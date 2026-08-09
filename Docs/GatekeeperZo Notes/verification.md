@@ -1,0 +1,104 @@
+# Verification
+
+<!--
+Purpose: The single list of what is shipped but unproven, ordered so Zo can spend a playthrough on the items that matter and skip the ones that do not. Milestones own their own criteria; this is the condensed view across all of them.
+Status: working — regenerated as milestones ship and items close
+Update trigger: when a milestone ships with open rows, or when an item is verified
+Last updated: 2026-08-09
+-->
+
+## How this works
+
+Shipped milestones carry rows that only a played Run can close. **They accumulate faster
+than they get checked, and that is fine** — the point of this file is that they accumulate
+somewhere ordered, so nothing is silently dropped and nothing low-value takes up attention.
+
+**Ordered by leverage, not by age.** Work the first section during a normal Run. Ignore the
+last section entirely unless you are at a keyboard with the editor open.
+
+**Closing an item is two edits**: mark it here, and update the row in the milestone that owns
+it. A milestone's own file stays the record; this is the index.
+
+**An item nobody has closed after three sessions is a signal the item is not worth checking.**
+Say so and delete it rather than carrying it forever.
+
+---
+
+## Next Run — four things, one Run
+
+These are the four claims the game currently rests on that nothing has tested.
+
+### 1. The Pin Shot fires at all — M31, criteria 7 and 10
+
+**Highest priority, and today's session says it may still be broken.** In
+`Logs/GatekeeperBastion_2026-08-09_15-21-59.log` there are zero `[Ability]` activation lines
+and the credit reads `0 / 0 / 0` across three Waves.
+
+- Embark at Wave 1. Fire **one** MR-35 shot into a group of three: expect **one**
+  `killed a Gatekeeper` line, not three inside the same tenth of a second.
+- Then fire **three shots at the front body of a line**: expect
+  `MR-35 Rifle — Pin Shot` and a `pin held Ns` line.
+- **If no pin line appears, stop and say so.** That is a defect, not a tuning result, and it
+  is the third session in a row it has not fired.
+
+### 2. The decoy peels them off the door — M30, playthrough path
+
+The answer to the oldest open design problem in the project, and it has never been played.
+
+- Buy the drone payload, embark at Wave 3, place a decoy **away from the Hatch**.
+- Expect Defaults and Hunters to peel, and **every Ram to walk straight past it**.
+- Use three charges, then try a fourth: expect a refusal.
+- Read the `Decoy` line on the Wave summary.
+
+### 3. `SEC-D` changes how you fight — M26, playthrough path
+
+- Embark with MR-35 plus `SEC-D`. Let a Hunter reach contact range: it should die fast.
+- Shoot a Default across the room with `SEC-D`: it should do close to nothing.
+- **The question to answer in `playthrough.md`:** does it change how you fight, or is it only
+  what you press when the Primary is dry? If the second, M26's premise is wrong.
+
+### 4. Two opposite wheel focuses feel like different weapons — M21, playthrough feel
+
+M21's whole claim. Take the BR-12 to two opposite focuses at the same total points and play a
+Wave with each. **If they feel the same, the wheel is a spreadsheet with a nice picture on it**
+and that is worth knowing now that M32 has added a third Primary to it.
+
+---
+
+## When convenient
+
+Real, lower leverage. None of these blocks anything.
+
+| Item | Milestone | What to do |
+|---|---|---|
+| PRI-C owns the far wall | M32 | Buy PRI-C, embark Wave 3, stand at the Hatch and fire up the bore; expect far kills. Swap to MR-35 at the same Tier; expect those kills not to land. Then `F` for Railshot into a line — expect `railshot armed` / `railshot fired` Ability lines |
+| Options reach the fight | M24 | Menu OPTIONS, set sensitivity, embark, press `O` mid-Assault, confirm Gatekeepers keep moving and the change applies in the same Run. One `[Settings]` line per commit |
+| Reload discard warning | M25 | Mid-reload, read `SWAP DISCARDS THIS RELOAD`, swap, confirm the discard line. Then turn it off in options and confirm `reload paused` |
+| First Run with no rig | M23 | The Hatch budget numbers assume the rig. Play one Run without buying it and see whether the door survives Wave 2 |
+| Rig prices 300 + 300 | M23 | Marked *tunable, needs play data*. Only worth an opinion after the item above |
+| Cold-start premise | M27 | Needs **another person**. Someone who has not read the wiki embarks and then says who the Gatekeepers are and what the Hatch does |
+| `SEC-D` kill share | M26 | Not a play item: grep a logged Run for `with Secondary` against `with Primary` |
+
+---
+
+## Not play — developer or environment
+
+**Ignore these during a playthrough.** They need the editor, a missing file, or a decision.
+
+| Item | Milestone | Blocker |
+|---|---|---|
+| Pinned fixture logs | M29 | `GatekeeperBastion_2026-08-07_16-34-30.log` and `..._2026-08-03_19-18-22.log` are **absent from this machine** and are cited across `Design/` and two milestones. Restore from backup or the pins are unverifiable forever |
+| EditMode suite green | M29 | AutoVerify hit `stuck` at 180 s twice while tests were still running. Re-run from the menu once the editor is quiet |
+| Save byte-identical | M24 | Needs one clean AutoVerify run |
+| Decoy Path 2 + PlayMode tests | M30 | `DecoyPlayModeTests` written, never run |
+| `FireRay` layer mask | M31 | No Enemy or World layers exist yet; buffer raised 16 to 32 with a full-buffer warning as the interim |
+| `SEC-D` ability and ring | M26 | **Blocked on Zo**, not on testing. Two design decisions: an ability meeting M20's contract, and a strength/weakness pair |
+| MK-1 wheel ring | M21 | Deferred on purpose until the Secondary wheel exists |
+
+---
+
+## Closed
+
+| Item | Milestone | Closed by |
+|---|---|---|
+| `— N live` on group lines, segment lands on zero | M29 | 2026-08-09 session `15-21-59`: group lines read `— 3 live`, `— 6 live`, `— 5 live`; the reader parses it and the Wave-3 segment resolves |

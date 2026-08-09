@@ -1,0 +1,16 @@
+{
+    "name": "GatekeeperBastion.PlayTests",
+    "references": [
+        "GatekeeperBastion",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [],
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "overrideReferences": true
+}

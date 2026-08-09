@@ -1,0 +1,360 @@
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: activated weapon ability on the player camera. Reads the active
+    /// slot's <see cref="WeaponDef"/>, runs the cooldown, and dispatches by
+    /// <see cref="AbilityId"/>. Gatekeeper motion goes through <see cref="EnemyGatekeeper.Shove"/> /
+    /// <see cref="EnemyGatekeeper.Pin"/> — never by writing NavMeshAgent from here.</summary>
+    /// <remarks>
+    /// Dial points come from the active weapon's ability spoke on the upgrade wheel.
+    /// </remarks>
+    public sealed class PlayerAbility : MonoBehaviour
+    {
+        const string Tag = "PlayerAbility";
+
+        PlayerGun _gun;
+        float _cooldown;
+        float _surgeRemaining;
+        float _waveGatekeeperSeconds;
+        float _waveRegenRounds;
+        PinBuildState _pinBuild;
+        bool _subscribed;
+        bool _waveTallyOpen;
+
+        /// <summary>Seconds left on the ability cooldown for the active weapon. 0 = ready.</summary>
+        public float CooldownRemaining => Mathf.Max(0f, _cooldown);
+
+        /// <summary>1 when ready, 0 when the cooldown just started.</summary>
+        public float CooldownProgress
+        {
+            get
+            {
+                var def = ActiveDef;
+                if (WeaponAbility.IsEmpty(def.abilityId) || def.abilityCooldown <= 0.01f)
+                    return 1f;
+                return 1f - Mathf.Clamp01(_cooldown / def.abilityCooldown);
+            }
+        }
+
+        public string AbilityName
+        {
+            get
+            {
+                var def = ActiveDef;
+                return string.IsNullOrEmpty(def.abilityName) ? "" : def.abilityName;
+            }
+        }
+
+        public bool HasAbility => !WeaponAbility.IsEmpty(ActiveDef.abilityId);
+
+        /// <summary>Fixed MK-1 surge rate while live; 1 otherwise. Dial stretches duration.</summary>
+        public float RegenSurgeMultiplier =>
+            _surgeRemaining > 0f ? WeaponAbility.Mk1SurgeMultiplier : 1f;
+
+        public bool RegenSurgeActive => _surgeRemaining > 0f;
+
+        /// <summary>Pin stacks on the current build target (MR-35). 0 when none.</summary>
+        public int PinBuildHits => _pinBuild.Hits;
+
+        /// <summary>Ability dial from the active weapon's wheel points.</summary>
+        public int DialPoints => _gun != null ? _gun.ActiveAbilityPoints : 0;
+
+        WeaponDef ActiveDef => _gun != null ? _gun.ActiveDef : default;
+
+        void Awake()
+        {
+            _gun = GetComponent<PlayerGun>();
+            if (_gun == null) _gun = GetComponentInParent<PlayerGun>();
+        }
+
+        void OnDisable() => Unsubscribe();
+
+        void EnsureSubscribed()
+        {
+            if (_subscribed) return;
+            var gc = GameController.Instance;
+            if (gc == null || gc.Sim == null) return;
+            gc.Sim.WaveStarted += OnWaveStarted;
+            gc.Sim.AssaultEnded += OnAssaultEnded;
+            _subscribed = true;
+        }
+
+        void Unsubscribe()
+        {
+            if (!_subscribed) return;
+            var gc = GameController.Instance;
+            if (gc != null && gc.Sim != null)
+            {
+                gc.Sim.WaveStarted -= OnWaveStarted;
+                gc.Sim.AssaultEnded -= OnAssaultEnded;
+            }
+            _subscribed = false;
+        }
+
+        void Update()
+        {
+            EnsureSubscribed();
+
+            if (_gun == null)
+            {
+                _gun = GetComponent<PlayerGun>();
+                if (_gun == null) return;
+            }
+
+            float dt = Time.deltaTime;
+            if (_cooldown > 0f) _cooldown -= dt;
+            if (_surgeRemaining > 0f) _surgeRemaining -= dt;
+
+            TickPinDecay(dt);
+            if (_gun != null) _gun.ClearExpiredRailshot();
+
+            if (!Controls.Down(ControlId.WeaponAbility)) return;
+            TryActivate();
+        }
+
+        void TickPinDecay(float dt)
+        {
+            if (_pinBuild.Hits <= 0) return;
+            if (_pinBuild.TargetKey != 0)
+            {
+                // Target destroyed → abandon build.
+                var live = EnemyGatekeeper.AllLive;
+                bool found = false;
+                for (int i = 0; i < live.Count; i++)
+                {
+                    if (live[i] != null && live[i].GetInstanceID() == _pinBuild.TargetKey)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    _pinBuild.Clear();
+                    return;
+                }
+            }
+            _pinBuild.Tick(dt);
+        }
+
+        /// <summary>MR-35 hits accumulate here — count of hits, never damage. Auto-pins when
+        /// the threshold is reached and the ability cooldown is ready.</summary>
+        public void RegisterPinHit(EnemyGatekeeper gatekeeper)
+        {
+            if (gatekeeper == null) return;
+            if (_gun == null || _gun.ActiveWeaponId != WeaponId.Mr35Rifle) return;
+            if (_cooldown > 0f) return;
+
+            _pinBuild.RegisterHit(gatekeeper.GetInstanceID(), WeaponAbility.PinBuildDecaySeconds);
+            if (!_pinBuild.Ready) return;
+
+            float seconds = WeaponAbility.Magnitude(AbilityId.Mr35Pin, DialPoints);
+            if (!ApplyPin(gatekeeper, seconds)) return;
+            var def = ActiveDef;
+            BeginCooldown(def);
+            Log.Event("Ability",
+                $"{def.displayName} — {def.abilityName} (dial {DialPoints}, mag {seconds:0.##})");
+        }
+
+        void TryActivate()
+        {
+            var def = ActiveDef;
+            if (WeaponAbility.IsEmpty(def.abilityId))
+            {
+                Log.Info(Tag, "ability refused — active weapon has no ability");
+                return;
+            }
+            if (_cooldown > 0f) return;
+
+            int dial = DialPoints;
+            float magnitude = WeaponAbility.Magnitude(def.abilityId, dial);
+            bool fired;
+            switch (def.abilityId)
+            {
+                case AbilityId.Br12Concussive:
+                    fired = ActivateConcussive(def, magnitude);
+                    break;
+                case AbilityId.Mr35Pin:
+                    // Pin is hit-driven; key only fires if build is already ready.
+                    fired = TryManualPin(magnitude);
+                    break;
+                case AbilityId.Mk1RegenSurge:
+                    fired = ActivateRegenSurge(magnitude);
+                    break;
+                case AbilityId.PriCRailshot:
+                    fired = ActivateRailshot(magnitude);
+                    break;
+                default:
+                    fired = false;
+                    break;
+            }
+
+            if (!fired) return;
+
+            BeginCooldown(def);
+            Log.Event("Ability",
+                $"{def.displayName} — {def.abilityName} (dial {dial}, mag {magnitude:0.##})");
+        }
+
+        void BeginCooldown(WeaponDef def)
+        {
+            _cooldown = def.abilityCooldown > 0f ? def.abilityCooldown : WeaponAbility.Cooldown(def.abilityId);
+        }
+
+        bool ActivateConcussive(WeaponDef def, float metres)
+        {
+            Vector3 origin = transform.position;
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 0.01f) forward = Vector3.forward;
+            forward.Normalize();
+
+            float range = def.range > 0.01f ? def.range : 14f;
+            float cosMin = Mathf.Cos(WeaponAbility.Br12ConeHalfAngleDegrees * Mathf.Deg2Rad);
+            var hatch = HatchStation.Instance;
+            Vector3 awayFromHatch = hatch != null
+                ? (origin - hatch.transform.position)
+                : -forward;
+            awayFromHatch.y = 0f;
+            if (awayFromHatch.sqrMagnitude < 0.01f) awayFromHatch = -forward;
+            awayFromHatch.Normalize();
+
+            int hit = 0;
+            float credited = 0f;
+            var live = EnemyGatekeeper.AllLive;
+            for (int i = 0; i < live.Count; i++)
+            {
+                var b = live[i];
+                if (b == null) continue;
+                Vector3 to = b.transform.position - origin;
+                to.y = 0f;
+                float dist = to.magnitude;
+                if (dist > range || dist < 0.05f) continue;
+                if (Vector3.Dot(forward, to / dist) < cosMin) continue;
+
+                credited += b.Shove(awayFromHatch * metres);
+                hit++;
+            }
+
+            _waveGatekeeperSeconds += credited;
+            Log.Event("Ability",
+                $"concussive shove — {hit} gatekeeper(s), {credited:0.##} gatekeeper-seconds");
+            return true;
+        }
+
+        bool TryManualPin(float seconds)
+        {
+            if (!_pinBuild.Ready || _pinBuild.TargetKey == 0) return false;
+            var live = EnemyGatekeeper.AllLive;
+            for (int i = 0; i < live.Count; i++)
+            {
+                var b = live[i];
+                if (b != null && b.GetInstanceID() == _pinBuild.TargetKey)
+                    return ApplyPin(b, seconds);
+            }
+            return false;
+        }
+
+        bool ApplyPin(EnemyGatekeeper target, float seconds)
+        {
+            if (target == null || seconds <= 0f) return false;
+            target.Pin(seconds);
+            _waveGatekeeperSeconds += seconds;
+            _pinBuild.Clear();
+            Log.Event("Ability",
+                $"pin held {seconds:0.##}s on {target.Kind} — {seconds:0.##} gatekeeper-seconds");
+            return true;
+        }
+
+        bool ActivateRegenSurge(float durationSeconds)
+        {
+            if (_gun.ActiveSlot != WeaponSlot.Secondary)
+            {
+                Log.Info(Tag, "regen surge refused — Secondary not active");
+                return false;
+            }
+            _surgeRemaining = durationSeconds;
+            Log.Event("Ability",
+                $"regen surge — {WeaponAbility.Mk1SurgeMultiplier:0.##}x for {durationSeconds:0.#}s");
+            return true;
+        }
+
+        bool ActivateRailshot(float pierceBodies)
+        {
+            if (_gun == null || _gun.ActiveWeaponId != WeaponId.PriC)
+            {
+                Log.Info(Tag, "railshot refused — PRI-C not active");
+                return false;
+            }
+            if (_gun.RailshotArmed)
+            {
+                Log.Info(Tag, "railshot refused — already armed");
+                return false;
+            }
+            int bodies = Mathf.Max(1, Mathf.RoundToInt(pierceBodies));
+            _gun.ArmRailshot(bodies, WeaponAbility.PriCRailshotArmedSeconds);
+            Log.Event("Ability",
+                $"railshot armed — pierce {bodies} at full damage for {WeaponAbility.PriCRailshotArmedSeconds:0.#}s");
+            return true;
+        }
+
+        /// <summary>PlayerGun reports bodies damaged by a consumed Railshot.</summary>
+        public void NotifyRailshotFired(int bodiesDamaged, int pierceArmed)
+        {
+            float credited = bodiesDamaged * WeaponAbility.PriCRailshotSecondsPerBody;
+            _waveGatekeeperSeconds += credited;
+            Log.Event("Ability",
+                $"railshot fired — {bodiesDamaged} body(s) of {pierceArmed} armed" +
+                (credited > 0f ? $", {credited:0.##} gatekeeper-seconds" : ""));
+        }
+
+        /// <summary>PlayerGun reports rounds the surge granted beyond baseline.</summary>
+        public void CreditRegenRound(float rounds)
+        {
+            if (rounds <= 0f) return;
+            _waveRegenRounds += rounds;
+            _waveGatekeeperSeconds += rounds * WeaponAbility.Mk1GatekeeperSecondsPerSurgeRound;
+        }
+
+        void OnWaveStarted(WaveSpec _)
+        {
+            // Deep-start chains fire WaveStarted between waves without AssaultEnded — flush the
+            // previous wave's tally first or criterion 6 loses every wave but the last.
+            if (_waveTallyOpen)
+            {
+                int completed = GameController.Instance != null && GameController.Instance.Sim != null
+                    ? GameController.Instance.Sim.CurrentWaveIndex - 1
+                    : 0;
+                LogWaveGatekeeperSeconds(completed);
+            }
+
+            _waveTallyOpen = true;
+            _waveGatekeeperSeconds = 0f;
+            _waveRegenRounds = 0f;
+            _pinBuild.Clear();
+            if (_gun != null) _gun.ClearRailshot();
+        }
+
+        void OnAssaultEnded()
+        {
+            if (!_waveTallyOpen) return;
+            int wave = GameController.Instance != null && GameController.Instance.Sim != null
+                ? GameController.Instance.Sim.CurrentWaveIndex
+                : 0;
+            LogWaveGatekeeperSeconds(wave);
+            _waveTallyOpen = false;
+            _waveGatekeeperSeconds = 0f;
+            _waveRegenRounds = 0f;
+        }
+
+        void LogWaveGatekeeperSeconds(int wave)
+        {
+            Log.Event("Ability",
+                $"wave {wave} gatekeeper-seconds removed: {_waveGatekeeperSeconds:0.##}" +
+                (_waveRegenRounds > 0f ? $" (regen rounds {_waveRegenRounds:0.##})" : ""));
+        }
+    }
+}

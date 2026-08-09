@@ -1,0 +1,82 @@
+using GatekeeperBastion.Game.Ui;
+using GatekeeperBastion.Sim;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: main menu — CONTINUE / START NEW (overwrite confirm) / OPTIONS / QUIT.</summary>
+    public sealed class MainMenuController : MonoBehaviour
+    {
+        bool _loading;
+        MainMenuView _view;
+
+        void Awake()
+        {
+            AudioBuses.ApplyFromSettings();
+            _view = GetComponentInChildren<MainMenuView>(true);
+            if (_view == null) return;
+            _view.EnsureBuilt();
+
+            _view.onContinue = OnContinue;
+            _view.onStartNew = OnStartNew;
+            _view.onOptions = () => OptionsScreen.Open(null);
+            _view.onQuit = () => Application.Quit();
+            _view.onOverwriteConfirm = StartNewAndEmbark;
+            _view.onOverwriteBack = () => _view.ShowMain();
+        }
+
+        void OnEnable()
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            RefreshMenu();
+        }
+
+        void Update()
+        {
+            OptionsScreen.TickDisplayRevert();
+            if (_view != null && _view.OverwriteOpen && Input.GetKeyDown(KeyCode.Escape))
+                _view.ShowMain();
+        }
+
+        void RefreshMenu()
+        {
+            if (_view == null) return;
+            _view.SetContinueVisible(GameSession.HasSave);
+            MetaState meta = GameSession.Meta;
+            int banked = meta != null ? (int)meta.BankedSalvage : 0;
+            int runs = meta != null ? meta.TotalRuns : 0;
+            int deepest = meta != null ? meta.DeepestWaveReached : 0;
+            _view.SetCampaignStrip(banked, runs, deepest);
+            _view.ShowMain();
+        }
+
+        void OnContinue()
+        {
+            if (_loading || !GameSession.HasSave) return;
+            _loading = true;
+            GameSession.ContinueGame();
+            SceneFlow.LoadShip();
+        }
+
+        void OnStartNew()
+        {
+            if (GameSession.HasSave)
+            {
+                _view.ShowOverwriteModal(
+                    "Overwrite save?",
+                    "Starting a new campaign will overwrite your existing save.");
+                return;
+            }
+            StartNewAndEmbark();
+        }
+
+        void StartNewAndEmbark()
+        {
+            if (_loading) return;
+            _loading = true;
+            GameSession.StartNew();
+            SceneFlow.LoadShip();
+        }
+    }
+}

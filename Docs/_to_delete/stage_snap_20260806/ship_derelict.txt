@@ -1,0 +1,3544 @@
+===== FILE: Assets/Scripts/Game/Combat/Damageable.cs
+using System.Collections;
+using GatekeeperBastion.Util;
+using UnityEngine;
+using UnityEngine.Events;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>REPLICATED-STATE: generic hit-point pool for scene actors (enemies in v0) —
+    /// TakeDamage drains Hp, flashes the renderer so hits are visibly registered, and fires
+    /// onDeath exactly once when Hp reaches zero.</summary>
+    /// <remarks>onDeath fires EXACTLY once per death (_deathFired), because a listener commonly
+    /// destroys the owning GameObject: a second invoke would run destroy logic on an object
+    /// already queued for destruction. The flash coroutine is stopped and the listener list
+    /// cleared on disable/destroy so nothing touches a destroyed Renderer.</remarks>
+    public sealed class Damageable : MonoBehaviour
+    {
+        const string Tag = "Damageable";
+
+        // 30 mirrors WaveDirector.StatsFor(Default).maxHp (the boarder baseline) so an actor built
+        // without a SceneBuilder pass still starts at a tuned value. WaveSpawner overrides it per
+        // spawn with the actor's OWN kind's hp — a Hunter is 20 and a Ram is 120, and neither of
+        // those numbers may ever be inferred from this one.
+        [SerializeField] float maxHp = 30f;
+        [SerializeField] Color hitFlashColor = new Color(1f, 0.15f, 0.1f);
+        [SerializeField] float hitFlashSeconds = 0.09f;
+
+        /// <summary>Invoked once when Hp reaches zero.</summary>
+        public UnityEvent onDeath = new UnityEvent();
+
+        /// <summary>Current hit points.</summary>
+        public float Hp { get; private set; }
+
+        /// <summary>Maximum hit points.</summary>
+        public float MaxHp => maxHp;
+
+        /// <summary>True once Hp has reached zero.</summary>
+        public bool IsDead => Hp <= 0f && _initialized;
+
+        /// <summary>Hits this actor has absorbed. Counted here (not by the shooter) so the kill
+        /// line can say "3 shots" without anyone keeping a per-target table.</summary>
+
+
+        /// <summary>Seconds from the first hit to now — the kill line's time-to-kill. 0 before the
+        /// first hit.</summary>
+
+
+        bool _initialized;
+        bool _deathFired;
+        Renderer _renderer;
+        MaterialPropertyBlock _mpb;
+        Color _baseColor;
+        bool _hasBaseColor;
+        Coroutine _flash;
+
+        void Awake()
+        {
+            Hp = maxHp;
+            _initialized = true;
+            _renderer = GetComponentInChildren<Renderer>();
+            if (_renderer != null)
+            {
+                _mpb = new MaterialPropertyBlock();
+                var mat = _renderer.sharedMaterial;
+                if (mat != null && mat.HasProperty("_BaseColor")) { _baseColor = mat.GetColor("_BaseColor"); _hasBaseColor = true; }
+                else if (mat != null && mat.HasProperty("_Color")) { _baseColor = mat.GetColor("_Color"); }
+            }
+        }
+
+        void OnDisable()
+        {
+            // Guard: a flash coroutine resuming after the renderer is gone would NRE in ClearColor.
+            if (_flash != null)
+            {
+                StopCoroutine(_flash);
+                _flash = null;
+            }
+        }
+
+        void OnDestroy()
+        {
+            onDeath?.RemoveAllListeners(); // drop listeners so nothing calls into a dead object
+            Damaged = null;
+        }
+
+        /// <summary>Rescales max hp (e.g. wave health multiplier); refills current Hp by default.</summary>
+        public void SetMaxHp(float value, bool refill = true)
+        {
+            maxHp = Mathf.Max(1f, value);
+            if (refill || Hp > maxHp) Hp = maxHp;
+        }
+
+        /// <summary>Raised on every hit with the attacker's transform (null if unknown). The AI
+        /// listens so that being shot makes a boarder turn on whoever shot it.</summary>
+        public event System.Action<Transform> Damaged;
+
+        /// <summary>Applies damage; flashes the hit, reports the attacker, fires onDeath when this
+        /// kills the owner. <paramref name="source"/> is who dealt it — pass the shooter.</summary>
+        public void TakeDamage(float amount, Transform source = null)
+        {
+            if (IsDead || _deathFired || amount <= 0f) return;
+            Hp -= amount;
+            FlashHit();
+            var damaged = Damaged;
+            if (damaged != null)
+            {
+                // Guard trip: one bad listener must not swallow the rest of the damage pipeline.
+                try { damaged(source); }
+                catch (System.Exception e) { Log.Error(Tag, $"Damaged listener threw {e.GetType().Name}: {e.Message}"); }
+            }
+            if (Hp > 0f) return;
+
+            Hp = 0f;
+            _deathFired = true; // guard: onDeath listeners destroy this object; never fire twice
+            try
+            {
+                onDeath?.Invoke();
+            }
+            catch (System.Exception e)
+            {
+                // Guard trip: one bad listener must not abort the rest of the damage pipeline.
+                Log.Error(Tag, $"onDeath listener threw {e.GetType().Name}: {e.Message}");
+            }
+        }
+
+        void FlashHit()
+        {
+            if (_renderer == null || _mpb == null || !isActiveAndEnabled) return;
+            if (_flash != null) StopCoroutine(_flash);
+            _flash = StartCoroutine(FlashRoutine());
+        }
+
+        IEnumerator FlashRoutine()
+        {
+            SetColor(hitFlashColor);
+            yield return new WaitForSeconds(hitFlashSeconds);
+            ClearColor();
+            _flash = null;
+        }
+
+        void SetColor(Color c)
+        {
+            if (_renderer == null || _mpb == null) return; // guard: renderer destroyed mid-flash
+            string prop = _hasBaseColor ? "_BaseColor" : "_Color";
+            _renderer.GetPropertyBlock(_mpb);
+            _mpb.SetColor(prop, c);
+            _renderer.SetPropertyBlock(_mpb);
+        }
+
+        void ClearColor()
+        {
+            if (_renderer == null || _mpb == null) return; // guard: renderer destroyed mid-flash
+            // Clearing the property block restores the shared material's own color.
+            _mpb.Clear();
+            _renderer.SetPropertyBlock(_mpb);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Combat/Effects.cs
+using GatekeeperBastion.Util;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: code-built particle effects for the gray-box — no assets, URP-safe
+    /// materials. Everything is a one-shot burst ParticleSystem that destroys itself.</summary>
+    /// <remarks>
+    /// Cosmetic only: every entry point is a no-op when the app is quitting or a scene load is
+    /// in flight. Creating GameObjects while a scene is unloading spawns them into the dying
+    /// scene (and can throw during teardown), which is the last thing you want firing on the
+    /// frame the player dies and the enemy AI is still swinging at the hatch.
+    /// </remarks>
+    public static class Effects
+    {
+        const string Tag = "Effects";
+
+        static Material _particleMat;
+        static bool _suspended;
+
+        /// <summary>Clears statics at play-mode start (domain-reload-disabled safety) and wires the
+        /// sceneLoaded hook that lifts the suspend flag — and carries the one scene-entry line.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            _particleMat = null;
+            _suspended = false;
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            Application.quitting -= OnQuitting;
+            Application.quitting += OnQuitting;
+        }
+
+        static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            _suspended = false;
+            // The ONE scene-entry line in the whole log, and the only structural line kept: it is
+            // the separator between "what I did in the ship" and "what happened in the derelict".
+            // Tagged Scene, not Effects — the FX system is merely where the sceneLoaded hook lives.
+            Log.Event("Scene", $"—— entered {scene.name} ——");
+        }
+
+        static void OnQuitting()
+        {
+            _suspended = true;
+        }
+
+        /// <summary>True while FX creation is disabled (scene load in flight, or app quitting).</summary>
+        public static bool Suspended => _suspended || !Application.isPlaying;
+
+        /// <summary>Called by SceneFlow immediately before a scene load: stop making objects that
+        /// would land in the scene being unloaded.</summary>
+        public static void SuspendForSceneChange()
+        {
+            _suspended = true;
+        }
+
+        /// <summary>Re-enable FX (used when a scene load was aborted).</summary>
+        public static void Resume()
+        {
+            _suspended = false;
+        }
+
+        static Material ParticleMat
+        {
+            get
+            {
+                if (_particleMat == null) // Unity-null: UnloadUnusedAssets can reap it across scene loads
+                {
+                    var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+                    if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
+                    if (shader == null) shader = Shader.Find("Particles/Standard Unlit");
+                    if (shader == null) shader = Shader.Find("Unlit/Color");
+                    if (shader == null)
+                    {
+                        // Guard trip: new Material(null) errors on every call; bail out instead.
+                        Log.Warn(Tag, "No usable shader found; particle FX disabled this session.");
+                        return null;
+                    }
+                    _particleMat = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+                }
+                return _particleMat;
+            }
+        }
+
+        /// <summary>Small spark burst at a weapon impact point.</summary>
+        public static void ImpactSparks(Vector3 position)
+            => Burst(position, new Color(1f, 0.6f, 0.15f), 14, speed: 5f, size: 0.07f, lifetime: 0.28f, gravity: 0.6f);
+
+        /// <summary>CRITICAL HIT impact — the same spark burst as ImpactSparks but roughly triple
+        /// the particles, faster, and pushed toward white, so a crit reads as a crit from across
+        /// the room without any HUD text. Two bursts (hot core + white flash) for the same reason
+        /// DeathExplosion uses two: a single tinted burst just looks like a normal hit that lagged.</summary>
+        public static void CritSparks(Vector3 position)
+        {
+            Burst(position, new Color(1f, 0.92f, 0.6f), 40, speed: 8f, size: 0.11f, lifetime: 0.34f, gravity: 0.5f);
+            Burst(position, Color.white, 14, speed: 3.2f, size: 0.13f, lifetime: 0.22f, gravity: 0f);
+        }
+
+        /// <summary>Big kill-confirm explosion where an enemy died.</summary>
+        public static void DeathExplosion(Vector3 position, Color tint)
+        {
+            Burst(position, tint, 42, speed: 7f, size: 0.14f, lifetime: 0.5f, gravity: 0.4f);
+            Burst(position, Color.white, 10, speed: 2.5f, size: 0.09f, lifetime: 0.35f, gravity: 0f);
+        }
+
+        /// <summary>Short flash at the muzzle each shot.</summary>
+        public static void MuzzleFlash(Vector3 position)
+            => Burst(position, new Color(1f, 0.9f, 0.4f), 6, speed: 1.6f, size: 0.05f, lifetime: 0.09f, gravity: 0f);
+
+        /// <summary>Sparks when something hits the hatch — damage you can see across the room.</summary>
+        public static void HatchDamageSparks(Vector3 position)
+            => Burst(position, new Color(1f, 0.3f, 0.1f), 20, speed: 4f, size: 0.1f, lifetime: 0.4f, gravity: 0.8f);
+
+        static void Burst(Vector3 position, Color color, int count, float speed, float size, float lifetime, float gravity)
+        {
+            if (Suspended) return; // guard: never create objects into a scene that is unloading / while quitting
+            var mat = ParticleMat;
+            if (mat == null) return;
+
+            var go = new GameObject("FX");
+            go.transform.position = position;
+            var ps = go.AddComponent<ParticleSystem>();
+
+            var main = ps.main;
+            main.loop = false;
+            main.playOnAwake = false;
+            main.startLifetime = lifetime;
+            main.startSpeed = new ParticleSystem.MinMaxCurve(speed * 0.5f, speed);
+            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.6f, size);
+            main.startColor = color;
+            main.gravityModifier = gravity;
+            main.maxParticles = count;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)count) });
+
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.08f;
+
+            var renderer = go.GetComponent<ParticleSystemRenderer>();
+            renderer.sharedMaterial = mat;
+
+            ps.Play();
+            Object.Destroy(go, lifetime + 0.5f);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Derelict/GameController.DevCommands.cs
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY (partial of GameController): Dev-mode command surface. Always compiled —
+    /// DevConsole compiles out of release, but these methods must remain so criterion 6 holds
+    /// (no dangling #if members on GameController). Every Dev binding lands here; none poke
+    /// RunSim / MetaState from the Dev layer.</summary>
+    public sealed partial class GameController
+    {
+        /// <summary>Despawn live boarders, restore hatch + player, re-draw the same wave index.</summary>
+        public void ReplayWave()
+        {
+            GameSession.NotifyDevAction();
+            if (Sim == null || Sim.Phase != RunPhase.Tethered)
+            {
+                Log.Warn(Tag, $"ReplayWave ignored (phase {(Sim == null ? "no-sim" : Sim.Phase.ToString())}).");
+                return;
+            }
+
+            // CurrentWaveIndex is the count of draws so far. Mid-assault it is the live wave;
+            // in Prep after a clear it is the wave just finished — both are the wave to re-draw.
+            int wave = Sim.CurrentWaveIndex;
+            if (wave <= 0)
+            {
+                Log.Warn(Tag, "ReplayWave ignored — no wave has been drawn yet.");
+                return;
+            }
+
+            DespawnLiveBoarders();
+            if (Sim.Assault == AssaultState.Assault)
+                Sim.AbortAssault();
+            else
+                Sim.SeekWave(wave); // Prep after clear: point the next draw at the same index
+
+            RestoreHatchAndPlayer();
+            Sim.TriggerDraw();
+            Log.Event("Dev", $"ReplayWave — re-drew wave {wave}/{WaveDirector.MaxWaves}");
+        }
+
+        /// <summary>Jump to 1-based wave N: despawn, seek, restore, draw. Arms via F3 then digit.</summary>
+        public void JumpToWave(int oneBasedWave)
+        {
+            GameSession.NotifyDevAction();
+            if (Sim == null || Sim.Phase != RunPhase.Tethered)
+            {
+                Log.Warn(Tag, $"JumpToWave ignored (phase {(Sim == null ? "no-sim" : Sim.Phase.ToString())}).");
+                return;
+            }
+            if (oneBasedWave < 1 || oneBasedWave > WaveDirector.MaxWaves)
+            {
+                Log.Warn(Tag, $"JumpToWave {oneBasedWave} out of range 1..{WaveDirector.MaxWaves}.");
+                return;
+            }
+
+            DespawnLiveBoarders();
+            if (Sim.Assault == AssaultState.Assault)
+                Sim.AbortAssault();
+
+            Sim.SeekWave(oneBasedWave);
+            RestoreHatchAndPlayer();
+            Sim.TriggerDraw();
+            Log.Event("Dev", $"JumpToWave — drew wave {oneBasedWave}/{WaveDirector.MaxWaves}");
+        }
+
+        /// <summary>Despawn every live boarder without awarding kills, then clear the assault so
+        /// the run returns to Prep (and can complete if that was the last wave).</summary>
+        public void ClearBoarders()
+        {
+            GameSession.NotifyDevAction();
+            if (Sim == null || Sim.Phase != RunPhase.Tethered)
+            {
+                Log.Warn(Tag, $"ClearBoarders ignored (phase {(Sim == null ? "no-sim" : Sim.Phase.ToString())}).");
+                return;
+            }
+
+            int n = DespawnLiveBoarders();
+            if (Sim.Assault == AssaultState.Assault)
+                Sim.NotifyAssaultCleared();
+            Log.Event("Dev", $"ClearBoarders — despawned {n}, assault {(Sim.Assault == AssaultState.Prep ? "cleared" : "unchanged")}");
+        }
+
+        /// <summary>Refill hatch HP and player HP to full (isolates the next wave from prior damage).</summary>
+        public void RestoreHatch()
+        {
+            GameSession.NotifyDevAction();
+            if (Sim == null || Sim.Phase != RunPhase.Tethered)
+            {
+                Log.Warn(Tag, $"RestoreHatch ignored (phase {(Sim == null ? "no-sim" : Sim.Phase.ToString())}).");
+                return;
+            }
+            RestoreHatchAndPlayer();
+            Log.Event("Dev",
+                $"RestoreHatch — hatch {Sim.Ship.Hatch.Hp:0}/{Sim.Ship.Hatch.MaxHp:0}, player refilled");
+        }
+
+        /// <summary>Toggle player invulnerability so boarder behaviour can be watched without a fight.</summary>
+        public void TogglePlayerInvulnerability()
+        {
+            GameSession.NotifyDevAction();
+            var player = PlayerRegistry.Local;
+            if (player == null)
+            {
+                Log.Warn(Tag, "TogglePlayerInvulnerability ignored — no local player.");
+                return;
+            }
+            player.Invulnerable = !player.Invulnerable;
+            Log.Event("Dev", $"player invulnerability {(player.Invulnerable ? "ON" : "OFF")}");
+        }
+
+        /// <summary>Bank salvage into the session. Static so the Ship scene (no GameController
+        /// instance) can still reach a shop state via F8.</summary>
+        public static void GrantSalvage(long amount)
+        {
+            GameSession.NotifyDevAction();
+            GameSession.EnsureLoaded();
+            var meta = GameSession.Meta;
+            if (meta == null)
+            {
+                Log.Warn(Tag, "GrantSalvage ignored — no MetaState.");
+                return;
+            }
+            meta.EarnSalvage(amount);
+            Log.Event("Dev", $"GrantSalvage +{amount} — banked {meta.BankedSalvage}");
+        }
+
+        /// <summary>Own, Tier, and equip a weapon into its catalog slot, then re-push the gun if
+        /// a Derelict run is live. Taints the session (Save suppressed).</summary>
+        public static void SetLoadout(int slot, int weaponId, int tier)
+        {
+            GameSession.NotifyDevAction();
+            GameSession.EnsureLoaded();
+            var meta = GameSession.Meta;
+            if (meta == null)
+            {
+                Log.Warn(Tag, "SetLoadout ignored — no MetaState.");
+                return;
+            }
+
+            var id = (WeaponId)weaponId;
+            if (id == WeaponId.None || !System.Enum.IsDefined(typeof(WeaponId), weaponId))
+            {
+                Log.Event("Dev", $"SetLoadout refused — invalid weaponId={weaponId}");
+                return;
+            }
+            if (!WeaponCatalog.IsAvailable(id))
+            {
+                Log.Event("Dev", $"SetLoadout refused — {WeaponCatalog.Def(id).displayName} is disabled");
+                return;
+            }
+
+            if (tier < 0) tier = 0;
+            if (tier > WeaponTier.MaxTier) tier = WeaponTier.MaxTier;
+
+            meta.SetOwned(id, true);
+            meta.SetTier(id, tier);
+            meta.SetEquipped(id);
+
+            // slot arg is advisory — equip always uses the def's own slot (same as ShipCommands).
+            var def = WeaponCatalog.Def(id);
+            Log.Event("Dev",
+                $"SetLoadout — {def.displayName} T{tier} equipped in {def.slot} (requested slot={slot})");
+
+            var gc = Instance;
+            if (gc != null && gc.Sim != null && !gc.RunIsOver)
+                gc.ApplyMetaEffects();
+        }
+
+        void RestoreHatchAndPlayer()
+        {
+            if (Sim != null)
+            {
+                var hatch = Sim.Ship.Hatch;
+                float missing = hatch.MaxHp - hatch.Hp;
+                if (missing > 0f) hatch.Repair(missing);
+            }
+
+            var player = PlayerRegistry.Local;
+            if (player != null)
+            {
+                player.HealToFull();
+                var fpc = player.GetComponent<FirstPersonController>();
+                if (fpc != null && Sim != null && Sim.Phase == RunPhase.Tethered)
+                {
+                    fpc.MovementLocked = false;
+                    fpc.SetCursorLock(true);
+                }
+            }
+        }
+
+        int DespawnLiveBoarders()
+        {
+            if (_spawner == null) _spawner = FindFirstObjectByType<WaveSpawner>();
+            if (_spawner != null) return _spawner.DespawnAllLive();
+
+            // Fallback if the spawner is missing: destroy boarders directly (no awards).
+            int n = 0;
+            foreach (var boarder in FindObjectsByType<EnemyBoarder>(FindObjectsSortMode.None))
+            {
+                if (boarder == null) continue;
+                boarder.enabled = false;
+                Destroy(boarder.gameObject);
+                n++;
+            }
+            return n;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Derelict/GameController.EndScreen.cs
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY (partial of GameController): everything that happens once a run is
+    /// over. Split out of GameController.cs when the success path landed and the file passed the
+    /// 400-line cap — same class, same state, one concern per file (the repo already splits
+    /// SceneBuilder this way).</summary>
+    /// <remarks>
+    /// A run ends in one of TWO terminal phases and this file refuses to care which:
+    ///   * Podded  — death (player down or hatch destroyed).
+    ///   * Escaped — all WaveDirector.MaxWaves waves cleared.
+    /// Neither settles any currency: kills bank as they happen, so ending a run — well or
+    /// badly — only stops the earning. All that is left here is the summary line and the exit.
+    /// Both draw an end screen whose ONLY exit is ReturnToShip, so both need identical
+    /// anti-soft-lock treatment. That symmetry is the whole point of IsTerminal: a win that
+    /// leaves the cursor captured is exactly as unplayable as a loss that does, and it is worse
+    /// in practice because the player has no dead body on screen to explain why nothing responds.
+    /// </remarks>
+    public sealed partial class GameController
+    {
+        /// <summary>Seconds on a terminal end screen with no input before we log a stuck-player warning.</summary>
+        const float LoseScreenWatchdogSeconds = 30f;
+
+        bool _leavingScene;
+        float _loseScreenAge; // seconds spent on a terminal end screen (lose OR success) with no input
+        bool _watchdogFired;
+
+        /// <summary>Terminal = the run is over and the only way on is RETURN TO SHIP. Podded
+        /// (died) and Escaped (all waves cleared) are treated identically by every exit path.</summary>
+        static bool IsTerminal(RunPhase phase) => phase == RunPhase.Podded || phase == RunPhase.Escaped;
+
+        /// <summary>Called from OnPhaseChanged the moment either terminal phase lands: free the
+        /// cursor, arm the watchdog, write the run summary, persist.</summary>
+        void EnterTerminalPhase(RunPhase phase)
+        {
+            _loseScreenAge = 0f;
+            _watchdogFired = false;
+
+            // THE soft-lock guard. Escaped is a WIN, and a win with a captured cursor is a player
+            // who cannot click RETURN TO SHIP and has no fight left to explain why. Freed here for
+            // both terminal phases (and re-asserted every frame in TickLoseScreen), and logged so
+            // the transcript proves which state the cursor was actually left in.
+            EnsureCursorFree();
+            Log.Info(Tag, $"Terminal phase {phase}: cursor freed " +
+                          $"(lock={Cursor.lockState}, visible={Cursor.visible}).");
+
+            var r = Sim.LastLossReport;
+            string repairBit = r.repairSpent > 0 ? $", repair spent {r.repairSpent}" : "";
+            if (phase == RunPhase.Escaped)
+            {
+                Log.Event("Run", $"DERELICT STRIPPED — all {WaveDirector.MaxWaves} waves cleared, " +
+                    $"earned {r.earned}{repairBit}, banked now {Meta.BankedSalvage}");
+            }
+            else
+            {
+                Log.Event("Run", $"RUN OVER after {Sim.RunElapsed:0}s on wave {Sim.CurrentWaveIndex} — " +
+                    $"earned {r.earned}{repairBit}, banked now {Meta.BankedSalvage}");
+            }
+            GameSession.Save();
+        }
+
+        /// <summary>Either terminal phase (Podded lose screen or Escaped success screen): keep the
+        /// cursor usable, accept the keyboard fallback, and warn if the player appears stuck.
+        /// This is the only screen with no other way out — including for a WINNING player.</summary>
+        void TickLoseScreen()
+        {
+            if (_leavingScene) return;
+
+            // Every frame, not just on the transition: a station panel, a stray click, or another
+            // controller re-locking the cursor would otherwise make the button unclickable.
+            EnsureCursorFree();
+
+            if (Controls.Down(ControlId.Confirm))
+            {
+                ReturnToShip(); // logs the single "returning to ship" line for both entry points
+                return;
+            }
+
+            _loseScreenAge += Time.unscaledDeltaTime;
+            if (Input.anyKeyDown || Input.GetAxisRaw("Mouse X") != 0f || Input.GetAxisRaw("Mouse Y") != 0f)
+                _loseScreenAge = 0f;
+
+            if (!_watchdogFired && _loseScreenAge >= LoseScreenWatchdogSeconds)
+            {
+                _watchdogFired = true;
+                Log.Warn(Tag, $"End-screen watchdog ({Sim.Phase}): {LoseScreenWatchdogSeconds:0}s with no input. " +
+                              $"cursor={Cursor.lockState}/visible={Cursor.visible}, " +
+                              $"shipLoadable={SceneFlow.CanLoad(SceneFlow.Ship)}. " +
+                              "Press ENTER to return to ship.");
+            }
+        }
+
+        /// <summary>End-screen command: the purse was settled kill by kill, so there is nothing
+        /// to reconcile here — persist and go home. Accepts
+        /// BOTH terminal phases; gating it on Podded alone would strand a winning player on the
+        /// success screen with a button that logs a warning and does nothing.</summary>
+        public void ReturnToShip()
+        {
+            if (_leavingScene) return;
+            if (Sim == null || !IsTerminal(Sim.Phase))
+            {
+                Log.Warn(Tag, $"ReturnToShip ignored (phase {(Sim == null ? "no-sim" : Sim.Phase.ToString())}).");
+                return;
+            }
+
+            _leavingScene = true;
+            Log.Event("Ship", $"returning to the ship — {Meta?.BankedSalvage ?? 0} banked");
+            GameSession.Save();
+
+            if (SceneFlow.LoadShip()) return;
+
+            // Guard trip: the load failed (scene not in build settings). Re-arm so the button and
+            // the keyboard fallback keep working instead of soft-locking on a dead screen.
+            _leavingScene = false;
+            _loseScreenAge = 0f;
+            _watchdogFired = false;
+            Log.Error(Tag, "RETURN TO SHIP failed to load the Ship scene; staying on the end screen. " +
+                           "Rebuild scenes from the GatekeeperBastion menu.");
+        }
+
+        /// <summary>Cursor free + visible. Idempotent and cheap; safe to call every frame.</summary>
+        static void EnsureCursorFree()
+        {
+            if (Cursor.lockState != CursorLockMode.None) Cursor.lockState = CursorLockMode.None;
+            if (!Cursor.visible) Cursor.visible = true;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Derelict/GameController.cs
+using System;
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY: Derelict-scene bootstrap that owns the RunSim, ticks it every frame,
+    /// and exposes the command methods all sim mutation flows through (grandfathered singleton).</summary>
+    /// <remarks>
+    /// Scene flow: the ship hub is now a real scene (SceneFlow.Ship), so entering the Derelict
+    /// starts fighting immediately — Start() calls StartRun + EngageTether and Docked is a
+    /// transient boot phase. A run now ends TWO ways: death (player death via PlayerDied →
+    /// Sim.NotifyPlayerDown, or hatch destruction) lands in Podded, and clearing all
+    /// WaveDirector.MaxWaves waves lands in Escaped. Both are terminal and both leave by exactly
+    /// one door: ReturnToShip (save + load the Ship scene) — the old in-place ResetRun/Respawn
+    /// path is gone. MetaState comes from GameSession (with a direct-play fallback); no
+    /// Time.timeScale pausing — the sim ignores Tick outside Tethered.
+    ///
+    /// Money: BoarderKilled → Sim.AwardKill() banks the kill into MetaState.BankedSalvage
+    /// immediately. RepairHatch spends from that bank as healing is applied. Ending a run —
+    /// well or badly — settles nothing and refunds nothing; the purse is also spent at the
+    /// ship's stations between runs.
+    ///
+    /// Terminal-phase contract (the anti-soft-lock rules — see GameController.EndScreen.cs, which
+    /// applies all of them to Podded AND Escaped alike, because a winning player trapped behind a
+    /// captured cursor is the same bug as a losing one):
+    ///   * the cursor is freed AND made visible every frame in a terminal phase, not just on the
+    ///     transition, so a station panel or a stray click can never re-capture it;
+    ///   * Enter / Space / Escape are keyboard fallbacks for the RETURN TO SHIP button;
+    ///   * if 30s pass on the end screen with no input, or the scene load fails, we Warn.
+    /// </remarks>
+    public sealed partial class GameController : MonoBehaviour
+    {
+        const string Tag = "GameController";
+
+        [SerializeField, Tooltip("0 = randomize seed per run.")]
+        int seed;
+
+        /// <summary>Scene-wide access point. Set in Awake, cleared in OnDestroy.</summary>
+        public static GameController Instance { get; private set; }
+
+        /// <summary>The authoritative game simulation. MonoBehaviours are thin views over this.</summary>
+        public RunSim Sim { get; private set; }
+
+
+        /// <summary>Persistent cross-run progression state, owned by GameSession.</summary>
+        public MetaState Meta => GameSession.Meta;
+
+        /// <summary>Boarders spawned and still alive right now (spawner readout). Used for the
+        /// death/hatch-loss context lines; 0 when no spawner is present.</summary>
+        public int EnemiesAlive
+        {
+            get
+            {
+                if (_spawner == null) _spawner = FindFirstObjectByType<WaveSpawner>();
+                return _spawner != null ? _spawner.AliveCount : 0;
+            }
+        }
+
+        /// <summary>True once the run has ended (terminal phase) — enemy AI and the spawner
+        /// use this as their single "stop everything" test.</summary>
+        public bool RunIsOver => Sim == null || IsTerminal(Sim.Phase);
+
+        FirstPersonController _fpc;
+        WaveSpawner _spawner;
+        bool _discarded;      // this instance lost the duplicate race and is being destroyed
+
+        /// <summary>Clears the static handle at play-mode start (domain-reload-disabled safety).</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Instance = null;
+        }
+
+        void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                // Guard: Destroy is deferred to end of frame, so Start/Update still run on this
+                // instance — _discarded makes them no-ops instead of NRE-ing on a null Sim.
+                _discarded = true;
+                Log.Warn(Tag, "Duplicate GameController destroyed.");
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+
+            // Direct-play/test fallback: entering the Derelict without passing menu/ship.
+            GameSession.EnsureLoaded();
+            if (Meta == null)
+            {
+                // Guard trip: RunSim's ctor throws on a null MetaState — fail loudly, not with a stack trace.
+                Log.Error(Tag, "No MetaState after GameSession.EnsureLoaded(); the run cannot start.");
+                _discarded = true;
+                return;
+            }
+
+            int runSeed = seed != 0 ? seed : Environment.TickCount;
+            Sim = new RunSim(Meta, runSeed);
+            Subscribe();
+        }
+
+        void Start()
+        {
+            if (_discarded || Sim == null) return; // guard: duplicate/failed boot must not touch a null Sim
+            // The ship-menu phase is a real scene now: boarding is immediate, Docked transient.
+            // PendingStartWave is set by MapStation; consumed once so direct-play falls back to 1.
+            int startWave = GameSession.PendingStartWave;
+            GameSession.PendingStartWave = 1;
+            Sim.StartRun(startWave);
+            Sim.EngageTether(); // → Tethered (Prep)
+            ApplyMetaEffects();
+
+            Log.Event("Run", $"run begins at {SceneFlow.DerelictName} starting at wave {Sim.StartWave} — " +
+                $"{LoadoutSummary(Meta)}, " +
+                $"{Meta.BankedSalvage} banked, hatch {Sim.Ship.Hatch.MaxHp:0}hp");
+        }
+
+        /// <summary>Primary + Secondary with Tiers for the run-begins line — criterion 12 cannot
+        /// be read from a log that does not say which weapon it came from.</summary>
+        static string LoadoutSummary(MetaState meta)
+        {
+            if (meta == null || !meta.OwnsAnyWeapon)
+                return "no weapon (improvised cutter)";
+            string primary = SlotSummary("Primary", meta.EquippedPrimary, meta);
+            string secondary = SlotSummary("Secondary", meta.EquippedSecondary, meta);
+            return $"{primary}; {secondary}";
+        }
+
+        static string SlotSummary(string label, WeaponId id, MetaState meta)
+        {
+            if (id == WeaponId.None) return $"{label}=—";
+            return $"{label}={WeaponCatalog.Def(id).displayName} T{meta.TierOf(id)}";
+        }
+
+        void Update()
+        {
+            if (_discarded || Sim == null) return; // guard: NRE at Sim.Tick on the duplicate-controller path
+
+            Sim.Tick(Time.deltaTime);
+
+            if (Sim.Phase == RunPhase.Tethered)
+            {
+                TickFightInput();
+                return;
+            }
+
+            // BOTH terminal phases run the end-screen tick: Escaped is a win, but it is exactly
+            // as much of a dead end as Podded — same cursor, same button, same soft-lock risk.
+            if (IsTerminal(Sim.Phase))
+                TickLoseScreen();
+        }
+
+        /// <summary>Prep-only inputs (siphon draw + dial stepper). Dial is [ ] — the number
+        /// row belongs to weapon slots (see Controls), so Prep no longer double-fires on 1/2/3.</summary>
+        void TickFightInput()
+        {
+            if (Sim.Assault != AssaultState.Prep) return;
+
+            if (Controls.Down(ControlId.PullDraw))
+            {
+                // Both halves matter: AllWavesCleared is the sim's own "run completed" flag,
+                // but it only flips as the run goes Escaped, so the draw-budget test is what
+                // actually catches a refused T while still Tethered.
+                if (Sim.AllWavesCleared || Sim.CurrentWaveIndex >= WaveDirector.MaxWaves)
+                {
+                    Log.Event("Run", $"draw refused — the derelict is stripped, " +
+                                     $"all {WaveDirector.MaxWaves} waves cleared");
+                }
+                else
+                {
+                    Log.Event("Run", $"pulled the siphon draw at L{Sim.Siphon.Level} — " +
+                                     $"wave {Sim.CurrentWaveIndex + 1}/{WaveDirector.MaxWaves} incoming");
+                    Sim.TriggerDraw();
+                }
+            }
+
+            int delta = 0;
+            if (Controls.Down(ControlId.DialUp)) delta = 1;
+            else if (Controls.Down(ControlId.DialDown)) delta = -1;
+            if (delta == 0) return;
+
+            int before = Sim.Siphon.Level;
+            Sim.SetSiphonLevel(before + delta);
+            // Only a real change is worth a line; clamp at the ends and phase refusal are not.
+            if (Sim.Siphon.Level == before) return;
+            Log.Event("Run",
+                $"set siphon dial to L{Sim.Siphon.Level} — reward x{Sim.Siphon.RewardMultiplier:0.##} " +
+                $"(each kill +{Sim.CurrentKillValue:0} salvage)");
+        }
+
+        /// <summary>Command from WaveSpawner: one boarder is down. This is the ONLY income path
+        /// in the game — the sim computes the kill's value from the siphon dial and banks it into
+        /// MetaState.BankedSalvage on the spot, so the player owns it before the body lands.
+        /// Convention R1: the spawner never calls the sim itself.</summary>
+        public void BoarderKilled()
+        {
+            if (Sim == null)
+            {
+                Log.Warn(Tag, "BoarderKilled ignored: no Sim (scene teardown or failed boot).");
+                return;
+            }
+            if (RunIsOver)
+            {
+                // A boarder dying on the same frame the run ends must not pay out.
+                Log.Warn(Tag, $"BoarderKilled ignored in terminal phase {Sim.Phase}.");
+                return;
+            }
+            Sim.AwardKill();
+        }
+
+        /// <summary>Command from PlayerHealth: the player is dead — end the run exactly like a
+        /// hatch loss. Nothing is forfeited; the salvage is already banked. Only meaningful
+        /// while Tethered.</summary>
+        public void PlayerDied()
+        {
+            if (Sim == null)
+            {
+                // Guard trip: no sim means no lose screen — free the cursor so the player isn't
+                // trapped in a dead body with a captured mouse.
+                Log.Error(Tag, "PlayerDied with no Sim; freeing the cursor as a last resort.");
+                EnsureCursorFree();
+                return;
+            }
+            if (Sim.Phase != RunPhase.Tethered)
+            {
+                Log.Warn(Tag, $"PlayerDied ignored in phase {Sim.Phase} (run already over).");
+                return;
+            }
+            Sim.NotifyPlayerDown();
+        }
+
+        /// <summary>Command from RepairInteractable: heal the hatch by up to
+        /// <paramref name="requestedHp"/>, charging salvage continuously via
+        /// <see cref="RunSim.RepairHatch"/>. Returns HP actually applied.</summary>
+        public float RepairHatch(float requestedHp)
+        {
+            if (Sim == null || RunIsOver) return 0f;
+            var hatch = Sim.Ship.Hatch;
+            bool wasFull = hatch.Hp >= hatch.MaxHp - 0.01f;
+            float applied = Sim.RepairHatch(requestedHp);
+            if (applied > 0f && !wasFull && hatch.Hp >= hatch.MaxHp - 0.01f)
+                Log.Event("Hatch", $"hatch fully repaired — {hatch.Hp:0}/{hatch.MaxHp:0}");
+            return applied;
+        }
+
+        /// <summary>
+        /// Push every shop value into the scene at run start: ARMORY gun damage/fire rate/clip
+        /// size, FABRICATION hatch repair rate, and the CREW QUARTERS player attributes
+        /// (Vitality → PlayerHealth max HP, Stamina → FirstPersonController sprint pool,
+        /// Engineering → a multiplier on the repair rate). Called once from Start.
+        /// </summary>
+        /// <remarks>
+        /// Two tracks are deliberately NOT applied here:
+        ///   * Hatch Armor flows through the RunSim constructor (it is sim state, not scene state).
+        ///   * SCAVENGING is applied by RunSim.CurrentKillValue and NOWHERE ELSE. Do not add a
+        ///     salvage-per-kill push here: the award path already reads
+        ///     MetaUpgrades.SalvagePerKill(ScavengingLevel), and a second application would pay
+        ///     the multiplier twice for every body.
+        /// Luck is read per-shot by PlayerGun, so it needs no push either.
+        /// </remarks>
+        public void ApplyMetaEffects()
+        {
+            if (Meta == null) return;
+
+            var local = PlayerRegistry.Local;
+            var gun = local != null ? local.GetComponentInChildren<PlayerGun>() : null;
+            if (gun != null)
+            {
+                // Values are pushed at run start, never serialized onto a prefab (gotcha 1).
+                gun.ClearLoadout();
+                PushSlot(gun, Meta, WeaponSlot.Primary, Meta.EquippedPrimary);
+                PushSlot(gun, Meta, WeaponSlot.Secondary, Meta.EquippedSecondary);
+                // Start on Primary when carried; otherwise Secondary (sidearm-only runs).
+                if (gun.SlotConfigured(WeaponSlot.Primary))
+                    gun.TrySelectSlotPublic(WeaponSlot.Primary);
+                else if (gun.SlotConfigured(WeaponSlot.Secondary))
+                    gun.TrySelectSlotPublic(WeaponSlot.Secondary);
+            }
+            else
+            {
+                Log.Warn(Tag, "ApplyMetaEffects: no PlayerGun found under the local player.");
+            }
+
+            // VITALITY. Heals to full by design — see PlayerHealth.ConfigureMaxHp.
+            if (local != null) local.ConfigureMaxHp(MetaUpgrades.PlayerMaxHp(Meta.VitalityLevel));
+            else Log.Warn(Tag, "ApplyMetaEffects: no local PlayerHealth to size from Vitality.");
+
+            // STAMINA — the sprint pool. Without this push the controller keeps its serialized
+            // 100 and the whole Stamina track is invisible to the player.
+            var fpc = local != null ? local.GetComponent<FirstPersonController>() : null;
+            if (fpc != null) fpc.ConfigureStamina(MetaUpgrades.StaminaMax(Meta.StaminaLevel));
+            else Log.Warn(Tag, "ApplyMetaEffects: no FirstPersonController to size the stamina pool on.");
+
+            // Repair rate = the RIG's base rate (Fabrication) x the PLAYER's speed (Engineering).
+            // Multiplicative on purpose: the two tracks are bought at different consoles and
+            // stacking them additively would make the second one bought feel like a dud.
+            var repair = FindFirstObjectByType<RepairInteractable>();
+            if (repair != null)
+            {
+                repair.Configure(MetaUpgrades.RepairPerSecond(Meta.RepairRigLevel) *
+                                 MetaUpgrades.RepairSpeedMultiplier(Meta.EngineeringLevel));
+            }
+            else Log.Warn(Tag, "ApplyMetaEffects: no RepairInteractable in the scene.");
+        }
+
+        static void PushSlot(PlayerGun gun, MetaState meta, WeaponSlot slot, WeaponId id)
+        {
+            if (id == WeaponId.None || meta == null) return;
+            // Disabled catalog rows (e.g. VK-7) stay in saves but never reach the rig.
+            if (!WeaponCatalog.IsAvailable(id)) return;
+            gun.Configure(slot, WeaponCatalog.Def(id), meta.TierOf(id), id);
+        }
+
+        /// <summary>Phase transitions themselves are NOT logged: the death / hatch-loss line that
+        /// caused them is already in the transcript, and a "Phase -> Podded" line only restates it.
+        /// This handler does cursor/lock work and, on either terminal phase, emits the
+        /// end-of-run summary — RUN OVER for Podded, DERELICT STRIPPED for Escaped.</summary>
+        void OnPhaseChanged(RunPhase phase)
+        {
+            bool fighting = phase == RunPhase.Tethered;
+
+            // Re-resolve every transition: a cached _fpc from a previous player rig is fake-null,
+            // and a null _fpc used to mean the cursor was NEVER freed on the lose screen.
+            if (_fpc == null)
+            {
+                var local = PlayerRegistry.Local;
+                _fpc = local != null ? local.GetComponent<FirstPersonController>() : null;
+            }
+            if (_fpc != null)
+            {
+                _fpc.MovementLocked = !fighting;
+                _fpc.SetCursorLock(fighting);
+            }
+            else if (!fighting)
+            {
+                // Guard trip: no controller to release the cursor for us — do it directly, or the
+                // RETURN TO SHIP button can never be clicked.
+                Log.Warn(Tag, "No FirstPersonController found; freeing the cursor directly.");
+                EnsureCursorFree();
+            }
+
+            if (IsTerminal(phase)) EnterTerminalPhase(phase); // GameController.EndScreen.cs
+        }
+
+        void OnWaveStarted(WaveSpec wave)
+        {
+            Log.Event("Run", $"wave {Sim.CurrentWaveIndex}/{WaveDirector.MaxWaves} — {wave.enemyCount} boarders, " +
+                $"siphon L{Sim.Siphon.Level} (each kill +{Sim.CurrentKillValue:0})");
+        }
+
+        void OnAssaultEnded()
+        {
+            Log.Event("Run", $"wave {Sim.CurrentWaveIndex}/{WaveDirector.MaxWaves} cleared — " +
+                $"salvage {Sim.Salvage.RunSalvage:0}, " +
+                $"hatch {Sim.Ship.Hatch.Hp:0}/{Sim.Ship.Hatch.MaxHp:0}");
+        }
+
+        void OnApplicationQuit()
+        {
+            GameSession.Save();
+        }
+
+        void OnEnable()
+        {
+            Subscribe(); // idempotent: covers a disable/enable cycle without double-firing
+        }
+
+        void OnDisable()
+        {
+            // Unsubscribe here too: OnDestroy alone leaves the sim holding this handler if the
+            // component is merely disabled during scene teardown.
+            Unsubscribe();
+        }
+
+        void OnDestroy()
+        {
+            Unsubscribe();
+            if (Instance == this) Instance = null;
+        }
+
+        /// <summary>Idempotent subscribe (-= before += so re-entry can never double-fire).</summary>
+        void Subscribe()
+        {
+            if (Sim == null) return;
+            Unsubscribe();
+            Sim.PhaseChanged += OnPhaseChanged;
+            Sim.WaveStarted += OnWaveStarted;
+            Sim.AssaultEnded += OnAssaultEnded;
+        }
+
+        void Unsubscribe()
+        {
+            if (Sim == null) return;
+            Sim.PhaseChanged -= OnPhaseChanged;
+            Sim.WaveStarted -= OnWaveStarted;
+            Sim.AssaultEnded -= OnAssaultEnded;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Derelict/HatchStation.cs
+using GatekeeperBastion.Util;
+using UnityEngine;
+// Alias avoids CS0104: UnityEngine also declares a 'Subsystem' type.
+using Subsystem = GatekeeperBastion.Sim.Subsystem;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>REPLICATED-STATE: scene-side proxy for the sim Hatch — the defended umbilical
+    /// junction back to your ship at one end of the derelict. Routes enemy damage and player
+    /// repairs into GameController.Sim.Ship.Hatch; static Instance is the enemy pathing target
+    /// and the HUD reads Hp/MaxHp. Reads the sim fresh each access, so a run reset (fresh
+    /// RunSim) restores hatch HP with no scene work.</summary>
+    /// <remarks>Instance is cleared in OnDisable, OnDestroy AND at play-mode start: a stale
+    /// static pointing at a destroyed hatch passes `Instance != null` as false but is still an
+    /// NRE the moment anyone touches .transform on a reference cached before it died — which is
+    /// exactly what the enemy attack path used to do.</remarks>
+    public sealed class HatchStation : MonoBehaviour
+    {
+        const string Tag = "HatchStation";
+
+        /// <summary>The single hatch in the scene (one per derelict), or null if disabled.</summary>
+        public static HatchStation Instance { get; private set; }
+
+        /// <summary>Clears the static handle at play-mode start (domain-reload-disabled safety).</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Instance = null;
+        }
+
+        static Subsystem SimHatch
+        {
+            get
+            {
+                var gc = GameController.Instance;
+                return gc != null && gc.Sim != null ? gc.Sim.Ship.Hatch : null;
+            }
+        }
+
+        /// <summary>Current sim hit points (0 when the sim is unavailable).</summary>
+        public float Hp => SimHatch?.Hp ?? 0f;
+
+        /// <summary>Maximum sim hit points (1 when the sim is unavailable, to keep ratios safe).</summary>
+        public float MaxHp => SimHatch?.MaxHp ?? 1f;
+
+        /// <summary>True when the sim hatch is destroyed or unavailable.</summary>
+        public bool IsDestroyed => SimHatch?.IsDestroyed ?? true;
+
+        Collider _collider;
+
+        /// <summary>Nearest point on the hatch's own surface to <paramref name="from"/>. Melee range
+        /// must be measured against the SURFACE: the hatch is a 4x3x1.5 box whose transform sits at
+        /// its centre 1.5m off the floor, so a boarder pressed against the side is ~2.8m from that
+        /// centre — outside a 2.4m attack range — and stands there doing nothing.</summary>
+        public Vector3 ClosestSurfacePoint(Vector3 from)
+        {
+            if (_collider == null) _collider = GetComponent<Collider>();
+            return _collider != null ? _collider.ClosestPoint(from) : transform.position;
+        }
+
+        void OnEnable()
+        {
+            if (Instance != null && Instance != this)
+                Log.Warn(Tag, "Multiple hatches in scene; last one wins.");
+            Instance = this;
+        }
+
+        void OnDisable()
+        {
+            if (Instance == this) Instance = null;
+        }
+
+        void OnDestroy()
+        {
+            // Belt and braces: OnDisable is skipped when the object was already inactive.
+            if (Instance == this) Instance = null;
+        }
+
+        /// <summary>Routes enemy damage into the sim hatch. No-op once the run is over.</summary>
+        /// <remarks>Also the whole hatch half of the transcript, because every point of damage in
+        /// the game funnels through here. The fatal blow is ANNOUNCED BEFORE it lands: Damage()
+        /// raises Destroyed synchronously, which ends the run and emits the summary, so logging
+        /// after the call would print the hatch's obituary underneath its own post-mortem.</remarks>
+        public void ApplyDamage(float amount)
+        {
+            if (amount <= 0f) return;
+            var gc = GameController.Instance;
+            if (gc == null || gc.RunIsOver) return; // guard: no damage into a terminal/absent sim
+            var hatch = SimHatch;
+            if (hatch == null) return;
+
+            if (hatch.Hp - amount <= 0f)
+                Log.Event("Hatch", "HATCH BREACHED — the run is over");
+            float before = hatch.Hp;
+            hatch.Damage(amount);
+            // One line per quarter lost: enough to see from the log whether boarders ever reached
+            // home at all, without a line per swing.
+            LogThreshold(before, hatch.Hp, hatch.MaxHp);
+        }
+
+        /// <summary>Logs the first time the hatch drops through 75/50/25% of its health.</summary>
+        static void LogThreshold(float before, float after, float max)
+        {
+            if (max <= 0f) return;
+            float[] marks = { 0.75f, 0.5f, 0.25f };
+            for (int i = 0; i < marks.Length; i++)
+            {
+                float line = marks[i] * max;
+                if (before > line && after <= line)
+                    Log.Event("Hatch", $"hatch under attack — {after:0}/{max:0} ({marks[i] * 100f:0}%)");
+            }
+        }
+
+        /// <summary>Routes player repairs into the sim hatch via GameController.RepairHatch
+        /// (charges salvage). No-op once destroyed or the run is over. Prefer calling
+        /// GameController.RepairHatch directly from interactables.</summary>
+        public void ApplyRepair(float amount)
+        {
+            if (amount <= 0f || IsDestroyed) return;
+            var gc = GameController.Instance;
+            if (gc == null || gc.RunIsOver) return;
+            gc.RepairHatch(amount);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Derelict/HudController.EndScreens.cs
+using GatekeeperBastion.Sim;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER (partial of HudController): the two TERMINAL screens and the single
+    /// door out of them, PLUS the drawing primitives and per-instance GUIStyles both halves of
+    /// the class share. Split out of HudController.cs when the stamina bar pushed that file past
+    /// the 400-line cap — same class, same styles, mirroring the GameController /
+    /// GameController.EndScreen.cs split it is the view for.</summary>
+    /// <remarks>
+    /// The Podded lose screen and the Escaped success screen are drawn the same way on purpose —
+    /// one button, one command, one keyboard fallback — because a winning player stranded on a
+    /// terminal screen is exactly as stuck as a losing one. The numbers are the same in kind too:
+    /// every kill banked the instant it landed, so neither screen has any arithmetic to do; they
+    /// only restate what the player already owns. Nothing is ever forfeited.
+    ///
+    /// The shared block at the bottom (DrawBar / vignette / crosshair / prompt and the style
+    /// factories) moved here from HudController.cs when the Prep panel grew to carry the repair
+    /// and dial decisions: it was already a self-contained "// shared" section there, the end
+    /// screens use half of it, and moving it whole beat trimming comments off the fight HUD.
+    ///
+    /// The NO GUILayout rule from HudController.cs applies here with extra force: this is the code
+    /// that has to survive a HUD fault, so it uses absolute GUI rects only.
+    /// </remarks>
+    public sealed partial class HudController
+    {
+        // ---------- LOSE (Podded: the run ended; the money is already yours) ----------
+
+        /// <summary>Always renders and the button is always live, whatever LastLossReport holds
+        /// (a default report just prints 0 earned instead of blanking the screen). There is no
+        /// arithmetic to show: every kill banked the moment it landed, so this screen only
+        /// reports what the run made and what the purse now holds.</summary>
+        void DrawLose(GameController gc, RunSim sim, float vw, float vh)
+        {
+            var report = sim.LastLossReport;
+            string cause = report.cause == "player" ? "YOU DIED"
+                         : report.cause == "hatch" ? "HATCH DESTROYED"
+                         : Player != null && Player.IsDead ? "YOU DIED" : "RUN ENDED";
+
+            var rect = new Rect(vw / 2f - 290f, vh / 2f - 170f, 580f, 340f);
+            GUI.Box(rect, "");
+            float x = rect.x + 20f, w = rect.width - 40f, y = rect.y + 20f;
+
+            GUI.Label(new Rect(x, y, w, 36f), cause, Title());
+            y += 50f;
+            GUI.Label(new Rect(x, y, w, 28f), "the run is over", Heading());
+            y += 40f;
+            GUI.Label(new Rect(x, y, w, 26f),
+                $"earned this run: {report.earned} — already banked", Centered());
+            y += 28f;
+            if (report.repairSpent > 0)
+            {
+                GUI.Label(new Rect(x, y, w, 24f),
+                    $"repair spent: {report.repairSpent} salvage", Centered());
+                y += 26f;
+            }
+            GUI.Label(new Rect(x, y, w, 24f), $"banked total: {gc.Meta?.BankedSalvage ?? 0}", Centered());
+            y += 26f;
+            GUI.Label(new Rect(x, y, w, 24f),
+                $"DEEPEST WAVE {DeepestShown(gc)}", Centered());
+            y += 32f;
+            DrawExit(gc, rect, y);
+            ShortcutPanel.Draw(vw, vh, ControlContext.EndScreen, Small());
+        }
+
+        /// <summary>The win screen. Same shape and the same plumbing as the lose screen on
+        /// purpose — one button, one command, one keyboard fallback — because a winning player
+        /// stranded on a terminal screen is as stuck as a losing one. The numbers are identical in
+        /// kind too: winning does not pay a bonus and losing does not cost a penny.</summary>
+        void DrawSuccess(GameController gc, RunSim sim, float vw, float vh)
+        {
+            var report = sim.LastLossReport;
+            var rect = new Rect(vw / 2f - 290f, vh / 2f - 170f, 580f, 340f);
+            GUI.Box(rect, "");
+            float x = rect.x + 20f, w = rect.width - 40f, y = rect.y + 20f;
+
+            GUI.Label(new Rect(x, y, w, 36f), "DERELICT STRIPPED", Title());
+            y += 50f;
+            GUI.Label(new Rect(x, y, w, 28f), $"all {WaveDirector.MaxWaves} waves cleared", Heading());
+            y += 36f;
+            GUI.Label(new Rect(x, y, w, 26f),
+                $"earned this run: {report.earned} — already banked", Centered());
+            y += 28f;
+            if (report.repairSpent > 0)
+            {
+                GUI.Label(new Rect(x, y, w, 24f),
+                    $"repair spent: {report.repairSpent} salvage", Centered());
+                y += 26f;
+            }
+            GUI.Label(new Rect(x, y, w, 24f), $"banked total: {gc.Meta?.BankedSalvage ?? 0}", Centered());
+            y += 26f;
+            GUI.Label(new Rect(x, y, w, 24f),
+                $"DEEPEST WAVE {DeepestShown(gc)}", Centered());
+            y += 32f;
+            DrawExit(gc, rect, y);
+            ShortcutPanel.Draw(vw, vh, ControlContext.EndScreen, Small());
+        }
+
+        static int DeepestShown(GameController gc)
+        {
+            int d = gc.Meta != null ? gc.Meta.DeepestWaveReached : 1;
+            return d < 1 ? 1 : d;
+        }
+
+        /// <summary>The single door out of BOTH terminal screens. Keyboard fallbacks are listed
+        /// on the shortcut panel (Confirm bindings) — not restated here.</summary>
+        void DrawExit(GameController gc, Rect rect, float y)
+        {
+            if (GUI.Button(new Rect(rect.x + rect.width / 2f - 190f, y, 380f, 48f), "RETURN TO SHIP", Button()))
+            {
+                gc.ReturnToShip(); // logs the single "returning to the ship" line for every exit path
+            }
+        }
+
+        /// <summary>Last-ditch exit drawn if the normal lose screen threw. Bare and unstyled on
+        /// purpose: it must be drawable when everything else is broken.</summary>
+        void DrawEmergencyExit(GameController gc, float vw, float vh)
+        {
+            GUI.Label(new Rect(vw / 2f - 250f, vh / 2f - 60f, 500f, 30f), "RUN LOST (HUD error — see the log)");
+            if (GUI.Button(new Rect(vw / 2f - 150f, vh / 2f, 300f, 44f), "RETURN TO SHIP"))
+                gc.ReturnToShip();
+            ShortcutPanel.Draw(vw, vh, ControlContext.EndScreen, Small());
+        }
+
+        // ---------- shared ----------
+
+        void DrawBar(Rect rect, float value, float max, Color fill, bool showText = true)
+        {
+            float f = max <= 0f ? 0f : Mathf.Clamp01(value / max);
+            var prev = GUI.color;
+            GUI.color = new Color(0f, 0f, 0f, 0.6f);
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
+            GUI.color = fill;
+            GUI.DrawTexture(new Rect(rect.x + 1f, rect.y + 1f, (rect.width - 2f) * f, rect.height - 2f), Texture2D.whiteTexture);
+            GUI.color = prev;
+            if (!showText) return;
+            GUI.Label(rect, $"{value:0} / {max:0}", Bar());
+        }
+
+        void DrawVignette(float vw, float vh)
+        {
+            var player = Player;
+            if (player == null) return;
+            if (player.IsDead)
+            {
+                // Permanent DOWN overlay — death ends the run; the lose screen follows.
+                var prev = GUI.color;
+                GUI.color = new Color(0.4f, 0f, 0f, 0.55f);
+                GUI.DrawTexture(new Rect(0f, 0f, vw, vh), Texture2D.whiteTexture);
+                GUI.color = prev;
+                GUI.Label(new Rect(0f, vh / 2f - 40f, vw, 40f), "YOU ARE DOWN", Title());
+            }
+            else if (_vignette > 0f)
+            {
+                var prev = GUI.color;
+                GUI.color = new Color(0.8f, 0f, 0f, Mathf.Clamp01(_vignette / 0.35f) * 0.35f);
+                GUI.DrawTexture(new Rect(0f, 0f, vw, vh), Texture2D.whiteTexture);
+                GUI.color = prev;
+            }
+        }
+
+        void DrawCrosshair(float vw, float vh)
+        {
+            float cx = vw / 2f;
+            float cy = vh / 2f;
+            var style = Big();
+            WeaponCrosshair shape = _gun != null ? _gun.ActiveCrosshair : WeaponCrosshair.Cross;
+            switch (shape)
+            {
+                case WeaponCrosshair.Dot:
+                    GUI.Label(new Rect(cx - 6f, cy - 10f, 12f, 20f), "•", style);
+                    break;
+                case WeaponCrosshair.Brackets:
+                    GUI.Label(new Rect(cx - 28f, cy - 14f, 24f, 28f), "[", style);
+                    GUI.Label(new Rect(cx + 4f, cy - 14f, 24f, 28f), "]", style);
+                    break;
+                default:
+                    GUI.Label(new Rect(cx - 10f, cy - 14f, 20f, 28f), "+", style);
+                    break;
+            }
+        }
+
+        void DrawPrompt(float vw, float vh)
+        {
+            if (_interactor == null || string.IsNullOrEmpty(_interactor.CurrentPrompt)) return;
+            // Sit above the shortcut band; keep clear of the reserved left margin.
+            float left = ShortcutPanel.BandWidth + ShortcutPanel.Margin;
+            GUI.Label(new Rect(left, vh - 118f, vw - left - 12f, 30f), _interactor.CurrentPrompt, Centered());
+        }
+
+        // Per-instance styles, rebuilt whenever null (OnEnable clears them). Only ever called
+        // from inside OnGUI, where GUI.skin is valid.
+        GUIStyle Centered() => _centered ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 16 };
+        GUIStyle Small() => _small ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontSize = 13 };
+        GUIStyle Big() => _big ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontSize = 19, fontStyle = FontStyle.Bold };
+        GUIStyle Title() => _title ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 26, fontStyle = FontStyle.Bold };
+        GUIStyle Heading() => _heading ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 21, fontStyle = FontStyle.Bold };
+        GUIStyle Bar() => _bar ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 12, fontStyle = FontStyle.Bold };
+        GUIStyle Button() => _button ??= new GUIStyle(GUI.skin.button) { fontSize = 20, fontStyle = FontStyle.Bold };
+
+        /// <summary>Heading, in red. Reserved for the two hatch lines that ask for an action the
+        /// player would otherwise never take: UNDER ATTACK during Assault, and the damaged-hatch
+        /// repair call in Prep. Nothing else in the fight HUD is allowed to use it — a red line
+        /// that appears for ordinary status stops meaning anything.</summary>
+        GUIStyle Alarm()
+        {
+            if (_alarm != null) return _alarm;
+            _alarm = new GUIStyle(GUI.skin.label)
+                { alignment = TextAnchor.MiddleCenter, fontSize = 21, fontStyle = FontStyle.Bold };
+            _alarm.normal.textColor = new Color(1f, 0.42f, 0.32f);
+            return _alarm;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Derelict/HudController.Panels.cs
+using GatekeeperBastion.Sim;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER (partial of HudController): Prep / Assault centre strips and the
+    /// bottom-left shortcut panel. Split out when M15 pushed the fight HUD past the 400-line cap.</summary>
+    public sealed partial class HudController
+    {
+        /// <summary>Bottom-left key panel. Context follows Prep/Assault and whether the
+        /// interactor is looking at something — sections appear and vanish with state.</summary>
+        void DrawShortcutPanel(RunSim sim, float vw, float vh)
+        {
+            var ctx = Controls.FightAlways;
+            ctx |= sim.Assault == AssaultState.Prep ? ControlContext.Prep : ControlContext.Assault;
+            if (_interactor != null && !string.IsNullOrEmpty(_interactor.CurrentPrompt))
+                ctx |= ControlContext.NearInteract;
+            ShortcutPanel.Draw(vw, vh, ctx, Small(),
+                dialLevel: sim.Assault == AssaultState.Prep ? sim.Siphon.Level : -1);
+        }
+
+        /// <summary>PREP: the phase's two decisions priced — hatch state and the dial trade —
+        /// then what the draw will bring. Keys live on the shortcut panel, not here.</summary>
+        void DrawPrepPanel(RunSim sim, float vw, float vh)
+        {
+            // Stay clear of the bottom-left shortcut band (Watch: hatch alarm / strips must not cover it).
+            float left = ShortcutPanel.BandWidth + ShortcutPanel.Margin + 8f;
+            float width = Mathf.Min(760f, vw - left - 12f);
+            var rect = new Rect(Mathf.Max(left, vw / 2f - width / 2f), vh - 292f, width, 170f);
+            GUI.Box(rect, "");
+            float w = rect.width;
+
+            if (sim.AllWavesCleared || sim.CurrentWaveIndex >= WaveDirector.MaxWaves)
+            {
+                GUI.Label(new Rect(rect.x, rect.y + 8f, w, 30f),
+                    $"DERELICT STRIPPED — all {WaveDirector.MaxWaves} waves cleared", Heading());
+                GUI.Label(new Rect(rect.x, rect.y + 44f, w, 24f),
+                    "there is nothing left to draw", Centered());
+                return;
+            }
+
+            GUI.Label(new Rect(rect.x, rect.y + 8f, w, 30f),
+                "PREP — Siphon Draw ready", Heading());
+
+            var hatch = sim.Ship.Hatch;
+            bool damaged = hatch.Hp < hatch.MaxHp - 0.01f;
+            long bank = GameController.Instance != null && GameController.Instance.Meta != null
+                ? GameController.Instance.Meta.BankedSalvage : 0L;
+            float rate = ShipSystems.RepairSalvagePerHp;
+            string hatchLine;
+            if (!damaged)
+                hatchLine = $"HATCH {hatch.Hp:0}/{hatch.MaxHp:0} — sealed tight";
+            else if (bank <= 0)
+                hatchLine = $"HATCH {hatch.Hp:0}/{hatch.MaxHp:0} — damaged; no salvage to repair";
+            else
+                hatchLine = $"HATCH {hatch.Hp:0}/{hatch.MaxHp:0} — damaged; repair at the hatch ({rate:0} salvage/HP)";
+            GUI.Label(new Rect(rect.x, rect.y + 42f, w, 28f), hatchLine,
+                damaged ? Alarm() : Centered());
+
+            int lvl = sim.Siphon.Level;
+            GUI.Label(new Rect(rect.x, rect.y + 74f, w, 24f),
+                $"SIPHON L{lvl} (x{sim.Siphon.RewardMultiplier:0.##}) — each kill +{sim.CurrentKillValue:0} salvage",
+                Centered());
+
+            int wave = sim.CurrentWaveIndex;
+            int here = _waves.NextWave(wave, lvl).enemyCount;
+            GUI.Label(new Rect(rect.x, rect.y + 102f, w, 24f),
+                lvl >= TetherSiphon.MaxLevel
+                    ? $"dial at max (L{TetherSiphon.MaxLevel}) — step down for a smaller wave"
+                    : $"raise to L{lvl + 1}: each kill +{sim.CurrentKillValue / TetherSiphon.RewardMultiplierFor(lvl) * TetherSiphon.RewardMultiplierFor(lvl + 1):0}, " +
+                      $"and wave {wave + 1} brings {_waves.NextWave(wave, lvl + 1).enemyCount} boarders instead of {here}",
+                Centered());
+
+            GUI.Label(new Rect(rect.x, rect.y + 130f, w, 24f),
+                $"the draw brings wave {wave + 1}/{WaveDirector.MaxWaves} — {here} boarders", Centered());
+        }
+
+        /// <summary>ASSAULT: wave live — number, enemies remaining, and the hatch alarm.</summary>
+        void DrawAssaultPanel(RunSim sim, float vw, float vh)
+        {
+            if (_spawner == null) _spawner = FindFirstObjectByType<WaveSpawner>();
+            int remaining = _spawner != null ? _spawner.AliveCount : 0;
+            float left = ShortcutPanel.BandWidth + ShortcutPanel.Margin + 8f;
+            float width = Mathf.Min(520f, vw - left - 12f);
+            var rect = new Rect(Mathf.Max(left, vw / 2f - width / 2f), vh - 160f, width, 46f);
+            GUI.Box(rect, "");
+            GUI.Label(new Rect(rect.x, rect.y + 8f, rect.width, 30f),
+                $"ASSAULT — wave {sim.CurrentWaveIndex}/{WaveDirector.MaxWaves}   |   " +
+                $"enemies remaining: {remaining}", Heading());
+
+            if (_hatchAlert <= 0f) return;
+            var hatch = sim.Ship.Hatch;
+            GUI.Label(new Rect(left, rect.y - 38f, vw - left - 12f, 30f),
+                $"HATCH UNDER ATTACK — {hatch.Hp:0}/{hatch.MaxHp:0}", Alarm());
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Derelict/HudController.cs
+using System;
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: Derelict-scene IMGUI HUD (DPI-scaled). Fight readouts —
+    /// hatch/HP/stamina bars, clip + reload bar, weapon stats, siphon level and what a kill pays,
+    /// run salvage + banked total, wave N/MaxWaves, enemies left, vignette/DOWN overlay — plus
+    /// the two things Prep exists for, priced: repairing the hatch and setting the dial. BOTH
+    /// terminal screens (the Podded lose screen and the Escaped success screen, each with the same
+    /// RETURN TO SHIP exit) live in the partial HudController.EndScreens.cs, along with the
+    /// drawing primitives and GUIStyles shared with this file.</summary>
+    /// <remarks>
+    /// Currency is dead simple: a kill is worth RunSim.CurrentKillValue and it is banked the
+    /// instant it is earned, so neither terminal screen has anything to reconcile — it only
+    /// restates what the player already owns. Nothing is ever forfeited, so the HUD never shows
+    /// an "at risk" number of any kind.
+    ///
+    /// WHY THE PREP PANEL IS THE BIG ONE. Seven recorded sessions took 19 draws and every single
+    /// one was at L0, and not one hatch was ever repaired — while both recent losses were the
+    /// hatch breaking. Neither mechanic was being weighed and rejected; the panel named the keys
+    /// and never named what they DO, and the repair prompt only exists inside the Interactor's
+    /// 3.2m. So Prep states the hatch's HP and how to fix it from anywhere in the derelict, and
+    /// states the dial as a trade with both sides priced.
+    ///
+    /// All mutation goes through GameController commands — this class only reads sim state and
+    /// draws. Two deliberate robustness rules:
+    ///   * NO GUILayout anywhere. An exception thrown between BeginArea and EndArea leaves the
+    ///     IMGUI layout stack unbalanced, which then throws "Mismatched LayoutGroup" on every
+    ///     subsequent OnGUI for the rest of the session — the lose screen never renders and the
+    ///     RETURN TO SHIP button can never be clicked. Absolute GUI rects cannot corrupt.
+    ///   * OnGUI is wrapped in a try/catch that logs once. A HUD bug must never be able to hide
+    ///     the only exit from the run.
+    /// Styles are per-instance and rebuilt on demand, not static: static GUIStyles survive
+    /// domain-reload-disabled play sessions holding destroyed font/texture references.
+    /// </remarks>
+    public sealed partial class HudController : MonoBehaviour
+    {
+        const string Tag = "HudController";
+        const float VirtualHeight = 900f; // design-space height; everything scales from this
+
+        /// <summary>Seconds the hatch alarm stays lit after the last point of damage. Comfortably
+        /// longer than a boarder's 0.7s swing, so an ongoing attack reads as a steady alarm and a
+        /// finished one clears itself — no "attack ended" bookkeeping exists or is needed.</summary>
+        const float HatchAlertSeconds = 2f;
+
+        Interactor _interactor;
+        WaveSpawner _spawner;
+        PlayerGun _gun;
+        FirstPersonController _fpc;
+        float _lastPlayerHp = -1f;
+        float _vignette; // seconds remaining on the damage flash
+        float _lastHatchHp = -1f;
+        float _hatchAlert; // seconds remaining on the hatch-under-attack alarm
+        bool _guiFaulted;
+
+        /// <summary>Local copy of the wave curve, used ONLY to preview what a draw would bring.
+        /// NextWave is a pure, stateless function of (waveIndex, siphonLevel), so asking it keeps
+        /// the Prep panel's boarder counts honest — restating the formula in a format string is
+        /// how a HUD starts lying after a tuning pass. The run's own director stays in RunSim.</summary>
+        readonly WaveDirector _waves = new WaveDirector();
+
+        GUIStyle _centered, _title, _heading, _small, _big, _bar, _button, _alarm;
+
+        PlayerHealth Player => PlayerRegistry.Local;
+
+        void OnEnable()
+        {
+            // Drop cached styles: a style built in a previous session/scene can hold a destroyed font.
+            _centered = _title = _heading = _small = _big = _bar = _button = _alarm = null;
+            _guiFaulted = false;
+            _hatchAlert = 0f;
+            _lastHatchHp = -1f; // -1 = "no baseline yet"; the first sampled frame must not alarm
+        }
+
+        void Start()
+        {
+            ResolveRefs();
+        }
+
+        /// <summary>Re-resolves player-rig references. Called from Start AND lazily every frame:
+        /// caching once in Start breaks whenever the registry is empty at Start time or the rig
+        /// is replaced, and the stale reference then reads as null forever.</summary>
+        void ResolveRefs()
+        {
+            if (_spawner == null) _spawner = FindFirstObjectByType<WaveSpawner>();
+            var player = Player;
+            if (player == null) return;
+            if (_gun == null) _gun = player.GetComponentInChildren<PlayerGun>();
+            if (_interactor == null) _interactor = player.GetComponentInChildren<Interactor>();
+            if (_fpc == null) _fpc = player.GetComponent<FirstPersonController>();
+        }
+
+        void Update()
+        {
+            ResolveRefs();
+            var player = Player;
+            if (player != null)
+            {
+                if (_lastPlayerHp >= 0f && player.Hp < _lastPlayerHp) _vignette = 0.35f;
+                _lastPlayerHp = player.Hp;
+            }
+            if (_vignette > 0f) _vignette -= Time.deltaTime;
+            TickHatchAlert();
+        }
+
+        /// <summary>Arms the hatch alarm by watching Sim.Ship.Hatch.Hp FALL between frames.</summary>
+        /// <remarks>Polled on purpose. Sim has no "hatch damaged" event and adding one would put a
+        /// view's convenience inside the multiplayer seam, which is the one thing Sim/ exists to
+        /// keep clean. The cost is one float compare a frame: no coroutine, no allocation, nothing
+        /// to unsubscribe on teardown. Repair only ever raises Hp, so it can never arm the alarm,
+        /// and the alarm clears itself purely by the timer running out.</remarks>
+        void TickHatchAlert()
+        {
+            if (_hatchAlert > 0f) _hatchAlert -= Time.deltaTime;
+
+            var gc = GameController.Instance;
+            var sim = gc != null ? gc.Sim : null;
+            if (sim == null)
+            {
+                _lastHatchHp = -1f; // scene teardown / failed boot: drop the baseline, don't alarm
+                return;
+            }
+
+            float hp = sim.Ship.Hatch.Hp;
+            // Epsilon, not !=: float HP is fed by repairPerSecond * dt and would otherwise jitter.
+            if (_lastHatchHp >= 0f && hp < _lastHatchHp - 0.01f) _hatchAlert = HatchAlertSeconds;
+            _lastHatchHp = hp;
+        }
+
+        void OnGUI()
+        {
+            var gc = GameController.Instance;
+            if (gc == null || gc.Sim == null) return;
+            var sim = gc.Sim;
+
+            // Scale all IMGUI drawing so the HUD is readable at any resolution/DPI.
+            float s = Mathf.Max(1f, Screen.height / VirtualHeight);
+            GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
+            float vw = Screen.width / s;
+            float vh = Screen.height / s;
+
+            try
+            {
+                switch (sim.Phase)
+                {
+                    case RunPhase.Docked: // transient boot frame(s) before EngageTether lands
+                        GUI.Label(new Rect(0f, vh / 2f - 20f, vw, 40f), "arriving at the derelict...", Title());
+                        break;
+                    case RunPhase.Tethered: DrawFight(gc, sim, vw, vh); break;
+                    case RunPhase.Escaped: DrawSuccess(gc, sim, vw, vh); break; // all waves cleared
+                    default: DrawLose(gc, sim, vw, vh); break; // Podded and any other terminal phase
+                }
+            }
+            catch (ExitGUIException)
+            {
+                throw; // IMGUI control flow, not an error — must propagate.
+            }
+            catch (Exception e)
+            {
+                // Guard trip: a HUD exception must never hide the lose screen. Log once, then
+                // fall back to a bare, always-drawable exit.
+                if (!_guiFaulted)
+                {
+                    _guiFaulted = true;
+                    Log.Error(Tag, $"OnGUI threw {e.GetType().Name}: {e.Message}");
+                }
+                if (sim.Phase != RunPhase.Tethered) DrawEmergencyExit(gc, vw, vh);
+            }
+        }
+
+        // ---------- FIGHT (Tethered: in the derelict) ----------
+
+        void DrawFight(GameController gc, RunSim sim, float vw, float vh)
+        {
+            // Stats panel, top-left. It starts at the very top of the screen: the centre-top strip
+            // used to carry a banner and now deliberately carries nothing at all.
+            // Height allows for the stamina block (DrawStamina) even on the frames it is hidden —
+            // sizing to the collapsed layout would clip the dev-shortcut line the moment the
+            // player sprints.
+            var panel = new Rect(12f, 12f, 380f, 352f);
+            GUI.Box(panel, "");
+            float x = panel.x + 12f, y = panel.y + 10f, w = panel.width - 24f;
+
+            GUI.Label(new Rect(x, y, w, 22f),
+                $"T+{sim.RunElapsed:0}s    Wave {sim.CurrentWaveIndex}/{WaveDirector.MaxWaves}", Small());
+            y += 24f;
+
+            // The whole income model in one line: the dial, and what one body is worth right now.
+            GUI.Label(new Rect(x, y, w, 22f),
+                $"Siphon L{sim.Siphon.Level} (x{sim.Siphon.RewardMultiplier:0.##})    " +
+                $"each kill: +{sim.CurrentKillValue:0}", Small());
+            y += 26f;
+
+            // Both numbers are real money: run salvage is this run's tally and every point of it
+            // is already inside the banked total — nothing here is at risk.
+            GUI.Label(new Rect(x, y, w, 24f),
+                $"Run: {sim.Salvage.RunSalvage:0}    Banked: {gc.Meta?.BankedSalvage ?? 0}", Big());
+            y += 32f;
+
+            // HATCH ABOVE YOU, deliberately: the player feels his own damage (vignette, sound, the
+            // thing chewing on him) and feels nothing at all from the hatch, which is the failure
+            // mode both recent losses went through. It also lifts the game's only remaining lose
+            // condition out of the small-grey-rows band between stamina and the dev shortcuts.
+            var hatch = sim.Ship.Hatch;
+            bool alarm = _hatchAlert > 0f;
+            GUI.Label(new Rect(x, y, w, 20f), alarm ? "HATCH — UNDER ATTACK" : "HATCH", Small());
+            y += 20f;
+            // Inverted fill on the blink — one Repeat on the alarm timer, no texture, no animator.
+            bool blink = alarm && Mathf.Repeat(_hatchAlert, 0.5f) > 0.25f;
+            DrawBar(new Rect(x, y, w, 18f), hatch.Hp, hatch.MaxHp,
+                blink ? new Color(1f, 0.95f, 0.85f) : new Color(1f, 0.55f, 0.15f));
+            y += 26f;
+
+            var player = Player;
+            if (player != null)
+            {
+                GUI.Label(new Rect(x, y, w, 20f), player.IsDead ? "YOU  (DOWN)" : "YOU", Small());
+                y += 20f;
+                DrawBar(new Rect(x, y, w, 18f), player.Hp, player.MaxHp, new Color(0.25f, 0.85f, 0.35f));
+                y += 26f;
+                y = DrawStamina(x, y, w);
+            }
+
+            y = DrawWeaponReadout(gc, x, y, w);
+
+            if (sim.Assault == AssaultState.Prep) DrawPrepPanel(sim, vw, vh);
+            else DrawAssaultPanel(sim, vw, vh);
+
+            DrawShortcutPanel(sim, vw, vh);
+            DrawCrosshair(vw, vh);
+            DrawPrompt(vw, vh);
+            DrawVignette(vw, vh);
+        }
+
+        /// <summary>SPRINT stamina, drawn immediately under the player HP bar in cold blue so it
+        /// can never be misread as health at a glance.</summary>
+        /// <remarks>CONDITIONAL ON PURPOSE. A permanently-full bar under the HP bar is pure
+        /// clutter: stamina only matters in the moment you are spending or waiting on it, so this
+        /// draws only while sprinting or while the pool is short, and returns y UNCHANGED
+        /// otherwise so the panel below does not shuffle by 26px every time the player taps
+        /// Shift — the rows under it would visibly jump. The panel is sized for the bar being
+        /// present, so nothing overflows when it appears.</remarks>
+        float DrawStamina(float x, float y, float w)
+        {
+            if (_fpc == null)
+            {
+                ResolveRefs();
+                if (_fpc == null) return y;
+            }
+            bool spent = _fpc.Stamina < _fpc.StaminaMax - 0.01f;
+            if (!spent && !_fpc.IsSprinting) return y;
+
+            GUI.Label(new Rect(x, y, w, 20f), _fpc.IsSprinting ? "SPRINT" : "STAMINA", Small());
+            y += 20f;
+            // Brighter while actually sprinting: the bar is being SPENT, not merely refilling.
+            var fill = _fpc.IsSprinting
+                ? new Color(0.45f, 0.80f, 1f)
+                : new Color(0.25f, 0.50f, 0.85f);
+            DrawBar(new Rect(x, y, w, 12f), _fpc.Stamina, _fpc.StaminaMax, fill, showText: false);
+            return y + 20f;
+        }
+
+        /// <summary>Ammo line ("CLIP 8/12" + reload bar) and weapon stats — and, when the MK-1
+        /// has not been bought, exactly what the improvised cutter does and where to fix it.</summary>
+        float DrawWeaponReadout(GameController gc, float x, float y, float w)
+        {
+            if (_gun == null)
+            {
+                ResolveRefs();
+                if (_gun == null)
+                {
+                    GUI.Label(new Rect(x, y, w, 20f), "NO WEAPON RIG FOUND", Small());
+                    return y + 24f;
+                }
+            }
+
+            if (_gun.IsReloading)
+            {
+                GUI.Label(new Rect(x, y, w, 20f), "RELOADING", Small());
+                y += 20f;
+                DrawBar(new Rect(x, y, w, 12f), _gun.ReloadProgress, 1f, new Color(0.9f, 0.85f, 0.3f), showText: false);
+                y += 18f;
+            }
+            else
+            {
+                GUI.Label(new Rect(x, y, w, 20f), $"CLIP {_gun.ClipRemaining}/{_gun.MagazineCapacity}", Small());
+                y += 22f;
+            }
+
+            if (_gun.UsingSalvageCutter)
+            {
+                // The player must never be left wondering why his shots tickle. Two lines so the
+                // full sentence fits the 380px panel: PlayerGun.WeaponBlockedReason is the source.
+                GUI.Label(new Rect(x, y, w, 18f),
+                    $"NO WEAPON — improvised cutter: {_gun.EffectiveDamage:0} dmg.", Small());
+                y += 20f;
+                GUI.Label(new Rect(x, y, w, 18f), "Buy the MK-1 at the ship's Armory.", Small());
+                return y + 22f;
+            }
+
+            string blocked = _gun.WeaponBlockedReason;
+            if (!string.IsNullOrEmpty(blocked))
+            {
+                GUI.Label(new Rect(x, y, w, 18f), $"HOLSTERED: {blocked}", Small());
+                y += 20f;
+            }
+
+            // Slot strip: tells the player a second weapon exists at all.
+            GUI.Label(new Rect(x, y, w, 18f), SlotStrip(_gun), Small());
+            y += 20f;
+
+            // Crit chance is appended only once Luck has been bought.
+            string crit = _gun.CritChance > 0f ? $" | {_gun.CritChance * 100f:0.#}% crit" : "";
+            GUI.Label(new Rect(x, y, w, 18f),
+                $"{_gun.DisplayName}: {_gun.EffectiveDamage:0} dmg | {_gun.EffectiveFireRate:0.#}/s | " +
+                $"clip {_gun.MagazineCapacity}{crit}", Small());
+            return y + 22f;
+        }
+
+        static string SlotStrip(PlayerGun gun)
+        {
+            return $"{Mark(gun, WeaponSlot.Primary, 1)}   " +
+                   $"{Mark(gun, WeaponSlot.Secondary, 2)}   " +
+                   $"{Mark(gun, WeaponSlot.Melee, 3)}";
+        }
+
+        static string Mark(PlayerGun gun, WeaponSlot slot, int key)
+        {
+            bool live = gun.ActiveSlot == slot;
+            string mark = live ? "▸" : "·";
+            if (slot == WeaponSlot.Melee || !gun.SlotConfigured(slot))
+                return $"{key} {(live ? "▸" : "—")} —";
+            string name = WeaponCatalog.Def(gun.WeaponInSlot(slot)).displayName;
+            // Short label: take text before first space if long.
+            int sp = name.IndexOf(' ');
+            string shortName = sp > 0 && sp < 6 ? name.Substring(0, sp) : (name.Length > 8 ? name.Substring(0, 8) : name);
+            return $"{key} {mark} {shortName}";
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Derelict/RepairInteractable.cs
+using GatekeeperBastion.Sim;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>REPLICATED-STATE: hold-E repair point at the Hatch — requests
+    /// repairPerSecond * dt from GameController.RepairHatch each frame while the interact key
+    /// is held. Healing and salvage debit live in the sim; this only drives the command and
+    /// surfaces the rate / session cost / insufficient-funds prompt.</summary>
+    /// <remarks>Every access to the station is Unity-null-safe: the hatch object can be destroyed
+    /// (scene teardown once the run ends) while the Interactor still holds this interactable from
+    /// its last raycast.</remarks>
+    public sealed class RepairInteractable : MonoBehaviour, IInteractable
+    {
+        [Tooltip("Hatch to repair. Wired by SceneBuilder; falls back to a sibling component.")]
+        public HatchStation station;
+
+        [SerializeField] float repairPerSecond = 8f;
+
+        bool _holding;
+        long _sessionSpent;
+        float _sessionHp;
+
+        /// <summary>Apply the ship-shop repair-rig rate (GameController pushes MetaUpgrades values here).</summary>
+        public void Configure(float newRepairPerSecond)
+        {
+            repairPerSecond = Mathf.Max(0f, newRepairPerSecond);
+        }
+
+        void Awake()
+        {
+            if (station == null) station = GetComponent<HatchStation>();
+        }
+
+        void LateUpdate()
+        {
+            // Interact runs in Update via Interactor; if we were not held this frame, the session ends.
+            if (!_holding)
+            {
+                _sessionSpent = 0;
+                _sessionHp = 0f;
+            }
+            _holding = false;
+        }
+
+        public string Prompt
+        {
+            get
+            {
+                if (station == null) station = GetComponent<HatchStation>(); // re-resolve if fake-null
+                if (station == null) return null;
+                var gc = GameController.Instance;
+                if (gc == null || gc.RunIsOver) return null; // no repair prompt once the run is over
+                if (station.IsDestroyed) return "Hatch: DESTROYED";
+                if (station.Hp >= station.MaxHp) return "Hatch: sealed tight";
+
+                long bank = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
+                float rate = ShipSystems.RepairSalvagePerHp;
+                if (bank <= 0)
+                    return $"Hatch damaged ({station.Hp:0}/{station.MaxHp:0}) — no salvage to repair";
+
+                if (_sessionSpent > 0 || _sessionHp > 0.01f)
+                {
+                    return $"Repairing +{_sessionHp:0.#} HP — {_sessionSpent} salvage " +
+                           $"({rate:0}/HP, {bank} banked)";
+                }
+
+                return $"Hatch damaged ({station.Hp:0}/{station.MaxHp:0}) — {rate:0} salvage/HP";
+            }
+        }
+
+        /// <summary>Per-frame while E is held. Sim mutation goes through GameController.</summary>
+        public void Interact(float dt)
+        {
+            if (dt <= 0f || station == null) return;
+            var gc = GameController.Instance;
+            if (gc == null || gc.RunIsOver || gc.Sim == null) return;
+
+            _holding = true;
+            long before = gc.Sim.RepairSalvageSpent;
+            float applied = gc.RepairHatch(repairPerSecond * dt);
+            _sessionSpent += gc.Sim.RepairSalvageSpent - before;
+            _sessionHp += applied;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Flow/GameSession.cs
+using System;
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY composition root: the one place that owns the loaded MetaState and all
+    /// SaveService IO for the whole app (allowed exception to the no-new-statics rule).</summary>
+    /// <remarks>
+    /// Scene controllers read GameSession.Meta; every persistence call in the codebase goes
+    /// through Save()/StartNew()/ContinueGame() — nothing else may touch SaveService directly.
+    /// In future co-op this state lives on the host and is never mutated by remote clients.
+    /// Load and save are exception-guarded: a corrupt or unreadable save file must degrade to a
+    /// fresh session, never take the game down on the way into or out of a run.
+    /// </remarks>
+    public static class GameSession
+    {
+        const string Tag = "GameSession";
+
+        /// <summary>The live cross-run progression state, or null before StartNew/ContinueGame.</summary>
+        public static MetaState Meta { get; private set; }
+
+        /// <summary>True once any Dev command has run this play session. A tainted session must
+        /// never overwrite a real campaign save (M13 Watch) — <see cref="Save"/> becomes a no-op.</summary>
+        public static bool DevTainted { get; private set; }
+
+        /// <summary>1-based start wave chosen at the MAP. Consumed by GameController on embark;
+        /// resets to 1 after the run begins so a direct-play fallback stays a normal start.</summary>
+        public static int PendingStartWave { get; set; } = 1;
+
+        /// <summary>Clears statics at play-mode start (domain-reload-disabled safety).</summary>
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Meta = null;
+            DevTainted = false;
+            PendingStartWave = 1;
+        }
+
+        /// <summary>Mark this play session as Dev-touched. First call logs once; Save is then skipped.</summary>
+        public static void NotifyDevAction()
+        {
+            if (DevTainted) return;
+            DevTainted = true;
+            Log.Event("Dev", "session tainted — GameSession.Save suppressed for this play session");
+        }
+
+        /// <summary>True when a save file exists on disk.</summary>
+        public static bool HasSave
+        {
+            get
+            {
+                try { return SaveService.Exists(); }
+                catch (Exception e)
+                {
+                    Log.Warn(Tag, $"HasSave check failed ({e.GetType().Name}: {e.Message}); assuming no save.");
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>Begin a fresh campaign: new MetaState (0 banked, nothing owned) saved immediately.</summary>
+        public static void StartNew()
+        {
+            DevTainted = false; // intentional new campaign may persist again
+            Meta = MetaState.CreateNew();
+            Save();
+            Log.Event("Ship",
+                $"new campaign — {Meta.BankedSalvage} banked to start with, no weapon yet");
+        }
+
+        /// <summary>Load the persisted campaign into Meta. Falls back to a fresh session on failure.</summary>
+        public static void ContinueGame()
+        {
+            DevTainted = false; // disk load is a clean slate for save suppression
+            try
+            {
+                Meta = SaveService.Load();
+            }
+            catch (Exception e)
+            {
+                // Guard trip: a corrupt save must not brick the boot path.
+                Log.Error(Tag, $"Load failed ({e.GetType().Name}: {e.Message}); starting a fresh session.");
+                Meta = null;
+            }
+            if (Meta == null)
+            {
+                StartNew();
+                return;
+            }
+            Log.Event("Ship",
+                $"campaign continued — {Meta.BankedSalvage} banked, {Meta.LifetimeSalvageEarned} earned, " +
+                $"{Meta.LifetimeSalvageSpent} spent, {Meta.TotalRuns} run(s), " +
+                $"{Meta.PodEjections} death(s), {LoadoutLog(Meta)}");
+
+            if (Meta.SalvageStatsWereRepaired)
+            {
+                // Either a pre-v2 save (no lifetime fields) or a hand-edited one: Earned/Spent were
+                // rebuilt from the owned upgrade levels so Earned == Banked + Spent holds again.
+                Log.Warn(Tag, $"Lifetime salvage stats rebuilt on load — {Meta.LifetimeSalvageEarned} earned, " +
+                              $"{Meta.LifetimeSalvageSpent} spent (reconstructed from owned upgrades).");
+            }
+
+            if (!Meta.OwnsAnyWeapon)
+            {
+                // Guard trip: no weapon. Survivable only because PlayerGun falls back to the
+                // improvised cutter — flag it so it is not a silent trap. MK-1 costs 0.
+                Log.Warn(Tag, "No weapon owned. Runs will use the improvised salvage cutter " +
+                              "until you take the free MK-1 at the ARMORY.");
+            }
+        }
+
+        static string LoadoutLog(MetaState m)
+        {
+            if (!m.OwnsAnyWeapon) return "weapon NONE";
+            string p = m.EquippedPrimary == WeaponId.None
+                ? "—"
+                : $"{WeaponCatalog.Def(m.EquippedPrimary).displayName} T{m.TierOf(m.EquippedPrimary)}";
+            string s = m.EquippedSecondary == WeaponId.None
+                ? "—"
+                : $"{WeaponCatalog.Def(m.EquippedSecondary).displayName} T{m.TierOf(m.EquippedSecondary)}";
+            return $"Primary={p}, Secondary={s}";
+        }
+
+        /// <summary>Persist the current Meta to disk. No-op (with a warning) when Meta is null.
+        /// Also a no-op when <see cref="DevTainted"/> — Dev loadouts / grants must not overwrite
+        /// a real campaign (M13 Watch: skip Save while Dev mode has been used).</summary>
+        public static void Save()
+        {
+            if (DevTainted)
+            {
+                Log.Event("Dev", "Save skipped — session tainted by Dev mode");
+                return;
+            }
+            if (Meta == null)
+            {
+                Log.Warn(Tag, "Save called with no session loaded; ignored.");
+                return;
+            }
+            try
+            {
+                SaveService.Save(Meta);
+                Log.Info(Tag, $"Saved (banked {Meta.BankedSalvage}, runs {Meta.TotalRuns}).");
+            }
+            catch (Exception e)
+            {
+                // Guard trip: a failed save must not abort the caller — this runs on the death path.
+                Log.Error(Tag, $"Save failed ({e.GetType().Name}: {e.Message}); progress this run may be lost.");
+            }
+        }
+
+        /// <summary>
+        /// Fallback for direct-play/tests entering a gameplay scene without passing the menu:
+        /// continue the save if one exists, otherwise start a fresh session. No-op when loaded.
+        /// </summary>
+        public static void EnsureLoaded()
+        {
+            if (Meta != null) return;
+            Log.Warn(Tag, "No session loaded (direct play?) — resolving one now.");
+            if (HasSave) ContinueGame();
+            else StartNew();
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Flow/MainMenuController.cs
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: main menu — DPI-scaled IMGUI with CONTINUE / START NEW (inline
+    /// overwrite confirm) / OPTIONS (mouse sensitivity via PlayerPrefs) / QUIT.</summary>
+    /// <remarks>Frees the cursor in OnEnable as well as on first load: an IMGUI button cannot
+    /// be clicked while the cursor is locked, so inheriting a lock from a gameplay scene would
+    /// leave the whole menu unusable with nothing on screen to explain why.</remarks>
+    public sealed class MainMenuController : MonoBehaviour
+    {
+        /// <summary>PlayerPrefs key for mouse sensitivity (FirstPersonController reads it in Awake).</summary>
+        public const string SensitivityPrefKey = "gkb_sensitivity";
+
+        /// <summary>Default mouse sensitivity when the pref has never been set.</summary>
+        public const float DefaultSensitivity = 2f;
+
+        const float VirtualHeight = 900f;
+
+        enum Panel { Main, ConfirmOverwrite, Options }
+
+        Panel _panel = Panel.Main;
+        float _sensitivity;
+        bool _loading;
+        static GUIStyle _title, _centered;
+
+        void Awake()
+        {
+            _sensitivity = PlayerPrefs.GetFloat(SensitivityPrefKey, DefaultSensitivity);
+        }
+
+        void OnEnable()
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        void OnGUI()
+        {
+            float s = Mathf.Max(1f, Screen.height / VirtualHeight);
+            GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
+            float vw = Screen.width / s;
+            float vh = Screen.height / s;
+
+            var rect = new Rect(vw / 2f - 260f, vh / 2f - 240f, 520f, 480f);
+            GUI.Box(rect, "");
+            GUILayout.BeginArea(rect);
+            GUILayout.Space(18f);
+            GUILayout.Label("GATEKEEPER BASTION", Title());
+            GUILayout.Space(20f);
+
+            switch (_panel)
+            {
+                case Panel.Main: DrawMain(); break;
+                case Panel.ConfirmOverwrite: DrawConfirmOverwrite(); break;
+                case Panel.Options: DrawOptions(); break;
+            }
+            GUILayout.EndArea();
+        }
+
+        void DrawMain()
+        {
+            if (GameSession.HasSave && MenuButton("CONTINUE") && !_loading)
+            {
+                _loading = true;
+                GameSession.ContinueGame();
+                SceneFlow.LoadShip();
+            }
+            if (MenuButton("START NEW"))
+            {
+                if (GameSession.HasSave) _panel = Panel.ConfirmOverwrite;
+                else StartNewAndEmbark();
+            }
+            if (MenuButton("OPTIONS")) _panel = Panel.Options;
+            if (MenuButton("QUIT")) Application.Quit();
+        }
+
+        void DrawConfirmOverwrite()
+        {
+            GUILayout.Label("A save already exists.", Centered());
+            GUILayout.Label("Starting new will OVERWRITE it. Are you sure?", Centered());
+            GUILayout.Space(14f);
+            if (MenuButton("YES — OVERWRITE AND START NEW")) StartNewAndEmbark();
+            if (MenuButton("BACK")) _panel = Panel.Main;
+        }
+
+        void DrawOptions()
+        {
+            GUILayout.Label($"Mouse sensitivity: {_sensitivity:0.0}", Centered());
+            GUILayout.Space(6f);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            float value = GUILayout.HorizontalSlider(_sensitivity, 0.2f, 8f, GUILayout.Width(320f));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            if (!Mathf.Approximately(value, _sensitivity))
+            {
+                _sensitivity = value;
+                PlayerPrefs.SetFloat(SensitivityPrefKey, _sensitivity);
+                PlayerPrefs.Save();
+            }
+            GUILayout.Space(14f);
+            if (MenuButton("BACK")) _panel = Panel.Main;
+        }
+
+        void StartNewAndEmbark()
+        {
+            if (_loading) return;
+            _loading = true;
+            GameSession.StartNew();
+            SceneFlow.LoadShip();
+        }
+
+        static bool MenuButton(string label)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            bool clicked = GUILayout.Button(label, GUILayout.Height(46f), GUILayout.Width(360f));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(8f);
+            return clicked;
+        }
+
+        static GUIStyle Title() => _title ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 30, fontStyle = FontStyle.Bold };
+        static GUIStyle Centered() => _centered ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 16 };
+    }
+}
+===== FILE: Assets/Scripts/Game/Flow/SaveService.cs
+using System;
+using System.IO;
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>Static load/save of MetaState JSON at Application.persistentDataPath/gatekeeper_meta.json,
+    /// falling back to a fresh MetaState (with a warning) on missing or corrupt files.
+    /// IO backend for GameSession — ALL other code must go through GameSession, never call this directly.</summary>
+    public static class SaveService
+    {
+        const string Tag = "SaveService";
+        const string FileName = "gatekeeper_meta.json";
+
+        /// <summary>Full path of the meta save file.</summary>
+        public static string SavePath => Path.Combine(Application.persistentDataPath, FileName);
+
+        /// <summary>True when a save file exists on disk. (GameSession.HasSave delegates here.)</summary>
+        public static bool Exists()
+        {
+            try { return File.Exists(SavePath); }
+            catch (Exception) { return false; }
+        }
+
+        /// <summary>Loads the persisted MetaState, or returns a fresh one if absent/corrupt.</summary>
+        public static MetaState Load()
+        {
+            try
+            {
+                if (File.Exists(SavePath))
+                {
+                    var meta = MetaState.FromJson(File.ReadAllText(SavePath));
+                    if (meta != null) return meta;
+                    Log.Warn(Tag, "Save file parsed to null; starting a fresh MetaState.");
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Warn(Tag, $"Corrupt or unreadable save at {SavePath} ({e.Message}); starting a fresh MetaState.");
+            }
+            return new MetaState();
+        }
+
+        /// <summary>Serializes the given MetaState to disk. Errors are logged, never thrown.</summary>
+        public static void Save(MetaState meta)
+        {
+            if (meta == null)
+            {
+                Log.Warn(Tag, "Save called with null MetaState; ignored.");
+                return;
+            }
+            try
+            {
+                File.WriteAllText(SavePath, meta.ToJson());
+                Log.Info(Tag, $"Meta saved to {SavePath}.");
+            }
+            catch (Exception e)
+            {
+                Log.Error(Tag, $"Failed to save meta: {e.Message}");
+            }
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Flow/SceneFlow.cs
+using GatekeeperBastion.Util;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: static scene-name registry and loaders for the game flow:
+    /// Splash → MainMenu → Ship (walkable hub) → Derelict (the fight).</summary>
+    /// <remarks>
+    /// Every loader returns bool and logs its outcome. A scene missing from the build settings
+    /// makes SceneManager.LoadScene throw, which used to strand the player on the lose screen
+    /// with no feedback ("never allowed me to properly respawn"); now the failure is logged as
+    /// an error and the caller can recover instead of soft-locking.
+    /// </remarks>
+    public static class SceneFlow
+    {
+        const string Tag = "SceneFlow";
+
+        /// <summary>Boot splash scene name.</summary>
+        public const string Splash = "Splash";
+
+        /// <summary>Main menu scene name.</summary>
+        public const string MainMenu = "MainMenu";
+
+        /// <summary>Walkable ship-hub scene name
+        /// (stations: Armory / Fabrication / Nav Map / Crew Quarters).</summary>
+        public const string Ship = "Ship";
+
+        /// <summary>Combat scene name (the derelict run).</summary>
+        public const string Derelict = "Derelict";
+
+        /// <summary>In-fiction name of the v0 derelict, for the nav map and the run-start log line.</summary>
+        public const string DerelictName = "ALPHA-7";
+
+        /// <summary>Name of the currently active scene ("" while no scene is valid).</summary>
+        public static string ActiveSceneName
+        {
+            get
+            {
+                var scene = SceneManager.GetActiveScene();
+                return scene.IsValid() ? scene.name : string.Empty;
+            }
+        }
+
+        /// <summary>True when the active scene is a combat scene (weapons live). The ship hub
+        /// is weapons-holstered; PlayerGun gates firing on this.</summary>
+        /// <remarks>Verified against SceneBuilder: the derelict is saved as
+        /// Assets/Scenes/Derelict.unity, so the active scene name in play mode is exactly
+        /// "Derelict" — including when that scene is opened and played directly in the editor.
+        /// PlayerGun additionally treats "a live GameController is in the scene" as a
+        /// direct-play fallback, so a renamed or duplicated combat scene still fires.</remarks>
+        public static bool InCombatScene => ActiveSceneName == Derelict;
+
+        /// <summary>True when the named scene is registered in the build settings and loadable.</summary>
+        public static bool CanLoad(string sceneName) =>
+            !string.IsNullOrEmpty(sceneName) && Application.CanStreamedLevelBeLoaded(sceneName);
+
+        /// <summary>Load the main menu scene. Returns false (and logs an error) if it cannot load.</summary>
+        public static bool LoadMainMenu() => Load(MainMenu);
+
+        /// <summary>Load the ship hub scene. Returns false (and logs an error) if it cannot load.</summary>
+        public static bool LoadShip() => Load(Ship);
+
+        /// <summary>Load the derelict combat scene. Returns false (and logs an error) if it cannot load.</summary>
+        public static bool LoadDerelict() => Load(Derelict);
+
+        static bool Load(string sceneName)
+        {
+            if (!CanLoad(sceneName))
+            {
+                // Guard trip: LoadScene would throw here and strand the caller (lose-screen soft-lock).
+                Log.Error(Tag, $"Cannot load scene '{sceneName}' — it is not in the build settings. " +
+                               "Run GatekeeperBastion/Build All Scenes to register Splash, MainMenu, Ship, Derelict.");
+                return false;
+            }
+
+            // Deliberately NOT an Event: Effects' sceneLoaded hook logs the single scene-entry line
+            // a moment later, and two lines per transition is the structural noise we removed.
+            Log.Info(Tag, $"Scene transition: '{ActiveSceneName}' -> '{sceneName}'.");
+            Effects.SuspendForSceneChange(); // no FX GameObjects created into a scene that is unloading
+            try
+            {
+                SceneManager.LoadScene(sceneName);
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                Effects.Resume();
+                Log.Error(Tag, $"LoadScene('{sceneName}') threw {e.GetType().Name}: {e.Message}");
+                return false;
+            }
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Flow/SplashController.cs
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: boot splash — IMGUI title card; any key (or 2.5 s timeout)
+    /// advances to the main menu.</summary>
+    /// <remarks>Frees the cursor in OnEnable, not just Awake: arriving here with a locked
+    /// cursor left over from a gameplay scene would swallow clicks on every screen after
+    /// this one. Cheap insurance against a whole class of "the menu is dead" bug.</remarks>
+    public sealed class SplashController : MonoBehaviour
+    {
+        const float VirtualHeight = 900f;
+        const float AutoAdvanceSeconds = 2.5f;
+
+        float _elapsed;
+        bool _loading;
+        bool _failed;
+        static GUIStyle _title, _sub;
+
+        void OnEnable()
+        {
+            FreeCursor();
+        }
+
+        /// <summary>Cursor must be free and visible on every non-gameplay screen.</summary>
+        static void FreeCursor()
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        void Update()
+        {
+            _elapsed += Time.deltaTime;
+            if (_loading || _failed) return;
+            // anyKeyDown covers mouse buttons too, so a click advances as well as a key.
+            if (!Input.anyKeyDown && _elapsed < AutoAdvanceSeconds) return;
+
+            // Latch on the outcome: on success we are leaving, on failure we STOP trying —
+            // retrying every frame past the auto-advance deadline would spam the log forever.
+            if (SceneFlow.LoadMainMenu()) _loading = true;
+            else _failed = true;
+        }
+
+        void OnGUI()
+        {
+            float s = Mathf.Max(1f, Screen.height / VirtualHeight);
+            GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
+            float vw = Screen.width / s;
+            float vh = Screen.height / s;
+
+            GUI.Label(new Rect(0f, vh / 2f - 60f, vw, 60f), "GATEKEEPER BASTION", Title());
+            GUI.Label(new Rect(0f, vh / 2f + 20f, vw, 30f),
+                _failed
+                    ? "MainMenu scene is not in the build settings — run GatekeeperBastion > Build All Scenes."
+                    : "press any key",
+                Sub());
+        }
+
+        static GUIStyle Title() => _title ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 44, fontStyle = FontStyle.Bold };
+        static GUIStyle Sub() => _sub ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 18 };
+    }
+}
+===== FILE: Assets/Scripts/Game/Ship/ArmoryStation.cs
+using GatekeeperBastion.Sim;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: Armory console — contextual per equipped weapon. Slot toggle picks
+    /// which weapon fills Primary/Secondary (the only place that choice is made); fight-time
+    /// keys only switch between slots.</summary>
+    public sealed class ArmoryStation : StationTerminal
+    {
+        WeaponSlot _viewSlot = WeaponSlot.Secondary;
+
+        protected override string StationName => "ARMORY";
+
+        protected override string PromptHint =>
+            GameSession.Meta != null && !GameSession.Meta.OwnsAnyWeapon
+                ? "buy the MK-1 sidearm — free, and you need it"
+                : "equip and Tier-up the weapon in your hands";
+
+        protected override void DrawPanel(MetaState m)
+        {
+            // Slot toggle — criterion 2: panel contents change with the viewed slot.
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button(_viewSlot == WeaponSlot.Primary ? "[ PRIMARY ]" : "  Primary  ",
+                    GUILayout.Width(140f), GUILayout.Height(28f)))
+                _viewSlot = WeaponSlot.Primary;
+            if (GUILayout.Button(_viewSlot == WeaponSlot.Secondary ? "[ SECONDARY ]" : "  Secondary  ",
+                    GUILayout.Width(160f), GUILayout.Height(28f)))
+                _viewSlot = WeaponSlot.Secondary;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(8f);
+
+            WeaponId equipped = m.Equipped(_viewSlot);
+            if (equipped == WeaponId.None)
+            {
+                GUILayout.Label($"{_viewSlot}: empty", Big());
+                GUILayout.Label(
+                    _viewSlot == WeaponSlot.Secondary
+                        ? "Buy the MK-1 below — it costs nothing and teaches you the ARMORY."
+                        : "Buy a Primary below, or equip one you already own.",
+                    Centered());
+            }
+            else
+            {
+                var def = WeaponCatalog.Def(equipped);
+                int tier = m.TierOf(equipped);
+                GUILayout.Label($"{def.displayName}  T{tier}", Big());
+                GUILayout.Label(
+                    $"{WeaponTier.EffectiveDamage(def, tier):0.#} dmg   |   " +
+                    $"{def.shotsPerSecond:0.#} shots/s   |   " +
+                    $"clip {WeaponTier.EffectiveClip(def, tier)}   |   " +
+                    $"{WeaponTier.EffectiveDps(def, tier):0.#} dps",
+                    Centered());
+                GUILayout.Space(8f);
+
+                string locked = MetaUpgrades.UpgradesUnlocked(m) ? null : "LOCKED — survive a death first";
+                UpgradeRow(equipped, locked);
+            }
+
+            GUILayout.Space(12f);
+            GUILayout.Label($"Available {_viewSlot} weapons", Centered());
+            GUILayout.Space(4f);
+
+            foreach (var id in WeaponCatalog.ForSlot(_viewSlot))
+            {
+                DrawCatalogRow(m, id, equipped);
+            }
+        }
+
+        void DrawCatalogRow(MetaState m, WeaponId id, WeaponId equippedInSlot)
+        {
+            var def = WeaponCatalog.Def(id);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(def.displayName, Small(), GUILayout.Width(200f));
+
+            if (m.Owns(id))
+            {
+                int tier = m.TierOf(id);
+                GUILayout.Label($"owned T{tier}", Small(), GUILayout.Width(100f));
+                if (id == equippedInSlot)
+                {
+                    GUILayout.Label("EQUIPPED", Reason(), GUILayout.Width(150f), GUILayout.Height(24f));
+                }
+                else if (GUILayout.Button("EQUIP", GUILayout.Width(150f), GUILayout.Height(24f)))
+                {
+                    ShipCommands.EquipWeapon(id);
+                }
+            }
+            else
+            {
+                string priceLabel = def.cost == 0 ? "BUY (free)" : $"BUY ({def.cost})";
+                // Headline diff vs empty / vs current equipped — damage × rate as a skim line.
+                string headline = def.pellets > 1
+                    ? $"{def.damage:0}×{def.pellets} @ {def.shotsPerSecond:0.#}/s"
+                    : $"{def.damage:0} dmg @ {def.shotsPerSecond:0.#}/s";
+                GUILayout.Label(headline, Small(), GUILayout.Width(160f));
+
+                // Cost 0 is always affordable (BankedSalvage >= 0). Do not require cost > 0.
+                if (m.BankedSalvage >= def.cost)
+                {
+                    if (GUILayout.Button(priceLabel, GUILayout.Width(150f), GUILayout.Height(24f)))
+                        ShipCommands.BuyWeapon(id);
+                }
+                else
+                {
+                    GUILayout.Label($"need {def.cost - m.BankedSalvage} more", Reason(),
+                        GUILayout.Width(150f), GUILayout.Height(24f));
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Ship/CrewQuartersStation.cs
+using GatekeeperBastion.Sim;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: CREW QUARTERS console — the fourth shop category, PLAYER ATTRIBUTES.
+    /// Five tracks that upgrade the operator rather than the ship: Vitality, Stamina, Engineering,
+    /// Scavenging, Luck.</summary>
+    /// <remarks>
+    /// Structurally identical to ArmoryStation / EngineeringStation: StationTerminal owns the
+    /// panel frame, the cursor/Esc behaviour and the shared UpgradeRow, and every purchase leaves
+    /// through ShipCommands.BuyUpgrade — this class never touches MetaUpgrades.Buy or
+    /// GameSession.Save itself.
+    ///
+    /// NOTHING HERE IS GATED. The Armory's weapon tracks stay locked until the first death
+    /// (MetaUpgrades.UpgradesUnlocked), and that is right for gear: a player who has not died yet
+    /// does not know what he needs. Attributes are the opposite case — they are the ANSWER to
+    /// dying, and a player who has just watched a wave eat him should be able to spend his
+    /// salvage on not-dying immediately. So UpgradeRow is called with no lockedLabel and
+    /// ShipCommands' weapon-track gate deliberately does not list any of these five.
+    ///
+    /// The panel quotes Stamina as SECONDS OF SPRINT as well as raw points, because "120 stamina"
+    /// is meaningless on its own; the seconds come from FirstPersonController's own drain
+    /// constant so the two can never drift apart.
+    /// </remarks>
+    public sealed class CrewQuartersStation : StationTerminal
+    {
+        protected override string StationName => "CREW QUARTERS";
+
+        protected override string PromptHint => "upgrade your own attributes";
+
+        protected override void DrawPanel(MetaState m)
+        {
+            GUILayout.Label("Player attributes — permanent upgrades (cost doubles per level)", Centered());
+            GUILayout.Label("These are about YOU, not the ship. No death required to buy any of them.", Centered());
+            GUILayout.Space(10f);
+
+            UpgradeRow(UpgradeTrack.Vitality, "Vitality",
+                l => $"{MetaUpgrades.PlayerMaxHp(l):0} max HP");
+            UpgradeRow(UpgradeTrack.Stamina, "Stamina",
+                l => $"{SprintSeconds(l):0.#}s sprint");
+            UpgradeRow(UpgradeTrack.Engineering, "Engineering",
+                l => $"x{MetaUpgrades.RepairSpeedMultiplier(l):0.00} repair");
+            UpgradeRow(UpgradeTrack.Scavenging, "Scavenging",
+                l => $"{MetaUpgrades.SalvagePerKill(l):0} per kill");
+            UpgradeRow(UpgradeTrack.Luck, "Luck",
+                l => $"{MetaUpgrades.CritChance(l) * 100f:0.#}% crit");
+
+            GUILayout.Space(10f);
+            GUILayout.Label(
+                $"Sprint: hold SHIFT while moving. {MetaUpgrades.StaminaMax(m.StaminaLevel):0} stamina, " +
+                $"{FirstPersonController.SprintDrainPerSecond:0}/s to run, " +
+                $"{FirstPersonController.StaminaRegenPerSecond:0}/s back after {FirstPersonController.StaminaRegenDelaySeconds:0.#}s.",
+                Centered());
+            GUILayout.Label(
+                $"Crits deal x{PlayerGun.CritDamageMultiplier:0.#} damage — Luck buys the chance, never the size.",
+                Centered());
+            GUILayout.Label(
+                "Engineering multiplies the FABRICATION console's repair rig; Scavenging raises every kill.",
+                Centered());
+        }
+
+        /// <summary>Seconds of continuous sprint the pool buys at the given Stamina level.
+        /// Derived from the controller's own drain rate — never hard-code the 4s.</summary>
+        static float SprintSeconds(int level)
+        {
+            return MetaUpgrades.StaminaMax(level) / FirstPersonController.SprintDrainPerSecond;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Ship/EngineeringStation.cs
+using GatekeeperBastion.Sim;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: FABRICATION console — sells the Hatch Armor and Repair Rig
+    /// tracks (always available; hatch armor applies to the next run's sim).</summary>
+    /// <remarks>The class keeps its historical name (renaming the type would churn the PlayMode
+    /// scene-contract test and the scene's component reference for no player-visible gain), but
+    /// every string the player can read says FABRICATION. The station was called ENGINEERING
+    /// until the player-attribute shop landed: ENGINEERING is now an ATTRIBUTE track at the
+    /// CREW QUARTERS console (repair SPEED multiplier), and two different things called
+    /// "engineering" in the same shop is exactly the sort of collision that gets misread as a
+    /// bug. Ship-side gear = FABRICATION; the player's own skill at using it = Engineering.</remarks>
+    public sealed class EngineeringStation : StationTerminal
+    {
+        protected override string StationName => "FABRICATION";
+
+        protected override string PromptHint => "fabricate hatch armor and repair rig upgrades";
+
+        protected override void DrawPanel(MetaState m)
+        {
+            GUILayout.Label("Hatch defenses — permanent upgrades (cost doubles per level)", Centered());
+            GUILayout.Label("Applied to the hatch on your next embark. No death required to buy these.", Centered());
+            GUILayout.Space(10f);
+            UpgradeRow(UpgradeTrack.HatchArmor, "Hatch Armor",
+                l => $"{MetaUpgrades.HatchHp(l):0} HP");
+            UpgradeRow(UpgradeTrack.RepairRig, "Repair Rig",
+                l => $"{MetaUpgrades.RepairPerSecond(l):0} HP/s");
+            GUILayout.Space(8f);
+            GUILayout.Label("Repair RATE is the rig; repair SPEED is you — buy Engineering at CREW QUARTERS.",
+                Centered());
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Ship/MapStation.cs
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: Map console — lists the run destination with an intel line, a
+    /// start-wave selector (1..DeepestWaveReached), and the EMBARK button that loads the
+    /// Derelict combat scene.</summary>
+    /// <remarks>HOST-AUTHORITY in future co-op: embarking starts a run for the whole crew,
+    /// so this becomes a host-validated command (clients request, host loads).
+    /// Embarking unarmed is WARNED, never blocked — the player is allowed to make bad bets;
+    /// that is the whole game. Starting at wave N delivers waves 1..N back to back (M14).</remarks>
+    public sealed class MapStation : StationTerminal
+    {
+        protected override string StationName => "NAV MAP";
+
+        protected override string PromptHint =>
+            GameSession.Meta != null && !GameSession.Meta.OwnsAnyWeapon
+                ? "EMBARK — but you have NO WEAPON yet"
+                : "embark on the run";
+
+        bool _embarking;
+        bool _loadFailed;
+        int _startWave = 1;
+
+        protected override void DrawPanel(MetaState m)
+        {
+            GUILayout.Label($"Derelict {SceneFlow.DerelictName}", Big());
+            GUILayout.Label("dormant Gate signature; boarders expected", Centered());
+            GUILayout.Space(8f);
+
+            int deepest = m.DeepestWaveReached < 1 ? 1 : m.DeepestWaveReached;
+            if (deepest > WaveDirector.MaxWaves) deepest = WaveDirector.MaxWaves;
+            if (_startWave < 1) _startWave = 1;
+            if (_startWave > deepest) _startWave = deepest;
+
+            GUILayout.Label($"START AT WAVE {_startWave}  (reached {deepest})", Centered());
+            if (_startWave > 1)
+                GUILayout.Label($"waves 1..{_startWave} arrive back to back — no Prep between them",
+                    Small());
+            else
+                GUILayout.Label("normal run — Prep between every wave", Small());
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUI.enabled = _startWave > 1;
+            if (GUILayout.Button("◀", GUILayout.Width(48f), GUILayout.Height(36f)))
+                _startWave--;
+            GUI.enabled = true;
+            GUILayout.Label($"  {_startWave}  ", Big(), GUILayout.Width(60f));
+            GUI.enabled = _startWave < deepest;
+            if (GUILayout.Button("▶", GUILayout.Width(48f), GUILayout.Height(36f)))
+                _startWave++;
+            GUI.enabled = true;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(12f);
+
+            if (!m.OwnsAnyWeapon)
+            {
+                GUILayout.Label("NO WEAPON — you will be defenseless.", Warning());
+                GUILayout.Label("Buy the free MK-1 at the ARMORY first.", Centered());
+                GUILayout.Space(10f);
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            bool clicked = GUILayout.Button(m.OwnsAnyWeapon ? "EMBARK" : "EMBARK ANYWAY",
+                GUILayout.Height(48f), GUILayout.Width(300f));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            if (clicked && !_embarking)
+            {
+                GameSession.PendingStartWave = _startWave;
+                Log.Event("Ship",
+                    $"embarked for derelict {SceneFlow.DerelictName} starting at wave {_startWave} — " +
+                    $"{m.BankedSalvage} banked, " +
+                    $"{(m.OwnsAnyWeapon ? LoadoutBrief(m) : "NO WEAPON (improvised cutter only)")}");
+                _embarking = SceneFlow.LoadDerelict();
+                _loadFailed = !_embarking;
+            }
+
+            GUILayout.Label(_loadFailed
+                ? "EMBARK FAILED — Derelict scene is not in the build settings. Run GatekeeperBastion > Build All Scenes."
+                : " ", Warning());
+        }
+
+        static string LoadoutBrief(MetaState m)
+        {
+            string p = m.EquippedPrimary == WeaponId.None
+                ? "Primary=—"
+                : WeaponCatalog.Def(m.EquippedPrimary).displayName;
+            string s = m.EquippedSecondary == WeaponId.None
+                ? "Secondary=—"
+                : WeaponCatalog.Def(m.EquippedSecondary).displayName;
+            return $"{p} + {s}";
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Ship/ShipCommands.cs
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>Meta-upgrade tracks purchasable at ship stations. Weapon Damage/FireRate/Clip
+    /// are gone — weapons and Tiers go through BuyWeapon / BuyTier / EquipWeapon.</summary>
+    public enum UpgradeTrack
+    {
+        /// <summary>Hatch max HP (Fabrication).</summary>
+        HatchArmor,
+        /// <summary>Hatch repair rate (Fabrication).</summary>
+        RepairRig,
+
+        // ---- PLAYER ATTRIBUTES (Crew Quarters) ----
+        // Same Buy/NextCost curve, deliberately NOT gated behind UpgradesUnlocked.
+
+        /// <summary>Player max HP (Crew Quarters).</summary>
+        Vitality,
+        /// <summary>Sprint stamina pool (Crew Quarters).</summary>
+        Stamina,
+        /// <summary>Repair SPEED multiplier (Crew Quarters).</summary>
+        Engineering,
+        /// <summary>Base salvage per kill (Crew Quarters).</summary>
+        Scavenging,
+        /// <summary>Critical-hit chance (Crew Quarters).</summary>
+        Luck
+    }
+
+    /// <summary>HOST-ONLY command layer for ship-hub purchases: the ONLY path by which station UI
+    /// mutates MetaState. Each command applies MetaUpgrades / WeaponTier arithmetic then persists
+    /// via GameSession.</summary>
+    /// <remarks>Every refusal is logged with its reason — "I clicked BUY and nothing happened"
+    /// has to be answerable from the log alone. Derelict code must never call EquipWeapon
+    /// (criterion 4: Primary is fixed for the run).</remarks>
+    public static class ShipCommands
+    {
+        const string Tag = "ShipCommands";
+
+        /// <summary>Buy a catalog weapon for its def.cost. Cost 0 (MK-1) is a free purchase —
+        /// must not be treated as already-owned or not-for-sale. Auto-equips into the def's slot.</summary>
+        public static bool BuyWeapon(WeaponId id)
+        {
+            var m = GameSession.Meta;
+            if (m == null)
+            {
+                Log.Warn(Tag, $"BuyWeapon({id}) refused: no session loaded.");
+                return false;
+            }
+            if (id == WeaponId.None)
+            {
+                Log.Warn(Tag, "BuyWeapon(None) refused.");
+                return false;
+            }
+            if (!WeaponCatalog.IsAvailable(id))
+            {
+                Log.Event("Ship", $"tried to buy {WeaponCatalog.Def(id).displayName} — not available");
+                return false;
+            }
+            if (m.Owns(id))
+            {
+                Log.Event("Ship", $"tried to buy {WeaponCatalog.Def(id).displayName} — already owned");
+                return false;
+            }
+
+            var def = WeaponCatalog.Def(id);
+            long cost = def.cost;
+            // Cost 0 is affordable at BankedSalvage 0 — do NOT require SpendSalvage (it rejects <=0).
+            if (cost > 0)
+            {
+                if (m.BankedSalvage < cost)
+                {
+                    Log.Event("Ship",
+                        $"tried to buy {def.displayName} ({cost}) — {cost - m.BankedSalvage} salvage short");
+                    return false;
+                }
+                if (!m.SpendSalvage(cost))
+                {
+                    Log.Warn(Tag, $"BuyWeapon({id}) SpendSalvage failed despite precondition check.");
+                    return false;
+                }
+            }
+
+            m.SetOwned(id, true);
+            m.SetEquipped(id);
+            GameSession.Save();
+            Log.Event("Ship",
+                $"bought {def.displayName} for {cost} — equipped {def.slot}, banked {m.BankedSalvage} left");
+            return true;
+        }
+
+        /// <summary>Buy the next Tier for an owned weapon. Gated on UpgradesUnlocked.</summary>
+        public static bool BuyTier(WeaponId id)
+        {
+            var m = GameSession.Meta;
+            if (m == null)
+            {
+                Log.Warn(Tag, $"BuyTier({id}) refused: no session loaded.");
+                return false;
+            }
+            if (id == WeaponId.None || !m.Owns(id))
+            {
+                Log.Event("Ship", $"tried to Tier-up {id} — not owned");
+                return false;
+            }
+            if (!WeaponCatalog.IsAvailable(id))
+            {
+                Log.Event("Ship",
+                    $"tried to Tier-up {WeaponCatalog.Def(id).displayName} — not available");
+                return false;
+            }
+            if (!MetaUpgrades.UpgradesUnlocked(m))
+            {
+                Log.Event("Ship",
+                    $"tried to Tier-up {WeaponCatalog.Def(id).displayName} — locked until first death");
+                return false;
+            }
+
+            int tier = m.TierOf(id);
+            if (tier >= WeaponTier.MaxTier)
+            {
+                Log.Event("Ship",
+                    $"tried to Tier-up {WeaponCatalog.Def(id).displayName} — already T{tier}");
+                return false;
+            }
+
+            long price = WeaponTier.Cost(tier);
+            if (m.BankedSalvage < price)
+            {
+                Log.Event("Ship",
+                    $"tried to buy {WeaponCatalog.Def(id).displayName} T{tier + 1} ({price}) — " +
+                    $"{price - m.BankedSalvage} salvage short");
+                return false;
+            }
+            if (!m.SpendSalvage(price))
+            {
+                Log.Warn(Tag, $"BuyTier({id}) SpendSalvage failed despite precondition check.");
+                return false;
+            }
+
+            m.SetTier(id, tier + 1);
+            GameSession.Save();
+            Log.Event("Ship",
+                $"bought {WeaponCatalog.Def(id).displayName} T{tier + 1} for {price} — banked {m.BankedSalvage} left");
+            return true;
+        }
+
+        /// <summary>Equip an owned weapon into its own def.slot. Impossible into the wrong slot.
+        /// Ship / ARMORY only — never call from Derelict.</summary>
+        public static bool EquipWeapon(WeaponId id)
+        {
+            var m = GameSession.Meta;
+            if (m == null)
+            {
+                Log.Warn(Tag, $"EquipWeapon({id}) refused: no session loaded.");
+                return false;
+            }
+            if (id == WeaponId.None || !m.Owns(id))
+            {
+                Log.Event("Ship", $"tried to equip {id} — not owned");
+                return false;
+            }
+            if (!WeaponCatalog.IsAvailable(id))
+            {
+                Log.Event("Ship", $"tried to equip {WeaponCatalog.Def(id).displayName} — not available");
+                return false;
+            }
+
+            m.SetEquipped(id);
+            GameSession.Save();
+            var def = WeaponCatalog.Def(id);
+            Log.Event("Ship", $"equipped {def.displayName} in {def.slot}");
+            return true;
+        }
+
+        /// <summary>Buy the next level of an attribute/fab upgrade track.</summary>
+        public static bool BuyUpgrade(UpgradeTrack track)
+        {
+            var m = GameSession.Meta;
+            if (m == null)
+            {
+                Log.Warn(Tag, $"BuyUpgrade({track}) refused: no session loaded.");
+                return false;
+            }
+
+            int levelBefore = LevelOf(track);
+            long price = levelBefore < MetaUpgrades.MaxLevel ? MetaUpgrades.NextCost(levelBefore) : 0L;
+
+            bool bought;
+            switch (track)
+            {
+                case UpgradeTrack.HatchArmor: bought = MetaUpgrades.Buy(m, ref m.HatchArmorLevel); break;
+                case UpgradeTrack.RepairRig: bought = MetaUpgrades.Buy(m, ref m.RepairRigLevel); break;
+                case UpgradeTrack.Vitality: bought = MetaUpgrades.Buy(m, ref m.VitalityLevel); break;
+                case UpgradeTrack.Stamina: bought = MetaUpgrades.Buy(m, ref m.StaminaLevel); break;
+                case UpgradeTrack.Engineering: bought = MetaUpgrades.Buy(m, ref m.EngineeringLevel); break;
+                case UpgradeTrack.Scavenging: bought = MetaUpgrades.Buy(m, ref m.ScavengingLevel); break;
+                case UpgradeTrack.Luck: bought = MetaUpgrades.Buy(m, ref m.LuckLevel); break;
+                default: bought = false; break;
+            }
+
+            if (bought)
+            {
+                GameSession.Save();
+                Log.Event("Ship",
+                    $"bought {Label(track)} L{LevelOf(track)} for {price} — banked {m.BankedSalvage} left");
+            }
+            else if (levelBefore >= MetaUpgrades.MaxLevel)
+            {
+                Log.Event("Ship", $"tried to buy {Label(track)} — already maxed at L{levelBefore}");
+            }
+            else
+            {
+                Log.Event("Ship",
+                    $"tried to buy {Label(track)} L{levelBefore + 1} ({price}) — {price - m.BankedSalvage} salvage short");
+            }
+            return bought;
+        }
+
+        /// <summary>Console display name of a track.</summary>
+        public static string Label(UpgradeTrack track)
+        {
+            switch (track)
+            {
+                case UpgradeTrack.HatchArmor: return "Hatch Armor";
+                case UpgradeTrack.RepairRig: return "Repair Rig";
+                case UpgradeTrack.Vitality: return "Vitality";
+                case UpgradeTrack.Stamina: return "Stamina";
+                case UpgradeTrack.Engineering: return "Engineering";
+                case UpgradeTrack.Scavenging: return "Scavenging";
+                case UpgradeTrack.Luck: return "Luck";
+                default: return track.ToString();
+            }
+        }
+
+        /// <summary>Current level of a track, read from GameSession.Meta (0 when no session).</summary>
+        public static int LevelOf(UpgradeTrack track)
+        {
+            var m = GameSession.Meta;
+            if (m == null) return 0;
+            switch (track)
+            {
+                case UpgradeTrack.HatchArmor: return m.HatchArmorLevel;
+                case UpgradeTrack.RepairRig: return m.RepairRigLevel;
+                case UpgradeTrack.Vitality: return m.VitalityLevel;
+                case UpgradeTrack.Stamina: return m.StaminaLevel;
+                case UpgradeTrack.Engineering: return m.EngineeringLevel;
+                case UpgradeTrack.Scavenging: return m.ScavengingLevel;
+                case UpgradeTrack.Luck: return m.LuckLevel;
+                default: return 0;
+            }
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Ship/ShipController.cs
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: Ship-hub scene controller — guarantees a loaded GameSession
+    /// (direct-play fallback) and owns cursor/movement state while station panels are open.</summary>
+    /// <remarks>Cursor lock is load-bearing: Interactor refuses to raycast unless
+    /// Cursor.lockState == Locked, so a missed lock means nothing in the ship is usable.
+    /// SetWalkMode therefore always sets the cursor itself (even with no player rig found)
+    /// and re-asserts once if the rig registers after Start.</remarks>
+    public sealed class ShipController : MonoBehaviour
+    {
+        const string Tag = "ShipController";
+        const float BindWindowSeconds = 2f;
+
+        /// <summary>The station panel currently open, or null while walking.</summary>
+        public StationTerminal OpenStation { get; private set; }
+
+        /// <summary>True while any station panel is up (read by ShipHud).</summary>
+        public bool IsPanelOpen => OpenStation != null;
+
+        FirstPersonController _fpc;
+        bool _walking = true;
+        bool _warnedNoRig;
+        float _bindWindow = BindWindowSeconds;
+
+        void Awake()
+        {
+            // Editor-direct-play / test fallback: entering Ship without passing the menu.
+            GameSession.EnsureLoaded();
+        }
+
+        void Start()
+        {
+            SetWalkMode(true);
+            // A cleared run bumps CleanExits, not PodEjections, so "run(s) lost" stayed honest —
+            // it just read as if a won run had never happened. Both counters, both true.
+            Log.Event("Ship", $"aboard the ship — {GameSession.Meta.BankedSalvage} banked, " +
+                                        $"{GameSession.Meta.PodEjections} run(s) lost, " +
+                                        $"{GameSession.Meta.CleanExits} cleared");
+        }
+
+        void Update()
+        {
+            // Re-assert exactly once, if the player rig only showed up after our Start:
+            // PlayerRegistry is filled from PlayerHealth.OnEnable, and nothing guarantees
+            // that ran first. Bounded so we never fight the player's own Esc/click later.
+            if (_fpc != null || _bindWindow <= 0f) return;
+            _bindWindow -= Time.deltaTime;
+            var fpc = FindLocalController();
+            if (fpc == null) return;
+            _fpc = fpc;
+            ApplyWalkMode();
+        }
+
+        /// <summary>Open a station panel: cursor freed, movement locked. One panel at a time.</summary>
+        public void OpenStationPanel(StationTerminal station)
+        {
+            if (station == null || OpenStation == station) return;
+            OpenStation = station;
+            SetWalkMode(false);
+        }
+
+        /// <summary>Close the open panel (if it is the given one) and return to walking.</summary>
+        public void CloseStationPanel(StationTerminal station)
+        {
+            if (OpenStation != station) return;
+            OpenStation = null;
+            SetWalkMode(true);
+        }
+
+        void SetWalkMode(bool walking)
+        {
+            _walking = walking;
+            ApplyWalkMode();
+        }
+
+        /// <summary>Push the current mode onto the rig. The cursor is set unconditionally —
+        /// the FirstPersonController path is an optimisation, not a prerequisite.</summary>
+        void ApplyWalkMode()
+        {
+            if (_fpc == null) _fpc = FindLocalController();
+            if (_fpc != null)
+            {
+                _fpc.MovementLocked = !_walking;
+                _fpc.SetCursorLock(_walking);
+                return;
+            }
+            if (!_warnedNoRig)
+            {
+                _warnedNoRig = true;
+                Log.Warn(Tag, "No FirstPersonController found; locking the cursor directly.");
+            }
+            Cursor.lockState = _walking ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !_walking;
+        }
+
+        /// <summary>Registry first (the sanctioned lookup), scene scan as a last resort so a
+        /// registration-order surprise cannot leave the hub uncontrollable.</summary>
+        static FirstPersonController FindLocalController()
+        {
+            var local = PlayerRegistry.Local;
+            var fpc = local != null ? local.GetComponent<FirstPersonController>() : null;
+            return fpc != null ? fpc : FindFirstObjectByType<FirstPersonController>();
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Ship/ShipHud.cs
+using GatekeeperBastion.Sim;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: the Ship hub's HUD — DPI-scaled IMGUI drawn in a virtual
+    /// 900px-high design space. Crosshair, the Interactor's prompt, the shortcut panel
+    /// (same list as the derelict), a salvage/weapon header and a first-time objective line.</summary>
+    /// <remarks>Deliberately does NOT reference HudController (Derelict-only, gated on
+    /// GameController) — it only copies the virtual-height matrix approach. Read-only over
+    /// GameSession.Meta: purchases go through ShipCommands from the station panels.
+    /// Also billboards the station TextMesh labels every frame so they can never render
+    /// mirrored regardless of how the scene builder oriented them. Placed by
+    /// SceneBuilder.Ship on the ShipController object.</remarks>
+    public sealed class ShipHud : MonoBehaviour
+    {
+        const float VirtualHeight = 900f; // design-space height; everything scales from this
+        const float RebindInterval = 0.5f;
+
+        ShipController _ship;
+        Interactor _interactor;
+        Transform _camera;
+        TextMesh[] _labels;
+        bool _labelsScanned;
+        float _rebindTimer;
+
+        static GUIStyle _small, _big, _prompt, _crosshair, _objective, _warn;
+
+        void Awake()
+        {
+            _ship = GetComponent<ShipController>();
+            if (_ship == null) _ship = FindFirstObjectByType<ShipController>();
+        }
+
+        void Start()
+        {
+            Bind();
+        }
+
+        void LateUpdate()
+        {
+            // The player rig may register after our Start (scene-load order is not ours to
+            // assume), so keep retrying cheaply until the Interactor and camera are found.
+            _rebindTimer -= Time.deltaTime;
+            if (_rebindTimer <= 0f && (_interactor == null || _camera == null))
+            {
+                _rebindTimer = RebindInterval;
+                Bind();
+            }
+            BillboardLabels();
+        }
+
+        void Bind()
+        {
+            if (_ship == null) _ship = FindFirstObjectByType<ShipController>();
+
+            var player = PlayerRegistry.Local;
+            if (player != null) _interactor = player.GetComponentInChildren<Interactor>();
+            if (_interactor == null) _interactor = FindFirstObjectByType<Interactor>();
+
+            var cam = Camera.main;
+            _camera = cam != null ? cam.transform : null;
+
+            // Scanned once: with no built-in font the builder falls back to marker bars and
+            // there are legitimately zero TextMeshes to billboard — don't rescan forever.
+            if (_labelsScanned) return;
+            _labelsScanned = true;
+            _labels = FindObjectsByType<TextMesh>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        }
+
+        /// <summary>A TextMesh renders readable only when viewed from its local -Z side, so
+        /// yaw each label until its forward points AWAY from the camera. Makes the whole
+        /// class of "the FABRICATION sign is mirrored" bug impossible.</summary>
+        void BillboardLabels()
+        {
+            if (_labels == null || _camera == null) return;
+            Vector3 eye = _camera.position;
+            for (int i = 0; i < _labels.Length; i++)
+            {
+                var label = _labels[i];
+                if (label == null) continue;
+                Vector3 away = label.transform.position - eye;
+                away.y = 0f; // yaw only — signage stays upright
+                if (away.sqrMagnitude < 0.0001f) continue;
+                label.transform.rotation = Quaternion.LookRotation(away, Vector3.up);
+            }
+        }
+
+        void OnGUI()
+        {
+            var m = GameSession.Meta;
+            if (m == null) return;
+            // While a station panel is up it owns the screen; drawing a crosshair and a
+            // "press E" legend over an open shop menu just adds noise.
+            if (_ship != null && _ship.IsPanelOpen) return;
+
+            float s = Mathf.Max(1f, Screen.height / VirtualHeight);
+            GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
+            float vw = Screen.width / s;
+            float vh = Screen.height / s;
+
+            DrawHeader(m);
+            DrawCrosshair(vw, vh);
+            DrawPrompt(vw, vh);
+            // Ship context alone: Interact is always listed here. Do not OR NearInteract —
+            // that flag is derelict-only and would surface the HATCH "repair" row on the hub.
+            ShortcutPanel.Draw(vw, vh, ControlContext.Ship, Small());
+        }
+
+        /// <summary>Top-left: where you are, what you have, and the one thing to do next.</summary>
+        /// <remarks>Widened from 620 to 700 when the fourth station landed: the alcove directory
+        /// is one line by design (four short "NAME: side" pairs read as a map; four stacked lines
+        /// read as a wall of text) and at 620 the CREW QUARTERS entry clipped off the right edge.</remarks>
+        void DrawHeader(MetaState m)
+        {
+            var panel = new Rect(12f, 12f, 700f, 116f);
+            GUI.Box(panel, "");
+            float x = panel.x + 14f, y = panel.y + 8f, w = panel.width - 28f;
+
+            GUI.Label(new Rect(x, y, w, 26f), "ABOARD YOUR SHIP", Big());
+            y += 28f;
+            GUI.Label(new Rect(x, y, w, 22f),
+                $"Banked salvage: {m.BankedSalvage}      Loadout: {LoadoutLabel(m)}",
+                Small());
+            y += 24f;
+            GUI.Label(new Rect(x, y, w, 22f), Objective(m), ObjectiveStyle());
+            y += 24f;
+            GUI.Label(new Rect(x, y, w, 20f),
+                "ARMORY: west   |   FABRICATION: east   |   NAV MAP: north   |   CREW QUARTERS: south",
+                Small());
+        }
+
+        /// <summary>The first-time-player line: the shortest path from spawn to a live run.
+        /// Stays ONE line whatever the state — it is the line a lost player reads first, and a
+        /// two-line objective stops being an objective. CREW QUARTERS is named in BOTH states —
+        /// attributes are the answer to dying and are deliberately ungated, so a first-time player
+        /// should not have to own a rifle before the console is mentioned to him. Kept terse
+        /// (no articles) because at fontSize 15 bold the 700px panel clips past ~75 characters.</summary>
+        static string Objective(MetaState m)
+        {
+            return m.OwnsAnyWeapon
+                ? "OBJECTIVE: EMBARK at the NAV MAP — or buy attributes at CREW QUARTERS."
+                : "OBJECTIVE: free MK-1 at ARMORY, attributes at CREW QUARTERS, EMBARK at NAV MAP.";
+        }
+
+        static string LoadoutLabel(MetaState m)
+        {
+            if (!m.OwnsAnyWeapon) return "NONE";
+            string s = m.EquippedSecondary != WeaponId.None
+                ? WeaponCatalog.Def(m.EquippedSecondary).displayName
+                : "—";
+            string p = m.EquippedPrimary != WeaponId.None
+                ? WeaponCatalog.Def(m.EquippedPrimary).displayName
+                : "—";
+            return $"P:{p} S:{s}";
+        }
+
+        void DrawCrosshair(float vw, float vh)
+        {
+            GUI.Label(new Rect(vw / 2f - 12f, vh / 2f - 16f, 24f, 32f), "+", Crosshair());
+        }
+
+        /// <summary>Centre-bottom: the targeted station's prompt, or — when the cursor is
+        /// free — how to get look control back. Kept clear of the bottom-left shortcut band.</summary>
+        void DrawPrompt(float vw, float vh)
+        {
+            float left = ShortcutPanel.BandWidth + ShortcutPanel.Margin;
+            float y = vh - 118f;
+            if (Cursor.lockState != CursorLockMode.Locked)
+            {
+                GUI.Label(new Rect(left, y, vw - left - 12f, 30f),
+                    "CURSOR FREE — left-click to take back mouse look", Warn());
+                return;
+            }
+            if (_interactor == null || string.IsNullOrEmpty(_interactor.CurrentPrompt)) return;
+            GUI.Label(new Rect(left, y, vw - left - 12f, 30f), _interactor.CurrentPrompt, Prompt());
+        }
+
+        static GUIStyle Small() => _small ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleLeft, fontSize = 13 };
+        static GUIStyle Big() => _big ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleLeft, fontSize = 19, fontStyle = FontStyle.Bold };
+        static GUIStyle Prompt() => _prompt ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 20, fontStyle = FontStyle.Bold };
+        static GUIStyle Crosshair() => _crosshair ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 22, fontStyle = FontStyle.Bold };
+        static GUIStyle ObjectiveStyle() => _objective ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleLeft, fontSize = 15, fontStyle = FontStyle.Bold };
+        static GUIStyle Warn() => _warn ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 18, fontStyle = FontStyle.Bold };
+    }
+}
+===== FILE: Assets/Scripts/Game/Ship/StationTerminal.cs
+using GatekeeperBastion.Sim;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: base class for ship-hub console interactables — press E to open a
+    /// DPI-scaled IMGUI panel (cursor freed, movement locked via ShipController), Esc/CLOSE exits.</summary>
+    /// <remarks>Subclasses implement StationName/PromptHint/DrawPanel and buy exclusively through
+    /// ShipCommands (never MetaUpgrades/GameSession.Save directly). The console needs a collider
+    /// the Interactor's ray can hit AT EYE HEIGHT (scene builder's job — see SceneBuilder.Ship).
+    /// Esc is handled in LateUpdate on purpose: FirstPersonController frees the cursor on the same
+    /// key in Update, and Update order between the two is undefined, so closing there could leave
+    /// the player with a free cursor and no interaction.</remarks>
+    public abstract class StationTerminal : MonoBehaviour, IInteractable
+    {
+        const float VirtualHeight = 900f;
+        const float ReopenLockoutSeconds = 0.3f;
+
+        ShipController _ship;
+        float _reopenAllowedAt;
+        static GUIStyle _title, _small, _big, _centered, _reason, _warning;
+
+        /// <summary>Panel/console display name (e.g. "ARMORY").</summary>
+        protected abstract string StationName { get; }
+
+        /// <summary>Half-line of "what this console is for", shown inside the HUD prompt.</summary>
+        protected abstract string PromptHint { get; }
+
+        /// <summary>True while this station's panel is open. Reads the cached controller only —
+        /// this runs several times per frame (OnGUI events), and with no ShipController in the
+        /// scene nothing can have opened us anyway.</summary>
+        public bool IsOpen => _ship != null && _ship.OpenStation == this;
+
+        /// <summary>HUD prompt while the player looks at the console.</summary>
+        public string Prompt => $"[{Controls.DisplayOf(ControlId.Interact)}] {StationName} — {PromptHint}";
+
+        /// <summary>Interactor callback (E held while targeted): open the panel once.</summary>
+        public void Interact(float dt)
+        {
+            // Interactor uses GetKey (a hold), so without the lockout a still-held E would
+            // reopen the panel on the frame after CLOSE re-locks the cursor.
+            if (IsOpen || Time.time < _reopenAllowedAt) return;
+            if (Ship != null) Ship.OpenStationPanel(this);
+        }
+
+        /// <summary>The hub controller. Looked up lazily so a build/spawn order surprise
+        /// degrades into "the console does nothing" rather than a NullReferenceException.</summary>
+        ShipController Ship => _ship != null ? _ship : (_ship = FindFirstObjectByType<ShipController>());
+
+        protected virtual void Awake()
+        {
+            _ship = FindFirstObjectByType<ShipController>();
+        }
+
+        void LateUpdate()
+        {
+            if (IsOpen && Controls.Down(ControlId.FreeCursor)) Close();
+        }
+
+        void OnGUI()
+        {
+            if (!IsOpen || GameSession.Meta == null) return;
+
+            float s = Mathf.Max(1f, Screen.height / VirtualHeight);
+            GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1f));
+            float vw = Screen.width / s;
+            float vh = Screen.height / s;
+
+            var rect = new Rect(vw / 2f - 340f, vh / 2f - 260f, 680f, 520f);
+            GUI.Box(rect, "");
+            GUILayout.BeginArea(rect);
+            GUILayout.Space(12f);
+            GUILayout.Label(StationName, Title());
+            GUILayout.Label($"Banked salvage: {GameSession.Meta.BankedSalvage}", Big());
+            GUILayout.Label($"Lifetime: {GameSession.Meta.LifetimeSalvageEarned} earned  —  " +
+                            $"{GameSession.Meta.LifetimeSalvageSpent} spent", Small());
+            GUILayout.Space(10f);
+
+            DrawPanel(GameSession.Meta);
+
+            GUILayout.FlexibleSpace();
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button($"CLOSE  ({Controls.DisplayOf(ControlId.FreeCursor)})", GUILayout.Height(36f), GUILayout.Width(220f)))
+                Close();
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(10f);
+            GUILayout.EndArea();
+        }
+
+        /// <summary>Station-specific panel body, drawn inside the framed GUILayout area.</summary>
+        protected abstract void DrawPanel(MetaState m);
+
+        /// <summary>Close this panel and return the player to walk mode (cursor re-locked).</summary>
+        protected void Close()
+        {
+            _reopenAllowedAt = Time.time + ReopenLockoutSeconds;
+            if (Ship != null) Ship.CloseStationPanel(this);
+        }
+
+        /// <summary>One upgrade row: name, level, effect now → next, cost, Buy via ShipCommands.
+        /// A row that cannot be bought states WHY (locked / maxed / how much salvage is short)
+        /// instead of showing a greyed-out button with no explanation.</summary>
+        protected static void UpgradeRow(UpgradeTrack track, string trackName,
+            System.Func<int, string> effect, string lockedLabel = null)
+        {
+            var meta = GameSession.Meta;
+            int level = ShipCommands.LevelOf(track);
+            bool maxed = level >= MetaUpgrades.MaxLevel;
+            string now = effect(level);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"{trackName}  {level}/{MetaUpgrades.MaxLevel}", Small(), GUILayout.Width(150f));
+            GUILayout.Label(maxed ? now : $"{now} → {effect(level + 1)}", Small(), GUILayout.Width(190f));
+
+            if (lockedLabel != null)
+            {
+                GUILayout.Label(lockedLabel, Reason(), GUILayout.Width(260f));
+            }
+            else if (maxed)
+            {
+                GUILayout.Label("MAX — fully upgraded", Reason(), GUILayout.Width(260f));
+            }
+            else
+            {
+                long cost = MetaUpgrades.NextCost(level); // safe: only reached below MaxLevel
+                long banked = meta != null ? meta.BankedSalvage : 0L;
+                GUILayout.Label($"cost {cost}", Small(), GUILayout.Width(100f));
+                if (banked >= cost)
+                {
+                    if (GUILayout.Button("BUY", GUILayout.Width(150f), GUILayout.Height(24f)))
+                        ShipCommands.BuyUpgrade(track);
+                }
+                else
+                {
+                    // Same width/height as the button it replaces: one layout entry either
+                    // way, so buying a row cannot reshuffle the rows below it mid-frame.
+                    GUILayout.Label($"need {cost - banked} more", Reason(),
+                        GUILayout.Width(150f), GUILayout.Height(24f));
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        /// <summary>Weapon Tier row keyed on <see cref="WeaponId"/> — ARMORY only. CREW QUARTERS
+        /// and FABRICATION keep the <see cref="UpgradeTrack"/> overload unchanged.</summary>
+        protected static void UpgradeRow(WeaponId weaponId, string lockedLabel = null)
+        {
+            var meta = GameSession.Meta;
+            if (meta == null || !meta.Owns(weaponId)) return;
+
+            int tier = meta.TierOf(weaponId);
+            var def = WeaponCatalog.Def(weaponId);
+            bool maxed = tier >= WeaponTier.MaxTier;
+            string now =
+                $"{WeaponTier.EffectiveDamage(def, tier):0.#} dmg × {WeaponTier.EffectiveClip(def, tier)}";
+            string next = maxed
+                ? now
+                : $"{WeaponTier.EffectiveDamage(def, tier + 1):0.#} dmg × {WeaponTier.EffectiveClip(def, tier + 1)}";
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Tier  T{tier}/{WeaponTier.MaxTier}", Small(), GUILayout.Width(150f));
+            GUILayout.Label(maxed ? now : $"{now} → {next}", Small(), GUILayout.Width(190f));
+
+            if (lockedLabel != null)
+            {
+                GUILayout.Label(lockedLabel, Reason(), GUILayout.Width(260f));
+            }
+            else if (maxed)
+            {
+                GUILayout.Label("MAX — fully upgraded", Reason(), GUILayout.Width(260f));
+            }
+            else
+            {
+                long cost = WeaponTier.Cost(tier);
+                long banked = meta.BankedSalvage;
+                GUILayout.Label($"cost {cost}", Small(), GUILayout.Width(100f));
+                if (banked >= cost)
+                {
+                    if (GUILayout.Button("BUY", GUILayout.Width(150f), GUILayout.Height(24f)))
+                        ShipCommands.BuyTier(weaponId);
+                }
+                else
+                {
+                    GUILayout.Label($"need {cost - banked} more", Reason(),
+                        GUILayout.Width(150f), GUILayout.Height(24f));
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        // Shared IMGUI styles for all stations.
+        protected static GUIStyle Title() => _title ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 26, fontStyle = FontStyle.Bold };
+        protected static GUIStyle Small() => _small ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleLeft, fontSize = 13 };
+        protected static GUIStyle Big() => _big ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 19, fontStyle = FontStyle.Bold };
+        protected static GUIStyle Centered() => _centered ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 16 };
+
+        /// <summary>Why a purchase is unavailable — italic, sits where the Buy button would.</summary>
+        protected static GUIStyle Reason() => _reason ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleLeft, fontSize = 13, fontStyle = FontStyle.Italic };
+
+        /// <summary>Loud centred line for consequences the player is about to accept.</summary>
+        protected static GUIStyle Warning() => _warning ??= new GUIStyle(GUI.skin.label)
+            { alignment = TextAnchor.MiddleCenter, fontSize = 18, fontStyle = FontStyle.Bold };
+    }
+}

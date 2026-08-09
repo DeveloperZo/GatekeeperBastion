@@ -1,0 +1,2076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gatekeeper Bastion — session dashboard</title>
+<style>
+:root {
+  --ink: #1c1b19;
+  --muted: #5c5a55;
+  --line: #d8d5ce;
+  --paper: #f3f1ec;
+  --card: #fffcf7;
+  --lost: #8b2e1f;
+  --dev: #6a665e;
+  --bar: #2f6b4f;
+  --bar-lost: #a34432;
+  --accent: #2a4d3e;
+  --ok: #2f6b4f;
+  --warn: #9a6b2f;
+  --alert: #8b2e1f;
+  --spark-pos: #2f6b4f;
+  --spark-neg: #a34432;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font: 14px/1.45 "Segoe UI", system-ui, sans-serif;
+}
+header {
+  padding: 20px 28px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
+}
+header h1 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+header .lede { margin: 0; color: var(--muted); max-width: 44rem; }
+.picker {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.picker label.btn {
+  display: inline-block;
+  padding: 8px 14px;
+  background: var(--accent);
+  color: #f7f4ee;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.picker label.btn:hover { filter: brightness(1.08); }
+.picker input[type=file] { display: none; }
+.picker .hint { color: var(--muted); font-size: 13px; }
+#status { margin-top: 10px; font-size: 13px; color: var(--muted); }
+#status.error { color: var(--lost); }
+.tunables {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.tunables > summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  font-weight: 650;
+  list-style: none;
+}
+.tunables > summary::-webkit-details-marker { display: none; }
+.tunables[open] > summary { border-bottom: 1px solid var(--line); }
+.tunables .body {
+  padding: 12px 14px 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+.tunables label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.tunables label span.name {
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.tunables label span.desc { font-size: 11px; line-height: 1.3; }
+.tunables input[type=number] {
+  width: 100%;
+  max-width: 10rem;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+main { padding: 20px 28px 48px; max-width: 1180px; }
+#empty {
+  padding: 28px;
+  border: 1px dashed var(--line);
+  background: var(--card);
+  color: var(--muted);
+}
+#app { display: none; }
+section { margin: 0 0 28px; }
+section > h2 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
+section > .hint, section > .caption {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+section > .caption { color: var(--ink); }
+
+/* Sample strip */
+.sample-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 22px;
+  align-items: center;
+}
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+.chip .v {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.chip .k { color: var(--muted); font-size: 12px; }
+.chip.lost .v { color: var(--lost); }
+.chip.muted { color: var(--muted); }
+
+/* Findings */
+.findings {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.findings li {
+  padding: 10px 12px 10px 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.findings .f-ok { border-left-color: var(--ok); }
+.findings .f-warn { border-left-color: var(--warn); }
+.findings .f-alert { border-left-color: var(--alert); }
+.findings .sev {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-right: 8px;
+  color: var(--muted);
+}
+.findings .f-alert .sev { color: var(--alert); }
+.findings .f-warn .sev { color: var(--warn); }
+.findings .f-ok .sev { color: var(--ok); }
+
+/* Era curves */
+.era {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.era-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: baseline;
+  margin: 0 0 10px;
+}
+.era-head h3 { margin: 0; font-size: 14px; font-weight: 650; }
+.era-head .meta { color: var(--muted); font-size: 12px; }
+.era .era-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.curve {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 6px 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.track { height: 12px; background: #e7e2d8; }
+.track > i { display: block; height: 100%; background: var(--bar); }
+.track.lost > i { background: var(--bar-lost); }
+
+/* Duo + horizontal bars */
+.duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.panel-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 14px 16px;
+}
+.panel-card h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.panel-card .caption {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.hbars { display: flex; flex-direction: column; gap: 7px; }
+.hbar {
+  display: grid;
+  grid-template-columns: minmax(72px, 28%) 1fr 44px;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+.hbar .lab {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hbar .track { height: 11px; background: #e7e2d8; }
+.hbar .track > i { display: block; height: 100%; background: var(--bar); min-width: 0; }
+.hbar .pct {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Hatch door meters */
+.door-list { display: flex; flex-direction: column; gap: 8px; }
+.door-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 32%) 1fr 88px;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+.door-row .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.door-meter {
+  height: 14px;
+  background: #e7e2d8;
+  position: relative;
+}
+.door-meter > i {
+  display: block;
+  height: 100%;
+  background: var(--bar);
+}
+.door-meter.calm > i { background: #c4bfb4; width: 0 !important; }
+.door-meter.pressured > i { background: var(--bar-lost); }
+.door-row .tag {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+.door-row .tag.pressured { color: var(--lost); font-weight: 600; }
+
+/* Ability status */
+.ability-status {
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 16px 18px;
+}
+.ability-status.dead {
+  border-color: var(--alert);
+  border-left: 4px solid var(--alert);
+}
+.ability-status .big {
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+.ability-status .sub {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.ability-status .callout {
+  margin-top: 10px;
+  color: var(--alert);
+  font-weight: 650;
+  font-size: 13px;
+}
+
+/* Salvage */
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 48px;
+  padding: 8px 0 0;
+}
+.spark .seg {
+  flex: 1 1 0;
+  min-width: 6px;
+  max-width: 36px;
+  background: var(--spark-pos);
+  align-self: flex-end;
+}
+.spark .seg.neg {
+  background: var(--spark-neg);
+  align-self: flex-start;
+  margin-top: auto;
+}
+.spark .seg.zero {
+  height: 2px !important;
+  background: var(--line);
+  align-self: center;
+}
+
+/* Verdict cards */
+.verdicts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.verdict {
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.verdict.warn { border-left: 3px solid var(--warn); }
+.verdict.alert { border-left: 3px solid var(--alert); }
+.verdict .meta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.empty { color: var(--muted); font-style: italic; margin: 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  font-size: 13px;
+}
+th, td {
+  border-bottom: 1px solid var(--line);
+  padding: 7px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #efeae2;
+}
+td.num, th.num { text-align: right; }
+tr.dev td { color: var(--dev); }
+tr.lost td.outcome, tr.lost td.flags { color: var(--lost); font-weight: 600; }
+tr.flag td.flag-yes { color: var(--lost); font-weight: 600; }
+.file { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+details.panel {
+  border: 1px solid var(--line);
+  background: var(--card);
+  margin: 0 0 10px;
+}
+details.panel > summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  font-weight: 650;
+  list-style: none;
+}
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel[open] > summary { border-bottom: 1px solid var(--line); }
+details.panel .body { overflow-x: auto; padding: 0; }
+details.panel .body > p.hint {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+@media (max-width: 900px) {
+  .duo { grid-template-columns: 1fr; }
+  .tunables .body { grid-template-columns: 1fr 1fr; }
+  .door-row { grid-template-columns: 1fr; gap: 4px; }
+  .door-row .tag { text-align: left; }
+}
+@media (max-width: 560px) {
+  .tunables .body { grid-template-columns: 1fr; }
+  .hbar { grid-template-columns: minmax(56px, 30%) 1fr 40px; }
+}
+body.drag {
+  outline: 3px dashed var(--accent);
+  outline-offset: -6px;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Gatekeeper Bastion — session dashboard</h1>
+  <p class="lede">Open this file, then point it at your session logs. The page parses them
+  in the browser — no server, no regenerate script. (A page opened as
+  <code>file://</code> is not allowed to scan <code>Logs/</code> by itself; you choose the
+  folder once.)</p>
+  <div class="picker">
+    <label class="btn">Choose Logs folder
+      <input id="dir" type="file" webkitdirectory multiple accept=".log,text/plain">
+    </label>
+    <label class="btn" style="background:#4a463f">Or pick .log files
+      <input id="files" type="file" multiple accept=".log,text/plain">
+    </label>
+    <span class="hint">Also: drag files or a folder onto this page.</span>
+  </div>
+  <details class="tunables" id="tunables">
+    <summary>Tunables</summary>
+    <div class="body">
+      <label>
+        <span class="name">MIN_RUN_SEC</span>
+        <input type="number" id="t_MIN_RUN_SEC" step="1" min="0" value="5">
+        <span class="desc">Exclude runs shorter than this (seconds).</span>
+      </label>
+      <label>
+        <span class="name">EASY_LIVE</span>
+        <input type="number" id="t_EASY_LIVE" step="0.1" min="0" value="5">
+        <span class="desc">meanLive below this contributes to ease flag.</span>
+      </label>
+      <label>
+        <span class="name">SECONDARY_SHARE_MIN</span>
+        <input type="number" id="t_SECONDARY_SHARE_MIN" step="0.01" min="0" max="1" value="0.15">
+        <span class="desc">Flag secondary share below this when kills ≥ 10.</span>
+      </label>
+      <label>
+        <span class="name">ARRIVAL_WEIGHT</span>
+        <input type="number" id="t_ARRIVAL_WEIGHT" step="0.1" min="0" value="1">
+        <span class="desc">Weight on under-attack lines in door threat.</span>
+      </label>
+      <label>
+        <span class="name">CLUSTER_MS</span>
+        <input type="number" id="t_CLUSTER_MS" step="1" min="0" value="100">
+        <span class="desc">Multi-kill cluster window (ms).</span>
+      </label>
+      <label>
+        <span class="name">EFFICIENCY_SCALE</span>
+        <input type="number" id="t_EFFICIENCY_SCALE" step="0.1" min="0" value="1">
+        <span class="desc">Scale on net / max(1, meanLive × seconds).</span>
+      </label>
+    </div>
+  </details>
+  <div id="status">Waiting for logs.</div>
+</header>
+
+<main>
+  <div id="empty">Choose <code>Logs</code> (and optionally <code>Docs/_meta/Logs</code>)
+  containing <code>GatekeeperBastion_*.log</code>.</div>
+  <div id="app">
+    <div class="sample-strip" id="sampleStrip"></div>
+
+    <section>
+      <h2>Findings</h2>
+      <ul class="findings" id="findings"></ul>
+    </section>
+
+    <section>
+      <h2>Is the room full?</h2>
+      <p class="hint">Clean segments only. Dev Runs stay out of the curves.</p>
+      <div id="eras"></div>
+    </section>
+
+    <section>
+      <h2>Who gets the kills?</h2>
+      <div class="duo">
+        <div class="panel-card">
+          <h3>Weapon share</h3>
+          <div class="hbars" id="weaponBars"></div>
+          <p class="caption" id="weaponCaption"></p>
+        </div>
+        <div class="panel-card">
+          <h3>Kind mix</h3>
+          <div class="hbars" id="kindBars"></div>
+          <p class="caption" id="kindCaption"></p>
+        </div>
+      </div>
+      <details class="panel" style="margin-top:12px">
+        <summary>Weapon &amp; kind counts</summary>
+        <div class="body">
+          <table>
+            <thead>
+              <tr>
+                <th>Weapon</th><th>Slot</th>
+                <th class="num">Kills</th><th class="num">Share</th>
+                <th class="num">Salvage from kills</th>
+                <th class="num">n Runs</th>
+              </tr>
+            </thead>
+            <tbody id="weapons"></tbody>
+          </table>
+          <table>
+            <thead>
+              <tr>
+                <th>Kind</th>
+                <th class="num">Kills</th><th class="num">Share</th>
+                <th class="num">Kill/s</th>
+                <th class="num">Spawned</th>
+              </tr>
+            </thead>
+            <tbody id="kinds"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section>
+      <h2>Is the Hatch in the fight?</h2>
+      <p class="caption" id="hatchCaption"></p>
+      <div class="door-list" id="hatchDoors"></div>
+      <details class="panel" style="margin-top:12px">
+        <summary>Hatch numbers</summary>
+        <div class="body">
+          <table>
+            <thead>
+              <tr>
+                <th>Log</th><th class="num">#</th>
+                <th class="num">Arrivals</th>
+                <th class="num">Under-attack</th>
+                <th class="num">Hatch at clear</th>
+                <th>Breached?</th>
+              </tr>
+            </thead>
+            <tbody id="hatch"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section>
+      <h2>Did abilities fire?</h2>
+      <div id="abilityStatus"></div>
+      <details class="panel" style="margin-top:12px">
+        <summary>Zero-credit wave list</summary>
+        <div class="body">
+          <p class="hint" id="abilityZero"></p>
+        </div>
+      </details>
+    </section>
+
+    <section>
+      <h2>Where did Salvage go?</h2>
+      <div class="duo">
+        <div class="panel-card">
+          <h3>Spend by track</h3>
+          <div class="hbars" id="spendBars"></div>
+          <p class="caption" id="spendCaption"></p>
+        </div>
+        <div class="panel-card">
+          <h3>Top SKUs</h3>
+          <div class="hbars" id="skuBars"></div>
+          <p class="caption" id="skuCaption"></p>
+        </div>
+      </div>
+      <div class="panel-card" style="margin-top:14px">
+        <h3>Bank trajectory</h3>
+        <div class="spark" id="bankSpark"></div>
+        <p class="caption" id="bankCaption"></p>
+      </div>
+      <details class="panel" style="margin-top:12px">
+        <summary>Salvage &amp; SKU tables</summary>
+        <div class="body">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th><th class="num">Count</th><th class="num">Salvage</th>
+              </tr>
+            </thead>
+            <tbody id="skus"></tbody>
+          </table>
+          <table>
+            <thead>
+              <tr>
+                <th>Log</th><th class="num">#</th><th>Primary</th>
+                <th class="num">startWave</th>
+                <th class="num">banked start</th>
+                <th class="num">gross</th>
+                <th class="num">repair</th>
+                <th class="num">net</th>
+                <th class="num">banked end</th>
+                <th class="num">kills salvage</th>
+              </tr>
+            </thead>
+            <tbody id="salvage"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section>
+      <h2>Runs that matter</h2>
+      <p class="hint">Flagged Runs, or the top five by kill count.</p>
+      <div class="verdicts" id="verdicts"></div>
+    </section>
+
+    <section>
+      <details class="panel">
+        <summary>Raw data</summary>
+        <div class="body">
+          <p class="hint">Qualitative scores · all kept Runs · every segment. far-wall / hatchDist needs M37.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Log</th><th class="num">#</th><th>Ease</th>
+                <th class="num">Door threat</th>
+                <th class="num">Sec share</th><th>Sec flag</th>
+                <th class="num">Salv eff</th>
+                <th>Ability</th>
+                <th class="num">Clusters ≥2</th>
+              </tr>
+            </thead>
+            <tbody id="scores"></tbody>
+          </table>
+          <table>
+            <thead>
+              <tr>
+                <th>Log</th><th class="num">#</th><th>Era</th><th>Primary</th>
+                <th class="num">Seg</th><th class="num">Sec</th>
+                <th>Dev</th><th>Ease</th><th>Outcome</th>
+              </tr>
+            </thead>
+            <tbody id="runs"></tbody>
+          </table>
+          <table>
+            <thead>
+              <tr>
+                <th>Log</th><th class="num">Run</th><th>Wave</th><th class="num">Bodies</th>
+                <th class="num">Sec</th><th class="num">Mean live</th><th class="num">Peak</th>
+                <th class="num">Mean life</th><th class="num">Hatch</th><th>Flags</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var ERA_HORDE = '2026-08-04';
+  var ERA_WEAPONS = '2026-08-08';
+
+  var TS_RE = /^\[(\d{2}):(\d{2}):(\d{2})\.(\d{3})\]/;
+  var WAVE_START = /^wave\s+(\d+)\/(\d+)\s+[—\-]\s+(\d+)\s+(gatekeepers|boarders)\b/i;
+  var WAVE_CLEAR = /^wave\s+(\d+)\/(\d+)\s+cleared\s+[—\-].*?hatch\s+(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)/i;
+  var GROUP_LIVE = /^group\s+\d+:\s+.+?\s+breached\s+at\s+\S+\s+\((\d+)\/(\d+)\)\s+[—\-]\s+(\d+)\s+live\b/i;
+  var GROUP = /^group\s+\d+:\s+(.+?)\s+breached\s+at\s+\S+\s+\((\d+)\/(\d+)\)\s*$/i;
+  var SOLO = /^boarder\s+(\d+)\/(\d+)\s+breached\s+at\s+\S+\s*$/i;
+  var KILL_FULL = /^killed\s+a\s+(\w+)(?:\s+with\s+(Primary|Secondary|Drone))?\s+\(\+(\d+)\s+salvage\)/i;
+  var KILL_ANY = /^killed\s+a\s+(\w+)\b/i;
+  var KIND = /(\d+)\s+(Gatekeepers?|Hunters?|Rams?|boarders?|gatekeepers?)\b/gi;
+  var TRACK = /\btrack=(weapon|crew|fabrication|equipment)\b/i;
+  var LOG_DATE = /GatekeeperBastion_(\d{4}-\d{2}-\d{2})_/i;
+  var END_GROSS = /gross\s+(\d+)\s*,\s*repair\s+(\d+)\s*,\s*net\s+(\d+)\s*,\s*banked now\s+(\d+)/i;
+  var END_EARNED = /earned\s+(\d+)\s*,\s*banked now\s+(\d+)/i;
+  var END_BANKED = /banked now\s+(\d+)/i;
+  var ABILITY_CREDIT = /gatekeeper-seconds removed:\s*([\d.]+)/i;
+  var DECOY_ABSORB = /gatekeeper-seconds absorbed:\s*([\d.]+)/i;
+  var ABILITY_WAVE = /wave\s+(\d+)\s+gatekeeper-seconds removed:\s*([\d.]+)/i;
+  var PLAYER_DMG = /^took\s+(\d+)\s+damage\b/i;
+  var BUY_SKU = /^bought\s+(.+?)\s+for\s+(\d+)\b/i;
+
+  /** Last successful parse: array of raw runs from parseFile. Tunable edits re-finalize this. */
+  var LAST_RAW = null;
+  var LAST_FILE_COUNT = 0;
+
+  function tunables() {
+    function num(id, fallback) {
+      var el = document.getElementById(id);
+      var v = el ? parseFloat(el.value) : NaN;
+      return isFinite(v) ? v : fallback;
+    }
+    return {
+      MIN_RUN_SEC: num('t_MIN_RUN_SEC', 5),
+      EASY_LIVE: num('t_EASY_LIVE', 5),
+      SECONDARY_SHARE_MIN: num('t_SECONDARY_SHARE_MIN', 0.15),
+      ARRIVAL_WEIGHT: num('t_ARRIVAL_WEIGHT', 1),
+      CLUSTER_MS: num('t_CLUSTER_MS', 100),
+      EFFICIENCY_SCALE: num('t_EFFICIENCY_SCALE', 1)
+    };
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function shortFile(f) {
+    return String(f || '').replace(/^GatekeeperBastion_/, '').replace(/\.log$/i, '');
+  }
+
+  function eraId(name) {
+    var m = LOG_DATE.exec(name || '');
+    if (!m) return 'weapons-and-wheel';
+    var d = m[1];
+    if (d < ERA_HORDE) return 'pre-weapon';
+    if (d < ERA_WEAPONS) return 'horde-retune';
+    return 'weapons-and-wheel';
+  }
+
+  function eraLabel(id) {
+    return ({
+      'pre-weapon': 'pre-weapon (<= 2026-08-03)',
+      'horde-retune': 'horde retune (2026-08-04 .. 2026-08-07)',
+      'weapons-and-wheel': 'weapons and wheel (>= 2026-08-08)'
+    })[id] || id;
+  }
+
+  function normalizeKind(raw) {
+    var k = String(raw || '').toLowerCase();
+    if (k === 'boarder' || k === 'boarders' || k === 'gatekeeper' || k === 'gatekeepers')
+      return 'Gatekeeper';
+    if (k === 'hunter' || k === 'hunters') return 'Hunter';
+    if (k === 'ram' || k === 'rams') return 'Ram';
+    if (!raw) return 'Unknown';
+    return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+  }
+
+  function inferTrack(msg) {
+    if (/Repair Rig|Decoy|equipment slot|Equipment Slot/i.test(msg)) return 'equipment';
+    if (/Hatch Armor/i.test(msg)) return 'fabrication';
+    if (/Vitality|Stamina|Scavenging|Luck/i.test(msg)) return 'crew';
+    if (/MK-1|MR-35|BR-12|SEC-D|PRI-C|VK-7|Sidearm|Rifle|Shotgun|focus |Damage L|Fire Rate L|Clip Size L|Clip L|Reload L/i.test(msg))
+      return 'weapon';
+    return 'pre-token';
+  }
+
+  function parsePurchase(msg) {
+    var tm = TRACK.exec(msg);
+    var pre = !tm;
+    var track = tm ? tm[1].toLowerCase() : inferTrack(msg);
+    var skuM = BUY_SKU.exec(msg);
+    var sku = skuM ? skuM[1].trim() : '';
+    var cost = 0;
+    if (skuM) cost = parseInt(skuM[2], 10);
+    else {
+      var cm = /\bfor\s+(\d+)\b/.exec(msg);
+      if (cm) cost = parseInt(cm[1], 10);
+    }
+    return { track: track, cost: cost, preToken: pre, sku: sku || '(unnamed)' };
+  }
+
+  function sumComposition(text) {
+    var sum = 0, m;
+    KIND.lastIndex = 0;
+    while ((m = KIND.exec(text))) sum += parseInt(m[1], 10);
+    return sum;
+  }
+
+  function compositionByKind(text, into) {
+    var m;
+    KIND.lastIndex = 0;
+    while ((m = KIND.exec(text))) {
+      var kind = normalizeKind(m[2]);
+      into[kind] = (into[kind] || 0) + parseInt(m[1], 10);
+    }
+  }
+
+  function tryParseLine(raw) {
+    var tm = TS_RE.exec(raw);
+    if (!tm) return null;
+    var sec = (+tm[1]) * 3600 + (+tm[2]) * 60 + (+tm[3]) + (+tm[4]) / 1000;
+    var rest = raw.slice(tm[0].length).replace(/^\s+/, '');
+    if (rest.charAt(0) === '[') {
+      var c1 = rest.indexOf(']');
+      if (c1 > 0) rest = rest.slice(c1 + 1).replace(/^\s+/, '');
+    }
+    if (rest.charAt(0) !== '[') return null;
+    var c2 = rest.indexOf(']');
+    if (c2 <= 1) return null;
+    return {
+      sec: sec,
+      ms: Math.round(sec * 1000),
+      tag: rest.slice(1, c2),
+      msg: rest.slice(c2 + 1).replace(/^\s+/, '')
+    };
+  }
+
+  function formatLabel(waves) {
+    if (!waves.length) return 'w?';
+    if (waves.length === 1) return 'w' + waves[0];
+    return 'w' + waves.join('+');
+  }
+
+  function trySpawn(msg) {
+    if (GROUP_LIVE.test(msg)) {
+      var n = sumComposition(msg);
+      return n > 0 ? n : null;
+    }
+    var g = GROUP.exec(msg);
+    if (g) {
+      var n2 = sumComposition(g[1]);
+      return n2 > 0 ? n2 : null;
+    }
+    if (SOLO.test(msg)) return 1;
+    return null;
+  }
+
+  function parseRunBegins(msg) {
+    var out = {
+      startWave: null,
+      primary: '',
+      primaryTier: null,
+      secondary: '',
+      secondaryTier: null,
+      bankedStart: null
+    };
+    var sw = /\bstartWave=(\d+)/i.exec(msg);
+    if (sw) out.startWave = parseInt(sw[1], 10);
+    else {
+      var swp = /starting at wave\s+(\d+)/i.exec(msg);
+      if (swp) out.startWave = parseInt(swp[1], 10);
+    }
+    var pr = /\bprimary=([^=]+?)\s+primaryTier=(\d+)/i.exec(msg);
+    if (pr) {
+      out.primary = pr[1].trim();
+      if (/^none$/i.test(out.primary) || out.primary === '-' || out.primary === '—')
+        out.primary = '';
+      out.primaryTier = parseInt(pr[2], 10);
+    } else {
+      var prp = /\bPrimary=([^;]+)/.exec(msg);
+      if (prp) {
+        out.primary = prp[1].replace(/\s+T\d+\s*$/i, '').trim();
+        if (out.primary === '-' || out.primary === '—') out.primary = '';
+      }
+    }
+    var sec = /\bsecondary=([^=]+?)\s+secondaryTier=(\d+)/i.exec(msg);
+    if (sec) {
+      out.secondary = sec[1].trim();
+      if (/^none$/i.test(out.secondary) || out.secondary === '-' || out.secondary === '—')
+        out.secondary = '';
+      out.secondaryTier = parseInt(sec[2], 10);
+    } else {
+      var secp = /\bSecondary=([^;]+)/.exec(msg);
+      if (secp) {
+        out.secondary = secp[1].replace(/\s+T\d+\s*$/i, '').trim();
+        if (out.secondary === '-' || out.secondary === '—') out.secondary = '';
+      }
+    }
+    var bk = /\bbanked=(\d+)/i.exec(msg);
+    if (bk) out.bankedStart = parseInt(bk[1], 10);
+    else {
+      var bkp = /,\s*(\d+)\s+banked\b/i.exec(msg);
+      if (bkp) out.bankedStart = parseInt(bkp[1], 10);
+    }
+    return out;
+  }
+
+  function parseEndSalvage(msg) {
+    var g = END_GROSS.exec(msg);
+    if (g) {
+      return {
+        gross: parseInt(g[1], 10),
+        repair: parseInt(g[2], 10),
+        net: parseInt(g[3], 10),
+        bankedEnd: parseInt(g[4], 10)
+      };
+    }
+    var e = END_EARNED.exec(msg);
+    if (e) {
+      var earned = parseInt(e[1], 10);
+      return {
+        gross: earned,
+        repair: 0,
+        net: earned,
+        bankedEnd: parseInt(e[2], 10)
+      };
+    }
+    var b = END_BANKED.exec(msg);
+    if (b) {
+      return { gross: null, repair: null, net: null, bankedEnd: parseInt(b[1], 10) };
+    }
+    return { gross: null, repair: null, net: null, bankedEnd: null };
+  }
+
+  function countClusters(timesMs, windowMs) {
+    if (!timesMs.length) return 0;
+    var sorted = timesMs.slice().sort(function (a, b) { return a - b; });
+    var clusters = 0;
+    var size = 1;
+    for (var i = 1; i < sorted.length; i++) {
+      if (sorted[i] - sorted[i - 1] <= windowMs) {
+        size++;
+      } else {
+        if (size >= 2) clusters++;
+        size = 1;
+      }
+    }
+    if (size >= 2) clusters++;
+    return clusters;
+  }
+
+  function parseFile(name, text) {
+    var playMode = /stage=playmode/i.test(text);
+    var lines = text.split(/\r?\n/);
+    var runs = [];
+    var pendingBuys = [];
+    var run = null;
+    var runCounter = 0;
+    var dayBase = null, dayOffset = 0, lastRaw = 0;
+
+    function closeSeg(t, lost, hatch) {
+      if (!run || !run.current || !run.current.open) return;
+      var seg = run.current;
+      if (t > seg.lastT) {
+        seg.integral += seg.live * (t - seg.lastT);
+        seg.lastT = t;
+      }
+      seg.endSec = t;
+      seg.open = false;
+      seg.lost = !!lost;
+      seg.dev = run.dev || seg.dev;
+      if (hatch != null) seg.hatch = hatch;
+      if (!lost && seg.live !== 0) seg.parseFailed = true;
+      run.current = null;
+    }
+
+    function applyDelta(t, delta) {
+      if (!run || !run.current || !run.current.open) return;
+      var seg = run.current;
+      if (t > seg.lastT) {
+        seg.integral += seg.live * (t - seg.lastT);
+        seg.lastT = t;
+      }
+      seg.live += delta;
+      if (seg.live < 0) seg.live = 0;
+      if (seg.live > seg.peakLive) seg.peakLive = seg.live;
+    }
+
+    function newRun(t, begins) {
+      closeSeg(t, false, null);
+      if (run && run.endSec < 0) run.endSec = t;
+      runCounter++;
+      run = {
+        index: runCounter,
+        file: name,
+        beginSec: t,
+        endSec: -1,
+        closed: false,
+        dev: false,
+        playMode: playMode,
+        hadWave: false,
+        sawDraw: false,
+        current: null,
+        segments: [],
+        purchases: pendingBuys.splice(0),
+        startWave: begins.startWave,
+        primary: begins.primary || '',
+        primaryTier: begins.primaryTier,
+        secondary: begins.secondary || '',
+        secondaryTier: begins.secondaryTier,
+        bankedStart: begins.bankedStart,
+        bankedEnd: null,
+        gross: null,
+        repair: null,
+        net: null,
+        kills: [],
+        hatchArrivals: 0,
+        underAttackLines: 0,
+        hatchBreached: false,
+        lastHatchAtClear: '',
+        abilityCredit: 0,
+        decoyAbsorbed: 0,
+        abilityActivations: 0,
+        abilityZeroWaves: [],
+        playerDamageHits: 0,
+        spawnedByKind: {}
+      };
+      runs.push(run);
+    }
+
+    for (var i = 0; i < lines.length; i++) {
+      var raw = lines[i];
+      var parsed = tryParseLine(raw);
+      if (!parsed) continue;
+      var rawSec = parsed.sec, tag = parsed.tag, msg = parsed.msg;
+      var tagL = tag.toLowerCase();
+
+      if (dayBase == null) { dayBase = rawSec; lastRaw = rawSec; }
+      else if (rawSec + 1 < lastRaw) dayOffset += 86400;
+      lastRaw = rawSec;
+      var t = rawSec + dayOffset;
+      var tMs = Math.round(t * 1000);
+
+      if (tagL === 'dev' || /\[Dev\]/i.test(msg)) {
+        if (run && !run.closed) run.dev = true;
+      }
+
+      if (tagL === 'ship' && (/^bought /i.test(msg) || /equipment slot unlocked/i.test(msg))) {
+        var buy = parsePurchase(msg);
+        if (/equipment slot unlocked/i.test(msg)) {
+          buy.track = 'equipment';
+          buy.sku = 'equipment slot';
+          var slotCost = /\bfor\s+(\d+)\b/i.exec(msg);
+          if (slotCost) buy.cost = parseInt(slotCost[1], 10);
+        }
+        if (run) run.purchases.push(buy);
+        else pendingBuys.push(buy);
+      }
+
+      if (tagL === 'run' && /^run begins\b/i.test(msg)) {
+        newRun(t, parseRunBegins(msg));
+        continue;
+      }
+
+      if (!run) continue;
+
+      if (tagL === 'run' && /^pulled the siphon draw/i.test(msg)) {
+        run.sawDraw = true;
+        continue;
+      }
+
+      if (tagL === 'run') {
+        var wm = WAVE_START.exec(msg);
+        if (wm) {
+          var wave = parseInt(wm[1], 10);
+          var bodies = parseInt(wm[3], 10);
+          var chain = run.hadWave && !run.sawDraw && run.current && run.current.open;
+          if (chain) {
+            run.current.waves.push(wave);
+            run.current.bodies += bodies;
+            run.current.label = formatLabel(run.current.waves);
+          } else {
+            closeSeg(t, false, null);
+            var seg = {
+              runIndex: run.index,
+              file: name,
+              startSec: t,
+              endSec: t,
+              lastT: t,
+              open: true,
+              live: 0,
+              peakLive: 0,
+              integral: 0,
+              bodies: bodies,
+              waves: [wave],
+              label: formatLabel([wave]),
+              lost: false,
+              dev: run.dev,
+              hatch: '',
+              parseFailed: false
+            };
+            run.current = seg;
+            run.segments.push(seg);
+          }
+          run.hadWave = true;
+          run.sawDraw = false;
+          continue;
+        }
+
+        var cm = WAVE_CLEAR.exec(msg);
+        if (cm) {
+          var hatchLeft = String(Math.round(parseFloat(cm[3])));
+          run.lastHatchAtClear = hatchLeft;
+          closeSeg(t, false, hatchLeft);
+          continue;
+        }
+
+        if (/^RUN OVER/i.test(msg) || /^BASTION STRIPPED/i.test(msg)) {
+          var lost = /^RUN OVER/i.test(msg);
+          if (run.current && run.current.open) closeSeg(t, lost, null);
+          var endSal = parseEndSalvage(msg);
+          run.gross = endSal.gross;
+          run.repair = endSal.repair;
+          run.net = endSal.net;
+          run.bankedEnd = endSal.bankedEnd;
+          run.closed = true;
+          run.endSec = t;
+          continue;
+        }
+      }
+
+      if (tagL === 'hatch') {
+        if (/hatch under attack/i.test(msg)) run.underAttackLines++;
+        if (/^HATCH BREACHED/i.test(msg)) {
+          run.hatchBreached = true;
+          if (run.current && run.current.open) closeSeg(t, true, '0');
+        }
+        continue;
+      }
+
+      if (/^(Gatekeepers|Boarders)$/i.test(tag)) {
+        if (/hitting the hatch/i.test(msg)) run.hatchArrivals++;
+        var n = trySpawn(msg);
+        if (n != null) {
+          applyDelta(t, n);
+          var g = GROUP.exec(msg) || GROUP_LIVE.exec(msg);
+          if (g) compositionByKind(msg, run.spawnedByKind);
+          else if (SOLO.test(msg)) {
+            run.spawnedByKind.Gatekeeper = (run.spawnedByKind.Gatekeeper || 0) + 1;
+          }
+        } else if (/hitting the hatch/i.test(msg)) {
+          /* arrival only */
+        } else {
+          compositionByKind(msg, run.spawnedByKind);
+        }
+        continue;
+      }
+
+      if (tagL === 'combat') {
+        var kf = KILL_FULL.exec(msg);
+        var ka = KILL_ANY.exec(msg);
+        if (kf || ka) {
+          applyDelta(t, -1);
+          var kind = normalizeKind((kf || ka)[1]);
+          var slot = kf && kf[2] ? kf[2] : '';
+          var salv = kf ? parseInt(kf[3], 10) : 0;
+          run.kills.push({ tMs: tMs, kind: kind, slot: slot, salvage: salv });
+        }
+        continue;
+      }
+
+      if (tagL === 'player' && PLAYER_DMG.test(msg)) {
+        run.playerDamageHits++;
+        continue;
+      }
+
+      if (tagL === 'ability') {
+        var aw = ABILITY_WAVE.exec(msg);
+        if (aw) {
+          var credit = parseFloat(aw[2]);
+          run.abilityCredit += credit;
+          if (credit === 0) run.abilityZeroWaves.push(parseInt(aw[1], 10));
+        } else {
+          var ac = ABILITY_CREDIT.exec(msg);
+          if (ac) run.abilityCredit += parseFloat(ac[1]);
+          else run.abilityActivations++;
+        }
+        continue;
+      }
+
+      if (tagL === 'decoy') {
+        var da = DECOY_ABSORB.exec(msg);
+        if (da) run.decoyAbsorbed += parseFloat(da[1]);
+      }
+    }
+
+    var endT = lastRaw + dayOffset;
+    closeSeg(endT, false, null);
+    if (run && run.endSec < 0) run.endSec = endT;
+    runs.forEach(function (r) {
+      if (playMode) r.playMode = true;
+      r.segments.forEach(function (s) {
+        s.dev = r.dev || s.dev;
+        s.seconds = Math.max(0, s.endSec - s.startSec);
+        s.meanLive = s.seconds > 0 ? s.integral / s.seconds : 0;
+        s.meanLife = (s.bodies > 0 && s.seconds > 0)
+          ? s.meanLive / (s.bodies / s.seconds) : 0;
+      });
+      r.duration = r.endSec < 0 ? 0 : Math.max(0, r.endSec - r.beginSec);
+      var integ = 0, secs = 0;
+      r.segments.forEach(function (s) {
+        integ += s.integral;
+        secs += s.seconds;
+      });
+      r.meanLive = secs > 0 ? integ / secs : 0;
+      r.secondsLive = secs;
+      r.killsSalvage = 0;
+      r.primaryKills = 0;
+      r.secondaryKills = 0;
+      r.droneKills = 0;
+      r.unknownSlotKills = 0;
+      r.kills.forEach(function (k) {
+        r.killsSalvage += k.salvage;
+        if (k.slot === 'Primary') r.primaryKills++;
+        else if (k.slot === 'Secondary') r.secondaryKills++;
+        else if (k.slot === 'Drone') r.droneKills++;
+        else r.unknownSlotKills++;
+      });
+      r.totalKills = r.kills.length;
+    });
+    return runs;
+  }
+
+  function scoreRun(r, T) {
+    var meanLive = r.meanLive || 0;
+    var seconds = r.secondsLive || 0;
+    var net = r.net != null ? r.net : 0;
+    var ease = meanLive < T.EASY_LIVE && r.hatchArrivals === 0 && r.playerDamageHits === 0;
+    var doorThreat = r.hatchArrivals + T.ARRIVAL_WEIGHT * r.underAttackLines;
+    var secShare = r.totalKills > 0 ? r.secondaryKills / r.totalKills : 0;
+    var secFlag = r.totalKills >= 10 && secShare < T.SECONDARY_SHARE_MIN;
+    var denom = Math.max(1, meanLive * seconds);
+    var salvEff = (net / denom) * T.EFFICIENCY_SCALE;
+    var abilityPresent = r.abilityCredit > 0 || r.abilityActivations > 0;
+    var clusters = countClusters(r.kills.map(function (k) { return k.tMs; }), T.CLUSTER_MS);
+    return {
+      ease: ease,
+      doorThreat: doorThreat,
+      secondaryShare: secShare,
+      secondaryFlag: secFlag,
+      salvageEfficiency: salvEff,
+      abilityPresent: abilityPresent,
+      multiKillClusters: clusters
+    };
+  }
+
+  function finalize(allRuns, T) {
+    var exclPlay = 0, exclShort = 0;
+    var kept = [];
+    allRuns.forEach(function (r) {
+      if (r.playMode) { exclPlay++; return; }
+      if (r.duration < T.MIN_RUN_SEC) { exclShort++; return; }
+      kept.push(r);
+    });
+
+    var segments = [];
+    kept.forEach(function (r) {
+      r.era = eraId(r.file);
+      r.eraLabel = eraLabel(r.era);
+      r.outcome = r.segments.some(function (s) { return s.lost; }) || r.hatchBreached
+        ? 'lost'
+        : r.segments.length ? 'cleared segments' : 'no segments';
+      r.scores = scoreRun(r, T);
+      r.segments.forEach(function (s) {
+        segments.push({
+          run: s.runIndex,
+          file: s.file,
+          era: r.era,
+          eraLabel: r.eraLabel,
+          label: s.label,
+          bodies: s.bodies,
+          seconds: s.seconds,
+          meanLive: s.meanLive,
+          peakLive: s.peakLive,
+          meanLife: s.meanLife,
+          hatch: s.hatch || '',
+          lost: s.lost,
+          dev: s.dev,
+          parseFailed: s.parseFailed
+        });
+      });
+    });
+
+    var spendMap = {};
+    var skuMap = {};
+    kept.forEach(function (r) {
+      r.purchases.forEach(function (p) {
+        if (!spendMap[p.track]) spendMap[p.track] = { track: p.track, count: 0, salvage: 0, preToken: 0 };
+        spendMap[p.track].count++;
+        spendMap[p.track].salvage += p.cost;
+        if (p.preToken) spendMap[p.track].preToken++;
+        if (!skuMap[p.sku]) skuMap[p.sku] = { item: p.sku, count: 0, salvage: 0 };
+        skuMap[p.sku].count++;
+        skuMap[p.sku].salvage += p.cost;
+      });
+    });
+    var order = { weapon: 0, crew: 1, fabrication: 2, equipment: 3, 'pre-token': 4 };
+    var spend = Object.keys(spendMap).sort(function (a, b) {
+      return (order[a] != null ? order[a] : 9) - (order[b] != null ? order[b] : 9);
+    }).map(function (k) { return spendMap[k]; });
+    var skus = Object.keys(skuMap).sort(function (a, b) {
+      return skuMap[b].salvage - skuMap[a].salvage || skuMap[b].count - skuMap[a].count;
+    }).map(function (k) { return skuMap[k]; });
+
+    // Per-weapon rows
+    var weaponMap = {};
+    var weaponRuns = {};
+    kept.forEach(function (r) {
+      var seen = {};
+      r.kills.forEach(function (k) {
+        var weapon, slot;
+        if (k.slot === 'Primary') { weapon = r.primary || '(unknown)'; slot = 'Primary'; }
+        else if (k.slot === 'Secondary') { weapon = r.secondary || '(unknown)'; slot = 'Secondary'; }
+        else if (k.slot === 'Drone') { weapon = 'Drone'; slot = 'Drone'; }
+        else { weapon = '(unknown)'; slot = '(unknown)'; }
+        var key = weapon + '\0' + slot;
+        if (!weaponMap[key]) weaponMap[key] = { weapon: weapon, slot: slot, kills: 0, salvage: 0 };
+        weaponMap[key].kills++;
+        weaponMap[key].salvage += k.salvage;
+        if (!seen[key]) {
+          seen[key] = true;
+          if (!weaponRuns[key]) weaponRuns[key] = 0;
+          weaponRuns[key]++;
+        }
+      });
+    });
+    var totalWeaponKills = 0;
+    Object.keys(weaponMap).forEach(function (k) { totalWeaponKills += weaponMap[k].kills; });
+    var weapons = Object.keys(weaponMap).map(function (k) {
+      var w = weaponMap[k];
+      return {
+        weapon: w.weapon,
+        slot: w.slot,
+        kills: w.kills,
+        share: totalWeaponKills ? w.kills / totalWeaponKills : 0,
+        salvage: w.salvage,
+        nRuns: weaponRuns[k] || 0
+      };
+    }).sort(function (a, b) { return b.kills - a.kills || a.weapon.localeCompare(b.weapon); });
+
+    // Per kind
+    var kindMap = {};
+    var cleanSec = 0;
+    kept.forEach(function (r) {
+      r.segments.forEach(function (s) {
+        if (!s.dev && !s.parseFailed) cleanSec += s.seconds;
+      });
+      r.kills.forEach(function (k) {
+        if (!kindMap[k.kind]) kindMap[k.kind] = { kind: k.kind, kills: 0, spawned: 0 };
+        kindMap[k.kind].kills++;
+      });
+      Object.keys(r.spawnedByKind).forEach(function (kind) {
+        if (!kindMap[kind]) kindMap[kind] = { kind: kind, kills: 0, spawned: 0 };
+        kindMap[kind].spawned += r.spawnedByKind[kind];
+      });
+    });
+    var totalKindKills = 0;
+    Object.keys(kindMap).forEach(function (k) { totalKindKills += kindMap[k].kills; });
+    var kinds = Object.keys(kindMap).map(function (k) {
+      var row = kindMap[k];
+      return {
+        kind: row.kind,
+        kills: row.kills,
+        share: totalKindKills ? row.kills / totalKindKills : 0,
+        killsPerSec: cleanSec > 0 ? row.kills / cleanSec : 0,
+        spawned: row.spawned
+      };
+    }).sort(function (a, b) { return b.kills - a.kills || a.kind.localeCompare(b.kind); });
+
+    var abilityCredit = 0, decoyAbsorbed = 0, zeroWaves = [];
+    kept.forEach(function (r) {
+      abilityCredit += r.abilityCredit;
+      decoyAbsorbed += r.decoyAbsorbed;
+      r.abilityZeroWaves.forEach(function (w) {
+        zeroWaves.push(shortFile(r.file) + ' #' + r.index + ' w' + w);
+      });
+    });
+
+    return {
+      exclusions: {
+        playmode: exclPlay,
+        short: exclShort,
+        shortRule: 'duration < ' + T.MIN_RUN_SEC + 's'
+      },
+      runs: kept,
+      segments: segments,
+      spend: spend,
+      skus: skus,
+      weapons: weapons,
+      kinds: kinds,
+      ability: { credit: abilityCredit, decoy: decoyAbsorbed, zeroWaves: zeroWaves },
+      eras: [
+        { id: 'pre-weapon', label: eraLabel('pre-weapon') },
+        { id: 'horde-retune', label: eraLabel('horde-retune') },
+        { id: 'weapons-and-wheel', label: eraLabel('weapons-and-wheel') }
+      ],
+      tunables: T
+    };
+  }
+
+  function avg(arr, key) {
+    if (!arr.length) return 0;
+    var t = 0;
+    for (var i = 0; i < arr.length; i++) t += Number(arr[i][key]) || 0;
+    return t / arr.length;
+  }
+
+  function waveSortKey(label) {
+    var m = /w(\d+)/.exec(label || '');
+    return m ? parseInt(m[1], 10) : 99;
+  }
+
+  function fmtNum(n, digits) {
+    if (n == null || !isFinite(n)) return '—';
+    return Number(n).toFixed(digits);
+  }
+
+  function fmtInt(n) {
+    if (n == null || !isFinite(n)) return '—';
+    return String(Math.round(n));
+  }
+
+  function hbarHtml(label, share, title) {
+    var pct = Math.max(0, Math.min(100, (share || 0) * 100));
+    var width = Math.max(share > 0 ? 2 : 0, Math.round(pct));
+    return '<div class="hbar" title="' + esc(title || '') + '">' +
+      '<div class="lab">' + esc(label) + '</div>' +
+      '<div class="track"><i style="width:' + width + '%"></i></div>' +
+      '<div class="pct">' + fmtNum(pct, 0) + '%</div></div>';
+  }
+
+  function abilityDead(r) {
+    return r.abilityCredit === 0 && r.totalKills >= 20;
+  }
+
+  function buildFindings(D, runs, fileCount) {
+    var out = [];
+    var T = D.tunables;
+
+    if (!runs.length) {
+      out.push({ sev: 'alert', text: 'No kept Runs in this sample — nothing to read.' });
+      return out.slice(0, 6);
+    }
+
+    var dead = runs.filter(abilityDead);
+    if (dead.length) {
+      out.push({
+        sev: 'alert',
+        text: 'Ability credit never moved — Pin/ability may be dead (verification #1). ' +
+          dead.length + ' Run(s) with ≥20 kills and 0 credit.'
+      });
+    }
+
+    var secFlagged = runs.filter(function (r) { return r.scores && r.scores.secondaryFlag; });
+    secFlagged.forEach(function (r) {
+      if (out.length >= 6) return;
+      out.push({
+        sev: 'warn',
+        text: 'Secondary below SECONDARY_SHARE_MIN on Run ' + r.index +
+          ' with Primary=' + (r.primary || '—') + ' — Secondary not in the fight.'
+      });
+    });
+
+    var easeRuns = runs.filter(function (r) { return r.scores && r.scores.ease; });
+    if (easeRuns.length >= 1 && out.length < 6) {
+      out.push({
+        sev: 'warn',
+        text: easeRuns.length + ' Run' + (easeRuns.length === 1 ? '' : 's') +
+          ' look easy (quiet room): meanLive&lt;EASY_LIVE, zero hatch arrivals, zero player damage.'
+      });
+    }
+
+    var hatchSum = 0;
+    var killVolume = 0;
+    runs.forEach(function (r) {
+      hatchSum += r.hatchArrivals;
+      killVolume += r.totalKills;
+    });
+    if (hatchSum === 0 && killVolume >= 30 && out.length < 6) {
+      out.push({
+        sev: 'warn',
+        text: 'No Hatch arrivals despite kill volume — door never pressured.'
+      });
+    }
+
+    if (D.weapons.length && out.length < 6) {
+      var top = D.weapons[0];
+      var primaryShare = 0;
+      D.weapons.forEach(function (w) {
+        if (w.slot === 'Primary') primaryShare += w.share;
+      });
+      if (primaryShare >= 0.85 || (top.share >= 0.85 && top.slot === 'Primary')) {
+        out.push({
+          sev: 'ok',
+          text: 'Fight is Primary-dominated (' +
+            fmtNum((primaryShare >= 0.85 ? primaryShare : top.share) * 100, 0) +
+            '% kills).'
+        });
+      } else if (top.share >= 0.85) {
+        out.push({
+          sev: 'ok',
+          text: top.weapon + ' dominates kills (' + fmtNum(top.share * 100, 0) + '%).'
+        });
+      }
+    }
+
+    if (D.ability.decoy === 0 && D.ability.credit === 0 && out.length < 6) {
+      var anyKills = runs.some(function (r) { return r.totalKills > 0; });
+      if (anyKills) {
+        out.push({
+          sev: 'ok',
+          text: 'Abilities unused this sample — credit 0 and decoy absorbed 0.'
+        });
+      }
+    }
+
+    if (D.spend.length && out.length < 6) {
+      var totalSalv = 0;
+      D.spend.forEach(function (g) { totalSalv += g.salvage; });
+      if (totalSalv > 0) {
+        var topSpend = D.spend.slice().sort(function (a, b) {
+          return b.salvage - a.salvage;
+        })[0];
+        if (topSpend.salvage / totalSalv >= 0.85) {
+          out.push({
+            sev: 'ok',
+            text: 'Spend concentrated on ' + topSpend.track + ' (' +
+              fmtNum(100 * topSpend.salvage / totalSalv, 0) + '% of salvage).'
+          });
+        }
+      }
+    }
+
+    if (!out.length) {
+      out.push({ sev: 'ok', text: 'No automated flags — check curves below.' });
+    }
+
+    return out.slice(0, 6);
+  }
+
+  function eraNote(labels, byLabel) {
+    if (!labels.length) return '';
+    var peakLabel = labels[0];
+    var peakMean = -1;
+    labels.forEach(function (label) {
+      var m = avg(byLabel[label], 'meanLive');
+      if (m > peakMean) { peakMean = m; peakLabel = label; }
+    });
+    var peakGroup = byLabel[peakLabel] || [];
+    var peakLost = peakGroup.filter(function (s) { return s.lost; }).length;
+    var allLost = 0;
+    labels.forEach(function (label) {
+      allLost += byLabel[label].filter(function (s) { return s.lost; }).length;
+    });
+    var note = 'Peaks at ' + peakLabel + ' (' + peakMean.toFixed(1) + ')';
+    if (peakLost > 0 && peakLost >= allLost * 0.5) {
+      note += ' — losses cluster there';
+    } else if (allLost > 0 && peakLost === 0) {
+      note += ' — losses elsewhere';
+    }
+    return note + '.';
+  }
+
+  function runVerdict(r) {
+    var parts = [];
+    if (r.scores && r.scores.ease) parts.push('Easy quiet clear');
+    else if (r.outcome === 'lost') parts.push('Lost');
+    else if (abilityDead(r)) parts.push('Ability dead');
+    else if (r.scores && r.scores.secondaryFlag) parts.push('Secondary sidelined');
+    else parts.push(r.outcome === 'cleared segments' ? 'Clear' : r.outcome);
+    if (r.primary) parts.push(r.primary);
+    parts.push(r.totalKills + ' kills');
+    parts.push(r.hatchArrivals + ' arrival' + (r.hatchArrivals === 1 ? '' : 's'));
+    return parts.join(' · ');
+  }
+
+  function render(D, fileCount) {
+    document.getElementById('empty').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    var ex = D.exclusions;
+    var runs = D.runs;
+    var segs = D.segments;
+    var cleanSegs = segs.filter(function (s) { return !s.dev && !s.parseFailed; });
+    var lostRuns = runs.filter(function (r) { return r.outcome === 'lost'; }).length;
+    var excluded = ex.playmode + ex.short;
+
+    document.getElementById('sampleStrip').innerHTML =
+      '<span class="chip"><span class="v">' + runs.length + '</span><span class="k">kept</span></span>' +
+      '<span class="chip lost"><span class="v">' + lostRuns + '</span><span class="k">lost</span></span>' +
+      '<span class="chip muted"><span class="v">' + excluded + '</span><span class="k">excluded</span></span>' +
+      '<span class="chip muted"><span class="v">' + cleanSegs.length + '</span><span class="k">clean segs</span></span>' +
+      '<span class="chip muted"><span class="v">' + fileCount + '</span><span class="k">files</span></span>' +
+      '<span class="chip muted"><span class="k">' + esc(ex.shortRule) +
+        ' · playmode ' + ex.playmode + ' · short ' + ex.short + '</span></span>';
+
+    var findings = buildFindings(D, runs, fileCount);
+    document.getElementById('findings').innerHTML = findings.map(function (f) {
+      return '<li class="f-' + f.sev + '"><span class="sev">' + f.sev + '</span>' + f.text + '</li>';
+    }).join('');
+
+    var ordered = runs.slice().sort(function (a, b) {
+      return String(b.file).localeCompare(String(a.file)) || (b.index - a.index);
+    });
+
+    // Eras — visual bars + one sentence
+    var erasRoot = document.getElementById('eras');
+    erasRoot.innerHTML = '';
+    var globalMax = 0;
+    cleanSegs.forEach(function (s) { if (s.meanLive > globalMax) globalMax = s.meanLive; });
+    if (globalMax <= 0) globalMax = 1;
+
+    D.eras.forEach(function (era) {
+      var clean = cleanSegs.filter(function (s) { return s.era === era.id; });
+      var box = document.createElement('div');
+      box.className = 'era';
+      box.innerHTML = '<div class="era-head"><h3>' + esc(era.label) + '</h3><span class="meta">n=' +
+        clean.length + '</span></div>';
+      if (!clean.length) {
+        box.innerHTML += '<p class="empty">No clean segments in this era.</p>';
+        erasRoot.appendChild(box);
+        return;
+      }
+      var byLabel = {};
+      clean.forEach(function (s) {
+        if (!byLabel[s.label]) byLabel[s.label] = [];
+        byLabel[s.label].push(s);
+      });
+      var labels = Object.keys(byLabel).sort(function (a, b) {
+        return waveSortKey(a) - waveSortKey(b) || (a < b ? -1 : 1);
+      });
+      var curve = document.createElement('div');
+      curve.className = 'curve';
+      labels.forEach(function (label) {
+        var group = byLabel[label];
+        var mean = avg(group, 'meanLive');
+        var lostN = group.filter(function (s) { return s.lost; }).length;
+        var width = Math.max(2, Math.round(100 * mean / globalMax));
+        var tip = label + ': mean ' + mean.toFixed(2) + ' · n=' + group.length +
+          (lostN ? ' · ' + lostN + ' lost' : '');
+        curve.innerHTML +=
+          '<div>' + esc(label) + '</div>' +
+          '<div class="track' + (lostN === group.length && lostN > 0 ? ' lost' : '') +
+            '" title="' + esc(tip) + '"><i style="width:' + width + '%"></i></div>';
+      });
+      box.appendChild(curve);
+      var note = document.createElement('p');
+      note.className = 'era-note';
+      note.textContent = eraNote(labels, byLabel);
+      box.appendChild(note);
+      erasRoot.appendChild(box);
+    });
+
+    // Weapon / kind bars
+    document.getElementById('weaponBars').innerHTML = D.weapons.length
+      ? D.weapons.map(function (w) {
+          var tip = w.weapon + ' (' + w.slot + '): ' + w.kills + ' kills · ' +
+            fmtInt(w.salvage) + ' salvage · ' + w.nRuns + ' runs';
+          return hbarHtml(w.weapon, w.share, tip);
+        }).join('')
+      : '<p class="empty">No weapon kills on kept Runs.</p>';
+    if (D.weapons.length) {
+      var tw = D.weapons[0];
+      document.getElementById('weaponCaption').textContent =
+        tw.weapon + ' leads at ' + fmtNum(tw.share * 100, 0) + '% of kills' +
+        (tw.slot ? ' (' + tw.slot + ')' : '') + '.';
+    } else {
+      document.getElementById('weaponCaption').textContent = '';
+    }
+
+    var kindOrder = ['Gatekeeper', 'Hunter', 'Ram'];
+    var kindByName = {};
+    D.kinds.forEach(function (k) { kindByName[k.kind] = k; });
+    var kindRows = kindOrder.map(function (name) {
+      return kindByName[name] || { kind: name, kills: 0, share: 0, spawned: 0, killsPerSec: 0 };
+    });
+    D.kinds.forEach(function (k) {
+      if (kindOrder.indexOf(k.kind) < 0) kindRows.push(k);
+    });
+    document.getElementById('kindBars').innerHTML = D.kinds.length
+      ? kindRows.filter(function (k) { return k.kills > 0 || kindOrder.indexOf(k.kind) >= 0; })
+        .map(function (k) {
+          var tip = k.kind + ': ' + k.kills + ' kills · spawned ' + k.spawned +
+            ' · ' + fmtNum(k.killsPerSec, 3) + '/s';
+          return hbarHtml(k.kind, k.share, tip);
+        }).join('')
+      : '<p class="empty">No kind data on kept Runs.</p>';
+    var hunter = kindByName.Hunter;
+    var ram = kindByName.Ram;
+    document.getElementById('kindCaption').textContent = D.kinds.length
+      ? 'Hunters ' + fmtNum((hunter ? hunter.share : 0) * 100, 0) +
+        '% · Rams ' + fmtNum((ram ? ram.share : 0) * 100, 0) + '%'
+      : '';
+
+    document.getElementById('weapons').innerHTML = D.weapons.length
+      ? D.weapons.map(function (w) {
+          return '<tr><td>' + esc(w.weapon) + '</td><td>' + esc(w.slot) + '</td>' +
+            '<td class="num">' + w.kills + '</td>' +
+            '<td class="num">' + fmtNum(w.share * 100, 1) + '%</td>' +
+            '<td class="num">' + fmtInt(w.salvage) + '</td>' +
+            '<td class="num">' + w.nRuns + '</td></tr>';
+        }).join('')
+      : '<tr><td colspan="6" class="empty">No kills with salvage on kept Runs.</td></tr>';
+
+    document.getElementById('kinds').innerHTML = D.kinds.length
+      ? D.kinds.map(function (k) {
+          return '<tr><td>' + esc(k.kind) + '</td>' +
+            '<td class="num">' + k.kills + '</td>' +
+            '<td class="num">' + fmtNum(k.share * 100, 1) + '%</td>' +
+            '<td class="num">' + fmtNum(k.killsPerSec, 3) + '</td>' +
+            '<td class="num">' + k.spawned + '</td></tr>';
+        }).join('')
+      : '<tr><td colspan="5" class="empty">No kind data on kept Runs.</td></tr>';
+
+    // Hatch door meters
+    var doorRuns = ordered.filter(function (r) {
+      return r.totalKills > 0 || r.hatchArrivals > 0 || r.underAttackLines > 0;
+    });
+    var doorMax = 1;
+    doorRuns.forEach(function (r) {
+      var threat = r.hatchArrivals + D.tunables.ARRIVAL_WEIGHT * r.underAttackLines;
+      if (threat > doorMax) doorMax = threat;
+    });
+    var pressuredN = 0;
+    var calmN = 0;
+    var arrivalsTotal = 0;
+    doorRuns.forEach(function (r) {
+      arrivalsTotal += r.hatchArrivals;
+      if (r.hatchArrivals === 0 && r.underAttackLines === 0) calmN++;
+      else pressuredN++;
+    });
+    if (!doorRuns.length) {
+      document.getElementById('hatchCaption').textContent = 'No kept Runs with kills or hatch activity.';
+      document.getElementById('hatchDoors').innerHTML = '<p class="empty">Nothing to meter.</p>';
+    } else {
+      document.getElementById('hatchCaption').textContent =
+        pressuredN + ' pressured · ' + calmN + ' calm · ' +
+        arrivalsTotal + ' arrival' + (arrivalsTotal === 1 ? '' : 's') + ' across ' +
+        doorRuns.length + ' Run(s).';
+      document.getElementById('hatchDoors').innerHTML = doorRuns.map(function (r) {
+        var threat = r.hatchArrivals + D.tunables.ARRIVAL_WEIGHT * r.underAttackLines;
+        var calm = r.hatchArrivals === 0 && r.underAttackLines === 0;
+        var width = calm ? 0 : Math.max(4, Math.round(100 * threat / doorMax));
+        var cls = calm ? 'calm' : 'pressured';
+        var tag = calm ? 'calm' : (r.hatchBreached ? 'breached' : 'pressured');
+        var lab = shortFile(r.file) + ' #' + r.index;
+        var tip = lab + ': ' + r.hatchArrivals + ' arrivals · ' +
+          r.underAttackLines + ' under-attack · threat ' + threat.toFixed(1);
+        return '<div class="door-row" title="' + esc(tip) + '">' +
+          '<div class="lab">' + esc(lab) + '</div>' +
+          '<div class="door-meter ' + cls + '"><i style="width:' + width + '%"></i></div>' +
+          '<div class="tag ' + cls + '">' + tag + '</div></div>';
+      }).join('');
+    }
+
+    document.getElementById('hatch').innerHTML = ordered.map(function (r) {
+      var breached = r.hatchBreached || r.segments.some(function (s) { return s.lost; });
+      return '<tr class="' + (breached ? 'lost' : '') + (r.dev ? ' dev' : '') + '">' +
+        '<td class="file">' + esc(shortFile(r.file)) + '</td>' +
+        '<td class="num">' + r.index + '</td>' +
+        '<td class="num">' + r.hatchArrivals + '</td>' +
+        '<td class="num">' + r.underAttackLines + '</td>' +
+        '<td class="num">' + esc(r.lastHatchAtClear || '\u2014') + '</td>' +
+        '<td class="flags">' + (breached ? 'yes' : '') + '</td></tr>';
+    }).join('') || '<tr><td colspan="6" class="empty">No kept Runs.</td></tr>';
+
+    // Ability status
+    var zeroN = 0;
+    var waveM = 0;
+    var killsWithDead = false;
+    runs.forEach(function (r) {
+      var z = r.abilityZeroWaves.length;
+      zeroN += z;
+      if (z || r.abilityCredit > 0) {
+        waveM += z + (r.abilityCredit > 0 ? 1 : 0);
+      }
+      if (abilityDead(r)) killsWithDead = true;
+    });
+    if (waveM < zeroN) waveM = zeroN;
+    var allCreditZero = D.ability.credit === 0;
+    var anyKills = runs.some(function (r) { return r.totalKills > 0; });
+    var deadCallout = allCreditZero && anyKills && (killsWithDead || runs.some(function (r) {
+      return r.totalKills >= 20;
+    }));
+    document.getElementById('abilityStatus').innerHTML =
+      '<div class="ability-status' + (deadCallout ? ' dead' : '') + '">' +
+        '<div class="big">' + fmtNum(D.ability.credit, 2) +
+          ' credit · ' + fmtNum(D.ability.decoy, 2) + ' decoy</div>' +
+        '<div class="sub">' + zeroN + '/' + (waveM || zeroN) +
+          ' waves at 0 credit · gatekeeper-seconds removed / absorbed</div>' +
+        (deadCallout
+          ? '<div class="callout">All ability credit is zero with kill volume \u2014 Pin/ability may be dead.</div>'
+          : '') +
+      '</div>';
+    document.getElementById('abilityZero').textContent = D.ability.zeroWaves.length
+      ? D.ability.zeroWaves.join(' \u00b7 ')
+      : 'No zero-credit waves on kept Runs.';
+
+    // Spend bars
+    var spendTotal = 0;
+    D.spend.forEach(function (g) { spendTotal += g.salvage; });
+    if (!D.spend.length) {
+      document.getElementById('spendBars').innerHTML = '<p class="empty">No purchases on kept Runs.</p>';
+      document.getElementById('spendCaption').textContent = '';
+    } else {
+      document.getElementById('spendBars').innerHTML = D.spend.map(function (g) {
+        var share = spendTotal ? g.salvage / spendTotal : 0;
+        var tip = g.track + ': ' + fmtInt(g.salvage) + ' salvage · ' + g.count + ' buys' +
+          (g.preToken ? ' · ' + g.preToken + ' pre-token' : '');
+        return hbarHtml(g.track, share, tip);
+      }).join('');
+      var topS = D.spend.slice().sort(function (a, b) { return b.salvage - a.salvage; })[0];
+      document.getElementById('spendCaption').textContent =
+        topS.track + ' takes ' + fmtNum(100 * topS.salvage / spendTotal, 0) + '% of spend.';
+    }
+
+    var topSkus = D.skus.slice(0, 5);
+    var skuTotal = 0;
+    D.skus.forEach(function (s) { skuTotal += s.salvage; });
+    if (!topSkus.length) {
+      document.getElementById('skuBars').innerHTML = '<p class="empty">No SKUs on kept Runs.</p>';
+      document.getElementById('skuCaption').textContent = '';
+    } else {
+      document.getElementById('skuBars').innerHTML = topSkus.map(function (s) {
+        var share = skuTotal ? s.salvage / skuTotal : 0;
+        var tip = s.item + ': ' + s.count + 'x · ' + fmtInt(s.salvage) + ' salvage';
+        return hbarHtml(s.item, share, tip);
+      }).join('');
+      var rest = D.skus.length - topSkus.length;
+      document.getElementById('skuCaption').textContent = rest > 0
+        ? 'Top 5 shown · ' + rest + ' more in details.'
+        : topSkus[0].item + ' leads SKU spend.';
+    }
+
+    document.getElementById('skus').innerHTML = D.skus.length
+      ? D.skus.map(function (s) {
+          return '<tr><td>' + esc(s.item) + '</td>' +
+            '<td class="num">' + s.count + '</td>' +
+            '<td class="num">' + fmtInt(s.salvage) + '</td></tr>';
+        }).join('')
+      : '<tr><td colspan="3" class="empty">No SKUs on kept Runs.</td></tr>';
+
+    // Bank sparkline (net per kept run, chronological-ish by file then index)
+    var bankOrdered = runs.slice().sort(function (a, b) {
+      return String(a.file).localeCompare(String(b.file)) || (a.index - b.index);
+    });
+    var maxAbsNet = 1;
+    bankOrdered.forEach(function (r) {
+      if (r.net != null && Math.abs(r.net) > maxAbsNet) maxAbsNet = Math.abs(r.net);
+    });
+    if (!bankOrdered.length) {
+      document.getElementById('bankSpark').innerHTML = '';
+      document.getElementById('bankCaption').textContent = 'No kept Runs.';
+    } else {
+      document.getElementById('bankSpark').innerHTML = bankOrdered.map(function (r) {
+        var net = r.net;
+        if (net == null) {
+          return '<div class="seg zero" title="' + esc(shortFile(r.file) + ' #' + r.index + ': no net') + '"></div>';
+        }
+        var h = Math.max(2, Math.round(40 * Math.abs(net) / maxAbsNet));
+        var cls = net < 0 ? 'seg neg' : (net === 0 ? 'seg zero' : 'seg');
+        var tip = shortFile(r.file) + ' #' + r.index + ': net ' + net;
+        return '<div class="' + cls + '" style="height:' + h + 'px" title="' + esc(tip) + '"></div>';
+      }).join('');
+      var firstStart = null;
+      var lastEnd = null;
+      bankOrdered.forEach(function (r) {
+        if (firstStart == null && r.bankedStart != null) firstStart = r.bankedStart;
+        if (r.bankedEnd != null) lastEnd = r.bankedEnd;
+      });
+      if (firstStart != null && lastEnd != null) {
+        var delta = lastEnd - firstStart;
+        document.getElementById('bankCaption').textContent =
+          'Campaign \u0394 bank ' + (delta >= 0 ? '+' : '') + delta +
+          ' (first banked start ' + firstStart + ' \u2192 last banked end ' + lastEnd + ').';
+      } else {
+        document.getElementById('bankCaption').textContent =
+          'Per-Run net bars (green +, red \u2212). Campaign \u0394 bank not computable.';
+      }
+    }
+
+    document.getElementById('salvage').innerHTML = ordered.map(function (r) {
+      return '<tr class="' + (r.dev ? 'dev ' : '') + (r.outcome === 'lost' ? 'lost' : '') + '">' +
+        '<td class="file">' + esc(shortFile(r.file)) + '</td>' +
+        '<td class="num">' + r.index + '</td>' +
+        '<td>' + esc(r.primary || '\u2014') + '</td>' +
+        '<td class="num">' + (r.startWave != null ? r.startWave : '\u2014') + '</td>' +
+        '<td class="num">' + (r.bankedStart != null ? r.bankedStart : '\u2014') + '</td>' +
+        '<td class="num">' + (r.gross != null ? r.gross : '\u2014') + '</td>' +
+        '<td class="num">' + (r.repair != null ? r.repair : '\u2014') + '</td>' +
+        '<td class="num">' + (r.net != null ? r.net : '\u2014') + '</td>' +
+        '<td class="num">' + (r.bankedEnd != null ? r.bankedEnd : '\u2014') + '</td>' +
+        '<td class="num">' + r.killsSalvage + '</td></tr>';
+    }).join('') || '<tr><td colspan="10" class="empty">No kept Runs.</td></tr>';
+
+    // Runs that matter: flagged union top 5 by kills
+    var matter = [];
+    var seen = {};
+    function addMatter(r, cls) {
+      var key = r.file + '\0' + r.index;
+      if (seen[key]) return;
+      seen[key] = true;
+      matter.push({ r: r, cls: cls || '' });
+    }
+    runs.forEach(function (r) {
+      if (r.scores && r.scores.ease) addMatter(r, 'warn');
+      else if (r.scores && r.scores.secondaryFlag) addMatter(r, 'warn');
+      else if (r.outcome === 'lost') addMatter(r, 'alert');
+      else if (abilityDead(r)) addMatter(r, 'alert');
+    });
+    runs.slice().sort(function (a, b) { return b.totalKills - a.totalKills; })
+      .slice(0, 5)
+      .forEach(function (r) { addMatter(r, ''); });
+    if (!matter.length) {
+      document.getElementById('verdicts').innerHTML = '<p class="empty">No kept Runs.</p>';
+    } else {
+      document.getElementById('verdicts').innerHTML = matter.map(function (item) {
+        var r = item.r;
+        return '<div class="verdict ' + item.cls + '">' +
+          '<div>' + esc(runVerdict(r)) + '</div>' +
+          '<div class="meta">' + esc(shortFile(r.file)) + ' #' + r.index +
+            (r.dev ? ' · Dev' : '') + '</div></div>';
+      }).join('');
+    }
+
+    // Raw tables
+    document.getElementById('scores').innerHTML = ordered.map(function (r) {
+      var s = r.scores;
+      var cls = (r.dev ? 'dev ' : '') + (s.ease || s.secondaryFlag ? 'flag ' : '') +
+        (r.outcome === 'lost' ? 'lost' : '');
+      return '<tr class="' + cls + '">' +
+        '<td class="file">' + esc(shortFile(r.file)) + '</td>' +
+        '<td class="num">' + r.index + '</td>' +
+        '<td class="' + (s.ease ? 'flag-yes' : '') + '">' + (s.ease ? 'yes' : '') + '</td>' +
+        '<td class="num">' + fmtNum(s.doorThreat, 1) + '</td>' +
+        '<td class="num">' + fmtNum(s.secondaryShare * 100, 1) + '%</td>' +
+        '<td class="' + (s.secondaryFlag ? 'flag-yes' : '') + '">' +
+          (s.secondaryFlag ? 'yes' : '') + '</td>' +
+        '<td class="num">' + fmtNum(s.salvageEfficiency, 3) + '</td>' +
+        '<td>' + (s.abilityPresent ? 'yes' : '') + '</td>' +
+        '<td class="num">' + s.multiKillClusters + '</td></tr>';
+    }).join('');
+
+    document.getElementById('runs').innerHTML = ordered.map(function (r) {
+      var cls = (r.dev ? 'dev ' : '') + (r.outcome === 'lost' ? 'lost' : '');
+      return '<tr class="' + cls + '">' +
+        '<td class="file">' + esc(shortFile(r.file)) + '</td>' +
+        '<td class="num">' + r.index + '</td>' +
+        '<td>' + esc((r.eraLabel || '').replace(/\s*\([^)]*\)\s*$/, '')) + '</td>' +
+        '<td>' + esc(r.primary || '\u2014') + '</td>' +
+        '<td class="num">' + r.segments.length + '</td>' +
+        '<td class="num">' + Number(r.duration).toFixed(0) + '</td>' +
+        '<td>' + (r.dev ? 'yes' : '') + '</td>' +
+        '<td class="' + (r.scores.ease ? 'flag-yes' : '') + '">' +
+          (r.scores.ease ? 'yes' : 'no') + '</td>' +
+        '<td class="outcome">' + esc(r.outcome) + '</td></tr>';
+    }).join('');
+
+    document.getElementById('rows').innerHTML = segs.map(function (s) {
+      var flags = (s.lost ? 'lost ' : '') + (s.dev ? 'dev ' : '') + (s.parseFailed ? 'PARSE' : '');
+      var cls = (s.dev ? 'dev ' : '') + (s.lost ? 'lost' : '');
+      return '<tr class="' + cls + '">' +
+        '<td class="file">' + esc(shortFile(s.file)) + '</td>' +
+        '<td class="num">' + s.run + '</td>' +
+        '<td>' + esc(s.label) + '</td>' +
+        '<td class="num">' + s.bodies + '</td>' +
+        '<td class="num">' + Number(s.seconds).toFixed(0) + '</td>' +
+        '<td class="num">' + Number(s.meanLive).toFixed(2) + '</td>' +
+        '<td class="num">' + s.peakLive + '</td>' +
+        '<td class="num">' + Number(s.meanLife).toFixed(1) + '</td>' +
+        '<td class="num">' + esc(s.hatch || '\u2014') + '</td>' +
+        '<td class="flags">' + esc(flags.trim()) + '</td></tr>';
+    }).join('');
+  }
+
+  function rerenderFromCache() {
+    if (!LAST_RAW) return;
+    var T = tunables();
+    var data = finalize(LAST_RAW, T);
+    var status = document.getElementById('status');
+    status.className = '';
+    status.textContent = 'Loaded ' + LAST_FILE_COUNT + ' file(s) · kept ' +
+      data.runs.length + ' Run(s) · excluded playmode ' + data.exclusions.playmode +
+      ', short ' + data.exclusions.short + ' · tunables applied.';
+    render(data, LAST_FILE_COUNT);
+  }
+
+  function isSessionLog(file) {
+    var n = file.name || '';
+    if (!/\.log$/i.test(n)) return false;
+    if (/GatekeeperBastion_/i.test(n)) return true;
+    return false;
+  }
+
+  function loadFileList(fileList) {
+    var files = Array.prototype.slice.call(fileList || []).filter(isSessionLog);
+    var status = document.getElementById('status');
+    if (!files.length) {
+      status.className = 'error';
+      status.textContent = 'No GatekeeperBastion_*.log in that selection.';
+      return;
+    }
+    status.className = '';
+    status.textContent = 'Reading ' + files.length + ' log file(s)\u2026';
+
+    Promise.all(files.map(function (f) {
+      return f.text().then(function (text) {
+        return { name: f.name, text: text };
+      });
+    })).then(function (loaded) {
+      var all = [];
+      loaded.forEach(function (item) {
+        all = all.concat(parseFile(item.name, item.text));
+      });
+      LAST_RAW = all;
+      LAST_FILE_COUNT = files.length;
+      rerenderFromCache();
+    }).catch(function (err) {
+      status.className = 'error';
+      status.textContent = 'Failed to read logs: ' + (err && err.message ? err.message : err);
+    });
+  }
+
+  ['t_MIN_RUN_SEC', 't_EASY_LIVE', 't_SECONDARY_SHARE_MIN', 't_ARRIVAL_WEIGHT',
+   't_CLUSTER_MS', 't_EFFICIENCY_SCALE'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', rerenderFromCache);
+    el.addEventListener('change', rerenderFromCache);
+  });
+
+  document.getElementById('dir').addEventListener('change', function (e) {
+    loadFileList(e.target.files);
+  });
+  document.getElementById('files').addEventListener('change', function (e) {
+    loadFileList(e.target.files);
+  });
+
+  var body = document.body;
+  body.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    body.classList.add('drag');
+  });
+  body.addEventListener('dragleave', function () { body.classList.remove('drag'); });
+  body.addEventListener('drop', function (e) {
+    e.preventDefault();
+    body.classList.remove('drag');
+    var dt = e.dataTransfer;
+    if (!dt) return;
+
+    var entries = [];
+    if (dt.items) {
+      for (var i = 0; i < dt.items.length; i++) {
+        var it = dt.items[i];
+        if (it.webkitGetAsEntry) entries.push(it.webkitGetAsEntry());
+      }
+    }
+
+    if (entries.length && entries.some(function (en) { return en && en.isDirectory; })) {
+      var collected = [];
+      var pending = 0;
+      function doneOne() {
+        pending--;
+        if (pending <= 0) loadFileList(collected);
+      }
+      function walk(entry) {
+        if (!entry) return;
+        if (entry.isFile) {
+          pending++;
+          entry.file(function (f) { collected.push(f); doneOne(); }, doneOne);
+        } else if (entry.isDirectory) {
+          var reader = entry.createReader();
+          pending++;
+          reader.readEntries(function (ents) {
+            ents.forEach(walk);
+            doneOne();
+          }, doneOne);
+        }
+      }
+      pending = 1;
+      entries.forEach(walk);
+      doneOne();
+      return;
+    }
+
+    loadFileList(dt.files);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2190 @@
+===== FILE: Assets/Scripts/Sim/Meta/MetaState.cs
+using System;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// Roguelite meta-progression that persists across runs: banked salvage, attributes,
+    /// and per-weapon ownership / Tiers / equipped slots. Serializes to/from JSON by hand
+    /// (field-for-field identical to JsonUtility on SaveData; no Newtonsoft). The game layer
+    /// owns file paths and IO.
+    /// </summary>
+    public sealed class MetaState
+    {
+        public long BankedSalvage;
+
+        /// <summary>Every unit of salvage this campaign has ever taken in: kills, plus any
+        /// starting grubstake. Only ever goes up.</summary>
+        public long LifetimeSalvageEarned;
+
+        /// <summary>Every unit of salvage this campaign has ever paid out at a ship station.
+        /// Only ever goes up.</summary>
+        public long LifetimeSalvageSpent;
+
+        public int TotalRuns;
+        public int CleanExits;
+        public int PodEjections;
+
+        /// <summary>Highest 1-based wave the player has cleared this campaign. Starts at 1,
+        /// rises only on clear (never on reach), never lowers. Caps the MAP start-wave selector.</summary>
+        public int DeepestWaveReached = 1;
+
+        public int SaveVersion = SaveData.CurrentVersion;
+
+        // Global ship tracks (FABRICATION). Weapon Damage/FireRate/Clip are gone — per weapon.
+        public int HatchArmorLevel;
+        public int RepairRigLevel;
+
+        // ---- PLAYER ATTRIBUTE tracks (0..5 each; MetaUpgrades owns the effect formulas) ----
+        // Deliberately NOT gated behind UpgradesUnlocked: attributes are the answer to dying.
+
+        /// <summary>Vitality: player max HP (MetaUpgrades.PlayerMaxHp).</summary>
+        public int VitalityLevel;
+
+        /// <summary>Stamina: max stamina pool (MetaUpgrades.StaminaMax).</summary>
+        public int StaminaLevel;
+
+        /// <summary>Engineering: hatch repair SPEED multiplier (MetaUpgrades.RepairSpeedMultiplier).</summary>
+        public int EngineeringLevel;
+
+        /// <summary>Scavenging: salvage per kill (MetaUpgrades.SalvagePerKill).</summary>
+        public int ScavengingLevel;
+
+        /// <summary>Luck: critical-hit chance (MetaUpgrades.CritChance). The game's ONLY
+        /// source of crit — see MetaUpgrades.CritChance.</summary>
+        public int LuckLevel;
+
+        // ---- Weapons (indexed by WeaponId; accessors only — do not index from outside) ----
+        bool[] _weaponsOwned;
+        int[] _weaponTiers;
+        public WeaponId EquippedPrimary = WeaponId.None;
+        public WeaponId EquippedSecondary = WeaponId.None;
+        public WeaponId EquippedMelee = WeaponId.None;
+
+        /// <summary>True when the lifetime ledger balances: Earned == Banked + Spent.</summary>
+        public bool SalvageLedgerBalances
+        {
+            get { return LifetimeSalvageEarned == BankedSalvage + LifetimeSalvageSpent; }
+        }
+
+        /// <summary>Set by FromJson/FromSaveData when the lifetime figures were missing or
+        /// inconsistent and had to be rebuilt. Not serialized.</summary>
+        [NonSerialized] public bool SalvageStatsWereRepaired;
+
+        /// <summary>True when any catalog weapon is owned. Replaces the old WeaponOwned flag
+        /// for MapStation / ShipHud / cutter gating.</summary>
+        public bool OwnsAnyWeapon
+        {
+            get
+            {
+                EnsureArrays();
+                for (int i = 0; i < _weaponsOwned.Length; i++)
+                    if (_weaponsOwned[i]) return true;
+                return false;
+            }
+        }
+
+        public bool Owns(WeaponId id)
+        {
+            if (id == WeaponId.None) return false;
+            EnsureArrays();
+            int i = (int)id;
+            return i >= 0 && i < _weaponsOwned.Length && _weaponsOwned[i];
+        }
+
+        public int TierOf(WeaponId id)
+        {
+            if (id == WeaponId.None) return 0;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= _weaponTiers.Length) return 0;
+            int t = _weaponTiers[i];
+            if (t < 0) return 0;
+            if (t > WeaponTier.MaxTier) return WeaponTier.MaxTier;
+            return t;
+        }
+
+        public WeaponId Equipped(WeaponSlot slot)
+        {
+            switch (slot)
+            {
+                case WeaponSlot.Primary: return EquippedPrimary;
+                case WeaponSlot.Secondary: return EquippedSecondary;
+                case WeaponSlot.Melee: return EquippedMelee;
+                default: return WeaponId.None;
+            }
+        }
+
+        /// <summary>Mark ownership. Does not spend salvage — ShipCommands.BuyWeapon owns that.</summary>
+        public void SetOwned(WeaponId id, bool owned)
+        {
+            if (id == WeaponId.None) return;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= _weaponsOwned.Length) return;
+            _weaponsOwned[i] = owned;
+        }
+
+        /// <summary>Set Tier (clamped 0..MaxTier). Does not spend salvage.</summary>
+        public void SetTier(WeaponId id, int tier)
+        {
+            if (id == WeaponId.None) return;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= _weaponTiers.Length) return;
+            if (tier < 0) tier = 0;
+            if (tier > WeaponTier.MaxTier) tier = WeaponTier.MaxTier;
+            _weaponTiers[i] = tier;
+        }
+
+        /// <summary>Write the equipped slot for this weapon's own def.slot. No-op for None.</summary>
+        public void SetEquipped(WeaponId id)
+        {
+            if (id == WeaponId.None) return;
+            var def = WeaponCatalog.Def(id);
+            switch (def.slot)
+            {
+                case WeaponSlot.Primary: EquippedPrimary = id; break;
+                case WeaponSlot.Secondary: EquippedSecondary = id; break;
+                case WeaponSlot.Melee: EquippedMelee = id; break;
+            }
+        }
+
+        /// <summary>
+        /// THE ONLY WAY salvage enters the bank. Credits the bank and the lifetime earned
+        /// tally together so Earned == Banked + Spent cannot drift. Non-positive amounts are
+        /// ignored (a kill worth nothing is not a transaction).
+        /// </summary>
+        public void EarnSalvage(long amount)
+        {
+            if (amount <= 0) return;
+            BankedSalvage += amount;
+            LifetimeSalvageEarned += amount;
+        }
+
+        /// <summary>
+        /// THE ONLY WAY salvage leaves the bank. Debits the bank and credits the lifetime
+        /// spent tally together. Returns false WITHOUT mutating anything when the amount is
+        /// non-positive or the bank cannot cover it — callers must treat false as "no sale".
+        /// Free purchases (cost 0) must NOT call this; they own without a spend.
+        /// </summary>
+        public bool SpendSalvage(long amount)
+        {
+            if (amount <= 0) return false;
+            if (BankedSalvage < amount) return false;
+            BankedSalvage -= amount;
+            LifetimeSalvageSpent += amount;
+            return true;
+        }
+
+        /// <summary>
+        /// What this save MUST have spent, derived from owned tracks + weapons + Tiers.
+        /// Used to rebuild the lifetime ledger for saves written before v2 recorded it.
+        /// </summary>
+        public long ReconstructSpentFromLevels()
+        {
+            long spent = 0;
+            spent += SpentOnTrack(HatchArmorLevel);
+            spent += SpentOnTrack(RepairRigLevel);
+            spent += SpentOnTrack(VitalityLevel);
+            spent += SpentOnTrack(StaminaLevel);
+            spent += SpentOnTrack(EngineeringLevel);
+            spent += SpentOnTrack(ScavengingLevel);
+            spent += SpentOnTrack(LuckLevel);
+
+            EnsureArrays();
+            for (int i = 0; i < _weaponsOwned.Length; i++)
+            {
+                if (!_weaponsOwned[i]) continue;
+                var id = (WeaponId)i;
+                spent += WeaponCatalog.Def(id).cost;
+                spent += WeaponTier.SpentToReach(_weaponTiers[i]);
+            }
+            return spent;
+        }
+
+        /// <summary>Total paid to reach `level` on one attribute/fab track: 200 * (2^level - 1).</summary>
+        private static long SpentOnTrack(int level)
+        {
+            if (level <= 0) return 0;
+            if (level > MetaUpgrades.MaxLevel) level = MetaUpgrades.MaxLevel;
+            return MetaUpgrades.BaseCost * ((1L << level) - 1L);
+        }
+
+        private void RestoreSalvageLedger(long earnedRaw, long spentRaw)
+        {
+            long floor = ReconstructSpentFromLevels();
+            LifetimeSalvageSpent = spentRaw > floor ? spentRaw : floor;
+            LifetimeSalvageEarned = BankedSalvage + LifetimeSalvageSpent;
+            SalvageStatsWereRepaired =
+                spentRaw != LifetimeSalvageSpent || earnedRaw != LifetimeSalvageEarned;
+        }
+
+        /// <summary>
+        /// A brand-new save: 0 banked salvage, nothing owned, every slot empty. The MK-1 costs
+        /// 0 at the ARMORY — free but still bought, so the buy flow teaches where weapons come from.
+        /// </summary>
+        public static MetaState CreateNew()
+        {
+            var m = new MetaState();
+            m.EnsureArrays();
+            return m;
+        }
+
+        public void EnsureArrays()
+        {
+            if (_weaponsOwned == null || _weaponsOwned.Length != WeaponCatalog.ArraySize)
+            {
+                var next = new bool[WeaponCatalog.ArraySize];
+                if (_weaponsOwned != null)
+                    Array.Copy(_weaponsOwned, next, Math.Min(_weaponsOwned.Length, next.Length));
+                _weaponsOwned = next;
+            }
+            if (_weaponTiers == null || _weaponTiers.Length != WeaponCatalog.ArraySize)
+            {
+                var next = new int[WeaponCatalog.ArraySize];
+                if (_weaponTiers != null)
+                    Array.Copy(_weaponTiers, next, Math.Min(_weaponTiers.Length, next.Length));
+                _weaponTiers = next;
+            }
+        }
+
+        /// <summary>Copy current values into a JsonUtility-compatible DTO.</summary>
+        public SaveData ToSaveData()
+        {
+            EnsureArrays();
+            var d = new SaveData();
+            d.SaveVersion = SaveVersion;
+            d.BankedSalvage = BankedSalvage;
+            d.LifetimeSalvageEarned = LifetimeSalvageEarned;
+            d.LifetimeSalvageSpent = LifetimeSalvageSpent;
+            d.TotalRuns = TotalRuns;
+            d.CleanExits = CleanExits;
+            d.PodEjections = PodEjections;
+            d.DeepestWaveReached = DeepestWaveReached < 1 ? 1 : DeepestWaveReached;
+            d.HatchArmorLevel = HatchArmorLevel;
+            d.RepairRigLevel = RepairRigLevel;
+            d.VitalityLevel = VitalityLevel;
+            d.StaminaLevel = StaminaLevel;
+            d.EngineeringLevel = EngineeringLevel;
+            d.ScavengingLevel = ScavengingLevel;
+            d.LuckLevel = LuckLevel;
+            d.WeaponsOwned = (bool[])_weaponsOwned.Clone();
+            d.WeaponTiers = (int[])_weaponTiers.Clone();
+            d.EquippedPrimary = (int)EquippedPrimary;
+            d.EquippedSecondary = (int)EquippedSecondary;
+            d.EquippedMelee = (int)EquippedMelee;
+            return d;
+        }
+
+        /// <summary>Build a MetaState from a DTO (e.g. one loaded by the game layer).</summary>
+        public static MetaState FromSaveData(SaveData d)
+        {
+            if (d == null) throw new ArgumentNullException("d");
+            var m = new MetaState();
+            m.SaveVersion = d.SaveVersion;
+            m.BankedSalvage = d.BankedSalvage;
+            m.TotalRuns = d.TotalRuns;
+            m.CleanExits = d.CleanExits;
+            m.PodEjections = d.PodEjections;
+            m.DeepestWaveReached = d.DeepestWaveReached < 1 ? 1 : d.DeepestWaveReached;
+            m.HatchArmorLevel = d.HatchArmorLevel;
+            m.RepairRigLevel = d.RepairRigLevel;
+            m.VitalityLevel = d.VitalityLevel;
+            m.StaminaLevel = d.StaminaLevel;
+            m.EngineeringLevel = d.EngineeringLevel;
+            m.ScavengingLevel = d.ScavengingLevel;
+            m.LuckLevel = d.LuckLevel;
+            m.EnsureArrays();
+
+            if (d.SaveVersion >= 3 && d.WeaponsOwned != null)
+            {
+                Array.Copy(d.WeaponsOwned, m._weaponsOwned,
+                    Math.Min(d.WeaponsOwned.Length, m._weaponsOwned.Length));
+                if (d.WeaponTiers != null)
+                    Array.Copy(d.WeaponTiers, m._weaponTiers,
+                        Math.Min(d.WeaponTiers.Length, m._weaponTiers.Length));
+                m.EquippedPrimary = (WeaponId)d.EquippedPrimary;
+                m.EquippedSecondary = (WeaponId)d.EquippedSecondary;
+                m.EquippedMelee = (WeaponId)d.EquippedMelee;
+            }
+            else
+            {
+                MigrateV1WeaponFields(m, d.WeaponOwned, d.GunDamageLevel, d.FireRateLevel, d.ClipSizeLevel);
+            }
+
+            m.RestoreSalvageLedger(
+                d.SaveVersion >= 2 ? d.LifetimeSalvageEarned : -1L,
+                d.SaveVersion >= 2 ? d.LifetimeSalvageSpent : -1L);
+            m.SaveVersion = SaveData.CurrentVersion;
+            return m;
+        }
+
+        /// <summary>v1/v2 → v3: MK-1 owned if WeaponOwned, Secondary equip, Tier from max of
+        /// the three deleted tracks (capped at MaxTier).</summary>
+        static void MigrateV1WeaponFields(MetaState m, bool weaponOwned,
+            int gunDamageLevel, int fireRateLevel, int clipSizeLevel)
+        {
+            m.EnsureArrays();
+            if (!weaponOwned) return;
+            m.SetOwned(WeaponId.Mk1Sidearm, true);
+            int tier = gunDamageLevel;
+            if (fireRateLevel > tier) tier = fireRateLevel;
+            if (clipSizeLevel > tier) tier = clipSizeLevel;
+            if (tier > WeaponTier.MaxTier) tier = WeaponTier.MaxTier;
+            if (tier < 0) tier = 0;
+            m.SetTier(WeaponId.Mk1Sidearm, tier);
+            m.EquippedSecondary = WeaponId.Mk1Sidearm;
+        }
+
+        /// <summary>Serialize to a flat JSON object (invariant culture).</summary>
+        public string ToJson()
+        {
+            EnsureArrays();
+            var sb = new StringBuilder(256);
+            sb.Append('{');
+            AppendField(sb, "SaveVersion", SaveVersion.ToString(CultureInfo.InvariantCulture), false);
+            AppendField(sb, "BankedSalvage", BankedSalvage.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "LifetimeSalvageEarned", LifetimeSalvageEarned.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "LifetimeSalvageSpent", LifetimeSalvageSpent.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "TotalRuns", TotalRuns.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "CleanExits", CleanExits.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "PodEjections", PodEjections.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "DeepestWaveReached",
+                (DeepestWaveReached < 1 ? 1 : DeepestWaveReached).ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "HatchArmorLevel", HatchArmorLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "RepairRigLevel", RepairRigLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "VitalityLevel", VitalityLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "StaminaLevel", StaminaLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "EngineeringLevel", EngineeringLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "ScavengingLevel", ScavengingLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "LuckLevel", LuckLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendBoolArray(sb, "WeaponsOwned", _weaponsOwned);
+            AppendIntArray(sb, "WeaponTiers", _weaponTiers);
+            AppendField(sb, "EquippedPrimary", ((int)EquippedPrimary).ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "EquippedSecondary", ((int)EquippedSecondary).ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "EquippedMelee", ((int)EquippedMelee).ToString(CultureInfo.InvariantCulture), true);
+            sb.Append('}');
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Parse a MetaState from JSON produced by ToJson (or JsonUtility on SaveData).
+        /// Missing fields fall back to defaults; v1/v2 weapon fields migrate into v3 arrays.
+        /// </summary>
+        public static MetaState FromJson(string json)
+        {
+            if (string.IsNullOrEmpty(json)) throw new ArgumentException("json is null or empty", "json");
+            var m = new MetaState();
+            m.SaveVersion = (int)ExtractLong(json, "SaveVersion", SaveData.CurrentVersion);
+            m.BankedSalvage = ExtractLong(json, "BankedSalvage", 0);
+            m.TotalRuns = (int)ExtractLong(json, "TotalRuns", 0);
+            m.CleanExits = (int)ExtractLong(json, "CleanExits", 0);
+            m.PodEjections = (int)ExtractLong(json, "PodEjections", 0);
+            // Absent in old saves → ExtractLong fallback 1; a written 0 is also treated as 1.
+            int deepest = (int)ExtractLong(json, "DeepestWaveReached", 1);
+            m.DeepestWaveReached = deepest < 1 ? 1 : deepest;
+            m.HatchArmorLevel = (int)ExtractLong(json, "HatchArmorLevel", 0);
+            m.RepairRigLevel = (int)ExtractLong(json, "RepairRigLevel", 0);
+            m.VitalityLevel = (int)ExtractLong(json, "VitalityLevel", 0);
+            m.StaminaLevel = (int)ExtractLong(json, "StaminaLevel", 0);
+            m.EngineeringLevel = (int)ExtractLong(json, "EngineeringLevel", 0);
+            m.ScavengingLevel = (int)ExtractLong(json, "ScavengingLevel", 0);
+            m.LuckLevel = (int)ExtractLong(json, "LuckLevel", 0);
+            m.EnsureArrays();
+
+            bool hasV3Weapons = json.IndexOf("\"WeaponsOwned\"", StringComparison.Ordinal) >= 0;
+            if (m.SaveVersion >= 3 && hasV3Weapons)
+            {
+                ExtractBoolArray(json, "WeaponsOwned", m._weaponsOwned);
+                ExtractIntArray(json, "WeaponTiers", m._weaponTiers);
+                m.EquippedPrimary = (WeaponId)ExtractLong(json, "EquippedPrimary", (int)WeaponId.None);
+                m.EquippedSecondary = (WeaponId)ExtractLong(json, "EquippedSecondary", (int)WeaponId.None);
+                m.EquippedMelee = (WeaponId)ExtractLong(json, "EquippedMelee", (int)WeaponId.None);
+            }
+            else
+            {
+                MigrateV1WeaponFields(m,
+                    ExtractBool(json, "WeaponOwned", false),
+                    (int)ExtractLong(json, "GunDamageLevel", 0),
+                    (int)ExtractLong(json, "FireRateLevel", 0),
+                    (int)ExtractLong(json, "ClipSizeLevel", 0));
+            }
+
+            m.RestoreSalvageLedger(
+                ExtractLong(json, "LifetimeSalvageEarned", -1L),
+                ExtractLong(json, "LifetimeSalvageSpent", -1L));
+            m.SaveVersion = SaveData.CurrentVersion;
+            return m;
+        }
+
+        private static void AppendField(StringBuilder sb, string name, string value, bool leadingComma)
+        {
+            if (leadingComma) sb.Append(',');
+            sb.Append('"').Append(name).Append("\":").Append(value);
+        }
+
+        static void AppendBoolArray(StringBuilder sb, string name, bool[] values)
+        {
+            sb.Append(",\"").Append(name).Append("\":[");
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (i > 0) sb.Append(',');
+                sb.Append(values[i] ? "true" : "false");
+            }
+            sb.Append(']');
+        }
+
+        static void AppendIntArray(StringBuilder sb, string name, int[] values)
+        {
+            sb.Append(",\"").Append(name).Append("\":[");
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (i > 0) sb.Append(',');
+                sb.Append(values[i].ToString(CultureInfo.InvariantCulture));
+            }
+            sb.Append(']');
+        }
+
+        static void ExtractBoolArray(string json, string key, bool[] dest)
+        {
+            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*\\[([^\\]]*)\\]");
+            if (!match.Success) return;
+            string[] parts = match.Groups[1].Value.Split(',');
+            for (int i = 0; i < dest.Length && i < parts.Length; i++)
+            {
+                string p = parts[i].Trim();
+                dest[i] = p == "true" || p == "1";
+            }
+        }
+
+        static void ExtractIntArray(string json, string key, int[] dest)
+        {
+            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*\\[([^\\]]*)\\]");
+            if (!match.Success) return;
+            string[] parts = match.Groups[1].Value.Split(',');
+            for (int i = 0; i < dest.Length && i < parts.Length; i++)
+            {
+                string p = parts[i].Trim();
+                if (p.Length == 0) continue;
+                long v;
+                if (long.TryParse(p, NumberStyles.Integer, CultureInfo.InvariantCulture, out v))
+                    dest[i] = (int)v;
+            }
+        }
+
+        private static bool ExtractBool(string json, string key, bool fallback)
+        {
+            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*(true|false|1|0)");
+            if (!match.Success) return fallback;
+            return match.Groups[1].Value == "true" || match.Groups[1].Value == "1";
+        }
+
+        private static long ExtractLong(string json, string key, long fallback)
+        {
+            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*(-?\\d+)");
+            return match.Success
+                ? long.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture)
+                : fallback;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Meta/MetaUpgrades.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// The ship-shop: permanent upgrade tracks bought with BANKED salvage between runs.
+    /// Pure static arithmetic — the LEVELS live on MetaState (so they persist with the save);
+    /// this class only prices, validates, and applies purchases, and maps levels to effects.
+    /// </summary>
+    /// <remarks>
+    /// Three invariants, each of which has a failure behind it. Docs/02_Numbers.md has the
+    /// effect table and the reasoning; do not restate either here.
+    ///   1. ONE SHAPE FOR EVERY (attribute/fab) TRACK: base * (1 + 0.05 * level). No per-track
+    ///      slopes — a uniform ramp is what keeps the shop legible. CritChance is additive at
+    ///      the same slope only because a chance of zero has nothing to scale.
+    ///   2. Cost is exactly 200 * 2^currentLevel. Never "roughly doubles".
+    ///   3. ATTRIBUTES ARE NOT GATED behind the first death. They are the answer to dying, so
+    ///      they must be buyable before you have died. Weapon Tiers ARE gated (UpgradesUnlocked).
+    /// Weapon damage / fire rate / clip no longer live here — see WeaponCatalog + WeaponTier.
+    /// </remarks>
+    public static class MetaUpgrades
+    {
+        /// <summary>Highest level of every attribute/fab track.</summary>
+        public const int MaxLevel = 5;
+
+        /// <summary>Cost of level 0 → 1; each further level doubles.</summary>
+        public const long BaseCost = 200;
+
+        /// <summary>Salvage cost to buy the next level from currentLevel: 200 * 2^currentLevel.
+        /// Only defined below MaxLevel — there is nothing to buy at 5.</summary>
+        public static long NextCost(int currentLevel)
+        {
+            if (currentLevel < 0 || currentLevel >= MaxLevel)
+                throw new ArgumentOutOfRangeException("currentLevel");
+            return BaseCost << currentLevel; // exact 200 * 2^currentLevel
+        }
+
+        /// <summary>True when the track is below MaxLevel and the bank covers NextCost.</summary>
+        public static bool CanBuy(MetaState meta, int currentLevel)
+        {
+            if (meta == null) throw new ArgumentNullException("meta");
+            if (currentLevel < 0 || currentLevel >= MaxLevel) return false;
+            return meta.BankedSalvage >= NextCost(currentLevel);
+        }
+
+        /// <summary>
+        /// Buy the next level of a track: pass the MetaState and a ref to its level field
+        /// (e.g. Buy(meta, ref meta.VitalityLevel)). Deducts BankedSalvage and increments
+        /// the level. Returns false (no mutation) when maxed or unaffordable.
+        /// </summary>
+        public static bool Buy(MetaState meta, ref int levelField)
+        {
+            if (meta == null) throw new ArgumentNullException("meta");
+            if (!CanBuy(meta, levelField)) return false;
+            // Goes through SpendSalvage so LifetimeSalvageSpent can never drift from the bank.
+            if (!meta.SpendSalvage(NextCost(levelField))) return false;
+            levelField++;
+            return true;
+        }
+
+        /// <summary>
+        /// True once weapon Tier purchases are unlocked — gated until the first death.
+        /// Buying a weapon itself is NOT gated, and neither are attributes.
+        /// </summary>
+        public static bool UpgradesUnlocked(MetaState m)
+        {
+            if (m == null) throw new ArgumentNullException("m");
+            return m.PodEjections >= 1;
+        }
+
+        // ---- FABRICATION ----
+
+        /// <summary>Hatch max HP. RunSim's constructor reads this.</summary>
+        public static float HatchHp(int lvl)
+        {
+            return 300f * (1f + 0.05f * lvl);
+        }
+
+        /// <summary>BASE hatch repair rate in HP/second. The Engineering attribute multiplies
+        /// this — RepairRig is how much, Engineering is how fast.</summary>
+        public static float RepairPerSecond(int lvl)
+        {
+            return 8f * (1f + 0.05f * lvl);
+        }
+
+        // ---- PLAYER ATTRIBUTES ----
+
+        /// <summary>VITALITY — player max HP.</summary>
+        public static float PlayerMaxHp(int level)
+        {
+            return 100f * (1f + 0.05f * ClampLevel(level));
+        }
+
+        /// <summary>STAMINA — max stamina pool.</summary>
+        public static float StaminaMax(int level)
+        {
+            return 100f * (1f + 0.05f * ClampLevel(level));
+        }
+
+        /// <summary>ENGINEERING — multiplier on the hatch repair rate.</summary>
+        public static float RepairSpeedMultiplier(int level)
+        {
+            return 1f + 0.05f * ClampLevel(level);
+        }
+
+        /// <summary>LUCK — critical-hit chance as a FRACTION. A crit deals DOUBLE damage.
+        /// THE RULE: Luck is the only source of crit chance or crit damage in the game.</summary>
+        public static float CritChance(int level)
+        {
+            return 0.05f * ClampLevel(level);
+        }
+
+        /// <summary>SCAVENGING — base salvage for one downed boarder, BEFORE the siphon
+        /// multiplier.</summary>
+        public static float SalvagePerKill(int level)
+        {
+            return 25f * (1f + 0.05f * ClampLevel(level));
+        }
+
+        /// <summary>Clamp a track level into 0..MaxLevel.</summary>
+        private static int ClampLevel(int level)
+        {
+            if (level < 0) return 0;
+            if (level > MaxLevel) return MaxLevel;
+            return level;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Meta/SaveData.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// Flat serializable DTO for meta-progression persistence. Public fields only, no dictionaries —
+    /// compatible with Unity's JsonUtility. File IO lives in the game layer, not here.
+    /// </summary>
+    /// <remarks>
+    /// Version history:
+    ///   1 — banked salvage + run tallies
+    ///   2 — lifetime salvage ledger (Earned/Spent)
+    ///   3 — per-weapon ownership, Tiers, equipped slots (replaces GunDamage/FireRate/Clip/WeaponOwned)
+    /// Migration from v1/v2 lives in <see cref="MetaState.FromJson"/> / <see cref="MetaState.FromSaveData"/>.
+    /// </remarks>
+    [Serializable]
+    public class SaveData
+    {
+        /// <summary>Schema version written by the current build.</summary>
+        public const int CurrentVersion = 3;
+
+        public int SaveVersion = CurrentVersion;
+        public long BankedSalvage;
+
+        // Lifetime salvage ledger (v2+). Invariant: Earned == Banked + Spent, always.
+        // Absent in v1 saves -> reconstructed from the owned upgrade levels on load.
+        public long LifetimeSalvageEarned;
+        public long LifetimeSalvageSpent;
+
+        public int TotalRuns;
+        public int CleanExits;
+        public int PodEjections;
+
+        /// <summary>Highest 1-based wave cleared this campaign. Absent/0 in old saves → 1.</summary>
+        public int DeepestWaveReached = 1;
+
+        // Ship-shop upgrade tracks that remain global (0..5 each).
+        public int HatchArmorLevel;
+        public int RepairRigLevel;
+
+        // PLAYER ATTRIBUTE tracks (0..5 each; absent in old saves → default 0).
+        public int VitalityLevel;
+        public int StaminaLevel;
+        public int EngineeringLevel;
+        public int ScavengingLevel;
+        public int LuckLevel;
+
+        // ---- v3 weapon system (indexed by WeaponId 0..ArraySize-1) ----
+        public bool[] WeaponsOwned;
+        public int[] WeaponTiers;
+        public int EquippedPrimary;   // WeaponId as int; -1 = None
+        public int EquippedSecondary;
+        public int EquippedMelee;
+
+        // ---- v1/v2 fields kept ONLY so JsonUtility / hand parsers can read old saves ----
+        // Written as 0/false on new saves; FromSaveData migrates them when SaveVersion < 3.
+        public int GunDamageLevel;
+        public int FireRateLevel;
+        public int ClipSizeLevel;
+        public bool WeaponOwned;
+    }
+}
+===== FILE: Assets/Scripts/Sim/Meta/TetherSiphon.cs
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// The risk/reward siphon dial. Level 0..5; the reward multiplier is a HAND-AUTHORED
+    /// five-step curve topping out at +50% (see <see cref="Curve"/>), NOT a formula.
+    /// </summary>
+    public sealed class TetherSiphon
+    {
+        /// <summary>Lowest dial setting (siphon idle, x1 reward).</summary>
+        public const int MinLevel = 0;
+
+        /// <summary>Highest dial setting (x1.5 reward).</summary>
+        public const int MaxLevel = 5;
+
+        /// <summary>
+        /// THE DIAL — A HAND-AUTHORED CURVE, NOT A FORMULA. DO NOT "SIMPLIFY" IT INTO ONE: the
+        /// steps are deliberately uneven and no closed form reproduces them. Array index is the
+        /// dial level. WaveDirector.NextWave sizes waves off this same table, so payout and body
+        /// count cannot drift apart. Authored values and their rationale: Docs/02_Numbers.md.
+        /// </summary>
+        private static readonly float[] Curve = { 1.00f, 1.10f, 1.15f, 1.25f, 1.35f, 1.50f };
+
+        private int _level;
+
+        /// <summary>Current dial level. Assignment clamps into [MinLevel, MaxLevel].</summary>
+        public int Level
+        {
+            get { return _level; }
+            set { _level = value < MinLevel ? MinLevel : (value > MaxLevel ? MaxLevel : value); }
+        }
+
+        /// <summary>
+        /// The dial's multiplier at an arbitrary level (clamped to [MinLevel, MaxLevel]).
+        /// Static so WaveDirector can size a wave off the SAME table the reward comes from —
+        /// this is the single source both sides read.
+        /// </summary>
+        public static float RewardMultiplierFor(int level)
+        {
+            if (level < MinLevel) level = MinLevel;
+            if (level > MaxLevel) level = MaxLevel;
+            return Curve[level];
+        }
+
+        /// <summary>Reward multiplier at the current level: 1, 1.1, 1.15, 1.25, 1.35, 1.5.</summary>
+        public float RewardMultiplier
+        {
+            get { return RewardMultiplierFor(_level); }
+        }
+
+        /// <summary>Salvage income per second for a given base rate: baseRate * the dial's multiplier.</summary>
+        public float SalvagePerSecond(float baseRate)
+        {
+            return baseRate * RewardMultiplier;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Meta/WeaponCatalog.cs
+using System;
+using System.Collections.Generic;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>Static pure catalog of every weapon. Shape matches
+    /// <see cref="WaveDirector.StatsFor"/> — holds no state, so it does not violate the
+    /// no-new-statics rule. Adding a fifth listed weapon is a row here and nowhere else.</summary>
+    public static class WeaponCatalog
+    {
+        /// <summary>Highest <see cref="WeaponId"/> value that occupies an array slot
+        /// (includes the throwaway test row).</summary>
+        public const int ArraySize = (int)WeaponId.ThrowawayComposite + 1;
+
+        /// <summary>Amber shared by MK-1 / VK-7 / BR-12 tracers.</summary>
+        const float AmberR = 1f, AmberG = 0.9f, AmberB = 0.35f;
+
+        /// <summary>Pale blue for the MR-35 — the long-range identity cue.</summary>
+        const float BlueR = 0.55f, BlueG = 0.78f, BlueB = 1f;
+
+        /// <summary>The combat profile of one weapon. Unknown ids return an empty Secondary stub.</summary>
+        public static WeaponDef Def(WeaponId id)
+        {
+            switch (id)
+            {
+                case WeaponId.Mk1Sidearm:
+                    return Make(WeaponSlot.Secondary, "MK-1 Sidearm", cost: 0L,
+                        damage: 14f, shotsPerSecond: 3.0f, clipSize: 8f, reloadSeconds: 1.4f, range: 45f,
+                        pellets: 1, spreadDegrees: 0f, pierceCount: 0, falloffStart: 0f,
+                        AmberR, AmberG, AmberB, tracerWidth: 0.030f, WeaponCrosshair.Cross);
+
+                case WeaponId.Vk7Rifle:
+                    // Disabled — kept so old saves still deserialize. Not in ShopWeapons.
+                    return Make(WeaponSlot.Primary, "VK-7 Assault Rifle", cost: 900L,
+                        damage: 10f, shotsPerSecond: 5.5f, clipSize: 25f, reloadSeconds: 2.1f, range: 60f,
+                        pellets: 1, spreadDegrees: 0f, pierceCount: 0, falloffStart: 0f,
+                        AmberR, AmberG, AmberB, tracerWidth: 0.035f, WeaponCrosshair.Dot);
+
+                case WeaponId.Br12Shotgun:
+                    return Make(WeaponSlot.Primary, "BR-12 Shotgun", cost: 900L,
+                        damage: 6f, shotsPerSecond: 1.2f, clipSize: 6f, reloadSeconds: 2.6f, range: 14f,
+                        pellets: 7, spreadDegrees: 7f, pierceCount: 0, falloffStart: 8f,
+                        AmberR, AmberG, AmberB, tracerWidth: 0.050f, WeaponCrosshair.Brackets);
+
+                case WeaponId.Mr35Rifle:
+                    return Make(WeaponSlot.Primary, "MR-35 Rifle", cost: 1200L,
+                        damage: 32f, shotsPerSecond: 1.6f, clipSize: 10f, reloadSeconds: 2.4f, range: 80f,
+                        pellets: 1, spreadDegrees: 0f, pierceCount: 2, falloffStart: 0f,
+                        BlueR, BlueG, BlueB, tracerWidth: 0.060f, WeaponCrosshair.Cross);
+
+                case WeaponId.ThrowawayComposite:
+                    // Criterion 11: pellets + pierce + falloff together. Not listed in the shop.
+                    return Make(WeaponSlot.Primary, "Throwaway Composite", cost: 1L,
+                        damage: 5f, shotsPerSecond: 2f, clipSize: 10f, reloadSeconds: 1.5f, range: 20f,
+                        pellets: 3, spreadDegrees: 5f, pierceCount: 1, falloffStart: 10f,
+                        AmberR, AmberG, AmberB, tracerWidth: 0.040f, WeaponCrosshair.Dot);
+
+                default:
+                    return Make(WeaponSlot.Secondary, "None", cost: 0L,
+                        damage: 0f, shotsPerSecond: 1f, clipSize: 1f, reloadSeconds: 1f, range: 1f,
+                        pellets: 1, spreadDegrees: 0f, pierceCount: 0, falloffStart: 0f,
+                        AmberR, AmberG, AmberB, tracerWidth: 0.030f, WeaponCrosshair.Cross);
+            }
+        }
+
+        /// <summary>Every catalog id that occupies an ownership array slot, including the
+        /// throwaway and disabled rows. Prefer <see cref="ShopWeapons"/> for ARMORY lists.</summary>
+        public static IEnumerable<WeaponId> All()
+        {
+            yield return WeaponId.Mk1Sidearm;
+            yield return WeaponId.Vk7Rifle;
+            yield return WeaponId.Br12Shotgun;
+            yield return WeaponId.Mr35Rifle;
+            yield return WeaponId.ThrowawayComposite;
+        }
+
+        /// <summary>True when the weapon can be bought or equipped at the ARMORY.
+        /// VK-7 is disabled (id kept for saves — never renumber). Throwaway is test-only.</summary>
+        public static bool IsAvailable(WeaponId id)
+        {
+            switch (id)
+            {
+                case WeaponId.Mk1Sidearm:
+                case WeaponId.Br12Shotgun:
+                case WeaponId.Mr35Rifle:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>Weapons a player can buy or equip at the ARMORY.</summary>
+        public static IEnumerable<WeaponId> ShopWeapons()
+        {
+            yield return WeaponId.Mk1Sidearm;
+            yield return WeaponId.Br12Shotgun;
+            yield return WeaponId.Mr35Rifle;
+        }
+
+        /// <summary>Shop weapons whose <see cref="WeaponDef.slot"/> matches.</summary>
+        public static IEnumerable<WeaponId> ForSlot(WeaponSlot slot)
+        {
+            foreach (var id in ShopWeapons())
+            {
+                if (Def(id).slot == slot)
+                    yield return id;
+            }
+        }
+
+        static WeaponDef Make(
+            WeaponSlot slot, string displayName, long cost,
+            float damage, float shotsPerSecond, float clipSize, float reloadSeconds, float range,
+            int pellets, float spreadDegrees, int pierceCount, float falloffStart,
+            float tracerR, float tracerG, float tracerB, float tracerWidth, WeaponCrosshair crosshair)
+        {
+            return new WeaponDef
+            {
+                slot = slot,
+                displayName = displayName,
+                cost = cost,
+                damage = damage,
+                shotsPerSecond = shotsPerSecond,
+                clipSize = clipSize,
+                reloadSeconds = reloadSeconds,
+                range = range,
+                pellets = pellets,
+                spreadDegrees = spreadDegrees,
+                pierceCount = pierceCount,
+                falloffStart = falloffStart,
+                tracerR = tracerR,
+                tracerG = tracerG,
+                tracerB = tracerB,
+                tracerWidth = tracerWidth,
+                crosshair = crosshair
+            };
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Meta/WeaponCrosshair.cs
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>Crosshair shape drawn by the Derelict HUD for a weapon. Identity cue, not
+    /// accuracy — spread lives on <see cref="WeaponDef.spreadDegrees"/>.</summary>
+    public enum WeaponCrosshair
+    {
+        Dot = 0,
+        Cross = 1,
+        Brackets = 2
+    }
+}
+===== FILE: Assets/Scripts/Sim/Meta/WeaponDef.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>Immutable combat profile of one <see cref="WeaponId"/>, produced by
+    /// <see cref="WeaponCatalog.Def"/>. Mirrors <see cref="BoarderStats"/>: if a firing mode
+    /// is not expressible here it belongs in PlayerGun, not as a new subclass.</summary>
+    [Serializable]
+    public struct WeaponDef
+    {
+        public WeaponSlot slot;
+        public string displayName;
+        public long cost;
+
+        public float damage;
+        public float shotsPerSecond;
+        public float clipSize;
+        public float reloadSeconds;
+        public float range;
+
+        /// <summary>1 = single hitscan; &gt;1 = that many rays inside <see cref="spreadDegrees"/>.</summary>
+        public int pellets;
+
+        /// <summary>Cone half-angle in degrees; ignored when pellets == 1.</summary>
+        public float spreadDegrees;
+
+        /// <summary>Bodies past the first a ray may continue through (0 = stop on first hit).</summary>
+        public int pierceCount;
+
+        /// <summary>Metres; damage scales linearly to zero from here to <see cref="range"/>.
+        /// 0 or negative = no falloff.</summary>
+        public float falloffStart;
+
+        public float tracerR, tracerG, tracerB;
+        public float tracerWidth;
+        public WeaponCrosshair crosshair;
+    }
+}
+===== FILE: Assets/Scripts/Sim/Meta/WeaponId.cs
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>Catalog identity for a weapon. Values are written into save files — never
+    /// renumber, never reuse a retired id. <see cref="None"/> is the empty-slot sentinel;
+    /// <see cref="ThrowawayComposite"/> exists only so tests can prove a fifth row composes
+    /// pellets + pierce + falloff without editing files outside <see cref="WeaponCatalog"/>.</summary>
+    public enum WeaponId
+    {
+        None = -1,
+        Mk1Sidearm = 0,
+        Vk7Rifle = 1,
+        Br12Shotgun = 2,
+        Mr35Rifle = 3,
+        /// <summary>Test-only composite row. Not listed in the ARMORY.</summary>
+        ThrowawayComposite = 4
+    }
+}
+===== FILE: Assets/Scripts/Sim/Meta/WeaponSlot.cs
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>Where a weapon sits on the player. Fight-time keys switch slots; the ARMORY
+    /// chooses which owned weapon fills a slot. Melee is reserved and currently always empty.</summary>
+    public enum WeaponSlot
+    {
+        Primary = 0,
+        Secondary = 1,
+        Melee = 2
+    }
+}
+===== FILE: Assets/Scripts/Sim/Meta/WeaponTier.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>Per-weapon Tier curve. Damage and clip scale; fire rate never does — cadence
+    /// is the weapon's identity. Every consecutive step lands above the ~20% noise floor.
+    /// Cost is linear (not the attribute doubling curve) so seven Tiers stay reachable.</summary>
+    public static class WeaponTier
+    {
+        public const int MaxTier = 7;
+
+        /// <summary>Damage multiplier at the given Tier: 1.25^tier.</summary>
+        public static float DamageMul(int tier)
+        {
+            tier = ClampTier(tier);
+            return (float)Math.Pow(1.25, tier);
+        }
+
+        /// <summary>Clip multiplier at the given Tier: 1.15^tier.</summary>
+        public static float ClipMul(int tier)
+        {
+            tier = ClampTier(tier);
+            return (float)Math.Pow(1.15, tier);
+        }
+
+        /// <summary>Salvage cost to buy the next Tier from <paramref name="currentTier"/>.
+        /// Linear: 400 + 200 * currentTier → 400/600/800/1000/1200/1400/1600. Cumulative 7,000.</summary>
+        public static long Cost(int currentTier)
+        {
+            if (currentTier < 0 || currentTier >= MaxTier)
+                throw new ArgumentOutOfRangeException("currentTier",
+                    "Tier cost is only defined for currentTier 0..6.");
+            return 400L + 200L * currentTier;
+        }
+
+        /// <summary>True when the weapon is below MaxTier and the bank covers <see cref="Cost"/>.</summary>
+        public static bool CanBuy(MetaState meta, int currentTier)
+        {
+            if (meta == null) throw new ArgumentNullException("meta");
+            if (currentTier < 0 || currentTier >= MaxTier) return false;
+            return meta.BankedSalvage >= Cost(currentTier);
+        }
+
+        /// <summary>Total salvage paid to reach <paramref name="tier"/> from T0 (sum of step costs).</summary>
+        public static long SpentToReach(int tier)
+        {
+            tier = ClampTier(tier);
+            long spent = 0;
+            for (int t = 0; t < tier; t++)
+                spent += Cost(t);
+            return spent;
+        }
+
+        /// <summary>Effective damage per pellet at this Tier.</summary>
+        public static float EffectiveDamage(WeaponDef def, int tier)
+        {
+            return def.damage * DamageMul(tier);
+        }
+
+        /// <summary>Whole rounds in the clip at this Tier.</summary>
+        public static int EffectiveClip(WeaponDef def, int tier)
+        {
+            int clip = (int)Math.Round(def.clipSize * ClipMul(tier));
+            return clip < 1 ? 1 : clip;
+        }
+
+        /// <summary>Single-target effective dps assuming every pellet connects at point-blank
+        /// (no falloff). Duty cycle: (clip * damage * pellets) / (clip/rate + reload).</summary>
+        public static float EffectiveDps(WeaponDef def, int tier)
+        {
+            float dmgPerPull = EffectiveDamage(def, tier) * Math.Max(1, def.pellets);
+            int clip = EffectiveClip(def, tier);
+            float rate = def.shotsPerSecond > 0.01f ? def.shotsPerSecond : 0.01f;
+            float cycle = clip / rate + Math.Max(0.01f, def.reloadSeconds);
+            return clip * dmgPerPull / cycle;
+        }
+
+        /// <summary>Damage at <paramref name="distance"/> metres after falloff. No falloff when
+        /// falloffStart &lt;= 0 or distance &lt;= falloffStart; zero at and past range.</summary>
+        public static float DamageAtRange(WeaponDef def, int tier, float distance)
+        {
+            float baseDmg = EffectiveDamage(def, tier);
+            if (distance < 0f) distance = 0f;
+            if (distance > def.range) return 0f;
+            if (def.falloffStart <= 0f || distance <= def.falloffStart) return baseDmg;
+            float span = def.range - def.falloffStart;
+            if (span <= 0.01f) return 0f;
+            float t = (distance - def.falloffStart) / span;
+            if (t < 0f) t = 0f;
+            if (t > 1f) t = 1f;
+            return baseDmg * (1f - t);
+        }
+
+        static int ClampTier(int tier)
+        {
+            if (tier < 0) return 0;
+            if (tier > MaxTier) return MaxTier;
+            return tier;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Run/AssaultState.cs
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// Sub-state of RunPhase.Tethered under the draw-triggered wave model.
+    /// PREP: no waves, NO siphon income (idle prep earns nothing); repair, reposition,
+    /// set the dial, then pull the trigger. ASSAULT: a Siphon Draw is running — the wave
+    /// is live and siphon income flows until the game layer reports the wave cleared.
+    /// </summary>
+    public enum AssaultState
+    {
+        /// <summary>Between draws: quiet, dial adjustable, zero income.</summary>
+        Prep,
+
+        /// <summary>A draw is live: wave spawned/spawning, income flowing, dial locked.</summary>
+        Assault
+    }
+}
+===== FILE: Assets/Scripts/Sim/Run/EscapeSpool.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// DORMANT in v0: the tether cannot be cut at will, so nothing starts this spool.
+    /// Kept (with its RunPhase.Spooling/Escaped enum slots) until the escape-window
+    /// design lands, at which point RunSim re-wires it.
+    /// Countdown timer for the escape sequence after cutting the tether.
+    /// Start it with a duration, Tick it with sim deltaTime, watch Progress/IsComplete.
+    /// </summary>
+    public sealed class EscapeSpool
+    {
+        /// <summary>Total spool duration in seconds (set by Start).</summary>
+        public float Duration { get; private set; }
+
+        /// <summary>Seconds elapsed since Start, clamped to Duration.</summary>
+        public float Elapsed { get; private set; }
+
+        /// <summary>True once Start has been called (stays true after completion).</summary>
+        public bool IsActive { get; private set; }
+
+        /// <summary>Normalized progress in [0, 1]. 0 before Start.</summary>
+        public float Progress
+        {
+            get { return IsActive && Duration > 0f ? Elapsed / Duration : 0f; }
+        }
+
+        /// <summary>True once Elapsed has reached Duration.</summary>
+        public bool IsComplete
+        {
+            get { return IsActive && Elapsed >= Duration; }
+        }
+
+        /// <summary>Begin (or restart) the spool with the given duration in seconds.</summary>
+        public void Start(float duration)
+        {
+            if (duration <= 0f) throw new ArgumentOutOfRangeException("duration");
+            Duration = duration;
+            Elapsed = 0f;
+            IsActive = true;
+        }
+
+        /// <summary>Advance the spool. Ignored before Start and after completion.</summary>
+        public void Tick(float dt)
+        {
+            if (!IsActive || dt <= 0f) return;
+            Elapsed = Math.Min(Duration, Elapsed + dt);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Run/RunPhase.cs
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// Lifecycle phases of a single run. v0 uses Docked → Tethered → Podded (lost) or
+    /// Escaped (all waves cleared). Spooling is reserved for the future escape-window
+    /// design and is UNUSED in v0 (kept so serialized values stay enum-stable when it lands).
+    /// </summary>
+    public enum RunPhase
+    {
+        /// <summary>Aboard your ship (menu/respawn screen). Not yet boarded the derelict.</summary>
+        Docked,
+
+        /// <summary>Fighting in the derelict: kills earn salvage, waves push toward the Hatch.</summary>
+        Tethered,
+
+        /// <summary>UNUSED in v0. Reserved for escape windows: tether cut, spool running.</summary>
+        Spooling,
+
+        /// <summary>Terminal ("Cleared"): run completed — all WaveDirector.MaxWaves waves cleared.</summary>
+        Escaped,
+
+        /// <summary>Terminal ("Lost"): Hatch destroyed or player down. Costs nothing but the run —
+        /// salvage was banked per kill and is kept in full.</summary>
+        Podded
+    }
+}
+===== FILE: Assets/Scripts/Sim/Run/RunSim.cs
+using System;
+using GatekeeperBastion.Util;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// How the run ended, and what it was worth. Currency is banked per kill; repair spend is
+    /// deducted from the bank as it happens. `earned` is the run's gross take minus salvage
+    /// spent repairing the hatch — what the player keeps from this run's kills.
+    /// </summary>
+    [Serializable]
+    public struct LossReport
+    {
+        /// <summary>What ended the run: "hatch" (Hatch destroyed), "player" (player down), or
+        /// "cleared" (all waves cleared — a SUCCESS).</summary>
+        public string cause;
+
+        /// <summary>Gross kill take this run, minus salvage spent on hatch repair. May be less
+        /// than the run ledger when the door was paid for; never credits a refund.</summary>
+        public long earned;
+
+        /// <summary>Salvage spent repairing the hatch during this run (0 when untouched).</summary>
+        public long repairSpent;
+    }
+
+    /// <summary>
+    /// Facade and state machine for one run. Plain C#, deterministic, driven only by explicit
+    /// Tick(deltaTime) — designed to run host-authoritative under NGO later. The Unity layer
+    /// codes against exactly this public API.
+    ///
+    /// v0 loop: Docked (aboard ship menu) → Tethered (fight in the derelict) → Podded (died)
+    /// or Escaped (all MaxWaves waves cleared). Death is the only FAILURE ender: either the Hatch
+    /// is destroyed or the player goes down (NotifyPlayerDown) — both funnel through one EndRun
+    /// path. The tether cannot be cut at will: there is no bail-out path in v0.
+    /// BeginEscape/spool ticking were removed; they return with the escape-window design.
+    ///
+    /// Waves are DRAW-TRIGGERED and there are exactly WaveDirector.MaxWaves of them: while
+    /// Tethered the sim alternates Prep ↔ Assault. There is no wave timer — the player pulls
+    /// TriggerDraw() to start each assault, and the game layer calls NotifyAssaultCleared() when
+    /// the wave is dead. Clearing the LAST wave completes the run.
+    ///
+    /// Deep start (M14): StartRun(N) remembers a start wave. The first TriggerDraw delivers
+    /// waves 1..N back to back — each next wave starts InterWaveGap seconds after the previous
+    /// wave's *delivery* finishes, with no Prep between them. Overlap in the room is the point.
+    /// After that chain clears, the run continues normally through wave MaxWaves.
+    ///
+    /// ECONOMY: AwardKill() banks MetaUpgrades.SalvagePerKill(meta.ScavengingLevel) times the
+    /// siphon multiplier straight into MetaState.BankedSalvage. RepairHatch spends from that
+    /// bank at ShipSystems.RepairSalvagePerHp as healing is applied. Nothing is staked or
+    /// forfeited at run end — dying and clearing keep the same kill take, and repair spend is
+    /// already gone. The two endings differ only in which counter ticks (PodEjections vs
+    /// CleanExits).
+    /// </summary>
+    public sealed class RunSim
+    {
+        private const string Tag = "RunSim";
+
+        private readonly MetaState _meta;
+        private readonly WaveDirector _director = new WaveDirector();
+        private bool _runStarted;
+
+        /// <summary>Fractional HP requested across RepairHatch ticks that has not yet bought a
+        /// whole salvage unit. Lets per-frame rate*dt charge continuously without free micro-heals.</summary>
+        private float _repairHpAccrued;
+
+        // Deep-start chain (only the first assault of a run started above wave 1).
+        int _startWave = 1;       // 1-based, clamped at StartRun
+        int _chainUntil;          // 0-based inclusive last wave index to auto-launch
+        bool _chainActive;        // this assault is (or was) a deep-start chain
+        bool _awaitingDelivery;   // waiting for WaveSpawner to finish the current wave's delivery
+        float _interWaveTimer;    // counts down WaveDirector.InterWaveGap between chained waves
+
+        /// <summary>Seed passed at construction; all future run randomness derives from it.</summary>
+        public int Seed { get; private set; }
+
+        /// <summary>Deterministic RNG seeded from the ctor. Draw ALL sim randomness from here — never statics.</summary>
+        public Random Rng { get; private set; }
+
+        /// <summary>Current run phase. Podded (lost) and Escaped (completed) are both terminal.</summary>
+        public RunPhase Phase { get; private set; }
+
+        /// <summary>Tethered sub-state: Prep (quiet, dial free) or Assault (draw live, kills pay).
+        /// Meaningful only while Phase == Tethered; always Prep otherwise.</summary>
+        public AssaultState Assault { get; private set; }
+
+        /// <summary>The risk/reward siphon dial.</summary>
+        public TetherSiphon Siphon { get; private set; }
+
+        /// <summary>The defended objective (the Hatch back to your ship).</summary>
+        public ShipSystems Ship { get; private set; }
+
+        /// <summary>Per-run salvage tally, for display. Purely informational — the real currency
+        /// lives in MetaState.BankedSalvage and is credited per kill. Resets with each new run
+        /// (each run gets a fresh RunSim and therefore a fresh ledger).</summary>
+        public SalvageLedger Salvage { get; private set; }
+
+        /// <summary>Filled when the run ends: net keep (gross kills minus repair spend) and how
+        /// much the door cost. Bookkeeping only — salvage already moved at kill/repair time.</summary>
+        public LossReport LastLossReport { get; private set; }
+
+        /// <summary>Salvage spent on hatch repair this run. Deducted from the bank as healing is
+        /// applied; subtracted from the end-of-run <see cref="LossReport.earned"/> figure.</summary>
+        public long RepairSalvageSpent { get; private set; }
+
+        /// <summary>Number of waves launched so far this run (0 before the first wave starts,
+        /// never above WaveDirector.MaxWaves).</summary>
+        public int CurrentWaveIndex { get; private set; }
+
+        /// <summary>1-based wave the player chose to start at (1 = normal run). Clamped to
+        /// 1..DeepestWaveReached at StartRun.</summary>
+        public int StartWave => _startWave;
+
+        /// <summary>True while a deep-start chain still has waves to launch (delivery wait or
+        /// inter-wave gap). WaveSpawner must not NotifyAssaultCleared until this is false.</summary>
+        public bool ChainPending
+        {
+            get
+            {
+                if (!_chainActive) return false;
+                if (_awaitingDelivery) return true;
+                if (_interWaveTimer > 0f) return true;
+                return CurrentWaveIndex <= _chainUntil;
+            }
+        }
+
+        /// <summary>True once the LAST wave (index MaxWaves-1) has been cleared via
+        /// NotifyAssaultCleared — i.e. the run was completed rather than lost.</summary>
+        public bool AllWavesCleared { get; private set; }
+
+        /// <summary>Base salvage one kill is worth before the siphon multiplier: the Scavenging
+        /// attribute's 25 + 5*level. Read fresh from the MetaState so a mid-session purchase is
+        /// live on the very next kill.</summary>
+        private float BaseKillValue
+        {
+            get { return MetaUpgrades.SalvagePerKill(_meta.ScavengingLevel); }
+        }
+
+        /// <summary>Salvage the next kill is worth right now:
+        /// MetaUpgrades.SalvagePerKill(ScavengingLevel) times the siphon's hand-authored dial
+        /// multiplier (1 / 1.1 / 1.15 / 1.25 / 1.35 / 1.5) — 25 at both dials down, 46.875 at
+        /// Scavenging 5 / siphon 5. The HUD shows this; it is the whole income model.</summary>
+        public float CurrentKillValue
+        {
+            get { return BaseKillValue * Siphon.RewardMultiplier; }
+        }
+
+        /// <summary>Sim seconds elapsed while Tethered.</summary>
+        public float RunElapsed { get; private set; }
+
+        /// <summary>Raised each time a wave launches (TriggerDraw or a chained follow-up), with its spec.</summary>
+        public event Action<WaveSpec> WaveStarted;
+
+        /// <summary>Raised when NotifyAssaultCleared returns the run to Prep (including after the
+        /// final wave, immediately before the run completes).</summary>
+        public event Action AssaultEnded;
+
+        /// <summary>Raised on every phase transition (also once for Docked on StartRun).</summary>
+        public event Action<RunPhase> PhaseChanged;
+
+        public RunSim(MetaState meta, int seed)
+        {
+            if (meta == null) throw new ArgumentNullException("meta");
+            _meta = meta;
+            Seed = seed;
+            Rng = new Random(seed);
+            Siphon = new TetherSiphon();
+            Ship = new ShipSystems(MetaUpgrades.HatchHp(meta.HatchArmorLevel));
+            Salvage = new SalvageLedger();
+            Phase = RunPhase.Docked;
+            Assault = AssaultState.Prep;
+
+            Ship.HatchDestroyed += OnHatchDestroyed;
+        }
+
+        /// <summary>Begin the run in Docked. Increments MetaState.TotalRuns. Callable once.
+        /// <paramref name="startWave"/> is 1-based and clamped to 1..min(MaxWaves, DeepestWaveReached).</summary>
+        public void StartRun(int startWave = 1)
+        {
+            if (_runStarted)
+            {
+                Log.Info(Tag, "StartRun ignored: run already started.");
+                return;
+            }
+            _runStarted = true;
+            _meta.TotalRuns++;
+            _startWave = ClampStartWave(startWave);
+            SetPhase(RunPhase.Docked);
+        }
+
+        /// <summary>Board the derelict: Docked → Tethered, landing in Prep. No waves until the
+        /// player pulls TriggerDraw.</summary>
+        public void EngageTether()
+        {
+            if (!_runStarted || Phase != RunPhase.Docked)
+            {
+                Log.Info(Tag, "EngageTether ignored in phase " + Phase);
+                return;
+            }
+            Assault = AssaultState.Prep;
+            SetPhase(RunPhase.Tethered);
+        }
+
+        /// <summary>Set the siphon dial (clamped 0..5). Only legal while Tethered+Prep —
+        /// the draw size is a pre-commitment, so during Assault this is a no-op.</summary>
+        public void SetSiphonLevel(int level)
+        {
+            if (Phase != RunPhase.Tethered || Assault != AssaultState.Prep)
+            {
+                Log.Info(Tag, "SetSiphonLevel ignored (phase " + Phase + ", " + Assault + ")");
+                return;
+            }
+            Siphon.Level = level;
+        }
+
+        /// <summary>
+        /// Pull the Siphon Draw: Prep → Assault. Only valid in Tethered+Prep, and only while
+        /// waves remain — a run is exactly WaveDirector.MaxWaves draws of *content*, so once
+        /// CurrentWaveIndex has reached MaxWaves this is a logged no-op. Launches the next wave
+        /// (WaveStarted fires). When StartWave &gt; 1 and this is the first draw, enters a
+        /// chained delivery through that wave.
+        /// </summary>
+        public void TriggerDraw()
+        {
+            if (Phase != RunPhase.Tethered || Assault != AssaultState.Prep)
+            {
+                Log.Info(Tag, "TriggerDraw ignored (phase " + Phase + ", " + Assault + ")");
+                return;
+            }
+            if (CurrentWaveIndex >= WaveDirector.MaxWaves)
+            {
+                Log.Info(Tag, "TriggerDraw refused: all " + WaveDirector.MaxWaves + " waves already drawn.");
+                return;
+            }
+            Assault = AssaultState.Assault;
+
+            // Deep start: only the first assault of the run chains. Later draws are normal.
+            if (CurrentWaveIndex == 0 && _startWave > 1)
+            {
+                _chainActive = true;
+                _chainUntil = _startWave - 1;
+            }
+            else
+            {
+                _chainActive = false;
+                _chainUntil = CurrentWaveIndex; // single-wave assault
+            }
+
+            LaunchWave();
+            if (_chainActive && CurrentWaveIndex <= _chainUntil)
+                _awaitingDelivery = true;
+        }
+
+        /// <summary>
+        /// Game layer reports the current wave's roster has finished spawning. During a deep-start
+        /// chain this starts the InterWaveGap timer toward the next wave; otherwise it is a no-op
+        /// (clear still waits on every boarder dead).
+        /// </summary>
+        public void NotifyDeliveryComplete()
+        {
+            if (!_chainActive || !_awaitingDelivery) return;
+            if (Phase != RunPhase.Tethered || Assault != AssaultState.Assault) return;
+
+            _awaitingDelivery = false;
+            if (CurrentWaveIndex <= _chainUntil)
+                _interWaveTimer = WaveDirector.InterWaveGap;
+        }
+
+        /// <summary>
+        /// Abort a live assault without counting it cleared: Assault → Prep and rewind
+        /// CurrentWaveIndex so the same wave can be drawn again. Does NOT fire AssaultEnded
+        /// (that would look like a clear and could CompleteRun). Used by Dev replay / jump;
+        /// not a player-facing bail-out. Clears any in-flight deep-start chain.
+        /// </summary>
+        public void AbortAssault()
+        {
+            if (Phase != RunPhase.Tethered || Assault != AssaultState.Assault)
+            {
+                Log.Info(Tag, "AbortAssault ignored (phase " + Phase + ", " + Assault + ")");
+                return;
+            }
+            Assault = AssaultState.Prep;
+            if (CurrentWaveIndex > 0) CurrentWaveIndex--;
+            ClearChainState();
+        }
+
+        /// <summary>
+        /// Point the next TriggerDraw at 1-based wave N. Only legal in Tethered+Prep.
+        /// Clamps to 1..MaxWaves. Does not start the wave — call TriggerDraw after.
+        /// Disables deep-start chaining for the rest of this run (Dev jump is a skip, not a chain).
+        /// </summary>
+        public void SeekWave(int oneBasedWave)
+        {
+            if (Phase != RunPhase.Tethered || Assault != AssaultState.Prep)
+            {
+                Log.Info(Tag, "SeekWave ignored (phase " + Phase + ", " + Assault + ")");
+                return;
+            }
+            if (oneBasedWave < 1) oneBasedWave = 1;
+            if (oneBasedWave > WaveDirector.MaxWaves) oneBasedWave = WaveDirector.MaxWaves;
+            // TriggerDraw reads CurrentWaveIndex as the next wave's 0-based index, then increments.
+            CurrentWaveIndex = oneBasedWave - 1;
+            AllWavesCleared = false;
+            // A seek mid-run is not a deep start — force single-wave assaults from here.
+            _startWave = 1;
+            ClearChainState();
+        }
+
+        /// <summary>
+        /// Game layer reports one boarder killed. An enemy dying IS the payday: the kill is
+        /// worth CurrentKillValue (Scavenging's 25 + 5*level times the siphon's dial multiplier),
+        /// which is added to
+        /// the run tally for display AND credited to MetaState.BankedSalvage immediately. Once
+        /// credited it can never be lost — dying later takes nothing back.
+        ///
+        /// Valid only while a draw is live (Tethered + Assault): kills pay nothing in Prep,
+        /// Docked, or after the run has ended.
+        /// </summary>
+        public void AwardKill()
+        {
+            if (Phase != RunPhase.Tethered || Assault != AssaultState.Assault)
+            {
+                Log.Info(Tag, "AwardKill ignored (phase " + Phase + ", " + Assault + ")");
+                return;
+            }
+            // The dial multiplier is a float now (x1..x1.5) and SalvageLedger.Earn still takes an
+            // INT multiplier, so the multiply happens here and the ledger gets a bare x1. Same
+            // product either way: RunSalvage += BaseKillValue * dial.
+            Salvage.Earn(CurrentKillValue, 1);
+            _meta.EarnSalvage((long)Math.Floor((double)CurrentKillValue));
+        }
+
+        /// <summary>
+        /// Heal the hatch by up to <paramref name="requestedHp"/>, charging
+        /// <see cref="ShipSystems.RepairSalvagePerHp"/> salvage per HP from the bank as healing
+        /// is applied. Returns the HP actually applied (0 when the hatch is full, destroyed, the
+        /// run is not live, or the bank is empty). Caps by need before cost so a full hatch never
+        /// charges. When the bank cannot cover the full request, spends the entire bank and heals
+        /// the affordable fraction so the bank lands at exactly zero.
+        /// </summary>
+        public float RepairHatch(float requestedHp)
+        {
+            if (requestedHp <= 0f) return 0f;
+            if (Phase != RunPhase.Tethered) return 0f;
+
+            var hatch = Ship.Hatch;
+            if (hatch.IsDestroyed) return 0f;
+
+            float need = hatch.MaxHp - hatch.Hp;
+            if (need <= 0f)
+            {
+                _repairHpAccrued = 0f;
+                return 0f;
+            }
+
+            long bank = _meta.BankedSalvage;
+            if (bank <= 0)
+            {
+                _repairHpAccrued = 0f;
+                return 0f;
+            }
+
+            float rate = ShipSystems.RepairSalvagePerHp;
+            float want = requestedHp < need ? requestedHp : need;
+            _repairHpAccrued += want;
+
+            // Whole salvage units this accrued HP can buy; bank is the hard cap (criterion 2).
+            long units = (long)Math.Floor((double)_repairHpAccrued * rate + 1e-6);
+            if (units <= 0) return 0f;
+            if (units > bank) units = bank;
+
+            float applied = (float)(units / (double)rate);
+            if (applied > need)
+            {
+                applied = need;
+                units = (long)Math.Ceiling((double)applied * rate - 1e-6);
+                if (units > bank) units = bank;
+                applied = (float)(units / (double)rate);
+            }
+            if (units <= 0 || applied <= 0f) return 0f;
+
+            if (!_meta.SpendSalvage(units)) return 0f;
+
+            hatch.Repair(applied);
+            _repairHpAccrued -= applied;
+            if (_repairHpAccrued < 0f) _repairHpAccrued = 0f;
+            RepairSalvageSpent += units;
+            return applied;
+        }
+
+        /// <summary>
+        /// Game layer reports the PLAYER dead. Death is the only way a run FAILS in v0, and
+        /// player death is exactly as terminal as losing the Hatch: PodEjections increments and
+        /// the run goes Podded. No salvage is lost — everything the run earned was banked at
+        /// kill time. Valid in either Tethered sub-state (Prep or Assault); ignored while
+        /// Docked or already terminal.
+        /// </summary>
+        public void NotifyPlayerDown()
+        {
+            if (Phase != RunPhase.Tethered)
+            {
+                Log.Info(Tag, "NotifyPlayerDown ignored in phase " + Phase);
+                return;
+            }
+            EndRun("player");
+        }
+
+        /// <summary>
+        /// Game layer reports the wave dead (all spawned boarders down, spawning finished, and
+        /// any deep-start chain fully delivered): Assault → Prep and AssaultEnded fires. Raises
+        /// MetaState.DeepestWaveReached to CurrentWaveIndex when higher. If that was the LAST
+        /// wave the run is COMPLETE and immediately finishes through CompleteRun. Ignored outside
+        /// Tethered+Assault, and ignored while ChainPending (more waves still scheduled).
+        /// </summary>
+        public void NotifyAssaultCleared()
+        {
+            if (Phase != RunPhase.Tethered || Assault != AssaultState.Assault)
+            {
+                Log.Info(Tag, "NotifyAssaultCleared ignored (phase " + Phase + ", " + Assault + ")");
+                return;
+            }
+            if (ChainPending)
+            {
+                Log.Info(Tag, "NotifyAssaultCleared ignored: deep-start chain still pending.");
+                return;
+            }
+
+            // Cleared through CurrentWaveIndex (1-based wave number already launched).
+            if (CurrentWaveIndex > _meta.DeepestWaveReached)
+                _meta.DeepestWaveReached = CurrentWaveIndex;
+
+            ClearChainState();
+            Assault = AssaultState.Prep;
+            var handler = AssaultEnded;
+            if (handler != null) handler();
+
+            // Re-check the phase: an AssaultEnded listener is free to end the run (kill the
+            // player, drop the hatch), and a run already lost must not also complete.
+            if (Phase == RunPhase.Tethered && CurrentWaveIndex >= WaveDirector.MaxWaves)
+                CompleteRun();
+        }
+
+        /// <summary>
+        /// Advance the sim by dt seconds. Active only while Tethered. Advances RunElapsed and,
+        /// during a deep-start chain, the inter-wave gap timer that auto-launches the next wave.
+        /// Docked and terminal phases ignore ticks entirely.
+        /// </summary>
+        public void Tick(float dt)
+        {
+            if (dt <= 0f) return;
+            if (Phase != RunPhase.Tethered) return;
+
+            RunElapsed += dt;
+
+            if (_interWaveTimer <= 0f) return;
+            if (Assault != AssaultState.Assault || !_chainActive) return;
+
+            _interWaveTimer -= dt;
+            if (_interWaveTimer > 0f) return;
+
+            _interWaveTimer = 0f;
+            if (CurrentWaveIndex > _chainUntil) return;
+            if (CurrentWaveIndex >= WaveDirector.MaxWaves) return;
+
+            LaunchWave();
+            if (CurrentWaveIndex <= _chainUntil)
+                _awaitingDelivery = true;
+        }
+
+        private void LaunchWave()
+        {
+            WaveSpec spec = _director.NextWave(CurrentWaveIndex, Siphon.Level);
+            CurrentWaveIndex++;
+            var handler = WaveStarted;
+            if (handler != null) handler(spec);
+        }
+
+        private void ClearChainState()
+        {
+            _chainActive = false;
+            _awaitingDelivery = false;
+            _interWaveTimer = 0f;
+        }
+
+        private int ClampStartWave(int startWave)
+        {
+            if (startWave < 1) startWave = 1;
+            int deepest = _meta.DeepestWaveReached;
+            if (deepest < 1) deepest = 1;
+            if (deepest > WaveDirector.MaxWaves) deepest = WaveDirector.MaxWaves;
+            if (startWave > deepest) startWave = deepest;
+            if (startWave > WaveDirector.MaxWaves) startWave = WaveDirector.MaxWaves;
+            return startWave;
+        }
+
+        private void OnHatchDestroyed()
+        {
+            // Hatch loss only ends a live run; ignore while Docked or already terminal.
+            if (Phase != RunPhase.Tethered) return;
+            EndRun("hatch");
+        }
+
+        /// <summary>
+        /// The single run-death path: hatch destruction and player death both land here.
+        /// BOOKKEEPING ONLY — no salvage moves, because every kill was banked when it happened.
+        /// Bumps PodEjections, records the report (cause + what the run earned), and goes
+        /// terminal Podded. Callers guard Phase == Tethered.
+        /// </summary>
+        private void EndRun(string cause)
+        {
+            ClearChainState();
+            LossReport report = BuildLossReport(cause);
+            _meta.PodEjections++;
+            LastLossReport = report;
+            SetPhase(RunPhase.Podded);
+            Log.Info(Tag, "Run ended (" + cause + "). Kept " + report.earned +
+                          " this run (repair spent " + report.repairSpent + "); nothing refunded.");
+        }
+
+        /// <summary>
+        /// The run-SUCCESS path: all WaveDirector.MaxWaves waves cleared. Also bookkeeping only —
+        /// clearing the derelict pays exactly what the kills paid, no more. CleanExits increments
+        /// (PodEjections does NOT) and the run goes terminal Escaped. Called only from
+        /// NotifyAssaultCleared, which guards Phase == Tethered.
+        /// </summary>
+        private void CompleteRun()
+        {
+            LossReport report = BuildLossReport("cleared");
+            _meta.CleanExits++;
+            AllWavesCleared = true;
+            LastLossReport = report;
+            SetPhase(RunPhase.Escaped);
+            Log.Info(Tag, "Run CLEARED: all " + WaveDirector.MaxWaves + " waves down. Kept " +
+                          report.earned + " this run (repair spent " + report.repairSpent + ").");
+        }
+
+        LossReport BuildLossReport(string cause)
+        {
+            long gross = (long)Math.Floor((double)Salvage.RunSalvage);
+            return new LossReport
+            {
+                cause = cause,
+                earned = gross - RepairSalvageSpent,
+                repairSpent = RepairSalvageSpent
+            };
+        }
+
+        private void SetPhase(RunPhase phase)
+        {
+            Phase = phase;
+            var handler = PhaseChanged;
+            if (handler != null) handler(phase);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Run/SalvageLedger.cs
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// Per-run salvage tally, for display only. Salvage is real currency the moment an enemy
+    /// dies: RunSim.AwardKill credits MetaState.BankedSalvage directly and mirrors the amount
+    /// here so the HUD can show "earned this run". Nothing in this class moves money.
+    ///
+    /// There is no banking API any more — BankCleanExit/BankPodded were deleted along with the
+    /// loss-stake mechanic. A run's tally resets simply by starting a new run: each run builds
+    /// a fresh RunSim, and therefore a fresh ledger.
+    /// </summary>
+    public sealed class SalvageLedger
+    {
+        /// <summary>Salvage accumulated this run (un-rounded). Never decreases during a run.</summary>
+        public float RunSalvage { get; private set; }
+
+        /// <summary>Add salvage: baseAmount * rewardMultiplier (the siphon's the dial's reward curve).</summary>
+        public void Earn(float baseAmount, int rewardMultiplier)
+        {
+            if (baseAmount <= 0f || rewardMultiplier <= 0) return;
+            RunSalvage += baseAmount * rewardMultiplier;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Ship/ShipSystems.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// The defended objective. v0 has exactly one: the HATCH — the tunnel/umbilical junction
+    /// back to your ship at one end of the derelict. Enemies push toward it; if it falls, the
+    /// run is lost (Podded). The four ship subsystems (Reactor, TetherCore, Engines,
+    /// LifeSupport) return when the bastion outfitting layer lands; this class stays the
+    /// aggregate so RunSim's wiring keeps its shape when they do.
+    /// </summary>
+    public sealed class ShipSystems
+    {
+        /// <summary>Default hatch HP pool — a simple starting number for the solo dev to tune.</summary>
+        public const float HatchMaxHp = 300f;
+
+        /// <summary>Salvage charged per hit point healed on the hatch. Lives here (not Game) so
+        /// the end-of-run report and EditMode tests share one constant with the heal path.</summary>
+        public const float RepairSalvagePerHp = 2f;
+
+        /// <summary>The umbilical junction back to the ship. Destruction ends the run (Podded).</summary>
+        public Subsystem Hatch { get; private set; }
+
+        /// <summary>Raised when the Hatch's HP first reaches 0.</summary>
+        public event Action HatchDestroyed;
+
+        /// <summary>True once the Hatch is at 0 HP (run lost).</summary>
+        public bool HatchIsDestroyed
+        {
+            get { return Hatch.IsDestroyed; }
+        }
+
+        /// <summary>Default hatch pool (300) — the unupgraded/test path.</summary>
+        public ShipSystems() : this(HatchMaxHp)
+        {
+        }
+
+        /// <summary>Hatch pool from the ship-shop: RunSim passes MetaUpgrades.HatchHp(level).</summary>
+        public ShipSystems(float hatchMaxHp)
+        {
+            Hatch = new Subsystem("Hatch", hatchMaxHp);
+            Hatch.Destroyed += OnHatchDestroyed;
+        }
+
+        private void OnHatchDestroyed(Subsystem s)
+        {
+            var handler = HatchDestroyed;
+            if (handler != null) handler();
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Ship/Subsystem.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// A damageable ship subsystem with clamped HP. Fires Destroyed once each time HP crosses to 0
+    /// (repairing above 0 re-arms it).
+    /// </summary>
+    public sealed class Subsystem
+    {
+        /// <summary>Display/debug name, e.g. "Reactor".</summary>
+        public string Name { get; private set; }
+
+        /// <summary>Maximum hit points.</summary>
+        public float MaxHp { get; private set; }
+
+        /// <summary>Current hit points, always in [0, MaxHp].</summary>
+        public float Hp { get; private set; }
+
+        /// <summary>True while Hp is 0.</summary>
+        public bool IsDestroyed
+        {
+            get { return Hp <= 0f; }
+        }
+
+        /// <summary>Raised when Hp reaches 0 (once per destruction).</summary>
+        public event Action<Subsystem> Destroyed;
+
+        public Subsystem(string name, float maxHp)
+        {
+            if (maxHp <= 0f) throw new ArgumentOutOfRangeException("maxHp");
+            Name = name;
+            MaxHp = maxHp;
+            Hp = maxHp;
+        }
+
+        /// <summary>Apply damage; HP clamps at 0. Non-positive amounts and hits on a destroyed system are ignored.</summary>
+        public void Damage(float amount)
+        {
+            if (amount <= 0f || IsDestroyed) return;
+            Hp = Math.Max(0f, Hp - amount);
+            if (Hp <= 0f)
+            {
+                var handler = Destroyed;
+                if (handler != null) handler(this);
+            }
+        }
+
+        /// <summary>Restore HP; clamps at MaxHp. Repairing a destroyed system brings it back online.</summary>
+        public void Repair(float amount)
+        {
+            if (amount <= 0f) return;
+            Hp = Math.Min(MaxHp, Hp + amount);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Waves/BoarderKind.cs
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// The three kinds of boarder. EACH KIND IS DEFINED BY WHAT IT REFUSES TO DO — the refusal is
+    /// the contract; the stat line is only tuning. Stats live in
+    /// <see cref="WaveDirector.StatsFor"/>, per-wave counts in <see cref="WaveSpec"/>, and the
+    /// design reasoning in Docs/01_Game.md.
+    /// </summary>
+    public enum BoarderKind
+    {
+        /// <summary>Hatch-seeker, provokable. The original boarder; the only kind in wave 1.</summary>
+        Default = 0,
+
+        /// <summary>Player-seeker. Ignores the hatch entirely. Introduced in wave 2.</summary>
+        Hunter = 1,
+
+        /// <summary>Hatch-only battering ram. Ignores the player entirely. Introduced in wave 3.</summary>
+        Ram = 2,
+    }
+}
+===== FILE: Assets/Scripts/Sim/Waves/BoarderStats.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// The complete combat profile of one <see cref="BoarderKind"/>, produced by
+    /// <see cref="WaveDirector.StatsFor"/> and pushed onto each spawned actor by the Game layer's
+    /// WaveSpawner. Nothing else describes a boarder: if a behaviour is not expressible here it
+    /// belongs in the Game layer's state machine, not in a new field.
+    ///
+    /// THE TWO FLAGS ARE THE DESIGN, THE NUMBERS ARE ONLY TUNING. A kind is what it refuses to
+    /// do; <see cref="ignoresHatch"/> and <see cref="ignoresPlayer"/> are those refusals, and the
+    /// zeroed damage fields beside them are the same rule stated twice so it cannot be half-obeyed
+    /// (a Hunter that somehow reached the hatch still cannot hurt it).
+    /// </summary>
+    [Serializable]
+    public struct BoarderStats
+    {
+        /// <summary>Hit points BEFORE <see cref="WaveSpec.enemyHealthMultiplier"/> is applied.
+        /// The Game layer spawns each actor at maxHp * that multiplier.</summary>
+        public float maxHp;
+
+        /// <summary>Damage dealt to the player per swing. 0 = this kind NEVER damages the player.</summary>
+        public float playerDamage;
+
+        /// <summary>Damage dealt to the hatch per swing. 0 = this kind NEVER damages the hatch.</summary>
+        public float hatchDamage;
+
+        /// <summary>Seconds between swings. All three kinds share one swing clock: kinds differ by
+        /// what they hit and how hard, never by cadence.</summary>
+        public float attackInterval;
+
+        /// <summary>Move speed while walking its default errand (Default/Ram to the hatch).</summary>
+        public float patrolSpeed;
+
+        /// <summary>Move speed while provoked or hunting. For Hunter and Ram this equals
+        /// <see cref="patrolSpeed"/> — neither has a second gear, because neither changes its mind.</summary>
+        public float chaseSpeed;
+
+        /// <summary>Hunter: never targets the hatch, at any range, including inside the 8 m commit
+        /// radius that pulls a Default boarder back to it.</summary>
+        public bool ignoresHatch;
+
+        /// <summary>Ram: never targets the player AND is never provoked by being shot — the one
+        /// enemy in the game that ignores the provoke-on-damage rule.</summary>
+        public bool ignoresPlayer;
+    }
+}
+===== FILE: Assets/Scripts/Sim/Waves/WaveDirector.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// Deterministic wave scaling. Pure functions of (waveIndex, siphonLevel) — no randomness,
+    /// so host and clients agree byte-for-byte.
+    /// </summary>
+    /// <remarks>
+    /// Every number here is justified in Docs/02_Numbers.md. Retune there and here together;
+    /// a value changed in one place only is the failure this file has already had once.
+    /// </remarks>
+    public sealed class WaveDirector
+    {
+        // ---- Wave curve ----
+
+        /// <summary>Total waves in a run. Indices are 0..MaxWaves-1; RunSim refuses a 6th draw.</summary>
+        public const int MaxWaves = 5;
+
+        /// <summary>Boarders in wave 0 at siphon level 0.</summary>
+        public const int BaseEnemyCount = 18;
+
+        /// <summary>Extra boarders per wave index.</summary>
+        public const int CountPerWave = 12;
+
+        /// <summary>Hard cap per wave AND aggregate live boarders across a deep-start chain.
+        /// At dial 5 wave 5 the largest single wave is 99; the cap is still a guard, not a knob.</summary>
+        public const int MaxEnemyCount = 120;
+
+        /// <summary>Floor on seconds between spawn GROUPS.</summary>
+        public const float MinSpawnInterval = 0.4f;
+
+        /// <summary>Boarders per spawn group in wave 0; each later wave adds one, capped by
+        /// <see cref="MaxGroupSize"/>.</summary>
+        public const int BaseGroupSize = 3;
+
+        /// <summary>Ceiling on spawn group width. M14's five-wave delivery table needs
+        /// 3/4/5/6/7 — lifting M2's temporary 4-wide cap so waves 3–5 match Docs/02_Numbers.md.
+        /// Do not reopen the *gap* (M10's lever); group width is the authored curve.</summary>
+        public const int MaxGroupSize = 7;
+
+        /// <summary>HP multiplier slope per wave index: <c>1 + slope * waveIndex</c>.
+        /// M16 raised 0.25 → 0.40 so late waves absorb Primary dps (MR-35 T3 cleared all three
+        /// at 100% hatch / 0 hits in <c>Logs/GatekeeperBastion_2026-08-04_09-14-16</c>).
+        /// Wave 1 stays at 1.0 by construction. Cap: slope 0.40 keeps BR-12's wave-2 one-shot
+        /// at 8 m (42 HP = 7×6 pellets).</summary>
+        public const float EnemyHealthPerWave = 0.40f;
+
+        /// <summary>Seconds between the end of one chained wave's delivery and the start of the
+        /// next during a deep start. The only tuning knob for the deep-start IFF crossover
+        /// (M14 criterion 9).</summary>
+        public const float InterWaveGap = 3f;
+
+        // ---- The Default kind's stat line. StatsFor(Default) is built from exactly these six
+        //      constants, so there is one copy of each number, not two that can drift. ----
+
+        /// <summary>Hit points of one Default boarder before enemyHealthMultiplier.</summary>
+        public const float BaseEnemyHp = 30f;
+
+        /// <summary>Damage a Default boarder deals to the player per swing.</summary>
+        public const float BoarderPlayerDamage = 6f;
+
+        /// <summary>Damage a Default boarder deals to the hatch per swing.</summary>
+        public const float BoarderHatchDamage = 4f;
+
+        /// <summary>Seconds between swings. ALL THREE KINDS SHARE THIS ONE CLOCK: a kind differs
+        /// by what it hits and how hard, never by cadence.</summary>
+        public const float BoarderAttackInterval = 0.7f;
+
+        /// <summary>Move speed while marching on the hatch (Default).</summary>
+        public const float BoarderPatrolSpeed = 3.2f;
+
+        /// <summary>Move speed once provoked (Default). MUST exceed the player's 5 m/s walk or
+        /// kiting is free.</summary>
+        public const float BoarderChaseSpeed = 5.6f;
+
+        /// <summary>Seconds between repeated spool-assault waves while the escape spool runs.</summary>
+        public const float SpoolWaveInterval = 8f;
+
+        // ---- Per-wave composition. Fixed counts; Default absorbs the remainder. ----
+
+        private static readonly int[] HunterPerWave = { 0, 4, 6, 10, 12 };
+        private static readonly int[] RamPerWave = { 0, 0, 2, 4, 7 };
+
+        /// <summary>The stat line of one boarder kind. Unknown kinds fall back to Default.</summary>
+        public static BoarderStats StatsFor(BoarderKind kind)
+        {
+            var stats = new BoarderStats();
+            stats.attackInterval = BoarderAttackInterval; // one swing clock for every kind
+
+            switch (kind)
+            {
+                case BoarderKind.Hunter:
+                    stats.maxHp = 20f;
+                    stats.playerDamage = 6f;
+                    stats.hatchDamage = 0f;   // THE RULE: a Hunter can never hurt the hatch
+                    stats.patrolSpeed = 6.5f; // no second gear: it is already hunting at spawn
+                    stats.chaseSpeed = 6.5f;
+                    stats.ignoresHatch = true;
+                    break;
+
+                case BoarderKind.Ram:
+                    stats.maxHp = 120f;
+                    stats.playerDamage = 0f;  // THE RULE: a Ram can never hurt the player
+                    stats.hatchDamage = 20f;
+                    stats.patrolSpeed = 2.2f; // no second gear: nothing makes it change its mind
+                    stats.chaseSpeed = 2.2f;
+                    stats.ignoresPlayer = true;
+                    break;
+
+                default: // BoarderKind.Default, and anything unrecognised
+                    stats.maxHp = BaseEnemyHp; // ONE copy of this number, shared with the wave curve
+                    stats.playerDamage = BoarderPlayerDamage;
+                    stats.hatchDamage = BoarderHatchDamage;
+                    stats.patrolSpeed = BoarderPatrolSpeed;
+                    stats.chaseSpeed = BoarderChaseSpeed;
+                    break;
+            }
+            return stats;
+        }
+
+        /// <summary>
+        /// Spec for the given wave.
+        ///
+        ///   enemyCount            = min(120, round((18 + 12*waveIndex) * dial))
+        ///                           dial = TetherSiphon.RewardMultiplierFor(siphonLevel)
+        ///   hunterCount           = {0,4,6,10,12}[waveIndex]   (never scaled by the dial)
+        ///   ramCount              = {0,0,2,4,7}[waveIndex]     (never scaled by the dial)
+        ///   defaultCount          = enemyCount - hunterCount - ramCount
+        ///   enemyHealthMultiplier = 1 + EnemyHealthPerWave*waveIndex  (0.40 → 1.00/1.40/1.80/2.20/2.60)
+        ///   groupSize             = min(3 + waveIndex, MaxGroupSize=7, enemyCount)  → 3/4/5/6/7
+        ///   spawnInterval         = max(0.4, 4.2 - 0.20*waveIndex)  — PER GROUP, see WaveSpec
+        ///   timeUntilNextWave     = 0 — obsolete under the draw model; kept for WaveSpec shape.
+        ///
+        /// The dial scales BODY COUNT ONLY. Health, group size, spawn gap and composition do not
+        /// see it, and the dial's surplus is entirely Default so it cannot multiply Hunters or
+        /// Rams. Both rules are load-bearing — see Docs/02_Numbers.md before relaxing either.
+        /// </summary>
+        public WaveSpec NextWave(int waveIndex, int siphonLevel)
+        {
+            if (waveIndex < 0) waveIndex = 0;
+            siphonLevel = ClampLevel(siphonLevel);
+
+            var spec = new WaveSpec();
+
+            // ONE table for money and bodies alike: TetherSiphon owns the curve, this reads it.
+            float dial = TetherSiphon.RewardMultiplierFor(siphonLevel);
+
+            // Snap to 4 decimals BEFORE rounding to a whole body. 1.15f is really 1.14999997...,
+            // so 30 * 1.15f lands a hair under 34.5 and a bare round would give 34 while the
+            // exact-in-binary 1.25f gives 38 from 37.5 — the grid would be lumpy for a reason
+            // that has nothing to do with tuning. Midpoints go up, always.
+            double scaled = Math.Round((double)(BaseEnemyCount + CountPerWave * waveIndex) * dial,
+                                       4, MidpointRounding.AwayFromZero);
+            spec.enemyCount = Math.Min(MaxEnemyCount,
+                (int)Math.Round(scaled, MidpointRounding.AwayFromZero));
+
+            // The Min() calls only bite on probe indices past the five real waves, and exist so
+            // the three counts ALWAYS sum to enemyCount — the Game layer's spawn loop relies on
+            // that without checking.
+            spec.hunterCount = Math.Min(Row(HunterPerWave, waveIndex), spec.enemyCount);
+            spec.ramCount = Math.Min(Row(RamPerWave, waveIndex), spec.enemyCount - spec.hunterCount);
+            spec.defaultCount = spec.enemyCount - spec.hunterCount - spec.ramCount;
+
+            spec.enemyHealthMultiplier = 1f + EnemyHealthPerWave * waveIndex;
+            spec.groupSize = Math.Max(1, Math.Min(Math.Min(BaseGroupSize + waveIndex, MaxGroupSize),
+                                                  spec.enemyCount));
+            spec.spawnInterval = Math.Max(MinSpawnInterval, 4.2f - 0.20f * waveIndex);
+            spec.timeUntilNextWave = 0f; // obsolete: no wave timer exists under the draw model
+            return spec;
+        }
+
+        /// <summary>
+        /// DORMANT in v0 (no escape path exists); kept for the escape-window design.
+        /// Intensified wave used while the escape spool runs — strictly harsher than
+        /// NextWave(0, siphonLevel) on every axis.
+        ///   enemyCount            = 14 + 6*siphonLevel
+        ///   enemyHealthMultiplier = 1.25 + 0.20*siphonLevel
+        ///   spawnInterval         = max(0.15, 0.75 - 0.05*siphonLevel)
+        ///   timeUntilNextWave     = 8 (waves keep coming until the spool finishes)
+        /// All Default, groupSize 1. These numbers predate the horde pass and were deliberately
+        /// left alone; they need a tuning pass if this ever wakes up.
+        /// </summary>
+        public WaveSpec SpoolAssault(int siphonLevel)
+        {
+            siphonLevel = ClampLevel(siphonLevel);
+
+            var spec = new WaveSpec();
+            spec.enemyCount = 14 + 6 * siphonLevel;
+            spec.defaultCount = spec.enemyCount;
+            spec.hunterCount = 0;
+            spec.ramCount = 0;
+            spec.enemyHealthMultiplier = 1.25f + 0.20f * siphonLevel;
+            spec.groupSize = 1;
+            spec.spawnInterval = Math.Max(0.15f, 0.75f - 0.05f * siphonLevel);
+            spec.timeUntilNextWave = SpoolWaveInterval;
+            return spec;
+        }
+
+        /// <summary>A composition row, holding the last authored value for probe indices past the
+        /// five real waves.</summary>
+        private static int Row(int[] table, int waveIndex)
+        {
+            return waveIndex >= table.Length ? table[table.Length - 1] : table[waveIndex];
+        }
+
+        private static int ClampLevel(int level)
+        {
+            if (level < TetherSiphon.MinLevel) return TetherSiphon.MinLevel;
+            if (level > TetherSiphon.MaxLevel) return TetherSiphon.MaxLevel;
+            return level;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Sim/Waves/WaveSpec.cs
+using System;
+
+namespace GatekeeperBastion.Sim
+{
+    /// <summary>
+    /// Value describing one boarder wave: how many enemies OF EACH KIND, how tough, how big a
+    /// spawn group is, how fast groups arrive, and the delay until the wave after this one.
+    /// </summary>
+    [Serializable]
+    public struct WaveSpec
+    {
+        /// <summary>Total boarders in this wave. Always equals
+        /// <see cref="defaultCount"/> + <see cref="hunterCount"/> + <see cref="ramCount"/>.</summary>
+        public int enemyCount;
+
+        /// <summary>How many of <see cref="enemyCount"/> are <see cref="BoarderKind.Default"/>.
+        /// The siphon dial's surplus lands here and nowhere else.</summary>
+        public int defaultCount;
+
+        /// <summary>How many of <see cref="enemyCount"/> are <see cref="BoarderKind.Hunter"/>.
+        /// Fixed per wave; the dial never multiplies it.</summary>
+        public int hunterCount;
+
+        /// <summary>How many of <see cref="enemyCount"/> are <see cref="BoarderKind.Ram"/>.
+        /// Fixed per wave; the dial never multiplies it.</summary>
+        public int ramCount;
+
+        /// <summary>Multiplier applied to each boarder's kind-specific
+        /// <see cref="BoarderStats.maxHp"/> (1 = baseline). One multiplier for all three kinds.</summary>
+        public float enemyHealthMultiplier;
+
+        /// <summary>How many boarders spawn together in one group. 1 = the old one-at-a-time
+        /// behaviour.</summary>
+        public int groupSize;
+
+        /// <summary>
+        /// SECONDS BETWEEN GROUPS — NOT BETWEEN INDIVIDUALS. The name predates the meaning.
+        ///
+        /// A wave arrives as ceil(enemyCount / groupSize) groups, the members of a group
+        /// spawning together and the next group arriving spawnInterval seconds later, so
+        /// delivery takes (ceil(enemyCount / groupSize) - 1) * spawnInterval seconds.
+        ///
+        /// A spawn loop that treats this as a per-individual gap delivers the wave three to five
+        /// times too slowly. This is the field to check first if a wave feels empty.
+        /// </summary>
+        public float spawnInterval;
+
+        /// <summary>OBSOLETE under the draw model: waves start only via RunSim.TriggerDraw, so
+        /// there is no wave timer. Kept for struct compatibility; NextWave always writes 0.
+        /// (SpoolAssault, dormant, still fills it for the future escape-window design.)</summary>
+        public float timeUntilNextWave;
+    }
+}

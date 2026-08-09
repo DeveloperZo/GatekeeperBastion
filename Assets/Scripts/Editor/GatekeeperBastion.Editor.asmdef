@@ -1,0 +1,24 @@
+{
+    "name": "GatekeeperBastion.Editor",
+    "rootNamespace": "GatekeeperBastion.EditorTools",
+    "references": [
+        "GatekeeperBastion",
+        "Michsky.UI.Shift",
+        "Unity.AI.Navigation",
+        "UnityEditor.TestRunner",
+        "UnityEngine.TestRunner",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

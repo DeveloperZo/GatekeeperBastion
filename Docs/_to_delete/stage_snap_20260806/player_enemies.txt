@@ -1,0 +1,2564 @@
+===== FILE: Assets/Scripts/Game/Enemies/BreachPoint.cs
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY: trivial marker for an enemy breach/spawn location; enabled instances
+    /// self-register in a static list consumed by WaveSpawner.</summary>
+    public sealed class BreachPoint : MonoBehaviour
+    {
+        static readonly List<BreachPoint> Registry = new List<BreachPoint>();
+
+        /// <summary>All currently enabled breach points.</summary>
+        public static IReadOnlyList<BreachPoint> All => Registry;
+
+        void OnEnable()
+        {
+            Registry.Add(this);
+        }
+
+        void OnDisable()
+        {
+            Registry.Remove(this);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Enemies/EnemyBoarder.Targeting.cs
+using GatekeeperBastion.Util;
+using UnityEngine;
+using UnityEngine.AI;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY (see EnemyBoarder.cs for the ownership contract): the targeting rule —
+    /// who a boarder is willing to go after, what provokes it, and where it stands to swing.
+    /// THIS FILE IS THE SEAM BETWEEN THE THREE KINDS. Everything else about a boarder is shared;
+    /// a kind is exactly the set of these three questions it answers differently.</summary>
+    public partial class EnemyBoarder
+    {
+        // ---------- the rule: three virtuals, one refusal each ----------
+
+        /// <summary>May this boarder march on the hatch? False for Hunters, which are a threat to
+        /// the player and to nothing else.</summary>
+        protected virtual bool MayTargetHatch => !ignoresHatch;
+
+        /// <summary>May this boarder go after a player at all — by aggro, by sight, or by being
+        /// shot? False for Rams, which walk past you to get to the door.</summary>
+        protected virtual bool MayTargetPlayer => !ignoresPlayer;
+
+        /// <summary>Can being shot (or a neighbour's shout) flip this boarder onto the player?
+        /// A boarder that will never target a player can never be provoked into doing so —
+        /// shooting a Ram changes nothing at all about it, which is the whole design.</summary>
+        protected virtual bool CanBeProvoked => MayTargetPlayer;
+
+        // ---------- provocation ----------
+
+        /// <summary>Shot by someone: hunt them, and pull the neighbours in with us.</summary>
+        void OnDamaged(Transform source)
+        {
+            // A Ram absorbs this and does not change: not its target, not its speed, and it does
+            // not shout. Provoke() is the single gate, so there is no second path to miss.
+            Provoke(source, shout: true);
+        }
+
+        /// <summary>Commit to hunting the player for the rest of this boarder's life. Idempotent,
+        /// and refused outright by any kind that cannot target players. Returns true only when
+        /// this call is what flipped the boarder, so a shout can count real joiners.
+        /// <paramref name="shout"/> alerts nearby boarders (they do not shout again, so one shot
+        /// pulls one group, not the whole derelict by relay).</summary>
+        public bool Provoke(Transform source, bool shout)
+        {
+            if (!CanBeProvoked) return false;
+            if (_provoked || _damageable == null || _damageable.IsDead) return false;
+            _provoked = true;
+            _chasingPlayer = true;
+            if (_agent != null && _agent.isOnNavMesh) _agent.speed = chaseSpeed;
+            _retargetTimer = 0f; // re-path this frame, not up to 0.75s later
+            Retarget();
+
+            if (!shout) return true;
+            int joined = 0;
+            for (int i = 0; i < Boarders.Count; i++)
+            {
+                var other = Boarders[i];
+                if (other == null || other == this) continue;
+                if (Vector3.Distance(transform.position, other.transform.position) > alertRadius) continue;
+                // Rams in the group silently decline; only boarders that actually joined count.
+                if (other.Provoke(source, shout: false)) joined++;
+            }
+            Log.Event("Boarders", joined > 0
+                ? $"boarder provoked — {joined} nearby joined the hunt"
+                : "boarder provoked — hunting the player");
+            return true;
+        }
+
+        /// <summary>Clear line of sight to the player within noticeRange? Cheap: only runs on the
+        /// retarget tick, and only until the boarder is provoked.</summary>
+        bool CanSeePlayer()
+        {
+            if (_player == null) return false;
+            Vector3 eye = transform.position + Vector3.up * 1.2f;
+            Vector3 target = _player.transform.position + Vector3.up * 1.0f;
+            Vector3 to = target - eye;
+            if (to.magnitude > noticeRange) return false;
+            // Anything solid between us blocks the sighting; the player's own collider does not.
+            if (Physics.Raycast(eye, to.normalized, out RaycastHit hit, to.magnitude,
+                                ~0, QueryTriggerInteraction.Ignore))
+                return hit.collider != null && hit.collider.transform.IsChildOf(_player.transform);
+            return true;
+        }
+
+        // ---------- the retarget tick ----------
+
+        void Retarget()
+        {
+            // Co-op ready: re-pick the closest LIVE player every retarget tick. NearestAlive means
+            // a downed player stops drawing aggro the instant the run ends, and the registry
+            // prunes destroyed entries first (dereferencing one used to be an NRE right here).
+            _player = PlayerRegistry.NearestAlive(transform.position);
+
+            var hatch = HatchStation.Instance;
+            // MayTargetHatch folds straight into "is there a hatch for me": a Hunter simply lives
+            // in a world with no hatch in it, so every hatch branch below is closed to it without
+            // a single kind test in the flow.
+            bool hatchAvailable = MayTargetHatch && hatch != null && !hatch.IsDestroyed;
+            bool playerNear = MayTargetPlayer && _player != null &&
+                              Vector3.Distance(transform.position, _player.transform.position) <= aggroRadius;
+
+            // Seeing the player down a sightline counts as encountering them.
+            if (!_provoked && MayTargetPlayer && _player != null && !playerNear && CanSeePlayer())
+                Provoke(_player.transform, shout: false);
+
+            // Player is the target when they get in the way — or when the hatch is gone.
+            // Proximity to the hatch beats every other consideration: a boarder in the bay is
+            // there to break your way home, not to chase whoever annoyed it on the way in.
+            // A Hunter never reaches this branch (hatchAvailable is false for it even while it is
+            // standing on the hatch), so the commit latch can never close on one.
+            if (hatchAvailable && !_committedToHatch &&
+                Vector3.Distance(transform.position, hatch.transform.position) <= hatchCommitRadius)
+            {
+                // LATCHED, not re-evaluated. Recomputing this every retarget made a boarder sitting
+                // near the 8m line flip between "hunt the player" and "wreck the hatch" twice a
+                // second — each flip threw away its path and restarted it, so it hovered instead of
+                // closing. Once a boarder is home, it is a hatch problem until the hatch is gone.
+                _committedToHatch = true;
+                _committedAt = Time.time;
+                Log.Event("Boarders", "boarder reached the hatch — attacking home");
+            }
+            if (!hatchAvailable) _committedToHatch = false;
+
+            // The one line that decides everything downstream. Read per kind:
+            //   Default — as it always was.
+            //   Hunter  — hatchAvailable is always false, so `!hatchAvailable` holds and it chases
+            //             the player from the breach, for life.
+            //   Ram     — MayTargetPlayer is false, so this is always false and the hatch is the
+            //             only goal it can ever have.
+            _chasingPlayer = MayTargetPlayer && !_committedToHatch &&
+                             (_provoked || playerNear || !hatchAvailable);
+            _hatchTarget = hatchAvailable ? hatch : null;
+            _standPoint = _committedToHatch && hatchAvailable ? HatchStandPoint(hatch) : (Vector3?)null;
+        }
+
+        /// <summary>A navmesh point just off the hatch's face. Pathing at the hatch's transform
+        /// aims INSIDE its collider, where no navmesh exists: the agent gets a partial path, stalls
+        /// at the edge and never registers as "arrived". This gives it somewhere it can stand.</summary>
+        Vector3 HatchStandPoint(HatchStation hatch)
+        {
+            Vector3 surface = hatch.ClosestSurfacePoint(transform.position);
+            Vector3 out2 = transform.position - surface;
+            out2.y = 0f;
+            if (out2.sqrMagnitude < 0.01f) out2 = Vector3.forward;
+            Vector3 want = surface + out2.normalized * 0.9f;
+            return NavMesh.SamplePosition(want, out NavMeshHit hit, 2.5f, NavMesh.AllAreas)
+                ? hit.position
+                : want;
+        }
+
+        bool TryGetGoal(out Vector3 goal)
+        {
+            // Unity-null-safe on every access: both targets can be destroyed between retargets.
+            if (_chasingPlayer && _player != null && !_player.IsDead)
+            {
+                goal = _player.transform.position;
+                return true;
+            }
+            if (_hatchTarget != null && !_hatchTarget.IsDestroyed)
+            {
+                goal = _standPoint ?? _hatchTarget.transform.position;
+                return true;
+            }
+            goal = default;
+            return false;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Enemies/EnemyBoarder.cs
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+using UnityEngine.AI;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY: NavMesh boarder — paths to the Hatch (HatchStation.Instance) and
+    /// attacks it on an interval; harasses the NEAREST LIVE player (PlayerRegistry, re-picked
+    /// every retarget) within aggro radius, hunting players outright once the hatch is gone.
+    /// BASE CLASS for the three kinds: <see cref="HunterBoarder"/> and <see cref="RamBoarder"/>
+    /// override only the targeting rule (see EnemyBoarder.Targeting.cs) and their crowd priority;
+    /// every number they differ by is pushed from the sim through <see cref="Configure"/>.</summary>
+    /// <remarks>
+    /// The AI hard-stops the moment the run reaches a terminal phase. Nothing used to stop it:
+    /// Update/Retarget/Attack kept running every frame after the player went down — still
+    /// damaging the hatch, still spawning FX, still trusting cached targets that the WaveSpawner
+    /// had just queued for destruction. Now Stop() disables the component once and for all, and
+    /// every cached reference (_player, _hatchTarget, _agent) is re-checked Unity-null-safe at
+    /// the point of use rather than trusted from the last retarget tick.
+    ///
+    /// SUBCLASSES CARRY NO BEHAVIOUR OF THEIR OWN BEYOND A REFUSAL. The two flags in
+    /// BoarderStats (ignoresHatch / ignoresPlayer) drive the shared Retarget() directly, so a
+    /// boarder configured with Hunter stats behaves like a Hunter whatever prefab it came from.
+    /// The subclasses exist to carry identity (Kind, and therefore colour/scale/prefab), to make
+    /// the refusal unmissable at the call site, and to harden it: HunterBoarder cannot latch onto
+    /// the hatch and RamBoarder cannot be provoked EVEN IF the flags were mis-pushed.
+    /// </remarks>
+    [RequireComponent(typeof(NavMeshAgent))]
+    [RequireComponent(typeof(Damageable))]
+    public partial class EnemyBoarder : MonoBehaviour
+    {
+        protected const string Tag = "EnemyBoarder";
+
+        // Combat tuning: NONE of the per-kind numbers below survive spawn — WaveSpawner pushes
+        // WaveDirector.StatsFor(kind) onto every boarder through Configure(). The serialized
+        // values are only what a hand-placed boarder in an unbuilt scene would fall back to.
+        // Enemy HP is not set here either: WaveSpawner applies stats.maxHp times the wave's
+        // multiplier, so a prefab's own value can never silently rescale a wave.
+        [SerializeField] float attackRange = 2.4f;
+
+        // The hatch is a 4m-wide box, not a person: a boarder anywhere along its face is "close
+        // enough" and starts wrecking it immediately. Player melee stays tight at attackRange.
+        [SerializeField] float hatchAttackRange = 3.5f;
+
+        /// <summary>Extra metres a target may drift before a boarder counts as out of reach.</summary>
+        const float ReachHysteresis = 1.2f;
+        [SerializeField] float attackInterval = 0.7f;
+        [SerializeField] float hatchDamage = 6f;
+        [SerializeField] float playerDamage = 18f;
+        [SerializeField] float aggroRadius = 8f;
+        [SerializeField] float retargetInterval = 0.75f;
+
+        // AGGRO. A boarder's default job is the hatch, but the player must never be able to stand
+        // out of reach and pick the queue apart. Two things flip a boarder onto the player, and
+        // once flipped it stays flipped for life:
+        //   1. being shot (Damageable.Damaged carries the shooter) — you shot it, it is yours;
+        //   2. seeing the player within noticeRange with clear line of sight.
+        // A provoked boarder also shouts: every other boarder within alertRadius joins the hunt,
+        // so sniping one out of a group pulls the group. Provoked movement is faster than the
+        // player's 5 m/s walk (chaseSpeed) — otherwise kiting backwards is a free win.
+        // HOME COMES FIRST: once a boarder is this close to the hatch it commits to wrecking it,
+        // even if the player shot it and even if the player is standing right there. Aggro decides
+        // who they hunt across the derelict; proximity to the hatch overrides that entirely.
+        [SerializeField] float hatchCommitRadius = 8f;
+        [SerializeField] float noticeRange = 26f;
+        [SerializeField] float alertRadius = 12f;
+        [SerializeField] float chaseSpeed = 5.6f;
+
+        static readonly System.Collections.Generic.List<EnemyBoarder> Boarders =
+            new System.Collections.Generic.List<EnemyBoarder>();
+
+        // The two refusals, pushed from BoarderStats at spawn. Read through the virtual
+        // MayTargetHatch / MayTargetPlayer / CanBeProvoked in EnemyBoarder.Targeting.cs.
+        protected bool ignoresHatch;
+        protected bool ignoresPlayer;
+
+        bool _provoked;
+        bool _committedToHatch;
+        bool _wasInRange;
+        bool _loggedHatchHit;
+        float _committedAt;
+        Vector3? _standPoint;
+        Vector3 _lastDestination = new Vector3(9999f, 9999f, 9999f);
+
+        NavMeshAgent _agent;
+        Damageable _damageable;
+        PlayerHealth _player;
+        HatchStation _hatchTarget;
+        bool _chasingPlayer;
+        float _attackTimer;
+        float _retargetTimer;
+
+        /// <summary>Which kind this actor is. Identity only — behaviour comes from the flags, so
+        /// this is what the kill line and the prefab palette read, never the AI.</summary>
+        public virtual BoarderKind Kind => BoarderKind.Default;
+
+        /// <summary>Dev F9 readout: who this boarder is hunting right now.</summary>
+        public string DevTargetLabel =>
+            _chasingPlayer ? "player" : (_committedToHatch ? "hatch" : (_hatchTarget != null ? "hatch?" : "idle"));
+
+        /// <summary>Dev F9 readout: seconds since hatch commit (0 when not parked).</summary>
+        public float DevTimeParked =>
+            _committedToHatch ? Mathf.Max(0f, Time.time - _committedAt) : 0f;
+
+        /// <summary>Crowd avoidance quality. 42 simultaneous agents is 3x the old load, so the
+        /// chaff kinds get a cheaper solver; RamBoarder keeps a high-quality one because its whole
+        /// job is shouldering through a crowd to reach the hatch.</summary>
+        protected virtual ObstacleAvoidanceType AvoidanceQuality =>
+            ObstacleAvoidanceType.MedQualityObstacleAvoidance;
+
+        /// <summary>Equal-priority agents push each other symmetrically and orbit a shared
+        /// destination forever; staggered priorities let a crowd settle against the hatch. LOWER
+        /// is stronger — RamBoarder overrides into a band that outranks every chaff boarder.</summary>
+        protected virtual int AvoidancePriority => 30 + (GetInstanceID() & 0x1F);
+
+        /// <summary>Push tuning from the sim onto this boarder at spawn. WaveSpawner calls this so
+        /// the SIM is the single source of truth: a prefab's serialized fields are frozen at the
+        /// moment the asset was created, so editing a [SerializeField] default in code does NOT
+        /// reach an existing prefab. That silently cost a whole tuning pass — boarders kept hitting
+        /// for the original 4 damage every 1.2s while the code said 18 every 0.7s. With three kinds
+        /// the same trap is three times as easy to fall into, so EVERY per-kind number (including
+        /// the two refusal flags) arrives here and none of them live only in a prefab.</summary>
+        public void Configure(BoarderStats stats)
+        {
+            Configure(stats.playerDamage, stats.hatchDamage, stats.attackInterval,
+                      stats.patrolSpeed, stats.chaseSpeed, stats.ignoresHatch, stats.ignoresPlayer);
+        }
+
+        /// <summary>The primitive form of <see cref="Configure(BoarderStats)"/> — the only place
+        /// that writes the tuning fields.</summary>
+        public void Configure(float toPlayer, float toHatch, float interval, float patrol,
+                              float chase, bool noHatch, bool noPlayer)
+        {
+            playerDamage = Mathf.Max(0f, toPlayer);
+            hatchDamage = Mathf.Max(0f, toHatch);
+            attackInterval = Mathf.Max(0.05f, interval);
+            chaseSpeed = Mathf.Max(0.1f, chase);
+            ignoresHatch = noHatch;
+            ignoresPlayer = noPlayer;
+            if (_agent == null) _agent = GetComponent<NavMeshAgent>();
+            if (_agent != null)
+            {
+                // A kind whose patrol speed equals its chase speed (Hunter) is already at full
+                // tilt from the breach; nothing needs to provoke it into moving properly.
+                _agent.speed = _provoked ? chaseSpeed : Mathf.Max(0.1f, patrol);
+                // The hatch destination is inside the box's collider, so the agent's path ends on
+                // the navmesh edge beside it; a 1.6m stopping distance then parks it short of
+                // melee range. Close all the way in and let attackRange decide.
+                _agent.stoppingDistance = 0.4f;
+                _agent.obstacleAvoidanceType = AvoidanceQuality;
+                _agent.avoidancePriority = Mathf.Clamp(AvoidancePriority, 0, 99);
+            }
+            // A Ram must not be left mid-hunt by a late re-Configure, and a Hunter must not be
+            // left latched on the hatch: re-derive the target under the new refusals right now.
+            if (ignoresPlayer)
+            {
+                _provoked = false;
+                _chasingPlayer = false;
+            }
+            Retarget();
+        }
+
+        void Awake()
+        {
+            _agent = GetComponent<NavMeshAgent>();
+            _damageable = GetComponent<Damageable>();
+            if (_damageable != null)
+            {
+                _damageable.onDeath.AddListener(OnDeath);
+                _damageable.Damaged += OnDamaged; // being shot is the strongest aggro signal there is
+            }
+        }
+
+        void OnDestroy()
+        {
+            // Unsubscribe: a UnityEvent listener pointing at a destroyed component errors out if
+            // the Damageable ever outlives us, and keeps this object alive to the GC otherwise.
+            if (_damageable != null)
+            {
+                _damageable.onDeath.RemoveListener(OnDeath);
+                _damageable.Damaged -= OnDamaged;
+            }
+            Boarders.Remove(this);
+        }
+
+        void OnEnable()
+        {
+            if (!Boarders.Contains(this)) Boarders.Add(this);
+        }
+
+        void OnDisable()
+        {
+            Boarders.Remove(this);
+        }
+
+        void Start()
+        {
+            Retarget();
+        }
+
+        void Update()
+        {
+            if (_damageable == null || _damageable.IsDead) return;
+
+            // Terminal phase (player down / hatch lost) or scene teardown: stop, permanently.
+            // Without this the AI kept attacking into the lose screen and through the scene load.
+            if (RunIsOver())
+            {
+                Stop("run over");
+                return;
+            }
+
+            _retargetTimer -= Time.deltaTime;
+            if (_retargetTimer <= 0f)
+            {
+                Retarget();
+                _retargetTimer = retargetInterval;
+            }
+
+            if (!TryGetGoal(out Vector3 goal))
+            {
+                StopAgent();
+                return;
+            }
+
+            // Measure melee range on the FLOOR PLANE and against the target's surface, not its
+            // transform. Vertical offset (the hatch centre is 1.5m up; a boarder's origin is at its
+            // feet) was eating most of a 2.4m budget on its own.
+            bool hittingHatch = !_chasingPlayer && _hatchTarget != null;
+            float reach = hittingHatch ? hatchAttackRange : attackRange;
+            float distance = PlanarDistanceToTarget(goal);
+
+            // HYSTERESIS. Agents crowding one destination shove each other with avoidance, so a
+            // boarder pressed against the hatch drifts across a hard range line several times a
+            // second. Enter at `reach`, leave only past `reach + ReachHysteresis` — otherwise the
+            // swing cadence is destroyed by jitter it has no control over.
+            bool inRange = _wasInRange ? distance <= reach + ReachHysteresis : distance <= reach;
+
+            // The swing clock runs on WALL TIME, not on time-spent-in-range. Ticking it only while
+            // in range meant a boarder in range 36% of frames swung at 36% of its rate — measured
+            // straight off a play log: 84 hatch damage took 13.5s instead of 4.9s.
+            _attackTimer -= Time.deltaTime;
+
+            // Arriving IS the attack: the first swing lands on contact, not an interval later.
+            if (inRange && !_wasInRange) _attackTimer = 0f;
+            _wasInRange = inRange;
+
+            if (inRange)
+            {
+                StopAgent();
+                if (_attackTimer <= 0f)
+                {
+                    Attack();
+                    _attackTimer = attackInterval;
+                }
+            }
+            else if (_agent != null && _agent.isOnNavMesh)
+            {
+                _agent.isStopped = false;
+                // Re-issuing an identical destination every frame restarts the path each time,
+                // which is what made them shuffle in place. Only re-path when the goal moves.
+                if ((goal - _lastDestination).sqrMagnitude > 0.25f)
+                {
+                    _agent.SetDestination(goal);
+                    _lastDestination = goal;
+                }
+            }
+        }
+
+        /// <summary>Distance to whatever we are about to hit, ignoring height and using the hatch's
+        /// surface rather than its centre.</summary>
+        float PlanarDistanceToTarget(Vector3 goal)
+        {
+            Vector3 point = goal;
+            if (!_chasingPlayer && _hatchTarget != null)
+                point = _hatchTarget.ClosestSurfacePoint(transform.position);
+            Vector3 d = point - transform.position;
+            d.y = 0f;
+            return d.magnitude;
+        }
+
+        /// <summary>True once the sim is in a terminal phase, or when there is no sim at all
+        /// (scene teardown / direct-play without a controller).</summary>
+        static bool RunIsOver()
+        {
+            var gc = GameController.Instance;
+            if (gc == null) return true; // no controller: nothing left to fight for
+            return gc.RunIsOver;         // Podded/Escaped, or a null Sim
+        }
+
+        /// <summary>Halt and disable for good — cheaper and safer than re-testing every frame.</summary>
+        void Stop(string reason)
+        {
+            StopAgent();
+            enabled = false;
+            Log.Info(Tag, $"Boarder stopped: {reason}.");
+        }
+
+        void StopAgent()
+        {
+            if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = true;
+        }
+
+        void Attack()
+        {
+            if (RunIsOver()) return; // guard: the run can end between the range test and the swing
+
+            if (_chasingPlayer && _player != null && !_player.IsDead)
+            {
+                _player.TakeDamage(playerDamage, transform);
+                return;
+            }
+
+            // Re-test the hatch here, not just at retarget: it may have been destroyed since, and
+            // hatch.transform on a destroyed HatchStation is a NullReferenceException.
+            var hatch = _hatchTarget;
+            if (hatch == null || hatch.IsDestroyed) return;
+
+            // One line per boarder, the first time it actually connects: arrival-to-damage latency
+            // is the thing to watch, and it is measurable straight from the log.
+            if (!_loggedHatchHit)
+            {
+                _loggedHatchHit = true;
+                Log.Event("Boarders", $"boarder hitting the hatch — {Time.time - _committedAt:0.0}s after arriving");
+            }
+            hatch.ApplyDamage(hatchDamage);
+            Effects.HatchDamageSparks(hatch.transform.position + Vector3.up * 1.2f);
+        }
+
+        void OnDeath()
+        {
+            // The kill LINE belongs to WaveSpawner: it owns the alive count this death changes,
+            // and its listener closes over this boarder's kind.
+            StopAgent();
+            SpawnDeathBurst();
+            Destroy(gameObject);
+        }
+
+        /// <summary>Kill-confirm particle explosion so deaths read as an event, not a vanish. The
+        /// tint comes off the renderer, so each kind's burst is its own colour for free.</summary>
+        void SpawnDeathBurst()
+        {
+            var myRenderer = GetComponentInChildren<Renderer>();
+            Color tint = myRenderer != null && myRenderer.sharedMaterial != null
+                ? myRenderer.sharedMaterial.color
+                : new Color(0.9f, 0.2f, 0.2f);
+            Effects.DeathExplosion(transform.position, tint);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Enemies/HunterBoarder.cs
+using GatekeeperBastion.Sim;
+using UnityEngine.AI;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY: the boarder that NEVER targets the hatch. It beelines the nearest live
+    /// player from the breach and keeps doing so for life — there is no hatch in its world, so no
+    /// distance to home can ever pull it off you. Fast and fragile (WaveDirector.StatsFor pushes
+    /// its hp and speeds); the answer to a Hunter is to shoot it, not to stand on the hatch.</summary>
+    /// <remarks>
+    /// Everything here is a refusal or an identity. The AI is EnemyBoarder's, unchanged:
+    /// <see cref="MayTargetHatch"/> returning false closes every hatch branch in Retarget(), which
+    /// is what makes `!hatchAvailable` hold from the first tick and the hatch-commit latch
+    /// unreachable — including while a Hunter is standing on top of the hatch, which is exactly
+    /// the case the flag alone had to be trusted for and now cannot be mis-pushed.
+    ///
+    /// A Hunter is NOT self-provoked at spawn on purpose: its patrol speed already equals its
+    /// chase speed, so it arrives at full tilt anyway, and leaving `_provoked` clear means being
+    /// shot still lets it SHOUT and pull its group. A pre-provoked Hunter would silently swallow
+    /// that, and the group shout is the reason groups spawn together.
+    /// </remarks>
+    public sealed class HunterBoarder : EnemyBoarder
+    {
+        public override BoarderKind Kind => BoarderKind.Hunter;
+
+        /// <summary>Never, at any distance, for any reason.</summary>
+        protected override bool MayTargetHatch => false;
+
+        /// <summary>Chaff: the cheapest solver Unity has. A Hunter is running a straight line at
+        /// one moving target and does not need to negotiate a scrum to do its job.</summary>
+        protected override ObstacleAvoidanceType AvoidanceQuality =>
+            ObstacleAvoidanceType.LowQualityObstacleAvoidance;
+    }
+}
+===== FILE: Assets/Scripts/Game/Enemies/RamBoarder.cs
+using GatekeeperBastion.Sim;
+using UnityEngine.AI;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY: the boarder that NEVER targets the player and is NEVER provoked. It
+    /// walks to the hatch and hits it hard; shooting it changes nothing — not its target, not its
+    /// speed, and it does not shout for help. You have to kill it, and it is slow and tanky
+    /// (WaveDirector.StatsFor pushes its hp and speeds), so every second spent on a Ram is a
+    /// second the Hunters escorting it spend on you. That trade is the point of the kind.</summary>
+    /// <remarks>
+    /// Two refusals, both hardened here rather than trusted from the pushed flags:
+    /// <see cref="MayTargetPlayer"/> is false, so aggro radius, line-of-sight and the whole
+    /// `_chasingPlayer` branch of Retarget() are closed; <see cref="CanBeProvoked"/> is false, so
+    /// Provoke() — the single gate that OnDamaged and a neighbour's shout both go through —
+    /// returns immediately without touching speed, target or the shout counter.
+    ///
+    /// Crowd priority is INVERTED relative to the chaff: a Ram outranks every Default and Hunter
+    /// (lower avoidancePriority wins in Unity), so a wall of bodies at the hatch parts for it
+    /// instead of stalling it in the doorway it exists to reach.
+    /// </remarks>
+    public sealed class RamBoarder : EnemyBoarder
+    {
+        public override BoarderKind Kind => BoarderKind.Ram;
+
+        /// <summary>Never. The player is scenery to a Ram.</summary>
+        protected override bool MayTargetPlayer => false;
+
+        /// <summary>Never — stated separately from <see cref="MayTargetPlayer"/> so that "shooting
+        /// it does nothing" is a written rule and not a side effect of one.</summary>
+        protected override bool CanBeProvoked => false;
+
+        /// <summary>The one kind that keeps the expensive solver: its whole job is pushing through
+        /// a crowd of its own escorts to reach the hatch, and a cheap solver is what makes an agent
+        /// give up and orbit instead.</summary>
+        protected override ObstacleAvoidanceType AvoidanceQuality =>
+            ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+
+        /// <summary>Outranks the chaff band (30..61) outright, still staggered inside its own band
+        /// so two Rams at the same door do not deadlock each other symmetrically.</summary>
+        protected override int AvoidancePriority => 4 + (GetInstanceID() & 0x0F);
+    }
+}
+===== FILE: Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs
+using System.Collections;
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+using UnityEngine.AI;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY (see WaveSpawner.cs for the ownership contract): how a wave becomes
+    /// actors — the shuffled per-kind roster, and the group emission that puts groupSize of them
+    /// through ONE door at a time. Deep-start chains run several of these routines at once.</summary>
+    public sealed partial class WaveSpawner
+    {
+        /// <summary>Fill a wave emit's roster from the spec's three counts and shuffle it.</summary>
+        /// <remarks>SHUFFLED, NOT BLOCKED: appending the kinds in order would send every Hunter
+        /// first and every Ram last, so the mix a player has to triage would only ever exist for
+        /// the few seconds the blocks overlap. Mixing is the whole reason there are three kinds.
+        ///
+        /// The shuffle draws from RunSim.Rng — the sim's seeded stream — so the same seed replays
+        /// the same roster; it is host-side wave construction, not player input, so it belongs on
+        /// that stream (the reason PlayerGun's crits deliberately do not). UnityEngine.Random is
+        /// the fallback only when there is no sim, which is the same case in which nothing spawns.
+        /// </remarks>
+        void BuildRoster(WaveEmit emit, WaveSpec spec)
+        {
+            emit.Queue.Clear();
+            AddKind(emit, BoarderKind.Default, spec.defaultCount);
+            AddKind(emit, BoarderKind.Hunter, spec.hunterCount);
+            AddKind(emit, BoarderKind.Ram, spec.ramCount);
+
+            // The sim's contract is that the three counts sum to enemyCount. If a tuning pass ever
+            // breaks that, spawn what the spec actually asked for rather than an empty wave, and
+            // say so — a silently short wave clears itself and looks like a win.
+            if (emit.Queue.Count != spec.enemyCount)
+            {
+                Log.Warn(Tag, $"Wave roster {emit.Queue.Count} != spec.enemyCount {spec.enemyCount} " +
+                              $"({spec.defaultCount}/{spec.hunterCount}/{spec.ramCount}); using the roster.");
+                if (emit.Queue.Count == 0) AddKind(emit, BoarderKind.Default, spec.enemyCount);
+            }
+
+            var rng = _sim != null ? _sim.Rng : null;
+            for (int i = emit.Queue.Count - 1; i > 0; i--)
+            {
+                int j = rng != null ? rng.Next(i + 1) : Random.Range(0, i + 1);
+                BoarderKind swap = emit.Queue[i];
+                emit.Queue[i] = emit.Queue[j];
+                emit.Queue[j] = swap;
+            }
+        }
+
+        void AddKind(WaveEmit emit, BoarderKind kind, int count)
+        {
+            for (int i = 0; i < count; i++) emit.Queue.Add(kind);
+        }
+
+        /// <summary>One group per spawnInterval until the roster is empty. spawnInterval is the gap
+        /// between GROUPS now, so the wave's total arrival time is unchanged in shape but the
+        /// pressure arrives in clumps. Respects MaxEnemyCount in aggregate across concurrent waves.</summary>
+        IEnumerator SpawnWaveRoutine(WaveEmit emit)
+        {
+            WaveSpec spec = emit.Spec;
+            int groupSize = Mathf.Max(1, spec.groupSize);
+            int groupNumber = 0;
+            while (emit.Queue.Count > 0)
+            {
+                // Re-tested every iteration: the run can end (or the scene start unloading)
+                // during any of the WaitForSeconds below.
+                if (_teardown || _sim == null || _sim.Phase != RunPhase.Tethered) yield break;
+
+                // Aggregate live-boarder cap across a deep-start pile-up (M14 Watch).
+                int want = Mathf.Min(groupSize, emit.Queue.Count);
+                while (!_teardown && AliveCount + want > WaveDirector.MaxEnemyCount)
+                {
+                    yield return null;
+                    if (_teardown || _sim == null || _sim.Phase != RunPhase.Tethered) yield break;
+                }
+
+                groupNumber++;
+                EmitGroup(emit, groupSize, groupNumber);
+                CheckAssaultCleared();
+                if (spec.spawnInterval > 0f && emit.Queue.Count > 0)
+                    yield return new WaitForSeconds(spec.spawnInterval);
+            }
+
+            // Delivery finished for THIS wave — may unlock the next chained wave.
+            if (!_teardown && _sim != null && _sim.Phase == RunPhase.Tethered)
+                _sim.NotifyDeliveryComplete();
+
+            _active.Remove(emit);
+            CheckAssaultCleared();
+        }
+
+        /// <summary>Emit up to <paramref name="groupSize"/> actors from the roster AT ONE BREACH
+        /// POINT, arranged on a small ring around it so they do not spawn inside each other. The
+        /// point is picked once per group — that rotation is what spreads groups around the map
+        /// while keeping each group together.</summary>
+        void EmitGroup(WaveEmit emit, int groupSize, int groupNumber)
+        {
+            int size = Mathf.Min(groupSize, emit.Queue.Count);
+            Transform point = PickBreachPoint();
+            var tally = new int[3];
+
+            for (int i = 0; i < size; i++)
+            {
+                BoarderKind kind = emit.Queue[emit.Queue.Count - 1];
+                emit.Queue.RemoveAt(emit.Queue.Count - 1);
+                // Decrement whether or not the spawn lands: a roster entry that can never be
+                // spawned must still stop counting against the wave, or the wave never clears
+                // and the run softlocks in Assault.
+                emit.Pending--;
+                if (point == null) continue;
+                if (SpawnOne(emit.Spec, kind, point, i, size, emit)) tally[(int)kind]++;
+            }
+
+            if (point == null)
+            {
+                Log.Warn(Tag, $"No breach points registered; dropped group {groupNumber} ({size} boarders).");
+                return;
+            }
+            Log.Event("Boarders", $"group {groupNumber}: {Describe(tally)} breached at {point.name} " +
+                                  $"({emit.Spawned}/{emit.Size})");
+        }
+
+        /// <summary>"2 Boarders, 1 Hunter, 2 Rams" — the group's composition, kinds omitted when
+        /// absent. This is the one place per-kind detail is worth log space: it is what makes a
+        /// group's threat readable afterwards.</summary>
+        static string Describe(int[] tally)
+        {
+            var sb = new System.Text.StringBuilder();
+            for (int k = 0; k < tally.Length; k++)
+            {
+                if (tally[k] <= 0) continue;
+                if (sb.Length > 0) sb.Append(", ");
+                sb.Append(tally[k]).Append(' ').Append(KindName((BoarderKind)k));
+                if (tally[k] > 1) sb.Append('s');
+            }
+            return sb.Length > 0 ? sb.ToString() : "0 boarders";
+        }
+
+        static string KindName(BoarderKind kind)
+        {
+            switch (kind)
+            {
+                case BoarderKind.Hunter: return "Hunter";
+                case BoarderKind.Ram: return "Ram";
+                default: return "Boarder";
+            }
+        }
+
+        /// <summary>Instantiate one actor of <paramref name="kind"/> at slot
+        /// <paramref name="index"/> of a <paramref name="groupCount"/>-strong group.</summary>
+        bool SpawnOne(WaveSpec spec, BoarderKind kind, Transform point, int index, int groupCount,
+                      WaveEmit emit)
+        {
+            if (_teardown) return false; // guard: never Instantiate into a scene that is unloading
+            GameObject prefab = PrefabFor(kind);
+            if (prefab == null)
+            {
+                Log.Warn(Tag, "No enemy prefab assigned; cannot spawn.");
+                return false;
+            }
+
+            // ONE call to the sim per actor: every per-kind number this boarder will ever use
+            // comes from here, because a prefab's serialized fields are frozen at asset-creation
+            // time and silently outrank any later code change (03_Architecture GOTCHA 1).
+            BoarderStats stats = WaveDirector.StatsFor(kind);
+
+            GameObject enemy = Instantiate(prefab, GroupSlot(point.position, index, groupCount),
+                                           point.rotation);
+            var damageable = enemy.GetComponent<Damageable>();
+            if (damageable != null)
+            {
+                // Absolute, not relative: scaling whatever the prefab happened to carry made the
+                // tuned baseline depend on a serialized asset that can drift (and a re-scaled
+                // pooled instance would compound). The kind's own maxHp is the one source.
+                float multiplier = spec.enemyHealthMultiplier > 0f ? spec.enemyHealthMultiplier : 1f;
+                damageable.SetMaxHp(Mathf.Max(1f, stats.maxHp) * multiplier);
+            }
+
+            var boarder = enemy.GetComponent<EnemyBoarder>();
+            if (boarder != null) boarder.Configure(stats);
+
+            AliveCount++;
+            emit.Spawned++;
+
+            // The listener captures ITS boarder's KIND so the kill line can name what died.
+            // Damageable drops all listeners in OnDestroy, so the closure cannot outlive the
+            // object it closed over.
+            if (damageable != null)
+            {
+                BoarderKind died = kind;
+                damageable.onDeath.AddListener(() => OnBoarderDied(died));
+            }
+            return true;
+        }
+
+        /// <summary>Where slot <paramref name="index"/> of a group stands. Slot 0 takes the breach
+        /// point itself; the rest ring it, snapped back onto the navmesh so nobody is born inside
+        /// a wall (a breach point sits at the far end of a chamber, not always in open floor).</summary>
+        static Vector3 GroupSlot(Vector3 origin, int index, int groupCount)
+        {
+            if (index <= 0 || groupCount <= 1) return origin;
+            float angle = Mathf.PI * 2f * index / groupCount;
+            Vector3 want = origin + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * GroupSpread;
+            return NavMesh.SamplePosition(want, out NavMeshHit hit, GroupSpread * 2f, NavMesh.AllAreas)
+                ? hit.position
+                : origin;
+        }
+
+        /// <summary>The prefab for a kind, falling back to the default one when a per-kind prefab
+        /// is missing. A fallback actor still BEHAVES correctly — EnemyBoarder derives its whole
+        /// targeting rule from the two flags in BoarderStats — so the only thing lost is the
+        /// colour that tells the player which one it is. Worth one warning, not a spawn failure.
+        /// </summary>
+        GameObject PrefabFor(BoarderKind kind)
+        {
+            switch (kind)
+            {
+                case BoarderKind.Hunter:
+                    if (hunterPrefab != null) return hunterPrefab;
+                    break;
+                case BoarderKind.Ram:
+                    if (ramPrefab != null) return ramPrefab;
+                    break;
+                default:
+                    return enemyPrefab;
+            }
+            if (!_warnedPrefab)
+            {
+                _warnedPrefab = true;
+                Log.Warn(Tag, $"No {KindName(kind)} prefab wired; using the default prefab " +
+                              "(behaviour is correct, colour is not). Re-run Build All Scenes.");
+            }
+            return enemyPrefab;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Enemies/WaveSpawner.cs
+using System.Collections.Generic;
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>HOST-ONLY: listens to RunSim.WaveStarted (fired by TriggerDraw and deep-start
+    /// chain follow-ups) and spawns each wave's boarders in GROUPS at registered breach points.
+    /// Several WaveSpecs may run concurrently during a deep start — each keeps its own roster
+    /// cursor and group timer; AliveCount is the aggregate, and the assault clears only when
+    /// every chained wave has finished delivering AND every boarder is dead (and the sim says
+    /// ChainPending is false). Spawns ONLY while Tethered; on Podded it stops all spawn
+    /// coroutines and despawns remaining boarders.</summary>
+    /// <remarks>
+    /// WHY GROUPS: one-at-a-time arrivals meant the 12m shout radius only fired when the spacing
+    /// happened to be kind, and a Ram would arrive alone and die politely. A group at one door is
+    /// the unit of pressure — the shout fires by construction, and a Ram shows up escorted.
+    /// The roster and the group emission itself live in WaveSpawner.Groups.cs; this file is the
+    /// lifecycle, the alive count and the wave-cleared handshake.
+    ///
+    /// Teardown contract: _teardown latches on the first terminal phase, on OnDisable, and on
+    /// application quit. Once latched, nothing Instantiates and no coroutine restarts — a
+    /// straggler spawning into a scene that is unloading is exactly the kind of half-constructed
+    /// object that throws during the lose screen.
+    /// </remarks>
+    public sealed partial class WaveSpawner : MonoBehaviour
+    {
+        const string Tag = "WaveSpawner";
+
+        /// <summary>Metres from the breach point to the ring the rest of a group lands on. Big
+        /// enough that groupSize agents do not spawn inside one another (agent radius is 0.4);
+        /// small enough that they still read as one arrival.</summary>
+        const float GroupSpread = 1.1f;
+
+        /// <summary>One in-flight wave's roster and spawn cursor. Deep start holds several at once.</summary>
+        sealed class WaveEmit
+        {
+            public WaveSpec Spec;
+            public readonly List<BoarderKind> Queue = new List<BoarderKind>();
+            public int Pending;
+            public int Spawned;
+            public int Size;
+        }
+
+        [Tooltip("Default boarder prefab (capsule + NavMeshAgent + EnemyBoarder + Damageable). Wired by SceneBuilder.")]
+        public GameObject enemyPrefab;
+
+        [Tooltip("Hunter prefab (HunterBoarder). Falls back to enemyPrefab when unassigned.")]
+        public GameObject hunterPrefab;
+
+        [Tooltip("Ram prefab (RamBoarder). Falls back to enemyPrefab when unassigned.")]
+        public GameObject ramPrefab;
+
+        [Tooltip("Explicit breach points; when empty, falls back to the BreachPoint registry.")]
+        public BreachPoint[] breachPoints;
+
+        /// <summary>Boarders of the current assault spawned and still alive (HUD readout).</summary>
+        public int AliveCount { get; private set; }
+
+        readonly List<WaveEmit> _active = new List<WaveEmit>();
+
+        RunSim _sim;
+        int _spawnCursor;
+        bool _teardown;         // latched: the run is over or the scene is going away
+        bool _warnedPrefab;     // one line per run about a missing per-kind prefab, not one per spawn
+
+        void Start()
+        {
+            var gc = GameController.Instance;
+            _sim = gc != null ? gc.Sim : null;
+            if (_sim == null)
+            {
+                Log.Warn(Tag, "No GameController/sim in scene; spawner idle.");
+                return;
+            }
+            Subscribe();
+        }
+
+        void OnDisable()
+        {
+            // Teardown latch + unsubscribe: the sim can outlive this component's enabled state,
+            // and a handler on a disabled spawner would try to StartCoroutine (which throws).
+            _teardown = true;
+            Unsubscribe();
+            StopAllCoroutines();
+        }
+
+        void OnDestroy()
+        {
+            Unsubscribe();
+        }
+
+        void OnApplicationQuit()
+        {
+            _teardown = true;
+        }
+
+        void Subscribe()
+        {
+            if (_sim == null) return;
+            Unsubscribe(); // idempotent
+            _sim.WaveStarted += OnWaveStarted;
+            _sim.PhaseChanged += OnPhaseChanged;
+        }
+
+        void Unsubscribe()
+        {
+            if (_sim == null) return;
+            _sim.WaveStarted -= OnWaveStarted;
+            _sim.PhaseChanged -= OnPhaseChanged;
+        }
+
+        void OnWaveStarted(WaveSpec spec)
+        {
+            if (_teardown || _sim == null || _sim.Phase != RunPhase.Tethered)
+            {
+                Log.Warn(Tag, $"Wave start ignored (teardown={_teardown}, phase={(_sim == null ? "no-sim" : _sim.Phase.ToString())}).");
+                return;
+            }
+            if (!isActiveAndEnabled)
+            {
+                // Guard trip: StartCoroutine on an inactive MonoBehaviour throws.
+                Log.Warn(Tag, "Wave start ignored: spawner is not active.");
+                return;
+            }
+
+            var emit = new WaveEmit { Spec = spec };
+            BuildRoster(emit, spec);
+            emit.Pending = emit.Queue.Count;
+            emit.Size = emit.Queue.Count;
+            emit.Spawned = 0;
+            // Do NOT reset AliveCount — a deep-start chain overlaps waves in the room.
+            _active.Add(emit);
+            StartCoroutine(SpawnWaveRoutine(emit));
+        }
+
+        void OnPhaseChanged(RunPhase phase)
+        {
+            if (phase == RunPhase.Tethered) return;
+            if (phase != RunPhase.Podded && phase != RunPhase.Escaped) return;
+
+            // Clean stop on loss: no stragglers spawn into the lose screen, and no boarder is
+            // left running its AI over a scene that is about to unload.
+            _teardown = true;
+            StopAllCoroutines();
+            int despawned = 0;
+            AliveCount = 0;
+            _active.Clear();
+            foreach (var boarder in FindObjectsByType<EnemyBoarder>(FindObjectsSortMode.None))
+            {
+                if (boarder == null) continue; // guard: destroyed between the query and here
+                boarder.enabled = false;       // stop the AI THIS frame; Destroy is end-of-frame
+                Destroy(boarder.gameObject);
+                despawned++;
+            }
+            // Info, not Event: this is teardown bookkeeping that happens AFTER the run summary has
+            // been written (GameController subscribes to PhaseChanged first), and a stray line
+            // trailing the summary block is exactly the structural noise we removed.
+            Log.Info(Tag, $"Terminal phase {phase}: spawning stopped, {despawned} boarder(s) despawned.");
+        }
+
+        /// <summary>A boarder is down: decrement first so the kill line's "N remaining" is the
+        /// count AFTER this death, then bank the kill and re-test the wave.</summary>
+        /// <remarks>Convention R1: the award goes through GameController.BoarderKilled(), never
+        /// straight into the sim. The value is READ BEFORE the award so the line reports what
+        /// THIS kill paid (the sim owns the number; we only quote it).</remarks>
+        void OnBoarderDied(BoarderKind kind)
+        {
+            AliveCount = Mathf.Max(0, AliveCount - 1);
+
+            var gc = GameController.Instance;
+            float award = gc != null && gc.Sim != null ? gc.Sim.CurrentKillValue : 0f;
+            if (gc != null) gc.BoarderKilled();
+            else Log.Warn(Tag, "Kill not awarded: no GameController in the scene.");
+
+            Log.Event("Combat", $"killed a {KindName(kind)} (+{award:0} salvage) — {AliveCount} left");
+            CheckAssaultCleared();
+        }
+
+        /// <summary>Assault dead = every active wave finished spawning, every spawned boarder
+        /// is down, and the sim is not still chaining more waves → tell the sim.</summary>
+        void CheckAssaultCleared()
+        {
+            if (_teardown) return; // guard: never call into the sim from a terminal/teardown state
+            if (_sim == null || _sim.Phase != RunPhase.Tethered) return;
+            if (_sim.Assault != AssaultState.Assault) return;
+            if (_sim.ChainPending) return;
+            if (_active.Count > 0) return; // at least one wave still delivering
+            if (AliveCount > 0) return;
+            // The "wave N cleared" line is GameController's (on AssaultEnded)
+            // — it has the duration, salvage and hatch HP this call site does not.
+            _sim.NotifyAssaultCleared();
+        }
+
+        /// <summary>Dev/replay: stop spawning and destroy every live boarder WITHOUT awarding
+        /// kills or notifying assault-cleared. Caller decides whether to AbortAssault or
+        /// NotifyAssaultCleared. Returns how many actors were destroyed.</summary>
+        public int DespawnAllLive()
+        {
+            StopAllCoroutines();
+            _active.Clear();
+            AliveCount = 0;
+            int despawned = 0;
+            foreach (var boarder in FindObjectsByType<EnemyBoarder>(FindObjectsSortMode.None))
+            {
+                if (boarder == null) continue;
+                boarder.enabled = false;
+                Destroy(boarder.gameObject);
+                despawned++;
+            }
+            return despawned;
+        }
+
+        /// <summary>The next breach point in rotation. Called ONCE PER GROUP, not per boarder:
+        /// a group arriving together at one door is the point.</summary>
+        Transform PickBreachPoint()
+        {
+            if (breachPoints != null && breachPoints.Length > 0)
+            {
+                // Skip destroyed/missing entries rather than returning a fake-null transform.
+                for (int attempt = 0; attempt < breachPoints.Length; attempt++)
+                {
+                    var bp = breachPoints[_spawnCursor++ % breachPoints.Length];
+                    if (bp != null) return bp.transform;
+                }
+                Log.Warn(Tag, "All wired breach points are missing; falling back to the registry.");
+            }
+            var all = BreachPoint.All;
+            if (all == null || all.Count == 0) return null;
+            for (int attempt = 0; attempt < all.Count; attempt++)
+            {
+                var bp = all[_spawnCursor++ % all.Count];
+                if (bp != null) return bp.transform;
+            }
+            return null;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Input/Controls.cs
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>Ids for every player-facing binding. Input sites call
+    /// <see cref="Controls.Down"/> / <see cref="Controls.Held"/>; the shortcut panel
+    /// iterates the same list. Adding a row here is what makes a key usable and visible.</summary>
+    public enum ControlId
+    {
+        Move,
+        Look,
+        Sprint,
+        Fire,
+        Reload,
+        SlotPrimary,
+        SlotSecondary,
+        SlotMelee,
+        SlotLast,
+        SlotCycle,
+        Interact,
+        PullDraw,
+        DialDown,
+        DialUp,
+        FreeCursor,
+        Confirm,
+        TogglePanel,
+    }
+
+    /// <summary>When a binding is live. Flags so Prep∩Assault is empty and a collision
+    /// test can ask whether two bindings can fire in the same state.</summary>
+    [Flags]
+    public enum ControlContext
+    {
+        None = 0,
+        Fight = 1 << 0,
+        Prep = 1 << 1,
+        Assault = 1 << 2,
+        NearInteract = 1 << 3,
+        Ship = 1 << 4,
+        EndScreen = 1 << 5,
+    }
+
+    /// <summary>One row in the binding list. <see cref="DisplayOnly"/> rows (WASD, wheel)
+    /// appear on the panel but have no KeyCode poll — axes/scroll stay on their Unity APIs.</summary>
+    public readonly struct ControlBinding
+    {
+        public readonly ControlId Id;
+        public readonly KeyCode Key;
+        public readonly KeyCode AltKey;
+        public readonly string Display;
+        public readonly string Label;
+        public readonly string Section;
+        public readonly ControlContext Context;
+        public readonly bool DisplayOnly;
+        public readonly bool ShowOnPanel;
+
+        public ControlBinding(
+            ControlId id, KeyCode key, KeyCode altKey, string display, string label,
+            string section, ControlContext context, bool displayOnly = false, bool showOnPanel = true)
+        {
+            Id = id;
+            Key = key;
+            AltKey = altKey;
+            Display = display;
+            Label = label;
+            Section = section;
+            Context = context;
+            DisplayOnly = displayOnly;
+            ShowOnPanel = showOnPanel;
+        }
+    }
+
+    /// <summary>LOCAL-OWNER: the single player-facing binding list. Every input site and the
+    /// shortcut panel read from here so a new key cannot ship invisible, and so two live
+    /// contexts cannot silently share a KeyCode (the Prep dial/slot collision this exists to kill).</summary>
+    public static class Controls
+    {
+        /// <summary>Fight-wide actions that stay live in both Prep and Assault.</summary>
+        public const ControlContext FightAlways = ControlContext.Fight | ControlContext.Prep | ControlContext.Assault;
+
+        static readonly ControlBinding[] Builtin =
+        {
+            new(ControlId.Move, KeyCode.None, KeyCode.None, "WASD", "move", "MOVE",
+                FightAlways | ControlContext.Ship, displayOnly: true),
+            new(ControlId.Look, KeyCode.None, KeyCode.None, "MOUSE", "look", "MOVE",
+                FightAlways | ControlContext.Ship, displayOnly: true),
+            new(ControlId.Sprint, KeyCode.LeftShift, KeyCode.RightShift, "SHIFT", "sprint", "MOVE",
+                FightAlways | ControlContext.Ship),
+
+            new(ControlId.Fire, KeyCode.Mouse0, KeyCode.None, "LMB", "fire", "FIGHT", FightAlways),
+            new(ControlId.Reload, KeyCode.R, KeyCode.None, "R", "reload", "FIGHT", FightAlways),
+            // Labels teach the mechanic (criterion 6): "weapons" not opaque "slots".
+            new(ControlId.SlotPrimary, KeyCode.Alpha1, KeyCode.Keypad1, "1", "weapons", "FIGHT", FightAlways),
+            new(ControlId.SlotSecondary, KeyCode.Alpha2, KeyCode.Keypad2, "2", "weapons", "FIGHT", FightAlways),
+            new(ControlId.SlotMelee, KeyCode.Alpha3, KeyCode.Keypad3, "3", "weapons", "FIGHT", FightAlways),
+            new(ControlId.SlotLast, KeyCode.Q, KeyCode.None, "Q", "last", "FIGHT", FightAlways),
+            new(ControlId.SlotCycle, KeyCode.None, KeyCode.None, "WHEEL", "cycle", "FIGHT", FightAlways,
+                displayOnly: true),
+
+            new(ControlId.PullDraw, KeyCode.T, KeyCode.None, "T", "siphon draw", "RUN", ControlContext.Prep),
+            new(ControlId.DialDown, KeyCode.LeftBracket, KeyCode.None, "[", "siphon", "RUN", ControlContext.Prep),
+            new(ControlId.DialUp, KeyCode.RightBracket, KeyCode.None, "]", "siphon", "RUN", ControlContext.Prep),
+
+            // Same key, non-overlapping contexts: hatch is a hold; ship is a tap-to-open.
+            // "hold repair" is the panel teaching — prompts must not restate a different key.
+            new(ControlId.Interact, KeyCode.E, KeyCode.None, "E", "hold repair", "HATCH",
+                ControlContext.NearInteract),
+            new(ControlId.Interact, KeyCode.E, KeyCode.None, "E", "interact", "SHIP",
+                ControlContext.Ship),
+
+            new(ControlId.FreeCursor, KeyCode.Escape, KeyCode.None, "ESC", "free cursor", "MOVE",
+                FightAlways | ControlContext.Ship),
+
+            new(ControlId.Confirm, KeyCode.Return, KeyCode.KeypadEnter, "ENTER", "return", "RUN",
+                ControlContext.EndScreen),
+            new(ControlId.Confirm, KeyCode.Space, KeyCode.None, "SPACE", "return", "RUN",
+                ControlContext.EndScreen),
+            new(ControlId.Confirm, KeyCode.Escape, KeyCode.None, "ESC", "return", "RUN",
+                ControlContext.EndScreen),
+
+            // Collapse chord — works everywhere the panel draws; omitted from the list itself.
+            new(ControlId.TogglePanel, KeyCode.Backspace, KeyCode.None, "BKSP", "toggle panel", "MOVE",
+                FightAlways | ControlContext.Ship | ControlContext.EndScreen, showOnPanel: false),
+        };
+
+        static readonly List<ControlBinding> Extra = new List<ControlBinding>(4);
+        static bool _collapsed;
+
+        /// <summary>Built-in rows plus any test extras. Not a copy — do not mutate.</summary>
+        public static IReadOnlyList<ControlBinding> All
+        {
+            get
+            {
+                if (Extra.Count == 0) return Builtin;
+                var merged = new ControlBinding[Builtin.Length + Extra.Count];
+                Array.Copy(Builtin, merged, Builtin.Length);
+                Extra.CopyTo(merged, Builtin.Length);
+                return merged;
+            }
+        }
+
+        public static bool Collapsed => _collapsed;
+
+        /// <summary>Poll Backspace and flip the panel collapse. Call once per frame from each HUD.</summary>
+        public static void TickPanelToggle()
+        {
+            if (Down(ControlId.TogglePanel)) _collapsed = !_collapsed;
+        }
+
+        public static void SetCollapsed(bool collapsed) => _collapsed = collapsed;
+
+        public static bool Down(ControlId id)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (DevConsole.Suppresses(id)) return false;
+#endif
+            var rows = All;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var b = rows[i];
+                if (b.Id != id || b.DisplayOnly) continue;
+                if (b.Key != KeyCode.None && Input.GetKeyDown(b.Key)) return true;
+                if (b.AltKey != KeyCode.None && Input.GetKeyDown(b.AltKey)) return true;
+            }
+            return false;
+        }
+
+        public static bool Held(ControlId id)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (DevConsole.Suppresses(id)) return false;
+#endif
+            var rows = All;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var b = rows[i];
+                if (b.Id != id || b.DisplayOnly) continue;
+                if (b.Key != KeyCode.None && Input.GetKey(b.Key)) return true;
+                if (b.AltKey != KeyCode.None && Input.GetKey(b.AltKey)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Mouse wheel for slot cycle — not a KeyCode, but owned here so the panel
+        /// row and the gun cannot drift apart on whether wheel switching exists.</summary>
+        public static float ScrollDelta() => Input.mouseScrollDelta.y;
+
+        /// <summary>First display string for an id (e.g. prompts that must stay in sync with the list).</summary>
+        public static string DisplayOf(ControlId id)
+        {
+            var rows = All;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                if (rows[i].Id == id) return rows[i].Display;
+            }
+            return id.ToString();
+        }
+
+        /// <summary>Panel-visible bindings whose context intersects <paramref name="active"/>.</summary>
+        public static void CollectPanelRows(ControlContext active, List<ControlBinding> into)
+        {
+            into.Clear();
+            var rows = All;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var b = rows[i];
+                if (!b.ShowOnPanel) continue;
+                if ((b.Context & active) == 0) continue;
+                into.Add(b);
+            }
+        }
+
+        /// <summary>Test hook: append a binding so criterion 4 can prove the panel reads the list.
+        /// Returns a dispose action that removes it.</summary>
+        public static Action PushForTest(ControlBinding binding)
+        {
+            Extra.Add(binding);
+            return () => Extra.Remove(binding);
+        }
+
+        /// <summary>Test hook: drop every PushForTest row.</summary>
+        public static void ClearTestBindings() => Extra.Clear();
+    }
+}
+===== FILE: Assets/Scripts/Game/Input/ShortcutPanel.cs
+using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: draws the bottom-left shortcut panel from <see cref="Controls"/>
+    /// (and DevCommands when compiled in). Absolute GUI rects only — safe for the Derelict HUD.
+    /// Sections appear only when they have at least one live row, so the panel teaches by changing.</summary>
+    public static class ShortcutPanel
+    {
+        /// <summary>Reserved left band so hatch alarms / centre strips never cover the panel.</summary>
+        public const float BandWidth = 360f;
+        public const float Margin = 12f;
+
+        static readonly List<ControlBinding> RowBuf = new List<ControlBinding>(32);
+        static readonly List<string> OrderBuf = new List<string>(8);
+        static readonly Dictionary<string, string> SectionBuf = new Dictionary<string, string>(8);
+        static readonly HashSet<string> SeenLabels = new HashSet<string>();
+        static readonly StringBuilder LineBuf = new StringBuilder(128);
+
+        /// <summary>Bottom-left panel. Pass the active context mask and, in Prep, the current
+        /// dial level so the RUN line can read "dial L2".</summary>
+        public static void Draw(
+            float vw, float vh, ControlContext active, GUIStyle labelStyle,
+            int dialLevel = -1, GUIStyle boxStyle = null)
+        {
+            Controls.TickPanelToggle();
+
+            float x = Margin;
+            float bottom = vh - Margin;
+
+            if (Controls.Collapsed)
+            {
+                var tip = new Rect(x, bottom - 28f, 36f, 28f);
+                GUI.Box(tip, "");
+                GUI.Label(tip, "[?]", labelStyle);
+                return;
+            }
+
+            Controls.CollectPanelRows(active, RowBuf);
+            BuildSections(RowBuf, dialLevel);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if ((active & (Controls.FightAlways | ControlContext.Ship | ControlContext.EndScreen)) != 0)
+                AppendDevSection();
+#endif
+
+            if (OrderBuf.Count == 0) return;
+
+            float lineH = 18f;
+            float height = 10f + OrderBuf.Count * lineH + 8f;
+            var panel = new Rect(x, bottom - height, BandWidth, height);
+            GUI.Box(panel, GUIContent.none, boxStyle ?? GUI.skin.box);
+
+            float y = panel.y + 6f;
+            for (int i = 0; i < OrderBuf.Count; i++)
+            {
+                string section = OrderBuf[i];
+                GUI.Label(new Rect(panel.x + 10f, y, panel.width - 16f, lineH),
+                    $"{section,-5} {SectionBuf[section]}", labelStyle);
+                y += lineH;
+            }
+        }
+
+        static void BuildSections(List<ControlBinding> rows, int dialLevel)
+        {
+            SectionBuf.Clear();
+            OrderBuf.Clear();
+
+            for (int i = 0; i < rows.Count; i++)
+            {
+                string section = rows[i].Section;
+                if (SectionBuf.ContainsKey(section)) continue;
+                SectionBuf[section] = "";
+                OrderBuf.Add(section);
+            }
+
+            for (int s = 0; s < OrderBuf.Count; s++)
+            {
+                string section = OrderBuf[s];
+                LineBuf.Clear();
+                SeenLabels.Clear();
+
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    var b = rows[i];
+                    if (b.Section != section) continue;
+                    if (!SeenLabels.Add(b.Label)) continue;
+
+                    if (LineBuf.Length > 0) LineBuf.Append(" · ");
+
+                    if (IsGrouped(b.Label))
+                    {
+                        AppendGroupedDisplays(rows, section, b.Label);
+                        LineBuf.Append(' ').Append(b.Label);
+                        if (b.Label == "siphon" && dialLevel >= 0)
+                            LineBuf.Append(' ').Append('L').Append(dialLevel);
+                    }
+                    else
+                    {
+                        LineBuf.Append(b.Display);
+                        if (!string.IsNullOrEmpty(b.Label) && b.Label != b.Display)
+                            LineBuf.Append(' ').Append(b.Label);
+                    }
+                }
+
+                SectionBuf[section] = LineBuf.ToString();
+            }
+        }
+
+        static bool IsGrouped(string label) =>
+            label == "weapons" || label == "siphon" || label == "return";
+
+        static void AppendGroupedDisplays(List<ControlBinding> rows, string section, string label)
+        {
+            bool first = true;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var b = rows[i];
+                if (b.Section != section || b.Label != label) continue;
+                if (!first) LineBuf.Append(' ');
+                LineBuf.Append(b.Display);
+                first = false;
+            }
+        }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        static void AppendDevSection()
+        {
+            LineBuf.Clear();
+            var all = DevCommands.All;
+            for (int i = 0; i < all.Length; i++)
+            {
+                if (i > 0) LineBuf.Append(" · ");
+                LineBuf.Append(DevCommands.PanelDisplay(all[i]));
+            }
+            if (LineBuf.Length == 0) return;
+            SectionBuf["DEV"] = LineBuf.ToString();
+            if (!OrderBuf.Contains("DEV")) OrderBuf.Add("DEV");
+        }
+#endif
+    }
+}
+===== FILE: Assets/Scripts/Game/Player/FirstPersonController.cs
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: minimal first-person controller — CharacterController WASD movement
+    /// plus mouse look with cursor lock (Escape releases, left-click re-locks), and a
+    /// stamina-limited sprint on Left Shift. No jump in v0.
+    /// Mouse sensitivity is read from the options pref (MainMenuController.SensitivityPrefKey).</summary>
+    /// <remarks>
+    /// WHY SPRINT IS RATIONED — this is the load-bearing part, do not "simplify" it away:
+    /// a provoked boarder chases at 5.6 m/s (EnemyBoarder.chaseSpeed), which is deliberately
+    /// FASTER than the 5 m/s walk so that backing away while shooting is not a free win. Sprint
+    /// at 7.5 m/s is faster than the chase, so an UNLIMITED sprint would hand the player exactly
+    /// the kiting exploit the enemy-AI work just closed: outrun the pack forever, plink at it,
+    /// never take a swing, never risk the hatch. Stamina is the price. The pool exists so sprint
+    /// is a BURST for repositioning — break contact, cross the bore, get back to the hatch —
+    /// and never sustained flight: 100 stamina at 25/s drains in exactly FOUR SECONDS of sprint,
+    /// about 30 m of ground, and it costs a 1s pause plus ~5.5s of standing regen to buy back.
+    /// Over any window longer than a few seconds the player's average speed is still below the
+    /// boarders'. Change these five numbers together or not at all.
+    /// </remarks>
+    [RequireComponent(typeof(CharacterController))]
+    public sealed class FirstPersonController : MonoBehaviour
+    {
+        /// <summary>Sprint stamina burned per second while actually sprinting. Public so the
+        /// Crew Quarters panel can quote the pool in SECONDS of sprint without duplicating it.</summary>
+        public const float SprintDrainPerSecond = 25f;
+
+        /// <summary>Stamina regained per second once the regen delay has elapsed.</summary>
+        public const float StaminaRegenPerSecond = 18f;
+
+        /// <summary>Seconds after sprinting stops before stamina starts coming back.</summary>
+        public const float StaminaRegenDelaySeconds = 1f;
+
+        [SerializeField] float moveSpeed = 5f;
+        [SerializeField] float sprintSpeed = 7.5f;
+        [SerializeField] float mouseSensitivity = 2f;
+        [SerializeField] float gravity = -20f;
+        [SerializeField] float pitchLimit = 85f;
+
+        [Tooltip("Max stamina. Overwritten at run start by GameController.ApplyMetaEffects " +
+                 "with MetaUpgrades.StaminaMax(meta.StaminaLevel).")]
+        [SerializeField] float staminaMax = 100f;
+
+        [Tooltip("Camera child used for pitch. Wired by SceneBuilder; falls back to Camera.main.")]
+        public Transform cameraTransform;
+
+        CharacterController _cc;
+        float _pitch;
+        float _verticalVelocity;
+        float _stamina;
+        float _regenDelay;   // > 0 while the post-sprint pause is still running
+        bool _exhausted;     // latched at zero; cleared once ReengageFraction is back in the tank
+
+        /// <summary>After bottoming out, sprint stays locked until the pool is back above this
+        /// fraction of max. Guard, not a design knob: without it a held Shift re-engages sprint on
+        /// the first regen frame, drains the ~0.3 stamina it just got back inside one frame, and
+        /// the player gets a flickering IsSprinting/HUD bar instead of "you are out of breath".</summary>
+        const float ReengageFraction = 0.2f;
+
+        /// <summary>When true (menu/lose screen, dead/respawning) look and movement input are ignored.</summary>
+        public bool MovementLocked { get; set; }
+
+        /// <summary>Current sprint stamina, 0..StaminaMax. HUD reads this.</summary>
+        public float Stamina => _stamina;
+
+        /// <summary>Max sprint stamina (MetaUpgrades.StaminaMax at the Stamina track level).</summary>
+        public float StaminaMax => staminaMax;
+
+        /// <summary>True on the frames the player is actually sprinting (Shift held, moving,
+        /// stamina left). HUD reads this.</summary>
+        public bool IsSprinting { get; private set; }
+
+        /// <summary>Apply the Crew Quarters stamina pool (GameController pushes MetaUpgrades values
+        /// here). Fills the tank — called at run start, never mid-fight, so the player never
+        /// starts a run winded by a purchase.</summary>
+        public void ConfigureStamina(float newStaminaMax)
+        {
+            staminaMax = Mathf.Max(1f, newStaminaMax);
+            _stamina = staminaMax;
+            _regenDelay = 0f;
+            _exhausted = false;
+        }
+
+        /// <summary>Lock/free the cursor (GameController drives this from the flow state).</summary>
+        public void SetCursorLock(bool locked)
+        {
+            SetCursorLocked(locked);
+        }
+
+        void Awake()
+        {
+            mouseSensitivity = PlayerPrefs.GetFloat(MainMenuController.SensitivityPrefKey, mouseSensitivity);
+            _cc = GetComponent<CharacterController>();
+            if (cameraTransform == null && Camera.main != null)
+                cameraTransform = Camera.main.transform;
+            staminaMax = Mathf.Max(1f, staminaMax);
+            _stamina = staminaMax;
+        }
+
+        void Update()
+        {
+            if (Controls.Down(ControlId.FreeCursor)) SetCursorLocked(false);
+            // Click-to-relock only during the fight; menu clicks must stay free for IMGUI buttons.
+            if (!MovementLocked && Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
+                SetCursorLocked(true);
+
+            bool canControl = Cursor.lockState == CursorLockMode.Locked && !MovementLocked;
+            if (canControl)
+            {
+                transform.Rotate(0f, Input.GetAxis("Mouse X") * mouseSensitivity, 0f);
+                _pitch = Mathf.Clamp(_pitch - Input.GetAxis("Mouse Y") * mouseSensitivity, -pitchLimit, pitchLimit);
+                if (cameraTransform != null)
+                    cameraTransform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+            }
+
+            Vector3 planar = Vector3.zero;
+            if (canControl)
+            {
+                var input = Vector3.ClampMagnitude(
+                    new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical")), 1f);
+                planar = transform.TransformDirection(input) * TickSprint(input.sqrMagnitude > 0.01f);
+            }
+            else
+            {
+                TickSprint(false); // locked out (panel/menu/down): no sprint, but stamina still returns
+            }
+
+            _verticalVelocity = _cc.isGrounded ? -1f : _verticalVelocity + gravity * Time.deltaTime;
+            _cc.Move((planar + Vector3.up * _verticalVelocity) * Time.deltaTime);
+        }
+
+        /// <summary>Resolve sprint for this frame and return the planar speed to move at.
+        /// Sprint requires Left Shift AND actual movement input AND stamina — holding Shift while
+        /// standing still must not drain the pool, or "sprint" becomes a tax on standing.</summary>
+        float TickSprint(bool moving)
+        {
+            float dt = Time.deltaTime;
+            bool wants = moving && Controls.Held(ControlId.Sprint);
+
+            if (_exhausted && _stamina >= staminaMax * ReengageFraction) _exhausted = false;
+
+            IsSprinting = wants && !_exhausted && _stamina > 0f;
+
+            if (IsSprinting)
+            {
+                _stamina -= SprintDrainPerSecond * dt;
+                if (_stamina <= 0f)
+                {
+                    _stamina = 0f;
+                    _exhausted = true;   // cannot sprint at zero
+                    IsSprinting = false; // this frame's move already spent the last of it
+                }
+                _regenDelay = StaminaRegenDelaySeconds;
+                return sprintSpeed;
+            }
+
+            // Not sprinting: serve out the delay, then refill.
+            if (_regenDelay > 0f) _regenDelay -= dt;
+            else if (_stamina < staminaMax)
+                _stamina = Mathf.Min(staminaMax, _stamina + StaminaRegenPerSecond * dt);
+
+            return moveSpeed;
+        }
+
+        static void SetCursorLocked(bool locked)
+        {
+            Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !locked;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Player/Interactor.cs
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>Anything the player can use with the E key: a HUD prompt plus a per-frame
+    /// Interact(dt) called while the key is held and the object is in view.</summary>
+    public interface IInteractable
+    {
+        /// <summary>Short prompt shown by the HUD while this interactable is targeted.</summary>
+        string Prompt { get; }
+
+        /// <summary>Called every frame the player holds E while looking at this interactable.</summary>
+        void Interact(float dt);
+    }
+
+    /// <summary>LOCAL-OWNER: camera-forward raycaster — surfaces the targeted IInteractable's prompt and
+    /// forwards E-key hold time into Interact(dt). Lives on the player camera.</summary>
+    public sealed class Interactor : MonoBehaviour
+    {
+        [SerializeField] float range = 3.2f;
+
+        /// <summary>Prompt of the currently targeted interactable, or null. Read by the HUD.</summary>
+        public string CurrentPrompt { get; private set; }
+
+        IInteractable _current;
+
+        void Update()
+        {
+            _current = null;
+            CurrentPrompt = null;
+
+            if (Cursor.lockState != CursorLockMode.Locked) return;
+
+            if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, range))
+                _current = hit.collider.GetComponentInParent<IInteractable>();
+
+            if (_current == null) return;
+            CurrentPrompt = _current.Prompt;
+            if (Controls.Held(ControlId.Interact))
+                _current.Interact(Time.deltaTime);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Player/PlayerGun.Firing.cs
+using System.Collections.Generic;
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>Firing modes (pellets / pierce / falloff) and tracer/spark FX — partial of
+    /// <see cref="PlayerGun"/>. One method branches on def fields; never a subclass per weapon.</summary>
+    public sealed partial class PlayerGun
+    {
+        void Fire()
+        {
+            ref var s = ref _slots[(int)_activeSlot];
+            WeaponDef def = s.configured ? s.def : DefaultDefFromSerialized();
+            int pellets = Mathf.Max(1, def.pellets);
+            Vector3 origin = transform.position + transform.forward * 0.3f;
+
+            bool anyCrit = false;
+            Vector3 lastEnd = origin + transform.forward * def.range;
+
+            for (int p = 0; p < pellets; p++)
+            {
+                bool crit = RollCrit();
+                if (crit) anyCrit = true;
+                float baseDmg = crit ? EffectiveDamage * CritDamageMultiplier : EffectiveDamage;
+                Vector3 dir = PelletDirection(def, p, pellets);
+                lastEnd = FireRay(origin, dir, def, baseDmg, crit);
+            }
+
+            LastShotWasCrit = anyCrit;
+            Effects.MuzzleFlash(origin + transform.forward * 0.45f + Vector3.down * 0.08f);
+            if (pellets == 1)
+                SpawnTracer(origin + transform.forward * 0.4f, lastEnd, anyCrit, def);
+            else
+                SpawnTracer(origin + transform.forward * 0.4f,
+                    origin + transform.forward * Mathf.Min(def.range, 20f), anyCrit, def);
+        }
+
+        WeaponDef DefaultDefFromSerialized()
+        {
+            return new WeaponDef
+            {
+                damage = damage,
+                shotsPerSecond = shotsPerSecond,
+                clipSize = clipSize,
+                reloadSeconds = reloadSeconds,
+                range = range,
+                pellets = 1,
+                tracerWidth = tracerWidth,
+                tracerR = 1f,
+                tracerG = 0.9f,
+                tracerB = 0.35f,
+                crosshair = WeaponCrosshair.Cross
+            };
+        }
+
+        Vector3 PelletDirection(WeaponDef def, int index, int pellets)
+        {
+            if (pellets <= 1 || def.spreadDegrees <= 0.01f)
+                return transform.forward;
+
+            float half = def.spreadDegrees;
+            float angle = (360f / pellets) * index + Random.Range(-8f, 8f);
+            float radius = Random.Range(0.15f, 1f) * half;
+            Quaternion yaw = Quaternion.AngleAxis(angle, transform.forward);
+            Quaternion pitch = Quaternion.AngleAxis(radius, transform.right);
+            return (yaw * pitch * transform.forward).normalized;
+        }
+
+        Vector3 FireRay(Vector3 origin, Vector3 dir, WeaponDef def, float baseDamage, bool crit)
+        {
+            float maxRange = def.range > 0.01f ? def.range : range;
+            Vector3 end = origin + dir * maxRange;
+            int pierceLeft = def.pierceCount;
+            _pierceScratch.Clear();
+
+            int hitCount = Physics.RaycastNonAlloc(origin, dir, _pierceHits, maxRange, ~0,
+                QueryTriggerInteraction.Ignore);
+            if (hitCount <= 0) return end;
+
+            System.Array.Sort(_pierceHits, 0, hitCount, Comparer<RaycastHit>.Create(
+                (a, b) => a.distance.CompareTo(b.distance)));
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                var hit = _pierceHits[i];
+                // Own capsule / child colliders sit on the ray origin; never stop a shot on ourselves.
+                if (hit.collider != null && IsOwnCollider(hit.collider))
+                    continue;
+
+                end = hit.point;
+                var damageable = hit.collider != null
+                    ? hit.collider.GetComponentInParent<Damageable>()
+                    : null;
+
+                if (damageable != null && _owner != null &&
+                    damageable.transform.IsChildOf(_owner.transform))
+                    continue;
+
+                if (damageable == null || damageable.IsDead || _pierceScratch.Contains(damageable))
+                {
+                    if (damageable == null)
+                    {
+                        if (crit) Effects.CritSparks(hit.point);
+                        else Effects.ImpactSparks(hit.point);
+                        SpawnSpark(hit.point, crit);
+                        break;
+                    }
+                    continue;
+                }
+
+                float dmg = ApplyFalloff(baseDamage, def, hit.distance);
+                if (dmg > 0f)
+                {
+                    damageable.TakeDamage(dmg, _owner != null ? _owner.transform : transform);
+                    if (crit)
+                        Log.Event("Combat", $"CRITICAL HIT — {dmg:0} damage (x{CritDamageMultiplier:0.#})");
+                }
+                if (crit) Effects.CritSparks(hit.point);
+                else Effects.ImpactSparks(hit.point);
+                SpawnSpark(hit.point, crit);
+                _pierceScratch.Add(damageable);
+
+                if (pierceLeft <= 0) break;
+                pierceLeft--;
+            }
+
+            return end;
+        }
+
+        bool IsOwnCollider(Collider col)
+        {
+            if (_owner == null) _owner = GetComponentInParent<PlayerHealth>();
+            if (_owner == null) return false;
+            return col.transform == _owner.transform || col.transform.IsChildOf(_owner.transform);
+        }
+
+        static float ApplyFalloff(float baseDamage, WeaponDef def, float distance)
+        {
+            if (def.falloffStart <= 0f || distance <= def.falloffStart) return baseDamage;
+            if (distance >= def.range) return 0f;
+            float span = def.range - def.falloffStart;
+            if (span <= 0.01f) return 0f;
+            float t = Mathf.Clamp01((distance - def.falloffStart) / span);
+            return baseDamage * (1f - t);
+        }
+
+        bool RollCrit()
+        {
+            float chance = CritChance;
+            return chance > 0f && Random.value < chance;
+        }
+
+        void ApplyTracerFromDef(WeaponDef def)
+        {
+            if (_tracerMat != null)
+                _tracerMat.color = new Color(def.tracerR, def.tracerG, def.tracerB);
+            if (_critTracerMat != null)
+            {
+                _critTracerMat.color = new Color(
+                    Mathf.Min(1f, def.tracerR + 0.35f),
+                    Mathf.Min(1f, def.tracerG + 0.35f),
+                    Mathf.Min(1f, def.tracerB + 0.25f));
+            }
+            tracerWidth = def.tracerWidth > 0f ? def.tracerWidth : tracerWidth;
+        }
+
+        void SpawnTracer(Vector3 from, Vector3 to, bool crit, WeaponDef def)
+        {
+            var mat = crit && _critTracerMat != null ? _critTracerMat : _tracerMat;
+            if (mat == null || Effects.Suspended) return;
+            Vector3 delta = to - from;
+            if (delta.sqrMagnitude < 0.01f) return;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = crit ? "TracerCrit" : "Tracer";
+            Destroy(go.GetComponent<Collider>());
+            var t = go.transform;
+            float width = def.tracerWidth > 0f ? def.tracerWidth : tracerWidth;
+            if (crit) width *= 2.2f;
+            t.position = (from + to) * 0.5f;
+            t.rotation = Quaternion.LookRotation(delta.normalized);
+            t.localScale = new Vector3(width, width, delta.magnitude);
+            go.GetComponent<Renderer>().sharedMaterial = mat;
+            Destroy(go, crit ? 0.1f : 0.06f);
+        }
+
+        void SpawnSpark(Vector3 at, bool crit)
+        {
+            var mat = crit && _critSparkMat != null ? _critSparkMat : _sparkMat;
+            if (mat == null || Effects.Suspended) return;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            go.name = crit ? "HitSparkCrit" : "HitSpark";
+            Destroy(go.GetComponent<Collider>());
+            go.transform.position = at;
+            go.transform.localScale = Vector3.one * (crit ? 0.34f : 0.16f);
+            go.GetComponent<Renderer>().sharedMaterial = mat;
+            Destroy(go, crit ? 0.14f : 0.08f);
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Player/PlayerGun.cs
+using System.Collections.Generic;
+using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: hitscan weapon on the player camera with per-slot clip/reload,
+    /// hold left-click to fire, R to reload. Slots switch via 1/2/3, mouse wheel, and Q —
+    /// never which owned weapon fills a slot (that is ARMORY-only).</summary>
+    /// <remarks>
+    /// THE PLAYER CAN ALWAYS SHOOT SOMETHING. With no owned weapon the rig falls back to the
+    /// IMPROVISED SALVAGE CUTTER (40% damage, 50% rate). Critical hits are rolled here and ONLY
+    /// here from Luck. Firing modes (pellets / pierce / falloff) branch on WeaponDef fields in
+    /// one method — never a subclass per weapon.
+    /// </remarks>
+    public sealed partial class PlayerGun : MonoBehaviour
+    {
+        const string Tag = "PlayerGun";
+        const int SlotCount = 3;
+
+        /// <summary>Improvised-cutter damage as a fraction of the configured weapon.</summary>
+        public const float CutterDamageFactor = 0.4f;
+
+        /// <summary>Improvised-cutter fire rate as a fraction of the configured weapon.</summary>
+        public const float CutterRateFactor = 0.5f;
+
+        /// <summary>What a critical hit multiplies damage by. Double, flat — Luck buys chance.</summary>
+        public const float CritDamageMultiplier = 2f;
+
+        // Inert editor defaults for direct-play; overwritten by Configure at run start.
+        [SerializeField] float damage = 14f;
+        [SerializeField] float shotsPerSecond = 3f;
+        [SerializeField] float clipSize = 8f;
+        [SerializeField] float reloadSeconds = 1.4f;
+        [SerializeField] float range = 45f;
+        [SerializeField] float tracerWidth = 0.030f;
+
+        struct SlotState
+        {
+            public bool configured;
+            public WeaponId id;
+            public WeaponDef def;
+            public int tier;
+            public int clipRemaining;
+            public float reloadTimer;
+            public bool reloadLogged;
+        }
+
+        readonly SlotState[] _slots = new SlotState[SlotCount];
+        WeaponSlot _activeSlot = WeaponSlot.Secondary;
+        WeaponSlot _previousSlot = WeaponSlot.Secondary;
+        float _cooldown;
+        Material _tracerMat;
+        Material _critTracerMat;
+        Material _sparkMat;
+        Material _critSparkMat;
+        PlayerHealth _owner;
+        string _lastRefusal;
+        readonly RaycastHit[] _pierceHits = new RaycastHit[16];
+        readonly List<Damageable> _pierceScratch = new List<Damageable>(8);
+
+        public WeaponSlot ActiveSlot => _activeSlot;
+        public WeaponDef ActiveDef => _slots[(int)_activeSlot].def;
+        public WeaponId ActiveWeaponId => _slots[(int)_activeSlot].id;
+        public int ActiveTier => _slots[(int)_activeSlot].tier;
+
+        /// <summary>Rounds left in the active slot's clip.</summary>
+        public int ClipRemaining => _slots[(int)_activeSlot].clipRemaining;
+
+        public bool LastShotWasCrit { get; private set; }
+
+        public float CritChance
+        {
+            get
+            {
+                var meta = GameSession.Meta;
+                return meta == null ? 0f : Mathf.Clamp01(MetaUpgrades.CritChance(meta.LuckLevel));
+            }
+        }
+
+        public int MagazineCapacity
+        {
+            get
+            {
+                ref var s = ref _slots[(int)_activeSlot];
+                if (!s.configured) return Mathf.Max(1, Mathf.RoundToInt(clipSize));
+                return WeaponTier.EffectiveClip(s.def, s.tier);
+            }
+        }
+
+        public bool IsReloading => _slots[(int)_activeSlot].reloadTimer > 0f;
+
+        public float ReloadProgress
+        {
+            get
+            {
+                ref var s = ref _slots[(int)_activeSlot];
+                if (s.reloadTimer <= 0f) return 0f;
+                float reload = s.configured ? s.def.reloadSeconds : reloadSeconds;
+                return 1f - Mathf.Clamp01(s.reloadTimer / Mathf.Max(0.01f, reload));
+            }
+        }
+
+        /// <summary>True when no owned weapon is configured on any slot — improvised cutter.</summary>
+        public bool UsingSalvageCutter
+        {
+            get
+            {
+                var meta = GameSession.Meta;
+                if (meta == null || !meta.OwnsAnyWeapon) return true;
+                return !_slots[(int)_activeSlot].configured;
+            }
+        }
+
+        public float EffectiveDamage
+        {
+            get
+            {
+                ref var s = ref _slots[(int)_activeSlot];
+                float dmg = s.configured
+                    ? WeaponTier.EffectiveDamage(s.def, s.tier)
+                    : damage;
+                return UsingSalvageCutter ? dmg * CutterDamageFactor : dmg;
+            }
+        }
+
+        public string WeaponBlockedReason
+        {
+            get
+            {
+                if (UsingSalvageCutter)
+                    return $"NO WEAPON — improvised cutter: {EffectiveDamage:0} dmg. " +
+                           "Buy the MK-1 at the ship's Armory.";
+                return _lastRefusal;
+            }
+        }
+
+        public float EffectiveFireRate
+        {
+            get
+            {
+                ref var s = ref _slots[(int)_activeSlot];
+                float rate = s.configured ? s.def.shotsPerSecond : shotsPerSecond;
+                rate = UsingSalvageCutter ? rate * CutterRateFactor : rate;
+                return Mathf.Max(0.01f, rate);
+            }
+        }
+
+        public string DisplayName
+        {
+            get
+            {
+                if (UsingSalvageCutter) return "Improvised Cutter";
+                ref var s = ref _slots[(int)_activeSlot];
+                return s.configured ? s.def.displayName : "Weapon";
+            }
+        }
+
+        public WeaponCrosshair ActiveCrosshair
+        {
+            get
+            {
+                ref var s = ref _slots[(int)_activeSlot];
+                return s.configured ? s.def.crosshair : WeaponCrosshair.Cross;
+            }
+        }
+
+        /// <summary>True when the given slot has a configured weapon.</summary>
+        public bool SlotConfigured(WeaponSlot slot) => _slots[(int)slot].configured;
+
+        public WeaponId WeaponInSlot(WeaponSlot slot) =>
+            _slots[(int)slot].configured ? _slots[(int)slot].id : WeaponId.None;
+
+        /// <summary>Push catalog stats for one slot at run start. Refills that slot's clip.
+        /// Never call mid-fight for equip changes — criterion 4.</summary>
+        public void Configure(WeaponSlot slot, WeaponDef def, int tier, WeaponId id)
+        {
+            int i = (int)slot;
+            _slots[i].configured = true;
+            _slots[i].id = id;
+            _slots[i].def = def;
+            _slots[i].tier = tier;
+            _slots[i].clipRemaining = WeaponTier.EffectiveClip(def, tier);
+            _slots[i].reloadTimer = 0f;
+            _slots[i].reloadLogged = false;
+            ApplyTracerFromDef(def);
+            Log.Info(Tag, $"Configured {slot}: {def.displayName} T{tier} — " +
+                          $"{WeaponTier.EffectiveDamage(def, tier):0.#} dmg, {def.shotsPerSecond:0.#}/s, " +
+                          $"clip {WeaponTier.EffectiveClip(def, tier)}.");
+        }
+
+        /// <summary>Clear every slot (direct-play / cutter fallback). Keeps serialized defaults.</summary>
+        public void ClearLoadout()
+        {
+            for (int i = 0; i < SlotCount; i++)
+            {
+                _slots[i] = default;
+                _slots[i].clipRemaining = Mathf.Max(1, Mathf.RoundToInt(clipSize));
+            }
+            _activeSlot = WeaponSlot.Secondary;
+            _previousSlot = WeaponSlot.Secondary;
+        }
+
+        void Awake()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null) shader = Shader.Find("Unlit/Color");
+            if (shader != null)
+            {
+                _tracerMat = new Material(shader) { color = new Color(1f, 0.9f, 0.35f) };
+                _sparkMat = new Material(shader) { color = new Color(1f, 0.55f, 0.1f) };
+                _critTracerMat = new Material(shader) { color = new Color(1f, 1f, 0.92f) };
+                _critSparkMat = new Material(shader) { color = new Color(1f, 0.98f, 0.8f) };
+            }
+            else
+            {
+                Log.Warn(Tag, "No unlit shader found; tracers and sparks disabled this session.");
+            }
+            ClearLoadout();
+            _owner = GetComponentInParent<PlayerHealth>();
+        }
+
+        void OnDestroy()
+        {
+            if (_tracerMat != null) Destroy(_tracerMat);
+            if (_sparkMat != null) Destroy(_sparkMat);
+            if (_critTracerMat != null) Destroy(_critTracerMat);
+            if (_critSparkMat != null) Destroy(_critSparkMat);
+        }
+
+        void Update()
+        {
+            _cooldown -= Time.deltaTime;
+            TickSlotInput();
+            TickReload();
+
+            if (IsReloading) return;
+            if (!CanFire()) return;
+
+            if (Controls.Down(ControlId.Reload) && ClipRemaining < MagazineCapacity)
+            {
+                StartReload();
+                return;
+            }
+
+            if (Controls.Held(ControlId.Fire)) TryFire();
+        }
+
+        void TickSlotInput()
+        {
+            if (Controls.Down(ControlId.SlotPrimary))
+                TrySelectSlot(WeaponSlot.Primary);
+            if (Controls.Down(ControlId.SlotSecondary))
+                TrySelectSlot(WeaponSlot.Secondary);
+            if (Controls.Down(ControlId.SlotMelee))
+                TrySelectSlot(WeaponSlot.Melee);
+
+            if (Controls.Down(ControlId.SlotLast))
+                TrySelectSlot(_previousSlot);
+
+            float scroll = Controls.ScrollDelta();
+            if (Mathf.Abs(scroll) > 0.01f)
+                CycleSlot(scroll > 0f ? 1 : -1);
+        }
+
+        void TrySelectSlot(WeaponSlot slot) => TrySelectSlotPublic(slot);
+
+        /// <summary>Public for GameController.ApplyMetaEffects to pick the starting slot.</summary>
+        public void TrySelectSlotPublic(WeaponSlot slot)
+        {
+            // Melee is always empty — selecting it is a no-op (criterion 3).
+            if (slot == WeaponSlot.Melee) return;
+            // Empty slots are no-ops (no Primary owned → 1 does nothing).
+            if (!_slots[(int)slot].configured) return;
+            if (slot == _activeSlot) return;
+
+            // Cancel in-progress reload without refunding progress.
+            ref var outgoing = ref _slots[(int)_activeSlot];
+            outgoing.reloadTimer = 0f;
+            outgoing.reloadLogged = false;
+
+            _previousSlot = _activeSlot;
+            _activeSlot = slot;
+            _cooldown = 0f;
+            ref var incoming = ref _slots[(int)_activeSlot];
+            if (incoming.configured) ApplyTracerFromDef(incoming.def);
+            Log.Event("Combat", $"switched to {SlotLabel(_activeSlot)}");
+        }
+
+        void CycleSlot(int direction)
+        {
+            // Cycle non-empty slots only.
+            int start = (int)_activeSlot;
+            for (int step = 1; step <= SlotCount; step++)
+            {
+                int idx = (start + direction * step) % SlotCount;
+                if (idx < 0) idx += SlotCount;
+                var candidate = (WeaponSlot)idx;
+                if (candidate == WeaponSlot.Melee) continue;
+                if (!_slots[idx].configured) continue;
+                TrySelectSlot(candidate);
+                return;
+            }
+        }
+
+        static string SlotLabel(WeaponSlot slot)
+        {
+            switch (slot)
+            {
+                case WeaponSlot.Primary: return "Primary (1)";
+                case WeaponSlot.Secondary: return "Secondary (2)";
+                default: return slot.ToString();
+            }
+        }
+
+        void TickReload()
+        {
+            ref var s = ref _slots[(int)_activeSlot];
+            if (s.reloadTimer <= 0f) return;
+            s.reloadTimer -= Time.deltaTime;
+            if (s.reloadTimer > 0f) return;
+            s.reloadTimer = 0f;
+            s.clipRemaining = MagazineCapacity;
+            if (s.reloadLogged) Log.Event("Combat", $"reloaded — clip {MagazineCapacity}");
+            s.reloadLogged = false;
+        }
+
+        public bool TryFire()
+        {
+            if (IsReloading) return false;
+            if (!CanFire()) return false;
+            if (_cooldown > 0f) return false;
+            ref var s = ref _slots[(int)_activeSlot];
+            if (s.clipRemaining <= 0)
+            {
+                StartReload();
+                return false;
+            }
+            _cooldown = 1f / EffectiveFireRate;
+            s.clipRemaining--;
+            Fire();
+            return true;
+        }
+
+        bool CanFire()
+        {
+            var gc = GameController.Instance;
+            if (!SceneFlow.InCombatScene && gc == null)
+                return Refuse($"not a combat scene (active '{SceneFlow.ActiveSceneName}') and no GameController present", true);
+
+            if (gc != null && gc.RunIsOver)
+                return Refuse("the run is over (terminal phase)", false);
+
+            if (_owner == null) _owner = GetComponentInParent<PlayerHealth>();
+            if (_owner != null && _owner.IsDead)
+                return Refuse("the player is down", false);
+
+            if (Cursor.lockState != CursorLockMode.Locked)
+                return Refuse("the cursor is not captured — left-click once to recapture it", true);
+
+            _lastRefusal = null;
+            return true;
+        }
+
+        bool Refuse(string reason, bool isProblem)
+        {
+            if (_lastRefusal != reason)
+            {
+                _lastRefusal = reason;
+                if (isProblem) Log.Warn(Tag, $"Fire refused: {reason}.");
+                else Log.Info(Tag, $"Fire refused: {reason}.");
+            }
+            return false;
+        }
+
+        void StartReload()
+        {
+            ref var s = ref _slots[(int)_activeSlot];
+            float reload = s.configured ? s.def.reloadSeconds : reloadSeconds;
+            s.reloadTimer = Mathf.Max(0.01f, reload);
+            s.reloadLogged = true;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Player/PlayerHealth.cs
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>REPLICATED-STATE: player hit points. Death is a RUN ENDER — no in-run respawn:
+    /// on death the player is locked down and GameController.PlayerDied() ends the run.</summary>
+    /// <remarks>Self-registers in PlayerRegistry (OnEnable/OnDisable) — the sanctioned way for
+    /// other systems to find players. ResetToSpawn remains for scene starts only.
+    /// Die() is idempotent and never leaves the player in a captured-cursor dead body: if no
+    /// GameController is present to raise the lose screen it frees the cursor itself and logs
+    /// an error, so "dead, mouse locked, no UI" cannot happen.</remarks>
+    public sealed class PlayerHealth : MonoBehaviour
+    {
+        const string Tag = "PlayerHealth";
+
+        [SerializeField] float maxHp = 100f;
+
+        [Tooltip("Optional respawn transform; defaults to the player's starting pose.")]
+        public Transform spawnPoint;
+
+        /// <summary>Current hit points.</summary>
+        public float Hp { get; private set; }
+
+        /// <summary>Maximum hit points.</summary>
+        public float MaxHp => maxHp;
+
+        /// <summary>True once dead. Permanent for the run — only ResetToSpawn clears it.</summary>
+        public bool IsDead { get; private set; }
+
+        /// <summary>Dev F6: when true, TakeDamage is a no-op. Cleared on ResetToSpawn.</summary>
+        public bool Invulnerable { get; set; }
+
+        Vector3 _initialPosition;
+        Quaternion _initialRotation;
+        CharacterController _cc;
+        FirstPersonController _fpc;
+        Transform _lastAttacker; // death log only: who was on us, and how close
+        float _lastAttackerTime;
+
+        void Awake()
+        {
+            Hp = maxHp;
+            _initialPosition = transform.position;
+            _initialRotation = transform.rotation;
+            _cc = GetComponent<CharacterController>();
+            _fpc = GetComponent<FirstPersonController>();
+        }
+
+        void OnEnable()
+        {
+            PlayerRegistry.Register(this);
+        }
+
+        void OnDisable()
+        {
+            PlayerRegistry.Unregister(this);
+        }
+
+        /// <summary>Applies damage; a killing blow ends the run via GameController.PlayerDied().
+        /// <paramref name="source"/> is optional and only enriches the death log.</summary>
+        public void TakeDamage(float amount, Transform source = null)
+        {
+            if (IsDead || amount <= 0f || Invulnerable) return;
+            if (source != null)
+            {
+                _lastAttacker = source;
+                _lastAttackerTime = Time.time;
+            }
+            float taken = Mathf.Min(amount, Hp); // overkill is not damage taken
+            Hp -= amount;
+            bool fatal = Hp <= 0f;
+            if (fatal) Hp = 0f;
+
+            // Rate-limited to ~1 line/second, aggregating every swing inside that window. Recorded
+            // before Die() so the killing blow is in the transcript above the death line (which
+            // flushes this window on its way out).
+            Log.Event("Player", $"took {taken:0} damage — HP {Hp:0}/{maxHp:0}");
+            if (fatal) Die();
+        }
+
+        /// <summary>Apply the Crew Quarters VITALITY pool (GameController pushes
+        /// MetaUpgrades.PlayerMaxHp here from ApplyMetaEffects).</summary>
+        /// <remarks>HEALS TO FULL, unconditionally. This is only ever called at run start, where
+        /// "full" is the only correct answer — and the alternatives are all wrong in a way the
+        /// player would feel: keeping raw Hp leaves a freshly-bought Vitality level showing
+        /// 100/140 on the first frame of the run (the upgrade reads as broken), while scaling Hp
+        /// by the ratio would silently carry damage across a run boundary that already heals.
+        /// If this ever gets called mid-fight it must be revisited: a free full heal from a shop
+        /// purchase is not a thing this game sells.</remarks>
+        public void ConfigureMaxHp(float newMaxHp)
+        {
+            maxHp = Mathf.Max(1f, newMaxHp);
+            Hp = maxHp;
+            IsDead = false;
+            Log.Info(Tag, $"Configured: max HP {maxHp:0} (healed to full).");
+        }
+
+        /// <summary>Instant reset used at scene starts: back to spawn at full HP.</summary>
+        public void ResetToSpawn()
+        {
+            Vector3 pos = spawnPoint != null ? spawnPoint.position : _initialPosition;
+            Quaternion rot = spawnPoint != null ? spawnPoint.rotation : _initialRotation;
+            if (_cc != null) _cc.enabled = false;
+            transform.SetPositionAndRotation(pos, rot);
+            if (_cc != null) _cc.enabled = true;
+            Hp = maxHp;
+            IsDead = false;
+            Invulnerable = false;
+            _lastAttacker = null;
+            Log.Info(Tag, "Player reset to spawn at full HP.");
+        }
+
+        /// <summary>Dev F5: refill to max HP and clear IsDead without moving the body.</summary>
+        public void HealToFull()
+        {
+            Hp = maxHp;
+            IsDead = false;
+            if (_fpc == null) _fpc = GetComponent<FirstPersonController>();
+            if (_fpc != null) _fpc.MovementLocked = false;
+            Log.Info(Tag, $"Healed to full — HP {Hp:0}/{maxHp:0}.");
+        }
+
+        /// <summary>Death is the run ender: lock the body and report up. The HUD draws the
+        /// DOWN overlay; GameController routes the command into the sim (NotifyPlayerDown).</summary>
+        void Die()
+        {
+            if (IsDead) return; // guard: re-entrancy (a second killing hit inside the same frame)
+            IsDead = true;
+
+            if (_fpc == null) _fpc = GetComponent<FirstPersonController>(); // re-resolve if fake-null
+            if (_fpc != null) _fpc.MovementLocked = true;
+
+            string killer = "unknown";
+            if (_lastAttacker != null && Time.time - _lastAttackerTime < 5f)
+                killer = $"boarder at {Vector3.Distance(transform.position, _lastAttacker.position):0.0}m";
+
+            var gc = GameController.Instance;
+            // Logged before the sim is told: PlayerDied ends the run synchronously.
+            Log.Event("Player", $"YOU DIED — killed by {killer}, {(gc != null ? gc.EnemiesAlive : 0)} boarders still alive");
+
+            if (gc != null)
+            {
+                gc.PlayerDied();
+                return;
+            }
+
+            // Guard trip: no controller means no sim, no transcript line and no lose screen. Free
+            // the cursor so the player can still reach a menu instead of being stuck in a
+            // locked-mouse dead body.
+            Log.Error(Tag, $"No GameController in the scene: player down (HP {Hp:0}/{maxHp:0}, killer {killer}, " +
+                           $"scene '{SceneFlow.ActiveSceneName}') but the run cannot be ended and no lose " +
+                           "screen will appear. Freeing the cursor as a last resort.");
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+    }
+}
+===== FILE: Assets/Scripts/Game/Player/PlayerRegistry.cs
+using System.Collections.Generic;
+using GatekeeperBastion.Util;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>REPLICATED-STATE: static registry of live PlayerHealth instances (self-registered
+    /// in OnEnable/OnDisable). The ONLY sanctioned way to find "the player" in new code —
+    /// co-op ready: enemies target Nearest, local-only UI reads Local.</summary>
+    /// <remarks>
+    /// Every accessor is Unity-null-safe and prunes destroyed entries before use. A static list
+    /// outlives scene loads (and, with Unity 6 "Enter Play Mode without Domain Reload", outlives
+    /// play sessions), so an entry can be a DESTROYED component that still occupies a slot:
+    /// dereferencing its .transform throws NullReferenceException, and returning it from Local
+    /// makes every caller's `!= null` test fail silently (which is how the death-screen cursor
+    /// stops being freed). Both are guarded here.
+    /// </remarks>
+    public static class PlayerRegistry
+    {
+        const string Tag = "PlayerRegistry";
+
+        static readonly List<PlayerHealth> Registry = new List<PlayerHealth>();
+
+        /// <summary>Wipes the static list at play-mode start — prevents destroyed players from a
+        /// previous session surviving into this one when domain reload is disabled.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            Registry.Clear();
+        }
+
+        /// <summary>All currently enabled, live players (destroyed entries pruned first).</summary>
+        public static IReadOnlyList<PlayerHealth> All
+        {
+            get
+            {
+                Prune();
+                return Registry;
+            }
+        }
+
+        /// <summary>The locally-owned player (in solo: the only one), or null. Never returns a
+        /// destroyed component — a fake-null Local silently disables cursor release on death.</summary>
+        public static PlayerHealth Local
+        {
+            get
+            {
+                Prune();
+                return Registry.Count > 0 ? Registry[0] : null;
+            }
+        }
+
+        /// <summary>The player closest to a world position, or null when none are registered.</summary>
+        public static PlayerHealth Nearest(Vector3 position)
+        {
+            Prune(); // guard: Registry[i].transform on a destroyed player is an NRE (enemy retarget path)
+            PlayerHealth best = null;
+            float bestSqr = float.MaxValue;
+            for (int i = 0; i < Registry.Count; i++)
+            {
+                var candidate = Registry[i];
+                if (candidate == null) continue; // guard: entry destroyed mid-iteration
+                float sqr = (candidate.transform.position - position).sqrMagnitude;
+                if (sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    best = candidate;
+                }
+            }
+            return best;
+        }
+
+        /// <summary>The closest player that is still alive, or null. Enemy AI uses this so a
+        /// downed player stops drawing aggro once the run has ended.</summary>
+        public static PlayerHealth NearestAlive(Vector3 position)
+        {
+            Prune();
+            PlayerHealth best = null;
+            float bestSqr = float.MaxValue;
+            for (int i = 0; i < Registry.Count; i++)
+            {
+                var candidate = Registry[i];
+                if (candidate == null || candidate.IsDead) continue;
+                float sqr = (candidate.transform.position - position).sqrMagnitude;
+                if (sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    best = candidate;
+                }
+            }
+            return best;
+        }
+
+        /// <summary>Called by PlayerHealth.OnEnable.</summary>
+        public static void Register(PlayerHealth player)
+        {
+            if (player == null) return;
+            Prune();
+            if (!Registry.Contains(player)) Registry.Add(player);
+            Log.Info(Tag, $"Registered {player.name} (count {Registry.Count}).");
+        }
+
+        /// <summary>Called by PlayerHealth.OnDisable.</summary>
+        public static void Unregister(PlayerHealth player)
+        {
+            Registry.Remove(player);
+            Prune();
+        }
+
+        /// <summary>Drops destroyed (Unity fake-null) entries. Cheap: the list is 1 long in solo.</summary>
+        static void Prune()
+        {
+            for (int i = Registry.Count - 1; i >= 0; i--)
+            {
+                if (Registry[i] != null) continue;
+                Registry.RemoveAt(i);
+                // Guard trip: a destroyed player left in the registry would NRE in Nearest and
+                // make Local fake-null (cursor never freed on the lose screen).
+                Log.Warn(Tag, "Pruned a destroyed PlayerHealth from the registry (stale scene/domain state).");
+            }
+        }
+    }
+}

@@ -1,0 +1,2 @@
+See `AGENTS.md` at the project root. It is the working contract for every agent on this
+project and there is no Claude-specific variant.
