@@ -30,8 +30,8 @@ namespace GatekeeperBastion.Game.Ui
         public CanvasGroup LogoGroup => _logoGroup;
         public CanvasGroup PressGroup => _pressGroup;
 
-        /// <summary>True when Shift's splash manager drives the sequence, in which case the
-        /// controller must not fight its Animator.</summary>
+        /// <summary>True when Shift's splash manager drives the sequence. On the boot Splash
+        /// scene we strip that manager so this stays false and SplashController owns the prompt.</summary>
         public bool ShiftDriven => _manager != null;
 
         public void EnsureBuilt()
@@ -42,11 +42,10 @@ namespace GatekeeperBastion.Game.Ui
                 _version.gameObject.SetActive(true);
                 _version.text = Application.version;
             }
+
+            UiBind.SetText(_subtitle, PressAnyKey);
             if (ShiftDriven) return;
 
-            // Without Shift's manager the prompt stays hidden until the controller says the
-            // game is ready; an early "press any key" reads as a soft-lock.
-            UiBind.SetText(_subtitle, PressAnyKey);
             UiBind.Show(_subtitle, false);
             UiBind.Show(_pressGroup, false);
         }

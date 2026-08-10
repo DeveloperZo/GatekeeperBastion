@@ -5,11 +5,9 @@ using UnityEngine.SceneManagement;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER: boot splash — logo fade, load-gated press-any-key, async MainMenu.
-    /// Any input arms skip; activation waits until the async load reaches 0.9 (Unity's
-    /// allowSceneActivation gate). A soft timeout forces activation of the pending async op
-    /// so a stalled gate cannot soft-lock boot; sync LoadMainMenu is only used when async
-    /// never started.</summary>
+    /// <summary>LOCAL-OWNER: legacy boot splash — logo fade, load-gated press-any-key, then
+    /// async load of <see cref="SceneFlow.FrontEndScene"/>. No-op when
+    /// <see cref="MainMenuController"/> is already in the scene (Splash IS the menu).</summary>
     public sealed class SplashController : MonoBehaviour
     {
         const string Tag = "Splash";
@@ -22,6 +20,7 @@ namespace GatekeeperBastion.Game
 
         SplashView _view;
         AsyncOperation _load;
+        bool _inert;
         bool _failed;
         bool _skip;
         bool _activated;
@@ -30,6 +29,13 @@ namespace GatekeeperBastion.Game
 
         void Awake()
         {
+            // Leftover Boot component on a Splash that already hosts the menu — do not load.
+            if (FindFirstObjectByType<MainMenuController>(FindObjectsInactive.Include) != null)
+            {
+                _inert = true;
+                return;
+            }
+
             SceneFlow.EnsureEventSystem();
             SceneFlow.RepairCanvas(gameObject);
             AudioBuses.ApplyFromSettings();
@@ -44,14 +50,14 @@ namespace GatekeeperBastion.Game
 
         void OnEnable()
         {
+            if (_inert) return;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
 
         void BeginAsyncMainMenu()
         {
-            // M35 moved the menu Canvas into Ship; FrontEndScene resolves to whichever of the
-            // two is actually registered, so this scene cannot strand on a deregistered MainMenu.
+            // Legacy loader path only (no MainMenuController). FrontEndScene is Splash.
             string target = SceneFlow.FrontEndScene;
             if (!SceneFlow.CanLoad(target))
             {
@@ -77,7 +83,7 @@ namespace GatekeeperBastion.Game
 
         void Update()
         {
-            if (_activated) return;
+            if (_inert || _activated) return;
 
             _elapsed += Time.unscaledDeltaTime;
             if (ReadAdvanceInput()) _skip = true;
@@ -115,7 +121,7 @@ namespace GatekeeperBastion.Game
             if (_elapsed >= LoadTimeoutSeconds)
             {
                 Log.Warn(Tag,
-                    $"Boot budget {_elapsed:0.0}s reached (loadReady={loadReady}, progress={(_load != null ? _load.progress : -1f):0.###}) — activating MainMenu.");
+                    $"Boot budget {_elapsed:0.0}s reached (loadReady={loadReady}, progress={(_load != null ? _load.progress : -1f):0.###}) — activating front end.");
                 if (_load != null)
                 {
                     _activated = true;

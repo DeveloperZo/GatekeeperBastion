@@ -128,7 +128,7 @@ static (static styles survive domain-reload-disabled sessions holding destroyed
 font references).
 
 **4. Geometry is generated; UI is authored.** `SceneBuilder` builds Ship and Bastion
-geometry, spawns and NavMesh into `Assets/Scenes/` and registers Splash, MainMenu, Ship,
+geometry, spawns and NavMesh into `Assets/Scenes/` and registers Splash, Ship,
 Bastion in build settings. It does **not** own UI — Shift canvases live in those scenes as
 authored content and are preserved across Build All. After any geometry, station or
 spawn-point change, re-run **`GatekeeperBastion > Build All Scenes`**. Hand-editing

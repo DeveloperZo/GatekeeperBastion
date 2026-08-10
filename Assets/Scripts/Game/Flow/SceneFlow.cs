@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: static scene-name registry and loaders for the game flow:
-    /// Splash → MainMenu → Ship (walkable hub) → Bastion (the fight).</summary>
+    /// Splash → Ship (walkable hub) → Bastion (the fight).</summary>
     /// <remarks>
     /// Every loader returns bool and logs its outcome. A scene missing from the build settings
     /// makes SceneManager.LoadScene throw, which used to strand the player on the lose screen
@@ -17,13 +17,12 @@ namespace GatekeeperBastion.Game
     {
         const string Tag = "SceneFlow";
 
-        /// <summary>Legacy boot splash scene name. M35 moved the splash into Shift's
-        /// <c>Splash Screen</c> branch inside the Ship scene's Canvas; the scene file survives
-        /// only so an existing build setting cannot dangle.</summary>
+        /// <summary>Boot / campaign-menu scene. Owns the Shift Main Menu Canvas
+        /// (Continue / Start / Options / Quit). Continue and Start load <see cref="Ship"/>.</summary>
         public const string Splash = "Splash";
 
-        /// <summary>Legacy main menu scene name. See <see cref="Splash"/> — the menu is now the
-        /// Canvas copied out of <c>Main Menu (Desktop).unity</c> and living in the Ship scene.</summary>
+        /// <summary>Legacy scene name kept for callers that still reference it.
+        /// Not in the build settings; <see cref="FrontEndScene"/> is always <see cref="Splash"/>.</summary>
         public const string MainMenu = "MainMenu";
 
         /// <summary>Walkable ship-hub scene name
@@ -55,18 +54,15 @@ namespace GatekeeperBastion.Game
         /// direct-play fallback, so a renamed or duplicated combat scene still fires.</remarks>
         public static bool InCombatScene => ActiveSceneName == Bastion;
 
-        /// <summary>The scene that shows the menu: the standalone MainMenu scene where one is
-        /// still registered, otherwise Ship.</summary>
-        public static string FrontEndScene => CanLoad(MainMenu) ? MainMenu : Ship;
+        /// <summary>Campaign menu scene — always Splash. Never Ship.</summary>
+        public static string FrontEndScene => Splash;
 
         /// <summary>True when the named scene is registered in the build settings and loadable.</summary>
         public static bool CanLoad(string sceneName) =>
             !string.IsNullOrEmpty(sceneName) && Application.CanStreamedLevelBeLoaded(sceneName);
 
-        /// <summary>Go to the front end. Prefers the standalone MainMenu scene while it is still
-        /// registered; otherwise loads Ship, which is where M35 put the menu Canvas. Without this
-        /// fallback, deregistering MainMenu strands every "back to menu" caller.</summary>
-        public static bool LoadMainMenu() => CanLoad(MainMenu) ? Load(MainMenu) : Load(Ship);
+        /// <summary>Go to the front end (Splash campaign menu).</summary>
+        public static bool LoadMainMenu() => Load(FrontEndScene);
 
         /// <summary>Load the ship hub scene. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadShip() => Load(Ship);
@@ -127,7 +123,7 @@ namespace GatekeeperBastion.Game
             {
                 // Guard trip: LoadScene would throw here and strand the caller (lose-screen soft-lock).
                 Log.Error(Tag, $"Cannot load scene '{sceneName}' — it is not in the build settings. " +
-                               "Run GatekeeperBastion/Build All Scenes to register Splash, MainMenu, Ship, Bastion.");
+                               "Run GatekeeperBastion/Build All Scenes to register Splash, Ship, Bastion.");
                 return false;
             }
 

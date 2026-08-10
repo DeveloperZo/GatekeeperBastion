@@ -12,11 +12,11 @@ using UnityEngine.Rendering;
 namespace GatekeeperBastion.EditorTools
 {
     /// <summary>One-click gray-box scene builders for the project. "Build All Scenes"
-    /// (re)builds Splash, MainMenu, Ship and Bastion into Assets/Scenes and registers
-    /// them in EditorBuildSettings in that order. "Build Bastion Scene" rebuilds just
-    /// the BASTION interior: the Hatch (umbilical back to your ship) sits at the south
-    /// end next to the player spawn; a main bore corridor runs north and widens into
-    /// three chambers whose far ends hold the spawn points. Alien feel comes from
+    /// (re)builds Ship and Bastion geometry into Assets/Scenes and registers
+    /// Splash, Ship, Bastion in EditorBuildSettings in that order. "Build Bastion Scene"
+    /// rebuilds just the BASTION interior: the Hatch (umbilical back to your ship) sits at
+    /// the south end next to the player spawn; a main bore corridor runs north and widens
+    /// into three chambers whose far ends hold the spawn points. Alien feel comes from
     /// layout + a dark violet/teal palette. The Ship scene (see SceneBuilder.Ship.cs)
     /// is the cleaner steel-blue home hull with the three meta stations. Materials and
     /// the THREE gatekeeper prefabs (Default / Hunter / Ram — see SceneBuilder.Enemies.cs)
@@ -27,7 +27,6 @@ namespace GatekeeperBastion.EditorTools
     {
         const string ScenePath = "Assets/Scenes/Bastion.unity";
         const string SplashScenePath = "Assets/Scenes/Splash.unity";
-        const string MainMenuScenePath = "Assets/Scenes/MainMenu.unity";
         const string ShipScenePath = "Assets/Scenes/Ship.unity";
         const string NavMeshDataPath = "Assets/Scenes/Bastion-NavMesh.asset";
         const string PrefabDir = "Assets/Prefabs";
@@ -82,28 +81,24 @@ namespace GatekeeperBastion.EditorTools
         {
             EnsureFolders();
             // M35: SceneBuilder owns geometry, spawns and NavMesh — not UI.
-            // Splash/MainMenu scene files are not regenerated (UI lives in Ship/Bastion).
+            // Splash is authored (campaign menu); Ship/Bastion geometry rebuilt here.
             BuildShipScene();
             BuildBastionScene();
             RegisterBuildScenes();
             AssetDatabase.SaveAssets();
-            Debug.Log("[SceneBuilder] EditorBuildSettings.scenes = Splash, MainMenu, Ship, Bastion (geometry only).");
+            Debug.Log("[SceneBuilder] EditorBuildSettings.scenes = Splash, Ship, Bastion (geometry only).");
         }
 
         // Build All Scenes is the only entry point. A Bastion-only item existed until
         // 2026-08-04 and was a narrower duplicate of it: the full build takes seconds, and a
         // Bastion rebuilt without re-registering build settings is exactly the state that
         // hides gotcha 4 (Docs/Working-Rules.md, "Tools, scripts and the menu").
-
         static void RegisterBuildScenes()
         {
-            // M35: menu Canvas lives in Ship. Splash/MainMenu stay registered only while those
-            // scene files still exist so old PlayMode tests can load them; boot prefers Ship via
-            // SceneFlow.FrontEndScene when MainMenu is empty of controllers.
+            // Splash → Ship → Bastion. MainMenu is not in the build.
             EditorBuildSettings.scenes = new[]
             {
                 new EditorBuildSettingsScene(SplashScenePath, true),
-                new EditorBuildSettingsScene(MainMenuScenePath, true),
                 new EditorBuildSettingsScene(ShipScenePath, true),
                 new EditorBuildSettingsScene(ScenePath, true),
             };

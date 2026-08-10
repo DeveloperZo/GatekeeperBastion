@@ -29,7 +29,8 @@ namespace GatekeeperBastion.PlayTests
         [Test]
         public void EveryFlowScene_IsRegisteredInBuildSettings()
         {
-            string[] flow = { SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.Ship, SceneFlow.Bastion };
+            // Boot path is Splash → Ship → Bastion. MainMenu is legacy and not required.
+            string[] flow = { SceneFlow.Splash, SceneFlow.Ship, SceneFlow.Bastion };
 
             var missing = new List<string>();
             var present = new List<string>();
@@ -48,51 +49,57 @@ namespace GatekeeperBastion.PlayTests
 
             Assert.IsEmpty(missing,
                 $"Scene(s) [{string.Join(", ", missing)}] are missing from Build Settings while " +
-                $"[{string.Join(", ", present)}] are registered. SceneFlow navigates to all four by name, so " +
-                "every missing one is a runtime dead end.");
+                $"[{string.Join(", ", present)}] are registered. SceneFlow needs Splash, Ship, Bastion.");
         }
 
         [UnityTest]
-        public IEnumerator SplashAndMainMenu_HaveEventSystemForUgui()
+        public IEnumerator SplashAndShip_HaveEventSystemForUgui()
         {
             PlayTestUtil.RequireSceneInBuild(SceneFlow.Splash);
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.MainMenu);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
 
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Splash);
             AssertEventSystemPresent(SceneFlow.Splash);
 
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.MainMenu);
-            AssertEventSystemPresent(SceneFlow.MainMenu);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            AssertEventSystemPresent(SceneFlow.Ship);
         }
 
         [UnityTest]
-        public IEnumerator Splash_ReachesMainMenu_WithinBootBudget()
+        public IEnumerator Splash_HostsCampaignMenu_AndLoadsShip()
         {
             PlayTestUtil.RequireSceneInBuild(SceneFlow.Splash);
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.MainMenu);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
 
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Splash);
-            var splash = UnityEngine.Object.FindFirstObjectByType<SplashController>();
-            Assert.IsNotNull(splash,
-                "Splash scene has no SplashController — press-any-key / boot budget cannot run.");
+            var menu = UnityEngine.Object.FindFirstObjectByType<MainMenuController>(
+                FindObjectsInactive.Include);
+            Assert.IsNotNull(menu,
+                "Splash must host MainMenuController (campaign Continue/Start/Options).");
 
-            float deadline = Time.realtimeSinceStartup + 12f;
-            while (Time.realtimeSinceStartup < deadline)
-            {
-                if (SceneFlow.ActiveSceneName == SceneFlow.MainMenu)
-                {
-                    Assert.IsNotNull(
-                        UnityEngine.Object.FindFirstObjectByType<MainMenuController>(),
-                        "MainMenu loaded without MainMenuController.");
-                    AssertEventSystemPresent(SceneFlow.MainMenu);
-                    yield break;
-                }
-                yield return null;
-            }
+            Assert.AreEqual(SceneFlow.Splash, SceneFlow.FrontEndScene);
+            Assert.IsTrue(SceneFlow.CanLoad(SceneFlow.Ship), "Ship must be in build settings.");
 
-            Assert.AreEqual(SceneFlow.MainMenu, SceneFlow.ActiveSceneName,
-                "Splash did not reach MainMenu within 12s (8s boot budget + settle). " +
-                $"Still on '{SceneFlow.ActiveSceneName}'.");
+            bool ok = SceneFlow.LoadShip();
+            Assert.IsTrue(ok, "LoadShip from Splash failed.");
+            yield return null;
+            yield return null;
+            Assert.AreEqual(SceneFlow.Ship, SceneFlow.ActiveSceneName,
+                "Continue/Start path must land on Ship.");
+        }
+
+        [UnityTest]
+        public IEnumerator Ship_CanLoadBastion_EmbarkPath()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.Bastion);
+
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            Assert.IsTrue(SceneFlow.LoadBastion(), "Embark LoadBastion failed.");
+            yield return null;
+            yield return null;
+            Assert.AreEqual(SceneFlow.Bastion, SceneFlow.ActiveSceneName,
+                "Embark must land on Bastion.");
         }
 
         static void AssertEventSystemPresent(string sceneName)

@@ -4,7 +4,9 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER: main menu — CONTINUE / START NEW (overwrite confirm) / OPTIONS / QUIT.</summary>
+    /// <summary>LOCAL-OWNER: Splash front-end — CONTINUE / START NEW (overwrite confirm) /
+    /// OPTIONS / QUIT. Continue and Start load <see cref="SceneFlow.Ship"/>; Embark to Bastion
+    /// is a Ship-station action, not a menu action.</summary>
     public sealed class MainMenuController : MonoBehaviour
     {
         bool _loading;
@@ -16,6 +18,7 @@ namespace GatekeeperBastion.Game
             SceneFlow.RepairCanvas(gameObject);
             AudioBuses.ApplyFromSettings();
             _view = GetComponentInChildren<MainMenuView>(true);
+            if (_view == null) _view = GetComponent<MainMenuView>();
             if (_view == null) return;
             _view.EnsureBuilt();
 
@@ -23,7 +26,7 @@ namespace GatekeeperBastion.Game
             _view.onStartNew = OnStartNew;
             _view.onOptions = () => OptionsScreen.Open(null);
             _view.onQuit = () => Application.Quit();
-            _view.onOverwriteConfirm = StartNewAndEmbark;
+            _view.onOverwriteConfirm = StartNewAndGoToShip;
             _view.onOverwriteBack = () => _view.ShowMain();
         }
 
@@ -58,7 +61,8 @@ namespace GatekeeperBastion.Game
             if (_loading || !GameSession.HasSave) return;
             _loading = true;
             GameSession.ContinueGame();
-            SceneFlow.LoadShip();
+            if (!SceneFlow.LoadShip())
+                _loading = false;
         }
 
         void OnStartNew()
@@ -70,15 +74,16 @@ namespace GatekeeperBastion.Game
                     "Starting a new campaign will overwrite your existing save.");
                 return;
             }
-            StartNewAndEmbark();
+            StartNewAndGoToShip();
         }
 
-        void StartNewAndEmbark()
+        void StartNewAndGoToShip()
         {
             if (_loading) return;
             _loading = true;
             GameSession.StartNew();
-            SceneFlow.LoadShip();
+            if (!SceneFlow.LoadShip())
+                _loading = false;
         }
     }
 }

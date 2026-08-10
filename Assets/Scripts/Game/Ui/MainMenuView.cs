@@ -92,8 +92,13 @@ namespace GatekeeperBastion.Game.Ui
             if (_continueBtn == null) _continueBtn = UiBind.Get<Button>(home, ContinueName);
             if (_continueButton == null && _continueBtn != null)
                 _continueButton = _continueBtn.gameObject;
-            if (_startNewBtn == null) _startNewBtn = UiBind.Get<Button>(home, StartNewName);
-            if (_optionsBtn == null) _optionsBtn = UiBind.Get<Button>(home, OptionsName);
+            // Shift Home labels: Play → Start New, Settings → Options.
+            if (_startNewBtn == null)
+                _startNewBtn = UiBind.Get<Button>(home, StartNewName)
+                    ?? UiBind.Get<Button>(home, "Play");
+            if (_optionsBtn == null)
+                _optionsBtn = UiBind.Get<Button>(home, OptionsName)
+                    ?? UiBind.Get<Button>(home, "Settings");
             if (_quitBtn == null) _quitBtn = UiBind.Get<Button>(home, QuitName);
 
             if (_overwriteModal == null)

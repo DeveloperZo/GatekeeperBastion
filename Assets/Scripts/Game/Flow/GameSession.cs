@@ -160,7 +160,7 @@ namespace GatekeeperBastion.Game
             Log.Warn(Tag, "No session loaded (direct play?) — resolving one now.");
             if (HasSave) ContinueGame();
             else StartNew();
-            // Volumes also apply on Settings.Bind / Splash / MainMenu; re-push for direct-play
+            // Volumes also apply on Settings.Bind / Splash; re-push for direct-play
             // scenes that skip the menu so AudioSources spawned here see the saved buses.
             AudioBuses.ApplyFromSettings();
         }

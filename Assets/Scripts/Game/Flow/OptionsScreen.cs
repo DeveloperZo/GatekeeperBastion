@@ -2,6 +2,7 @@ using System;
 using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
+using Michsky.UI.Shift;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
@@ -13,7 +14,6 @@ namespace GatekeeperBastion.Game
     public static class OptionsScreen
     {
         const string Tag = "Settings";
-        const string PrefabResourcesPath = "Ui/Options";
         const float DisplayRevertSeconds = 15f;
 
         static bool _open;
@@ -114,16 +114,20 @@ namespace GatekeeperBastion.Game
             _view = UnityEngine.Object.FindFirstObjectByType<OptionsView>(FindObjectsInactive.Include);
             if (_view != null) return _view;
 
-            var prefab = Resources.Load<GameObject>(PrefabResourcesPath);
-            if (prefab == null)
+            // M35: Options is Shift's Settings panel on the authored Canvas — open it, do not
+            // instantiate a deleted Resources prefab.
+            var panels = UnityEngine.Object.FindFirstObjectByType<MainPanelManager>(
+                FindObjectsInactive.Include);
+            if (panels != null)
+                panels.OpenPanel("Settings");
+
+            _view = UnityEngine.Object.FindFirstObjectByType<OptionsView>(FindObjectsInactive.Include);
+            if (_view == null)
             {
-                Log.Error(Tag, "Options prefab missing at Resources/" + PrefabResourcesPath);
+                Log.Error(Tag,
+                    "No OptionsView in scene — open Settings on the Shift Canvas and bind OptionsView.");
                 return null;
             }
-            var go = UnityEngine.Object.Instantiate(prefab);
-            go.name = "Options";
-            UnityEngine.Object.DontDestroyOnLoad(go);
-            _view = go.GetComponentInChildren<OptionsView>(true);
             return _view;
         }
 

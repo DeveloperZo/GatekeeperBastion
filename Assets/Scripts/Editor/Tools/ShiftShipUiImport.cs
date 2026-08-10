@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using GatekeeperBastion.Game;
 using Michsky.UI.Shift;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -14,21 +13,16 @@ using UnityEngine.UI;
 namespace GatekeeperBastion.EditorTools
 {
     /// <summary>
-    /// M35 B4–B5: copies the whole <c>Canvas</c> branch of Shift's Main Menu (Desktop) scene into
-    /// Assets/Scenes/Ship.unity, duplicates <c>Home</c> once per station panel, and registers each
-    /// duplicate in <see cref="MainPanelManager.panels"/> with its own Panel Button. Nothing is
-    /// generated — every object is a copy of an object Shift shipped.
+    /// M35: ensures station panels on Ship.unity only. Campaign Continue/Start/Options live on
+    /// Splash (see <see cref="ShiftFrontEndMutate"/>). Re-running this import must not put the
+    /// campaign menu back onto Ship.
     ///
-    /// Run it from <c>GatekeeperBastion/M35 Import Ship UI</c>, or by writing
-    /// <c>gkb_ship_ui_import_request.txt</c> at the project root; the result lands in
-    /// <c>gkb_ship_ui_import_report.json</c> either way.
+    /// Run from <c>GatekeeperBastion/M35 Import Ship UI</c>, or write
+    /// <c>gkb_ship_ui_import_request.txt</c>; result in <c>gkb_ship_ui_import_report.json</c>.
     ///
-    /// Idempotent: an existing <c>Canvas</c> root in Ship.unity is replaced, so re-running after a
-    /// Shift update re-copies cleanly. Anything authored under a panel's <c>Content</c> is lost on
-    /// re-run — that is the cost of the copy being a copy.
-    ///
-    /// The source scene is opened additively and closed WITHOUT saving. Nothing under
-    /// Assets/Shift - Complete Sci-Fi UI/ is written.
+    /// If Ship already has a Canvas, it is kept and only missing station panels are added.
+    /// If Canvas is missing, a Shift Main Menu Canvas is copied then stripped to stations only
+    /// (Splash Screen + campaign Home removed). Source scene is never saved.
     /// </summary>
     /// <remarks>
     /// Lives in Editor/Tools rather than Editor/Ui because criterion 1 greps
@@ -40,7 +34,6 @@ namespace GatekeeperBastion.EditorTools
         const string SourceScenePath =
             "Assets/Shift - Complete Sci-Fi UI/Scenes/Main Menu/Main Menu (Desktop).unity";
         const string ShipScenePath = "Assets/Scenes/Ship.unity";
-        const string SplashScenePath = "Assets/Scenes/Splash.unity";
 
         const string CanvasName = "Canvas";
         const string MainPanelsPath = "Main Panels";
@@ -127,42 +120,49 @@ namespace GatekeeperBastion.EditorTools
             }
 
             Scene ship = EditorSceneManager.OpenScene(ShipScenePath, OpenSceneMode.Single);
-            report.ReplacedExistingCanvas = DestroyRootsNamed(ship, CanvasName);
 
-            GameObject canvas = CopyCanvasFromSource(ship, report);
-            if (canvas == null) return;
+            // Campaign FrontEnd host belongs on Splash, never Ship.
+            DestroyRootsNamed(ship, "FrontEnd");
 
-            ForceOverlay(canvas, report);
-            report.RemovedEventSystems = RemoveEventSystemsOutside(ship, canvas);
-
-            var mpm = canvas.GetComponentInChildren<MainPanelManager>(true);
-            if (mpm == null)
+            GameObject canvas = FindRoot(ship, CanvasName);
+            if (canvas == null)
             {
-                report.Fail("Copied Canvas has no MainPanelManager — the Shift scene layout changed.");
-                return;
+                canvas = CopyCanvasFromDemo(ship, report);
+                if (canvas == null) return;
+                ConfigureStationOnlyCanvas(canvas, report);
+            }
+            else
+            {
+                // Keep existing Canvas — do not replace with a fresh campaign Main Menu.
+                // Stations first (need Home as template), then strip campaign chrome.
+                report.RemovedEventSystems = RemoveEventSystemsOutside(ship, canvas);
+                EnsureStationPanels(canvas, report);
+                StripCampaignFromExisting(canvas, report);
+                CheckModalWindows(canvas, report);
             }
 
-            RecordShippedBranches(canvas, report);
-            RemoveDemoPanels(mpm, report);
-            AddStationPanels(canvas, mpm, report);
-            CheckModalWindows(canvas, report);
-
-            EditorUtility.SetDirty(mpm);
+            var mpm = canvas.GetComponentInChildren<MainPanelManager>(true);
+            if (mpm != null) EditorUtility.SetDirty(mpm);
             EditorSceneManager.MarkSceneDirty(ship);
             EditorSceneManager.SaveScene(ship, ShipScenePath);
 
-            WireSplashBoot(report);
-
-            // Leave the editor on the scene the work landed in, not on Splash.
-            EditorSceneManager.OpenScene(ShipScenePath, OpenSceneMode.Single);
-
-            report.Succeed($"Copied the Shift Canvas into {ShipScenePath}; " +
-                           $"{report.PanelsAdded.Count} station panel(s) registered.");
+            report.SplashBoot = "skipped — stations only on Ship; campaign menu is Splash";
+            report.Succeed($"Ship station UI ensured in {ShipScenePath}; " +
+                           $"{report.PanelsAdded.Count} station panel(s) added this run.");
         }
 
-        /// <summary>Opens the vendor scene additively, clones its Canvas into the Ship scene, then
-        /// closes the vendor scene without saving.</summary>
-        static GameObject CopyCanvasFromSource(Scene ship, Report report)
+        // ---------- shared with ShiftFrontEndMutate ----------
+
+        /// <summary>Opens the vendor scene additively, clones Canvas into <paramref name="ship"/>,
+        /// closes vendor unsaved. Used by mutate rebuild and by import when Canvas is missing.</summary>
+        public static GameObject CopyCanvasFromDemo(Scene ship)
+        {
+            var canvas = CopyCanvasFromDemo(ship, null);
+            if (canvas != null) RemoveEventSystemsOutside(ship, canvas);
+            return canvas;
+        }
+
+        static GameObject CopyCanvasFromDemo(Scene ship, Report report)
         {
             Scene src = EditorSceneManager.OpenScene(SourceScenePath, OpenSceneMode.Additive);
             try
@@ -176,7 +176,7 @@ namespace GatekeeperBastion.EditorTools
                 }
                 if (source == null)
                 {
-                    report.Fail("No root named '" + CanvasName + "' in " + SourceScenePath);
+                    report?.Fail("No root named '" + CanvasName + "' in " + SourceScenePath);
                     return null;
                 }
 
@@ -185,16 +185,134 @@ namespace GatekeeperBastion.EditorTools
                 EditorSceneManager.MoveGameObjectToScene(copy, ship);
                 copy.transform.SetAsLastSibling();
 
-                // Instantiate remaps references that point inside the branch and keeps the rest.
-                // Anything still aimed at the vendor scene (its Main Camera) dangles the moment we
-                // close that scene, so clear it here where we can still name what was cleared.
                 ClearRefsIntoScene(copy, src, report);
-                report.CopiedObjectCount = copy.GetComponentsInChildren<Transform>(true).Length;
+                if (report != null)
+                    report.CopiedObjectCount = copy.GetComponentsInChildren<Transform>(true).Length;
+                ForceOverlay(copy, report);
+                if (report != null)
+                    report.RemovedEventSystems = RemoveEventSystemsOutside(ship, copy);
                 return copy;
             }
             finally
             {
                 EditorSceneManager.CloseScene(src, true);
+            }
+        }
+
+        /// <summary>After a fresh copy: overlay, kill login/splash/demo, add stations, hide campaign Home.</summary>
+        public static void ConfigureStationOnlyCanvas(GameObject canvas) =>
+            ConfigureStationOnlyCanvas(canvas, null);
+
+        static void ConfigureStationOnlyCanvas(GameObject canvas, Report report)
+        {
+            ForceOverlay(canvas, report);
+            if (report != null) RecordShippedBranches(canvas, report);
+            KillLogin(canvas);
+
+            var mpm = canvas.GetComponentInChildren<MainPanelManager>(true);
+            if (mpm == null)
+            {
+                report?.Fail("Copied Canvas has no MainPanelManager — the Shift scene layout changed.");
+                return;
+            }
+
+            RemoveDemoPanels(mpm, report);
+            EnsureStationPanels(canvas, mpm, report);
+            DestroySplashScreen(canvas, report);
+            HideCampaignHome(mpm, report);
+            CheckModalWindows(canvas, report);
+
+            var mgr = canvas.GetComponentInChildren<SplashScreenManager>(true);
+            if (mgr != null)
+            {
+                mgr.disableSplashScreen = true;
+                mgr.enableLoginScreen = false;
+                mgr.enablePressAnyKeyScreen = false;
+                EditorUtility.SetDirty(mgr);
+            }
+        }
+
+        /// <summary>Idempotent: duplicates Home once per missing station panel and registers it.</summary>
+        public static void EnsureStationPanels(GameObject canvas) =>
+            EnsureStationPanels(canvas, null);
+
+        static void EnsureStationPanels(GameObject canvas, Report report)
+        {
+            var mpm = canvas.GetComponentInChildren<MainPanelManager>(true);
+            if (mpm == null)
+            {
+                report?.Fail("Canvas has no MainPanelManager.");
+                return;
+            }
+            EnsureStationPanels(canvas, mpm, report);
+        }
+
+        static void StripCampaignFromExisting(GameObject canvas, Report report)
+        {
+            KillLogin(canvas);
+            DestroySplashScreen(canvas, report);
+            var mpm = canvas.GetComponentInChildren<MainPanelManager>(true);
+            if (mpm != null)
+            {
+                RemoveDemoPanels(mpm, report);
+                HideCampaignHome(mpm, report);
+            }
+            var mgr = canvas.GetComponentInChildren<SplashScreenManager>(true);
+            if (mgr != null)
+            {
+                mgr.disableSplashScreen = true;
+                mgr.enableLoginScreen = false;
+                mgr.enablePressAnyKeyScreen = false;
+                EditorUtility.SetDirty(mgr);
+            }
+        }
+
+        static void DestroySplashScreen(GameObject canvas, Report report)
+        {
+            var splash = canvas.transform.Find("Splash Screen");
+            if (splash == null)
+            {
+                foreach (var t in canvas.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name == "Splash Screen") { splash = t; break; }
+                }
+            }
+            if (splash == null) return;
+            UnityEngine.Object.DestroyImmediate(splash.gameObject);
+            report?.PanelsRemoved.Add("Splash Screen");
+        }
+
+        /// <summary>Home (Continue/Play/Settings) is the Splash campaign menu — hide on Ship.</summary>
+        static void HideCampaignHome(MainPanelManager mpm, Report report)
+        {
+            var keep = new HashSet<string>(StationPanels) { "Settings" };
+            var next = new List<MainPanelManager.PanelItem>();
+            foreach (var p in mpm.panels)
+            {
+                if (p == null || p.panelObject == null) continue;
+                if (keep.Contains(p.panelName))
+                {
+                    next.Add(p);
+                    continue;
+                }
+                if (p.panelObject != null) p.panelObject.SetActive(false);
+                if (p.buttonObject != null) p.buttonObject.SetActive(false);
+                report?.PanelsRemoved.Add(p.panelName + " (hidden on Ship)");
+            }
+            mpm.panels = next;
+            mpm.currentPanelIndex = 0;
+            EditorUtility.SetDirty(mpm);
+        }
+
+        static void KillLogin(GameObject canvas)
+        {
+            foreach (var t in canvas.GetComponentsInChildren<Transform>(true))
+            {
+                if (t == null) continue;
+                string n = t.name;
+                if (n == "Login" || n == "Sign Up" || n == "Login Stuff"
+                    || n == "Register Stuff" || n == "Login Button")
+                    t.gameObject.SetActive(false);
             }
         }
 
@@ -213,9 +331,9 @@ namespace GatekeeperBastion.EditorTools
                     if (value == null) continue;
                     GameObject owner = value as GameObject;
                     if (owner == null && value is Component c) owner = c.gameObject;
-                    if (owner == null) continue;           // asset reference — keep
-                    if (owner.scene != foreign) continue;  // in-branch reference — keep
-                    report.ClearedRefs.Add(
+                    if (owner == null) continue;
+                    if (owner.scene != foreign) continue;
+                    report?.ClearedRefs.Add(
                         PathOf(component.transform) + " :: " + component.GetType().Name + "." +
                         prop.propertyPath + " -> " + owner.name);
                     prop.objectReferenceValue = null;
@@ -226,14 +344,13 @@ namespace GatekeeperBastion.EditorTools
         }
 
         /// <summary>Shift authors the menu at Screen Space – Camera against its own Main Camera,
-        /// which we do not copy. Overlay needs no camera and keeps the 1920×1280 scaler intact.
-        /// Cost: Shift's UI blur samples a grabbed frame and will not blur under Overlay.</summary>
+        /// which we do not copy. Overlay needs no camera and keeps the 1920×1280 scaler intact.</summary>
         static void ForceOverlay(GameObject canvasRoot, Report report)
         {
             var canvas = canvasRoot.GetComponent<Canvas>();
             if (canvas == null)
             {
-                report.Warnings.Add("Copied root has no Canvas component.");
+                report?.Warnings.Add("Copied root has no Canvas component.");
                 return;
             }
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -241,9 +358,12 @@ namespace GatekeeperBastion.EditorTools
             canvasRoot.transform.localScale = Vector3.one;
 
             var scaler = canvasRoot.GetComponent<CanvasScaler>();
-            report.CanvasReference = scaler != null
-                ? $"Overlay, reference {scaler.referenceResolution.x}x{scaler.referenceResolution.y}, match {scaler.matchWidthOrHeight}"
-                : "Overlay, no CanvasScaler";
+            if (report != null)
+            {
+                report.CanvasReference = scaler != null
+                    ? $"Overlay, reference {scaler.referenceResolution.x}x{scaler.referenceResolution.y}, match {scaler.matchWidthOrHeight}"
+                    : "Overlay, no CanvasScaler";
+            }
         }
 
         static int DestroyRootsNamed(Scene scene, string name)
@@ -256,6 +376,13 @@ namespace GatekeeperBastion.EditorTools
                 n++;
             }
             return n;
+        }
+
+        static GameObject FindRoot(Scene scene, string name)
+        {
+            foreach (var r in scene.GetRootGameObjects())
+                if (r.name == name) return r;
+            return null;
         }
 
         /// <summary>The Shift Canvas nests its own Event System; a second one spams uGUI warnings.</summary>
@@ -274,7 +401,6 @@ namespace GatekeeperBastion.EditorTools
             return n;
         }
 
-        /// <summary>Criterion 4's checklist, recorded as measurements rather than assumed.</summary>
         static void RecordShippedBranches(GameObject canvas, Report report)
         {
             Require(canvas, "Menu Manager", report, typeof(SplashScreenManager), typeof(MainPanelManager));
@@ -316,32 +442,49 @@ namespace GatekeeperBastion.EditorTools
                     if (mpm.panels[i].buttonObject != null)
                         UnityEngine.Object.DestroyImmediate(mpm.panels[i].buttonObject);
                     mpm.panels.RemoveAt(i);
-                    report.PanelsRemoved.Add(name);
+                    report?.PanelsRemoved.Add(name);
                 }
             }
-            // Awake indexes panels[currentPanelIndex] before anything else runs.
             mpm.currentPanelIndex = 0;
         }
 
-        static void AddStationPanels(GameObject canvas, MainPanelManager mpm, Report report)
+        static void EnsureStationPanels(GameObject canvas, MainPanelManager mpm, Report report)
         {
             Transform mainPanels = canvas.transform.Find(MainPanelsPath);
             Transform buttonList = canvas.transform.Find(ButtonListPath);
             if (mainPanels == null || buttonList == null)
             {
-                report.Fail("Copied Canvas is missing '" + MainPanelsPath + "' or '" + ButtonListPath + "'.");
+                report?.Fail("Canvas is missing '" + MainPanelsPath + "' or '" + ButtonListPath + "'.");
                 return;
             }
 
             Transform home = mainPanels.Find(HomePanelName);
             GameObject homeButton = ButtonFor(mpm, HomePanelName);
+            // After HideCampaignHome, Home may be gone from mpm — still find the GO under Main Panels.
+            if (homeButton == null && home != null)
+            {
+                foreach (Transform t in buttonList)
+                {
+                    if (t.name == HomePanelName) { homeButton = t.gameObject; break; }
+                }
+            }
             if (home == null || homeButton == null)
             {
-                report.Fail("Home panel or its Panel Button is missing — nothing to duplicate.");
+                // Station panels already present and Home was stripped — nothing to duplicate from.
+                bool anyStation = false;
+                foreach (var name in StationPanels)
+                    if (mainPanels.Find(name) != null) { anyStation = true; break; }
+                if (anyStation)
+                {
+                    report?.Warnings.Add("Home template missing; existing station panels left alone.");
+                    return;
+                }
+                report?.Fail("Home panel or its Panel Button is missing — nothing to duplicate.");
                 return;
             }
 
             int listIndex = Mathf.Max(0, mpm.panels.FindIndex(p => p.panelName == HomePanelName)) + 1;
+            if (listIndex <= 0) listIndex = mpm.panels.Count;
             int siblingIndex = homeButton.transform.GetSiblingIndex() + 1;
 
             for (int i = 0; i < StationPanels.Length; i++)
@@ -349,7 +492,22 @@ namespace GatekeeperBastion.EditorTools
                 string name = StationPanels[i];
                 if (mainPanels.Find(name) != null)
                 {
-                    report.Warnings.Add("Panel '" + name + "' already exists — left alone.");
+                    report?.Warnings.Add("Panel '" + name + "' already exists — left alone.");
+                    // Ensure registration if the GO exists but mpm lost it.
+                    if (ButtonFor(mpm, name) == null)
+                    {
+                        var existing = mainPanels.Find(name).gameObject;
+                        GameObject btn = null;
+                        foreach (Transform t in buttonList)
+                            if (t.name == name) { btn = t.gameObject; break; }
+                        mpm.panels.Insert(Mathf.Min(listIndex + i, mpm.panels.Count),
+                            new MainPanelManager.PanelItem
+                            {
+                                panelName = name,
+                                panelObject = existing,
+                                buttonObject = btn,
+                            });
+                    }
                     continue;
                 }
 
@@ -357,7 +515,6 @@ namespace GatekeeperBastion.EditorTools
                 panel.name = name;
                 int cleared = ClearContent(panel, report);
 
-                // Shift stores an inactive panel as alpha 0; MainPanelManager fades it back in.
                 var group = panel.GetComponent<CanvasGroup>();
                 if (group != null) group.alpha = 0f;
                 panel.SetActive(false);
@@ -368,25 +525,23 @@ namespace GatekeeperBastion.EditorTools
                 LabelPanelButton(button, name, report);
                 RewireOpenPanel(button, mpm, name, report);
 
-                mpm.panels.Insert(listIndex + i, new MainPanelManager.PanelItem
+                mpm.panels.Insert(Mathf.Min(listIndex + i, mpm.panels.Count), new MainPanelManager.PanelItem
                 {
                     panelName = name,
                     panelObject = panel,
                     buttonObject = button,
                 });
 
-                report.PanelsAdded.Add(name + " (Content emptied of " + cleared + " Home child object(s))");
+                report?.PanelsAdded.Add(name + " (Content emptied of " + cleared + " Home child object(s))");
             }
         }
 
-        /// <summary>Keeps Shortcut Keys / Hotkeys / Content and empties Content — Home's profile card
-        /// and placeholder model are Shift demo content, and Content is where ours goes.</summary>
         static int ClearContent(GameObject panel, Report report)
         {
             var content = panel.transform.Find("Content");
             if (content == null)
             {
-                report.Warnings.Add(panel.name + " has no 'Content' child after duplication.");
+                report?.Warnings.Add(panel.name + " has no 'Content' child after duplication.");
                 return 0;
             }
             int n = content.childCount;
@@ -400,26 +555,23 @@ namespace GatekeeperBastion.EditorTools
             var mpb = button.GetComponent<MainPanelButton>();
             if (mpb == null)
             {
-                report.Warnings.Add("Panel Button copy for '" + label + "' has no MainPanelButton.");
+                report?.Warnings.Add("Panel Button copy for '" + label + "' has no MainPanelButton.");
                 return;
             }
             mpb.useCustomText = false;
             mpb.buttonText = label;
-            // OnEnable pushes buttonText onto these at runtime; set them now so the editor reads right.
             if (mpb.normalText != null) mpb.normalText.text = label;
             if (mpb.highlightedText != null) mpb.highlightedText.text = label;
             if (mpb.pressedText != null) mpb.pressedText.text = label;
             EditorUtility.SetDirty(mpb);
         }
 
-        /// <summary>Retargets the copied button's persistent onClick to OpenPanel("&lt;name&gt;").
-        /// Edited through SerializedProperty so the call keeps Shift's mode/target shape.</summary>
         static void RewireOpenPanel(GameObject button, MainPanelManager mpm, string panelName, Report report)
         {
             var ui = button.GetComponent<Button>();
             if (ui == null)
             {
-                report.Warnings.Add("Panel Button copy for '" + panelName + "' has no Button.");
+                report?.Warnings.Add("Panel Button copy for '" + panelName + "' has no Button.");
                 return;
             }
 
@@ -427,7 +579,7 @@ namespace GatekeeperBastion.EditorTools
             var calls = so.FindProperty("m_OnClick.m_PersistentCalls.m_Calls");
             if (calls == null)
             {
-                report.Warnings.Add("Could not reach m_OnClick on the '" + panelName + "' button.");
+                report?.Warnings.Add("Could not reach m_OnClick on the '" + panelName + "' button.");
                 return;
             }
             calls.arraySize = 1;
@@ -444,11 +596,12 @@ namespace GatekeeperBastion.EditorTools
                 targetType.stringValue = t.FullName + ", " + t.Assembly.GetName().Name;
             }
             so.ApplyModifiedPropertiesWithoutUndo();
-            report.ButtonsWired.Add(panelName + " -> MainPanelManager.OpenPanel(\"" + panelName + "\")");
+            report?.ButtonsWired.Add(panelName + " -> MainPanelManager.OpenPanel(\"" + panelName + "\")");
         }
 
         static void CheckModalWindows(GameObject canvas, Report report)
         {
+            if (report == null) return;
             var modals = canvas.transform.Find(ModalWindowsPath);
             if (modals == null)
             {
@@ -463,29 +616,6 @@ namespace GatekeeperBastion.EditorTools
             }
             if (!report.ExitModalPresent)
                 report.Warnings.Add("No modal named '" + ExitModalName + "' — criterion 7 needs Exit.prefab.");
-        }
-
-        /// <summary>Splash.unity is the boot scene and nothing else: SplashController async-loads Ship,
-        /// and Shift's Splash Screen panel on Ship's Canvas is the splash the player actually sees.</summary>
-        static void WireSplashBoot(Report report)
-        {
-            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(SplashScenePath) == null)
-            {
-                report.Warnings.Add("Splash scene missing: " + SplashScenePath);
-                return;
-            }
-            Scene splash = EditorSceneManager.OpenScene(SplashScenePath, OpenSceneMode.Single);
-            var existing = UnityEngine.Object.FindFirstObjectByType<SplashController>(FindObjectsInactive.Include);
-            if (existing != null)
-            {
-                report.SplashBoot = "already wired on '" + existing.gameObject.name + "'";
-                return;
-            }
-            var go = new GameObject("Boot");
-            go.AddComponent<SplashController>();
-            EditorSceneManager.MarkSceneDirty(splash);
-            EditorSceneManager.SaveScene(splash, SplashScenePath);
-            report.SplashBoot = "added 'Boot' with SplashController";
         }
 
         static GameObject ButtonFor(MainPanelManager mpm, string panelName)
