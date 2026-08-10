@@ -14,6 +14,31 @@ notes, not tuning results, not anything the milestone file already holds.
 This file is history. **`Roadmap.md` is what is next**: order, status, strategy and risks.
 `Milestones/` is the detail behind any entry here.
 
+- 2026-08-10: **Multiplayer work pulled out into M45, and M39 cancelled** (Zo: move related items
+  into their own milestone, research the architecture, do not over-engineer or copy a AAA dev).
+  **The strict `noEngineReferences: true` rule did not survive the research.** It is load-bearing
+  for exactly one thing, cross-platform bitwise determinism for lockstep or deterministic
+  rollback, and this project is doing neither. Unity's own docs say NGO does not implement
+  prediction and reconciliation; NGO's documented physics model runs Unity physics on the server,
+  which a pure sim cannot call; and Boss Room, Unity's official co-op sample, puts game logic in
+  `NetworkBehaviour` and uses `NavMeshAgent` server-side. The one architecture that mandates
+  engine-freedom, Photon Quantum, states determinism as the reason.
+  **Overwatch is retired as a citation for this rule** — its simulation is its engine, and the
+  separation it describes is by tick rate, not type purity.
+  What survives is the dependency direction: `Sim/` may use `Vector3`, `Quaternion` and `Mathf`,
+  and may not touch a MonoBehaviour, a scene, `Time` or `Random`. The stated reason changes from
+  "the multiplayer seam" to testability and one-directional dependency.
+  **M45's scope is the retrofit that is cheap now and ruinous later**, gated on one EditMode test:
+  two independent Run simulations in one process, which fails the moment a static comes back.
+  Measured 2026-08-10, the tree is close — three singletons, seven scene lookups, one gameplay
+  `Instantiate`, two gameplay random draws, seven files reading `Input`, and zero `Time.` in
+  `Sim/`. Netcode model recorded as host-client over Steam's relay, client-authoritative
+  own-movement, and **no library is named** because the work transfers between all of them.
+  Prediction, rollback, lag compensation, dedicated servers, host migration, anti-cheat, custom
+  serialization, interest management and an ECS rewrite are all rejected by name on the file.
+  **`Milestones/5. cancelled/` is now in use**, which forces the open question in this file's own
+  Milestone-files section: the contract says four folders are the set. Either it gains a fifth
+  row or the folder goes — still Zo's call, now with an occupant.
 - 2026-08-10: **M35 gate rewritten off the prefab-generator scope.** Roadmap row and
   Recommended-next no longer describe Build UI Prefabs / `GUILayout` menu / SceneBuilder-
   instantiated UI. Gate is four authored scenes, one Shift theme, generators deleted;

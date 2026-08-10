@@ -46,25 +46,27 @@ namespace Michsky.UI.Shift
             if (firstTime == false && nextPanelAnimator != null && nextPanelAnimator.gameObject.activeInHierarchy)
             {
                 nextPanelAnimator.Play(panelFadeIn);
-                nextButtonAnimator.Play(buttonFadeIn);
+                PlayButton(nextButtonAnimator, buttonFadeIn);
             }
 
             else if (firstTime == false && currentPanelAnimator != null && currentPanelAnimator.gameObject.activeInHierarchy)
             {
                 currentPanelAnimator.Play(panelFadeIn);
-                currentButtonAnimator.Play(buttonFadeIn);
+                PlayButton(currentButtonAnimator, buttonFadeIn);
             }
         }
 
         void Awake()
         {
             currentButton = panels[currentPanelIndex].buttonObject;
-            currentButtonAnimator = currentButton.GetComponent<Animator>();
-            currentButtonAnimator.Play(buttonFadeIn);
+            currentButtonAnimator = currentButton != null ? currentButton.GetComponent<Animator>() : null;
+            PlayButton(currentButtonAnimator, buttonFadeIn);
 
             currentPanel = panels[currentPanelIndex].panelObject;
-            currentPanelAnimator = currentPanel.GetComponent<Animator>();
-            currentPanelAnimator.Play(panelFadeIn);
+            currentPanelAnimator = currentPanel != null ? currentPanel.GetComponent<Animator>() : null;
+            if (currentPanelAnimator != null)
+                currentPanelAnimator.Play(panelFadeIn);
+            ForcePanelVisible(currentPanel);
 
             firstTime = false;
 
@@ -100,11 +102,14 @@ namespace Michsky.UI.Shift
                 nextPanel = panels[currentPanelIndex].panelObject;
                 nextPanel.SetActive(true);
 
-                currentPanelAnimator = currentPanel.GetComponent<Animator>();
-                nextPanelAnimator = nextPanel.GetComponent<Animator>();
+                currentPanelAnimator = currentPanel != null ? currentPanel.GetComponent<Animator>() : null;
+                nextPanelAnimator = nextPanel != null ? nextPanel.GetComponent<Animator>() : null;
 
-                currentPanelAnimator.Play(panelFadeOut);
-                nextPanelAnimator.Play(panelFadeIn);
+                if (currentPanelAnimator != null)
+                    currentPanelAnimator.Play(panelFadeOut);
+                if (nextPanelAnimator != null)
+                    nextPanelAnimator.Play(panelFadeIn);
+                ForcePanelVisible(nextPanel);
 
                 StartCoroutine("DisablePreviousPanel");
 
@@ -112,11 +117,25 @@ namespace Michsky.UI.Shift
                 currentButtonIndex = newPanelIndex;
                 nextButton = panels[currentButtonIndex].buttonObject;
 
-                currentButtonAnimator = currentButton.GetComponent<Animator>();
-                nextButtonAnimator = nextButton.GetComponent<Animator>();
+                currentButtonAnimator = currentButton != null ? currentButton.GetComponent<Animator>() : null;
+                nextButtonAnimator = nextButton != null ? nextButton.GetComponent<Animator>() : null;
 
-                currentButtonAnimator.Play(buttonFadeOut);
-                nextButtonAnimator.Play(buttonFadeIn);
+                PlayButton(currentButtonAnimator, buttonFadeOut);
+                PlayButton(nextButtonAnimator, buttonFadeIn);
+            }
+            else
+            {
+                // Already on this panel (e.g. Home at boot). Default state is Panel Out Helper
+                // (alpha 0) — re-assert visible when tab buttons were removed.
+                var panel = panels[currentPanelIndex].panelObject;
+                if (panel != null)
+                {
+                    panel.SetActive(true);
+                    var anim = panel.GetComponent<Animator>();
+                    if (anim != null && anim.enabled)
+                        anim.Play(panelFadeIn);
+                    ForcePanelVisible(panel);
+                }
             }
         }
 
@@ -131,21 +150,24 @@ namespace Michsky.UI.Shift
                 nextButton = panels[currentButtonIndex + 1].buttonObject;
                 currentPanel.gameObject.SetActive(true);
 
-                currentPanelAnimator = currentPanel.GetComponent<Animator>();
-                currentButtonAnimator = currentButton.GetComponent<Animator>();
+                currentPanelAnimator = currentPanel != null ? currentPanel.GetComponent<Animator>() : null;
+                currentButtonAnimator = currentButton != null ? currentButton.GetComponent<Animator>() : null;
 
-                currentButtonAnimator.Play(buttonFadeNormal);
-                currentPanelAnimator.Play(panelFadeOut);
+                PlayButton(currentButtonAnimator, buttonFadeNormal);
+                if (currentPanelAnimator != null)
+                    currentPanelAnimator.Play(panelFadeOut);
 
                 currentPanelIndex += 1;
                 currentButtonIndex += 1;
                 nextPanel = panels[currentPanelIndex].panelObject;
                 nextPanel.gameObject.SetActive(true);
 
-                nextPanelAnimator = nextPanel.GetComponent<Animator>();
-                nextButtonAnimator = nextButton.GetComponent<Animator>();
-                nextPanelAnimator.Play(panelFadeIn);
-                nextButtonAnimator.Play(buttonFadeIn);
+                nextPanelAnimator = nextPanel != null ? nextPanel.GetComponent<Animator>() : null;
+                nextButtonAnimator = nextButton != null ? nextButton.GetComponent<Animator>() : null;
+                if (nextPanelAnimator != null)
+                    nextPanelAnimator.Play(panelFadeIn);
+                PlayButton(nextButtonAnimator, buttonFadeIn);
+                ForcePanelVisible(nextPanel);
             }
         }
 
@@ -160,21 +182,24 @@ namespace Michsky.UI.Shift
                 nextButton = panels[currentButtonIndex - 1].buttonObject;
                 currentPanel.gameObject.SetActive(true);
 
-                currentPanelAnimator = currentPanel.GetComponent<Animator>();
-                currentButtonAnimator = currentButton.GetComponent<Animator>();
+                currentPanelAnimator = currentPanel != null ? currentPanel.GetComponent<Animator>() : null;
+                currentButtonAnimator = currentButton != null ? currentButton.GetComponent<Animator>() : null;
 
-                currentButtonAnimator.Play(buttonFadeNormal);
-                currentPanelAnimator.Play(panelFadeOut);
+                PlayButton(currentButtonAnimator, buttonFadeNormal);
+                if (currentPanelAnimator != null)
+                    currentPanelAnimator.Play(panelFadeOut);
 
                 currentPanelIndex -= 1;
                 currentButtonIndex -= 1;
                 nextPanel = panels[currentPanelIndex].panelObject;
                 nextPanel.gameObject.SetActive(true);
 
-                nextPanelAnimator = nextPanel.GetComponent<Animator>();
-                nextButtonAnimator = nextButton.GetComponent<Animator>();
-                nextPanelAnimator.Play(panelFadeIn);
-                nextButtonAnimator.Play(buttonFadeIn);
+                nextPanelAnimator = nextPanel != null ? nextPanel.GetComponent<Animator>() : null;
+                nextButtonAnimator = nextButton != null ? nextButton.GetComponent<Animator>() : null;
+                if (nextPanelAnimator != null)
+                    nextPanelAnimator.Play(panelFadeIn);
+                PlayButton(nextButtonAnimator, buttonFadeIn);
+                ForcePanelVisible(nextPanel);
             }
         }
 
@@ -186,8 +211,27 @@ namespace Michsky.UI.Shift
                 if (i == currentPanelIndex)
                     continue;
 
-                panels[i].panelObject.gameObject.SetActive(false);
+                if (panels[i].panelObject != null)
+                    panels[i].panelObject.gameObject.SetActive(false);
             }
+        }
+
+        static void PlayButton(Animator anim, string state)
+        {
+            if (anim != null && anim.enabled)
+                anim.Play(state);
+        }
+
+        /// <summary>Panel controllers default to Out Helper (alpha 0). When tab buttons are
+        /// absent, Awake used to NRE before Panel In — leave the CanvasGroup usable.</summary>
+        static void ForcePanelVisible(GameObject panel)
+        {
+            if (panel == null) return;
+            var group = panel.GetComponent<CanvasGroup>();
+            if (group == null) return;
+            group.alpha = 1f;
+            group.interactable = true;
+            group.blocksRaycasts = true;
         }
     }
 }

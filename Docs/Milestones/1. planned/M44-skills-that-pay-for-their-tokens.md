@@ -183,14 +183,40 @@ been thought about (`../../Architecture/README.md`).
       timestamp with a `.meta`, committed into the source tree.
     - **A new menu row names the row it replaces** (`../../Working-Rules.md`). A milestone-named
       submenu is a namespace that outlives its reason.
-21. **`gkb-brainstorm`** — moving an idea from interesting to cuttable:
+21. **`gkb-development` carries repair discipline**, because the expensive failure is not the
+    first wrong fix, it is the four turns after it. Every rule below is drawn from one logged
+    exchange on 2026-08-10 that fixed a Splash bug across five turns and finished by being told
+    the work was slop:
+    - **Repair what exists. Never rebuild it at runtime.** The fix for a scene that looks wrong
+      is an edit to that scene, not a script that reconstructs it on `Awake`. In that exchange
+      the agent made Splash *rebuild the MainMenu stack at runtime* rather than reuse the
+      objects already in the scene. **This is the same failure as building UI in code**, and it
+      is the single most costly habit in this project's history.
+    - **Name what was working before, and check it still works.** The change lost the
+      background music and replaced a Rajdhani TMP title with `OnGUI`. Neither was reported
+      broken. **A fix that quietly removes a shipped behaviour is a net loss even when the
+      original bug is closed.**
+    - **One cause, one change.** That bug had one cause — `LoadSceneAsync` activating in
+      `Awake`, proved from the log at 72 ms. The turn shipped four changes: no-preload, an
+      `OnGUI` title, input arming, and a delta clamp. **Three of them were unexplained**, and
+      each is a place a new defect can hide.
+    - **A workaround that bypasses the system is a defect with a button on it**
+      (`../../Working-Rules.md`). Drawing the title in `OnGUI` because it "cannot be blanked by
+      Canvas/TMP" is not a fix for the Canvas being blank; it is a way to stop looking at it.
+    - **Do not report as verified what you did not observe.** "You should see the title fade in"
+      is a prediction. **State what changed and what to look for; never assert the outcome.**
+      `AGENTS.md` already forbids reporting work verified on a suite that was not run — this is
+      the same rule for anything only a play session can confirm.
+    - **Change only what was asked.** Behaviour nobody reported broken is not in scope, and
+      swapping a design decision while fixing a bug hides the swap inside the fix.
+22. **`gkb-brainstorm`** — moving an idea from interesting to cuttable:
     - The entry question is **loop or arc**, and the second is **what observation would kill
       this**. An entry with neither is not yet a brainstorm entry.
     - The graduation test is unchanged: an entry graduates when its acceptance criteria can be
       written, and the entry is deleted when a milestone replaces it.
     - **Check `../../Decisions.md` before proposing.** Cut features are recorded by name
       precisely so they are not re-proposed.
-22. **`gkb-strategy`** — ordering and lane balance:
+23. **`gkb-strategy`** — ordering and lane balance:
     - Three lanes, queue caps, and the rule that a lane may not run ahead of the lane feeding
       it. **The cap on unbuilt planning is the point** — the previous project's postmortem named
       documentation as productive procrastination.

@@ -127,8 +127,31 @@ namespace GatekeeperBastion.Game.Ui
         {
             HideModal(_overwriteModal);
             HideModal(_exitModal);
+            RevealMainPanelsRoot();
             OpenPanel(HomePanel);
             FocusDefault();
+        }
+
+        /// <summary>Shift Main Panel Root defaults to Invisible (alpha 0). SplashScreenManager
+        /// used to Play("Start"); without it the Home buttons never appear. Scene disables
+        /// that Animator; this still Plays Start / forces the CanvasGroup if it is on.</summary>
+        static void RevealMainPanelsRoot()
+        {
+            var root = GameObject.Find("Main Panels");
+            if (root == null) return;
+
+            var anim = root.GetComponent<Animator>();
+            if (anim != null && anim.enabled)
+            {
+                anim.Play("Start");
+                return;
+            }
+
+            var group = root.GetComponent<CanvasGroup>();
+            if (group == null) return;
+            group.alpha = 1f;
+            group.interactable = true;
+            group.blocksRaycasts = true;
         }
 
         /// <summary>Opens the authored <c>Confirm Overwrite</c> modal (criterion 11). Its

@@ -21,6 +21,10 @@ namespace GatekeeperBastion.Game
         {
             SceneFlow.EnsureEventSystem();
             AudioBuses.ApplyFromSettings();
+
+            // Prefer the DDOL host from Splash. Only adopt this scene's source when cold-starting MainMenu.
+            FrontEndMusic.CaptureOrJoin(FindSceneBackgroundMusic());
+
             if (_view == null)
             {
                 Log.Error(Tag,
@@ -64,6 +68,7 @@ namespace GatekeeperBastion.Game
             if (_loading || !GameSession.HasSave) return;
             _loading = true;
             GameSession.ContinueGame();
+            FrontEndMusic.Stop();
             if (!SceneFlow.LoadShip())
                 _loading = false;
         }
@@ -83,6 +88,7 @@ namespace GatekeeperBastion.Game
             if (_loading) return;
             _loading = true;
             GameSession.StartNew();
+            FrontEndMusic.Stop();
             if (!SceneFlow.LoadShip())
                 _loading = false;
         }
@@ -97,6 +103,24 @@ namespace GatekeeperBastion.Game
 #else
             Application.Quit();
 #endif
+        }
+
+        /// <summary>Scene-local Background Music only — never the DDOL host (Find is
+        /// ambiguous when both exist and would hand CaptureOrJoin the wrong source).</summary>
+        static AudioSource FindSceneBackgroundMusic()
+        {
+            var all = Object.FindObjectsByType<AudioSource>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < all.Length; i++)
+            {
+                var src = all[i];
+                if (src == null || src.gameObject.name != "Background Music") continue;
+                string sceneName = src.gameObject.scene.name;
+                if (string.IsNullOrEmpty(sceneName) || sceneName == "DontDestroyOnLoad")
+                    continue;
+                return src;
+            }
+            return null;
         }
     }
 }

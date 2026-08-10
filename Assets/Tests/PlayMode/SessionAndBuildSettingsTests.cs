@@ -110,14 +110,12 @@ namespace GatekeeperBastion.PlayTests
                     FindObjectsInactive.Include),
                 "Splash must NOT host MainMenuController — the menu lives in MainMenu.unity.");
 
-            // Drive the any-key skip (Input cannot be injected). This also drains the parked
-            // async MainMenu load — a held allowSceneActivation=false op would otherwise block
-            // every later scene load in the suite.
+            // Input cannot be injected — Skip() is the press-any-key path.
             splash.Skip();
             yield return PlayTestUtil.WaitUntil(
                 () => SceneFlow.ActiveSceneName == SceneFlow.MainMenu, 10f);
             Assert.AreEqual(SceneFlow.MainMenu, SceneFlow.ActiveSceneName,
-                "Skipping the splash must land in MainMenu (criterion 1).");
+                "Press-any-key (Skip) must land in MainMenu.");
         }
 
         [UnityTest]

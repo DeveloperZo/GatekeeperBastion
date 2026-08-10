@@ -50,6 +50,21 @@ re-litigating a cut costs more than the cut saved.
   codenames (`PRI-C`, `UTL-B`) until play earns them a name. A name given early has to be
   defended later and fixes the fiction before the mechanic has earned one.
 
+- **FishNet is the networking library** (2026-08-10). Chosen for a solo dev shipping small co-op
+  on Steam: no CCU meter and no metered service path that opens up later, Unity 6 fully
+  supported, and — the deciding detail — **its Steam transports (`FishySteamworks`,
+  `FishyFacepunch`) are maintained by the netcode's own author**, where NGO's community Facepunch
+  transport still pins a 2020 build of Facepunch.Steamworks. Client-side prediction is included
+  if it is ever wanted, so there is no library switch waiting later.
+  **Runner-up: Netcode for GameObjects**, and it would not be a mistake — Lethal Company is a
+  solo-developed Unity 4-player PvE co-op game that sold 10M+ copies on NGO with host authority.
+  Take NGO instead if documentation and tutorial coverage matter more than transport ownership.
+  **Rejected: Photon Fusion and Quantum.** Both meter concurrent users, and below 500 CCU the cap
+  is hard — real players get disconnected until you pay. Quantum additionally mandates
+  deterministic fixed-point simulation, which is the constraint this project does not have.
+  **Rejected: PUN2**, in maintenance mode with no further feature updates.
+  Nothing in M45 depends on this choice; the retrofit transfers between all of them.
+
 ## Deferred, with intent
 
 - **Deliver-loot-before-the-run-ends.** The *spirit* of Gears of War's active

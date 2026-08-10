@@ -49,11 +49,11 @@ hand.
 2. **M36 — The HUD is the tether.** New. The distinct-feel pass: one readout shaped like the
    game's own premise, Prep and Assault as visibly different instruments, and a hit on the
    door that lands in peripheral vision. Depends on M35.
-3. **M39 — The seam becomes a boundary.** The architecture tent pole, and the only part of it
-   that depends on nothing — not on M35, not on M40. `Sim/` becomes its own assembly with
-   `noEngineReferences: true`, so the one structural rule this project has stops being held by
-   memory. Audited 2026-08-09: `Sim/` is genuinely engine-free, and the whole cost of the
-   split is **one** live call site.
+3. **M45 — Two Runs in one process.** The co-op pre-work, done while the game is still
+   single-player: no singleton holding Run or player state, one spawn chokepoint, input as a
+   struct, seeded randomness. Depends on nothing. It replaces M39, whose premise did not
+   survive research — strict engine-freedom is load-bearing only for deterministic lockstep,
+   which this project is not doing.
 4. **Play close-outs** — M32 criterion 7 (bore kills), M26 Path 2 / ability, M31 pin
    playthrough; see `GatekeeperZo Notes/verification.md`.
 5. **M40 then M41** — the rules made decidable, then checked. M40 is documents only; M41 is
@@ -103,12 +103,13 @@ this table — see the change log.
 | M36 | The HUD is the tether | later | One readout carries Hatch integrity, salvage and bodies at the door; Prep and Assault identifiable from one frame with text removed; a Hatch hit is visible in peripheral vision | [`1. planned/M36`](Milestones/1.%20planned/M36-the-hud-is-the-tether.md) |
 | M37 | Where they die | later | Every kill line carries `hatchDist=` and `spawnDist=` as raw metres, no formula in the game; `wave-report` prints median distance per Wave **per Gatekeeper kind** | [`1. planned/M37`](Milestones/1.%20planned/M37-where-they-die.md) |
 | M38 | A dashboard you can open | completed, Aug 2026 | `Docs/dashboard.html` parses logs in-browser after you choose Logs/; PlayMode by `stage=playmode`; no `legacy` spend; era curves | [`3. completed/M38`](Milestones/3.%20completed/M38-a-dashboard-you-can-open.md) |
-| M39 | The seam becomes a boundary | later | `Sim/` is its own assembly with `noEngineReferences: true` and all four consumers reference it; `Sim/` logs through a Sim-declared sink; a seeded `using UnityEngine;` in `Sim/` is `CS0246`; 266 harness / 282 Unity tests unchanged | [`1. planned/M39`](Milestones/1.%20planned/M39-the-seam-becomes-a-boundary.md) |
+| M39 | The seam becomes a boundary | **cancelled, Aug 2026** | Premised on `noEngineReferences: true`, which is load-bearing only for deterministic lockstep. Replaced by M45 | [`5. cancelled/M39`](Milestones/5.%20cancelled/M39-the-seam-becomes-a-boundary.md) |
 | M40 | The rules become measurable | later | One statement of the counted-line unit, linked from everywhere else; `Editor/` has a number; the two grandfathered singletons named by type rather than counted; `5-Audit` corrected; **no file under `Assets/` edited** | [`1. planned/M40`](Milestones/1.%20planned/M40-the-rules-become-measurable.md) |
 | M41 | The rules get a check | later | `Tools/lint-arch/run.sh` reads fenced rules from `Docs/Architecture/`, runs from `verify`, holds no literal from a fence and exits 2 on a deleted one; every row reproduces its measured baseline **and** catches a seeded violation | [`1. planned/M41`](Milestones/1.%20planned/M41-the-rules-get-a-check.md) |
 | M42 | One mechanism per job | later | One save-migration path (`grep "rawVersion >="` empty); falloff, repair and slot-select each one copy; `SalvagePerSecond`, `WaveEmit.Pending`, `abilityDial`, `ApplyRepair` deleted; kill lines quote the banked amount; `LossReport`→`RunReport`; 36/36 R5 labels; one `Game/` namespace; 265 harness / 282 Unity green | [`1. planned/M42`](Milestones/1.%20planned/M42-one-mechanism-per-job.md) |
 | M43 | A repository that reads as clean | later | `git status` on an untouched checkout — **and on a fresh clone** — prints `nothing to commit, working tree clean`; one root commit; binaries in LFS and no Unity YAML in it; `Tools/verify/run.sh` unchanged | [`1. planned/M43`](Milestones/1.%20planned/M43-a-repository-that-reads-as-clean.md) |
 | M44 | Skills that pay for their tokens | later | Five skills at `.claude/skills/`, portable frontmatter, bodies under 500 lines; **each ships only on a measured with/without pass-rate delta and is deleted at parity**; `AGENTS.md` under 200 lines; always-on token count recorded before and after | [`1. planned/M44`](Milestones/1.%20planned/M44-skills-that-pay-for-their-tokens.md) |
+| M45 | Two Runs in one process | later | Two independent Run simulations advance in one process without touching each other, proved by an EditMode test that fails when a static is seeded back; no netcode library named anywhere in it | [`1. planned/M45`](Milestones/1.%20planned/M45-two-runs-in-one-process.md) |
 
 ## Strategy
 
