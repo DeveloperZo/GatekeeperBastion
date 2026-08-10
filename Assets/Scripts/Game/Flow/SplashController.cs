@@ -1,187 +1,108 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Util;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER: legacy boot splash — logo fade, load-gated press-any-key, then
-    /// async load of <see cref="SceneFlow.FrontEndScene"/>. No-op when
-    /// <see cref="MainMenuController"/> is already in the scene (Splash IS the menu).</summary>
+    /// <summary>LOCAL-OWNER: the boot splash (M35 criteria 1-2). Fades the title card in,
+    /// holds, fades out, and lands in MainMenu with no input required — total under 4 s.
+    /// Any key or click after the first displayed frame skips straight to MainMenu.
+    /// MainMenu is async-loaded behind the card so the skip is instant.</summary>
     public sealed class SplashController : MonoBehaviour
     {
         const string Tag = "Splash";
-        const float LogoFadeSeconds = 0.8f;
-        const float BreathPeriod = 1.2f;
-        /// <summary>Criterion 15: boot to menu under 10s.</summary>
-        const float LoadTimeoutSeconds = 8f;
-        /// <summary>Unity stops async progress at 0.9 while allowSceneActivation is false.</summary>
+        // 0.4 in + 1.6 hold + 0.5 out = 2.5 s hands-off, inside criterion 1's 4 s budget
+        // (fade-in also inside its 0.5 s cap).
+        const float FadeInSeconds = 0.4f;
+        const float HoldSeconds = 1.6f;
+        const float FadeOutSeconds = 0.5f;
+        /// <summary>Unity parks async progress at 0.9 while allowSceneActivation is false.</summary>
         const float AsyncReadyProgress = 0.9f;
 
-        SplashView _view;
+        [SerializeField] CanvasGroup _fadeGroup;
+
         AsyncOperation _load;
-        bool _inert;
-        bool _failed;
-        bool _skip;
         bool _activated;
-        float _logoT;
+        bool _failed;
         float _elapsed;
+        int _framesSeen;
 
         void Awake()
         {
-            // Leftover Boot component on a Splash that already hosts the menu — do not load.
-            if (FindFirstObjectByType<MainMenuController>(FindObjectsInactive.Include) != null)
-            {
-                _inert = true;
-                return;
-            }
-
-            SceneFlow.EnsureEventSystem();
-            SceneFlow.RepairCanvas(gameObject);
-            AudioBuses.ApplyFromSettings();
-            _view = GetComponentInChildren<SplashView>(true);
-            _view?.EnsureBuilt();
-            _view?.SetPressVisible(false);
-            if (_view != null && _view.LogoGroup != null)
-                _view.LogoGroup.alpha = 0f;
-
-            BeginAsyncMainMenu();
-        }
-
-        void OnEnable()
-        {
-            if (_inert) return;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
-        }
+            if (_fadeGroup == null)
+                _fadeGroup = GetComponentInChildren<CanvasGroup>(true);
+            if (_fadeGroup != null) _fadeGroup.alpha = 0f;
 
-        void BeginAsyncMainMenu()
-        {
-            // Legacy loader path only (no MainMenuController). FrontEndScene is Splash.
-            string target = SceneFlow.FrontEndScene;
-            if (!SceneFlow.CanLoad(target))
+            if (!SceneFlow.CanLoad(SceneFlow.MainMenu))
             {
-                FailLoad($"{target} is not in the build settings");
+                _failed = true;
+                Log.Error(Tag, $"{SceneFlow.MainMenu} is not in the build settings — " +
+                               "run GatekeeperBastion > Build All Scenes.");
                 return;
             }
 
-            _load = SceneManager.LoadSceneAsync(target);
+            _load = SceneManager.LoadSceneAsync(SceneFlow.MainMenu);
             if (_load == null)
             {
-                FailLoad($"LoadSceneAsync({target}) returned null");
+                _failed = true;
+                Log.Error(Tag, $"LoadSceneAsync({SceneFlow.MainMenu}) returned null.");
                 return;
             }
             _load.allowSceneActivation = false;
         }
 
-        void FailLoad(string reason)
-        {
-            _failed = true;
-            Log.Error(Tag, reason + " — run GatekeeperBastion > Build All Scenes.");
-            _view?.SetFailed(true);
-        }
-
         void Update()
         {
-            if (_inert || _activated) return;
+            if (_activated) return;
 
             _elapsed += Time.unscaledDeltaTime;
-            if (ReadAdvanceInput()) _skip = true;
+            bool skip = _framesSeen > 0 && ReadAnyInput();
+            _framesSeen++;
 
-            TickLogoFade();
+            if (_fadeGroup != null)
+                _fadeGroup.alpha = AlphaAt(_elapsed);
 
-            if (_failed)
-            {
-                // Failed begin (_load null): any input retries via SceneFlow sync load.
-                if (_skip) ActivateSyncFallback();
-                return;
-            }
-
-            bool loadReady = _load != null && _load.progress >= AsyncReadyProgress - 0.001f;
-            if (loadReady)
-            {
-                _view?.SetSubtitle("press any key");
-                _view?.SetPressVisible(true);
-                TickBreath(true);
-            }
-            else if (_skip)
-            {
-                _view?.SetSubtitle("loading…");
-                _view?.SetPressVisible(true);
-            }
-
-            if (loadReady && _skip)
-            {
-                ActivateAsync();
-                return;
-            }
-
-            // Absolute boot budget — also covers "load ready but Input never fires"
-            // (Editor Game-view focus / dual-EventSystem log storms).
-            if (_elapsed >= LoadTimeoutSeconds)
-            {
-                Log.Warn(Tag,
-                    $"Boot budget {_elapsed:0.0}s reached (loadReady={loadReady}, progress={(_load != null ? _load.progress : -1f):0.###}) — activating front end.");
-                if (_load != null)
-                {
-                    _activated = true;
-                    _load.allowSceneActivation = true;
-                }
-                else
-                    ActivateSyncFallback();
-            }
+            if (skip || _elapsed >= FadeInSeconds + HoldSeconds + FadeOutSeconds)
+                Advance();
         }
 
-        static bool ReadAdvanceInput()
+        /// <summary>Fade in, hold, fade out — alpha over unscaled seconds since boot.</summary>
+        static float AlphaAt(float t)
         {
-            if (Input.anyKeyDown) return true;
-            if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)) return true;
-            return false;
+            if (t < FadeInSeconds) return Mathf.Clamp01(t / FadeInSeconds);
+            t -= FadeInSeconds;
+            if (t < HoldSeconds) return 1f;
+            t -= HoldSeconds;
+            return Mathf.Clamp01(1f - t / FadeOutSeconds);
         }
 
-        void ActivateAsync()
-        {
-            if (_activated || _load == null) return;
-            _activated = true;
-            _load.allowSceneActivation = true;
-        }
+        static bool ReadAnyInput() =>
+            Input.anyKeyDown || Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1);
 
-        void ActivateSyncFallback()
+        /// <summary>The any-key skip path, callable by tests (Input cannot be injected):
+        /// activates the parked MainMenu load immediately.</summary>
+        public void Skip() => Advance();
+
+        void Advance()
         {
             if (_activated) return;
-            _activated = true;
-            // A held LoadSceneAsync with allowSceneActivation=false stalls the load queue.
-            // Prefer finishing that op over a second sync LoadScene of the same target.
             if (_load != null)
             {
+                // allowSceneActivation completes the load whenever it is ready; no wait here.
+                _activated = true;
                 _load.allowSceneActivation = true;
                 return;
             }
-            if (!SceneFlow.LoadMainMenu())
+            // Failed Awake path: retry the sync load so a fixed build-settings state recovers.
+            if (SceneFlow.LoadMainMenu())
+                _activated = true;
+            else if (!_failed)
             {
                 _failed = true;
-                _activated = false;
-                _view?.SetFailed(true);
+                Log.Error(Tag, "Could not load MainMenu from the splash.");
             }
-        }
-
-        void TickLogoFade()
-        {
-            if (_view == null || _view.LogoGroup == null) return;
-            if (_skip && _view.LogoGroup.alpha < 1f)
-            {
-                _view.LogoGroup.alpha = 1f;
-                return;
-            }
-            _logoT += Time.unscaledDeltaTime;
-            _view.LogoGroup.alpha = Mathf.Clamp01(_logoT / LogoFadeSeconds);
-        }
-
-        void TickBreath(bool visible)
-        {
-            if (!visible || _view == null || _view.PressGroup == null) return;
-            float wave = 0.55f + 0.45f * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * (Mathf.PI * 2f / BreathPeriod)));
-            _view.PressGroup.alpha = wave;
         }
     }
 }

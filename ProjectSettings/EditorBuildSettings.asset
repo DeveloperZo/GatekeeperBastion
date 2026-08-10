@@ -7,6 +7,9 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/Scenes/Splash.unity
+    guid: 1329b234509c9bd4d936b374c704fb43
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
     guid: 15960d043343be442b17172954dd9602
   - enabled: 1
     path: Assets/Scenes/Ship.unity
