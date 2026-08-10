@@ -17,10 +17,13 @@ namespace GatekeeperBastion.Game
     {
         const string Tag = "SceneFlow";
 
-        /// <summary>Boot splash scene name.</summary>
+        /// <summary>Legacy boot splash scene name. M35 moved the splash into Shift's
+        /// <c>Splash Screen</c> branch inside the Ship scene's Canvas; the scene file survives
+        /// only so an existing build setting cannot dangle.</summary>
         public const string Splash = "Splash";
 
-        /// <summary>Main menu scene name.</summary>
+        /// <summary>Legacy main menu scene name. See <see cref="Splash"/> — the menu is now the
+        /// Canvas copied out of <c>Main Menu (Desktop).unity</c> and living in the Ship scene.</summary>
         public const string MainMenu = "MainMenu";
 
         /// <summary>Walkable ship-hub scene name
@@ -52,12 +55,18 @@ namespace GatekeeperBastion.Game
         /// direct-play fallback, so a renamed or duplicated combat scene still fires.</remarks>
         public static bool InCombatScene => ActiveSceneName == Bastion;
 
+        /// <summary>The scene that shows the menu: the standalone MainMenu scene where one is
+        /// still registered, otherwise Ship.</summary>
+        public static string FrontEndScene => CanLoad(MainMenu) ? MainMenu : Ship;
+
         /// <summary>True when the named scene is registered in the build settings and loadable.</summary>
         public static bool CanLoad(string sceneName) =>
             !string.IsNullOrEmpty(sceneName) && Application.CanStreamedLevelBeLoaded(sceneName);
 
-        /// <summary>Load the main menu scene. Returns false (and logs an error) if it cannot load.</summary>
-        public static bool LoadMainMenu() => Load(MainMenu);
+        /// <summary>Go to the front end. Prefers the standalone MainMenu scene while it is still
+        /// registered; otherwise loads Ship, which is where M35 put the menu Canvas. Without this
+        /// fallback, deregistering MainMenu strands every "back to menu" caller.</summary>
+        public static bool LoadMainMenu() => CanLoad(MainMenu) ? Load(MainMenu) : Load(Ship);
 
         /// <summary>Load the ship hub scene. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadShip() => Load(Ship);
@@ -99,6 +108,17 @@ namespace GatekeeperBastion.Game
 
             if (keep.GetComponent<StandaloneInputModule>() == null)
                 keep.gameObject.AddComponent<StandaloneInputModule>();
+        }
+
+        /// <summary>Rescue a Canvas that would render nothing. Shift's Main Menu Canvas is
+        /// Screen Space – Camera on purpose, so this only repairs the two always-broken states —
+        /// see <see cref="Ui.UiCanvasGuard"/>.</summary>
+        public static void RepairCanvas(GameObject root)
+        {
+            if (root == null) return;
+            var canvas = root.GetComponent<Canvas>();
+            if (canvas == null) canvas = root.GetComponentInChildren<Canvas>(true);
+            Ui.UiCanvasGuard.RepairIfBroken(canvas != null ? canvas.gameObject : root);
         }
 
         static bool Load(string sceneName)

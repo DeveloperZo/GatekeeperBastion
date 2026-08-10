@@ -1,32 +1,50 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GatekeeperBastion.Game.Ui;
 using TMPro;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Bottom-left shortcut list for Ship (and shared layout constants with Bastion).</summary>
+    /// <summary>Binds Shift's <c>Shortcut Keys</c> strip to the lines <see cref="ShortcutPanel"/>
+    /// builds. The strip sizes itself from its authored layout group and fitter — nothing here
+    /// writes a RectTransform (M35 criterion 6).</summary>
     public sealed class ShortcutPanelView : MonoBehaviour
     {
-        const float LineHeight = 25f;
+        const string StripName = "Shortcut Keys";
 
         [SerializeField] GameObject _panel;
         [SerializeField] TextMeshProUGUI _collapsedTip;
         [SerializeField] RectTransform _linesRoot;
         [SerializeField] TextMeshProUGUI[] _linePool;
 
-        /// <summary>authored prefab required — activates serialized children only.</summary>
+        bool _resolved;
+
+        /// <summary>Resolves the authored strip; the pool is whatever labels it already holds.</summary>
         public void EnsureBuilt()
         {
-            if (_panel != null) _panel.SetActive(true);
+            if (!_resolved)
+            {
+                _resolved = true;
+                if (_panel == null)
+                {
+                    var strip = UiBind.Find(transform, StripName);
+                    if (strip != null) _panel = strip.gameObject;
+                }
+                if (_linesRoot == null && _panel != null)
+                    _linesRoot = _panel.transform as RectTransform;
+                if ((_linePool == null || _linePool.Length == 0) && _linesRoot != null)
+                    _linePool = _linesRoot.GetComponentsInChildren<TextMeshProUGUI>(true);
+            }
+            UiBind.Show(_panel, true);
         }
 
         public void SetCollapsed(bool collapsed)
         {
             EnsureBuilt();
-            if (_collapsedTip != null) _collapsedTip.gameObject.SetActive(collapsed);
-            if (_linesRoot != null) _linesRoot.gameObject.SetActive(!collapsed);
+            UiBind.Show(_collapsedTip, collapsed);
+            UiBind.Show(_linesRoot, !collapsed);
         }
 
         public void SetLines(IEnumerable<string> lines)
@@ -37,20 +55,9 @@ namespace GatekeeperBastion.Game
             string[] arr = lines == null
                 ? Array.Empty<string>()
                 : lines as string[] ?? lines.ToArray();
-            int count = arr.Length;
 
             for (int i = 0; i < _linePool.Length; i++)
-            {
-                if (_linePool[i] == null) continue;
-                bool show = i < count;
-                _linePool[i].gameObject.SetActive(show);
-                if (show) _linePool[i].text = arr[i];
-            }
-
-            float height = 25f + Mathf.Min(count, _linePool.Length) * LineHeight + 25f;
-            var rt = GetComponent<RectTransform>();
-            if (rt != null)
-                rt.sizeDelta = new Vector2(rt.sizeDelta.x, Mathf.Max(height, 50f));
+                UiBind.SetTextOrHide(_linePool[i], i < arr.Length ? arr[i] : null);
         }
     }
 }

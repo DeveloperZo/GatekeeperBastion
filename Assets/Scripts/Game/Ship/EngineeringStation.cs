@@ -13,21 +13,21 @@ namespace GatekeeperBastion.Game
         {
             view.AddLabel("Hatch defenses — permanent upgrades (cost doubles per level)", centered: true);
             view.AddLabel("Applied to the hatch on your next embark.", centered: true);
-            view.AddSpacer(10f);
+            view.AddSpacer();
             UpgradeRow(view, UpgradeTrack.HatchArmor, "Hatch Armor",
                 l => $"{MetaUpgrades.HatchHp(l):0} HP");
 
-            view.AddSpacer(12f);
+            view.AddSpacer();
             view.AddLabel("Equipment — bring it or the Hatch stays whatever the fight left it",
                 centered: true);
-            view.AddSpacer(6f);
+            view.AddSpacer();
             DrawEquipmentSlotRow(view, m);
             if (m.EquipmentSlotPurchased)
                 DrawEquipmentRow(view, m, EquipmentId.RepairRig);
 
-            view.AddSpacer(12f);
+            view.AddSpacer();
             view.AddLabel("Payloads — one in the drone bay per Run", centered: true);
-            view.AddSpacer(6f);
+            view.AddSpacer();
             DrawPayloadRow(view, m, PayloadId.Decoy);
             string bay = m.EquippedDrone == PayloadId.None
                 ? "bay empty"

@@ -14,7 +14,7 @@ namespace GatekeeperBastion.Game
             view.AddLabel("Player attributes — permanent upgrades (cost doubles per level)", centered: true);
             view.AddLabel("These are about YOU, not the ship. No death required to buy any of them.",
                 centered: true);
-            view.AddSpacer(10f);
+            view.AddSpacer();
 
             UpgradeRow(view, UpgradeTrack.Vitality, "Vitality",
                 l => $"{MetaUpgrades.PlayerMaxHp(l):0} max HP");
@@ -25,7 +25,7 @@ namespace GatekeeperBastion.Game
             UpgradeRow(view, UpgradeTrack.Luck, "Luck",
                 l => $"{MetaUpgrades.CritChance(l) * 100f:0.#}% crit");
 
-            view.AddSpacer(10f);
+            view.AddSpacer();
             view.AddLabel(
                 $"Sprint: hold SHIFT while moving. {MetaUpgrades.StaminaMax(m.StaminaLevel):0} stamina, " +
                 $"{FirstPersonController.SprintDrainPerSecond:0}/s to run, " +

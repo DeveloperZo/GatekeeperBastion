@@ -40,9 +40,9 @@ namespace GatekeeperBastion.Game
 
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
-            view.AddLabel($"Bastion {SceneFlow.BastionName}", centered: true, warning: false);
+            view.AddLabel($"Bastion {SceneFlow.BastionName}", centered: true);
             view.AddLabel(PremiseBrief, centered: true);
-            view.AddSpacer(8f);
+            view.AddSpacer();
 
             int deepest = m.DeepestWaveReached < 1 ? 1 : m.DeepestWaveReached;
             if (deepest > WaveDirector.MaxWaves) deepest = WaveDirector.MaxWaves;
@@ -56,27 +56,27 @@ namespace GatekeeperBastion.Game
                 view.AddLabel("normal run — Prep between every wave");
 
             view.BeginRow();
-            view.AddButton("◀", () => _startWave--, 48f, 36f, _startWave > 1);
-            view.AddRowLabel($"  {_startWave}  ", 60f);
-            view.AddButton("▶", () => _startWave++, 48f, 36f, _startWave < deepest);
+            view.AddButton("◀", () => _startWave--, _startWave > 1);
+            view.AddRowLabel($"  {_startWave}  ");
+            view.AddButton("▶", () => _startWave++, _startWave < deepest);
             view.EndRow();
-            view.AddSpacer(12f);
+            view.AddSpacer();
 
             if (!m.OwnsAnyWeapon)
             {
                 view.AddLabel("NO WEAPON — you will be defenseless.", warning: true);
                 view.AddLabel("Buy the free MK-1 at the ARMORY first.", centered: true);
-                view.AddSpacer(10f);
+                view.AddSpacer();
             }
             if (!m.HasRepairRigEquipped)
             {
                 view.AddLabel("NO REPAIR RIG — the Hatch cannot be fixed this Run.", warning: true);
                 view.AddLabel("Buy the equipment slot and Repair Rig at FABRICATION.", centered: true);
-                view.AddSpacer(10f);
+                view.AddSpacer();
             }
 
             bool warned = !m.OwnsAnyWeapon || !m.HasRepairRigEquipped;
-            view.AddButton(warned ? "EMBARK ANYWAY" : "EMBARK", () => TryEmbark(m), 300f, 48f);
+            view.AddButton(warned ? "EMBARK ANYWAY" : "EMBARK", () => TryEmbark(m));
 
             if (_loadFailed)
                 view.AddLabel(

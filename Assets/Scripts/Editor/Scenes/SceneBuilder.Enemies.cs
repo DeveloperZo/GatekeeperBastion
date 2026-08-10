@@ -84,7 +84,7 @@ namespace GatekeeperBastion.EditorTools
             go.AddComponent<T>();
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
             return prefab;
         }
     }

@@ -46,16 +46,16 @@ namespace GatekeeperBastion.Game
 
             view.BeginRow();
             view.AddButton(_viewSlot == WeaponSlot.Primary ? "[ PRIMARY ]" : "  Primary  ",
-                () => _viewSlot = WeaponSlot.Primary, 140f, 28f);
+                () => _viewSlot = WeaponSlot.Primary);
             view.AddButton(_viewSlot == WeaponSlot.Secondary ? "[ SECONDARY ]" : "  Secondary  ",
-                () => _viewSlot = WeaponSlot.Secondary, 160f, 28f);
+                () => _viewSlot = WeaponSlot.Secondary);
             view.EndRow();
-            view.AddSpacer(6f);
+            view.AddSpacer();
 
             WeaponId equipped = m.Equipped(_viewSlot);
             if (equipped == WeaponId.None)
             {
-                view.AddLabel($"{_viewSlot}: empty", warning: false);
+                view.AddLabel($"{_viewSlot}: empty");
                 view.AddLabel(
                     _viewSlot == WeaponSlot.Secondary
                         ? "Buy a Secondary below — MK-1 for reach, SEC-D for contact. Both free."
@@ -67,23 +67,22 @@ namespace GatekeeperBastion.Game
                 var def = WeaponCatalog.Def(equipped);
                 int[] pts = m.PointsOf(equipped);
                 int tier = m.TierOf(equipped);
-                view.AddLabel($"{def.displayName}  ·  T{tier}/{WeaponTier.MaxTier}", centered: true,
-                    warning: false);
+                view.AddLabel($"{def.displayName}  ·  T{tier}/{WeaponTier.MaxTier}", centered: true);
                 view.AddLabel(
                     $"{WeaponWheel.EffectiveDamage(def, pts[(int)WheelAttr.Damage]):0.#} dmg    " +
                     $"{WeaponWheel.EffectiveFireRate(def, pts[(int)WheelAttr.FireRate]):0.#}/s    " +
                     $"clip {WeaponWheel.EffectiveClip(def, pts[(int)WheelAttr.Clip])}    " +
                     $"reload {WeaponWheel.EffectiveReload(def, pts[(int)WheelAttr.Reload]):0.##}s",
                     centered: true);
-                view.AddSpacer(4f);
+                view.AddSpacer();
 
                 string locked = MetaUpgrades.UpgradesUnlocked(m) ? null : "LOCKED — survive a death first";
                 BuildWheel(view, m, equipped, locked);
             }
 
-            view.AddSpacer(8f);
+            view.AddSpacer();
             view.AddLabel($"Available {_viewSlot} weapons", centered: true);
-            view.AddSpacer(2f);
+            view.AddSpacer();
 
             foreach (var id in WeaponCatalog.ForSlot(_viewSlot))
                 DrawCatalogRow(view, m, id, equipped);

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -174,7 +175,7 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Character-width estimate for wrapping outside OnGUI. LiberationSans ~7.2px
-        /// at Theme.Small; biased slightly wide so lines wrap early rather than clip.</summary>
+        /// at FxColors.Small; biased slightly wide so lines wrap early rather than clip.</summary>
         static float ApproxWidth(string s) =>
             string.IsNullOrEmpty(s) ? 0f : s.Length * 7.2f;
 

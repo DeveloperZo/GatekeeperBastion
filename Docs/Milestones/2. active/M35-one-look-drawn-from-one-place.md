@@ -1,294 +1,222 @@
 # M35 — One look, drawn from one place
 
 <!--
-Status: active — motion + Accessibility empty tab wired 2026-08-09; not completed (Section A/C/D play gates + suite reds remain)
-Update trigger: when a Shift version lands, when the palette or motif changes, or when a screen is added
-Last updated: 2026-08-09
+Status: active
+Update trigger: when a Shift version lands, when a screen is added, or when a value moves in Shift UI Manager
+Last updated: 2026-08-10
 -->
 
-Every player-facing screen is a **prefab variant of a Shift prefab**, authored in the editor,
-built to a stated per-screen specification and a measured visual standard. Code binds data and
-does nothing else. **The bar is not "ported" — it is that a stranger opening the build would
-not call it a prototype.**
-
-## Why the first attempt failed, and whose fault that was
-
-An agent pass on 2026-08-09 migrated the UI off IMGUI and produced flat coloured rectangles.
-It built the hierarchy at runtime in `UiFactory` / `EnsureBuilt()` and touched Shift only by
-reflection, for button sounds. Zo's verdict: too minimal, no Shift chrome, novice.
-
-**The criteria caused it.** Every acceptance criterion in the first version was a negative
-grep — no `OnGUI`, no `new Color` outside `Theme.cs`, every screen is a prefab, no behaviour
-change. **A grey box passes all four.** Nothing required Shift to be the substrate and nothing
-described what the result should look like. The implementer met the gate exactly as written.
-
-This version is built the other way round. **Section A fails if Shift is not the substrate.
-Section B fails if it does not match Shift's own measured rhythm. Section C fails if a screen
-is missing content a finished game would have. Section D fails if it looks bought.**
-
-## Two corrections to earlier versions
-
-**Shift does ship a HUD.** `Scenes/Simple HUD/` in Desktop, Console and Cross-Platform
-variants plus URP and HDRP copies, `Scenes/Main Menu/`, and a full **Pause Menu** animation
-set. What it lacks is HUD *scripts*. Both demo scenes have now been measured; the numbers are
-in Section B.
-
-**Shift's numbers are not the web's numbers.** An earlier draft specified an 8-point grid,
-150ms transitions and 0.1em tracking, all defensible in general and all wrong here. Measured:
-Shift is a **25-based rhythm at a 1920x1280 reference, 0 tracking, 250 to 833ms motion.**
-Imposing tidy numbers on a kit is how a bought UI ends up looking worse than its own demo.
+**The game's screens are Shift's demo scenes with our content in them.** Copy the Canvas
+branches out of the two demo scenes, duplicate the `Home` panel once per screen, bind data.
+Nothing is generated.
 
 ## Story
 
-As a player, I want the game to look like someone made it on purpose from the moment it boots,
-so that it reads as a game being built rather than a prototype with labels on it.
+As the player, I want the game to look like something that was made, so that the screens read
+as a product rather than as scaffolding.
 
-## The rule that governs everything
+## Why it matters
 
-**If a screen could be produced by code that creates GameObjects, it has failed.** Screens are
-authored assets. Code holds serialized references and pushes values into them.
+The UI is the last thing that still reads as a prototype, and Shift v2.0.12 ships a complete
+main menu, a complete HUD, a working options screen and a non-blocking pause — all of it
+currently unused. **Leverage tier (`../../Working-Rules.md`): #10, structure** — it changes
+where the look comes from, not what any value is.
 
----
+## What Shift ships — measured 2026-08-10
 
-## Section A — substrate
+**Use the plain scenes, not the `URP & HDRP/` copies.** This project is Built-in Render
+Pipeline (`ProjectSettings/GraphicsSettings.asset`, `m_CustomRenderPipeline: {fileID: 0}`), so
+Shift's blur materials work; the URP copies exist to strip them.
 
-1. **Every screen prefab under `Assets/Prefabs/Ui/` is a prefab variant** whose
-   `m_SourcePrefab` GUID resolves into `Assets/Shift - Complete Sci-Fi UI/Prefabs/`.
-   **A prefab with no Shift ancestor is a failed screen.**
-2. **Vendor prefabs are never edited in place.** `git status` on the Shift folder is clean
-   afterwards. Styling lives in variants, which is Unity's documented workflow for a kit.
-3. **No runtime UI construction.** `UiFactory.cs` and `ShiftUi.cs` are **deleted**;
-   `grep -rn "new GameObject(\|AddComponent<" Assets/Scripts/Game/Ui` returns nothing.
-4. **Theming is central**: one Shift `UIManager` asset, configured once, never per object.
-5. **Variant depth at most two**, hierarchy nesting at most seven.
-6. Shift's demo scenes and the `Evo.UI.Demo` namespace **do not ship**. Shift **v2.0.12** is
-   named in the commit.
+### `Scenes/Main Menu/Main Menu (Desktop).unity`
 
-## Section B — the measured standard
+One `Canvas`, Screen Space – Camera, **1920×1280, match 0.5**. Children in order:
+`Event System`, `Menu Manager`, `Quality Manager`, `Background Music`, `UI Audio`,
+`Background`, `Splash Screen`, `Main Panels`, `Modal Windows`, `Start Fade-in`.
 
-| | Generic guidance | **Shift, measured 2026-08-09** |
+| Object | Carries | Gives us |
 |---|---|---|
-| Canvas reference | 1920x1080 | **1920x1280**, match 0.5 |
-| Type sizes | 1.333 ratio from ~16 | **25 / 28 / 30 / 36 / 40** — 28 body, 40 display |
-| Tracking | 0.08–0.15em on caps | **0, everywhere** |
-| Spacing rhythm | 8pt grid | **25-based**: 25, 30, 35, 50, 70 |
-| Panel padding | 16 / 24 | **25 left and bottom, 30–45 right** |
-| Panel enter / exit | 200–300ms | **583ms / 250ms** |
-| Modal enter | 200–300ms | **833ms** |
-| Button press | 100–150ms | **500ms** |
+| `Menu Manager` | `SplashScreenManager`, `MainPanelManager` | splash, and the panel router |
+| `Quality Manager` | `QualityManager` | resolution, vsync, audio mixer — the options screen |
+| `Modal Windows` | `BlurManager` (`_Size` 0→5, speed 25) | confirm modal, blurring the frame behind |
+| `Start Fade-in` | `Image`, `Animator` | the opening fade |
 
-7. **Canvas reference is 1920x1280, match 0.5.** Using 1080 makes every Shift prefab the wrong
-   size on screen.
-8. **Spacing and padding use Shift's 25-based rhythm.** Legal: 25, 30, 35, 45, 50, 70.
-   **Mixing an 8pt grid into a 25-based kit is the specific mistake this prevents.**
-9. **Type is Shift's five sizes, Shift's font assets, tracking 0.**
-10. **Motion matches Shift's clips** — panels 583 and 250, modals 833, button press 500. Enter
-    is longer than exit. **Do not "correct" these toward web timings**; the components already
-    move at these speeds and a faster wrapper reads as a stutter.
-11. **Internal spacing never exceeds external spacing**, so a label obviously belongs to its
-    value. Independent of which scale is used.
-12. **Three depth planes on every panelled screen** — scrim, panel, content at distinct alphas,
-    plus a 1px accent border. Shift's demo panels sit at 0.88, 0.69, 0.49 and 0.39; use its
-    values. **A single flat fill is the exact defect this milestone exists to remove.**
-13. **Five states on every interactive element** — enabled, hover, focus, pressed, disabled —
-    each differing from enabled on **at least two channels**. Shift's Animator controllers
-    already provide these; wiring a bare `Button` and skipping the controller forfeits them.
-    Focus is distinct from hover, because a gamepad has no hover.
-14. **Text contrast at least 4.5:1**, measured against the darkest and lightest background the
-    element can sit over, not a flat swatch.
+**A panel is exactly three children.** `<Panel>` carries `CanvasGroup` + `Animator`
+(`Animations/Panel/Main Panels/Main Panel.controller`) and contains `Shortcut Keys`, `Hotkeys`,
+`Content`. **`Content` is a bare RectTransform — put our content there and it animates for
+free.** `Home` is the simplest panel (160 nodes) and is the one to duplicate.
 
-## Section C — what each screen contains
+`MainPanelManager.panels` is a list of `{panelName, panelObject, buttonObject}`; open with
+`OpenPanel("<name>")`. Buttons are `Prefabs/Button/Panel Button.prefab` under
+`Top Panel/Button List`. **Nested managers work** — `Settings` carries its own with four
+sub-tabs on `Panel Button Alternative.prefab`.
 
-Low-fidelity panels with text are the thing being replaced. Each screen is specified by
-content, not just by component.
+### `Scenes/Simple HUD/Simple HUD (Desktop).unity`
 
-15. **Splash.** Logo fade in and out, a version string, and a **"press any key" state gated
-    behind load completion** with a breathing pulse of about 1.2s. **Skippable by any input at
-    any point.** The main menu loads asynchronously behind it. Boot to menu under 10s.
-16. **Main menu.** Entries in frequency order — **CONTINUE, START NEW, OPTIONS, QUIT** — with
-    CONTINUE **first and default-focused**, and **hidden rather than disabled** when there is no
-    save. A persistent campaign strip showing banked Salvage, Runs and deepest Wave, the figures
-    the Ship already logs. **Behind it, the Bastion arena on a slow orbiting camera**; the level
-    already exists and this costs nothing. Selection slides an accent bar between entries.
-17. **Options.** Five tabs — Graphics, Audio, Controls, Gameplay, and **Accessibility as its own
-    top-level tab**. Audio has separate Master, Music and SFX sliders. **Settings auto-apply and
-    auto-save on change with no Apply button**, except display mode, which gets a 15-second
-    countdown revert. Per-page "Reset to defaults" behind a confirm.
-18. **Confirmation modals.** Only for destructive or irreversible actions: overwrite save,
-    abandon Run, quit. **Verb-labelled buttons** — "Overwrite and start new" / "Keep my save",
-    never Yes/No. The destructive option is **not default-focused**. Background dimmed and
-    blurred. Escape always cancels.
-19. **Ship HUD and station terminals.** Banked Salvage, objective line and interact prompt as a
-    persistent strip. Stations are panels with scrollable priced rows; a row shows name, cost,
-    current level and what the purchase does. **Unaffordable rows are visibly disabled, not
-    hidden.**
-20. **Bastion HUD.** **Content is unchanged and belongs to M36**; this milestone changes only
-    how it is drawn. The presentation treatment still applies: values **lerp rather than snap**,
-    a changed value punch-scales to about 1.15 and settles in 150ms, and elements not currently
-    relevant sit near 40% alpha rather than full. Everything inside a 5% title-safe margin.
-21. **End screens.** Sequenced, not dumped: the verdict held alone for about a second, then the
-    headline number, then stat rows staggered 200 to 300ms apart, then the Salvage tally
-    counting up, then Actions. **Any input fast-forwards to the fully populated state; a second
-    input proceeds.** At most six stats on screen, the rest behind a details toggle.
-22. **Transitions.** **Nothing hard-cuts.** One vocabulary everywhere: fade out 200 to 300ms,
-    load under black, fade in. Menu music continues across screens rather than restarting.
-    Loading always shows motion, with a minimum display of about 0.8s so a fast load does not
-    flash.
+Two Canvases: `Canvas - In Game` (Overlay, order 0) and `Canvas - Pause Menu` (order 1), both
+1920×1280 match 0.5.
 
-## Section D — so it does not look bought
+**`Canvas - In Game` is 39 objects with zero prefab instances** — it copies clean. Contains
+`Active Mission` (`VerticalLayoutGroup` + `ContentSizeFitter` list), `Armor & Health` (two
+bars), `Minimap`, and a placeholder backdrop. **No crosshair, no ammo readout** — those are
+ours to build from Shift parts.
 
-The failure mode after "novice" is "asset flip". These are cheap and they are what make the kit
-read as this game's.
+**The bar recipe**: `Slider` whose `fillRect` is a **sliced** `Filled` image, clipped by a
+parent `Bar` that is a `Mask` with `m_ShowMaskGraphic: 0` carrying a **Filled (`m_Type: 3`)**
+angled-cut frame, over a sliced `Background`, under a sliced `Border` glow. That is how a
+non-rectangular bar fills without smearing its 9-slice corners.
 
-23. **Repalette before building any screens.** One accent drawn from the game world — the Hatch
-    amber already in `Theme.cs` — one warning colour, one neutral ramp. **Shift's default
-    cyan-on-dark is the single most recognisable thing about it.**
-24. **Replace the font.** A display face for headers, a clean sans for body. Kit fonts are
-    recognised faster than kit shapes.
-25. **One signature motif, applied everywhere** — a single corner treatment, one bracket shape,
-    one stripe. Chosen once, used on every panel. **One shape consistently beats five
-    decorations.**
-26. **Layouts are rebuilt from Shift's components, not edited copies of its demo scenes.** Keep
-    the mechanics, discard the arrangement. Demo proportions surviving into the game is the
-    second most recognisable tell.
-27. **No placeholder copy anywhere** — no "Button", no "Panel Title", no "Option 1". Every
-    string is this game's vocabulary (`_meta/_definitions/language.md`).
-28. **UI audio exists.** `UIElementSound` with hover, confirm, back and error clips, **pitch
-    randomised about 5%**, hover debounced and quieter. The build has none today, and silence is
-    the loudest unfinished signal.
-29. **Match the UI's fidelity to the art's.** The game is gray-box. **A glossy, bloom-heavy
-    sci-fi UI over gray-box geometry reads as two projects glued together** — dial the UI
-    *down*, flatter and more restrained, so the two read as one intentional style. This is the
-    likeliest way to make the game look worse while making the UI look better.
+**The pause menu already satisfies `../../Decisions.md`.**
+`Pause Menu Manager/Keyboard Hotkey` (`PressKeyEvent`, key 27) plays `Window In` and calls
+`BlurInAnim()`. It never touches `Canvas - In Game` and never sets `Time.timeScale`.
 
-## Section E — effects, in priority order
+**The HUD drives nothing.** Both sliders have an empty `onValueChanged` and hardcoded values;
+`52%` / `69%` are literal strings typed to match. Shift supplies the shell, we supply every
+value.
 
-The first four are required. The rest are taken while cheap and dropped the moment they cost a
-day.
+### The theme
 
-| | Effect | In scope |
-|---|---|---|
-| 1 | **Staggered element entrance** — rows fade and slide 20–30px, 200ms each, 40–60ms apart, one reusable component | **Required.** The highest single win; turns a static panel into a designed screen |
-| 2 | **UI sound set** (criterion 28) | **Required** |
-| 3 | **Value animation** — count-up, bar lerp, punch-scale on change | **Required**, and it is criterion 20 |
-| 4 | **Menu background** — arena scene, slow camera drift, panels parallaxing 5–15px | **Required**, criterion 16 |
-| 5 | Blur and dim behind modals and pause, rendered once on open rather than per frame | Take |
-| 6 | Vignette and light grain on menus, under 25% | Take |
-| 7 | Particle accents in the **background layer only** | Take. **Never inside panels** — that reads as a screensaver |
-| 8 | Chromatic aberration on transitions, 200ms maximum | Only if free |
-| 9 | Scanlines and CRT overlay | **Do not.** Lowest ratio here, hurts legibility, and it is the "I put a hexagon on it" of sci-fi UI |
+`Resources/Shift UI Manager.asset`, edited at **Tools > Shift UI > Show UI Manager**.
+`UIManagerImage` picks a colour by enum (`Primary`, `Secondary`, `PrimaryReversed`, `Negative`,
+`Background`); `UIManagerText` picks colour and weight (`Light`…`Bold`). Values are universal;
+an element opts out by deleting its component.
 
-**Skip entirely**: idle breathing on every element, animated backgrounds behind body text, more
-than one accent colour.
+### The standard to match
 
-## Section F — architecture
+| | Value |
+|---|---|
+| Canvas | 1920×1280, match 0.5 |
+| Font | Rajdhani-SemiBold SDF (97 of 100 uses), Rajdhani-Medium SDF |
+| Sizes | 25, 29.5, 30, 36, 40 |
+| Images | 76% Sliced. Borders: `Cut Frame Filled` 6, `Cut Frame Glow - 3px` 19, `Cut Frame Filled Big` 26, `Cut Frame Glow Big` 40, `Circle Filled Glow` 356 @750ppu |
+| Panel idiom | filled body + glow border + `Circle Filled Glow` shadow |
+| Alphas | fills 0.039, borders 0.686, icons 1.0 |
+| Accent | cyan (0.388, 0.776, 1.0); negative red (1.0, 0.431, 0.392) |
 
-30. **The pause overlay is non-blocking. Do not use `Time.timeScale = 0`.** This project's
-    architecture exists for co-op — the Sim seam is the whole point (`Docs/Architecture.md`) —
-    and time cannot be frozen in multiplayer. **Building a blocking pause now means
-    retrofitting it later**, which is exactly the class of decision the seam was created to
-    avoid. Duck audio, blur the frame, keep the game running behind a semi-transparent panel.
-31. **No behaviour change.** `Tools/verify/run.sh` and the EditMode suite pass with the same
-    test count and the same test names.
-32. **The M21 wheel keeps its behaviour** — five spokes, two dark, `[` and `]` rotate, the
-    projection in fire and reload seconds still correct.
+## Acceptance criteria
 
-## Verification
+### A — the generator goes, the scenes become source
 
-**Sections A, B, F**: greps, `git status`, and reading numbers off prefab YAML and Animator
-clips. All binary.
+1. **Deleted, with `.meta` files:** `BastionUiAssembler.cs`, `ShipUiAssembler.cs`,
+   `ShiftFrontEndAssembler.cs`, `UiPrefabBuilder.cs`, `UiPrefabVariant.cs`, `UiFactory.cs`,
+   `ShiftUi.cs`, `Theme.cs`, plus the `Build UI Prefabs` menu item and batch entry.
+   `grep -rn "new GameObject\|AddComponent<" Assets/Scripts --include=*.cs` returns nothing
+   under any `Ui` folder.
+2. **`SceneBuilder` no longer touches UI.**
+   `grep -n "InstantiateUiPrefab\|Prefabs/Ui" Assets/Scripts/Editor/Scenes/*.cs` returns
+   nothing; the UI lives in `Ship.unity` and `Bastion.unity` as authored content.
+3. **Build All twice leaves the UI byte-identical.** `../../Architecture/README.md` and
+   `../../Decisions.md` are amended in the same commit: **`SceneBuilder` owns geometry, spawns
+   and NavMesh; it does not own UI.**
 
-**Section C**: the playthrough path below, one screenshot per screen against its criterion.
+### B — the front end is Shift's front end
 
-**Sections B, D, E** need four tests, each producing an artefact kept with the commit:
+4. **The `Canvas` branch of `Main Menu (Desktop).unity` is copied into the Ship scene**, with
+   `Menu Manager`, `Quality Manager`, `Background`, `Splash Screen`, `Main Panels`,
+   `Modal Windows` and `Start Fade-in` intact and Animators still bound.
+5. **ARMORY, FABRICATION, CREW QUARTERS and NAV MAP are each `Home` duplicated** — three
+   children kept, registered in `MainPanelManager.panels` with a `Panel Button`, opened by
+   `OpenPanel`. **Our content sits under `Content` and nowhere else.**
+6. **Controllers bind values and call `OpenPanel`.** `StationTerminal`, the station scripts,
+   `SplashController`, `ShipHud` and `HudController` hold no layout, no colour, no rect maths.
+7. **The confirm modal is `Prefabs/Modal Window/Exit.prefab`**, driven by `ModalWindowManager`
+   with `ModalWindowIn()` / `ModalWindowOut()`, `BlurManager` on the parent.
+8. **Options is Shift's Settings panel wired to `QualityManager`** — its resolution selector,
+   `VsyncSet`, audio mixer. Our settings join as `Horizontal Selector`, `Slider` and `Switch`
+   instances with unique save tags. No custom options widget is written.
 
-1. **Squint test.** Screenshot each screen, 8 to 10px Gaussian blur. **One element must
-   dominate, related items must clump, buttons must still read as buttons.** Uniform mush fails
-   criterion 12 regardless of what the YAML says.
-2. **Greyscale test.** Desaturate. If hierarchy or selected-versus-unselected disappears,
-   meaning is carried by hue alone and criterion 13 has failed.
-3. **Rhythm audit.** Read every `m_Spacing` and padding value out of the screen prefabs;
-   **target zero values off Shift's 25-based scale.**
-4. **State matrix.** Every interactive prefab against the five states, one screenshot per cell.
-   **An empty cell is a bug**; a cell identical to `enabled` is criterion 13 failing.
+### C — the HUD is Shift's HUD
 
-**Side by side against the demo.** Screenshot the game's main menu beside `Main Menu (Desktop)`.
-**They must not be mistakable for each other**, which is Section D passing, **and the game's
-must not look cheaper**, which is Sections B and C passing.
+9. **`Canvas - In Game` is copied wholesale into the Bastion scene**, then the placeholder
+   backdrop and `Minimap` are removed.
+10. **Hatch integrity and player health use the bar recipe unchanged** — sliced `Filled` as
+    `fillRect`, `Mask` parent with `m_ShowMaskGraphic: 0`, sliced `Background` and `Border`.
+    **Both sliders set `m_Interactable: 0`**; Shift ships them draggable.
+11. **Each numeric label is driven from the same value as its bar.** One binding, one source.
+12. **`Active Mission` becomes the objective line**, keeping its layout group, fitter and
+    `<b>` markup.
+13. **The pause overlay is Shift's pause Canvas as shipped** — second Canvas at order 1,
+    Escape, `Window In` / `BlurInAnim()`. **It must not touch `Time.timeScale` and must not
+    disable the game Canvas** (`../../Decisions.md`).
+14. **Crosshair and weapon readout are built from Shift parts** — `Cut Frame` sprites, `Icon`
+    sprites, the bar recipe. They use no sprite from outside Shift.
 
-**In context, never on a swatch.** Every HUD screenshot is taken over a busy Wave-3 frame with
-bodies on screen. The first attempt looked tolerable against grey and fell apart against the
-game.
+### D — the look is checkable
 
-**Playthrough path**: cold boot; splash skipped by keypress; main menu with the arena behind it;
-OPTIONS and back; START NEW with a save present so the modal fires; all four stations; rotate
-the wheel and buy one Tier; embark; clear a Wave; shortcut panel; die; end screen; return.
-Repeat at 1280x720.
+15. **`grep -rn "guid: 0000000000000000f000000000000000" Assets/Scenes Assets/Prefabs` returns
+    zero.** No Unity built-in UI sprite survives anywhere. **Run this first; it is the cheapest
+    check and the one that fails loudest.**
+16. **Every `Image` is `m_Type: 1` unless it is an icon or a fill**, and every icon names a
+    sprite under `Assets/Shift - Complete Sci-Fi UI/Textures/`. `m_Type: 0` is under 25% of
+    total Images, matching Shift's own 24%.
+17. **Every `Image` carries `UIManagerImage`, every `TextMeshProUGUI` carries `UIManagerText`.**
+    No colour is set on an element directly; `grep -rn "new Color\|Color32(" Assets/Scripts/Game/Ui`
+    returns nothing.
+18. **All text is Rajdhani** at 25 / 29.5 / 30 / 36 / 40, weight through `UIManagerText`.
+19. **`grep -rn "Ellipsis" Assets/Scripts` returns nothing.** Labels wrap, or the container
+    fits them.
+20. **No authored `RectTransform` is left at `sizeDelta 100×100` with centred anchors.**
+
+### E — it survives being looked at
+
+21. **Screenshots at 1920×1080 and 1280×720**, filed in `../../GatekeeperZo Notes/`: splash,
+    main menu, options, the four station panels, confirm modal, Bastion HUD in Prep, Bastion
+    HUD in Assault, pause overlay, end screen.
+22. **Zo plays one Run start to finish and gives a verdict on this file.** The greps above are
+    necessary and not sufficient; this row is what closes the milestone.
 
 ## Implementation
 
-**Delete** `Game/Ui/UiFactory.cs` and `Game/Ui/ShiftUi.cs`. They are the failed approach and
-leaving them invites a third attempt down the same path.
+**Copy, do not rebuild.** Open `Main Menu (Desktop).unity`, select the `Canvas` root, copy,
+paste into the Ship scene. Same for `Canvas - In Game` and `Canvas - Pause Menu` from
+`Simple HUD (Desktop).unity` into the Bastion scene. Delete what we do not use, then duplicate
+`Home` per panel.
 
-**Do Section D first, before building any screen.** Repalette and refont on the `UIManager`
-asset, and pick the motif. Doing it afterwards means restyling every screen twice.
+**Delete** the eight scripts in criterion 1 and their menu entries.
+**Change** `SceneBuilder.cs` and `SceneBuilder.Ship.cs` to stop touching UI.
+**Change** `HudController`, `StationTerminal`, `ShipHud`, `SplashController`, `OptionsScreen`,
+`ShortcutPanel` to bind values and call `OpenPanel` / `ModalWindowIn`.
+**Change** `../../Architecture/README.md` and `../../Decisions.md` per criterion 3.
 
-**Then the two reusable pieces**: the staggered-entrance component and the value-animation
-component. Every screen after them uses both.
+Three package behaviours that otherwise read as bugs:
 
-**Then the screens, in this order**: Ship HUD, station terminals, splash, main menu, options,
-end screens, Bastion HUD, **ARMORY wheel last** — it holds M21's freshly shipped behaviour and
-goes after the pattern is settled.
+- **Panels are invisible while you edit them.** Inactive panels store `CanvasGroup` alpha 0.
+  Set it to 1 to work, back to 0 before saving.
+- **Layout Group + Content Size Fitter mis-positions children in the editor.** Disable and
+  re-enable the Canvas, or enter Play. Keep `LayoutGroupPositionFix` on the objects that have it.
+- **Turn off `Update Values` in UI Manager** unless actively changing theme values — it runs in
+  `LateUpdate` across 260 components.
 
-**Keep** `Game/Ui/Theme.cs` as the semantic token list with the `UIManager` asset configured to
-match. Mapping: `Ink` to `primaryColor`, `InkDim` to `secondaryColor`, `Panel` to
-`backgroundColor`, `Danger` to `negativeColor`; `Accent`, `Warn`, `Good`, `InkFaint` and `Line`
-have no Shift equivalent and stay in `Theme.cs`.
+Rejected: generating any part of this, in any form. Criterion 1.
 
-**Keep** the existing views and controllers as the binding layer, stripped of construction.
+Rejected: keeping `Theme.cs`. Two sources of colour is how colours drift apart.
+`Shift UI Manager.asset` is the one place.
 
-Rejected: normalising Shift onto an 8-point grid or shortening its motion. Both were in an
-earlier draft and both are wrong; see Section B.
+Rejected: the `URP & HDRP/` scene copies. Built-in pipeline; those exist to remove blur that
+works here.
 
-Rejected: writing our own components against Shift's sprites. That is the first attempt with
-extra steps, and it forfeits the states, motion and audio the kit already ships.
+## Verification
 
-Rejected: `Time.timeScale = 0` for pause. Criterion 30.
+1. Criterion 15 first — expect zero, before claiming anything else is done.
+2. Criteria 1, 2 — the greps, then Build All twice and `git diff` the scene files.
+3. Criteria 16, 17, 18 — count `m_Type`, `UIManagerImage`, `UIManagerText` and font guids
+   across authored content; compare to Shift's ratios.
+4. Criterion 19 — the grep.
+5. Criterion 13 — pause during an Assault; Gatekeepers keep moving behind the overlay.
+6. Criterion 21 — the twelve screenshots, both resolutions.
+7. Criterion 22 — the Run, and the verdict written here.
 
 ## Watch
 
-- **The likeliest failure is a second wireframe that passes the greps.** Sections B to E and the
-  four tests exist for that reason, and **a screenshot that fails the squint test fails the
-  milestone** with every grep green.
-- **The second likeliest is imposing tidy numbers on the kit.** See Section B.
-- **The third is the UI outshining the game.** Criterion 29. Gray-box geometry under a glossy
-  HUD looks worse than gray-box geometry under a restrained one.
-- This is a large milestone and **Section E is where it grows without limit.** Items 8 and 9 are
-  droppable and 9 is already dropped. If it runs long, cut from the bottom of Section E, never
-  from Sections A to D.
-- True Shadow glow on a combat HUD is overdraw. Ship and menus freely, Bastion sparingly, and
-  check the frame cost rather than assuming it is free.
+- **`Content` is the whole contract.** Anything parented outside a panel's `Content` loses the
+  panel animation and will look bolted on. If something will not fit under `Content`, the panel
+  is the wrong shape.
+- **Do not tidy Shift's numbers.** 1920×1280, 25-based sizes, alpha 0.039 and 0.686 look
+  arbitrary and are what the art was drawn against. Imposing an 8-point grid makes a bought UI
+  look worse than its own demo.
+- **Copying the HUD gets zero behaviour.** Both sliders are hardcoded and their labels are
+  typed strings; criterion 11 exists so the shipped fake does not survive the copy.
 
 ## Depends on / Unblocks
 
-Depends on Shift v2.0.12, imported. **Unblocks M36** and the UI half of every later screen.
-
-## Close-out status
-
-Checked 2026-08-09 (`gkb_verify_report.json`, 2026-08-09T23:46:46Z). **Stay in `2. active/`** — do not move to `completed/` yet.
-
-| Gate | Result |
-|---|---|
-| A.3 no runtime `new GameObject(` / `AddComponent<` under `Game/Ui` | **pass** (empty grep) |
-| A.3 `UiFactory` / `ShiftUi` deleted | **pass** |
-| A.6 Shift **v2.0.12** named | **pass** (`Assets/Shift - Complete Sci-Fi UI/Read Me.txt` line 1); vendor commit still pending |
-| Motion — `StaggerEntrance` on MainMenu, Options, StationPanel, EndScreens, BastionHud (+ Splash) | **pass** (prefab YAML) |
-| Motion — BastionHud / EndScreens `ValueAnimator` fields assigned | **pass** after `BastionUiAssembler` rebuild 2026-08-09 18:47 (salvage punch + bars; end salvage count-up). AutoVerify PlayMode had left BastionHud as an empty Canvas variant (~4 KB) — rebuilt. |
-| Options Accessibility (Zo **1A**) | **pass** — tab exists; `EmptyCopy` one-sentence; panel Reset; no Accessibility `SettingDecl`s / fake toggles |
-| Fonts (Zo **2A**) | LiberationSans on UIManager (prior); assembler TMP uses LiberationSans SDF |
-| `AudioBuses.ApplyFromSettings` before Options | **pass** — `PlayerPrefsSettingsStore.Boot`, `SplashController.Awake`, `MainMenuController.Awake`, `GameSession.EnsureLoaded` (direct-play) |
-| AutoVerify | **complete** — EditMode **281 / 1**, PlayMode **9 / 7** (1 inconclusive). Pre-existing / M35 fallout, not this wiring pass |
-| EditMode red | `SettingsTests.RestoreDefaultsResetsAll` — MasterVolume `default == max` (1f) so “set to max ≠ default” asserts false |
-| PlayMode reds | OnGUI-era HUD/Ship contracts (`GUI functions from inside OnGUI`, lose-screen OnGUI null); combat `TryFire` / clip / shove — document, do not treat as motion-wiring regressions |
-| Zo play | **open** — screenshots, squint/greyscale/rhythm/state matrix, playthrough path (Section C/D/E) |
-| Shift v2.0.12 commit | **pending** |
+Depends on Shift v2.0.12, imported. **Blocks M36** and **M39's `Game/Ui` scope**.

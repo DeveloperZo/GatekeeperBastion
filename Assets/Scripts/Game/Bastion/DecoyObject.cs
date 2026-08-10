@@ -1,7 +1,7 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
+using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -65,7 +65,7 @@ namespace GatekeeperBastion.Game
                              ?? Shader.Find("Unlit/Color");
                 if (shader != null)
                 {
-                    var mat = new Material(shader) { color = Theme.DecoyBody };
+                    var mat = new Material(shader) { color = FxColors.DecoyBody };
                     rend.sharedMaterial = mat;
                 }
             }

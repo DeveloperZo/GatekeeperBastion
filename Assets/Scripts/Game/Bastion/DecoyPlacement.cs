@@ -1,8 +1,8 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
 using UnityEngine.AI;
+using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -169,8 +169,8 @@ namespace GatekeeperBastion.Game
             if (_validMat != null) return;
             var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
             if (shader == null) return;
-            _validMat = new Material(shader) { color = Theme.DecoyGhostValid };
-            _invalidMat = new Material(shader) { color = Theme.DecoyGhostInvalid };
+            _validMat = new Material(shader) { color = FxColors.DecoyGhostValid };
+            _invalidMat = new Material(shader) { color = FxColors.DecoyGhostInvalid };
         }
     }
 }

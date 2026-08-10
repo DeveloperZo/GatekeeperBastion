@@ -31,6 +31,7 @@ namespace GatekeeperBastion.Game
         void Awake()
         {
             SceneFlow.EnsureEventSystem();
+            SceneFlow.RepairCanvas(gameObject);
             AudioBuses.ApplyFromSettings();
             _view = GetComponentInChildren<SplashView>(true);
             _view?.EnsureBuilt();
@@ -49,16 +50,19 @@ namespace GatekeeperBastion.Game
 
         void BeginAsyncMainMenu()
         {
-            if (!SceneFlow.CanLoad(SceneFlow.MainMenu))
+            // M35 moved the menu Canvas into Ship; FrontEndScene resolves to whichever of the
+            // two is actually registered, so this scene cannot strand on a deregistered MainMenu.
+            string target = SceneFlow.FrontEndScene;
+            if (!SceneFlow.CanLoad(target))
             {
-                FailLoad("MainMenu is not in the build settings");
+                FailLoad($"{target} is not in the build settings");
                 return;
             }
 
-            _load = SceneManager.LoadSceneAsync(SceneFlow.MainMenu);
+            _load = SceneManager.LoadSceneAsync(target);
             if (_load == null)
             {
-                FailLoad("LoadSceneAsync(MainMenu) returned null");
+                FailLoad($"LoadSceneAsync({target}) returned null");
                 return;
             }
             _load.allowSceneActivation = false;

@@ -7,7 +7,10 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Shared framed panel for ship station consoles. Body rows Instantiated from authored templates.</summary>
+    /// <summary>Binds one of the station panels duplicated from Shift's <c>Home</c> panel.
+    /// Station scripts push text and actions; rows are clones of templates authored under
+    /// <c>Content</c>, so this class sets no colour, no font size and no rect (M35 criteria
+    /// 5, 6, 17). Emphasis travels as <c>&lt;b&gt;</c> / <c>&lt;i&gt;</c> markup.</summary>
     public sealed class StationPanelView : MonoBehaviour
     {
         static StationPanelView _instance;
@@ -20,8 +23,11 @@ namespace GatekeeperBastion.Game
         [SerializeField] RectTransform _wheelSlot;
         [SerializeField] ArmoryWheelView _wheel;
         [SerializeField] Button _closeButton;
+
+        [Header("Templates — authored under Content, cloned per row")]
         [SerializeField] StationRowView _rowPrefab;
         [SerializeField] TextMeshProUGUI _labelPrefab;
+        [SerializeField] TextMeshProUGUI _headingPrefab;
         [SerializeField] Button _buttonPrefab;
         [SerializeField] RectTransform _spacerPrefab;
         [SerializeField] RectTransform _rowHostPrefab;
@@ -41,7 +47,7 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        /// <summary>ARMORY wheel host (M35). Prefab-authored; never destroyed by ClearBody.</summary>
+        /// <summary>ARMORY wheel host. Authored under <c>Content</c>; never destroyed by ClearBody.</summary>
         public RectTransform WheelSlot
         {
             get
@@ -56,8 +62,7 @@ namespace GatekeeperBastion.Game
             get
             {
                 EnsureBuilt();
-                if (_wheel != null) return _wheel;
-                if (_wheelSlot != null)
+                if (_wheel == null && _wheelSlot != null)
                     _wheel = _wheelSlot.GetComponentInChildren<ArmoryWheelView>(true);
                 return _wheel;
             }
@@ -67,21 +72,35 @@ namespace GatekeeperBastion.Game
         {
             EnsureBuilt();
             var w = Wheel;
-            if (w != null) w.gameObject.SetActive(visible);
-            else if (_wheelSlot != null) _wheelSlot.gameObject.SetActive(visible);
+            if (w != null) UiBind.Show(w, visible);
+            else UiBind.Show(_wheelSlot, visible);
         }
+
+        void Awake()
+        {
+            _instance = this;
+            UiCanvasGuard.RepairIfBroken(gameObject);
+            // The panel's CanvasGroup starts at alpha 0 (Shift idiom); never force-open from Awake.
+            UiBind.Show(_root, false);
+        }
+
+        void OnEnable() => UiCanvasGuard.RepairIfBroken(gameObject);
 
         public static StationPanelView EnsureInstance()
         {
             if (_instance != null) return _instance;
-            _instance = UnityEngine.Object.FindFirstObjectByType<StationPanelView>();
+            _instance = UiBind.First<StationPanelView>();
             _instance?.EnsureBuilt();
             return _instance;
         }
 
+        /// <summary>Resolves the authored panel and wires close; does not open it —
+        /// <see cref="SetVisible"/> owns that.</summary>
         public void EnsureBuilt()
         {
-            if (_root != null) _root.gameObject.SetActive(true);
+            UiCanvasGuard.RepairIfBroken(gameObject);
+            if (_bodyContent == null)
+                _bodyContent = UiBind.Find(transform, "Content") as RectTransform;
             if (_closeWired || _closeButton == null) return;
             _closeWired = true;
             _closeButton.onClick.RemoveAllListeners();
@@ -93,9 +112,9 @@ namespace GatekeeperBastion.Game
         public void SetHeader(string stationName, long banked, string lifetimeLine)
         {
             EnsureBuilt();
-            if (_title != null) _title.text = stationName;
-            if (_banked != null) _banked.text = $"Banked salvage: {banked}";
-            if (_lifetime != null) _lifetime.text = lifetimeLine;
+            UiBind.SetText(_title, stationName);
+            UiBind.SetText(_banked, $"Banked salvage: {banked}");
+            UiBind.SetText(_lifetime, lifetimeLine);
         }
 
         public void ClearBody()
@@ -120,7 +139,6 @@ namespace GatekeeperBastion.Game
                 }
             }
 
-            // Wheel is authored under _wheelSlot — leave it; ArmoryStation re-Configure each open.
             SetWheelVisible(false);
         }
 
@@ -131,61 +149,34 @@ namespace GatekeeperBastion.Game
             _bodyStagger.enabled = true;
         }
 
-        public void AddSpacer(float height = 25f)
+        public void AddSpacer()
         {
             EnsureBuilt();
-            if (_bodyContent == null || _spacerPrefab == null) return;
-            var rt = Instantiate(_spacerPrefab, _bodyContent);
-            rt.gameObject.SetActive(true);
-            rt.name = "Spacer";
-            var le = rt.GetComponent<LayoutElement>();
-            if (le != null)
-            {
-                le.minHeight = height;
-                le.preferredHeight = height;
-            }
-            Track(rt.gameObject);
+            var rt = Clone(_spacerPrefab, _bodyContent, "Spacer");
+            if (rt != null) Track(rt.gameObject);
         }
 
+        /// <summary>A body line. <paramref name="centered"/> picks the heading template;
+        /// <paramref name="warning"/> and <paramref name="reason"/> become markup.</summary>
         public TextMeshProUGUI AddLabel(string text, bool centered = false, bool warning = false,
             bool reason = false)
         {
             EnsureBuilt();
             var parent = _rowParent != null ? _rowParent : _bodyContent;
-            if (parent == null || _labelPrefab == null) return null;
-
-            var tmp = Instantiate(_labelPrefab, parent);
-            tmp.gameObject.SetActive(true);
-            tmp.name = "Label";
-            tmp.text = text ?? "";
-            var align = centered ? TextAlignmentOptions.Center : TextAlignmentOptions.TopLeft;
-            var color = warning ? Theme.Warn : reason ? Theme.InkFaint : Theme.InkDim;
-            var style = warning ? FontStyles.Bold : reason ? FontStyles.Italic : FontStyles.Normal;
-            float size = centered ? Theme.Head : Theme.Body;
-            Theme.Apply(tmp, size, color, style, align);
-            Track(tmp.gameObject);
+            var template = centered && _headingPrefab != null ? _headingPrefab : _labelPrefab;
+            var tmp = Clone(template, parent, "Label");
+            if (tmp != null) tmp.text = Emphasise(text, warning, reason);
+            if (tmp != null) Track(tmp.gameObject);
             return tmp;
         }
 
-        public Button AddButton(string label, Action onClick, float width = 150f, float height = 50f,
-            bool enabled = true)
+        public Button AddButton(string label, Action onClick, bool enabled = true)
         {
             EnsureBuilt();
             var parent = _rowParent != null ? _rowParent : _bodyContent;
-            if (parent == null || _buttonPrefab == null) return null;
-
-            var btn = Instantiate(_buttonPrefab, parent);
-            btn.gameObject.SetActive(true);
-            btn.name = "Action";
+            var btn = Clone(_buttonPrefab, parent, "Action");
+            if (btn == null) return null;
             ApplyButtonLabel(btn, label);
-            var le = btn.GetComponent<LayoutElement>();
-            if (le != null)
-            {
-                le.preferredWidth = width;
-                le.minWidth = width;
-                le.preferredHeight = height;
-                le.minHeight = height;
-            }
             btn.onClick.RemoveAllListeners();
             if (onClick != null) btn.onClick.AddListener(() => onClick());
             btn.interactable = enabled;
@@ -193,81 +184,46 @@ namespace GatekeeperBastion.Game
             return btn;
         }
 
-        public void AddReason(string text, float width = 260f, float height = 25f)
-        {
-            EnsureBuilt();
-            var parent = _rowParent != null ? _rowParent : _bodyContent;
-            if (parent == null || _labelPrefab == null) return;
-            var tmp = Instantiate(_labelPrefab, parent);
-            tmp.gameObject.SetActive(true);
-            tmp.name = "Reason";
-            tmp.text = text ?? "";
-            Theme.Apply(tmp, Theme.Body, Theme.InkFaint, FontStyles.Italic);
-            var le = tmp.GetComponent<LayoutElement>();
-            if (le != null)
-            {
-                le.preferredWidth = width;
-                le.minHeight = height;
-            }
-            Track(tmp.gameObject);
-        }
+        public void AddReason(string text) => AddLabel(text, reason: true);
 
         public void BeginRow()
         {
             EnsureBuilt();
-            if (_bodyContent == null || _rowHostPrefab == null)
+            var row = Clone(_rowHostPrefab, _bodyContent, "Row");
+            if (row == null)
             {
                 _rowParent = _bodyContent;
                 return;
             }
-            var row = Instantiate(_rowHostPrefab, _bodyContent);
-            row.gameObject.SetActive(true);
-            row.name = "Row";
             _rowParent = row;
             Track(row.gameObject);
         }
 
         public void EndRow() => _rowParent = null;
 
-        public void AddRowLabel(string text, float width)
+        public void AddRowLabel(string text)
         {
             EnsureBuilt();
             if (_rowParent == null) BeginRow();
-            if (_rowParent == null || _labelPrefab == null) return;
-            var tmp = Instantiate(_labelPrefab, _rowParent);
-            tmp.gameObject.SetActive(true);
-            tmp.name = "Cell";
+            var tmp = Clone(_labelPrefab, _rowParent, "Cell");
+            if (tmp == null) return;
             tmp.text = text ?? "";
-            Theme.Apply(tmp, Theme.Body, Theme.InkDim);
-            var le = tmp.GetComponent<LayoutElement>();
-            if (le != null)
-            {
-                le.preferredWidth = width;
-                le.minWidth = width;
-                le.preferredHeight = 25f;
-            }
             Track(tmp.gameObject);
         }
 
-        public void AddRowReason(string text, float width = 260f)
-        {
-            AddReason(text, width);
-        }
+        public void AddRowReason(string text) => AddReason(text);
 
-        public void AddRowButton(string label, Action onClick, float width = 150f, bool enabled = true)
-        {
-            AddButton(label, onClick, width, 50f, enabled);
-        }
+        public void AddRowButton(string label, Action onClick, bool enabled = true) =>
+            AddButton(label, onClick, enabled);
 
-        /// <summary>Criterion 19 priced row — unaffordable action stays visible and disabled.</summary>
+        /// <summary>A priced row: an unaffordable action stays visible and disabled with its
+        /// reason, rather than disappearing.</summary>
         public StationRowView AddPricedRow(string name, string cost, string level, string effect,
             string actionLabel, Action onAction, bool actionEnabled, string reason = null)
         {
             EnsureBuilt();
-            if (_bodyContent == null || _rowPrefab == null) return null;
-            var row = Instantiate(_rowPrefab, _bodyContent);
-            row.gameObject.SetActive(true);
-            row.name = "PricedRow";
+            var row = Clone(_rowPrefab, _bodyContent, "PricedRow");
+            if (row == null) return null;
             row.Bind(name, cost, level, effect, actionLabel, onAction, actionEnabled, reason);
             Track(row.gameObject);
             return row;
@@ -276,14 +232,29 @@ namespace GatekeeperBastion.Game
         public void SetCloseLabel(string label)
         {
             EnsureBuilt();
-            if (_closeButton == null) return;
             ApplyButtonLabel(_closeButton, label);
         }
 
         public void SetVisible(bool visible)
         {
             EnsureBuilt();
-            if (_root != null) _root.gameObject.SetActive(visible);
+            UiBind.Show(_root, visible);
+        }
+
+        static string Emphasise(string text, bool warning, bool reason)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            if (warning) return $"<b>{text}</b>";
+            return reason ? $"<i>{text}</i>" : text;
+        }
+
+        static T Clone<T>(T template, Transform parent, string name) where T : Component
+        {
+            if (template == null || parent == null) return null;
+            var copy = Instantiate(template, parent);
+            copy.gameObject.SetActive(true);
+            copy.name = name;
+            return copy;
         }
 
         void Track(GameObject go)
@@ -294,31 +265,31 @@ namespace GatekeeperBastion.Game
         bool IsTemplate(GameObject go)
         {
             if (go == null) return false;
-            if (_rowPrefab != null && go == _rowPrefab.gameObject) return true;
-            if (_labelPrefab != null && go == _labelPrefab.gameObject) return true;
-            if (_buttonPrefab != null && go == _buttonPrefab.gameObject) return true;
-            if (_spacerPrefab != null && go == _spacerPrefab.gameObject) return true;
-            if (_rowHostPrefab != null && go == _rowHostPrefab.gameObject) return true;
-            return false;
+            return Is(go, _rowPrefab) || Is(go, _labelPrefab) || Is(go, _headingPrefab)
+                || Is(go, _buttonPrefab) || Is(go, _spacerPrefab) || Is(go, _rowHostPrefab);
         }
+
+        static bool Is(GameObject go, Component template) =>
+            template != null && go == template.gameObject;
 
         static void ApplyButtonLabel(Button button, string label)
         {
             if (button == null) return;
+            string text = label ?? "";
             var main = button.GetComponent<Michsky.UI.Shift.MainButton>();
             if (main != null)
             {
-                main.buttonText = label ?? "";
+                main.buttonText = text;
                 main.useCustomText = false;
             }
             var panel = button.GetComponent<Michsky.UI.Shift.MainPanelButton>();
             if (panel != null)
             {
-                panel.buttonText = label ?? "";
+                panel.buttonText = text;
                 panel.useCustomText = false;
             }
             var tmp = button.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (tmp != null) tmp.text = label ?? "";
+            if (tmp != null) tmp.text = text;
         }
 
         void OnDestroy()

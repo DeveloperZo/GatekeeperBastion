@@ -26,11 +26,10 @@ namespace GatekeeperBastion.Game.Ui
             _drift.anchoredPosition = _origin + new Vector2(Mathf.Cos(t), Mathf.Sin(t * 0.7f)) * _driftPixels;
         }
 
-        /// <summary>Editor/runtime helper when wiring a fresh scrim Image.</summary>
+        /// <summary>No-op: colour comes from Shift UI Manager on the authored Image.</summary>
         public static void ApplyRestrainedLook(Image image)
         {
             if (image == null) return;
-            image.color = new Color(Theme.Accent.r, Theme.Accent.g, Theme.Accent.b, 0.06f);
             image.raycastTarget = false;
         }
     }

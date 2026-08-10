@@ -173,37 +173,34 @@ namespace GatekeeperBastion.Game
 
             var hatch = sim.Ship.Hatch;
             bool alarm = _hatchAlert > 0f;
-            _view.SetHatchLabel(alarm ? "HATCH — UNDER ATTACK" : "HATCH", alarm);
-            bool blink = alarm && Mathf.Repeat(_hatchAlert, 0.5f) > 0.25f;
-            _view.SetHatchBar(hatch.Hp, hatch.MaxHp, blink ? Theme.HatchBlink : Theme.Accent);
+            // <b> is the only emphasis the HUD applies; colour is Shift UI Manager's (criterion 17).
+            _view.SetHatchLabel(alarm ? "<b>HATCH — UNDER ATTACK</b>" : "HATCH");
+            _view.SetHatchBar(hatch.Hp, hatch.MaxHp);
 
             var player = Player;
             if (player != null)
             {
-                _view.SetPlayerLabel(player.IsDead ? "YOU  (DOWN)" : "YOU");
+                _view.SetPlayerLabel(player.IsDead ? "<b>YOU  (DOWN)</b>" : "YOU");
                 _view.SetPlayerBar(player.Hp, player.MaxHp);
                 PushStamina();
             }
 
             PushWeaponReadout(gc);
             PushShortcutPanel(sim);
-            float band = ShortcutPanel.LastDrawnHeight;
 
             if (sim.Assault == AssaultState.Prep)
             {
                 PushPrepPanel(sim);
                 _view.SetPrepVisible(true);
-                _view.LayoutPrepStrip(band);
             }
             else
             {
                 PushAssaultPanel(sim);
                 _view.SetAssaultVisible(true);
-                _view.LayoutAssaultStrip(band);
             }
 
             PushCrosshair();
-            PushPrompt(band);
+            PushPrompt();
             PushVignette();
         }
 
@@ -227,8 +224,8 @@ namespace GatekeeperBastion.Game
             }
 
             _view.SetStaminaBlockVisible(true);
-            _view.SetStaminaLabel(_fpc.IsSprinting ? "SPRINT" : "STAMINA");
-            _view.SetStaminaBar(_fpc.Stamina, _fpc.StaminaMax, _fpc.IsSprinting);
+            _view.SetStaminaLabel(_fpc.IsSprinting ? "<b>SPRINT</b>" : "STAMINA");
+            _view.SetStaminaBar(_fpc.Stamina, _fpc.StaminaMax);
         }
 
         void PushWeaponReadout(GameController gc)
@@ -326,8 +323,8 @@ namespace GatekeeperBastion.Game
             if (ability.RegenSurgeActive)
             {
                 _view.SetAbilityBlockVisible(true);
-                _view.SetAbilityLabel($"ABILITY {name} — SURGING");
-                _view.SetAbilityBar(ability.CooldownProgress, Theme.AbilitySurge);
+                _view.SetAbilityLabel($"<b>ABILITY {name} — SURGING</b>");
+                _view.SetAbilityBar(ability.CooldownProgress);
                 return;
             }
 
@@ -335,7 +332,7 @@ namespace GatekeeperBastion.Game
             {
                 _view.SetAbilityBlockVisible(true);
                 _view.SetAbilityLabel($"ABILITY {name}  {ability.CooldownRemaining:0.0}s");
-                _view.SetAbilityBar(ability.CooldownProgress, Theme.AbilityCooldown);
+                _view.SetAbilityBar(ability.CooldownProgress);
                 return;
             }
 
@@ -389,7 +386,7 @@ namespace GatekeeperBastion.Game
             });
         }
 
-        void PushPrompt(float shortcutHeight)
+        void PushPrompt()
         {
             if (_interactor == null || string.IsNullOrEmpty(_interactor.CurrentPrompt))
             {
@@ -398,7 +395,6 @@ namespace GatekeeperBastion.Game
             }
 
             _view.SetPrompt(_interactor.CurrentPrompt);
-            _view.LayoutPrompt(shortcutHeight);
             _view.SetPromptVisible(true);
         }
 

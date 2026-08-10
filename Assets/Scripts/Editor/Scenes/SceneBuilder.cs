@@ -1,5 +1,7 @@
 using GatekeeperBastion.Game;
 using GatekeeperBastion.Sim;
+using System;
+using System.IO;
 using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -20,6 +22,7 @@ namespace GatekeeperBastion.EditorTools
     /// the THREE gatekeeper prefabs (Default / Hunter / Ram — see SceneBuilder.Enemies.cs)
     /// are generated under Assets/Prefabs, materials under Assets/Materials. Safe to re-run (idempotent; existing assets
     /// are updated in place so GUIDs stay stable).</summary>
+    [InitializeOnLoad]
     public static partial class SceneBuilder
     {
         const string ScenePath = "Assets/Scenes/Bastion.unity";
@@ -33,6 +36,27 @@ namespace GatekeeperBastion.EditorTools
         const float WallHeight = 3.5f;
         const float WallThickness = 0.5f;
 
+        static double _nextSentinelPoll;
+        static string Root => Directory.GetParent(Application.dataPath).FullName;
+        static string SentinelPath => Path.Combine(Root, "gkb_scene_build_request.txt");
+
+        static SceneBuilder()
+        {
+            EditorApplication.update += PollSentinel;
+        }
+
+        static void PollSentinel()
+        {
+            if (EditorApplication.timeSinceStartup < _nextSentinelPoll) return;
+            _nextSentinelPoll = EditorApplication.timeSinceStartup + 1.0;
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
+                return;
+            if (!File.Exists(SentinelPath)) return;
+            try { File.Delete(SentinelPath); }
+            catch (Exception e) { Debug.LogWarning("[SceneBuilder] sentinel: " + e.Message); return; }
+            BuildAllCore();
+        }
+
         sealed class Palette
         {
             public Material Floor, Wall, Rib, Enemy, Hunter, Ram, Hatch, Player, Breach;
@@ -40,50 +64,30 @@ namespace GatekeeperBastion.EditorTools
 
         // ---------- menu items ----------
 
-        const string UiPrefabDir = "Assets/Prefabs/Ui";
-
         [MenuItem("GatekeeperBastion/Build All Scenes")]
         public static void BuildAll()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-            BuildAllCore(rebuildUiPrefabs: true);
+            BuildAllCore();
         }
 
-        /// <summary>Batchmode entry: rebuild scenes (UI prefabs already on disk from UiPrefabBuilder).</summary>
+        /// <summary>Batchmode entry: rebuild geometry/spawns/NavMesh only. UI is authored in scenes.</summary>
         public static void BuildFromBatch()
         {
-            BuildAllCore(rebuildUiPrefabs: false);
+            BuildAllCore();
             EditorApplication.Exit(0);
         }
 
-        static void BuildAllCore(bool rebuildUiPrefabs)
+        static void BuildAllCore()
         {
             EnsureFolders();
-            // Prefabs first — scenes instantiate them; a missing prefab falls back to an empty host.
-            if (rebuildUiPrefabs)
-                UiPrefabBuilder.BuildAll("scene-build");
-            BuildSplashScene();
-            BuildMainMenuScene();
+            // M35: SceneBuilder owns geometry, spawns and NavMesh — not UI.
+            // Splash/MainMenu scene files are not regenerated (UI lives in Ship/Bastion).
             BuildShipScene();
             BuildBastionScene();
             RegisterBuildScenes();
             AssetDatabase.SaveAssets();
-            Debug.Log("[SceneBuilder] EditorBuildSettings.scenes = Splash, MainMenu, Ship, Bastion.");
-        }
-
-        /// <summary>Instantiate a UI prefab under Assets/Prefabs/Ui/. Never authors Canvas into the
-        /// scene YAML by hand — the prefab carries the hierarchy (M35 criterion 3).</summary>
-        static GameObject InstantiateUiPrefab(string prefabName)
-        {
-            string path = $"{UiPrefabDir}/{prefabName}.prefab";
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            if (prefab == null)
-            {
-                Debug.LogWarning(
-                    $"[SceneBuilder] Missing {path} — empty host; view EnsureBuilt runs at play.");
-                return new GameObject(prefabName);
-            }
-            return (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            Debug.Log("[SceneBuilder] EditorBuildSettings.scenes = Splash, MainMenu, Ship, Bastion (geometry only).");
         }
 
         // Build All Scenes is the only entry point. A Bastion-only item existed until
@@ -93,6 +97,9 @@ namespace GatekeeperBastion.EditorTools
 
         static void RegisterBuildScenes()
         {
+            // M35: menu Canvas lives in Ship. Splash/MainMenu stay registered only while those
+            // scene files still exist so old PlayMode tests can load them; boot prefers Ship via
+            // SceneFlow.FrontEndScene when MainMenu is empty of controllers.
             EditorBuildSettings.scenes = new[]
             {
                 new EditorBuildSettingsScene(SplashScenePath, true),
@@ -102,61 +109,17 @@ namespace GatekeeperBastion.EditorTools
             };
         }
 
-        // ---------- Splash / MainMenu ----------
-
-        static void BuildSplashScene()
-        {
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            MakeSoloCamera(new Color(0.02f, 0.02f, 0.04f));
-            EnsureEventSystem();
-            var splash = InstantiateUiPrefab("Splash");
-            splash.name = "Splash";
-            // SplashController / SplashView live on the Splash prefab (assembler). Do not
-            // re-AddComponent here — nested Shift fileID churn orphaned scene overrides.
-            if (splash.GetComponentInChildren<SplashController>(true) == null)
-                splash.AddComponent<SplashController>();
-            if (splash.GetComponentInChildren<GatekeeperBastion.Game.Ui.SplashView>(true) == null)
-                splash.AddComponent<GatekeeperBastion.Game.Ui.SplashView>();
-            EditorSceneManager.SaveScene(scene, SplashScenePath);
-            Debug.Log($"[SceneBuilder] Built {SplashScenePath}: camera + EventSystem + Splash UI prefab.");
-        }
-
-        static void BuildMainMenuScene()
-        {
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            MakeSoloCamera(new Color(0.03f, 0.04f, 0.07f));
-            EnsureEventSystem();
-            var menu = InstantiateUiPrefab("MainMenu");
-            menu.name = "MainMenu";
-            // MainMenuController / MainMenuView live on the MainMenu prefab (assembler).
-            if (menu.GetComponentInChildren<MainMenuController>(true) == null)
-                menu.AddComponent<MainMenuController>();
-            if (menu.GetComponentInChildren<GatekeeperBastion.Game.Ui.MainMenuView>(true) == null)
-                menu.AddComponent<GatekeeperBastion.Game.Ui.MainMenuView>();
-            // Overwrite flow uses MainMenuView's nested OverwriteModal (ConfirmModal Shift
-            // variant). Do not spawn a second ConfirmModal — MainMenuController binds via
-            // onOverwriteConfirm / ShowOverwriteModal, not Resources or DontDestroy.
-            EnsureNestedNamed(menu, "OverwriteModal", "MainMenu overwrite ConfirmModal");
-            // Arena backdrop: Bastion additive is blocked — Bastion Awake boots GameController /
-            // WaveSpawner / player. MenuArenaBackdrop on the MainMenu prefab is the restrained scrim.
-            EditorSceneManager.SaveScene(scene, MainMenuScenePath);
-            Debug.Log(
-                $"[SceneBuilder] Built {MainMenuScenePath}: camera + EventSystem + MainMenu UI prefab " +
-                "(OverwriteModal nested; arena = MenuArenaBackdrop scrim; Bastion additive blocked).");
-        }
-
-        /// <summary>uGUI buttons need an EventSystem. Shift Canvas prefabs do not include one;
-        /// without it Splash advances on Input.anyKeyDown but MainMenu / stations never click.</summary>
+        /// <summary>uGUI buttons need an EventSystem when geometry-only scenes are opened alone.</summary>
         static void EnsureEventSystem()
         {
-            if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() != null)
+            if (UnityEngine.Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() != null)
                 return;
             var go = new GameObject("EventSystem");
             go.AddComponent<UnityEngine.EventSystems.EventSystem>();
             go.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
         }
 
-        /// <summary>Logs if an expected child is missing from a UI prefab instance.</summary>
+        /// <summary>Logs if an expected child is missing.</summary>
         static void EnsureNestedNamed(GameObject host, string childName, string label)
         {
             if (host == null) return;
@@ -185,8 +148,16 @@ namespace GatekeeperBastion.EditorTools
 
         // ---------- Bastion ----------
 
+        static readonly string[] BastionUiRootNames =
+        {
+            "Canvas - In Game",
+            "Canvas - Pause Menu",
+            "BastionHud",
+        };
+
         static void BuildBastionScene()
         {
+            var preserved = CaptureUiRoots(ScenePath, BastionUiRootNames);
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             EnsureEventSystem();
             Palette pal = CreatePalette();
@@ -197,11 +168,69 @@ namespace GatekeeperBastion.EditorTools
             BuildHatch(pal, env.transform);
             SpawnPoint[] breaches = BuildSpawnPoints(pal);
             BuildPlayerRig(pal);
+            // Restore UI before GameSystems so HudController on the authored canvas is found.
+            RestoreUiRoots(preserved);
             BuildGameSystems(enemies, breaches);
             BakeNavMesh(env);
+            EnsureEventSystem();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log($"[SceneBuilder] Built {ScenePath}: EventSystem + bastion interior, hatch, 3 breaches, player rig, GameSystems, NavMesh.");
+            Debug.Log($"[SceneBuilder] Built {ScenePath}: EventSystem + bastion interior, hatch, 3 breaches, player rig, GameSystems, NavMesh (UI roots preserved if present).");
+        }
+
+        /// <summary>M35: geometry rebuild must not wipe authored Shift UI. Clone matching roots
+        /// with HideAndDontSave before NewScene, then re-parent into the new scene.</summary>
+        static GameObject[] CaptureUiRoots(string scenePath, string[] rootNames)
+        {
+            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath) == null)
+                return System.Array.Empty<GameObject>();
+
+            var open = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            var captured = new System.Collections.Generic.List<GameObject>();
+            foreach (var root in open.GetRootGameObjects())
+            {
+                if (!IsPreservedUiRoot(root.name, rootNames)) continue;
+                var clone = UnityEngine.Object.Instantiate(root);
+                clone.name = root.name;
+                SetHideFlagsRecursive(clone, HideFlags.HideAndDontSave);
+                captured.Add(clone);
+            }
+            return captured.ToArray();
+        }
+
+        static void SetHideFlagsRecursive(GameObject go, HideFlags flags)
+        {
+            if (go == null) return;
+            go.hideFlags = flags;
+            var transforms = go.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                if (transforms[i] != null)
+                    transforms[i].gameObject.hideFlags = flags;
+            }
+        }
+
+        static bool IsPreservedUiRoot(string name, string[] rootNames)
+        {
+            foreach (var n in rootNames)
+                if (name == n) return true;
+            if (name == "Canvas") return true;
+            return false;
+        }
+
+        static void RestoreUiRoots(GameObject[] preserved)
+        {
+            if (preserved == null || preserved.Length == 0) return;
+            var scene = EditorSceneManager.GetActiveScene();
+            foreach (var clone in preserved)
+            {
+                if (clone == null) continue;
+                var go = UnityEngine.Object.Instantiate(clone);
+                go.name = clone.name;
+                SetHideFlagsRecursive(go, HideFlags.None);
+                EditorSceneManager.MoveGameObjectToScene(go, scene);
+                UnityEngine.Object.DestroyImmediate(clone);
+            }
         }
 
         // ---------- assets ----------
@@ -352,7 +381,7 @@ namespace GatekeeperBastion.EditorTools
 
             // Collider-free floor decal so breaches are visible in the gray-box.
             var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            Object.DestroyImmediate(marker.GetComponent<Collider>());
+            UnityEngine.Object.DestroyImmediate(marker.GetComponent<Collider>());
             marker.name = "Marker";
             marker.transform.SetParent(go.transform, false);
             marker.transform.localPosition = new Vector3(0f, 0.03f, 0f);
@@ -367,7 +396,7 @@ namespace GatekeeperBastion.EditorTools
         {
             var player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             player.name = "Player";
-            Object.DestroyImmediate(player.GetComponent<Collider>());
+            UnityEngine.Object.DestroyImmediate(player.GetComponent<Collider>());
             player.transform.position = new Vector3(0f, 1.1f, -16f);
             player.GetComponent<Renderer>().sharedMaterial = pal.Player;
 
@@ -395,20 +424,16 @@ namespace GatekeeperBastion.EditorTools
         {
             var go = new GameObject("GameSystems");
             go.AddComponent<GameController>();
-            // BastionHud prefab already nests EndScreen (EndScreenView). Standalone
-            // EndScreens.prefab is the same hierarchy for reuse — do not also instantiate it
-            // here or HudController would have two end screens and zero wiring to the orphan.
-            var hudHost = InstantiateUiPrefab("BastionHud");
-            hudHost.name = "BastionHud";
-            hudHost.transform.SetParent(go.transform, false);
-            if (hudHost.GetComponent<HudController>() == null)
+            // M35: Bastion UI (Canvas - In Game / Pause) is authored in Bastion.unity — not spawned here.
+            // HudController must already exist on that authored hierarchy after the Shift HUD copy.
+            if (UnityEngine.Object.FindFirstObjectByType<HudController>(FindObjectsInactive.Include) == null)
+            {
+                var hudHost = new GameObject("BastionHud");
+                hudHost.transform.SetParent(go.transform, false);
                 hudHost.AddComponent<HudController>();
-            if (hudHost.GetComponentInChildren<GatekeeperBastion.Game.Ui.BastionHudView>(true) == null)
-                hudHost.AddComponent<GatekeeperBastion.Game.Ui.BastionHudView>();
-            if (hudHost.GetComponentInChildren<GatekeeperBastion.Game.Ui.EndScreenView>(true) == null)
-                Debug.LogWarning("[SceneBuilder] BastionHud missing EndScreenView — rebuild Bastion UI prefabs.");
-            else
-                EnsureNestedNamed(hudHost, "EndScreen", "BastionHud end screen");
+                Debug.LogWarning(
+                    "[SceneBuilder] No HudController in scene — stub host added. Copy Simple HUD canvases into Bastion.unity (M35 C).");
+            }
             go.AddComponent<DevConsole>();
             var spawner = go.AddComponent<WaveSpawner>();
             // All three kinds, or the spawner falls back to the default prefab and the wave is

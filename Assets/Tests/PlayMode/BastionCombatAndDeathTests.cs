@@ -255,10 +255,11 @@ namespace GatekeeperBastion.PlayTests
                     "Entering the Bastion must auto-board into Tethered (Docked is a transient boot phase).");
                 logs.AssertNoErrors("entering the Bastion scene");
 
-                // Something must draw the lose screen, or RETURN TO SHIP is unreachable.
+                // Something must drive the lose screen, or RETURN TO SHIP is unreachable.
                 Assert.IsNotNull(FindHudRenderer(),
-                    "No HUD component with an OnGUI pass exists in the Bastion scene, so the lose screen " +
-                    "(and its RETURN TO SHIP button) can never be drawn — the run dead-ends on death.");
+                    "No BastionHudView/HudController (uGUI) or Hud* OnGUI renderer exists in the Bastion " +
+                    "scene, so the lose screen (and its RETURN TO SHIP button) can never be drawn — " +
+                    "the run dead-ends on death.");
 
                 MetaState meta = GameSession.Meta;
                 Assert.IsNotNull(meta, "GameSession.Meta is null inside the Bastion scene.");
@@ -417,22 +418,25 @@ namespace GatekeeperBastion.PlayTests
             return null;
         }
 
-        /// <summary>Any MonoBehaviour in the active scene whose type name contains "Hud" and that
-        /// actually declares an OnGUI pass.</summary>
+        /// <summary>Bastion fight HUD: prefers BastionHudView / HudController (uGUI);
+        /// falls back to a Hud* MonoBehaviour that still declares OnGUI.</summary>
         static MonoBehaviour FindHudRenderer()
         {
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            MonoBehaviour onGuiFallback = null;
             foreach (MonoBehaviour mb in PlayTestUtil.FindAll<MonoBehaviour>())
             {
                 if (mb == null) continue;
                 Type type = mb.GetType();
+                if (type.Name == "BastionHudView" || type.Name == "HudController")
+                    return mb;
                 if (type.Name.IndexOf("Hud", StringComparison.OrdinalIgnoreCase) < 0) continue;
                 MethodInfo onGui;
                 try { onGui = type.GetMethod("OnGUI", flags); }
                 catch (AmbiguousMatchException) { onGui = null; }
-                if (onGui != null) return mb;
+                if (onGui != null && onGuiFallback == null) onGuiFallback = mb;
             }
-            return null;
+            return onGuiFallback;
         }
     }
 }

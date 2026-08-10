@@ -82,6 +82,7 @@ namespace GatekeeperBastion.Game
 
             var view = EnsureView();
             if (view == null) return;
+            SceneFlow.RepairCanvas(view.gameObject);
             WireView(view);
             view.RebuildRows(BuildRowSpecs());
             view.SetOpen(true);

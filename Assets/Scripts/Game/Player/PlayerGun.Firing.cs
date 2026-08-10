@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
+using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -188,10 +188,10 @@ namespace GatekeeperBastion.Game
         void ApplyTracerFromDef(WeaponDef def)
         {
             if (_tracerMat != null)
-                _tracerMat.color = Theme.Rgb(def.tracerR, def.tracerG, def.tracerB);
+                _tracerMat.color = FxColors.Rgb(def.tracerR, def.tracerG, def.tracerB);
             if (_critTracerMat != null)
             {
-                _critTracerMat.color = Theme.Rgb(
+                _critTracerMat.color = FxColors.Rgb(
                     Mathf.Min(1f, def.tracerR + 0.35f),
                     Mathf.Min(1f, def.tracerG + 0.35f),
                     Mathf.Min(1f, def.tracerB + 0.25f));

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
+using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -286,10 +286,10 @@ namespace GatekeeperBastion.Game
             if (shader == null) shader = Shader.Find("Unlit/Color");
             if (shader != null)
             {
-                _tracerMat = new Material(shader) { color = Theme.TracerDefault };
-                _sparkMat = new Material(shader) { color = Theme.SparkDefault };
-                _critTracerMat = new Material(shader) { color = Theme.CritTracer };
-                _critSparkMat = new Material(shader) { color = Theme.CritSpark };
+                _tracerMat = new Material(shader) { color = FxColors.TracerDefault };
+                _sparkMat = new Material(shader) { color = FxColors.SparkDefault };
+                _critTracerMat = new Material(shader) { color = FxColors.CritTracer };
+                _critSparkMat = new Material(shader) { color = FxColors.CritSpark };
             }
             else
             {

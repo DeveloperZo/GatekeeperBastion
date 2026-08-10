@@ -1,10 +1,12 @@
 using GatekeeperBastion.Sim;
+using Michsky.UI.Shift;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: base class for ship-hub console interactables — press E to open a
-    /// uGUI panel (cursor freed, movement locked via ShipController), Esc/CLOSE exits.</summary>
+    /// Shift panel via <see cref="MainPanelManager.OpenPanel"/> (cursor freed, movement locked
+    /// via ShipController), Esc/CLOSE exits.</summary>
     public abstract class StationTerminal : MonoBehaviour, IInteractable
     {
         const float ReopenLockoutSeconds = 0.3f;
@@ -12,6 +14,7 @@ namespace GatekeeperBastion.Game
         ShipController _ship;
         float _reopenAllowedAt;
         StationPanelView _view;
+        MainPanelManager _panels;
         int _lastContentHash;
         bool _wasOpen;
 
@@ -69,6 +72,7 @@ namespace GatekeeperBastion.Game
             else
             {
                 _view?.SetVisible(true);
+                OpenShiftPanel();
             }
             _wasOpen = true;
         }
@@ -92,17 +96,28 @@ namespace GatekeeperBastion.Game
         void RefreshPanel(MetaState meta)
         {
             _view = StationPanelView.EnsureInstance();
-            _view.SetOnClose(Close);
-            _view.SetCloseLabel($"CLOSE  ({Controls.DisplayOf(ControlId.FreeCursor)})");
-            _view.SetHeader(
-                StationName,
-                meta.BankedSalvage,
-                $"Lifetime: {meta.LifetimeSalvageEarned} earned  —  {meta.LifetimeSalvageSpent} spent");
-            _view.ClearBody();
-            BuildPanel(_view, meta);
-            _view.PlayEntrance();
-            _view.SetVisible(true);
-            // DevTaintBanner stays IMGUI on Bastion HudController; Ship stations skip it in uGUI path.
+            if (_view != null)
+            {
+                _view.SetOnClose(Close);
+                _view.SetCloseLabel($"CLOSE  ({Controls.DisplayOf(ControlId.FreeCursor)})");
+                _view.SetHeader(
+                    StationName,
+                    meta.BankedSalvage,
+                    $"Lifetime: {meta.LifetimeSalvageEarned} earned  —  {meta.LifetimeSalvageSpent} spent");
+                _view.ClearBody();
+                BuildPanel(_view, meta);
+                _view.PlayEntrance();
+                _view.SetVisible(true);
+            }
+            OpenShiftPanel();
+        }
+
+        void OpenShiftPanel()
+        {
+            if (_panels == null)
+                _panels = FindFirstObjectByType<MainPanelManager>(FindObjectsInactive.Include);
+            if (_panels == null) return;
+            _panels.OpenPanel(StationName);
         }
 
         protected abstract void BuildPanel(StationPanelView view, MetaState m);

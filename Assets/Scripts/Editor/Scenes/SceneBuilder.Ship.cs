@@ -44,10 +44,17 @@ namespace GatekeeperBastion.EditorTools
         /// looking straight down the common room at the NAV MAP alcove; CREW QUARTERS is the
         /// console directly behind him.
         /// </summary>
+        static readonly string[] ShipUiRootNames =
+        {
+            "Canvas",
+            "ShipHud",
+            "StationPanel",
+        };
+
         static void BuildShipScene()
         {
+            var preserved = CaptureUiRoots(ShipScenePath, ShipUiRootNames);
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            EnsureEventSystem();
             ShipPalette pal = CreateShipPalette();
 
             BuildShipLighting();
@@ -55,41 +62,24 @@ namespace GatekeeperBastion.EditorTools
             BuildShipStations(pal);
             BuildShipPlayerRig();
 
-            // ShipController owns cursor/walk state; ShipHud is the ONLY HUD in this scene
-            // (HudController is Bastion-only and draws nothing without a GameController).
-            // StationPanel (with nested ArmoryWheel) is the shared station host — stations
-            // resolve it via StationPanelView.EnsureInstance(). DevConsole is editor/dev-build
-            // only — F8 grant salvage reaches shop states here.
+            // ShipController owns cursor/walk state. M35: Main Menu Canvas + station panels are
+            // authored in Ship.unity (copied from Shift) — SceneBuilder must not spawn UI.
             var control = new GameObject("ShipController");
             control.AddComponent<ShipController>();
-            var shipHud = InstantiateUiPrefab("ShipHud");
-            shipHud.name = "ShipHud";
-            shipHud.transform.SetParent(control.transform, false);
-            if (shipHud.GetComponent<ShipHud>() == null)
-                shipHud.AddComponent<ShipHud>();
-            if (shipHud.GetComponentInChildren<ShipHudView>(true) == null)
-                shipHud.AddComponent<ShipHudView>();
-
-            var stationPanel = InstantiateUiPrefab("StationPanel");
-            stationPanel.name = "StationPanel";
-            stationPanel.transform.SetParent(control.transform, false);
-            if (stationPanel.GetComponentInChildren<StationPanelView>(true) == null)
-                stationPanel.AddComponent<StationPanelView>();
-            // ArmoryWheel is nested under StationPanel by BastionUiAssembler — not a scene root.
-            if (stationPanel.GetComponentInChildren<ArmoryWheelView>(true) == null)
-                Debug.LogWarning(
-                    "[SceneBuilder] StationPanel missing ArmoryWheelView — re-run Assemble Bastion UI.");
-            else
-                EnsureNestedNamed(stationPanel, "ArmoryWheel", "StationPanel ArmoryWheel");
-
+            if (UnityEngine.Object.FindFirstObjectByType<ShipHud>(FindObjectsInactive.Include) == null)
+                control.AddComponent<ShipHud>();
             control.AddComponent<DevConsole>();
+            RestoreUiRoots(preserved);
+            // After the restore: the Shift Canvas nests its own Event System, and a second one
+            // makes uGUI log a warning every frame.
+            EnsureEventSystem();
 
             EditorSceneManager.SaveScene(scene, ShipScenePath);
             Debug.Log(
                 $"[SceneBuilder] Built {ShipScenePath}: common room + 4 alcoves, " +
                 "ARMORY/FABRICATION/NAV MAP/CREW QUARTERS stations (eye-height screens, " +
-                "front-facing labels), gunless player rig, ShipController + ShipHud + " +
-                "StationPanel (ArmoryWheel nested) + DevConsole.");
+                "front-facing labels), gunless player rig, ShipController + DevConsole. " +
+                "UI authored separately (M35); preserved roots restored if present.");
         }
 
         /// <summary>Home palette: clean steel blues/greys vs the bastion's dark violet/teal.
@@ -255,7 +245,7 @@ namespace GatekeeperBastion.EditorTools
             else
             {
                 var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                Object.DestroyImmediate(marker.GetComponent<Collider>());
+                UnityEngine.Object.DestroyImmediate(marker.GetComponent<Collider>());
                 marker.name = "LabelMarker";
                 marker.transform.SetParent(root.transform, false);
                 marker.transform.localPosition = new Vector3(0f, 2.45f, 0f);
@@ -273,7 +263,7 @@ namespace GatekeeperBastion.EditorTools
 
             var player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             player.name = "Player";
-            Object.DestroyImmediate(player.GetComponent<Collider>());
+            UnityEngine.Object.DestroyImmediate(player.GetComponent<Collider>());
             player.transform.position = new Vector3(0f, 1.1f, -4f);
             player.GetComponent<Renderer>().sharedMaterial = playerMat;
 

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
 using UnityEngine.AI;
+using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -414,7 +414,7 @@ namespace GatekeeperBastion.Game
             var myRenderer = GetComponentInChildren<Renderer>();
             Color tint = myRenderer != null && myRenderer.sharedMaterial != null
                 ? myRenderer.sharedMaterial.color
-                : Theme.EnemyAlert;
+                : FxColors.EnemyAlert;
             Effects.DeathExplosion(transform.position, tint);
         }
     }

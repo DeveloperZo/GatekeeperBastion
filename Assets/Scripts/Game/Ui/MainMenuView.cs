@@ -7,16 +7,32 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game.Ui
 {
-    /// <summary>Main menu presentation — Shift buttons, campaign strip, overwrite modal, accent bar.</summary>
+    /// <summary>Binds the front end copied out of Shift's <c>Main Menu (Desktop).unity</c>.
+    /// Panels are switched with <see cref="MainPanelManager.OpenPanel"/> and the overwrite
+    /// prompt is Shift's <c>Exit</c> modal driven by <see cref="ModalWindowManager"/> — this
+    /// class holds no layout, no colour and no rect maths (M35 criteria 6, 7, 17).</summary>
+    /// <remarks>
+    /// Names the scene must use, because they are how this binds when nothing is serialised:
+    /// the panel that holds the four buttons is <c>Home</c>; the buttons are <c>Continue</c>,
+    /// <c>Start New</c>, <c>Options</c> and <c>Quit</c>; the confirm modal is <c>Exit</c>,
+    /// with <c>Confirm</c> and <c>Cancel</c> buttons.
+    /// </remarks>
     public sealed class MainMenuView : MonoBehaviour
     {
-        [SerializeField] GameObject _mainRoot;
+        public const string HomePanel = "Home";
+
+        const string CanvasRoot = "Canvas";
+        const string ContinueName = "Continue";
+        const string StartNewName = "Start New";
+        const string OptionsName = "Options";
+        const string QuitName = "Quit";
+        const string ModalName = "Exit";
+        const string ConfirmName = "Confirm";
+        const string CancelName = "Cancel";
+
+        [SerializeField] MainPanelManager _panels;
         [SerializeField] GameObject _continueButton;
-        [SerializeField] TextMeshProUGUI _campaignBanked;
-        [SerializeField] TextMeshProUGUI _campaignRuns;
-        [SerializeField] TextMeshProUGUI _campaignDeepest;
         [SerializeField] TextMeshProUGUI _campaignLine;
-        [SerializeField] RectTransform _accentBar;
         [SerializeField] Button _continueBtn;
         [SerializeField] Button _startNewBtn;
         [SerializeField] Button _optionsBtn;
@@ -24,12 +40,9 @@ namespace GatekeeperBastion.Game.Ui
         [SerializeField] ModalWindowManager _overwriteModal;
         [SerializeField] Button _overwriteConfirmBtn;
         [SerializeField] Button _overwriteCancelBtn;
-        [SerializeField] TextMeshProUGUI _overwriteConfirmLabel;
-        [SerializeField] TextMeshProUGUI _overwriteCancelLabel;
 
+        bool _resolved;
         bool _wired;
-        RectTransform _accentTarget;
-        Vector2 _accentRest;
 
         public Action onContinue;
         public Action onStartNew;
@@ -40,12 +53,13 @@ namespace GatekeeperBastion.Game.Ui
 
         public bool OverwriteOpen { get; private set; }
 
-        /// <summary>authored prefab required — wires serialized buttons; no construction.</summary>
+        /// <summary>True once the Shift Canvas is present — the signal that the front end
+        /// exists in this scene at all.</summary>
+        public bool HasFrontEnd => _panels != null;
+
         public void EnsureBuilt()
         {
-            if (_mainRoot != null) _mainRoot.SetActive(true);
-            if (_accentBar != null) _accentRest = _accentBar.anchoredPosition;
-            ApplyModalVerbs();
+            Resolve();
             if (_wired) return;
             _wired = true;
 
@@ -65,52 +79,32 @@ namespace GatekeeperBastion.Game.Ui
             });
         }
 
-        void Update()
+        void Resolve()
         {
-            TrackAccentFromSelection();
-            if (_accentBar == null || _accentTarget == null) return;
-            Vector2 want = new Vector2(_accentRest.x, _accentTarget.anchoredPosition.y);
-            _accentBar.anchoredPosition = Vector2.Lerp(
-                _accentBar.anchoredPosition, want, 1f - Mathf.Exp(-12f * Time.unscaledDeltaTime));
-        }
+            if (_resolved) return;
+            if (_panels == null) _panels = UiBind.First<MainPanelManager>();
+            if (_panels == null) return;
+            _resolved = true;
 
-        void TrackAccentFromSelection()
-        {
-            var es = EventSystem.current;
-            if (es == null || es.currentSelectedGameObject == null) return;
-            var rt = es.currentSelectedGameObject.transform as RectTransform;
-            if (rt == null) return;
-            if (IsMenuButton(rt)) _accentTarget = rt;
-        }
+            Transform canvas = UiBind.Root(CanvasRoot) ?? _panels.transform.root;
+            Transform home = UiBind.Find(canvas, HomePanel) ?? canvas;
 
-        bool IsMenuButton(RectTransform rt)
-        {
-            return rt == (_continueBtn != null ? _continueBtn.transform : null)
-                || rt == (_startNewBtn != null ? _startNewBtn.transform : null)
-                || rt == (_optionsBtn != null ? _optionsBtn.transform : null)
-                || rt == (_quitBtn != null ? _quitBtn.transform : null);
-        }
+            if (_continueBtn == null) _continueBtn = UiBind.Get<Button>(home, ContinueName);
+            if (_continueButton == null && _continueBtn != null)
+                _continueButton = _continueBtn.gameObject;
+            if (_startNewBtn == null) _startNewBtn = UiBind.Get<Button>(home, StartNewName);
+            if (_optionsBtn == null) _optionsBtn = UiBind.Get<Button>(home, OptionsName);
+            if (_quitBtn == null) _quitBtn = UiBind.Get<Button>(home, QuitName);
 
-        void ApplyModalVerbs()
-        {
-            if (_overwriteConfirmLabel != null)
-                _overwriteConfirmLabel.text = "Overwrite and start new";
-            if (_overwriteCancelLabel != null)
-                _overwriteCancelLabel.text = "Keep my save";
-            SetMainButtonText(_overwriteConfirmBtn, "Overwrite and start new");
-            SetMainButtonText(_overwriteCancelBtn, "Keep my save");
-        }
-
-        static void SetMainButtonText(Button btn, string text)
-        {
-            if (btn == null) return;
-            var mb = btn.GetComponent<MainButton>();
-            if (mb != null)
+            if (_overwriteModal == null)
+                _overwriteModal = UiBind.Get<ModalWindowManager>(canvas, ModalName);
+            if (_overwriteModal != null)
             {
-                mb.buttonText = text;
-                if (mb.normalText != null) mb.normalText.text = text;
-                if (mb.highlightedText != null) mb.highlightedText.text = text;
-                if (mb.pressedText != null) mb.pressedText.text = text;
+                var modal = _overwriteModal.transform;
+                if (_overwriteConfirmBtn == null)
+                    _overwriteConfirmBtn = UiBind.Get<Button>(modal, ConfirmName);
+                if (_overwriteCancelBtn == null)
+                    _overwriteCancelBtn = UiBind.Get<Button>(modal, CancelName);
             }
         }
 
@@ -125,63 +119,70 @@ namespace GatekeeperBastion.Game.Ui
         {
             var es = EventSystem.current;
             if (es == null) return;
-            GameObject target = null;
-            if (_continueButton != null && _continueButton.activeInHierarchy && _continueBtn != null)
-                target = _continueBtn.gameObject;
-            else if (_startNewBtn != null)
-                target = _startNewBtn.gameObject;
-            if (target != null)
-            {
-                es.SetSelectedGameObject(target);
-                _accentTarget = target.transform as RectTransform;
-            }
+            Button target = _continueButton != null && _continueButton.activeInHierarchy
+                ? _continueBtn
+                : _startNewBtn;
+            if (target != null) es.SetSelectedGameObject(target.gameObject);
         }
 
         public void SetCampaignStrip(int banked, int runs, int deepestWave)
         {
             EnsureBuilt();
-            if (_campaignBanked != null) _campaignBanked.text = $"{banked} banked";
-            if (_campaignRuns != null) _campaignRuns.text = $"{runs} run(s)";
             string deepest = deepestWave < 1 ? "1" : deepestWave.ToString();
-            if (_campaignDeepest != null) _campaignDeepest.text = $"deepest Wave {deepest}";
-            if (_campaignLine != null)
-                _campaignLine.text = $"{banked} banked  —  {runs} run(s)  —  deepest Wave {deepest}";
+            UiBind.SetText(_campaignLine,
+                $"{banked} banked  —  {runs} run(s)  —  deepest Wave {deepest}");
         }
 
         public void SetContinueVisible(bool visible)
         {
             EnsureBuilt();
-            if (_continueButton != null) _continueButton.SetActive(visible);
+            UiBind.Show(_continueButton, visible);
+        }
+
+        /// <summary>Opens a panel by the name it is registered under in
+        /// <see cref="MainPanelManager.panels"/>. The only way this class changes screens.</summary>
+        public void OpenPanel(string panelName)
+        {
+            EnsureBuilt();
+            if (_panels != null && !string.IsNullOrEmpty(panelName))
+                _panels.OpenPanel(panelName);
         }
 
         public void ShowMain()
         {
             EnsureBuilt();
             OverwriteOpen = false;
-            if (_mainRoot != null) _mainRoot.SetActive(true);
-            // Shift ModalWindowOut starts a coroutine — only safe when the modal GO is active.
+            // ModalWindowOut starts a coroutine — only legal while the modal object is active.
             if (_overwriteModal != null && _overwriteModal.gameObject.activeInHierarchy)
                 _overwriteModal.ModalWindowOut();
+            OpenPanel(HomePanel);
             FocusDefault();
         }
 
         public void ShowOverwriteModal(string title, string body)
         {
             EnsureBuilt();
-            ApplyModalVerbs();
             OverwriteOpen = true;
             if (_overwriteModal != null)
             {
                 _overwriteModal.useCustomTexts = true;
-                if (_overwriteModal.windowTitle != null) _overwriteModal.windowTitle.text = title;
-                if (_overwriteModal.windowDescription != null)
-                    _overwriteModal.windowDescription.text = body;
+                UiBind.SetText(_overwriteModal.windowTitle, title);
+                UiBind.SetText(_overwriteModal.windowDescription, body);
                 _overwriteModal.ModalWindowIn();
             }
 
             var es = EventSystem.current;
             if (es != null && _overwriteCancelBtn != null)
                 es.SetSelectedGameObject(_overwriteCancelBtn.gameObject);
+        }
+
+        /// <summary>Hides the whole front end so the walkable hub behind it becomes the game.</summary>
+        public void SetVisible(bool visible)
+        {
+            Resolve();
+            if (_panels == null) return;
+            var canvas = UiBind.Root(CanvasRoot);
+            UiBind.Show(canvas, visible);
         }
     }
 }

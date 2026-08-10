@@ -23,7 +23,11 @@ re-litigating a cut costs more than the cut saved.
   Pause in any multiplayer setting is a menu for one player while time keeps flowing, so the
   overlay is non-blocking from the start: duck audio, blur the frame, keep the sim ticking
   behind a semi-transparent panel. Building it blocking now is the retrofit the Sim seam
-  exists to avoid (`Architecture.md`). Enforced as M35 criterion 30.
+  exists to avoid (`Architecture.md`). Enforced as M35 criterion 13.
+- **SceneBuilder owning UI.** Rejected (M35). `SceneBuilder` owns geometry, spawns and
+  NavMesh. Shift canvases are authored in `Ship.unity` / `Bastion.unity` and preserved across
+  Build All. Generating UI prefabs from assemblers shipped scaffolding that never looked like
+  Shift's demos.
 - **Unity asset files in Git LFS.** `ProjectSettings/EditorSettings.asset` sets
   `m_SerializationMode: 2` — Force Text — so every `.unity`, `.prefab`, `.asset`, `.mat`,
   `.anim`, `.controller` and `.meta` in this project is YAML. **They stay in git as text.**

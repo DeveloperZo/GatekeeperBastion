@@ -93,8 +93,6 @@ namespace GatekeeperBastion.Game
                 ShortcutPanel.FillLines(ControlContext.Ship, _shortcutLines);
                 _view.SetShortcutLines(_shortcutLines, false);
             }
-
-            _view.LayoutPrompt(ShortcutPanel.LastDrawnHeight);
         }
 
         void Bind()

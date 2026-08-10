@@ -1,7 +1,7 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Util;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -87,7 +87,7 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Small spark burst at a weapon impact point.</summary>
         public static void ImpactSparks(Vector3 position)
-            => Burst(position, Theme.FxSparks, 14, speed: 5f, size: 0.07f, lifetime: 0.28f, gravity: 0.6f);
+            => Burst(position, FxColors.FxSparks, 14, speed: 5f, size: 0.07f, lifetime: 0.28f, gravity: 0.6f);
 
         /// <summary>CRITICAL HIT impact — the same spark burst as ImpactSparks but roughly triple
         /// the particles, faster, and pushed toward white, so a crit reads as a crit from across
@@ -95,7 +95,7 @@ namespace GatekeeperBastion.Game
         /// DeathExplosion uses two: a single tinted burst just looks like a normal hit that lagged.</summary>
         public static void CritSparks(Vector3 position)
         {
-            Burst(position, Theme.FxBurst, 40, speed: 8f, size: 0.11f, lifetime: 0.34f, gravity: 0.5f);
+            Burst(position, FxColors.FxBurst, 40, speed: 8f, size: 0.11f, lifetime: 0.34f, gravity: 0.5f);
             Burst(position, Color.white, 14, speed: 3.2f, size: 0.13f, lifetime: 0.22f, gravity: 0f);
         }
 
@@ -108,11 +108,11 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Short flash at the muzzle each shot.</summary>
         public static void MuzzleFlash(Vector3 position)
-            => Burst(position, Theme.FxMuzzle, 6, speed: 1.6f, size: 0.05f, lifetime: 0.09f, gravity: 0f);
+            => Burst(position, FxColors.FxMuzzle, 6, speed: 1.6f, size: 0.05f, lifetime: 0.09f, gravity: 0f);
 
         /// <summary>Sparks when something hits the hatch — damage you can see across the room.</summary>
         public static void HatchDamageSparks(Vector3 position)
-            => Burst(position, Theme.FxBlood, 20, speed: 4f, size: 0.1f, lifetime: 0.4f, gravity: 0.8f);
+            => Burst(position, FxColors.FxBlood, 20, speed: 4f, size: 0.1f, lifetime: 0.4f, gravity: 0.8f);
 
         static void Burst(Vector3 position, Color color, int count, float speed, float size, float lifetime, float gravity)
         {

@@ -1,25 +1,23 @@
 using System;
 using GatekeeperBastion.Game.Ui;
-using GatekeeperBastion.Sim;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>M21 ARMORY upgrade wheel — five spokes, hub, projection lines, buy row.
-    /// Hierarchy is authored (Shift Panel Button spokes around a hub). Configure only binds data.</summary>
+    /// <summary>Binds the authored ARMORY upgrade wheel — five spokes placed around a hub in the
+    /// scene, not by this class. <see cref="Configure"/> writes labels, marks the centre spoke and
+    /// arms the buy action; the ring geometry and every colour are the authored panel's
+    /// (M35 criteria 6, 17).</summary>
     public sealed class ArmoryWheelView : MonoBehaviour
     {
         public const int SpokeCount = 5;
-        const float RingRadius = 88f;
 
-        [SerializeField] RectTransform _wheelRoot;
-        [SerializeField] RectTransform[] _spokeRoots = new RectTransform[SpokeCount];
         [SerializeField] Button[] _spokes = new Button[SpokeCount];
-        [SerializeField] Image[] _spokeFills = new Image[SpokeCount];
         [SerializeField] TMP_Text[] _spokeLabels = new TMP_Text[SpokeCount];
-        [SerializeField] Image[] _spokeRays = new Image[SpokeCount];
+        /// <summary>Optional per-spoke "this is the centre" decoration, authored from Shift parts.</summary>
+        [SerializeField] GameObject[] _spokeSelected;
         [SerializeField] TMP_Text _hubTitle;
         [SerializeField] TMP_Text _hubSub;
         [SerializeField] TMP_Text _projFire;
@@ -32,9 +30,9 @@ namespace GatekeeperBastion.Game
 
         public void EnsureBuilt()
         {
-            if (_hubLabeled || _hubSub == null) return;
+            if (_hubLabeled) return;
             _hubLabeled = true;
-            _hubSub.text = "FOCUS";
+            UiBind.SetText(_hubSub, "FOCUS");
         }
 
         public void Configure(ArmoryWheelDisplay d, Action<int> onSelectCentre, Action buy)
@@ -44,42 +42,21 @@ namespace GatekeeperBastion.Game
 
             for (int i = 0; i < SpokeCount; i++)
             {
-                if (_spokes[i] == null) continue;
+                if (_spokes == null || i >= _spokes.Length || _spokes[i] == null) continue;
 
+                // Distance 0 is the spoke currently in focus; 1 neighbours it; 2 is opposite.
                 int dist = d.SpokeDistances != null && i < d.SpokeDistances.Length
                     ? d.SpokeDistances[i] : 2;
-                float angleDeg = -90f + i * (360f / WeaponWheel.AttrCount);
-                float rad = angleDeg * Mathf.Deg2Rad;
-                float sx = Mathf.Cos(rad) * RingRadius;
-                float sy = Mathf.Sin(rad) * RingRadius;
+                bool centre = dist == 0;
 
-                if (_spokeRoots[i] != null)
+                if (_spokeSelected != null && i < _spokeSelected.Length)
+                    UiBind.Show(_spokeSelected[i], centre);
+
+                if (_spokeLabels != null && i < _spokeLabels.Length)
                 {
-                    _spokeRoots[i].anchorMin = _spokeRoots[i].anchorMax = new Vector2(0.5f, 0.5f);
-                    _spokeRoots[i].anchoredPosition = new Vector2(sx, sy);
-                }
-
-                if (_spokeRays[i] != null)
-                {
-                    var rayRt = _spokeRays[i].rectTransform;
-                    rayRt.anchorMin = rayRt.anchorMax = new Vector2(0.5f, 0.5f);
-                    rayRt.pivot = new Vector2(0.5f, 0f);
-                    rayRt.sizeDelta = new Vector2(dist == 0 ? 3f : 1.5f, RingRadius);
-                    rayRt.anchoredPosition = Vector2.zero;
-                    rayRt.localRotation = Quaternion.Euler(0f, 0f, angleDeg + 90f);
-                    _spokeRays[i].color = dist == 2 ? Theme.WheelSpokeDark : Theme.WheelSpokeLit;
-                }
-
-                Color fill = dist == 0 ? Theme.WheelCentre
-                    : dist == 1 ? Theme.WheelNeighbour : Theme.WheelOpposite;
-                if (_spokeFills[i] != null) _spokeFills[i].color = fill;
-
-                if (_spokeLabels[i] != null)
-                {
-                    _spokeLabels[i].text = d.SpokeLabels != null && i < d.SpokeLabels.Length
+                    string text = d.SpokeLabels != null && i < d.SpokeLabels.Length
                         ? d.SpokeLabels[i] : "";
-                    _spokeLabels[i].color = dist == 0 ? Theme.WheelTextOnCentre
-                        : dist == 1 ? Theme.Ink : Theme.InkFaint;
+                    UiBind.SetText(_spokeLabels[i], centre ? $"<b>{text}</b>" : text);
                 }
 
                 int captured = d.SpokeRingIndices != null && i < d.SpokeRingIndices.Length
@@ -88,25 +65,20 @@ namespace GatekeeperBastion.Game
                 _spokes[i].onClick.AddListener(() => onSelectCentre?.Invoke(captured));
             }
 
-            if (_hubTitle != null) _hubTitle.text = d.HubTitle ?? "";
-            if (_projFire != null) _projFire.text = d.ProjFireLine ?? "";
-            if (_projReload != null) _projReload.text = d.ProjReloadLine ?? "";
+            UiBind.SetText(_hubTitle, d.HubTitle);
+            UiBind.SetText(_projFire, d.ProjFireLine);
+            UiBind.SetText(_projReload, d.ProjReloadLine);
 
             bool showBuy = d.ShowBuyButton;
             if (_buyButton != null)
             {
-                _buyButton.gameObject.SetActive(showBuy);
+                UiBind.Show(_buyButton, showBuy);
                 _buyButton.onClick.RemoveAllListeners();
                 if (showBuy) _buyButton.onClick.AddListener(() => buy?.Invoke());
             }
-            if (_buyLabel != null && showBuy) _buyLabel.text = d.BuyButtonLabel ?? "";
+            if (showBuy) UiBind.SetText(_buyLabel, d.BuyButtonLabel);
 
-            bool showReason = !showBuy && !string.IsNullOrEmpty(d.ReasonLine);
-            if (_reasonLabel != null)
-            {
-                _reasonLabel.gameObject.SetActive(showReason);
-                if (showReason) _reasonLabel.text = d.ReasonLine;
-            }
+            UiBind.SetTextOrHide(_reasonLabel, showBuy ? null : d.ReasonLine);
         }
     }
 }

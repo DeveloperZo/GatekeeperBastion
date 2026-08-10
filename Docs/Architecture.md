@@ -46,7 +46,7 @@ Assets/Scripts/
     Input/     Controls  ShortcutPanel — single binding list + bottom-left key panel
     Dev/       DevCommands  DevConsole (editor/dev-build only)
   Editor/
-    Scenes/  SceneBuilder(+.Ship, +.Enemies) — generates all four scenes
+    Scenes/  SceneBuilder(+.Ship, +.Enemies) — geometry/spawns/NavMesh; UI authored
     Tools/   AutoVerify (file-bridge test runner)  LogTools (Logs menu)
   Util/      Log (front end)  LogFile (one file per session)
 
@@ -127,10 +127,11 @@ GUILayout; the Bastion HUD may not. GUIStyles there are per-instance, never
 static (static styles survive domain-reload-disabled sessions holding destroyed
 font references).
 
-**4. Scenes are generated, not authored.** `SceneBuilder` builds Splash,
-MainMenu, Ship and Bastion into `Assets/Scenes/` and registers them in build
-settings. After any geometry, station or spawn-point change, re-run
-**`GatekeeperBastion > Build All Scenes`**. Hand-editing a scene loses the edit on
-the next rebuild. A scene missing from build settings makes `SceneManager.LoadScene`
-throw, which strands the player on the end screen — `SceneFlow` guards this and
-logs an error telling you to rebuild.
+**4. Geometry is generated; UI is authored.** `SceneBuilder` builds Ship and Bastion
+geometry, spawns and NavMesh into `Assets/Scenes/` and registers Splash, MainMenu, Ship,
+Bastion in build settings. It does **not** own UI — Shift canvases live in those scenes as
+authored content and are preserved across Build All. After any geometry, station or
+spawn-point change, re-run **`GatekeeperBastion > Build All Scenes`**. Hand-editing
+**geometry** loses the edit on the next rebuild; hand-editing **UI** does not. A scene
+missing from build settings makes `SceneManager.LoadScene` throw, which strands the player
+on the end screen — `SceneFlow` guards this and logs an error telling you to rebuild.

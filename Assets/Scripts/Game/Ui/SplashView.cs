@@ -1,52 +1,80 @@
+using Michsky.UI.Shift;
 using TMPro;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game.Ui
 {
-    /// <summary>Splash presentation — setters only; hierarchy from authored Shift Canvas variant.</summary>
+    /// <summary>Binds Shift's <c>Splash Screen</c> branch. When a
+    /// <see cref="SplashScreenManager"/> is present it owns the animation and this class only
+    /// writes copy; the fades are the authored Animator's, not ours (M35 criterion 6).</summary>
     public sealed class SplashView : MonoBehaviour
     {
         const string FailMessage =
-            "MainMenu scene is not in the build settings — run GatekeeperBastion > Build All Scenes.";
+            "The Ship scene is not in the build settings — run GatekeeperBastion > Build All Scenes.";
 
         const string PressAnyKey = "press any key";
 
+        const string SplashRoot = "Splash Screen";
+        const string PressBlock = "Press Any Key";
+        const string PressLabel = "Press Text";
+        const string LogoName = "Logo";
+
+        [SerializeField] SplashScreenManager _manager;
         [SerializeField] CanvasGroup _logoGroup;
         [SerializeField] TextMeshProUGUI _version;
         [SerializeField] TextMeshProUGUI _subtitle;
         [SerializeField] CanvasGroup _pressGroup;
 
+        bool _resolved;
+
         public CanvasGroup LogoGroup => _logoGroup;
         public CanvasGroup PressGroup => _pressGroup;
 
-        /// <summary>authored prefab required — activates serialized children only.</summary>
+        /// <summary>True when Shift's splash manager drives the sequence, in which case the
+        /// controller must not fight its Animator.</summary>
+        public bool ShiftDriven => _manager != null;
+
         public void EnsureBuilt()
         {
+            Resolve();
             if (_version != null)
             {
                 _version.gameObject.SetActive(true);
                 _version.text = Application.version;
             }
-            // Prompt stays hidden until SplashController marks the MainMenu load ready
-            // (or fails / times out). Showing "press any key" early feels like a soft-lock.
-            if (_subtitle != null)
-            {
-                _subtitle.text = PressAnyKey;
-                _subtitle.gameObject.SetActive(false);
-            }
-            if (_pressGroup != null) _pressGroup.gameObject.SetActive(false);
+            if (ShiftDriven) return;
+
+            // Without Shift's manager the prompt stays hidden until the controller says the
+            // game is ready; an early "press any key" reads as a soft-lock.
+            UiBind.SetText(_subtitle, PressAnyKey);
+            UiBind.Show(_subtitle, false);
+            UiBind.Show(_pressGroup, false);
+        }
+
+        void Resolve()
+        {
+            if (_resolved) return;
+            _resolved = true;
+            if (_manager == null) _manager = UiBind.First<SplashScreenManager>();
+
+            Transform splash = UiBind.Find(transform, SplashRoot);
+            if (splash == null && _manager != null && _manager.splashScreen != null)
+                splash = _manager.splashScreen.transform;
+            if (splash == null) return;
+
+            if (_logoGroup == null) _logoGroup = UiBind.Get<CanvasGroup>(splash, LogoName);
+            if (_pressGroup == null) _pressGroup = UiBind.Get<CanvasGroup>(splash, PressBlock);
+            if (_subtitle == null) _subtitle = UiBind.Get<TextMeshProUGUI>(splash, PressLabel);
         }
 
         public void SetPressVisible(bool visible)
         {
-            if (_pressGroup != null) _pressGroup.gameObject.SetActive(visible);
-            if (_subtitle != null) _subtitle.gameObject.SetActive(visible);
+            if (ShiftDriven) return;
+            UiBind.Show(_pressGroup, visible);
+            UiBind.Show(_subtitle, visible);
         }
 
-        public void SetSubtitle(string text)
-        {
-            if (_subtitle != null) _subtitle.text = text;
-        }
+        public void SetSubtitle(string text) => UiBind.SetText(_subtitle, text);
 
         public void SetFailed(bool failed)
         {
