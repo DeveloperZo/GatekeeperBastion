@@ -254,6 +254,58 @@ Three paths, in increasing cost:
 If you changed only comments, the harness result must be identical. If it isn't,
 you changed code; revert.
 
+## Driving the editor
+
+**The editor is for effecting change and for running the game. It is never for finding
+something out.** Asset serialization is Force Text
+(`ProjectSettings/EditorSettings.asset`, `m_SerializationMode: 2`), so every scene, prefab
+and asset is plain YAML that `grep` reads in milliseconds. A domain reload plus a scene open
+is tens of seconds and a round-trip of tokens, and it is the single largest sink of
+development time in this project.
+
+**The test: could this be answered or done by reading or editing text?** If yes, the editor
+is the wrong tool, whatever the question.
+
+**Writing code is the largest activity and none of it needs the editor.** `.cs` files are
+text. What needs Unity is *compiling* them, and that is not the same as driving it:
+
+- **`Sim/` and `Tests/EditMode/` never need Unity at all.** `Tools/verify/run.sh` compiles
+  them with `mcs` and runs them in about 80 ms. Write, compile, test, iterate — the editor is
+  not in the loop, and after M39's assembly split the boundary is enforced by the compiler.
+- **`Game/` and `Editor/` need Unity to compile, and Unity does that itself on focus.**
+  Read the result from `Library/Bee/CachedNodeOutput`. **Do not drive the editor to ask
+  whether it compiled** — the answer is a file. One MCP call to force a compile when the
+  editor is unfocused is fine; a call per edit is the loop this rule exists to kill.
+- **A compile is not a test.** Compiling proves nothing about behaviour. If the change is
+  sim logic, path 1 answers it offline; if it touches a MonoBehaviour, a scene or the save
+  file, only path 3 does.
+
+| Do it offline | Needs the editor |
+|---|---|
+| **Write any `.cs` file** — game code, tests, tools | Compile `Game/` or `Editor/` — but read the errors from `Library/Bee/CachedNodeOutput`, do not ask the editor |
+| Read any serialized value — a field, a reference, a component list, a hierarchy | Create a GameObject, component or prefab instance — fileIDs and GUIDs must be allocated by the serializer |
+| Set an existing field, swap a reference, rename an object | Re-import an asset after changing its importer settings |
+| Count, audit or grep anything across the tree | Bake NavMesh, lightmaps or a sprite atlas |
+| Sim and tuning tests — `Tools/verify/run.sh`, seconds | PlayMode tests, and anything touching a MonoBehaviour, a scene or the save file — path 3 |
+| Read what happened in a Run — `Tools/wave-report/run.sh`, the session log | Confirm the project actually compiles and the scenes load |
+| Read a compile error — `Library/Bee/CachedNodeOutput` | Author UI: the human does this in the editor, not an agent through a script |
+
+**Three rules on top of the table.**
+
+**A milestone's acceptance criteria may not require driving the editor — only reading its
+output.** A criterion that reads "the agent assembles X in the scene" turns authoring into a
+code-generation problem and puts a domain reload in the inner loop. Criteria gate on a grep,
+the harness, a session log, or a screenshot a human took.
+
+**If the editor is genuinely needed, batch it.** One session, one entry point, one pass —
+`-executeMethod` or a single menu item. Never a per-item loop, never a polling handshake, and
+never `[InitializeOnLoad]`. The AutoVerify bridge is the one file-sentinel mechanism this
+project has and there is not a second one.
+
+**Never use the editor twice for the same answer.** If a value has to be checked repeatedly,
+it belongs in a generated document or a check, not in a repeated look
+(`README.md`: countable is generated, arguable is written).
+
 ## Log discipline
 
 Write a line when a **player-visible thing happened** or a **refusal needs to be

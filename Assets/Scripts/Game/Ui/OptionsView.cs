@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Michsky.UI.Shift;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game.Ui
@@ -26,27 +25,52 @@ namespace GatekeeperBastion.Game.Ui
         public int DefaultInt;
     }
 
-    /// <summary>Options presentation — five tabs, authored Shift rows, confirm for Reset.</summary>
+    /// <summary>One generated Controls-tab row (M35 criterion 13): keycap text + action label.
+    /// Built by <see cref="OptionsScreen"/> from the single-source binding table.</summary>
+    public struct OptionsControlRow
+    {
+        public string Key;
+        public string Label;
+    }
+
+    /// <summary>Options presentation over Shift's authored Settings panel. Registers itself in
+    /// <see cref="Awake"/> so <see cref="OptionsScreen"/> reaches it without a scene search
+    /// (M35 criterion 14). All wiring is serialized (criterion 13); Shift's nested
+    /// MainPanelManager owns sub-tab visuals — this class only records the active tab index,
+    /// whose order matches <c>SettingCategory</c> (criterion 13). The Controls tab's binding
+    /// rows are generated at open by cloning <see cref="_controlsRowTemplate"/>.</summary>
     public sealed class OptionsView : MonoBehaviour
     {
-        [SerializeField] GameObject _root;
+        [Header("Panel routing (criterion 14)")]
+        [SerializeField] MainPanelManager _panels;
+        [SerializeField] string _settingsPanel = "Settings";
+        [SerializeField] string _homePanel = "Home";
+        [Tooltip("Canvas root to (de)activate around open/close; null on the menu, whose canvas is always live.")]
+        [SerializeField, OptionalBinding] GameObject _root;
+
+        [Header("Tabs — order must match SettingCategory")]
         [SerializeField] Button[] _tabButtons;
-        [SerializeField] GameObject[] _pages;
+
+        [Header("Rows (criterion 13)")]
+        [SerializeField] OptionsRowBinding[] _rowBindings;
         [SerializeField] Button _resetButton;
         [SerializeField] Button _backButton;
-        [SerializeField] OptionsRowBinding[] _rowBindings;
-        [SerializeField] ModalWindowManager _confirmModal;
-        [SerializeField] Button _confirmYesBtn;
-        [SerializeField] Button _confirmNoBtn;
-        [SerializeField] TextMeshProUGUI _confirmYesLabel;
-        [SerializeField] TextMeshProUGUI _confirmNoLabel;
+
+        [Header("Display-mode revert (criterion 13)")]
         [SerializeField] TextMeshProUGUI _displayRevertLabel;
         [SerializeField] Button _keepDisplayButton;
 
-        readonly List<RowWidgets> _rows = new List<RowWidgets>();
-        bool _wired;
+        [Header("Controls tab — generated at open (criterion 13)")]
+        [SerializeField] RectTransform _controlsRowsRoot;
+        [SerializeField] GameObject _controlsRowTemplate;
+
+        /// <summary>The scene's registered instance, set in <see cref="Awake"/>. Canvas
+        /// activation always precedes <see cref="OptionsScreen.Open"/>, so this exists by
+        /// first use.</summary>
+        public static OptionsView Registered { get; private set; }
+
+        readonly List<ControlRowWidgets> _controlRowPool = new List<ControlRowWidgets>(24);
         int _activeTab;
-        Action _pendingConfirm;
 
         public Action<int, float> OnFloatChanged;
         public Action<int> OnFloatDragEnd;
@@ -62,41 +86,61 @@ namespace GatekeeperBastion.Game.Ui
         {
             public int RowIndex;
             public int Category;
-            public Slider Slider;
-            public TextMeshProUGUI ValueLabel;
-            public TextMeshProUGUI NameLabel;
-            public SwitchManager Switch;
-            public HorizontalSelector IntSelector;
+            [OptionalBinding] public Slider Slider;
+            [OptionalBinding] public TextMeshProUGUI ValueLabel;
+            [OptionalBinding] public TextMeshProUGUI NameLabel;
+            [OptionalBinding] public SwitchManager Switch;
+            [OptionalBinding] public HorizontalSelector IntSelector;
         }
 
-        struct RowWidgets
+        struct ControlRowWidgets
         {
-            public int RowIndex;
-            public int Category;
-            public Slider Slider;
-            public TextMeshProUGUI ValueLabel;
-            public TextMeshProUGUI NameLabel;
-            public SwitchManager Switch;
-            public HorizontalSelector IntSelector;
+            public GameObject Root;
+            public TextMeshProUGUI Key;
+            public TextMeshProUGUI Label;
         }
 
-        /// <summary>authored prefab required — activates root and wires serialized controls.</summary>
-        public void EnsureBuilt()
+        void Awake()
         {
-            if (_root != null) _root.SetActive(true);
-            if (_wired) return;
-            _wired = true;
+            Registered = this;
+            ValidateBindings();
+            WireControls();
+        }
 
+        void OnDestroy()
+        {
+            if (Registered == this) Registered = null;
+        }
+
+        void ValidateBindings()
+        {
+            Require(_panels, nameof(_panels));
+            Require(_resetButton, nameof(_resetButton));
+            Require(_backButton, nameof(_backButton));
+            Require(_displayRevertLabel, nameof(_displayRevertLabel));
+            Require(_keepDisplayButton, nameof(_keepDisplayButton));
+            Require(_controlsRowsRoot, nameof(_controlsRowsRoot));
+            Require(_controlsRowTemplate, nameof(_controlsRowTemplate));
+            if (_tabButtons == null || _tabButtons.Length == 0)
+                Require(null, nameof(_tabButtons));
+            if (_rowBindings == null || _rowBindings.Length == 0)
+                Require(null, nameof(_rowBindings));
+        }
+
+        void Require(UnityEngine.Object reference, string field)
+        {
+            if (reference == null)
+                Debug.LogError(
+                    $"[OptionsView] '{name}' is missing serialized reference '{field}' " +
+                    "(M35 criterion 13 — wire it in the scene).", this);
+        }
+
+        void WireControls()
+        {
             if (_resetButton != null)
             {
                 _resetButton.onClick.RemoveAllListeners();
-                _resetButton.onClick.AddListener(() =>
-                    ShowConfirm(
-                        "Reset this page?",
-                        "Restore this tab's settings to defaults.",
-                        "Reset to defaults",
-                        "Keep current",
-                        () => OnResetPage?.Invoke(_activeTab)));
+                _resetButton.onClick.AddListener(() => OnResetPage?.Invoke(_activeTab));
             }
             if (_backButton != null)
             {
@@ -109,22 +153,8 @@ namespace GatekeeperBastion.Game.Ui
                 _keepDisplayButton.onClick.AddListener(() => OnConfirmDisplay?.Invoke());
                 _keepDisplayButton.gameObject.SetActive(false);
             }
-            if (_confirmYesBtn != null)
-            {
-                _confirmYesBtn.onClick.RemoveAllListeners();
-                _confirmYesBtn.onClick.AddListener(() =>
-                {
-                    var act = _pendingConfirm;
-                    _pendingConfirm = null;
-                    HideConfirm();
-                    act?.Invoke();
-                });
-            }
-            if (_confirmNoBtn != null)
-            {
-                _confirmNoBtn.onClick.RemoveAllListeners();
-                _confirmNoBtn.onClick.AddListener(HideConfirm);
-            }
+            if (_displayRevertLabel != null)
+                _displayRevertLabel.gameObject.SetActive(false);
 
             if (_tabButtons != null)
             {
@@ -132,12 +162,12 @@ namespace GatekeeperBastion.Game.Ui
                 {
                     int tab = i;
                     if (_tabButtons[i] == null) continue;
-                    _tabButtons[i].onClick.RemoveAllListeners();
+                    // Runtime listener only records the index; the authored persistent call on
+                    // the same button drives Shift's nested MainPanelManager page switch.
                     _tabButtons[i].onClick.AddListener(() => ShowTab(tab));
                 }
             }
 
-            _rows.Clear();
             if (_rowBindings == null) return;
             for (int i = 0; i < _rowBindings.Length; i++)
             {
@@ -177,74 +207,68 @@ namespace GatekeeperBastion.Game.Ui
                         }
                     }
                 }
-                _rows.Add(new RowWidgets
-                {
-                    RowIndex = idx,
-                    Category = b.Category,
-                    Slider = b.Slider,
-                    ValueLabel = b.ValueLabel,
-                    NameLabel = b.NameLabel,
-                    Switch = b.Switch,
-                    IntSelector = b.IntSelector
-                });
             }
+        }
 
-            ShowTab(0);
+        /// <summary>Route in (M35 criterion 14): activates the canvas root when one is
+        /// authored, then opens Shift's Settings panel on this scene's MainPanelManager.</summary>
+        public void Open()
+        {
+            if (_root != null) _root.SetActive(true);
+            if (_panels != null) _panels.OpenPanel(_settingsPanel);
         }
 
         public void SetOpen(bool open)
         {
-            EnsureBuilt();
-            if (_root != null) _root.SetActive(open);
-            if (open) ShowTab(_activeTab);
-            else HideConfirm();
-        }
-
-        public void ShowTab(int tab)
-        {
-            _activeTab = tab;
-            if (_pages != null)
+            if (open)
             {
-                for (int i = 0; i < _pages.Length; i++)
-                    if (_pages[i] != null) _pages[i].SetActive(i == tab);
+                Open();
+                return;
             }
+            SetDisplayRevertSeconds(0f);
+            if (_root != null) _root.SetActive(false);
+            else if (_panels != null) _panels.OpenPanel(_homePanel);
         }
 
-        public void RebuildRows(IReadOnlyList<OptionsRowSpec> specs)
-        {
-            EnsureBuilt();
-            RefreshRowValues(specs);
-        }
+        /// <summary>Records the active sub-tab; index order matches <c>SettingCategory</c>
+        /// (criterion 13). Page visuals belong to Shift's nested MainPanelManager.</summary>
+        public void ShowTab(int tab) => _activeTab = tab;
+
+        /// <summary>Scene-hotkey entry (Shift's authored PressKeyEvent) — routes the panel's
+        /// Esc through the same close path as the BACK button.</summary>
+        public void CloseFromHotkey() => OnBack?.Invoke();
 
         public void RefreshRowValues(IReadOnlyList<OptionsRowSpec> specs)
         {
-            if (specs == null) return;
+            if (specs == null || _rowBindings == null) return;
             for (int i = 0; i < specs.Count; i++)
             {
                 var spec = specs[i];
-                for (int r = 0; r < _rows.Count; r++)
+                for (int r = 0; r < _rowBindings.Length; r++)
                 {
-                    if (_rows[r].RowIndex != spec.RowIndex) continue;
-                    if (_rows[r].NameLabel != null) _rows[r].NameLabel.text = spec.Label;
-                    if (spec.IsFloat && _rows[r].Slider != null)
+                    var row = _rowBindings[r];
+                    if (row == null || row.RowIndex != spec.RowIndex) continue;
+                    if (row.NameLabel != null) UiBind.SetText(row.NameLabel, spec.Label);
+                    if (spec.IsFloat && row.Slider != null)
                     {
-                        _rows[r].Slider.minValue = spec.Min;
-                        _rows[r].Slider.maxValue = spec.Max;
-                        _rows[r].Slider.SetValueWithoutNotify(spec.FloatValue);
-                        if (_rows[r].ValueLabel != null)
-                            _rows[r].ValueLabel.text = spec.FloatValue.ToString("0.##");
+                        row.Slider.minValue = spec.Min;
+                        row.Slider.maxValue = spec.Max;
+                        row.Slider.SetValueWithoutNotify(spec.FloatValue);
+                        if (row.ValueLabel != null)
+                            UiBind.SetText(row.ValueLabel, spec.FloatValue.ToString("0.##"));
                     }
-                    else if (spec.IsInt && _rows[r].IntSelector != null)
+                    else if (spec.IsInt && row.IntSelector != null)
                     {
-                        _rows[r].IntSelector.index = spec.IntValue;
-                        _rows[r].IntSelector.defaultIndex = spec.IntValue;
-                        _rows[r].IntSelector.UpdateUI();
+                        row.IntSelector.index = spec.IntValue;
+                        row.IntSelector.defaultIndex = spec.IntValue;
+                        if (row.IntSelector.gameObject.activeInHierarchy)
+                            row.IntSelector.UpdateUI();
                     }
-                    else if (!spec.IsFloat && !spec.IsInt && _rows[r].Switch != null)
+                    else if (!spec.IsFloat && !spec.IsInt && row.Switch != null)
                     {
-                        _rows[r].Switch.isOn = spec.BoolValue;
-                        var anim = _rows[r].Switch.switchAnimator;
-                        if (anim != null)
+                        row.Switch.isOn = spec.BoolValue;
+                        var anim = row.Switch.switchAnimator;
+                        if (anim != null && anim.isActiveAndEnabled)
                             anim.Play(spec.BoolValue ? "Switch On" : "Switch Off");
                     }
                     break;
@@ -252,63 +276,68 @@ namespace GatekeeperBastion.Game.Ui
             }
         }
 
+        /// <summary>Fills the Controls tab from the single-source binding table by cloning the
+        /// serialized row template (criterion 13). Pooled — rows beyond the list deactivate.
+        /// Template contract: the TMP label under a child named "Primary" is the keycap;
+        /// any other TMP label is the action label.</summary>
+        public void SetControlRows(IReadOnlyList<OptionsControlRow> rows)
+        {
+            if (_controlsRowTemplate == null || _controlsRowsRoot == null) return;
+            if (_controlsRowTemplate.activeSelf) _controlsRowTemplate.SetActive(false);
+
+            int used = 0;
+            for (int i = 0; i < (rows?.Count ?? 0); i++)
+            {
+                ControlRowWidgets slot = ControlRowAt(used++);
+                UiBind.SetText(slot.Key, rows[i].Key);
+                UiBind.SetText(slot.Label, rows[i].Label);
+                slot.Root.transform.SetAsLastSibling();
+                UiBind.Show(slot.Root, true);
+            }
+            for (int i = used; i < _controlRowPool.Count; i++)
+                UiBind.Show(_controlRowPool[i].Root, false);
+        }
+
+        ControlRowWidgets ControlRowAt(int index)
+        {
+            while (_controlRowPool.Count <= index)
+            {
+                GameObject clone = Instantiate(_controlsRowTemplate, _controlsRowsRoot);
+                var widgets = new ControlRowWidgets { Root = clone };
+                var labels = clone.GetComponentsInChildren<TextMeshProUGUI>(true);
+                for (int i = 0; i < labels.Length; i++)
+                {
+                    if (HasAncestorNamed(labels[i].transform, clone.transform, "Primary"))
+                        widgets.Key = labels[i];
+                    else if (widgets.Label == null)
+                        widgets.Label = labels[i];
+                }
+                _controlRowPool.Add(widgets);
+            }
+            return _controlRowPool[index];
+        }
+
+        static bool HasAncestorNamed(Transform t, Transform stopAt, string ancestorName)
+        {
+            for (Transform p = t; p != null && p != stopAt; p = p.parent)
+            {
+                if (p.name == ancestorName) return true;
+            }
+            return false;
+        }
+
         public void SetDisplayRevertSeconds(float secondsRemaining)
         {
             bool armed = secondsRemaining > 0f;
             if (_displayRevertLabel != null)
             {
-                if (!armed)
-                    _displayRevertLabel.gameObject.SetActive(false);
-                else
-                {
-                    _displayRevertLabel.gameObject.SetActive(true);
-                    _displayRevertLabel.text =
-                        $"Reverting display in {Mathf.CeilToInt(secondsRemaining)}s";
-                }
+                UiBind.Show(_displayRevertLabel.gameObject, armed);
+                if (armed)
+                    UiBind.SetText(_displayRevertLabel,
+                        $"Reverting display in {Mathf.CeilToInt(secondsRemaining)}s");
             }
             if (_keepDisplayButton != null)
-                _keepDisplayButton.gameObject.SetActive(armed);
-        }
-
-        public bool ConfirmOpen => _confirmModal != null && _confirmModal.gameObject.activeSelf;
-
-        public void CancelConfirm() => HideConfirm();
-
-        void ShowConfirm(string title, string body, string yes, string no, Action onYes)
-        {
-            _pendingConfirm = onYes;
-            if (_confirmYesLabel != null) _confirmYesLabel.text = yes;
-            if (_confirmNoLabel != null) _confirmNoLabel.text = no;
-            SetMainButtonText(_confirmYesBtn, yes);
-            SetMainButtonText(_confirmNoBtn, no);
-            if (_confirmModal != null)
-            {
-                _confirmModal.useCustomTexts = true;
-                if (_confirmModal.windowTitle != null) _confirmModal.windowTitle.text = title;
-                if (_confirmModal.windowDescription != null)
-                    _confirmModal.windowDescription.text = body;
-                _confirmModal.ModalWindowIn();
-            }
-            var es = EventSystem.current;
-            if (es != null && _confirmNoBtn != null)
-                es.SetSelectedGameObject(_confirmNoBtn.gameObject);
-        }
-
-        void HideConfirm()
-        {
-            _pendingConfirm = null;
-            if (_confirmModal != null) _confirmModal.ModalWindowOut();
-        }
-
-        static void SetMainButtonText(Button btn, string text)
-        {
-            if (btn == null) return;
-            var mb = btn.GetComponent<MainButton>();
-            if (mb == null) return;
-            mb.buttonText = text;
-            if (mb.normalText != null) mb.normalText.text = text;
-            if (mb.highlightedText != null) mb.highlightedText.text = text;
-            if (mb.pressedText != null) mb.pressedText.text = text;
+                UiBind.Show(_keepDisplayButton.gameObject, armed);
         }
     }
 }

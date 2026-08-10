@@ -1,20 +1,27 @@
 using System;
+using System.Collections.Generic;
 using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
-using Michsky.UI.Shift;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER: one options screen for the main menu, Ship and Bastion.
-    /// Opening locks movement and frees the cursor; closing restores both. Does not touch
-    /// <c>Time.timeScale</c>. Settings auto-apply; display mode arms a 15s revert — closing
-    /// Options reverts an unconfirmed change; "Keep this mode" confirms it.</summary>
+    /// <summary>LOCAL-OWNER: one options screen for the main menu, Ship and Bastion, presented
+    /// through the scene's registered <see cref="OptionsView"/> (M35 criterion 14). Opening
+    /// locks movement and frees the cursor; closing restores both. Does not touch
+    /// <c>Time.timeScale</c> and does not poll Esc — each scene's dispatcher owns Esc.
+    /// Settings auto-apply; display mode arms a 15s revert — closing Options reverts an
+    /// unconfirmed change; "Keep this mode" confirms it.</summary>
     public static class OptionsScreen
     {
         const string Tag = "Settings";
         const float DisplayRevertSeconds = 15f;
+
+        // Every context, so the generated Controls rows show the full binding table.
+        const ControlContext AllContexts =
+            ControlContext.Fight | ControlContext.Prep | ControlContext.Assault |
+            ControlContext.NearInteract | ControlContext.Ship | ControlContext.EndScreen;
 
         static bool _open;
         static FirstPersonController _fpc;
@@ -22,7 +29,8 @@ namespace GatekeeperBastion.Game
         static CursorLockMode _capturedCursor;
         static bool _capturedVisible;
         static bool[] _dirty;
-        static OptionsView _view;
+        static bool _missingViewLogged;
+        static readonly List<ControlBinding> _controlScratch = new List<ControlBinding>(24);
 
         static bool _displayRevertArmed;
         static float _displayRevertDeadline;
@@ -31,31 +39,12 @@ namespace GatekeeperBastion.Game
         /// <summary>True while the screen is up.</summary>
         public static bool IsOpen => _open;
 
-        /// <summary>Poll the options binding. Call once per frame from Ship and Bastion HUDs.</summary>
-        public static void Tick(FirstPersonController fpc)
-        {
-            TickDisplayRevert();
-            if (_open && _view != null && _view.ConfirmOpen && Input.GetKeyDown(KeyCode.Escape))
-            {
-                _view.CancelConfirm();
-                return;
-            }
-            if (_open && Input.GetKeyDown(KeyCode.Escape))
-            {
-                Close();
-                return;
-            }
-            if (!Controls.Down(ControlId.Options)) return;
-            if (_open) Close();
-            else Open(fpc);
-        }
-
         /// <summary>Advance display-mode revert countdown (safe to call every frame).</summary>
         public static void TickDisplayRevert()
         {
             if (!_displayRevertArmed) return;
             float left = _displayRevertDeadline - Time.unscaledTime;
-            _view?.SetDisplayRevertSeconds(left);
+            View?.SetDisplayRevertSeconds(left);
             if (left > 0f) return;
             RevertDisplayMode("timeout");
         }
@@ -65,6 +54,9 @@ namespace GatekeeperBastion.Game
         public static void Open(FirstPersonController fpc)
         {
             if (_open) return;
+            var view = RequireView();
+            if (view == null) return;
+
             _fpc = fpc;
             if (fpc != null)
             {
@@ -80,12 +72,10 @@ namespace GatekeeperBastion.Game
             EnsureDirtyBuffer();
             Array.Clear(_dirty, 0, _dirty.Length);
 
-            var view = EnsureView();
-            if (view == null) return;
-            SceneFlow.RepairCanvas(view.gameObject);
             WireView(view);
-            view.RebuildRows(BuildRowSpecs());
-            view.SetOpen(true);
+            view.Open();
+            view.RefreshRowValues(BuildRowSpecs());
+            view.SetControlRows(BuildControlRows());
             _open = true;
             AudioBuses.ApplyFromSettings();
         }
@@ -97,7 +87,7 @@ namespace GatekeeperBastion.Game
             if (!_open) return;
             CommitAllDirty();
             if (_displayRevertArmed) RevertDisplayMode("options closed");
-            if (_view != null) _view.SetOpen(false);
+            View?.SetOpen(false);
             if (_fpc != null)
             {
                 _fpc.MovementLocked = _capturedLock;
@@ -108,27 +98,26 @@ namespace GatekeeperBastion.Game
             _open = false;
         }
 
-        static OptionsView EnsureView()
+        static OptionsView View => OptionsView.Registered;
+
+        /// <summary>The registered view, logging one error (not one per frame) when a scene
+        /// ticks the options binding with no <see cref="OptionsView"/> registered.</summary>
+        static OptionsView RequireView()
         {
-            if (_view != null) return _view;
-            _view = UnityEngine.Object.FindFirstObjectByType<OptionsView>(FindObjectsInactive.Include);
-            if (_view != null) return _view;
-
-            // M35: Options is Shift's Settings panel on the authored Canvas — open it, do not
-            // instantiate a deleted Resources prefab.
-            var panels = UnityEngine.Object.FindFirstObjectByType<MainPanelManager>(
-                FindObjectsInactive.Include);
-            if (panels != null)
-                panels.OpenPanel("Settings");
-
-            _view = UnityEngine.Object.FindFirstObjectByType<OptionsView>(FindObjectsInactive.Include);
-            if (_view == null)
+            var view = OptionsView.Registered;
+            if (view == null)
             {
-                Log.Error(Tag,
-                    "No OptionsView in scene — open Settings on the Shift Canvas and bind OptionsView.");
+                if (!_missingViewLogged)
+                {
+                    _missingViewLogged = true;
+                    Log.Error(Tag,
+                        "No OptionsView registered in this scene — author one on the Shift " +
+                        "canvas and wire its serialized references (M35 criterion 14).");
+                }
                 return null;
             }
-            return _view;
+            _missingViewLogged = false;
+            return view;
         }
 
         static void WireView(OptionsView view)
@@ -192,23 +181,23 @@ namespace GatekeeperBastion.Game
             ApplyDisplayMode(mode);
             _displayRevertArmed = true;
             _displayRevertDeadline = Time.unscaledTime + DisplayRevertSeconds;
-            _view?.SetDisplayRevertSeconds(DisplayRevertSeconds);
+            View?.SetDisplayRevertSeconds(DisplayRevertSeconds);
         }
 
         static void ConfirmDisplayMode()
         {
             _displayRevertArmed = false;
-            _view?.SetDisplayRevertSeconds(0f);
+            View?.SetDisplayRevertSeconds(0f);
         }
 
         static void RevertDisplayMode(string reason)
         {
             if (!_displayRevertArmed) return;
             _displayRevertArmed = false;
-            _view?.SetDisplayRevertSeconds(0f);
+            View?.SetDisplayRevertSeconds(0f);
             Settings.SetInt(SettingId.DisplayMode, _displayRevertPrevious);
             ApplyDisplayMode(_displayRevertPrevious);
-            if (_open) _view?.RefreshRowValues(BuildRowSpecs());
+            if (_open) View?.RefreshRowValues(BuildRowSpecs());
             Log.Event(Tag, $"Display mode reverted to {_displayRevertPrevious} ({reason})");
         }
 
@@ -250,6 +239,23 @@ namespace GatekeeperBastion.Game
                 };
             }
             return specs;
+        }
+
+        /// <summary>Controls-tab rows from the single-source binding table (criterion 13) —
+        /// hand-authored rows would drift from <c>Controls</c>.</summary>
+        static OptionsControlRow[] BuildControlRows()
+        {
+            Controls.CollectPanelRows(AllContexts, _controlScratch);
+            var rows = new OptionsControlRow[_controlScratch.Count];
+            for (int i = 0; i < _controlScratch.Count; i++)
+            {
+                rows[i] = new OptionsControlRow
+                {
+                    Key = _controlScratch[i].Display,
+                    Label = _controlScratch[i].Label,
+                };
+            }
+            return rows;
         }
 
         static SettingDecl SettingIdOf(int rowIndex)

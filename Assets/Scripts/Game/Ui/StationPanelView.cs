@@ -1,27 +1,26 @@
 using System;
 using System.Collections.Generic;
 using GatekeeperBastion.Game.Ui;
+using GatekeeperBastion.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Binds one of the station panels duplicated from Shift's <c>Home</c> panel.
-    /// Station scripts push text and actions; rows are clones of templates authored under
-    /// <c>Content</c>, so this class sets no colour, no font size and no rect (M35 criteria
-    /// 5, 6, 17). Emphasis travels as <c>&lt;b&gt;</c> / <c>&lt;i&gt;</c> markup.</summary>
+    /// <summary>One authored station panel. Templates live under <c>Content</c> and are cloned
+    /// per row; this class sets no colour, font size or rect (M35 criteria 24, 38).</summary>
     public sealed class StationPanelView : MonoBehaviour
     {
-        static StationPanelView _instance;
+        const string Tag = "StationPanelView";
 
         [SerializeField] RectTransform _root;
         [SerializeField] TextMeshProUGUI _title;
         [SerializeField] TextMeshProUGUI _banked;
-        [SerializeField] TextMeshProUGUI _lifetime;
+        [SerializeField, OptionalBinding] TextMeshProUGUI _lifetime;
         [SerializeField] RectTransform _bodyContent;
-        [SerializeField] RectTransform _wheelSlot;
-        [SerializeField] ArmoryWheelView _wheel;
+        [SerializeField, OptionalBinding] RectTransform _wheelSlot;
+        [SerializeField, OptionalBinding] ArmoryWheelView _wheel;
         [SerializeField] Button _closeButton;
 
         [Header("Templates — authored under Content, cloned per row")]
@@ -31,37 +30,23 @@ namespace GatekeeperBastion.Game
         [SerializeField] Button _buttonPrefab;
         [SerializeField] RectTransform _spacerPrefab;
         [SerializeField] RectTransform _rowHostPrefab;
-        [SerializeField] StaggerEntrance _bodyStagger;
+        [SerializeField, OptionalBinding] StaggerEntrance _bodyStagger;
 
         Action _onClose;
         bool _closeWired;
+        bool _bindingsChecked;
         RectTransform _rowParent;
         readonly List<GameObject> _spawned = new List<GameObject>(32);
 
-        public RectTransform BodyContent
-        {
-            get
-            {
-                EnsureBuilt();
-                return _bodyContent;
-            }
-        }
+        public RectTransform BodyContent => _bodyContent;
 
         /// <summary>ARMORY wheel host. Authored under <c>Content</c>; never destroyed by ClearBody.</summary>
-        public RectTransform WheelSlot
-        {
-            get
-            {
-                EnsureBuilt();
-                return _wheelSlot;
-            }
-        }
+        public RectTransform WheelSlot => _wheelSlot;
 
         public ArmoryWheelView Wheel
         {
             get
             {
-                EnsureBuilt();
                 if (_wheel == null && _wheelSlot != null)
                     _wheel = _wheelSlot.GetComponentInChildren<ArmoryWheelView>(true);
                 return _wheel;
@@ -70,7 +55,6 @@ namespace GatekeeperBastion.Game
 
         public void SetWheelVisible(bool visible)
         {
-            EnsureBuilt();
             var w = Wheel;
             if (w != null) UiBind.Show(w, visible);
             else UiBind.Show(_wheelSlot, visible);
@@ -78,48 +62,60 @@ namespace GatekeeperBastion.Game
 
         void Awake()
         {
-            _instance = this;
             UiCanvasGuard.RepairIfBroken(gameObject);
-            // The panel's CanvasGroup starts at alpha 0 (Shift idiom); never force-open from Awake.
-            UiBind.Show(_root, false);
+            WireClose();
+            ValidateRequiredBindings();
         }
 
         void OnEnable() => UiCanvasGuard.RepairIfBroken(gameObject);
 
-        public static StationPanelView EnsureInstance()
+        /// <summary>Logs one error per missing required field. OptionalBinding fields are skipped.</summary>
+        public void ValidateRequiredBindings()
         {
-            if (_instance != null) return _instance;
-            _instance = UiBind.First<StationPanelView>();
-            _instance?.EnsureBuilt();
-            return _instance;
+            if (_bindingsChecked) return;
+            _bindingsChecked = true;
+            Require(nameof(_root), _root);
+            Require(nameof(_title), _title);
+            Require(nameof(_banked), _banked);
+            Require(nameof(_bodyContent), _bodyContent);
+            Require(nameof(_closeButton), _closeButton);
+            Require(nameof(_rowPrefab), _rowPrefab);
+            Require(nameof(_labelPrefab), _labelPrefab);
+            Require(nameof(_headingPrefab), _headingPrefab);
+            Require(nameof(_buttonPrefab), _buttonPrefab);
+            Require(nameof(_spacerPrefab), _spacerPrefab);
+            Require(nameof(_rowHostPrefab), _rowHostPrefab);
         }
 
-        /// <summary>Resolves the authored panel and wires close; does not open it —
-        /// <see cref="SetVisible"/> owns that.</summary>
-        public void EnsureBuilt()
+        void Require(string field, UnityEngine.Object value)
         {
-            UiCanvasGuard.RepairIfBroken(gameObject);
-            if (_bodyContent == null)
-                _bodyContent = UiBind.Find(transform, "Content") as RectTransform;
+            if (value != null) return;
+            Log.Error(Tag, $"{name}: missing binding '{field}' (M35 criterion 24).");
+        }
+
+        void WireClose()
+        {
             if (_closeWired || _closeButton == null) return;
             _closeWired = true;
             _closeButton.onClick.RemoveAllListeners();
             _closeButton.onClick.AddListener(() => _onClose?.Invoke());
         }
 
-        public void SetOnClose(Action onClose) => _onClose = onClose;
+        public void SetOnClose(Action onClose)
+        {
+            _onClose = onClose;
+            WireClose();
+        }
 
         public void SetHeader(string stationName, long banked, string lifetimeLine)
         {
-            EnsureBuilt();
             UiBind.SetText(_title, stationName);
-            UiBind.SetText(_banked, $"Banked salvage: {banked}");
+            UiBind.SetText(_banked, "Banked salvage: " + banked);
             UiBind.SetText(_lifetime, lifetimeLine);
         }
 
         public void ClearBody()
         {
-            EnsureBuilt();
             _rowParent = null;
             for (int i = 0; i < _spawned.Count; i++)
             {
@@ -151,7 +147,6 @@ namespace GatekeeperBastion.Game
 
         public void AddSpacer()
         {
-            EnsureBuilt();
             var rt = Clone(_spacerPrefab, _bodyContent, "Spacer");
             if (rt != null) Track(rt.gameObject);
         }
@@ -161,7 +156,6 @@ namespace GatekeeperBastion.Game
         public TextMeshProUGUI AddLabel(string text, bool centered = false, bool warning = false,
             bool reason = false)
         {
-            EnsureBuilt();
             var parent = _rowParent != null ? _rowParent : _bodyContent;
             var template = centered && _headingPrefab != null ? _headingPrefab : _labelPrefab;
             var tmp = Clone(template, parent, "Label");
@@ -172,7 +166,6 @@ namespace GatekeeperBastion.Game
 
         public Button AddButton(string label, Action onClick, bool enabled = true)
         {
-            EnsureBuilt();
             var parent = _rowParent != null ? _rowParent : _bodyContent;
             var btn = Clone(_buttonPrefab, parent, "Action");
             if (btn == null) return null;
@@ -188,7 +181,6 @@ namespace GatekeeperBastion.Game
 
         public void BeginRow()
         {
-            EnsureBuilt();
             var row = Clone(_rowHostPrefab, _bodyContent, "Row");
             if (row == null)
             {
@@ -203,7 +195,6 @@ namespace GatekeeperBastion.Game
 
         public void AddRowLabel(string text)
         {
-            EnsureBuilt();
             if (_rowParent == null) BeginRow();
             var tmp = Clone(_labelPrefab, _rowParent, "Cell");
             if (tmp == null) return;
@@ -221,7 +212,6 @@ namespace GatekeeperBastion.Game
         public StationRowView AddPricedRow(string name, string cost, string level, string effect,
             string actionLabel, Action onAction, bool actionEnabled, string reason = null)
         {
-            EnsureBuilt();
             var row = Clone(_rowPrefab, _bodyContent, "PricedRow");
             if (row == null) return null;
             row.Bind(name, cost, level, effect, actionLabel, onAction, actionEnabled, reason);
@@ -229,23 +219,13 @@ namespace GatekeeperBastion.Game
             return row;
         }
 
-        public void SetCloseLabel(string label)
-        {
-            EnsureBuilt();
-            ApplyButtonLabel(_closeButton, label);
-        }
-
-        public void SetVisible(bool visible)
-        {
-            EnsureBuilt();
-            UiBind.Show(_root, visible);
-        }
+        public void SetCloseLabel(string label) => ApplyButtonLabel(_closeButton, label);
 
         static string Emphasise(string text, bool warning, bool reason)
         {
             if (string.IsNullOrEmpty(text)) return "";
-            if (warning) return $"<b>{text}</b>";
-            return reason ? $"<i>{text}</i>" : text;
+            if (warning) return "<b>" + text + "</b>";
+            return reason ? "<i>" + text + "</i>" : text;
         }
 
         static T Clone<T>(T template, Transform parent, string name) where T : Component
@@ -289,12 +269,9 @@ namespace GatekeeperBastion.Game
                 panel.useCustomText = false;
             }
             var tmp = button.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (tmp != null) tmp.text = text;
-        }
-
-        void OnDestroy()
-        {
-            if (_instance == this) _instance = null;
+            if (tmp != null) UiBind.SetText(tmp, text);
         }
     }
 }
+
+// wp3-refresh

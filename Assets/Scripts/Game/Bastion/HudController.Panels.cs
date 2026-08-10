@@ -1,16 +1,12 @@
-using System.Collections.Generic;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER (partial of HudController): Prep / Assault centre strips, shortcut
-    /// panel lines and end-screen pushes.</summary>
+    /// <summary>LOCAL-OWNER (partial of HudController): Prep / Assault centre strips and
+    /// shortcut-panel rows.</summary>
     public sealed partial class HudController
     {
-        static readonly List<string> ShortcutLineBuf = new List<string>(16);
-
         void PushShortcutPanel(RunSim sim) => PushShortcutPanel(sim, FightShortcutContext(sim));
 
         void PushEndScreenShortcut() =>
@@ -36,12 +32,12 @@ namespace GatekeeperBastion.Game
             if (Controls.Collapsed)
             {
                 ShortcutPanel.EstimateCollapsedHeight();
-                _view.SetShortcutLines(null, true);
+                _view.SetShortcutRows(null, true);
                 return;
             }
 
-            ShortcutPanel.FillLines(ctx, ShortcutLineBuf, dialLevel);
-            _view.SetShortcutLines(ShortcutLineBuf, false);
+            ShortcutPanel.FillRows(ctx, _shortcutRows, dialLevel);
+            _view.SetShortcutRows(_shortcutRows, false);
         }
 
         void PushPrepPanel(RunSim sim)
@@ -49,7 +45,7 @@ namespace GatekeeperBastion.Game
             if (sim.AllWavesCleared || sim.CurrentWaveIndex >= WaveDirector.MaxWaves)
             {
                 _view.SetPrepHeading(
-                    $"<b>BASTION STRIPPED</b> — all {WaveDirector.MaxWaves} waves cleared");
+                    "<b>BASTION STRIPPED</b> — all " + WaveDirector.MaxWaves + " waves cleared");
                 _view.SetPrepLine(1, "there is nothing left to draw");
                 _view.SetPrepLine(2, null);
                 _view.SetPrepLine(3, null);
@@ -69,35 +65,62 @@ namespace GatekeeperBastion.Game
             if (!damaged) state = "sealed tight";
             else if (missing != null) state = missing;
             else if (bank <= 0) state = "no salvage to repair";
-            else state = $"repair at the hatch ({rate:0} salvage/HP)";
-            string hatchStat = $"HATCH {hatch.Hp:0}/{hatch.MaxHp:0}";
+            else state = "repair at the hatch (" + rate.ToString("0") + " salvage/HP)";
+
+            _lineBuf.Clear();
+            _lineBuf.Append("HATCH ").Append(hatch.Hp.ToString("0")).Append('/')
+                .Append(hatch.MaxHp.ToString("0"));
+            string hatchStat = _lineBuf.ToString();
             _view.SetPrepLine(1, damaged
-                ? $"<b>{hatchStat}</b> — damaged; {state}"
-                : $"{hatchStat} — {state}");
+                ? "<b>" + hatchStat + "</b> — damaged; " + state
+                : hatchStat + " — " + state);
 
             int lvl = sim.Siphon.Level;
-            _view.SetPrepLine(2,
-                $"SIPHON L{lvl} (x{sim.Siphon.RewardMultiplier:0.##}) — each kill +{sim.CurrentKillValue:0} salvage");
+            _lineBuf.Clear();
+            _lineBuf.Append("SIPHON L").Append(lvl)
+                .Append(" (x").Append(sim.Siphon.RewardMultiplier.ToString("0.##")).Append(") — each kill +")
+                .Append(sim.CurrentKillValue.ToString("0")).Append(" salvage");
+            _view.SetPrepLine(2, _lineBuf.ToString());
 
             int wave = sim.CurrentWaveIndex;
             int here = _waves.NextWave(wave, lvl).enemyCount;
-            _view.SetPrepLine(3,
-                lvl >= TetherSiphon.MaxLevel
-                    ? $"dial at max (L{TetherSiphon.MaxLevel}) — step down for a smaller wave"
-                    : $"raise to L{lvl + 1}: each kill +{sim.CurrentKillValue / TetherSiphon.RewardMultiplierFor(lvl) * TetherSiphon.RewardMultiplierFor(lvl + 1):0}, " +
-                      $"and wave {wave + 1} brings {_waves.NextWave(wave, lvl + 1).enemyCount} gatekeepers instead of {here}");
+            if (lvl >= TetherSiphon.MaxLevel)
+            {
+                _view.SetPrepLine(3,
+                    "dial at max (L" + TetherSiphon.MaxLevel + ") — step down for a smaller wave");
+            }
+            else
+            {
+                float nextKill = sim.CurrentKillValue / TetherSiphon.RewardMultiplierFor(lvl)
+                    * TetherSiphon.RewardMultiplierFor(lvl + 1);
+                int nextCount = _waves.NextWave(wave, lvl + 1).enemyCount;
+                _lineBuf.Clear();
+                _lineBuf.Append("raise to L").Append(lvl + 1).Append(": each kill +")
+                    .Append(nextKill.ToString("0")).Append(", and wave ").Append(wave + 1)
+                    .Append(" brings ").Append(nextCount).Append(" gatekeepers instead of ")
+                    .Append(here);
+                _view.SetPrepLine(3, _lineBuf.ToString());
+            }
 
-            _view.SetPrepLine(4,
-                $"the draw brings wave {wave + 1}/{WaveDirector.MaxWaves} — {here} gatekeepers");
+            _lineBuf.Clear();
+            _lineBuf.Append("the draw brings wave ").Append(wave + 1).Append('/')
+                .Append(WaveDirector.MaxWaves).Append(" — ").Append(here).Append(" gatekeepers");
+            _view.SetPrepLine(4, _lineBuf.ToString());
         }
 
         void PushAssaultPanel(RunSim sim)
         {
             if (_spawner == null) _spawner = FindFirstObjectByType<WaveSpawner>();
             int remaining = _spawner != null ? _spawner.AliveCount : 0;
-            _view.SetAssaultHeading(
-                $"ASSAULT — wave {sim.CurrentWaveIndex}/{WaveDirector.MaxWaves}   |   " +
-                $"enemies remaining: {remaining}");
+            if (remaining != _cacheAlive || sim.CurrentWaveIndex != _cacheWave)
+            {
+                _cacheAlive = remaining;
+                _lineBuf.Clear();
+                _lineBuf.Append("ASSAULT — wave ").Append(sim.CurrentWaveIndex).Append('/')
+                    .Append(WaveDirector.MaxWaves).Append("   |   enemies remaining: ")
+                    .Append(remaining);
+                _view.SetAssaultHeading(_lineBuf.ToString());
+            }
 
             if (_hatchAlert <= 0f)
             {
@@ -106,7 +129,10 @@ namespace GatekeeperBastion.Game
             }
 
             var hatch = sim.Ship.Hatch;
-            _view.SetHatchAlarmStrip($"<b>HATCH UNDER ATTACK</b> — {hatch.Hp:0}/{hatch.MaxHp:0}");
+            _lineBuf.Clear();
+            _lineBuf.Append("<b>HATCH UNDER ATTACK</b> — ")
+                .Append(hatch.Hp.ToString("0")).Append('/').Append(hatch.MaxHp.ToString("0"));
+            _view.SetHatchAlarmStrip(_lineBuf.ToString());
             _view.SetHatchAlarmVisible(true);
         }
     }

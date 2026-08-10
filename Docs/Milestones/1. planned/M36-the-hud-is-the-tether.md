@@ -3,7 +3,7 @@
 <!--
 Status: later
 Update trigger: when the tether readout's states change, or when a new Run state needs a HUD reading
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 -->
 
 The three numbers in three corners become one instrument shaped like the thing the game is
@@ -42,11 +42,12 @@ above rules for a reason: the same fight becomes a different decision when you c
 ## What the Shift purchase does not cover
 
 Read from the import, 2026-08-09: Shift ships **no HUD component of any kind** — no bar, no
-readout, no crosshair. Its component list is menus and panels. **So M35 assembles the front
-end from prefabs, and everything below is built.** Two Shift pieces do help and are named in
-the implementation: `UIParticleRenderer` for the salvage pulse and `GradientEffect` for the
-tether's fill. Motion is **DOTween Pro**, because Shift drives its own components with
-Animator clips and coroutines and has no DOTween dependency to piggyback on.
+readout, no crosshair. Its component list is menus and panels. **M35 leaves Bastion HUD as
+authored scene content under Shift UI Manager look rules; everything below is built on that
+canvas.** Two Shift pieces do help and are named in the implementation: `UIParticleRenderer`
+for the salvage pulse and `GradientEffect` for the tether's fill. Motion is **DOTween Pro**,
+because Shift drives its own components with Animator clips and coroutines and has no DOTween
+dependency to piggyback on.
 
 ## The three changes
 
@@ -121,8 +122,8 @@ with DOTween Pro, which is the game's motion layer and not Shift's.
 **Change** `HudController` — push into `TetherView` from the events it already subscribes to.
 It gains no state; the events exist.
 
-**Change** `Game/Ui/Theme.cs` — no new tokens. If a state needs one, it earns a row first
-(M35's rule).
+Look values come from **Shift UI Manager** (M35's rule). No local theme file; a new colour or
+size earns a UI Manager row first.
 
 **Delete** the separate Hatch bar and the standalone Gatekeeper counter, which this replaces.
 Say so in the commit; two readouts for one fact is how a HUD gets crowded.
@@ -170,6 +171,7 @@ and pointing at the player is what the current HUD already gets wrong.
 
 ## Depends on / Unblocks
 
-**Depends on M35** — there is nowhere to build this until uGUI and Shift are in.
+**Depends on M35** — Bastion HUD must be the authored Shift canvas with UI Manager look rules
+in place before this readout lands on it.
 Unblocks nothing formally. Pairs with **M30**: the tether is what makes leaving the Hatch
 survivable, and M30 is the reason to leave.

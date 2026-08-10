@@ -189,7 +189,7 @@ namespace GatekeeperBastion.Game
         /// row belongs to weapon slots (see Controls), so Prep no longer double-fires on 1/2/3.</summary>
         void TickFightInput()
         {
-            if (OptionsScreen.IsOpen) return;
+            if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
             if (Sim.Assault != AssaultState.Prep) return;
 
             if (Controls.Down(ControlId.PullDraw))
@@ -409,6 +409,19 @@ namespace GatekeeperBastion.Game
         void OnApplicationQuit()
         {
             GameSession.Save();
+        }
+
+        /// <summary>Pause QUIT TO MENU confirm (M35 criterion 32): persist then load MainMenu.
+        /// WP-2 owns the Options/Settings row authoring; this is the save-then-load call site.</summary>
+        public void QuitToMenu()
+        {
+            if (_leavingScene) return;
+            _leavingScene = true;
+            Log.Event("Ship", $"quit to menu — {Meta?.BankedSalvage ?? 0} banked");
+            GameSession.Save();
+            if (SceneFlow.LoadMainMenu()) return;
+            _leavingScene = false;
+            Log.Error(Tag, "QUIT TO MENU failed to load MainMenu; staying in Bastion.");
         }
 
         void OnEnable()

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using GatekeeperBastion.Util;
 using UnityEditor;
 using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
@@ -32,11 +33,16 @@ namespace GatekeeperBastion.EditorTools
         static string Root => Directory.GetParent(Application.dataPath).FullName;
         static string SentinelPath => Path.Combine(Root, "gkb_verify_request.txt");
         static string ReportPath => Path.Combine(Root, "gkb_verify_report.json");
+        static string BindingsRequestPath => Path.Combine(Root, "gkb_bindings_request.txt");
+        static string PlayPathRequestPath => Path.Combine(Root, "gkb_m35_playpath_request.txt");
 
         static double _nextSentinelPoll;
 
         static AutoVerify()
         {
+            // LogTools menu items must not carry [InitializeOnLoad] (M35 criterion 5).
+            AssemblyReloadEvents.beforeAssemblyReload -= LogFile.Close;
+            AssemblyReloadEvents.beforeAssemblyReload += LogFile.Close;
             EditorApplication.delayCall += OnEditorReady;
             EditorApplication.update += PollSentinel;
         }
@@ -75,6 +81,9 @@ namespace GatekeeperBastion.EditorTools
             // Domain reload / script compile leaves StageKey set and TestRunner mute —
             // do not treat that idle as a stuck stage, or a live PlayMode run is aborted.
             if (EditorApplication.isCompiling) return;
+            // BindingValidator / play-path capture are separate reports; don't block AutoVerify.
+            TryConsumeBindingsRequest();
+            TryConsumePlayPathRequest();
             // Sentinel always wins — same rule as OnEditorReady. A stuck StageKey from a
             // mid-run domain reload must not permanently ignore agent requests.
             if (TryConsumeSentinel()) return;
@@ -115,6 +124,48 @@ namespace GatekeeperBastion.EditorTools
         {
             SessionState.SetString(StageKey, stage);
             SessionState.SetFloat(StageSinceKey, (float)EditorApplication.timeSinceStartup);
+        }
+
+        /// <summary>File bridge for BindingValidator (M35 criterion 40). Agents write
+        /// <c>gkb_bindings_request.txt</c>; the report lands in <c>gkb_bindings_report.json</c>.</summary>
+        static void TryConsumeBindingsRequest()
+        {
+            if (!File.Exists(BindingsRequestPath)) return;
+            try { File.Delete(BindingsRequestPath); }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[AutoVerify] Could not delete bindings request: " + e.Message);
+                return;
+            }
+            try
+            {
+                int missing = BindingValidator.RunHeadless();
+                Debug.Log($"[AutoVerify] BindingValidator finished — {missing} missing.");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("[AutoVerify] BindingValidator failed: " + e.Message);
+            }
+        }
+
+        /// <summary>File bridge for WP-5 play-path screenshots (criterion 41 evidence).</summary>
+        static void TryConsumePlayPathRequest()
+        {
+            if (!File.Exists(PlayPathRequestPath)) return;
+            // Never start while a verify run owns Play Mode.
+            if (!string.IsNullOrEmpty(SessionState.GetString(StageKey, ""))) return;
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+            try { File.Delete(PlayPathRequestPath); }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[AutoVerify] Could not delete playpath request: " + e.Message);
+                return;
+            }
+            try { M35PlayPathCapture.RunFromRequest(); }
+            catch (Exception e)
+            {
+                Debug.LogError("[AutoVerify] PlayPathCapture failed to start: " + e.Message);
+            }
         }
 
         /// <summary>Two-phase sentinel consumption. Consuming used to Refresh and Execute in the

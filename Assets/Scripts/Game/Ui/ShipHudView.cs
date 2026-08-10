@@ -5,23 +5,21 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Binds the Ship hub's HUD strip inside the authored Shift Canvas. Controllers push
-    /// strings; nothing here sets a colour, a font size or a RectTransform (M35 criteria 6, 17).</summary>
+    /// <summary>Binds the Ship hub's HUD strip on its own small canvas. Controllers push
+    /// strings; nothing here sets a colour, a font size or a RectTransform (M35 criteria 25, 38).</summary>
     public sealed class ShipHudView : MonoBehaviour
     {
-        const string HudRootName = "Ship HUD";
-
         [SerializeField] RectTransform _root;
-        [SerializeField] GameObject _headerPanel;
+        [SerializeField, OptionalBinding] GameObject _headerPanel;
         [SerializeField] TextMeshProUGUI _title;
         [SerializeField] TextMeshProUGUI _salvageLine;
         [SerializeField] TextMeshProUGUI _objective;
-        [SerializeField] TextMeshProUGUI _directory;
+        [SerializeField, OptionalBinding] TextMeshProUGUI _directory;
         [SerializeField] GameObject _crosshair;
         [SerializeField] TextMeshProUGUI _prompt;
-        [SerializeField] ShortcutPanelView _shortcuts;
+        [SerializeField, OptionalBinding] ShortcutPanelView _shortcuts;
 
-        bool _resolved;
+        bool _promptIsWarn;
 
         public ShortcutPanelView Shortcuts => _shortcuts;
 
@@ -29,24 +27,8 @@ namespace GatekeeperBastion.Game
 
         void OnEnable() => UiCanvasGuard.RepairIfBroken(gameObject);
 
-        /// <summary>Resolves whatever the scene author did not wire and shows the strip.</summary>
-        public void EnsureBuilt()
-        {
-            if (!_resolved)
-            {
-                _resolved = true;
-                if (_root == null)
-                    _root = (UiBind.Find(transform, HudRootName) ?? transform) as RectTransform;
-                if (_shortcuts == null) _shortcuts = GetComponentInChildren<ShortcutPanelView>(true);
-            }
-            UiBind.Show(_root, true);
-            UiBind.Show(_headerPanel, true);
-            _shortcuts?.EnsureBuilt();
-        }
-
         public void SetHeader(string title, string salvageLoadoutLine, string objective, string directoryLine)
         {
-            EnsureBuilt();
             UiBind.SetText(_title, title);
             UiBind.SetText(_salvageLine, salvageLoadoutLine);
             UiBind.SetText(_objective, objective);
@@ -55,34 +37,42 @@ namespace GatekeeperBastion.Game
 
         public void SetPrompt(string text)
         {
-            EnsureBuilt();
+            _promptIsWarn = false;
             UiBind.SetTextOrHide(_prompt, text);
         }
 
-        /// <summary>Cursor-free warning reuses the prompt slot; <c>&lt;b&gt;</c> is the only
-        /// emphasis available to us, colour being Shift UI Manager's.</summary>
         public void SetCursorFreeWarn(bool show)
         {
-            EnsureBuilt();
-            if (!show) return;
-            UiBind.SetTextOrHide(_prompt, "<b>CURSOR FREE</b> — left-click to take back mouse look");
+            if (!show)
+            {
+                if (_promptIsWarn) UiBind.SetTextOrHide(_prompt, null);
+                _promptIsWarn = false;
+                return;
+            }
+            _promptIsWarn = true;
+            UiBind.SetTextOrHide(_prompt, "<b>CURSOR FREE</b> - left-click to take back mouse look");
         }
 
-        public void SetCrosshairVisible(bool visible)
+        public void SetCrosshairVisible(bool visible) => UiBind.Show(_crosshair, visible);
+
+        /// <summary>State-change only — callers must not toggle every frame (M35 criterion 26).</summary>
+        public void SetHudRelevant(bool relevant)
         {
-            EnsureBuilt();
-            UiBind.Show(_crosshair, visible);
+            UiBind.Show(_root, relevant);
+            UiBind.Show(_headerPanel, relevant);
         }
 
-        public void SetVisible(bool visible)
+        public void SetVisible(bool visible) => SetHudRelevant(visible);
+
+        public void SetShortcutRows(IReadOnlyList<ShortcutRow> rows, bool collapsed)
         {
-            EnsureBuilt();
-            UiBind.Show(_root, visible);
+            if (_shortcuts == null) return;
+            _shortcuts.SetCollapsed(collapsed);
+            if (!collapsed) _shortcuts.SetRows(rows);
         }
 
         public void SetShortcutLines(IList<string> lines, bool collapsed)
         {
-            EnsureBuilt();
             if (_shortcuts == null) return;
             _shortcuts.SetCollapsed(collapsed);
             if (!collapsed) _shortcuts.SetLines(lines);

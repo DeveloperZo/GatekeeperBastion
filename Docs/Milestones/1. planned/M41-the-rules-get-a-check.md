@@ -87,9 +87,18 @@ before every gate.
    | `FindObjectOfType` / `FindObjectsOfType` | deprecated in Unity 6 | **0** — enforced |
    | An empty `Update` / `Start` / `LateUpdate` / `FixedUpdate` / `OnGUI` body | `3-Unity-Runtime.md` | **0** — enforced |
    | A `static` MonoBehaviour singleton not on M40's named list | `Architecture/README.md` | **1** — `DecoyBay.Instance` |
+   | A file, type, namespace, menu path or define containing a milestone ID (`M<digits>`) | `Architecture/2-Naming.md` | **enforced at 0.** `Editor/Tools/M35Wp4OptionsPatch.cs` is the type, the file and the menu row `GatekeeperBastion/M35/…` |
+   | `[InitializeOnLoad]` outside a named allowlist in the fence | `Working-Rules.md` | **enforced at 0.** A tool that runs because the editor loaded cannot be un-run — this is the `VerifyKickOnce.cs` incident |
+   | `AssetDatabase.DeleteAsset` naming the calling file | `Working-Rules.md` | **enforced at 0.** Self-deleting scripts make the tree state depend on whether a run succeeded |
+   | A non-source, non-`.meta` file under `Assets/Scripts/` | `Architecture/7-File-Layout.md` | **1** — `Editor/Tools/_wake2.txt` |
 
    **The singleton row matches type names from M40's fence, never a count.** A count-based
    check passes forever by renaming.
+
+   **The four rows above are enforced, not baselined.** They are cheap to satisfy — the work is
+   deleting one file — and each of them is a mechanism that survives its own reason for
+   existing. A one-shot migration left in the tree is the sprawl that makes an editor folder
+   unmanageable, and the naming is only the visible half.
 
 6. **The counter/rollup row is advisory and inventory-based, or it is not shipped.**
    `../../Decisions.md` bans a specific rejected design — the `RunStats` aggregation layer —
@@ -99,13 +108,45 @@ before every gate.
    fails only on a fourth**; if that cannot be made to work, the row is removed rather than
    narrowed to `grep -w RunStats`, which would seed and catch perfectly while detecting
    nothing.
-7. **Every row is proved twice**: it reproduces its baseline count on the tree as it stands,
+
+### C2 — one-shot work stops leaving residue
+
+Delete-after-verify has now failed twice — `VerifyKickOnce.cs` and
+`Editor/Tools/M35Wp4OptionsPatch.cs`. **The mechanism is wrong, not the discipline**: cleanup
+that runs inside the script only happens when the script succeeds, and a script that fails
+halfway is exactly the one that stays.
+
+7. **The ladder is written into `../../Working-Rules.md`, cheapest rung first**, and a rung is
+   only skipped with a stated reason:
+
+   | Rung | Use when | Residue |
+   |---|---|---|
+   | **Edit the YAML** | setting a field, swapping a reference, renaming an object. Serialization is Force Text (`ProjectSettings/EditorSettings.asset`, `m_SerializationMode: 2`), so scenes, prefabs and assets are plain text | none — the diff is the review, `git checkout` is the undo |
+   | **`Assets/_Scratch/`** | anything needing the AssetDatabase, `PrefabUtility`, or new fileIDs | none — the folder is gitignored and emptied |
+   | **A committed tool** | the operation has served more than one session and more than one question (`../../Working-Rules.md`, three-kinds gate) | it is the deliverable |
+
+   **Rung 1 covers more than it appears to.** The background-music change on 2026-08-10 was
+   three `sed` edits across a `.asset` and two `.unity` files, where the shipped alternative was
+   a 500-line editor script. Rung 1 stops being safe when the job needs new GUIDs or fileIDs.
+
+8. **`Assets/_Scratch/` exists, is gitignored, and holds a committed `.gitkeep` and nothing
+   else.** Unity compiles what is dropped there; a committed `[MenuItem]` runs it; the folder is
+   emptied after.
+9. **`Tools/verify/run.sh` fails while `Assets/_Scratch/` contains anything but `.gitkeep`.**
+   **This is the whole mechanism.** Cleanup stops being the script's job and stops depending on
+   the run succeeding, in the same way the language lint does not depend on anyone choosing to
+   run it. A scratch script that half-worked now blocks the next gate instead of surviving into
+   the tree.
+10. **Nothing in `Assets/_Scratch/` is ever cited by a document.** Same rule the three-kinds
+    gate already sets for `/tmp`: a path that will not exist next session cannot appear in a
+    milestone's Verification section.
+11. **Every row is proved twice**: it reproduces its baseline count on the tree as it stands,
    **and** it catches a seeded violation. **Seeding alone is not proof** — a gutted row seeds
    and catches fine. The baseline is what proves it still sees the real tree.
-8. **`Tools/verify/run.sh` passes**, with the same test counts as M39 leaves —
+12. **`Tools/verify/run.sh` passes**, with the same test counts as M39 leaves —
    **266 in the harness, 282 in Unity** — and the new check running before the compile, next
    to the existing `lint-language` call.
-9. **No file under `Assets/Scripts` is edited to satisfy a check.** If a row's honest state is
+13. **No file under `Assets/Scripts` is edited to satisfy a check.** If a row's honest state is
    ugly, it is baselined and the fix is a separate milestone. **The one exception is any row
    this milestone chooses to enforce at zero**, which is then listed here with its file list
    before the work starts, not after.
@@ -145,12 +186,14 @@ Developer infrastructure, so the three questions are answered for the developer.
 2. Criterion 3, second half — **delete one fence and run; expect exit 2 and "missing fence".**
    Then change one value inside a fence, touching no script, and confirm the next run reflects
    it. Both halves, per fence.
-3. Criteria 4, 5, 7 — run the check on the untouched tree and confirm every baseline count
+3. Criteria 4, 5, 11 — run the check on the untouched tree and confirm every baseline count
    matches the table above **exactly**. Then seed one violation per row and confirm each is
    named with `file:line` and that the baselined rows fail on the increment.
 4. Criterion 6 — the counter row prints exactly the three known matches and nothing else.
-5. Criterion 8 — `Tools/verify/run.sh` reports 266; Unity reports 282; same names.
-6. Criterion 9 — `git diff --stat` shows `Tools/` and `Docs/` only, unless a row was listed as
+5. Criteria 8, 9 — drop a file into `Assets/_Scratch/` and run `Tools/verify/run.sh`; expect a
+   non-zero exit naming the folder. Remove it and re-run; expect pass.
+6. Criterion 12 — `Tools/verify/run.sh` reports 266; Unity reports 282; same names.
+7. Criterion 13 — `git diff --stat` shows `Tools/`, `Docs/` and the new `Assets/_Scratch/.gitkeep` only, unless a row was listed as
    enforced-at-zero in advance.
 
 ## Watch

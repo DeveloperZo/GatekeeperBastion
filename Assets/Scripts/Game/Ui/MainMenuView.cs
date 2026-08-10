@@ -7,28 +7,14 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game.Ui
 {
-    /// <summary>Binds the front end copied out of Shift's <c>Main Menu (Desktop).unity</c>.
-    /// Panels are switched with <see cref="MainPanelManager.OpenPanel"/> and the overwrite
-    /// prompt is Shift's <c>Exit</c> modal driven by <see cref="ModalWindowManager"/> — this
-    /// class holds no layout, no colour and no rect maths (M35 criteria 6, 7, 17).</summary>
-    /// <remarks>
-    /// Names the scene must use, because they are how this binds when nothing is serialised:
-    /// the panel that holds the four buttons is <c>Home</c>; the buttons are <c>Continue</c>,
-    /// <c>Start New</c>, <c>Options</c> and <c>Quit</c>; the confirm modal is <c>Exit</c>,
-    /// with <c>Confirm</c> and <c>Cancel</c> buttons.
-    /// </remarks>
+    /// <summary>Binds the authored Shift menu in <c>MainMenu.unity</c>. All wiring is by
+    /// serialized reference (M35 criterion 17) — a null reference logs one error naming the
+    /// field at scene load instead of silently no-opping. Panels switch through
+    /// <see cref="MainPanelManager.OpenPanel"/>; the confirm modals are authored duplicates of
+    /// Shift's <c>Exit</c> modal whose title/description text lives in the scene.</summary>
     public sealed class MainMenuView : MonoBehaviour
     {
         public const string HomePanel = "Home";
-
-        const string CanvasRoot = "Canvas";
-        const string ContinueName = "Continue";
-        const string StartNewName = "Start New";
-        const string OptionsName = "Options";
-        const string QuitName = "Quit";
-        const string ModalName = "Exit";
-        const string ConfirmName = "Confirm";
-        const string CancelName = "Cancel";
 
         [SerializeField] MainPanelManager _panels;
         [SerializeField] GameObject _continueButton;
@@ -40,77 +26,67 @@ namespace GatekeeperBastion.Game.Ui
         [SerializeField] ModalWindowManager _overwriteModal;
         [SerializeField] Button _overwriteConfirmBtn;
         [SerializeField] Button _overwriteCancelBtn;
-
-        bool _resolved;
-        bool _wired;
+        [SerializeField] ModalWindowManager _exitModal;
+        [SerializeField] Button _exitConfirmBtn;
+        [SerializeField] Button _exitCancelBtn;
+        [SerializeField] BlurManager _modalBlur;
 
         public Action onContinue;
         public Action onStartNew;
         public Action onOptions;
-        public Action onQuit;
         public Action onOverwriteConfirm;
-        public Action onOverwriteBack;
+        public Action onQuitConfirm;
 
-        public bool OverwriteOpen { get; private set; }
-
-        /// <summary>True once the Shift Canvas is present — the signal that the front end
-        /// exists in this scene at all.</summary>
-        public bool HasFrontEnd => _panels != null;
-
-        public void EnsureBuilt()
+        void Awake()
         {
-            Resolve();
-            if (_wired) return;
-            _wired = true;
+            ValidateBindings();
 
             Wire(_continueBtn, () => onContinue?.Invoke());
             Wire(_startNewBtn, () => onStartNew?.Invoke());
             Wire(_optionsBtn, () => onOptions?.Invoke());
-            Wire(_quitBtn, () => onQuit?.Invoke());
+            Wire(_quitBtn, ShowExitModal);
             Wire(_overwriteConfirmBtn, () =>
             {
+                HideModal(_overwriteModal);
                 onOverwriteConfirm?.Invoke();
-                ShowMain();
             });
             Wire(_overwriteCancelBtn, () =>
             {
-                onOverwriteBack?.Invoke();
-                ShowMain();
+                HideModal(_overwriteModal);
+                FocusDefault();
+            });
+            Wire(_exitConfirmBtn, () => onQuitConfirm?.Invoke());
+            Wire(_exitCancelBtn, () =>
+            {
+                HideModal(_exitModal);
+                FocusDefault();
             });
         }
 
-        void Resolve()
+        void ValidateBindings()
         {
-            if (_resolved) return;
-            if (_panels == null) _panels = UiBind.First<MainPanelManager>();
-            if (_panels == null) return;
-            _resolved = true;
+            Require(_panels, nameof(_panels));
+            Require(_continueButton, nameof(_continueButton));
+            Require(_campaignLine, nameof(_campaignLine));
+            Require(_continueBtn, nameof(_continueBtn));
+            Require(_startNewBtn, nameof(_startNewBtn));
+            Require(_optionsBtn, nameof(_optionsBtn));
+            Require(_quitBtn, nameof(_quitBtn));
+            Require(_overwriteModal, nameof(_overwriteModal));
+            Require(_overwriteConfirmBtn, nameof(_overwriteConfirmBtn));
+            Require(_overwriteCancelBtn, nameof(_overwriteCancelBtn));
+            Require(_exitModal, nameof(_exitModal));
+            Require(_exitConfirmBtn, nameof(_exitConfirmBtn));
+            Require(_exitCancelBtn, nameof(_exitCancelBtn));
+            Require(_modalBlur, nameof(_modalBlur));
+        }
 
-            Transform canvas = UiBind.Root(CanvasRoot) ?? _panels.transform.root;
-            Transform home = UiBind.Find(canvas, HomePanel) ?? canvas;
-
-            if (_continueBtn == null) _continueBtn = UiBind.Get<Button>(home, ContinueName);
-            if (_continueButton == null && _continueBtn != null)
-                _continueButton = _continueBtn.gameObject;
-            // Shift Home labels: Play → Start New, Settings → Options.
-            if (_startNewBtn == null)
-                _startNewBtn = UiBind.Get<Button>(home, StartNewName)
-                    ?? UiBind.Get<Button>(home, "Play");
-            if (_optionsBtn == null)
-                _optionsBtn = UiBind.Get<Button>(home, OptionsName)
-                    ?? UiBind.Get<Button>(home, "Settings");
-            if (_quitBtn == null) _quitBtn = UiBind.Get<Button>(home, QuitName);
-
-            if (_overwriteModal == null)
-                _overwriteModal = UiBind.Get<ModalWindowManager>(canvas, ModalName);
-            if (_overwriteModal != null)
-            {
-                var modal = _overwriteModal.transform;
-                if (_overwriteConfirmBtn == null)
-                    _overwriteConfirmBtn = UiBind.Get<Button>(modal, ConfirmName);
-                if (_overwriteCancelBtn == null)
-                    _overwriteCancelBtn = UiBind.Get<Button>(modal, CancelName);
-            }
+        void Require(UnityEngine.Object reference, string field)
+        {
+            if (reference == null)
+                Debug.LogError(
+                    $"[MainMenuView] '{name}' is missing serialized reference '{field}' " +
+                    "(M35 criterion 17 — wire it in MainMenu.unity).", this);
         }
 
         static void Wire(Button btn, Action handler)
@@ -132,62 +108,54 @@ namespace GatekeeperBastion.Game.Ui
 
         public void SetCampaignStrip(int banked, int runs, int deepestWave)
         {
-            EnsureBuilt();
             string deepest = deepestWave < 1 ? "1" : deepestWave.ToString();
             UiBind.SetText(_campaignLine,
                 $"{banked} banked  —  {runs} run(s)  —  deepest Wave {deepest}");
         }
 
-        public void SetContinueVisible(bool visible)
-        {
-            EnsureBuilt();
-            UiBind.Show(_continueButton, visible);
-        }
+        public void SetContinueVisible(bool visible) => UiBind.Show(_continueButton, visible);
 
         /// <summary>Opens a panel by the name it is registered under in
         /// <see cref="MainPanelManager.panels"/>. The only way this class changes screens.</summary>
         public void OpenPanel(string panelName)
         {
-            EnsureBuilt();
             if (_panels != null && !string.IsNullOrEmpty(panelName))
                 _panels.OpenPanel(panelName);
         }
 
         public void ShowMain()
         {
-            EnsureBuilt();
-            OverwriteOpen = false;
-            // ModalWindowOut starts a coroutine — only legal while the modal object is active.
-            if (_overwriteModal != null && _overwriteModal.gameObject.activeInHierarchy)
-                _overwriteModal.ModalWindowOut();
+            HideModal(_overwriteModal);
+            HideModal(_exitModal);
             OpenPanel(HomePanel);
             FocusDefault();
         }
 
-        public void ShowOverwriteModal(string title, string body)
+        /// <summary>Opens the authored <c>Confirm Overwrite</c> modal (criterion 11). Its
+        /// title and description are scene text, not code strings.</summary>
+        public void ShowOverwriteModal() => ShowModal(_overwriteModal, _overwriteCancelBtn);
+
+        /// <summary>Opens the authored <c>Exit</c> modal (criterion 12).</summary>
+        public void ShowExitModal() => ShowModal(_exitModal, _exitCancelBtn);
+
+        void ShowModal(ModalWindowManager modal, Button focus)
         {
-            EnsureBuilt();
-            OverwriteOpen = true;
-            if (_overwriteModal != null)
-            {
-                _overwriteModal.useCustomTexts = true;
-                UiBind.SetText(_overwriteModal.windowTitle, title);
-                UiBind.SetText(_overwriteModal.windowDescription, body);
-                _overwriteModal.ModalWindowIn();
-            }
+            if (modal == null) return;
+            modal.ModalWindowIn();
+            if (_modalBlur != null) _modalBlur.BlurInAnim();
 
             var es = EventSystem.current;
-            if (es != null && _overwriteCancelBtn != null)
-                es.SetSelectedGameObject(_overwriteCancelBtn.gameObject);
+            if (es != null && focus != null) es.SetSelectedGameObject(focus.gameObject);
         }
 
-        /// <summary>Hides the whole front end so the walkable hub behind it becomes the game.</summary>
-        public void SetVisible(bool visible)
+        void HideModal(ModalWindowManager modal)
         {
-            Resolve();
-            if (_panels == null) return;
-            var canvas = UiBind.Root(CanvasRoot);
-            UiBind.Show(canvas, visible);
+            // ModalWindowOut starts a coroutine — only legal while the modal object is active.
+            if (modal != null && modal.gameObject.activeInHierarchy)
+            {
+                modal.ModalWindowOut();
+                if (_modalBlur != null) _modalBlur.BlurOutAnim();
+            }
         }
     }
 }

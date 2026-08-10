@@ -72,7 +72,7 @@ namespace GatekeeperBastion.Game.Ui
         /// template, one per <see cref="ShortcutRow"/>. Section headings pool from the section
         /// template when one is authored. Rows beyond the list are deactivated, never destroyed.
         /// Logs one error and no-ops when the template is not wired.</summary>
-        public void SetRows(IReadOnlyList<ShortcutRow> rows)
+        public void SetRows(IEnumerable<ShortcutRow> rows)
         {
             EnsureBuilt();
             if (_rowTemplate == null || _rowsRoot == null)
@@ -88,9 +88,16 @@ namespace GatekeeperBastion.Game.Ui
             int used = 0;
             int sectionsUsed = 0;
             string section = null;
-            for (int i = 0; i < (rows?.Count ?? 0); i++)
+            if (rows == null)
             {
-                ShortcutRow row = rows[i];
+                for (int i = 0; i < _rowPool.Count; i++)
+                    UiBind.Show(_rowPool[i].root, false);
+                for (int i = 0; i < _sectionPool.Count; i++)
+                    UiBind.Show(_sectionPool[i], false);
+                return;
+            }
+            foreach (ShortcutRow row in rows)
+            {
                 if (_sectionTemplate != null && row.Section != section)
                 {
                     section = row.Section;

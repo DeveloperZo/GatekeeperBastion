@@ -46,7 +46,7 @@ Assets/Scripts/
     Input/     Controls  ShortcutPanel — single binding list + bottom-left key panel
     Dev/       DevCommands  DevConsole (editor/dev-build only)
   Editor/
-    Scenes/  SceneBuilder(+.Ship, +.Enemies) — geometry/spawns/NavMesh; UI authored
+    Scenes/  SceneBuilder(+.Ship, +.Enemies) — Environment/spawns/light/NavMesh; hosts+UI authored
     Tools/   AutoVerify (file-bridge test runner)  LogTools (Logs menu)
   Util/      Log (front end)  LogFile (one file per session)
 
@@ -127,11 +127,16 @@ GUILayout; the Bastion HUD may not. GUIStyles there are per-instance, never
 static (static styles survive domain-reload-disabled sessions holding destroyed
 font references).
 
-**4. Geometry is generated; UI is authored.** `SceneBuilder` builds Ship and Bastion
-geometry, spawns and NavMesh into `Assets/Scenes/` and registers Splash, Ship,
-Bastion in build settings. It does **not** own UI — Shift canvases live in those scenes as
-authored content and are preserved across Build All. After any geometry, station or
-spawn-point change, re-run **`GatekeeperBastion > Build All Scenes`**. Hand-editing
-**geometry** loses the edit on the next rebuild; hand-editing **UI** does not. A scene
-missing from build settings makes `SceneManager.LoadScene` throw, which strands the player
-on the end screen — `SceneFlow` guards this and logs an error telling you to rebuild.
+**4. Geometry is generated; UI and gameplay hosts are authored.** `SceneBuilder` rebuilds
+only the `Environment` root, the `SpawnPoints` root, the Directional Light, and the
+NavMesh asset — in place, in the open scene. It does **not** touch stations, the player
+rig, `ShipController`, `GameSystems`, the `EventSystem`, or any UI canvas; those are
+authored scene content and survive Build All. Build settings list **Splash, MainMenu,
+Ship, Bastion**. After any geometry or spawn-point change, re-run
+**`GatekeeperBastion > Build All Scenes`**. Hand-editing **geometry** loses the edit on
+the next rebuild; hand-editing **UI or gameplay hosts** does not. A scene missing from
+build settings makes `SceneManager.LoadScene` throw, which strands the player on the end
+screen — `SceneFlow` guards this and logs an error telling you to rebuild.
+
+Do not re-invent the deleted mutators: `ShiftFrontEndMutate`, `ShiftShipUiImport`,
+`ShiftBastionUiImport`.

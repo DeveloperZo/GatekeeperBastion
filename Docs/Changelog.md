@@ -4,7 +4,7 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 -->
 
 Most recent first. **State transitions and structural edits only** — a milestone moving
@@ -14,6 +14,41 @@ notes, not tuning results, not anything the milestone file already holds.
 This file is history. **`Roadmap.md` is what is next**: order, status, strategy and risks.
 `Milestones/` is the detail behind any entry here.
 
+- 2026-08-10: **M35 gate rewritten off the prefab-generator scope.** Roadmap row and
+  Recommended-next no longer describe Build UI Prefabs / `GUILayout` menu / SceneBuilder-
+  instantiated UI. Gate is four authored scenes, one Shift theme, generators deleted;
+  SceneBuilder owns environment/spawns/light/NavMesh only. Docs sweep under criterion 8 /
+  WP-5 (`AGENTS.md`, `Architecture.md`, `Decisions.md`, `M36`).
+- 2026-08-10: **M44 added — the working method becomes five skills, each gated on a measured
+  delta** (Zo: the third step-function milestone, with token efficiency as the through line).
+  Placed at `.claude/skills/`, which Claude Code reads natively and Cursor reads as a
+  compatibility path, so **one location serves both tools and nothing is duplicated into
+  `.cursor/rules/`**. The loading model is the whole argument: a description costs ~100 tokens
+  and is always present, a body costs nothing until it triggers, and **a bundled script's
+  source never enters context at all** — only its output. Five descriptions ≈ 500 tokens
+  against `AGENTS.md`'s 1,420 words, and `Docs/` is 139,568 words that nothing routes.
+  **The gate is a with-skill / without-skill pass-rate delta, and a skill at parity is deleted
+  rather than rewritten** — it is documenting something the model already does. Two of the five
+  (`gkb-brainstorm`, `gkb-strategy`) are `disable-model-invocation: true` and cost nothing until
+  invoked, because models under-trigger skills for work they can attempt unaided.
+  Two rules the research changed rather than confirmed. **`== null` versus `?.` is a
+  presentation-layer rule, not a global one** — the lifetime check exists because a destroyed
+  `UnityEngine.Object` keeps a live C# wrapper, and `Sim/` contains no such object; the blanket
+  version is why M41 baselines 23 files. And **the allocation list is scoped to per-frame paths
+  only**; applying it to editor tooling is how a codebase gets unreadable for no measured gain.
+- 2026-08-10: **M42 re-cut as the code-cleanliness milestone; the git normalisation moves to
+  M43 unchanged.** A six-lens audit with adversarial verification (40 findings raised, 28
+  confirmed — `Architecture/5-Audit-2026-08-10.md`) found the tree's debt is duplication, not
+  structure: two save-migration pipelines already divergent on the `-1` ledger sentinel, two
+  falloff copies where the tested one is not the live one, a kill log that rounds while the
+  bank floors, and a cut economy mechanic still shipping a tested API. The new M42
+  (`one-mechanism-per-job`) deletes the second copies, makes four lying names true, restores
+  the R5 label and one-namespace conventions, and pins the log to the bank. Zo's call on the
+  renumber; the stable-ID rule bends once because M42 had not shipped and only Roadmap.md
+  referenced it. Deliberately NOT in M42, recorded so they are not re-raised: DecoyBay's
+  singleton (M40/M41 own it), fake-null/LINQ (M41 fences them), the PodEjections full rename
+  (~88 refs for two demonstrated errors), and the decoy wire-or-cut — the audit's one open
+  decision, FABRICATION sells a payload with no reachable in-run activation path.
 - 2026-08-10: **M42 added — the repository is normalised once, and the milestone is written
   for an agent to execute.** The project gained a remote (`DeveloperZo/GatekeeperBastion`,
   one commit) and immediately showed **141 tracked files as modified with zero real changes**;

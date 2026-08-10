@@ -6,8 +6,9 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game.Ui
 {
-    /// <summary>Sequenced end-of-run panel (criterion 21): verdict → headline → staggered stats →
-    /// salvage count-up → actions. Any input fast-forwards; a second input proceeds.</summary>
+    /// <summary>Sequenced end-of-run panel (M35 criteria 26, 30): verdict → headline →
+    /// staggered stats → salvage count-up → actions. Any input fast-forwards; a second input
+    /// proceeds. Visibility is event-driven — Present once per end identity, not every frame.</summary>
     public sealed class EndScreenView : MonoBehaviour
     {
         const float VerdictHold = 1f;
@@ -17,20 +18,20 @@ namespace GatekeeperBastion.Game.Ui
         public event Action ProceedClicked;
 
         [SerializeField] GameObject _root;
-        [SerializeField] CanvasGroup _scrim;
-        [SerializeField] GameObject _panel;
+        [SerializeField, OptionalBinding] CanvasGroup _scrim;
+        [SerializeField, OptionalBinding] GameObject _panel;
         [SerializeField] TMP_Text _verdict;
         [SerializeField] TMP_Text _headline;
         [SerializeField] GameObject[] _statRows;
         [SerializeField] TMP_Text[] _statLabels;
-        [SerializeField] ValueAnimator _salvageCount;
-        [SerializeField] TMP_Text _salvageCaption;
+        [SerializeField, OptionalBinding] ValueAnimator _salvageCount;
+        [SerializeField, OptionalBinding] TMP_Text _salvageCaption;
         [SerializeField] GameObject _actionsRoot;
         [SerializeField] Button _returnButton;
-        [SerializeField] Button _detailsButton;
-        [SerializeField] GameObject _detailsRoot;
-        [SerializeField] TMP_Text[] _detailLabels;
-        [SerializeField] StaggerEntrance _statsStagger;
+        [SerializeField, OptionalBinding] Button _detailsButton;
+        [SerializeField, OptionalBinding] GameObject _detailsRoot;
+        [SerializeField, OptionalBinding] TMP_Text[] _detailLabels;
+        [SerializeField, OptionalBinding] StaggerEntrance _statsStagger;
 
         bool _wired;
         bool _sequenceComplete;
@@ -42,7 +43,12 @@ namespace GatekeeperBastion.Game.Ui
 
         public void EnsureBuilt()
         {
-            if (_wired || _returnButton == null) return;
+            if (_wired) return;
+            if (_returnButton == null)
+            {
+                Debug.LogError($"[EndScreenView] '{name}' missing serialized _returnButton.", this);
+                return;
+            }
             _wired = true;
             _returnButton.onClick.RemoveAllListeners();
             _returnButton.onClick.AddListener(OnReturn);
@@ -56,13 +62,13 @@ namespace GatekeeperBastion.Game.Ui
         public void SetVisible(bool visible)
         {
             EnsureBuilt();
-            if (_root != null) _root.SetActive(visible);
+            UiBind.Show(_root, visible);
             if (!visible)
             {
                 StopSequence();
                 _sequenceComplete = false;
                 _awaitingProceed = false;
-                // Keep _lastKey so HudController's per-frame HideAll+Present does not restart.
+                _lastKey = null;
             }
         }
 
@@ -77,12 +83,7 @@ namespace GatekeeperBastion.Game.Ui
         {
             EnsureBuilt();
             string key = verdict + "|" + headline + "|" + salvageValue;
-            if (key == _lastKey)
-            {
-                // HudController re-pushes every frame after HideAll — re-show, do not restart.
-                if (_root != null && !_root.activeSelf) SetVisible(true);
-                return;
-            }
+            if (key == _lastKey) return;
 
             _lastKey = key;
             _salvageTarget = salvageValue;
@@ -90,16 +91,16 @@ namespace GatekeeperBastion.Game.Ui
             _awaitingProceed = false;
             _detailsOpen = false;
 
-            if (_verdict != null) _verdict.text = verdict ?? "";
-            if (_headline != null) _headline.text = headline ?? "";
-            if (_salvageCaption != null) _salvageCaption.text = salvageCaption ?? "";
+            UiBind.SetText(_verdict, verdict ?? "");
+            UiBind.SetText(_headline, headline ?? "");
+            UiBind.SetText(_salvageCaption, salvageCaption ?? "");
 
             ApplyStatTexts(_statLabels, primaryStats);
             ApplyStatTexts(_detailLabels, detailStats);
 
             bool hasDetails = detailStats != null && detailStats.Length > 0;
-            if (_detailsButton != null) _detailsButton.gameObject.SetActive(hasDetails);
-            if (_detailsRoot != null) _detailsRoot.SetActive(false);
+            UiBind.Show(_detailsButton, hasDetails);
+            UiBind.Show(_detailsRoot, false);
 
             SetVisible(true);
             StopSequence();
@@ -163,7 +164,6 @@ namespace GatekeeperBastion.Game.Ui
         void MarkComplete()
         {
             _sequenceComplete = true;
-            // One-frame gap so the fast-forward key does not also proceed.
             _awaitingProceed = false;
             StartCoroutine(ArmProceedNextFrame());
         }
@@ -226,7 +226,7 @@ namespace GatekeeperBastion.Game.Ui
         void ToggleDetails()
         {
             _detailsOpen = !_detailsOpen;
-            if (_detailsRoot != null) _detailsRoot.SetActive(_detailsOpen);
+            UiBind.Show(_detailsRoot, _detailsOpen);
         }
 
         void OnReturn() => ProceedClicked?.Invoke();
@@ -254,20 +254,17 @@ namespace GatekeeperBastion.Game.Ui
             {
                 if (labels[i] == null) continue;
                 bool show = values != null && i < values.Length && !string.IsNullOrEmpty(values[i]);
-                labels[i].gameObject.SetActive(show);
-                if (show) labels[i].text = values[i];
+                UiBind.Show(labels[i], show);
+                if (show) UiBind.SetText(labels[i], values[i]);
             }
         }
 
         static void SetActive(Component c, bool on)
         {
-            if (c != null) c.gameObject.SetActive(on);
+            if (c != null) UiBind.Show(c.gameObject, on);
         }
 
-        static void SetActive(GameObject go, bool on)
-        {
-            if (go != null) go.SetActive(on);
-        }
+        static void SetActive(GameObject go, bool on) => UiBind.Show(go, on);
 
         static bool AnyInputDown()
         {

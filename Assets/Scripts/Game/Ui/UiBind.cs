@@ -7,8 +7,8 @@ namespace GatekeeperBastion.Game.Ui
 {
     /// <summary>Lookup into the authored Shift hierarchy by name or component type, and the
     /// small set of writes a bound view is allowed to make: text, visibility, slider value.
-    /// Resolution only — constructing UI is M35 criterion 1's forbidden path, so this class
-    /// neither allocates scene objects nor attaches components.</summary>
+    /// Resolution only — constructing UI is forbidden (M35 criteria 4–5; scenes are source),
+    /// so this class neither allocates scene objects nor attaches components.</summary>
     /// <remarks>Views serialize their references where a scene author wired them and call these
     /// helpers for whatever is still null, so a view keeps working while the Canvas copy from
     /// <c>Main Menu (Desktop).unity</c> / <c>Simple HUD (Desktop).unity</c> is still landing.</remarks>
@@ -131,7 +131,7 @@ namespace GatekeeperBastion.Game.Ui
             if (c != null) Show(c.gameObject, visible);
         }
 
-        /// <summary>Drives a Shift bar. Criterion 10: the slider is display-only, so
+        /// <summary>Drives a Shift bar. The slider is display-only, so
         /// <c>interactable</c> is cleared here rather than trusted to the scene.
         /// Change-gated (M35 criterion 27): equal values touch nothing.</summary>
         public static bool SetBar(Slider slider, float value, float max)

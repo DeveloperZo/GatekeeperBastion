@@ -6,19 +6,11 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game.Ui
 {
-    /// <summary>Binds the authored <c>Canvas - In Game</c> copied out of Shift's
-    /// <c>Simple HUD (Desktop).unity</c>. HudController pushes strings and values; nothing here
-    /// reads sim state, sets a colour, or moves a RectTransform — the look is Shift UI Manager's
-    /// and the layout is the scene's (M35 criteria 6, 11, 17).</summary>
+    /// <summary>Binds the authored Bastion HUD. HudController pushes strings and values; nothing
+    /// here reads sim state or moves a RectTransform. All hosts are serialized — missing wires
+    /// log once at EnsureBuilt (M35 criteria 26, 30, 34).</summary>
     public sealed class BastionHudView : MonoBehaviour
     {
-        /// <summary>Shift's HUD root, and the two bar blocks inside it.</summary>
-        const string InGameCanvas = "Canvas - In Game";
-        const string BarsBlock = "Armor & Health";
-        const string HatchBlockName = "Armor";
-        const string PlayerBlockName = "Health";
-        const string MissionBlock = "Active Mission";
-
         const float IrrelevantAlpha = 0.4f;
 
         public event Action ReturnClicked;
@@ -27,7 +19,7 @@ namespace GatekeeperBastion.Game.Ui
 
         [Header("Vignette")]
         [SerializeField] GameObject _vignetteRoot;
-        [SerializeField] TMP_Text _downLabel;
+        [SerializeField, OptionalBinding] TMP_Text _downLabel;
 
         [Header("Fight")]
         [SerializeField] GameObject _fightRoot;
@@ -39,18 +31,18 @@ namespace GatekeeperBastion.Game.Ui
         [SerializeField] TMP_Text _playerLabel;
         [SerializeField] Slider _playerBar;
         [SerializeField] GameObject _staminaBlock;
-        [SerializeField] CanvasGroup _staminaGroup;
+        [SerializeField, OptionalBinding] CanvasGroup _staminaGroup;
         [SerializeField] TMP_Text _staminaLabel;
         [SerializeField] Slider _staminaBar;
         [SerializeField] GameObject _weaponStack;
-        [SerializeField] CanvasGroup _weaponGroup;
+        [SerializeField, OptionalBinding] CanvasGroup _weaponGroup;
         [SerializeField] TMP_Text _weaponBlock;
         [SerializeField] GameObject _reloadBlock;
-        [SerializeField] CanvasGroup _reloadGroup;
+        [SerializeField, OptionalBinding] CanvasGroup _reloadGroup;
         [SerializeField] TMP_Text _reloadLabel;
         [SerializeField] Slider _reloadBar;
         [SerializeField] GameObject _abilityBlock;
-        [SerializeField] CanvasGroup _abilityGroup;
+        [SerializeField, OptionalBinding] CanvasGroup _abilityGroup;
         [SerializeField] TMP_Text _abilityLabel;
         [SerializeField] Slider _abilityBar;
 
@@ -83,14 +75,23 @@ namespace GatekeeperBastion.Game.Ui
         [SerializeField] TMP_Text _emergencyText;
         [SerializeField] Button _emergencyButton;
 
-        bool _resolved;
         bool _returnWired;
+        bool _missingLogged;
+        float _vignetteAlpha = -1f;
+        bool _vignetteDown;
+        CrosshairShape _crosshair = (CrosshairShape)(-1);
 
-        /// <summary>Resolves whatever the scene author did not wire, then arms the buttons.
-        /// Safe to call every frame; the work happens once.</summary>
+        /// <summary>Arms button listeners once. Logs one error per null required field.</summary>
         public void EnsureBuilt()
         {
-            Resolve();
+            if (!_missingLogged)
+            {
+                _missingLogged = true;
+                LogMissing(nameof(_root), _root);
+                LogMissing(nameof(_fightRoot), _fightRoot);
+                LogMissing(nameof(_endScreen), _endScreen);
+                LogMissing(nameof(_shortcuts), _shortcuts);
+            }
 
             if (_returnWired) return;
             _returnWired = true;
@@ -104,41 +105,10 @@ namespace GatekeeperBastion.Game.Ui
             _endScreen?.EnsureBuilt();
         }
 
-        /// <summary>Name lookup into the Shift copy. Re-runs until the Canvas exists, so the
-        /// HUD latches on whether the copy lands before or after this component.</summary>
-        void Resolve()
+        void LogMissing(string field, UnityEngine.Object value)
         {
-            if (_resolved) return;
-
-            Transform canvas = _root != null ? _root : UiBind.Root(InGameCanvas);
-            if (canvas == null) return;
-            _resolved = true;
-            if (_root == null) _root = canvas as RectTransform;
-
-            Transform bars = UiBind.Find(canvas, BarsBlock);
-            BindBar(bars, HatchBlockName, ref _hatchBar, ref _hatchLabel);
-            BindBar(bars, PlayerBlockName, ref _playerBar, ref _playerLabel);
-
-            if (_prepRoot == null)
-            {
-                var mission = UiBind.Find(canvas, MissionBlock);
-                if (mission != null) _prepRoot = mission.gameObject;
-            }
-
-            if (_fightRoot == null && bars != null) _fightRoot = bars.gameObject;
-            if (_shortcuts == null) _shortcuts = UiBind.Get<ShortcutPanelView>(canvas);
-            if (_endScreen == null) _endScreen = UiBind.First<EndScreenView>();
-        }
-
-        /// <summary>Criterion 11: one binding, one source — the slider and its numeric label
-        /// come out of the same block so they cannot drift apart.</summary>
-        static void BindBar(Transform bars, string blockName, ref Slider bar, ref TMP_Text label)
-        {
-            if (bars == null) return;
-            var block = UiBind.Find(bars, blockName);
-            if (block == null) return;
-            if (bar == null) bar = UiBind.Get<Slider>(block);
-            if (label == null) label = UiBind.Get<TMP_Text>(block, "Text") ?? UiBind.Get<TMP_Text>(block);
+            if (value == null)
+                Debug.LogError($"[BastionHudView] '{name}' missing serialized {field}.", this);
         }
 
         void OnDestroy()
@@ -148,7 +118,39 @@ namespace GatekeeperBastion.Game.Ui
 
         void OnReturn() => ReturnClicked?.Invoke();
 
-        public void HideAll()
+        /// <summary>One-shot visibility for a phase transition — not called every frame.</summary>
+        public void ShowArriving()
+        {
+            HideChrome();
+            UiBind.Show(_arrivingRoot, true);
+        }
+
+        /// <summary>Fight chrome on; prep or assault strip chosen by <paramref name="prep"/>.</summary>
+        public void ShowFight(bool prep)
+        {
+            HideChrome();
+            UiBind.Show(_fightRoot, true);
+            UiBind.Show(_crosshairRoot, true);
+            UiBind.Show(_shortcutRoot, true);
+            UiBind.Show(_prepRoot, prep);
+            UiBind.Show(_assaultRoot, !prep);
+        }
+
+        public void ShowEnd()
+        {
+            HideChrome();
+            _endScreen?.SetVisible(true);
+            UiBind.Show(_shortcutRoot, true);
+        }
+
+        public void ShowEmergency()
+        {
+            HideChrome();
+            UiBind.Show(_emergencyRoot, true);
+            UiBind.Show(_shortcutRoot, true);
+        }
+
+        public void HideChrome()
         {
             UiBind.Show(_vignetteRoot, false);
             UiBind.Show(_fightRoot, false);
@@ -163,25 +165,29 @@ namespace GatekeeperBastion.Game.Ui
             UiBind.Show(_emergencyRoot, false);
         }
 
+        // Transition shims — keep both event-driven and legacy callers compiling.
+        public void HideAll() => HideChrome();
         public void SetFightVisible(bool visible) => UiBind.Show(_fightRoot, visible);
-
         public void SetCrosshairVisible(bool visible) => UiBind.Show(_crosshairRoot, visible);
-
-        public void SetPromptVisible(bool visible) => UiBind.Show(_promptRoot, visible);
-
         public void SetPrepVisible(bool visible) => UiBind.Show(_prepRoot, visible);
-
         public void SetAssaultVisible(bool visible) => UiBind.Show(_assaultRoot, visible);
+        public void SetShortcutVisible(bool visible) => UiBind.Show(_shortcutRoot, visible);
+        public void SetArrivingVisible(bool visible) => UiBind.Show(_arrivingRoot, visible);
+        public void SetEndVisible(bool visible) => _endScreen?.SetVisible(visible);
+        public void SetEmergencyVisible(bool visible) => UiBind.Show(_emergencyRoot, visible);
+
+        public void SetShortcutLines(IReadOnlyList<string> lines, bool collapsed)
+        {
+            EnsureBuilt();
+            if (_shortcuts == null) return;
+            _shortcuts.SetCollapsed(collapsed);
+            if (!collapsed && lines != null) _shortcuts.SetLines(lines);
+            UiBind.Show(_shortcutRoot, collapsed || (lines != null && lines.Count > 0));
+        }
 
         public void SetHatchAlarmVisible(bool visible) => UiBind.Show(_hatchAlarmRoot, visible);
 
-        public void SetShortcutVisible(bool visible) => UiBind.Show(_shortcutRoot, visible);
-
-        public void SetArrivingVisible(bool visible) => UiBind.Show(_arrivingRoot, visible);
-
-        public void SetEndVisible(bool visible) => _endScreen?.SetVisible(visible);
-
-        public void SetEmergencyVisible(bool visible) => UiBind.Show(_emergencyRoot, visible);
+        public void SetPromptVisible(bool visible) => UiBind.Show(_promptRoot, visible);
 
         public void SetTimeWave(string text) => UiBind.SetText(_timeWave, text);
 
@@ -224,10 +230,10 @@ namespace GatekeeperBastion.Game.Ui
             UiBind.SetRelevant(_weaponStack, _weaponGroup, !string.IsNullOrEmpty(text), IrrelevantAlpha);
         }
 
-        /// <summary>Criterion 14: the three crosshairs are authored from Shift parts and
-        /// swapped by activation, not drawn as glyphs.</summary>
         public void SetCrosshair(CrosshairShape shape)
         {
+            if (_crosshair == shape) return;
+            _crosshair = shape;
             UiBind.Show(_crosshairCross, shape == CrosshairShape.Cross);
             UiBind.Show(_crosshairDot, shape == CrosshairShape.Dot);
             UiBind.Show(_crosshairBrackets, shape == CrosshairShape.Brackets);
@@ -237,8 +243,6 @@ namespace GatekeeperBastion.Game.Ui
 
         public void SetPrepHeading(string text) => UiBind.SetText(_prepHeading, text);
 
-        /// <summary>Prep body line 1..4. Criterion 12 keeps <c>&lt;b&gt;</c> markup, so emphasis
-        /// arrives inside <paramref name="text"/> rather than as a style set here.</summary>
         public void SetPrepLine(int index, string text)
         {
             int i = index - 1;
@@ -250,14 +254,13 @@ namespace GatekeeperBastion.Game.Ui
 
         public void SetHatchAlarmStrip(string text) => UiBind.SetText(_hatchAlarmText, text);
 
-        public void SetShortcutLines(IReadOnlyList<string> lines, bool collapsed)
+        public void SetShortcutRows(IReadOnlyList<ShortcutRow> rows, bool collapsed)
         {
             EnsureBuilt();
             if (_shortcuts == null) return;
             _shortcuts.SetCollapsed(collapsed);
-            if (!collapsed && lines != null && lines.Count > 0)
-                _shortcuts.SetLines(lines);
-            UiBind.Show(_shortcutRoot, collapsed || (lines != null && lines.Count > 0));
+            if (!collapsed && rows != null) _shortcuts.SetRows(rows);
+            UiBind.Show(_shortcutRoot, collapsed || (rows != null && rows.Count > 0));
         }
 
         public void SetArriving(string text) => UiBind.SetText(_arrivingText, text);
@@ -274,16 +277,20 @@ namespace GatekeeperBastion.Game.Ui
 
         public void SetEmergencyText(string text) => UiBind.SetText(_emergencyText, text);
 
-        /// <summary>Damage and death overlay. Intensity is the authored CanvasGroup's alpha —
-        /// the tint itself belongs to the scene.</summary>
         public void SetVignette(float alpha, bool downOverlay, string downText)
         {
             bool show = alpha > 0.001f || downOverlay;
             UiBind.Show(_vignetteRoot, show);
             if (!show || _vignetteRoot == null) return;
 
-            var group = _vignetteRoot.GetComponent<CanvasGroup>();
-            if (group != null) group.alpha = downOverlay ? 1f : Mathf.Clamp01(alpha);
+            float target = downOverlay ? 1f : Mathf.Clamp01(alpha);
+            if (!Mathf.Approximately(_vignetteAlpha, target) || _vignetteDown != downOverlay)
+            {
+                _vignetteAlpha = target;
+                _vignetteDown = downOverlay;
+                var group = _vignetteRoot.GetComponent<CanvasGroup>();
+                if (group != null) group.alpha = target;
+            }
             UiBind.SetTextOrHide(_downLabel, downOverlay ? downText : null);
         }
 

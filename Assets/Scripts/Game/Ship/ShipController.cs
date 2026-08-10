@@ -1,11 +1,14 @@
+using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
+using Michsky.UI.Shift;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: Ship-hub scene controller — guarantees a loaded GameSession
-    /// (direct-play fallback) and owns cursor/movement state while station panels are open.</summary>
+    /// (direct-play fallback), owns cursor/movement while station panels are open, and is the
+    /// sole Esc dispatcher for the Ship (M35 Escape contract).</summary>
     /// <remarks>Cursor lock is load-bearing: Interactor refuses to raycast unless
     /// Cursor.lockState == Locked, so a missed lock means nothing in the ship is usable.
     /// SetWalkMode therefore always sets the cursor itself (even with no player rig found)
@@ -15,11 +18,22 @@ namespace GatekeeperBastion.Game
         const string Tag = "ShipController";
         const float BindWindowSeconds = 2f;
 
+        [SerializeField] GameObject _stationCanvas;
+        [SerializeField] MainPanelManager _panels;
+        [SerializeField] ModalWindowManager _exitModal;
+
         /// <summary>The station panel currently open, or null while walking.</summary>
         public StationTerminal OpenStation { get; private set; }
 
         /// <summary>True while any station panel is up (read by ShipHud).</summary>
         public bool IsPanelOpen => OpenStation != null;
+
+        /// <summary>True while the Settings panel is up via Esc / OptionsScreen.</summary>
+        public bool IsSettingsOpen { get; private set; }
+
+        /// <summary>QUIT TO MENU on the Ship Settings panel (M35 criterion 32) — state is
+        /// already saved at purchase time; no confirm.</summary>
+        public void QuitToMenu() => SceneFlow.LoadMainMenu();
 
         FirstPersonController _fpc;
         bool _walking = true;
@@ -29,8 +43,9 @@ namespace GatekeeperBastion.Game
         void Awake()
         {
             SceneFlow.EnsureEventSystem();
-            // Editor-direct-play / test fallback: entering Ship without passing the menu.
             GameSession.EnsureLoaded();
+            if (_stationCanvas != null && _stationCanvas.activeSelf)
+                _stationCanvas.SetActive(false);
         }
 
         void Start()
@@ -38,18 +53,16 @@ namespace GatekeeperBastion.Game
             SetWalkMode(true);
             if (GameSession.Meta != null)
                 GameSession.Meta.PayloadLoadoutLocked = false;
-            // A cleared run bumps CleanExits, not PodEjections, so "run(s) lost" stayed honest —
-            // it just read as if a won run had never happened. Both counters, both true.
-            Log.Event("Ship", $"aboard the ship — {GameSession.Meta.BankedSalvage} banked, " +
-                                        $"{GameSession.Meta.PodEjections} run(s) lost, " +
-                                        $"{GameSession.Meta.CleanExits} cleared");
+            Log.Event("Ship", "aboard the ship — " + GameSession.Meta.BankedSalvage + " banked, " +
+                                        GameSession.Meta.PodEjections + " run(s) lost, " +
+                                        GameSession.Meta.CleanExits + " cleared");
         }
 
         void Update()
         {
-            // Re-assert exactly once, if the player rig only showed up after our Start:
-            // PlayerRegistry is filled from PlayerHealth.OnEnable, and nothing guarantees
-            // that ran first. Bounded so we never fight the player's own Esc/click later.
+            if (Controls.Down(ControlId.FreeCursor))
+                HandleEscape();
+
             if (_fpc != null || _bindWindow <= 0f) return;
             _bindWindow -= Time.deltaTime;
             var fpc = FindLocalController();
@@ -58,12 +71,84 @@ namespace GatekeeperBastion.Game
             ApplyWalkMode();
         }
 
-        /// <summary>Open a station panel: cursor freed, movement locked. One panel at a time.</summary>
+        void LateUpdate()
+        {
+            // Esc is FreeCursor on Ship; FirstPersonController also unlocks on that binding.
+            // After the Escape contract, walking means locked — re-assert once per frame so FPC
+            // cannot leave the hub cursor-free after Esc opened/closed Settings or a station.
+            if (_walking && OpenStation == null && !IsSettingsOpen && !OptionsScreen.IsOpen)
+                ApplyWalkMode();
+        }
+
+        /// <summary>Ship Esc priority: open modal → close; station open → Close; Settings open
+        /// → close Settings; otherwise → open Settings (M35 Escape contract).</summary>
+        void HandleEscape()
+        {
+            if (_exitModal != null && _exitModal.gameObject.activeInHierarchy)
+            {
+                _exitModal.ModalWindowOut();
+                return;
+            }
+
+            if (OpenStation != null)
+            {
+                OpenStation.Close();
+                return;
+            }
+
+            if (IsSettingsOpen || OptionsScreen.IsOpen)
+            {
+                CloseSettings();
+                return;
+            }
+
+            OpenSettings();
+        }
+
+        void OpenSettings()
+        {
+            if (_stationCanvas != null && !_stationCanvas.activeSelf)
+                _stationCanvas.SetActive(true);
+
+            // Prefer OptionsScreen when an OptionsView is registered (WP-2 handoff); otherwise
+            // open the Shift Settings panel alone and leave content empty (crit 32 deferred).
+            if (OptionsView.Registered != null)
+            {
+                OptionsScreen.Open(_fpc != null ? _fpc : FindLocalController());
+                IsSettingsOpen = true;
+                return;
+            }
+
+            if (_panels != null) _panels.OpenPanel("Settings");
+            IsSettingsOpen = true;
+            SetWalkMode(false);
+        }
+
+        void CloseSettings()
+        {
+            if (OptionsScreen.IsOpen)
+            {
+                OptionsScreen.Close();
+                IsSettingsOpen = false;
+                if (OpenStation == null && _stationCanvas != null && _stationCanvas.activeSelf)
+                    _stationCanvas.SetActive(false);
+                return;
+            }
+
+            IsSettingsOpen = false;
+            if (_stationCanvas != null && _stationCanvas.activeSelf && OpenStation == null)
+                _stationCanvas.SetActive(false);
+            SetWalkMode(true);
+        }
+
+        /// <summary>Open a station panel: canvas on, cursor freed, movement locked. One at a time.</summary>
         public void OpenStationPanel(StationTerminal station)
         {
             if (station == null || OpenStation == station) return;
+            if (IsSettingsOpen) CloseSettings();
             OpenStation = station;
             SetWalkMode(false);
+            station.OnOpenedByShip();
         }
 
         /// <summary>Close the open panel (if it is the given one) and return to walking.</summary>
@@ -110,3 +195,5 @@ namespace GatekeeperBastion.Game
         }
     }
 }
+
+// wp3-refresh

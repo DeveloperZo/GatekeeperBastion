@@ -1,33 +1,38 @@
 using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER: Splash front-end — CONTINUE / START NEW (overwrite confirm) /
-    /// OPTIONS / QUIT. Continue and Start load <see cref="SceneFlow.Ship"/>; Embark to Bastion
-    /// is a Ship-station action, not a menu action.</summary>
+    /// <summary>LOCAL-OWNER: MainMenu front-end flow — CONTINUE / START NEW (overwrite
+    /// confirm) / OPTIONS / QUIT (exit confirm, M35 criterion 12). Continue and Start load
+    /// <see cref="SceneFlow.Ship"/>; Embark to Bastion is a Ship-station action, not a menu
+    /// action. Esc is not polled here — Shift's modal hotkeys own it on the menu.</summary>
     public sealed class MainMenuController : MonoBehaviour
     {
+        const string Tag = "MainMenu";
+
+        [SerializeField] MainMenuView _view;
+
         bool _loading;
-        MainMenuView _view;
 
         void Awake()
         {
             SceneFlow.EnsureEventSystem();
-            SceneFlow.RepairCanvas(gameObject);
             AudioBuses.ApplyFromSettings();
-            _view = GetComponentInChildren<MainMenuView>(true);
-            if (_view == null) _view = GetComponent<MainMenuView>();
-            if (_view == null) return;
-            _view.EnsureBuilt();
+            if (_view == null)
+            {
+                Log.Error(Tag,
+                    "Missing serialized reference '_view' (M35 criterion 17 — wire it in MainMenu.unity).");
+                return;
+            }
 
             _view.onContinue = OnContinue;
             _view.onStartNew = OnStartNew;
             _view.onOptions = () => OptionsScreen.Open(null);
-            _view.onQuit = () => Application.Quit();
             _view.onOverwriteConfirm = StartNewAndGoToShip;
-            _view.onOverwriteBack = () => _view.ShowMain();
+            _view.onQuitConfirm = Quit;
         }
 
         void OnEnable()
@@ -40,8 +45,6 @@ namespace GatekeeperBastion.Game
         void Update()
         {
             OptionsScreen.TickDisplayRevert();
-            if (_view != null && _view.OverwriteOpen && Input.GetKeyDown(KeyCode.Escape))
-                _view.ShowMain();
         }
 
         void RefreshMenu()
@@ -69,9 +72,7 @@ namespace GatekeeperBastion.Game
         {
             if (GameSession.HasSave)
             {
-                _view.ShowOverwriteModal(
-                    "Overwrite save?",
-                    "Starting a new campaign will overwrite your existing save.");
+                _view.ShowOverwriteModal();
                 return;
             }
             StartNewAndGoToShip();
@@ -84,6 +85,18 @@ namespace GatekeeperBastion.Game
             GameSession.StartNew();
             if (!SceneFlow.LoadShip())
                 _loading = false;
+        }
+
+        /// <summary>Exit-modal confirm (M35 criterion 12): quits the build, stops Play mode
+        /// in the editor.</summary>
+        void Quit()
+        {
+            Log.Event(Tag, "Quit confirmed from the menu.");
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
     }
 }

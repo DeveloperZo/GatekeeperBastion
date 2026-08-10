@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 namespace GatekeeperBastion.Game.Ui
 {
-    /// <summary>Sets UI Audio pitch to ±5% before Shift <c>UIElementSound</c> plays (M35 criterion 28).</summary>
+    /// <summary>Sets UI Audio pitch to ±5% before Shift <c>UIElementSound</c> plays.</summary>
     public sealed class UiPitchRandomizer : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler
     {
         const float Jitter = 0.05f;

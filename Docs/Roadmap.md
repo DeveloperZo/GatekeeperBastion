@@ -38,15 +38,14 @@ holds **M35**.
 
 **The project gained a git remote on 2026-08-10** — `DeveloperZo/GatekeeperBastion`, one
 commit. That makes this file's own rule operable for the first time: a status change is a
-`git mv` plus the table row, in one commit. **M42 is what makes the diff readable enough for
+`git mv` plus the table row, in one commit. **M43 is what makes the diff readable enough for
 that to mean anything**, and it is written to be executed by a coding agent rather than by
 hand.
 
-1. **M35 — One look, drawn from one place.** Re-cut twice on 2026-08-09: the move to uGUI on
-   **Shift v2.0.12**, and the scope is a **baseline front end** rather than a straight port.
-   The splash is one centred label today and the main menu is four `GUILayout.Button` calls;
-   porting those faithfully would spend the migration and leave the game looking as unfinished
-   as it does now. It goes first because M36 adds screens on top of this baseline.
+1. **M35 — One look, drawn from one place.** Four authored scenes (Splash → MainMenu → Ship →
+   Bastion), one Shift theme, no UI generators. Scene files are the UI source; the three
+   mutators that regenerated them are deleted. It goes first because M36 adds HUD instruments
+   on top of this baseline.
 2. **M36 — The HUD is the tether.** New. The distinct-feel pass: one readout shaped like the
    game's own premise, Prep and Assault as visibly different instruments, and a hit on the
    door that lands in peripheral vision. Depends on M35.
@@ -100,14 +99,16 @@ this table — see the change log.
 | M32 | A Primary that wants the far wall | completed, Aug 2026 | `PRI-C` in the catalog; full damage at 50 m; sustained within 5% of the MR-35; Railshot on `F` — playthrough 7 open on file | [`3. completed/M32`](Milestones/3.%20completed/M32-a-primary-that-wants-the-far-wall.md) |
 | M33 | The numbers doc reads itself out of the build | later | `Tools/docgen/run.sh --check` exits non-zero when a `Sim/` number changes and `Design/4-Data.md` is not regenerated; deleting an `UpgradeTrack` value drops its row from both docs with no generator edit | [`1. planned/M33`](Milestones/1.%20planned/M33-the-numbers-doc-reads-itself.md) |
 | M34 | A file you can navigate | later | Every type with three or more members carries the `Architecture/7-File-Layout.md` region order; `Tools/lint-layout/run.sh` fails on a seeded violation and runs from `verify`; no member added, removed or resignatured | [`1. planned/M34`](Milestones/1.%20planned/M34-a-file-you-can-navigate.md) |
-| M35 | One look, drawn from one place | active | Player UI on uGUI + Shift v2.0.12 in prefabs `SceneBuilder` instantiates; a real splash, main menu, options and confirm modal; no `OnGUI` outside `Game/Dev/`; Bastion layer ports unchanged — **close-out blocked on Build UI Prefabs + Build All Scenes + playthrough** | [`2. active/M35`](Milestones/2.%20active/M35-one-look-drawn-from-one-place.md) |
+| M35 | One look, drawn from one place | active | Four authored scenes, one Shift theme, no UI generators; Splash→MainMenu→Ship→Bastion; stations/HUD/pause/quit-to-menu wired; SceneBuilder owns environment/spawns/light/NavMesh only — **close-out blocked on WP-5 docs/sweeps + Zo playthrough** | [`2. active/M35`](Milestones/2.%20active/M35-one-look-drawn-from-one-place.md) |
 | M36 | The HUD is the tether | later | One readout carries Hatch integrity, salvage and bodies at the door; Prep and Assault identifiable from one frame with text removed; a Hatch hit is visible in peripheral vision | [`1. planned/M36`](Milestones/1.%20planned/M36-the-hud-is-the-tether.md) |
 | M37 | Where they die | later | Every kill line carries `hatchDist=` and `spawnDist=` as raw metres, no formula in the game; `wave-report` prints median distance per Wave **per Gatekeeper kind** | [`1. planned/M37`](Milestones/1.%20planned/M37-where-they-die.md) |
 | M38 | A dashboard you can open | completed, Aug 2026 | `Docs/dashboard.html` parses logs in-browser after you choose Logs/; PlayMode by `stage=playmode`; no `legacy` spend; era curves | [`3. completed/M38`](Milestones/3.%20completed/M38-a-dashboard-you-can-open.md) |
 | M39 | The seam becomes a boundary | later | `Sim/` is its own assembly with `noEngineReferences: true` and all four consumers reference it; `Sim/` logs through a Sim-declared sink; a seeded `using UnityEngine;` in `Sim/` is `CS0246`; 266 harness / 282 Unity tests unchanged | [`1. planned/M39`](Milestones/1.%20planned/M39-the-seam-becomes-a-boundary.md) |
 | M40 | The rules become measurable | later | One statement of the counted-line unit, linked from everywhere else; `Editor/` has a number; the two grandfathered singletons named by type rather than counted; `5-Audit` corrected; **no file under `Assets/` edited** | [`1. planned/M40`](Milestones/1.%20planned/M40-the-rules-become-measurable.md) |
 | M41 | The rules get a check | later | `Tools/lint-arch/run.sh` reads fenced rules from `Docs/Architecture/`, runs from `verify`, holds no literal from a fence and exits 2 on a deleted one; every row reproduces its measured baseline **and** catches a seeded violation | [`1. planned/M41`](Milestones/1.%20planned/M41-the-rules-get-a-check.md) |
-| M42 | A repository that reads as clean | later | `git status` on an untouched checkout — **and on a fresh clone** — prints `nothing to commit, working tree clean`; one root commit; binaries in LFS and no Unity YAML in it; `Tools/verify/run.sh` unchanged | [`1. planned/M42`](Milestones/1.%20planned/M42-a-repository-that-reads-as-clean.md) |
+| M42 | One mechanism per job | later | One save-migration path (`grep "rawVersion >="` empty); falloff, repair and slot-select each one copy; `SalvagePerSecond`, `WaveEmit.Pending`, `abilityDial`, `ApplyRepair` deleted; kill lines quote the banked amount; `LossReport`→`RunReport`; 36/36 R5 labels; one `Game/` namespace; 265 harness / 282 Unity green | [`1. planned/M42`](Milestones/1.%20planned/M42-one-mechanism-per-job.md) |
+| M43 | A repository that reads as clean | later | `git status` on an untouched checkout — **and on a fresh clone** — prints `nothing to commit, working tree clean`; one root commit; binaries in LFS and no Unity YAML in it; `Tools/verify/run.sh` unchanged | [`1. planned/M43`](Milestones/1.%20planned/M43-a-repository-that-reads-as-clean.md) |
+| M44 | Skills that pay for their tokens | later | Five skills at `.claude/skills/`, portable frontmatter, bodies under 500 lines; **each ships only on a measured with/without pass-rate delta and is deleted at parity**; `AGENTS.md` under 200 lines; always-on token count recorded before and after | [`1. planned/M44`](Milestones/1.%20planned/M44-skills-that-pay-for-their-tokens.md) |
 
 ## Strategy
 

@@ -20,7 +20,7 @@ namespace GatekeeperBastion.Sim
         MasterVolume = 2,
         MusicVolume = 3,
         SfxVolume = 4,
-        /// <summary>0 = windowed, 1 = fullscreen. Changing it arms a 15s revert (M35 criterion 17).</summary>
+        /// <summary>0 = windowed, 1 = fullscreen. Changing it arms a 15s revert (M35 criterion 13).</summary>
         DisplayMode = 5,
     }
 }

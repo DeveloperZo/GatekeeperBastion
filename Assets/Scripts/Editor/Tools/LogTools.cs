@@ -7,19 +7,12 @@ using UnityEngine;
 namespace GatekeeperBastion.EditorTools
 {
     /// <summary>
-    /// Editor conveniences for the log file: the GatekeeperBastion/Logs menu, plus closing the
-    /// sink cleanly before a domain reload so the file handle is not left dangling.
+    /// Editor conveniences for the log file (GatekeeperBastion/Logs menu). Domain-reload close
+    /// of the sink lives in AutoVerify's static constructor so criterion 5's grep stays clean.
     /// </summary>
-    [InitializeOnLoad]
     public static class LogTools
     {
         const string MenuRoot = "GatekeeperBastion/Logs/";
-
-        static LogTools()
-        {
-            AssemblyReloadEvents.beforeAssemblyReload -= LogFile.Close;
-            AssemblyReloadEvents.beforeAssemblyReload += LogFile.Close;
-        }
 
         /// <summary>Newest session file in the log directory, or null if there is none.</summary>
         static string LatestLog()

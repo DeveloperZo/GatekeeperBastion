@@ -9,7 +9,7 @@ namespace GatekeeperBastion.Game.Ui
     public sealed class ValueAnimator : MonoBehaviour
     {
         [SerializeField] TMP_Text _label;
-        [SerializeField] Image _fill;
+        [SerializeField, OptionalBinding] Image _fill;
         [SerializeField] RectTransform _punchTarget;
         [SerializeField] float _lerpSpeed = 8f;
         [SerializeField] float _punchScale = 1.15f;

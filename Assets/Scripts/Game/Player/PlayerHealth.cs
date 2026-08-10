@@ -1,3 +1,4 @@
+using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Util;
 using UnityEngine;
 
@@ -17,7 +18,7 @@ namespace GatekeeperBastion.Game
         [SerializeField] float maxHp = 100f;
 
         [Tooltip("Optional respawn transform; defaults to the player's starting pose.")]
-        public Transform spawnPoint;
+        [OptionalBinding] public Transform spawnPoint;
 
         /// <summary>Current hit points.</summary>
         public float Hp { get; private set; }

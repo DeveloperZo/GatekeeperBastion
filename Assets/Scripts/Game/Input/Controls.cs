@@ -30,7 +30,6 @@ namespace GatekeeperBastion.Game
         FreeCursor,
         Confirm,
         TogglePanel,
-        Options,
     }
 
     /// <summary>When a binding is live. Flags so Prep∩Assault is empty and a collision
@@ -122,8 +121,12 @@ namespace GatekeeperBastion.Game
             new(ControlId.Interact, KeyCode.E, KeyCode.None, "E", "interact", "SHIP",
                 ControlContext.Ship),
 
-            new(ControlId.FreeCursor, KeyCode.Escape, KeyCode.None, "ESC", "free cursor", "MOVE",
-                FightAlways | ControlContext.Ship),
+            // Esc is owned by each scene's dispatcher (M35 Escape contract). The strip labels
+            // match what Esc does: pause on the Bastion, settings on the Ship, return on end.
+            new(ControlId.FreeCursor, KeyCode.Escape, KeyCode.None, "ESC", "pause", "MOVE",
+                FightAlways),
+            new(ControlId.FreeCursor, KeyCode.Escape, KeyCode.None, "ESC", "settings", "SHIP",
+                ControlContext.Ship),
 
             new(ControlId.Confirm, KeyCode.Return, KeyCode.KeypadEnter, "ENTER", "return", "RUN",
                 ControlContext.EndScreen),
@@ -135,11 +138,6 @@ namespace GatekeeperBastion.Game
             // Collapse chord — works everywhere the panel draws; omitted from the list itself.
             new(ControlId.TogglePanel, KeyCode.Backspace, KeyCode.None, "BKSP", "toggle panel", "MOVE",
                 FightAlways | ControlContext.Ship | ControlContext.EndScreen, showOnPanel: false),
-
-            // Escape is FreeCursor / Confirm / station close — cannot close options without also
-            // closing a station panel in the same frame. O is free on the current binding list.
-            new(ControlId.Options, KeyCode.O, KeyCode.None, "O", "options", "MOVE",
-                FightAlways | ControlContext.Ship),
         };
 
         static readonly List<ControlBinding> Extra = new List<ControlBinding>(4);
