@@ -76,6 +76,7 @@ namespace GatekeeperBastion.Game
             _capturedVisible = Cursor.visible;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+            SceneFlow.EnsureEventSystem();
             EnsureDirtyBuffer();
             Array.Clear(_dirty, 0, _dirty.Length);
 

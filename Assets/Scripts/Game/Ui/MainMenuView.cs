@@ -159,7 +159,9 @@ namespace GatekeeperBastion.Game.Ui
             EnsureBuilt();
             OverwriteOpen = false;
             if (_mainRoot != null) _mainRoot.SetActive(true);
-            if (_overwriteModal != null) _overwriteModal.ModalWindowOut();
+            // Shift ModalWindowOut starts a coroutine — only safe when the modal GO is active.
+            if (_overwriteModal != null && _overwriteModal.gameObject.activeInHierarchy)
+                _overwriteModal.ModalWindowOut();
             FocusDefault();
         }
 

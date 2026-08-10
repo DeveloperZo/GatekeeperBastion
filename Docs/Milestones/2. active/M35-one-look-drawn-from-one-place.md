@@ -1,7 +1,7 @@
 # M35 — One look, drawn from one place
 
 <!--
-Status: active — re-authored twice on 2026-08-09; the second pass raises the bar from "ported" to "finished"
+Status: active — motion + Accessibility empty tab wired 2026-08-09; not completed (Section A/C/D play gates + suite reds remain)
 Update trigger: when a Shift version lands, when the palette or motif changes, or when a screen is added
 Last updated: 2026-08-09
 -->
@@ -272,3 +272,23 @@ Rejected: `Time.timeScale = 0` for pause. Criterion 30.
 ## Depends on / Unblocks
 
 Depends on Shift v2.0.12, imported. **Unblocks M36** and the UI half of every later screen.
+
+## Close-out status
+
+Checked 2026-08-09 (`gkb_verify_report.json`, 2026-08-09T23:46:46Z). **Stay in `2. active/`** — do not move to `completed/` yet.
+
+| Gate | Result |
+|---|---|
+| A.3 no runtime `new GameObject(` / `AddComponent<` under `Game/Ui` | **pass** (empty grep) |
+| A.3 `UiFactory` / `ShiftUi` deleted | **pass** |
+| A.6 Shift **v2.0.12** named | **pass** (`Assets/Shift - Complete Sci-Fi UI/Read Me.txt` line 1); vendor commit still pending |
+| Motion — `StaggerEntrance` on MainMenu, Options, StationPanel, EndScreens, BastionHud (+ Splash) | **pass** (prefab YAML) |
+| Motion — BastionHud / EndScreens `ValueAnimator` fields assigned | **pass** after `BastionUiAssembler` rebuild 2026-08-09 18:47 (salvage punch + bars; end salvage count-up). AutoVerify PlayMode had left BastionHud as an empty Canvas variant (~4 KB) — rebuilt. |
+| Options Accessibility (Zo **1A**) | **pass** — tab exists; `EmptyCopy` one-sentence; panel Reset; no Accessibility `SettingDecl`s / fake toggles |
+| Fonts (Zo **2A**) | LiberationSans on UIManager (prior); assembler TMP uses LiberationSans SDF |
+| `AudioBuses.ApplyFromSettings` before Options | **pass** — `PlayerPrefsSettingsStore.Boot`, `SplashController.Awake`, `MainMenuController.Awake`, `GameSession.EnsureLoaded` (direct-play) |
+| AutoVerify | **complete** — EditMode **281 / 1**, PlayMode **9 / 7** (1 inconclusive). Pre-existing / M35 fallout, not this wiring pass |
+| EditMode red | `SettingsTests.RestoreDefaultsResetsAll` — MasterVolume `default == max` (1f) so “set to max ≠ default” asserts false |
+| PlayMode reds | OnGUI-era HUD/Ship contracts (`GUI functions from inside OnGUI`, lose-screen OnGUI null); combat `TryFire` / clip / shove — document, do not treat as motion-wiring regressions |
+| Zo play | **open** — screenshots, squint/greyscale/rhythm/state matrix, playthrough path (Section C/D/E) |
+| Shift v2.0.12 commit | **pending** |

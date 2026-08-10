@@ -27,11 +27,12 @@ namespace GatekeeperBastion.Game.Ui
                 _version.gameObject.SetActive(true);
                 _version.text = Application.version;
             }
+            // Prompt stays hidden until SplashController marks the MainMenu load ready
+            // (or fails / times out). Showing "press any key" early feels like a soft-lock.
             if (_subtitle != null)
             {
-                _subtitle.gameObject.SetActive(true);
-                if (string.IsNullOrEmpty(_subtitle.text))
-                    _subtitle.text = PressAnyKey;
+                _subtitle.text = PressAnyKey;
+                _subtitle.gameObject.SetActive(false);
             }
             if (_pressGroup != null) _pressGroup.gameObject.SetActive(false);
         }
@@ -39,7 +40,7 @@ namespace GatekeeperBastion.Game.Ui
         public void SetPressVisible(bool visible)
         {
             if (_pressGroup != null) _pressGroup.gameObject.SetActive(visible);
-            else if (_subtitle != null) _subtitle.gameObject.SetActive(visible);
+            if (_subtitle != null) _subtitle.gameObject.SetActive(visible);
         }
 
         public void SetSubtitle(string text)

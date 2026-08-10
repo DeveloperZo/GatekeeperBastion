@@ -12,6 +12,7 @@ namespace GatekeeperBastion.Game
 
         void Awake()
         {
+            SceneFlow.EnsureEventSystem();
             AudioBuses.ApplyFromSettings();
             _view = GetComponentInChildren<MainMenuView>(true);
             if (_view == null) return;

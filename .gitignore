@@ -30,6 +30,9 @@ Recordings/
 ExportedObj/
 .gradle/
 
+# Cursor — rules are shared, local CLI state is not.
+.cursor/cli.json
+
 # Unity crash reports / profiling
 sysinfo.txt
 crashlytics-build.properties
@@ -44,3 +47,24 @@ crashlytics-build.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# ---------------------------------------------------------------------------
+# Agent and tooling output at the repo root. These are the transcripts and
+# reports an editor batch leaves behind (M35 produced a dozen). They are
+# evidence for one session, not project history — the session log in Logs/ is
+# the record, and it is already ignored above.
+# ---------------------------------------------------------------------------
+/gkb_*.log
+/gkb_*.json
+/bastion_ui_assemble.log
+/*_report.json
+/*_report.prev.json
+
+# Scratch and staging directories. _to_delete/ exists because a connected
+# folder cannot be deleted through the device bridge — files are moved here
+# and removed by hand.
+/_backup/
+/_to_delete/
+
+# Harness output, if GKB_HARNESS_OUT is ever pointed inside the repo.
+/gkb-harness/

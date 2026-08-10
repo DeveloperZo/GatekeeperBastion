@@ -15,13 +15,13 @@ namespace GatekeeperBastion.Sim
                 defaultInt: 1, min: 0, max: 1, prefKey: "gkb_display_mode"),
             new SettingDecl(
                 SettingId.MasterVolume, "Master", SettingCategory.Audio,
-                defaultFloat: 1f, min: 0f, max: 1f, prefKey: "gkb_master_volume"),
+                defaultFloat: 0.85f, min: 0f, max: 1f, prefKey: "gkb_master_volume"),
             new SettingDecl(
                 SettingId.MusicVolume, "Music", SettingCategory.Audio,
                 defaultFloat: 0.8f, min: 0f, max: 1f, prefKey: "gkb_music_volume"),
             new SettingDecl(
                 SettingId.SfxVolume, "SFX", SettingCategory.Audio,
-                defaultFloat: 1f, min: 0f, max: 1f, prefKey: "gkb_sfx_volume"),
+                defaultFloat: 0.9f, min: 0f, max: 1f, prefKey: "gkb_sfx_volume"),
             // Key string kept from the pre-M24 PlayerPrefs write so existing installs keep their value.
             new SettingDecl(
                 SettingId.MouseSensitivity, "Mouse sensitivity", SettingCategory.Controls,

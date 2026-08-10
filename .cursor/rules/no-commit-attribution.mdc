@@ -1,0 +1,7 @@
+---
+description: No AI attribution trailers on commits or PRs
+alwaysApply: true
+---
+
+Never add `Co-authored-by`, `Made-with`, or any other attribution trailer to
+commits or pull requests. Commit messages are subject and body only.

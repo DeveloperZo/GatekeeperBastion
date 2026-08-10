@@ -1,5 +1,6 @@
 using GatekeeperBastion.Util;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 namespace GatekeeperBastion.Game
@@ -63,6 +64,42 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Load the bastion combat scene. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadBastion() => Load(Bastion);
+
+        /// <summary>Exactly one EventSystem for uGUI. Shift Canvas variants nest one; scenes may
+        /// bake another — keep a single live system and destroy extras.</summary>
+        public static void EnsureEventSystem()
+        {
+            var systems = Object.FindObjectsByType<EventSystem>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (systems.Length == 0)
+            {
+                var go = new GameObject("EventSystem");
+                go.AddComponent<EventSystem>();
+                go.AddComponent<StandaloneInputModule>();
+                return;
+            }
+
+            EventSystem keep = null;
+            for (int i = 0; i < systems.Length; i++)
+            {
+                var es = systems[i];
+                if (es == null || !es.isActiveAndEnabled) continue;
+                if (es.GetComponent<StandaloneInputModule>() == null) continue;
+                keep = es;
+                break;
+            }
+            if (keep == null) keep = systems[0];
+
+            for (int i = 0; i < systems.Length; i++)
+            {
+                var es = systems[i];
+                if (es == null || es == keep) continue;
+                Object.Destroy(es.gameObject);
+            }
+
+            if (keep.GetComponent<StandaloneInputModule>() == null)
+                keep.gameObject.AddComponent<StandaloneInputModule>();
+        }
 
         static bool Load(string sceneName)
         {

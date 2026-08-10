@@ -108,23 +108,28 @@ namespace GatekeeperBastion.EditorTools
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             MakeSoloCamera(new Color(0.02f, 0.02f, 0.04f));
+            EnsureEventSystem();
             var splash = InstantiateUiPrefab("Splash");
             splash.name = "Splash";
-            if (splash.GetComponent<SplashController>() == null)
+            // SplashController / SplashView live on the Splash prefab (assembler). Do not
+            // re-AddComponent here — nested Shift fileID churn orphaned scene overrides.
+            if (splash.GetComponentInChildren<SplashController>(true) == null)
                 splash.AddComponent<SplashController>();
             if (splash.GetComponentInChildren<GatekeeperBastion.Game.Ui.SplashView>(true) == null)
                 splash.AddComponent<GatekeeperBastion.Game.Ui.SplashView>();
             EditorSceneManager.SaveScene(scene, SplashScenePath);
-            Debug.Log($"[SceneBuilder] Built {SplashScenePath}: camera + Splash UI prefab.");
+            Debug.Log($"[SceneBuilder] Built {SplashScenePath}: camera + EventSystem + Splash UI prefab.");
         }
 
         static void BuildMainMenuScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             MakeSoloCamera(new Color(0.03f, 0.04f, 0.07f));
+            EnsureEventSystem();
             var menu = InstantiateUiPrefab("MainMenu");
             menu.name = "MainMenu";
-            if (menu.GetComponent<MainMenuController>() == null)
+            // MainMenuController / MainMenuView live on the MainMenu prefab (assembler).
+            if (menu.GetComponentInChildren<MainMenuController>(true) == null)
                 menu.AddComponent<MainMenuController>();
             if (menu.GetComponentInChildren<GatekeeperBastion.Game.Ui.MainMenuView>(true) == null)
                 menu.AddComponent<GatekeeperBastion.Game.Ui.MainMenuView>();
@@ -136,8 +141,19 @@ namespace GatekeeperBastion.EditorTools
             // WaveSpawner / player. MenuArenaBackdrop on the MainMenu prefab is the restrained scrim.
             EditorSceneManager.SaveScene(scene, MainMenuScenePath);
             Debug.Log(
-                $"[SceneBuilder] Built {MainMenuScenePath}: camera + MainMenu UI prefab " +
+                $"[SceneBuilder] Built {MainMenuScenePath}: camera + EventSystem + MainMenu UI prefab " +
                 "(OverwriteModal nested; arena = MenuArenaBackdrop scrim; Bastion additive blocked).");
+        }
+
+        /// <summary>uGUI buttons need an EventSystem. Shift Canvas prefabs do not include one;
+        /// without it Splash advances on Input.anyKeyDown but MainMenu / stations never click.</summary>
+        static void EnsureEventSystem()
+        {
+            if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() != null)
+                return;
+            var go = new GameObject("EventSystem");
+            go.AddComponent<UnityEngine.EventSystems.EventSystem>();
+            go.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
         }
 
         /// <summary>Logs if an expected child is missing from a UI prefab instance.</summary>
@@ -172,6 +188,7 @@ namespace GatekeeperBastion.EditorTools
         static void BuildBastionScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            EnsureEventSystem();
             Palette pal = CreatePalette();
             EnemyPrefabs enemies = CreateEnemyPrefabs(pal); // SceneBuilder.Enemies.cs
 
@@ -184,7 +201,7 @@ namespace GatekeeperBastion.EditorTools
             BakeNavMesh(env);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log($"[SceneBuilder] Built {ScenePath}: bastion interior, hatch, 3 breaches, player rig, GameSystems, NavMesh.");
+            Debug.Log($"[SceneBuilder] Built {ScenePath}: EventSystem + bastion interior, hatch, 3 breaches, player rig, GameSystems, NavMesh.");
         }
 
         // ---------- assets ----------

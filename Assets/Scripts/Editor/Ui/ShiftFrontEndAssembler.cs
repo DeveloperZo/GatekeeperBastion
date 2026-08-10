@@ -30,7 +30,7 @@ namespace GatekeeperBastion.EditorTools
         static readonly string[] TabNames =
             { "Graphics", "Audio", "Controls", "Gameplay", "Accessibility" };
 
-        [MenuItem("GatekeeperBastion/Build Front-End UI Prefabs")]
+        // Reachable via GatekeeperBastion/Build UI Prefabs (UiPrefabBuilder) — no separate menu.
         public static void BuildFromMenu() => BuildAll("menu");
 
         public static void BuildFromBatch()
@@ -90,8 +90,21 @@ namespace GatekeeperBastion.EditorTools
                 canvas.sortingOrder = 10;
             }
             UiPrefabVariant.EnsureCanvasScaler(root);
+            // Shift Canvas ships a nested Event System — scene/runtime Ensure owns the singleton.
+            // Leaving both creates dual EventSystems (console spam + dead uGUI).
+            StripNestedEventSystems(root.transform);
             EnsureUiAudio(root.transform);
             return root;
+        }
+
+        static void StripNestedEventSystems(Transform root)
+        {
+            var systems = root.GetComponentsInChildren<UnityEngine.EventSystems.EventSystem>(true);
+            for (int i = 0; i < systems.Length; i++)
+            {
+                if (systems[i] != null)
+                    UnityEngine.Object.DestroyImmediate(systems[i].gameObject);
+            }
         }
 
         static void EnsureUiAudio(Transform canvas)
@@ -169,6 +182,9 @@ namespace GatekeeperBastion.EditorTools
 
             // SplashScreenManager needs demo Animator clips on splash/mainPanels; wiring it
             // without those clips NREs in OnEnable. SplashController owns the load-gate flow.
+            // Controllers live ON the prefab — scene-added components break when nested Shift
+            // fileIDs change (Splash.unity once had m_AddedComponents: [] and no input).
+            root.AddComponent<GatekeeperBastion.Game.SplashController>();
 
             var view = root.AddComponent<SplashView>();
             SetPrivate(view, "_logoGroup", logoCg);
@@ -247,6 +263,10 @@ namespace GatekeeperBastion.EditorTools
             SetPrivate(view, "_overwriteCancelBtn", cancelBtn);
             SetPrivate(view, "_overwriteConfirmLabel", FindLabel(yesBtn));
             SetPrivate(view, "_overwriteCancelLabel", FindLabel(cancelBtn));
+
+            // Controllers on the prefab — scene-added MainMenuController breaks when Shift
+            // nested fileIDs churn (same failure mode as Splash).
+            root.AddComponent<GatekeeperBastion.Game.MainMenuController>();
 
             // silence unused
             _ = title;

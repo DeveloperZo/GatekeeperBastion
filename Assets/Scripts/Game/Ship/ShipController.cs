@@ -28,6 +28,7 @@ namespace GatekeeperBastion.Game
 
         void Awake()
         {
+            SceneFlow.EnsureEventSystem();
             // Editor-direct-play / test fallback: entering Ship without passing the menu.
             GameSession.EnsureLoaded();
         }

@@ -141,8 +141,9 @@ namespace GatekeeperBastion.Game
         static void AppendWrapped(string first, string indent, float maxWidth, IList<string> target)
         {
             if (string.IsNullOrEmpty(first)) return;
-            var style = WrapStyle(null);
-            if (style.CalcSize(new GUIContent(first)).x <= maxWidth)
+            // Never call GUIStyle.CalcSize outside OnGUI — FillLines runs from LateUpdate
+            // (ShipHud / HudController) and throws ArgumentException in PlayMode.
+            if (ApproxWidth(first) <= maxWidth)
             {
                 target.Add(first);
                 return;
@@ -160,7 +161,7 @@ namespace GatekeeperBastion.Game
             for (int i = 1; i < parts.Length; i++)
             {
                 string candidate = LineBuf + " · " + parts[i];
-                if (style.CalcSize(new GUIContent(candidate)).x <= maxWidth)
+                if (ApproxWidth(candidate) <= maxWidth)
                 {
                     LineBuf.Append(" · ").Append(parts[i]);
                     continue;
@@ -171,6 +172,11 @@ namespace GatekeeperBastion.Game
             }
             if (LineBuf.Length > 0) target.Add(LineBuf.ToString());
         }
+
+        /// <summary>Character-width estimate for wrapping outside OnGUI. LiberationSans ~7.2px
+        /// at Theme.Small; biased slightly wide so lines wrap early rather than clip.</summary>
+        static float ApproxWidth(string s) =>
+            string.IsNullOrEmpty(s) ? 0f : s.Length * 7.2f;
 
         static void BuildSections(List<ControlBinding> rows, int dialLevel)
         {

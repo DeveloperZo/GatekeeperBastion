@@ -9,8 +9,9 @@ namespace GatekeeperBastion.EditorTools
 {
     /// <summary>
     /// Builds skeleton prefab variants under Assets/Prefabs/Ui/ from Shift source prefabs.
-    /// File-bridge: gkb_ui_build_request.txt → gkb_ui_build_report.json. Never edits Shift
-    /// prefabs in place (UIManager.asset colours/fonts are the only Shift asset touch).
+    /// One menu entry for all UI assemble work. File-bridge: gkb_ui_build_request.txt →
+    /// gkb_ui_build_report.json. Never edits Shift prefabs in place (UIManager.asset colours/fonts
+    /// are the only Shift asset touch).
     /// </summary>
     [InitializeOnLoad]
     public static class UiPrefabBuilder
@@ -114,6 +115,17 @@ namespace GatekeeperBastion.EditorTools
                             built.Add(prefabPath);
                         else
                             errors.Add($"{prefabName}: {shipErr}");
+                        continue;
+                    }
+
+                    // BastionHud must NOT go through TryBuildVariant — that saves an empty
+                    // Shift Canvas and wiped the assembled fight/end HUD (M35 regression).
+                    if (prefabName == "BastionHud")
+                    {
+                        BastionUiAssembler.AssembleAll(trigger + "+bastion");
+                        built.Add(prefabPath);
+                        built.Add($"{PrefabFolder}/EndScreens.prefab");
+                        built.Add($"{PrefabFolder}/ArmoryWheel.prefab");
                         continue;
                     }
 

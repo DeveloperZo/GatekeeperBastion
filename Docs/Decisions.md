@@ -24,6 +24,17 @@ re-litigating a cut costs more than the cut saved.
   overlay is non-blocking from the start: duck audio, blur the frame, keep the sim ticking
   behind a semi-transparent panel. Building it blocking now is the retrofit the Sim seam
   exists to avoid (`Architecture.md`). Enforced as M35 criterion 30.
+- **Unity asset files in Git LFS.** `ProjectSettings/EditorSettings.asset` sets
+  `m_SerializationMode: 2` — Force Text — so every `.unity`, `.prefab`, `.asset`, `.mat`,
+  `.anim`, `.controller` and `.meta` in this project is YAML. **They stay in git as text.**
+  The instinct is to LFS them because `.unity` is the largest category on disk (22.7 MB,
+  almost all of it Shift's six demo scenes), and doing so trades a diffable, mergeable file
+  for an opaque pointer. LFS takes true binaries only — `.png`, `.dll`, `.mp4`, `.ttf`,
+  `.ogg` and the rest of the list in `../.gitattributes` (Zo, 2026-08-10).
+- **`core.autocrlf` as the line-ending fix.** Rejected in favour of `.gitattributes`. The
+  config setting lives on one machine and does not travel with the repository, so the
+  141-phantom-modification problem returns on the next clone or on CI. The repository is the
+  only place the rule can live (2026-08-10).
 - **The VK-7 Assault Rifle** (2026-08-06). Shipped disabled in M11 and kept "until a weapon
   polish pass"; the pass arrived and it is not wanted. `WeaponId.Vk7Rifle` **keeps its value
   so old saves deserialize, and the id is never reused**; the row leaves `ShopWeapons()`,

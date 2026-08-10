@@ -86,6 +86,8 @@ namespace GatekeeperBastion.Game
             }
             Instance = this;
 
+            SceneFlow.EnsureEventSystem();
+
             // Direct-play/test fallback: entering the Bastion without passing menu/ship.
             GameSession.EnsureLoaded();
             if (Meta == null)

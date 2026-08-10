@@ -1,0 +1,145 @@
+# ---------------------------------------------------------------------------
+# Gatekeeper Bastion — line endings and binary handling.
+#
+# Two jobs. First, end the 141 phantom "modified" files: everything textual is
+# normalised to LF in the repository and checked out native, so a clean tree
+# reads as clean on any machine. Second, keep true binaries out of git object
+# storage — they do not delta-compress, so every re-import of an asset pack
+# would otherwise add its full size to history forever.
+#
+# Unity asset serialization is Force Text (ProjectSettings/EditorSettings.asset,
+# m_SerializationMode: 2), so .unity, .prefab, .asset, .mat, .anim, .controller
+# and .meta are all YAML and stay in git as text. They are the largest category
+# on disk (22.7 MB of .unity alone, nearly all of it Shift's demo scenes) and
+# putting them in LFS would trade a diffable file for an opaque pointer.
+# ---------------------------------------------------------------------------
+
+# Default: let git decide what is text, normalise it to LF on commit.
+* text=auto
+
+# ---------------------------------------------------------------------------
+# Unity YAML — text, and mergeable with unityyamlmerge.
+# The merge driver is inert until it is configured in .git/config; git falls
+# back to the default merge until then, which is the current behaviour.
+# ---------------------------------------------------------------------------
+*.unity        text merge=unityyamlmerge eol=lf
+*.prefab       text merge=unityyamlmerge eol=lf
+*.asset        text merge=unityyamlmerge eol=lf
+*.meta         text merge=unityyamlmerge eol=lf
+*.mat          text merge=unityyamlmerge eol=lf
+*.anim         text merge=unityyamlmerge eol=lf
+*.controller   text merge=unityyamlmerge eol=lf
+*.overrideController text merge=unityyamlmerge eol=lf
+*.physicMaterial     text merge=unityyamlmerge eol=lf
+*.physicsMaterial2D  text merge=unityyamlmerge eol=lf
+*.playable     text merge=unityyamlmerge eol=lf
+*.mask         text merge=unityyamlmerge eol=lf
+*.brush        text merge=unityyamlmerge eol=lf
+*.flare        text merge=unityyamlmerge eol=lf
+*.fontsettings text merge=unityyamlmerge eol=lf
+*.guiskin      text merge=unityyamlmerge eol=lf
+*.giparams     text merge=unityyamlmerge eol=lf
+*.renderTexture      text merge=unityyamlmerge eol=lf
+*.spriteatlas  text merge=unityyamlmerge eol=lf
+*.terrainlayer text merge=unityyamlmerge eol=lf
+*.mixer        text merge=unityyamlmerge eol=lf
+*.shadervariants     text merge=unityyamlmerge eol=lf
+
+# ---------------------------------------------------------------------------
+# Source and docs — text, LF in the repo.
+# ---------------------------------------------------------------------------
+*.cs           text diff=csharp eol=lf
+*.md           text eol=lf
+*.json         text eol=lf
+*.xml          text eol=lf
+*.txt          text eol=lf
+*.asmdef       text eol=lf
+*.asmref       text eol=lf
+*.shader       text eol=lf
+*.cginc        text eol=lf
+*.hlsl         text eol=lf
+*.compute      text eol=lf
+*.shadergraph  text eol=lf
+*.uss          text eol=lf
+*.uxml         text eol=lf
+*.yml          text eol=lf
+*.yaml         text eol=lf
+*.gitattributes text eol=lf
+.gitignore     text eol=lf
+
+# Shell scripts are LF in the repo AND in the working tree. Tools/verify,
+# Tools/docgen, Tools/lint-language and Tools/wave-report all run under bash;
+# a CRLF checkout gives "bad interpreter: /usr/bin/env bash^M".
+*.sh           text eol=lf
+
+# Windows-only scripts want CRLF for the same reason, in reverse.
+*.bat          text eol=crlf
+*.cmd          text eol=crlf
+*.ps1          text eol=crlf
+
+# ---------------------------------------------------------------------------
+# Git LFS — true binaries only. These lines must come after "* text=auto";
+# the trailing -text is what stops git from trying to normalise them.
+# ---------------------------------------------------------------------------
+
+# Images
+*.png   filter=lfs diff=lfs merge=lfs -text
+*.jpg   filter=lfs diff=lfs merge=lfs -text
+*.jpeg  filter=lfs diff=lfs merge=lfs -text
+*.gif   filter=lfs diff=lfs merge=lfs -text
+*.bmp   filter=lfs diff=lfs merge=lfs -text
+*.tga   filter=lfs diff=lfs merge=lfs -text
+*.tif   filter=lfs diff=lfs merge=lfs -text
+*.tiff  filter=lfs diff=lfs merge=lfs -text
+*.psd   filter=lfs diff=lfs merge=lfs -text
+*.exr   filter=lfs diff=lfs merge=lfs -text
+*.hdr   filter=lfs diff=lfs merge=lfs -text
+*.iff   filter=lfs diff=lfs merge=lfs -text
+*.pict  filter=lfs diff=lfs merge=lfs -text
+*.cubemap filter=lfs diff=lfs merge=lfs -text
+
+# Audio
+*.ogg   filter=lfs diff=lfs merge=lfs -text
+*.wav   filter=lfs diff=lfs merge=lfs -text
+*.mp3   filter=lfs diff=lfs merge=lfs -text
+*.aif   filter=lfs diff=lfs merge=lfs -text
+*.aiff  filter=lfs diff=lfs merge=lfs -text
+
+# Video
+*.mp4   filter=lfs diff=lfs merge=lfs -text
+*.mov   filter=lfs diff=lfs merge=lfs -text
+*.webm  filter=lfs diff=lfs merge=lfs -text
+*.avi   filter=lfs diff=lfs merge=lfs -text
+
+# Fonts
+*.ttf   filter=lfs diff=lfs merge=lfs -text
+*.otf   filter=lfs diff=lfs merge=lfs -text
+
+# Models
+*.fbx   filter=lfs diff=lfs merge=lfs -text
+*.obj   filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+*.dae   filter=lfs diff=lfs merge=lfs -text
+*.3ds   filter=lfs diff=lfs merge=lfs -text
+*.max   filter=lfs diff=lfs merge=lfs -text
+*.c4d   filter=lfs diff=lfs merge=lfs -text
+*.ma    filter=lfs diff=lfs merge=lfs -text
+*.mb    filter=lfs diff=lfs merge=lfs -text
+
+# Compiled and packaged
+*.dll   filter=lfs diff=lfs merge=lfs -text
+*.pdb   filter=lfs diff=lfs merge=lfs -text
+*.so    filter=lfs diff=lfs merge=lfs -text
+*.dylib filter=lfs diff=lfs merge=lfs -text
+*.a     filter=lfs diff=lfs merge=lfs -text
+*.bundle filter=lfs diff=lfs merge=lfs -text
+*.exe   filter=lfs diff=lfs merge=lfs -text
+*.zip   filter=lfs diff=lfs merge=lfs -text
+*.7z    filter=lfs diff=lfs merge=lfs -text
+*.rar   filter=lfs diff=lfs merge=lfs -text
+*.gz    filter=lfs diff=lfs merge=lfs -text
+*.unitypackage filter=lfs diff=lfs merge=lfs -text
+
+# Unity binary payloads
+*.data  filter=lfs diff=lfs merge=lfs -text
+*.bytes filter=lfs diff=lfs merge=lfs -text

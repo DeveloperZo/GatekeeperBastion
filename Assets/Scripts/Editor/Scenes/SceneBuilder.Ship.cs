@@ -47,6 +47,7 @@ namespace GatekeeperBastion.EditorTools
         static void BuildShipScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            EnsureEventSystem();
             ShipPalette pal = CreateShipPalette();
 
             BuildShipLighting();

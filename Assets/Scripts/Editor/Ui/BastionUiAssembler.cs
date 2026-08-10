@@ -12,7 +12,7 @@ using UnityEngine.UI;
 namespace GatekeeperBastion.EditorTools
 {
     /// <summary>Assembles BastionHud, EndScreens and ArmoryWheel as Shift prefab variants.
-    /// Menu + batch entry. Does not edit vendor Shift prefabs in place.</summary>
+    /// Invoked from UiPrefabBuilder (one menu: Build UI Prefabs). Does not edit vendor Shift prefabs.</summary>
     public static class BastionUiAssembler
     {
         const string PrefabFolder = "Assets/Prefabs/Ui";
@@ -32,7 +32,7 @@ namespace GatekeeperBastion.EditorTools
         static string Root => Directory.GetParent(Application.dataPath).FullName;
         static string ReportPath => Path.Combine(Root, "gkb_bastion_ui_report.json");
 
-        [MenuItem("GatekeeperBastion/Assemble Bastion UI")]
+        // Reachable via GatekeeperBastion/Build UI Prefabs (UiPrefabBuilder) — no separate menu.
         public static void AssembleFromMenu() => AssembleAll("menu");
 
         /// <summary>Batchmode: -executeMethod GatekeeperBastion.EditorTools.BastionUiAssembler.AssembleFromBatch</summary>
@@ -564,6 +564,10 @@ namespace GatekeeperBastion.EditorTools
 
         static void ConfigureCanvas(GameObject root)
         {
+            // Shift Canvas nests an Event System — scene/runtime Ensure owns the singleton.
+            var es = root.transform.Find("Event System");
+            if (es != null) UnityEngine.Object.DestroyImmediate(es.gameObject);
+
             UiPrefabVariant.EnsureCanvasScaler(root);
             var canvas = root.GetComponent<Canvas>();
             if (canvas != null)

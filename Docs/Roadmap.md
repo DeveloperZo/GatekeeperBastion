@@ -36,6 +36,12 @@ holds **M35**.
 
 **Recommended next**, in this order.
 
+**The project gained a git remote on 2026-08-10** — `DeveloperZo/GatekeeperBastion`, one
+commit. That makes this file's own rule operable for the first time: a status change is a
+`git mv` plus the table row, in one commit. **M42 is what makes the diff readable enough for
+that to mean anything**, and it is written to be executed by a coding agent rather than by
+hand.
+
 1. **M35 — One look, drawn from one place.** Re-cut twice on 2026-08-09: the move to uGUI on
    **Shift v2.0.12**, and the scope is a **baseline front end** rather than a straight port.
    The splash is one centred label today and the main menu is four `GUILayout.Button` calls;
@@ -101,6 +107,7 @@ this table — see the change log.
 | M39 | The seam becomes a boundary | later | `Sim/` is its own assembly with `noEngineReferences: true` and all four consumers reference it; `Sim/` logs through a Sim-declared sink; a seeded `using UnityEngine;` in `Sim/` is `CS0246`; 266 harness / 282 Unity tests unchanged | [`1. planned/M39`](Milestones/1.%20planned/M39-the-seam-becomes-a-boundary.md) |
 | M40 | The rules become measurable | later | One statement of the counted-line unit, linked from everywhere else; `Editor/` has a number; the two grandfathered singletons named by type rather than counted; `5-Audit` corrected; **no file under `Assets/` edited** | [`1. planned/M40`](Milestones/1.%20planned/M40-the-rules-become-measurable.md) |
 | M41 | The rules get a check | later | `Tools/lint-arch/run.sh` reads fenced rules from `Docs/Architecture/`, runs from `verify`, holds no literal from a fence and exits 2 on a deleted one; every row reproduces its measured baseline **and** catches a seeded violation | [`1. planned/M41`](Milestones/1.%20planned/M41-the-rules-get-a-check.md) |
+| M42 | A repository that reads as clean | later | `git status` on an untouched checkout — **and on a fresh clone** — prints `nothing to commit, working tree clean`; one root commit; binaries in LFS and no Unity YAML in it; `Tools/verify/run.sh` unchanged | [`1. planned/M42`](Milestones/1.%20planned/M42-a-repository-that-reads-as-clean.md) |
 
 ## Strategy
 

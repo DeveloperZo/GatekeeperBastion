@@ -1,9 +1,13 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using GatekeeperBastion.Game;
 using GatekeeperBastion.Sim;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.TestTools;
 
 namespace GatekeeperBastion.PlayTests
 {
@@ -15,6 +19,12 @@ namespace GatekeeperBastion.PlayTests
     public class SessionAndBuildSettingsTests
     {
         // Save isolation is assembly-wide via PlayModeSaveFixture — see BastionCombatAndDeathTests.
+
+        [UnityTearDown]
+        public IEnumerator TearDown()
+        {
+            yield return PlayTestUtil.ReturnToBlankScene();
+        }
 
         [Test]
         public void EveryFlowScene_IsRegisteredInBuildSettings()
@@ -40,6 +50,60 @@ namespace GatekeeperBastion.PlayTests
                 $"Scene(s) [{string.Join(", ", missing)}] are missing from Build Settings while " +
                 $"[{string.Join(", ", present)}] are registered. SceneFlow navigates to all four by name, so " +
                 "every missing one is a runtime dead end.");
+        }
+
+        [UnityTest]
+        public IEnumerator SplashAndMainMenu_HaveEventSystemForUgui()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.Splash);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.MainMenu);
+
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Splash);
+            AssertEventSystemPresent(SceneFlow.Splash);
+
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.MainMenu);
+            AssertEventSystemPresent(SceneFlow.MainMenu);
+        }
+
+        [UnityTest]
+        public IEnumerator Splash_ReachesMainMenu_WithinBootBudget()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.Splash);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.MainMenu);
+
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Splash);
+            var splash = UnityEngine.Object.FindFirstObjectByType<SplashController>();
+            Assert.IsNotNull(splash,
+                "Splash scene has no SplashController — press-any-key / boot budget cannot run.");
+
+            float deadline = Time.realtimeSinceStartup + 12f;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                if (SceneFlow.ActiveSceneName == SceneFlow.MainMenu)
+                {
+                    Assert.IsNotNull(
+                        UnityEngine.Object.FindFirstObjectByType<MainMenuController>(),
+                        "MainMenu loaded without MainMenuController.");
+                    AssertEventSystemPresent(SceneFlow.MainMenu);
+                    yield break;
+                }
+                yield return null;
+            }
+
+            Assert.AreEqual(SceneFlow.MainMenu, SceneFlow.ActiveSceneName,
+                "Splash did not reach MainMenu within 12s (8s boot budget + settle). " +
+                $"Still on '{SceneFlow.ActiveSceneName}'.");
+        }
+
+        static void AssertEventSystemPresent(string sceneName)
+        {
+            var systems = UnityEngine.Object.FindObjectsByType<EventSystem>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            Assert.GreaterOrEqual(systems.Length, 1,
+                $"{sceneName} has no EventSystem — uGUI buttons cannot receive clicks.");
+            Assert.IsNotNull(systems[0].GetComponent<StandaloneInputModule>(),
+                $"{sceneName} EventSystem is missing StandaloneInputModule " +
+                "(project activeInputHandler is legacy Input Manager).");
         }
 
         [Test]

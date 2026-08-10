@@ -15,7 +15,7 @@ namespace GatekeeperBastion.EditorTools
     /// <summary>
     /// Assembles ShipHud / StationPanel / ShortcutPanel as Shift Canvas (or Panel Button) variants
     /// with game vocabulary, L-bracket Hatch amber motif, and SerializeField wiring on views.
-    /// Menu: GatekeeperBastion/Assemble Ship UI. Batch: AssembleFromBatch.
+    /// Invoked from UiPrefabBuilder (one menu: Build UI Prefabs), not a separate menu item.
     /// </summary>
     public static class ShipUiAssembler
     {
@@ -36,7 +36,7 @@ namespace GatekeeperBastion.EditorTools
         static string Root => Directory.GetParent(Application.dataPath).FullName;
         static string ReportPath => Path.Combine(Root, "gkb_ship_ui_report.json");
 
-        [MenuItem("GatekeeperBastion/Assemble Ship UI")]
+        // Reachable via GatekeeperBastion/Build UI Prefabs (UiPrefabBuilder) — no separate menu.
         public static void AssembleFromMenu() => AssembleAll("menu");
 
         /// <summary>Batchmode entry — assemble ship screens then exit with report.</summary>

@@ -14,6 +14,25 @@ notes, not tuning results, not anything the milestone file already holds.
 This file is history. **`Roadmap.md` is what is next**: order, status, strategy and risks.
 `Milestones/` is the detail behind any entry here.
 
+- 2026-08-10: **M42 added — the repository is normalised once, and the milestone is written
+  for an agent to execute.** The project gained a remote (`DeveloperZo/GatekeeperBastion`,
+  one commit) and immediately showed **141 tracked files as modified with zero real changes**;
+  `git diff --ignore-cr-at-eol` across the whole tree prints nothing. That breaks `git status`
+  and `git diff` as signals in the same week this file's own rule — a status change is a
+  `git mv` plus the table row, in one commit — starts to matter.
+  Two decisions were recorded in `Decisions.md` rather than left to the run.
+  **Unity YAML stays in git, not LFS**: asset serialization is Force Text, so `.unity`,
+  `.prefab`, `.asset` and `.meta` are text — and `.unity` is the largest category on disk at
+  22.7 MB, which makes it exactly what an optimiser reaches for first.
+  **`.gitattributes`, not `core.autocrlf`**: the config lives on one machine and does not
+  travel with the repository, so the problem returns on the next clone.
+  Also rejected: `git lfs migrate`. History is one commit called `Initial commit`, so a fresh
+  orphan root commit reaches the same place with fewer failure modes.
+  **M42 is the first milestone here written for a coding agent**: every check states its
+  expected output, four are hard aborts, and criterion 5 checks the staged set in *both*
+  directions — the "must be present" column exists because two files of real M35 work
+  (`UiEventSystem.cs`, `MainButton.prefab`) have never been committed, and a rewrite that
+  only verifies exclusions would drop them.
 - 2026-08-09: **The architecture refactor enters the table as M39, M40 and M41, not one
   milestone** (Zo: the next tent pole is a refactor to align with the Architecture principles).
   It was drafted as one and split after two adversarial reviews, on the one-grain rule: the
