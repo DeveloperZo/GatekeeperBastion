@@ -38511,10 +38511,7 @@ MonoBehaviour:
   enemyPrefab: {fileID: 1397712982800884421, guid: 2677fac0780193e4fae0c9f381742eb8, type: 3}
   hunterPrefab: {fileID: 8362424237665421886, guid: 62c430b7b7bf6154ca45b1e6f9ba61eb, type: 3}
   ramPrefab: {fileID: 7671676083526859099, guid: a1571208dbbebe446b69202598c81ec1, type: 3}
-  spawnPoints:
-  - {fileID: 1276339204}
-  - {fileID: 1101749135}
-  - {fileID: 1152401160}
+  spawnPoints: []
 --- !u!114 &597519391
 MonoBehaviour:
   m_ObjectHideFlags: 0
