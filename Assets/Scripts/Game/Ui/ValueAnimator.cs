@@ -24,6 +24,7 @@ namespace GatekeeperBastion.Game.Ui
         float _max = 1f;
         float _punchT = 1f;
         bool _hasValue;
+        bool _settled;
 
         void Awake()
         {
@@ -44,11 +45,13 @@ namespace GatekeeperBastion.Game.Ui
             _display = value;
             _hasValue = true;
             _punchT = 1f;
+            _settled = false;
             ApplyScale(1f);
             WriteVisuals();
         }
 
-        /// <summary>Animate toward value; punch-scale when the target changes.</summary>
+        /// <summary>Animate toward value; punch-scale when the target changes.
+        /// Early-out (M35 criterion 27): an unchanged target does no per-frame work.</summary>
         public void SetValue(float value)
         {
             bool changed = !_hasValue || !Mathf.Approximately(_target, value);
@@ -59,7 +62,10 @@ namespace GatekeeperBastion.Game.Ui
                 _hasValue = true;
             }
             if (changed)
+            {
                 _punchT = 0f;
+                _settled = false;
+            }
         }
 
         /// <summary>Bar lerp: fillAmount = value/max, optional "v / m" label.</summary>
@@ -83,10 +89,17 @@ namespace GatekeeperBastion.Game.Ui
         }
 
         /// <summary>Punch without changing the numeric target (string-driven readouts).</summary>
-        public void Punch() => _punchT = 0f;
+        public void Punch()
+        {
+            _punchT = 0f;
+            _settled = false;
+        }
 
         void Update()
         {
+            // Early-out when the display already equals the target and the punch is done —
+            // a steady HUD value costs nothing per frame (M35 criterion 27).
+            if (_settled && _punchT >= 1f) return;
             if (!_hasValue && _punchT >= 1f) return;
 
             float dt = Time.unscaledDeltaTime;
@@ -106,7 +119,12 @@ namespace GatekeeperBastion.Game.Ui
                 ApplyScale(s);
             }
 
-            if (_hasValue) WriteVisuals();
+            if (_hasValue)
+            {
+                WriteVisuals();
+                if (_display == _target && _punchT >= 1f)
+                    _settled = true;
+            }
         }
 
         void WriteVisuals()
@@ -116,9 +134,9 @@ namespace GatekeeperBastion.Game.Ui
 
             if (_label == null) return;
             if (_writeValueOverMax)
-                _label.text = $"{_display:0} / {_max:0}";
+                _label.SetText("{0} / {1}", Mathf.Round(_display), Mathf.Round(_max)); // TMP buffer, no string alloc
             else
-                _label.text = _prefix + _display.ToString(_format) + _suffix;
+                _label.text = _prefix + _display.ToString(_format) + _suffix; // runs only while animating (early-out above)
         }
 
         void ApplyScale(float s)

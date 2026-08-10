@@ -6,27 +6,28 @@ using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace GatekeeperBastion.EditorTools
 {
-    /// <summary>One-click gray-box scene builders for the project. "Build All Scenes"
-    /// (re)builds Ship and Bastion geometry into Assets/Scenes and registers
-    /// Splash, Ship, Bastion in EditorBuildSettings in that order. "Build Bastion Scene"
-    /// rebuilds just the BASTION interior: the Hatch (umbilical back to your ship) sits at
-    /// the south end next to the player spawn; a main bore corridor runs north and widens
-    /// into three chambers whose far ends hold the spawn points. Alien feel comes from
-    /// layout + a dark violet/teal palette. The Ship scene (see SceneBuilder.Ship.cs)
-    /// is the cleaner steel-blue home hull with the three meta stations. Materials and
-    /// the THREE gatekeeper prefabs (Default / Hunter / Ram — see SceneBuilder.Enemies.cs)
-    /// are generated under Assets/Prefabs, materials under Assets/Materials. Safe to re-run (idempotent; existing assets
-    /// are updated in place so GUIDs stay stable).</summary>
+    /// <summary>Gray-box geometry rebuilds (M35 criterion 6). "Build All Scenes" rebuilds the
+    /// owned set — the <c>Environment</c> root, the <c>SpawnPoints</c> root, the
+    /// <c>Directional Light</c> and the NavMesh asset — IN PLACE in Ship.unity and
+    /// Bastion.unity, and registers Splash, MainMenu, Ship, Bastion in EditorBuildSettings.
+    /// Everything else in those scenes is authored, persistent content this class never
+    /// touches: station consoles, the Hatch, player rigs, ShipController/GameSystems,
+    /// EventSystems, and every UI canvas. The owned set carries no serialized
+    /// cross-references, which is what makes the rebuild safe; anything that gains one
+    /// (the Hatch did — RepairInteractable.station) must move out of it. Materials and the
+    /// three gatekeeper prefabs (SceneBuilder.Enemies.cs) are refreshed under
+    /// Assets/Materials and Assets/Prefabs with stable GUIDs.</summary>
     [InitializeOnLoad]
     public static partial class SceneBuilder
     {
         const string ScenePath = "Assets/Scenes/Bastion.unity";
         const string SplashScenePath = "Assets/Scenes/Splash.unity";
+        const string MainMenuScenePath = "Assets/Scenes/MainMenu.unity";
         const string ShipScenePath = "Assets/Scenes/Ship.unity";
         const string NavMeshDataPath = "Assets/Scenes/Bastion-NavMesh.asset";
         const string PrefabDir = "Assets/Prefabs";
@@ -34,6 +35,10 @@ namespace GatekeeperBastion.EditorTools
         const string EnemyPrefabPath = PrefabDir + "/EnemyGatekeeper.prefab";
         const float WallHeight = 3.5f;
         const float WallThickness = 0.5f;
+
+        /// <summary>The rebuildable roots. A root name in this list is owned by the builder
+        /// and deleted before every rebuild; nothing else in the scene is touched.</summary>
+        static readonly string[] OwnedRootNames = { "Environment", "SpawnPoints", "Directional Light" };
 
         static double _nextSentinelPoll;
         static string Root => Directory.GetParent(Application.dataPath).FullName;
@@ -80,13 +85,11 @@ namespace GatekeeperBastion.EditorTools
         static void BuildAllCore()
         {
             EnsureFolders();
-            // M35: SceneBuilder owns geometry, spawns and NavMesh — not UI.
-            // Splash is authored (campaign menu); Ship/Bastion geometry rebuilt here.
-            BuildShipScene();
-            BuildBastionScene();
+            RebuildShipGeometry();     // SceneBuilder.Ship.cs
+            RebuildBastionGeometry();
             RegisterBuildScenes();
             AssetDatabase.SaveAssets();
-            Debug.Log("[SceneBuilder] EditorBuildSettings.scenes = Splash, Ship, Bastion (geometry only).");
+            Debug.Log("[SceneBuilder] In-place geometry rebuild done; EditorBuildSettings.scenes = Splash, MainMenu, Ship, Bastion.");
         }
 
         // Build All Scenes is the only entry point. A Bastion-only item existed until
@@ -95,137 +98,51 @@ namespace GatekeeperBastion.EditorTools
         // hides gotcha 4 (Docs/Working-Rules.md, "Tools, scripts and the menu").
         static void RegisterBuildScenes()
         {
-            // Splash → Ship → Bastion. MainMenu is not in the build.
+            // Boot order: Splash → MainMenu → Ship → Bastion (M35 criterion 3).
             EditorBuildSettings.scenes = new[]
             {
                 new EditorBuildSettingsScene(SplashScenePath, true),
+                new EditorBuildSettingsScene(MainMenuScenePath, true),
                 new EditorBuildSettingsScene(ShipScenePath, true),
                 new EditorBuildSettingsScene(ScenePath, true),
             };
         }
 
-        /// <summary>uGUI buttons need an EventSystem when geometry-only scenes are opened alone.</summary>
-        static void EnsureEventSystem()
+        /// <summary>Opens the scene single (saving nothing) and deletes the owned roots.
+        /// Returns the open scene. Only exact root-name matches in
+        /// <see cref="OwnedRootNames"/> are deleted — authored content is never touched.</summary>
+        static Scene OpenAndClearOwnedRoots(string scenePath)
         {
-            if (UnityEngine.Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() != null)
-                return;
-            var go = new GameObject("EventSystem");
-            go.AddComponent<UnityEngine.EventSystems.EventSystem>();
-            go.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-        }
-
-        /// <summary>Logs if an expected child is missing.</summary>
-        static void EnsureNestedNamed(GameObject host, string childName, string label)
-        {
-            if (host == null) return;
-            var t = host.transform.Find(childName);
-            if (t == null)
+            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            foreach (GameObject root in scene.GetRootGameObjects())
             {
-                foreach (var tr in host.GetComponentsInChildren<Transform>(true))
+                foreach (string owned in OwnedRootNames)
                 {
-                    if (tr.name == childName) { t = tr; break; }
+                    if (root != null && root.name == owned)
+                    {
+                        UnityEngine.Object.DestroyImmediate(root);
+                        break;
+                    }
                 }
             }
-            if (t == null)
-                Debug.LogWarning($"[SceneBuilder] {label}: '{childName}' missing under {host.name}.");
-        }
-
-        /// <summary>Standalone solid-color camera for the non-gameplay scenes.</summary>
-        static void MakeSoloCamera(Color background)
-        {
-            var go = new GameObject("Main Camera");
-            go.tag = "MainCamera";
-            var cam = go.AddComponent<Camera>();
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = background;
-            go.AddComponent<AudioListener>();
+            return scene;
         }
 
         // ---------- Bastion ----------
 
-        static readonly string[] BastionUiRootNames =
+        static void RebuildBastionGeometry()
         {
-            "Canvas - In Game",
-            "Canvas - Pause Menu",
-            "BastionHud",
-        };
-
-        static void BuildBastionScene()
-        {
-            var preserved = CaptureUiRoots(ScenePath, BastionUiRootNames);
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            EnsureEventSystem();
+            Scene scene = OpenAndClearOwnedRoots(ScenePath);
             Palette pal = CreatePalette();
-            EnemyPrefabs enemies = CreateEnemyPrefabs(pal); // SceneBuilder.Enemies.cs
+            CreateEnemyPrefabs(pal); // SceneBuilder.Enemies.cs — asset refresh, stable GUIDs
 
             BuildLighting();
             GameObject env = BuildBastion(pal);
-            BuildHatch(pal, env.transform);
-            SpawnPoint[] breaches = BuildSpawnPoints(pal);
-            BuildPlayerRig(pal);
-            // Restore UI before GameSystems so HudController on the authored canvas is found.
-            RestoreUiRoots(preserved);
-            BuildGameSystems(enemies, breaches);
+            BuildSpawnPoints(pal);
             BakeNavMesh(env);
-            EnsureEventSystem();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log($"[SceneBuilder] Built {ScenePath}: EventSystem + bastion interior, hatch, 3 breaches, player rig, GameSystems, NavMesh (UI roots preserved if present).");
-        }
-
-        /// <summary>M35: geometry rebuild must not wipe authored Shift UI. Clone matching roots
-        /// with HideAndDontSave before NewScene, then re-parent into the new scene.</summary>
-        static GameObject[] CaptureUiRoots(string scenePath, string[] rootNames)
-        {
-            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath) == null)
-                return System.Array.Empty<GameObject>();
-
-            var open = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
-            var captured = new System.Collections.Generic.List<GameObject>();
-            foreach (var root in open.GetRootGameObjects())
-            {
-                if (!IsPreservedUiRoot(root.name, rootNames)) continue;
-                var clone = UnityEngine.Object.Instantiate(root);
-                clone.name = root.name;
-                SetHideFlagsRecursive(clone, HideFlags.HideAndDontSave);
-                captured.Add(clone);
-            }
-            return captured.ToArray();
-        }
-
-        static void SetHideFlagsRecursive(GameObject go, HideFlags flags)
-        {
-            if (go == null) return;
-            go.hideFlags = flags;
-            var transforms = go.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < transforms.Length; i++)
-            {
-                if (transforms[i] != null)
-                    transforms[i].gameObject.hideFlags = flags;
-            }
-        }
-
-        static bool IsPreservedUiRoot(string name, string[] rootNames)
-        {
-            foreach (var n in rootNames)
-                if (name == n) return true;
-            if (name == "Canvas") return true;
-            return false;
-        }
-
-        static void RestoreUiRoots(GameObject[] preserved)
-        {
-            if (preserved == null || preserved.Length == 0) return;
-            var scene = EditorSceneManager.GetActiveScene();
-            foreach (var clone in preserved)
-            {
-                if (clone == null) continue;
-                var go = UnityEngine.Object.Instantiate(clone);
-                go.name = clone.name;
-                SetHideFlagsRecursive(go, HideFlags.None);
-                EditorSceneManager.MoveGameObjectToScene(go, scene);
-                UnityEngine.Object.DestroyImmediate(clone);
-            }
+            Debug.Log($"[SceneBuilder] Rebuilt {ScenePath} in place: Environment, SpawnPoints, Directional Light, NavMesh. Authored content untouched.");
         }
 
         // ---------- assets ----------
@@ -294,7 +211,7 @@ namespace GatekeeperBastion.EditorTools
 
         /// <summary>
         /// The bastion interior. Coordinates (x: -15..15, z: -22..30):
-        ///   Hatch bay (south, z -22..-10)  — Hatch + player spawn.
+        ///   Hatch bay (south, z -22..-10)  — Hatch (authored, scene root) + player spawn.
         ///   Main bore (z -10..2, 6 wide)   — single chokepoint away from home.
         ///   Mid chamber (z 2..16, full width) — first fighting room, breach at its west end.
         ///   NW / NE chambers (z 16..30, split by a spine) — deep rooms, breaches at far ends.
@@ -346,17 +263,9 @@ namespace GatekeeperBastion.EditorTools
             rib.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
         }
 
-        /// <summary>The defended objective: a loud orange block at the south end, wearing
-        /// HatchStation (enemy target / sim proxy) and RepairInteractable (hold E).</summary>
-        static void BuildHatch(Palette pal, Transform parent)
-        {
-            GameObject hatch = Box("Hatch", new Vector3(0f, 1.5f, -20.5f), new Vector3(4f, 3f, 1.5f), pal.Hatch, parent);
-            hatch.AddComponent<HatchStation>();
-            var repair = hatch.AddComponent<RepairInteractable>();
-            repair.station = hatch.GetComponent<HatchStation>();
-        }
-
-        /// <summary>Three spawn points at the far ends of the chambers, deep in the bastion.</summary>
+        /// <summary>Three spawn points at the far ends of the chambers, deep in the bastion.
+        /// The authored WaveSpawner's explicit array stays empty; it resolves these through
+        /// the SpawnPoint registry at runtime, so the rebuild wires nothing.</summary>
         static SpawnPoint[] BuildSpawnPoints(Palette pal)
         {
             var root = new GameObject("SpawnPoints");
@@ -384,59 +293,6 @@ namespace GatekeeperBastion.EditorTools
             marker.GetComponent<Renderer>().sharedMaterial = pal.Breach;
 
             return go.AddComponent<SpawnPoint>();
-        }
-
-        /// <summary>Player spawns in the hatch bay, right next to home. Combat rig: gun on.</summary>
-        static void BuildPlayerRig(Palette pal)
-        {
-            var player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            player.name = "Player";
-            UnityEngine.Object.DestroyImmediate(player.GetComponent<Collider>());
-            player.transform.position = new Vector3(0f, 1.1f, -16f);
-            player.GetComponent<Renderer>().sharedMaterial = pal.Player;
-
-            var cc = player.AddComponent<CharacterController>();
-            cc.height = 1.8f;
-            cc.radius = 0.35f;
-
-            var camGo = new GameObject("PlayerCamera");
-            camGo.transform.SetParent(player.transform, false);
-            camGo.transform.localPosition = new Vector3(0f, 0.65f, 0f);
-            camGo.tag = "MainCamera";
-            var cam = camGo.AddComponent<Camera>();
-            cam.nearClipPlane = 0.05f;
-            camGo.AddComponent<AudioListener>();
-            camGo.AddComponent<PlayerGun>();
-            camGo.AddComponent<PlayerAbility>();
-            camGo.AddComponent<Interactor>();
-
-            var fpc = player.AddComponent<FirstPersonController>();
-            fpc.cameraTransform = camGo.transform;
-            player.AddComponent<PlayerHealth>();
-        }
-
-        static void BuildGameSystems(EnemyPrefabs enemies, SpawnPoint[] breaches)
-        {
-            var go = new GameObject("GameSystems");
-            go.AddComponent<GameController>();
-            // M35: Bastion UI (Canvas - In Game / Pause) is authored in Bastion.unity — not spawned here.
-            // HudController must already exist on that authored hierarchy after the Shift HUD copy.
-            if (UnityEngine.Object.FindFirstObjectByType<HudController>(FindObjectsInactive.Include) == null)
-            {
-                var hudHost = new GameObject("BastionHud");
-                hudHost.transform.SetParent(go.transform, false);
-                hudHost.AddComponent<HudController>();
-                Debug.LogWarning(
-                    "[SceneBuilder] No HudController in scene — stub host added. Copy Simple HUD canvases into Bastion.unity (M35 C).");
-            }
-            go.AddComponent<DevConsole>();
-            var spawner = go.AddComponent<WaveSpawner>();
-            // All three kinds, or the spawner falls back to the default prefab and the wave is
-            // the right fight in the wrong colours.
-            spawner.enemyPrefab = enemies.Default;
-            spawner.hunterPrefab = enemies.Hunter;
-            spawner.ramPrefab = enemies.Ram;
-            spawner.spawnPoints = breaches;
         }
 
         static void BakeNavMesh(GameObject env)

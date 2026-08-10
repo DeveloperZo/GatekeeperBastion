@@ -1,22 +1,17 @@
-using GatekeeperBastion.Game;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace GatekeeperBastion.EditorTools
 {
     /// <summary>Ship half of the SceneBuilder: the player's HOME hull between runs.
     /// Same gray-box family as the bastion but reads as a different place — cleaner
     /// steel blues/greys, brighter light, orthogonal compact layout. A central common
-    /// room with FOUR alcoves, one meta station per alcove:
-    ///   West  = ArmoryStation       (weapon-orange console)
-    ///   East  = EngineeringStation  (repair-green console, labelled FABRICATION)
-    ///   North = MapStation          (nav-cyan console)
-    ///   South = CrewQuartersStation (amber/gold console — player attributes)
-    /// Player rig has no gun aboard the ship. No NavMesh, no enemies, no GameController —
-    /// and therefore no HudController either (it is gated on GameController.Instance and
-    /// would draw nothing here), so this scene gets ShipHud instead: crosshair, interaction
-    /// prompt, controls legend, salvage header and objective line.</summary>
+    /// room with FOUR alcoves. The station consoles in those alcoves (ARMORY /
+    /// FABRICATION / NAV MAP / CREW QUARTERS), the player rig, ShipController and the
+    /// UI canvases are authored, persistent scene content (M35 criterion 6) — this
+    /// class rebuilds only the hull geometry and the light, in place.</summary>
     public static partial class SceneBuilder
     {
         const float ShipWallHeight = 3f;
@@ -38,55 +33,26 @@ namespace GatekeeperBastion.EditorTools
         /// north wall has). It is NOT a variation on the theme: reachability is a shipped-bug
         /// class here, and mirroring geometry that is already proven reachable is the cheapest
         /// way not to reopen it.
-        /// Every station root is set back far enough that the player (capsule radius 0.35)
-        /// can stand within ~0.8 m of its screen — well inside the Interactor's 3.2 m range.
-        /// Player spawns at (0, 1.1, -4) with identity rotation, i.e. facing +Z / north,
-        /// looking straight down the common room at the NAV MAP alcove; CREW QUARTERS is the
-        /// console directly behind him.
+        /// The authored station roots are set back far enough that the player (capsule radius
+        /// 0.35) can stand within ~0.8 m of each screen — well inside the Interactor's 3.2 m
+        /// range. The geometry rebuilt here must keep those alcoves where the stations sit.
         /// </summary>
-        static readonly string[] ShipUiRootNames =
+        static void RebuildShipGeometry()
         {
-            "Canvas",
-            "ShipHud",
-            "StationPanel",
-        };
-
-        static void BuildShipScene()
-        {
-            var preserved = CaptureUiRoots(ShipScenePath, ShipUiRootNames);
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            Scene scene = OpenAndClearOwnedRoots(ShipScenePath);
             ShipPalette pal = CreateShipPalette();
 
             BuildShipLighting();
             BuildShipHull(pal);
-            BuildShipStations(pal);
-            BuildShipPlayerRig();
-
-            // ShipController owns cursor/walk state. M35: Main Menu Canvas + station panels are
-            // authored in Ship.unity (copied from Shift) — SceneBuilder must not spawn UI.
-            var control = new GameObject("ShipController");
-            control.AddComponent<ShipController>();
-            if (UnityEngine.Object.FindFirstObjectByType<ShipHud>(FindObjectsInactive.Include) == null)
-                control.AddComponent<ShipHud>();
-            control.AddComponent<DevConsole>();
-            RestoreUiRoots(preserved);
-            // After the restore: the Shift Canvas nests its own Event System, and a second one
-            // makes uGUI log a warning every frame.
-            EnsureEventSystem();
 
             EditorSceneManager.SaveScene(scene, ShipScenePath);
-            Debug.Log(
-                $"[SceneBuilder] Built {ShipScenePath}: common room + 4 alcoves, " +
-                "ARMORY/FABRICATION/NAV MAP/CREW QUARTERS stations (eye-height screens, " +
-                "front-facing labels), gunless player rig, ShipController + DevConsole. " +
-                "UI authored separately (M35); preserved roots restored if present.");
+            Debug.Log($"[SceneBuilder] Rebuilt {ShipScenePath} in place: Environment + Directional Light. Authored stations, rig, controllers and UI untouched.");
         }
 
         /// <summary>Home palette: clean steel blues/greys vs the bastion's dark violet/teal.
         /// Console colors code their function (weapon-orange / repair-green / nav-cyan /
-        /// crew amber-gold). The four hues are picked to stay distinguishable at a glance from
-        /// the middle of the common room — amber is warm and pale where the armory's orange is
-        /// saturated and red-shifted, so the two never read as the same console.</summary>
+        /// crew amber-gold). The console materials stay in the refresh so the authored
+        /// station meshes keep their look when materials are regenerated.</summary>
         static ShipPalette CreateShipPalette()
         {
             return new ShipPalette
@@ -160,129 +126,6 @@ namespace GatekeeperBastion.EditorTools
             Box("Alcove_E_S", new Vector3(10.25f, y, -3.25f), new Vector3(6.5f, ShipWallHeight, th), pal.Wall, t);
             Box("Alcove_E_N", new Vector3(10.25f, y, 3.25f), new Vector3(6.5f, ShipWallHeight, th), pal.Wall, t);
             Box("Alcove_E_Back", new Vector3(13.25f, y, 0f), new Vector3(th, ShipWallHeight, 7f), pal.Wall, t);
-        }
-
-        static void BuildShipStations(ShipPalette pal)
-        {
-            var root = new GameObject("Stations");
-            Transform t = root.transform;
-
-            MakeStationConsole(t, "Station_Armory", new Vector3(-11.5f, 0f, 0f), 90f,
-                pal.ConsoleArmory, "ARMORY").AddComponent<ArmoryStation>();
-            MakeStationConsole(t, "Station_Fabrication", new Vector3(11.5f, 0f, 0f), -90f,
-                pal.ConsoleFabrication, "FABRICATION").AddComponent<EngineeringStation>();
-            MakeStationConsole(t, "Station_Map", new Vector3(0f, 0f, 11.5f), 180f,
-                pal.ConsoleMap, "MAP").AddComponent<MapStation>();
-            // Yaw 0: the south alcove's console faces +Z, i.e. back up the common room at the
-            // player's spawn — the same "root's +Z points at the player" rule the other three use.
-            MakeStationConsole(t, "Station_CrewQuarters", new Vector3(0f, 0f, -11.5f), 0f,
-                pal.ConsoleCrew, "CREW QUARTERS").AddComponent<CrewQuartersStation>();
-        }
-
-        /// <summary>A station: an unscaled root (carrying the StationTerminal component) with a
-        /// waist-high DESK and an upright SCREEN, both keeping their primitive BoxColliders, plus
-        /// a floating TextMesh label (thin marker bar if the built-in font is unavailable).
-        /// Yaw turns the root's +Z toward the common room, i.e. toward the player.
-        ///
-        /// Two things here are load-bearing and must not be "tidied" away:
-        ///
-        /// 1. THE SCREEN EXISTS SO THE RAYCAST CAN LAND. The player camera sits at y = 1.75
-        ///    (spawn y 1.1 + camera local y 0.65). A desk alone tops out at 1.2, entirely below
-        ///    the eyeline, so a level look-forward ray from Interactor sails over it and the
-        ///    console is effectively un-interactable without aiming at the floor. The screen
-        ///    spans y 1.25..2.15, straddling eye height. Colliders are NOT stripped here (unlike
-        ///    the bastion's floor decals); the Interactor resolves the station by walking up
-        ///    from whichever child collider it hits (GetComponentInParent).
-        ///
-        /// 2. THE LABEL IS FLIPPED 180°. A TextMesh reads correctly only from its local -Z side,
-        ///    so its forward must point AWAY from the reader. The root already faces the player,
-        ///    so an unrotated child label renders MIRRORED — that is the "text is flipped
-        ///    backwards for fabrication/map/etc." bug. ShipHud re-billboards these at runtime,
-        ///    which makes the bug impossible even if this rotation is ever wrong again.
-        ///
-        /// ALL FOUR stations go through this one function, unchanged, for exactly that reason:
-        /// screen height and collider survival are both shipped-bug classes, and a station built
-        /// "just slightly differently" is how they come back.</summary>
-        static GameObject MakeStationConsole(Transform parent, string name, Vector3 pos, float yaw,
-            Material mat, string label)
-        {
-            var root = new GameObject(name);
-            root.transform.SetParent(parent, false);
-            root.transform.localPosition = pos;
-            root.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
-
-            var desk = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            desk.name = "Desk";
-            desk.transform.SetParent(root.transform, false);
-            desk.transform.localPosition = new Vector3(0f, 0.6f, 0f);
-            desk.transform.localScale = new Vector3(1.6f, 1.2f, 0.7f);
-            desk.GetComponent<Renderer>().sharedMaterial = mat;
-
-            var screen = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            screen.name = "Screen";
-            screen.transform.SetParent(root.transform, false);
-            screen.transform.localPosition = new Vector3(0f, 1.7f, -0.15f);
-            screen.transform.localScale = new Vector3(1.6f, 0.9f, 0.12f);
-            screen.GetComponent<Renderer>().sharedMaterial = mat;
-
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            if (font != null)
-            {
-                var labelGo = new GameObject("Label");
-                labelGo.transform.SetParent(root.transform, false);
-                labelGo.transform.localPosition = new Vector3(0f, 2.45f, 0f);
-                labelGo.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // see (2) above
-                var text = labelGo.AddComponent<TextMesh>();
-                text.text = label;
-                text.font = font;
-                text.fontSize = 48;
-                text.characterSize = 0.035f;
-                text.anchor = TextAnchor.MiddleCenter;
-                text.alignment = TextAlignment.Center;
-                text.color = mat.color;
-                labelGo.GetComponent<MeshRenderer>().sharedMaterial = font.material;
-            }
-            else
-            {
-                var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                UnityEngine.Object.DestroyImmediate(marker.GetComponent<Collider>());
-                marker.name = "LabelMarker";
-                marker.transform.SetParent(root.transform, false);
-                marker.transform.localPosition = new Vector3(0f, 2.45f, 0f);
-                marker.transform.localScale = new Vector3(0.9f, 0.12f, 0.15f);
-                marker.GetComponent<Renderer>().sharedMaterial = mat;
-            }
-            return root;
-        }
-
-        /// <summary>Ship player rig: same as the bastion rig but with NO PlayerGun —
-        /// the ship is a safe space. Spawns in the common room facing the map alcove.</summary>
-        static void BuildShipPlayerRig()
-        {
-            Material playerMat = MakeMaterial("Player", new Color(0.85f, 0.85f, 0.9f));
-
-            var player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            player.name = "Player";
-            UnityEngine.Object.DestroyImmediate(player.GetComponent<Collider>());
-            player.transform.position = new Vector3(0f, 1.1f, -4f);
-            player.GetComponent<Renderer>().sharedMaterial = playerMat;
-
-            var cc = player.AddComponent<CharacterController>();
-            cc.height = 1.8f;
-            cc.radius = 0.35f;
-
-            var camGo = new GameObject("PlayerCamera");
-            camGo.transform.SetParent(player.transform, false);
-            camGo.transform.localPosition = new Vector3(0f, 0.65f, 0f);
-            camGo.tag = "MainCamera";
-            var cam = camGo.AddComponent<Camera>();
-            cam.nearClipPlane = 0.05f;
-            camGo.AddComponent<AudioListener>();
-            camGo.AddComponent<Interactor>();
-
-            var fpc = player.AddComponent<FirstPersonController>();
-            fpc.cameraTransform = camGo.transform;
-            player.AddComponent<PlayerHealth>();
         }
     }
 }

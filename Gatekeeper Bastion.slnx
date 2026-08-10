@@ -1,9 +1,9 @@
 ﻿<Solution>
   <Project Path="MCPForUnity.Editor.csproj" />
-  <Project Path="GatekeeperBastion.Editor.csproj" />
   <Project Path="Michsky.UI.Shift.csproj" />
   <Project Path="GatekeeperBastion.csproj" />
   <Project Path="Michsky.UI.Shift.Editor.csproj" />
+  <Project Path="GatekeeperBastion.Editor.csproj" />
   <Project Path="Assembly-CSharp-firstpass.csproj" />
   <Project Path="GatekeeperBastion.Tests.csproj" />
   <Project Path="GatekeeperBastion.PlayTests.csproj" />

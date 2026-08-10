@@ -89,17 +89,36 @@ namespace GatekeeperBastion.Game.Ui
         public static T First<T>() where T : Component =>
             Object.FindFirstObjectByType<T>(FindObjectsInactive.Include);
 
-        public static void SetText(TMP_Text label, string text)
+        /// <summary>Change-gated text write (M35 criterion 27): an equal value touches
+        /// nothing, so per-frame pushes do not dirty the canvas. Returns true when it wrote.</summary>
+        public static bool SetText(TMP_Text label, string text)
         {
-            if (label != null) label.text = text ?? string.Empty;
+            if (label == null) return false;
+            text = text ?? string.Empty;
+            if (label.text == text) return false;
+            label.text = text;
+            return true;
         }
 
-        /// <summary>Writes the text and hides the label when it is empty.</summary>
+        /// <summary>Change-gated numeric write for per-frame numbers: formats and writes only
+        /// when <paramref name="value"/> differs from <paramref name="cache"/>, so steady state
+        /// allocates nothing. Seed the cache with <see cref="long.MinValue"/>.</summary>
+        public static bool SetNumber(TMP_Text label, ref long cache, long value,
+                                     string prefix = "", string suffix = "")
+        {
+            if (label == null) return false;
+            if (cache == value) return false;
+            cache = value;
+            label.text = prefix + value + suffix;
+            return true;
+        }
+
+        /// <summary>Writes the text and hides the label when it is empty. Change-gated.</summary>
         public static void SetTextOrHide(TMP_Text label, string text)
         {
             if (label == null) return;
-            label.text = text ?? string.Empty;
-            label.gameObject.SetActive(!string.IsNullOrEmpty(text));
+            SetText(label, text);
+            Show(label.gameObject, !string.IsNullOrEmpty(text));
         }
 
         public static void Show(GameObject go, bool visible)
@@ -113,18 +132,24 @@ namespace GatekeeperBastion.Game.Ui
         }
 
         /// <summary>Drives a Shift bar. Criterion 10: the slider is display-only, so
-        /// <c>interactable</c> is cleared here rather than trusted to the scene.</summary>
-        public static void SetBar(Slider slider, float value, float max)
+        /// <c>interactable</c> is cleared here rather than trusted to the scene.
+        /// Change-gated (M35 criterion 27): equal values touch nothing.</summary>
+        public static bool SetBar(Slider slider, float value, float max)
         {
-            if (slider == null) return;
-            if (slider.interactable) slider.interactable = false;
-            slider.minValue = 0f;
-            slider.maxValue = max > 0f ? max : 1f;
-            slider.SetValueWithoutNotify(Mathf.Clamp(value, 0f, slider.maxValue));
+            if (slider == null) return false;
+            float clampedMax = max > 0f ? max : 1f;
+            float clamped = Mathf.Clamp(value, 0f, clampedMax);
+            bool changed = false;
+            if (slider.interactable) { slider.interactable = false; changed = true; }
+            if (slider.minValue != 0f) { slider.minValue = 0f; changed = true; }
+            if (slider.maxValue != clampedMax) { slider.maxValue = clampedMax; changed = true; }
+            if (slider.value != clamped) { slider.SetValueWithoutNotify(clamped); changed = true; }
+            return changed;
         }
 
         /// <summary>Fades a block that is not currently relevant instead of hiding it, so the
-        /// HUD keeps its shape. Falls back to activation when there is no CanvasGroup.</summary>
+        /// HUD keeps its shape. Falls back to activation when there is no CanvasGroup.
+        /// Change-gated (M35 criterion 27): equal values touch nothing.</summary>
         public static void SetRelevant(GameObject block, CanvasGroup group, bool relevant, float dimAlpha)
         {
             if (group == null)
@@ -133,9 +158,10 @@ namespace GatekeeperBastion.Game.Ui
                 return;
             }
             Show(block, true);
-            group.alpha = relevant ? 1f : dimAlpha;
-            group.interactable = relevant;
-            group.blocksRaycasts = relevant;
+            float alpha = relevant ? 1f : dimAlpha;
+            if (group.alpha != alpha) group.alpha = alpha;
+            if (group.interactable != relevant) group.interactable = relevant;
+            if (group.blocksRaycasts != relevant) group.blocksRaycasts = relevant;
         }
     }
 }

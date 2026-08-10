@@ -22,6 +22,7 @@ namespace GatekeeperBastion.EditorTools
         const string EditResultsKey = "GKB_VERIFY_EDIT_JSON"; // leaf results captured after stage 1
         const string StageSinceKey = "GKB_VERIFY_STAGE_SINCE"; // last progress (stage set / RunStarted / TestStarted)
         const string PlayKickKey = "GKB_VERIFY_PLAY_KICK";   // attempts to start PlayMode after EditMode
+        const string PendingKey = "GKB_VERIFY_PENDING";      // sentinel consumed; run starts next idle tick
         // Measured from last progress, not from stage entry: PlayMode suites idle between tests
         // while the editor is out of play, and a 90s-from-start timer aborted live runs (M17).
         const double StuckStageSeconds = 180.0;
@@ -47,6 +48,9 @@ namespace GatekeeperBastion.EditorTools
             // domain reload during an unexpected error) StageKey can stick on "editmode" forever
             // and block every later request. Consuming the sentinel clears that.
             if (TryConsumeSentinel())
+                return;
+            // A pending run armed before a domain reload starts here (or on a later poll).
+            if (TryStartPending())
                 return;
             string stage = SessionState.GetString(StageKey, "");
             if (stage == "playmode")
@@ -74,6 +78,8 @@ namespace GatekeeperBastion.EditorTools
             // Sentinel always wins — same rule as OnEditorReady. A stuck StageKey from a
             // mid-run domain reload must not permanently ignore agent requests.
             if (TryConsumeSentinel()) return;
+            // A consumed sentinel starts once the refresh (and any compile it queued) settles.
+            if (TryStartPending()) return;
             // If PlayMode is armed but the kick loop went silent (lost delayCall), re-kick
             // once per poll. PlayKickKey stays >0 until PlayTests RunStarted.
             if (SessionState.GetString(StageKey, "") == "playmode"
@@ -111,12 +117,16 @@ namespace GatekeeperBastion.EditorTools
             SessionState.SetFloat(StageSinceKey, (float)EditorApplication.timeSinceStartup);
         }
 
+        /// <summary>Two-phase sentinel consumption. Consuming used to Refresh and Execute in the
+        /// same tick; when the refresh queued a script recompile (agents edit scripts on disk),
+        /// the domain reload wiped the queued TestRunner job before RunStarted — the run was
+        /// never serialized, StageKey stuck on "editmode", and the 180 s timer wrote the
+        /// "stuck" report (M35: the diagnosed cause of the broken verify loop). Now the
+        /// sentinel is consumed into a SessionState pending flag, which survives the reload;
+        /// the run starts on a later idle tick with fresh assemblies.</summary>
         static bool TryConsumeSentinel()
         {
             if (!File.Exists(SentinelPath)) return false;
-            // External agents edit scripts on disk; without a refresh Unity may still hold the
-            // previous assemblies. Safe here: we refuse to start while already in play mode.
-            AssetDatabase.Refresh();
             // Never start EditMode while PlayMode tests (or the user) are in play —
             // TestRunner throws "cannot be used during play mode" and wipes the report.
             if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -124,7 +134,35 @@ namespace GatekeeperBastion.EditorTools
                 Debug.LogWarning("[AutoVerify] Sentinel waiting — editor is in play mode.");
                 return false;
             }
-            BeginVerification("sentinel file");
+            try { File.Delete(SentinelPath); }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[AutoVerify] Could not delete sentinel: " + e.Message);
+                return false;
+            }
+            // Sentinel always wins: a stale stage from a dead run must not block this request.
+            SessionState.SetString(StageKey, "");
+            SessionState.SetFloat(StageSinceKey, -1f);
+            SessionState.SetString(PendingKey, "sentinel file");
+            Debug.Log("[AutoVerify] Sentinel consumed — verification pending after refresh.");
+            // External agents edit scripts on disk; without a refresh Unity may still hold the
+            // previous assemblies. Any compile/domain reload this queues happens before the
+            // pending run starts.
+            AssetDatabase.Refresh();
+            return true;
+        }
+
+        /// <summary>Starts a pending (sentinel-requested) run once the editor is idle: not
+        /// compiling, not updating, not entering play mode. Returns true when it consumed
+        /// the pending flag.</summary>
+        static bool TryStartPending()
+        {
+            string pending = SessionState.GetString(PendingKey, "");
+            if (string.IsNullOrEmpty(pending)) return false;
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating
+                || EditorApplication.isPlayingOrWillChangePlaymode) return false;
+            SessionState.SetString(PendingKey, "");
+            BeginVerification(pending);
             return true;
         }
 

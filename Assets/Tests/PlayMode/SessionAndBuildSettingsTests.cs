@@ -29,8 +29,8 @@ namespace GatekeeperBastion.PlayTests
         [Test]
         public void EveryFlowScene_IsRegisteredInBuildSettings()
         {
-            // Boot path is Splash → Ship → Bastion. MainMenu is legacy and not required.
-            string[] flow = { SceneFlow.Splash, SceneFlow.Ship, SceneFlow.Bastion };
+            // Boot path is Splash → MainMenu → Ship → Bastion (M35 criterion 3).
+            string[] flow = { SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.Ship, SceneFlow.Bastion };
 
             var missing = new List<string>();
             var present = new List<string>();
@@ -49,39 +49,94 @@ namespace GatekeeperBastion.PlayTests
 
             Assert.IsEmpty(missing,
                 $"Scene(s) [{string.Join(", ", missing)}] are missing from Build Settings while " +
-                $"[{string.Join(", ", present)}] are registered. SceneFlow needs Splash, Ship, Bastion.");
+                $"[{string.Join(", ", present)}] are registered. SceneFlow needs Splash, MainMenu, Ship, Bastion.");
+        }
+
+        /// <summary>The build-order smoke assertion that lived in the deleted
+        /// ShiftFrontEndMutate.Smoke, updated to the four-scene list (M35 criterion 3).</summary>
+        [Test]
+        public void BuildSettings_OrderIs_Splash_MainMenu_Ship_Bastion()
+        {
+            string[] expected = { SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.Ship, SceneFlow.Bastion };
+
+            // The PlayMode harness injects its own InitTestScene into the build list for the
+            // duration of the run (and it lands at slot 0, shifting every real scene) — filter
+            // it out or this test can only pass outside the harness.
+            var names = new System.Collections.Generic.List<string>();
+            int count = UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings;
+            for (int i = 0; i < count; i++)
+            {
+                string path = UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i);
+                if (path.Contains("InitTestScene")) continue;
+                names.Add(System.IO.Path.GetFileNameWithoutExtension(path));
+            }
+
+            Assert.AreEqual(expected.Length, names.Count,
+                $"Build Settings holds [{string.Join(", ", names)}]; expected exactly the four flow scenes.");
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(expected[i], names[i],
+                    $"Build slot {i} is '{names[i]}'; expected '{expected[i]}'. " +
+                    "Order must be Splash, MainMenu, Ship, Bastion.");
+            }
         }
 
         [UnityTest]
-        public IEnumerator SplashAndShip_HaveEventSystemForUgui()
+        public IEnumerator MainMenuAndShip_HaveEventSystemForUgui()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Splash);
+            // Splash is deliberately not checked: it has no clickable UI (M35 criterion 2) —
+            // the any-key skip polls Input directly, so it needs no EventSystem.
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.MainMenu);
             PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
 
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Splash);
-            AssertEventSystemPresent(SceneFlow.Splash);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.MainMenu);
+            AssertEventSystemPresent(SceneFlow.MainMenu);
 
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
             AssertEventSystemPresent(SceneFlow.Ship);
         }
 
         [UnityTest]
-        public IEnumerator Splash_HostsCampaignMenu_AndLoadsShip()
+        public IEnumerator Splash_HostsSplashController_AndSkipLandsInMainMenu()
         {
             PlayTestUtil.RequireSceneInBuild(SceneFlow.Splash);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.MainMenu);
+
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Splash, settleFrames: 1);
+            var splash = UnityEngine.Object.FindFirstObjectByType<SplashController>(
+                FindObjectsInactive.Include);
+            Assert.IsNotNull(splash, "Splash must host SplashController (the boot title card).");
+            Assert.IsNull(UnityEngine.Object.FindFirstObjectByType<MainMenuController>(
+                    FindObjectsInactive.Include),
+                "Splash must NOT host MainMenuController — the menu lives in MainMenu.unity.");
+
+            // Drive the any-key skip (Input cannot be injected). This also drains the parked
+            // async MainMenu load — a held allowSceneActivation=false op would otherwise block
+            // every later scene load in the suite.
+            splash.Skip();
+            yield return PlayTestUtil.WaitUntil(
+                () => SceneFlow.ActiveSceneName == SceneFlow.MainMenu, 10f);
+            Assert.AreEqual(SceneFlow.MainMenu, SceneFlow.ActiveSceneName,
+                "Skipping the splash must land in MainMenu (criterion 1).");
+        }
+
+        [UnityTest]
+        public IEnumerator MainMenu_HostsCampaignMenu_AndLoadsShip()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.MainMenu);
             PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
 
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Splash);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.MainMenu);
             var menu = UnityEngine.Object.FindFirstObjectByType<MainMenuController>(
                 FindObjectsInactive.Include);
             Assert.IsNotNull(menu,
-                "Splash must host MainMenuController (campaign Continue/Start/Options).");
+                "MainMenu must host MainMenuController (campaign Continue/Start/Options).");
 
-            Assert.AreEqual(SceneFlow.Splash, SceneFlow.FrontEndScene);
+            Assert.AreEqual(SceneFlow.MainMenu, SceneFlow.FrontEndScene);
             Assert.IsTrue(SceneFlow.CanLoad(SceneFlow.Ship), "Ship must be in build settings.");
 
             bool ok = SceneFlow.LoadShip();
-            Assert.IsTrue(ok, "LoadShip from Splash failed.");
+            Assert.IsTrue(ok, "LoadShip from MainMenu failed.");
             yield return null;
             yield return null;
             Assert.AreEqual(SceneFlow.Ship, SceneFlow.ActiveSceneName,

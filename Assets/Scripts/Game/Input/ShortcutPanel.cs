@@ -5,8 +5,33 @@ using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Builds shortcut-panel line text from <see cref="Controls"/>. Rendering is
-    /// <see cref="ShortcutPanelView"/>; Bastion HUD still calls legacy Draw until it ports.</summary>
+    /// <summary>One shortcut-strip row: keycap label(s), what they do, and the section they
+    /// belong to. <see cref="Dev"/> rows exist only in dev builds and render visually
+    /// separated (Negative accent) — M35 criterion 35.</summary>
+    public readonly struct ShortcutRow
+    {
+        /// <summary>Keycap text, e.g. "E", "WASD", or "1 2 3" for a grouped binding.</summary>
+        public readonly string Key;
+        /// <summary>What the key does, e.g. "interact".</summary>
+        public readonly string Description;
+        /// <summary>Section heading the row sits under, e.g. "MOVE", "FIGHT", "DEV".</summary>
+        public readonly string Section;
+        /// <summary>Dev-only row: appended last, never interleaved, Negative accent.</summary>
+        public readonly bool Dev;
+
+        public ShortcutRow(string key, string description, string section, bool dev = false)
+        {
+            Key = key;
+            Description = description;
+            Section = section;
+            Dev = dev;
+        }
+    }
+
+    /// <summary>Builds structured shortcut rows from <see cref="Controls"/>. Rendering is
+    /// <see cref="Ui.ShortcutPanelView"/>'s pooled keycap rows. The legacy string-line path
+    /// (<see cref="FillLines"/>) remains only until WP-3/WP-4 port ShipHud and HudController
+    /// to <see cref="FillRows"/>; the IMGUI Draw path is deleted (M35 criterion 36).</summary>
     public static class ShortcutPanel
     {
         public const float BandWidth = 420f;
@@ -22,63 +47,59 @@ namespace GatekeeperBastion.Game
         static readonly HashSet<string> SeenLabels = new HashSet<string>();
         static readonly StringBuilder LineBuf = new StringBuilder(128);
 
-        static GUIStyle _wrap;
-
-        /// <summary>Legacy IMGUI draw for Bastion until HudController ports.</summary>
-        public static void Draw(
-            float vw, float vh, ControlContext active, GUIStyle labelStyle,
-            int dialLevel = -1, GUIStyle boxStyle = null)
+        /// <summary>Fills <paramref name="rows"/> with one structured row per distinct binding
+        /// label, in <see cref="Controls"/> order: grouped labels ("weapons", "siphon",
+        /// "return") merge their keycaps into one row. Dev rows are appended last with
+        /// <see cref="ShortcutRow.Dev"/> set, only in dev builds. Does not call
+        /// TickPanelToggle — the caller polls first.</summary>
+        public static void FillRows(ControlContext active, IList<ShortcutRow> rows, int dialLevel = -1)
         {
-            Controls.TickPanelToggle();
-            var lines = new List<string>(16);
-            if (Controls.Collapsed)
+            rows.Clear();
+            Controls.CollectPanelRows(active, RowBuf);
+            SeenLabels.Clear();
+
+            for (int i = 0; i < RowBuf.Count; i++)
             {
-                DrawCollapsedImgui(vw, vh, labelStyle, boxStyle);
-                return;
+                var b = RowBuf[i];
+                // One row per (section, label); grouped labels collect every keycap.
+                if (!SeenLabels.Add(b.Section + "\0" + b.Label)) continue;
+
+                string key = b.Display;
+                if (IsGrouped(b.Label))
+                {
+                    LineBuf.Clear();
+                    AppendGroupedDisplays(RowBuf, b.Section, b.Label);
+                    key = LineBuf.ToString();
+                }
+
+                string description = b.Label;
+                if (b.Label == "siphon" && dialLevel >= 0)
+                    description = "siphon L" + dialLevel;
+
+                rows.Add(new ShortcutRow(key, description, b.Section));
             }
 
-            FillLines(active, lines, dialLevel);
-            if (lines.Count == 0)
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if ((active & (Controls.FightAlways | ControlContext.Ship | ControlContext.EndScreen)) != 0)
             {
-                LastDrawnHeight = 0f;
-                return;
+                var all = DevCommands.All;
+                for (int i = 0; i < all.Length; i++)
+                {
+                    // PanelDisplay is "<key> <short label>"; split so the keycap carries the key.
+                    string key = all[i].Key.ToString();
+                    string display = DevCommands.PanelDisplay(all[i]);
+                    string description = display.Length > key.Length + 1
+                        ? display.Substring(key.Length + 1)
+                        : "";
+                    rows.Add(new ShortcutRow(key, description, "DEV", dev: true));
+                }
             }
-
-            var style = WrapStyle(labelStyle);
-            float x = Margin;
-            float bottom = vh - Margin;
-            float height = EstimateHeight(lines.Count, vh);
-            var panel = new Rect(x, bottom - height, BandWidth, height);
-            GUI.Box(panel, GUIContent.none, boxStyle ?? GUI.skin.box);
-
-            float y = panel.y + 6f;
-            int shown = Mathf.Min(VisibleLineCount(height), lines.Count);
-            for (int i = 0; i < shown; i++)
-            {
-                GUI.Label(new Rect(panel.x + 10f, y, panel.width - 16f, LineHeight), lines[i], style);
-                y += LineHeight;
-            }
-            if (shown < lines.Count)
-            {
-                GUI.Label(new Rect(panel.x + 10f, panel.yMax - LineHeight - 4f, panel.width - 16f, LineHeight),
-                    "BKSP hide keys", style);
-            }
-
-            LastDrawnHeight = height + Margin;
+#endif
         }
 
-        static void DrawCollapsedImgui(float vw, float vh, GUIStyle labelStyle, GUIStyle boxStyle)
-        {
-            float x = Margin;
-            float bottom = vh - Margin;
-            const float tipW = 168f;
-            var tip = new Rect(x, bottom - CollapsedTipHeight, tipW, CollapsedTipHeight);
-            GUI.Box(tip, GUIContent.none, boxStyle ?? GUI.skin.box);
-            GUI.Label(tip, "  BKSP — show keys", WrapStyle(labelStyle));
-            LastDrawnHeight = CollapsedTipHeight + Margin;
-        }
-
-        /// <summary>Fills <paramref name="lines"/> for uGUI. Does not call TickPanelToggle — caller polls first.</summary>
+        /// <summary>Legacy string-line fill for uGUI. Consumed by ShipHud / HudController until
+        /// WP-3/WP-4 port them to <see cref="FillRows"/>. Does not call TickPanelToggle — caller
+        /// polls first.</summary>
         public static void FillLines(ControlContext active, IList<string> lines, int dialLevel = -1)
         {
             lines.Clear();
@@ -109,24 +130,6 @@ namespace GatekeeperBastion.Game
             float maxH = Mathf.Max(120f, viewportHeight * 0.42f);
             float needed = 12f + lineCount * LineHeight + 8f;
             return Mathf.Min(needed, maxH);
-        }
-
-        static int VisibleLineCount(float height) =>
-            Mathf.Max(1, Mathf.FloorToInt((height - 20f) / LineHeight));
-
-        static GUIStyle WrapStyle(GUIStyle baseStyle)
-        {
-            if (_wrap == null || _wrap.fontSize != (baseStyle != null ? baseStyle.fontSize : 14))
-            {
-                _wrap = new GUIStyle(baseStyle ?? GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleLeft,
-                    fontSize = Mathf.Max(14, baseStyle != null ? baseStyle.fontSize : 14),
-                    wordWrap = false,
-                    clipping = TextClipping.Clip
-                };
-            }
-            return _wrap;
         }
 
         static void BuildDrawLines(IList<string> target, float maxWidth)
@@ -175,7 +178,8 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Character-width estimate for wrapping outside OnGUI. LiberationSans ~7.2px
-        /// at FxColors.Small; biased slightly wide so lines wrap early rather than clip.</summary>
+        /// at FxColors.Small; biased slightly wide so lines wrap early rather than clip.
+        /// Dies with FillLines when WP-3/WP-4 port to FillRows.</summary>
         static float ApproxWidth(string s) =>
             string.IsNullOrEmpty(s) ? 0f : s.Length * 7.2f;
 
