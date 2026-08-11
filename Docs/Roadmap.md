@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-09
+Last updated: 2026-08-11
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -29,32 +29,20 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**M32 Path 1 shipped 2026-08-09** (`PRI-C` catalog + Railshot; playthrough criterion 7
-remains on the file). **M29** shipped earlier the same day with
-open playthrough rows. **M30 Path 1** and **M31 criterion 6** closed earlier. `2. active/`
-holds **M35**.
+**M35 shipped 2026-08-11** (authored Splash→MainMenu→Ship→Bastion; station *drive*
+path closed; panel polish deferred). `2. active/` holds **M40** and **M41**.
 
 **Recommended next**, in this order.
 
-**The project gained a git remote on 2026-08-10** — `DeveloperZo/GatekeeperBastion`, one
-commit. That makes this file's own rule operable for the first time: a status change is a
-`git mv` plus the table row, in one commit. **M43 is what makes the diff readable enough for
-that to mean anything**, and it is written to be executed by a coding agent rather than by
-hand.
-
-1. **M35 — One look, drawn from one place.** Four authored scenes (Splash → MainMenu → Ship →
-   Bastion), one Shift theme, no UI generators. Scene files are the UI source; the three
-   mutators that regenerated them are deleted. It goes first because M36 adds HUD instruments
-   on top of this baseline.
-2. **M36 — The HUD is the tether.** New. The distinct-feel pass: one readout shaped like the
+1. **M36 — The HUD is the tether.** The distinct-feel pass: one readout shaped like the
    game's own premise, Prep and Assault as visibly different instruments, and a hit on the
-   door that lands in peripheral vision. Depends on M35.
+   door that lands in peripheral vision. Depends on M35 (shipped).
+2. **Ship station terminal UI** — panel chrome, Settings-shell strip, row readability,
+   criterion-41 screenshots. Not filed yet; craft when that polish is the next cut.
 3. **M45 — Two Runs in one process.** The co-op pre-work, done while the game is still
    single-player: no singleton holding Run or player state, one spawn chokepoint, input as a
-   struct, seeded randomness. Depends on nothing. It replaces M39, whose premise did not
-   survive research — strict engine-freedom is load-bearing only for deterministic lockstep,
-   which this project is not doing.
-4. **Play close-outs** — M32 criterion 7 (bore kills), M26 Path 2 / ability, M31 pin
+   struct, seeded randomness. Depends on nothing. It replaces M39.
+4. **Play close-outs** — M32 criterion 7 (bore kills), M26 Path 2 / inventory, M31 pin
    playthrough; see `GatekeeperZo Notes/verification.md`.
 5. **M40 then M41** — the rules made decidable, then checked. M40 is documents only; M41 is
    the lint script and is where the risk lives. **M41 is the reason M40 is allowed to exist**;
@@ -99,7 +87,7 @@ this table — see the change log.
 | M32 | A Primary that wants the far wall | completed, Aug 2026 | `PRI-C` in the catalog; full damage at 50 m; sustained within 5% of the MR-35; Railshot on `F` — playthrough 7 open on file | [`3. completed/M32`](Milestones/3.%20completed/M32-a-primary-that-wants-the-far-wall.md) |
 | M33 | The numbers doc reads itself out of the build | later | `Tools/docgen/run.sh --check` exits non-zero when a `Sim/` number changes and `Design/4-Data.md` is not regenerated; deleting an `UpgradeTrack` value drops its row from both docs with no generator edit | [`1. planned/M33`](Milestones/1.%20planned/M33-the-numbers-doc-reads-itself.md) |
 | M34 | A file you can navigate | later | Every type with three or more members carries the `Architecture/7-File-Layout.md` region order; `Tools/lint-layout/run.sh` fails on a seeded violation and runs from `verify`; no member added, removed or resignatured | [`1. planned/M34`](Milestones/1.%20planned/M34-a-file-you-can-navigate.md) |
-| M35 | One look, drawn from one place | active | Four authored scenes, one Shift theme, no UI generators; Splash→MainMenu→Ship→Bastion; stations/HUD/pause/quit-to-menu wired; SceneBuilder owns environment/spawns/light/NavMesh only — **close-out blocked on WP-5 docs/sweeps + Zo playthrough** | [`2. active/M35`](Milestones/2.%20active/M35-one-look-drawn-from-one-place.md) |
+| M35 | One look, drawn from one place | completed, Aug 2026 | Four authored scenes, one Shift theme, no UI generators; Splash→MainMenu→Ship→Bastion; stations drive path / HUD / pause / quit-to-menu; SceneBuilder owns environment/spawns/light/NavMesh only — station panel polish deferred | [`3. completed/M35`](Milestones/3.%20completed/M35-one-look-drawn-from-one-place.md) |
 | M36 | The HUD is the tether | later | One readout carries Hatch integrity, salvage and bodies at the door; Prep and Assault identifiable from one frame with text removed; a Hatch hit is visible in peripheral vision | [`1. planned/M36`](Milestones/1.%20planned/M36-the-hud-is-the-tether.md) |
 | M37 | Where they die | later | Every kill line carries `hatchDist=` and `spawnDist=` as raw metres, no formula in the game; `wave-report` prints median distance per Wave **per Gatekeeper kind** | [`1. planned/M37`](Milestones/1.%20planned/M37-where-they-die.md) |
 | M38 | A dashboard you can open | completed, Aug 2026 | `Docs/dashboard.html` parses logs in-browser after you choose Logs/; PlayMode by `stage=playmode`; no `legacy` spend; era curves | [`3. completed/M38`](Milestones/3.%20completed/M38-a-dashboard-you-can-open.md) |

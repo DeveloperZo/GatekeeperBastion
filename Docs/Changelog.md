@@ -4,7 +4,7 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
-Last updated: 2026-08-10
+Last updated: 2026-08-11
 -->
 
 Most recent first. **State transitions and structural edits only** — a milestone moving
@@ -13,6 +13,12 @@ notes, not tuning results, not anything the milestone file already holds.
 
 This file is history. **`Roadmap.md` is what is next**: order, status, strategy and risks.
 `Milestones/` is the detail behind any entry here.
+
+- 2026-08-11: **M35 completed — Zo close.** Moved to `3. completed/`. Softens named on the
+  file: criterion 5 admits the two station-shell sentinel tools until a follow-up deletes
+  them; section D panel *detail* and criterion 41 screenshots deferred to an unfiled
+  ship-terminal UI milestone; criterion 42 closed by Zo's verdict. Bindings report
+  `missingCount:0` (`2026-08-11T02:00:47Z`).
 
 - 2026-08-10: **M44 completed — trigger gate 50/50.** Moved to `3. completed/`.
   `.claude/skills/_evals/run.sh trigger` passed all five skills (6 should + 4 near_miss each,

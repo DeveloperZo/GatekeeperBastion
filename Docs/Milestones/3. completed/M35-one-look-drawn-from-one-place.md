@@ -1,9 +1,9 @@
 # M35 — One look, drawn from one place
 
 <!--
-Status: active
-Update trigger: when a Shift version lands, when a scene is added, when a value moves in Shift UI Manager, or when a criterion here is found gamed.
-Last updated: 2026-08-10 (rev 4: criterion 34 rewritten to the authored geometry — a per-host table in canvas units, the Active Mission Shadow clone recipe including that Shift ships it inactive, closed drawers deactivated, the once-per-Run mission-drawer latch and its Docked re-arm, and MsgPlayer's derived Y named as the only RectTransform write a view makes. Rev 3: two further adversarial reviews folded in — quit-to-menu now saves (the game already saves mid-run via OnApplicationQuit, so a no-save quit would have been a rollback exploit), a single Esc dispatcher per scene, SceneBuilder's owned set shrunk so it never rebuilds objects that carry serialized UI references, work packages made strictly sequential. Rev 2 added quit-to-menu and the work packages. Rev 1 was the full rework superseding the morning version. Gates deliberately dropped from the old version: the m_Type sliced-ratio count. Kept and renumbered: built-in-sprite grep, Ellipsis grep, default-rect check, pause constraints.)
+Status: completed, Aug 2026
+Update trigger: never — shipped milestones are a record. Corrections only.
+Last updated: 2026-08-11
 -->
 
 **Four authored scenes, one theme, no UI generators.** Boot order is Splash → MainMenu →
@@ -18,6 +18,24 @@ This is one milestone at Zo's direction, larger than the grain rule wants. The w
 packages below are the honest split — exclusive file ownership, strict order, per-package
 checkpoints, briefable to separate agents; work stops at any checkpoint without stranding
 the game.
+
+## Closed
+
+**Shipped 2026-08-11 on Zo's close.** Boot path, authored scenes, deleted Shift regenerators,
+menu/HUD/pause/quit-to-menu, and the station *drive* path (open → live data → purchase or
+EMBARK) are in. Evidence at close: `gkb_bindings_report.json`
+`2026-08-11T02:00:47Z` `missingCount:0` across Splash/MainMenu/Ship/Bastion;
+`gkb_verify_report.json` `2026-08-11T04:03:46Z` EditMode 295/0, PlayMode 22/1
+(`ShoveDoesNotUncommit` — combat latch, not UI).
+
+**Gate softens (named, not silent):**
+
+| Criterion | Soften |
+|---|---|
+| 5 | `InitializeOnLoad` also matches `StripSettingsToStations.cs` and `RepairStationPanels.cs` — sentinel-only station-shell tools kept for the deferred ship-terminal milestone; deleted when that milestone closes. |
+| 18–25 (panel *detail*) | Drive path closed; Settings-shell strip, row chrome, readability over the live view, and related polish move to a later ship-terminal UI milestone (not filed yet). |
+| 41 | Screenshot set not filed; visual QA rides with that follow-up. |
+| 42 | Closed by Zo's 2026-08-11 verdict on this file. |
 
 ## Story
 
@@ -778,6 +796,7 @@ at Zo's direction, with per-WP checkpoints standing in for per-milestone gates.
 ## Depends on / Unblocks
 
 Depends on Shift v2.0.12, imported (store-verified compatible with Unity 6 and
-Built-in RP, May 2026 build). **Blocks M36** (HUD tether — needs the bound,
-split HUD; M36's file is corrected by criterion 8). Informs M39's `Game/Ui`
-scope (M39 declares no dependency on M35 — `../../Roadmap.md`).
+Built-in RP, May 2026 build). **Unblocks M36** (HUD tether — needs the bound,
+split HUD; M36's file is corrected by criterion 8). Ship station panel polish
+(Settings-shell strip, row chrome, readability, criterion-41 screenshots) is
+deferred to a later milestone — not filed at close.
