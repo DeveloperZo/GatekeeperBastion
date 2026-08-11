@@ -7,7 +7,7 @@ namespace GatekeeperBastion.Game.Ui
 {
     /// <summary>Lookup into the authored Shift hierarchy by name or component type, and the
     /// small set of writes a bound view is allowed to make: text, visibility, slider value.
-    /// Resolution only — constructing UI is forbidden (M35 criteria 4–5; scenes are source),
+    /// Resolution only — constructing UI is forbidden (scenes are source),
     /// so this class neither allocates scene objects nor attaches components.</summary>
     /// <remarks>Views serialize their references where a scene author wired them and call these
     /// helpers for whatever is still null, so a view keeps working while the Canvas copy from
@@ -89,7 +89,7 @@ namespace GatekeeperBastion.Game.Ui
         public static T First<T>() where T : Component =>
             Object.FindFirstObjectByType<T>(FindObjectsInactive.Include);
 
-        /// <summary>Change-gated text write (M35 criterion 27): an equal value touches
+        /// <summary>Change-gated text write: an equal value touches
         /// nothing, so per-frame pushes do not dirty the canvas. Returns true when it wrote.</summary>
         public static bool SetText(TMP_Text label, string text)
         {
@@ -133,7 +133,7 @@ namespace GatekeeperBastion.Game.Ui
 
         /// <summary>Drives a Shift bar. The slider is display-only, so
         /// <c>interactable</c> is cleared here rather than trusted to the scene.
-        /// Change-gated (M35 criterion 27): equal values touch nothing.</summary>
+        /// Change-gated: equal values touch nothing.</summary>
         public static bool SetBar(Slider slider, float value, float max)
         {
             if (slider == null) return false;
@@ -149,7 +149,7 @@ namespace GatekeeperBastion.Game.Ui
 
         /// <summary>Fades a block that is not currently relevant instead of hiding it, so the
         /// HUD keeps its shape. Falls back to activation when there is no CanvasGroup.
-        /// Change-gated (M35 criterion 27): equal values touch nothing.</summary>
+        /// Change-gated: equal values touch nothing.</summary>
         public static void SetRelevant(GameObject block, CanvasGroup group, bool relevant, float dimAlpha)
         {
             if (group == null)

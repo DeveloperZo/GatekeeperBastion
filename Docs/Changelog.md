@@ -14,6 +14,30 @@ notes, not tuning results, not anything the milestone file already holds.
 This file is history. **`Roadmap.md` is what is next**: order, status, strategy and risks.
 `Milestones/` is the detail behind any entry here.
 
+- 2026-08-11: **M40 + M41 built — the architecture rules are decided, then checked.**
+  M40: the counted-line unit is stated once (`Architecture/7-File-Layout.md`) and linked
+  from everywhere else; `Editor/` gets its first cap, 800 counted lines, higher because
+  editor assemblers and scene-strip tools carry long serialized-wiring sequences
+  (largest today `StripSettingsToStations.cs`, 791, measured 2026-08-11); the
+  singletons are named by type — `GameController` and `HatchStation` grandfathered,
+  `DecoyBay.Instance` recorded as owed with its three call sites, and
+  `StationPanelView.EnsureInstance()` recorded as since-removed so it is not
+  rediscovered. `5-Audit-2026-08-09.md` takes an appended correction: its file-size
+  figures match no measure now in use, and `HudController.cs`'s overage (613 counted
+  against 400) is baselined by name. M41: `Tools/lint-arch/run.sh` reads every rule
+  from `arch-lint` fences in the document that states it (`Architecture.md`,
+  `Architecture/3-Unity-Runtime.md`, `Architecture/README.md`) and runs from
+  `Tools/verify/run.sh` beside the language check; every row is enforced at zero or
+  baselined by a count in its fence (over-cap 1, fake-null 23 files,
+  `WaitForSeconds`-in-loop 1), and a missing fence is exit 2, never a default.
+  Milestone-ID identifiers (file, type, namespace, menu, define) are enforced at zero;
+  milestone references in comments and strings are baselined (66 lines / 39 files,
+  2026-08-11) with the player-facing ones cleaned and the rest a follow-up. `Assets/_Scratch/` exists, gitignored
+  except its `.gitkeep`, and verify fails while it holds anything else; the one-shot
+  ladder lands in `Working-Rules.md`. With M39 cancelled, criterion 12's 266/282 count
+  expectation is replaced by re-measurement on the first clean run; one pre-existing
+  PlayMode failure (`WeaponAbilityPlayModeTests.ShoveDoesNotUncommit`) blocks a green
+  verify and is outside M41's scope.
 - 2026-08-11: **M35 completed — Zo close.** Moved to `3. completed/`. Softens named on the
   file: criterion 5 admits the two station-shell sentinel tools until a follow-up deletes
   them; section D panel *detail* and criterion 41 screenshots deferred to an unfiled

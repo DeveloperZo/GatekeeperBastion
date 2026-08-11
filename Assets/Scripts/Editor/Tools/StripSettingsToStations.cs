@@ -394,7 +394,6 @@ namespace GatekeeperBastion.EditorTools
             var soOld = new SerializedObject(oldView);
             var oldTemplates = FindDeep(oldRt, "Templates");
             var oldWheel = FindDeep(oldRt, "Wheel Slot");
-            var oldClose = soOld.FindProperty("_closeButton").objectReferenceValue as Button;
             var oldTitle = soOld.FindProperty("_title").objectReferenceValue as TMP_Text;
             var oldBanked = soOld.FindProperty("_banked").objectReferenceValue as TMP_Text;
             var oldLifetime = soOld.FindProperty("_lifetime").objectReferenceValue as TMP_Text;
@@ -504,11 +503,19 @@ namespace GatekeeperBastion.EditorTools
             MoveNamed(oldRt, cloneRt, "Banked Salvage", log);
             MoveNamed(oldRt, cloneRt, "Lifetime", log);
 
-            // Prefer Hotkeys/Exit (Main Menu chrome); else Close / Main Button.
-            Button close = FindDeep(cloneRt, "Exit")?.GetComponent<Button>()
-                ?? FindDeep(cloneRt, "Close")?.GetComponent<Button>()
-                ?? oldClose;
+            // Close must live under the CLONE. A button borrowed from the old panel is
+            // destroyed with it below, and the gate then reads _closeButton as null —
+            // that dangling fallback nulled all four stations on 2026-08-11.
+            Button close = null;
             var exitGo = FindDeep(cloneRt, "Exit");
+            if (exitGo != null)
+                close = exitGo.GetComponentInChildren<Button>(true);
+            if (close == null)
+            {
+                var closeGo = FindDeep(cloneRt, "Close");
+                if (closeGo != null)
+                    close = closeGo.GetComponentInChildren<Button>(true);
+            }
             if (exitGo != null && close != null)
             {
                 exitGo.name = "Close";

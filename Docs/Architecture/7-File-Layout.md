@@ -5,7 +5,7 @@ Purpose: The region order every C# file in Assets/Scripts follows, and the rules
 Status: working
 Authority: MANDATORY — the order is fixed; which regions appear is not.
 Update trigger: when a region is added to or removed from either order, or when the checker's rules change.
-Last updated: 2026-08-09
+Last updated: 2026-08-11
 -->
 
 Adopted from InfinityQube's `03-file-standards.md` (`6-InfinityQube-Precedence.md`).
@@ -54,6 +54,11 @@ is a seam violation and `1-Boundaries.md` §1 is the rule it breaks.
 
 **Regions do not count toward the line cap.** Sim ≤ 600, Game ≤ 400
 (`Docs/Architecture.md`), measured as non-blank, non-comment, non-directive lines.
+
+The sentence above is the project's one statement of the counted-line unit.
+`Docs/Architecture.md` links here rather than restating it (M40), and
+`Tools/lint-arch/run.sh` implements it (M41) — do not delete or rephrase it as
+duplication. The cap numbers themselves live in `Docs/Architecture.md`'s fence.
 
 **A partial class regions each part independently.** `GameController.DevCommands.cs` gets
 its own `Public API` and `Private`; it does not continue the ones in `GameController.cs`.

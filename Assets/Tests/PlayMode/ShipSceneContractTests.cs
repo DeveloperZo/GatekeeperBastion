@@ -166,11 +166,11 @@ namespace GatekeeperBastion.PlayTests
         }
 
         // =====================================================================
-        // B1b. E opens Armory from anywhere — not the Interactor raycast
+        // B1b. Interact Down opens the targeted station via OpenStationPanel
         // =====================================================================
 
         [UnityTest]
-        public IEnumerator ShipScene_Interact_OpensArmoryWithoutLookingAtConsole()
+        public IEnumerator ShipScene_Interact_AtConsole_OpensThatStationPanel()
         {
             PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
@@ -180,33 +180,36 @@ namespace GatekeeperBastion.PlayTests
             Assert.IsNotNull(ship, "ShipController missing");
             var armory = UnityEngine.Object.FindFirstObjectByType<ArmoryStation>();
             Assert.IsNotNull(armory, "ArmoryStation missing");
+            var map = UnityEngine.Object.FindFirstObjectByType<MapStation>();
+            Assert.IsNotNull(map, "MapStation missing");
 
-            // Put the player far away, looking at the sky — raycast cannot hit the console.
-            var player = PlayerRegistry.Local.transform;
-            player.position = armory.transform.position + Vector3.up * 200f;
-            player.rotation = Quaternion.LookRotation(Vector3.up);
-            var interactor = player.GetComponentInChildren<Interactor>(true);
-            Assert.IsNotNull(interactor);
+            Assert.IsFalse(ship.TryOpenStationFromInteract(null),
+                "No target must not open a panel.");
+            Assert.IsNull(ship.OpenStation);
+
+            Assert.IsTrue(ship.TryOpenStationFromInteract(armory),
+                "TryOpenStationFromInteract(Armory) must succeed with no panel open.");
             yield return null;
-            Assert.IsTrue(string.IsNullOrEmpty(interactor.CurrentPrompt),
-                "Falsifier setup failed: Interactor still has a prompt — player is still targeting something.");
-
-            bool opened = ship.TryOpenArmoryFromInteract();
-            Assert.IsTrue(opened, "TryOpenArmoryFromInteract returned false with no panel open");
-            yield return null;
-
-            Assert.AreSame(armory, ship.OpenStation,
-                "E/Interact must open Armory from anywhere; OpenStation was not Armory after TryOpenArmoryFromInteract.");
+            Assert.AreSame(armory, ship.OpenStation);
             Assert.IsTrue(ship.IsPanelOpen);
 
-            // Console Interact is a no-op — must not be required for open.
             ship.CloseStationPanel(armory);
             yield return null;
             Assert.IsNull(ship.OpenStation);
+
+            Assert.IsTrue(ship.TryOpenStationFromInteract(map),
+                "TryOpenStationFromInteract(Map) must open NAV MAP, not Armory.");
+            yield return null;
+            Assert.AreSame(map, ship.OpenStation);
+
+            ship.CloseStationPanel(map);
+            yield return null;
+
+            // Console Interact remains a no-op — open is ShipController Down only.
             ((IInteractable)armory).Interact(0f);
             yield return null;
             Assert.IsNull(ship.OpenStation,
-                "StationTerminal.Interact must not open the panel — only ShipController.TryOpenArmoryFromInteract does.");
+                "StationTerminal.Interact must not open — only TryOpenStationFromInteract does.");
         }
 
         // =====================================================================

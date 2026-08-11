@@ -22,6 +22,9 @@ namespace GatekeeperBastion.Game
         /// <summary>Prompt of the currently targeted interactable, or null. Read by the HUD.</summary>
         public string CurrentPrompt { get; private set; }
 
+        /// <summary>Target under the crosshair this frame, or null. Ship uses this for station open.</summary>
+        public IInteractable Current => _current;
+
         IInteractable _current;
 
         void Update()

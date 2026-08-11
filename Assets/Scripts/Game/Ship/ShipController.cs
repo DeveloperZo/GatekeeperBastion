@@ -8,7 +8,7 @@ namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: Ship-hub scene controller — guarantees a loaded GameSession
     /// (direct-play fallback), owns cursor/movement while station panels are open, and is the
-    /// sole Esc dispatcher for the Ship (M35 Escape contract).</summary>
+    /// sole Esc dispatcher for the Ship (Escape contract).</summary>
     /// <remarks>Cursor lock is load-bearing: Interactor refuses to raycast unless
     /// Cursor.lockState == Locked, so a missed lock means nothing in the ship is usable.
     /// SetWalkMode therefore always sets the cursor itself (even with no player rig found)
@@ -17,6 +17,7 @@ namespace GatekeeperBastion.Game
     {
         const string Tag = "ShipController";
         const float BindWindowSeconds = 2f;
+        const float InteractRange = 3.2f;
 
         [SerializeField] GameObject _stationCanvas;
         [SerializeField] MainPanelManager _panels;
@@ -31,7 +32,7 @@ namespace GatekeeperBastion.Game
         /// <summary>True while the Settings panel is up via Esc / OptionsScreen.</summary>
         public bool IsSettingsOpen { get; private set; }
 
-        /// <summary>QUIT TO MENU on the Ship Settings panel (M35 criterion 32) — state is
+        /// <summary>QUIT TO MENU on the Ship Settings panel — state is
         /// already saved at purchase time; no confirm.</summary>
         public void QuitToMenu() => SceneFlow.LoadMainMenu();
 
@@ -63,9 +64,10 @@ namespace GatekeeperBastion.Game
             if (Controls.Down(ControlId.FreeCursor))
                 HandleEscape();
 
-            // Ship Interact (E) opens Armory from anywhere — not the Interactor raycast.
+            // Same open path as Armory-from-anywhere: Interact Down → OpenStationPanel.
+            // Target is the console under the camera ray, not a hard-coded Armory.
             if (Controls.Down(ControlId.Interact))
-                TryOpenArmoryFromInteract();
+                TryOpenStationFromInteract(ResolveTargetedStation());
 
             if (_fpc != null || _bindWindow <= 0f) return;
             _bindWindow -= Time.deltaTime;
@@ -75,15 +77,26 @@ namespace GatekeeperBastion.Game
             ApplyWalkMode();
         }
 
-        /// <summary>E aboard the ship opens ARMORY with no console, range, or look check.
-        /// Returns false when a panel/Settings is already up or Armory is missing.</summary>
-        public bool TryOpenArmoryFromInteract()
+        /// <summary>Open the given station panel. Returns false when a panel/Settings is already
+        /// up or <paramref name="station"/> is null. Call site for Interact Down on Ship.</summary>
+        public bool TryOpenStationFromInteract(StationTerminal station)
         {
-            if (OpenStation != null || IsSettingsOpen || OptionsScreen.IsOpen) return false;
-            var armory = FindFirstObjectByType<ArmoryStation>();
-            if (armory == null) return false;
-            OpenStationPanel(armory);
+            if (station == null || OpenStation != null || IsSettingsOpen || OptionsScreen.IsOpen)
+                return false;
+            OpenStationPanel(station);
             return true;
+        }
+
+        /// <summary>Camera-forward ray, same range as <see cref="Interactor"/> — self-contained
+        /// so open does not depend on Interactor script order.</summary>
+        static StationTerminal ResolveTargetedStation()
+        {
+            var cam = Camera.main;
+            if (cam == null) return null;
+            if (!Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit hit,
+                    InteractRange))
+                return null;
+            return hit.collider.GetComponentInParent<StationTerminal>();
         }
 
         void LateUpdate()
@@ -96,7 +109,7 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Ship Esc priority: open modal → close; station open → Close; Settings open
-        /// → close Settings; otherwise → open Settings (M35 Escape contract).</summary>
+        /// → close Settings; otherwise → open Settings (Escape contract).</summary>
         void HandleEscape()
         {
             if (_exitModal != null && _exitModal.gameObject.activeInHierarchy)

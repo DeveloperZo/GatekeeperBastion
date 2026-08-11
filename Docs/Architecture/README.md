@@ -5,14 +5,16 @@ Purpose: Governs how code in this project is structured, named and written. Rule
 Status: working
 Authority: MASTER REFERENCE for how code is written. Docs/Architecture.md remains the reference for what this codebase is.
 Update trigger: when a rule is added, changed or retired, or when a new audit finds a rule nobody follows.
-Last updated: 2026-08-09
+Last updated: 2026-08-11
 -->
 
 ## Never do
 
 - **Put `using UnityEngine` in `Sim/`.** That is the multiplayer seam and it is the one
   structural rule this project has.
-- **Add a static MonoBehaviour singleton.** Two are grandfathered. There is no third.
+- **Add a static MonoBehaviour singleton.** Two are grandfathered by type —
+  `GameController` and `HatchStation` — and `DecoyBay` is recorded as owed, not
+  grandfathered (see *The singletons, named*). There is no fourth.
 - **Add a counter, a rollup or a stats object** (`../Decisions.md`). Emit a log line.
 - **Use `?.`, `??`, `??=`, `is null` or `ReferenceEquals` on a `UnityEngine.Object.`**
   Only `== null`, `!= null`, `if (x)` respect Unity's lifetime check.
@@ -33,6 +35,37 @@ Last updated: 2026-08-09
 - **Put a member in its region** (`7-File-Layout.md`). The order is fixed; presence is not.
 - **Run `Tools/verify/run.sh`, then the EditMode mirror.** Path 1 alone does not close a gate.
 - **Update the tool in the same commit as the log line it parses.**
+
+## The singletons, named
+
+Measured 2026-08-11 (`rg -n "static\s+\w+\s+Instance" Assets/Scripts/Game` for the
+declarations, `rg -n "<Type>\.Instance" Assets/Scripts` for the call sites): exactly
+three `static Instance` declarations exist.
+
+- **`GameController`** — grandfathered. Declared `Game/Bastion/GameController.cs:41`;
+  36 call sites. It is the command surface every sim mutation already routes through.
+- **`HatchStation`** — grandfathered. Declared `Game/Bastion/HatchStation.cs:22`;
+  3 code call sites (`DevConsole.cs:362`, `EnemyGatekeeper.Targeting.cs:95`,
+  `PlayerAbility.cs:217`), plus the melee-range convention in `Architecture.md`
+  gotcha 2.
+- **`DecoyBay`** — **owed, not grandfathered.** Declared `Game/Bastion/DecoyBay.cs:14`;
+  3 call sites: `HudController.cs:581`, `HudController.cs:636`,
+  `EnemyGatekeeper.Targeting.cs:139`. The bay is reachable through `GameController`
+  like everything else; removing the static is real refactoring and belongs to its own
+  milestone, so it is recorded here rather than excused.
+
+A fourth pattern existed when M40 was written (2026-08-09): `StationPanelView.EnsureInstance()`,
+a static factory — the same pattern under another name. It has since been removed
+(confirmed absent 2026-08-11), so its absence is expected, not a mystery to rediscover.
+
+`Tools/lint-arch/run.sh` reads the fenced block below; a `static Instance` declaration
+on any type not named in it fails the run, and the owed entry prints as a baselined
+note rather than a pass.
+
+```arch-lint
+singleton_allow=GameController,HatchStation
+singleton_owed=DecoyBay
+```
 
 ## The files
 

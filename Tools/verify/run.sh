@@ -31,6 +31,30 @@ if ! bash "$LINT_LANG"; then
   exit 1
 fi
 
+# M41 — architecture rules. Fail before compile so a violation is not buried under mcs noise.
+LINT_ARCH="$ROOT/Tools/lint-arch/run.sh"
+if [[ ! -f "$LINT_ARCH" ]]; then
+  echo "verify: expected $LINT_ARCH" >&2
+  exit 2
+fi
+if ! bash "$LINT_ARCH"; then
+  echo "verify: architecture check failed (Tools/lint-arch/run.sh)" >&2
+  exit 1
+fi
+
+# M41 — one-shot editor work runs from Assets/_Scratch/ and is removed before this
+# gate; cleanup is not the scratch script's job. Unity's generated .meta files are
+# tolerated so an empty folder does not cry wolf forever.
+SCRATCH="$ROOT/Assets/_Scratch"
+if [[ -d "$SCRATCH" ]]; then
+  SCRATCH_LEFTOVER="$(find "$SCRATCH" -mindepth 1 ! -name '.gitkeep' ! -name '*.meta' -print | sort)"
+  if [[ -n "$SCRATCH_LEFTOVER" ]]; then
+    echo "verify: Assets/_Scratch/ is not empty — remove scratch work before the gate:" >&2
+    printf '%s\n' "$SCRATCH_LEFTOVER" >&2
+    exit 1
+  fi
+fi
+
 # EditMode tests that cannot compile outside Unity. Each needs a reason; a file added
 # here without one is coverage quietly dropped.
 declare -A EXCLUDED=(

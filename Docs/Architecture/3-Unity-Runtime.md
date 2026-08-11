@@ -5,7 +5,7 @@ Purpose: The measured, Unity-6-current rules for code that runs in the engine. S
 Status: working
 Authority: CRITICAL — correctness against the engine, and measured cost.
 Update trigger: when Unity's guidance changes, when a rule here is measured against this project, or when a "stale" entry turns out to still bite.
-Last updated: 2026-08-09
+Last updated: 2026-08-11
 -->
 
 Everything here is `[documented]` or `[measured]` and is **not** outrankable by convention.
@@ -248,3 +248,55 @@ Per-call `GetComponent` cost in Unity 6 (all circulating figures trace to Unity 
 benchmarks on 2015 hardware), per-call `Debug.Log` milliseconds (sources are qualitative),
 and update-manager gains on Unity 6 / IL2CPP specifically (the authoritative measurement is
 Unity 5.2.2 on iOS). **Profile before acting on any of the three.**
+
+## 9. The check — enforced or baselined, per row
+
+`Tools/lint-arch/run.sh` (M41) reads the fenced block at the end of this section and
+runs from `Tools/verify/run.sh`. Each row below is either **enforced** — zero
+violations, any new one fails the run — or **baselined** — it prints `NOTE file:line`
+and fails only when the count in the fence is exceeded. All counts measured 2026-08-11
+with `rg` over `Assets/Scripts` using the patterns in the fence.
+
+| Row | Decision | Measured 2026-08-11 |
+|---|---|---|
+| `?.` / `??` / `is null` / `ReferenceEquals` on what may be a `UnityEngine.Object` (§3), scanned as the raw constructs in `Game/`, comment lines excluded | **baselined** | **22 files** (re-measured 2026-08-11 with the comment-excluding pattern below; 2 of the 24 raw-grep files were doc-comment prose). §3's "Audited 2026-08-09: no violations" no longer holds — the constructs arrived with later UI work. Fixing them is behaviour-changing and owns its own milestone |
+| `using System.Linq` in runtime code (§1) | **enforced at 0** | 0 — the one site M41's draft recorded has been fixed since |
+| `new WaitForSeconds` in a loop body (§1) | **baselined at 1** | the row greps every site in `Game/`, subtracts the file the fence names as the known non-loop site (`Damageable.cs:150`, not in a loop), and baselines the remainder: 1 — `WaveSpawner.Groups.cs:82`, inside the `while` at line 64 |
+| `FindObjectOfType` / `FindObjectsOfType` (§2) | **enforced at 0** | 0 |
+| Empty `Update` / `Start` / `LateUpdate` / `FixedUpdate` / `OnGUI` body (§4) | **enforced at 0** | 0 |
+| A milestone ID (`M<digits>`) in an identifier — a file name, type, namespace, menu path or define | **enforced at 0** | 0 — true today (`M35Wp4OptionsPatch.cs`, the type, the file and its menu row, is already deleted). Zero exceptions |
+| A milestone ID in a comment or string literal | **baselined at 66 lines / 39 files** | measured 2026-08-11, `grep -rnE '\bM[0-9]{2,3}\b' --include=*.cs Assets/Scripts/` — mostly historical comments. The player-facing ones were cleaned with this change (a milestone reference had already reached a runtime error string); the rest are a follow-up, because cleaning 39 files here would violate criterion 13 |
+| `[InitializeOnLoad]` outside the fence's allowlist | **enforced at 0** | 4 sites, all four in the allowlist |
+| `AssetDatabase.DeleteAsset` naming a `.cs` file (self-deleting script) | **enforced at 0** | 0 |
+| A non-source, non-`.meta` file under `Assets/Scripts/` (`.cs`, `.asmdef` and `.meta` are source here) | **enforced at 0** | 0 |
+| A `static Instance` on a type not named in `Architecture/README.md`'s fence | see that file's fence | 3 declarations, all named there |
+| A file over its folder's cap | see `Docs/Architecture.md`'s fence | 1, named there |
+
+The scan is textual — a construct inside a string or comment counts, which is
+deliberate for the milestone-ID text row and a cheap over-approximation for the rest.
+A row narrowed until its count reaches zero is a failed row, not a passing one.
+
+```arch-lint
+fakenull_pattern=^(?![ \t]*//).*?(\?\.|\?\?|\bis[ \t]+null\b|\bReferenceEquals\b)
+fakenull_file_baseline=22
+linq_pattern=^[ \t]*using[ \t]+System\.Linq
+linq_enforced=0
+waitforseconds_pattern=\bnew[ \t]+WaitForSeconds\b
+waitforseconds_baseline=1
+waitforseconds_nonloop_allow=Game/Combat/Damageable.cs
+findobjectoftype_pattern=\bFindObjects?OfType\b
+findobjectoftype_enforced=0
+emptybody_pattern=\bvoid[ \t]+(Update|Start|LateUpdate|FixedUpdate|OnGUI)[ \t]*\([ \t]*\)\s*\{\s*\}
+emptybody_enforced=0
+midid_pattern=(\b(class|struct|interface|enum|namespace)[ \t]+[A-Za-z0-9_.]*M[0-9]{2,3}|MenuItem\("[^"]*M[0-9]{2,3}|^[ \t]*#(define|if|elif)[^/\r\n]*M[0-9]{2,3})
+midid_name_pattern=M[0-9]{2,3}
+midid_enforced=0
+midtext_pattern=\bM[0-9]{2,3}\b
+midtext_line_baseline=66
+midtext_file_baseline=39
+initializeonload_pattern=\[InitializeOnLoad\]
+initializeonload_allow=Editor/Scenes/SceneBuilder.cs,Editor/Tools/AutoVerify.cs,Editor/Tools/RepairStationPanels.cs,Editor/Tools/StripSettingsToStations.cs
+selfdelete_pattern=AssetDatabase\.DeleteAsset[^\r\n]*\.cs
+selfdelete_enforced=0
+nonsource_enforced=0
+```

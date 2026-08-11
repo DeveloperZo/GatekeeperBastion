@@ -112,17 +112,19 @@ No slogans or embark/objective commands on the corners — those belong in stati
 panels. Crosshair and console interact prompt stay. `ShipHudView` wires the three
 hosts; `ShipHud` pushes meta into those bindings.
 
-**Ship terminals:** while walking the ship, **E opens ARMORY from anywhere** (no
-console, range, or look check — `ShipController.TryOpenArmoryFromInteract`). That
-leaves walk and opens one full-screen station menu cloned from **Main Menu
-(Desktop) Settings** (`Assets/Shift - Complete Sci-Fi UI/Scenes/Main Menu/Main Menu
-(Desktop).unity`) — Background + Top/Bottom chrome kept; Categories / Preview /
-top Button List stripped via `Gatekeeper/HUD/Strip Settings Shell Onto Stations`.
-Only that menu takes input. Esc or Close returns to walk. FAB / CREW / NAV still
-exist as panels; open path for those is not E-anywhere. Body rows clone from each
-panel's inactive `Templates` under the Settings `List` — that host must survive
-`ClearBody`. Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW:
-four tracks; FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
+**Ship terminals** (ARMORY, FABRICATION, CREW QUARTERS, NAV MAP): walk the ship;
+look at a console and Interact (`Controls.Down` in `ShipController.Update`) opens
+that station's full-screen menu — `TryOpenStationFromInteract` →
+`OpenStationPanel`, the same open path that painted Armory from anywhere; the
+camera ray picks which console (Interactor still drives the HUD prompt only).
+Cloned from **Main Menu (Desktop) Settings** (`Assets/Shift - Complete Sci-Fi
+UI/Scenes/Main Menu/Main Menu (Desktop).unity`) — Background + Top/Bottom chrome
+kept; Categories / Preview / top Button List stripped via
+`Gatekeeper/HUD/Strip Settings Shell Onto Stations`. Only that menu takes input.
+Esc or Close returns to walk. Body rows clone from each panel's inactive
+`Templates` under the Settings `List` — that host must survive `ClearBody`.
+Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW: four tracks;
+FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
 
 ## Deferred, with intent
 

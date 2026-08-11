@@ -25,7 +25,7 @@ namespace GatekeeperBastion.EditorTools
         const string PlayKickKey = "GKB_VERIFY_PLAY_KICK";   // attempts to start PlayMode after EditMode
         const string PendingKey = "GKB_VERIFY_PENDING";      // sentinel consumed; run starts next idle tick
         // Measured from last progress, not from stage entry: PlayMode suites idle between tests
-        // while the editor is out of play, and a 90s-from-start timer aborted live runs (M17).
+        // while the editor is out of play, and a 90s-from-start timer aborted live runs.
         const double StuckStageSeconds = 180.0;
 
         static TestRunnerApi _api;
@@ -39,7 +39,7 @@ namespace GatekeeperBastion.EditorTools
 
         static AutoVerify()
         {
-            // LogTools menu items must not carry [InitializeOnLoad] (M35 criterion 5).
+            // LogTools menu items must not carry [InitializeOnLoad].
             AssemblyReloadEvents.beforeAssemblyReload -= LogFile.Close;
             AssemblyReloadEvents.beforeAssemblyReload += LogFile.Close;
             EditorApplication.delayCall += OnEditorReady;
@@ -124,7 +124,7 @@ namespace GatekeeperBastion.EditorTools
             SessionState.SetFloat(StageSinceKey, (float)EditorApplication.timeSinceStartup);
         }
 
-        /// <summary>File bridge for BindingValidator (M35 criterion 40). Agents write
+        /// <summary>File bridge for BindingValidator. Agents write
         /// <c>gkb_bindings_request.txt</c>; the report lands in <c>gkb_bindings_report.json</c>.</summary>
         static void TryConsumeBindingsRequest()
         {

@@ -172,6 +172,32 @@ developer did not ask for, at a moment they did not choose, is the worst version
 this failure — invisible, so nothing prompts anyone to remove it. One-shots do not go
 in `Assets/`.
 
+### One-shot editor work — the ladder (M41)
+
+Delete-after-verify has failed twice (`VerifyKickOnce.cs` above, and the M35 options
+patch): cleanup that runs inside a script only happens when the script succeeds, and a
+script that fails halfway is exactly the one that stays. The ladder replaces the
+discipline with a mechanism. Cheapest rung first; a rung is only skipped with a stated
+reason.
+
+| Rung | Use when | Residue |
+|---|---|---|
+| **Edit the YAML** | setting a field, swapping a reference, renaming an object. Serialization is Force Text (`ProjectSettings/EditorSettings.asset`, `m_SerializationMode: 2`), so scenes, prefabs and assets are plain text | none — the diff is the review, `git checkout` is the undo |
+| **`Assets/_Scratch/`** | anything needing the AssetDatabase, `PrefabUtility`, or new fileIDs | none — the folder is gitignored and emptied |
+| **A committed tool** | the operation has served more than one session and more than one question (the three-kinds gate above) | it is the deliverable |
+
+Rung 1 covers more than it appears to. The background-music change on 2026-08-10 was
+three `sed` edits across a `.asset` and two `.unity` files, where the shipped
+alternative was a 500-line editor script. Rung 1 stops being safe when the job needs
+new GUIDs or fileIDs.
+
+`Assets/_Scratch/` is gitignored except its committed `.gitkeep`; Unity compiles what
+is dropped there and a committed `[MenuItem]` runs it. **Cleanup is not the script's
+job:** `Tools/verify/run.sh` fails while the folder holds anything but `.gitkeep` (and
+the `.meta` files Unity generates for it), so a scratch script that half-worked blocks
+the next gate instead of surviving into the tree. And nothing in `Assets/_Scratch/` is
+ever cited by a document — the same rule the three-kinds gate sets for `/tmp`.
+
 ## Leverage — the gate before tuning
 
 Meadows' twelve points in the tiers this project uses. **The map is not here** — it is the

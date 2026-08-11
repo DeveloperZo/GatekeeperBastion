@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace GatekeeperBastion.Game
 {
     /// <summary>One authored station panel. Templates live under <c>Content</c> and are cloned
-    /// per row; this class sets no colour, font size or rect (M35 criteria 24, 38).</summary>
+    /// per row; this class sets no colour, font size or rect.</summary>
     public sealed class StationPanelView : MonoBehaviour
     {
         const string Tag = "StationPanelView";
@@ -90,7 +90,7 @@ namespace GatekeeperBastion.Game
         void Require(string field, UnityEngine.Object value)
         {
             if (value != null) return;
-            Log.Error(Tag, $"{name}: missing binding '{field}' (M35 criterion 24).");
+            Log.Error(Tag, $"{name}: missing binding '{field}'.");
         }
 
         void WireClose()

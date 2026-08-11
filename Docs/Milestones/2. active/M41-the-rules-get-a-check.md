@@ -3,7 +3,8 @@
 <!--
 Status: later
 Update trigger: when a rule is added to Docs/Architecture/, when a check row is added or retired, or when a baseline count changes
-Last updated: 2026-08-09
+Last updated: 2026-08-11
+Note: a green verify is currently blocked by one pre-existing PlayMode failure, WeaponAbilityPlayModeTests.ShoveDoesNotUncommit — outside this milestone's scope (see Watch, 2026-08-11)
 -->
 
 `Tools/lint-arch/run.sh` reads the rules out of `Docs/Architecture/` and runs from
@@ -143,9 +144,10 @@ halfway is exactly the one that stays.
 11. **Every row is proved twice**: it reproduces its baseline count on the tree as it stands,
    **and** it catches a seeded violation. **Seeding alone is not proof** — a gutted row seeds
    and catches fine. The baseline is what proves it still sees the real tree.
-12. **`Tools/verify/run.sh` passes**, with the same test counts as M39 leaves —
-   **266 in the harness, 282 in Unity** — and the new check running before the compile, next
-   to the existing `lint-language` call.
+12. **`Tools/verify/run.sh` passes**, with the new check running before the compile, next
+   to the existing `lint-language` call. M39 is cancelled, so no count is expected in
+   advance: the harness and Unity counts are re-measured on the first clean run and
+   recorded then.
 13. **No file under `Assets/Scripts` is edited to satisfy a check.** If a row's honest state is
    ugly, it is baselined and the fix is a separate milestone. **The one exception is any row
    this milestone chooses to enforce at zero**, which is then listed here with its file list
@@ -192,7 +194,8 @@ Developer infrastructure, so the three questions are answered for the developer.
 4. Criterion 6 — the counter row prints exactly the three known matches and nothing else.
 5. Criteria 8, 9 — drop a file into `Assets/_Scratch/` and run `Tools/verify/run.sh`; expect a
    non-zero exit naming the folder. Remove it and re-run; expect pass.
-6. Criterion 12 — `Tools/verify/run.sh` reports 266; Unity reports 282; same names.
+6. Criterion 12 — `Tools/verify/run.sh` and Unity report their counts on the first clean
+   run; those measurements become the record, and the same names appear across runs.
 7. Criterion 13 — `git diff --stat` shows `Tools/`, `Docs/` and the new `Assets/_Scratch/.gitkeep` only, unless a row was listed as
    enforced-at-zero in advance.
 
@@ -210,11 +213,19 @@ Developer infrastructure, so the three questions are answered for the developer.
 - **`WaveSpawner.Groups.cs:82` may be a false positive worth keeping.** It allocates a
   `WaitForSeconds` per spawn interval inside a coroutine — real garbage, but on a path that
   runs a few times a second, not per frame. Baseline it and let the number argue.
+- **2026-08-11:** criterion 12's 266/282 expectation died with M39's cancellation; counts
+  are re-measured on the first clean run instead. And a green verify is currently blocked
+  by one pre-existing PlayMode failure, `WeaponAbilityPlayModeTests.ShoveDoesNotUncommit`
+  (latest `gkb_verify_report.json`: EditMode 295 passed, PlayMode 22 passed / 1 failed).
+  Fixing it is outside M41's scope; the check's own rows are provable while it stands.
 
 ## Depends on / Unblocks
 
 **Depends on M40**, which decides the rules this check reads. **Depends on M39** only for
 criterion 8's harness count.
+
+*(2026-08-11: M39 is cancelled — see the Watch entry of the same date. The M39 dependency
+is void, and the harness count is re-measured on the first clean run instead.)*
 
 **Unblocks nothing formally**, and makes every later milestone's architecture claims
 verifiable rather than asserted.

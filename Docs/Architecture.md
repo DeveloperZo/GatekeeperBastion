@@ -88,11 +88,32 @@ directly above the live constants, which is exactly how a later session reverts 
   `HOST-ONLY:`, `LOCAL-OWNER:`, or `REPLICATED-STATE:`. This is the co-op
   homework done in advance; a class with no label is a class nobody has thought
   about networking.
-- **File size**: ≤600 lines in Sim, ≤400 in Game. Split with `partial` (see
-  `GameController` / `HudController`) rather than growing past it.
+- **File size**: Sim ≤ 600, Game ≤ 400, Editor ≤ 800 counted lines — one unit for
+  all three caps, defined once in `Architecture/7-File-Layout.md` and only there;
+  Editor's cap is higher because editor assemblers and scene-strip tools carry long
+  serialized-wiring sequences, largest today `StripSettingsToStations.cs` at 791
+  counted lines (measured 2026-08-11 by the counted-line awk in
+  `Tools/lint-arch/run.sh`). Split with `partial` (see `GameController` /
+  `HudController`) only when the split passes `Architecture/1-Boundaries.md`
+  section 4's test — *would the split files pass as separate classes if the
+  language allowed it?*
 - Sim randomness comes from `RunSim.Rng` only. `PlayerGun` deliberately uses
   `UnityEngine.Random` for crits so trigger pulls never advance the replayable
   sim stream.
+
+One file is over its cap today: `Game/Bastion/HudController.cs`, 613 counted lines
+against 400 (measured 2026-08-11 by the counted-line awk in `Tools/lint-arch/run.sh`).
+It is baselined, not excused — the baseline in the fence below may not grow.
+`Tools/lint-arch/run.sh` reads the caps and the baseline from this fenced block;
+changing a value here changes the check with no script edit.
+
+```arch-lint
+sim_cap=600
+game_cap=400
+editor_cap=800
+over_cap_baseline=1
+over_cap_known=Game/Bastion/HudController.cs
+```
 
 ## GOTCHAS
 

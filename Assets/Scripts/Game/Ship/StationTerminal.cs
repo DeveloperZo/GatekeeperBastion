@@ -24,6 +24,12 @@ namespace GatekeeperBastion.Game
         int _lastContentHash;
         bool _wasOpen;
         bool _missingLogged;
+        bool _openLogged;
+        Animator[] _panelAnims;
+        CanvasGroup[] _panelGroups;
+        Behaviour _bodyScroll;
+        Behaviour _bodyMask;
+        bool _visibilityResolved;
 
         protected abstract string StationName { get; }
         protected abstract string PromptHint { get; }
@@ -33,8 +39,9 @@ namespace GatekeeperBastion.Game
         public string Prompt =>
             "[" + Controls.DisplayOf(ControlId.Interact) + "] " + StationName + " — " + PromptHint;
 
-        /// <summary>Unused for open — Ship Interact (E) opens Armory from anywhere via
-        /// <see cref="ShipController.TryOpenArmoryFromInteract"/>. Kept for IInteractable prompts.</summary>
+        /// <summary>Stations open via <see cref="ShipController.TryOpenStationFromInteract"/> on
+        /// Interact Down — same path as the working Armory open. Kept for IInteractable prompts
+        /// and hold-based interactables (repair); do not open here.</summary>
         public void Interact(float dt) { }
 
         ShipController Ship => _ship != null ? _ship : (_ship = FindFirstObjectByType<ShipController>());
@@ -51,11 +58,11 @@ namespace GatekeeperBastion.Game
             if (_missingLogged) return;
             _missingLogged = true;
             if (_view == null)
-                Log.Error(Tag, StationName + ": missing serialized _view (M35 criterion 24).");
+                Log.Error(Tag, StationName + ": missing serialized _view.");
             if (_canvasRoot == null)
-                Log.Error(Tag, StationName + ": missing serialized _canvasRoot (M35 criterion 24).");
+                Log.Error(Tag, StationName + ": missing serialized _canvasRoot.");
             if (_panels == null)
-                Log.Error(Tag, StationName + ": missing serialized _panels (M35 criterion 24).");
+                Log.Error(Tag, StationName + ": missing serialized _panels.");
         }
 
         /// <summary>Canvas on, this panel on, every other Main Panels child off (Top Panel stays).
@@ -94,8 +101,18 @@ namespace GatekeeperBastion.Game
             }
 
             IsolateAmongMainPanels();
+            ForcePanelSubtreeVisible();
             _wasOpen = false;
             _lastContentHash = 0;
+            _openLogged = false;
+
+            var meta = GameSession.Meta;
+            if (meta != null && !OptionsScreen.IsOpen)
+            {
+                RefreshPanel(meta);
+                _lastContentHash = ContentHash(meta);
+                _wasOpen = true;
+            }
         }
 
         void IsolateAmongMainPanels()
@@ -114,6 +131,7 @@ namespace GatekeeperBastion.Game
             if (!_view.gameObject.activeSelf)
                 _view.gameObject.SetActive(true);
             ShowPanelImmediate(_view.gameObject);
+            ForcePanelSubtreeVisible();
         }
 
         static void ShowPanelImmediate(GameObject panel)
@@ -127,6 +145,57 @@ namespace GatekeeperBastion.Game
                 group.alpha = 1f;
                 group.interactable = true;
                 group.blocksRaycasts = true;
+            }
+        }
+
+        /// <summary>Edit mode shows authored List/Templates; Play samples Shift's Panel Out
+        /// Helper on nested Gameplay (and siblings) and writes CanvasGroup.alpha=0 every
+        /// frame. Disable every Animator under the station panel and force every
+        /// CanvasGroup visible. Also kill the broken List ScrollRect/Mask (null content).</summary>
+        void ForcePanelSubtreeVisible()
+        {
+            if (_view == null) return;
+            ResolveVisibilityHooks();
+
+            if (_panelAnims != null)
+            {
+                for (int i = 0; i < _panelAnims.Length; i++)
+                {
+                    if (_panelAnims[i] != null)
+                        _panelAnims[i].enabled = false;
+                }
+            }
+
+            if (_panelGroups != null)
+            {
+                for (int i = 0; i < _panelGroups.Length; i++)
+                {
+                    var g = _panelGroups[i];
+                    if (g == null) continue;
+                    g.alpha = 1f;
+                    g.interactable = true;
+                    g.blocksRaycasts = true;
+                }
+            }
+
+            if (_bodyScroll != null) _bodyScroll.enabled = false;
+            if (_bodyMask != null) _bodyMask.enabled = false;
+        }
+
+        void ResolveVisibilityHooks()
+        {
+            if (_visibilityResolved || _view == null) return;
+            _visibilityResolved = true;
+            _panelAnims = _view.GetComponentsInChildren<Animator>(true);
+            _panelGroups = _view.GetComponentsInChildren<CanvasGroup>(true);
+
+            var body = _view.BodyContent;
+            if (body != null)
+            {
+                _bodyScroll = body.GetComponent<UnityEngine.UI.ScrollRect>();
+                _bodyMask = body.GetComponent<UnityEngine.UI.Mask>();
+                if (_bodyMask == null)
+                    _bodyMask = body.GetComponent<UnityEngine.UI.RectMask2D>();
             }
         }
 
@@ -193,6 +262,26 @@ namespace GatekeeperBastion.Game
             BuildPanel(_view, meta);
             _view.PlayEntrance();
             IsolateAmongMainPanels();
+            ForcePanelSubtreeVisible();
+
+            if (!_openLogged)
+            {
+                _openLogged = true;
+                int bodyKids = _view.BodyContent != null ? _view.BodyContent.childCount : -1;
+                float gAlpha = -1f;
+                if (_panelGroups != null)
+                {
+                    for (int i = 0; i < _panelGroups.Length; i++)
+                    {
+                        if (_panelGroups[i] == null) continue;
+                        if (_panelGroups[i].gameObject.name != "Gameplay") continue;
+                        gAlpha = _panelGroups[i].alpha;
+                        break;
+                    }
+                }
+                Log.Event(Tag, StationName + ": refreshed — bodyChildren=" + bodyKids +
+                    " gameplayAlpha=" + gAlpha);
+            }
         }
 
         protected abstract void BuildPanel(StationPanelView view, MetaState m);

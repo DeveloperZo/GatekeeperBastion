@@ -129,10 +129,9 @@ namespace GatekeeperBastion.Game
 
             if (!cursorFree)
             {
-                // E opens Armory from anywhere; console raycast prompts are optional overlays.
                 string prompt = _interactor != null && !string.IsNullOrEmpty(_interactor.CurrentPrompt)
                     ? _interactor.CurrentPrompt
-                    : "[" + Controls.DisplayOf(ControlId.Interact) + "] ARMORY";
+                    : "";
                 if (prompt != _cachedPrompt)
                 {
                     _cachedPrompt = prompt;

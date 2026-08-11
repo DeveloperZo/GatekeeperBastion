@@ -66,6 +66,13 @@ Thumbs.db
 /_backup/
 /_to_delete/
 
+# One-shot editor scripts run from Assets/_Scratch/ and are removed before the next
+# verify gate (Tools/verify/run.sh fails while the folder holds anything but
+# .gitkeep). The folder itself stays tracked — .gitkeep and Assets/_Scratch.meta —
+# so Unity keeps a stable GUID for it.
+Assets/_Scratch/*
+!Assets/_Scratch/.gitkeep
+
 # Harness output, if GKB_HARNESS_OUT is ever pointed inside the repo.
 /gkb-harness/
 
