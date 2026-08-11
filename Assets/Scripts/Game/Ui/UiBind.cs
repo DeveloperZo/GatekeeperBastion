@@ -6,8 +6,8 @@ using UnityEngine.UI;
 namespace GatekeeperBastion.Game.Ui
 {
     /// <summary>Lookup into the authored Shift hierarchy by name or component type, and the
-    /// small set of writes a bound view is allowed to make: text, visibility, slider value.
-    /// Resolution only — constructing UI is forbidden (scenes are source),
+    /// small set of writes a bound view is allowed to make: text, visibility, slider value,
+    /// button label. Resolution only — constructing UI is forbidden (scenes are source),
     /// so this class neither allocates scene objects nor attaches components.</summary>
     /// <remarks>Views serialize their references where a scene author wired them and call these
     /// helpers for whatever is still null, so a view keeps working while the Canvas copy from
@@ -119,6 +119,32 @@ namespace GatekeeperBastion.Game.Ui
             if (label == null) return;
             SetText(label, text);
             Show(label.gameObject, !string.IsNullOrEmpty(text));
+        }
+
+        /// <summary>Writes a button's label through Shift's MainButton / MainPanelButton when
+        /// present (they own the visible text) and into the TMP child either way, so plain
+        /// Buttons and Shift buttons both read back correctly. The TMP write is change-gated.</summary>
+        public static void SetButtonLabel(Button button, string label)
+        {
+            if (button == null) return;
+            string text = label ?? "";
+            var main = button.GetComponent<Michsky.UI.Shift.MainButton>();
+            if (main != null)
+            {
+                main.buttonText = text;
+                main.useCustomText = false;
+            }
+            var panel = button.GetComponent<Michsky.UI.Shift.MainPanelButton>();
+            if (panel != null)
+            {
+                panel.buttonText = text;
+                panel.useCustomText = false;
+            }
+            // Shift buttons carry several state labels (normal/highlighted/pressed). An
+            // authored button is enabled once, so writing only the first would leave the
+            // visible state stale — write them all.
+            var tmps = button.GetComponentsInChildren<TextMeshProUGUI>(true);
+            for (int i = 0; i < tmps.Length; i++) SetText(tmps[i], text);
         }
 
         public static void Show(GameObject go, bool visible)

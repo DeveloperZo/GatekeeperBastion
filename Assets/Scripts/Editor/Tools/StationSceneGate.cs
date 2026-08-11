@@ -1,5 +1,6 @@
 using System.Text;
 using GatekeeperBastion.Game;
+using GatekeeperBastion.Game.Ui;
 using Michsky.UI.Shift;
 using UnityEditor;
 using UnityEngine;
@@ -55,8 +56,10 @@ namespace GatekeeperBastion.EditorTools
                 return false;
             }
             var soShip = new SerializedObject(shipController);
-            var mpm = soShip.FindProperty("_panels")?.objectReferenceValue as MainPanelManager;
-            var canvasRoot = soShip.FindProperty("_stationCanvas")?.objectReferenceValue as GameObject;
+            var panelsProp = soShip.FindProperty("_panels");
+            var mpm = panelsProp != null ? panelsProp.objectReferenceValue as MainPanelManager : null;
+            var canvasProp = soShip.FindProperty("_stationCanvas");
+            var canvasRoot = canvasProp != null ? canvasProp.objectReferenceValue as GameObject : null;
             if (mpm == null)
             {
                 log.AppendLine("FAIL: ShipController._panels null");
@@ -143,9 +146,6 @@ namespace GatekeeperBastion.EditorTools
             bool ok = true;
             ok &= Require(so, "_bodyContent", name, log);
             ok &= Require(so, "_closeButton", name, log);
-            ok &= Require(so, "_buttonPrefab", name, log);
-            ok &= Require(so, "_labelPrefab", name, log);
-            ok &= Require(so, "_rowPrefab", name, log);
 
             if (FindDeep(panel, "Background Blur") == null)
             {
@@ -157,20 +157,16 @@ namespace GatekeeperBastion.EditorTools
                 log.AppendLine("FAIL: " + name + " missing Background (Settings chrome)");
                 ok = false;
             }
-            var list = FindDeep(panel, "List");
-            if (list == null)
+
+            // The body host is the layout-managed List Content, not the List frame itself.
+            var bodyProp = so.FindProperty("_bodyContent");
+            var body = bodyProp != null ? bodyProp.objectReferenceValue as RectTransform : null;
+            if (body == null || body.gameObject.name != "List Content"
+                || body.parent == null || body.parent.name != "List")
             {
-                log.AppendLine("FAIL: " + name + " missing List (Settings body host)");
+                log.AppendLine("FAIL: " + name
+                    + " StationPanelView._bodyContent is not List Content under List");
                 ok = false;
-            }
-            else
-            {
-                var body = so.FindProperty("_bodyContent")?.objectReferenceValue as RectTransform;
-                if (body == null || body.gameObject != list.gameObject)
-                {
-                    log.AppendLine("FAIL: " + name + " StationPanelView._bodyContent is not List");
-                    ok = false;
-                }
             }
 
             if (FindDeep(panel, "Panel Background") != null
@@ -180,7 +176,120 @@ namespace GatekeeperBastion.EditorTools
                 ok = false;
             }
 
+            // The builder templates died with the runtime body; a surviving folder means an
+            // unfinished migration that would still be cloned from.
+            if (FindDeep(panel, "Templates") != null)
+            {
+                log.AppendLine("FAIL: " + name + " still has a Templates folder (authored panels clone nothing)");
+                ok = false;
+            }
+
+            if (!BodyViewReady(panel, name, log))
+                ok = false;
+            if (!ConsoleBodyWired(name, log))
+                ok = false;
+
             return ok;
+        }
+
+        /// <summary>The per-station authored body view must sit on the panel GO with every
+        /// serialized object reference wired (array elements included). None of the body view
+        /// fields are [OptionalBinding] today; the attribute is still respected so a future
+        /// optional widget does not fail the gate.</summary>
+        static bool BodyViewReady(RectTransform panel, string name, StringBuilder log)
+        {
+            var viewType = BodyViewType(name);
+            if (viewType == null)
+            {
+                log.AppendLine("FAIL: no body view type mapped for station '" + name + "'");
+                return false;
+            }
+            var bodyView = panel.GetComponent(viewType) as MonoBehaviour;
+            if (bodyView == null)
+            {
+                log.AppendLine("FAIL: " + name + " missing " + viewType.Name);
+                return false;
+            }
+
+            bool ok = true;
+            var so = new SerializedObject(bodyView);
+            var it = so.GetIterator();
+            while (it.NextVisible(true))
+            {
+                if (it.propertyType != SerializedPropertyType.ObjectReference) continue;
+                if (it.name == "m_Script") continue;
+                if (IsOptionalField(viewType, it.propertyPath)) continue;
+                if (it.objectReferenceValue == null)
+                {
+                    log.AppendLine("FAIL: " + name + " " + viewType.Name + "." + it.propertyPath + " is null");
+                    ok = false;
+                }
+            }
+            return ok;
+        }
+
+        static bool ConsoleBodyWired(string name, StringBuilder log)
+        {
+            MonoBehaviour console = null;
+            switch (name)
+            {
+                case "ARMORY":
+                    console = Object.FindFirstObjectByType<ArmoryStation>(FindObjectsInactive.Include);
+                    break;
+                case "FABRICATION":
+                    console = Object.FindFirstObjectByType<EngineeringStation>(FindObjectsInactive.Include);
+                    break;
+                case "CREW QUARTERS":
+                    console = Object.FindFirstObjectByType<CrewQuartersStation>(FindObjectsInactive.Include);
+                    break;
+                case "NAV MAP":
+                    console = Object.FindFirstObjectByType<MapStation>(FindObjectsInactive.Include);
+                    break;
+            }
+            if (console == null)
+            {
+                log.AppendLine("FAIL: console terminal missing for station '" + name + "'");
+                return false;
+            }
+            var so = new SerializedObject(console);
+            var body = so.FindProperty("_body");
+            if (body == null || body.objectReferenceValue == null)
+            {
+                log.AppendLine("FAIL: " + name + " " + console.GetType().Name + "._body is null");
+                return false;
+            }
+            return true;
+        }
+
+        static System.Type BodyViewType(string station)
+        {
+            switch (station)
+            {
+                case "ARMORY": return typeof(ArmoryPanelView);
+                case "FABRICATION": return typeof(FabricationPanelView);
+                case "CREW QUARTERS": return typeof(CrewQuartersPanelView);
+                case "NAV MAP": return typeof(NavMapPanelView);
+                default: return null;
+            }
+        }
+
+        /// <summary>True when the field behind <paramref name="propertyPath"/> carries
+        /// [OptionalBinding]. Array elements resolve to their root field.</summary>
+        static bool IsOptionalField(System.Type type, string propertyPath)
+        {
+            int dot = propertyPath.IndexOf('.');
+            string fieldName = dot >= 0 ? propertyPath.Substring(0, dot) : propertyPath;
+            for (var t = type; t != null; t = t.BaseType)
+            {
+                var field = t.GetField(fieldName,
+                    System.Reflection.BindingFlags.Instance
+                    | System.Reflection.BindingFlags.Public
+                    | System.Reflection.BindingFlags.NonPublic
+                    | System.Reflection.BindingFlags.DeclaredOnly);
+                if (field != null)
+                    return field.IsDefined(typeof(OptionalBindingAttribute), false);
+            }
+            return false;
         }
 
         static bool Require(SerializedObject so, string prop, string station, StringBuilder log)

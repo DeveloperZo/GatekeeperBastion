@@ -1,47 +1,60 @@
+using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
     public sealed class EngineeringStation : StationTerminal
     {
+        const string Tag = "EngineeringStation";
+
+        [SerializeField] FabricationPanelView _body;
+
         protected override string StationName => "FABRICATION";
 
         protected override string PromptHint => "fabricate hatch armor, equipment, and payloads";
 
+        protected override void Awake()
+        {
+            base.Awake();
+            if (_body == null)
+                Log.Error(Tag, StationName + ": missing serialized _body.");
+        }
+
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
-            // Settings-shell baseline: hatch / equipment / one payload. Section headers only.
-            view.AddLabel("HATCH", centered: true);
-            UpgradeRow(view, UpgradeTrack.HatchArmor, "Hatch Armor",
+            if (_body == null) return; // Awake already logged the missing binding.
+
+            // HATCH / EQUIPMENT / PAYLOAD headings are authored scene text.
+            UpgradeRow(_body.HatchRow, UpgradeTrack.HatchArmor, "Hatch Armor",
                 l => $"{MetaUpgrades.HatchHp(l):0} HP");
 
-            view.AddSpacer();
-            view.AddLabel("EQUIPMENT", centered: true);
-            DrawEquipmentSlotRow(view, m);
+            BindEquipmentSlotRow(_body.EquipmentSlotRow, m);
+            // A row that cannot apply yet is deactivated, not absent.
+            UiBind.Show(_body.RepairRigRow, m.EquipmentSlotPurchased);
             if (m.EquipmentSlotPurchased)
-                DrawEquipmentRow(view, m, EquipmentId.RepairRig);
+                BindEquipmentRow(_body.RepairRigRow, m, EquipmentId.RepairRig);
 
-            view.AddSpacer();
-            view.AddLabel("PAYLOAD", centered: true);
-            DrawPayloadRow(view, m, PayloadId.Decoy);
+            BindPayloadRow(_body.DecoyRow, m, PayloadId.Decoy);
             string bay = m.EquippedDrone == PayloadId.None
                 ? "bay empty"
                 : $"bay: {PayloadCatalog.Def(m.EquippedDrone).displayName}";
-            view.AddLabel(bay, reason: true);
+            _body.SetBayLine(bay);
         }
 
-        static void DrawEquipmentSlotRow(StationPanelView view, MetaState m)
+        static void BindEquipmentSlotRow(PanelRowView row, MetaState m)
         {
+            if (row == null) return;
             if (m.EquipmentSlotPurchased)
             {
-                view.AddPricedRow("Equipment Slot", "", "owned", "slot open", "BUY", null, false, "OWNED");
+                row.Bind("Equipment Slot", "", "owned", "slot open", "BUY", null, false, "OWNED");
                 return;
             }
 
             if (!MetaUpgrades.UpgradesUnlocked(m))
             {
-                view.AddPricedRow("Equipment Slot", "", "locked", "slot", "BUY", null, false,
+                row.Bind("Equipment Slot", "", "locked", "slot", "BUY", null, false,
                     "unlocks after first lost Run");
                 return;
             }
@@ -49,7 +62,7 @@ namespace GatekeeperBastion.Game
             long cost = EquipmentCatalog.SlotPrice;
             long banked = m.BankedSalvage;
             bool canBuy = banked >= cost;
-            view.AddPricedRow(
+            row.Bind(
                 "Equipment Slot",
                 $"cost {cost}",
                 "",
@@ -60,15 +73,16 @@ namespace GatekeeperBastion.Game
                 canBuy ? null : $"need {cost - banked} more");
         }
 
-        static void DrawEquipmentRow(StationPanelView view, MetaState m, EquipmentId id)
+        static void BindEquipmentRow(PanelRowView row, MetaState m, EquipmentId id)
         {
+            if (row == null) return;
             var def = EquipmentCatalog.Def(id);
             if (m.OwnsEquipment(id))
             {
                 string effect = def.repairPerSecond > 0f
                     ? $"{def.repairPerSecond:0} HP/s repair"
                     : "owned";
-                view.AddPricedRow(def.displayName, "", "", effect, "BUY", null, false,
+                row.Bind(def.displayName, "", "", effect, "BUY", null, false,
                     m.EquippedEquipment == id ? "EQUIPPED" : "OWNED");
                 return;
             }
@@ -79,7 +93,7 @@ namespace GatekeeperBastion.Game
             long cost = def.cost;
             long banked = m.BankedSalvage;
             bool canBuy = banked >= cost;
-            view.AddPricedRow(
+            row.Bind(
                 def.displayName,
                 $"cost {cost}",
                 "",
@@ -90,24 +104,25 @@ namespace GatekeeperBastion.Game
                 canBuy ? null : $"need {cost - banked} more");
         }
 
-        static void DrawPayloadRow(StationPanelView view, MetaState m, PayloadId id)
+        static void BindPayloadRow(PanelRowView row, MetaState m, PayloadId id)
         {
+            if (row == null) return;
             var def = PayloadCatalog.Def(id);
             if (m.OwnsPayload(id))
             {
                 string effect = $"{def.charges} charges · {def.hp:0} HP";
                 if (m.EquippedDrone == id)
                 {
-                    view.AddPricedRow(def.displayName, "", "", effect, "EQUIP", null, false, "EQUIPPED");
+                    row.Bind(def.displayName, "", "", effect, "EQUIP", null, false, "EQUIPPED");
                 }
                 else if (m.PayloadLoadoutLocked)
                 {
-                    view.AddPricedRow(def.displayName, "", "", effect, "EQUIP", null, false,
+                    row.Bind(def.displayName, "", "", effect, "EQUIP", null, false,
                         "OWNED — locked mid-Run");
                 }
                 else
                 {
-                    view.AddPricedRow(def.displayName, "", "", effect, "EQUIP",
+                    row.Bind(def.displayName, "", "", effect, "EQUIP",
                         () => ShipCommands.EquipPayload(id), true);
                 }
                 return;
@@ -116,7 +131,7 @@ namespace GatekeeperBastion.Game
             long cost = def.cost;
             long banked = m.BankedSalvage;
             bool canBuy = banked >= cost;
-            view.AddPricedRow(
+            row.Bind(
                 def.displayName,
                 $"cost {cost}",
                 "",

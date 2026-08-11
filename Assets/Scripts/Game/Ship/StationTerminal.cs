@@ -27,8 +27,6 @@ namespace GatekeeperBastion.Game
         bool _openLogged;
         Animator[] _panelAnims;
         CanvasGroup[] _panelGroups;
-        Behaviour _bodyScroll;
-        Behaviour _bodyMask;
         bool _visibilityResolved;
 
         protected abstract string StationName { get; }
@@ -148,10 +146,10 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        /// <summary>Edit mode shows authored List/Templates; Play samples Shift's Panel Out
+        /// <summary>Edit mode shows the authored panel; Play samples Shift's Panel Out
         /// Helper on nested Gameplay (and siblings) and writes CanvasGroup.alpha=0 every
         /// frame. Disable every Animator under the station panel and force every
-        /// CanvasGroup visible. Also kill the broken List ScrollRect/Mask (null content).</summary>
+        /// CanvasGroup visible.</summary>
         void ForcePanelSubtreeVisible()
         {
             if (_view == null) return;
@@ -177,9 +175,6 @@ namespace GatekeeperBastion.Game
                     g.blocksRaycasts = true;
                 }
             }
-
-            if (_bodyScroll != null) _bodyScroll.enabled = false;
-            if (_bodyMask != null) _bodyMask.enabled = false;
         }
 
         void ResolveVisibilityHooks()
@@ -188,15 +183,6 @@ namespace GatekeeperBastion.Game
             _visibilityResolved = true;
             _panelAnims = _view.GetComponentsInChildren<Animator>(true);
             _panelGroups = _view.GetComponentsInChildren<CanvasGroup>(true);
-
-            var body = _view.BodyContent;
-            if (body != null)
-            {
-                _bodyScroll = body.GetComponent<UnityEngine.UI.ScrollRect>();
-                _bodyMask = body.GetComponent<UnityEngine.UI.Mask>();
-                if (_bodyMask == null)
-                    _bodyMask = body.GetComponent<UnityEngine.UI.RectMask2D>();
-            }
         }
 
         void LateUpdate()
@@ -258,9 +244,7 @@ namespace GatekeeperBastion.Game
                 StationName,
                 meta.BankedSalvage,
                 "Lifetime: " + meta.LifetimeSalvageEarned + " earned  —  " + meta.LifetimeSalvageSpent + " spent");
-            _view.ClearBody();
             BuildPanel(_view, meta);
-            _view.PlayEntrance();
             IsolateAmongMainPanels();
             ForcePanelSubtreeVisible();
 
@@ -304,9 +288,12 @@ namespace GatekeeperBastion.Game
             if (Ship != null) Ship.CloseStationPanel(this);
         }
 
-        protected static void UpgradeRow(StationPanelView view, UpgradeTrack track, string trackName,
+        /// <summary>Binds one authored upgrade-track row. The row stays visible when the
+        /// action cannot apply — locked and maxed states show as disabled with a reason.</summary>
+        protected static void UpgradeRow(PanelRowView row, UpgradeTrack track, string trackName,
             System.Func<int, string> effect, string lockedLabel = null)
         {
+            if (row == null) return;
             var meta = GameSession.Meta;
             int level = ShipCommands.LevelOf(track);
             bool maxed = level >= MetaUpgrades.MaxLevel;
@@ -316,13 +303,13 @@ namespace GatekeeperBastion.Game
 
             if (lockedLabel != null)
             {
-                view.AddPricedRow(trackName, "", levelLine, effectLine, "BUY", null, false, lockedLabel);
+                row.Bind(trackName, "", levelLine, effectLine, "BUY", null, false, lockedLabel);
                 return;
             }
 
             if (maxed)
             {
-                view.AddPricedRow(trackName, "", levelLine, effectLine, "BUY", null, false,
+                row.Bind(trackName, "", levelLine, effectLine, "BUY", null, false,
                     "MAX — fully upgraded");
                 return;
             }
@@ -331,7 +318,7 @@ namespace GatekeeperBastion.Game
             long banked = meta != null ? meta.BankedSalvage : 0L;
             bool canBuy = banked >= cost;
             string refuse = canBuy ? null : "need " + (cost - banked) + " more";
-            view.AddPricedRow(
+            row.Bind(
                 trackName,
                 "cost " + cost,
                 levelLine,

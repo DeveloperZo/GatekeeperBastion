@@ -1,4 +1,6 @@
+using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
@@ -7,7 +9,15 @@ namespace GatekeeperBastion.Game
     /// which weapon fills Primary/Secondary; the upgrade wheel centres an attribute and buys.</summary>
     public sealed class ArmoryStation : StationTerminal
     {
-        WeaponSlot _viewSlot = WeaponSlot.Secondary;
+        const string Tag = "ArmoryStation";
+
+        [SerializeField] ArmoryPanelView _body;
+
+        // Primary first: it is the slot most likely to carry an authored upgrade ring,
+        // so the wheel is on screen at open. A fresh save (nothing equipped) sees the
+        // empty-slot line and the Primary catalog; the door prompt still steers first
+        // purchases to a Secondary.
+        WeaponSlot _viewSlot = WeaponSlot.Primary;
         readonly int[] _centreIndexByWeapon = new int[WeaponCatalog.ArraySize];
         bool _wheelDirty;
 
@@ -17,6 +27,13 @@ namespace GatekeeperBastion.Game
             GameSession.Meta != null && !GameSession.Meta.OwnsAnyWeapon
                 ? "buy a Secondary — both cost nothing; pick the shape you want"
                 : "equip and focus-upgrade the weapon in your hands";
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (_body == null)
+                Log.Error(Tag, StationName + ": missing serialized _body.");
+        }
 
         protected override void TickWhileOpen(MetaState m)
         {
@@ -43,42 +60,38 @@ namespace GatekeeperBastion.Game
         {
             _wheelDirty = false;
             // rotate is also handled in TickWhileOpen; keep BuildPanel free of input polls.
+            if (_body == null) return; // Awake already logged the missing binding.
 
-            view.BeginRow();
-            view.AddButton(_viewSlot == WeaponSlot.Primary ? "[ PRIMARY ]" : "  Primary  ",
-                () => _viewSlot = WeaponSlot.Primary);
-            view.AddButton(_viewSlot == WeaponSlot.Secondary ? "[ SECONDARY ]" : "  Secondary  ",
+            _body.BindSlotButtons(
+                _viewSlot == WeaponSlot.Primary ? "[ PRIMARY ]" : "  Primary  ",
+                () => _viewSlot = WeaponSlot.Primary,
+                _viewSlot == WeaponSlot.Secondary ? "[ SECONDARY ]" : "  Secondary  ",
                 () => _viewSlot = WeaponSlot.Secondary);
-            view.EndRow();
-            view.AddSpacer();
 
             WeaponId equipped = m.Equipped(_viewSlot);
             if (equipped == WeaponId.None)
             {
-                view.AddLabel($"{_viewSlot}: empty — buy below", centered: true);
+                _body.BindEquipped($"{_viewSlot}: empty — buy below", null);
+                _body.BindWheelNotes(null, null);
+                view.SetWheelVisible(false);
             }
             else
             {
                 var def = WeaponCatalog.Def(equipped);
                 int[] pts = m.PointsOf(equipped);
                 int tier = m.TierOf(equipped);
-                view.AddLabel($"{def.displayName}  ·  T{tier}/{WeaponTier.MaxTier}", centered: true);
-                view.AddLabel(
+                _body.BindEquipped(
+                    $"{def.displayName}  ·  T{tier}/{WeaponTier.MaxTier}",
                     $"{WeaponWheel.EffectiveDamage(def, pts[(int)WheelAttr.Damage]):0.#} dmg    " +
                     $"{WeaponWheel.EffectiveFireRate(def, pts[(int)WheelAttr.FireRate]):0.#}/s    " +
                     $"clip {WeaponWheel.EffectiveClip(def, pts[(int)WheelAttr.Clip])}    " +
-                    $"reload {WeaponWheel.EffectiveReload(def, pts[(int)WheelAttr.Reload]):0.##}s",
-                    centered: true);
-                view.AddSpacer();
+                    $"reload {WeaponWheel.EffectiveReload(def, pts[(int)WheelAttr.Reload]):0.##}s");
 
                 string locked = MetaUpgrades.UpgradesUnlocked(m) ? null : "LOCKED — survive a death first";
                 BuildWheel(view, m, equipped, locked);
             }
 
-            view.AddSpacer();
-            view.AddLabel("CATALOG", centered: true);
-            foreach (var id in WeaponCatalog.ForSlot(_viewSlot))
-                DrawCatalogRow(view, m, id, equipped);
+            BindCatalog(m, equipped);
         }
 
         void RotateCentre(int delta, MetaState m)
@@ -97,14 +110,14 @@ namespace GatekeeperBastion.Game
             var ring = WeaponWheel.RingOf(id);
             if (ring == null)
             {
-                view.AddLabel("Upgrade ring not authored for this weapon yet.", reason: true);
+                _body.BindWheelNotes(null, "Upgrade ring not authored for this weapon yet.");
+                view.SetWheelVisible(false);
                 return;
             }
 
-            view.AddLabel(
+            string rotateHint =
                 $"[{Controls.DisplayOf(ControlId.WheelRotatePrev)} / " +
-                $"{Controls.DisplayOf(ControlId.WheelRotateNext)}] rotate   ·   click a spoke",
-                centered: true);
+                $"{Controls.DisplayOf(ControlId.WheelRotateNext)}] rotate   ·   click a spoke";
 
             int wi = (int)id;
             int centreIndex = _centreIndexByWeapon[wi] % WeaponWheel.AttrCount;
@@ -113,15 +126,51 @@ namespace GatekeeperBastion.Game
             var wheel = view.Wheel;
             if (wheel == null)
             {
-                view.AddLabel("ARMORY wheel missing from StationPanel slot.", reason: true);
+                _body.BindWheelNotes(rotateHint, "ARMORY wheel missing from StationPanel slot.");
+                view.SetWheelVisible(false);
                 return;
             }
 
+            _body.BindWheelNotes(rotateHint, null);
             view.SetWheelVisible(true);
             wheel.Configure(
                 display,
                 idx => _centreIndexByWeapon[wi] = idx,
                 () => ShipCommands.BuyWheelUpgrade(display.Weapon, display.BuyAttr));
+        }
+
+        /// <summary>One authored row per catalog weapon; leftover rows deactivate. A roster
+        /// that outgrows the authored rows fails loud — one error naming every missing weapon,
+        /// plus the authored "ROWS MISSING" line — never silent truncation.</summary>
+        void BindCatalog(MetaState m, WeaponId equippedInSlot)
+        {
+            int i = 0;
+            string missing = null;
+            foreach (var id in WeaponCatalog.ForSlot(_viewSlot))
+            {
+                if (i < _body.CatalogRowCount)
+                {
+                    var row = _body.CatalogRow(i);
+                    BindCatalogRow(row, m, id, equippedInSlot);
+                    UiBind.Show(row, true);
+                }
+                else
+                {
+                    string weapon = WeaponCatalog.Def(id).displayName;
+                    missing = missing == null ? weapon : missing + ", " + weapon;
+                }
+                i++;
+            }
+            for (int r = i; r < _body.CatalogRowCount; r++)
+                UiBind.Show(_body.CatalogRow(r), false);
+
+            bool overflow = missing != null;
+            _body.ShowRowsMissing(overflow);
+            if (overflow)
+            {
+                Log.Error(Tag, StationName + " " + _viewSlot + ": catalog roster exceeds " +
+                    _body.CatalogRowCount + " authored rows — missing: " + missing);
+            }
         }
 
         static ArmoryWheelDisplay BuildWheelDisplay(MetaState m, WeaponId id, WheelAttr[] ring,
@@ -147,6 +196,16 @@ namespace GatekeeperBastion.Game
             }
 
             int[] now = m.PointsOf(id);
+            var spokeTicks = new int[WeaponWheel.AttrCount];
+            for (int i = 0; i < WeaponWheel.AttrCount; i++)
+            {
+                int p = now[(int)ring[(centreIndex + i) % WeaponWheel.AttrCount]];
+                // Share of the most one attribute can hold at max tier; any progress shows
+                // at least one tick so a first purchase is visible on the chart.
+                spokeTicks[i] = p <= 0
+                    ? 0
+                    : Mathf.Clamp(Mathf.RoundToInt(5f * p / WeaponWheel.FocusAtMax), 1, 5);
+            }
             int[] after = (int[])now.Clone();
             if (!maxed) WeaponWheel.Award(after, ring, centre);
 
@@ -167,6 +226,7 @@ namespace GatekeeperBastion.Game
                 ProjReloadLine = $"Seconds of reload   {reloadNow:0.##}  →  {reloadAfter:0.##}",
                 Weapon = id,
                 BuyAttr = centre,
+                SpokeTicks = spokeTicks,
             };
 
             if (lockedLabel != null)
@@ -208,20 +268,21 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        static void DrawCatalogRow(StationPanelView view, MetaState m, WeaponId id, WeaponId equippedInSlot)
+        static void BindCatalogRow(PanelRowView row, MetaState m, WeaponId id, WeaponId equippedInSlot)
         {
+            if (row == null) return;
             var def = WeaponCatalog.Def(id);
             if (m.Owns(id))
             {
                 int tier = m.TierOf(id);
                 if (id == equippedInSlot)
                 {
-                    view.AddPricedRow(def.displayName, "", $"T{tier}", "owned", "EQUIP", null, false,
+                    row.Bind(def.displayName, "", $"T{tier}", "owned", "EQUIP", null, false,
                         "EQUIPPED");
                 }
                 else
                 {
-                    view.AddPricedRow(def.displayName, "", $"T{tier}", "owned", "EQUIP",
+                    row.Bind(def.displayName, "", $"T{tier}", "owned", "EQUIP",
                         () => ShipCommands.EquipWeapon(id), true);
                 }
                 return;
@@ -232,7 +293,7 @@ namespace GatekeeperBastion.Game
                 ? $"{def.damage:0}×{def.pellets} @ {def.shotsPerSecond:0.#}/s"
                 : $"{def.damage:0} dmg @ {def.shotsPerSecond:0.#}/s";
             bool canBuy = m.BankedSalvage >= def.cost;
-            view.AddPricedRow(
+            row.Bind(
                 def.displayName,
                 def.cost == 0 ? "free" : $"cost {def.cost}",
                 "",

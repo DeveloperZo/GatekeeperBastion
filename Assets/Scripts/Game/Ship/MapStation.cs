@@ -9,6 +9,10 @@ namespace GatekeeperBastion.Game
         public const string PremiseBrief =
             "Gatekeepers hold this garrisoned Bastion. The Hatch is your way back to the Ship.";
 
+        const string Tag = "MapStation";
+
+        [SerializeField] NavMapPanelView _body;
+
         protected override string StationName => "NAV MAP";
 
         protected override string PromptHint
@@ -30,6 +34,13 @@ namespace GatekeeperBastion.Game
         bool _loadFailed;
         int _startWave = 1;
 
+        protected override void Awake()
+        {
+            base.Awake();
+            if (_body == null)
+                Log.Error(Tag, StationName + ": missing serialized _body.");
+        }
+
         protected override int ContentHash(MetaState m)
         {
             unchecked
@@ -40,36 +51,29 @@ namespace GatekeeperBastion.Game
 
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
-            // Settings-shell baseline: destination, wave, warnings, EMBARK. No extra copy.
-            view.AddLabel($"Bastion {SceneFlow.BastionName}", centered: true);
-            view.AddLabel(PremiseBrief, centered: true);
-            view.AddSpacer();
+            if (_body == null) return; // Awake already logged the missing binding.
+
+            _body.SetDestination($"Bastion {SceneFlow.BastionName}");
+            _body.SetPremise(PremiseBrief);
 
             int deepest = m.DeepestWaveReached < 1 ? 1 : m.DeepestWaveReached;
             if (deepest > WaveDirector.MaxWaves) deepest = WaveDirector.MaxWaves;
             if (_startWave < 1) _startWave = 1;
             if (_startWave > deepest) _startWave = deepest;
 
-            view.AddLabel($"START WAVE  {_startWave}  /  {deepest}", centered: true);
-            view.BeginRow();
-            view.AddButton("◀", () => _startWave--, _startWave > 1);
-            view.AddRowLabel($"  {_startWave}  ");
-            view.AddButton("▶", () => _startWave++, _startWave < deepest);
-            view.EndRow();
-            view.AddSpacer();
+            _body.SetStartWaveLine($"START WAVE  {_startWave}  /  {deepest}");
+            _body.BindWaveControls(
+                $"  {_startWave}  ",
+                () => _startWave--, _startWave > 1,
+                () => _startWave++, _startWave < deepest);
 
-            if (!m.OwnsAnyWeapon)
-                view.AddLabel("NO WEAPON", warning: true);
-            if (!m.HasRepairRigEquipped)
-                view.AddLabel("NO REPAIR RIG", warning: true);
-            if (!m.OwnsAnyWeapon || !m.HasRepairRigEquipped)
-                view.AddSpacer();
+            // NO WEAPON / NO REPAIR RIG texts are authored; toggled only.
+            _body.ShowWarnings(!m.OwnsAnyWeapon, !m.HasRepairRigEquipped);
 
             bool warned = !m.OwnsAnyWeapon || !m.HasRepairRigEquipped;
-            view.AddButton(warned ? "EMBARK ANYWAY" : "EMBARK", () => TryEmbark(m));
+            _body.BindEmbark(warned ? "EMBARK ANYWAY" : "EMBARK", () => TryEmbark(m));
 
-            if (_loadFailed)
-                view.AddLabel("EMBARK FAILED — Bastion not in Build Settings.", warning: true);
+            _body.ShowLoadFailed(_loadFailed);
         }
 
         void TryEmbark(MetaState m)

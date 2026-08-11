@@ -18,6 +18,9 @@ namespace GatekeeperBastion.Game
         [SerializeField] TMP_Text[] _spokeLabels = new TMP_Text[SpokeCount];
         /// <summary>Optional per-spoke "this is the centre" decoration, authored from Shift parts.</summary>
         [SerializeField] GameObject[] _spokeSelected;
+        /// <summary>Radar ticks, axis-major: element i * 5 + k is the k-th fill on axis i.
+        /// Authored bright marks toggled over always-on dim frames; this class sets no colour.</summary>
+        [SerializeField] GameObject[] _tickFills;
         [SerializeField] TMP_Text _hubTitle;
         [SerializeField] TMP_Text _hubSub;
         [SerializeField] TMP_Text _projFire;
@@ -57,6 +60,18 @@ namespace GatekeeperBastion.Game
                     string text = d.SpokeLabels != null && i < d.SpokeLabels.Length
                         ? d.SpokeLabels[i] : "";
                     UiBind.SetText(_spokeLabels[i], centre ? $"<b>{text}</b>" : text);
+                }
+
+                if (_tickFills != null)
+                {
+                    int filled = d.SpokeTicks != null && i < d.SpokeTicks.Length
+                        ? d.SpokeTicks[i] : 0;
+                    for (int k = 0; k < 5; k++)
+                    {
+                        int idx = i * 5 + k;
+                        if (idx < _tickFills.Length)
+                            UiBind.Show(_tickFills[idx], k < filled);
+                    }
                 }
 
                 int captured = d.SpokeRingIndices != null && i < d.SpokeRingIndices.Length

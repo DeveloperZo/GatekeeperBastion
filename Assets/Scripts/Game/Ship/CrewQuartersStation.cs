@@ -1,13 +1,25 @@
 using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
     public sealed class CrewQuartersStation : StationTerminal
     {
+        const string Tag = "CrewQuartersStation";
+
+        [SerializeField] CrewQuartersPanelView _body;
+
         protected override string StationName => "CREW QUARTERS";
 
         protected override string PromptHint => "upgrade your own attributes";
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (_body == null)
+                Log.Error(Tag, StationName + ": missing serialized _body.");
+        }
 
         protected override int ContentHash(MetaState m)
         {
@@ -23,17 +35,16 @@ namespace GatekeeperBastion.Game
 
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
-            // Settings-shell baseline: the four attribute tracks only.
-            view.AddLabel("ATTRIBUTES", centered: true);
-            view.AddSpacer();
+            if (_body == null) return; // Awake already logged the missing binding.
 
-            UpgradeRow(view, UpgradeTrack.Vitality, "Vitality",
+            // The ATTRIBUTES heading is authored scene text.
+            UpgradeRow(_body.VitalityRow, UpgradeTrack.Vitality, "Vitality",
                 l => $"{MetaUpgrades.PlayerMaxHp(l):0} max HP");
-            UpgradeRow(view, UpgradeTrack.Stamina, "Stamina",
+            UpgradeRow(_body.StaminaRow, UpgradeTrack.Stamina, "Stamina",
                 l => $"{SprintSeconds(l):0.#}s sprint");
-            UpgradeRow(view, UpgradeTrack.Scavenging, "Scavenging",
+            UpgradeRow(_body.ScavengingRow, UpgradeTrack.Scavenging, "Scavenging",
                 l => $"{MetaUpgrades.SalvagePerKill(l):0} per kill");
-            UpgradeRow(view, UpgradeTrack.Luck, "Luck",
+            UpgradeRow(_body.LuckRow, UpgradeTrack.Luck, "Luck",
                 l => $"{MetaUpgrades.CritChance(l) * 100f:0.#}% crit");
         }
 

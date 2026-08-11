@@ -5,8 +5,8 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>One station priced row: name, cost, level, effect, action. Authored prefab; view binds only.</summary>
-    public sealed class StationRowView : MonoBehaviour
+    /// <summary>One station priced row: name, cost, level, effect, action. Authored in the scene; view binds only.</summary>
+    public sealed class PanelRowView : MonoBehaviour
     {
         [SerializeField] TextMeshProUGUI _name;
         [SerializeField] TextMeshProUGUI _cost;
@@ -43,30 +43,11 @@ namespace GatekeeperBastion.Game
             _action.gameObject.SetActive(showAction);
             if (!showAction) return;
 
-            var tmp = _action.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (tmp != null) tmp.text = actionLabel;
-            SetShiftButtonText(_action, actionLabel);
+            Ui.UiBind.SetButtonLabel(_action, actionLabel);
 
             _action.onClick.RemoveAllListeners();
             if (onAction != null) _action.onClick.AddListener(() => onAction());
             _action.interactable = actionEnabled;
-        }
-
-        static void SetShiftButtonText(Button button, string label)
-        {
-            var main = button.GetComponent<Michsky.UI.Shift.MainButton>();
-            if (main != null)
-            {
-                main.buttonText = label;
-                main.useCustomText = false;
-                return;
-            }
-            var panel = button.GetComponent<Michsky.UI.Shift.MainPanelButton>();
-            if (panel != null)
-            {
-                panel.buttonText = label;
-                panel.useCustomText = false;
-            }
         }
     }
 }
