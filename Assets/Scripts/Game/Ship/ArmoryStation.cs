@@ -55,12 +55,7 @@ namespace GatekeeperBastion.Game
             WeaponId equipped = m.Equipped(_viewSlot);
             if (equipped == WeaponId.None)
             {
-                view.AddLabel($"{_viewSlot}: empty");
-                view.AddLabel(
-                    _viewSlot == WeaponSlot.Secondary
-                        ? "Buy a Secondary below — MK-1 for reach, SEC-D for contact. Both free."
-                        : "Buy a Primary below, or equip one you already own.",
-                    centered: true);
+                view.AddLabel($"{_viewSlot}: empty — buy below", centered: true);
             }
             else
             {
@@ -81,9 +76,7 @@ namespace GatekeeperBastion.Game
             }
 
             view.AddSpacer();
-            view.AddLabel($"Available {_viewSlot} weapons", centered: true);
-            view.AddSpacer();
-
+            view.AddLabel("CATALOG", centered: true);
             foreach (var id in WeaponCatalog.ForSlot(_viewSlot))
                 DrawCatalogRow(view, m, id, equipped);
         }

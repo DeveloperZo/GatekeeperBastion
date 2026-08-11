@@ -93,14 +93,27 @@ hand-written mapping layer for every replicated field, permanently.
    a field on an explicitly-passed context, or keeps its static accessor **and holds no
    per-player state**, stated per type. **`Player` must never become a singleton** — there is
    about to be more than one.
-6. **No `FindObjectOfType`, `FindAnyObjectByType`, `GameObject.Find` or `Camera.main` in
-   gameplay code.** Seven sites: `HudController.cs:121`, `MainMenuView.cs:140`,
-   `UiPitchRandomizer.cs:17`, `FirstPersonController.cs:45,94,95`, `ShipHud.cs:168`. Replaced by
-   a reference resolved once at spawn or a registry keyed by owner. **UI and menu code is not
-   exempt** — those are the sites that silently return *a* player rather than *the* player.
+6. **No `FindObjectOfType`, `FindAnyObjectByType`, `FindObjectsByType`, `GameObject.Find` or
+   `Camera.main` in gameplay code.** **Thirty lines across eighteen files**, not the seven an
+   earlier draft listed — that count was wrong on the day it was written, and clearing seven
+   named lines while `ShipHud`, `StationTerminal`, `SceneFlow`, `FrontEndMusic`, `AudioBuses`,
+   `UiBind`, `WaveSpawner` and both `GameController` files still resolve *a* object rather than
+   *the* object is exactly the failure this criterion exists to prevent.
+
+   Re-derive the list at the start of the work; as measured 2026-08-11 it is
+   `GameController.cs:56,336` · `GameController.DevCommands.cs:195,200` ·
+   `HudController.cs:120,131` · `HudController.Panels.cs:91` · `HudController.Pause.cs:116` ·
+   `DevConsole.cs:355` · `WaveSpawner.cs:150,208` · `FrontEndMusic.cs:95,109` ·
+   `MainMenuController.cs:112` · `SceneFlow.cs:77` · `FirstPersonController.cs:94,95` ·
+   `ShipController.cs:194` · `ShipHud.cs:38,147,155,156,158,163` · `StationTerminal.cs:41,45` ·
+   `AudioBuses.cs:36` · `MainMenuView.cs:140` · `UiBind.cs:90` · `UiPitchRandomizer.cs:17`.
+
+   **Exempt, named so the exemption is deliberate:** `DevConsole.cs:355` and
+   `GameController.DevCommands.cs:195,200` are dev-only. **UI and menu code is not exempt** —
+   those are the sites that silently return *a* player rather than *the* player.
 7. **All gameplay `Instantiate` and `Destroy` go through one spawner with a stable ID.**
    `WaveSpawner.Groups.cs:169` is the only gameplay site; the four UI sites
-   (`OptionsView.cs:305`, `ShortcutPanelView.cs:131,146`, `StationPanelView.cs:234`) are
+   (`OptionsView.cs:305`, `ShortcutPanelView.cs:141,235`, `StationPanelView.cs:234`) are
    local-only and **explicitly exempt, named here so the exemption is deliberate.** VFX, decals
    and shells stay local forever.
 

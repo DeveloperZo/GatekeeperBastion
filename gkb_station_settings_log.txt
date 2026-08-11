@@ -1,0 +1,11 @@
+[StripSettingsToStations]
+source: Main Menu (Desktop) Settings
+Opened Main Menu (Desktop) additive
+imported Canvas/Background from Main Menu (Desktop)
+stripped: Button List
+imported Top Panel from Main Menu (Desktop); Button List stripped
+imported Bottom Panel from Main Menu (Desktop)
+replaced Ship Settings with Main Menu (Desktop) Settings
+Using MPM on Menu Manager
+FAIL: Settings clone missing Content
+FAIL: station scene gate — fix WARN/FAIL lines above; do not treat this run as done

@@ -1,0 +1,178 @@
+{
+  "_comment": "state = what the agent must be told for the case to be reproducible. Assertions must discriminate: an assertion the model satisfies without the skill inflates the score and measures nothing. Write assertions AFTER seeing the first outputs.",
+  "gkb-development": {
+    "manual": false,
+    "cases": [
+      {
+        "id": "dev-repair",
+        "state": "In this repo, Assets/Scripts/Game/Flow/SplashController.cs owns the splash screen and the scene already contains its Canvas, a TextMeshPro title using Rajdhani, and an AudioSource playing the background track.",
+        "prompt": "The splash shows for 72ms and then MainMenu loads, so the title never holds. The log proves LoadSceneAsync is activating in Awake. Fix it.",
+        "assertions": [
+          "The fix edits SplashController or the existing scene, and does not construct Canvas, text or audio objects in code at runtime",
+          "The response ships one change addressing the activation-in-Awake cause, and does not also change the title rendering, the input handling or the timing model",
+          "The response names the background music and the TMP title as existing behaviour that must survive the change",
+          "The response describes what to look for rather than stating that the title was seen to fade in"
+        ]
+      },
+      {
+        "id": "dev-scope",
+        "state": "GameController is a MonoBehaviour in Assets/Scripts/Game/. RunSim is a plain class in Assets/Scripts/Sim/.",
+        "prompt": "Add null checks before every use of GameController.Instance and before every use of the RunSim reference. Use ?. everywhere so it stays terse.",
+        "assertions": [
+          "The response uses == null or != null for GameController and explains that ?. bypasses Unity's lifetime check on a destroyed object",
+          "The response explicitly permits ?. for the RunSim reference because Sim/ contains no UnityEngine.Object",
+          "The response does not apply one idiom uniformly across both"
+        ]
+      },
+      {
+        "id": "dev-oneshot",
+        "state": "Assets/Scenes/Bastion.unity already contains the Options rows. Asset serialization is Force Text.",
+        "prompt": "Write an editor script that renames the Visuals tab to Graphics in the Bastion scene. It only needs to run once.",
+        "assertions": [
+          "The response proposes editing the scene YAML directly before proposing any C#",
+          "If a C# script is proposed at all, it is not named after a milestone or work package, does not use [InitializeOnLoad], and does not delete itself",
+          "The response states where a one-shot script lives so that it does not remain in the tracked tree"
+        ]
+      }
+    ]
+  },
+  "gkb-design": {
+    "manual": false,
+    "cases": [
+      {
+        "id": "design-classify",
+        "state": "Gatekeeper Bastion is a solo-developed wave-defense FPS with five waves.",
+        "prompt": "I want to add a boss that appears on wave 5 with a scripted intro. Is that a good idea?",
+        "assertions": [
+          "The response explicitly classifies the boss as an arc rather than a loop",
+          "The response states the authoring-cost consequence of an arc for a solo developer specifically",
+          "The response names what the boss would have to do to be worth an arc, rather than accepting or rejecting it outright"
+        ]
+      },
+      {
+        "id": "design-kill",
+        "state": "Docs/Decisions.md contains a 'Cut — do not rebuild' section that includes a mobility skill, cut because mobility is not a mechanic in a room this size.",
+        "prompt": "Write me a plan for adding a stamina-based dodge mechanic.",
+        "assertions": [
+          "The response checks the cut list and identifies that a mobility skill was already cut",
+          "If a plan is written at all, it states a kill criterion as a measurable state plus a date",
+          "The stated kill criterion is not phrased in terms of whether the dodge feels good"
+        ]
+      },
+      {
+        "id": "design-tuning",
+        "state": "Tools/wave-report/run.sh is the shipped reader over session logs and is the authority on what happened in a Run.",
+        "prompt": "The BR-12 feels weak. Drop its reload time from 2.2s to 1.6s and I'll ship it.",
+        "assertions": [
+          "The response asks for the reading from Tools/wave-report before changing the number",
+          "The response distinguishes what a measurement can establish from what only playing can establish",
+          "The response does not accept the proposed number on the strength of the report alone"
+        ]
+      }
+    ]
+  },
+  "gkb-verification": {
+    "manual": false,
+    "cases": [
+      {
+        "id": "verify-claim",
+        "state": "The change is to a damage falloff curve in Assets/Scripts/Sim/. Tools/verify/run.sh is the offline EditMode harness and cannot see MonoBehaviours, scenes or the save file.",
+        "prompt": "I changed the falloff curve on the PRI-C. Confirm it works.",
+        "assertions": [
+          "The response runs or instructs running Tools/verify/run.sh before making any claim",
+          "The response states what that harness cannot see, and names the path that would be needed for those",
+          "The response does not state that the change works on the strength of the harness alone"
+        ]
+      },
+      {
+        "id": "verify-tool",
+        "state": "The project has four committed tools and four menu rows. Generated agent output at the repository root is gitignored.",
+        "prompt": "Add a menu item that resets the save file, and a script that dumps every weapon's DPS to a JSON file at the repo root.",
+        "assertions": [
+          "The response asks which existing menu row the new one replaces, or argues why the count should grow",
+          "The response classifies the DPS dump as throwaway or committed and applies the more-than-one-session test",
+          "The response states that the JSON output needs a cleanup step and that being gitignored is not cleanup"
+        ]
+      },
+      {
+        "id": "verify-gate",
+        "state": "A milestone is being written for enemy spawn pacing. The project's session log records spawn and kill events.",
+        "prompt": "Write the acceptance criteria for a milestone that improves how enemy spawns feel.",
+        "assertions": [
+          "Every criterion is checkable from the session log, the test harness, or a generated number",
+          "No criterion is satisfiable by an unchanged build",
+          "No criterion requires driving the Unity editor, though reading its output is allowed"
+        ]
+      }
+    ]
+  },
+  "gkb-brainstorm": {
+    "manual": false,
+    "cases": [
+      {
+        "id": "brainstorm-entry",
+        "state": "Docs/Brainstorms/ holds one file per mechanic area. Entries require a loop-or-arc classification, a killing observation, and which system they touch.",
+        "prompt": "Capture this idea: gatekeepers drop salvage that decays if you do not collect it fast.",
+        "assertions": [
+          "The entry classifies the idea as a loop or an arc",
+          "The entry states an observation from a Run or a session log that would kill it",
+          "The entry names which existing system it touches",
+          "The entry is written in the game's own vocabulary rather than builder terms"
+        ]
+      },
+      {
+        "id": "brainstorm-graduate",
+        "state": "Docs/Brainstorms/fabrication.md contains an entry for a drone bay. No milestone file exists for it.",
+        "prompt": "Is the drone bay entry ready to become a milestone?",
+        "assertions": [
+          "The response applies the test of whether acceptance criteria can be written, not whether the idea is well described",
+          "The response states that on graduation the brainstorm entry is deleted rather than kept alongside the milestone"
+        ]
+      },
+      {
+        "id": "brainstorm-recut",
+        "state": "Docs/Decisions.md records under 'Cut — do not rebuild' that per-second siphon income is gone and BaseSalvagePerSecond was deleted; kills are the income.",
+        "prompt": "Let's add a slow trickle of salvage income each second so the player is never at zero.",
+        "assertions": [
+          "The response identifies that per-second income is already on the cut list",
+          "The response does not proceed without a stated reason the original verdict was wrong or has expired"
+        ]
+      }
+    ]
+  },
+  "gkb-strategy": {
+    "manual": false,
+    "cases": [
+      {
+        "id": "strategy-order",
+        "state": "The roadmap has ten planned milestones, one active, and three play close-outs outstanding. The lanes are design, build and play.",
+        "prompt": "What should I work on next?",
+        "assertions": [
+          "The response checks whether a lane has run ahead of the lane feeding it, rather than only ranking milestones",
+          "The response names the outstanding play close-outs as a claim on the play lane",
+          "The response leads with any decision needed and carries a recommendation rather than presenting options neutrally"
+        ]
+      },
+      {
+        "id": "strategy-tune",
+        "state": "Enemy health is a constant in the wave data. The project has previously retuned against arithmetic with no play behind it, and that model is marked wrong in Docs/Design/.",
+        "prompt": "Wave 3 is too hard. Drop enemy health by 15% across the board.",
+        "assertions": [
+          "The response places the proposed change on the leverage ladder and identifies it as a constant, the weakest tier",
+          "The response proposes a specific higher-leverage alternative rather than only cautioning",
+          "The response asks for the play evidence before the number moves"
+        ]
+      },
+      {
+        "id": "strategy-milestone",
+        "state": "The milestone contract requires numbered acceptance criteria that can only be true or false.",
+        "prompt": "Write a milestone for making the ARMORY screen better.",
+        "assertions": [
+          "The response refuses to start from the vague gate, or sharpens 'better' into something checkable before writing",
+          "Every criterion is checkable from the log, the harness, or a generated number",
+          "The milestone names what is rejected so it is not re-proposed inside the same work"
+        ]
+      }
+    ]
+  }
+}

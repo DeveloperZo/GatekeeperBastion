@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Michsky.UI.Shift;
 using TMPro;
 using UnityEngine;
 
@@ -15,6 +16,10 @@ namespace GatekeeperBastion.Game.Ui
         public GameObject root;
         public TextMeshProUGUI key;
         public TextMeshProUGUI description;
+        /// <summary>Present when the template embeds Shift's keycap button. Its
+        /// <see cref="ShortcutButton.keyText"/> / <see cref="ShortcutButton.buttonText"/>
+        /// must be updated or <c>OnEnable</c> restores the prefab defaults (ESC/EXIT).</summary>
+        public ShortcutButton shortcut;
     }
 
     /// <summary>Binds Shift's <c>Shortcut Keys</c> strip. New path: pooled keycap rows fed by
@@ -26,6 +31,7 @@ namespace GatekeeperBastion.Game.Ui
     public sealed class ShortcutPanelView : MonoBehaviour
     {
         const string StripName = "Shortcut Keys";
+        const string DescriptionChild = "Description";
 
         [SerializeField] GameObject _panel;
         [SerializeField, OptionalBinding] TextMeshProUGUI _collapsedTip;
@@ -112,10 +118,15 @@ namespace GatekeeperBastion.Game.Ui
                 }
 
                 ShortcutRowBinding slot = RowAt(used++);
-                UiBind.SetText(slot.key, row.Key);
-                UiBind.SetText(slot.description, row.Description);
                 slot.root.transform.SetAsLastSibling();
+                // Seed ShortcutButton fields before enable so OnEnable cannot restore ESC/EXIT.
+                if (slot.shortcut != null)
+                {
+                    slot.shortcut.keyText = row.Key ?? "";
+                    slot.shortcut.buttonText = "";
+                }
                 UiBind.Show(slot.root, true);
+                ApplyRow(slot, row);
             }
 
             for (int i = used; i < _rowPool.Count; i++)
@@ -127,16 +138,94 @@ namespace GatekeeperBastion.Game.Ui
         ShortcutRowBinding RowAt(int index)
         {
             while (_rowPool.Count <= index)
-            {
-                GameObject clone = Instantiate(_rowTemplate, _rowsRoot);
-                var binding = new ShortcutRowBinding { root = clone };
-                // Template contract: first TMP label is the keycap, second the description.
-                var labels = clone.GetComponentsInChildren<TextMeshProUGUI>(true);
-                if (labels.Length > 0) binding.key = labels[0];
-                if (labels.Length > 1) binding.description = labels[1];
-                _rowPool.Add(binding);
-            }
+                _rowPool.Add(BindRow(Instantiate(_rowTemplate, _rowsRoot)));
             return _rowPool[index];
+        }
+
+        /// <summary>Template contract: optional child named Description is the action label;
+        /// optional <see cref="ShortcutButton"/> under Keycap owns the key glyph (and must be
+        /// driven via its fields). Fallback for unit tests: first TMP is key, second is
+        /// description.</summary>
+        static ShortcutRowBinding BindRow(GameObject clone)
+        {
+            var binding = new ShortcutRowBinding { root = clone };
+            binding.shortcut = clone.GetComponentInChildren<ShortcutButton>(true);
+
+            Transform desc = clone.transform.Find(DescriptionChild);
+            if (desc != null)
+                binding.description = desc.GetComponent<TextMeshProUGUI>();
+
+            if (binding.shortcut != null)
+            {
+                binding.key = binding.shortcut.normalKeyText;
+                // Keycap also carries an EXIT-style action label; description lives on the
+                // sibling, so keep that keycap action empty and hide its labels.
+                HideKeycapActionLabels(binding.shortcut);
+            }
+
+            if (binding.key == null || binding.description == null)
+            {
+                var labels = clone.GetComponentsInChildren<TextMeshProUGUI>(true);
+                if (binding.key == null && labels.Length > 0) binding.key = labels[0];
+                if (binding.description == null)
+                {
+                    for (int i = 0; i < labels.Length; i++)
+                    {
+                        if (labels[i] == binding.key) continue;
+                        if (binding.shortcut != null && IsUnderKeycapAction(binding.shortcut, labels[i]))
+                            continue;
+                        binding.description = labels[i];
+                        break;
+                    }
+                }
+            }
+
+            return binding;
+        }
+
+        static void ApplyRow(ShortcutRowBinding slot, ShortcutRow row)
+        {
+            string key = row.Key ?? "";
+            string description = row.Description ?? "";
+
+            if (slot.shortcut != null)
+            {
+                slot.shortcut.keyText = key;
+                slot.shortcut.buttonText = "";
+                if (slot.shortcut.normalKeyText != null)
+                    UiBind.SetText(slot.shortcut.normalKeyText, key);
+                if (slot.shortcut.highlightedKeyText != null)
+                    UiBind.SetText(slot.shortcut.highlightedKeyText, key);
+                HideKeycapActionLabels(slot.shortcut);
+            }
+            else
+            {
+                UiBind.SetText(slot.key, key);
+            }
+
+            UiBind.SetText(slot.description, description);
+        }
+
+        static void HideKeycapActionLabels(ShortcutButton shortcut)
+        {
+            if (shortcut.normalText != null)
+            {
+                shortcut.normalText.text = "";
+                UiBind.Show(shortcut.normalText, false);
+            }
+            if (shortcut.highlightedText != null)
+            {
+                shortcut.highlightedText.text = "";
+                UiBind.Show(shortcut.highlightedText, false);
+            }
+        }
+
+        static bool IsUnderKeycapAction(ShortcutButton shortcut, TextMeshProUGUI label)
+        {
+            return label == shortcut.normalText
+                || label == shortcut.highlightedText
+                || label == shortcut.normalKeyText
+                || label == shortcut.highlightedKeyText;
         }
 
         TextMeshProUGUI SectionAt(int index)

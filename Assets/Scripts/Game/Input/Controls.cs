@@ -30,6 +30,8 @@ namespace GatekeeperBastion.Game
         FreeCursor,
         Confirm,
         TogglePanel,
+        /// <summary>Bastion right-edge mission drawer (Tab). Omitted from the strip.</summary>
+        ToggleMissionDrawer,
     }
 
     /// <summary>When a binding is live. Flags so Prep∩Assault is empty and a collision
@@ -135,13 +137,17 @@ namespace GatekeeperBastion.Game
             new(ControlId.Confirm, KeyCode.Escape, KeyCode.None, "ESC", "return", "RUN",
                 ControlContext.EndScreen),
 
-            // Collapse chord — works everywhere the panel draws; omitted from the list itself.
-            new(ControlId.TogglePanel, KeyCode.Backspace, KeyCode.None, "BKSP", "toggle panel", "MOVE",
+            // Left-edge controls drawer (Bastion) / strip collapse (Ship). Omitted from the list.
+            new(ControlId.TogglePanel, KeyCode.Backspace, KeyCode.None, "BKSP", "controls", "MOVE",
                 FightAlways | ControlContext.Ship | ControlContext.EndScreen, showOnPanel: false),
+            // Right-edge mission drawer — Bastion fight only.
+            new(ControlId.ToggleMissionDrawer, KeyCode.Tab, KeyCode.None, "TAB", "mission", "RUN",
+                FightAlways, showOnPanel: false),
         };
 
         static readonly List<ControlBinding> Extra = new List<ControlBinding>(4);
         static bool _collapsed;
+        static bool _missionDrawerOpen;
 
         /// <summary>Built-in rows plus any test extras. Not a copy — do not mutate.</summary>
         public static IReadOnlyList<ControlBinding> All
@@ -156,15 +162,27 @@ namespace GatekeeperBastion.Game
             }
         }
 
+        /// <summary>Bastion left drawer closed / Ship shortcut strip collapsed when true.</summary>
         public static bool Collapsed => _collapsed;
 
-        /// <summary>Poll Backspace and flip the panel collapse. Call once per frame from each HUD.</summary>
+        /// <summary>Bastion right mission drawer open.</summary>
+        public static bool MissionDrawerOpen => _missionDrawerOpen;
+
+        /// <summary>Poll Backspace and flip the left drawer / strip collapse.</summary>
         public static void TickPanelToggle()
         {
             if (Down(ControlId.TogglePanel)) _collapsed = !_collapsed;
         }
 
+        /// <summary>Poll Tab and flip the Bastion mission drawer.</summary>
+        public static void TickMissionDrawerToggle()
+        {
+            if (Down(ControlId.ToggleMissionDrawer)) _missionDrawerOpen = !_missionDrawerOpen;
+        }
+
         public static void SetCollapsed(bool collapsed) => _collapsed = collapsed;
+
+        public static void SetMissionDrawerOpen(bool open) => _missionDrawerOpen = open;
 
         public static bool Down(ControlId id)
         {

@@ -141,6 +141,62 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
+        public void SetRows_ShortcutButtonTemplate_OverridesPrefabEscExitDefaults()
+        {
+            // Mirrors Ship's Row Template: Keycap(ShortcutButton ESC/EXIT) + Description sibling.
+            // Regression: first-two-TMP binding wrote into the keycap, then OnEnable restored EXIT.
+            var panelGo = new GameObject("panel", typeof(RectTransform));
+            _spawned.Add(panelGo);
+            var view = panelGo.AddComponent<ShortcutPanelView>();
+
+            var rowsRoot = new GameObject("rows", typeof(RectTransform)).GetComponent<RectTransform>();
+            rowsRoot.SetParent(panelGo.transform, false);
+
+            var template = new GameObject("row template", typeof(RectTransform));
+            template.transform.SetParent(rowsRoot, false);
+
+            var keycap = new GameObject("Keycap", typeof(RectTransform));
+            keycap.transform.SetParent(template.transform, false);
+            var shortcut = keycap.AddComponent<Michsky.UI.Shift.ShortcutButton>();
+            shortcut.keyText = "ESC";
+            shortcut.buttonText = "EXIT";
+            shortcut.normalKeyText = new GameObject("key", typeof(RectTransform))
+                .AddComponent<TextMeshProUGUI>();
+            shortcut.normalKeyText.transform.SetParent(keycap.transform, false);
+            shortcut.normalKeyText.text = "ESC";
+            shortcut.normalText = new GameObject("action", typeof(RectTransform))
+                .AddComponent<TextMeshProUGUI>();
+            shortcut.normalText.transform.SetParent(keycap.transform, false);
+            shortcut.normalText.text = "EXIT";
+
+            var descGo = new GameObject("Description", typeof(RectTransform));
+            descGo.transform.SetParent(template.transform, false);
+            var desc = descGo.AddComponent<TextMeshProUGUI>();
+
+            var so = new SerializedObject(view);
+            so.FindProperty("_panel").objectReferenceValue = panelGo;
+            so.FindProperty("_linesRoot").objectReferenceValue = rowsRoot;
+            so.FindProperty("_rowsRoot").objectReferenceValue = rowsRoot;
+            so.FindProperty("_rowTemplate").objectReferenceValue = template;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            view.SetRows(new[] { new ShortcutRow("WASD", "move", "MOVE") });
+
+            List<GameObject> clones = ActiveClones(rowsRoot, template);
+            Assert.AreEqual(1, clones.Count);
+            var cloneBtn = clones[0].GetComponentInChildren<Michsky.UI.Shift.ShortcutButton>(true);
+            Assert.IsNotNull(cloneBtn);
+            Assert.AreEqual("WASD", cloneBtn.keyText);
+            Assert.AreEqual("WASD", cloneBtn.normalKeyText.text);
+            Assert.AreEqual("", cloneBtn.buttonText);
+            Assert.IsFalse(cloneBtn.normalText.gameObject.activeSelf,
+                "Keycap action label stays hidden; description is the sibling.");
+            var cloneDesc = clones[0].transform.Find("Description")
+                .GetComponent<TextMeshProUGUI>();
+            Assert.AreEqual("move", cloneDesc.text);
+        }
+
+        [Test]
         public void SetRows_ReusesPooledClones_AndDeactivatesSurplus()
         {
             ShortcutPanelView view = MakeView(out RectTransform rowsRoot, out GameObject template);

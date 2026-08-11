@@ -3,7 +3,7 @@
 <!--
 Status: active
 Update trigger: when a Shift version lands, when a scene is added, when a value moves in Shift UI Manager, or when a criterion here is found gamed.
-Last updated: 2026-08-10 (rev 3: two further adversarial reviews folded in — quit-to-menu now saves (the game already saves mid-run via OnApplicationQuit, so a no-save quit would have been a rollback exploit), a single Esc dispatcher per scene, SceneBuilder's owned set shrunk so it never rebuilds objects that carry serialized UI references, work packages made strictly sequential. Rev 2 added quit-to-menu and the work packages. Rev 1 was the full rework superseding the morning version. Gates deliberately dropped from the old version: the m_Type sliced-ratio count. Kept and renumbered: built-in-sprite grep, Ellipsis grep, default-rect check, pause constraints.)
+Last updated: 2026-08-10 (rev 4: criterion 34 rewritten to the authored geometry — a per-host table in canvas units, the Active Mission Shadow clone recipe including that Shift ships it inactive, closed drawers deactivated, the once-per-Run mission-drawer latch and its Docked re-arm, and MsgPlayer's derived Y named as the only RectTransform write a view makes. Rev 3: two further adversarial reviews folded in — quit-to-menu now saves (the game already saves mid-run via OnApplicationQuit, so a no-save quit would have been a rollback exploit), a single Esc dispatcher per scene, SceneBuilder's owned set shrunk so it never rebuilds objects that carry serialized UI references, work packages made strictly sequential. Rev 2 added quit-to-menu and the work packages. Rev 1 was the full rework superseding the morning version. Gates deliberately dropped from the old version: the m_Type sliced-ratio count. Kept and renumbered: built-in-sprite grep, Ellipsis grep, default-rect check, pause constraints.)
 -->
 
 **Four authored scenes, one theme, no UI generators.** Boot order is Splash → MainMenu →
@@ -378,19 +378,59 @@ wheel spokes), `Modal Window/Exit` (confirm modals), `Scrollbar` (armory catalog
     Assault). Menu-idle canvas traffic is **not** gated — Shift's Background and
     fade Animators legitimately animate there. Absolute ms targets are not set;
     these captures are the baseline.
-34. HUD element placement, applied by **anchor moves only** (Shift's internal bar
-    recipe untouched), to the layout of the genre-nearest documented comps (Deep
-    Rock Galactic and Helldivers 2 wikis; genre placement varies — Destiny anchors
-    everything bottom-left, Halo top-center — DRG/HD2 are the chosen models):
-    player status, stamina, salvage and siphon lines bottom-left; weapon + ammo +
-    reload + ability block bottom-right; objective, timer and wave status
-    top-right; crosshair and interact prompt center; damage vignette center-edge;
-    arriving/emergency strips top-center. Verified against the criterion-41
-    screenshots: each named element sits in its named screen region (anchor
-    preset + pivot in that quadrant at both capture resolutions). The hatch bar
-    and standalone Gatekeeper counter are bound and change-gated but **not**
-    re-anchored — M36 deletes both in favour of the tether and owns that
-    region's final layout.
+34. HUD element placement on Bastion's **1920×1280 / match 0.5** canvas, by
+    **anchor / parent / rect** moves (Shift's sliced bar fill recipe untouched),
+    to the segmented fight HUD. Every figure here is a **canvas unit**, not a
+    screen pixel — the 24-unit inset is the same inset at every resolution.
+
+    | Host | Anchor = pivot | Position | Size |
+    |---|---|---|---|
+    | `Hud Profile` | top-left | (24, −24) | 280 × 72 |
+    | `Hud Score` | top-right | (−24, −24) | 320 × 72 |
+    | `Hud Vitals` | bottom-left | (24, 24) | 360 × 96 |
+    | `Hud Weapon` | bottom-right | (−24, 24) | 360 × 96, **fixed** |
+    | `Hud Msg General` | (0.5, 1) | (0, −120) | ≤ 720 wide |
+    | `Hud Msg Player` | (0, 0.5) | (24, derived) | 360 × 56 |
+    | `Hud Drawer Left` | (0,0)–(0,1) stretch | x = +24 | 400 wide |
+    | `Hud Drawer Right` | (1,0)–(1,1) stretch | x = −24 | 400 wide |
+
+    Chrome for every card and drawer is a clone of `Active Mission/Shadow` —
+    Shift ships that object **inactive**, and a clone left inactive is the
+    blank-card failure. After clone, `UIManagerImage` is set to
+    `ColorType.Background` with `keepAlphaValue` off so the theme fill
+    (α ≈ 0.94) reads as a card; Primary + keepAlpha at α ≈ 0.04 is the
+    ghost-pill failure. Contents: profile = LV + EXP; score = Banked /
+    Run · Siphon · Wave; vitals = HEALTH + STAMINA only, from the existing
+    `Armor & Health` rows; weapon = name + ammo + an **always-on clip bar**
+    filled by `clipRemaining / capacity`, replaced while reloading by a
+    RELOADING label over `ReloadProgress`. The weapon card's third row is
+    reserved space: its contents show and hide, the card never resizes.
+
+    Each drawer stretches a band inset 120 from the top and 144 from the bottom;
+    the visible card inside that band is capped at 640 tall and centred in it, so
+    no drawer covers a corner card. Left = controls + hatch (BKSP), right =
+    mission / prep detail (TAB). Both closed by default, and closed means
+    deactivated — nothing peeks inside the inset. The right drawer auto-opens
+    **once per Run**, at the first Prep; the latch re-arms when a Run enters
+    `Docked`.
+
+    `Hud Msg Player`'s anchored Y is the one RectTransform value a view may
+    write: `0` while the left drawer is closed, `drawerTop + 24 +
+    toastHalfHeight` while it is open, read from the live drawer rect so a
+    drawer resize cannot overlap the lane.
+
+    Quiet Prep is the four cards and the crosshair, nothing else. Retired to
+    inactive or into a drawer: the floating siphon / salvage / Time Wave lines,
+    the always-on `Active Mission` panel, the mid-left shortcut strip, the
+    standalone bottom-right reload block, `Armor & Health`, `Player Status`,
+    `Weapon Block`. Crosshair and interact prompt centre; vignette and
+    end/emergency hosts unchanged. Hatch leaves the always-on vitals card
+    (drawer plus message lane); M36 still owns deleting hatch/counter in favour
+    of the tether.
+
+    Every visible HUD pixel stays ≥24 **canvas units** from any screen edge — no
+    clipped slider chrome, no label hanging past a card. Verified against the
+    criterion-41 screenshots at both capture resolutions.
 
 ### F — dev surfaces are polished
 

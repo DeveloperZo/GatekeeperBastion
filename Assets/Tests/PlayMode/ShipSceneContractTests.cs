@@ -166,6 +166,50 @@ namespace GatekeeperBastion.PlayTests
         }
 
         // =====================================================================
+        // B1b. E opens Armory from anywhere — not the Interactor raycast
+        // =====================================================================
+
+        [UnityTest]
+        public IEnumerator ShipScene_Interact_OpensArmoryWithoutLookingAtConsole()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            yield return PlayTestUtil.WaitUntil(() => PlayerRegistry.Local != null, 5f);
+
+            var ship = UnityEngine.Object.FindFirstObjectByType<ShipController>();
+            Assert.IsNotNull(ship, "ShipController missing");
+            var armory = UnityEngine.Object.FindFirstObjectByType<ArmoryStation>();
+            Assert.IsNotNull(armory, "ArmoryStation missing");
+
+            // Put the player far away, looking at the sky — raycast cannot hit the console.
+            var player = PlayerRegistry.Local.transform;
+            player.position = armory.transform.position + Vector3.up * 200f;
+            player.rotation = Quaternion.LookRotation(Vector3.up);
+            var interactor = player.GetComponentInChildren<Interactor>(true);
+            Assert.IsNotNull(interactor);
+            yield return null;
+            Assert.IsTrue(string.IsNullOrEmpty(interactor.CurrentPrompt),
+                "Falsifier setup failed: Interactor still has a prompt — player is still targeting something.");
+
+            bool opened = ship.TryOpenArmoryFromInteract();
+            Assert.IsTrue(opened, "TryOpenArmoryFromInteract returned false with no panel open");
+            yield return null;
+
+            Assert.AreSame(armory, ship.OpenStation,
+                "E/Interact must open Armory from anywhere; OpenStation was not Armory after TryOpenArmoryFromInteract.");
+            Assert.IsTrue(ship.IsPanelOpen);
+
+            // Console Interact is a no-op — must not be required for open.
+            ship.CloseStationPanel(armory);
+            yield return null;
+            Assert.IsNull(ship.OpenStation);
+            ((IInteractable)armory).Interact(0f);
+            yield return null;
+            Assert.IsNull(ship.OpenStation,
+                "StationTerminal.Interact must not open the panel — only ShipController.TryOpenArmoryFromInteract does.");
+        }
+
+        // =====================================================================
         // B2. Opening a station panel frees the cursor again
         // =====================================================================
 

@@ -313,8 +313,9 @@ namespace GatekeeperBastion.Game
         {
             _cooldown -= Time.deltaTime;
             TickSlotInput();
-            TickReload(Time.deltaTime);
             TickSecondaryRegen();
+            // Tick before fire so a reload started this frame is never immediately advanced.
+            TickReload(Time.deltaTime);
 
             if (!CanFire()) return;
 

@@ -16,6 +16,25 @@ namespace GatekeeperBastion.Tests
         {
             Controls.ClearTestBindings();
             Controls.SetCollapsed(false);
+            Controls.SetMissionDrawerOpen(false);
+        }
+
+        [Test]
+        public void ToggleMissionDrawer_IsTab_FightOnly_HiddenFromPanel()
+        {
+            var rows = Controls.All;
+            int idx = -1;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                if (rows[i].Id == ControlId.ToggleMissionDrawer) { idx = i; break; }
+            }
+            Assert.GreaterOrEqual(idx, 0, "ToggleMissionDrawer binding missing");
+            var row = rows[idx];
+            Assert.AreEqual(KeyCode.Tab, row.Key);
+            Assert.IsFalse(row.ShowOnPanel);
+            Assert.AreEqual(Controls.FightAlways, row.Context & Controls.FightAlways);
+            Assert.AreEqual(ControlContext.None, row.Context & ControlContext.Ship,
+                "mission drawer must not be live on Ship");
         }
 
         [Test]

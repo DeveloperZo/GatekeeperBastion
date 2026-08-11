@@ -52,7 +52,7 @@ that already exists and currently lies.
 
 **Multiplier** (the tooling exception, `../../_meta/_definitions/milestone.md`): every
 milestone from here is committed, moved between folders and reviewed through this repository.
-M34, M39 and M41 all gate on a `git diff --stat` that must be readable.
+M34 and M41 both gate on a `git diff --stat` that must be readable.
 
 ## Preconditions
 
@@ -83,9 +83,16 @@ that decision so it is not re-litigated mid-run.
 
    | Must be absent | Must be present |
    |---|---|
-   | `gkb_*.log`, `*_report.json`, `bastion_ui_assemble.log` | `Assets/Scripts/Game/Ui/UiEventSystem.cs` |
-   | `_backup/`, `_to_delete/`, `.cursor/cli.json` | `Assets/Prefabs/Ui/MainButton.prefab` |
-   | anything under `Library/`, `Temp/`, `Logs/` | `.gitattributes`, `.gitignore` |
+   | `gkb_*` (any extension), `*_report.json`, `bastion_ui_assemble.log`, `tmp_*.py` | `.gitattributes`, `.gitignore` |
+   | `_backup/`, `_to_delete/`, `_wp4_author_park/`, `__pycache__/`, `.cursor/cli.json` | `.claude/skills/` — five skills and `_evals/` |
+   | anything under `Library/`, `Temp/`, `Logs/` | every `.cs` under `Assets/Scripts` and every `.unity` under `Assets/Scenes` |
+
+   **The "must be present" column is re-derived on the day of the run, not read from here.**
+   The previous version named `Assets/Scripts/Game/Ui/UiEventSystem.cs` and
+   `Assets/Prefabs/Ui/MainButton.prefab` as work that must survive. **Neither exists any more** —
+   `Assets/Prefabs/Ui/` is empty and that script was never created. An agent following a stale
+   safety check either aborts on a file that was never there, or learns to skip the column.
+   Take the list from the tree, immediately before staging.
 
    **Both columns are checked.** An agent that verifies only the exclusions will happily ship
    a commit that drops two files of real M35 work.

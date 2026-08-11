@@ -14,6 +14,47 @@ notes, not tuning results, not anything the milestone file already holds.
 This file is history. **`Roadmap.md` is what is next**: order, status, strategy and risks.
 `Milestones/` is the detail behind any entry here.
 
+- 2026-08-10: **M44 completed — trigger gate 50/50.** Moved to `3. completed/`.
+  `.claude/skills/_evals/run.sh trigger` passed all five skills (6 should + 4 near_miss each,
+  `failures: []`). Descriptions sharpened on the design↔brainstorm and development↔verification
+  boundaries after two earlier should-misses. Quality remains opt-in (`EVAL_QUALITY=1`), not a
+  close gate. Always-on description budget re-measured at 1,022 (chars÷4) after the sharpening.
+
+- 2026-08-10: **M44 built — five skills live at `.claude/skills/`, all model-invocable.**
+  `gkb-development`, `gkb-design`, `gkb-verification`, `gkb-brainstorm`, `gkb-strategy`, plus an
+  eval harness at `_evals/`. Criteria 1 to 6, 11, 14 and 15 close; the eval runs need a session
+  with the `claude` CLI.
+  **Criterion 4 was corrected during the build (Zo): manual invocation was the wrong default.**
+  Two skills shipped with `disable-model-invocation: true` on the reasoning that models
+  under-trigger for work they can attempt unaided. The real usage pattern settles it — the
+  request that should load a skill is phrased "what should I work on next", never as a command
+  naming the skill — so a manual skill provides nothing and the description cost is what buys the
+  ability to fire at all. **The failure mode moves from under-triggering to co-firing**, and every
+  description now ends by naming its adjacent skill.
+  An adversarial review of the first draft found the eval runner would have produced meaningless
+  numbers three ways, each looking like a legitimate result: **skill firing was undetectable**
+  (the result envelope carries no tool-call records, so the check was grepping prose for the word
+  "Skill"); **the two manual skills were condemned by construction** (unable to load from a prompt,
+  so both configurations were identical, scoring the exact parity that the milestone deletes on);
+  and **every API failure recorded a zero-token non-firing run and exited 0**. The runner now
+  reads `stream-json` tool-use events, counts only the skill under test, and dies loudly. A
+  `selftest` mode runs first because a broken detector reports every skill as useless.
+  Also caught: `gkb-development` shipped the exact banned pattern — a count inside a rule — that
+  `gkb-verification` cites as the project's worked example of one.
+  **Recorded because it will recur: `.claude/` cannot be written through the Cowork device
+  bridge.** Files land elsewhere in the repository and are copied in with a shell command.
+  **Path-scoped after a second correction (Zo): the skills have different homes.** Development
+  and verification happen almost exclusively in Cursor; brainstorm and strategy almost
+  exclusively in a planning session. `paths` is the mechanism, and both toolchains document it
+  as restricting rather than adding — Cursor: "the skill is only surfaced when the agent works
+  with files that match"; Claude Code: "Claude loads the skill automatically only when working
+  with files matching the patterns." So `gkb-development` and `gkb-verification` are scoped to
+  C#, tests and `Tools/`, and vanish from a docs session.
+  **The other three are deliberately unscoped**: their work is conversational and often has no
+  file in context, so a path scope would make them absent exactly where they are wanted.
+  **`Docs/_meta/_definitions/` stays where it is** (Zo). Criterion 13 previously moved it into
+  the skills; a skill is not a second home for an authoring contract, and `language.md`'s
+  machine-read fence must not move away from the check that parses it.
 - 2026-08-10: **Multiplayer work pulled out into M45, and M39 cancelled** (Zo: move related items
   into their own milestone, research the architecture, do not over-engineer or copy a AAA dev).
   **The strict `noEngineReferences: true` rule did not survive the research.** It is load-bearing

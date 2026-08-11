@@ -63,12 +63,27 @@ namespace GatekeeperBastion.Game
             if (Controls.Down(ControlId.FreeCursor))
                 HandleEscape();
 
+            // Ship Interact (E) opens Armory from anywhere — not the Interactor raycast.
+            if (Controls.Down(ControlId.Interact))
+                TryOpenArmoryFromInteract();
+
             if (_fpc != null || _bindWindow <= 0f) return;
             _bindWindow -= Time.deltaTime;
             var fpc = FindLocalController();
             if (fpc == null) return;
             _fpc = fpc;
             ApplyWalkMode();
+        }
+
+        /// <summary>E aboard the ship opens ARMORY with no console, range, or look check.
+        /// Returns false when a panel/Settings is already up or Armory is missing.</summary>
+        public bool TryOpenArmoryFromInteract()
+        {
+            if (OpenStation != null || IsSettingsOpen || OptionsScreen.IsOpen) return false;
+            var armory = FindFirstObjectByType<ArmoryStation>();
+            if (armory == null) return false;
+            OpenStationPanel(armory);
+            return true;
         }
 
         void LateUpdate()

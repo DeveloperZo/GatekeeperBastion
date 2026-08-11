@@ -87,6 +87,7 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 |---|---|
 | `Architecture.md` | Where code lives, the conventions, and the gotchas that cost real time. |
 | `Working-Rules.md` | How to work here: lanes, scope, the leverage gate, evidence, logs, verification. |
+| [`.claude/skills/`](../.claude/skills/) | How to do a kind of work — development, design, verification, brainstorm, strategy. Loaded by the agent when the work matches, not read by hand. Read by both Claude Code and Cursor. |
 | `Decisions.md` | What was decided, cut, deferred, or designed-but-not-built, and why. |
 | `Roadmap.md` | Order, status, strategy and risks. The summary layer over `Milestones/`. |
 | `Changelog.md` | The roadmap's audit trail: milestone state transitions and structural edits, most recent first. |

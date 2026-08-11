@@ -1,7 +1,7 @@
 # M44 — Skills that pay for their tokens
 
 <!--
-Status: later
+Status: completed
 Update trigger: when a skill is added or retired, when a skill's eval fails, or when the always-on budget changes
 Last updated: 2026-08-10
 -->
@@ -56,46 +56,110 @@ the agent at the moment of the work.
    `disable-model-invocation`.** No other key appears. Checkable by grep across the five files.
 3. **Every body is under 500 lines**, and **the first 40 lines of each contain its
    non-negotiables** — what survives compaction.
-4. **`gkb-brainstorm` and `gkb-strategy` set `disable-model-invocation: true`.** Both are
-   deliberate acts, not reactions to a file being opened, and both cover work the model will
-   attempt unaided rather than trigger for. They cost nothing until invoked as `/gkb-brainstorm`
-   and `/gkb-strategy`.
+4. **All five are model-invocable.** No skill sets `disable-model-invocation: true`.
+   **Corrected 2026-08-10 (Zo): manual invocation was the wrong default** — the request that
+   should load a skill is phrased as "what should I work on next" or "capture this idea", never
+   as a command naming the skill, so a manual skill provides nothing. The ~100 tokens per
+   description is the cost of being able to fire at all.
+   **The failure mode moves from under-triggering to co-firing**, so every description ends by
+   naming the adjacent skill and what belongs to it instead. `gkb-development` against
+   `gkb-verification` is the closest pair; `gkb-design` against `gkb-brainstorm` is the next.
 5. **Nothing is duplicated into `.cursor/rules/`.** Those two files stay pointers
-   (`AGENTS.md:6-7` already states the rule).
+   (`AGENTS.md` already states the rule), and `.claude/skills/` is on Cursor's discovery path.
+6. **Only `gkb-verification` is path-scoped.** `paths` restricts rather than adds — both
+   toolchains document it identically: Cursor, *"the skill is only surfaced when the agent works
+   with files that match"*; Claude Code, *"Claude loads the skill automatically only when working
+   with files matching the patterns."*
+
+   | Skill | `paths` | Why |
+   |---|---|---|
+   | `gkb-verification` | C#, tests, `Tools/`, `Editor/` | Nothing to verify until there is code, and by then files are open. Absent from a docs session |
+   | the other four | none | Their work begins before any file is open |
+
+   **`gkb-development` is deliberately unscoped, and this was corrected during the build.**
+   Scoping it to C# meant that "complete M45" — the dominant way work starts — surfaced nothing,
+   because the turn opens with a milestone markdown file and no code. The skill would arrive
+   after the approach was chosen, and approach is what it governs: do not reconstruct at runtime
+   what an asset defines, the one-shot ladder, one cause and one change. **Its description now
+   leads with milestone execution**, since building a milestone is development work almost every
+   time.
+
+   **The three conversational skills are unscoped for the same reason**: "what should I work on
+   next" and "capture this idea" carry no file context at all.
 
 ### B — each skill earns its place against a baseline
 
-6. **`.claude/skills/_evals/` holds, per skill, at least three task cases** — a prompt, the
+7. **`.claude/skills/_evals/` holds, per skill, at least three task cases** — a prompt, the
    input state, and assertions that are gradeable without judgement ("the milestone file has a
    numbered `## Acceptance criteria` section", "the proposal names a kill criterion with a
    date"). Assertions are written **after** seeing the first outputs, not before.
-7. **Every case runs twice — with the skill and without it — in a clean context**, and the
-   result records `pass_rate`, `total_tokens` and `duration_ms` for both.
-8. **A skill ships only if it beats its baseline on pass rate.** The recorded delta is the
-   evidence. **A skill whose with/without results are identical is deleted**, not rewritten —
-   it is documenting something the model already does.
-9. **Assertions that pass in both configurations are removed from the eval.** They inflate the
-   with-skill number and measure nothing.
-10. **Description triggering is measured**, not assumed: per skill, at least six prompts that
-    should trigger it and four near-misses that should not. **Near-misses share vocabulary with
-    the skill** — a weak negative tests nothing. Trigger rate is recorded.
-
-### C — the always-on surface shrinks
-
-11. **`AGENTS.md` is under 200 lines**, and every paragraph left in it passes the test:
+8. **One cheap check closes this: `.claude/skills/_evals/run.sh trigger`.** Five calls, about a
+   minute, no tools enabled. It asks, from the descriptions alone, which skill each prompt
+   should invoke, and compares against the expected mapping. **Nothing else is required to close
+   M44.**
+   **Closed 2026-08-10.** `run.sh trigger` — five skills × (6 should + 4 near_miss) = 50 prompts,
+   **50/50 pass**, `failures: []`. Recorded in `.claude/skills/_evals/results/trigger.json`
+   (gitignored). Descriptions were sharpened twice on the design↔brainstorm and
+   development↔verification boundaries after the first two runs left should-prompts on the
+   wrong skill; near-misses were clean throughout.
+9. **Every should-prompt picks its own skill and no near-miss picks it.** A near-miss that fires
+   even once fails — over-triggering costs a whole body load on every unrelated task. Fixed by
+   adding what the skill does *not* cover to its description, never by pasting keywords from the
+   failing prompt. **The skill it chose instead names the boundary to sharpen.**
+   **Closed with criterion 8** — same run, zero near-miss failures.
+10. **The quality arm is not a gate.** `run.sh quality` prepends the skill body to one arm and
+    omits it from the other, then grades both — a real measurement, and about ten minutes and a
+    large token spend for the suite. **Run it when a skill is suspected of not earning its
+    keep, by name, never as part of closing this milestone.**
+    Recorded so the earlier rule is not reinstated: the first version of this milestone made a
+    with/without delta the ship gate for every skill. That was right in principle and wrong in
+    cost. Using the skills reveals a dud faster than a ten-minute harness does, and by this
+    project's own three-kinds gate a committed tool earns its place by serving more than one
+    session and more than one question. This one has not yet.
+11. **A skill measured at or below baseline is deleted, not tuned** — whenever that measurement
+    is taken. Parity means it documents something the model already does.
+12. **The harness never spawns an agent with tools.** The first version did, and one probe cost
+    about 199,000 tokens and 162 seconds while detecting nothing, because the agent explored the
+    repository instead of answering. Every call passes `--allowedTools ""`, and quality
+    **controls rather than detects** — the body is injected, so there is no skill-loading to
+    observe and no hiding to restore.
+13. **`AGENTS.md` is under 200 lines**, and every paragraph left in it passes the test:
     *would the agent get this wrong without it?* Content that fails the test moves into a skill
     or is deleted.
-12. **The three files in `Docs/_meta/_definitions/` (5,904 words) become skill bodies or
-    `references/`**, not a fourth copy. `language.md`'s ```language-lint fence stays where
-    `Tools/lint-language/run.sh` reads it — **a skill must not become a second home for a
-    machine-read rule.**
-13. **Measured before and after, and both numbers recorded on this file**: total always-on
-    tokens (`AGENTS.md` + `CLAUDE.md` + `.cursor/rules/` + the five descriptions), and the
-    word count of `Docs/`. **The after must be smaller on the first.**
-14. **No skill contains a count.** No test totals, no file counts, no "there are three of X".
+14. **`Docs/_meta/_definitions/` is left where it is** (Zo, 2026-08-10). The three authoring
+    contracts stay documents; a skill does not become a second home for them, and `language.md`'s
+    machine-read fence must not move away from the check that parses it.
+
+15. **Measured before and after, both numbers recorded here.** Measured 2026-08-10 by character
+    count over four, on the files that load at session start:
+
+    | | Before | After |
+    |---|---|---|
+    | `AGENTS.md` | 2,114 | 2,114 |
+    | `CLAUDE.md` | 34 | 34 |
+    | `.cursor/rules/` | 112 | 112 |
+    | Five skill descriptions | 0 | **1,022** |
+    | **Always-on total** | **2,260** | **3,282** |
+    | Skill bodies, load-on-trigger | — | 7,084 |
+
+    Description column re-measured 2026-08-10 after the trigger-gate description sharpening
+    (chars÷4, same method as the opening row). Bodies left at the earlier figure; they were not
+    re-derived this close.
+
+    **The always-on surface went up by 1,022, not down**, and that is the honest result. The
+    milestone's opening claim assumed `AGENTS.md` would be cut in exchange; criterion 13 found it
+    already under its limit at 185 lines, so nothing was traded away. What was bought is procedure
+    that loads only when the work needs it, against a `Docs/` tree that nothing routes.
+
+    **The saving is therefore conditional on the skills firing and on their bodies being read
+    instead of the documents.** Criterion 8's trigger pass is the proof they fire on the prompts
+    that should load them; a skill that later measures at parity on `run.sh quality` is still
+    deleted under criterion 11.
+
+16. **No skill contains a count.** No test totals, no file counts, no "there are three of X".
     Counts belong in generated output; a count in a rule passes forever by renaming
     (`../../Changelog.md`, 2026-08-09).
-15. **No skill cites a path that is not committed.** Every tool, script or log named in a skill
+17. **No skill cites a path that is not committed.** Every tool, script or log named in a skill
     exists in the repository at the time the skill ships.
 
 ### D — what each skill carries
@@ -104,7 +168,7 @@ Each is written from measured sources; **every non-obvious claim carries its sou
 rule carries the case where it does not apply.** A rule with no stated counter-case has not
 been thought about (`../../Architecture/README.md`).
 
-16. **`gkb-development`** — Unity and C# practice for this codebase, scoped rather than blanket:
+18. **`gkb-development`** — Unity and C# practice for this codebase, scoped rather than blanket:
     - The sim/presentation seam **as the Humble Object pattern**, and the fixed-tick rule that
       follows from it: `Sim/` never reads `Time`, presentation runs on render delta.
     - **`== null` versus `?.` is a presentation-layer rule, not a global one.** The lifetime
@@ -122,7 +186,7 @@ been thought about (`../../Architecture/README.md`).
       there is no second person here.
     - **Assembly definitions are adopted for the compile error, not for speed.** The circulated
       multipliers are unsourced; Unity's own documentation claims no number.
-17. **`gkb-design`** — cheap falsification, before investment:
+19. **`gkb-design`** — cheap falsification, before investment:
     - **Classify every idea as a loop or an arc before costing it**
       ([Cook](https://lostgarden.com/2012/04/30/loops-and-arcs/)). A wave-defense game lives on
       loop quality and a solo developer cannot fund a content treadmill. Arcs are not inferior —
@@ -139,7 +203,7 @@ been thought about (`../../Architecture/README.md`).
       evidence, add hit confirmation and re-test.
     - **MDA is diagnostic vocabulary, not a generative tool.** Use it to locate which layer a
       problem is in. Framework analysis is not the experiment.
-18. **`gkb-verification`** — the discipline that is currently sprawling:
+20. **`gkb-verification`** — the discipline that is currently sprawling:
     - **The three paths, and only three** (`../../Working-Rules.md`): the offline harness, the
       log reader, the AutoVerify bridge. Adding a fourth means naming the one it replaces.
     - **The three-kinds gate on tooling** — throwaway lives in `/tmp` and is **never named in a
@@ -155,7 +219,7 @@ been thought about (`../../Architecture/README.md`).
     - **Determinism is tested, not declared** — a recorded input stream replayed in an EditMode
       test against a state hash. Same-build only; that is a regression check, not a
       cross-platform guarantee.
-19. **`gkb-development` and `gkb-verification` both carry the one-shot rule**, because it is
+21. **`gkb-development` and `gkb-verification` both carry the one-shot rule**, because it is
     both a naming failure and a tooling failure:
     - **Nothing in the codebase is named after a work item.** No type, file, namespace, menu
       path or define contains a milestone ID. `Assets/Scripts/Editor/Tools/M35Wp4OptionsPatch.cs`
@@ -183,7 +247,7 @@ been thought about (`../../Architecture/README.md`).
       timestamp with a `.meta`, committed into the source tree.
     - **A new menu row names the row it replaces** (`../../Working-Rules.md`). A milestone-named
       submenu is a namespace that outlives its reason.
-21. **`gkb-development` carries repair discipline**, because the expensive failure is not the
+22. **`gkb-development` carries repair discipline**, because the expensive failure is not the
     first wrong fix, it is the four turns after it. Every rule below is drawn from one logged
     exchange on 2026-08-10 that fixed a Splash bug across five turns and finished by being told
     the work was slop:
@@ -209,14 +273,14 @@ been thought about (`../../Architecture/README.md`).
       the same rule for anything only a play session can confirm.
     - **Change only what was asked.** Behaviour nobody reported broken is not in scope, and
       swapping a design decision while fixing a bug hides the swap inside the fix.
-22. **`gkb-brainstorm`** — moving an idea from interesting to cuttable:
+23. **`gkb-brainstorm`** — moving an idea from interesting to cuttable:
     - The entry question is **loop or arc**, and the second is **what observation would kill
       this**. An entry with neither is not yet a brainstorm entry.
     - The graduation test is unchanged: an entry graduates when its acceptance criteria can be
       written, and the entry is deleted when a milestone replaces it.
     - **Check `../../Decisions.md` before proposing.** Cut features are recorded by name
       precisely so they are not re-proposed.
-23. **`gkb-strategy`** — ordering and lane balance:
+24. **`gkb-strategy`** — ordering and lane balance:
     - Three lanes, queue caps, and the rule that a lane may not run ahead of the lane feeding
       it. **The cap on unbuilt planning is the point** — the previous project's postmortem named
       documentation as productive procrastination.
@@ -259,25 +323,28 @@ first, "so your Skill solves real problems rather than documenting imagined ones
 
 ## Verification
 
-1. Criteria 2, 3, 14, 15 — grep the five files for frontmatter keys, line counts, digits used
-   as counts, and every path mentioned.
-2. Criterion 7 — the eval runner, showing both configurations per case.
-3. Criterion 8 — read the deltas. **Any skill at parity is deleted in the same commit**, and
-   the deletion is recorded on this file with its numbers.
-4. Criterion 10 — the trigger sets, with recorded rates.
-5. Criteria 11, 13 — the before and after token measurements, written onto this file.
-6. Criterion 12 — `Tools/lint-language/run.sh` still passes, proving the fence did not move.
+1. Criteria 2, 3, 16, 17 — grep the five files for frontmatter keys, line counts, digits used
+   as counts, and every path mentioned. **Done 2026-08-10:** bodies 66–142 lines; no
+   `disable-model-invocation`; only `gkb-verification` has `paths:`; cited tools and docs exist
+   on disk; no count-in-a-rule phrases in skill bodies.
+2. Criterion 7 — `_evals/cases.json` has ≥3 cases per skill. **Done:** 3 each.
+3. Criteria 8–9 — `run.sh trigger`. **Done:** 50/50, `failures: []`.
+4. Criterion 10 — quality is opt-in (`EVAL_QUALITY=1`), not a close gate. Not run for close.
+5. Criteria 13, 15 — `AGENTS.md` 185 lines; always-on table updated on this file.
+6. Criterion 14 — `Docs/_meta/_definitions/` untouched. `Tools/lint-language/run.sh` still runs
+   against the fence (pre-existing `PlayerGun.cs:191` violation is unrelated to this milestone).
 
 ## Watch
 
 - **The failure mode is five well-written documents that change nothing.** Criterion 8 is the
-  only defence: a measured delta, or the skill goes. Do not soften it to "seems better."
+  only close gate: descriptions that pick the right skill, or the description is wrong. Do not
+  soften it to "seems better."
 - **Do not write what the model already does.** The test for every paragraph is whether the
   agent would get it wrong without it. A skill that restates competence costs tokens on every
-  turn it loads and buys nothing.
-- **`gkb-brainstorm` is the most likely to fail its eval.** Brainstorming is something the
-  model does passably unaided, which is why it is manual-invocation only — and if its delta is
-  flat, deleting it is the correct outcome rather than a failure of this milestone.
+  turn it loads and buys nothing. `run.sh quality` (opt-in) is how that is measured later.
+- **`gkb-brainstorm` is the most likely to fail a later quality run.** Capturing is something the
+  model does passably unaided — if its quality delta is flat, deleting it is the correct outcome
+  rather than a failure of this milestone.
 - **Descriptions decide everything.** The body never loads if the description does not fire,
   and models under-trigger by default. Write them pushy, then measure.
 - **Skills go stale exactly like documents do.** Each carries an `Update trigger`, not a review

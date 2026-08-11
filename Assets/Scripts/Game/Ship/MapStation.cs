@@ -40,6 +40,7 @@ namespace GatekeeperBastion.Game
 
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
+            // Settings-shell baseline: destination, wave, warnings, EMBARK. No extra copy.
             view.AddLabel($"Bastion {SceneFlow.BastionName}", centered: true);
             view.AddLabel(PremiseBrief, centered: true);
             view.AddSpacer();
@@ -49,12 +50,7 @@ namespace GatekeeperBastion.Game
             if (_startWave < 1) _startWave = 1;
             if (_startWave > deepest) _startWave = deepest;
 
-            view.AddLabel($"START AT WAVE {_startWave}  (reached {deepest})", centered: true);
-            if (_startWave > 1)
-                view.AddLabel($"waves 1..{_startWave} arrive back to back — no Prep between them");
-            else
-                view.AddLabel("normal run — Prep between every wave");
-
+            view.AddLabel($"START WAVE  {_startWave}  /  {deepest}", centered: true);
             view.BeginRow();
             view.AddButton("◀", () => _startWave--, _startWave > 1);
             view.AddRowLabel($"  {_startWave}  ");
@@ -63,25 +59,17 @@ namespace GatekeeperBastion.Game
             view.AddSpacer();
 
             if (!m.OwnsAnyWeapon)
-            {
-                view.AddLabel("NO WEAPON — you will be defenseless.", warning: true);
-                view.AddLabel("Buy the free MK-1 at the ARMORY first.", centered: true);
-                view.AddSpacer();
-            }
+                view.AddLabel("NO WEAPON", warning: true);
             if (!m.HasRepairRigEquipped)
-            {
-                view.AddLabel("NO REPAIR RIG — the Hatch cannot be fixed this Run.", warning: true);
-                view.AddLabel("Buy the equipment slot and Repair Rig at FABRICATION.", centered: true);
+                view.AddLabel("NO REPAIR RIG", warning: true);
+            if (!m.OwnsAnyWeapon || !m.HasRepairRigEquipped)
                 view.AddSpacer();
-            }
 
             bool warned = !m.OwnsAnyWeapon || !m.HasRepairRigEquipped;
             view.AddButton(warned ? "EMBARK ANYWAY" : "EMBARK", () => TryEmbark(m));
 
             if (_loadFailed)
-                view.AddLabel(
-                    "EMBARK FAILED — Bastion scene is not in the build settings. Run GatekeeperBastion > Build All Scenes.",
-                    warning: true);
+                view.AddLabel("EMBARK FAILED — Bastion not in Build Settings.", warning: true);
         }
 
         void TryEmbark(MetaState m)
@@ -95,6 +83,8 @@ namespace GatekeeperBastion.Game
                 $"{(m.HasRepairRigEquipped ? "repair rig equipped" : "NO REPAIR RIG")}");
             _embarking = SceneFlow.LoadBastion();
             _loadFailed = !_embarking;
+            if (_loadFailed)
+                Log.Error("Ship", "embark refused — Bastion is not in Build Settings / not loadable");
         }
 
         static string LoadoutBrief(MetaState m)

@@ -2,6 +2,7 @@
     "name": "GatekeeperBastion.Tests",
     "references": [
         "GatekeeperBastion",
+        "Michsky.UI.Shift",
         "Unity.TextMeshPro",
         "UnityEngine.UI",
         "UnityEngine.TestRunner",

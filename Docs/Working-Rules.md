@@ -101,6 +101,22 @@ So the rule cannot simply be "use judgement". If every boundary is negotiable at
 of them constrains anything, and the catalog fills with weapons that each seemed reasonable
 alone.
 
+## Scene UI tools — fail closed (Zo, 2026-08-10)
+
+Ship/Bastion UI scene mutators have already reported `OK` while leaving Interact
+unable to paint a panel. The rule:
+
+1. **WARN or FAIL in the tool log means the run failed.** Status may not say `OK`.
+2. **Destroying a panel GO is forbidden until its replacement is bound** on
+   `MainPanelManager.panelObject` and on the console's `_view`.
+3. **Postconditions before SaveScene** (see `StationSceneGate`): Canvas scale ≥ 0.5;
+   each station has `StationPanelView` with non-null `_bodyContent`, `_closeButton`,
+   `_buttonPrefab`, `_labelPrefab`, `_rowPrefab`; a Background/Shadow; MPM entry live.
+4. **Do not claim a terminal or HUD works from YAML inspection alone.** Open-path
+   evidence is the gate log PASS, a play Interact that shows chrome, or both.
+5. **Prefer `Object.Instantiate` from a working scene/prefab** over hand-cloned YAML
+   trees for Shift chrome.
+
 ## Tools, scripts and the menu
 
 Tooling accretes faster than anything else here, because every piece is individually

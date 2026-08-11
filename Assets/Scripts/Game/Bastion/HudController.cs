@@ -61,8 +61,13 @@ namespace GatekeeperBastion.Game
         long _cacheHatchMax = long.MinValue;
         long _cachePlayerHp = long.MinValue;
         long _cacheAlive = long.MinValue;
+        long _cacheAssaultWave = long.MinValue;
         bool _cacheAlarm;
         bool _cachePlayerDead;
+        bool _missionDrawerAutoOpened;
+        string _cacheWeaponName = "\0";
+        string _cacheWeaponAmmo = "\0";
+        string _cacheWeaponDetail = "\0";
 
         PlayerHealth Player => PlayerRegistry.Local;
 
@@ -76,6 +81,8 @@ namespace GatekeeperBastion.Game
             }
             _view.EnsureBuilt();
             _view.ReturnClicked += OnReturnClicked;
+            Controls.SetCollapsed(true);
+            Controls.SetMissionDrawerOpen(false);
             ResolvePauseHosts();
         }
 
@@ -92,8 +99,11 @@ namespace GatekeeperBastion.Game
             _hatchAlert = 0f;
             _lastHatchHp = -1f;
             _endPresented = false;
+            _missionDrawerAutoOpened = false;
             _shownPhase = (RunPhase)(-1);
             _shownAssault = (AssaultState)(-1);
+            Controls.SetCollapsed(true);
+            Controls.SetMissionDrawerOpen(false);
             SubscribeSim();
         }
 
@@ -242,11 +252,17 @@ namespace GatekeeperBastion.Game
 
             if (OptionsScreen.IsOpen || IsPauseOpen)
             {
-                if (sim.Phase == RunPhase.Tethered && _shownPhase != RunPhase.Tethered)
+                // Terminal phases still hide fight chrome. Do not advance _shownPhase for
+                // Tethered here — that skipped the once-per-Run mission-drawer latch forever.
+                if (sim.Phase == RunPhase.Escaped || sim.Phase == RunPhase.Lost)
                 {
-                    _shownPhase = RunPhase.Tethered;
-                    _shownAssault = sim.Assault;
-                    _view.ShowFight(sim.Assault == AssaultState.Prep);
+                    _shownPhase = sim.Phase;
+                    _view.ShowEnd();
+                }
+                else if (sim.Phase != RunPhase.Docked && sim.Phase != RunPhase.Tethered)
+                {
+                    _shownPhase = sim.Phase;
+                    _view.ShowEmergency();
                 }
                 return;
             }
@@ -261,10 +277,16 @@ namespace GatekeeperBastion.Game
             switch (sim.Phase)
             {
                 case RunPhase.Docked:
-                    _view.SetArriving("arriving at the bastion...");
+                    // Docked is the start of a Run: re-arm the once-per-Run mission drawer.
+                    _missionDrawerAutoOpened = false;
                     _view.ShowArriving();
                     break;
                 case RunPhase.Tethered:
+                    if (sim.Assault == AssaultState.Prep && !_missionDrawerAutoOpened)
+                    {
+                        _missionDrawerAutoOpened = true;
+                        Controls.SetMissionDrawerOpen(true);
+                    }
                     _view.ShowFight(sim.Assault == AssaultState.Prep);
                     break;
                 case RunPhase.Escaped:
@@ -338,54 +360,67 @@ namespace GatekeeperBastion.Game
 
         void PushFightValues(GameController gc, RunSim sim)
         {
+            Controls.TickPanelToggle();
+            Controls.TickMissionDrawerToggle();
+            bool leftOpen = !Controls.Collapsed;
+            _view.SetLeftDrawerOpen(leftOpen);
+            _view.SetRightDrawerOpen(Controls.MissionDrawerOpen);
+
             long elapsed = (long)sim.RunElapsed;
-            if (elapsed != _cacheElapsed || sim.CurrentWaveIndex != _cacheWave)
+            long kill = (long)sim.CurrentKillValue;
+            long runSal = (long)sim.Salvage.RunSalvage;
+            long banked = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
+
+            if (elapsed != _cacheElapsed || sim.CurrentWaveIndex != _cacheWave
+                || sim.Siphon.Level != _cacheSiphon || kill != _cacheKill
+                || runSal != _cacheRunSalvage || banked != _cacheBanked)
             {
                 _cacheElapsed = elapsed;
                 _cacheWave = sim.CurrentWaveIndex;
-                _lineBuf.Clear();
-                _lineBuf.Append("T+").Append(elapsed).Append("s    Wave ")
-                    .Append(sim.CurrentWaveIndex).Append('/').Append(WaveDirector.MaxWaves);
-                _view.SetTimeWave(_lineBuf.ToString());
-            }
-
-            long kill = (long)sim.CurrentKillValue;
-            if (sim.Siphon.Level != _cacheSiphon || kill != _cacheKill)
-            {
                 _cacheSiphon = sim.Siphon.Level;
                 _cacheKill = kill;
-                _lineBuf.Clear();
-                _lineBuf.Append("Siphon L").Append(sim.Siphon.Level)
-                    .Append(" (x").Append(sim.Siphon.RewardMultiplier.ToString("0.##")).Append(")    ")
-                    .Append("each kill: +").Append(kill);
-                _view.SetSiphonLine(_lineBuf.ToString());
-            }
-
-            long runSal = (long)sim.Salvage.RunSalvage;
-            long banked = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
-            if (runSal != _cacheRunSalvage || banked != _cacheBanked)
-            {
                 _cacheRunSalvage = runSal;
                 _cacheBanked = banked;
+
+                _view.SetProfile("LV 1", "EXP —");
+
                 _lineBuf.Clear();
-                _lineBuf.Append("Run: ").Append(runSal).Append("    Banked: ").Append(banked);
-                _view.SetSalvageLine(_lineBuf.ToString());
+                _lineBuf.Append("Banked ").Append(banked);
+                string salvage = _lineBuf.ToString();
+                _lineBuf.Clear();
+                _lineBuf.Append("Run ").Append(runSal)
+                    .Append("  ·  Siphon L").Append(sim.Siphon.Level)
+                    .Append("  ·  Wave ").Append(sim.CurrentWaveIndex).Append('/')
+                    .Append(WaveDirector.MaxWaves);
+                _view.SetScore(salvage, _lineBuf.ToString());
             }
 
             var hatch = sim.Ship.Hatch;
             long hatchHp = (long)hatch.Hp;
             long hatchMax = (long)hatch.MaxHp;
             bool alarm = _hatchAlert > 0f;
-            if (alarm != _cacheAlarm)
-            {
-                _cacheAlarm = alarm;
-                _view.SetHatchLabel(alarm ? "<b>HATCH — UNDER ATTACK</b>" : "HATCH");
-            }
-            if (hatchHp != _cacheHatchHp || hatchMax != _cacheHatchMax)
+            bool alarmChanged = alarm != _cacheAlarm;
+            if (alarmChanged) _cacheAlarm = alarm;
+            if (hatchHp != _cacheHatchHp || hatchMax != _cacheHatchMax || alarmChanged)
             {
                 _cacheHatchHp = hatchHp;
                 _cacheHatchMax = hatchMax;
-                _view.SetHatchBar(hatch.Hp, hatch.MaxHp);
+                _view.SetDrawerHatch(
+                    alarm ? "<b>HATCH — UNDER ATTACK</b>" : "HATCH",
+                    hatch.Hp, hatch.MaxHp);
+
+                // One writer for the player lane: the hatch alarm, in Prep and in Assault.
+                if (alarm)
+                {
+                    _lineBuf.Clear();
+                    _lineBuf.Append("<b>HATCH UNDER ATTACK</b> — ").Append(hatchHp)
+                        .Append('/').Append(hatchMax);
+                    _view.SetPlayerMessage(_lineBuf.ToString());
+                }
+                else
+                {
+                    _view.SetPlayerMessage(null);
+                }
             }
 
             var player = Player;
@@ -396,7 +431,7 @@ namespace GatekeeperBastion.Game
                 if (dead != _cachePlayerDead)
                 {
                     _cachePlayerDead = dead;
-                    _view.SetPlayerLabel(dead ? "<b>YOU  (DOWN)</b>" : "YOU");
+                    _view.SetPlayerLabel(dead ? "<b>HEALTH (DOWN)</b>" : "HEALTH");
                 }
                 if (php != _cachePlayerHp)
                 {
@@ -407,7 +442,7 @@ namespace GatekeeperBastion.Game
             }
 
             PushWeaponReadout(gc);
-            PushShortcutPanel(sim);
+            if (leftOpen) PushShortcutPanel(sim);
 
             if (sim.Assault == AssaultState.Prep)
                 PushPrepPanel(sim);
@@ -431,13 +466,7 @@ namespace GatekeeperBastion.Game
                 }
             }
 
-            bool spent = _fpc.Stamina < _fpc.StaminaMax - 0.01f;
-            if (!spent && !_fpc.IsSprinting)
-            {
-                _view.SetStaminaBlockVisible(false);
-                return;
-            }
-
+            // Always shown — Zo's bottom vitals band; hiding a full bar made the corner look empty.
             _view.SetStaminaBlockVisible(true);
             _view.SetStaminaLabel(_fpc.IsSprinting ? "<b>SPRINT</b>" : "STAMINA");
             _view.SetStaminaBar(_fpc.Stamina, _fpc.StaminaMax);
@@ -445,7 +474,6 @@ namespace GatekeeperBastion.Game
 
         void PushWeaponReadout(GameController gc)
         {
-            _view.SetReloadBlockVisible(false);
             _view.SetAbilityBlockVisible(false);
             _weaponLines.Clear();
 
@@ -454,7 +482,10 @@ namespace GatekeeperBastion.Game
                 ResolveRefs();
                 if (_gun == null)
                 {
-                    _view.SetWeaponBlock("NO WEAPON RIG FOUND");
+                    PushWeaponCard("NO WEAPON", "—", "Buy the MK-1 at the ship's ARMORY.");
+                    _view.SetReloadLabel("—");
+                    _view.SetReloadBar(0f);
+                    _view.SetReloadBlockVisible(false);
                     return;
                 }
             }
@@ -463,49 +494,51 @@ namespace GatekeeperBastion.Game
             {
                 PushDecoyReadout(_weaponLines);
                 _weaponLines.Add(SlotStrip(_gun));
-                FlushWeaponBlock();
+                PushWeaponCard("DECOY", SlotStrip(_gun), JoinWeaponLines());
+                // The decoy has no clip. Dim the reserved row; keep a label so the slot is not blank.
+                _view.SetReloadLabel("—");
+                _view.SetReloadBar(0f);
+                _view.SetReloadBlockVisible(false);
                 return;
             }
 
+            string name = _gun.UsingSalvageCutter ? "Improvised cutter" : _gun.DisplayName;
+            string ammo;
+            // Clip bar: depletes left→right as you fire; refill left→right while reloading.
+            _view.SetReloadBlockVisible(true);
             if (_gun.IsReloading)
             {
-                _view.SetReloadBlockVisible(true);
                 _view.SetReloadLabel("RELOADING");
                 _view.SetReloadBar(_gun.ReloadProgress);
-                if (Settings.GetBool(SettingId.DiscardReloadOnSwap) && _gun.HasAlternateWeapon)
-                    _weaponLines.Add("SWAP DISCARDS THIS RELOAD");
+                ammo = "RELOADING";
             }
             else
             {
+                // Always-on clip row: keep the label filled so the reserved third row is never blank.
+                _view.SetReloadLabel("CLIP");
+                float cap = _gun.MagazineCapacity;
+                float fill = cap > 0f ? _gun.ClipRemaining / cap : 0f;
+                _view.SetReloadBar(fill);
                 _lineBuf.Clear();
-                _lineBuf.Append("CLIP ").Append(_gun.ClipRemaining).Append('/').Append(_gun.MagazineCapacity);
-                _weaponLines.Add(_lineBuf.ToString());
+                _lineBuf.Append(_gun.ClipRemaining).Append('/').Append(_gun.MagazineCapacity);
+                ammo = _lineBuf.ToString();
             }
 
             if (_gun.UsingSalvageCutter)
             {
                 _lineBuf.Clear();
-                _lineBuf.Append("NO WEAPON — improvised cutter: ")
-                    .Append(_gun.EffectiveDamage.ToString("0")).Append(" dmg.");
-                _weaponLines.Add(_lineBuf.ToString());
-                _weaponLines.Add("Buy the MK-1 at the ship's ARMORY.");
-                FlushWeaponBlock();
+                _lineBuf.Append(_gun.EffectiveDamage.ToString("0")).Append(" dmg  ·  buy MK-1 at ARMORY");
+                PushWeaponCard(name, ammo, _lineBuf.ToString());
                 return;
             }
 
             string blocked = _gun.WeaponBlockedReason;
             if (!string.IsNullOrEmpty(blocked))
-            {
-                _lineBuf.Clear();
-                _lineBuf.Append("HOLSTERED: ").Append(blocked);
-                _weaponLines.Add(_lineBuf.ToString());
-            }
+                _weaponLines.Add("HOLSTERED: " + blocked);
 
             _weaponLines.Add(SlotStrip(_gun));
-
             _lineBuf.Clear();
-            _lineBuf.Append(_gun.DisplayName).Append(": ")
-                .Append(_gun.EffectiveDamage.ToString("0")).Append(" dmg | ")
+            _lineBuf.Append(_gun.EffectiveDamage.ToString("0")).Append(" dmg | ")
                 .Append(_gun.EffectiveFireRate.ToString("0.#")).Append("/s | clip ")
                 .Append(_gun.MagazineCapacity);
             if (_gun.CritChance > 0f)
@@ -514,10 +547,25 @@ namespace GatekeeperBastion.Game
 
             PushAbilityReadout(_weaponLines);
             PushDecoyReadout(_weaponLines);
-            FlushWeaponBlock();
+            PushWeaponCard(name, ammo, JoinWeaponLines());
         }
 
-        void FlushWeaponBlock()
+        void PushWeaponCard(string name, string ammo, string detail)
+        {
+            if (name != _cacheWeaponName || ammo != _cacheWeaponAmmo)
+            {
+                _cacheWeaponName = name;
+                _cacheWeaponAmmo = ammo;
+                _view.SetWeapon(name, ammo);
+            }
+            if (detail != _cacheWeaponDetail)
+            {
+                _cacheWeaponDetail = detail;
+                _view.SetDrawerWeaponDetail(detail);
+            }
+        }
+
+        string JoinWeaponLines()
         {
             _weaponBlock.Clear();
             for (int i = 0; i < _weaponLines.Count; i++)
@@ -525,7 +573,7 @@ namespace GatekeeperBastion.Game
                 if (i > 0) _weaponBlock.Append('\n');
                 _weaponBlock.Append(_weaponLines[i]);
             }
-            _view.SetWeaponBlock(_weaponBlock.Length > 0 ? _weaponBlock.ToString() : null);
+            return _weaponBlock.ToString();
         }
 
         void PushDecoyReadout(List<string> lines)
@@ -545,41 +593,30 @@ namespace GatekeeperBastion.Game
         void PushAbilityReadout(List<string> lines)
         {
             if (_ability == null && _gun != null) _ability = _gun.GetComponent<PlayerAbility>();
-            if (_ability == null || !_ability.HasAbility)
-            {
-                _view.SetAbilityBlockVisible(false);
-                return;
-            }
+            // Ability chrome lives in the right-drawer weapon detail string. A separate
+            // Ability host was dual-wired to Weapon Detail and blanked / overwrote it.
+            _view.SetAbilityBlockVisible(false);
+            if (_ability == null || !_ability.HasAbility) return;
 
             string name = _ability.AbilityName;
+            _lineBuf.Clear();
             if (_ability.RegenSurgeActive)
             {
-                _view.SetAbilityBlockVisible(true);
-                _lineBuf.Clear();
                 _lineBuf.Append("<b>ABILITY ").Append(name).Append(" — SURGING</b>");
-                _view.SetAbilityLabel(_lineBuf.ToString());
-                _view.SetAbilityBar(_ability.CooldownProgress);
-                return;
             }
-
-            if (_ability.CooldownRemaining > 0.05f)
+            else if (_ability.CooldownRemaining > 0.05f)
             {
-                _view.SetAbilityBlockVisible(true);
-                _lineBuf.Clear();
                 _lineBuf.Append("ABILITY ").Append(name).Append("  ")
                     .Append(_ability.CooldownRemaining.ToString("0.0")).Append('s');
-                _view.SetAbilityLabel(_lineBuf.ToString());
-                _view.SetAbilityBar(_ability.CooldownProgress);
-                return;
             }
-
-            _view.SetAbilityBlockVisible(false);
-            _lineBuf.Clear();
-            _lineBuf.Append("ABILITY ").Append(name).Append("  [")
-                .Append(Controls.DisplayOf(ControlId.WeaponAbility)).Append(']');
-            if (_ability.PinBuildHits > 0)
-                _lineBuf.Append("  [").Append(_ability.PinBuildHits).Append('/')
-                    .Append(WeaponAbility.PinHitThreshold).Append(']');
+            else
+            {
+                _lineBuf.Append("ABILITY ").Append(name).Append("  [")
+                    .Append(Controls.DisplayOf(ControlId.WeaponAbility)).Append(']');
+                if (_ability.PinBuildHits > 0)
+                    _lineBuf.Append("  [").Append(_ability.PinBuildHits).Append('/')
+                        .Append(WeaponAbility.PinHitThreshold).Append(']');
+            }
             lines.Add(_lineBuf.ToString());
         }
 

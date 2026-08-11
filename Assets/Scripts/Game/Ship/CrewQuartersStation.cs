@@ -9,11 +9,22 @@ namespace GatekeeperBastion.Game
 
         protected override string PromptHint => "upgrade your own attributes";
 
+        protected override int ContentHash(MetaState m)
+        {
+            unchecked
+            {
+                return base.ContentHash(m)
+                    ^ m.VitalityLevel * 17
+                    ^ m.StaminaLevel * 31
+                    ^ m.ScavengingLevel * 41
+                    ^ m.LuckLevel * 59;
+            }
+        }
+
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
-            view.AddLabel("Player attributes — permanent upgrades (cost doubles per level)", centered: true);
-            view.AddLabel("These are about YOU, not the ship. No death required to buy any of them.",
-                centered: true);
+            // Settings-shell baseline: the four attribute tracks only.
+            view.AddLabel("ATTRIBUTES", centered: true);
             view.AddSpacer();
 
             UpgradeRow(view, UpgradeTrack.Vitality, "Vitality",
@@ -24,19 +35,6 @@ namespace GatekeeperBastion.Game
                 l => $"{MetaUpgrades.SalvagePerKill(l):0} per kill");
             UpgradeRow(view, UpgradeTrack.Luck, "Luck",
                 l => $"{MetaUpgrades.CritChance(l) * 100f:0.#}% crit");
-
-            view.AddSpacer();
-            view.AddLabel(
-                $"Sprint: hold SHIFT while moving. {MetaUpgrades.StaminaMax(m.StaminaLevel):0} stamina, " +
-                $"{FirstPersonController.SprintDrainPerSecond:0}/s to run, " +
-                $"{FirstPersonController.StaminaRegenPerSecond:0}/s back after {FirstPersonController.StaminaRegenDelaySeconds:0.#}s.",
-                centered: true);
-            view.AddLabel(
-                $"Crits deal x{PlayerGun.CritDamageMultiplier:0.#} damage — Luck buys the chance, never the size.",
-                centered: true);
-            view.AddLabel(
-                "Scavenging raises every kill. Hatch repair is the Repair Rig at FABRICATION.",
-                centered: true);
         }
 
         static float SprintSeconds(int level)

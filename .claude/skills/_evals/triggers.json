@@ -1,0 +1,88 @@
+{
+  "_comment": "should: the skill must fire. near_miss: it must not, and shares vocabulary on purpose. A near-miss that fires even once in three runs is a real over-trigger, not noise. All five skills are model-invocable, so co-firing between adjacent skills is the failure to watch: a prompt that fires the wrong skill is not a pass.",
+  "gkb-development": {
+    "manual": false,
+    "should": [
+      "complete M45",
+      "implement the milestone",
+      "work through M42's acceptance criteria",
+      "Fix the reload timer, it fires one frame early",
+      "add a field to WaveSpawner for the spawn radius",
+      "the pause menu button does nothing when clicked"
+    ],
+    "near_miss": [
+      "should the MR-35 do more damage than the BR-12",
+      "what order should I build the next three milestones in",
+      "is a decoy drone a loop or an arc",
+      "write the acceptance criteria for the HUD milestone"
+    ]
+  },
+  "gkb-design": {
+    "manual": false,
+    "should": [
+      "Should gatekeepers drop loot on death",
+      "I want a second resource besides salvage",
+      "the upgrade wheel feels flat, what would make it interesting",
+      "is it worth adding a boss wave",
+      "how should the siphon dial change what the player does",
+      "players will never use the shotgun, what do I do about that"
+    ],
+    "near_miss": [
+      "the shotgun pellet spread code allocates every shot",
+      "add a UI panel showing the current wave",
+      "run the tests and tell me if the falloff change broke anything",
+      "rename Damageable to Health across the codebase"
+    ]
+  },
+  "gkb-verification": {
+    "manual": false,
+    "should": [
+      "confirm the pin shot fix works",
+      "is wave 2 winnable now",
+      "add a test for the salvage ledger",
+      "I want a script that checks every weapon has an ability",
+      "did that change break anything",
+      "add a menu item to rebuild the scenes"
+    ],
+    "near_miss": [
+      "the pin shot never fires, find out why",
+      "should the pin shot exist at all",
+      "rename Damageable to Health",
+      "what should I build after the HUD milestone"
+    ]
+  },
+  "gkb-brainstorm": {
+    "manual": false,
+    "should": [
+      "capture this idea for later",
+      "add this to the brainstorm doc",
+      "is the drone bay idea ready to be a milestone",
+      "I have a half-formed idea about crew perks",
+      "what is sitting in the brainstorm queue",
+      "park this one, I am not ready to build it"
+    ],
+    "near_miss": [
+      "brainstorm some names for the new weapon",
+      "should this mechanic be a loop or an arc",
+      "write the milestone for the drone bay",
+      "fix the wave counter"
+    ]
+  },
+  "gkb-strategy": {
+    "manual": false,
+    "should": [
+      "what should I work on next",
+      "reorder the roadmap",
+      "is M36 more important than M37",
+      "write a milestone for the HUD pass",
+      "am I spending too much time on docs",
+      "should this be one milestone or two"
+    ],
+    "near_miss": [
+      "what does M36 say",
+      "is the decoy a good idea",
+      "fix the wave counter",
+      "confirm the falloff change works"
+    ]
+  }
+}

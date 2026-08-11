@@ -50,20 +50,79 @@ re-litigating a cut costs more than the cut saved.
   codenames (`PRI-C`, `UTL-B`) until play earns them a name. A name given early has to be
   defended later and fixes the fiction before the mechanic has earned one.
 
-- **FishNet is the networking library** (2026-08-10). Chosen for a solo dev shipping small co-op
-  on Steam: no CCU meter and no metered service path that opens up later, Unity 6 fully
-  supported, and — the deciding detail — **its Steam transports (`FishySteamworks`,
-  `FishyFacepunch`) are maintained by the netcode's own author**, where NGO's community Facepunch
-  transport still pins a 2020 build of Facepunch.Steamworks. Client-side prediction is included
-  if it is ever wanted, so there is no library switch waiting later.
-  **Runner-up: Netcode for GameObjects**, and it would not be a mistake — Lethal Company is a
-  solo-developed Unity 4-player PvE co-op game that sold 10M+ copies on NGO with host authority.
-  Take NGO instead if documentation and tutorial coverage matter more than transport ownership.
+- **Netcode for GameObjects is the networking library** (Zo, 2026-08-10). **Chosen on the
+  criterion that the code will be AI-written, so the material a model can read and reason
+  against is worth more than raw library quality.** On that criterion NGO wins decisively:
+  it is first-party, so its documentation is Unity's versioned manual; and **Boss Room is a
+  complete, Unity-authored, 4-player co-op reference game** an agent can read end to end
+  (`https://docs.unity3d.com/Packages/com.unity.netcode.gameobjects@2.7/manual/samples/bossroom/architecture.html`).
+  Nothing else in the field has a canonical implementation of this genre's exact shape.
+  Lethal Company is the shipped existence proof — solo developer, Unity, 4-player PvE co-op,
+  host authority, 10M+ copies.
+  **What this costs, stated so it is not a surprise:** the community Steam transport
+  (`com.community.netcode.transport.facepunch`) pins an old Facepunch.Steamworks build, so the
+  free-forever Steam path depends on a component Unity does not maintain. The fallback is Unity
+  Relay, which is metered above 50 average monthly CCU. **Transport is the most swappable layer
+  in the stack**, so this is a later problem, not a blocking one.
+  **Rejected: FishNet**, which was the pick until the AI-authorship criterion was raised. Better
+  transport ownership (its Steam transports are by the netcode's own author) and no metered path,
+  but thinner documentation and no reference game of Boss Room's scale.
   **Rejected: Photon Fusion and Quantum.** Both meter concurrent users, and below 500 CCU the cap
   is hard — real players get disconnected until you pay. Quantum additionally mandates
-  deterministic fixed-point simulation, which is the constraint this project does not have.
+  deterministic fixed-point simulation, a constraint this project does not have.
   **Rejected: PUN2**, in maintenance mode with no further feature updates.
   Nothing in M45 depends on this choice; the retrofit transfers between all of them.
+
+**The criterion generalises.** When an agent writes the code, weight a dependency's
+documentation, version stability and the existence of a readable reference implementation above
+its feature list. A library the model writes correctly on the first attempt beats a better
+library it writes subtly wrong.
+
+## Locked — Bastion fight HUD corner starting point (Zo, 2026-08-10)
+
+The four always-on fight cards in `Bastion.unity` under `Canvas - Dynamic` are the
+baseline. Agents extend these hosts; they do not replace them with homemade bars or
+ghost Shadow chrome. Shift package rows (Icon Border + Slider + Text) stay intact.
+
+| Host | Corner | Size (canvas) | Contents |
+|---|---|---|---|
+| `Hud Profile` | TL `(64, −24)` | 320 × 64 | Shadow, **Profile Icon** (sprite), Profile Level, Profile Exp |
+| `Hud Score` | TR `(−24, −24)` | 320 × 72 | Shadow, Score Salvage, Wave Counter (VLG) |
+| `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows (Icon Border / Slider / Text), VLG |
+| `Hud Weapon` | BR `(−24, 24)` | 400 × 150 | Shadow, Weapon Name, Weapon Ammo, Shift **Reload** row (same bar recipe as vitals), VLG |
+
+`BastionHudView` wires those hosts. EXP-as-slider and further polish are manual on top
+of this layout — not a reason to rebuild the corners.
+
+## Locked — Ship HUD corners and station terminals (Zo, 2026-08-10)
+
+**Ship always-on HUD** = Bastion fight corner hosts **minus `Hud Vitals`**, pulled with
+`Gatekeeper/HUD/Pull Bastion Corners Into Ship` (`Object.Instantiate` from
+`Bastion.unity` — not YAML theatre). No always-on shortcut strip. The old text strip
+(`Title` / `Salvage` / `Objective` / `Directory` / `Shortcut Keys`) is not the baseline.
+
+| Host | Corner | Size (canvas) | Ship contents |
+|---|---|---|---|
+| `Hud Profile` | TL `(64, −24)` | 320 × 64 | Shadow, Profile Icon, **LV** / **EXP** (same slots as Bastion) |
+| `Hud Score` | TR `(−24, −24)` | 320 × 72 | Shadow, Salvage, Wave + **runs** |
+| `Hud Weapon` | BR `(−24, 24)` | 320 × 72 | Shadow, primary + secondary names (no Reload; card matches Score) |
+| *(no)* `Hud Vitals` | — | — | Omitted on Ship |
+
+No slogans or embark/objective commands on the corners — those belong in station
+panels. Crosshair and console interact prompt stay. `ShipHudView` wires the three
+hosts; `ShipHud` pushes meta into those bindings.
+
+**Ship terminals:** while walking the ship, **E opens ARMORY from anywhere** (no
+console, range, or look check — `ShipController.TryOpenArmoryFromInteract`). That
+leaves walk and opens one full-screen station menu cloned from **Main Menu
+(Desktop) Settings** (`Assets/Shift - Complete Sci-Fi UI/Scenes/Main Menu/Main Menu
+(Desktop).unity`) — Background + Top/Bottom chrome kept; Categories / Preview /
+top Button List stripped via `Gatekeeper/HUD/Strip Settings Shell Onto Stations`.
+Only that menu takes input. Esc or Close returns to walk. FAB / CREW / NAV still
+exist as panels; open path for those is not E-anywhere. Body rows clone from each
+panel's inactive `Templates` under the Settings `List` — that host must survive
+`ClearBody`. Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW:
+four tracks; FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
 
 ## Deferred, with intent
 

@@ -1,0 +1,59 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.3/staging' branch; Version is '6000.3.21f1 (c02631ffc030) revision 12592689'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) Professional' Language: 'en' Physical Memory: 65243 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-08-10T18:00:54Z
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-awill" at "2026-08-10T18:00:54.4421658Z"
+[Licensing::Client] Error: HandshakeResponse reported an error:
+	ResponseCode: 505
+	ResponseStatus: Unsupported protocol version '1.18.1'.
+[Licensing::Module] Error: Failed to handshake to channel: "LicenseClient-awill"
+[Licensing::IpcConnector] LicenseClient-awill channel disconnected successfully.
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-awill-6000.3.21" at "2026-08-10T18:00:55.3598677Z"
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 29408, path: "C:/Program Files/Unity/Hub/Editor/6000.3.21f1/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.1+9fbee8e
+  Session Id:              b4a8021a9fc4405b9ef7fc9cc52f6579
+  Correlation Id:          70a8cd02dcdf89454ae31d4d2029a424
+  External correlation Id: 2585172727188394464
+  Machine Id:              C2sTu0ux+/rLZNBKmHen0v5s3CM=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-awill-6000.3.21" (connect: 0.00s, validation: 0.00s, handshake: 0.05s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-awill-6000.3.21-notifications" at "2026-08-10T18:00:55.4091421Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: F4-Q7BY-BUNU-V7Z7-22KM-XXXX
+  Product: Unity Personal
+  Type: ULF
+  Expiration: Unlimited
+[Licensing::Module] License group:
+  Id: 3632653-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.00
+[Licensing::Module] Licensing Background thread has ended after 0.97s
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.3.21f1\Editor\Unity.exe
+-batchmode
+-nographics
+-projectPath
+f:\Programming\Gatekeeper Bastion
+-runTests
+-testPlatform
+EditMode
+-assemblyNames
+GatekeeperBastion.Tests
+-testFilter
+GatekeeperBastion.Tests.ShortcutRowApiTests
+-testResults
+f:\Programming\Gatekeeper Bastion\gkb_shortcut_row_test_results.xml
+-logFile
+f:\Programming\Gatekeeper Bastion\gkb_shortcut_row_test_log.txt
+Successfully changed project path to: f:\Programming\Gatekeeper Bastion
+F:/Programming/Gatekeeper Bastion
+Exiting without the bug reporter. Application will terminate with return code 1

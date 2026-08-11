@@ -11,23 +11,19 @@ namespace GatekeeperBastion.Game
 
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
-            view.AddLabel("Hatch defenses — permanent upgrades (cost doubles per level)", centered: true);
-            view.AddLabel("Applied to the hatch on your next embark.", centered: true);
-            view.AddSpacer();
+            // Settings-shell baseline: hatch / equipment / one payload. Section headers only.
+            view.AddLabel("HATCH", centered: true);
             UpgradeRow(view, UpgradeTrack.HatchArmor, "Hatch Armor",
                 l => $"{MetaUpgrades.HatchHp(l):0} HP");
 
             view.AddSpacer();
-            view.AddLabel("Equipment — bring it or the Hatch stays whatever the fight left it",
-                centered: true);
-            view.AddSpacer();
+            view.AddLabel("EQUIPMENT", centered: true);
             DrawEquipmentSlotRow(view, m);
             if (m.EquipmentSlotPurchased)
                 DrawEquipmentRow(view, m, EquipmentId.RepairRig);
 
             view.AddSpacer();
-            view.AddLabel("Payloads — one in the drone bay per Run", centered: true);
-            view.AddSpacer();
+            view.AddLabel("PAYLOAD", centered: true);
             DrawPayloadRow(view, m, PayloadId.Decoy);
             string bay = m.EquippedDrone == PayloadId.None
                 ? "bay empty"

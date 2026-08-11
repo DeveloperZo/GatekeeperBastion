@@ -68,3 +68,7 @@ Thumbs.db
 
 # Harness output, if GKB_HARNESS_OUT is ever pointed inside the repo.
 /gkb-harness/
+
+# Skill eval output and the baseline-run staging dir. Generated per run, never history.
+.claude/skills/_evals/results/
+.claude/skills/_evals/.hidden/

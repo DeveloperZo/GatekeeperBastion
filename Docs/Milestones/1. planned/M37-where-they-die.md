@@ -148,8 +148,10 @@ Developer instrumentation, so the three questions are answered for the developer
 2. Criterion 2 — an EditMode test on the arithmetic at fixed positions: a body on the Hatch
    face reads `hatchDist` under 1, one at the far wall reads roughly 50.
 3. Criterion 5 — the grep, plus read the one assignment site.
-4. Criteria 6, 7 — run the tool over `Logs/GatekeeperBastion_2026-08-09_15-21-59.log` once new
-   lines exist; expect three per-kind rows per Wave.
+4. Criteria 6, 7 — run the tool over **any session log recorded after this milestone lands**;
+   expect three per-kind rows per Wave. *The log this originally pinned has been rotated out of
+   `Logs/`, which is the failure `Working-Rules.md` warns about: a gate that names a file which
+   will not exist next session.*
 5. Criterion 8 — **two Runs, deliberately different**: one never leaving the Hatch bay, one
    fighting from the bore mouth outward. Compare medians and record both in
    `../../GatekeeperZo Notes/playthrough.md`.
@@ -165,6 +167,10 @@ Developer instrumentation, so the three questions are answered for the developer
   raw numbers is that every normalisation tried so far hid the case it was meant to reveal.
 
 ## Depends on / Unblocks
+
+**Build this before M42.** Both append to the same kill line — M37 adds two fields, M42
+rewrites the award number in `KillLog.Format`. Neither milestone mentions the other, and in
+parallel they collide. M37 only appends, so it goes first.
 
 Depends on M29's tool, shipped. **Unblocks the verification of M30's decoy and M32's PRI-C**,
 neither of which currently has a way to prove its central claim.

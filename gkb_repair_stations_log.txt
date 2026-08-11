@@ -1,0 +1,18 @@
+[RepairStationPanels]
+ARMORY: added Panel Background
+ARMORY: StationPanelView rewired
+ARMORY: MPM rebound
+ARMORY: console._view rebound
+FABRICATION: added Panel Background
+FABRICATION: StationPanelView rewired
+FABRICATION: MPM rebound
+FABRICATION: console._view rebound
+CREW QUARTERS: added Panel Background
+CREW QUARTERS: StationPanelView rewired
+CREW QUARTERS: MPM rebound
+CREW QUARTERS: console._view rebound
+NAV MAP: added Panel Background
+NAV MAP: StationPanelView rewired
+NAV MAP: MPM rebound
+NAV MAP: console._view rebound
+OK — station panels repaired (scale, background, Close, Button Template, MPM)

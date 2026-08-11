@@ -245,12 +245,27 @@ namespace GatekeeperBastion.Game
         bool IsTemplate(GameObject go)
         {
             if (go == null) return false;
-            return Is(go, _rowPrefab) || Is(go, _labelPrefab) || Is(go, _headingPrefab)
-                || Is(go, _buttonPrefab) || Is(go, _spacerPrefab) || Is(go, _rowHostPrefab);
+            if (Is(go, _rowPrefab) || Is(go, _labelPrefab) || Is(go, _headingPrefab)
+                || Is(go, _buttonPrefab) || Is(go, _spacerPrefab) || Is(go, _rowHostPrefab))
+                return true;
+            // Inactive Templates folder under Content hosts the serialized prefabs. Without
+            // this, ClearBody destroys the host on the first refresh and every later Clone
+            // returns null (Primary/Secondary toggle, buy, equip).
+            return !go.activeSelf && HostsTemplate(go.transform);
+        }
+
+        bool HostsTemplate(Transform host)
+        {
+            return ChildOf(host, _rowPrefab) || ChildOf(host, _labelPrefab)
+                || ChildOf(host, _headingPrefab) || ChildOf(host, _buttonPrefab)
+                || ChildOf(host, _spacerPrefab) || ChildOf(host, _rowHostPrefab);
         }
 
         static bool Is(GameObject go, Component template) =>
             template != null && go == template.gameObject;
+
+        static bool ChildOf(Transform host, Component template) =>
+            template != null && template.transform.IsChildOf(host);
 
         static void ApplyButtonLabel(Button button, string label)
         {
