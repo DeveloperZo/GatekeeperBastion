@@ -15,7 +15,10 @@ metadata:
   changed and what to look for.
 - **Report work verified on a suite you did not run.**
 - **Close a gate with a tainted log.** A session log carrying dev-command markers cannot support
-  a claim.
+  a claim. Neither can a stale one: before a log speaks for current code, the
+  `Library/ScriptAssemblies` dll must be newer than the edited source and the log's literal
+  strings must still exist in that source. A handoff once cited a FAIL log written by a dll
+  two edits old.
 - **Cite a path that will not exist next session.** Throwaway scripts live outside the repository
   and are never named in a document. Three milestone gates once pointed at a deleted harness
   path.
@@ -24,6 +27,7 @@ metadata:
 - **Leave generated output where it lands.** Ignoring is not cleaning.
 - **Write a criterion an unchanged build would pass.** A negative grep is not a gate — that
   exact mistake shipped a UI milestone that satisfied every criterion and failed on sight.
+  Hierarchy inspection is not proof either; the Game view must paint.
 
 ## Always
 
@@ -51,6 +55,13 @@ metadata:
 
 Compile errors are written to `Library/Bee/CachedNodeOutput` — read them there rather than
 asking the editor.
+
+**Confirm the recompile before writing a sentinel.** An unfocused editor consumes
+`gkb_*_request.txt` files without recompiling, so the run is whatever dll is loaded — check
+the `Library/ScriptAssemblies` mtime against the edited source first. And a tool that reports
+through a log file must reach its log write on every exit, exception included; sentinel
+consumed with no log means an exception escaped before the write, not that nothing happened.
+One strip tool burned several runs exactly this way.
 
 **If you changed only comments, the harness result must be identical.** If it is not, you
 changed code. Revert.

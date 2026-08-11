@@ -121,7 +121,18 @@ Cheapest rung first:
    one question.
 
 **Delete-after-verify is not a mechanism.** Cleanup inside a script only runs when the script
-succeeds, and the script that fails halfway is the one that stays.
+succeeds, and the script that fails halfway is the one that stays. The log write dies the same
+way: wrap the body in try/catch so every exit, including the throw, still writes the log — a
+tool that died before its log write burned several blind runs here.
+
+**A clone of scene objects keeps their prefab links**, and `DestroyImmediate` on a child inside
+a prefab instance throws. For plain objects: staging copy → unpack all instances →
+`SaveAsPrefabAsset` to a temp path → `InstantiatePrefab` at the target → unpack completely →
+delete staging and temp asset in `finally`.
+
+**Before writing a run sentinel, confirm the recompile happened.** The handshake — dll mtime
+against source, and what a consumed sentinel with no log means — is stated once, in
+gkb-verification.
 
 ## Do not use the editor to find something out
 

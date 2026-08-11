@@ -76,38 +76,39 @@ namespace GatekeeperBastion.EditorTools
                 return;
             }
 
-            Scene ship = default;
-            bool shipWasOpen = false;
-            for (int i = 0; i < EditorSceneManager.sceneCount; i++)
-            {
-                Scene s = EditorSceneManager.GetSceneAt(i);
-                if (s.path != ShipPath) continue;
-                ship = s;
-                shipWasOpen = true;
-                break;
-            }
-            // Always reload Ship from disk so a prior failed strip cannot leave empty chrome.
-            ship = EditorSceneManager.OpenScene(ShipPath, OpenSceneMode.Single);
-            if (!ship.IsValid() || !ship.isLoaded)
-            {
-                Finish(log, "FAIL: could not load Ship.unity");
-                return;
-            }
-            log.AppendLine(shipWasOpen ? "Reloaded Ship.unity from disk" : "Opened Ship.unity");
-
-            Scene mainMenu = EditorSceneManager.OpenScene(MainMenuPath, OpenSceneMode.Additive);
-            if (!mainMenu.IsValid() || !mainMenu.isLoaded)
-            {
-                Finish(log, "FAIL: could not open Main Menu (Desktop).unity");
-                return;
-            }
-            log.AppendLine("Opened Main Menu (Desktop) additive");
-
+            Scene mainMenu = default;
             try
             {
+                Scene ship = default;
+                bool shipWasOpen = false;
+                for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+                {
+                    Scene s = EditorSceneManager.GetSceneAt(i);
+                    if (s.path != ShipPath) continue;
+                    ship = s;
+                    shipWasOpen = true;
+                    break;
+                }
+                // Always reload Ship from disk so a prior failed strip cannot leave empty chrome.
+                ship = EditorSceneManager.OpenScene(ShipPath, OpenSceneMode.Single);
+                if (!ship.IsValid() || !ship.isLoaded)
+                {
+                    Finish(log, "FAIL: could not load Ship.unity");
+                    return;
+                }
+                log.AppendLine(shipWasOpen ? "Reloaded Ship.unity from disk" : "Opened Ship.unity");
+
+                mainMenu = EditorSceneManager.OpenScene(MainMenuPath, OpenSceneMode.Additive);
+                if (!mainMenu.IsValid() || !mainMenu.isLoaded)
+                {
+                    Finish(log, "FAIL: could not open Main Menu (Desktop).unity");
+                    return;
+                }
+                log.AppendLine("Opened Main Menu (Desktop) additive");
+
                 var shipCanvas = FindNamed(ship, "Canvas");
                 var mainPanels = FindNamed(ship, "Main Panels");
-                var mmSettings = FindNamed(mainMenu, "Settings");
+                var mmSettings = FindSettingsPanel(mainMenu);
                 if (shipCanvas == null || mainPanels == null || mmSettings == null)
                 {
                     Finish(log, "FAIL: Ship Canvas / Main Panels or Main Menu Settings missing");
@@ -120,7 +121,8 @@ namespace GatekeeperBastion.EditorTools
                     return;
                 }
 
-                // Replace Ship Settings with the real Main Menu Settings (Esc settings + clone source).
+                // Esc Settings panel from Main Menu. Station shells clone from the live MM
+                // Settings (not the Ship copy) so nested Content cannot be dropped twice.
                 var settings = ReplaceSettingsFromMainMenu(ship, mainPanels, mmSettings, log);
                 if (settings == null)
                 {
@@ -158,7 +160,7 @@ namespace GatekeeperBastion.EditorTools
 
                 foreach (var (panelName, _) in Stations)
                 {
-                    if (!RebuildStation(ship, settings, mainPanels, mpm, mainButton, panelName, log))
+                    if (!RebuildStation(ship, mmSettings, mainPanels, mpm, mainButton, panelName, log))
                     {
                         Finish(log, StationSceneGate.StatusLine(log, false, ""));
                         return;
@@ -176,6 +178,12 @@ namespace GatekeeperBastion.EditorTools
                 EditorSceneManager.SaveScene(ship);
                 Finish(log, StationSceneGate.StatusLine(log, true,
                     "OK — stations from Main Menu (Desktop) Settings; Background/Top/Bottom imported"));
+            }
+            catch (System.Exception e)
+            {
+                // An uncaught throw here previously died silently: sentinel consumed, no log.
+                Finish(log, "FAIL: exception — " + e.GetType().Name + ": " + e.Message +
+                    "\n" + e.StackTrace);
             }
             finally
             {
@@ -280,25 +288,78 @@ namespace GatekeeperBastion.EditorTools
             return rt;
         }
 
-        /// <summary>Instantiate across additive scenes — if Unity drops children, copy them
-        /// one level at a time from the still-live source.</summary>
+        const string TempPrefabPath = "Assets/__StripSettingsTemp.prefab";
+
+        /// <summary>Clone via a temp prefab asset. The asset round-trip guarantees children
+        /// survive (cross-scene Instantiate dropped Content), and unpacking leaves plain
+        /// objects — a straight Instantiate keeps the source's prefab links, and
+        /// DestroyImmediate on a child inside a prefab instance throws.</summary>
         static GameObject CloneHierarchy(GameObject source, Transform parent, string name,
             StringBuilder log)
         {
-            var clone = Object.Instantiate(source, parent, false);
+            // Same-scene staging copy, unpacked, so SaveAsPrefabAsset is legal whatever
+            // prefab linkage the source carries. Throws here reach Run's catch and get logged.
+            var staging = Object.Instantiate(source);
+            GameObject clone = null;
+            try
+            {
+                staging.name = name;
+                UnpackInstancesUnder(staging);
+                var asset = PrefabUtility.SaveAsPrefabAsset(staging, TempPrefabPath);
+                if (asset != null)
+                    clone = (GameObject)PrefabUtility.InstantiatePrefab(asset, parent);
+                if (clone != null && PrefabUtility.IsAnyPrefabInstanceRoot(clone))
+                    PrefabUtility.UnpackPrefabInstance(clone, PrefabUnpackMode.Completely,
+                        InteractionMode.AutomatedAction);
+            }
+            finally
+            {
+                Object.DestroyImmediate(staging);
+                AssetDatabase.DeleteAsset(TempPrefabPath);
+            }
+
+            if (clone == null)
+            {
+                log.AppendLine("note: prefab round-trip returned null for " + name +
+                               " — direct clone + unpack");
+                clone = Object.Instantiate(source, parent, false);
+                UnpackInstancesUnder(clone);
+            }
             clone.name = name;
             if (clone.transform.childCount == 0 && source.transform.childCount > 0)
             {
-                log.AppendLine("WARN: Instantiate dropped children for " + name +
+                log.AppendLine("WARN: clone dropped children for " + name +
                                " — deep-copying " + source.transform.childCount);
                 for (int i = 0; i < source.transform.childCount; i++)
                 {
                     var srcChild = source.transform.GetChild(i);
                     var childClone = Object.Instantiate(srcChild.gameObject, clone.transform, false);
+                    UnpackInstancesUnder(childClone);
                     childClone.name = srcChild.name;
                 }
             }
             return clone;
+        }
+
+        /// <summary>Break every prefab link under root so DestroyImmediate on any child is
+        /// legal. Guard bound only stops a pathological loop; one pass per instance root.</summary>
+        static void UnpackInstancesUnder(GameObject root)
+        {
+            for (int guard = 0; guard < 256; guard++)
+            {
+                GameObject target = null;
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    var go = t.gameObject;
+                    if (!PrefabUtility.IsAnyPrefabInstanceRoot(go)) continue;
+                    var outer = PrefabUtility.GetOutermostPrefabInstanceRoot(go);
+                    target = outer != null ? outer : go;
+                    break;
+                }
+                if (target == null) return;
+                PrefabUtility.UnpackPrefabInstance(target, PrefabUnpackMode.Completely,
+                    InteractionMode.AutomatedAction);
+            }
         }
 
         static string ChildNames(Transform t)
@@ -714,6 +775,23 @@ namespace GatekeeperBastion.EditorTools
             foreach (var t in root.GetComponentsInChildren<Transform>(true))
             {
                 if (t.name == name) return t;
+            }
+            return null;
+        }
+
+        /// <summary>The Settings PANEL, not the SETTINGS nav button — the scene holds both
+        /// names. Only the panel has a direct Content child; a button's children are its
+        /// Underline/Normal/Highlighted/Pressed states.</summary>
+        static RectTransform FindSettingsPanel(Scene scene)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name != "Settings") continue;
+                    if (FindChild(t, "Content") == null) continue;
+                    return t as RectTransform;
+                }
             }
             return null;
         }
