@@ -30,16 +30,12 @@ These are the four claims the game currently rests on that nothing has tested.
 
 ### 1. The Pin Shot fires at all — M31, criteria 7 and 10
 
-**Highest priority, and today's session says it may still be broken.** In
-`Logs/GatekeeperBastion_2026-08-09_15-21-59.log` there are zero `[Ability]` activation lines
-and the credit reads `0 / 0 / 0` across three Waves.
+**Code fix landed 2026-08-11** (weapon-scoped charge; corpse tipping shots do not spend).
+Still needs a clean play log. Embark with MR-35, land three first-body hits within 1.25 s
+(trash kills count), then a hit on a living body — expect `MR-35 Rifle — Pin Shot` and
+`pin held Ns`. At T10 the living tip is usually a Ram.
 
-- Embark at Wave 1. Fire **one** MR-35 shot into a group of three: expect **one**
-  `killed a Gatekeeper` line, not three inside the same tenth of a second.
-- Then fire **three shots at the front body of a line**: expect
-  `MR-35 Rifle — Pin Shot` and a `pin held Ns` line.
-- **If no pin line appears, stop and say so.** That is a defect, not a tuning result, and it
-  is the third session in a row it has not fired.
+- **If no pin line appears, stop and say so.**
 
 ### 2. The decoy peels them off the door — M30, playthrough path
 

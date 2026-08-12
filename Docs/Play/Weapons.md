@@ -50,9 +50,9 @@ Every weapon carries one activated ability, on the same key for all of them. It 
 cooldown, and the HUD names it and counts the cooldown down.
 
 - **BR-12 — Concussive Breach.** Shoves Gatekeepers back out of a cone in front of you.
-- **MR-35 — Pin Shot.** **It has never fired as shipped** — the condition that arms it
-  cannot be met in the build you are playing, so treat the rifle as having no usable
-  ability until that is fixed.
+- **MR-35 — Pin Shot.** Hits charge a meter on the rifle (3 first-body hits, 1.25 s
+  decay). The charge carries across targets; the shot that completes it pins whatever is
+  still alive under the crosshair. Holding F with a full meter also fires it.
 - **MK-1 — Regen Surge.** While it runs, the Secondary's passive clip regeneration runs
   faster. Its duration is what the Ability spoke buys.
 

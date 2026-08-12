@@ -171,8 +171,8 @@ namespace GatekeeperBastion.Game
             // time and silently outrank any later code change (Docs/Architecture.md GOTCHA 1).
             GatekeeperStats stats = WaveDirector.StatsFor(kind);
 
-            GameObject enemy = Instantiate(prefab, GroupSlot(point.position, index, groupCount),
-                                           point.rotation);
+            Vector3 at = GroupSlot(point.position, index, groupCount);
+            GameObject enemy = Instantiate(prefab, at, point.rotation);
             var damageable = enemy.GetComponent<Damageable>();
             if (damageable != null)
             {
@@ -184,7 +184,11 @@ namespace GatekeeperBastion.Game
             }
 
             var gatekeeper = enemy.GetComponent<EnemyGatekeeper>();
-            if (gatekeeper != null) gatekeeper.Configure(stats);
+            if (gatekeeper != null)
+            {
+                gatekeeper.Configure(stats);
+                gatekeeper.SpawnedAt = at;
+            }
 
             AliveCount++;
             emit.Spawned++;

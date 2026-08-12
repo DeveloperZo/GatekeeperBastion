@@ -236,9 +236,10 @@ Numbers in `Sim/Meta/WeaponAbility.cs`. Dial points come from the upgrade wheel'
 | MK-1 | Regen Surge | **surge duration** | 4 s | 10 s | 10 s | rate fixed at 2.5× |
 | PRI-C | Railshot | bodies at full damage | 3 | 8 | 12 s | arms 4 s; ignores `pierceDamageMul` |
 
-**The MR-35's Pin Shot registers on the first damaged body of a shot only** (M31). Before
-that fix, pierce through a line reset the build every body and the ability never fired;
-authored magnitudes above were unread in play. The BR-12 and MK-1 rows shipped with M20.
+**The MR-35's Pin Shot registers on the first damaged body of a shot only** (M31), and the
+hit charge is weapon-scoped — target changes do not reset Hits; only the 1.25 s decay does.
+Same-target reset left the build unreachable once TTK fell below 3 (T10 FocusAtMax one-shots
+Defaults and kills Wave-5 Rams in two). The BR-12 and MK-1 rows shipped with M20.
 
 Secondary baseline regen: **0.4 rounds/s**. Surge multiplies that rate only while Secondary
 is active. Gatekeeper-seconds log tag: `Ability`.

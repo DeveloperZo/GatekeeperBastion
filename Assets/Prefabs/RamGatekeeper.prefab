@@ -180,3 +180,4 @@ MonoBehaviour:
   noticeRange: 26
   alertRadius: 12
   chaseSpeed: 5.6
+  SpawnedAt: {x: 0, y: 0, z: 0}

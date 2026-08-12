@@ -96,6 +96,10 @@ namespace GatekeeperBastion.Game
         float _attackTimer;
         float _retargetTimer;
 
+        /// <summary>World position written once at Instantiate (the GroupSlot sample). Left at
+        /// default when never spawned through WaveSpawner — kill line then writes spawnDist=-1.</summary>
+        public Vector3 SpawnedAt;
+
         /// <summary>Which kind this actor is. Identity only — behaviour comes from the flags, so
         /// this is what the kill line and the prefab palette read, never the AI.</summary>
         public virtual GatekeeperKind Kind => GatekeeperKind.Default;

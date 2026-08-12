@@ -1,9 +1,9 @@
 # M37 — Where they die
 
 <!--
-Status: later
-Update trigger: when the kill line's format changes, or when the Bastion's geometry moves
-Last updated: 2026-08-09
+Status: shipped, August 2026
+Update trigger: never — shipped milestones are a record. Corrections only.
+Last updated: 2026-08-11
 -->
 
 Every kill records two raw distances: how far the Gatekeeper was from the Hatch, and how far
@@ -13,6 +13,33 @@ game, no accumulator, no clamp.
 **Reviewed adversarially 2026-08-09 and rewritten.** The first draft normalised the two into a
 single `penetration` fraction and bundled a dashboard restructure. Both were wrong; see
 *What the review killed*.
+
+## Done when
+
+**Met (emit + tool + docs + Path 1).** `EnemyGatekeeper.SpawnedAt` assigned once in
+`WaveSpawner.Groups.SpawnOne`; `KillLog.Format` appends `hatchDist=` / `spawnDist=`;
+`spawnDist=-1` when `SpawnedAt` was never written; `Tools/wave-report` prints per-Wave
+per-kind median `hatchDist` and share beyond 25 m, and reports how many rows had absent
+`spawnDist`; `language.md` rule 3 + `builder_play_ban` list both terms; EditMode
+`KillDistanceTests` + `KillLog_NamesTheSlot` green.
+
+**Path 1 (this host, Unity 6000.3.21f1 MonoBleedingEdge mcs):** **267 / 0** with the three
+Game-touching EditMode files excluded the same way `run.sh` excludes Dev/Reload/Controls
+(plus PremiseCopy + Ui rows that also need `Game/`). Filter `KillDistance` / `KillLog_Names`:
+**3+1 / 0**.
+
+**AutoVerify EditMode** (`gkb_verify_report.json`, 2026-08-12T00:59:32Z): **298 / 0**,
+including `KillDistanceTests` (3) and `KillLog_NamesTheSlot`. PlayMode stage returned
+`status:"error"` (unexpected error) — outside this milestone's emit path; same class of
+block M41 already notes for `ShoveDoesNotUncommit`.
+
+**wave-report fixture:** seeded kill lines with distances → three kind rows
+(Gatekeeper / Hunter / Ram) and `spawnDist absent … 1 kill row(s)`.
+
+**Play** (`Logs/GatekeeperBastion_2026-08-11_20-02-31.log`): **185 / 185** kill lines carry
+both fields; Gatekeeper med hatchDist **25.9** m. Criteria 4 (unset play) and 8 (Hatch-bay
+vs far-wall pair) **closed by Zo override 2026-08-11** — within-run first/second half
+medians already differed (29.1 vs 17.0).
 
 ## Story
 
@@ -92,9 +119,9 @@ working, and it was unrepresentable before.
 3. **`spawnDist` measures to where the body actually spawned**, which is its `GroupSlot`
    position after NavMesh sampling, **not** the spawn point's own position. One `Vector3`
    written once at spawn.
-4. **A Gatekeeper with no recorded spawn position writes `spawnDist=-1`** — dev-spawned bodies
-   and anything `SceneBuilder` places directly. `hatchDist` is always real. The tool treats
-   `-1` as absent and says how many rows it dropped.
+4. **A Gatekeeper with no recorded spawn position writes `spawnDist=-1`** — bodies whose
+   `SpawnedAt` was never written (hand-placed / unset). `hatchDist` is always real. The tool
+   treats `-1` as absent and says how many rows it dropped.
 5. **The only new state is one `Vector3` on the Gatekeeper, assigned once at spawn.**
    Checkable: `grep -n "SpawnedAt" Assets/Scripts/Game` returns exactly one assignment site,
    and it is inside `SpawnOne`. **No `SpawnPoint` component field, no `Update`, no
@@ -116,11 +143,14 @@ working, and it was unrepresentable before.
 **Change** `Game/Enemies/EnemyGatekeeper.cs` — one `public Vector3 SpawnedAt` field.
 
 **Change** `Game/Enemies/WaveSpawner.Groups.cs` — `SpawnOne` already computes the slot position
-at line 169 and passes it to `Instantiate`. Assign it to `SpawnedAt` there. One line.
+and passes it to `Instantiate`. Assign it to `SpawnedAt` there. One line.
 
 **Change** `Game/Enemies/WaveSpawner.cs` — `OnGatekeeperDied(GatekeeperKind, Damageable)`
 already receives the `Damageable`, so the transform and both distances are available at the
 existing log site. Append the two fields where `KillLog.Format` builds the line.
+
+**Change** `Sim/Combat/KillLog.cs` — `Format` / `FormatUnknownSlot` take the two floats;
+`PlanarMetres` is the shared arithmetic Path 1 pins.
 
 **Change** `Tools/wave-report/Program.cs` — parse the two fields; add the per-Wave, per-kind rows.
 
@@ -143,8 +173,8 @@ Developer instrumentation, so the three questions are answered for the developer
 
 ## Verification
 
-1. Criteria 1, 3, 4 — play one Wave; every kill line carries both fields, and an `F3`
-   dev-spawned body reads `spawnDist=-1`.
+1. Criteria 1, 3, 4 — play one Wave; every kill line carries both fields, and an unset
+   `SpawnedAt` body reads `spawnDist=-1`.
 2. Criterion 2 — an EditMode test on the arithmetic at fixed positions: a body on the Hatch
    face reads `hatchDist` under 1, one at the far wall reads roughly 50.
 3. Criterion 5 — the grep, plus read the one assignment site.
@@ -165,6 +195,8 @@ Developer instrumentation, so the three questions are answered for the developer
   stops being tolerable the moment the layout gains geometry.
 - **Do not add a derived fraction back into the game later.** The whole reason this reads two
   raw numbers is that every normalisation tried so far hid the case it was meant to reveal.
+- **Verification §1's "F3 dev-spawn" line was stale.** F3 is jump-to-wave; unset `SpawnedAt`
+  is still the `spawnDist=-1` path.
 
 ## Depends on / Unblocks
 

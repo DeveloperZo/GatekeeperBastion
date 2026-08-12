@@ -134,8 +134,8 @@ namespace GatekeeperBastion.Game
                     bodiesDamaged++;
                     if (crit)
                         Log.Event("Combat", $"CRITICAL HIT — {dmg:0} damage (x{CritDamageMultiplier:0.#})");
-                    // Pin build is per shot on the first damaged body only — registering every
-                    // pierce target resets Hits on target change and the build never reaches 3.
+                    // Pin charge is once per shot on the first damaged body only (M31). Pierce
+                    // bodies must not each RegisterHit or a single ray spends the whole threshold.
                     if (firstDamaged)
                         RegisterPinHitIfNeeded(damageable);
                 }

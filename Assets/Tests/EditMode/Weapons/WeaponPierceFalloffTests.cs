@@ -130,14 +130,15 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void PinBuild_ResetsWhenFirstBodyChanges_Unchanged()
+        public void PinBuild_CarriesWhenFirstBodyChanges()
         {
             var build = new PinBuildState();
             build.RegisterHit(1, WeaponAbility.PinBuildDecaySeconds);
             build.RegisterHit(1, WeaponAbility.PinBuildDecaySeconds);
             build.RegisterHit(2, WeaponAbility.PinBuildDecaySeconds);
-            Assert.AreEqual(1, build.Hits);
+            Assert.AreEqual(WeaponAbility.PinHitThreshold, build.Hits);
             Assert.AreEqual(2, build.TargetKey);
+            Assert.IsTrue(build.Ready);
         }
 
         static float Frac(WeaponDef def, float distance)

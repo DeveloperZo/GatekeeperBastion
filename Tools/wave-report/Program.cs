@@ -57,6 +57,18 @@ public static class WaveReport
         @"^killed\s+a\s+(Gatekeeper|Hunter|Ram|Boarder|boarder|gatekeeper|hunter|ram)\b",
         RegexOptions.Compiled);
 
+    static readonly Regex HatchDistRe = new Regex(
+        @"\bhatchDist=(-?\d+(?:\.\d+)?)\b",
+        RegexOptions.Compiled);
+
+    static readonly Regex SpawnDistRe = new Regex(
+        @"\bspawnDist=(-?\d+(?:\.\d+)?)\b",
+        RegexOptions.Compiled);
+
+    /// <summary>Half the Bastion floor depth (SceneBuilder floor z-extent 52 m). Share of
+    /// kills beyond this is the far-wall reading.</summary>
+    const double FarWallMetres = 25.0;
+
     static readonly Regex KindCountRe = new Regex(
         @"(\d+)\s+(Gatekeepers?|Hunters?|Rams?|boarders?|gatekeepers?)\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -103,6 +115,9 @@ public static class WaveReport
         public int HatchMax;
         public bool ParseFailed;
         public string FailReason;
+        public int SpawnDistAbsent;
+        public readonly Dictionary<string, List<double>> HatchDistByKind =
+            new Dictionary<string, List<double>>(StringComparer.OrdinalIgnoreCase);
 
         public double Seconds => Math.Max(0.0, EndSec - StartSec);
 
@@ -391,9 +406,11 @@ public static class WaveReport
 
             if (tag.Equals("Combat", StringComparison.OrdinalIgnoreCase))
             {
-                if (KillRe.IsMatch(msg))
+                var km = KillRe.Match(msg);
+                if (km.Success)
                 {
                     ApplyDelta(run, t, -1);
+                    RecordKillDistances(run, km.Groups[1].Value, msg);
                 }
                 continue;
             }
@@ -557,6 +574,64 @@ public static class WaveReport
         return sum;
     }
 
+    static void RecordKillDistances(RunState run, string kindRaw, string msg)
+    {
+        if (run?.Current == null) return;
+        var seg = run.Current;
+
+        var sm = SpawnDistRe.Match(msg);
+        if (sm.Success
+            && double.TryParse(sm.Groups[1].Value, NumberStyles.Float, Inv, out double spawnDist)
+            && spawnDist < 0)
+        {
+            seg.SpawnDistAbsent++;
+        }
+
+        var hm = HatchDistRe.Match(msg);
+        if (!hm.Success) return;
+        if (!double.TryParse(hm.Groups[1].Value, NumberStyles.Float, Inv, out double hatchDist))
+            return;
+
+        string kind = NormalizeKind(kindRaw);
+        if (!seg.HatchDistByKind.TryGetValue(kind, out List<double> list))
+        {
+            list = new List<double>();
+            seg.HatchDistByKind[kind] = list;
+        }
+        list.Add(hatchDist);
+    }
+
+    static string NormalizeKind(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return "Gatekeeper";
+        switch (raw.ToLowerInvariant())
+        {
+            case "hunter": return "Hunter";
+            case "ram": return "Ram";
+            case "boarder":
+            case "gatekeeper":
+            default: return "Gatekeeper";
+        }
+    }
+
+    static double Median(List<double> values)
+    {
+        if (values == null || values.Count == 0) return 0;
+        var sorted = values.OrderBy(v => v).ToList();
+        int mid = sorted.Count / 2;
+        if ((sorted.Count & 1) == 1) return sorted[mid];
+        return (sorted[mid - 1] + sorted[mid]) / 2.0;
+    }
+
+    static double ShareBeyond(List<double> values, double threshold)
+    {
+        if (values == null || values.Count == 0) return 0;
+        int n = 0;
+        for (int i = 0; i < values.Count; i++)
+            if (values[i] > threshold) n++;
+        return (double)n / values.Count;
+    }
+
     static void ApplyDelta(RunState run, double t, int delta)
     {
         if (run?.Current == null || !run.Current.Open) return;
@@ -659,6 +734,37 @@ public static class WaveReport
                 s.RunIndex, s.Label, s.Bodies, s.Seconds, s.MeanLive, s.PeakLive, s.MeanLifetime,
                 hatch, flags));
         }
+
+        PrintDistanceTable(rows);
+    }
+
+    static void PrintDistanceTable(List<Segment> rows)
+    {
+        bool any = rows.Any(s => s.HatchDistByKind.Count > 0);
+        if (!any) return;
+
+        Console.WriteLine();
+        Console.WriteLine(string.Format(Inv,
+            "{0,-6} {1,-14} {2,-11} {3,10} {4,10} {5,5}   (median hatchDist m; share >{6:0} m)",
+            "run", "wave", "kind", "medHatch", "farShare", "n", FarWallMetres));
+
+        int dropped = 0;
+        foreach (var s in rows)
+        {
+            dropped += s.SpawnDistAbsent;
+            foreach (string kind in new[] { "Gatekeeper", "Hunter", "Ram" })
+            {
+                if (!s.HatchDistByKind.TryGetValue(kind, out List<double> list) || list.Count == 0)
+                    continue;
+                Console.WriteLine(string.Format(Inv,
+                    "{0,-6} {1,-14} {2,-11} {3,10:0.0} {4,10:0.00} {5,5}",
+                    s.RunIndex, s.Label, kind, Median(list), ShareBeyond(list, FarWallMetres), list.Count));
+            }
+        }
+
+        if (dropped > 0)
+            Console.WriteLine(string.Format(Inv,
+                "spawnDist absent (dropped from spawnDist reads): {0} kill row(s)", dropped));
     }
 
     static void PrintCsv(List<Segment> rows)

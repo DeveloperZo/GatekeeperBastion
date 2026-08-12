@@ -1,7 +1,7 @@
 # M41 — The rules get a check
 
 <!--
-Status: later
+Status: completed
 Update trigger: when a rule is added to Docs/Architecture/, when a check row is added or retired, or when a baseline count changes
 Last updated: 2026-08-11
 Note: a green verify is currently blocked by one pre-existing PlayMode failure, WeaponAbilityPlayModeTests.ShoveDoesNotUncommit — outside this milestone's scope (see Watch, 2026-08-11)
@@ -229,3 +229,20 @@ is void, and the harness count is re-measured on the first clean run instead.)*
 
 **Unblocks nothing formally**, and makes every later milestone's architecture claims
 verifiable rather than asserted.
+
+## Correction — 2026-08-11, after shipping
+
+**A menu-surface row was added to the fence after this milestone closed.**
+`Docs/Architecture/README.md`'s `arch-lint` block now carries `menu_root` and `menu_rows`, and
+the rule beside it: one root, every row named, and **permission before a row is written**.
+
+The trigger was `Gatekeeper/HUD/`, a second menu root created by two one-shot HUD migration
+tools left in the tracked tree (`PullBastionHudToShip.cs`, `RestoreShiftArmorHealth.cs`, ~220
+lines each, both moved out 2026-08-11). It is the same failure this milestone's
+`[InitializeOnLoad]` and milestone-ID rows exist for: the sprawl is visible as a menu and starts
+as a script nobody deleted.
+
+**`Tools/lint-arch/run.sh` does not read the two new keys yet.** The fence is the source of
+truth and the script is one check away from honouring it — a missing key must exit 2, never
+default, per criterion 3. Until that lands the rule is prose, which this milestone's own Why-it-
+matters says holds for about three weeks.

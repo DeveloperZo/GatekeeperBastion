@@ -29,8 +29,8 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**M35 shipped 2026-08-11** (authored Splash→MainMenu→Ship→Bastion; station *drive*
-path closed; panel polish deferred). `2. active/` holds **M40** and **M41**.
+**M37, M40 and M41 completed 2026-08-11** (kill-line distances; architecture rules
+decidable, then `Tools/lint-arch` on every verify). `2. active/` is empty.
 
 **Recommended next**, in this order.
 
@@ -44,9 +44,6 @@ path closed; panel polish deferred). `2. active/` holds **M40** and **M41**.
    struct, seeded randomness. Depends on nothing. It replaces M39.
 4. **Play close-outs** — M32 criterion 7 (bore kills), M26 Path 2 / inventory, M31 pin
    playthrough; see `GatekeeperZo Notes/verification.md`.
-5. **M40 then M41** — the rules made decidable, then checked. M40 is documents only; M41 is
-   the lint script and is where the risk lives. **M41 is the reason M40 is allowed to exist**;
-   if M41 does not follow it, M40 was procrastination.
 
 ## Order
 
@@ -89,15 +86,17 @@ this table — see the change log.
 | M34 | A file you can navigate | later | Every type with three or more members carries the `Architecture/7-File-Layout.md` region order; `Tools/lint-layout/run.sh` fails on a seeded violation and runs from `verify`; no member added, removed or resignatured | [`1. planned/M34`](Milestones/1.%20planned/M34-a-file-you-can-navigate.md) |
 | M35 | One look, drawn from one place | completed, Aug 2026 | Four authored scenes, one Shift theme, no UI generators; Splash→MainMenu→Ship→Bastion; stations drive path / HUD / pause / quit-to-menu; SceneBuilder owns environment/spawns/light/NavMesh only — station panel polish deferred | [`3. completed/M35`](Milestones/3.%20completed/M35-one-look-drawn-from-one-place.md) |
 | M36 | The HUD is the tether | later | One readout carries Hatch integrity, salvage and bodies at the door; Prep and Assault identifiable from one frame with text removed; a Hatch hit is visible in peripheral vision | [`1. planned/M36`](Milestones/1.%20planned/M36-the-hud-is-the-tether.md) |
-| M37 | Where they die | later | Every kill line carries `hatchDist=` and `spawnDist=` as raw metres, no formula in the game; `wave-report` prints median distance per Wave **per Gatekeeper kind** | [`1. planned/M37`](Milestones/1.%20planned/M37-where-they-die.md) |
+| M37 | Where they die | completed, Aug 2026 | Every kill line carries `hatchDist=` and `spawnDist=` as raw metres, no formula in the game; `wave-report` prints median distance per Wave **per Gatekeeper kind** | [`3. completed/M37`](Milestones/3.%20completed/M37-where-they-die.md) |
 | M38 | A dashboard you can open | completed, Aug 2026 | `Docs/dashboard.html` parses logs in-browser after you choose Logs/; PlayMode by `stage=playmode`; no `legacy` spend; era curves | [`3. completed/M38`](Milestones/3.%20completed/M38-a-dashboard-you-can-open.md) |
 | M39 | The seam becomes a boundary | **cancelled, Aug 2026** | Premised on `noEngineReferences: true`, which is load-bearing only for deterministic lockstep. Replaced by M45 | [`5. cancelled/M39`](Milestones/5.%20cancelled/M39-the-seam-becomes-a-boundary.md) |
-| M40 | The rules become measurable | later | One statement of the counted-line unit, linked from everywhere else; `Editor/` has a number; the two grandfathered singletons named by type rather than counted; `5-Audit` corrected; **no file under `Assets/` edited** | [`1. planned/M40`](Milestones/1.%20planned/M40-the-rules-become-measurable.md) |
-| M41 | The rules get a check | later | `Tools/lint-arch/run.sh` reads fenced rules from `Docs/Architecture/`, runs from `verify`, holds no literal from a fence and exits 2 on a deleted one; every row reproduces its measured baseline **and** catches a seeded violation | [`1. planned/M41`](Milestones/1.%20planned/M41-the-rules-get-a-check.md) |
+| M40 | The rules become measurable | completed, Aug 2026 | One statement of the counted-line unit, linked from everywhere else; `Editor/` has a number; the two grandfathered singletons named by type; `5-Audit` corrected; **no file under `Assets/` edited** | [`3. completed/M40`](Milestones/3.%20completed/M40-the-rules-become-measurable.md) |
+| M41 | The rules get a check | completed, Aug 2026 | `Tools/lint-arch/run.sh` reads fenced rules from `Docs/Architecture/`, runs from `verify`, holds no literal from a fence and exits 2 on a deleted one; every row reproduces its measured baseline **and** catches a seeded violation | [`3. completed/M41`](Milestones/3.%20completed/M41-the-rules-get-a-check.md) |
 | M42 | One mechanism per job | later | One save-migration path (`grep "rawVersion >="` empty); falloff, repair and slot-select each one copy; `SalvagePerSecond`, `WaveEmit.Pending`, `abilityDial`, `ApplyRepair` deleted; kill lines quote the banked amount; `LossReport`→`RunReport`; 36/36 R5 labels; one `Game/` namespace; 265 harness / 282 Unity green | [`1. planned/M42`](Milestones/1.%20planned/M42-one-mechanism-per-job.md) |
 | M43 | A repository that reads as clean | later | `git status` on an untouched checkout — **and on a fresh clone** — prints `nothing to commit, working tree clean`; one root commit; binaries in LFS and no Unity YAML in it; `Tools/verify/run.sh` unchanged | [`1. planned/M43`](Milestones/1.%20planned/M43-a-repository-that-reads-as-clean.md) |
 | M44 | Skills that pay for their tokens | completed, Aug 2026 | Five skills at `.claude/skills/`, portable frontmatter, bodies under 500 lines; **trigger gate 50/50** (`run.sh trigger`); `AGENTS.md` under 200 lines; always-on token count recorded before and after | [`3. completed/M44`](Milestones/3.%20completed/M44-skills-that-pay-for-their-tokens.md) |
 | M45 | Two Runs in one process | later | Two independent Run simulations advance in one process without touching each other, proved by an EditMode test that fails when a static is seeded back; no netcode library named anywhere in it | [`1. planned/M45`](Milestones/1.%20planned/M45-two-runs-in-one-process.md) |
+| M46 | The panel is authored | later | 1. **Author-time truth:** with ARMORY enabled in edit mode, the Scene/Game view shows the complete panel — every block, row, and button in final position — with no Play press. 2. ** | [`1. planned/M46`](Milestones/1.%20planned/M46-the-panel-is-authored.md) |
+| M47 | The bastion gets height and angles | later | **Artifact = palette.** **Done = bastion from it** with H/S/T/D marks, unlock graph (Control Room last; order ≠ distance), sightline/path gates, M37 medians. Runtime terminals later | [`1. planned/M47`](Milestones/1.%20planned/M47-the-bastion-gets-height-and-angles.md) |
 
 ## Strategy
 

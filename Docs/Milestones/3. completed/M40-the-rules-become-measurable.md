@@ -1,9 +1,9 @@
 # M40 — The rules become measurable
 
 <!--
-Status: later
+Status: completed
 Update trigger: when a cap's number or unit changes, when a grandfathered exception is added or removed, or when two Architecture files disagree
-Last updated: 2026-08-09
+Last updated: 2026-08-11
 -->
 
 Every rule in `Docs/Architecture/` that M41's check will read is first made **decidable**: one

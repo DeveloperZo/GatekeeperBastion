@@ -189,3 +189,28 @@ indistinguishable from dying on the spot. M37 now logs **two raw distances**, `h
 
 Today's session is exactly why it is worth having. Zero arrivals is the same reading whether
 those 90 bodies died at 40 m or at 5 m, and those are different games.
+
+### M37 first live reading — 2026-08-11
+
+`Logs/GatekeeperBastion_2026-08-11_20-02-31.log`. Deep start wave 5 (chained w1..5), MR-35 T10
++ SEC-D, **lost** on Hatch breach after 157 s. Untainted (no Dev).
+
+| | |
+|---|---|
+| Kill lines | **185 / 185** carry `hatchDist=` and `spawnDist=` (criteria 1, 3) |
+| `spawnDist=-1` | **0** (criterion 4 unset path not exercised) |
+| mean live | **9.20** (peak 28, mean lifetime 6.79 s) — `wave-report` |
+
+Per-kind median `hatchDist` / share >25 m (`wave-report`):
+
+| kind | n | medHatch | farShare |
+|---|---|---|---|
+| Gatekeeper | 145 | **25.9** | 0.55 |
+| Hunter | 29 | **20.1** | 0.24 |
+| Ram | 11 | **19.6** | 0.18 |
+
+Within the same Run, first-half kill median hatchDist **29.1** (farShare 0.72) vs second-half
+**17.0** (farShare 0.25) — the instrument moves as the fight collapses toward the Hatch.
+**Criterion 8 closed by Zo override 2026-08-11** (contrasting Hatch-bay / far-wall pair not
+run; within-run split accepted as the difference proof).
+

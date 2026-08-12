@@ -5,7 +5,7 @@ Purpose: the ubiquitous language of Gatekeeper Bastion. One name per thing, used
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired — in the same commit as the rename.
-Last updated: 2026-08-09
+Last updated: 2026-08-11
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in
@@ -40,7 +40,8 @@ that compresses it. If a term genuinely earns its keep, it earns a row here firs
 **3. Analysis vocabulary is builder-only and never appears in player docs.**
 `gatekeeper-seconds`, `arrivals x dwell`, `mean live` and `mean lifetime` are defined in
 `../../Design/3-Mechanics.md` (and mean live also in `../../Design/1-Experience.md`,
-section 1.3); `realization` is used in `../../Design/2-Dynamics.md`. A player has no way
+section 1.3); `realization` is used in `../../Design/2-Dynamics.md`; `hatchDist` and
+`spawnDist` are kill-line metres read by `Tools/wave-report`. A player has no way
 to look any of them up, so a page in `Docs/Play/` that uses one has failed. Checked
 2026-08-08: none leak; re-check when M28 runs.
 
@@ -168,7 +169,7 @@ a term retired without a row here is a term the check does not know about (M28).
 ```language-lint
 # Comma-separated lists. Keys are fixed; the script parses this fence only.
 retired=derelict,Podded,podded,breach point,muster point
-builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization
+builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization,hatchDist,spawnDist
 stations_title=Armory,Crew Quarters,Fabrication,Nav Map
 boarder_enemy=boarders expected,the boarders,boarder kind,boarder-seconds
 ```

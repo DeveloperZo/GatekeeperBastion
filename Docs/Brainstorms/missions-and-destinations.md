@@ -112,6 +112,15 @@ currently pointless because one room has nothing to divert anything *around*.
 by `OnEnable` / `OnDisable`, so a spawn point reached and shut is nearly free mechanically. Its
 **visibility is itself a lever** — known, suspected, or hidden — rather than a binary.
 
+### Layout marks (Zo, 2026-08-11) — space for M47, behaviour later
+
+Sketch: **H** Hatch defend, **S** spawns, **T** terminals, **D** locked doors, Open Areas as hubs,
+Full/Half for T/S wings, **Control Room (76) last in unlock order**. Completing terminals in an
+open wing opens a **D** and pressures the tied **S**. Spawns behind a lock are nominal for that
+wing once live. **Unlock order is authored independently of distance** — Master Control can sit
+near the Hatch and stay sealed until late. M47 authors the kit layout and the graph; runtime
+terminal / door / wave-on-T is still this entry's loop, not M47's gate.
+
 ## Information is telegraphed, not guaranteed
 
 Paths to the Hatch are shown tower-defense style so pressure can be read before delivery. **They
@@ -126,11 +135,19 @@ That is a HUD system and it belongs with **M36**.
 
 ## What would kill it
 
-**The player collects everything first and delivers once at the end.** That is the current game
-with extra walking. It happens if delivery size does not size the wave, or if the Hatch's
-accumulated salvage is safe from arrivals.
+**Framed as a gradient, not a gate** (Zo, 2026-08-11). Holding the Hatch stays a valid way to
+play. It should simply pay less.
 
-Weaker, and worth watching: the drawn paths do not change where the player stands.
+**The test is two cleared Runs, deliberately different: one that explores, one that holds the
+Hatch bay. The exploring Run banks materially more salvage.** If the two bank the same, the
+field bought nothing and the expanded space is decoration. This is the same shape as M37's
+two-Run comparison, and it can be read straight off the end-of-Run report.
+
+Note what this does *not* say: it does not require the holding Run to fail. A player who wants
+to turtle is making a lower-yield choice, not a wrong one, which is the same reasoning as
+spawning field resources during the wave rather than penalising the player for staying.
+
+**The weaker second signal:** the drawn paths do not change where the player stands.
 
 ## Settled
 

@@ -95,18 +95,20 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void PinBuildDecaysAndIsPerTarget()
+        public void PinBuildCarriesAcrossTargets_DecaysOnIdle()
         {
             var build = new PinBuildState();
             build.RegisterHit(1, WeaponAbility.PinBuildDecaySeconds);
             build.RegisterHit(1, WeaponAbility.PinBuildDecaySeconds);
             Assert.AreEqual(2, build.Hits);
 
+            // T10 MR-35 one-shots Defaults; charge must survive the target change so the
+            // tipping shot on a Ram can Ready and pin.
             build.RegisterHit(2, WeaponAbility.PinBuildDecaySeconds);
-            Assert.AreEqual(1, build.Hits, "switching targets must not carry build");
+            Assert.AreEqual(WeaponAbility.PinHitThreshold, build.Hits);
             Assert.AreEqual(2, build.TargetKey);
+            Assert.IsTrue(build.Ready);
 
-            build.RegisterHit(2, WeaponAbility.PinBuildDecaySeconds);
             build.Tick(WeaponAbility.PinBuildDecaySeconds + 0.01f);
             Assert.AreEqual(0, build.Hits, "build must clear after the decay window");
         }

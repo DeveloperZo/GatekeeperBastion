@@ -47,5 +47,6 @@ An upgrade purchase moves damage, clip, reload and cadence together, weighted by
 - Its reach is the longest in the game, but there is no cue for where it ends — past that point shots do nothing at all rather than reduced damage.
 - The blue tracer is a deliberate identity cue for this weapon. It is not a different damage type or ammunition.
 - Its structural weakness is Hunters at contact range, which is not apparent at the ARMORY where the panel only shows damage, cadence and clip.
-- Its ability, the Pin Shot, has never fired in a shipped build. The HUD names it and counts a cooldown for an effect that cannot occur.
+- Its ability, the Pin Shot, charges across first-body hits on the rifle (not per living
+  target). Same-target build could not ready once TTK fell below 3.
 - The upgrade wheel can be focused on Fire Rate to close some of the cadence gap that makes close-range fights hard with this weapon, but nothing at the ARMORY frames the ring as a choice with that consequence.

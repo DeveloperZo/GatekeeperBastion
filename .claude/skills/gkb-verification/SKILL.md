@@ -23,7 +23,13 @@ metadata:
   and are never named in a document. Three milestone gates once pointed at a deleted harness
   path.
 - **Add a verification path without naming the one it replaces.**
-- **Add a menu row without naming the row it replaces**, or arguing why the count should grow.
+- **Add a menu row without asking first.** Naming the row it replaces is the argument you bring
+  to the ask, not a substitute for it. A menu entry outlives the reason it was added.
+- **Add a second menu root.** There is one, `GatekeeperBastion/`, and its members are
+  deliberate. `Gatekeeper/HUD/` appeared from two one-shot migration tools
+  (`Editor/Tools/PullBastionHudToShip.cs`, `Editor/Tools/RestoreShiftArmorHealth.cs`, ~220 lines
+  each) that should not have been in the tracked tree at all — the sprawl arrives as a menu, but
+  it starts as a script nobody deleted.
 - **Leave generated output where it lands.** Ignoring is not cleaning.
 - **Write a criterion an unchanged build would pass.** A negative grep is not a gate — that
   exact mistake shipped a UI milestone that satisfied every criterion and failed on sight.
@@ -81,7 +87,8 @@ Three kinds, and the bar rises:
 
 - **Throwaway** — lives outside the repository, never named in a document, never committed.
 - **Committed tool** — earns it by serving more than one session and more than one question.
-- **Menu row** — highest bar. Name the row it replaces.
+- **Menu row** — highest bar, and **it requires permission before it is written**. Name the row
+  it replaces when you ask.
 
 **A one-shot migration is not a committed asset.** Delete-after-verify has failed twice here,
 because cleanup inside a script only runs when the script succeeds, and the script that fails

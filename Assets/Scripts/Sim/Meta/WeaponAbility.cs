@@ -107,7 +107,9 @@ namespace GatekeeperBastion.Sim
     }
 
     /// <summary>MR-35 pin build tracker — hits only, never damage. Pure so Path 1 can pin the
-    /// ring-integrity rule without a scene.</summary>
+    /// ring-integrity rule without a scene. Charge is weapon-scoped: target changes do not
+    /// reset Hits (only <see cref="Tick"/> decay does). Same-target reset made the build
+    /// unreachable once MR-35 TTK fell below <see cref="WeaponAbility.PinHitThreshold"/>.</summary>
     public struct PinBuildState
     {
         public int TargetKey;
@@ -115,14 +117,11 @@ namespace GatekeeperBastion.Sim
         public float DecayRemaining;
 
         /// <summary>Record one hit on <paramref name="targetKey"/>. Damage is intentionally
-        /// unused — callers must not pass it into the threshold math.</summary>
+        /// unused — callers must not pass it into the threshold math. Hits carry across
+        /// targets; <see cref="TargetKey"/> is whoever was hit last (the pin recipient).</summary>
         public void RegisterHit(int targetKey, float decaySeconds)
         {
-            if (targetKey != TargetKey)
-            {
-                TargetKey = targetKey;
-                Hits = 0;
-            }
+            TargetKey = targetKey;
             Hits++;
             DecayRemaining = decaySeconds;
         }

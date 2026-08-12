@@ -14,6 +14,66 @@ notes, not tuning results, not anything the milestone file already holds.
 This file is history. **`Roadmap.md` is what is next**: order, status, strategy and risks.
 `Milestones/` is the detail behind any entry here.
 
+- 2026-08-11: **M47 map heuristics H/S/T/D.** Defend at Hatch; terminals open locked doors and
+  pressure spawns; Control Room (76) last in unlock graph; unlock order authored independent of
+  spatial distance. Layout + graph in M47; terminal runtime stays missions-and-destinations.
+- 2026-08-11: **M47 = palette artifact + bastion as done-proof.** Zo: both. Prefabs alone do not
+  close; producing an authored kit bastion (shape, sightlines, M37 medians) is the verification.
+  Criteria 1–5 palette; 6–17 produced bastion.
+- 2026-08-11: **M47 gate = palette, not a bastion.** First cut; superseded same day by
+  palette + produce-bastion verification above.
+- 2026-08-11: **M47 kit scaffolding.** `BastionSegment` with per-side Wall/Door/Window/None,
+  `BastionKit` scaler table, EditMode footprint tests, `BastionKitEmitter` via sentinel
+  `gkb_bastion_kit_request.txt` (no menu row). Prefab emit pending Unity import while the
+  editor holds the project lock. Storey height locked at 5; side sight/walk table in the
+  milestone.
+- 2026-08-11: **M47 per-side Wall / Door / Window / None.** Four sides on every segment, toggled
+  without rebuilding the footprint; obstacles are the remaining authoring after sides are set.
+- 2026-08-11: **M47 corrections (Zo).** "Unit" renamed **scaler** (math, not a player concept).
+  Compose from **Control Room outward**; Hatch is a segment shape some distance away. No connector
+  kit — openings are wall add/remove on segments; generate→tune→author is emit segments, set wall
+  state, freeze. Soft lane/corner criteria met by wall and obstacle placement. Two-path split
+  collapsed again.
+- 2026-08-11: **M47 unit = 5×8; rooms are multiples.** Quarter 5→25×40, Half 8→40×64, Full
+  13→65×104, Open 21→105×168, Control 76→380×608. (Naming corrected to scaler same day.)
+- 2026-08-11: **M47 building blocks, not envelope.** Zo: the five sizes are room blocks that
+  compose a bastion — Hatch may be stacked rooms; Control Room is a chamber you place.
+  Reference composition: hub with Quarter/Half/Full around it. Criterion 8 no longer requires
+  exact 30×52.
+- 2026-08-11: **M47 map units from the golden mean.** First pass; superseded same day by the
+  unit×multiple table above.
+- 2026-08-11: **M47 gate rewrite — paths are not disjoint; generate→tune→author.** Dropped the
+  Path 1 / Path 2 split and the "no visual change" intermediate close. End state is one authored
+  multi-level bastion. Segment kinds: HatchChamber (freeze of today), LongLane,
+  ConcealedApproach, VerticalConnector. Draft writer may generate into the open scene once;
+  Build All must not regenerate playable geometry; the draft tool dies or parks under
+  `_to_delete/` at freeze. Path-length band locked at ±25% of median. Architecture §4 and
+  Decisions amend on the same commit as the freeze. Roadmap row updated.
+- 2026-08-11: **M47 derived from the missions-and-destinations brainstorm — the bastion gets
+  height and angles.** Zo's observation is the premise: firing lanes make the player very
+  effective, corners and blocking walls give gatekeepers time to close unshot, and the current
+  30 x 52 room only has the first half. **The heuristic it makes checkable: the player cannot
+  see or kill at a spawn point** — arrivals come from off the accessible map through a concealed
+  approach, and the check is a raycast grid from the Hatch chamber to every spawn, all blocked,
+  plus the first two seconds of travel out of sight.
+  Originally cut into two paths (authored freeze, then the space). Superseded the same day by
+  the generate→tune→author rewrite above.
+  **Hunters are deliberately outside the lane design** (Zo) — `MayTargetHatch` is false for them,
+  so the approach work does not describe them and is not meant to. Recorded so a later reader
+  does not read it as an oversight.
+  Depends on M37 so the median-move criterion has a before to compare against.
+- 2026-08-11: **M37 Zo-closed.** Criteria 4 and 8 overridden; within-run hatchDist halves
+  already differed (29.1 vs 17.0 on `20-02-31`). Remaining table removed.
+
+- 2026-08-11: **M37 completed — where they die.** Kill lines carry planar `hatchDist=` /
+  `spawnDist=`; one `SpawnedAt` on the Gatekeeper, assigned in `SpawnOne`;
+  `wave-report` prints per-Wave per-kind median and share beyond 25 m. Criterion 8
+  (Hatch-bay vs far-wall medians) and a live Wave play check remain open on the file.
+  Moved to `3. completed/`.
+
+- 2026-08-11: **M40 + M41 completed.** Moved to `3. completed/`. Build record already on
+  this file (same date); status catch-up so the folder matches the shipped work.
+  `2. active/` empty; next recommended remains M36.
 - 2026-08-11: **M40 + M41 built — the architecture rules are decided, then checked.**
   M40: the counted-line unit is stated once (`Architecture/7-File-Layout.md`) and linked
   from everywhere else; `Editor/` gets its first cap, 800 counted lines, higher because

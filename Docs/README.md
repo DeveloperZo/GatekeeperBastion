@@ -104,7 +104,8 @@ and `Roadmap.md` before starting work. **If you have never played it**, start in
 **Wave dashboard:** open [`dashboard.html`](dashboard.html). Choose the `Logs` folder (or
 drop `GatekeeperBastion_*.log`). Parses in the browser: mean live by era, per-weapon and
 per-kind kill share, spend/SKU, salvage ledger, hatch pressure, ability credit, and
-editable qualitative scores. Far-wall / `hatchDist` waits on M37.
+editable qualitative scores. Far-wall / `hatchDist` is on the kill line; `wave-report`
+prints median and far-wall share per kind.
 
 ### Three standing rules
 

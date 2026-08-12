@@ -69,7 +69,19 @@ on any type not named in it fails the run. The owed list has been empty since
 ```arch-lint
 singleton_allow=GameController,HatchStation
 singleton_owed=
+menu_root=GatekeeperBastion
+menu_rows=Build All Scenes,Run Verification Now,Validate Scene Bindings,Logs/Open Logs Folder,Logs/Copy Latest Log Path
 ```
+
+**One menu root, and every row is named above.** A `[MenuItem]` under any other root fails the
+run; a row not in `menu_rows` fails it too. **Adding a row requires permission before it is
+written**, and the ask names the row it replaces — a menu entry is a shared, permanent surface
+that outlives the reason it was added.
+
+`Gatekeeper/HUD/` existed until 2026-08-11. It was created by two one-shot HUD migration tools
+(`PullBastionHudToShip.cs`, `RestoreShiftArmorHealth.cs`, ~220 lines each) that should never
+have been in the tracked tree. **The sprawl arrives as a menu and starts as a script nobody
+deleted**, which is why this list is checked rather than trusted.
 
 ## The files
 

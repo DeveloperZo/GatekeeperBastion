@@ -117,31 +117,15 @@ namespace GatekeeperBastion.Game
 
         void TickPinDecay(float dt)
         {
+            // Charge is weapon-scoped — a dead build target must not wipe Hits, or trash kills
+            // that arm a Ram pin can never land. Only the decay window clears the build.
             if (_pinBuild.Hits <= 0) return;
-            if (_pinBuild.TargetKey != 0)
-            {
-                // Target destroyed → abandon build.
-                var live = EnemyGatekeeper.AllLive;
-                bool found = false;
-                for (int i = 0; i < live.Count; i++)
-                {
-                    if (live[i] != null && live[i].GetInstanceID() == _pinBuild.TargetKey)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    _pinBuild.Clear();
-                    return;
-                }
-            }
             _pinBuild.Tick(dt);
         }
 
         /// <summary>MR-35 hits accumulate here — count of hits, never damage. Auto-pins when
-        /// the threshold is reached and the ability cooldown is ready.</summary>
+        /// the threshold is reached and the ability cooldown is ready. Charge is weapon-scoped
+        /// (survives target changes); a killing blow that only tips the meter does not spend it.</summary>
         public void RegisterPinHit(EnemyGatekeeper gatekeeper)
         {
             if (gatekeeper == null) return;
@@ -150,6 +134,12 @@ namespace GatekeeperBastion.Game
 
             _pinBuild.RegisterHit(gatekeeper.GetInstanceID(), WeaponAbility.PinBuildDecaySeconds);
             if (!_pinBuild.Ready) return;
+
+            // T10 MR-35 one-shots Defaults; spending the pin on that corpse wastes the charge.
+            // Leave Ready armed until a living body takes the tipping (or follow-up) hit.
+            var body = gatekeeper.GetComponent<Damageable>();
+            if (body != null && body.IsDead)
+                return;
 
             float seconds = WeaponAbility.Magnitude(AbilityId.Mr35Pin, DialPoints);
             if (!ApplyPin(gatekeeper, seconds)) return;

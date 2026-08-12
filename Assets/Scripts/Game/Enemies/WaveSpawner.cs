@@ -174,11 +174,40 @@ namespace GatekeeperBastion.Game
             if (gc != null) gc.GatekeeperKilled();
             else Log.Warn(Tag, "Kill not awarded: no GameController in the scene.");
 
+            KillDistances(damageable, out float hatchDist, out float spawnDist);
             string line = damageable != null && damageable.HasLastDamagingSlot
-                ? KillLog.Format(KindName(kind), damageable.LastDamagingSlot, award, AliveCount)
-                : KillLog.FormatUnknownSlot(KindName(kind), award, AliveCount);
+                ? KillLog.Format(KindName(kind), damageable.LastDamagingSlot, award, AliveCount,
+                    hatchDist, spawnDist)
+                : KillLog.FormatUnknownSlot(KindName(kind), award, AliveCount, hatchDist, spawnDist);
             Log.Event("Combat", line);
             CheckAssaultCleared();
+        }
+
+        /// <summary>Planar metres from the body to the Hatch surface and to SpawnedAt.
+        /// spawnDist is -1 when SpawnedAt was never written (hand-placed / unset).</summary>
+        static void KillDistances(Damageable damageable, out float hatchDist, out float spawnDist)
+        {
+            hatchDist = 0f;
+            spawnDist = -1f;
+            if (damageable == null) return;
+
+            Vector3 pos = damageable.transform.position;
+            var hatch = HatchStation.Instance;
+            if (hatch != null)
+            {
+                Vector3 surface = hatch.ClosestSurfacePoint(pos);
+                hatchDist = KillLog.PlanarMetres(
+                    pos.x, pos.y, pos.z, surface.x, surface.y, surface.z);
+            }
+            else
+                Log.Warn(Tag, "Kill hatchDist measured with no HatchStation in the scene.");
+
+            var gatekeeper = damageable.GetComponent<EnemyGatekeeper>();
+            if (gatekeeper != null && gatekeeper.SpawnedAt != default)
+            {
+                Vector3 at = gatekeeper.SpawnedAt;
+                spawnDist = KillLog.PlanarMetres(pos.x, pos.y, pos.z, at.x, at.y, at.z);
+            }
         }
 
         /// <summary>Assault dead = every active wave finished spawning, every spawned gatekeeper
