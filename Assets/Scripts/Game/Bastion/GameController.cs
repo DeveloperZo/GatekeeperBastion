@@ -236,7 +236,7 @@ namespace GatekeeperBastion.Game
             if (Sim.Siphon.Level == before) return;
             Log.Event("Run",
                 $"set siphon dial to L{Sim.Siphon.Level} — reward x{Sim.Siphon.RewardMultiplier:0.##} " +
-                $"(each kill +{Sim.CurrentKillValue:0} salvage)");
+                $"(each kill +{Sim.CurrentKillAward} salvage)");
         }
 
         /// <summary>Command from WaveSpawner: one gatekeeper is down. This is the ONLY income path
@@ -278,6 +278,13 @@ namespace GatekeeperBastion.Game
                 return;
             }
             Sim.NotifyPlayerDown();
+        }
+
+        /// <summary>Command from HatchStation: damage the authoritative sim Hatch.</summary>
+        public void DamageHatch(float amount)
+        {
+            if (amount <= 0f || Sim == null || RunIsOver) return;
+            Sim.Ship.Hatch.Damage(amount);
         }
 
         /// <summary>Command from RepairInteractable: heal the hatch by up to
@@ -328,9 +335,9 @@ namespace GatekeeperBastion.Game
                 PushSlot(gun, Meta, WeaponSlot.Secondary, Meta.EquippedSecondary);
                 // Start on Primary when carried; otherwise Secondary (sidearm-only runs).
                 if (gun.SlotConfigured(WeaponSlot.Primary))
-                    gun.TrySelectSlotPublic(WeaponSlot.Primary);
+                    gun.SelectSlot(WeaponSlot.Primary);
                 else if (gun.SlotConfigured(WeaponSlot.Secondary))
-                    gun.TrySelectSlotPublic(WeaponSlot.Secondary);
+                    gun.SelectSlot(WeaponSlot.Secondary);
             }
             else
             {
@@ -411,7 +418,7 @@ namespace GatekeeperBastion.Game
         void OnWaveStarted(WaveSpec wave)
         {
             Log.Event("Run", $"wave {Sim.CurrentWaveIndex}/{WaveDirector.MaxWaves} — {wave.enemyCount} gatekeepers, " +
-                $"siphon L{Sim.Siphon.Level} (each kill +{Sim.CurrentKillValue:0})");
+                $"siphon L{Sim.Siphon.Level} (each kill +{Sim.CurrentKillAward})");
         }
 
         void OnAssaultEnded()

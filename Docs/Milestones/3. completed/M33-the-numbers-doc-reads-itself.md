@@ -1,9 +1,9 @@
 # M33 — The numbers doc reads itself out of the build
 
 <!--
-Status: later
+Status: completed
 Update trigger: when a generated block is added to or removed from Docs/Design/4-Data.md, or when the splice format changes
-Last updated: 2026-08-09
+Last updated: 2026-08-12
 -->
 
 `Docs/Design/4-Data.md` stops being hand-maintained. Its countable half is spliced in by

@@ -61,6 +61,9 @@ declare -A EXCLUDED=(
   ["Dev/DevSessionTests.cs"]="needs GatekeeperBastion.Game (SaveService) and a real filesystem save"
   ["Weapons/ReloadSwapTests.cs"]="needs PlayerGun MonoBehaviour, GameObject, and UnityEngine.TestTools.LogAssert"
   ["ControlsTests.cs"]="needs GatekeeperBastion.Game (Controls) and UnityEngine.Input/KeyCode"
+  ["Ship/PremiseCopyTests.cs"]="needs GatekeeperBastion.Game (PremiseCopy) and scene strings"
+  ["Ui/ShortcutRowApiTests.cs"]="needs ShortcutRow MonoBehaviour, TMPro, and UnityEditor"
+  ["Ui/UiBindGatingTests.cs"]="needs GatekeeperBastion.Game.Ui, TMPro, and UnityEngine.UI"
 )
 
 if ! command -v mcs >/dev/null 2>&1 || ! command -v mono >/dev/null 2>&1; then
@@ -110,3 +113,19 @@ for s in "${SKIPPED[@]}"; do
 done
 
 mono "$EXE" "$@"
+test_rc=$?
+if [[ $test_rc -ne 0 ]]; then
+  exit $test_rc
+fi
+
+# M33 — countable docs stay in lockstep with Sim/. Fail after tests so a stale doc is named
+# as the cause, not buried under compile noise.
+DOCGEN="$ROOT/Tools/docgen/run.sh"
+if [[ ! -f "$DOCGEN" ]]; then
+  echo "verify: expected $DOCGEN" >&2
+  exit 2
+fi
+if ! bash "$DOCGEN" --check; then
+  echo "verify: docgen check failed (Tools/docgen/run.sh --check)" >&2
+  exit 1
+fi

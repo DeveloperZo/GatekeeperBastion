@@ -197,4 +197,41 @@ namespace NUnit.Framework
                 "Expected: " + typeof(T).Name + "\n  But was:  no exception"));
         }
     }
+
+    public static class CollectionAssert
+    {
+        public static void AreEquivalent(IEnumerable expected, IEnumerable actual, string message = null)
+        {
+            var exp = new List<object>();
+            var act = new List<object>();
+            if (expected != null) foreach (var x in expected) exp.Add(x);
+            if (actual != null) foreach (var x in actual) act.Add(x);
+            if (exp.Count != act.Count)
+                throw new AssertionException(
+                    (string.IsNullOrEmpty(message) ? "" : message + "\n  ") +
+                    "Expected count " + exp.Count + " but was " + act.Count);
+            foreach (var e in exp)
+            {
+                int idx = act.FindIndex(a =>
+                    (e == null && a == null) || (e != null && e.Equals(a)));
+                if (idx < 0)
+                    throw new AssertionException(
+                        (string.IsNullOrEmpty(message) ? "" : message + "\n  ") +
+                        "Missing expected element: " + e);
+                act.RemoveAt(idx);
+            }
+        }
+    }
+
+    public static class StringAssert
+    {
+        public static void Contains(string expected, string actual, string message = null)
+        {
+            if (actual == null || expected == null || actual.IndexOf(expected, StringComparison.Ordinal) < 0)
+                throw new AssertionException(
+                    (string.IsNullOrEmpty(message) ? "" : message + "\n  ") +
+                    "Expected string to contain \"" + expected + "\"\n  But was:  " +
+                    (actual == null ? "null" : "\"" + actual + "\""));
+        }
+    }
 }

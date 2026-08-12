@@ -29,7 +29,7 @@ namespace GatekeeperBastion.Tests
             var secondary = WeaponCatalog.Def(WeaponId.Mk1Sidearm);
             _gun.Configure(WeaponSlot.Primary, primary, 0, WeaponId.Br12Shotgun);
             _gun.Configure(WeaponSlot.Secondary, secondary, 0, WeaponId.Mk1Sidearm);
-            _gun.TrySelectSlotPublic(WeaponSlot.Primary);
+            _gun.SelectSlot(WeaponSlot.Primary);
         }
 
         [TearDown]
@@ -55,13 +55,13 @@ namespace GatekeeperBastion.Tests
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"switched to Secondary"));
 
-            _gun.TrySelectSlotPublic(WeaponSlot.Secondary);
+            _gun.SelectSlot(WeaponSlot.Secondary);
             Assert.IsFalse(_gun.SlotIsReloading(WeaponSlot.Primary),
                 "outgoing Primary reload must be zeroed");
 
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"switched to Primary"));
-            _gun.TrySelectSlotPublic(WeaponSlot.Primary);
+            _gun.SelectSlot(WeaponSlot.Primary);
             Assert.AreEqual(0f, _gun.SlotReloadProgress(WeaponSlot.Primary), 0.001f,
                 "swap back: discarded progress stays zero");
         }
@@ -76,7 +76,7 @@ namespace GatekeeperBastion.Tests
 
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"switched to Secondary"));
-            _gun.TrySelectSlotPublic(WeaponSlot.Secondary);
+            _gun.SelectSlot(WeaponSlot.Secondary);
 
             Assert.IsTrue(_gun.SlotIsReloading(WeaponSlot.Primary),
                 "stowed Primary must keep its timer");
@@ -84,7 +84,7 @@ namespace GatekeeperBastion.Tests
 
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"switched to Primary"));
-            _gun.TrySelectSlotPublic(WeaponSlot.Primary);
+            _gun.SelectSlot(WeaponSlot.Primary);
             Assert.AreEqual(atHalf, _gun.SlotReloadProgress(WeaponSlot.Primary), 0.05f,
                 "return: fraction unchanged");
         }
@@ -99,7 +99,7 @@ namespace GatekeeperBastion.Tests
 
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"switched to Secondary"));
-            _gun.TrySelectSlotPublic(WeaponSlot.Secondary);
+            _gun.SelectSlot(WeaponSlot.Secondary);
             Assert.AreEqual(parked, _gun.SlotReloadProgress(WeaponSlot.Primary), 0.05f);
 
             for (int i = 0; i < 30; i++)
@@ -112,14 +112,14 @@ namespace GatekeeperBastion.Tests
             Settings.SetBool(SettingId.DiscardReloadOnSwap, true);
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"switched to Primary"));
-            _gun.TrySelectSlotPublic(WeaponSlot.Primary);
+            _gun.SelectSlot(WeaponSlot.Primary);
             _gun.BeginReload();
             AdvanceToFraction(0.4f);
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"reload on Primary discarded"));
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"switched to Secondary"));
-            _gun.TrySelectSlotPublic(WeaponSlot.Secondary);
+            _gun.SelectSlot(WeaponSlot.Secondary);
             Assert.AreEqual(0f, _gun.SlotReloadProgress(WeaponSlot.Primary), 0.001f);
             for (int i = 0; i < 30; i++)
                 _gun.TickReload(0.1f);
@@ -139,10 +139,10 @@ namespace GatekeeperBastion.Tests
 
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"switched to Secondary"));
-            _gun.TrySelectSlotPublic(WeaponSlot.Secondary);
+            _gun.SelectSlot(WeaponSlot.Secondary);
             LogAssert.Expect(LogType.Log,
                 new System.Text.RegularExpressions.Regex(@"switched to Primary"));
-            _gun.TrySelectSlotPublic(WeaponSlot.Primary);
+            _gun.SelectSlot(WeaponSlot.Primary);
             Assert.IsTrue(_gun.IsReloading, "precondition: resumed mid-reload");
 
             // TryFire cancels before CanFire — EditMode has no locked cursor, so the shot

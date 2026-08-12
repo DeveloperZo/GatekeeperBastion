@@ -113,7 +113,7 @@ namespace GatekeeperBastion.Game
             if (hatch.Hp - amount <= 0f)
                 Log.Event("Hatch", "HATCH BREACHED — the run is over");
             float before = hatch.Hp;
-            hatch.Damage(amount);
+            gc.DamageHatch(amount);
             // One line per quarter lost: enough to see from the log whether gatekeepers ever reached
             // home at all, without a line per swing.
             LogThreshold(before, hatch.Hp, hatch.MaxHp);
@@ -132,16 +132,5 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        /// <summary>Routes player repairs into the sim hatch via GameController.RepairHatch
-        /// (charges salvage). No-op once destroyed, the run is over, or the repair rig is not
-        /// equipped. Prefer calling GameController.RepairHatch directly from interactables.</summary>
-        public void ApplyRepair(float amount)
-        {
-            if (amount <= 0f || IsDestroyed) return;
-            var gc = GameController.Instance;
-            if (gc == null || gc.RunIsOver) return;
-            if (gc.Meta == null || !gc.Meta.HasRepairRigEquipped) return;
-            gc.RepairHatch(amount);
-        }
     }
 }

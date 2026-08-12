@@ -11,20 +11,20 @@ namespace GatekeeperBastion.Sim
         /// <summary>Combat kill line including the slot that landed the killing blow, plus
         /// planar metres to the Hatch surface and to where the body spawned.</summary>
         public static string Format(
-            string kindName, WeaponSlot slot, float award, int aliveLeft,
+            string kindName, WeaponSlot slot, long award, int aliveLeft,
             float hatchDist, float spawnDist)
         {
             return "killed a " + kindName + " with " + SlotWord(slot)
-                + " (+" + award.ToString("0", Inv) + " salvage) — " + aliveLeft.ToString(Inv)
+                + " (+" + award.ToString(Inv) + " salvage) -- " + aliveLeft.ToString(Inv)
                 + " left" + DistTail(hatchDist, spawnDist);
         }
 
         /// <summary>Combat kill line when no damaging slot was recorded (should be rare).</summary>
         public static string FormatUnknownSlot(
-            string kindName, float award, int aliveLeft, float hatchDist, float spawnDist)
+            string kindName, long award, int aliveLeft, float hatchDist, float spawnDist)
         {
             return "killed a " + kindName
-                + " (+" + award.ToString("0", Inv) + " salvage) — " + aliveLeft.ToString(Inv)
+                + " (+" + award.ToString(Inv) + " salvage) -- " + aliveLeft.ToString(Inv)
                 + " left" + DistTail(hatchDist, spawnDist);
         }
 

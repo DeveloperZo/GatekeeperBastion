@@ -199,7 +199,7 @@ wheel spokes), `Modal Window/Exit` (confirm modals), `Scrollbar` (armory catalog
    `../../Roadmap.md` (the M35 row — which still describes the abandoned
    prefab-generator scope — plus the stale Current/Recommended-next strategy
    paragraph, and a change-log entry for this gate rewrite), and
-   `../1. planned/M36-the-hud-is-the-tether.md` (it says "M35 assembles the front
+   `../3. completed/M36-the-hatch-is-always-on.md` (it says "M35 assembles the front
    end from prefabs" and names `Theme.cs`, which no longer exists — both corrected
    to this scope).
 
@@ -443,8 +443,8 @@ wheel spokes), `Modal Window/Exit` (confirm modals), `Scrollbar` (armory catalog
     standalone bottom-right reload block, `Armor & Health`, `Player Status`,
     `Weapon Block`. Crosshair and interact prompt centre; vignette and
     end/emergency hosts unchanged. Hatch leaves the always-on vitals card
-    (drawer plus message lane); M36 still owns deleting hatch/counter in favour
-    of the tether.
+    (drawer plus message lane); M36 puts Hatch back on the always-on surface as its
+    own top-centre host.
 
     Every visible HUD pixel stays ≥24 **canvas units** from any screen edge — no
     clipped slider chrome, no label hanging past a card. Verified against the
@@ -669,7 +669,7 @@ Owns: `Bastion.unity`; `HudController.cs` (+ partials); `GameController.cs`
 ### WP-5 — close-out: docs, sweeps, screenshots
 
 Owns: `../../../AGENTS.md`, `../../Architecture.md`, `../../Decisions.md`,
-`../../Roadmap.md`, `../1. planned/M36-the-hud-is-the-tether.md`; the final
+`../../Roadmap.md`, `../3. completed/M36-the-hatch-is-always-on.md`; the final
 validator run; the screenshots; code-comment sweep.
 
 - The criterion-8 doc list. Sweep stale in-code criterion references — code

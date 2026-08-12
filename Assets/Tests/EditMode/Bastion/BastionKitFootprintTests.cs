@@ -1,7 +1,6 @@
 using System;
-using GatekeeperBastion.Game;
+using GatekeeperBastion.Sim;
 using NUnit.Framework;
-using UnityEngine;
 
 namespace GatekeeperBastion.Tests
 {
@@ -13,10 +12,9 @@ namespace GatekeeperBastion.Tests
         {
             foreach (BastionBlockKind kind in Enum.GetValues(typeof(BastionBlockKind)))
             {
-                Vector2 footprint = BastionKit.Footprint(kind);
                 int multiple = BastionKit.Multiple(kind);
-                Assert.AreEqual(BastionKit.Scaler.x * multiple, footprint.x, 1e-4f, kind.ToString());
-                Assert.AreEqual(BastionKit.Scaler.y * multiple, footprint.y, 1e-4f, kind.ToString());
+                Assert.AreEqual(BastionKit.ScalerX * multiple, BastionKit.FootprintWidth(kind), 1e-4f, kind.ToString());
+                Assert.AreEqual(BastionKit.ScalerZ * multiple, BastionKit.FootprintDepth(kind), 1e-4f, kind.ToString());
             }
         }
 

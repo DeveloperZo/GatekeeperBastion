@@ -2,7 +2,8 @@
 
 <!-- GENERATED FILE — DO NOT EDIT BY HAND.
      Produced by Tools/docgen/run.sh from the live code: Controls.cs,
-     WeaponCatalog, WeaponTier, WaveDirector, TetherSiphon, MetaUpgrades.
+     WeaponCatalog, WeaponWheel, WeaponTier, WaveDirector, TetherSiphon,
+     MetaUpgrades, UpgradeTracks, EquipmentCatalog.
      Re-run it after any change to those files; a hand edit here is lost.
      Prose about what the game IS lives in The-Game.md and is hand-written. -->
 
@@ -21,20 +22,22 @@ live right now, so this table is a reference, not something you have to memorise
 | `WASD` | move | in the bastion, on the ship |
 | `MOUSE` | look | in the bastion, on the ship |
 | `SHIFT` | sprint | in the bastion, on the ship |
-| `ESC` | free cursor | in the bastion, on the ship |
-| `BKSP` | toggle panel | in the bastion, on the ship, end screen |
+| `ESC` | pause | in the bastion |
+| `BKSP` | controls | in the bastion, on the ship, end screen |
 
 **FIGHT**
 
 | Key | Does | Live when |
 |---|---|---|
 | `LMB` | fire | in the bastion |
+| `RMB` | cancel place | in the bastion |
 | `R` | reload | in the bastion |
 | `1` | weapons | in the bastion |
 | `2` | weapons | in the bastion |
 | `3` | weapons | in the bastion |
 | `Q` | last | in the bastion |
 | `WHEEL` | cycle | in the bastion |
+| `F` | ability | in the bastion |
 
 **RUN**
 
@@ -46,6 +49,14 @@ live right now, so this table is a reference, not something you have to memorise
 | `ENTER` | return | end screen |
 | `SPACE` | return | end screen |
 | `ESC` | return | end screen |
+| `TAB` | mission | in the bastion |
+
+**ARMORY**
+
+| Key | Does | Live when |
+|---|---|---|
+| `[` | wheel | on the ship |
+| `]` | wheel | on the ship |
 
 **HATCH**
 
@@ -58,34 +69,37 @@ live right now, so this table is a reference, not something you have to memorise
 | Key | Does | Live when |
 |---|---|---|
 | `E` | interact | on the ship |
+| `ESC` | settings | on the ship |
 
 ## Weapons
 
-You carry one **Primary** and one **Secondary** at once, plus an empty melee slot.
+You carry one **Primary** and one **Secondary** at once, plus an empty Drone slot.
 The Primary is chosen at the ARMORY before you embark and is fixed for the run;
 switching in the bastion swaps between the slots you already carry, never between
 owned weapons. Each slot keeps its own clip, so switching is not a free reload.
 
 | Weapon | Slot | Cost | Damage | Shots/s | Clip | Reload | Range | Notes |
 |---|---|---|---|---|---|---|---|---|
-| **MK-1 Sidearm** | Secondary | 0 | 14 | 3 | 8 | 1.4 s | 45 m | free; falls off past 12 m |
-| **SEC-D** | Secondary | 0 | 18 | 6 | 4 | 2.2 s | 8 m | free; contact only; falls off past 3 m |
+| **MK-1 Sidearm** | Secondary | 0 | 14 | 3 | 8 | 1.4 s | 45 m | falls off past 12 m; free — always affordable |
+| **SEC-D** | Secondary | 0 | 18 | 6 | 4 | 2.2 s | 8 m | falls off past 3 m; free — always affordable |
 | **BR-12 Shotgun** | Primary | 900 | 6 ×7 | 1.2 | 6 | 2.6 s | 14 m | 7 pellets, 7° spread; falls off past 8 m |
-| **MR-35 Rifle** | Primary | 1,200 | 32 | 1.6 | 10 | 2.4 s | 60 m | pierces 2 at 0.26× after the first; falls off past 25 m |
-| **PRI-C** | Primary | 1,500 | 90 | 0.6 | 4 | 3.2 s | 90 m | pierces 3 at 0.75× after the first; no indoor falloff |
+| **MR-35 Rifle** | Primary | 1,200 | 32 | 1.6 | 10 | 2.4 s | 60 m | pierces 2; falls off past 25 m |
+| **PRI-C** | Primary | 1,500 | 90 | 0.6 | 4 | 3.2 s | 90 m | pierces 3; falls off past 55 m |
 
-### Tiers — what upgrading a weapon buys
+### Upgrade wheel — what a purchase buys
 
-Upgrades are **per weapon**, not global. Damage rises ×1.25 a Tier and clip ×1.15; fire rate never changes, because cadence is how a weapon reads. Tiers unlock
-after your first death. Effective damage per second, every pellet connecting:
+Upgrades are **per weapon**, not global. One purchase awards **5 / 3 / 3 / 0 / 0** by ring distance (11 points). Tier is derived as total / 11. Cadence still reads as the
+weapon: fire-rate points exist, but a purchase chooses a spoke. Purchases unlock
+after your first death. Full focus on one spoke is **50** points; each neighbour reaches **30**.
 
-| Weapon | T0 | T1 | T2 | T3 | T4 | T5 | T6 | T7 |
-|---|---|---|---|---|---|---|---|---|
-| MK-1 Sidearm | 28 | 36 | 47 | 61 | 79 | 102 | 131 | 167 |
-| BR-12 Shotgun | 33 | 44 | 57 | 73 | 94 | 122 | 157 | 201 |
-| MR-35 Rifle | 37 | 48 | 62 | 80 | 102 | 131 | 167 | 214 |
+| attribute | per point | at full focus (50) | at neighbour (30) |
+|---|---|---|---|
+| damage | ×1.05 | ×9.3 | ×3.81 |
+| clip | ×1.03 | ×4.04 | ×2.31 |
+| reload | ×0.98 | ×0.37 | ×0.55 |
+| fire rate | ×1.01 | ×1.79 | ×1.42 |
 
-Each Tier costs 400 / 600 / 800 / 1,000 / 1,200 / 1,400 / 1,600 / 1,800 / 2,000 / 2,200 salvage — **13,000** to take one weapon all the way.
+Each purchase costs 400 / 600 / 800 / 1,000 / 1,200 / 1,400 / 1,600 / 1,800 / 2,000 / 2,200 salvage — **13,000** to take one weapon all the way (10 purchases).
 
 ## What comes aboard
 
@@ -152,28 +166,28 @@ Between runs you walk your own ship. Four consoles, each owning one subject.
 
 | Console | Owns | Sells |
 |---|---|---|
-| **ARMORY** | the weapon in your hands | weapons, and Tiers for whichever you carry |
-| **CREW QUARTERS** | you | Vitality, Stamina, Engineering, Scavenging, Luck |
-| **FABRICATION** | the ship | Hatch Armor, Repair Rig |
-| **MAP** | where you go | the destination, and embarking |
+| **ARMORY** | the weapon in your hands | weapons, and wheel purchases for whichever you carry |
+| **CREW QUARTERS** | you | Vitality, Stamina, Scavenging, Luck |
+| **FABRICATION** | the ship | Hatch Armor, Equipment slot, Repair Rig |
+| **NAV MAP** | where you go | the destination, and embarking |
 
 Attribute and ship tracks run 0–5 at +5% a level, costing 200 × 2^level — 200 / 400 / 800 / 1,600 / 3,200.
 
 | Track | Level 0 | Level 5 |
 |---|---|---|
-| Vitality — your HP | 100 | 125 |
+| Hatch Armor — hatch HP | 300 HP | 375 HP |
+| Vitality — your HP | 100 HP | 125 HP |
 | Stamina — sprint pool | 100 | 125 |
-| Engineering — repair speed | ×1 | ×1.25 |
 | Scavenging — salvage per kill | 25 | 31.25 |
 | Luck — crit chance (double damage) | 0% | 25% |
-| Hatch Armor — hatch HP | 300 | 375 |
-| Repair Rig — repair rate | 8 HP/s | 10 HP/s |
+| Equipment slot (once, after first loss) | — | 300 salvage |
+| Repair Rig — flat repair rate | 8 HP/s | 300 salvage |
 
 Luck is the only source of critical hits in the game, on purpose: two sources would
 multiply against each other and the numbers on the panel would stop meaning anything.
 
 **Attributes are never locked.** They are the answer to dying, so you can buy them
-before you have died. Weapon Tiers unlock after your first death.
+before you have died. Weapon wheel purchases and the equipment slot unlock after your first death.
 
 ---
 

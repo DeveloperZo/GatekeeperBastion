@@ -188,7 +188,7 @@ namespace GatekeeperBastion.Game
             {
                 if (UsingSalvageCutter)
                     return $"NO WEAPON — improvised cutter: {EffectiveDamage:0} dmg. " +
-                           "Buy the MK-1 at the ship's Armory.";
+                           "Buy the MK-1 at the ship's ARMORY.";
                 return _lastRefusal;
             }
         }
@@ -369,22 +369,20 @@ namespace GatekeeperBastion.Game
         void TickSlotInput()
         {
             if (Controls.Down(ControlId.SlotPrimary))
-                TrySelectSlot(WeaponSlot.Primary);
+                SelectSlot(WeaponSlot.Primary);
             if (Controls.Down(ControlId.SlotSecondary))
-                TrySelectSlot(WeaponSlot.Secondary);
+                SelectSlot(WeaponSlot.Secondary);
 
             if (Controls.Down(ControlId.SlotLast))
-                TrySelectSlot(_previousSlot);
+                SelectSlot(_previousSlot);
 
             float scroll = Controls.ScrollDelta();
             if (Mathf.Abs(scroll) > 0.01f)
                 CycleSlot(scroll > 0f ? 1 : -1);
         }
 
-        void TrySelectSlot(WeaponSlot slot) => TrySelectSlotPublic(slot);
-
-        /// <summary>Public for GameController.ApplyMetaEffects to pick the starting slot.</summary>
-        public void TrySelectSlotPublic(WeaponSlot slot)
+        /// <summary>Select a configured slot; public for starting loadout and tests.</summary>
+        public void SelectSlot(WeaponSlot slot)
         {
             // Empty slots are no-ops (no Primary owned → 1 does nothing).
             if (!_slots[(int)slot].configured) return;
@@ -411,7 +409,7 @@ namespace GatekeeperBastion.Game
                 if (idx < 0) idx += SlotCount;
                 var candidate = (WeaponSlot)idx;
                 if (!_slots[idx].configured) continue;
-                TrySelectSlot(candidate);
+                SelectSlot(candidate);
                 return;
             }
         }

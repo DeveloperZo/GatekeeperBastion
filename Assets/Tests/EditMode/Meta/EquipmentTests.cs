@@ -108,15 +108,8 @@ namespace GatekeeperBastion.Tests
             Assert.IsNull(typeof(MetaState).GetField("RepairRigLevel"));
             Assert.IsNull(typeof(MetaState).GetField("EngineeringLevel"));
 
-            // UpgradeTrack lives in Game — resolve by name so this file still compiles under
-            // the mcs harness (Sim-only). Under Unity the type is present and both names gone.
-            Type trackType = Type.GetType("GatekeeperBastion.Game.UpgradeTrack, GatekeeperBastion")
-                ?? Type.GetType("GatekeeperBastion.Game.UpgradeTrack");
-            if (trackType != null)
-            {
-                Assert.IsFalse(Enum.IsDefined(trackType, "RepairRig"));
-                Assert.IsFalse(Enum.IsDefined(trackType, "Engineering"));
-            }
+            Assert.IsFalse(Enum.IsDefined(typeof(UpgradeTrack), "RepairRig"));
+            Assert.IsFalse(Enum.IsDefined(typeof(UpgradeTrack), "Engineering"));
         }
 
         [Test]

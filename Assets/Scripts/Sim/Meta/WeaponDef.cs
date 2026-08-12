@@ -47,10 +47,6 @@ namespace GatekeeperBastion.Sim
         /// <summary>Player-facing ability name. Empty when <see cref="abilityId"/> is None.</summary>
         public string abilityName;
 
-        /// <summary>Zero-investment magnitude (metres / pin seconds / regen multiplier).
-        /// Accumulated wheel points push this dial.</summary>
-        public float abilityDial;
-
         /// <summary>Wall-clock cooldown in seconds. 0 when there is no ability.</summary>
         public float abilityCooldown;
     }

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using GatekeeperBastion.Game;
+using GatekeeperBastion.Sim;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;

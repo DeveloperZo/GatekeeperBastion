@@ -217,13 +217,25 @@ counted_lines() {
   ' "$1"
 }
 
+# Fence paths use forward slashes; rg on Windows may report backslashes.
+norm_path() {
+  printf '%s' "${1//\\//}"
+}
+
 in_list() {
-  local needle="$1"; shift
+  local needle; needle="$(norm_path "$1")"; shift
   local raw
   for raw in "$@"; do
-    [[ "$(trim "$raw")" == "$needle" ]] && return 0
+    [[ "$(trim "$(norm_path "$raw")")" == "$needle" ]] && return 0
   done
   return 1
+}
+
+# Path relative to Assets/Scripts, always forward-slash.
+scripts_rel() {
+  local file; file="$(norm_path "$1")"
+  local root; root="$(norm_path "$SCRIPTS_DIR")"
+  printf '%s' "${file#"$root"/}"
 }
 
 # rg exit 0 = matches, 1 = no matches, 2 = error. Only 2 is fatal. Matches land in
@@ -299,7 +311,7 @@ check_caps_dir() {
     n="$(counted_lines "$f")"
     if (( n > cap )); then
       OVER_COUNT=$((OVER_COUNT + 1))
-      short="${f#"$SCRIPTS_DIR"/}"
+      short="$(scripts_rel "$f")"
       if in_list "$short" "${OVER_KNOWN[@]}"; then
         printf 'NOTE %s: %s counted lines against a cap of %s (baselined by name)\n' "$f" "$n" "$cap"
       else
@@ -356,7 +368,7 @@ if [[ -n "$HITS" ]]; then
     file="${hit%%:*}"
     rest="${hit#*:}"
     lineno="${rest%%:*}"
-    short="${file#"$SCRIPTS_DIR"/}"
+    short="$(scripts_rel "$file")"
     if in_list "$short" "${WFS_NONLOOP[@]}"; then
       continue  # named in the fence as a non-loop site
     fi
@@ -432,7 +444,7 @@ if [[ -n "$HITS" ]]; then
     file="${hit%%:*}"
     rest="${hit#*:}"
     lineno="${rest%%:*}"
-    short="${file#"$SCRIPTS_DIR"/}"
+    short="$(scripts_rel "$file")"
     if in_list "$short" "${IOL_ALLOW[@]}"; then
       continue
     fi

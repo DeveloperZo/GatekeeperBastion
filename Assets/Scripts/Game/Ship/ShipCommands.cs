@@ -3,26 +3,6 @@ using GatekeeperBastion.Util;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Meta-upgrade tracks purchasable at ship stations. Weapons go through BuyWeapon /
-    /// BuyWheelUpgrade / EquipWeapon. The repair rig is equipment (BuyEquipmentSlot / BuyEquipment).</summary>
-    public enum UpgradeTrack
-    {
-        /// <summary>Hatch max HP (Fabrication).</summary>
-        HatchArmor,
-
-        // ---- PLAYER ATTRIBUTES (Crew Quarters) ----
-        // Same Buy/NextCost curve, deliberately NOT gated behind UpgradesUnlocked.
-
-        /// <summary>Player max HP (Crew Quarters).</summary>
-        Vitality,
-        /// <summary>Sprint stamina pool (Crew Quarters).</summary>
-        Stamina,
-        /// <summary>Base salvage per kill (Crew Quarters).</summary>
-        Scavenging,
-        /// <summary>Critical-hit chance (Crew Quarters).</summary>
-        Luck
-    }
-
     /// <summary>HOST-ONLY command layer for ship-hub purchases: the ONLY path by which station UI
     /// mutates MetaState. Each command applies MetaUpgrades / WeaponWheel / EquipmentCatalog
     /// arithmetic then persists via GameSession.</summary>
@@ -414,18 +394,7 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Console display name of a track.</summary>
-        public static string Label(UpgradeTrack track)
-        {
-            switch (track)
-            {
-                case UpgradeTrack.HatchArmor: return "Hatch Armor";
-                case UpgradeTrack.Vitality: return "Vitality";
-                case UpgradeTrack.Stamina: return "Stamina";
-                case UpgradeTrack.Scavenging: return "Scavenging";
-                case UpgradeTrack.Luck: return "Luck";
-                default: return track.ToString();
-            }
-        }
+        public static string Label(UpgradeTrack track) => UpgradeTracks.Label(track);
 
         /// <summary>Spend attribution token on every successful bought line.</summary>
         static string TrackToken(UpgradeTrack track)

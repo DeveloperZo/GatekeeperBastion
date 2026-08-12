@@ -81,18 +81,21 @@ library it writes subtly wrong.
 ## Locked — Bastion fight HUD corner starting point (Zo, 2026-08-10)
 
 The four always-on fight cards in `Bastion.unity` under `Canvas - Dynamic` are the
-baseline. Agents extend these hosts; they do not replace them with homemade bars or
-ghost Shadow chrome. Shift package rows (Icon Border + Slider + Text) stay intact.
+baseline, plus the top-centre Hatch host added by M36. Agents extend these hosts; they do
+not replace them with homemade bars or ghost Shadow chrome. Shift package rows (Icon Border
++ Slider + Text) stay intact.
 
 | Host | Corner | Size (canvas) | Contents |
 |---|---|---|---|
 | `Hud Profile` | TL `(64, −24)` | 320 × 64 | Shadow, **Profile Icon** (sprite), Profile Level, Profile Exp |
 | `Hud Score` | TR `(−24, −24)` | 320 × 72 | Shadow, Score Salvage, Wave Counter (VLG) |
+| `Hud Hatch` | Top centre `(0, −24)`, anchors `(0.5, 1)` | 360 × 72 | Shadow, Shift **Hatch** row (Icon Border / Slider / Text) + value `hp/max` |
 | `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows (Icon Border / Slider / Text), VLG |
 | `Hud Weapon` | BR `(−24, 24)` | 400 × 150 | Shadow, Weapon Name, Weapon Ammo, Shift **Reload** row (same bar recipe as vitals), VLG |
 
 `BastionHudView` wires those hosts. EXP-as-slider and further polish are manual on top
-of this layout — not a reason to rebuild the corners.
+of this layout — not a reason to rebuild the corners. Hatch integrity is always-on during
+Tethered; the left-drawer Armor/Hatch bar is retired.
 
 ## Locked — Ship HUD corners and station terminals (Zo, 2026-08-10)
 

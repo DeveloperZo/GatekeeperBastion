@@ -89,9 +89,14 @@ late doors open.
 place H / S / T markers, write the unlock graph, obstacles, freeze. Build All never regenerates
 playable geometry.
 
-Runtime terminal UX and wave-on-terminal are
-`../../Brainstorms/missions-and-destinations.md` — M47 authors the **space and the graph** so that
-work has somewhere to land.
+Runtime terminal interact polish and delivery banking remain
+`../../Brainstorms/missions-and-destinations.md`. M47 ships the unlock **graph**, markers, and
+sketch→kit emit so that loop has a place to land.
+
+### Sketch emit
+
+Write `Tools/bastion-sketch/*.txt`, then create `gkb_bastion_sketch_request.txt` at the project
+root (empty = example layout). Emits kit rooms + H/S/T/D under `BastionKit` with `BastionLayout`.
 
 ## Acceptance criteria
 
@@ -152,8 +157,7 @@ Rejected: a separate connector prefab family.
 
 Rejected: Build All regenerating playable geometry.
 
-Rejected: implementing terminal runtime, wave-on-terminal, or delivery banking here — layout and
-graph only; behaviour is `../../Brainstorms/missions-and-destinations.md`.
+Rejected: delivery banking / siphon replacement here.
 
 ## Verification
 

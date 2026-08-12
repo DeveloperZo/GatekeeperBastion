@@ -109,10 +109,8 @@ namespace GatekeeperBastion.Game
             {
                 GatekeeperKind kind = emit.Queue[emit.Queue.Count - 1];
                 emit.Queue.RemoveAt(emit.Queue.Count - 1);
-                // Decrement whether or not the spawn lands: a roster entry that can never be
-                // spawned must still stop counting against the wave, or the wave never clears
-                // and the run softlocks in Assault.
-                emit.Pending--;
+                // Queue.RemoveAt plus AliveCount/_active clearing prevent a failed spawn from
+                // softlocking the assault.
                 if (point == null) continue;
                 if (SpawnOne(emit.Spec, kind, point, i, size, emit)) tally[(int)kind]++;
             }

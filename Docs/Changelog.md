@@ -4,7 +4,7 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 -->
 
 Most recent first. **State transitions and structural edits only** — a milestone moving
@@ -14,6 +14,31 @@ notes, not tuning results, not anything the milestone file already holds.
 This file is history. **`Roadmap.md` is what is next**: order, status, strategy and risks.
 `Milestones/` is the detail behind any entry here.
 
+- 2026-08-12: **M36 completed** (Zo playtest: Hatch always-on host accepted for this stage).
+  Criteria 8–11 closed; file moved to `3. completed/`.
+- 2026-08-12: **M46 cancelled** (Zo). Authored-panel rewrite not a roadmap slot; station
+  polish remains the unfiled Current cut. File moved to `5. cancelled/`.
+- 2026-08-12: **M43 cancelled** (Zo). Line-ending phantoms and LFS adoption already true;
+  history is 21 commits so the orphan rewrite is no longer cheap. Root `gkb_*` / `_to_delete`
+  cleanup stays a chore. File moved to `5. cancelled/`.
+- 2026-08-12: **M36 active — Hatch always-on host.** Gate split into agent-closable (scene,
+  bindings, drawer removal) vs Zo-closable (screenshots / play bands). Completion bar forbids
+  `3. completed/` until playthrough notes land. File in `2. active/`.
+- 2026-08-12: **M36 rewritten — Hatch always-on host, not the tether instrument** (Zo). Dropped
+  salvage pulses, bodies-at-door marks, Prep/Assault re-skin and directional hit marks. Gate is
+  a fifth `Hud Hatch` card on the top edge centre (Shift Health-row recipe), drawer Hatch bar
+  removed, Decisions table extended on ship. File renamed
+  `M36-the-hatch-is-always-on.md`.
+- 2026-08-12: **M34 cancelled** (Zo). Region order stays in `Architecture/7-File-Layout.md`
+  for new files; tree-wide sweep and `Tools/lint-layout` are not a roadmap slot. File moved
+  to `5. cancelled/`; Architecture "in flight" row retired.
+- 2026-08-12: **M33 completed.** `Tools/docgen` splices ten countable blocks into
+  `Design/4-Data.md`, repairs Field-Manual against `WeaponWheel` / `UpgradeTracks`, and
+  `--check` runs from `Tools/verify/run.sh`.
+- 2026-08-11: **M47 unlock graph + sketch emit.** Sim `BastionUnlockGraph`; Game door/terminal/layout;
+  line-oriented `Tools/bastion-sketch/` + `gkb_bastion_sketch_request.txt` emitter. Kit enums/data
+  moved to Sim (no UnityEngine in BastionKit). Verification blockers remediated (Sim purity,
+  Validate terminal ids, exactly-one control door, example spacing, InitializeOnLoad allowlist).
 - 2026-08-11: **M47 map heuristics H/S/T/D.** Defend at Hatch; terminals open locked doors and
   pressure spawns; Control Room (76) last in unlock graph; unlock order authored independent of
   spatial distance. Layout + graph in M47; terminal runtime stays missions-and-destinations.

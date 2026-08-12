@@ -6,10 +6,10 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game.Ui
 {
-    /// <summary>Binds the authored Bastion fight HUD: four fixed corner cards, left/right edge
-    /// drawers, and the MsgGeneral / MsgPlayer lanes. Controllers push strings and values. The
-    /// one RectTransform write allowed here is the MsgPlayer lane's anchored Y, which has to
-    /// clear the left drawer's top edge and so cannot be authored.</summary>
+    /// <summary>Binds the authored Bastion fight HUD: four corner cards, top-centre Hatch host,
+    /// left/right edge drawers, and the MsgGeneral / MsgPlayer lanes. Controllers push strings
+    /// and values. The one RectTransform write allowed here is the MsgPlayer lane's anchored Y,
+    /// which has to clear the left drawer's top edge and so cannot be authored.</summary>
     public sealed class BastionHudView : MonoBehaviour
     {
         const float IrrelevantAlpha = 0.4f;
@@ -44,6 +44,13 @@ namespace GatekeeperBastion.Game.Ui
         [SerializeField] GameObject _weaponCardRoot;
         [SerializeField] TMP_Text _weaponName;
         [SerializeField] TMP_Text _weaponAmmo;
+
+        [Header("Hatch (top centre)")]
+        [SerializeField] GameObject _hatchRoot;
+        [SerializeField] TMP_Text _hatchLabel;
+        [SerializeField] TMP_Text _hatchValue;
+        [SerializeField] Slider _hatchBar;
+        [SerializeField, OptionalBinding] CanvasGroup _hatchGroup;
 
         // Clip bar. Always on while a gun is equipped: fill is clipRemaining/capacity, and
         // reloading swaps the fill for ReloadProgress under a RELOADING label. The row is
@@ -81,8 +88,6 @@ namespace GatekeeperBastion.Game.Ui
         [SerializeField, OptionalBinding] TMP_Text _assaultHeading;
         [SerializeField, OptionalBinding] GameObject _shortcutRoot;
         [SerializeField, OptionalBinding] ShortcutPanelView _shortcuts;
-        [SerializeField, OptionalBinding] TMP_Text _drawerHatchLabel;
-        [SerializeField, OptionalBinding] Slider _drawerHatchBar;
         [SerializeField, OptionalBinding] TMP_Text _drawerWeaponDetail;
 
         [Header("Message lanes")]
@@ -107,6 +112,7 @@ namespace GatekeeperBastion.Game.Ui
         bool _rightDrawerKnown;
         bool _rightDrawerOpen;
         bool _prepMode;
+        bool _hatchAlert;
 
         public void EnsureBuilt()
         {
@@ -117,6 +123,7 @@ namespace GatekeeperBastion.Game.Ui
                 LogMissing(nameof(_endScreen), _endScreen);
                 LogMissing(nameof(_vitalsRoot), _vitalsRoot);
                 LogMissing(nameof(_weaponCardRoot), _weaponCardRoot);
+                LogMissing(nameof(_hatchRoot), _hatchRoot);
             }
 
             if (_returnWired) return;
@@ -153,9 +160,9 @@ namespace GatekeeperBastion.Game.Ui
             SetGeneralMessage("arriving at the bastion...");
         }
 
-        /// <summary>Enters the fight look: the four cards and the crosshair. Drawer state is
-        /// not decided here — HudController pushes Controls' state the same frame, and forcing
-        /// a value would flip the drawer for one frame against the player's toggle.</summary>
+        /// <summary>Enters the fight look: corner cards, Hatch host, and the crosshair. Drawer
+        /// state is not decided here — HudController pushes Controls' state the same frame, and
+        /// forcing a value would flip the drawer for one frame against the player's toggle.</summary>
         public void ShowFight(bool prep)
         {
             HideChrome();
@@ -212,6 +219,7 @@ namespace GatekeeperBastion.Game.Ui
             UiBind.Show(_scoreRoot, visible);
             UiBind.Show(_vitalsRoot, visible);
             UiBind.Show(_weaponCardRoot, visible);
+            UiBind.Show(_hatchRoot, visible);
         }
 
         public void SetCrosshairVisible(bool visible) => UiBind.Show(_crosshairRoot, visible);
@@ -272,10 +280,21 @@ namespace GatekeeperBastion.Game.Ui
             UiBind.SetText(_weaponAmmo, ammoLine != null ? ammoLine : "");
         }
 
-        public void SetDrawerHatch(string label, float hp, float maxHp)
+        public void SetHatch(string label, string valueLine, float hp, float maxHp)
         {
-            UiBind.SetText(_drawerHatchLabel, label);
-            UiBind.SetBar(_drawerHatchBar, hp, maxHp);
+            UiBind.SetText(_hatchLabel, label);
+            UiBind.SetText(_hatchValue, valueLine != null ? valueLine : "");
+            UiBind.SetBar(_hatchBar, hp, maxHp);
+        }
+
+        /// <summary>Emphasis while Hatch is taking damage. Prefer label weight from
+        /// <see cref="SetHatch"/>; when a CanvasGroup is authored, ping-pong alpha so the card
+        /// moves in peripheral vision without being the only integrity channel.</summary>
+        public void SetHatchAlert(bool alert)
+        {
+            _hatchAlert = alert;
+            if (!alert && _hatchGroup != null && _hatchGroup.alpha != 1f)
+                _hatchGroup.alpha = 1f;
         }
 
         public void SetDrawerWeaponDetail(string text) =>
@@ -334,6 +353,13 @@ namespace GatekeeperBastion.Game.Ui
             // state, so a first open that raced layout would otherwise stick forever.
             if (_msgPlayerRoot != null && _msgPlayerRoot.activeSelf && _leftDrawerOpen)
                 UpdatePlayerMessageAnchor();
+
+            if (_hatchAlert && _hatchGroup != null)
+            {
+                // 2 Hz pulse between 0.7 and 1.0 — motion only; fill length still carries HP.
+                float a = 0.7f + 0.3f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * (Mathf.PI * 2f)));
+                if (_hatchGroup.alpha != a) _hatchGroup.alpha = a;
+            }
         }
 
         public void SetPromptVisible(bool visible) => UiBind.Show(_promptRoot, visible);

@@ -29,7 +29,7 @@ namespace GatekeeperBastion.Game
             _view.SetRightDrawerOpen(Controls.MissionDrawerOpen);
 
             long elapsed = (long)sim.RunElapsed;
-            long kill = (long)sim.CurrentKillValue;
+            long kill = sim.CurrentKillAward;
             long runSal = (long)sim.Salvage.RunSalvage;
             long banked = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
 
@@ -67,22 +67,20 @@ namespace GatekeeperBastion.Game
             {
                 _cacheHatchHp = hatchHp;
                 _cacheHatchMax = hatchMax;
-                _view.SetDrawerHatch(
-                    alarm ? "<b>HATCH — UNDER ATTACK</b>" : "HATCH",
-                    hatch.Hp, hatch.MaxHp);
 
-                // One writer for the player lane: the hatch alarm, in Prep and in Assault.
-                if (alarm)
-                {
-                    _lineBuf.Clear();
-                    _lineBuf.Append("<b>HATCH UNDER ATTACK</b> — ").Append(hatchHp)
-                        .Append('/').Append(hatchMax);
-                    _view.SetPlayerMessage(_lineBuf.ToString());
-                }
-                else
-                {
-                    _view.SetPlayerMessage(null);
-                }
+                _lineBuf.Clear();
+                if (alarm) _lineBuf.Append("<b>HATCH — UNDER ATTACK</b>");
+                else _lineBuf.Append("HATCH");
+                string hatchLabel = _lineBuf.ToString();
+
+                _lineBuf.Clear();
+                _lineBuf.Append(hatchHp).Append('/').Append(hatchMax);
+                _view.SetHatch(hatchLabel, _lineBuf.ToString(), hatch.Hp, hatch.MaxHp);
+                _view.SetHatchAlert(alarm);
+
+                // Toast is text-only — no second bar. Clears when the alert window ends.
+                if (alarm) _view.SetPlayerMessage("<b>HATCH UNDER ATTACK</b>");
+                else _view.SetPlayerMessage(null);
             }
 
             var player = Player;

@@ -125,7 +125,7 @@ namespace GatekeeperBastion.Game
                 }
 
                 bool firstDamaged = _pierceScratch.Count == 0;
-                float dmg = ApplyFalloff(baseDamage, def, hit.distance);
+                float dmg = baseDamage * WeaponWheel.FalloffFactor(def, hit.distance);
                 if (!firstDamaged)
                     dmg *= pierceMul;
                 if (dmg > 0f)
@@ -134,7 +134,7 @@ namespace GatekeeperBastion.Game
                     bodiesDamaged++;
                     if (crit)
                         Log.Event("Combat", $"CRITICAL HIT — {dmg:0} damage (x{CritDamageMultiplier:0.#})");
-                    // Pin charge is once per shot on the first damaged body only (M31). Pierce
+                    // Pin charge is once per shot on the first damaged body only. Pierce
                     // bodies must not each RegisterHit or a single ray spends the whole threshold.
                     if (firstDamaged)
                         RegisterPinHitIfNeeded(damageable);
@@ -159,16 +159,6 @@ namespace GatekeeperBastion.Game
             if (_owner == null) _owner = GetComponentInParent<PlayerHealth>();
             if (_owner == null) return false;
             return col.transform == _owner.transform || col.transform.IsChildOf(_owner.transform);
-        }
-
-        static float ApplyFalloff(float baseDamage, WeaponDef def, float distance)
-        {
-            if (def.falloffStart <= 0f || distance <= def.falloffStart) return baseDamage;
-            if (distance >= def.range) return 0f;
-            float span = def.range - def.falloffStart;
-            if (span <= 0.01f) return 0f;
-            float t = Mathf.Clamp01((distance - def.falloffStart) / span);
-            return baseDamage * (1f - t);
         }
 
         void RegisterPinHitIfNeeded(Damageable damageable)

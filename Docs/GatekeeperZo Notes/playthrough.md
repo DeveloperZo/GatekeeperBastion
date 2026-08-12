@@ -168,7 +168,8 @@ damage.** Ability credit `0 / 0 / 0`, and no `[Ability]` activation line of any 
 3. **"Could not tell when it was active" is a separate, real gap.** *(#6, information flows.)*
    Even a firing pin has no visible state: a pinned Gatekeeper looks like an unpinned one, and
    `PlayerAbility.TryActivate` returns silently on two of its three failure paths. **A working
-   pin would still read as broken.** Both halves belong with the HUD work, M36.
+   pin would still read as broken.** Both halves are HUD feedback still owed after M36
+   (always-on Hatch only — pin state was out of scope there).
 4. **MR-35 T9 needs explaining.** *(Question, not a claim.)* `WeaponTier.MaxTier` is 7 and the
    cost curve is defined for T0 through T6. A T9 either means the cap moved deliberately or it
    means the wheel's derived tier is no longer bounded by it. Worth one look before any
@@ -213,4 +214,11 @@ Within the same Run, first-half kill median hatchDist **29.1** (farShare 0.72) v
 **17.0** (farShare 0.25) — the instrument moves as the fight collapses toward the Hatch.
 **Criterion 8 closed by Zo override 2026-08-11** (contrasting Hatch-bay / far-wall pair not
 run; within-run split accepted as the difference proof).
+
+## 2026-08-12 — M36 Hatch HUD
+
+**Played:** Bastion fight with top-centre `Hud Hatch` always on.
+
+**Zo's verdict:** Hatch HUD addition is great for this point in time. Criteria 8–11 closed;
+M36 shipped.
 

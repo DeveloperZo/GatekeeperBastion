@@ -10,7 +10,7 @@ namespace GatekeeperBastion.Sim
     /// "earned" field; that is what made the end screen lie.
     /// </summary>
     [Serializable]
-    public struct LossReport
+    public struct RunReport
     {
         /// <summary>What ended the run: "hatch" (Hatch destroyed), "player" (player down), or
         /// "cleared" (all waves cleared — a SUCCESS).</summary>
@@ -97,7 +97,7 @@ namespace GatekeeperBastion.Sim
 
         /// <summary>Filled when the run ends: gross kill take and repair spend. Bookkeeping only —
         /// salvage already moved at kill/repair time. Net is derived by the caller.</summary>
-        public LossReport LastLossReport { get; private set; }
+        public RunReport LastRunReport { get; private set; }
 
         /// <summary>Salvage spent on hatch repair this run. Deducted from the bank as healing is
         /// applied; reported alongside gross on the end screen.</summary>
@@ -140,10 +140,12 @@ namespace GatekeeperBastion.Sim
         /// MetaUpgrades.SalvagePerKill(ScavengingLevel) times the siphon's hand-authored dial
         /// multiplier (1 / 1.1 / 1.15 / 1.25 / 1.35 / 1.5) — 25 at both dials down, 46.875 at
         /// Scavenging 5 / siphon 5. The HUD shows this; it is the whole income model.</summary>
-        public float CurrentKillValue
-        {
-            get { return BaseKillValue * Siphon.RewardMultiplier; }
-        }
+        public float KillValueAt(int siphonLevel) =>
+            BaseKillValue * TetherSiphon.RewardMultiplierFor(siphonLevel);
+
+        public float CurrentKillValue => KillValueAt(Siphon.Level);
+
+        public long CurrentKillAward => (long)Math.Floor((double)CurrentKillValue);
 
         /// <summary>Sim seconds elapsed while Tethered.</summary>
         public float RunElapsed { get; private set; }
@@ -325,7 +327,7 @@ namespace GatekeeperBastion.Sim
             }
             // Floor once: the bank and the run tally must agree to the unit. Crediting the raw
             // float to the tally and the floor to the bank was the end-screen drift.
-            long award = (long)Math.Floor((double)CurrentKillValue);
+            long award = CurrentKillAward;
             Salvage.Earn(award);
             _meta.EarnSalvage(award);
         }
@@ -509,9 +511,9 @@ namespace GatekeeperBastion.Sim
         private void EndRun(string cause)
         {
             ClearChainState();
-            LossReport report = BuildLossReport(cause);
+            RunReport report = BuildRunReport(cause);
             _meta.PodEjections++;
-            LastLossReport = report;
+            LastRunReport = report;
             SetPhase(RunPhase.Lost);
             long net = report.grossEarned - report.repairSpent;
             Log.Info(Tag, "Run ended (" + cause + "). Gross " + report.grossEarned +
@@ -527,10 +529,10 @@ namespace GatekeeperBastion.Sim
         /// </summary>
         private void CompleteRun()
         {
-            LossReport report = BuildLossReport("cleared");
+            RunReport report = BuildRunReport("cleared");
             _meta.CleanExits++;
             AllWavesCleared = true;
-            LastLossReport = report;
+            LastRunReport = report;
             SetPhase(RunPhase.Escaped);
             long net = report.grossEarned - report.repairSpent;
             Log.Info(Tag, "Run CLEARED: all " + WaveDirector.MaxWaves + " waves down. Gross " +
@@ -538,9 +540,9 @@ namespace GatekeeperBastion.Sim
                           ", net " + net + ".");
         }
 
-        LossReport BuildLossReport(string cause)
+        RunReport BuildRunReport(string cause)
         {
-            return new LossReport
+            return new RunReport
             {
                 cause = cause,
                 grossEarned = Salvage.RunSalvage,

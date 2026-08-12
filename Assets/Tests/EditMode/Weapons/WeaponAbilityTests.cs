@@ -24,7 +24,8 @@ namespace GatekeeperBastion.Tests
                 }
                 Assert.AreNotEqual(AbilityId.None, def.abilityId, $"{id} must have an ability");
                 Assert.IsFalse(string.IsNullOrEmpty(def.abilityName), $"{id} abilityName");
-                Assert.Greater(def.abilityDial, 0f, $"{id} abilityDial");
+                Assert.Greater(WeaponAbility.Magnitude(def.abilityId, 0), 0f,
+                    $"{id} ability magnitude");
                 Assert.Greater(def.abilityCooldown, 0f, $"{id} abilityCooldown");
             }
 
@@ -145,7 +146,7 @@ namespace GatekeeperBastion.Tests
             {
                 var def = WeaponCatalog.Def(id);
                 if (WeaponAbility.IsEmpty(def.abilityId)) continue;
-                Assert.AreEqual(WeaponAbility.Magnitude(def.abilityId, 0), def.abilityDial, 0.001f);
+                Assert.Greater(WeaponAbility.Magnitude(def.abilityId, 0), 0f);
                 Assert.AreEqual(WeaponAbility.Cooldown(def.abilityId), def.abilityCooldown, 0.001f);
             }
         }
@@ -154,7 +155,7 @@ namespace GatekeeperBastion.Tests
         {
             Assert.AreEqual(AbilityId.None, def.abilityId);
             Assert.IsTrue(string.IsNullOrEmpty(def.abilityName));
-            Assert.AreEqual(0f, def.abilityDial, 0.001f);
+            Assert.AreEqual(0f, WeaponAbility.Magnitude(def.abilityId, 0), 0.001f);
             Assert.AreEqual(0f, def.abilityCooldown, 0.001f);
         }
     }

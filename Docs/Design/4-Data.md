@@ -1,9 +1,10 @@
 # 4 — Data
 
-**Standing note.** This file is scheduled to become generated output read straight out of
-the live code, with a drift check, on the same contract as `../Play/Field-Manual.md`. Until
-that lands it is hand-maintained, so a number here can be stale from the moment the code
-changes until someone edits this page.
+<!-- GENERATED BLOCKS — DO NOT EDIT INSIDE GKB:GEN … GKB:END MARKERS.
+     Tools/docgen/run.sh splices these ten blocks from Sim/: mk1-base, wheel, rings,
+     tier-cost, abilities, gatekeepers, waves, dial, hatch, tracks. Prose outside the
+     markers is hand-written and preserved byte-for-byte on regenerate. Run
+     Tools/docgen/run.sh after any Sim/ change that owns a block; --check fails on drift. -->
 
 **Mechanics, the data half** (MDA), and the bottom of the leverage ladder — #11 buffer
 sizes and #12 constants. Read last, on purpose.
@@ -16,10 +17,11 @@ is what these values are in service of.
 Before changing a number, clear the gate in `../Working-Rules.md`: name the tier you are
 targeting, and say why a higher one is wrong.
 
-Every number here was read out of the source cited beside it. **Retuning means re-deriving
-with this arithmetic, never adjusting by feel** — change a number and you change the
-derivation and the tables in the same edit. Loop behaviour, pacing models and the evidence
-about what a change actually did are `2-Dynamics.md`.
+Every countable number here is emitted from the source cited on its `GKB:GEN` marker.
+**Retuning means regenerating with `Tools/docgen/run.sh`, then re-deriving** the hand-written
+arithmetic that sits beside the tables — change a number and you change the derivation in
+the same edit. Loop behaviour, pacing models and the evidence about what a change actually
+did are `2-Dynamics.md`.
 
 ## Weapon — MK-1 Sidearm
 
@@ -27,11 +29,13 @@ about what a change actually did are `2-Dynamics.md`.
 **There are no weapon "levels".** The flat Tier curve was replaced by the upgrade wheel; the MK-1
 has no ring authored (`WeaponWheel.RingOf` returns null for it), so it never improves.
 
+<!-- GKB:GEN mk1-base — WeaponCatalog.Def(Mk1Sidearm) -->
 | | base | | base |
 |---|---|---|---|
 | damage/shot | 14 | reload | 1.4s |
-| shots/second | 3.0 | range | 45 m |
+| shots/second | 3 | range | 45 m |
 | clip | 8 | | |
+<!-- GKB:END mk1-base -->
 
 **Duty-cycle formula.** A cycle is `clip/rate` seconds of firing plus a reload:
 
@@ -68,11 +72,13 @@ three share one **0.7s swing clock**: kinds differ by what they hit, never by ca
 HP 90 → 30 with 3x the bodies, so Wave 1 is still **540 HP of gatekeeper** (18 x 30 = the
 old 6 x 90) — a redistribution, not an inflation.
 
+<!-- GKB:GEN gatekeepers — WaveDirector.StatsFor, GatekeeperAttackInterval -->
 | kind | HP | player dmg | Hatch dmg | patrol | chase | refuses |
 |---|---|---|---|---|---|---|
 | Default | 30 | 6 | 4 | 3.2 | 5.6 | — |
 | Hunter | 20 | 6 | **0** | 6.5 | 6.5 | the Hatch (`ignoresHatch`) |
 | Ram | 120 | **0** | 20 | 2.2 | 2.2 | the player (`ignoresPlayer`; never provoked) |
+<!-- GKB:END gatekeepers -->
 
 - **Default** 30 HP = **3 shots** (14/28/42) = `30/27.5 = 1.09s`. 6 dmg/0.7s = 8.6 dps
   each: three on you kill a 100 HP player in **3.9s**, five in **2.3s** (at the old
@@ -117,16 +123,35 @@ different one, and the dial cannot multiply the scariest Gatekeeper.
 `TetherSiphon`, so payout and pressure cannot drift apart (it used to charge on three
 axes at once: +600% Gatekeeper HP for +50% money). +50% bodies for +50% money is break-even
 on paper; the wager is the residual, since gatekeepers overlap and leak. **Siphon 0 is the
-baseline** every table below rests on: **18 / 30 / 42 / 54 / 66** gatekeepers,
-**30 / 42 / 54 / 66 / 78** HP Defaults, **4.20 / 4.00 / 3.80 / 3.60 / 3.40s** group gaps.
+baseline** every table below rests on:
+
+<!-- GKB:GEN waves — WaveDirector.NextWave(i, 0) -->
+| Wave | Bodies | Default | Hunter | Ram | HP × | groups of | Every |
+|---|---|---|---|---|---|---|---|
+| 1 | 18 | 18 | 0 | 0 | 1 | 3 | 4.2 s |
+| 2 | 30 | 26 | 4 | 0 | 1.4 | 4 | 4 s |
+| 3 | 42 | 34 | 6 | 2 | 1.8 | 5 | 3.8 s |
+| 4 | 54 | 40 | 10 | 4 | 2.2 | 6 | 3.6 s |
+| 5 | 66 | 47 | 12 | 7 | 2.6 | 7 | 3.4 s |
+<!-- GKB:END waves -->
+
+<!-- GKB:GEN dial — TetherSiphon.RewardMultiplierFor, NextWave body counts -->
+| Dial | You earn | Wave 1 sends | Wave 5 sends |
+|---|---|---|---|
+| 0 | ×1.00 | 18 | 66 |
+| 1 | ×1.10 | 20 | 73 |
+| 2 | ×1.15 | 21 | 76 |
+| 3 | ×1.25 | 23 | 83 |
+| 4 | ×1.35 | 24 | 89 |
+| 5 | ×1.50 | 27 | 99 |
+<!-- GKB:END dial -->
 
 ## Hatch
 
-`Sim/Ship/ShipSystems.cs`, `MetaUpgrades.HatchHp`. 300 HP base, 375 at Hatch Armor 5.
-Repair rate is a flat **8 HP/s** on the equipped Repair Rig (`EquipmentCatalog`); there is
-no Engineering multiplier and no Repair Rig track.
+`Sim/Ship/ShipSystems.cs`, `MetaUpgrades.HatchHp`. Repair rate is a flat rate on the equipped
+Repair Rig (`EquipmentCatalog`); there is no Engineering multiplier and no Repair Rig track.
 
-**Repair costs `ShipSystems.RepairSalvagePerHp` (2) Salvage per HP**, charged as healing is
+**Repair costs `ShipSystems.RepairSalvagePerHp` Salvage per HP**, charged as healing is
 applied through `RunSim.RepairHatch`. Stops when the bank hits zero (partial heal, never
 negative). Free unlimited Prep repair is gone — that is the decision the cost exists to
 create; the share-of-gross table and three-death pacing interaction live in
@@ -140,11 +165,15 @@ names the next missing step. FABRICATION's old `RepairRigLevel` track and CREW Q
 `EngineeringLevel` are deleted; saves that owned either load with the slot and rig granted
 free.
 
-| cost | value | status |
-|---|---|---|
-| per HP healed | 2 Salvage (`ShipSystems.RepairSalvagePerHp`) | unchanged |
-| equipment slot | **300** Salvage, once, after first loss | *tunable, needs play data* |
-| repair rig | **300** Salvage, flat 8 HP/s | *tunable, needs play data* |
+<!-- GKB:GEN hatch — ShipSystems, MetaUpgrades.HatchHp, EquipmentCatalog -->
+| cost | value |
+|---|---|
+| Hatch HP (Armor 0) | 300 |
+| Hatch HP (Armor 5) | 375 |
+| per HP healed | 2 Salvage (`ShipSystems.RepairSalvagePerHp`) |
+| equipment slot | **300** Salvage, once, after first loss |
+| repair rig | **300** Salvage, flat 8 HP/s |
+<!-- GKB:END hatch -->
 
 Arithmetic for the 300/300 pair: a Run that dies on Wave 2 banks ~900 at dial 0 (pacing
 tables), so 600 fits inside one post-loss Run alongside a 400 wheel purchase — and prices the tool at
@@ -197,23 +226,29 @@ are a side investment.
 
 **Weapon upgrade wheel** (`Sim/Meta/WeaponWheel.cs`) — five attributes (reload, clip,
 damage, fire rate, ability). One purchase awards **5 / 3 / 3 / 0 / 0** by ring distance.
-Ten purchases, 110 points. Tier is derived (`total / 11`), never stored. Cost of the next
-purchase is still `400 + 200 × currentTier` = 400/600/800/1000/1200/1400/1600/1800/2000/2200,
-**13,000 cumulative**.
+Ten purchases, 110 points. Tier is derived (`total / 11`), never stored.
+
+<!-- GKB:GEN tier-cost — WeaponTier.Cost, SpentToReach -->
+Cost of the next purchase is still `400 + 200 × currentTier` = 400/600/800/1,000/1,200/1,400/1,600/1,800/2,000/2,200,
+**13,000** cumulative.
+<!-- GKB:END tier-cost -->
 
 Per-point compound multipliers (dials — retune freely). Mid-ladder (35 pts) keeps the old
-T7 focus anchors; full focus is 50 pts:
+T7 focus anchors; full focus is read from `WeaponWheel.FocusAtMax` / `NeighbourAtMax`:
 
-| attribute | per point | focus (50) | neighbour (30) | at 35 (old T7) |
-|---|---|---|---|---|
-| damage | ×1.0456 | ×9.30 | ×3.81 | ×4.76 |
-| clip | ×1.0283 | ×4.04 | ×2.31 | ×2.66 |
-| reload | ×0.98035 | ×0.37 | ×0.55 | ×0.50 |
-| fire rate | ×1.0117 | ×1.79 | ×1.42 | ×1.50 |
-| ability | dial points → `WeaponAbility.Magnitude` (`t = p/50`) | | | |
+<!-- GKB:GEN wheel — WeaponWheel per-point, FocusAtMax, NeighbourAtMax -->
+| attribute | per point | focus (50) | neighbour (30) |
+|---|---|---|---|
+| damage | ×1.05 | ×9.3 | ×3.81 |
+| clip | ×1.03 | ×4.04 | ×2.31 |
+| reload | ×0.98 | ×0.37 | ×0.55 |
+| fire rate | ×1.01 | ×1.79 | ×1.42 |
+| ability | dial points → `WeaponAbility.Magnitude` (`t = p/50`) | | |
+<!-- GKB:END wheel -->
 
 Rings (cycles; focus pays centre 5, neighbours 3):
 
+<!-- GKB:GEN rings — WeaponWheel.RingOf, TryIdentity, AttrLabel -->
 | Weapon | Ring | Strength | Weakness |
 |---|---|---|---|
 | BR-12 | R C D A F | damage | reload |
@@ -221,6 +256,7 @@ Rings (cycles; focus pays centre 5, neighbours 3):
 | PRI-C | C D R A F | damage | fire rate |
 | MK-1 | *unset* | — | — |
 | SEC-D | *unset* | — | — |
+<!-- GKB:END rings -->
 
 Pre-wheel flat Tier N migrates to **6N damage + 5N clip** points (N×11 total), zero elsewhere.
 
@@ -229,12 +265,14 @@ Pre-wheel flat Tier N migrates to **6N damage + 5N clip** points (N×11 total), 
 Numbers in `Sim/Meta/WeaponAbility.cs`. Dial points come from the upgrade wheel's ability spoke;
 `t = p/50`.
 
+<!-- GKB:GEN abilities — WeaponAbility.Magnitude, Cooldown, fixed constants -->
 | weapon | ability | dial | at 0 | at 50 | cooldown | fixed |
 |---|---|---|---|---|---|---|
 | BR-12 | Concussive Breach | metres of shove | 3.5 m | 10.5 m | 10 s | cone half-angle 35° |
-| MR-35 | Pin Shot | seconds held | 1.5 s | 6.0 s | 6 s | 3 hits to pin; 1.25 s decay |
+| MR-35 | Pin Shot | seconds held | 1.5 s | 6 s | 6 s | 3 hits to pin; 1.25 s decay |
 | MK-1 | Regen Surge | **surge duration** | 4 s | 10 s | 10 s | rate fixed at 2.5× |
 | PRI-C | Railshot | bodies at full damage | 3 | 8 | 12 s | arms 4 s; ignores `pierceDamageMul` |
+<!-- GKB:END abilities -->
 
 **The MR-35's Pin Shot registers on the first damaged body of a shot only** (M31), and the
 hit charge is weapon-scoped — target changes do not reset Hits; only the 1.25 s decay does.
@@ -279,14 +317,23 @@ on that line is worth **+31%** (BR-12 `33.2 → 43.6`), which is the number the 
 below is measured against. Whether Wave 5 still clears against a 383/436 ceiling is
 **unknown — needs play data** (old sizing assumed ~187/214 at seven purchases).
 
-**Attributes** (`Sim/Meta/MetaUpgrades.cs`) — `base * (1 + 0.05 * level)`, exactly +25%
-at level 5; CritChance is additive `0.05 * level` because a chance of zero has nothing
-to scale. Cost `200 * 2^currentLevel` = 200/400/800/1600/3200, **6,200** to max a track.
-`Game/Ship/ShipCommands.UpgradeTrack` carries five rows: **Hatch Armor** at FABRICATION, and
-**Vitality / Stamina / Scavenging / Luck** at CREW QUARTERS — four there, not five.
-Engineering and `RepairRigLevel` are off the enum entirely; they survive only as legacy save
-fields, which `MetaState.MigrateLegacyRepairTracks` converts into a free equipment slot and
-Repair Rig.
+**Attributes** (`Sim/Meta/UpgradeTracks` + `MetaUpgrades.cs`) — `base * (1 + 0.05 * level)`,
+exactly +25% at level 5; CritChance is additive `0.05 * level` because a chance of zero has
+nothing to scale. Engineering and `RepairRigLevel` are off the enum entirely; they survive
+only as legacy save fields, which `MetaState.MigrateLegacyRepairTracks` converts into a free
+equipment slot and Repair Rig.
+
+<!-- GKB:GEN tracks — UpgradeTracks.All, MetaUpgrades.NextCost -->
+Cost `200 * 2^currentLevel` = 200/400/800/1,600/3,200, **6,200** to max a track.
+
+| Track | Station | Level 0 | Level 5 |
+|---|---|---|---|
+| Hatch Armor | FABRICATION | 300 HP | 375 HP |
+| Vitality | CREW QUARTERS | 100 HP | 125 HP |
+| Stamina | CREW QUARTERS | 100 | 125 |
+| Scavenging | CREW QUARTERS | 25 | 31.25 |
+| Luck | CREW QUARTERS | 0% | 25% |
+<!-- GKB:END tracks -->
 
 **A level is smaller than the noise, so no *attribute* purchase is perceptible.** The
 measured three-attempt series is in `2-Dynamics.md` (loop B1): a **20% run-to-run spread**
@@ -313,3 +360,4 @@ Logs folder (or drop the files). Sample filters and era cutoffs:
 
 Why these values and not others: `2-Dynamics.md`. What they are in service of:
 `1-Experience.md`. What enforces them: `3-Mechanics.md`.
+

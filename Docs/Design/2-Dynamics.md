@@ -122,7 +122,7 @@ reachable; attributes are a side investment and should get expensive. Damage, fi
 clip left `MetaUpgrades` for `WeaponCatalog`, `WeaponTier` (the cost curve) and
 `WeaponWheel` (the multipliers) to make that split structural rather than a matter of two
 slopes. CREW QUARTERS is four tracks now that M23 deleted Engineering:
-`ShipCommands.UpgradeTrack` is `HatchArmor, Vitality, Stamina, Scavenging, Luck`.
+`UpgradeTrack` is `HatchArmor, Vitality, Stamina, Scavenging, Luck`.
 
 ### R2 — the dial: the player's hand on the gain
 

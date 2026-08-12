@@ -1,11 +1,11 @@
-using UnityEngine;
-
-namespace GatekeeperBastion.Game
+namespace GatekeeperBastion.Sim
 {
-    /// <summary>Footprint multiples for bastion segment prefabs. Scaler retunes the whole kit.</summary>
+    /// <summary>Footprint multiples for bastion segment prefabs. Scaler retunes the whole kit.
+    /// Pure floats — no UnityEngine (Sim seam + offline harness).</summary>
     public static class BastionKit
     {
-        public static readonly Vector2 Scaler = new Vector2(5f, 8f);
+        public const float ScalerX = 5f;
+        public const float ScalerZ = 8f;
 
         public const float StoreyHeight = 5f;
         public const float WallThickness = 0.5f;
@@ -24,11 +24,14 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        /// <summary>Footprint in local XZ: width (x) × depth (z).</summary>
-        public static Vector2 Footprint(BastionBlockKind kind)
+        public static float FootprintWidth(BastionBlockKind kind)
         {
-            int multiple = Multiple(kind);
-            return new Vector2(multiple * Scaler.x, multiple * Scaler.y);
+            return Multiple(kind) * ScalerX;
+        }
+
+        public static float FootprintDepth(BastionBlockKind kind)
+        {
+            return Multiple(kind) * ScalerZ;
         }
     }
 }

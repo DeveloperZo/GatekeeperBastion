@@ -1,9 +1,10 @@
 # M46 — The panel is authored
 
 <!--
-Status: planned
-Update trigger: when a station gains or loses an element, or the weapon/equipment roster grows
-Last updated: 2026-08-11
+Status: cancelled, Aug 2026
+Update trigger: none — cancelled
+Last updated: 2026-08-12
+Cancelled 2026-08-12 (Zo).
 -->
 
 Every element a station panel can ever show exists in Ship.unity at author time. Code writes

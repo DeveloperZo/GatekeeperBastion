@@ -117,14 +117,6 @@ namespace GatekeeperBastion.Tests
             }
         }
 
-        [Test]
-        public void Siphon_SalvagePerSecond_AppliesMultiplier()
-        {
-            var siphon = new TetherSiphon();
-            siphon.Level = 3; // x1.25
-            Assert.AreEqual(12.5f, siphon.SalvagePerSecond(10f), 1e-5f);
-        }
-
         // ---- The five-wave curve ----
 
         [Test]

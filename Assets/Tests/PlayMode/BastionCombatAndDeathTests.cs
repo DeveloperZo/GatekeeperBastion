@@ -187,7 +187,7 @@ namespace GatekeeperBastion.PlayTests
                 Cursor.lockState = CursorLockMode.Locked;
                 yield return null;
 
-                gun.TrySelectSlotPublic(WeaponSlot.Primary);
+                gun.SelectSlot(WeaponSlot.Primary);
                 yield return null;
                 int before = gun.ClipRemaining;
                 Assert.Greater(before, 3, "Primary should start with a full magazine");
@@ -201,9 +201,9 @@ namespace GatekeeperBastion.PlayTests
                 yield return null;
                 Assert.AreEqual(before - 3, gun.ClipRemaining);
 
-                gun.TrySelectSlotPublic(WeaponSlot.Secondary);
+                gun.SelectSlot(WeaponSlot.Secondary);
                 yield return null;
-                gun.TrySelectSlotPublic(WeaponSlot.Primary);
+                gun.SelectSlot(WeaponSlot.Primary);
                 yield return null;
 
                 Assert.AreEqual(before - 3, gun.ClipRemaining,

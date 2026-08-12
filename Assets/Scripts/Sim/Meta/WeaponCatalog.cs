@@ -8,10 +8,19 @@ namespace GatekeeperBastion.Sim
     /// no-new-statics rule. Adding a fifth listed weapon is a row here and nowhere else.</summary>
     public static class WeaponCatalog
     {
-        /// <summary>Highest <see cref="WeaponId"/> value that occupies an array slot
-        /// (includes the throwaway test row). Re-anchor when a new highest id lands —
-        /// ownership and wheel arrays are sized off this, not off enum Count.</summary>
-        public const int ArraySize = (int)WeaponId.PriC + 1;
+        /// <summary>One slot beyond the highest numeric <see cref="WeaponId"/> value.</summary>
+        public static readonly int ArraySize = ComputeArraySize();
+
+        static int ComputeArraySize()
+        {
+            int max = -1;
+            foreach (WeaponId id in Enum.GetValues(typeof(WeaponId)))
+            {
+                int value = (int)id;
+                if (value > max) max = value;
+            }
+            return max + 1;
+        }
 
         /// <summary>Amber shared by MK-1 / VK-7 / BR-12 tracers.</summary>
         const float AmberR = 1f, AmberG = 0.9f, AmberB = 0.35f;
@@ -180,7 +189,6 @@ namespace GatekeeperBastion.Sim
                 crosshair = crosshair,
                 abilityId = abilityId,
                 abilityName = has ? WeaponAbility.DisplayName(abilityId) : "",
-                abilityDial = has ? WeaponAbility.Magnitude(abilityId, 0) : 0f,
                 abilityCooldown = has ? WeaponAbility.Cooldown(abilityId) : 0f
             };
         }

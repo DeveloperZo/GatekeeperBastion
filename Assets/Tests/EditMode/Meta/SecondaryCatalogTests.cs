@@ -125,19 +125,22 @@ namespace GatekeeperBastion.Tests
         [Test]
         public void KillLog_NamesTheSlot()
         {
-            string primary = KillLog.Format("Hunter", WeaponSlot.Primary, 25f, 3, 34.2f, 11.8f);
+            string primary = KillLog.Format(
+                "Hunter", WeaponSlot.Primary, 25L, 3, hatchDist: 34.2f, spawnDist: 11.8f);
             Assert.AreEqual(
-                "killed a Hunter with Primary (+25 salvage) — 3 left hatchDist=34.2 spawnDist=11.8",
+                "killed a Hunter with Primary (+25 salvage) -- 3 left hatchDist=34.2 spawnDist=11.8",
                 primary);
 
-            string secondary = KillLog.Format("Default", WeaponSlot.Secondary, 10f, 0, 5.0f, -1f);
+            string secondary = KillLog.Format(
+                "Default", WeaponSlot.Secondary, 10L, 0, hatchDist: 5.0f, spawnDist: -1f);
             Assert.AreEqual(
-                "killed a Default with Secondary (+10 salvage) — 0 left hatchDist=5.0 spawnDist=-1.0",
+                "killed a Default with Secondary (+10 salvage) -- 0 left hatchDist=5.0 spawnDist=-1.0",
                 secondary);
 
-            string unknown = KillLog.FormatUnknownSlot("Ram", 40f, 1, 0.4f, 2.5f);
+            string unknown = KillLog.FormatUnknownSlot(
+                "Ram", 40L, 1, hatchDist: 0.4f, spawnDist: 2.5f);
             Assert.AreEqual(
-                "killed a Ram (+40 salvage) — 1 left hatchDist=0.4 spawnDist=2.5",
+                "killed a Ram (+40 salvage) -- 1 left hatchDist=0.4 spawnDist=2.5",
                 unknown);
         }
 

@@ -1,10 +1,10 @@
 # M43 — A repository that reads as clean
 
 <!--
-Status: later
-Update trigger: when .gitattributes changes, when an asset pack is re-imported, or when the LFS allowance is approached
-Last updated: 2026-08-10
-Renumbered from M42 on 2026-08-10 (M42 is now the code-cleanliness milestone); content otherwise unchanged.
+Status: cancelled, Aug 2026
+Update trigger: none — cancelled
+Last updated: 2026-08-12
+Renumbered from M42 on 2026-08-10 (M42 is now the code-cleanliness milestone). Cancelled 2026-08-12: phantom status and LFS premises already true; rewrite no longer cheap.
 -->
 
 `git status` on an untouched checkout prints `nothing to commit, working tree clean`.

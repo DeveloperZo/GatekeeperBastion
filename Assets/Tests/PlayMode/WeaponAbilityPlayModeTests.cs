@@ -73,7 +73,7 @@ namespace GatekeeperBastion.PlayTests
 
             var def = WeaponCatalog.Def(WeaponId.Br12Shotgun);
             gun.Configure(WeaponSlot.Primary, def, 0, WeaponId.Br12Shotgun);
-            gun.TrySelectSlotPublic(WeaponSlot.Primary);
+            gun.SelectSlot(WeaponSlot.Primary);
 
             var gatekeeper = SpawnGatekeeper();
             gatekeeper.transform.position = cam.transform.position + Vector3.forward * 3f;
@@ -82,7 +82,8 @@ namespace GatekeeperBastion.PlayTests
             // Invoke concussive via reflection-free public path: Register is pin-only;
             // drive TryActivate by simulating the private path through a known public effect.
             // Shove API is the HOST-ONLY entry — call it the same way PlayerAbility does.
-            float credited = gatekeeper.Shove(Vector3.back * def.abilityDial);
+            float credited = gatekeeper.Shove(
+                Vector3.back * WeaponAbility.Magnitude(def.abilityId, 0));
             Assert.IsTrue(gatekeeper.IsCommittedToHatch);
             Assert.GreaterOrEqual(credited, 0f);
             Assert.IsNotNull(ability);

@@ -6,6 +6,7 @@ using Unity.AI.Navigation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
@@ -21,7 +22,9 @@ namespace GatekeeperBastion.EditorTools
     /// cross-references, which is what makes the rebuild safe; anything that gains one
     /// (the Hatch did — RepairInteractable.station) must move out of it. Materials and the
     /// three gatekeeper prefabs (SceneBuilder.Enemies.cs) are refreshed under
-    /// Assets/Materials and Assets/Prefabs with stable GUIDs.</summary>
+    /// Assets/Materials and Assets/Prefabs with stable GUIDs.
+    /// Bastion kit segments under Environment skip the geometry wipe; rebake NavMesh only
+    /// via <c>gkb_bastion_navmesh_request.txt</c>.</summary>
     [InitializeOnLoad]
     public static partial class SceneBuilder
     {
@@ -43,6 +46,7 @@ namespace GatekeeperBastion.EditorTools
         static double _nextSentinelPoll;
         static string Root => Directory.GetParent(Application.dataPath).FullName;
         static string SentinelPath => Path.Combine(Root, "gkb_scene_build_request.txt");
+        static string NavMeshSentinelPath => Path.Combine(Root, "gkb_bastion_navmesh_request.txt");
 
         static SceneBuilder()
         {
@@ -55,6 +59,19 @@ namespace GatekeeperBastion.EditorTools
             _nextSentinelPoll = EditorApplication.timeSinceStartup + 1.0;
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
                 return;
+
+            if (File.Exists(NavMeshSentinelPath))
+            {
+                try { File.Delete(NavMeshSentinelPath); }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[SceneBuilder] navmesh sentinel: " + e.Message);
+                    return;
+                }
+                BakeBastionNavMeshInPlace();
+                return;
+            }
+
             if (!File.Exists(SentinelPath)) return;
             try { File.Delete(SentinelPath); }
             catch (Exception e) { Debug.LogWarning("[SceneBuilder] sentinel: " + e.Message); return; }
@@ -73,6 +90,15 @@ namespace GatekeeperBastion.EditorTools
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             BuildAllCore();
+        }
+
+        /// <summary>Rebakes Bastion-NavMesh.asset from current Environment children without
+        /// wiping kit / authored geometry. Prefer this after moving halves or floors.</summary>
+        [MenuItem("GatekeeperBastion/Bake Bastion NavMesh")]
+        public static void BakeBastionNavMeshMenu()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            BakeBastionNavMeshInPlace();
         }
 
         /// <summary>Batchmode entry: rebuild geometry/spawns/NavMesh only. UI is authored in scenes.</summary>
@@ -132,6 +158,16 @@ namespace GatekeeperBastion.EditorTools
 
         static void RebuildBastionGeometry()
         {
+            // Kit halves live under Environment. Clearing that root would wipe authored layout.
+            if (BastionSceneHasKitSegments())
+            {
+                Debug.LogWarning(
+                    "[SceneBuilder] Bastion.unity has BastionSegment under Environment — skipping geometry wipe. " +
+                    "Drop gkb_bastion_navmesh_request.txt to rebake NavMesh only.");
+                BakeBastionNavMeshInPlace();
+                return;
+            }
+
             Scene scene = OpenAndClearOwnedRoots(ScenePath);
             Palette pal = CreatePalette();
             CreateEnemyPrefabs(pal); // SceneBuilder.Enemies.cs — asset refresh, stable GUIDs
@@ -143,6 +179,33 @@ namespace GatekeeperBastion.EditorTools
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             Debug.Log($"[SceneBuilder] Rebuilt {ScenePath} in place: Environment, SpawnPoints, Directional Light, NavMesh. Authored content untouched.");
+        }
+
+        /// <summary>Rebake <c>Bastion-NavMesh.asset</c> from current Environment children (kit floors
+        /// included). Does not rebuild or delete scene geometry.</summary>
+        public static void BakeBastionNavMeshInPlace()
+        {
+            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            GameObject env = GameObject.Find("Environment");
+            if (env == null)
+            {
+                Debug.LogError("[SceneBuilder] No Environment root in Bastion.unity — cannot bake NavMesh.");
+                return;
+            }
+
+            BakeNavMesh(env);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SceneBuilder] Bastion NavMesh rebaked in place from Environment children.");
+        }
+
+        static bool BastionSceneHasKitSegments()
+        {
+            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            BastionSegment[] segments = UnityEngine.Object.FindObjectsByType<BastionSegment>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            return segments != null && segments.Length > 0;
         }
 
         // ---------- assets ----------
@@ -297,8 +360,13 @@ namespace GatekeeperBastion.EditorTools
 
         static void BakeNavMesh(GameObject env)
         {
+            NavMeshSurface[] existing = env.GetComponents<NavMeshSurface>();
+            for (int i = existing.Length - 1; i >= 0; i--)
+                UnityEngine.Object.DestroyImmediate(existing[i]);
+
             var surface = env.AddComponent<NavMeshSurface>();
             surface.collectObjects = CollectObjects.Children;
+            surface.useGeometry = NavMeshCollectGeometry.RenderMeshes;
             surface.BuildNavMesh();
             if (surface.navMeshData == null)
             {
@@ -307,6 +375,7 @@ namespace GatekeeperBastion.EditorTools
             }
             AssetDatabase.DeleteAsset(NavMeshDataPath);
             AssetDatabase.CreateAsset(surface.navMeshData, NavMeshDataPath);
+            surface.navMeshData = AssetDatabase.LoadAssetAtPath<UnityEngine.AI.NavMeshData>(NavMeshDataPath);
         }
 
         // ---------- helpers ----------

@@ -47,10 +47,5 @@ namespace GatekeeperBastion.Sim
             get { return RewardMultiplierFor(_level); }
         }
 
-        /// <summary>Salvage income per second for a given base rate: baseRate * the dial's multiplier.</summary>
-        public float SalvagePerSecond(float baseRate)
-        {
-            return baseRate * RewardMultiplier;
-        }
     }
 }

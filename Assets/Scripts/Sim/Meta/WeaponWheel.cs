@@ -160,7 +160,9 @@ namespace GatekeeperBastion.Sim
 
         public static int EffectiveClip(WeaponDef def, int clipPoints)
         {
-            int clip = (int)Math.Round(def.clipSize * ClipMul(clipPoints));
+            // No catalog product lands on exact .5 today; round halves away from zero and floor at 1.
+            int clip = (int)Math.Round(
+                def.clipSize * ClipMul(clipPoints), MidpointRounding.AwayFromZero);
             return clip < 1 ? 1 : clip;
         }
 
@@ -194,20 +196,24 @@ namespace GatekeeperBastion.Sim
             return clip * dmgPerPull / cycle;
         }
 
-        /// <summary>Damage at range after falloff, using the damage spoke only.</summary>
-        public static float DamageAtRange(WeaponDef def, int damagePoints, float distance)
+        /// <summary>Damage multiplier at <paramref name="distance"/>. Negative and out-of-range
+        /// distances deal nothing; otherwise falloff is linear from falloffStart to range.</summary>
+        public static float FalloffFactor(WeaponDef def, float distance)
         {
-            float baseDmg = EffectiveDamage(def, damagePoints);
-            if (distance < 0f) distance = 0f;
+            if (distance < 0f) return 0f;
             if (distance > def.range) return 0f;
-            if (def.falloffStart <= 0f || distance <= def.falloffStart) return baseDmg;
+            if (def.falloffStart <= 0f || distance <= def.falloffStart) return 1f;
             float span = def.range - def.falloffStart;
             if (span <= 0.01f) return 0f;
             float t = (distance - def.falloffStart) / span;
             if (t < 0f) t = 0f;
             if (t > 1f) t = 1f;
-            return baseDmg * (1f - t);
+            return 1f - t;
         }
+
+        /// <summary>Damage at range after falloff, using the damage spoke only.</summary>
+        public static float DamageAtRange(WeaponDef def, int damagePoints, float distance) =>
+            EffectiveDamage(def, damagePoints) * FalloffFactor(def, distance);
 
         /// <summary>Per-body damage for a pierce ray: falloff at <paramref name="distance"/>,
         /// then flat <see cref="WeaponDef.pierceDamageMul"/> on every body after the first.

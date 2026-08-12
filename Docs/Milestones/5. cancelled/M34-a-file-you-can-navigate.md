@@ -1,9 +1,9 @@
 # M34 — A file you can navigate
 
 <!--
-Status: later
-Update trigger: when the region order changes, or when the layout check moves into AutoVerify
-Last updated: 2026-08-09
+Status: cancelled, Aug 2026
+Update trigger: none — cancelled
+Last updated: 2026-08-12
 -->
 
 Every C# file in `Assets/Scripts` gets the region order from

@@ -131,7 +131,8 @@ annoyed it on the way in" — Defaults and Rams honour a drawn line, Hunters do 
 Zo, 2026-08-11: *"I like that things can break that promise. No information is absolute and we
 can telegraph to player."* So the display needs a **vocabulary of confidence**, not a single
 line style: a committed lane, an uncertain one, a spawn point that is known versus suspected.
-That is a HUD system and it belongs with **M36**.
+That is a HUD system and it does **not** belong on M36 (always-on Hatch integrity only).
+Park it until a dedicated telegraph milestone or a later HUD cut.
 
 ## What would kill it
 

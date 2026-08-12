@@ -38,7 +38,6 @@ namespace GatekeeperBastion.Game
         {
             public WaveSpec Spec;
             public readonly List<GatekeeperKind> Queue = new List<GatekeeperKind>();
-            public int Pending;
             public int Spawned;
             public int Size;
         }
@@ -127,7 +126,6 @@ namespace GatekeeperBastion.Game
 
             var emit = new WaveEmit { Spec = spec };
             BuildRoster(emit, spec);
-            emit.Pending = emit.Queue.Count;
             emit.Size = emit.Queue.Count;
             emit.Spawned = 0;
             // Do NOT reset AliveCount — a deep-start chain overlaps waves in the room.
@@ -170,7 +168,7 @@ namespace GatekeeperBastion.Game
             AliveCount = Mathf.Max(0, AliveCount - 1);
 
             var gc = GameController.Instance;
-            float award = gc != null && gc.Sim != null ? gc.Sim.CurrentKillValue : 0f;
+            long award = gc != null && gc.Sim != null ? gc.Sim.CurrentKillAward : 0L;
             if (gc != null) gc.GatekeeperKilled();
             else Log.Warn(Tag, "Kill not awarded: no GameController in the scene.");
 

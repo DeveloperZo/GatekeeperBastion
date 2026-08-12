@@ -110,10 +110,13 @@ prints median and far-wall share per kind.
 ### Three standing rules
 
 **Countable is generated; arguable is written.** `Tools/docgen/run.sh` writes
-`Play/Field-Manual.md` by calling the same code the game runs, and `--check` exits non-zero
-on drift. A hand edit there is lost on the next Run, on purpose. **Do not restate a countable
-fact anywhere else** — link to the manual. On 2026-08-04 three documents described three
-different games and none was the one in the repo; each had been correct when written.
+`Play/Field-Manual.md` and splices the countable blocks in `Design/4-Data.md` by calling the
+same code the game runs, and `--check` exits non-zero on drift (also from
+`Tools/verify/run.sh`). A hand edit inside a generated region is lost on the next Run, on
+purpose; prose outside `4-Data.md`'s `GKB` markers is preserved. **Do not restate a countable
+fact anywhere else** — link to the manual or the block. On 2026-08-04 three documents
+described three different games and none was the one in the repo; each had been correct when
+written.
 
 **Keep the set small.** The previous project reached 48 markdown files and its own postmortem
 named the docs as a failure: productive procrastination. Before adding a file it has to fail
@@ -130,5 +133,6 @@ standing rule applying to every file, every log line and every string a player r
 would otherwise be duplicated into six files and drift in four.
 
 Numbers in these docs were read out of `Assets/Scripts/Sim/*.cs` and
-`Assets/Scripts/Game/*.cs`. When you retune, update `Design/4-Data.md` in the same change.
-Root `README.md` has clone-to-play steps.
+`Assets/Scripts/Game/*.cs`. When you retune a Sim/ constant that owns a `4-Data.md` block or
+the Field Manual, run `Tools/docgen/run.sh` in the same change. Root `README.md` has
+clone-to-play steps.

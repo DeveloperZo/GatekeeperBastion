@@ -5,12 +5,12 @@ Purpose: The region order every C# file in Assets/Scripts follows, and the rules
 Status: working
 Authority: MANDATORY — the order is fixed; which regions appear is not.
 Update trigger: when a region is added to or removed from either order, or when the checker's rules change.
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 -->
 
 Adopted from InfinityQube's `03-file-standards.md` (`6-InfinityQube-Precedence.md`).
-**M34 applies it to the existing tree and adds the check.** Until M34 ships, this governs new
-files only.
+**Governs new files.** M34 (tree-wide sweep + `Tools/lint-layout`) is cancelled; nothing
+enforces the order on the existing tree.
 
 ## The two orders
 
@@ -93,8 +93,6 @@ the number was and never said where the seam went — twelve files over, and the
 ## The check, not the convention
 
 **A rule enforced by a person re-reading this file is a rule that will hold for about three
-weeks.** M34's real deliverable is `Tools/lint-layout/run.sh` wired into
-`Tools/verify/run.sh`, alongside M28's language check. That is the InfinityQube lesson
-applied: their file-size rule was CRITICAL, script-backed, and ended at 247% over — because
-the script had to be invoked, and a verification step that has to be remembered is a
-verification step that is skipped.
+weeks.** That is the InfinityQube lesson: their file-size rule was CRITICAL, script-backed,
+and ended at 247% over — because the script had to be invoked. M34 would have wired
+`Tools/lint-layout` into `verify`; it is cancelled, so this order stays a convention.
