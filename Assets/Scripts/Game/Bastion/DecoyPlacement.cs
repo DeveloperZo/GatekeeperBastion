@@ -167,7 +167,8 @@ namespace GatekeeperBastion.Game
         void EnsureMats()
         {
             if (_validMat != null) return;
-            var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+            var shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null) shader = Shader.Find("Unlit/Color");
             if (shader == null) return;
             _validMat = new Material(shader) { color = FxColors.DecoyGhostValid };
             _invalidMat = new Material(shader) { color = FxColors.DecoyGhostInvalid };

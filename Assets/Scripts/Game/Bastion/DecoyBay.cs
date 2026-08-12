@@ -11,8 +11,6 @@ namespace GatekeeperBastion.Game
     {
         const string Tag = "Decoy";
 
-        public static DecoyBay Instance { get; private set; }
-
         public DecoyState State { get; private set; } = new DecoyState();
         public DecoyObject Live { get; private set; }
         public bool HasPayload { get; private set; }
@@ -20,12 +18,12 @@ namespace GatekeeperBastion.Game
         DecoyPlacement _placement;
         bool _waveTallyOpen;
         bool _subscribed;
+        bool _registered;
 
         public DecoyPlacement Placement => _placement;
 
         void Awake()
         {
-            Instance = this;
             _placement = GetComponent<DecoyPlacement>();
             if (_placement == null) _placement = gameObject.AddComponent<DecoyPlacement>();
             var gun = GetComponent<PlayerGun>();
@@ -35,18 +33,36 @@ namespace GatekeeperBastion.Game
 
         void OnEnable()
         {
+            TryRegister();
             TrySubscribe();
         }
 
         void OnDisable()
         {
+            Unregister();
             Unsubscribe();
-            if (Instance == this) Instance = null;
         }
 
         void Update()
         {
+            // The controller can enable after the bay; both hooks retry until it exists.
+            if (!_registered) TryRegister();
             if (!_subscribed) TrySubscribe();
+        }
+
+        void TryRegister()
+        {
+            var gc = GameController.Instance;
+            if (gc == null) return;
+            gc.RegisterDecoyBay(this);
+            _registered = true;
+        }
+
+        void Unregister()
+        {
+            _registered = false;
+            var gc = GameController.Instance;
+            if (gc != null) gc.UnregisterDecoyBay(this);
         }
 
         void TrySubscribe()

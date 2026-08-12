@@ -94,7 +94,7 @@ namespace GatekeeperBastion.Game.Ui
         public static bool SetText(TMP_Text label, string text)
         {
             if (label == null) return false;
-            text = text ?? string.Empty;
+            if (text == null) text = string.Empty;
             if (label.text == text) return false;
             label.text = text;
             return true;
@@ -127,7 +127,7 @@ namespace GatekeeperBastion.Game.Ui
         public static void SetButtonLabel(Button button, string label)
         {
             if (button == null) return;
-            string text = label ?? "";
+            string text = label != null ? label : "";
             var main = button.GetComponent<Michsky.UI.Shift.MainButton>();
             if (main != null)
             {

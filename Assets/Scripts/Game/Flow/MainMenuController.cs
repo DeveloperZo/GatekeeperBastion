@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: MainMenu front-end flow — CONTINUE / START NEW (overwrite
-    /// confirm) / OPTIONS / QUIT (exit confirm, M35 criterion 12). Continue and Start load
+    /// confirm) / OPTIONS / QUIT (exit confirm). Continue and Start load
     /// <see cref="SceneFlow.Ship"/>; Embark to Bastion is a Ship-station action, not a menu
     /// action. Esc is not polled here — Shift's modal hotkeys own it on the menu.</summary>
     public sealed class MainMenuController : MonoBehaviour
@@ -28,7 +28,7 @@ namespace GatekeeperBastion.Game
             if (_view == null)
             {
                 Log.Error(Tag,
-                    "Missing serialized reference '_view' (M35 criterion 17 — wire it in MainMenu.unity).");
+                    "Missing serialized reference '_view' (wire it in MainMenu.unity).");
                 return;
             }
 
@@ -93,7 +93,7 @@ namespace GatekeeperBastion.Game
                 _loading = false;
         }
 
-        /// <summary>Exit-modal confirm (M35 criterion 12): quits the build, stops Play mode
+        /// <summary>Exit-modal confirm: quits the build, stops Play mode
         /// in the editor.</summary>
         void Quit()
         {

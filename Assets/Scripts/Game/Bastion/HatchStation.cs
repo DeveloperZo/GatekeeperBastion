@@ -38,13 +38,34 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Current sim hit points (0 when the sim is unavailable).</summary>
-        public float Hp => SimHatch?.Hp ?? 0f;
+        public float Hp
+        {
+            get
+            {
+                var hatch = SimHatch;
+                return hatch != null ? hatch.Hp : 0f;
+            }
+        }
 
         /// <summary>Maximum sim hit points (1 when the sim is unavailable, to keep ratios safe).</summary>
-        public float MaxHp => SimHatch?.MaxHp ?? 1f;
+        public float MaxHp
+        {
+            get
+            {
+                var hatch = SimHatch;
+                return hatch != null ? hatch.MaxHp : 1f;
+            }
+        }
 
         /// <summary>True when the sim hatch is destroyed or unavailable.</summary>
-        public bool IsDestroyed => SimHatch?.IsDestroyed ?? true;
+        public bool IsDestroyed
+        {
+            get
+            {
+                var hatch = SimHatch;
+                return hatch == null || hatch.IsDestroyed;
+            }
+        }
 
         Collider _collider;
 

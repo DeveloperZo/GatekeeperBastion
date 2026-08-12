@@ -35,12 +35,12 @@ namespace GatekeeperBastion.Sim
         public int ScavengingLevel;
         public int LuckLevel;
 
-        // ---- Equipment (M23) ----
+        // ---- Equipment ----
         public bool EquipmentSlotPurchased;
         public int OwnedEquipmentMask;
         public EquipmentId EquippedEquipment = EquipmentId.None;
 
-        // ---- Payloads (M30) — drone bay ----
+        // ---- Payloads — drone bay ----
         public int OwnedPayloadMask;
         /// <summary>Payload sitting in the drone bay. Field name is the bay; value is the payload.</summary>
         public PayloadId EquippedDrone = PayloadId.None;
@@ -436,7 +436,7 @@ namespace GatekeeperBastion.Sim
             }
         }
 
-        /// <summary>M23 criterion 8: any legacy repair-track investment grants slot + rig free.</summary>
+        /// <summary>Any legacy repair-track investment grants slot + rig free.</summary>
         static void MigrateLegacyRepairTracks(MetaState m, int repairRigLevel, int engineeringLevel)
         {
             if (repairRigLevel <= 0 && engineeringLevel <= 0) return;

@@ -9,7 +9,7 @@ namespace GatekeeperBastion.Game.Ui
     /// <summary>One pooled keycap row of the shortcut strip: keycap label + description.
     /// The row object is an authored clone of a serialized template (Shift's
     /// <c>Keyboard Shortcut Key</c> keycap + Rajdhani labels through UIManagerText) —
-    /// M35 criterion 35. WP-3/WP-4 author the template in their scenes.</summary>
+    /// WP-3/WP-4 author the template in their scenes.</summary>
     [Serializable]
     public sealed class ShortcutRowBinding
     {
@@ -74,7 +74,7 @@ namespace GatekeeperBastion.Game.Ui
             UiBind.Show(_rowsRoot, !collapsed);
         }
 
-        /// <summary>Structured row path (M35 criterion 35): pools clones of the serialized row
+        /// <summary>Structured row path: pools clones of the serialized row
         /// template, one per <see cref="ShortcutRow"/>. Section headings pool from the section
         /// template when one is authored. Rows beyond the list are deactivated, never destroyed.
         /// Logs one error and no-ops when the template is not wired.</summary>
@@ -122,7 +122,7 @@ namespace GatekeeperBastion.Game.Ui
                 // Seed ShortcutButton fields before enable so OnEnable cannot restore ESC/EXIT.
                 if (slot.shortcut != null)
                 {
-                    slot.shortcut.keyText = row.Key ?? "";
+                    slot.shortcut.keyText = row.Key != null ? row.Key : "";
                     slot.shortcut.buttonText = "";
                 }
                 UiBind.Show(slot.root, true);
@@ -185,8 +185,8 @@ namespace GatekeeperBastion.Game.Ui
 
         static void ApplyRow(ShortcutRowBinding slot, ShortcutRow row)
         {
-            string key = row.Key ?? "";
-            string description = row.Description ?? "";
+            string key = row.Key != null ? row.Key : "";
+            string description = row.Description != null ? row.Description : "";
 
             if (slot.shortcut != null)
             {

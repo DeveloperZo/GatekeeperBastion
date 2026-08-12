@@ -123,7 +123,7 @@ namespace GatekeeperBastion.Game
             new(ControlId.Interact, KeyCode.E, KeyCode.None, "E", "interact", "SHIP",
                 ControlContext.Ship),
 
-            // Esc is owned by each scene's dispatcher (M35 Escape contract). The strip labels
+            // Esc is owned by each scene's dispatcher (the Escape contract). The strip labels
             // match what Esc does: pause on the Bastion, settings on the Ship, return on end.
             new(ControlId.FreeCursor, KeyCode.Escape, KeyCode.None, "ESC", "pause", "MOVE",
                 FightAlways),

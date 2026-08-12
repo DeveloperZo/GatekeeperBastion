@@ -6,8 +6,7 @@ namespace GatekeeperBastion.Game
 {
     /// <summary>Binds the Ship hub's always-on HUD: Bastion corner cards minus Vitals
     /// (Profile TL, Score TR, Weapon BR), plus crosshair and interact prompt. Controllers
-    /// push strings; nothing here sets a colour, a font size or a RectTransform
-    /// (M35 criteria 25, 38).</summary>
+    /// push strings; nothing here sets a colour, a font size or a RectTransform.</summary>
     public sealed class ShipHudView : MonoBehaviour
     {
         [SerializeField] RectTransform _root;
@@ -60,19 +59,19 @@ namespace GatekeeperBastion.Game
         public void SetProfile(string levelLine, string expLine)
         {
             UiBind.SetText(_profileLevel, levelLine);
-            UiBind.SetText(_profileExp, expLine ?? "");
+            UiBind.SetText(_profileExp, expLine != null ? expLine : "");
         }
 
         public void SetScore(string salvageLine, string metaLine)
         {
             UiBind.SetText(_scoreSalvage, salvageLine);
-            UiBind.SetText(_scoreMeta, metaLine ?? "");
+            UiBind.SetText(_scoreMeta, metaLine != null ? metaLine : "");
         }
 
         public void SetWeapon(string name, string ammoLine)
         {
-            UiBind.SetText(_weaponName, name ?? "");
-            UiBind.SetText(_weaponAmmo, ammoLine ?? "");
+            UiBind.SetText(_weaponName, name != null ? name : "");
+            UiBind.SetText(_weaponAmmo, ammoLine != null ? ammoLine : "");
         }
 
         public void SetPrompt(string text)
@@ -95,7 +94,7 @@ namespace GatekeeperBastion.Game
 
         public void SetCrosshairVisible(bool visible) => UiBind.Show(_crosshair, visible);
 
-        /// <summary>State-change only — callers must not toggle every frame (M35 criterion 26).</summary>
+        /// <summary>State-change only — callers must not toggle every frame.</summary>
         public void SetHudRelevant(bool relevant)
         {
             UiBind.Show(_root, relevant);

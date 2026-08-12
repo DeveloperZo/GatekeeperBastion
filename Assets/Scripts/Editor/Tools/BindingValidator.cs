@@ -12,12 +12,12 @@ using UnityEngine.SceneManagement;
 namespace GatekeeperBastion.EditorTools
 {
     /// <summary>
-    /// Headless binding validation (M35 criterion 40): a reflection-based walk over the four
+    /// Headless binding validation: a reflection-based walk over the four
     /// build scenes that reports every null serialized UnityEngine.Object field on non-vendor
     /// MonoBehaviours, excluding fields marked [OptionalBinding]. Reflection-based so it runs
     /// before any view changes. Results go to <projectRoot>/gkb_bindings_report.json — a
     /// separate file, so AutoVerify's fixed report schema is untouched. Every missed wire
-    /// across the ~200 serialized references M35 authors — and every future scene edit —
+    /// across the ~200 serialized references the authored scenes carry — and every future scene edit —
     /// becomes a headless failure instead of a mid-playthrough discovery.
     /// </summary>
     public static class BindingValidator

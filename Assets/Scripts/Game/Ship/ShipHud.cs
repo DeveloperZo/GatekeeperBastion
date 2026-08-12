@@ -9,7 +9,7 @@ namespace GatekeeperBastion.Game
     /// Bastion corner cards (Profile / Score / Weapon; no Vitals), crosshair, and interact
     /// prompt when looking at a console. No slogans, objectives, or shortcut strip on the
     /// corners — those belong in station panels. Visibility is state-change only;
-    /// steady-state LateUpdate writes values only (M35 26-27).</summary>
+    /// steady-state LateUpdate writes values only.</summary>
     public sealed class ShipHud : MonoBehaviour
     {
         const float RebindInterval = 0.5f;

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game.Ui
 {
-    /// <summary>Sequenced end-of-run panel (M35 criteria 26, 30): verdict → headline →
+    /// <summary>Sequenced end-of-run panel: verdict → headline →
     /// staggered stats → salvage count-up → actions. Any input fast-forwards; a second input
     /// proceeds. Visibility is event-driven — Present once per end identity, not every frame.</summary>
     public sealed class EndScreenView : MonoBehaviour
@@ -91,9 +91,9 @@ namespace GatekeeperBastion.Game.Ui
             _awaitingProceed = false;
             _detailsOpen = false;
 
-            UiBind.SetText(_verdict, verdict ?? "");
-            UiBind.SetText(_headline, headline ?? "");
-            UiBind.SetText(_salvageCaption, salvageCaption ?? "");
+            UiBind.SetText(_verdict, verdict != null ? verdict : "");
+            UiBind.SetText(_headline, headline != null ? headline : "");
+            UiBind.SetText(_salvageCaption, salvageCaption != null ? salvageCaption : "");
 
             ApplyStatTexts(_statLabels, primaryStats);
             ApplyStatTexts(_detailLabels, detailStats);
@@ -229,7 +229,10 @@ namespace GatekeeperBastion.Game.Ui
             UiBind.Show(_detailsRoot, _detailsOpen);
         }
 
-        void OnReturn() => ProceedClicked?.Invoke();
+        void OnReturn()
+        {
+            if (ProceedClicked != null) ProceedClicked.Invoke();
+        }
 
         void StopSequence()
         {

@@ -81,7 +81,7 @@ namespace GatekeeperBastion.Game
             if (_closeWired || _closeButton == null) return;
             _closeWired = true;
             _closeButton.onClick.RemoveAllListeners();
-            _closeButton.onClick.AddListener(() => _onClose?.Invoke());
+            _closeButton.onClick.AddListener(() => { if (_onClose != null) _onClose.Invoke(); });
         }
 
         public void SetOnClose(Action onClose)

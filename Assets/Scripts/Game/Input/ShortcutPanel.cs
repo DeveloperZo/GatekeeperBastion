@@ -7,7 +7,7 @@ namespace GatekeeperBastion.Game
 {
     /// <summary>One shortcut-strip row: keycap label(s), what they do, and the section they
     /// belong to. <see cref="Dev"/> rows exist only in dev builds and render visually
-    /// separated (Negative accent) — M35 criterion 35.</summary>
+    /// separated (Negative accent).</summary>
     public readonly struct ShortcutRow
     {
         /// <summary>Keycap text, e.g. "E", "WASD", or "1 2 3" for a grouped binding.</summary>
@@ -31,7 +31,7 @@ namespace GatekeeperBastion.Game
     /// <summary>Builds structured shortcut rows from <see cref="Controls"/>. Rendering is
     /// <see cref="Ui.ShortcutPanelView"/>'s pooled keycap rows. The legacy string-line path
     /// (<see cref="FillLines"/>) remains only until WP-3/WP-4 port ShipHud and HudController
-    /// to <see cref="FillRows"/>; the IMGUI Draw path is deleted (M35 criterion 36).</summary>
+    /// to <see cref="FillRows"/>; the IMGUI Draw path is deleted.</summary>
     public static class ShortcutPanel
     {
         public const float BandWidth = 420f;

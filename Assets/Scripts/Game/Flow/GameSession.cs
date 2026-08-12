@@ -22,7 +22,7 @@ namespace GatekeeperBastion.Game
         public static MetaState Meta { get; private set; }
 
         /// <summary>True once any Dev command has run this play session. A tainted session must
-        /// never overwrite a real campaign save (M13 Watch) — <see cref="Save"/> becomes a no-op.</summary>
+        /// never overwrite a real campaign save — <see cref="Save"/> becomes a no-op.</summary>
         public static bool DevTainted { get; private set; }
 
         /// <summary>1-based start wave chosen at the MAP. Consumed by GameController on embark;
@@ -125,7 +125,7 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Persist the current Meta to disk. No-op (with a warning) when Meta is null.
         /// Also a no-op when <see cref="DevTainted"/> — Dev loadouts / grants must not overwrite
-        /// a real campaign (M13 Watch: skip Save while Dev mode has been used).</summary>
+        /// a real campaign (skip Save while Dev mode has been used).</summary>
         public static void Save()
         {
             if (DevTainted)

@@ -18,23 +18,23 @@ namespace GatekeeperBastion.Game
         public void Bind(string name, string cost, string level, string effect,
             string actionLabel, Action onAction, bool actionEnabled, string reason = null)
         {
-            if (_name != null) _name.text = name ?? "";
+            if (_name != null) _name.text = name != null ? name : "";
             if (_cost != null)
             {
-                _cost.text = cost ?? "";
+                _cost.text = cost != null ? cost : "";
                 _cost.gameObject.SetActive(!string.IsNullOrEmpty(cost));
             }
             if (_level != null)
             {
-                _level.text = level ?? "";
+                _level.text = level != null ? level : "";
                 _level.gameObject.SetActive(!string.IsNullOrEmpty(level));
             }
-            if (_effect != null) _effect.text = effect ?? "";
+            if (_effect != null) _effect.text = effect != null ? effect : "";
 
             bool hasReason = !string.IsNullOrEmpty(reason);
             if (_reason != null)
             {
-                _reason.text = reason ?? "";
+                _reason.text = reason != null ? reason : "";
                 _reason.gameObject.SetActive(hasReason);
             }
 

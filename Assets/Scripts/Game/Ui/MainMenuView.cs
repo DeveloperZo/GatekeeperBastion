@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace GatekeeperBastion.Game.Ui
 {
     /// <summary>Binds the authored Shift menu in <c>MainMenu.unity</c>. All wiring is by
-    /// serialized reference (M35 criterion 17) — a null reference logs one error naming the
+    /// serialized reference — a null reference logs one error naming the
     /// field at scene load instead of silently no-opping. Panels switch through
     /// <see cref="MainPanelManager.OpenPanel"/>; the confirm modals are authored duplicates of
     /// Shift's <c>Exit</c> modal whose title/description text lives in the scene.</summary>
@@ -41,21 +41,21 @@ namespace GatekeeperBastion.Game.Ui
         {
             ValidateBindings();
 
-            Wire(_continueBtn, () => onContinue?.Invoke());
-            Wire(_startNewBtn, () => onStartNew?.Invoke());
-            Wire(_optionsBtn, () => onOptions?.Invoke());
+            Wire(_continueBtn, () => { if (onContinue != null) onContinue.Invoke(); });
+            Wire(_startNewBtn, () => { if (onStartNew != null) onStartNew.Invoke(); });
+            Wire(_optionsBtn, () => { if (onOptions != null) onOptions.Invoke(); });
             Wire(_quitBtn, ShowExitModal);
             Wire(_overwriteConfirmBtn, () =>
             {
                 HideModal(_overwriteModal);
-                onOverwriteConfirm?.Invoke();
+                if (onOverwriteConfirm != null) onOverwriteConfirm.Invoke();
             });
             Wire(_overwriteCancelBtn, () =>
             {
                 HideModal(_overwriteModal);
                 FocusDefault();
             });
-            Wire(_exitConfirmBtn, () => onQuitConfirm?.Invoke());
+            Wire(_exitConfirmBtn, () => { if (onQuitConfirm != null) onQuitConfirm.Invoke(); });
             Wire(_exitCancelBtn, () =>
             {
                 HideModal(_exitModal);
@@ -86,7 +86,7 @@ namespace GatekeeperBastion.Game.Ui
             if (reference == null)
                 Debug.LogError(
                     $"[MainMenuView] '{name}' is missing serialized reference '{field}' " +
-                    "(M35 criterion 17 — wire it in MainMenu.unity).", this);
+                    "(wire it in MainMenu.unity).", this);
         }
 
         static void Wire(Button btn, Action handler)

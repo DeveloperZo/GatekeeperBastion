@@ -40,7 +40,7 @@ namespace GatekeeperBastion.Sim
     /// TriggerDraw() to start each assault, and the game layer calls NotifyAssaultCleared() when
     /// the wave is dead. Clearing the LAST wave completes the run.
     ///
-    /// Deep start (M14): StartRun(N) remembers a start wave. The first TriggerDraw delivers
+    /// Deep start: StartRun(N) remembers a start wave. The first TriggerDraw delivers
     /// waves 1..N back to back — each next wave starts InterWaveGap seconds after the previous
     /// wave's *delivery* finishes, with no Prep between them. Overlap in the room is the point.
     /// After that chain clears, the run continues normally through wave MaxWaves.

@@ -38,8 +38,8 @@ namespace GatekeeperBastion.Sim
                         AbilityId.Mk1RegenSurge);
 
                 case WeaponId.SecD:
-                    // Close-quarters Secondary. Ability + ring are M26 Open (Zo). Cost 0 so either
-                    // Secondary is reachable as a campaign's first buy (criterion 9).
+                    // Close-quarters Secondary. Ability + ring are still an open call (Zo).
+                    // Cost 0 so either Secondary is reachable as a campaign's first buy.
                     // Burst empties in clip/rate = 4/6 ≈ 0.67s (MK-1 ≈ 2.67s, ≥2×). Range 8 m /
                     // falloff from 3 m → near-zero at the MK-1's 12 m working distance.
                     // Duty-cycle dps ≈ 25.1 — below both Primaries' T0 floor (~33).
@@ -72,7 +72,7 @@ namespace GatekeeperBastion.Sim
                         AbilityId.Mr35Pin);
 
                 case WeaponId.PriC:
-                    // Far-wall Primary (M32). falloffStart 55 exceeds indoor sightlines so no
+                    // Far-wall Primary. falloffStart 55 exceeds indoor sightlines so no
                     // Bastion shot falls off. Sustained dps ≈ 36.5 — within 5% of MR-35's 37.0.
                     // pierce 3 ×0.75 is the bore payoff at 0.6 shots/s; Railshot overrides both.
                     return Make(WeaponSlot.Primary, "PRI-C", cost: 1500L,

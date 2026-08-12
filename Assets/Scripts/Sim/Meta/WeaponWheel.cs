@@ -56,7 +56,7 @@ namespace GatekeeperBastion.Sim
                         WheelAttr.Ability, WheelAttr.FireRate
                     };
                 // Strength Damage, weakness FireRate — two apart. Ability adjacent to FireRate.
-                // Clip/Reload swapped vs MR-35 so rings stay unique (M21 RingsAreUniqueAcrossShopWeapons).
+                // Clip/Reload swapped vs MR-35 so rings stay unique (RingsAreUniqueAcrossShopWeapons).
                 case WeaponId.PriC:
                     return new[]
                     {

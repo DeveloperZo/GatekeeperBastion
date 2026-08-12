@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Bastion Esc dispatcher and pause overlay (M35 Escape contract + criterion 31).
+    /// <summary>Bastion Esc dispatcher and pause overlay (the Escape contract).
     /// Does not touch Time.timeScale and does not disable the fight canvas.</summary>
     public sealed partial class HudController
     {
@@ -17,7 +17,7 @@ namespace GatekeeperBastion.Game
             if (modal != null)
             {
                 modal.ModalWindowOut();
-                _pauseBlur?.BlurOutAnim();
+                if (_pauseBlur != null) _pauseBlur.BlurOutAnim();
                 return;
             }
 
@@ -57,7 +57,7 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            _fpc = _fpc != null ? _fpc : Player?.GetComponent<FirstPersonController>();
+            if (_fpc == null && Player != null) _fpc = Player.GetComponent<FirstPersonController>();
             if (_fpc != null)
             {
                 _pauseCapturedLock = _fpc.MovementLocked;
@@ -76,7 +76,7 @@ namespace GatekeeperBastion.Game
                 _pauseGroup.blocksRaycasts = true;
             }
             _pauseAnimator.Play("Window In");
-            _pauseBlur?.BlurInAnim();
+            if (_pauseBlur != null) _pauseBlur.BlurInAnim();
             IsPauseOpen = true;
             // Criterion 31: never touch timeScale; fight canvas stays enabled.
         }
@@ -86,8 +86,8 @@ namespace GatekeeperBastion.Game
             if (!IsPauseOpen) return;
             if (_pauseAnimator == null) ResolvePauseHosts();
 
-            _pauseAnimator?.Play("Window Out");
-            _pauseBlur?.BlurOutAnim();
+            if (_pauseAnimator != null) _pauseAnimator.Play("Window Out");
+            if (_pauseBlur != null) _pauseBlur.BlurOutAnim();
             if (_pauseGroup != null)
             {
                 _pauseGroup.interactable = false;

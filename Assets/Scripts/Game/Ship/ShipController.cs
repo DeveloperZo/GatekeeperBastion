@@ -22,6 +22,8 @@ namespace GatekeeperBastion.Game
         [SerializeField] GameObject _stationCanvas;
         [SerializeField] MainPanelManager _panels;
         [SerializeField] ModalWindowManager _exitModal;
+        [SerializeField] GameObject _pauseMenuPanel;
+        [SerializeField] GameObject _settingsPanel;
 
         /// <summary>The station panel currently open, or null while walking.</summary>
         public StationTerminal OpenStation { get; private set; }
@@ -108,8 +110,9 @@ namespace GatekeeperBastion.Game
                 ApplyWalkMode();
         }
 
-        /// <summary>Ship Esc priority: open modal → close; station open → Close; Settings open
-        /// → close Settings; otherwise → open Settings (Escape contract).</summary>
+        /// <summary>Ship Esc priority: open modal → close; station open → Close; Options tabs open
+        /// → back to Pause Menu; Pause Menu open → close; otherwise → open Pause Menu (Escape
+        /// contract).</summary>
         void HandleEscape()
         {
             if (_exitModal != null && _exitModal.gameObject.activeInHierarchy)
@@ -124,7 +127,13 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            if (IsSettingsOpen || OptionsScreen.IsOpen)
+            if (OptionsScreen.IsOpen)
+            {
+                BackToPauseMenu();
+                return;
+            }
+
+            if (IsSettingsOpen)
             {
                 CloseSettings();
                 return;
@@ -135,38 +144,42 @@ namespace GatekeeperBastion.Game
 
         void OpenSettings()
         {
-            if (_stationCanvas != null && !_stationCanvas.activeSelf)
-                _stationCanvas.SetActive(true);
-
-            // Prefer OptionsScreen when an OptionsView is registered (WP-2 handoff); otherwise
-            // open the Shift Settings panel alone and leave content empty (crit 32 deferred).
-            if (OptionsView.Registered != null)
-            {
-                OptionsScreen.Open(_fpc != null ? _fpc : FindLocalController());
-                IsSettingsOpen = true;
-                return;
-            }
-
-            if (_panels != null) _panels.OpenPanel("Settings");
+            if (_stationCanvas != null && !_stationCanvas.activeSelf) _stationCanvas.SetActive(true);
+            if (_settingsPanel != null && _settingsPanel.activeSelf) _settingsPanel.SetActive(false);
+            if (_pauseMenuPanel != null) _pauseMenuPanel.SetActive(true);
             IsSettingsOpen = true;
             SetWalkMode(false);
         }
 
+        /// <summary>Settings button on the Pause Menu shell — reveals the Options tabs screen.</summary>
+        public void OpenOptionsFromPauseMenu()
+        {
+            if (_pauseMenuPanel != null) _pauseMenuPanel.SetActive(false);
+            if (_settingsPanel != null) _settingsPanel.SetActive(true);
+            OptionsScreen.Open(_fpc != null ? _fpc : FindLocalController());
+        }
+
+        /// <summary>Resume button on the Pause Menu shell — same as pressing Esc from the shell.</summary>
+        public void ResumeFromPauseMenu() => CloseSettings();
+
         void CloseSettings()
         {
-            if (OptionsScreen.IsOpen)
-            {
-                OptionsScreen.Close();
-                IsSettingsOpen = false;
-                if (OpenStation == null && _stationCanvas != null && _stationCanvas.activeSelf)
-                    _stationCanvas.SetActive(false);
-                return;
-            }
-
+            if (OptionsScreen.IsOpen) OptionsScreen.Close();
+            if (_settingsPanel != null) _settingsPanel.SetActive(false);
+            if (_pauseMenuPanel != null) _pauseMenuPanel.SetActive(false);
             IsSettingsOpen = false;
             if (_stationCanvas != null && _stationCanvas.activeSelf && OpenStation == null)
                 _stationCanvas.SetActive(false);
             SetWalkMode(true);
+        }
+
+        /// <summary>Esc from the Options tabs, or its own back button's runtime path, steps back to
+        /// the Pause Menu shell rather than fully closing (QuitToMenu/X-close still fully close).</summary>
+        void BackToPauseMenu()
+        {
+            OptionsScreen.Close();
+            if (_settingsPanel != null) _settingsPanel.SetActive(false);
+            if (_pauseMenuPanel != null) _pauseMenuPanel.SetActive(true);
         }
 
         /// <summary>Open a station panel: canvas on, cursor freed, movement locked. One at a time.</summary>

@@ -51,9 +51,10 @@ a free loop into a per-frame allocation. Type hot-path fields as the concrete `L
 mutable and accessed through a property or indexer (`myList[0].hp -= 1` silently mutates a
 copy), or when it holds reference-type fields.
 
-**Live in this codebase:** `new WaitForSeconds(...)` allocates on every call, and
-`WaveSpawner.Groups.cs:77` constructs one per group inside the spawn loop with a
-per-wave-constant interval. `Damageable.cs:135` does the same per hit flash. Cache a
+**Live in this codebase:** `new WaitForSeconds(...)` allocates on every call.
+`WaveSpawner.Groups.cs` used to construct one per group inside its spawn loop with a
+per-wave-constant interval; since 2026-08-11 it allocates the wait once before the loop
+and reuses it. `Damageable.cs` allocates one per hit flash outside any loop. Cache a
 `static readonly WaitForSeconds` per distinct duration, or per wave. Also: `yield return
 null` is free; `yield return 0` boxes.
 
@@ -121,9 +122,10 @@ IDE0031 "simplify to `?.`" on Unity types, because the IDE's own refactoring int
 bug ([USP0002](https://github.com/microsoft/Microsoft.Unity.Analyzers/blob/main/doc/USP0002.md)).
 Any editor with "apply all suggestions" on will do this unprompted.
 
-**Audited 2026-08-09: no violations.** Every `??=` in the tree is on `GUIStyle`, and every
-`?.` is on `UnityEvent` or on plain C# types — none of these derive from `UnityEngine.Object`,
-so all are safe. The rule is written down because the next `?.` might not be.
+**Audited 2026-08-09: no violations — then later UI work reintroduced the constructs, and
+on 2026-08-11 every flagged construct line across the 22 files were converted back to the Unity-null-safe
+forms.** The §9 row now enforces this at zero. The rule is written down because the next
+`?.` might not be safe, and history shows it arrives with routine UI work.
 
 **Do not "optimize" `== null` into `ReferenceEquals`.** You buy nanoseconds and sell the
 destroyed-object check. The legitimate optimization is hoisting the check out of the loop.
@@ -259,18 +261,18 @@ with `rg` over `Assets/Scripts` using the patterns in the fence.
 
 | Row | Decision | Measured 2026-08-11 |
 |---|---|---|
-| `?.` / `??` / `is null` / `ReferenceEquals` on what may be a `UnityEngine.Object` (§3), scanned as the raw constructs in `Game/`, comment lines excluded | **baselined** | **22 files** (re-measured 2026-08-11 with the comment-excluding pattern below; 2 of the 24 raw-grep files were doc-comment prose). §3's "Audited 2026-08-09: no violations" no longer holds — the constructs arrived with later UI work. Fixing them is behaviour-changing and owns its own milestone |
+| `?.` / `??` / `is null` / `ReferenceEquals` on what may be a `UnityEngine.Object` (§3), scanned as the raw constructs in `Game/`, comment lines excluded | **enforced at 0** (stamped 2026-08-11) | 0 — every flagged construct line across the 22 baselined files were converted to Unity-null-safe forms (`== null` / `!= null` / plain truthiness) on 2026-08-11 |
 | `using System.Linq` in runtime code (§1) | **enforced at 0** | 0 — the one site M41's draft recorded has been fixed since |
-| `new WaitForSeconds` in a loop body (§1) | **baselined at 1** | the row greps every site in `Game/`, subtracts the file the fence names as the known non-loop site (`Damageable.cs:150`, not in a loop), and baselines the remainder: 1 — `WaveSpawner.Groups.cs:82`, inside the `while` at line 64 |
+| `new WaitForSeconds` in a loop body (§1) | **enforced at 0** (stamped 2026-08-11) | 0 — the row greps every site in `Game/` and subtracts the files the fence names as known non-loop sites (`Damageable.cs:150`, not in a loop; `WaveSpawner.Groups.cs`, whose per-group wait was hoisted out of its `while` loop into a single allocation before it on 2026-08-11). Any new site outside the two named files fails the run; a new in-loop wait inside a named file is masked, so touching those files means re-checking the loop by eye |
 | `FindObjectOfType` / `FindObjectsOfType` (§2) | **enforced at 0** | 0 |
 | Empty `Update` / `Start` / `LateUpdate` / `FixedUpdate` / `OnGUI` body (§4) | **enforced at 0** | 0 |
 | A milestone ID (`M<digits>`) in an identifier — a file name, type, namespace, menu path or define | **enforced at 0** | 0 — true today (`M35Wp4OptionsPatch.cs`, the type, the file and its menu row, is already deleted). Zero exceptions |
-| A milestone ID in a comment or string literal | **baselined at 66 lines / 39 files** | measured 2026-08-11, `grep -rnE '\bM[0-9]{2,3}\b' --include=*.cs Assets/Scripts/` — mostly historical comments. The player-facing ones were cleaned with this change (a milestone reference had already reached a runtime error string); the rest are a follow-up, because cleaning 39 files here would violate criterion 13 |
+| A milestone ID in a comment or string literal | **enforced at 0** (stamped 2026-08-11) | 0 — the 66 baselined lines across 39 files were cleaned on 2026-08-11; comments now say what the code does, not which milestone touched it |
 | `[InitializeOnLoad]` outside the fence's allowlist | **enforced at 0** | 4 sites, all four in the allowlist |
 | `AssetDatabase.DeleteAsset` naming a `.cs` file (self-deleting script) | **enforced at 0** | 0 |
 | A non-source, non-`.meta` file under `Assets/Scripts/` (`.cs`, `.asmdef` and `.meta` are source here) | **enforced at 0** | 0 |
-| A `static Instance` on a type not named in `Architecture/README.md`'s fence | see that file's fence | 3 declarations, all named there |
-| A file over its folder's cap | see `Docs/Architecture.md`'s fence | 1, named there |
+| A `static Instance` on a type not named in `Architecture/README.md`'s fence | see that file's fence | 2 declarations, both named there (`DecoyBay`'s was retired 2026-08-11) |
+| A file over its folder's cap | see `Docs/Architecture.md`'s fence | 0 since 2026-08-11 |
 
 The scan is textual — a construct inside a string or comment counts, which is
 deliberate for the milestone-ID text row and a cheap over-approximation for the rest.
@@ -278,12 +280,12 @@ A row narrowed until its count reaches zero is a failed row, not a passing one.
 
 ```arch-lint
 fakenull_pattern=^(?![ \t]*//).*?(\?\.|\?\?|\bis[ \t]+null\b|\bReferenceEquals\b)
-fakenull_file_baseline=22
+fakenull_file_baseline=0
 linq_pattern=^[ \t]*using[ \t]+System\.Linq
 linq_enforced=0
 waitforseconds_pattern=\bnew[ \t]+WaitForSeconds\b
-waitforseconds_baseline=1
-waitforseconds_nonloop_allow=Game/Combat/Damageable.cs
+waitforseconds_baseline=0
+waitforseconds_nonloop_allow=Game/Combat/Damageable.cs,Game/Enemies/WaveSpawner.Groups.cs
 findobjectoftype_pattern=\bFindObjects?OfType\b
 findobjectoftype_enforced=0
 emptybody_pattern=\bvoid[ \t]+(Update|Start|LateUpdate|FixedUpdate|OnGUI)[ \t]*\([ \t]*\)\s*\{\s*\}
@@ -292,8 +294,8 @@ midid_pattern=(\b(class|struct|interface|enum|namespace)[ \t]+[A-Za-z0-9_.]*M[0-
 midid_name_pattern=M[0-9]{2,3}
 midid_enforced=0
 midtext_pattern=\bM[0-9]{2,3}\b
-midtext_line_baseline=66
-midtext_file_baseline=39
+midtext_line_baseline=0
+midtext_file_baseline=0
 initializeonload_pattern=\[InitializeOnLoad\]
 initializeonload_allow=Editor/Scenes/SceneBuilder.cs,Editor/Tools/AutoVerify.cs,Editor/Tools/RepairStationPanels.cs,Editor/Tools/StripSettingsToStations.cs
 selfdelete_pattern=AssetDatabase\.DeleteAsset[^\r\n]*\.cs

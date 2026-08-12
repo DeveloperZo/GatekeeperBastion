@@ -61,13 +61,18 @@ namespace GatekeeperBastion.Game
             WaveSpec spec = emit.Spec;
             int groupSize = Mathf.Max(1, spec.groupSize);
             int groupNumber = 0;
+            // spawnInterval is fixed for the wave, so the yield object is built once out here
+            // instead of once per group inside the loop.
+            WaitForSeconds groupGap = spec.spawnInterval > 0f
+                ? new WaitForSeconds(spec.spawnInterval)
+                : null;
             while (emit.Queue.Count > 0)
             {
                 // Re-tested every iteration: the run can end (or the scene start unloading)
                 // during any of the WaitForSeconds below.
                 if (_teardown || _sim == null || _sim.Phase != RunPhase.Tethered) yield break;
 
-                // Aggregate live-gatekeeper cap across a deep-start pile-up (M14 Watch).
+                // Aggregate live-gatekeeper cap across a deep-start pile-up.
                 int want = Mathf.Min(groupSize, emit.Queue.Count);
                 while (!_teardown && AliveCount + want > WaveDirector.MaxEnemyCount)
                 {
@@ -78,8 +83,8 @@ namespace GatekeeperBastion.Game
                 groupNumber++;
                 EmitGroup(emit, groupSize, groupNumber);
                 CheckAssaultCleared();
-                if (spec.spawnInterval > 0f && emit.Queue.Count > 0)
-                    yield return new WaitForSeconds(spec.spawnInterval);
+                if (groupGap != null && emit.Queue.Count > 0)
+                    yield return groupGap;
             }
 
             // Delivery finished for THIS wave — may unlock the next chained wave.
@@ -117,7 +122,7 @@ namespace GatekeeperBastion.Game
                 Log.Warn(Tag, $"No spawn points registered; dropped group {groupNumber} ({size} gatekeepers).");
                 return;
             }
-            // AliveCount suffix is existing live state, not a new counter — M29 criterion 12.
+            // AliveCount suffix is existing live state, not a new counter.
             Log.Event("Gatekeepers", $"group {groupNumber}: {Describe(tally)} breached at {point.name} " +
                                   $"({emit.Spawned}/{emit.Size}) — {AliveCount} live");
         }

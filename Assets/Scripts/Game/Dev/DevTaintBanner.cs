@@ -6,7 +6,7 @@ namespace GatekeeperBastion.Game
     /// <summary>LOCAL-OWNER: persistent on-screen warning while <see cref="GameSession.DevTainted"/>
     /// is true. Drawn by absolute GUI rects so both the Bastion HUD (no GUILayout) and ship
     /// station panels can share one string and one draw path. Entire file compiles out of release
-    /// with Dev mode (M13) — call sites are wrapped in the same ifdef so StationTerminal has no
+    /// with Dev mode — call sites are wrapped in the same ifdef so StationTerminal has no
     /// dangling reference.</summary>
     public static class DevTaintBanner
     {

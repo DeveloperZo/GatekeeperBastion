@@ -9,7 +9,7 @@ namespace GatekeeperBastion.Game.Ui
     /// <summary>Binds the authored Bastion fight HUD: four fixed corner cards, left/right edge
     /// drawers, and the MsgGeneral / MsgPlayer lanes. Controllers push strings and values. The
     /// one RectTransform write allowed here is the MsgPlayer lane's anchored Y, which has to
-    /// clear the left drawer's top edge and so cannot be authored (M35 criteria 26, 30, 34).</summary>
+    /// clear the left drawer's top edge and so cannot be authored.</summary>
     public sealed class BastionHudView : MonoBehaviour
     {
         const float IrrelevantAlpha = 0.4f;
@@ -127,8 +127,8 @@ namespace GatekeeperBastion.Game.Ui
                 _emergencyButton.onClick.RemoveAllListeners();
                 _emergencyButton.onClick.AddListener(OnReturn);
             }
-            _shortcuts?.EnsureBuilt();
-            _endScreen?.EnsureBuilt();
+            if (_shortcuts != null) _shortcuts.EnsureBuilt();
+            if (_endScreen != null) _endScreen.EnsureBuilt();
         }
 
         void LogMissing(string field, UnityEngine.Object value)
@@ -142,7 +142,10 @@ namespace GatekeeperBastion.Game.Ui
             if (_endScreen != null) _endScreen.ProceedClicked -= OnReturn;
         }
 
-        void OnReturn() => ReturnClicked?.Invoke();
+        void OnReturn()
+        {
+            if (ReturnClicked != null) ReturnClicked.Invoke();
+        }
 
         public void ShowArriving()
         {
@@ -173,7 +176,7 @@ namespace GatekeeperBastion.Game.Ui
         public void ShowEnd()
         {
             HideChrome();
-            _endScreen?.SetVisible(true);
+            if (_endScreen != null) _endScreen.SetVisible(true);
             SetLeftDrawerOpen(true);
         }
 
@@ -197,7 +200,7 @@ namespace GatekeeperBastion.Game.Ui
             UiBind.Show(_rightDrawerRoot, false);
             SetGeneralMessage(null);
             SetPlayerMessage(null);
-            _endScreen?.SetVisible(false);
+            if (_endScreen != null) _endScreen.SetVisible(false);
             UiBind.Show(_emergencyRoot, false);
             _leftDrawerKnown = false;
             _rightDrawerKnown = false;
@@ -212,7 +215,10 @@ namespace GatekeeperBastion.Game.Ui
         }
 
         public void SetCrosshairVisible(bool visible) => UiBind.Show(_crosshairRoot, visible);
-        public void SetEndVisible(bool visible) => _endScreen?.SetVisible(visible);
+        public void SetEndVisible(bool visible)
+        {
+            if (_endScreen != null) _endScreen.SetVisible(visible);
+        }
         public void SetEmergencyVisible(bool visible) => UiBind.Show(_emergencyRoot, visible);
 
         /// <summary>Closed is deactivated, which is what "fully off-screen" buys: no partial
@@ -251,7 +257,7 @@ namespace GatekeeperBastion.Game.Ui
         public void SetProfile(string levelLine, string expLine)
         {
             UiBind.SetText(_profileLevel, levelLine);
-            UiBind.SetText(_profileExp, expLine ?? "");
+            UiBind.SetText(_profileExp, expLine != null ? expLine : "");
         }
 
         public void SetScore(string salvageLine, string metaLine)
@@ -262,8 +268,8 @@ namespace GatekeeperBastion.Game.Ui
 
         public void SetWeapon(string name, string ammoLine)
         {
-            UiBind.SetText(_weaponName, name ?? "");
-            UiBind.SetText(_weaponAmmo, ammoLine ?? "");
+            UiBind.SetText(_weaponName, name != null ? name : "");
+            UiBind.SetText(_weaponAmmo, ammoLine != null ? ammoLine : "");
         }
 
         public void SetDrawerHatch(string label, float hp, float maxHp)
@@ -370,7 +376,7 @@ namespace GatekeeperBastion.Game.Ui
 
         public void SetPrepHeading(string text)
         {
-            UiBind.SetText(_prepHeading, text ?? "");
+            UiBind.SetText(_prepHeading, text != null ? text : "");
             if (_prepHeading != null) UiBind.Show(_prepHeading.gameObject, !string.IsNullOrEmpty(text));
         }
 

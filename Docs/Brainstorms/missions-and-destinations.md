@@ -23,6 +23,11 @@ floor with three spawn points, and it ends when the Waves are cleared or the doo
 A decision on whether a Run's structure is Waves-in-one-room or objectives-across-areas,
 because the two produce different milestones for everything downstream.
 
+**Answered 2026-08-11 (Zo): waves in one room, and the room gets much bigger.** Not
+objectives-across-areas — that invalidates the wave director, the siphon dial and the Hatch as
+the loss condition all at once. See *The bastion becomes a field of approach* below, which is
+the entry this test was waiting for.
+
 ## Ideas
 
 ### The console restructure
@@ -51,3 +56,108 @@ the first wager to be worth taking before a second means anything.
 The 48.5 m between breach and Hatch is currently travel time and nothing else. Anything
 that makes the floor's geometry matter — cover, chokepoints, a route worth knowing —
 would repay the space that already exists.
+
+### The bastion is a field you work, and delivering is what calls the wave
+
+**Zo, 2026-08-11**, refined across two passes. This is one mechanic, not several — the entries
+*Opt-in loot delivery*, *Destinations that differ* and *A reason the bastion is a place* above
+all fold into it, and it is **`../Decisions.md`'s deferred *Deliver-loot-before-the-run-ends*
+graduating**: "a neutral default, and an opt-in that pays more and makes the Run harder." It
+has been waiting for a shape since it was deferred.
+
+**Loop.** Exploring, timing and defending become one decision instead of three systems.
+
+## The loop
+
+1. The bastion is **much larger** than today's 30 × 52 room, with **many spawn points**.
+2. The player explores and collects. **Nothing banks in the field.** Salvage accumulates at the
+   Hatch.
+3. **Gatekeepers reaching the Hatch take salvage as well as integrity** — and, later, other
+   things. Hoarding is not safe; the vault leaks.
+4. The player **triggers delivery** when ready. That is what signals the bastion.
+5. Waves come from the spawn points. The player defends.
+6. Waves end, the delivery banks to the ship, **more of the bastion opens**, and it repeats
+   until the Master Control.
+
+## Why each piece is load-bearing
+
+**Delivering calls the wave, so greed authors the difficulty.** The natural coupling is the
+amount delivered sizing the wave: the player writes their own curve, and `MaxWaves` becomes
+emergent rather than the constant 5 with its fixed 18 / 30 / 42 / 54 / 66. The reference is
+surfacing with treasure in *Depth*.
+
+**This replaces the siphon dial rather than sitting beside it.** *Opt-in loot delivery* above
+says a second wager "needs the first wager to be worth taking before a second means anything."
+**Measured across every session log on disk: eleven Runs at siphon L0, two at L2.** The first
+wager is not being taken. Two dials nobody turns is worse than one the player cannot avoid
+making — the dial's multiplier becomes the delivery's rate.
+
+**The Hatch holding losable salvage is what answers "why explore".** Not a destination out in
+the field — a *stake* back home. Staying put does not protect it, because arrivals drain it.
+That is the difference between a game that punishes leaving and one that prices it.
+
+**Resources appear only once a wave is sufficiently spawned.** *(Zo's, and the sharpest piece
+here.)* The standard tower-defense failure is that leaving your emplacement is pure downside, so
+the correct play is always to stand still. Spawning field resources **during** the wave inverts
+it: moving away is an opportunity rather than a penalty, and it cannot be farmed before pulling
+the trigger. **"Sufficiently spawned" needs a definition** — share of the wave emitted, or first
+group landed — or it is exploitable by delivering and immediately running.
+
+**A main path exists and is chokeable; other spawn points bypass it.** That is the emplacement
+decision — you can hold the choke or cover a flank, not both, and the Drone Bay (charges, one
+live prop, HP, a gatekeeper-seconds tally) is the primitive that already exists for it and is
+currently pointless because one room has nothing to divert anything *around*.
+
+**Exploring and interacting alters spawn points.** `SpawnPoint` keeps a static registry driven
+by `OnEnable` / `OnDisable`, so a spawn point reached and shut is nearly free mechanically. Its
+**visibility is itself a lever** — known, suspected, or hidden — rather than a binary.
+
+## Information is telegraphed, not guaranteed
+
+Paths to the Hatch are shown tower-defense style so pressure can be read before delivery. **They
+are a forecast and some things break them, deliberately.** `EnemyGatekeeper.Targeting` sets
+`MayTargetHatch` false for Hunters, which exist "to break your way home, not to chase whoever
+annoyed it on the way in" — Defaults and Rams honour a drawn line, Hunters do not.
+
+Zo, 2026-08-11: *"I like that things can break that promise. No information is absolute and we
+can telegraph to player."* So the display needs a **vocabulary of confidence**, not a single
+line style: a committed lane, an uncertain one, a spawn point that is known versus suspected.
+That is a HUD system and it belongs with **M36**.
+
+## What would kill it
+
+**The player collects everything first and delivers once at the end.** That is the current game
+with extra walking. It happens if delivery size does not size the wave, or if the Hatch's
+accumulated salvage is safe from arrivals.
+
+Weaker, and worth watching: the drawn paths do not change where the player stands.
+
+## Settled
+
+**Death costs salvage and the player respawns.** One currency of failure: arrivals drain the
+Hatch, dying costs salvage. No drop-and-recover, no second loss model.
+
+**The Master Control ends the Run.** A bastion is a Run; the nav map holds many. Whether a
+bastion ever has more than one is not a question this entry needs answered.
+
+**Wave sizing is not decided here.** It is a number, and numbers are the weakest place to
+intervene — it gets set when there is something to tune against.
+
+**Field resources appear once 10% of the wave has emitted** (Zo, 2026-08-11). At today's wave
+sizes that is two to seven gatekeepers on the floor — early, and deliberately so: the player
+leaves while pressure is still building rather than after it resolves. It also closes the
+deliver-then-immediately-run exploit, since the trigger is emission and not the clock.
+
+**Nothing blocks the build.** The entry is complete against the contract in
+`../_meta/_definitions/brainstorm.md`.
+
+## Before it graduates
+
+**M37**, so "where they died" is measurable before and after. A field of approach that changed
+nothing would otherwise be indistinguishable from one that worked.
+
+**What it touches:** `SceneBuilder` geometry and the NavMesh bake, `SpawnPoint`, `WaveSpawner`,
+`WaveDirector` composition and `MaxWaves`, `TetherSiphon` and the dial, `RunSim`'s banking path,
+`HatchStation`, `DecoyBay` / `DecoyState`, the HUD, and the end-of-Run report. Pairs with **A
+gatekeeper you must leave the Hatch for** in `gatekeepers-and-waves.md`, which is the same move
+from the enemy side.

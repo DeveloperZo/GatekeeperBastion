@@ -16,7 +16,7 @@ namespace GatekeeperBastion.Game
         public bool SlotIsReloading(WeaponSlot slot) => _slots[(int)slot].reloadTimer > 0f;
 
         /// <summary>0..1 progress on the given slot's reload, or 0 when idle. Uses the same
-        /// duration helper as <see cref="StartReload"/> so M21's reload spoke stays one place.</summary>
+        /// duration helper as <see cref="StartReload"/> so the wheel's reload spoke stays one place.</summary>
         public float SlotReloadProgress(WeaponSlot slot)
         {
             ref var s = ref _slots[(int)slot];

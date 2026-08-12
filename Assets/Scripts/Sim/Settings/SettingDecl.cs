@@ -1,6 +1,6 @@
 namespace GatekeeperBastion.Sim
 {
-    /// <summary>One preferences row. The options screen (M24/M35) draws exactly these — adding a
+    /// <summary>One preferences row. The options screen draws exactly these — adding a
     /// setting is a row here, not layout code.</summary>
     public readonly struct SettingDecl
     {

@@ -427,7 +427,7 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        /// <summary>M29 criterion 13 — spend attribution token on every successful bought line.</summary>
+        /// <summary>Spend attribution token on every successful bought line.</summary>
         static string TrackToken(UpgradeTrack track)
         {
             return track == UpgradeTrack.HatchArmor ? "track=fabrication" : "track=crew";

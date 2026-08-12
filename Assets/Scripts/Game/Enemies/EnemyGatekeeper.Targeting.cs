@@ -136,7 +136,8 @@ namespace GatekeeperBastion.Game
             // Decoy pull: ahead of Hatch and player when in radius. Rams never; committed Defaults never.
             _decoyTarget = null;
             _chasingDecoy = false;
-            var bay = DecoyBay.Instance;
+            var gc = GameController.Instance;
+            var bay = gc != null ? gc.Decoys : null;
             if (bay != null && bay.State.IsLive && bay.Live != null && bay.Live.IsAlive)
             {
                 float dist = Vector3.Distance(transform.position, bay.Live.transform.position);
@@ -180,7 +181,7 @@ namespace GatekeeperBastion.Game
             }
             if (_hatchTarget != null && !_hatchTarget.IsDestroyed)
             {
-                goal = _standPoint ?? _hatchTarget.transform.position;
+                goal = _standPoint != null ? _standPoint.Value : _hatchTarget.transform.position;
                 return true;
             }
             goal = default;

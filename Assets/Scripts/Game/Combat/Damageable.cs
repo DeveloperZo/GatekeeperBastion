@@ -77,7 +77,7 @@ namespace GatekeeperBastion.Game
 
         void OnDestroy()
         {
-            onDeath?.RemoveAllListeners(); // drop listeners so nothing calls into a dead object
+            if (onDeath != null) onDeath.RemoveAllListeners(); // drop listeners so nothing calls into a dead object
             Damaged = null;
         }
 
@@ -99,7 +99,7 @@ namespace GatekeeperBastion.Game
             TakeDamage(amount, source, recordSlot: false, slot: default);
         }
 
-        /// <summary>Applies damage and records the weapon slot for kill attribution (M26).</summary>
+        /// <summary>Applies damage and records the weapon slot for kill attribution.</summary>
         public void TakeDamage(float amount, Transform source, WeaponSlot slot)
         {
             TakeDamage(amount, source, recordSlot: true, slot);
@@ -128,7 +128,7 @@ namespace GatekeeperBastion.Game
             _deathFired = true; // guard: onDeath listeners destroy this object; never fire twice
             try
             {
-                onDeath?.Invoke();
+                if (onDeath != null) onDeath.Invoke();
             }
             catch (System.Exception e)
             {

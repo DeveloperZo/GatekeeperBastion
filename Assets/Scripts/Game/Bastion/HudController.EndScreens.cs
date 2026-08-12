@@ -23,7 +23,7 @@ namespace GatekeeperBastion.Game
                 "earned this run: " + report.grossEarned + " — already banked",
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
-                "banked total: " + (gc.Meta?.BankedSalvage ?? 0),
+                "banked total: " + (gc.Meta != null ? gc.Meta.BankedSalvage : 0),
                 "DEEPEST WAVE " + DeepestShown(gc));
 
             PushEndScreenShortcut();
@@ -40,7 +40,7 @@ namespace GatekeeperBastion.Game
                 "earned this run: " + report.grossEarned + " — already banked",
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
-                "banked total: " + (gc.Meta?.BankedSalvage ?? 0),
+                "banked total: " + (gc.Meta != null ? gc.Meta.BankedSalvage : 0),
                 "DEEPEST WAVE " + DeepestShown(gc));
 
             PushEndScreenShortcut();

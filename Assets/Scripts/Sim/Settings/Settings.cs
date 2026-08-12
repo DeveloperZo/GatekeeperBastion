@@ -22,7 +22,7 @@ namespace GatekeeperBastion.Sim
             new SettingDecl(
                 SettingId.SfxVolume, "SFX", SettingCategory.Audio,
                 defaultFloat: 0.9f, min: 0f, max: 1f, prefKey: "gkb_sfx_volume"),
-            // Key string kept from the pre-M24 PlayerPrefs write so existing installs keep their value.
+            // Key string kept from an earlier PlayerPrefs write so existing installs keep their value.
             new SettingDecl(
                 SettingId.MouseSensitivity, "Mouse sensitivity", SettingCategory.Controls,
                 defaultFloat: 2f, min: 0.2f, max: 8f, prefKey: "gkb_sensitivity"),
@@ -128,7 +128,7 @@ namespace GatekeeperBastion.Sim
             if (_store != null) _store.Save();
         }
 
-        /// <summary>Restore defaults for one options tab only (M35 per-page Reset).</summary>
+        /// <summary>Restore defaults for one options tab only (the per-page Reset).</summary>
         public static void RestoreDefaults(SettingCategory category)
         {
             EnsureBuffers();

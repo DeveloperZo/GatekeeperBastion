@@ -34,21 +34,23 @@ namespace GatekeeperBastion.Sim
         /// <see cref="MaxGroupSize"/>.</summary>
         public const int BaseGroupSize = 3;
 
-        /// <summary>Ceiling on spawn group width. M14's five-wave delivery table needs
-        /// 3/4/5/6/7 — lifting M2's temporary 4-wide cap so waves 3–5 match Docs/Design/4-Data.md.
-        /// Do not reopen the *gap* (M10's lever); group width is the authored curve.</summary>
+        /// <summary>Ceiling on spawn group width. The five-wave delivery table needs 3/4/5/6/7 —
+        /// this lifted an earlier temporary 4-wide cap so waves 3–5 match Docs/Design/4-Data.md.
+        /// Do not reopen the *gap* — that was the lever of an earlier balance model, kept closed
+        /// as the record of what play data falsified; group width is the authored curve.</summary>
         public const int MaxGroupSize = 7;
 
         /// <summary>HP multiplier slope per wave index: <c>1 + slope * waveIndex</c>.
-        /// M16 raised 0.25 → 0.40 so late waves absorb Primary dps (MR-35 T3 cleared all three
+        /// Raised 0.25 → 0.40 so late waves absorb Primary dps — the earlier, shallower slope
+        /// is the balance model play data falsified (MR-35 T3 cleared all three
         /// at 100% hatch / 0 hits in <c>Logs/GatekeeperBastion_2026-08-04_09-14-16</c>).
         /// Wave 1 stays at 1.0 by construction. Cap: slope 0.40 keeps BR-12's wave-2 one-shot
         /// at 8 m (42 HP = 7×6 pellets).</summary>
         public const float EnemyHealthPerWave = 0.40f;
 
         /// <summary>Seconds between the end of one chained wave's delivery and the start of the
-        /// next during a deep start. The only tuning knob for the deep-start IFF crossover
-        /// (M14 criterion 9).</summary>
+        /// next during a deep start. The only tuning knob for the deep-start
+        /// IFF crossover.</summary>
         public const float InterWaveGap = 3f;
 
         // ---- The Default kind's stat line. StatsFor(Default) is built from exactly these six

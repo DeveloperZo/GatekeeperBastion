@@ -4,8 +4,8 @@ namespace GatekeeperBastion.Game.Ui
 {
     /// <summary>
     /// Rescues a Canvas that would render nothing, and changes nothing else.
-    /// Shift's Main Menu Canvas is Screen Space – Camera at 1920×1280 on purpose (M35's
-    /// measurement of `Main Menu (Desktop).unity`), so forcing Overlay would break its
+    /// Shift's Main Menu Canvas is Screen Space – Camera at 1920×1280 on purpose (measured
+    /// from `Main Menu (Desktop).unity`), so forcing Overlay would break its
     /// Background and BlurManager. The two states that are always faults are a
     /// Screen Space – Camera Canvas with no camera, and localScale 0 — which the package
     /// ships on its prefab sources and which kills TMP content and raycasts while some

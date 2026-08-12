@@ -97,7 +97,7 @@ namespace GatekeeperBastion.Game
             {
                 if (!_loggedRefusal)
                 {
-                    Log.Event("Hatch", $"repair refused — {missing ?? "repair rig not equipped"}");
+                    Log.Event("Hatch", $"repair refused — {(missing != null ? missing : "repair rig not equipped")}");
                     _loggedRefusal = true;
                 }
                 return;

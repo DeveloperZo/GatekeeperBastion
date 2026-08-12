@@ -5,7 +5,7 @@ namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: the Dev mode binding table — one row per action. Adding a command
     /// is one entry here plus a call on <see cref="GameController"/>. The F1 overlay lists these
-    /// labels; they are the only discovery surface (see M13).</summary>
+    /// labels; they are the only discovery surface.</summary>
     public static class DevCommands
     {
         public enum Kind

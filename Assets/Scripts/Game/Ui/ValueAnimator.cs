@@ -51,7 +51,7 @@ namespace GatekeeperBastion.Game.Ui
         }
 
         /// <summary>Animate toward value; punch-scale when the target changes.
-        /// Early-out (M35 criterion 27): an unchanged target does no per-frame work.</summary>
+        /// Early-out: an unchanged target does no per-frame work.</summary>
         public void SetValue(float value)
         {
             bool changed = !_hasValue || !Mathf.Approximately(_target, value);
@@ -98,7 +98,7 @@ namespace GatekeeperBastion.Game.Ui
         void Update()
         {
             // Early-out when the display already equals the target and the punch is done —
-            // a steady HUD value costs nothing per frame (M35 criterion 27).
+            // a steady HUD value costs nothing per frame.
             if (_settled && _punchT >= 1f) return;
             if (!_hasValue && _punchT >= 1f) return;
 

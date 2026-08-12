@@ -101,9 +101,11 @@ directly above the live constants, which is exactly how a later session reverts 
   `UnityEngine.Random` for crits so trigger pulls never advance the replayable
   sim stream.
 
-One file is over its cap today: `Game/Bastion/HudController.cs`, 613 counted lines
-against 400 (measured 2026-08-11 by the counted-line awk in `Tools/lint-arch/run.sh`).
-It is baselined, not excused — the baseline in the fence below may not grow.
+No file is over its cap today. The last one, `Game/Bastion/HudController.cs` (613
+counted lines against 400), was split by responsibility on 2026-08-11 — the weapon
+readout moved to `HudController.Weapon.cs` and the per-frame fight readout to
+`HudController.Fight.cs`, alongside the existing Pause / Panels / EndScreens
+partials — and the baseline returned to zero, where it stays.
 `Tools/lint-arch/run.sh` reads the caps and the baseline from this fenced block;
 changing a value here changes the check with no script edit.
 
@@ -111,8 +113,8 @@ changing a value here changes the check with no script edit.
 sim_cap=600
 game_cap=400
 editor_cap=800
-over_cap_baseline=1
-over_cap_known=Game/Bastion/HudController.cs
+over_cap_baseline=0
+over_cap_known=
 ```
 
 ## GOTCHAS

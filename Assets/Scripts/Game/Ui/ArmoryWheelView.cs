@@ -8,8 +8,7 @@ namespace GatekeeperBastion.Game
 {
     /// <summary>Binds the authored ARMORY upgrade wheel — five spokes placed around a hub in the
     /// scene, not by this class. <see cref="Configure"/> writes labels, marks the centre spoke and
-    /// arms the buy action; the ring geometry and every colour are the authored panel's
-    /// (M35 criteria 18, 38).</summary>
+    /// arms the buy action; the ring geometry and every colour are the authored panel's.</summary>
     public sealed class ArmoryWheelView : MonoBehaviour
     {
         public const int SpokeCount = 5;
@@ -77,7 +76,7 @@ namespace GatekeeperBastion.Game
                 int captured = d.SpokeRingIndices != null && i < d.SpokeRingIndices.Length
                     ? d.SpokeRingIndices[i] : i;
                 _spokes[i].onClick.RemoveAllListeners();
-                _spokes[i].onClick.AddListener(() => onSelectCentre?.Invoke(captured));
+                _spokes[i].onClick.AddListener(() => { if (onSelectCentre != null) onSelectCentre.Invoke(captured); });
             }
 
             UiBind.SetText(_hubTitle, d.HubTitle);
@@ -89,7 +88,7 @@ namespace GatekeeperBastion.Game
             {
                 UiBind.Show(_buyButton, showBuy);
                 _buyButton.onClick.RemoveAllListeners();
-                if (showBuy) _buyButton.onClick.AddListener(() => buy?.Invoke());
+                if (showBuy) _buyButton.onClick.AddListener(() => { if (buy != null) buy.Invoke(); });
             }
             if (showBuy) UiBind.SetText(_buyLabel, d.BuyButtonLabel);
 

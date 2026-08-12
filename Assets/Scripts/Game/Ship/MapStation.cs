@@ -32,6 +32,7 @@ namespace GatekeeperBastion.Game
 
         bool _embarking;
         bool _loadFailed;
+        bool _mapOpen;
         int _startWave = 1;
 
         protected override void Awake()
@@ -45,13 +46,18 @@ namespace GatekeeperBastion.Game
         {
             unchecked
             {
-                return base.ContentHash(m) * 397 ^ _startWave * 17 ^ (_embarking ? 1 : 0) ^ (_loadFailed ? 2 : 0);
+                return base.ContentHash(m) * 397 ^ _startWave * 17 ^ (_embarking ? 1 : 0) ^ (_loadFailed ? 2 : 0)
+                    ^ (_mapOpen ? 1 << 12 : 0);
             }
         }
 
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
             if (_body == null) return; // Awake already logged the missing binding.
+
+            // Nav panel first: picking the node arms _mapOpen, and ContentHash folds it in,
+            // so the rebuild that follows swaps the nav panel out for the map panel.
+            _body.BindMap(() => _mapOpen = true, _mapOpen);
 
             _body.SetDestination($"Bastion {SceneFlow.BastionName}");
             _body.SetPremise(PremiseBrief);

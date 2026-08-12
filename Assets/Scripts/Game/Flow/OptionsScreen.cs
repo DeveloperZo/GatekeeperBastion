@@ -8,7 +8,7 @@ using UnityEngine;
 namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: one options screen for the main menu, Ship and Bastion, presented
-    /// through the scene's registered <see cref="OptionsView"/> (M35 criterion 14). Opening
+    /// through the scene's registered <see cref="OptionsView"/>. Opening
     /// locks movement and frees the cursor; closing restores both. Does not touch
     /// <c>Time.timeScale</c> and does not poll Esc — each scene's dispatcher owns Esc.
     /// Settings auto-apply; display mode arms a 15s revert — closing Options reverts an
@@ -44,7 +44,7 @@ namespace GatekeeperBastion.Game
         {
             if (!_displayRevertArmed) return;
             float left = _displayRevertDeadline - Time.unscaledTime;
-            View?.SetDisplayRevertSeconds(left);
+            if (View != null) View.SetDisplayRevertSeconds(left);
             if (left > 0f) return;
             RevertDisplayMode("timeout");
         }
@@ -87,7 +87,7 @@ namespace GatekeeperBastion.Game
             if (!_open) return;
             CommitAllDirty();
             if (_displayRevertArmed) RevertDisplayMode("options closed");
-            View?.SetOpen(false);
+            if (View != null) View.SetOpen(false);
             if (_fpc != null)
             {
                 _fpc.MovementLocked = _capturedLock;
@@ -112,7 +112,7 @@ namespace GatekeeperBastion.Game
                     _missingViewLogged = true;
                     Log.Error(Tag,
                         "No OptionsView registered in this scene — author one on the Shift " +
-                        "canvas and wire its serialized references (M35 criterion 14).");
+                        "canvas and wire its serialized references.");
                 }
                 return null;
             }
@@ -181,23 +181,23 @@ namespace GatekeeperBastion.Game
             ApplyDisplayMode(mode);
             _displayRevertArmed = true;
             _displayRevertDeadline = Time.unscaledTime + DisplayRevertSeconds;
-            View?.SetDisplayRevertSeconds(DisplayRevertSeconds);
+            if (View != null) View.SetDisplayRevertSeconds(DisplayRevertSeconds);
         }
 
         static void ConfirmDisplayMode()
         {
             _displayRevertArmed = false;
-            View?.SetDisplayRevertSeconds(0f);
+            if (View != null) View.SetDisplayRevertSeconds(0f);
         }
 
         static void RevertDisplayMode(string reason)
         {
             if (!_displayRevertArmed) return;
             _displayRevertArmed = false;
-            View?.SetDisplayRevertSeconds(0f);
+            if (View != null) View.SetDisplayRevertSeconds(0f);
             Settings.SetInt(SettingId.DisplayMode, _displayRevertPrevious);
             ApplyDisplayMode(_displayRevertPrevious);
-            if (_open) View?.RefreshRowValues(BuildRowSpecs());
+            if (_open && View != null) View.RefreshRowValues(BuildRowSpecs());
             Log.Event(Tag, $"Display mode reverted to {_displayRevertPrevious} ({reason})");
         }
 

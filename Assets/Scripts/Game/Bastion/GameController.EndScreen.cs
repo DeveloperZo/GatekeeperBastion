@@ -108,7 +108,7 @@ namespace GatekeeperBastion.Game
 
             _leavingScene = true;
             if (Meta != null) Meta.PayloadLoadoutLocked = false;
-            Log.Event("Ship", $"returning to the ship — {Meta?.BankedSalvage ?? 0} banked");
+            Log.Event("Ship", $"returning to the ship — {(Meta != null ? Meta.BankedSalvage : 0)} banked");
             GameSession.Save();
 
             if (SceneFlow.LoadShip()) return;

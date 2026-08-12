@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 namespace GatekeeperBastion.EditorTools
 {
-    /// <summary>Gray-box geometry rebuilds (M35 criterion 6). "Build All Scenes" rebuilds the
+    /// <summary>Gray-box geometry rebuilds. "Build All Scenes" rebuilds the
     /// owned set — the <c>Environment</c> root, the <c>SpawnPoints</c> root, the
     /// <c>Directional Light</c> and the NavMesh asset — IN PLACE in Ship.unity and
     /// Bastion.unity, and registers Splash, MainMenu, Ship, Bastion in EditorBuildSettings.
@@ -98,7 +98,7 @@ namespace GatekeeperBastion.EditorTools
         // hides gotcha 4 (Docs/Working-Rules.md, "Tools, scripts and the menu").
         static void RegisterBuildScenes()
         {
-            // Boot order: Splash → MainMenu → Ship → Bastion (M35 criterion 3).
+            // Boot order: Splash → MainMenu → Ship → Bastion.
             EditorBuildSettings.scenes = new[]
             {
                 new EditorBuildSettingsScene(SplashScenePath, true),

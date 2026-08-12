@@ -43,6 +43,21 @@ namespace GatekeeperBastion.Game
         /// <summary>The authoritative game simulation. MonoBehaviours are thin views over this.</summary>
         public RunSim Sim { get; private set; }
 
+        /// <summary>The player rig's decoy bay, registered by the bay itself — it rides the
+        /// player rig, so it cannot be wired as a scene reference here. Null until a bay
+        /// enables, and again after it disables.</summary>
+        public DecoyBay Decoys { get; private set; }
+
+        /// <summary>Command from DecoyBay.OnEnable: publish the bay through the controller.</summary>
+        public void RegisterDecoyBay(DecoyBay bay) => Decoys = bay;
+
+        /// <summary>Command from DecoyBay.OnDisable: drop the handle — only if it is still this
+        /// bay's, so a replacement rig that registered first is not knocked out.</summary>
+        public void UnregisterDecoyBay(DecoyBay bay)
+        {
+            if (Decoys == bay) Decoys = null;
+        }
+
 
         /// <summary>Persistent cross-run progression state, owned by GameSession.</summary>
         public MetaState Meta => GameSession.Meta;
@@ -114,7 +129,7 @@ namespace GatekeeperBastion.Game
             Sim.EngageTether(); // → Tethered (Prep)
             ApplyMetaEffects();
 
-            // Stable fields after the prose — M29 criterion 14. The sentence stays readable;
+            // Stable fields after the prose. The sentence stays readable;
             // wave-report reads startWave=/primary=/… without re-parsing the prose.
             Log.Event("Run", $"run begins at {SceneFlow.BastionName} starting at wave {Sim.StartWave} — " +
                 $"{LoadoutSummary(Meta)}, " +
@@ -142,7 +157,7 @@ namespace GatekeeperBastion.Game
             return $"{label}={WeaponCatalog.Def(id).displayName} T{meta.TierOf(id)}";
         }
 
-        /// <summary>Machine-readable tail for the run-begins line (M29 criterion 14).</summary>
+        /// <summary>Machine-readable tail for the run-begins line.</summary>
         static string RunBeginsFields(MetaState meta, int startWave)
         {
             string primary = "none", primaryTier = "0", secondary = "none", secondaryTier = "0";
@@ -411,13 +426,13 @@ namespace GatekeeperBastion.Game
             GameSession.Save();
         }
 
-        /// <summary>Pause QUIT TO MENU confirm (M35 criterion 32): persist then load MainMenu.
+        /// <summary>Pause QUIT TO MENU confirm: persist then load MainMenu.
         /// WP-2 owns the Options/Settings row authoring; this is the save-then-load call site.</summary>
         public void QuitToMenu()
         {
             if (_leavingScene) return;
             _leavingScene = true;
-            Log.Event("Ship", $"quit to menu — {Meta?.BankedSalvage ?? 0} banked");
+            Log.Event("Ship", $"quit to menu — {(Meta != null ? Meta.BankedSalvage : 0)} banked");
             GameSession.Save();
             if (SceneFlow.LoadMainMenu()) return;
             _leavingScene = false;

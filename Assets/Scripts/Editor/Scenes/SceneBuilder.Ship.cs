@@ -10,7 +10,7 @@ namespace GatekeeperBastion.EditorTools
     /// steel blues/greys, brighter light, orthogonal compact layout. A central common
     /// room with FOUR alcoves. The station consoles in those alcoves (ARMORY /
     /// FABRICATION / NAV MAP / CREW QUARTERS), the player rig, ShipController and the
-    /// UI canvases are authored, persistent scene content (M35 criterion 6) — this
+    /// UI canvases are authored, persistent scene content — this
     /// class rebuilds only the hull geometry and the light, in place.</summary>
     public static partial class SceneBuilder
     {

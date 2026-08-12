@@ -48,7 +48,7 @@ namespace GatekeeperBastion.Sim
         public string abilityName;
 
         /// <summary>Zero-investment magnitude (metres / pin seconds / regen multiplier).
-        /// M21 pushes this dial with accumulated wheel points.</summary>
+        /// Accumulated wheel points push this dial.</summary>
         public float abilityDial;
 
         /// <summary>Wall-clock cooldown in seconds. 0 when there is no ability.</summary>

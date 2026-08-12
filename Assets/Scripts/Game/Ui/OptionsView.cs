@@ -25,7 +25,7 @@ namespace GatekeeperBastion.Game.Ui
         public int DefaultInt;
     }
 
-    /// <summary>One generated Controls-tab row (M35 criterion 13): keycap text + action label.
+    /// <summary>One generated Controls-tab row: keycap text + action label.
     /// Built by <see cref="OptionsScreen"/> from the single-source binding table.</summary>
     public struct OptionsControlRow
     {
@@ -34,10 +34,10 @@ namespace GatekeeperBastion.Game.Ui
     }
 
     /// <summary>Options presentation over Shift's authored Settings panel. Registers itself in
-    /// <see cref="Awake"/> so <see cref="OptionsScreen"/> reaches it without a scene search
-    /// (M35 criterion 14). All wiring is serialized (criterion 13); Shift's nested
+    /// <see cref="Awake"/> so <see cref="OptionsScreen"/> reaches it without a scene search.
+    /// All wiring is serialized; Shift's nested
     /// MainPanelManager owns sub-tab visuals — this class only records the active tab index,
-    /// whose order matches <c>SettingCategory</c> (criterion 13). The Controls tab's binding
+    /// whose order matches <c>SettingCategory</c>. The Controls tab's binding
     /// rows are generated at open by cloning <see cref="_controlsRowTemplate"/>.</summary>
     public sealed class OptionsView : MonoBehaviour
     {
@@ -132,7 +132,7 @@ namespace GatekeeperBastion.Game.Ui
             if (reference == null)
                 Debug.LogError(
                     $"[OptionsView] '{name}' is missing serialized reference '{field}' " +
-                    "(M35 criterion 13 — wire it in the scene).", this);
+                    "(wire it in the scene).", this);
         }
 
         void WireControls()
@@ -140,17 +140,17 @@ namespace GatekeeperBastion.Game.Ui
             if (_resetButton != null)
             {
                 _resetButton.onClick.RemoveAllListeners();
-                _resetButton.onClick.AddListener(() => OnResetPage?.Invoke(_activeTab));
+                _resetButton.onClick.AddListener(() => { if (OnResetPage != null) OnResetPage.Invoke(_activeTab); });
             }
             if (_backButton != null)
             {
                 _backButton.onClick.RemoveAllListeners();
-                _backButton.onClick.AddListener(() => OnBack?.Invoke());
+                _backButton.onClick.AddListener(() => { if (OnBack != null) OnBack.Invoke(); });
             }
             if (_keepDisplayButton != null)
             {
                 _keepDisplayButton.onClick.RemoveAllListeners();
-                _keepDisplayButton.onClick.AddListener(() => OnConfirmDisplay?.Invoke());
+                _keepDisplayButton.onClick.AddListener(() => { if (OnConfirmDisplay != null) OnConfirmDisplay.Invoke(); });
                 _keepDisplayButton.gameObject.SetActive(false);
             }
             if (_displayRevertLabel != null)
@@ -179,8 +179,8 @@ namespace GatekeeperBastion.Game.Ui
                     b.Slider.onValueChanged.RemoveAllListeners();
                     b.Slider.onValueChanged.AddListener(v =>
                     {
-                        OnFloatChanged?.Invoke(idx, v);
-                        OnFloatDragEnd?.Invoke(idx);
+                        if (OnFloatChanged != null) OnFloatChanged.Invoke(idx, v);
+                        if (OnFloatDragEnd != null) OnFloatDragEnd.Invoke(idx);
                     });
                 }
                 if (b.Switch != null)
@@ -189,8 +189,8 @@ namespace GatekeeperBastion.Game.Ui
                     b.Switch.invokeAtStart = false;
                     b.Switch.OnEvents.RemoveAllListeners();
                     b.Switch.OffEvents.RemoveAllListeners();
-                    b.Switch.OnEvents.AddListener(() => OnBoolChanged?.Invoke(idx, true));
-                    b.Switch.OffEvents.AddListener(() => OnBoolChanged?.Invoke(idx, false));
+                    b.Switch.OnEvents.AddListener(() => { if (OnBoolChanged != null) OnBoolChanged.Invoke(idx, true); });
+                    b.Switch.OffEvents.AddListener(() => { if (OnBoolChanged != null) OnBoolChanged.Invoke(idx, false); });
                 }
                 if (b.IntSelector != null)
                 {
@@ -203,14 +203,14 @@ namespace GatekeeperBastion.Game.Ui
                             int value = k;
                             b.IntSelector.itemList[k].onValueChanged.RemoveAllListeners();
                             b.IntSelector.itemList[k].onValueChanged
-                                .AddListener(() => OnIntChanged?.Invoke(idx, value));
+                                .AddListener(() => { if (OnIntChanged != null) OnIntChanged.Invoke(idx, value); });
                         }
                     }
                 }
             }
         }
 
-        /// <summary>Route in (M35 criterion 14): activates the canvas root when one is
+        /// <summary>Route in: activates the canvas root when one is
         /// authored, then opens Shift's Settings panel on this scene's MainPanelManager.</summary>
         public void Open()
         {
@@ -236,7 +236,10 @@ namespace GatekeeperBastion.Game.Ui
 
         /// <summary>Scene-hotkey entry (Shift's authored PressKeyEvent) — routes the panel's
         /// Esc through the same close path as the BACK button.</summary>
-        public void CloseFromHotkey() => OnBack?.Invoke();
+        public void CloseFromHotkey()
+        {
+            if (OnBack != null) OnBack.Invoke();
+        }
 
         public void RefreshRowValues(IReadOnlyList<OptionsRowSpec> specs)
         {
@@ -286,7 +289,7 @@ namespace GatekeeperBastion.Game.Ui
             if (_controlsRowTemplate.activeSelf) _controlsRowTemplate.SetActive(false);
 
             int used = 0;
-            for (int i = 0; i < (rows?.Count ?? 0); i++)
+            for (int i = 0; rows != null && i < rows.Count; i++)
             {
                 ControlRowWidgets slot = ControlRowAt(used++);
                 UiBind.SetText(slot.Key, rows[i].Key);

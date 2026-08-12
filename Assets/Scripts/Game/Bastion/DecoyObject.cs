@@ -60,9 +60,9 @@ namespace GatekeeperBastion.Game
             var rend = go.GetComponent<Renderer>();
             if (rend != null)
             {
-                var shader = Shader.Find("Universal Render Pipeline/Lit")
-                             ?? Shader.Find("Universal Render Pipeline/Unlit")
-                             ?? Shader.Find("Unlit/Color");
+                var shader = Shader.Find("Universal Render Pipeline/Lit");
+                if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
+                if (shader == null) shader = Shader.Find("Unlit/Color");
                 if (shader != null)
                 {
                     var mat = new Material(shader) { color = FxColors.DecoyBody };

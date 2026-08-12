@@ -12,8 +12,8 @@ namespace GatekeeperBastion.Sim
     }
 
     /// <summary>Pure arithmetic for weapon abilities. Mechanism lives in the Game layer;
-    /// only magnitudes, thresholds and cooldowns live here. M21 drives
-    /// <paramref name="dialPoints"/>; M20 guarantees the curve has no plateau across 0..MaxDialPoints.</summary>
+    /// only magnitudes, thresholds and cooldowns live here. Accumulated wheel points drive
+    /// <paramref name="dialPoints"/>; the curve must have no plateau across 0..MaxDialPoints.</summary>
     public static class WeaponAbility
     {
         /// <summary>Full ability focus at MaxPurchases. Matches <see cref="WeaponWheel.FocusAtMax"/>.</summary>
@@ -29,7 +29,7 @@ namespace GatekeeperBastion.Sim
         public const float SecondaryRegenPerSecond = 0.4f;
 
         /// <summary>Fixed regen multiplier while an MK-1 surge is live. Dial stretches duration,
-        /// not rate (M20 Zo 2026-08-07).</summary>
+        /// not rate (Zo, 2026-08-07).</summary>
         public const float Mk1SurgeMultiplier = 2.5f;
 
         /// <summary>Half-angle of the BR-12 concussive cone, degrees.</summary>
@@ -42,7 +42,7 @@ namespace GatekeeperBastion.Sim
         /// <summary>Armed Railshot lapses after this many seconds if the shot is not fired.</summary>
         public const float PriCRailshotArmedSeconds = 4f;
 
-        /// <summary>Provisional gatekeeper-seconds per body damaged by a Railshot (play measures M20 bar).</summary>
+        /// <summary>Provisional gatekeeper-seconds per body damaged by a Railshot (the real bar is measured in play).</summary>
         public const float PriCRailshotSecondsPerBody = 1.0f;
 
         /// <summary>Effect magnitude at <paramref name="dialPoints"/> (0..MaxDialPoints).
