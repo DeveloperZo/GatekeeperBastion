@@ -1,9 +1,10 @@
 # M49 — The gatekeepers see the second player
 
 <!--
-Status: next
-Update trigger: when the down rule changes
+Status: completed 2026-08-13
+Update trigger: closed
 Last updated: 2026-08-13
+Closed on: Zo playtest 2026-08-13 (client huntable; melee drops replicated HP; client down does not end the host run). Headless record: `NetTargetingTests` in `Assets/Tests/PlayMode/`. Integration-check report not re-run this close. Get-up is M57, not this slice.
 -->
 
 After M48 the client can kill but cannot be touched: the avatar has no collider, no health,
