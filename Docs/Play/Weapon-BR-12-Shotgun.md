@@ -42,6 +42,10 @@ Damage is raised **per pellet**, and an upgrade purchase moves damage, clip, rel
 
 One quiet consequence: critical hits are rolled per pellet, so this weapon gets more crit rolls per trigger pull than a single-shot weapon. If you are also buying Luck at CREW QUARTERS, the two stack better here than anywhere else.
 
+## See also
+
+[Weapons](Weapons.md). [Hunter](Gatekeeper-Hunter.md). [Default](Gatekeeper-Default.md). [The Hatch](The-Hatch.md).
+
 ## Gaps
 
 - Damage falls off with distance and there is no indicator of where that begins or how bad it is. Shots at medium range look identical to shots at point blank.

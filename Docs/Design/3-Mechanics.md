@@ -22,15 +22,15 @@ has had; no tuning pass has come close.
 
 | Rule | Where |
 |---|---|
-| Death is the only thing that ends a Run early. | `NotifyPlayerDown` and `ShipSystems.HatchDestroyed` both funnel through one `EndRun` → `Lost`, `PodEjections++`. |
+| Death is the only thing that ends a Run early. | The Run ends early on host down or Hatch destroyed: `NotifyPlayerDown` / `ShipSystems.HatchDestroyed` both funnel through one `EndRun` → `Lost`, `PodEjections++`. A client Boarder at 0 HP does not call that path (`endsTheRunOnDeath` false on the avatar, `M49`). Solo is unchanged. |
 | Clearing the last Wave is the only other ending. | → `Escaped`, `CleanExits++`. Both endings exit by one door: RETURN TO SHIP. |
 | Shooting a Default makes it come for you. | `EnemyGatekeeper.OnDamaged`. |
 | A Hunter can never hurt the door, at any tuning. | `hatchDamage = 0`, `ignoresHatch`. |
-| A Ram can never hurt you, and shooting it will not turn it around. | `playerDamage = 0`, `ignoresPlayer`. |
+| A Ram hunts the Boarder on a field-terminal Wave; shooting it still will not shout. | `RamGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`; `CanBeProvoked` stays false. |
 | All three kinds share one swing clock. | `GatekeeperAttackInterval`. A kind differs by what it hits and how hard, never by cadence. |
 | Gatekeepers arrive in groups with a gap, not as a stream. | `WaveSpawner(+.Groups)`. |
-| Kills pay, and only in `Tethered + Assault`. | `RunSim.AwardKill`. Prep pays nothing. |
-| The money is yours the instant the gatekeeper dies. | `AwardKill` credits `MetaState.BankedSalvage` immediately. |
+| Kills pay, and only in `Tethered + Assault`. | `RunSim.AwardKill` → Unbanked. Prep pays nothing. |
+| Unbanked converts only through a Hatch-bank. | `TriggerDraw(WaveMode.HatchBank)`; drip/dump → `BankedSalvage`. Down/breach wipes leftover. |
 | Repair spends banked Salvage as healing is applied. | `RunSim.RepairHatch`. Already spent if you die afterward. |
 | A Run is `WaveDirector.MaxWaves` Waves and `TriggerDraw` refuses one more. | `Sim/Waves/WaveDirector.cs`. |
 | Crit has exactly one source. | `MetaUpgrades.CritChance` × `PlayerGun.CritDamageMultiplier`. A second source would multiply against the first and the dps curve would stop being readable from the Armory panel. |
@@ -188,13 +188,13 @@ Wave** than before either change.
 | Stock | Filled by | Drained by |
 |---|---|---|
 | Hatch HP | `RunSim.RepairHatch`, paid from banked Salvage | gatekeeper dwell × landing rate |
-| Banked Salvage | `AwardKill`, immediately on each kill | repair, and Ship purchases |
+| Unbanked Salvage | `AwardKill` | Hatch-bank drip/dump, attrition, wipe on down/breach |
+| Banked Salvage | Hatch-bank drip/dump | repair, withdraw, Ship purchases |
 | Player HP | CREW QUARTERS Vitality, between Runs only | gatekeeper swings |
 | Stamina | regen after a 1s delay | sprint |
 | Clip | reload | firing |
 
-**Banked Salvage is the only stock that survives a Run.** Dying takes nothing back and
-clearing takes nothing back. Sizes are `4-Data.md`.
+**Banked Salvage is the only stock that survives a Run.** Unbanked does not. Sizes are `4-Data.md`.
 
 ---
 

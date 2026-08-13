@@ -12,16 +12,14 @@ namespace GatekeeperBastion.Game
     /// Scene flow: the ship hub is now a real scene (SceneFlow.Ship), so entering the Bastion
     /// starts fighting immediately — Start() calls StartRun + EngageTether and Docked is a
     /// transient boot phase. A run now ends TWO ways: death (player death via PlayerDied →
-    /// Sim.NotifyPlayerDown, or hatch destruction) lands in Lost, and clearing all
-    /// WaveDirector.MaxWaves waves lands in Escaped. Both are terminal and both leave by exactly
+    /// Sim.NotifyPlayerDown, or hatch destruction) lands in Lost, and Wave 5 with nothing
+    /// unbanked lands in Escaped. Hatch-bank after the field is stripped stays Tethered.
+    /// Both terminal phases leave by exactly
     /// one door: ReturnToShip (save + load the Ship scene) — the old in-place ResetRun/Respawn
     /// path is gone. MetaState comes from GameSession (with a direct-play fallback); no
     /// Time.timeScale pausing — the sim ignores Tick outside Tethered.
-    ///
-    /// Money: GatekeeperKilled → Sim.AwardKill() banks the kill into MetaState.BankedSalvage
-    /// immediately. RepairHatch spends from that bank as healing is applied. Ending a run —
-    /// well or badly — settles nothing and refunds nothing; the purse is also spent at the
-    /// ship's stations between runs.
+    /// Money: GatekeeperKilled → Sim.AwardKill() credits Unbanked. Hatch-bank drip/dump
+    /// converts into MetaState.BankedSalvage. RepairHatch spends from that bank.
     ///
     /// Terminal-phase contract (the anti-soft-lock rules — see GameController.EndScreen.cs, which
     /// applies all of them to Lost AND Escaped alike, because a winning player trapped behind a
@@ -46,6 +44,9 @@ namespace GatekeeperBastion.Game
 
         [SerializeField, OptionalBinding, Tooltip("Bastion net session. Null in solo / tests.")]
         NetSession _net;
+
+        [SerializeField, Tooltip("Bastion layout on Environment. Authored in the scene.")]
+        BastionLayout _layout;
 
         /// <summary>Everything this Run owns (meta, sim, decoy state, spawn ids). Constructed
         /// in Awake; null only on a failed boot (no MetaState).</summary>
@@ -97,9 +98,6 @@ namespace GatekeeperBastion.Game
         PlayerAbility _ability;
         Interactor _interactor;
         DecoyPlacement _decoyPlacement;
-
-        /// <summary>Field terminal id waiting on the live Wave clear. Null when none pending.</summary>
-        string _pendingTerminalId;
 
         // One GameController per scene, authored; there is no process-global instance left to protect.
         void Awake()
@@ -214,12 +212,11 @@ namespace GatekeeperBastion.Game
 
             Controls.Sample();                                        // 1
 
-            // Client-only: the host owns the run. Keep local move + fire so RPCs can fire;
+            // Client-only: the host owns the run. Local move/fire/verbs so RPCs can fire;
             // do not tick the local sim or the spawner (that would fork a second live sim).
             if (_net != null && _net.IsClientOnly)
             {
-                if (_fpc != null) _fpc.Tick(dt);
-                if (_gun != null) _gun.Tick(dt);
+                TickClientLocal(dt);
                 return;
             }
 
@@ -257,7 +254,12 @@ namespace GatekeeperBastion.Game
 
             if (Controls.Down(ControlId.PullDraw))
             {
-                Log.Event("Run", "draw refused — Waves start at a terminal");
+                if (_interactor != null && _interactor.Current is RepairInteractable)
+                    StartHatchBankWave();
+                else if (Sim.Unbanked > 0L && Sim.HatchBankSlotsLeft > 0)
+                    Log.Event("Hatch", "hatch-bank refused — look at the Hatch");
+                else
+                    Log.Event("Run", "draw refused — Waves start at a terminal");
                 return;
             }
 
@@ -275,10 +277,8 @@ namespace GatekeeperBastion.Game
                 $"(each kill +{Sim.CurrentKillAward} salvage)");
         }
 
-        /// <summary>Command from WaveSpawner: one gatekeeper is down. This is the ONLY income path
-        /// in the game — the sim computes the kill's value from the siphon dial and banks it into
-        /// MetaState.BankedSalvage on the spot, so the player owns it before the body lands.
-        /// Convention R1: the spawner never calls the sim itself.</summary>
+        /// <summary>Command from WaveSpawner: one gatekeeper is down. Credits Unbanked; the
+        /// ship bank does not move until a Hatch-bank converts.</summary>
         public void GatekeeperKilled()
         {
             if (Sim == null)
@@ -296,7 +296,7 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Command from PlayerHealth: the player is dead — end the run exactly like a
-        /// hatch loss. Nothing is forfeited; the salvage is already banked. Only meaningful
+        /// hatch loss. Unbanked is wiped; already-converted ship Salvage is kept. Only meaningful
         /// while Tethered.</summary>
         public void PlayerDied()
         {
@@ -317,87 +317,31 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Command from HatchStation: damage the authoritative sim Hatch.
-        /// Field-terminal Waves leave the Hatch invulnerable (M52).</summary>
+        /// Field-terminal Waves leave the Hatch invulnerable.</summary>
         public void DamageHatch(float amount)
         {
             if (amount <= 0f || Sim == null || RunIsOver) return;
-            if (Sim.Mode == WaveMode.Terminal) return;
-            Sim.Ship.Hatch.Damage(amount);
-        }
-
-        /// <summary>Field terminal Interact: start the next Wave; door opens only when that
-        /// Wave clears (<see cref="OnAssaultEnded"/>).</summary>
-        public bool StartTerminalWave(BastionTerminal terminal)
-        {
-            if (terminal == null)
-            {
-                Log.Warn(Tag, "StartTerminalWave refused — no terminal");
-                return false;
-            }
-
-            if (terminal.Kind != BastionTerminalKind.Field)
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — kind=" + terminal.Kind);
-                return false;
-            }
-
-            if (Sim == null || RunIsOver)
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — run not live");
-                return false;
-            }
-
-            if (Sim.Phase != RunPhase.Tethered || Sim.Assault != AssaultState.Prep)
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — not in Prep");
-                return false;
-            }
-
-            if (Sim.AllWavesCleared || Sim.CurrentWaveIndex >= WaveDirector.MaxWaves)
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — all waves cleared");
-                return false;
-            }
-
-            BastionLayout layout = terminal.Layout;
-            if (layout == null)
-                layout = FindFirstObjectByType<BastionLayout>();
-            if (layout != null && layout.IsTerminalDone(terminal.TerminalId))
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — already complete");
-                return false;
-            }
-
-            if (!string.IsNullOrEmpty(_pendingTerminalId))
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — wave already pending "
-                    + _pendingTerminalId);
-                return false;
-            }
-
-            // Field Wave Spawns register only while active; enable before TriggerDraw.
-            terminal.SetUnlockedSpawnsActive(true);
-
-            _pendingTerminalId = terminal.TerminalId;
-            Sim.TriggerDraw();
-            Log.Event("Terminal", terminal.TerminalId + " started wave " + Sim.CurrentWaveIndex
-                + " mode=terminal");
-            return true;
+            Sim.DamageHatch(amount);
         }
 
         /// <summary>Command from RepairInteractable: heal the hatch by up to
         /// <paramref name="requestedHp"/>, charging salvage continuously via
-        /// <see cref="RunSim.RepairHatch"/>. Returns HP actually applied. Refuses when the
+        /// <see cref="RunSim.RepairHatch"/>. A full Hatch in Prep withdraws instead
+        /// (<see cref="RunSim.Withdraw"/>). Repair refuses when the
         /// repair rig is not equipped — Dev RestoreHatchAndPlayer bypasses this via
         /// <c>Subsystem.Repair</c> directly.</summary>
         public float RepairHatch(float requestedHp)
         {
             if (Sim == null || RunIsOver) return 0f;
-            if (Meta == null || !Meta.HasRepairRigEquipped) return 0f;
             var hatch = Sim.Ship.Hatch;
-            bool wasFull = hatch.Hp >= hatch.MaxHp - 0.01f;
+            if (hatch.Hp >= hatch.MaxHp - 0.01f)
+            {
+                TryWithdrawFromHpRequest(requestedHp);
+                return 0f;
+            }
+            if (Meta == null || !Meta.HasRepairRigEquipped) return 0f;
             float applied = Sim.RepairHatch(requestedHp);
-            if (applied > 0f && !wasFull && hatch.Hp >= hatch.MaxHp - 0.01f)
+            if (applied > 0f && hatch.Hp >= hatch.MaxHp - 0.01f)
                 Log.Event("Hatch", $"hatch fully repaired — {hatch.Hp:0}/{hatch.MaxHp:0}");
             return applied;
         }
@@ -499,11 +443,20 @@ namespace GatekeeperBastion.Game
             if (Meta != null) Meta.PayloadLoadoutLocked = true;
             var bay = local != null ? local.GetComponentInChildren<DecoyBay>() : null;
             if (bay == null && gun != null) bay = gun.GetComponent<DecoyBay>();
+            if (bay == null && gun != null)
+                bay = gun.gameObject.AddComponent<DecoyBay>();
             if (bay != null)
             {
                 // Bind registers the bay with this controller and subscribes it to Sim events.
                 bay.Bind(this);
                 bay.ResetForRun(Meta != null ? Meta.EquippedDrone : PayloadId.None);
+                if (gun != null) gun.ConfigureDrone(bay.HasPayload);
+                var placement = bay.Placement;
+                if (placement != null)
+                {
+                    placement.SetHosted(true);
+                    _decoyPlacement = placement;
+                }
             }
             else
                 Log.Warn(Tag, "ApplyMetaEffects: no DecoyBay on the player rig.");
@@ -547,7 +500,7 @@ namespace GatekeeperBastion.Game
 
             if (IsTerminal(phase))
             {
-                _pendingTerminalId = null;
+                ClearPendingTerminal();
                 EnterTerminalPhase(phase); // GameController.EndScreen.cs
             }
         }
@@ -556,6 +509,9 @@ namespace GatekeeperBastion.Game
         {
             Log.Event("Run", $"wave {Sim.CurrentWaveIndex}/{WaveDirector.MaxWaves} — {wave.enemyCount} gatekeepers, " +
                 $"siphon L{Sim.Siphon.Level} (each kill +{Sim.CurrentKillAward})");
+            if (!string.IsNullOrEmpty(_pendingTerminalId))
+                Log.Event("Terminal", _pendingTerminalId + " started wave " + Sim.CurrentWaveIndex
+                    + " mode=terminal");
         }
 
         void OnAssaultEnded()
@@ -563,27 +519,10 @@ namespace GatekeeperBastion.Game
             Log.Event("Run", $"wave {Sim.CurrentWaveIndex}/{WaveDirector.MaxWaves} cleared — " +
                 $"salvage {Sim.Salvage.RunSalvage:0}, " +
                 $"hatch {Sim.Ship.Hatch.Hp:0}/{Sim.Ship.Hatch.MaxHp:0}");
-
-            if (string.IsNullOrEmpty(_pendingTerminalId))
-                return;
-
-            string id = _pendingTerminalId;
-            _pendingTerminalId = null;
-
-            BastionLayout layout = FindFirstObjectByType<BastionLayout>();
-            if (layout == null)
-            {
-                Log.Warn(Tag, "AssaultEnded: pending terminal " + id + " but no BastionLayout");
-                return;
-            }
-
-            if (!layout.TryCompleteTerminal(id, out string refuseReason))
-            {
-                Log.Event("Terminal", id + " complete refused — " + refuseReason);
-                return;
-            }
-
-            Log.Event("Terminal", id + " complete — wave cleared");
+            if (Sim.Mode == WaveMode.HatchBank && _spawner != null)
+                _spawner.DespawnAllLive();
+            RecordPendingTerminalClear();
+            RestoreHatchBankSpawns();
         }
 
         void OnApplicationQuit()

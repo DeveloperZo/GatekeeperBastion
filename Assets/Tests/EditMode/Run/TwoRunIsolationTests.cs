@@ -35,6 +35,7 @@ namespace GatekeeperBastion.Tests
             public float RunElapsed;
             public float HatchHp;
             public long RunSalvage;
+            public long Unbanked;
             public long Banked;
             public int Deepest;
             public int NextRngDraw;
@@ -51,6 +52,7 @@ namespace GatekeeperBastion.Tests
                     RunElapsed = ctx.Sim.RunElapsed,
                     HatchHp = ctx.Sim.Ship.Hatch.Hp,
                     RunSalvage = ctx.Sim.Salvage.RunSalvage,
+                    Unbanked = ctx.Sim.Unbanked,
                     Banked = ctx.Meta.BankedSalvage,
                     Deepest = ctx.Meta.DeepestWaveReached,
                     NextRngDraw = ctx.Sim.Rng.Next(),
@@ -160,7 +162,8 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(AssaultState.Prep, a.Sim.Assault);
             Assert.AreEqual(3, a.Sim.CurrentWaveIndex);
             Assert.AreEqual(3, a.Meta.DeepestWaveReached);
-            Assert.AreEqual(100L, a.Meta.BankedSalvage, "4 kills x 25 at Scavenging 0, siphon 0");
+            Assert.AreEqual(100L, a.Sim.Unbanked, "4 kills x 25 at Scavenging 0, siphon 0");
+            Assert.AreEqual(0L, a.Meta.BankedSalvage);
             Assert.AreEqual(a.Sim.Ship.Hatch.MaxHp - 40f, a.Sim.Ship.Hatch.Hp, 1e-4f);
             Assert.IsTrue(a.Decoy.IsLive);
 
@@ -169,7 +172,8 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(AssaultState.Assault, b.Sim.Assault);
             Assert.AreEqual(1, b.Sim.CurrentWaveIndex);
             Assert.AreEqual(1, b.Meta.DeepestWaveReached, "B never cleared anything");
-            Assert.AreEqual(62L, b.Meta.BankedSalvage, "2 kills x floor(25 x 1.25 siphon-3) = 2 x 31");
+            Assert.AreEqual(62L, b.Sim.Unbanked, "2 kills x floor(25 x 1.25 siphon-3) = 2 x 31");
+            Assert.AreEqual(0L, b.Meta.BankedSalvage);
             Assert.AreEqual(b.Sim.Ship.Hatch.MaxHp - 90f, b.Sim.Ship.Hatch.Hp, 1e-4f);
             Assert.IsFalse(b.Decoy.IsLive, "B never armed a decoy");
 
@@ -178,7 +182,7 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(1, b.Meta.TotalRuns);
             Assert.AreNotEqual(a.Sim.CurrentWaveIndex, b.Sim.CurrentWaveIndex);
             Assert.AreNotEqual(a.Sim.Assault, b.Sim.Assault);
-            Assert.AreNotEqual(a.Meta.BankedSalvage, b.Meta.BankedSalvage);
+            Assert.AreNotEqual(a.Sim.Unbanked, b.Sim.Unbanked);
         }
 
         [Test]
@@ -211,6 +215,7 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(first.RunElapsed, second.RunElapsed, "same ticks, same order — exact");
             Assert.AreEqual(first.HatchHp, second.HatchHp);
             Assert.AreEqual(first.RunSalvage, second.RunSalvage);
+            Assert.AreEqual(first.Unbanked, second.Unbanked);
             Assert.AreEqual(first.Banked, second.Banked);
             Assert.AreEqual(first.Deepest, second.Deepest);
             Assert.AreEqual(first.NextRngDraw, second.NextRngDraw,

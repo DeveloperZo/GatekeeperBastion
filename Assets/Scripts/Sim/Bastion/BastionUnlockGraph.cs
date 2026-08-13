@@ -16,10 +16,14 @@ namespace GatekeeperBastion.Sim
         public struct TerminalSpec
         {
             public string TerminalId;
+            /// <summary>Waves that must clear on this id before <see cref="TryCompleteTerminal"/>.
+            /// Values below 1 are treated as 1.</summary>
+            public int WavesToComplete;
         }
 
         readonly Dictionary<string, DoorSpec> _doors = new Dictionary<string, DoorSpec>();
         readonly Dictionary<string, TerminalSpec> _terminals = new Dictionary<string, TerminalSpec>();
+        readonly Dictionary<string, int> _clearedWaves = new Dictionary<string, int>();
         readonly HashSet<string> _completedTerminals = new HashSet<string>();
         readonly List<string> _openDoors = new List<string>();
         readonly HashSet<string> _openDoorSet = new HashSet<string>();
@@ -36,6 +40,7 @@ namespace GatekeeperBastion.Sim
         {
             _doors.Clear();
             _terminals.Clear();
+            _clearedWaves.Clear();
             _completedTerminals.Clear();
             _openDoors.Clear();
             _openDoorSet.Clear();
@@ -64,6 +69,58 @@ namespace GatekeeperBastion.Sim
                     _terminals[spec.TerminalId] = spec;
                 }
             }
+        }
+
+        public int ClearedWaves(string terminalId)
+        {
+            if (string.IsNullOrEmpty(terminalId))
+                return 0;
+            int n;
+            return _clearedWaves.TryGetValue(terminalId, out n) ? n : 0;
+        }
+
+        public int WavesNeeded(string terminalId)
+        {
+            if (string.IsNullOrEmpty(terminalId)
+                || !_terminals.TryGetValue(terminalId, out TerminalSpec spec))
+                return 1;
+            return spec.WavesToComplete < 1 ? 1 : spec.WavesToComplete;
+        }
+
+        /// <summary>Count <paramref name="waves"/> toward this terminal. Completes it when
+        /// the running total reaches <see cref="WavesNeeded"/>. Dying must not call this.</summary>
+        public bool RecordWaveCleared(string terminalId, int waves, out string refuseReason)
+        {
+            refuseReason = null;
+            if (string.IsNullOrEmpty(terminalId))
+            {
+                refuseReason = "terminal id is empty";
+                return false;
+            }
+
+            if (!_terminals.ContainsKey(terminalId))
+            {
+                refuseReason = "unknown terminal";
+                return false;
+            }
+
+            if (_completedTerminals.Contains(terminalId))
+            {
+                refuseReason = "already complete";
+                return false;
+            }
+
+            if (waves < 1)
+            {
+                refuseReason = "no waves cleared";
+                return false;
+            }
+
+            int have = ClearedWaves(terminalId) + waves;
+            _clearedWaves[terminalId] = have;
+            if (have < WavesNeeded(terminalId))
+                return true;
+            return TryCompleteTerminal(terminalId, out refuseReason);
         }
 
         public bool TryCompleteTerminal(string terminalId, out string refuseReason)

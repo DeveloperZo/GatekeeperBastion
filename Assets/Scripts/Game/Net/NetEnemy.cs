@@ -43,6 +43,7 @@ namespace GatekeeperBastion.Game
             if (IsServer) return;
             if (_ai != null) _ai.enabled = false;
             if (_agent != null) _agent.enabled = false;
+            Log.Event(Tag, "clone enemy=" + NetworkObjectId);
         }
         #endregion
 

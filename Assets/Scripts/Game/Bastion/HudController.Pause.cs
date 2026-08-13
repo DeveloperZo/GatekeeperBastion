@@ -35,8 +35,9 @@ namespace GatekeeperBastion.Game
             }
 
             var gc = _game;
-            if (gc != null && gc.Sim != null
-                && (gc.Sim.Phase == Sim.RunPhase.Lost || gc.Sim.Phase == Sim.RunPhase.Escaped))
+            if (gc != null && (_endPresented
+                || (gc.Sim != null
+                    && (gc.Sim.Phase == Sim.RunPhase.Lost || gc.Sim.Phase == Sim.RunPhase.Escaped))))
             {
                 gc.ReturnToShip();
                 return;

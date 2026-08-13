@@ -133,8 +133,9 @@ namespace GatekeeperBastion.Game
             //   Default — as it always was.
             //   Hunter  — hatchAvailable is always false, so `!hatchAvailable` holds and it chases
             //             the player from the breach, for life.
-            //   Ram     — MayTargetPlayer is false, so this is always false and the hatch is the
-            //             only goal it can ever have.
+            //   Ram     — MayTargetPlayer is true on field-terminal Waves (2026-08-13), so it
+            //             hunts the Boarder while the Hatch is out of the fight. Hatch-bank
+            //             restores MayTargetPlayer false.
             _chasingPlayer = MayTargetPlayer && !_committedToHatch &&
                              (_provoked || playerNear || !hatchAvailable);
             _hatchTarget = hatchAvailable ? hatch : null;

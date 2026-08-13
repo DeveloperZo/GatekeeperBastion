@@ -8,8 +8,9 @@ re-litigating a cut costs more than the cut saved.
 - **Loss-stake "musical chairs" rotor.** A rotator cycled named stakes (Salvage
   Hold 50%, Weapon Rig 25%, Core Cache 0%, Lucky Break 75%), advancing once per
   Wave, and whichever was current when you lost was forfeited. Built, then cut.
-  **Currency is simply kept**: `AwardKill` banks each kill instantly and no
-  ending moves Salvage. `SalvageLedger.BankCleanExit/BankPodded` are gone.
+  **Currency is simply kept** on the ship: already-converted Salvage is never
+  taken back. `AwardKill` credits Unbanked immediately; only a Hatch-bank
+  converts it to `MetaState.BankedSalvage`. `SalvageLedger.BankCleanExit/BankPodded` are gone.
   **Expiry, 2026-08-12 (Zo), for the field loop only:** unbanked Salvage since the
   last Hatch-bank is lost on a down. The ship bank is still kept. The rotor stays
   cut — this is a known pile the player authored, not a named random forfeit.
@@ -85,6 +86,13 @@ documentation, version stability and the existence of a readable reference imple
 its feature list. A library the model writes correctly on the first attempt beats a better
 library it writes subtly wrong.
 
+## Locked — co-op down (Zo, 2026-08-13)
+
+A client Boarder at 0 HP does not end the host's Run (`M49`, `endsTheRunOnDeath` false
+on the avatar). Get-up is a wait on the Ship, then embark on the next hatch-defense Wave
+via NAV MAP or pause (`Milestones/1. planned/M57-the-downed-player-waits-on-the-ship.md`);
+decided, not built. Solo and host: no in-Run respawn.
+
 ## Locked — Bastion kit geometry (Zo, 2026-08-13)
 
 Playable Bastion floors and walls are **kit segments** (`BastionSegment` /
@@ -155,8 +163,8 @@ FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
   requirement, and NGO names the mechanism (`AnticipatedNetworkVariable<T>` /
   `AnticipatedNetworkTransform`). NGO 2.x's distributed-authority topology is
   rejected deliberately: it is documented as unsuitable where one machine should
-  govern the simulation. First slice shipped over UnityTransport loopback (M48);
-  Steam transport still deferred. 2–4 players on one hull.
+  govern the simulation. First slices shipped over UnityTransport loopback (M48, M49).
+  Steam transport still deferred (`M60`). 2–4 players on one hull.
 - **Ship subsystems** (Reactor, TetherCore, Engines, LifeSupport) return with the
   bastion outfitting layer. `ShipSystems` stays the aggregate so the wiring keeps
   its shape.

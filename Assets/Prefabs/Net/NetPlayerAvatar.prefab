@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 6759053939319035304}
   - component: {fileID: 3918204761295837402}
   - component: {fileID: 1269764879076884921}
+  - component: {fileID: 5829103748291037462}
   m_Layer: 0
   m_Name: NetPlayerAvatar
   m_TagString: Untagged
@@ -218,4 +219,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71b35c3b33e22614a912cbfe5c92f855, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.NetPlayerAvatar
+  ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &5829103748291037462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7578676510071751952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7e4c2a91f6d48b3a0c5e8d1f3a24670, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.NetVerbs
   ShowTopMostFoldoutHeaderGroup: 1

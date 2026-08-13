@@ -43,7 +43,7 @@ live right now, so this table is a reference, not something you have to memorise
 
 | Key | Does | Live when |
 |---|---|---|
-| `T` | siphon draw | between waves |
+| `T` | Hatch-bank | between waves |
 | `[` | siphon | between waves |
 | `]` | siphon | between waves |
 | `ENTER` | return | end screen |
@@ -116,9 +116,10 @@ HP above is the base line. Later waves multiply it (see the wave table).
 
 ## The waves
 
-**5 waves to a run**, and none of them start until you pull the
-siphon draw. There is no timer: the quiet between waves lasts exactly as long as you
-want it to. Gatekeepers arrive in groups, not a stream.
+**5 waves to a run**, and none of them start until you use a
+field terminal. One Interact starts that terminal's remaining Waves; after each
+clear there are 8 seconds of quiet, then the next Wave.
+After the sequence, Prep lasts as long as you want. Gatekeepers arrive in groups, not a stream.
 
 At the dial's lowest setting:
 
@@ -149,12 +150,13 @@ else: no extra health, no tighter spacing, no larger groups.
 
 ## Salvage
 
-**Gatekeepers are worth money and the money is yours the instant they die.** Not at the
-end of the wave, not if you survive — the moment they drop. Dying takes none of it
-back, and clearing the bastion adds no bonus. A run you lose still paid you.
+**Gatekeepers are worth Salvage, and that Salvage sits unbanked until a Hatch-bank.**
+A kill does not credit the ship. Prep `T` at the Hatch starts the convert Wave:
+drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A fatter pile
+converts at a higher multiplier. Dying keeps what already made it through the Hatch.
 
 A kill pays `25` at Scavenging 0, up to `31.25` at 5, then multiplied by the dial.
-Nothing pays per second, and the quiet between waves earns nothing at all.
+Nothing pays per second except Hatch-bank drip (`20` unbanked/s), and the quiet between waves earns nothing at all.
 
 The hatch is what you are defending: **300 HP** at Hatch Armor 0, up to **375**. Hold `E` near it to repair.
 If it falls, the run ends. If you fall, the run ends. There is no other way out —

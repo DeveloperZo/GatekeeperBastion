@@ -109,14 +109,14 @@ namespace GatekeeperBastion.Tests
             sim.RepairHatch(50f); // 100 salvage
             Assert.AreEqual(100L, sim.RepairSalvageSpent);
 
-            // One kill at dial 0 / scavenging 0 = 25, then die.
+            // One kill at dial 0 / scavenging 0 = 25 unbanked, then die — never converted.
             sim.TriggerDraw();
             sim.AwardKill();
             sim.NotifyPlayerDown();
 
             Assert.AreEqual(100L, sim.LastRunReport.repairSpent);
-            Assert.AreEqual(25L, sim.LastRunReport.grossEarned);
-            Assert.AreEqual(25L - 100L, sim.LastRunReport.grossEarned - sim.LastRunReport.repairSpent);
+            Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
+            Assert.AreEqual(0L - 100L, sim.LastRunReport.grossEarned - sim.LastRunReport.repairSpent);
         }
 
         [Test]

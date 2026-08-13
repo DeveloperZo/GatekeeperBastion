@@ -12,7 +12,7 @@ Last updated: 2026-08-13
 The gatekeeper roster and how Waves are composed from it: which kinds exist, what each kind
 refuses to do, and how Waves 1–5 escalate. Not the tuning of any single number — that is
 `../Design/4-Data.md` — and not what the player shoots them with, which is
-[`armory-and-weapons`](armory-and-weapons.md).
+[`armory-and-weapons`](closed/armory-and-weapons.md).
 
 ## Where it stands
 

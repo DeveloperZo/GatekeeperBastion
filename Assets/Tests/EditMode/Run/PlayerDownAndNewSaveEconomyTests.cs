@@ -33,14 +33,16 @@ namespace GatekeeperBastion.Tests
             var sim = NewTetheredSim(out meta);
             sim.TriggerDraw();
             Kill(sim, 2);
-            Assert.AreEqual(50L, meta.BankedSalvage, "banked while still alive");
+            Assert.AreEqual(50L, sim.Unbanked, "unbanked while still alive");
+            Assert.AreEqual(0L, meta.BankedSalvage);
 
             sim.NotifyPlayerDown();
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
-            Assert.AreEqual(50L, meta.BankedSalvage, "dying costs the player zero currency");
+            Assert.AreEqual(0L, sim.Unbanked, "down wipes unbanked");
+            Assert.AreEqual(0L, meta.BankedSalvage);
             Assert.AreEqual(1, meta.PodEjections);
             Assert.AreEqual("player", sim.LastRunReport.cause);
-            Assert.AreEqual(50L, sim.LastRunReport.grossEarned);
+            Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
         }
 
         [Test]
@@ -69,10 +71,12 @@ namespace GatekeeperBastion.Tests
                 sim.TriggerDraw();
                 Kill(sim, 4);
                 long before = meta.BankedSalvage;
-                Assert.AreEqual(1000L + 4L * bankedPerKill[level], before, "level " + level + " earnings");
+                Assert.AreEqual(1000L, before, "level " + level + " ship bank unchanged by kills");
+                Assert.AreEqual(4L * bankedPerKill[level], sim.Unbanked, "level " + level + " unbanked");
 
                 sim.NotifyPlayerDown();
                 Assert.AreEqual(before, meta.BankedSalvage, "death took currency at level " + level);
+                Assert.AreEqual(0L, sim.Unbanked, "unbanked wiped at level " + level);
             }
         }
 
@@ -147,9 +151,9 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(RunPhase.Lost, simHatch.Phase);
             Assert.AreEqual(RunPhase.Lost, simPlayer.Phase);
             Assert.AreEqual(metaHatch.BankedSalvage, metaPlayer.BankedSalvage, "same bank");
-            Assert.AreEqual(84L, metaPlayer.BankedSalvage); // 3 * floor(28.75) at dial 2
+            Assert.AreEqual(0L, metaPlayer.BankedSalvage);
             Assert.AreEqual(simHatch.LastRunReport.grossEarned, simPlayer.LastRunReport.grossEarned);
-            Assert.AreEqual(84L, simPlayer.LastRunReport.grossEarned, "gross equals banked awards (M22)");
+            Assert.AreEqual(0L, simPlayer.LastRunReport.grossEarned, "neither converted");
             Assert.AreEqual(metaHatch.PodEjections, metaPlayer.PodEjections);
             Assert.AreEqual("hatch", simHatch.LastRunReport.cause);
             Assert.AreEqual("player", simPlayer.LastRunReport.cause);

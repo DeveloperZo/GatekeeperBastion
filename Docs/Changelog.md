@@ -7,6 +7,101 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-13
 -->
 
+- 2026-08-13: **M53 status next → completed.** Playthrough
+  `Logs/GatekeeperBastion_2026-08-13_18-23-55_p92464.log` (Run clean): T1 five Waves
+  hatch 300/300 salvage 0; Hatch-bank 18:31:53 unbanked=5250 slots=2, 78 bodies, `+0`,
+  45.002 s, salvage 7413 hatch 292/300. Wave 5 with Unbanked did not Escaped. Dump
+  still `BASTION STRIPPED` in that log; stay-Prep is EditMode after the recut. Harness
+  316/0. PlayMode not re-run. No milestone active.
+- 2026-08-13: **M52 status next → completed.** Playthrough
+  `Logs/GatekeeperBastion_2026-08-13_14-46-59.log` (no `[Dev]`): one Interact starts T1
+  Waves 1–5, 8.000 s gap, `wave 5/5 cleared`, T1 complete, `BASTION STRIPPED`, hatch
+  300/300. AwardKill-to-bank is M53 (`+25 unbanked` in that log). Harness 309/0.
+  M53 remains the only active.
+- 2026-08-13: **M53 status later → next.** Recut on start: convert multiplier snapshotted
+  at Hatch-bank start; Hatch-bank never deep-start chains; T1 Wave Spawns plus completed
+  Field UnlockedSpawns for the extract; withdraw is `RunSim.Withdraw`, not `RepairHatch`.
+  Kill criterion dated 2026-09-13. M52 stays active.
+- 2026-08-13: **M52 recut — one Interact starts the terminal's N Waves.** After each
+  clear, `TerminalChainGap` (8 s) of Prep, then the next draw. Not a deep-start
+  overlap (that would make T1's default Interact the NAV MAP's hardest start). Play
+  through is one Interact at T1, not five.
+- 2026-08-13: **F10/F11 no longer taint.** Host/join stay on the Dev key table (compile
+  out of release) but do not call `NotifyDevAction` and do not write `[Dev]`. The taint
+  rule is unchanged: a `[Dev]` log still cannot close a gate. Unblocks co-op playthroughs
+  (M50 close noted F10 at 10:29:53 as taint).
+- 2026-08-13: **M51 status next → completed.** Gate is all five `NetVerbTests`
+  Passed (`gkb_verify_report.json` 2026-08-13T18:09:48Z, PlayMode 31/0). Criterion 6
+  playthrough is confirmation: Terminal Waves leave the hatch invulnerable, so
+  repair-under-attack waits on M53. EditMode 327/1
+  `BastionDoorApertureTests.TryGetDoorAperture_NorthDoor_AtHalfDepth` (4.5 vs 3.5)
+  is the same miss as the M50 close, not this slice. Loopback in-run verbs done;
+  M52 remains active.
+- 2026-08-13: **M51 status later → next.** Recut against landed M50: client
+  `Update` must tick Interactor / ability / decoy; repair prompt and HUD banked
+  read mirrored `Banked` (M50 only mirrored run salvage); `RepairHatchFromNet`
+  skips the host-rig check; `NetVerbs` on the avatar; drone slot wired
+  (`SlotDrone` had no caller); networked decoy prefab; pin by `NetworkObjectId`.
+  Criterion 6 playthrough is a damaged hatch, not under-attack (M53). Gate is
+  `NetVerbTests`.
+- 2026-08-13: **M52 status later → next.** Waves start at a terminal is in build: N
+  Waves per terminal (T1 = 5), D1 unlocks on T1 only, Prep `T` refused, Hatch
+  invulnerable in `WaveMode.Terminal`, Open-door Interact if the slab is still up.
+  Recut this start: Wave 5 still `Escaped`; walking D1 is M54. Deep-start chain
+  counts every Wave it delivered toward N.
+- 2026-08-13: **M62 recut.** Voice pinned in `language.md` (*Player-facing voice*). Play
+  pages authored to that pin this slice; the reader copies, it does not write. Compendium
+  is its own pause command, not a row in the key list. Entry shape: origin plus fight
+  tells, one pause. Unlock, companion diary, and completion ledger stay rejected.
+- 2026-08-13: **M50 status next → completed.** Gate is `NetRunMirrorTests` Passed
+  (`gkb_verify_report.json` 2026-08-13T15:19:01Z). Criteria 2–5 playthrough recut: one
+  terminal Wave then `already complete`, D1 locked, hatch invulnerable — cannot prove
+  hatch-fall, a second Wave, or an ending. N Waves per terminal (T1 = 5) and Open-door
+  Interact are M52. Hatch-destroyed eyes-on waits on M53. No milestone active; next is
+  M57.
+- 2026-08-13: **M52 recut.** Terminals have N Waves, not 1. T1 is 5. D1 requires only T1.
+  Completed terminal Interact opens its door if the slab is still up. Evidence:
+  `Logs/GatekeeperBastion_2026-08-13_10-29-42.log` T1 refused after Wave 1; door stayed
+  locked.
+- 2026-08-13: **M59/M61 recut, M62 created.** QoL is two multi-area passes, not keys then
+  copy: M59 the Bastion is a room (terminal Scale 1, HUD gutters, Whispers of the Void);
+  M61 the Ship is a hull (station chrome + copy, player-build keys). M62 the Compendium
+  you can open (volumes in `Docs/Play/`, pause reader). Brainstorm `compendium.md`
+  deleted on graduation. Planned 12; cap overage continues.
+- 2026-08-13: **M61 created** — *The stations a friend can read*, second QoL cut. Purpose
+  lines on the four Ship consoles; ARMORY transfer note; FABRICATION Rig + salvage/HP;
+  no sell-back. Not M46. Planned 11; cap overage continues.
+- 2026-08-13: **Compendium.** `Docs/Play/` is the player-facing name Compendium (index
+  rewritten). In-game reader is `Brainstorms/compendium.md`, not a milestone yet.
+- 2026-08-13: **M50 status later → next.** Client lives the run is in build: readout
+  fields on `NetRunMirror`, `EndSummary` ClientRpc, client HUD seam, session shutdown to
+  MainMenu. Recut against landed M48/M49 (LateUpdate poll, client sim stays Tethered,
+  endings cannot follow `sim.Phase`).
+- 2026-08-13: **`Brainstorms/closed/`.** Files with nothing to mine (empty Open, no
+  mineable Ideas) move here instead of sitting in the live set. `armory-and-weapons.md`
+  is the first: its own Open section says nothing is open. Contract amended —
+  `_meta/_definitions/brainstorm.md`. Do not delete a closed file that still holds a
+  roster or Decided table.
+- 2026-08-13: **M50 re-cut** against M48/M49 landed shapes (AssaultState byte, LateUpdate
+  poll, `EndSummary` ClientRpc, client `ReturnToShip` cannot gate on `IsTerminal`). M57
+  owns Ship wait.
+- 2026-08-13: **M49 status next → completed.** Zo playtest: client huntable, down does not
+  end host run. `NetTargetingTests` is the headless record; integration-check report not
+  re-run this close. Get-up is M57.
+- 2026-08-13: **Friends-alpha reorder.** Filter is a session a friend can operate. Execution
+  order: M50 → M57 → M51 → M58 → M59 → M60 → M52–M56. Planned cap 10 broken to 11 with Zo's
+  authorization this date; Working-Rules cap unchanged.
+- 2026-08-13: **M57 created** (graduate down rule from co-op.md): Ship wait, embark next
+  Prep, NAV or pause.
+- 2026-08-13: **M58 created:** Windows player build, Main Menu LAN host/join (typed IP).
+  F11 stays 127.0.0.1 editor fallback.
+- 2026-08-13: **M59 created:** first friends QoL cut — player-build keys, pause lists
+  playable bindings, F2–F9 unbound outside editor.
+- 2026-08-13: **M60 created** (graduate Steam join from co-op.md): Facepunch transport,
+  re-cut before start against M51+M58.
+- 2026-08-13: **M26 row corrected** in the roadmap table (file already in `3. completed/`;
+  Path 1 shipped).
+- 2026-08-13: **M56 row added** to the roadmap table (file already in `1. planned/`).
 - 2026-08-13: **M49 gate cut — no in-run client respawn.** Wave-start revive is out of
   criteria 5–6, Implementation, and `NetTargetingTests`. Client down still does not end
   the host run; how or whether the client gets back up is parked in

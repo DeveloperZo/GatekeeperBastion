@@ -56,7 +56,8 @@ recorded. Two sessions on 2026-08-08 (`00-03-53`, and `14-45-28`/`15-03-32`) wer
 that bar — the first re-read the same 0.9 ability figure already logged on 08-07.
 
 **`[Dev]` taint is per-Run, not per-file.** A file can carry `[Dev]` lines and still hold
-clean Runs if the taint arrives after they end. Say which.
+clean Runs if the taint arrives after they end. Say which. F10/F11 host/join log `[Net]`
+and are not taint.
 
 ## 2026-08-07 — first five-Wave clear
 
@@ -221,4 +222,25 @@ run; within-run split accepted as the difference proof).
 
 **Zo's verdict:** Hatch HUD addition is great for this point in time. Criteria 8–11 closed;
 M36 shipped.
+
+## 2026-08-13 — T1 five Waves from one Interact
+
+Played: `Bastion.unity`, T1, one Interact, Waves 1–5, no F1–F9.
+
+Log: `Logs/GatekeeperBastion_2026-08-13_14-46-59.log`. Untainted. Interact 14:47:17; T1
+`started wave` 1 then 2/3/4/5 at 8.000 s after each prior clear; `wave 5/5 cleared` and
+T1 complete 14:53:33; `BASTION STRIPPED`. Hatch **300/300** every clear. Kills `+25
+unbanked`; banked stayed 12208. `wave-report` median `hatchDist` 44.8–67.4 m, farShare
+**1.00** every kind/Wave (parser failed on `Spawn_MidWest (1)` parens; medians still
+printed).
+
+**Verdict:** Zo concurred 2026-08-13. Entry closed.
+
+## 2026-08-13 — M53 Hatch-bank
+
+Played: `Bastion.unity`, T1 five Waves then Hatch-bank at the Hatch. No F1–F9 during the Run.
+
+Log: `Logs/GatekeeperBastion_2026-08-13_18-23-55_p92464.log`. Run clean (`[Dev]` StartCoopHost is after the end screen). T1 complete 18:31:10, hatch 300/300, salvage 0. Hatch-bank 18:31:53 wave 5 unbanked=5250 slots=2, 78 gatekeepers, kills `+0`. Timer 45.002 s; salvage 7413, hatch 292/300. Then `BASTION STRIPPED` (recut after this log: dump stays Prep).
+
+**Verdict:** Zo 2026-08-13 — hatch wave worked pretty well; the run ending after it was the remaining miss (fixed in sim, not replayed). Entry closed.
 

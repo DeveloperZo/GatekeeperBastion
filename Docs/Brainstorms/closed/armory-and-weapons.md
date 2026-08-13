@@ -2,9 +2,9 @@
 
 <!--
 Purpose: The ARMORY console — the weapon catalog, the gun classes, slots, and what a weapon can be.
-Status: brainstorm
-Update trigger: when a weapon changes state in the roster, a class contract changes, or a row in Decided/Open moves.
-Last updated: 2026-08-12
+Status: closed — no open entries; roster and Decided kept so they are not re-proposed
+Update trigger: when a weapon changes state in the roster, a class contract changes, or a row in Open moves.
+Last updated: 2026-08-13
 -->
 
 ## What this covers
@@ -15,7 +15,7 @@ drone or its payloads (FABRICATION).
 
 **Boundary with FABRICATION, restated 2026-08-08 (Zo):** the ARMORY sells what is in your
 hands — guns, their Tiers, rings and abilities. The drone, and every former Utility item
-now a drone payload, is FABRICATION's ([`fabrication`](fabrication.md)). The
+now a drone payload, is FABRICATION's ([`fabrication`](../fabrication.md)). The
 carried-vs-installed line this paragraph used to state is retired with that move.
 
 ## Where it stands
@@ -47,7 +47,7 @@ Link, never restate. If a detail below matters, it lives in the milestone.
 gatekeepers a Primary must stop per Wave, how much of the reload gap a Secondary must cover.
 Until a class can say that, a new weapon is a damage number with a different name and the
 catalog grows without the fight changing. (The Utility clause moved with the class to
-[`fabrication`](fabrication.md), 2026-08-08.)
+[`fabrication`](../fabrication.md), 2026-08-08.)
 
 ## Decided
 
@@ -74,7 +74,7 @@ be somewhere other than the Hatch" as the highest-value unused structure in the 
 
 **Utility re-homed (Zo, 2026-08-08):** the class contract above is unchanged, but its items
 are now **drone payloads bought at FABRICATION** — player-activated, one equipped per Run.
-The roster rows and their notes moved to [`fabrication`](fabrication.md); the third slot
+The roster rows and their notes moved to [`fabrication`](../fabrication.md); the third slot
 itself becomes the **drone bay** (decided there the same day).
 
 ### Ammo (Zo, 2026-08-06)
@@ -108,7 +108,7 @@ enum value no save has ever used." That is false. `SaveData.EquippedMelee`, the 
 wrong, and **the JSON key must not change** or old saves lose the slot.
 
 **Note, 2026-08-08 (closed same day):** the third slot becomes the **drone bay** — decided
-in [`fabrication`](fabrication.md). Same slot, same JSON key, the equipped payload shown in
+in [`fabrication`](../fabrication.md). Same slot, same JSON key, the equipped payload shown in
 it; the rule above stands.
 
 ### Two Primaries is the roster (Zo, 2026-08-06)
@@ -168,7 +168,7 @@ measured one step removed from the effect.
 are 0%. A resupply **eats a Utility slot** like any other item. *(Superseded in part
 2026-08-08: resupply is the drone's **preloaded ammo reserve** — rounds bought in Prep at
 the normal Salvage price, fed to the Primary mid-fight; it eats the drone bay. See
-[`fabrication`](fabrication.md). The drop model stands.)*
+[`fabrication`](../fabrication.md). The drop model stands.)*
 
 The per-kind percentage is a design surface, not just a number: a kind that drops nothing is
 a kind that costs you to kill, which is a lever for making some Gatekeepers unattractive targets
@@ -265,7 +265,7 @@ purpose and recorded is design.
   fire rate, ability — and all five must be meaningful or the weapon has dead spokes and
   fewer than five builds. This rules out a beam with no clip and a weapon that reloads from
   kills instead of a timer. (Whether drone payloads keep the wheel is Open in
-  [`fabrication`](fabrication.md), 2026-08-08.)
+  [`fabrication`](../fabrication.md), 2026-08-08.)
 - **An item that only adds dps is a worse version of a Tier.** FABRICATION's caution, applied
   here unchanged.
 - **Class is declared on `WeaponDef`** and the ARMORY groups by it. A weapon that cannot state
@@ -276,7 +276,7 @@ purpose and recorded is design.
 **Nothing is open in this file.** O1–O7 are all answered and recorded in *Decided*
 (2026-08-07). A milestone can be written from any picked gun row without waiting on a
 decision. The one outside question that briefly bound this file — the fate of
-`WeaponSlot.Utility` — closed in [`fabrication`](fabrication.md) the day it opened: the
+`WeaponSlot.Utility` — closed in [`fabrication`](../fabrication.md) the day it opened: the
 slot becomes the drone bay (2026-08-08).
 
 When something opens, it goes here as a table — question, why it blocks, owner, recommendation
@@ -310,7 +310,7 @@ Each row is named by **what it refuses**, the same grammar the gatekeeper roster
 | **SEC-D** | Secondary | reach | Close-quarters sidearm: empties its pool fast, hits hard, useless past a few metres. | Path 1 shipped (ability/ring still open) |
 
 **The repair rig and the UTL rows left this table 2026-08-08** — they are drone payloads
-now, and their one canonical list is the roster in [`fabrication`](fabrication.md).
+now, and their one canonical list is the roster in [`fabrication`](../fabrication.md).
 
 **Ship order for remaining candidates:** nothing picked is unbuilt. PRI-D and PRI-E wait
 for a Run that says a fourth Primary is missing. Payload ship order lives with the payloads.

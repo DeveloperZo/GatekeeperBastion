@@ -284,18 +284,15 @@ namespace GatekeeperBastion.PlayTests
                 yield return new WaitForSeconds(0.75f);
                 logs.AssertNoErrors("triggering the siphon draw");
 
-                // ---- a kill pays, and it pays into the purse straight away ----
-                // Enemies are worth currency: enemy dies, currency added. There is no
-                // end-of-run settlement left to carry it, so if this does not land in
-                // MetaState.BankedSalvage now, it never will.
+                // ---- a kill pays Unbanked, not the ship bank ----
                 long bankedBeforeKill = meta.BankedSalvage;
+                long unbankedBeforeKill = sim.Unbanked;
                 gc.GatekeeperKilled();
-                Assert.Greater(meta.BankedSalvage, bankedBeforeKill,
-                    $"A reported kill did not add currency to MetaState.BankedSalvage (still " +
-                    $"{meta.BankedSalvage}). GameController.GatekeeperKilled() -> RunSim.AwardKill() is " +
-                    "the only income path in the game, and it banks immediately.");
-                long bankedAfterKill = meta.BankedSalvage;
-                logs.AssertNoErrors("banking a kill");
+                Assert.AreEqual(bankedBeforeKill, meta.BankedSalvage,
+                    "A reported kill credited MetaState.BankedSalvage. AwardKill fills Unbanked.");
+                Assert.Greater(sim.Unbanked, unbankedBeforeKill,
+                    $"A reported kill did not raise Unbanked (still {sim.Unbanked}).");
+                logs.AssertNoErrors("crediting a kill to Unbanked");
 
                 // ---- kill the player ----
                 PlayerHealth player = PlayerRegistry.Local;
@@ -314,10 +311,10 @@ namespace GatekeeperBastion.PlayTests
                 Assert.AreEqual(RunPhase.Lost, sim.Phase,
                     "Player death must end the run: PlayerHealth.Die -> GameController.PlayerDied -> " +
                     "RunSim.NotifyPlayerDown -> Lost.");
-                Assert.AreEqual(bankedAfterKill, meta.BankedSalvage,
-                    $"Dying CHANGED banked salvage ({bankedAfterKill} -> {meta.BankedSalvage}). " +
-                    "Death stops the earning and nothing else: every kill was already banked, and " +
-                    "there is no stake, forfeit or end-of-run settlement to move the number now.");
+                Assert.AreEqual(0L, sim.Unbanked, "player death must wipe Unbanked");
+                Assert.AreEqual(bankedBeforeKill, meta.BankedSalvage,
+                    $"Dying CHANGED banked salvage ({bankedBeforeKill} -> {meta.BankedSalvage}). " +
+                    "Death wipes Unbanked and keeps converted ship Salvage.");
                 Assert.GreaterOrEqual(meta.BankedSalvage, bankedBefore,
                     $"Banked salvage went BACKWARDS across the run ({bankedBefore} -> " +
                     $"{meta.BankedSalvage}). A run may never take banked progress away.");

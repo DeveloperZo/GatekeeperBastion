@@ -10,10 +10,9 @@ namespace GatekeeperBastion.PlayTests
     /// <summary>
     /// In-editor Play-mode proof of the scene-flow loop against the REAL MonoBehaviour layer:
     /// entering the Bastion auto-boards (StartRun + EngageTether — the ship menu is its own
-    /// scene now), and the CURRENCY MODEL holds end to end — an enemy dies, currency is added,
-    /// and it is banked into MetaState.BankedSalvage the instant it is earned. Player death
-    /// ends the run exactly like hatch loss (PlayerDied → Lost) and takes NOTHING back: a
-    /// lost run keeps every point of salvage the player killed for. GameSession supplies the
+    /// scene now), and the CURRENCY MODEL holds end to end — an enemy dies, Unbanked rises,
+    /// BankedSalvage does not. Player death ends the run (PlayerDied → Lost), wipes Unbanked,
+    /// and keeps already-converted ship Salvage. GameSession supplies the
     /// meta via its direct-play fallback. Runs in an empty scene it populates itself; tolerant
     /// of a pre-existing save/session (asserts deltas, not absolutes). Does NOT press RETURN TO
     /// SHIP — that loads the Ship scene, which isn't available to the test harness.
@@ -46,7 +45,7 @@ namespace GatekeeperBastion.PlayTests
         }
 
         [UnityTest]
-        public IEnumerator CoreLoop_AutoBoard_KillsBankImmediately_DeathTakesNothingBack()
+        public IEnumerator CoreLoop_AutoBoard_KillsCreditUnbanked_DeathWipesUnbanked()
         {
             // --- Boot: bootstrap the real controller in an empty scene ---
             _gcObject = new GameObject("GameController");
@@ -73,18 +72,20 @@ namespace GatekeeperBastion.PlayTests
             gc.Sim.TriggerDraw();     // the draw is the bell: assault starts, kills pay
             Assert.AreEqual(AssaultState.Assault, gc.Sim.Assault);
 
-            // Kills are the ONLY income. Time passing must not add a single point of salvage —
-            // that was the old per-second siphon drip and it is gone.
+            // Kills credit Unbanked only. Time passing must not add salvage — the old
+            // per-second siphon drip is gone, and Hatch-bank drip is off in Terminal mode.
             long idleBefore = gc.Sim.Salvage.RunSalvage;
             long idleBankedBefore = gc.Meta.BankedSalvage;
+            long idleUnbankedBefore = gc.Sim.Unbanked;
             yield return new WaitForSeconds(0.75f);
             Assert.AreEqual(idleBefore, gc.Sim.Salvage.RunSalvage,
                 "Salvage accrued while nothing was killed. Income is per-kill only: enemy dies, " +
                 "currency added. Nothing may drip from the clock.");
             Assert.AreEqual(idleBankedBefore, gc.Meta.BankedSalvage,
                 "Banked salvage grew while nothing was killed.");
+            Assert.AreEqual(idleUnbankedBefore, gc.Sim.Unbanked,
+                "Unbanked grew while nothing was killed.");
 
-            // --- ENEMY DIES → CURRENCY ADDED → BANKED, in that one motion ---
             float killValue = gc.Sim.CurrentKillValue;
             Assert.Greater(killValue, 0f,
                 $"RunSim.CurrentKillValue is {killValue} at siphon L{gc.Sim.Siphon.Level}. " +
@@ -92,57 +93,52 @@ namespace GatekeeperBastion.PlayTests
 
             long bankedBeforeKill = gc.Meta.BankedSalvage;
             long runBeforeKill = gc.Sim.Salvage.RunSalvage;
+            long unbankedBeforeKill = gc.Sim.Unbanked;
 
-            gc.GatekeeperKilled(); // the one income command: → Sim.AwardKill()
+            gc.GatekeeperKilled();
 
-            Assert.Greater(gc.Sim.Salvage.RunSalvage, runBeforeKill,
-                "A kill did not add to the per-run tally (RunSim.Salvage.RunSalvage).");
-            Assert.AreEqual(gc.Sim.Salvage.RunSalvage - runBeforeKill,
-                gc.Meta.BankedSalvage - bankedBeforeKill,
-                "Run tally and bank must receive the same floored award (M22).");
+            Assert.AreEqual(runBeforeKill, gc.Sim.Salvage.RunSalvage,
+                "A kill must not add to converted RunSalvage — that tally is Hatch-bank drip/dump.");
+            Assert.AreEqual(bankedBeforeKill, gc.Meta.BankedSalvage,
+                "A kill must not credit MetaState.BankedSalvage. AwardKill fills Unbanked.");
+            long unbankedDelta = gc.Sim.Unbanked - unbankedBeforeKill;
+            Assert.Greater(unbankedDelta, 0L,
+                $"A kill worth {killValue:0} did NOT raise Unbanked (still {gc.Sim.Unbanked}).");
+            Assert.GreaterOrEqual(unbankedDelta, (long)Mathf.Floor(killValue),
+                $"A kill worth {killValue:0} credited only {unbankedDelta} unbanked.");
+            Assert.LessOrEqual(unbankedDelta, (long)Mathf.Ceil(killValue),
+                $"A kill worth {killValue:0} credited {unbankedDelta} — more than one kill's value.");
 
-            long bankedDelta = gc.Meta.BankedSalvage - bankedBeforeKill;
-            Assert.Greater(bankedDelta, 0L,
-                $"A kill worth {killValue:0} did NOT reach MetaState.BankedSalvage " +
-                $"(still {gc.Meta.BankedSalvage}). Currency is banked the moment it is earned — " +
-                "there is no end-of-run settlement any more, so a kill that only touches the run " +
-                "tally is money the player can never spend.");
-            Assert.GreaterOrEqual(bankedDelta, (long)Mathf.Floor(killValue),
-                $"A kill worth {killValue:0} banked only {bankedDelta}.");
-            Assert.LessOrEqual(bankedDelta, (long)Mathf.Ceil(killValue),
-                $"A kill worth {killValue:0} banked {bankedDelta} — more than one kill's value.");
-
-            // Every subsequent kill pays too, and keeps paying into the same purse.
             for (int i = 0; i < 3; i++)
             {
-                long before = gc.Meta.BankedSalvage;
+                long before = gc.Sim.Unbanked;
                 gc.GatekeeperKilled();
-                Assert.Greater(gc.Meta.BankedSalvage, before,
-                    $"Kill #{i + 2} did not bank (stuck at {before}).");
+                Assert.Greater(gc.Sim.Unbanked, before,
+                    $"Kill #{i + 2} did not raise Unbanked (stuck at {before}).");
+                Assert.AreEqual(bankedBeforeKill, gc.Meta.BankedSalvage,
+                    $"Kill #{i + 2} credited the ship bank.");
             }
 
-            // Scene -> sim damage routing through the HatchStation proxy.
+            Assert.AreEqual(WaveMode.Terminal, gc.Sim.Mode);
             float hpBefore = hatch.Hp;
             hatch.ApplyDamage(25f);
-            Assert.AreEqual(hpBefore - 25f, hatch.Hp, 0.01f, "HatchStation routes damage into the sim hatch");
+            Assert.AreEqual(hpBefore, hatch.Hp, 0.01f,
+                "HatchStation routed ApplyDamage; Terminal mode left hatch HP unchanged");
 
-            // --- Player death: the ONLY other run ender. It stops the earning; it takes nothing ---
             long bankedAtDeath = gc.Meta.BankedSalvage;
-            long earnedThisRun = gc.Sim.Salvage.RunSalvage;
-            Assert.Greater(earnedThisRun, 0L, "the run earned something before the player died");
+            long unbankedAtDeath = gc.Sim.Unbanked;
+            Assert.Greater(unbankedAtDeath, 0L, "the run had unbanked before the player died");
             long flooredPerKill = (long)Mathf.Floor(killValue);
-            Assert.GreaterOrEqual(bankedAtDeath, banked0 + flooredPerKill * 4L,
-                "The purse is missing floored kill payouts — some kills never reached the bank.");
-            Assert.AreEqual(earnedThisRun, bankedAtDeath - banked0,
-                "RunSalvage must equal the sum of banked awards this run (M22).");
+            Assert.AreEqual(unbankedBeforeKill + flooredPerKill * 4L, unbankedAtDeath,
+                "Unbanked is missing floored kill payouts.");
+            Assert.AreEqual(banked0, bankedAtDeath, "ship bank must not move on Terminal kills");
 
-            gc.PlayerDied(); // command → Sim.NotifyPlayerDown()
+            gc.PlayerDied();
             Assert.AreEqual(RunPhase.Lost, gc.Sim.Phase, "player death ends the run");
-
-            Assert.GreaterOrEqual(gc.Meta.BankedSalvage, bankedAtDeath,
-                $"DYING TOOK MONEY BACK: banked went {bankedAtDeath} -> {gc.Meta.BankedSalvage}. " +
-                "There is no loss stake and no forfeit of any kind — currency earned from kills is " +
-                "the player's the instant it is earned, and a lost run may never reduce it.");
+            Assert.AreEqual(0L, gc.Sim.Unbanked, "dying must wipe Unbanked");
+            Assert.AreEqual(bankedAtDeath, gc.Meta.BankedSalvage,
+                $"DYING CHANGED THE SHIP BANK: {bankedAtDeath} -> {gc.Meta.BankedSalvage}. " +
+                "Converted Salvage is kept; only Unbanked is wiped.");
             Assert.GreaterOrEqual(gc.Meta.BankedSalvage, banked0,
                 "Banked salvage ended the run below where it started.");
             Assert.AreEqual(pods0 + 1, gc.Meta.PodEjections);
@@ -150,7 +146,7 @@ namespace GatekeeperBastion.PlayTests
                 "first death unlocks the Armory upgrade rows");
 
             // Report shape (cause/grossEarned/repairSpent, and no stake members).
-            RunReportAssertions.AssertShape(gc.Sim, "player", earnedThisRun);
+            RunReportAssertions.AssertShape(gc.Sim, "player", 0L);
 
             yield return null; // let phase-change side effects (save, locks) run a frame
 
@@ -161,10 +157,11 @@ namespace GatekeeperBastion.PlayTests
             Assert.AreEqual(bankedAfterLoss, gc.Meta.BankedSalvage, "no double banking");
             Assert.AreEqual(runs0, gc.Meta.TotalRuns, "run count unchanged until the next embark");
 
-            // Kills after the run is over pay nothing — the tally is closed.
             gc.GatekeeperKilled();
             Assert.AreEqual(bankedAfterLoss, gc.Meta.BankedSalvage,
                 "A kill reported after the run ended still paid out.");
+            Assert.AreEqual(0L, gc.Sim.Unbanked,
+                "A kill reported after the run ended still raised Unbanked.");
         }
     }
 }

@@ -1,5 +1,6 @@
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
@@ -23,6 +24,7 @@ namespace GatekeeperBastion.Game
         float _waveGatekeeperSeconds;
         float _waveRegenRounds;
         PinBuildState _pinBuild;
+        EnemyGatekeeper _pinTarget;
         bool _subscribed;
         bool _waveTallyOpen;
 
@@ -154,6 +156,7 @@ namespace GatekeeperBastion.Game
             if (_gun == null || _gun.ActiveWeaponId != WeaponId.Mr35Rifle) return;
             if (_cooldown > 0f) return;
 
+            _pinTarget = gatekeeper;
             _pinBuild.RegisterHit(gatekeeper.GetInstanceID(), WeaponAbility.PinBuildDecaySeconds);
             if (!_pinBuild.Ready) return;
 
@@ -225,6 +228,14 @@ namespace GatekeeperBastion.Game
             forward.Normalize();
 
             float range = def.range > 0.01f ? def.range : 14f;
+            if (ClientOnly())
+            {
+                var verbs = LocalVerbs();
+                if (verbs == null) return false;
+                verbs.RequestConcussive(origin, forward, metres, range);
+                return true;
+            }
+
             float cosMin = Mathf.Cos(WeaponAbility.Br12ConeHalfAngleDegrees * Mathf.Deg2Rad);
             var hatch = HatchStation.Instance;
             Vector3 awayFromHatch = hatch != null
@@ -271,6 +282,13 @@ namespace GatekeeperBastion.Game
         bool TryManualPin(float seconds)
         {
             if (!_pinBuild.Ready || _pinBuild.TargetKey == 0) return false;
+            if (ClientOnly())
+            {
+                if (_pinTarget == null) return false;
+                if (_pinTarget.GetInstanceID() != _pinBuild.TargetKey) return false;
+                return ApplyPin(_pinTarget, seconds);
+            }
+
             var live = LiveGatekeepers();
             for (int i = 0; i < live.Count; i++)
             {
@@ -284,9 +302,20 @@ namespace GatekeeperBastion.Game
         bool ApplyPin(EnemyGatekeeper target, float seconds)
         {
             if (target == null || seconds <= 0f) return false;
+            if (ClientOnly())
+            {
+                var netObj = target.GetComponent<NetworkObject>();
+                if (netObj == null || !netObj.IsSpawned) return false;
+                var verbs = LocalVerbs();
+                if (verbs == null) return false;
+                verbs.RequestPin(netObj.NetworkObjectId, seconds);
+                ClearPinBuild();
+                return true;
+            }
+
             target.Pin(seconds);
             _waveGatekeeperSeconds += seconds;
-            _pinBuild.Clear();
+            ClearPinBuild();
             Log.Event("Ability",
                 $"pin held {seconds:0.##}s on {target.Kind} — {seconds:0.##} gatekeeper-seconds");
             return true;
@@ -357,7 +386,7 @@ namespace GatekeeperBastion.Game
             _waveTallyOpen = true;
             _waveGatekeeperSeconds = 0f;
             _waveRegenRounds = 0f;
-            _pinBuild.Clear();
+            ClearPinBuild();
             if (_gun != null) _gun.ClearRailshot();
         }
 
@@ -378,6 +407,26 @@ namespace GatekeeperBastion.Game
             Log.Event("Ability",
                 $"wave {wave} gatekeeper-seconds removed: {_waveGatekeeperSeconds:0.##}" +
                 (_waveRegenRounds > 0f ? $" (regen rounds {_waveRegenRounds:0.##})" : ""));
+        }
+
+        void ClearPinBuild()
+        {
+            _pinBuild.Clear();
+            _pinTarget = null;
+        }
+
+        bool ClientOnly()
+        {
+            var gc = _game;
+            var net = gc != null ? gc.Net : null;
+            return net != null && net.IsClientOnly;
+        }
+
+        NetVerbs LocalVerbs()
+        {
+            var gc = _game;
+            if (gc == null || gc.Net == null) return null;
+            return gc.Net.LocalVerbs;
         }
     }
 }

@@ -185,6 +185,7 @@ namespace GatekeeperBastion.Tests
             deep.AwardKill();
 
             Assert.AreEqual(vNormal, vDeep, 1e-6f);
+            Assert.AreEqual(normal.Unbanked, deep.Unbanked);
             Assert.AreEqual(a.BankedSalvage, b.BankedSalvage);
             Assert.AreEqual(25f, vNormal, 1e-5f, "dial 0 scavenging 0 baseline");
         }

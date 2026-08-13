@@ -35,7 +35,8 @@ namespace GatekeeperBastion.Game
             else
                 Sim.SeekWave(wave); // Prep after clear: point the next draw at the same index
 
-            _pendingTerminalId = null;
+            ClearPendingTerminal();
+            RestoreHatchBankSpawns();
             RestoreHatchAndPlayer();
             Sim.TriggerDraw();
             Log.Event("Dev", $"ReplayWave — re-drew wave {wave}/{WaveDirector.MaxWaves}");
@@ -60,7 +61,8 @@ namespace GatekeeperBastion.Game
             if (Sim.Assault == AssaultState.Assault)
                 Sim.AbortAssault();
 
-            _pendingTerminalId = null;
+            ClearPendingTerminal();
+            RestoreHatchBankSpawns();
             Sim.SeekWave(oneBasedWave);
             RestoreHatchAndPlayer();
             Sim.TriggerDraw();
@@ -128,10 +130,10 @@ namespace GatekeeperBastion.Game
             Log.Event("Dev", $"GrantSalvage +{amount} — banked {meta.BankedSalvage}");
         }
 
-        /// <summary>F10: start a host session on loopback. Taints the session (dev command).</summary>
+        /// <summary>F10: start a host session on loopback. Session start, not a Dev
+        /// mutation — does not taint. Logs <c>[Net]</c> from <see cref="NetSession"/>.</summary>
         public void StartCoopHost()
         {
-            GameSession.NotifyDevAction();
             if (_net == null)
             {
                 Log.Warn(Tag, "StartCoopHost refused — no NetSession wired.");
@@ -140,10 +142,9 @@ namespace GatekeeperBastion.Game
             _net.StartHost();
         }
 
-        /// <summary>F11: join 127.0.0.1. Taints the session (dev command).</summary>
+        /// <summary>F11: join 127.0.0.1. Session start, not a Dev mutation — does not taint.</summary>
         public void StartCoopClient()
         {
-            GameSession.NotifyDevAction();
             if (_net == null)
             {
                 Log.Warn(Tag, "StartCoopClient refused — no NetSession wired.");

@@ -1,8 +1,8 @@
-<!-- Purpose: how Waves escalate across a Run and what is different about the last one compared to the first. / Status: working / Update trigger: when the Wave curve, composition table, group delivery, or health scaling changes. / Last updated: 2026-08-06 -->
+<!-- Purpose: how Waves escalate across a Run and what is different about the last one compared to the first. / Status: working / Update trigger: when the Wave curve, composition table, group delivery, health scaling, or how a Wave starts changes. / Last updated: 2026-08-13 -->
 
 # Waves
 
-A Run is a fixed number of Waves, each one drawn by you, each one bigger than the last. The counts, the composition table and the exact scaling are in the [Field Manual](Field-Manual.md); this page is what the escalation *does*.
+A Run is a fixed number of Waves, started from field terminals or as a Hatch-bank, each one bigger than the last. The first terminal on the kit bastion is the Run's full five, from one Interact. The counts, the composition table and the exact scaling are in the [Field Manual](Field-Manual.md); this page is what the escalation *does*.
 
 ## Four things escalate, and they escalate together
 
@@ -20,9 +20,9 @@ None of these four are affected by the siphon dial. The dial adds bodies on top.
 
 The kinds are not tiers. They arrive on a fixed schedule that the dial cannot touch.
 
-- The **first Wave is all basic Gatekeepers** — the marchers that go for the Hatch and turn on you only if you hurt them. Nothing else is in it. It exists to teach you the door.
-- **Hunters** enter after that, and their count grows every Wave. They never touch the Hatch. They are the reason you cannot park in front of the door and hold the trigger.
-- **Rams** enter later still, and their count grows fastest at the end. They never touch you and cannot be provoked into it. They walk to the door and take a serious bite out of it.
+- The **first Wave is all basic Gatekeepers** — the marchers. On a Wave started at a field terminal they hunt you, not the Hatch. On a Hatch-bank they march on the Hatch. Nothing else is in it. It exists to teach you the room.
+- **Hunters** enter after that, and their count grows every Wave. They never touch the Hatch. They are the reason you cannot stand still and hold the trigger.
+- **Rams** enter later still, and their count grows fastest at the end. On a field-terminal Wave they hunt you. On a Hatch-bank they go for the door again. Shooting one still does not shout, and it still does not speed up.
 
 Within a group the kinds are **shuffled, not blocked** — a group can be all marchers, or a Ram escorted by Hunters. You do not get a clean Hunter phase followed by a clean Ram phase; you get a mix at every door, every time, which is the whole reason there is more than one kind.
 
@@ -35,15 +35,19 @@ Within a group the kinds are **shuffled, not blocked** — a group can be all ma
 | Group | narrow | the widest the game sends |
 | Gap between groups | the longest | the shortest |
 | What kills you | nothing, if you pay attention | being made to answer three problems at once |
-| What kills the Hatch | a marcher you ignored | a Ram you didn't have time for |
+| What the Hatch does | nothing on a field-terminal Wave; the Hatch-bank target on a Hatch-bank | the same split |
 
-The first Wave asks one question: can you stop a thing walking at a door. The last asks three at once — the marchers pulling on the door, the Hunters coming for you specifically, and the Rams that ignore you entirely — and every second you spend on one is a second the other two are unopposed. That is the escalation. It is not that any single Gatekeeper becomes frightening.
+The first Wave asks one question: can you stop a thing walking at you. The last asks three at once — marchers, Hunters, and Rams that will not turn when shot — and every second you spend on one is a second the other two are unopposed. That is the escalation. It is not that any single Gatekeeper becomes frightening.
 
 ## Where the difficulty actually comes from
 
 Not from the bodies. From **overlap**. A Wave's difficulty is roughly how much of it is in the room at the same time, and that rises from both ends: bigger groups arriving with less time between them, taking longer to kill because they're tougher.
 
-This is also exactly what the NAV MAP's deep start does deliberately: it delivers several Waves back to back with no Prep, so the overlap is between Waves rather than within one. Same content, stacked.
+This is also exactly what the NAV MAP's deep start does deliberately: it delivers several Waves back to back with no Prep, so the overlap is between Waves rather than within one. Same content, stacked. That chain still starts from one Interact at a field terminal.
+
+## See also
+
+[A Run](A-Run.md). [Gatekeepers](Gatekeepers.md). [The Siphon Dial](The-Siphon-Dial.md). [Staying Alive](Staying-Alive.md).
 
 ## Gaps
 

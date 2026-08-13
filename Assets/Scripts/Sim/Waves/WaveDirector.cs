@@ -14,7 +14,8 @@ namespace GatekeeperBastion.Sim
     {
         // ---- Wave curve ----
 
-        /// <summary>Total waves in a run. Indices are 0..MaxWaves-1; RunSim refuses a 6th draw.</summary>
+        /// <summary>Field Waves in a run. Indices are 0..MaxWaves-1. Terminal draws after
+        /// MaxWaves clamp composition at MaxWaves-1. Hatch-bank does not consume a field Wave.</summary>
         public const int MaxWaves = 5;
 
         /// <summary>Gatekeepers in wave 0 at siphon level 0.</summary>
@@ -52,6 +53,10 @@ namespace GatekeeperBastion.Sim
         /// next during a deep start. The only tuning knob for the deep-start
         /// IFF crossover.</summary>
         public const float InterWaveGap = 3f;
+
+        /// <summary>Seconds of Prep after a field-terminal Wave clears before the next Wave
+        /// of that Interact. Not <see cref="InterWaveGap"/> (deep-start delivery overlap).</summary>
+        public const float TerminalChainGap = 8f;
 
         // ---- The Default kind's stat line. StatsFor(Default) is built from exactly these six
         //      constants, so there is one copy of each number, not two that can drift. ----

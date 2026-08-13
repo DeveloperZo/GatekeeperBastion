@@ -105,6 +105,19 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
+            if (ClientOnly())
+            {
+                var verbs = LocalVerbs();
+                if (verbs == null)
+                {
+                    Log.Event(Tag, "place refused — no net verbs");
+                    return;
+                }
+                verbs.RequestPlaceDecoy(_samplePos);
+                EndAim();
+                return;
+            }
+
             if (_bay.TryPlace(_samplePos))
             {
                 EndAim();
@@ -184,6 +197,20 @@ namespace GatekeeperBastion.Game
             if (shader == null) return;
             _validMat = new Material(shader) { color = FxColors.DecoyGhostValid };
             _invalidMat = new Material(shader) { color = FxColors.DecoyGhostInvalid };
+        }
+
+        bool ClientOnly()
+        {
+            var gc = _bay != null ? _bay.Game : null;
+            var net = gc != null ? gc.Net : null;
+            return net != null && net.IsClientOnly;
+        }
+
+        NetVerbs LocalVerbs()
+        {
+            var gc = _bay != null ? _bay.Game : null;
+            if (gc == null || gc.Net == null) return null;
+            return gc.Net.LocalVerbs;
         }
     }
 }

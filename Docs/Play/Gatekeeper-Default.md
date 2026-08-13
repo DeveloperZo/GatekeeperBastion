@@ -31,15 +31,19 @@ The Ram is the exception in both directions: shooting a Ram alerts nobody, and n
 
 ## The one you cannot pull
 
-Once a Default gets to the Hatch, it is finished negotiating. It will keep hitting the Hatch while you shoot it, while you stand next to it, and while its friends chase you around the room. Aggro decides who they chase on the way in; nothing decides anything once they arrive.
+Once a Default gets to the Hatch, it is finished negotiating. It will keep hitting the Hatch while you shoot it, while you stand next to it, and while its friends chase you around the room. Provoke decides who they chase on the way in; nothing decides anything once they arrive.
 
-So the useful frame is: **a Default is a decision only while it is still walking.** Every one you let close is a Default that has stopped being a choice and started being a timer on the Hatch.
+**A Default is a decision only while it is still walking.** Every one you let close is a Default that has stopped being a choice and started being a timer on the Hatch.
 
 ## Fighting them
 
 They are individually the weakest thing to kill in the game and they win by count. What actually kills you is a Default group that flipped as one and reached you as one — the swing is not large per hit, but several of them in contact at once is a health bar disappearing quickly, and you do not heal during a Run.
 
 Late in a Run they are the same Gatekeeper with substantially more health. The dial's extra bodies land entirely here, so a high dial is a bet specifically on your ability to chew through more Defaults, not on anything else.
+
+## See also
+
+[Gatekeepers](Gatekeepers.md). [Hunter](Gatekeeper-Hunter.md). [Ram](Gatekeeper-Ram.md). [The Hatch](The-Hatch.md).
 
 ## Gaps
 

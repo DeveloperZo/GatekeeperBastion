@@ -6,7 +6,8 @@ namespace GatekeeperBastion.Game
 {
     /// <summary>HOST-ONLY: entry for the drone bay's decoy: owns <see cref="DecoyState"/>,
     /// spawns the live prop, and emits the per-Wave <c>Decoy</c> gatekeeper-seconds line.
-    /// Placement confirm is HOST-ONLY; the ghost is local and predictive.</summary>
+    /// Placement confirm is HOST-ONLY (a client RPC calls <see cref="TryPlace"/> here);
+    /// the ghost is local and predictive.</summary>
     public sealed class DecoyBay : MonoBehaviour
     {
         const string Tag = "Decoy";
@@ -19,10 +20,12 @@ namespace GatekeeperBastion.Game
         // Pushed by GameController.ApplyMetaEffects (Bind); registration and the wave-tally
         // event subscriptions run against this handle.
         GameController _game;
+        GameObject _spawnPrefab;
         bool _waveTallyOpen;
         bool _subscribed;
 
         public DecoyPlacement Placement => _placement;
+        public GameController Game => _game;
 
         void Awake()
         {
@@ -35,12 +38,12 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Adopt the scene's GameController (called from ApplyMetaEffects at run
         /// start): take the run's own DecoyState off its RunContext, register as its decoy
-        /// bay and subscribe to its Sim's wave events. The context owns the decoy bag so an
-        /// isolation test and the live bay read the same instance; the field initializer is
-        /// only the pre-Bind placeholder (Ship scene, unbound rigs).</summary>
-        public void Bind(GameController game)
+        /// bay and subscribe to its Sim's wave events. Optional spawn prefab is the networked
+        /// decoy for host place; tests pass one when no NetSession exists.</summary>
+        public void Bind(GameController game, GameObject spawnPrefab = null)
         {
             _game = game;
+            if (spawnPrefab != null) _spawnPrefab = spawnPrefab;
             if (game != null && game.Run != null) State = game.Run.Decoy;
             Register();
             Subscribe();
@@ -121,7 +124,7 @@ namespace GatekeeperBastion.Game
                 return false;
             }
 
-            Live = DecoyObject.Spawn(position, this, State.MaxHp);
+            Live = DecoyObject.Spawn(position, this, State.MaxHp, ResolveSpawnPrefab());
             Log.Event(Tag,
                 $"placed — charges left {State.ChargesRemaining}, hp {State.MaxHp:0}");
             return true;
@@ -161,6 +164,14 @@ namespace GatekeeperBastion.Game
         {
             Log.Event(Tag,
                 $"wave {wave} gatekeeper-seconds absorbed: {State.WaveAbsorbedSeconds:0.##}");
+        }
+
+        GameObject ResolveSpawnPrefab()
+        {
+            if (_spawnPrefab != null) return _spawnPrefab;
+            var gc = _game;
+            if (gc == null || gc.Net == null) return null;
+            return gc.Net.DecoyPrefab;
         }
     }
 }

@@ -169,8 +169,13 @@ namespace GatekeeperBastion.Game
                 return;
             }
             // AliveCount suffix is existing live state, not a new counter.
+            // `net` / `local` only while a session is listening — solo lines stay byte-identical
+            // so wave-report's `live\b` still matches and old logs stay comparable.
+            string netTag = "";
+            if (_game != null && _game.Net != null && _game.Net.Active)
+                netTag = _game.Net.IsClientOnly ? " local" : " net";
             Log.Event("Gatekeepers", $"group {groupNumber}: {Describe(tally)} breached at {point.name} " +
-                                  $"({emit.Spawned}/{emit.Size}) — {AliveCount} live");
+                                  $"({emit.Spawned}/{emit.Size}) — {AliveCount} live" + netTag);
         }
 
         /// <summary>"2 Gatekeepers, 1 Hunter, 2 Rams" — the group's composition, kinds omitted when
@@ -249,6 +254,8 @@ namespace GatekeeperBastion.Game
                 var netObj = enemy.GetComponent<NetworkObject>();
                 if (netObj != null)
                     netObj.Spawn(true);
+                else
+                    Log.Warn("Net", "spawn skipped — no NetworkObject kind=" + kind);
             }
 
             AliveCount++;

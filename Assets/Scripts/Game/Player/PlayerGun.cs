@@ -208,44 +208,6 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        public float EffectiveFireRate
-        {
-            get
-            {
-                ref var s = ref _slots[(int)_activeSlot];
-                float rate = s.configured
-                    ? WeaponWheel.EffectiveFireRate(s.def, Point(s, WheelAttr.FireRate))
-                    : shotsPerSecond;
-                rate = UsingSalvageCutter ? rate * CutterRateFactor : rate;
-                return Mathf.Max(0.01f, rate);
-            }
-        }
-
-        public string DisplayName
-        {
-            get
-            {
-                if (UsingSalvageCutter) return "Improvised Cutter";
-                ref var s = ref _slots[(int)_activeSlot];
-                return s.configured ? s.def.displayName : "Weapon";
-            }
-        }
-
-        public WeaponCrosshair ActiveCrosshair
-        {
-            get
-            {
-                ref var s = ref _slots[(int)_activeSlot];
-                return s.configured ? s.def.crosshair : WeaponCrosshair.Cross;
-            }
-        }
-
-        /// <summary>True when the given slot has a configured weapon.</summary>
-        public bool SlotConfigured(WeaponSlot slot) => _slots[(int)slot].configured;
-
-        public WeaponId WeaponInSlot(WeaponSlot slot) =>
-            _slots[(int)slot].configured ? _slots[(int)slot].id : WeaponId.None;
-
         /// <summary>Push catalog stats for one slot at run start. Refills that slot's clip.
         /// Never call mid-fight for equip changes — criterion 4.</summary>
         public void Configure(WeaponSlot slot, WeaponDef def, int[] wheelPoints, WeaponId id)
@@ -350,6 +312,12 @@ namespace GatekeeperBastion.Game
 
             if (!CanFire()) return;
 
+            if (_activeSlot == WeaponSlot.Drone)
+            {
+                TickDroneFire();
+                return;
+            }
+
             if (Controls.Down(ControlId.Reload) && !IsReloading && ClipRemaining < MagazineCapacity)
             {
                 StartReload();
@@ -395,64 +363,6 @@ namespace GatekeeperBastion.Game
             int gained = s.clipRemaining - before;
             if (gained > 0 && mult > 1.01f && _ability != null)
                 _ability.CreditRegenRound(gained * (mult - 1f) / mult);
-        }
-
-        void TickSlotInput()
-        {
-            if (Controls.Down(ControlId.SlotPrimary))
-                SelectSlot(WeaponSlot.Primary);
-            if (Controls.Down(ControlId.SlotSecondary))
-                SelectSlot(WeaponSlot.Secondary);
-
-            if (Controls.Down(ControlId.SlotLast))
-                SelectSlot(_previousSlot);
-
-            float scroll = Controls.ScrollDelta();
-            if (Mathf.Abs(scroll) > 0.01f)
-                CycleSlot(scroll > 0f ? 1 : -1);
-        }
-
-        /// <summary>Select a configured slot; public for starting loadout and tests.</summary>
-        public void SelectSlot(WeaponSlot slot)
-        {
-            // Empty slots are no-ops (no Primary owned → 1 does nothing).
-            if (!_slots[(int)slot].configured) return;
-            if (slot == _activeSlot) return;
-
-            ref var outgoing = ref _slots[(int)_activeSlot];
-            ApplyReloadOnSwap(ref outgoing);
-
-            _previousSlot = _activeSlot;
-            _activeSlot = slot;
-            _cooldown = 0f;
-            ref var incoming = ref _slots[(int)_activeSlot];
-            if (incoming.configured) ApplyTracerFromDef(incoming.def);
-            Log.Event("Combat", $"switched to {SlotLabel(_activeSlot)}");
-        }
-
-        void CycleSlot(int direction)
-        {
-            // Cycle non-empty slots only.
-            int start = (int)_activeSlot;
-            for (int step = 1; step <= SlotCount; step++)
-            {
-                int idx = (start + direction * step) % SlotCount;
-                if (idx < 0) idx += SlotCount;
-                var candidate = (WeaponSlot)idx;
-                if (!_slots[idx].configured) continue;
-                SelectSlot(candidate);
-                return;
-            }
-        }
-
-        static string SlotLabel(WeaponSlot slot)
-        {
-            switch (slot)
-            {
-                case WeaponSlot.Primary: return "Primary (1)";
-                case WeaponSlot.Secondary: return "Secondary (2)";
-                default: return slot.ToString();
-            }
         }
 
         public bool TryFire()

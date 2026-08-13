@@ -284,9 +284,11 @@ including this file's own numbers if they disagree with the code.
 **Read the log yourself.** Never ask the developer to relay an exception or
 paste a stack trace.
 
-- Editor: `<projectRoot>/Logs/GatekeeperBastion_yyyy-MM-dd_HH-mm-ss.log`
-  (gitignored). Player build: `Application.persistentDataPath/Logs/`.
-- One file per session, newest 15 kept, readable while Unity runs.
+- Editor: `<projectRoot>/Logs/GatekeeperBastion_yyyy-MM-dd_HH-mm-ss_p{pid}.log`
+  (gitignored). Player build: `Application.persistentDataPath/Logs/`. MPPM writes one
+  file per process; the pid suffix stops two Play instances sharing a path. Header
+  `Process:` matches the suffix.
+- One file per process per Play, newest 30 kept, readable while Unity runs.
 - Line format: `[HH:mm:ss.fff] [Log|Warning|Error] [Tag] message` — wall clock,
   Unity's own level words. Stack traces follow errors and exceptions.
 - Everything reaching `Debug.*` lands there: our `Log.Event` / `Log.Metric` /

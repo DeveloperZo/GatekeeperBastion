@@ -290,7 +290,7 @@ namespace GatekeeperBastion.Tests
             sim.TriggerDraw();
             killValue = sim.CurrentKillValue;
             sim.AwardKill();
-            return meta.BankedSalvage;
+            return sim.Unbanked;
         }
 
         [Test]
@@ -388,14 +388,15 @@ namespace GatekeeperBastion.Tests
             sim.EngageTether();
             sim.TriggerDraw();
             sim.AwardKill();
-            Assert.AreEqual(25L, meta.BankedSalvage, "first kill at Scavenging 0");
+            Assert.AreEqual(25L, sim.Unbanked, "first kill at Scavenging 0");
+            Assert.AreEqual(0L, meta.BankedSalvage);
 
             meta.ScavengingLevel = 5; // as if bought at the ship
             Assert.AreEqual(31.25f, sim.CurrentKillValue, 1e-5f,
                 "the very next kill is already priced at the maxed rate");
             sim.AwardKill();
-            Assert.AreEqual(56L, meta.BankedSalvage,
-                "next kill is worth 31.25, banked as floor() = 31, not 25");
+            Assert.AreEqual(56L, sim.Unbanked,
+                "next kill is worth 31.25, unbanked as floor() = 31, not 25");
         }
 
         // ---- The gating asymmetry ----------------------------------------------------

@@ -4,7 +4,7 @@ using UnityEngine.AI;
 namespace GatekeeperBastion.Game
 {
     /// <summary>HOST-ONLY: the gatekeeper that walks to the Hatch — except on field-terminal
-    /// Waves, where it hunts the Boarder (dated break, M52). Shooting still does not provoke it.</summary>
+    /// Waves, where it hunts the Boarder (dated break, 2026-08-13). Shooting still does not provoke it.</summary>
     /// <remarks>
     /// Two refusals, both hardened here rather than trusted from the pushed flags:
     /// <see cref="MayTargetPlayer"/> is false on Hatch-bank Waves, so aggro radius, line-of-sight

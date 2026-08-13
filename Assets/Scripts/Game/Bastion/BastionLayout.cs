@@ -80,6 +80,63 @@ namespace GatekeeperBastion.Game
             return _graph != null && _graph.IsTerminalDone(terminalId);
         }
 
+        public bool TryGetFieldProgress(string terminalId, out int cleared, out int needed)
+        {
+            cleared = 0;
+            needed = 1;
+            if (_graph == null)
+                return false;
+            needed = _graph.WavesNeeded(terminalId);
+            cleared = _graph.ClearedWaves(terminalId);
+            return true;
+        }
+
+        /// <summary>Hatch-bank uses T1's Wave Spawns (hatch bay) plus completed Field terminals.</summary>
+        public void ActivateHatchBankSpawns()
+        {
+            for (int i = 0; i < _terminals.Count; i++)
+            {
+                BastionTerminal terminal = _terminals[i];
+                if (terminal == null) continue;
+                if (terminal.Kind != BastionTerminalKind.Field) continue;
+                if (terminal.TerminalId == "T1" || IsTerminalDone(terminal.TerminalId))
+                    terminal.SetUnlockedSpawnsActive(true);
+            }
+        }
+
+        public void RestoreFieldSpawns()
+        {
+            RefreshTerminalStates();
+        }
+
+        public bool RecordWaveCleared(string terminalId, int waves, out int cleared, out int needed, out string refuseReason)
+        {
+            cleared = 0;
+            needed = 1;
+            refuseReason = null;
+            if (_graph == null)
+            {
+                refuseReason = "graph not built";
+                return false;
+            }
+
+            needed = _graph.WavesNeeded(terminalId);
+            if (!_graph.RecordWaveCleared(terminalId, waves, out refuseReason))
+            {
+                cleared = _graph.ClearedWaves(terminalId);
+                return false;
+            }
+
+            cleared = _graph.ClearedWaves(terminalId);
+            if (_graph.IsTerminalDone(terminalId))
+            {
+                RefreshDoorStates();
+                RefreshTerminalStates();
+            }
+
+            return true;
+        }
+
         public bool ControlRoomReachable => _graph != null && _graph.ControlRoomReachable;
 
         void RebuildGraph()
@@ -158,6 +215,7 @@ namespace GatekeeperBastion.Game
                 terminalSpecs[w++] = new BastionUnlockGraph.TerminalSpec
                 {
                     TerminalId = terminal.TerminalId,
+                    WavesToComplete = terminal.WavesToComplete,
                 };
             }
 

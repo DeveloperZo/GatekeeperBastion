@@ -50,7 +50,7 @@ fall back on says something about how I intend to fight.
 The Secondary is the weapon you start with and the weapon you hold when the Primary is dry —
 and dry is a real state, not an edge case, because Primary ammo drops at a per-kind percentage
 and some kinds drop nothing
-(`../../Brainstorms/armory-and-weapons.md`). One weapon in the class means every player's
+(`../../Brainstorms/closed/armory-and-weapons.md`). One weapon in the class means every player's
 opening is identical and every loadout has the same second half.
 
 The pairing is the point:

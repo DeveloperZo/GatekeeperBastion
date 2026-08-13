@@ -54,7 +54,8 @@ side LateTerm W Door
 side Control S Door
 
 # --- Unlock graph: open wing → staging → spine → control ---
-# T1+T2 open D1 (reach Staging). T3 opens D2 (spine). T4 opens Control last.
-door D1 Approach N unlock=T1,T2
+# T1 (5 Waves, authored on the scene object) opens D1 (reach Staging). T2 is not an AND
+# on D1. T3 opens D2 (spine). T4 opens Control last.
+door D1 Approach N unlock=T1
 door D2 Staging N unlock=T3
 door D3 Control S unlock=T4 control

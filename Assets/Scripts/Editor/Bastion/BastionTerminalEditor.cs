@@ -9,6 +9,7 @@ namespace GatekeeperBastion.EditorTools
     {
         SerializedProperty _terminalId;
         SerializedProperty _kind;
+        SerializedProperty _wavesToComplete;
         SerializedProperty _unlocksDoor;
         SerializedProperty _unlockedSpawns;
         SerializedProperty _game;
@@ -17,6 +18,7 @@ namespace GatekeeperBastion.EditorTools
         {
             _terminalId = serializedObject.FindProperty("terminalId");
             _kind = serializedObject.FindProperty("kind");
+            _wavesToComplete = serializedObject.FindProperty("wavesToComplete");
             _unlocksDoor = serializedObject.FindProperty("unlocksDoor");
             _unlockedSpawns = serializedObject.FindProperty("unlockedSpawns");
             _game = serializedObject.FindProperty("_game");
@@ -34,6 +36,7 @@ namespace GatekeeperBastion.EditorTools
             {
                 EditorGUILayout.Space(4f);
                 EditorGUILayout.LabelField("Field unlock", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(_wavesToComplete, new GUIContent("Waves To Complete"));
                 EditorGUILayout.PropertyField(_unlocksDoor, new GUIContent("Unlocks Door"));
                 EditorGUILayout.PropertyField(
                     _unlockedSpawns,

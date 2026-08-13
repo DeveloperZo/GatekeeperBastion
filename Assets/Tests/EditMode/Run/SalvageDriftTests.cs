@@ -3,7 +3,7 @@ using GatekeeperBastion.Sim;
 
 namespace GatekeeperBastion.Tests
 {
-    /// <summary>M22 criterion 2: AwardKill floors once; RunSalvage equals the sum banked.</summary>
+    /// <summary>AwardKill floors once into Unbanked; ship bank does not move.</summary>
     public class SalvageDriftTests
     {
         static RunSim LiveAssault(MetaState meta, int siphonLevel)
@@ -17,10 +17,8 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void MixedKills_AtFractionalDial_RunTallyEqualsBankedAwards()
+        public void MixedKills_AtFractionalDial_UnbankedEqualsFlooredAwards()
         {
-            // Dial 3 → CurrentKillValue = 25 * 1.25 = 31.25. Floor once → 31 per kill.
-            // Pre-M22 the tally kept 31.25 and the bank took 31; after N kills they drifted by N*0.25.
             var meta = new MetaState();
             long bankedBefore = meta.BankedSalvage;
             var sim = LiveAssault(meta, siphonLevel: 3);
@@ -30,16 +28,14 @@ namespace GatekeeperBastion.Tests
 
             long expected = kills * 31L; // floor(31.25) each
             Assert.AreEqual(31.25f, sim.CurrentKillValue, 1e-5f);
-            Assert.AreEqual(expected, sim.Salvage.RunSalvage);
-            Assert.AreEqual(bankedBefore + expected, meta.BankedSalvage);
-            Assert.AreEqual(sim.Salvage.RunSalvage, meta.BankedSalvage - bankedBefore,
-                "RunSalvage must equal the total credited to MetaState, to the unit");
+            Assert.AreEqual(expected, sim.Unbanked);
+            Assert.AreEqual(bankedBefore, meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Salvage.RunSalvage);
         }
 
         [Test]
-        public void FractionalScavenging_AndDial_TallyAgreesWithBank()
+        public void FractionalScavenging_AndDial_UnbankedAgreesWithFloor()
         {
-            // Scavenging 3 → 28.75 base; dial 3 → x1.25 → 35.9375 → floor 35.
             var meta = new MetaState();
             meta.ScavengingLevel = 3;
             var sim = LiveAssault(meta, siphonLevel: 3);
@@ -50,8 +46,8 @@ namespace GatekeeperBastion.Tests
             for (int i = 0; i < kills; i++) sim.AwardKill();
 
             long expected = kills * 35L;
-            Assert.AreEqual(expected, sim.Salvage.RunSalvage);
-            Assert.AreEqual(before + expected, meta.BankedSalvage);
+            Assert.AreEqual(expected, sim.Unbanked);
+            Assert.AreEqual(before, meta.BankedSalvage);
         }
     }
 }

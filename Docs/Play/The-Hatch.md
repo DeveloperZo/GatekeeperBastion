@@ -6,6 +6,8 @@ The Hatch is the umbilical junction back to your Ship, at one end of the Bastion
 
 It has its own health, separate from yours. It cannot be moved, closed, sealed, or traded away. **If it reaches zero the Run ends immediately** — the same ending as your own death, the same counter, the same screen. There is no version of the Run that continues without it.
 
+Field-terminal Waves leave it invulnerable. A Hatch-bank Wave is when it can be hurt, and when Unbanked converts to the ship — drip on the Score card, dump when the timer ends. Unbanked hitting 0 does not end the defense.
+
 It starts every Run whole. Whatever happened to it last time did not carry over.
 
 ## What damages it
@@ -22,7 +24,11 @@ So the shape of the threat to the door depends entirely on what the Wave brought
 
 ## Repairing it
 
-Stand at the Hatch and hold the interact key. It heals continuously while you hold, at a flat rate, but **only if you have the Repair Rig equipped** — without it, holding the key does nothing. Let go and it stops. The rate is in the [Field Manual](Field-Manual.md).
+Stand at the Hatch and hold the interact key. It heals continuously while you hold, at a flat rate, but **only if you have the Repair Rig equipped** — without it, holding the key does nothing to a damaged Hatch. Let go and it stops. The rate is in the [Field Manual](Field-Manual.md).
+
+Prep `T` while looking at the Hatch, with Unbanked and a slot left, starts a Hatch-bank. That is not repair.
+
+If the Hatch is full, Prep, and Unbanked is 0, hold Interact to **withdraw** banked Salvage back into Unbanked. Withdraw does not need the Repair Rig.
 
 **Repair is charged in Salvage, per point healed, out of the same bank you spend at the Ship.** The prompt at the door tells you the rate and totals what the current hold has cost you so far. That prompt is the only place the game ever mentions the price.
 
@@ -41,6 +47,10 @@ More than the number.
 The honest consequence: **letting a Ram reach the door is more expensive than killing it, every time.** Not in danger — in money. That is the whole reason to walk out and meet one instead of holding the doorway.
 
 The end screen breaks out what you spent on repairs, if you spent anything. It is worth reading, because it is the only place the Run tells you what the door cost you.
+
+## See also
+
+[A Run](A-Run.md). [Salvage](Salvage.md). [Gatekeepers](Gatekeepers.md). [The Ship](The-Ship.md).
 
 ## Gaps
 

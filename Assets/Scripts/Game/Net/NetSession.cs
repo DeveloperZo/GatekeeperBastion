@@ -31,6 +31,9 @@ namespace GatekeeperBastion.Game
         [SerializeField] GameObject _gatekeeperPrefab;
         [SerializeField] GameObject _hunterPrefab;
         [SerializeField] GameObject _ramPrefab;
+
+        [SerializeField, Tooltip("Networked decoy prop. Spawned by the host bay.")]
+        GameObject _decoyPrefab;
         #endregion
 
         #region References
@@ -51,6 +54,26 @@ namespace GatekeeperBastion.Game
 
         /// <summary>True on a connected client that is not also the server.</summary>
         public bool IsClientOnly => Active && _nm != null && _nm.IsClient && !_nm.IsServer;
+
+        /// <summary>Host-spawned decoy prefab. Null in solo when unwired.</summary>
+        public GameObject DecoyPrefab => _decoyPrefab;
+
+        /// <summary>Owner avatar verbs, or null until the player object exists.</summary>
+        public NetVerbs LocalVerbs
+        {
+            get
+            {
+                if (_nm == null || !_nm.IsListening) return null;
+                if (!_nm.ConnectedClients.TryGetValue(_nm.LocalClientId, out var client))
+                    return null;
+                var po = client.PlayerObject;
+                if (po == null) return null;
+                var verbs = po.GetComponent<NetVerbs>();
+                if (verbs != null)
+                    verbs.Bind(_game);
+                return verbs;
+            }
+        }
         #endregion
 
         #region Unity Lifecycle
@@ -71,12 +94,16 @@ namespace GatekeeperBastion.Game
                 _nm.NetworkConfig.PlayerPrefab = _avatarPrefab;
 
             _nm.OnClientConnectedCallback += OnClientConnected;
+            _nm.OnClientStopped += OnClientStopped;
         }
 
         void OnDestroy()
         {
             if (_nm != null)
+            {
                 _nm.OnClientConnectedCallback -= OnClientConnected;
+                _nm.OnClientStopped -= OnClientStopped;
+            }
         }
         #endregion
 
@@ -104,7 +131,7 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            Log.Event(Tag, "host started");
+            LogSessionSnapshot("host started localId=" + _nm.LocalClientId);
             SpawnMirror();
         }
 
@@ -131,9 +158,13 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            Log.Event(Tag, "client cannot board — the host owns the run");
+            Log.Event(Tag, "client starting — host owns the run");
             if (_game != null && _game.Spawner != null)
-                _game.Spawner.DespawnAllLive();
+            {
+                int wiped = _game.Spawner.DespawnAllLive();
+                if (wiped > 0)
+                    Log.Event(Tag, "client starting — cleared " + wiped + " local gatekeepers");
+            }
         }
 
         /// <summary>Client clones register here from OnNetworkSpawn. Null-safe for fixture tests
@@ -143,6 +174,17 @@ namespace GatekeeperBastion.Game
             _mirror = mirror;
             if (mirror != null)
                 mirror.Bind(_game);
+        }
+
+        /// <summary>Drop the session. A non-host then loads MainMenu from OnClientStopped.
+        /// Host ReturnToShip loads Ship itself after this returns.</summary>
+        public void ShutdownSession()
+        {
+            _mirror = null;
+            if (_nm == null) return;
+            if (!_nm.IsListening) return;
+            Log.Event(Tag, "session shutdown");
+            _nm.Shutdown();
         }
         #endregion
 
@@ -169,6 +211,7 @@ namespace GatekeeperBastion.Game
             RegisterPrefab(_gatekeeperPrefab);
             RegisterPrefab(_hunterPrefab);
             RegisterPrefab(_ramPrefab);
+            RegisterPrefab(_decoyPrefab);
         }
 
         void RegisterPrefab(GameObject prefab)
@@ -178,6 +221,37 @@ namespace GatekeeperBastion.Game
             if (prefabs == null) return;
             if (prefabs.Contains(prefab)) return;
             prefabs.Add(new NetworkPrefab { Prefab = prefab });
+        }
+
+        /// <summary>Wave / assault / alive at this instant. netAlive is how many live
+        /// bodies are actually Spawn()'d — 0 with alive &gt; 0 means the session started
+        /// after the wave, so the client will not see those actors.</summary>
+        void LogSessionSnapshot(string head)
+        {
+            var sim = _game != null ? _game.Sim : null;
+            int wave = sim != null ? sim.CurrentWaveIndex : 0;
+            string assault = sim != null ? sim.Assault.ToString() : "none";
+            int alive = _game != null ? _game.EnemiesAlive : 0;
+            Log.Event(Tag, head
+                + " wave=" + wave
+                + " assault=" + assault
+                + " alive=" + alive
+                + " netAlive=" + CountNetworkSpawned());
+        }
+
+        int CountNetworkSpawned()
+        {
+            if (_game == null || _game.Spawner == null) return 0;
+            var live = _game.Spawner.Live;
+            int n = 0;
+            for (int i = 0; i < live.Count; i++)
+            {
+                var gk = live[i];
+                if (gk == null) continue;
+                var net = gk.GetComponent<NetworkObject>();
+                if (net != null && net.IsSpawned) n++;
+            }
+            return n;
         }
 
         void SpawnMirror()
@@ -201,7 +275,35 @@ namespace GatekeeperBastion.Game
 
         void OnClientConnected(ulong clientId)
         {
-            Log.Event(Tag, "connected clientId=" + clientId);
+            if (_nm != null && _nm.IsServer
+                && _nm.ConnectedClients.TryGetValue(clientId, out var client)
+                && client.PlayerObject != null)
+            {
+                var verbs = client.PlayerObject.GetComponent<NetVerbs>();
+                if (verbs != null)
+                    verbs.Bind(_game);
+            }
+            if (_nm == null) return;
+            if (_nm.IsServer && clientId == _nm.LocalClientId)
+                return;
+            if (_nm.IsServer)
+            {
+                LogSessionSnapshot("connected clientId=" + clientId
+                    + " localId=" + _nm.LocalClientId
+                    + " role=host");
+                return;
+            }
+            Log.Event(Tag, "connected clientId=" + clientId
+                + " localId=" + _nm.LocalClientId
+                + " role=client");
+        }
+
+        void OnClientStopped(bool wasHost)
+        {
+            _mirror = null;
+            Log.Event(Tag, "session stopped");
+            if (wasHost) return;
+            SceneFlow.LoadMainMenu();
         }
         #endregion
     }

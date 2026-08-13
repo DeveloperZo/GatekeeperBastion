@@ -12,8 +12,8 @@ Deterministic, seedable (`RunSim.Seed` / `RunSim.Rng`), driven only by explicit
 
 The reason is **testability and one-directional dependency** — EditMode tests
 with no scene and no domain reload, and two independent Runs advancing in one
-process (`TwoRunIsolationTests`). When NGO lands, the sim runs host-authoritative
-and MonoBehaviours become replicated views; the full argument, with sources, is
+process (`TwoRunIsolationTests`). NGO is in (`M48`): the sim is host-authoritative;
+MonoBehaviours are replicated views. The full argument, with sources, is
 in `Architecture/1-Boundaries.md` section 1.
 
 `Assets/Scripts/Game/` MonoBehaviours are **thin views**: they read sim state and
@@ -37,12 +37,12 @@ Assets/Scripts/
     Ship/    ShipSystems  Subsystem
     Util/    Log (front end — rides inside the Sim assembly)
   Game/                      MonoBehaviours, thin views     (~7,700 lines)
-    Player/    FirstPersonController  PlayerGun(+.Firing)  PlayerAbility
+    Player/    FirstPersonController  PlayerGun(+.Firing, +.Slots)  PlayerAbility
                PlayerHealth  PlayerRegistry  Interactor
     Enemies/   EnemyGatekeeper(+.Targeting)  HunterGatekeeper  RamGatekeeper
                WaveSpawner(+.Groups)  SpawnPoint
     Combat/    Damageable  Effects
-    Bastion/  GameController(+.EndScreen, +.DevCommands)  HudController(+.EndScreens, +.Panels)
+    Bastion/  GameController(+.EndScreen, +.DevCommands, +.Client)  HudController(+.EndScreens, +.Panels)
                HatchStation  RepairInteractable
     Ship/      ShipController  ShipHud  StationTerminal  ShipCommands
                ArmoryStation  EngineeringStation(FABRICATION)  CrewQuartersStation  MapStation
@@ -51,7 +51,7 @@ Assets/Scripts/
     Input/     Controls  PlayerInputFrame  ShortcutPanel — one binding list + one input frame
     Settings/  Settings  SettingId  SettingDecl  ISettingsStore (moved out of Sim/, M45)
     Dev/       DevCommands  DevConsole (editor/dev-build only)
-    Net/       NetSession  NetRunMirror  NetPlayerAvatar  NetEnemy
+    Net/       NetSession  NetRunMirror  NetPlayerAvatar  NetEnemy  NetVerbs
   Editor/
     Scenes/  SceneBuilder(+.Ship, +.Enemies) — Environment/spawns/light/NavMesh; hosts+UI authored
     Tools/   IntegrationCheck (file-bridge test runner; formerly AutoVerify)  LogTools (Logs menu)

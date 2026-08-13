@@ -19,9 +19,9 @@ a room.
 
 ## Why it matters
 
-M14 ends a Run on the fifth `NotifyAssaultCleared`. M52–M53 still do. The settled win
-(`../../Brainstorms/missions-and-destinations.md`, Zo 2026-08-13) is Master Control's
-two-phase sequence. Without it, leftover unbanked on a terminal Wave 5 is abandoned, and
+M14 ends a Run on the fifth `NotifyAssaultCleared`. M53 keeps leftover Unbanked after
+Wave 5 and converts it on Hatch-bank. This milestone is Master Control's two-phase
+sequence (`../../Brainstorms/missions-and-destinations.md`, Zo 2026-08-13). Without it,
 the Control Room is another **T**.
 
 Leverage tier: **#9, rules**. Sequence split is **#12 constants** (5 then 5 of 10),

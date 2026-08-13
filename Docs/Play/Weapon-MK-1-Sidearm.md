@@ -38,6 +38,10 @@ Two jobs, and they are different jobs.
 
 **The sidearm cannot be upgraded.** Its upgrade wheel has no ring authored yet, so the ARMORY will show it and refuse. Whatever the MK-1 does for you, it does at its base numbers for the whole campaign, and every Salvage you spend on upgrades goes to the Primary you have committed to.
 
+## See also
+
+[Weapons](Weapons.md). [SEC-D](Weapon-SEC-D.md). [Gatekeepers](Gatekeepers.md). [The Ship](The-Ship.md).
+
 ## Gaps
 
 - It is free but must still be bought. A new campaign that never opens the ARMORY fights the entire Bastion with the improvised cutter for no stated reason.

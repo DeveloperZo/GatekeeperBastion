@@ -1,81 +1,72 @@
-# Play — the game from the outside
+# Compendium
 
 <!--
-Purpose: the player-facing half of the documentation, and the index of the wiki. What
-Gatekeeper Bastion is, and how everything in it actually behaves.
+Purpose: the Boarder's working knowledge of the game — volumes of related entries.
+Builder path stays Docs/Play/ (M28 language lint). Player-facing name is Compendium.
 Status: working
-Update trigger: when a page is added to or removed from this folder.
-Last updated: 2026-08-06
+Update trigger: when a volume or entry is added or removed, or when the in-game reader ships (M62).
+Last updated: 2026-08-13
+Builder notes (omitted in-game): Gaps sections are builder audit; the reader strips them
+and HTML comments. Countable facts live only in Field-Manual.md (Tools/docgen/run.sh
+--check). Until pause opens these volumes, this folder is the Compendium.
 -->
 
-`Docs/` above this folder is written for whoever is **building** the game — where code
-lives, why a number is what it is, what was cut and why. This folder is the other half:
-the game as a player meets it.
+This is the Boarder's **Compendium**: the working knowledge of the place you cut into, the
+garrison that already holds it, the hull you leave from, and the deal that makes a Run
+worth the risk. Entries point at each other on purpose.
 
-## Start here
+The [Field Manual](Field-Manual.md) is the appendix of numbers, generated from the build.
+These pages never type a number or a key.
 
-| Page | Answers |
-|---|---|
-| [`The-Game.md`](The-Game.md) | What is this, what is a Run, why is it built this way. |
-| [`Getting-Started.md`](Getting-Started.md) | You just installed it. What to do, in order. |
-| [`Field-Manual.md`](Field-Manual.md) | Every key, weapon, Gatekeeper, Wave, cost and track. **Generated.** |
+## I. The Situation
 
-## The Run
+You are the **Boarder**. The **Bastion** is held. The **Hatch** is the way home.
 
-| Page | Answers |
-|---|---|
-| [`A-Run.md`](A-Run.md) | The shape of a Run start to finish: Prep, the draw, Assault, and the three ways it ends. |
-| [`Waves.md`](Waves.md) | How Waves escalate, and where the difficulty actually comes from. |
-| [`The-Siphon-Dial.md`](The-Siphon-Dial.md) | The wager: what it changes, what it does not, and when to raise it. |
-| [`Staying-Alive.md`](Staying-Alive.md) | Tactics, each one traced to the rule that makes it work. |
+Start with [The Game](The-Game.md) — what a Run is, why the three kinds exist, what losing
+costs. If you have just installed it, [Getting Started](Getting-Started.md) is the first
+hours in order.
 
-## What comes at you
+## II. A Run
 
-| Page | Answers |
-|---|---|
-| [`Gatekeepers.md`](Gatekeepers.md) | The roster, how they arrive, and what puts one on you. |
-| [`Gatekeeper-Default.md`](Gatekeeper-Default.md) | The marcher — the only kind you can steer. |
-| [`Gatekeeper-Hunter.md`](Gatekeeper-Hunter.md) | Comes for you, never for the Hatch. |
-| [`Gatekeeper-Ram.md`](Gatekeeper-Ram.md) | Comes for the Hatch, never for you, and cannot be moved. |
+One trip out and back. [A Run](A-Run.md) is embark, Prep, the draw, Assault, and the two
+endings. [Waves](Waves.md) is how the room gets worse. [The Siphon Dial](The-Siphon-Dial.md)
+is the only wager, and it is honest: more of the same, not a different fight.
+[Salvage](Salvage.md) is the only currency. Kills fill Unbanked; a Hatch-bank converts it to the ship.
+[Staying Alive](Staying-Alive.md) is tactics traced to the rule that makes each one work.
 
-## What you carry
+## III. The Bastion
 
-| Page | Answers |
-|---|---|
-| [`Weapons.md`](Weapons.md) | Slots, buying, the upgrade wheel, reloading, switching, and how to choose. |
-| [`Weapon-MK-1-Sidearm.md`](Weapon-MK-1-Sidearm.md) | The ranged Secondary. |
-| [`Weapon-SEC-D.md`](Weapon-SEC-D.md) | The close-quarters Secondary. |
-| [`Weapon-BR-12-Shotgun.md`](Weapon-BR-12-Shotgun.md) | The answer to things that come to you. |
-| [`Weapon-MR-35-Rifle.md`](Weapon-MR-35-Rifle.md) | The answer to things that do not. |
-| [`Weapon-PRI-C.md`](Weapon-PRI-C.md) | The answer to the far wall. |
+The place you hold. [The Hatch](The-Hatch.md) is the umbilical — the only defended object
+in the Run, and the bill you did not plan for.
 
-## Between runs
+## IV. The Garrison
 
-| Page | Answers |
-|---|---|
-| [`The-Ship.md`](The-Ship.md) | The hub, the four consoles, and what to buy first. |
-| [`Salvage.md`](Salvage.md) | The only currency: how you earn it and what competes for it. |
-| [`Upgrades.md`](Upgrades.md) | The permanent tracks, what is gated, and what is worth buying. |
-| [`The-Hatch.md`](The-Hatch.md) | The thing you defend, and what repairing it really costs. |
+Gatekeepers live here. They are not tiers of one kind. Each kind is defined by what it
+**refuses**. [Gatekeepers](Gatekeepers.md) is the garrison as a whole: how they arrive,
+what puts one on you, how Waves mix them.
 
-## The rules this folder follows
+Then the kinds: [Default](Gatekeeper-Default.md) (the only one you can steer),
+[Hunter](Gatekeeper-Hunter.md) (you, never the Hatch), [Ram](Gatekeeper-Ram.md) (the Hatch,
+never you, and nothing you do turns it).
 
-**Anything countable is generated; anything arguable is written.** A weapon's damage is
-countable and belongs in `Field-Manual.md`, which `Tools/docgen/run.sh` writes by calling
-the same code the game runs. Why a Ram refuses to notice you is arguable and belongs on a
-wiki page. **No page in this folder hand-types a number or a key binding** — it names the
-action and links to the manual. That rule exists because the hand-maintained versions had
-drifted three separate ways by 2026-08-04, including a controls table listing a key that
-had already moved.
+## V. Arms
 
-**We wiki what we build.** A page exists because a thing exists in the game, not because
-a wiki is expected to have a page of that kind. There is no items page, no crafting page
-and no bestiary of things that have not shipped. When a page would have to describe
-something that does not exist, it goes in `## Gaps` instead.
+Everything about the gun in your hands is decided on the Ship. [Weapons](Weapons.md) is
+the doctrine — two slots, buying, the wheel, how the three Primaries map onto the three
+refusals.
 
-**Every page ends with `## Gaps`** — what the game never tells the player, and what a
-player could not discover in play. Those lists are written for the builder as much as the
-reader: a wiki that has to explain a rule the game keeps secret has found a design
-problem, and the Gaps section is where it gets recorded.
+Then the guns: [MK-1 Sidearm](Weapon-MK-1-Sidearm.md), [SEC-D](Weapon-SEC-D.md),
+[BR-12 Shotgun](Weapon-BR-12-Shotgun.md), [MR-35 Rifle](Weapon-MR-35-Rifle.md),
+[PRI-C](Weapon-PRI-C.md).
 
-`Tools/docgen/run.sh --check` fails if the committed manual no longer matches the build.
+## VI. The Hull
+
+Between Runs you walk your own Ship. [The Ship](The-Ship.md) is the hub and the four
+consoles, each owning one subject. [Upgrades](Upgrades.md) is the permanent tracks, what
+is gated behind a lost Run, and what is worth buying.
+
+## Appendix
+
+[Field Manual](Field-Manual.md) — every key, weapon, Gatekeeper, Wave, cost and track,
+generated from the code the game runs. If this folder and the build disagree, the build
+is right and the manual was not regenerated.

@@ -1,31 +1,46 @@
-<!-- Purpose: how PRI-C wants to be used, and when it stops being enough. / Status: working / Update trigger: when PRI-C's catalog row, ability, or ring changes. / Last updated: 2026-08-09 -->
-
 # PRI-C
 
-Your **far-wall Primary**. Costs 1,500 at the ARMORY. Codename until identity is solid (`../Decisions.md`).
+<!--
+Purpose: how PRI-C wants to be used, and when it stops being enough.
+Status: working
+Update trigger: when PRI-C's catalog row, ability, or ring changes.
+Last updated: 2026-08-13
+-->
+
+Your **far-wall Primary**. Bought at the ARMORY.
 
 Numbers: [Field Manual](Field-Manual.md).
 
 ## What it is for
 
-**Killing at distances the MR-35 has already given up.** Full damage across the whole Bastion floor. Slow enough that Wave 5 cannot be cleared on this gun alone. Aimed up the Hatch bore, pierce through a funnelled line is the payoff for that rate.
+Killing at distances the MR-35 has already given up. Full damage across the whole Bastion
+floor. Slow enough that a late Wave will drown you if this is all you fire. Aimed up the
+Hatch bore, a pierced line is the payoff for that rate.
+
+**Railshot** arms the next shot to pierce further, at full damage. It lapses if you do
+not fire. Bindings and values: [Field Manual](Field-Manual.md).
 
 ## How it wants to be used
 
-- Leave the Hatch. The gun is strongest where you currently never stand.
-- Fire up the bore when bodies stack in the mouth — pierce 3 at 0.75× after the first is why.
-- Press **F** to arm **Railshot**: the next shot pierces N bodies at full damage (3 at zero ability focus, 8 at full). Lapses after 4 s if unfired; 12 s cooldown.
+Leave the Hatch. The gun is strongest where you currently never stand. Fire up the bore
+when bodies stack in the mouth. A Hunter in your face is the Secondary's job.
 
 ## What it is bad at
 
-- **Volume.** 0.6 shots/s and a 4-round clip. A late Wave floods the room faster than you can delete it.
-- **Contact.** A Hunter in your face is the Secondary's job; this gun is empty by the time you turn around.
-- **Solo late Waves.** Criterion 5 is intentional — bring a Secondary and do not expect PRI-C alone to carry Wave 5.
+**Volume.** A late Wave floods the room faster than you can delete it. **Contact.** This
+gun is empty by the time you turn around. Do not expect it alone to carry the last Wave.
 
 ## Tiering it
 
-Ring is **C D R A F**, strength Damage, weakness Fire rate — Clip/Reload swapped vs the MR-35 so M21's unique-ring rule holds.
+The ring exists. Strength is Damage; weakness is Fire Rate. Clip and Reload sit in a
+different order than on the MR-35, so the same focus buys a different gun. Award and
+prices: [Field Manual](Field-Manual.md).
+
+## See also
+
+[Weapons](Weapons.md). [MR-35 Rifle](Weapon-MR-35-Rifle.md). [Ram](Gatekeeper-Ram.md). [The Hatch](The-Hatch.md).
 
 ## Gaps
 
-- Playthrough criterion 7 still needs a logged Run standing at the Hatch vs the same shots on the MR-35.
+- Playthrough still needs a logged Run standing at the Hatch vs the same shots on the MR-35.
+- Codename until identity is solid.

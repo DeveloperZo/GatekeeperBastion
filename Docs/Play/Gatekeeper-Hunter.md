@@ -32,6 +32,10 @@ Deal with them first and deal with them fast. They are the only kind that threat
 
 The dial never adds Hunters. If a Wave feels like it is drowning you in Hunters specifically, that is the Wave's fixed composition, not your wager — the dial's extra bodies are all Defaults.
 
+## See also
+
+[Gatekeepers](Gatekeepers.md). [Default](Gatekeeper-Default.md). [Ram](Gatekeeper-Ram.md). [Staying Alive](Staying-Alive.md).
+
 ## Gaps
 
 - Nothing on screen distinguishes a Hunter from a Default until it changes direction or outruns everything else in the group.

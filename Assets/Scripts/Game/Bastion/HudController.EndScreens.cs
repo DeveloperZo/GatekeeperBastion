@@ -1,4 +1,5 @@
 using GatekeeperBastion.Sim;
+using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
@@ -20,7 +21,7 @@ namespace GatekeeperBastion.Game
             _view.SetEndScreen(
                 cause,
                 LoseFraming,
-                "earned this run: " + report.grossEarned + " — already banked",
+                "converted this run: " + report.grossEarned,
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
                 "banked total: " + (gc.Meta != null ? gc.Meta.BankedSalvage : 0),
@@ -37,7 +38,7 @@ namespace GatekeeperBastion.Game
             _view.SetEndScreen(
                 "BASTION STRIPPED",
                 ClearFraming + " — all " + WaveDirector.MaxWaves + " waves cleared",
-                "earned this run: " + report.grossEarned + " — already banked",
+                "converted this run: " + report.grossEarned,
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
                 "banked total: " + (gc.Meta != null ? gc.Meta.BankedSalvage : 0),
@@ -50,6 +51,59 @@ namespace GatekeeperBastion.Game
         {
             int d = gc.Meta != null ? gc.Meta.DeepestWaveReached : 1;
             return d < 1 ? 1 : d;
+        }
+
+        void PushFromSummary(EndSummary s)
+        {
+            string earned = "converted this run: " + s.GrossEarned;
+            string repair = "repair spent: " + s.RepairSpent;
+            string net = "net: " + s.Net;
+            string banked = "banked total: " + s.Banked;
+            string deepest = "DEEPEST WAVE " + (s.DeepestWave < 1 ? 1 : s.DeepestWave);
+
+            if (s.Kind == RunEndKind.Cleared)
+            {
+                _view.SetEndScreen(
+                    "BASTION STRIPPED",
+                    ClearFraming + " — all " + WaveDirector.MaxWaves + " waves cleared",
+                    earned, repair, net, banked, deepest);
+            }
+            else
+            {
+                string cause = s.Kind == RunEndKind.Hatch ? "HATCH DESTROYED" : "YOU DIED";
+                _view.SetEndScreen(
+                    cause, LoseFraming, earned, repair, net, banked, deepest);
+            }
+
+            PushEndScreenShortcut();
+        }
+
+        bool TryPushClientEnd()
+        {
+            var net = _game != null ? _game.Net : null;
+            if (net == null || !net.IsClientOnly) return false;
+            var mirror = net.Mirror;
+            if (mirror == null || !mirror.HasEnd) return false;
+
+            if (!_endPresented)
+            {
+                _endPresented = true;
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                if (_view != null) _view.ShowEnd();
+                PushFromSummary(mirror.LastEnd);
+            }
+            PushEndScreenShortcut();
+            return true;
+        }
+
+        void TickClientEndDismiss()
+        {
+            if (!_endPresented) return;
+            var net = _game != null ? _game.Net : null;
+            if (net == null || !net.IsClientOnly) return;
+            if (!Controls.Down(ControlId.Confirm)) return;
+            if (_game != null) _game.ReturnToShip();
         }
 
         void PushEmergencyExit()

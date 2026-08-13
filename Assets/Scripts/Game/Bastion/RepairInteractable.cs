@@ -4,11 +4,8 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>REPLICATED-STATE: hold-E repair point at the Hatch — requests
-    /// repairPerSecond * dt from GameController.RepairHatch each frame while the interact key
-    /// is held, only when the repair rig is equipped. Healing and salvage debit live in the
-    /// sim; this only drives the command and surfaces the rate / session cost / missing-step
-    /// prompt.</summary>
+    /// <summary>REPLICATED-STATE: hold-E at the Hatch — repair when damaged (rig required),
+    /// withdraw when sealed in Prep with Unbanked 0 (no rig). Hatch-bank is Prep T, not E.
     /// <remarks>Every access to the station is Unity-null-safe: the hatch object can be destroyed
     /// (scene teardown once the run ends) while the Interactor still holds this interactable from
     /// its last raycast. Prefab serializes repairPerSecond = 8; GameController always pushes
@@ -25,8 +22,11 @@ namespace GatekeeperBastion.Game
 
         bool _equipped;
         bool _holding;
+        bool _withdrawHold;
         bool _loggedRefusal;
+        bool _repairRpcOpen;
         long _sessionSpent;
+        long _sessionWithdrawn;
         float _sessionHp;
 
         /// <summary>Apply the equipment repair rate and whether the rig is equipped.
@@ -47,9 +47,17 @@ namespace GatekeeperBastion.Game
             // Interact runs in Update via Interactor; if we were not held this frame, the session ends.
             if (!_holding)
             {
+                if (_repairRpcOpen)
+                {
+                    var verbs = LocalVerbs();
+                    if (verbs != null) verbs.SetRepairing(false);
+                    _repairRpcOpen = false;
+                }
                 _sessionSpent = 0;
+                _sessionWithdrawn = 0;
                 _sessionHp = 0f;
                 _loggedRefusal = false;
+                _withdrawHold = false;
             }
             _holding = false;
         }
@@ -62,37 +70,71 @@ namespace GatekeeperBastion.Game
                 if (station == null) return null;
                 var gc = _game;
                 if (gc == null || gc.RunIsOver) return null; // no repair prompt once the run is over
-                if (station.IsDestroyed) return "Hatch: DESTROYED";
-                if (station.Hp >= station.MaxHp) return "Hatch: sealed tight";
+
+                ReadRepairView(gc, out float hp, out float maxHp, out long bank, out bool destroyed,
+                    out long unbanked, out int slots, out bool prep);
+                if (destroyed) return "Hatch: DESTROYED";
+                if (hp >= maxHp)
+                {
+                    if (prep && unbanked > 0L && (slots < 0 || slots > 0))
+                    {
+                        if (slots >= 0)
+                            return $"Hatch-bank — T  ({unbanked} unbanked, {slots} slots)";
+                        return $"Hatch-bank — T  ({unbanked} unbanked)";
+                    }
+                    if (prep && unbanked == 0L && bank > 0L)
+                    {
+                        if (_withdrawHold || _sessionWithdrawn > 0L)
+                            return $"Withdrawing {unbanked} unbanked — {bank} banked";
+                        return $"Withdraw — hold E  ({bank} banked → unbanked)";
+                    }
+                    return "Hatch: sealed tight";
+                }
 
                 var meta = gc.Meta;
                 string missing = meta != null ? meta.RepairMissingStep() : "no session";
                 if (missing != null)
-                    return $"Hatch damaged ({station.Hp:0}/{station.MaxHp:0}) — {missing}";
+                    return $"Hatch damaged ({hp:0}/{maxHp:0}) — {missing}";
 
-                long bank = meta != null ? meta.BankedSalvage : 0L;
                 float rate = ShipSystems.RepairSalvagePerHp;
                 if (bank <= 0)
-                    return $"Hatch damaged ({station.Hp:0}/{station.MaxHp:0}) — no salvage to repair";
+                    return $"Hatch damaged ({hp:0}/{maxHp:0}) — no salvage to repair";
 
-                if (_sessionSpent > 0 || _sessionHp > 0.01f)
+                if (_sessionSpent > 0 || _sessionHp > 0.01f || _holding || _repairRpcOpen)
                 {
-                    return $"Repairing +{_sessionHp:0.#} HP — {_sessionSpent} salvage " +
-                           $"({rate:0}/HP, {bank} banked)";
+                    if (_sessionSpent > 0 || _sessionHp > 0.01f)
+                    {
+                        return $"Repairing +{_sessionHp:0.#} HP — {_sessionSpent} salvage " +
+                               $"({rate:0}/HP, {bank} banked)";
+                    }
+                    return $"Repairing... ({hp:0}/{maxHp:0}) — {bank} banked";
                 }
 
-                return $"Hatch damaged ({station.Hp:0}/{station.MaxHp:0}) — {rate:0} salvage/HP";
+                return $"Hatch damaged ({hp:0}/{maxHp:0}) — {rate:0} salvage/HP";
             }
         }
 
-        /// <summary>Per-frame while E is held. Sim mutation goes through GameController.</summary>
+        /// <summary>Per-frame while E is held. Sim mutation goes through GameController on the
+        /// host; a client opens the repair channel instead.</summary>
         public void Interact(float dt)
         {
             if (dt <= 0f || station == null) return;
             var gc = _game;
-            if (gc == null || gc.RunIsOver || gc.Sim == null) return;
+            if (gc == null || gc.RunIsOver) return;
 
             _holding = true;
+
+            ReadRepairView(gc, out float hp, out float maxHp, out long bank, out bool destroyed,
+                out long unbanked, out _, out bool prep);
+            if (destroyed) return;
+            if (hp >= maxHp - 0.01f)
+            {
+                bool canStart = prep && unbanked == 0L && bank > 0L;
+                if (!_withdrawHold && !canStart) return;
+                _withdrawHold = true;
+                HoldWithdraw(gc, dt);
+                return;
+            }
 
             var meta = gc.Meta;
             string missing = meta != null ? meta.RepairMissingStep() : "no session";
@@ -106,10 +148,87 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
+            if (IsClientOnly(gc))
+            {
+                if (!_repairRpcOpen)
+                {
+                    var verbs = LocalVerbs();
+                    if (verbs != null)
+                    {
+                        verbs.SetRepairing(true);
+                        _repairRpcOpen = true;
+                    }
+                }
+                return;
+            }
+
+            if (gc.Sim == null) return;
             long before = gc.Sim.RepairSalvageSpent;
             float applied = gc.RepairHatch(repairPerSecond * dt);
             _sessionSpent += gc.Sim.RepairSalvageSpent - before;
             _sessionHp += applied;
+        }
+
+        void HoldWithdraw(GameController gc, float dt)
+        {
+            float rate = EquipmentCatalog.Def(EquipmentId.RepairRig).repairPerSecond;
+            if (IsClientOnly(gc))
+            {
+                if (!_repairRpcOpen)
+                {
+                    var verbs = LocalVerbs();
+                    if (verbs != null)
+                    {
+                        verbs.SetRepairing(true);
+                        _repairRpcOpen = true;
+                    }
+                }
+                return;
+            }
+
+            if (gc.Sim == null) return;
+            long before = gc.Sim.Unbanked;
+            gc.RepairHatch(rate * dt);
+            _sessionWithdrawn += gc.Sim.Unbanked - before;
+        }
+
+        static bool IsClientOnly(GameController gc)
+        {
+            var net = gc.Net;
+            return net != null && net.IsClientOnly;
+        }
+
+        NetVerbs LocalVerbs()
+        {
+            var gc = _game;
+            if (gc == null || gc.Net == null) return null;
+            return gc.Net.LocalVerbs;
+        }
+
+        void ReadRepairView(GameController gc, out float hp, out float maxHp, out long bank,
+            out bool destroyed, out long unbanked, out int slots, out bool prep)
+        {
+            var net = gc.Net;
+            var mirror = net != null && net.IsClientOnly ? net.Mirror : null;
+            if (mirror != null)
+            {
+                hp = mirror.HatchHp.Value;
+                maxHp = mirror.HatchMax.Value;
+                bank = mirror.Banked.Value;
+                destroyed = hp <= 0f;
+                unbanked = mirror.Unbanked.Value;
+                slots = -1;
+                prep = (AssaultState)mirror.Phase.Value == AssaultState.Prep;
+                return;
+            }
+
+            hp = station.Hp;
+            maxHp = station.MaxHp;
+            bank = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
+            destroyed = station.IsDestroyed;
+            unbanked = gc.Sim != null ? gc.Sim.Unbanked : 0L;
+            slots = gc.Sim != null ? gc.Sim.HatchBankSlotsLeft : 0;
+            prep = gc.Sim != null && gc.Sim.Assault == AssaultState.Prep;
         }
     }
 }

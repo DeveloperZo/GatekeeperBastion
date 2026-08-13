@@ -66,7 +66,7 @@ namespace GatekeeperBastion.Tests
             sim.StartRun();
             sim.EngageTether();
 
-            // MaxWaves draws is the whole run; the last clear completes it.
+            // Zero-kill Wave 5 Completes. Mid-assault draw is refused; after Escaped, so is another.
             for (int i = 0; i < WaveDirector.MaxWaves; i++)
             {
                 sim.TriggerDraw();
@@ -76,12 +76,11 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(WaveDirector.MaxWaves, waves);
             Assert.AreEqual(WaveDirector.MaxWaves, sim.CurrentWaveIndex);
 
-            // Another draw mid-assault, and again after the run completes: both refused.
             sim.TriggerDraw();
             Assert.AreEqual(WaveDirector.MaxWaves, waves);
-            sim.NotifyAssaultCleared(); // last wave down → run complete
+            sim.NotifyAssaultCleared();
             sim.TriggerDraw();
-            Assert.AreEqual(WaveDirector.MaxWaves, waves, "no wave past MaxWaves");
+            Assert.AreEqual(WaveDirector.MaxWaves, waves, "Escaped refuses another draw");
             Assert.AreEqual(WaveDirector.MaxWaves, sim.CurrentWaveIndex);
         }
 
@@ -103,7 +102,7 @@ namespace GatekeeperBastion.Tests
             sim.TriggerDraw();
             Assert.IsFalse(sim.AllWavesCleared, "last wave launched but not yet dead");
             sim.NotifyAssaultCleared();
-            Assert.IsTrue(sim.AllWavesCleared, "last wave cleared → run complete");
+            Assert.IsTrue(sim.AllWavesCleared, "Wave 5 with Unbanked 0 Completes");
         }
 
         [Test]
@@ -192,18 +191,18 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(0L, meta.BankedSalvage, "nothing banked before the first kill");
 
             sim.AwardKill();
-            Assert.AreEqual(25L, meta.BankedSalvage, "one kill at siphon 0 banks exactly 25");
-            Assert.AreEqual(25L, sim.Salvage.RunSalvage, "and shows in the run tally");
+            Assert.AreEqual(25L, sim.Unbanked, "one kill at siphon 0 goes to unbanked");
+            Assert.AreEqual(0L, meta.BankedSalvage, "ship bank is untouched");
+            Assert.AreEqual(0L, sim.Salvage.RunSalvage, "tally is converted, not kill awards");
 
-            // Dial up in prep, then a kill is worth 25 * 1.25 = 31.25 — floored once to 31 and
-            // given to both the bank and the run tally (M22: no float drift).
+            // Dial up in prep, then a kill is worth 25 * 1.25 = 31.25 — floored once to 31.
             sim.NotifyAssaultCleared();
             sim.SetSiphonLevel(3);
             sim.TriggerDraw();
             Assert.AreEqual(31.25f, sim.CurrentKillValue, 1e-5f);
             sim.AwardKill();
-            Assert.AreEqual(56L, meta.BankedSalvage, "one kill at siphon 3 banks exactly 31 more");
-            Assert.AreEqual(56L, sim.Salvage.RunSalvage, "tally equals banked awards to the unit");
+            Assert.AreEqual(56L, sim.Unbanked, "one kill at siphon 3 adds 31 more unbanked");
+            Assert.AreEqual(0L, meta.BankedSalvage);
         }
 
         [Test]
@@ -226,7 +225,8 @@ namespace GatekeeperBastion.Tests
                 Assert.AreEqual(expectedValue[level], sim.CurrentKillValue, 1e-4f,
                     "CurrentKillValue at siphon level " + level);
                 sim.AwardKill();
-                Assert.AreEqual(expectedPerKill[level], meta.BankedSalvage, "siphon level " + level);
+                Assert.AreEqual(expectedPerKill[level], sim.Unbanked, "siphon level " + level);
+                Assert.AreEqual(0L, meta.BankedSalvage, "siphon level " + level + " ship bank");
             }
         }
 
@@ -241,8 +241,9 @@ namespace GatekeeperBastion.Tests
             sim.TriggerDraw();
             Assert.AreEqual(18, new WaveDirector().NextWave(0, 0).enemyCount);
             Kill(sim, 18);
-            Assert.AreEqual(450L, sim.Salvage.RunSalvage); // 18 * 25
-            Assert.AreEqual(450L, meta.BankedSalvage);
+            Assert.AreEqual(450L, sim.Unbanked); // 18 * 25
+            Assert.AreEqual(0L, meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Salvage.RunSalvage);
         }
 
         [Test]
@@ -253,29 +254,29 @@ namespace GatekeeperBastion.Tests
             sim.StartRun();
 
             sim.AwardKill(); // Docked
-            Assert.AreEqual(0L, sim.Salvage.RunSalvage);
+            Assert.AreEqual(0L, sim.Unbanked);
             Assert.AreEqual(0L, meta.BankedSalvage);
 
             sim.EngageTether();
             sim.AwardKill(); // Prep — nothing is spawned to kill
-            Assert.AreEqual(0L, sim.Salvage.RunSalvage);
+            Assert.AreEqual(0L, sim.Unbanked);
             Assert.AreEqual(0L, meta.BankedSalvage);
 
             sim.TriggerDraw();
             sim.AwardKill(); // legal
-            Assert.AreEqual(25L, sim.Salvage.RunSalvage);
-            Assert.AreEqual(25L, meta.BankedSalvage);
+            Assert.AreEqual(25L, sim.Unbanked);
+            Assert.AreEqual(0L, meta.BankedSalvage);
 
             sim.NotifyAssaultCleared();
             sim.AwardKill(); // back in Prep
-            Assert.AreEqual(25L, sim.Salvage.RunSalvage);
-            Assert.AreEqual(25L, meta.BankedSalvage);
+            Assert.AreEqual(25L, sim.Unbanked);
+            Assert.AreEqual(0L, meta.BankedSalvage);
 
             sim.TriggerDraw();
             sim.NotifyPlayerDown(); // terminal
             sim.AwardKill();
-            Assert.AreEqual(25L, sim.Salvage.RunSalvage, "kills after the run ends pay nothing");
-            Assert.AreEqual(25L, meta.BankedSalvage, "the 25 earned while alive is still there");
+            Assert.AreEqual(0L, sim.Unbanked, "kills after the run ends pay nothing; down wiped the pile");
+            Assert.AreEqual(0L, meta.BankedSalvage, "never converted");
         }
 
         [Test]
@@ -297,8 +298,9 @@ namespace GatekeeperBastion.Tests
 
             TickFor(sim, 30f);
             Kill(sim, 3); // rejected in Prep
-            Assert.AreEqual(50L, sim.Salvage.RunSalvage);
-            Assert.AreEqual(50L, meta.BankedSalvage);
+            Assert.AreEqual(50L, sim.Unbanked);
+            Assert.AreEqual(0L, meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Salvage.RunSalvage);
         }
 
         [Test]
@@ -353,15 +355,17 @@ namespace GatekeeperBastion.Tests
             sim.StartRun();
             sim.EngageTether();
             sim.TriggerDraw();
-            Kill(sim, 2);      // 50 salvage at level 0, banked as it was earned
-            Assert.AreEqual(50L, meta.BankedSalvage);
+            Kill(sim, 2);      // 50 unbanked at level 0
+            Assert.AreEqual(50L, sim.Unbanked);
+            Assert.AreEqual(0L, meta.BankedSalvage);
             sim.Ship.Hatch.Damage(99999f);
 
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
-            Assert.AreEqual(50L, meta.BankedSalvage, "losing the hatch forfeits nothing");
+            Assert.AreEqual(0L, sim.Unbanked, "breach wipes unbanked");
+            Assert.AreEqual(0L, meta.BankedSalvage, "never converted");
             Assert.AreEqual(1, meta.PodEjections);
             Assert.AreEqual("hatch", sim.LastRunReport.cause);
-            Assert.AreEqual(50L, sim.LastRunReport.grossEarned);
+            Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
         }
 
         [Test]
@@ -450,9 +454,9 @@ namespace GatekeeperBastion.Tests
             TickFor(sim, 20f);
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual(elapsed, sim.RunElapsed, 1e-5f);
-            Assert.AreEqual(50L, sim.Salvage.RunSalvage, "the run's tally stands as its record");
+            Assert.AreEqual(0L, sim.Salvage.RunSalvage, "never converted");
             Assert.AreEqual(banked, meta.BankedSalvage);
-            Assert.AreEqual(50L, banked);
+            Assert.AreEqual(0L, banked);
         }
 
         [Test]

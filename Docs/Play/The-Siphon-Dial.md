@@ -20,9 +20,9 @@ So a raised dial is never a different fight. It is the same fight with more of t
 
 ## When you can set it
 
-Only in Prep. Pulling the draw locks it for the whole Assault, and it unlocks again when the Wave clears. That is deliberate: the dial is a pre-commitment, not something you back out of when the room gets loud.
+Only in Prep. Starting a Wave locks it for the whole Assault, and it unlocks again when the Wave clears. That is deliberate: the dial is a pre-commitment, not something you back out of when the room gets loud.
 
-If you start deep from the NAV MAP, the whole chained delivery is one Assault — so the dial you set before that first draw governs every Wave in the chain.
+If you start deep from the NAV MAP, the whole chained delivery is one Assault — so the dial you set before that first Interact governs every Wave in the chain.
 
 The Prep panel prices both sides for you before you commit: what a kill pays now, what it would pay one step up, and how many Gatekeepers the next Wave brings at each setting. Read it rather than guessing. Keys and the exact reward curve are in the [Field Manual](Field-Manual.md).
 
@@ -30,7 +30,7 @@ The Prep panel prices both sides for you before you commit: what a kill pays now
 
 Ask three questions, in this order.
 
-**1. Can you kill the surplus before it reaches the Hatch?** The extra bodies all march on the Hatch and all can be pulled off it by hurting them. Your ceiling is not how much damage you can take — it is how much you can put out between a group spawning and that group arriving at the door. If you are already finishing Waves with the Hatch chipped, more bodies means more chip.
+**1. Can you kill the surplus before it reaches you?** The extra bodies all hunt you on a field-terminal Wave. Your ceiling is how much you can put out between a group spawning and that group closing. If you are already finishing Waves hurt, more bodies means more chip.
 
 **2. What is your health going to look like afterwards?** Health does not come back during a Run. A bigger Wave is more swings landed on you, and that damage carries into every Wave after it. The dial's cost is paid across the rest of the Run, not just this Wave.
 
@@ -46,6 +46,10 @@ Some practical shapes:
 ## The one thing the dial is not
 
 It is not a difficulty setting for the Run. It is a per-Wave bet, and the game does not remember it. Every Prep is a fresh decision.
+
+## See also
+
+[A Run](A-Run.md). [Waves](Waves.md). [Salvage](Salvage.md). [Gatekeepers](Gatekeepers.md).
 
 ## Gaps
 

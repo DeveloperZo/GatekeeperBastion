@@ -39,6 +39,10 @@ Its cadence is slow. The clip is moderate and the reload is not short. You get a
 
 An upgrade purchase moves damage, clip, reload and cadence together, weighted by the spoke you centred. It does **not** extend the range or add pierce. Since this weapon's whole case is damage per individual shot, a Damage focus compounds with what it already does better than it does on anything else — dropping a Ram in one fewer shot is worth more than the step size suggests.
 
+## See also
+
+[Weapons](Weapons.md). [Ram](Gatekeeper-Ram.md). [PRI-C](Weapon-PRI-C.md). [Default](Gatekeeper-Default.md).
+
 ## Gaps
 
 - Pierce is never explained in play. Nothing tells you a shot continues through bodies, so most players never deliberately line targets up — which is the weapon's best trick.

@@ -61,8 +61,9 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(0L, meta.BankedSalvage, "still zero — no grubstake");
 
             Kill(sim, 18); // the whole wave down: 18 * 25
-            Assert.AreEqual(450L, sim.Salvage.RunSalvage);
-            Assert.AreEqual(450L, meta.BankedSalvage, "450 landed in the bank as the gatekeepers fell");
+            Assert.AreEqual(450L, sim.Unbanked);
+            Assert.AreEqual(0L, meta.BankedSalvage, "kills stay unbanked until a Hatch-bank");
+            Assert.AreEqual(0L, sim.Salvage.RunSalvage);
 
             // --- Clear wave 1: back to PREP, the run is still live (waves remain) ---
             sim.NotifyAssaultCleared();
@@ -72,8 +73,8 @@ namespace GatekeeperBastion.Tests
             Assert.IsFalse(sim.AllWavesCleared);
             Kill(sim, 4); // no gatekeepers exist in prep — refused
             for (int i = 0; i < 20; i++) sim.Tick(0.5f);
-            Assert.AreEqual(450L, sim.Salvage.RunSalvage, "prep income is zero");
-            Assert.AreEqual(450L, meta.BankedSalvage, "and refused kills bank nothing");
+            Assert.AreEqual(450L, sim.Unbanked, "prep income is zero");
+            Assert.AreEqual(0L, meta.BankedSalvage, "and refused kills bank nothing");
 
             // --- Wave 2: the wall. Thirty gatekeepers — 26 Default and the first 4 Hunters —
             // at 42 HP, four at a time every 4.00s ---
@@ -88,25 +89,23 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(42f, WaveDirector.BaseEnemyHp * specs[1].enemyHealthMultiplier, 1e-3f);
 
             Kill(sim, 4); // four down before being overwhelmed: +100
-            Assert.AreEqual(550L, sim.Salvage.RunSalvage);
-            Assert.AreEqual(550L, meta.BankedSalvage, "this run's 550, banked as it came");
+            Assert.AreEqual(550L, sim.Unbanked);
+            Assert.AreEqual(0L, meta.BankedSalvage, "still unbanked");
 
-            // --- Die mid-wave-2. Death is a full stop, not a bill: the 550 earned this run
-            // was already currency before the player fell, so the bank does not move. ---
-            long bankAtDeath = meta.BankedSalvage;
+            // --- Die mid-wave-2. Down wipes unbanked; ship bank never received it. ---
             sim.NotifyPlayerDown();
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual("player", sim.LastRunReport.cause);
-            Assert.AreEqual(550L, sim.LastRunReport.grossEarned, "the run's whole take");
-            Assert.AreEqual(bankAtDeath, meta.BankedSalvage, "dying moves no currency at all");
-            Assert.AreEqual(550L, meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.LastRunReport.grossEarned, "never converted");
+            Assert.AreEqual(0L, meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Unbanked);
             Assert.AreEqual(1, meta.PodEjections);
             Assert.AreEqual(0, meta.CleanExits, "a death is not a clean exit");
             Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta), "the first death opens the shop");
 
             // --- persistence: exactly the JSON SaveService round-trips ---
             MetaState loaded = MetaState.FromJson(meta.ToJson());
-            Assert.AreEqual(550L, loaded.BankedSalvage);
+            Assert.AreEqual(0L, loaded.BankedSalvage);
             Assert.AreEqual(1, loaded.PodEjections);
             Assert.AreEqual(1, loaded.TotalRuns);
 
@@ -115,14 +114,15 @@ namespace GatekeeperBastion.Tests
             sim2.StartRun();
             Assert.AreEqual(RunPhase.Docked, sim2.Phase);
             Assert.AreEqual(AssaultState.Prep, sim2.Assault);
-            Assert.AreEqual(550L, loaded.BankedSalvage, "banked salvage carries over in full");
+            Assert.AreEqual(0L, loaded.BankedSalvage, "nothing converted last run");
             Assert.AreEqual(0L, sim2.Salvage.RunSalvage, "the per-run tally resets");
             Assert.AreEqual(2, loaded.TotalRuns);
             Assert.AreEqual(ShipSystems.HatchMaxHp, sim2.Ship.Hatch.Hp, 1e-5f, "fresh run, fresh hatch");
             Assert.AreEqual(0, sim2.CurrentWaveIndex, "three fresh waves");
             Assert.IsFalse(sim2.AllWavesCleared);
 
-            // ...and it is spendable: free MK-1 still "bought", then a Tier costs 400.
+            // Spend path still works when the bank has money.
+            loaded.EarnSalvage(550L);
             loaded.SetOwned(WeaponId.Mk1Sidearm, true);
             loaded.SetEquipped(WeaponId.Mk1Sidearm);
             Assert.IsTrue(loaded.Owns(WeaponId.Mk1Sidearm));
@@ -154,9 +154,9 @@ namespace GatekeeperBastion.Tests
             sim.SetSiphonLevel(0);            // the draw size is a pre-commitment
             Assert.AreEqual(3, sim.Siphon.Level, "dial locked during assault");
             Kill(sim, 23);
-            Assert.AreEqual(713L, sim.Salvage.RunSalvage); // 23 * floor(31.25) = 23 * 31
-            Assert.AreEqual(713L, meta.BankedSalvage,
-                "every one of those credits is already banked, each floored as it lands");
+            Assert.AreEqual(713L, sim.Unbanked); // 23 * floor(31.25) = 23 * 31
+            Assert.AreEqual(0L, meta.BankedSalvage,
+                "kill awards sit unbanked until a Hatch-bank");
         }
     }
 }

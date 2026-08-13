@@ -30,22 +30,25 @@ task, not a documentation error.
 
 | Belief | Carried today by | Gap |
 |---|---|---|
-| Progress through failure | **The whole purchasable surface.** `RunSim.AwardKill` banks Salvage the instant a Gatekeeper dies and no ending moves it, so every weapon, every wheel purchase, all four CREW QUARTERS tracks (`UpgradeTrack`), Hatch Armor and the equipment slot are bought with earnings from Runs that were mostly lost. Tiers additionally unlock only after a first loss (`MetaUpgrades.UpgradesUnlocked == PodEjections >= 1`), so failing once is the thing that opens the deepest progression track. The loss screen says it in words: `earned this run: N — already banked`, then the banked total. | None identified. |
-| Reward success rather than punish failure | No ending moves Salvage. Dying and clearing differ only in which counter ticks, the deepest Wave shown, and what the screen says. The loss-stake "musical chairs" rotor was built and cut (`../Decisions.md`). Repair is an **exchange**, Salvage for Hatch HP, priced at `ShipSystems.RepairSalvagePerHp`; it is a purchase like any other and not a forfeit. | None identified. |
+| Progress through failure | **The whole purchasable surface.** Hatch-bank drip/dump credits `MetaState.BankedSalvage`; leftover Unbanked is wiped on a lost Run, so shop money is what made it through the Hatch. Tiers additionally unlock only after a first loss (`MetaUpgrades.UpgradesUnlocked == PodEjections >= 1`), so failing once is the thing that opens the deepest progression track. The loss screen says `converted this run: N`, then the banked total. | None identified. |
+| Reward success rather than punish failure | No ending moves **banked** Salvage. Unbanked since the last Hatch-bank is lost on a down or Hatch breach (`../Decisions.md` expiry). Dying and clearing differ in which counter ticks, the deepest Wave shown, and what the screen says. The loss-stake "musical chairs" rotor was built and cut. Repair is an **exchange**, Salvage for Hatch HP, priced at `ShipSystems.RepairSalvagePerHp`; it is a purchase like any other and not a forfeit. | None identified. |
 | Skills and loadout amplify expression | The weapon is the build, per-weapon rather than a global stat sheet, and each purchase is now a choice: `ShipCommands.BuyWheelUpgrade` centres one upgrade spoke and `WeaponWheel` awards 5 + 3 + 3 = 11 points across three of the five, nothing to the two at distance 2. BR-12 and MR-35 order their rings differently (`WeaponWheel.RingOf`), so the same focus buys a different gun. The siphon dial is a stake the player authors. | The MK-1 has no ring — `RingOf` returns null for it — so the Secondary still upgrades on no decision. The five-skill system is designed and not built, and the Drone slot has no payload to put in it. |
-| You start the action | No Wave timer. `WaveSpec.timeUntilNextWave` is always 0 and a Wave begins only because the player pulled the Siphon Draw (`RunSim.TriggerDraw`). Prep is untimed, pays nothing, and is the only window the dial moves in. | None. This is the belief the build carries most completely. |
+| You start the action | No Wave timer until Interact. `BastionTerminal` Interact → `RunSim.TriggerDraw` and `ArmSequentialDraws` for that terminal's remaining Waves (`TerminalChainGap` between clears). Prep `T` at the Hatch is Hatch-bank; elsewhere it is a logged refusal. Untimed Prep is before a sequence, between Hatch-bank and the next terminal, and after Wave 5 while Unbanked waits. The dial still only moves in Prep. | None. This is the belief the build carries most completely. |
 
 Together: **the player sets both the pace and the stake, and the game supplies neither.**
-Pressure here is authored by the person under it. That is what "the draw is the bell" names
-— `TriggerDraw` is the only thing in a Run that starts a clock.
+Pressure here is authored by the person under it. Interact at a field terminal, or Prep `T`
+at the Hatch, is what starts a clock.
 
 **What the game refuses to be** (confirmed by Zo, 2026-08-08), each refusal paid for by a
 cut already made:
 
 - **Not an idle game.** Time never pays; standing in Prep earns exactly zero.
   `BaseSalvagePerSecond` is gone.
-- **No exit mid-Run.** There is no bail-out lever and no in-Run respawn. `EscapeSpool` and
-  `RunPhase.Spooling` are dormant, kept only so the enum stays serialization-stable.
+- **No exit mid-Run.** There is no bail-out lever and no in-Run respawn for solo play or
+  for the host. `EscapeSpool` and `RunPhase.Spooling` are dormant, kept only so the enum
+  stays serialization-stable. Exception (Zo, 2026-08-13): co-op client get-up is decided
+  and owned by `../Milestones/1. planned/M57-the-downed-player-waits-on-the-ship.md`
+  (Ship wait, then embark on the next hatch-defense Wave). Not built.
 - **It does not rush you.** The one thing it will never do is start without you.
 
 ---
@@ -62,7 +65,7 @@ This is a claim about the shipped game, not a wish list; each row cites what mak
 | Aesthetic | Rank | Status | Evidence |
 |---|---|---|---|
 | **Expression** | **1** | served | The upgrade wheel ships (`Sim/Meta/WeaponWheel.cs`, bought from the ARMORY via `ShipCommands.BuyWheelUpgrade`). One purchase centres a spoke and spends 5 + 3 + 3 = 11 points across three adjacent spokes of five, so the focus is a decision with a cost: the two spokes at distance 2 get nothing. Rings are per weapon, so the same focus builds a different gun on BR-12 than on MR-35 or PRI-C. Still missing: the MK-1 has no ring (`WeaponWheel.RingOf` returns null), and the five-skill system is unbuilt. |
-| **Fellowship** | **2** | designed, not built | 2–4 co-op is first-class in the architecture — pure-C# sim seam, `HOST-ONLY:` / `LOCAL-OWNER:` ownership labels — and absent from play (`../Decisions.md`). |
+| **Fellowship** | **2** | in play, incomplete | Kill loop (`../Milestones/3. completed/M48-the-first-networked-kill.md`), huntable/downable second Boarder (`../Milestones/3. completed/M49-the-gatekeepers-see-the-second-player.md`), client readout/endings (`../Milestones/3. completed/M50-the-client-lives-the-run.md`), and in-run verbs (`../Milestones/3. completed/M51-the-clients-hands.md`) over UnityTransport loopback. Gap: get-up (`../Milestones/1. planned/M57-the-downed-player-waits-on-the-ship.md`), a build a friend can install (`../Milestones/1. planned/M58-a-build-two-machines-can-run.md`), Steam join (`../Milestones/1. planned/M60-a-join-a-friend-can-use.md`). |
 | **Challenge** | **3** | served | The Run is an obstacle course with one fail state. Death is the only early ender; there is no difficulty option that is not the dial. |
 | Sensation | — | not addressed | Gray-box art, no audio pass. A deliberate deferral, not an oversight. |
 | Discovery | — | declined for now | One destination, one Bastion, generated scenes. |
@@ -72,15 +75,14 @@ This is a claim about the shipped game, not a wish list; each row cites what mak
 | Competition | — | absent | No score against anyone else. `CleanExits` and `PodEjections` are counters, not a ladder. |
 
 Challenge, ranked third, is served. Expression, ranked first, has a mechanism as of M21:
-the upgrade wheel is buyable and its point spread makes which spoke you centre a real trade. Fellowship, ranked
-second, still has architecture and no gameplay, so one of the three priorities remains
-unserved rather than two.
+the upgrade wheel is buyable and its point spread makes which spoke you centre a real trade.
+Fellowship, ranked second, has gameplay over loopback (`M48`–`M51`); a session a friend
+can install and join is unbuilt (`M58`, `M60`).
 
 **What that implies for ordering work:** the leverage tier that serves Expression is #4,
 who may change the rules (`3-Mechanics.md`), because expression is the player authoring
 their own Run. The MK-1 ring, the skill slots and a payload for the Drone slot all live
-there. Tuning a constant cannot move an aesthetic with no mechanism yet, which is now
-Fellowship's position rather than Expression's.
+there. Fellowship's remaining work is a session a friend can operate (`M58`, `M60`).
 
 ---
 

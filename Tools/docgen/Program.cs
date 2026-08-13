@@ -21,7 +21,7 @@ public static class Docgen
     static readonly string[] KnownBlockIds =
     {
         "mk1-base", "wheel", "rings", "tier-cost", "abilities",
-        "gatekeepers", "waves", "dial", "hatch", "tracks"
+        "gatekeepers", "waves", "dial", "hatch", "hatch-bank", "tracks"
     };
 
     public static int Main(string[] args)
@@ -326,6 +326,7 @@ public static class Docgen
         d["waves"] = EmitWaves();
         d["dial"] = EmitDial();
         d["hatch"] = EmitHatch();
+        d["hatch-bank"] = EmitHatchBank();
         d["tracks"] = EmitTracks();
         return d;
     }
@@ -518,6 +519,24 @@ public static class Docgen
                       "** Salvage, once, after first loss |");
         sb.AppendLine("| repair rig | **" + rig.cost.ToString("N0", Inv) +
                       "** Salvage, flat " + N(rig.repairPerSecond) + " HP/s |");
+        return sb.ToString().TrimEnd('\r', '\n');
+    }
+
+    static string EmitHatchBank()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("| | |");
+        sb.AppendLine("|---|---|");
+        sb.AppendLine("| slots / Run | " + HatchBank.SlotsPerRun + " |");
+        sb.AppendLine("| drip | " + N(HatchBank.DripPerSecond) + " unbanked/s |");
+        sb.AppendLine("| duration | " + N(HatchBank.DurationSeconds) + " s |");
+        sb.AppendLine("| convert < " + HatchBank.MidAt + " | ×" +
+                      HatchBank.MultLow.ToString("0.00", Inv) + " |");
+        sb.AppendLine("| convert " + HatchBank.MidAt + "–" + (HatchBank.HighAt - 1) + " | ×" +
+                      HatchBank.MultMid.ToString("0.00", Inv) + " |");
+        sb.AppendLine("| convert ≥ " + HatchBank.HighAt + " | ×" +
+                      HatchBank.MultHigh.ToString("0.00", Inv) + " |");
+        sb.AppendLine("| withdraw | " + N(HatchBank.WithdrawPerSecond) + " salvage/s |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
 
@@ -742,9 +761,10 @@ public static class Docgen
         var wd = new WaveDirector();
         sb.AppendLine("## The waves");
         sb.AppendLine();
-        sb.AppendLine("**" + WaveDirector.MaxWaves + " waves to a run**, and none of them start until you pull the");
-        sb.AppendLine("siphon draw. There is no timer: the quiet between waves lasts exactly as long as you");
-        sb.AppendLine("want it to. Gatekeepers arrive in groups, not a stream.");
+        sb.AppendLine("**" + WaveDirector.MaxWaves + " waves to a run**, and none of them start until you use a");
+        sb.AppendLine("field terminal. One Interact starts that terminal's remaining Waves; after each");
+        sb.AppendLine("clear there are " + WaveDirector.TerminalChainGap.ToString("0") + " seconds of quiet, then the next Wave.");
+        sb.AppendLine("After the sequence, Prep lasts as long as you want. Gatekeepers arrive in groups, not a stream.");
         sb.AppendLine();
         sb.AppendLine("At the dial's lowest setting:");
         sb.AppendLine();
@@ -788,14 +808,16 @@ public static class Docgen
     {
         sb.AppendLine("## Salvage");
         sb.AppendLine();
-        sb.AppendLine("**Gatekeepers are worth money and the money is yours the instant they die.** Not at the");
-        sb.AppendLine("end of the wave, not if you survive — the moment they drop. Dying takes none of it");
-        sb.AppendLine("back, and clearing the bastion adds no bonus. A run you lose still paid you.");
+        sb.AppendLine("**Gatekeepers are worth Salvage, and that Salvage sits unbanked until a Hatch-bank.**");
+        sb.AppendLine("A kill does not credit the ship. Prep `T` at the Hatch starts the convert Wave:");
+        sb.AppendLine("drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A fatter pile");
+        sb.AppendLine("converts at a higher multiplier. Dying keeps what already made it through the Hatch.");
         sb.AppendLine();
         sb.AppendLine("A kill pays `" + N(MetaUpgrades.SalvagePerKill(0)) + "` at Scavenging 0, up to `" +
                       N(MetaUpgrades.SalvagePerKill(MetaUpgrades.MaxLevel)) + "` at " +
                       MetaUpgrades.MaxLevel + ", then multiplied by the dial.");
-        sb.AppendLine("Nothing pays per second, and the quiet between waves earns nothing at all.");
+        sb.AppendLine("Nothing pays per second except Hatch-bank drip (`" + N(HatchBank.DripPerSecond) +
+                      "` unbanked/s), and the quiet between waves earns nothing at all.");
         sb.AppendLine();
         sb.AppendLine("The hatch is what you are defending: **" + N(ShipSystems.HatchMaxHp) +
                       " HP** at Hatch Armor 0, up to **" + N(MetaUpgrades.HatchHp(MetaUpgrades.MaxLevel)) +

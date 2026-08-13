@@ -15,7 +15,7 @@ namespace GatekeeperBastion.Sim
             float hatchDist, float spawnDist)
         {
             return "killed a " + kindName + " with " + SlotWord(slot)
-                + " (+" + award.ToString(Inv) + " salvage) -- " + aliveLeft.ToString(Inv)
+                + " (+" + award.ToString(Inv) + " unbanked) -- " + aliveLeft.ToString(Inv)
                 + " left" + DistTail(hatchDist, spawnDist);
         }
 
@@ -24,7 +24,7 @@ namespace GatekeeperBastion.Sim
             string kindName, long award, int aliveLeft, float hatchDist, float spawnDist)
         {
             return "killed a " + kindName
-                + " (+" + award.ToString(Inv) + " salvage) -- " + aliveLeft.ToString(Inv)
+                + " (+" + award.ToString(Inv) + " unbanked) -- " + aliveLeft.ToString(Inv)
                 + " left" + DistTail(hatchDist, spawnDist);
         }
 

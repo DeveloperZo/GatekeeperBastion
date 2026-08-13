@@ -13,6 +13,7 @@ namespace GatekeeperBastion.Game
         long _cacheSiphon = long.MinValue;
         long _cacheKill = long.MinValue;
         long _cacheRunSalvage = long.MinValue;
+        long _cacheUnbanked = long.MinValue;
         long _cacheBanked = long.MinValue;
         long _cacheHatchHp = long.MinValue;
         long _cacheHatchMax = long.MinValue;
@@ -28,15 +29,26 @@ namespace GatekeeperBastion.Game
             _view.SetLeftDrawerOpen(leftOpen);
             _view.SetRightDrawerOpen(Controls.MissionDrawerOpen);
 
-            long elapsed = (long)sim.RunElapsed;
+            ReadFightReadout(sim, out AssaultState assault, out int wave, out int alive,
+                out long runSal, out int elapsed, out float hatchHp, out float hatchMax);
             long kill = sim.CurrentKillAward;
-            long runSal = (long)sim.Salvage.RunSalvage;
             long banked = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
-            ReadAssaultReadout(sim, out AssaultState assault, out int wave, out int alive);
+            long unbanked = sim.Unbanked;
+            var net = gc.Net;
+            if (net != null && net.IsClientOnly)
+            {
+                var mirror = net.Mirror;
+                if (mirror != null)
+                {
+                    banked = mirror.Banked.Value;
+                    unbanked = mirror.Unbanked.Value;
+                }
+            }
 
             if (elapsed != _cacheElapsed || wave != _cacheWave
                 || sim.Siphon.Level != _cacheSiphon || kill != _cacheKill
-                || runSal != _cacheRunSalvage || banked != _cacheBanked)
+                || runSal != _cacheRunSalvage || banked != _cacheBanked
+                || unbanked != _cacheUnbanked)
             {
                 _cacheElapsed = elapsed;
                 _cacheWave = wave;
@@ -44,30 +56,38 @@ namespace GatekeeperBastion.Game
                 _cacheKill = kill;
                 _cacheRunSalvage = runSal;
                 _cacheBanked = banked;
+                _cacheUnbanked = unbanked;
 
                 _view.SetProfile("LV 1", "EXP —");
 
                 _lineBuf.Clear();
-                _lineBuf.Append("Banked ").Append(banked);
+                _lineBuf.Append("Unbanked ").Append(unbanked)
+                    .Append("  ·  Banked ").Append(banked);
                 string salvage = _lineBuf.ToString();
                 _lineBuf.Clear();
+                int shown = wave;
+                if (shown > WaveDirector.MaxWaves) shown = WaveDirector.MaxWaves;
                 _lineBuf.Append("Run ").Append(runSal)
                     .Append("  ·  Siphon L").Append(sim.Siphon.Level)
-                    .Append("  ·  Wave ").Append(wave).Append('/')
-                    .Append(WaveDirector.MaxWaves);
+                    .Append("  ·  Wave ").Append(shown).Append('/')
+                    .Append(WaveDirector.MaxWaves)
+                    .Append("  ·  ");
+                _lineBuf.Append(elapsed / 60).Append(':');
+                int sec = elapsed % 60;
+                if (sec < 10) _lineBuf.Append('0');
+                _lineBuf.Append(sec);
                 _view.SetScore(salvage, _lineBuf.ToString());
             }
 
-            var hatch = sim.Ship.Hatch;
-            long hatchHp = (long)hatch.Hp;
-            long hatchMax = (long)hatch.MaxHp;
+            long hatchHpI = (long)hatchHp;
+            long hatchMaxI = (long)hatchMax;
             bool alarm = _hatchAlert > 0f;
             bool alarmChanged = alarm != _cacheAlarm;
             if (alarmChanged) _cacheAlarm = alarm;
-            if (hatchHp != _cacheHatchHp || hatchMax != _cacheHatchMax || alarmChanged)
+            if (hatchHpI != _cacheHatchHp || hatchMaxI != _cacheHatchMax || alarmChanged)
             {
-                _cacheHatchHp = hatchHp;
-                _cacheHatchMax = hatchMax;
+                _cacheHatchHp = hatchHpI;
+                _cacheHatchMax = hatchMaxI;
 
                 _lineBuf.Clear();
                 if (alarm) _lineBuf.Append("<b>HATCH — UNDER ATTACK</b>");
@@ -75,11 +95,10 @@ namespace GatekeeperBastion.Game
                 string hatchLabel = _lineBuf.ToString();
 
                 _lineBuf.Clear();
-                _lineBuf.Append(hatchHp).Append('/').Append(hatchMax);
-                _view.SetHatch(hatchLabel, _lineBuf.ToString(), hatch.Hp, hatch.MaxHp);
+                _lineBuf.Append(hatchHpI).Append('/').Append(hatchMaxI);
+                _view.SetHatch(hatchLabel, _lineBuf.ToString(), hatchHp, hatchMax);
                 _view.SetHatchAlert(alarm);
 
-                // Toast is text-only — no second bar. Clears when the alert window ends.
                 if (alarm) _view.SetPlayerMessage("<b>HATCH UNDER ATTACK</b>");
                 else _view.SetPlayerMessage(null);
             }
@@ -106,9 +125,9 @@ namespace GatekeeperBastion.Game
             if (leftOpen) PushShortcutPanel(sim);
 
             if (assault == AssaultState.Prep)
-                PushPrepPanel(sim, wave);
+                PushPrepPanel(sim, wave, hatchHp, hatchMax, unbanked);
             else
-                PushAssaultPanel(wave, alive);
+                PushAssaultPanel(sim, wave, alive);
 
             PushCrosshair();
             PushPrompt();
@@ -160,6 +179,35 @@ namespace GatekeeperBastion.Game
                 _view.SetVignette(Mathf.Clamp01(_vignette / 0.35f) * 0.35f, false, null);
             else
                 _view.SetVignette(0f, false, null);
+        }
+
+        void ReadFightReadout(RunSim sim, out AssaultState assault, out int wave, out int alive,
+            out long runSal, out int elapsed, out float hatchHp, out float hatchMax)
+        {
+            assault = ViewAssault(sim);
+            wave = sim.CurrentWaveIndex;
+            alive = _spawner != null ? _spawner.AliveCount : 0;
+            runSal = sim.Salvage != null ? sim.Salvage.RunSalvage : 0L;
+            elapsed = (int)sim.RunElapsed;
+            hatchHp = 0f;
+            hatchMax = 0f;
+            if (sim.Ship != null)
+            {
+                hatchHp = sim.Ship.Hatch.Hp;
+                hatchMax = sim.Ship.Hatch.MaxHp;
+            }
+
+            var net = _game != null ? _game.Net : null;
+            if (net == null || !net.IsClientOnly) return;
+            var mirror = net.Mirror;
+            if (mirror == null) return;
+            assault = (AssaultState)mirror.Phase.Value;
+            wave = mirror.Wave.Value;
+            alive = mirror.Alive.Value;
+            runSal = mirror.Salvage.Value;
+            elapsed = mirror.ElapsedSeconds.Value;
+            hatchHp = mirror.HatchHp.Value;
+            hatchMax = mirror.HatchMax.Value;
         }
     }
 }

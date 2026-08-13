@@ -11,9 +11,11 @@ namespace GatekeeperBastion.Game
     /// <remarks>
     /// A run ends in one of TWO terminal phases and this file refuses to care which:
     ///   * Lost  — death (player down or hatch destroyed).
-    ///   * Escaped — all WaveDirector.MaxWaves waves cleared.
-    /// Neither settles any currency: kills bank as they happen, so ending a run — well or
-    /// badly — only stops the earning. All that is left here is the summary line and the exit.
+    ///   * Escaped — Wave 5 terminal with Unbanked 0. Hatch-bank after the field is stripped
+    ///     stays Tethered.
+    /// Leftover Unbanked is wiped on Lost, kept on Wave 5 until Hatch-bank. Gross on the report
+    /// is converted this Run.
+    /// All that is left here is the summary line and the exit.
     /// Both draw an end screen whose ONLY exit is ReturnToShip, so both need identical
     /// anti-soft-lock treatment. That symmetry is the whole point of IsTerminal: a win that
     /// leaves the cursor captured is exactly as unplayable as a loss that does, and it is worse
@@ -44,6 +46,7 @@ namespace GatekeeperBastion.Game
             // both terminal phases (and re-asserted every frame in TickLoseScreen), and logged so
             // the transcript proves which state the cursor was actually left in.
             EnsureCursorFree();
+            RestoreHatchBankSpawns();
             Log.Info(Tag, $"Terminal phase {phase}: cursor freed " +
                           $"(lock={Cursor.lockState}, visible={Cursor.visible}).");
 
@@ -60,6 +63,35 @@ namespace GatekeeperBastion.Game
                     $"gross {r.grossEarned}, repair {r.repairSpent}, net {net}, banked now {Meta.BankedSalvage}");
             }
             GameSession.Save();
+
+            if (_net != null && _net.Mirror != null)
+                _net.Mirror.ServerShowEnd(BuildEndSummary(phase, r, net));
+        }
+
+        EndSummary BuildEndSummary(RunPhase phase, RunReport r, long net)
+        {
+            RunEndKind kind = RunEndKind.Player;
+            if (phase == RunPhase.Escaped) kind = RunEndKind.Cleared;
+            else if (r.cause == "hatch") kind = RunEndKind.Hatch;
+
+            int deepest = 1;
+            long banked = 0;
+            if (Meta != null)
+            {
+                deepest = Meta.DeepestWaveReached;
+                if (deepest < 1) deepest = 1;
+                banked = Meta.BankedSalvage;
+            }
+
+            return new EndSummary
+            {
+                Kind = kind,
+                GrossEarned = r.grossEarned,
+                RepairSpent = r.repairSpent,
+                Net = net,
+                DeepestWave = deepest,
+                Banked = banked
+            };
         }
 
         /// <summary>Either terminal phase (Lost lose screen or Escaped success screen): keep the
@@ -102,6 +134,14 @@ namespace GatekeeperBastion.Game
         public void ReturnToShip()
         {
             if (_leavingScene) return;
+
+            if (_net != null && _net.IsClientOnly)
+            {
+                _leavingScene = true;
+                _net.ShutdownSession();
+                return;
+            }
+
             if (Sim == null || !IsTerminal(Sim.Phase))
             {
                 Log.Warn(Tag, $"ReturnToShip ignored (phase {(Sim == null ? "no-sim" : Sim.Phase.ToString())}).");
@@ -112,6 +152,9 @@ namespace GatekeeperBastion.Game
             if (Meta != null) Meta.PayloadLoadoutLocked = false;
             Log.Event("Ship", $"returning to the ship — {(Meta != null ? Meta.BankedSalvage : 0)} banked");
             GameSession.Save();
+
+            if (_net != null && _net.Active)
+                _net.ShutdownSession();
 
             if (SceneFlow.LoadShip()) return;
 

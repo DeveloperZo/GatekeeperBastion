@@ -1,12 +1,14 @@
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
     /// <summary>HOST-ONLY: placed decoy prop. Stats pushed at spawn — never serialized.
     /// Player fire cannot damage it: there is no <see cref="Damageable"/>; Gatekeepers call
-    /// <see cref="ApplyDamage"/> with their Hatch-damage value.</summary>
+    /// <see cref="ApplyDamage"/> with their Hatch-damage value. A networked prefab is spawned
+    /// when a session is live; solo still builds a primitive.</summary>
     public sealed class DecoyObject : MonoBehaviour
     {
         const string Tag = "Decoy";
@@ -36,7 +38,7 @@ namespace GatekeeperBastion.Game
             {
                 Log.Event(Tag, $"destroyed — absorbed {_bay.State.AbsorbedSeconds:0.##} gatekeeper-seconds total");
                 _bay.NotifyDestroyed(this);
-                Destroy(gameObject);
+                DespawnInternal();
             }
             return destroyed;
         }
@@ -46,15 +48,50 @@ namespace GatekeeperBastion.Game
         /// DESTROY paths live in this file; nothing else destroys a live decoy.</summary>
         public void Despawn()
         {
+            DespawnInternal();
+        }
+
+        void DespawnInternal()
+        {
+            var net = GetComponent<NetworkObject>();
+            if (net != null && net.IsSpawned)
+            {
+                var nm = NetworkManager.Singleton;
+                if (nm != null && nm.IsServer) net.Despawn(true);
+                return;
+            }
             Destroy(gameObject);
         }
 
-        /// <summary>Build a gray-box decoy at world position. Caller registers it with the bay.</summary>
-        public static DecoyObject Spawn(Vector3 position, DecoyBay bay, float hp)
+        /// <summary>Build a decoy at world position. Caller registers it with the bay.
+        /// When <paramref name="networkPrefab"/> is set and this instance is the server,
+        /// the prefab is spawned as a NetworkObject; otherwise a local primitive.</summary>
+        public static DecoyObject Spawn(Vector3 position, DecoyBay bay, float hp,
+            GameObject networkPrefab = null)
+        {
+            Vector3 at = position + Vector3.up * 0.6f;
+            var nm = NetworkManager.Singleton;
+            if (networkPrefab != null && nm != null && nm.IsListening && nm.IsServer)
+            {
+                var go = Object.Instantiate(networkPrefab, at, Quaternion.identity);
+                go.transform.localScale = new Vector3(0.9f, 0.6f, 0.9f);
+                var decoy = go.GetComponent<DecoyObject>();
+                if (decoy == null) decoy = go.AddComponent<DecoyObject>();
+                decoy.Configure(bay, hp);
+                var net = go.GetComponent<NetworkObject>();
+                if (net != null && !net.IsSpawned)
+                    net.Spawn(true);
+                return decoy;
+            }
+
+            return SpawnPrimitive(at, bay, hp);
+        }
+
+        static DecoyObject SpawnPrimitive(Vector3 at, DecoyBay bay, float hp)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             go.name = "Decoy";
-            go.transform.position = position + Vector3.up * 0.6f;
+            go.transform.position = at;
             go.transform.localScale = new Vector3(0.9f, 0.6f, 0.9f);
 
             // Ignore Raycast so player fire never finds a Damageable / collider hit on the decoy.

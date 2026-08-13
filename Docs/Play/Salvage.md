@@ -1,4 +1,4 @@
-<!-- Purpose: the currency — where it comes from, why it is safe, and what competes for it. / Status: working / Update trigger: when the award path, the repair charge, or the Run-end settlement changes. / Last updated: 2026-08-06 -->
+<!-- Purpose: the currency — where it comes from, why Unbanked is at risk until a Hatch-bank, and what competes for it. / Status: working / Update trigger: when the award path, Hatch-bank convert, the repair charge, or the Run-end settlement changes. / Last updated: 2026-08-13 -->
 
 # Salvage
 
@@ -6,17 +6,17 @@ Salvage is the only currency in the game. There is nothing else to collect, no s
 
 ## How you earn it
 
-**By killing Gatekeepers, and by nothing else.** Nothing pays per second. The quiet of Prep earns nothing. Walking the room earns nothing. Clearing the Bastion pays no completion bonus — a cleared Run pays exactly what its kills paid, no more.
+**By killing Gatekeepers, and by nothing else — until you Hatch-bank.** A kill fills Unbanked. Prep `T` at the Hatch starts a Hatch-bank Wave: drip while it is live, dump on clear. That convert is what credits the ship. The quiet of Prep earns nothing. Walking the room earns nothing. Clearing the Bastion pays no completion bonus.
 
-What one body is worth is your Scavenging level multiplied by wherever you left the siphon dial. Those two multiply against each other, so a high dial is worth more to a player who has invested in Scavenging than to one who has not.
+What one body is worth is your Scavenging level multiplied by wherever you left the siphon dial. Those two multiply against each other, so a high dial is worth more to a player who has invested in Scavenging than to one who has not. A fatter Unbanked pile converts at a higher multiplier.
 
-## Why it is safe
+## Why it is at risk
 
-**A Gatekeeper's Salvage is in your bank the instant it drops.** Not at the end of the Wave, not when you get back to the Ship, not if you survive. The moment it dies.
+**A Gatekeeper's Salvage sits Unbanked until a Hatch-bank.** Not in your shop purse the moment it drops. Down, or Hatch to zero, wipes what you have not converted. What already dripped or dumped stays on the ship.
 
-This is the whole reason the Runs can be as dangerous as they are. Being Lost takes nothing back. Losing the Hatch takes nothing back. There is no stake, no forfeit, no percentage lost on death. A Run that fell apart early still paid you for every body you put down before it did, and that money buys the thing that gets you further next time.
+This is why leaving the Hatch is an economy, not just a door. Being Lost keeps converted Salvage. Losing the Hatch keeps converted Salvage. There is no named forfeit. A Run that fell apart early paid you only for what made it through a Hatch-bank.
 
-The only difference between a Run you clear and a Run you lose is which counter ticks.
+A Run you convert through a Hatch-bank and a Run you lose differ in whether leftover Unbanked survives. Converted Salvage stays either way. Wave 5 does not convert leftover and does not wipe it. See [A Run](A-Run.md).
 
 ## The one thing that takes it back
 
@@ -36,9 +36,13 @@ Everything wants the same pile:
 
 There is no order that is correct for everyone, but there is a wrong instinct: treating the bank as a score. It is not banked so you can look at it. See [Upgrades](Upgrades.md) for what to do with it.
 
+## See also
+
+[The Hatch](The-Hatch.md). [The Siphon Dial](The-Siphon-Dial.md). [Upgrades](Upgrades.md). [A Run](A-Run.md).
+
 ## Gaps
 
-- The game never tells you Salvage is banked per kill rather than at the end of a Wave. The only cue is the counter moving mid-fight, and you have to be looking at it.
+- The HUD shows Unbanked and Banked separately. Kills move Unbanked; Banked moves during a Hatch-bank.
 - It never tells you that a Gatekeeper killed outside a live Wave pays nothing.
 - Every station panel shows lifetime earned and lifetime spent. Neither is explained anywhere, neither is a resource, and neither can be used for anything.
 - If a save is old or damaged, those lifetime figures are silently rebuilt from what you own. Your bank is always the truth; the lifetime lines may be a reconstruction.

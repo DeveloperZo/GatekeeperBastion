@@ -42,6 +42,10 @@ The NAV MAP will warn you loudly if you own no weapon and then let you go anyway
 
 **Save the big weapon purchase for when you know which fight you want.** A Primary is fixed for the whole Run, and its upgrade wheel does not follow you to the next gun. Buying one is committing to a range and a cadence, not just spending money.
 
+## See also
+
+[Upgrades](Upgrades.md). [Weapons](Weapons.md). [A Run](A-Run.md). [The Hatch](The-Hatch.md).
+
 ## Gaps
 
 - The ship never tells you that repairing the Hatch costs Salvage. FABRICATION sells the repair rig and quotes its rate, and there is no price per point healed anywhere on the hub. You find out standing at the door mid-Run, with the bill already running.

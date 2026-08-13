@@ -148,7 +148,7 @@ point (that belongs to Utility).
 ### MK-1 Sidearm — faster ammo regeneration (Zo, 2026-08-07)
 
 The Secondary regenerates its own ammo (see the ammo model in
-`../../Brainstorms/armory-and-weapons.md`). Its ability makes that regeneration run faster.
+`../../Brainstorms/closed/armory-and-weapons.md`). Its ability makes that regeneration run faster.
 
 It rewards actually holding the Secondary rather than treating it as a backup, and it is
 **self-contained** — it reads nothing about the Primary. That is the rule the rejected

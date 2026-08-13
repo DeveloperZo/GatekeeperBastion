@@ -119,6 +119,11 @@ field to check if a Wave feels empty. **The dial's surplus is all Default** (Hun
 Ram counts are fixed per Wave), so L5 Wave 3 is 55 D + 6 H + 2 R: a bigger fight, not a
 different one, and the dial cannot multiply the scariest Gatekeeper.
 
+**`TerminalChainGap = 8s`** (`WaveDirector`). Prep after a field-terminal Wave clears
+before the next Wave of that Interact. Middle of a 5–10 s band. Not `InterWaveGap`
+(3 s after *delivery* during a deep-start overlap). Tier #12 serving the #9 rule
+(one Interact starts N). Do not retune `InterWaveGap` to steal this job.
+
 **One table drives reward AND body count, on purpose**: `WaveDirector` reads
 `TetherSiphon`, so payout and pressure cannot drift apart (it used to charge on three
 axes at once: +600% Gatekeeper HP for +50% money). +50% bodies for +50% money is break-even
@@ -175,6 +180,25 @@ free.
 | repair rig | **300** Salvage, flat 8 HP/s |
 <!-- GKB:END hatch -->
 
+## Hatch-bank (M53)
+
+Kills fill `RunSim.Unbanked`. Only a Hatch-bank converts to the ship. The convert
+multiplier is snapshotted from Unbanked at Hatch-bank start and applied to drip and dump.
+The window is `DurationSeconds`; Unbanked hitting 0 does not end it. Leftover dumps when
+the timer ends.
+
+<!-- GKB:GEN hatch-bank — HatchBank.SlotsPerRun, DripPerSecond, DurationSeconds, MidAt, HighAt, Mult*, WithdrawPerSecond -->
+| | |
+|---|---|
+| slots / Run | 3 |
+| drip | 20 unbanked/s |
+| duration | 45 s |
+| convert < 400 | ×1.00 |
+| convert 400–799 | ×1.25 |
+| convert ≥ 800 | ×1.50 |
+| withdraw | 16 salvage/s |
+<!-- GKB:END hatch-bank -->
+
 Arithmetic for the 300/300 pair: a Run that dies on Wave 2 banks ~900 at dial 0 (pacing
 tables), so 600 fits inside one post-loss Run alongside a 400 wheel purchase — and prices the tool at
 exactly one full 300 HP repair (600 at 2/HP).
@@ -211,12 +235,13 @@ side of M23 are not comparable on anything involving the door. *Whether the rig 
 feeling compulsory rather than chosen is unknown and needs play data* — M23 carries the
 fallback if it does.
 
-**Kill awards floor once (M22).** `AwardKill` takes `floor(CurrentKillValue)` and credits
-that integer to both `MetaState.BankedSalvage` and `SalvageLedger.RunSalvage`. Pre-M22 logs
+**Kill awards floor once (M22).** `AwardKill` takes `floor(CurrentKillValue)` into
+`RunSim.Unbanked`. Hatch-bank drip and dump credit that converted integer to both
+`MetaState.BankedSalvage` and `SalvageLedger.RunSalvage`. Pre-M22 logs
 that quote an end-of-Run `earned` figure are not comparable to post-M22 `gross` / `net`
 lines: the old tally kept fractional kill value and floored once at report time, so a
 fractional dial overstated the take by about `0.25 × kills` at dial 3 (measured 19 and 21
-Salvage of drift on 2026-08-04 Runs).
+Salvage of drift on 2026-08-04 Runs). Instant kill-into-bank ended with M53.
 
 ## Upgrade tracks
 

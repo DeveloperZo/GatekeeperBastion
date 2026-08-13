@@ -192,7 +192,7 @@ namespace GatekeeperBastion.EditorTools
 
         static void RebuildBastionGeometry()
         {
-            // M47: Bastion playable geometry is kit-authored. Never regenerate freestyle floors/walls.
+            // Bastion playable geometry is kit-authored. Never regenerate freestyle floors/walls.
             CreateEnemyPrefabs(CreatePalette()); // SceneBuilder.Enemies.cs — asset refresh, stable GUIDs
 
             if (BastionSceneHasKitSegments())
@@ -206,7 +206,7 @@ namespace GatekeeperBastion.EditorTools
 
             Debug.LogError(
                 "[SceneBuilder] Bastion.unity has no BastionSegment under Environment — Build All will not " +
-                "generate freestyle bastion geometry (M47 closed). Author kit segments or restore from VCS.");
+                "generate freestyle bastion geometry. Author kit segments or restore from VCS.");
         }
 
         /// <summary>Rebake <c>Bastion-NavMesh.asset</c> from current Environment children (kit floors

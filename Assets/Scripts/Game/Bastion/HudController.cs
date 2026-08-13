@@ -61,6 +61,7 @@ namespace GatekeeperBastion.Game
 
         long _cacheAlive = long.MinValue;
         long _cacheAssaultWave = long.MinValue;
+        long _cacheHatchBankSec = long.MinValue;
         bool _missionDrawerAutoOpened;
 
         PlayerHealth Player => PlayerRegistry.Local;
@@ -186,6 +187,7 @@ namespace GatekeeperBastion.Game
             ResolveRefs();
             OptionsScreen.TickDisplayRevert();
             TickEscape();
+            TickClientEndDismiss();
 
             var player = Player;
             if (player != null)
@@ -213,19 +215,6 @@ namespace GatekeeperBastion.Game
             return sim.Assault;
         }
 
-        void ReadAssaultReadout(RunSim sim, out AssaultState assault, out int wave, out int alive)
-        {
-            assault = ViewAssault(sim);
-            wave = sim.CurrentWaveIndex;
-            alive = _spawner != null ? _spawner.AliveCount : 0;
-            var net = _game != null ? _game.Net : null;
-            if (net == null || !net.IsClientOnly) return;
-            var mirror = net.Mirror;
-            if (mirror == null) return;
-            wave = mirror.Wave.Value;
-            alive = mirror.Alive.Value;
-        }
-
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         void OnGUI()
         {
@@ -251,6 +240,9 @@ namespace GatekeeperBastion.Game
             }
 
             float hp = sim.Ship.Hatch.Hp;
+            var net = gc.Net;
+            if (net != null && net.IsClientOnly && net.Mirror != null)
+                hp = net.Mirror.HatchHp.Value;
             if (_lastHatchHp >= 0f && hp < _lastHatchHp - 0.01f) _hatchAlert = HatchAlertSeconds;
             _lastHatchHp = hp;
         }
@@ -323,6 +315,9 @@ namespace GatekeeperBastion.Game
 
             try
             {
+                if (TryPushClientEnd())
+                    return;
+
                 if (_shownPhase != sim.Phase
                     || (sim.Phase == RunPhase.Tethered && _shownAssault != ViewAssault(sim)))
                     ApplyPhase(sim);

@@ -43,7 +43,7 @@ delivery mechanism; the test lands on each payload.
 The station is centered on a **drone the player outfits with one payload per Run**. The
 payload gives the player an activated ability — **player-activated, not autonomous**
 (Zo, same day). This absorbs the carried-Utility item list from
-[`armory-and-weapons`](armory-and-weapons.md) **wholesale**: the intent of every item is
+[`armory-and-weapons`](closed/armory-and-weapons.md) **wholesale**: the intent of every item is
 unchanged, the mechanism is recentered on the drone. Zo's four named payload types:
 mine, turret, decoy, ammo.
 
@@ -154,7 +154,7 @@ Link, never restate. If a detail below matters, it lives in the milestone.
 ## The payload roster
 
 **One table; `state` is the only place a row's status lives.** Codes, states and
-refusal grammar carried over from `armory-and-weapons.md` (migrated 2026-08-08).
+refusal grammar carried over from `closed/armory-and-weapons.md` (migrated 2026-08-08).
 
 | Code | Refuses | Identity in one line | State |
 |---|---|---|---|
@@ -243,4 +243,4 @@ are waiting on exactly this outfitting layer.
 - Every payload states which term of `arrivals x dwell` it reduces; the gatekeeper-second
   budget (`../Design/3-Mechanics.md`) is the unit.
 - Any ammo payload must not delete the dry-Primary state — the Secondary class's axis
-  (`armory-and-weapons.md`, decided 2026-08-07) depends on running dry being real.
+  (`closed/armory-and-weapons.md`, decided 2026-08-07) depends on running dry being real.

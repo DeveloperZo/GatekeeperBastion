@@ -4,8 +4,8 @@
 Purpose: the ubiquitous language of Gatekeeper Bastion. One name per thing, used in code,
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
-Update trigger: when a term is added, renamed, or retired — in the same commit as the rename.
-Last updated: 2026-08-12
+Update trigger: when a term is added, renamed, or retired, or when player-facing voice rules change.
+Last updated: 2026-08-13
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in
@@ -72,9 +72,11 @@ everything the game contains.
 | **embark** | Leaving the Ship for the Bastion, from the NAV MAP. | deploy, launch, start mission |
 | **Prep** | The quiet state between Waves. Untimed, pays nothing, the only time the dial moves. | downtime, intermission, break |
 | **Assault** | The state while a Wave is live. | combat, the fight |
-| **the Siphon Draw** | The player action that starts a Wave. Written as one term; the binding, the HUD and the log all say it. | spawn, trigger, call the wave, the draw *(alone)* |
-| **Wave** | One delivery of Gatekeepers, started by one Siphon Draw. | round, horde |
-| **cleared** / **stripped** | Every Wave in the Run beaten. The Boarder escapes through the Hatch. | won, completed, extracted |
+| **the Siphon Draw** | Retired as the Wave-start verb (M52). The dial still exists until M55. Prep `T` at the Hatch is **Hatch-bank**; elsewhere it is a logged refusal. | spawn, trigger, call the wave, the draw *(alone)* |
+| **Wave** | One delivery of Gatekeepers. Interact at a **field terminal** starts that terminal's remaining Waves (a short gap after each clear). Prep `T` at the Hatch is Hatch-bank. | round, horde |
+| **field terminal** | A bastion console marked **T**. Interact in Prep starts its remaining Boarder-hunt Waves. N clears complete it and open its **D**. | station *(alone)*, objective, console *(the Ship's four are stations)* |
+| **cleared** / **stripped** | Field Waves beaten. Wave 5 with leftover Unbanked is field stripped, not Escaped. | won, completed, extracted |
+| **Escaped** | Terminal, good: Wave 5 with nothing Unbanked. Hatch-bank after that stays aboard. | won, victory |
 
 A Run that ends badly is **lost**: the Boarder went down, or the Hatch fell. It is listed
 under Run phases below only because `RunPhase.Lost` is a real enum value the code branches
@@ -91,7 +93,7 @@ are named here.
 | **Docked** | Aboard the Ship. Not yet boarded. | menu, lobby, idle |
 | **Tethered** | Aboard the Bastion with the tether live. The whole fight happens here. | in-run, active, boarded |
 | **Spooling** | Reserved, unused in v0 — the escape window after the tether is cut. | *(do not use it for anything else)* |
-| **Escaped** | Terminal, good: every Wave cleared. | won, victory |
+| **Escaped** | Terminal, good: Wave 5 with nothing Unbanked. | won, victory |
 | **Lost** | Terminal, bad: the Boarder went down or the Hatch fell. | podded *(retired)*, death, game over, wipe, fail |
 
 ### What comes at you
@@ -134,8 +136,10 @@ mark in the commit that builds it.
 
 | Term | Means | Never called |
 |---|---|---|
-| **Salvage** | The only currency. Banked the instant a Gatekeeper dies. | credits, scrap, cash, resources |
-| **banked** | Salvage the player holds and can spend. | stored, saved |
+| **Salvage** | The only currency. Kills fill **unbanked**; only a **Hatch-bank** converts it to the ship. | credits, scrap, cash, resources |
+| **unbanked** | Salvage earned this Run that has not gone through the Hatch. Lost on down or Hatch breach. | floating, pending, at-risk |
+| **Hatch-bank** | Prep `T` while looking at the Hatch: a Wave that converts unbanked to the ship. Capped per Run. | extract, cash-out, deposit |
+| **banked** | Salvage on the ship that the player can spend. | stored, saved |
 | **the siphon dial** | The per-Wave wager: more Salvage per Gatekeeper, more Gatekeepers. | difficulty, risk slider, multiplier |
 | **track** | A permanent upgrade line at CREW QUARTERS or FABRICATION. | skill, perk, stat line |
 
@@ -161,6 +165,47 @@ Written in caps in player-facing text, matching what the player reads on the con
 | **CREW QUARTERS** | The Boarder's Crew abilities (*designed*). Today still sells attribute tracks. | barracks, skills |
 | **FABRICATION** | The Ship's gear and the Hatch. | workshop |
 | **NAV MAP** | Where you go, and going there. | map, bridge, terminal |
+| **Compendium** | The Boarder's working knowledge of the game: volumes of related entries (situation, Run, Bastion, garrison, arms, hull), not a glossary of terms. Markdown lives in `Docs/Play/` (M28 language lint). In-game reader is `M62`. | Codex, encyclopedia, wiki, lore bible, Hyrule Compendium, Persona Compendium |
+
+## Player-facing voice
+
+Applies to `Docs/Play/` and to any string a Boarder reads in the build. Builder docs keep
+the agent voice in `AGENTS.md`. This register will move as the game does; changing it is
+an edit to this section, in the same change as the pages it recuts.
+
+The Compendium is working knowledge, written as the Boarder already in the place. Form
+references are builder-only (never those titles in player text): Mass Effect's Codex
+(volumes, Primary vs appendix) and God of War 2018's journal (practical and world in the
+same pause entry).
+
+**Entry shape.** A kind or weapon page is an origin plus the fight tells, finishable in
+one pause. A hub (`The-Game`, `Gatekeepers`, `Weapons`, `The-Ship`, `A-Run`) is 2–4 short
+paragraphs per section, same budget. Numbers and bindings live in the Field Manual
+appendix. `## See also` is the cross-link; in-game bodies do not need a full markdown
+engine. `## Gaps` is builder audit; the reader omits it.
+
+Test a Play page by reading the visible body (skip HTML comments and `## Gaps`). One hit
+fails.
+
+| # | Rule | Good | Banned |
+|---|---|---|---|
+| 1 | Person is *you* / the Boarder. No *I*, named diarist, or "the player". | "You cut in. They are already home." | "I've watched them stomp…" / "The player should…" |
+| 2 | Sentence one is a situating fact in this world. | "The Ram is walking to the Hatch." | "A first-person Wave-defense game…" |
+| 3 | The first paragraph states a playable rule the HUD does not print. | "Shooting it does not provoke it." | Opening that only restates HP, clip, or a key already on pause. |
+| 4 | Numbers and bindings only by linking Field Manual. | "How many: [Field Manual](Field-Manual.md)." | "The Ram has 180 HP." / "Press F." |
+| 5 | No milestone IDs, "not built", or builder paths in the visible body. | The page describes what ships. | "M23 shipped the Repair Rig." |
+| 6 | No never-called terms from the table above. | Hatch, Gatekeeper, siphon draw. | Codex, encyclopedia, wiki, enemy, aggro, mission. |
+| 7 | Humor is the situation's exactness. No pun, slang persona, or pop-culture aside. | "You are scenery." | "Think of it as the tank from every horde game." |
+| 8 | Fiction is a frame, not a plot. No byline, Day N, or origin myth. | "Gatekeepers hold the Bastion." | "Day 12. The garrison still will not yield. — J." |
+| 9 | `## See also` names at least one other Play page. The page is not a glossary stub. | Ram → Hatch, Waves. | "Ram — a large Gatekeeper." as the whole page. |
+| 10 | No analysis vocabulary (rule 3). | "A group arrives together." | `gatekeeper-seconds`, `hatchDist`. |
+| 11 | Visible body starts as player prose. HTML comments and `## Gaps` are not the opening. | First readable line is the title, then the world. | Purpose / Status as the thing a Boarder reads. |
+| 12 | Do not teach by citing another game or by riddle. | "They arrive from garrison to repel an intrusion." | "Like a Left 4 Dead tank…" |
+
+Always-on for friends alpha: every shipped entry is readable from the first pause. Unlock-
+on-encounter, a companion diary, a completion ledger, and a stat-block-as-entry are
+refused. Destiny's Grimoire (lore outside the game) is the shape this folder exists to
+prevent.
 
 ## Language check (machine-readable)
 
@@ -170,7 +215,7 @@ a term retired without a row here is a term the check does not know about (M28).
 ```language-lint
 # Comma-separated lists. Keys are fixed; the script parses this fence only.
 retired=derelict,Podded,podded,breach point,muster point
-builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization,hatchDist,spawnDist
+builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization,hatchDist,spawnDist,Wave-defense,encyclopedia,lore bible,Codex
 stations_title=Armory,Crew Quarters,Fabrication,Nav Map
 boarder_enemy=boarders expected,the boarders,boarder kind,boarder-seconds
 ```

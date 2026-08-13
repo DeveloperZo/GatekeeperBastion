@@ -9,8 +9,11 @@ namespace GatekeeperBastion.Util
     /// Passthrough file sink. Everything the process sends to Debug.* — ours, Unity's, any
     /// package's — is written to one file per session:
     ///
-    ///     Editor : &lt;projectRoot&gt;/Logs/GatekeeperBastion_yyyy-MM-dd_HH-mm-ss.log
-    ///     Player : Application.persistentDataPath/Logs/GatekeeperBastion_yyyy-MM-dd_HH-mm-ss.log
+    ///     Editor : &lt;projectRoot&gt;/Logs/GatekeeperBastion_yyyy-MM-dd_HH-mm-ss_p{pid}.log
+    ///     Player : Application.persistentDataPath/Logs/GatekeeperBastion_yyyy-MM-dd_HH-mm-ss_p{pid}.log
+    ///
+    /// The pid suffix is load-bearing for MPPM: two processes that enter Play in the same
+    /// second would otherwise FileMode.Create the same path and wipe the first file.
     ///
     /// Line format: [HH:mm:ss.fff] [Log|Warning|Error] message   (wall clock, Unity's own level
     /// words). Stack traces are appended for errors and exceptions only.
@@ -22,8 +25,9 @@ namespace GatekeeperBastion.Util
     {
         public const string Product = "GatekeeperBastion";
 
-        /// <summary>Session files retained; older ones are deleted when a new session opens.</summary>
-        public const int KeepSessions = 15;
+        /// <summary>Session files retained; older ones are deleted when a new session opens.
+        /// MPPM writes one file per process, so this is roughly half as many Play sessions.</summary>
+        public const int KeepSessions = 30;
 
         static readonly object Gate = new object();
         static StreamWriter _writer;
@@ -59,8 +63,9 @@ namespace GatekeeperBastion.Util
                     System.IO.Directory.CreateDirectory(dir);
                     Prune(dir);
 
+                    int pid = System.Diagnostics.Process.GetCurrentProcess().Id;
                     string path = Path.Combine(
-                        dir, Product + "_" + now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log");
+                        dir, Product + "_" + now.ToString("yyyy-MM-dd_HH-mm-ss") + "_p" + pid + ".log");
 
                     var stream = new FileStream(path, FileMode.Create, FileAccess.Write,
                                                 FileShare.ReadWrite | FileShare.Delete);
@@ -70,6 +75,7 @@ namespace GatekeeperBastion.Util
                     _writer.WriteLine("=====================================");
                     _writer.WriteLine("Gatekeeper Bastion Log File");
                     _writer.WriteLine("Started: " + now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    _writer.WriteLine("Process: " + pid);
                     _writer.WriteLine("Unity Version: " + Application.unityVersion);
                     _writer.WriteLine("Platform: " + Application.platform);
                     _writer.WriteLine("Device: " + SystemInfo.deviceName + " (" + SystemInfo.deviceModel + ")");

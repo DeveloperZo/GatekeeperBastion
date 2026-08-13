@@ -3,7 +3,7 @@
 <!--
 Purpose: The multiplayer epic beyond the filed slices — what is deliberately after a full loopback run, and the open design questions the slices must not decide by accident.
 Status: brainstorm
-Update trigger: when a filed slice (M49–M51) ships or is re-cut, or when the Steam entry graduates.
+Update trigger: when a filed slice (M50–M51 / M57–M60) ships or is re-cut.
 Last updated: 2026-08-13
 -->
 
@@ -13,37 +13,44 @@ Everything co-op that is not yet a milestone. The decided ground lives in
 `../Decisions.md` (NGO, host-client, server-authoritative sim, client-auth own-movement,
 Steam relay eventually) and is not re-argued here. The filed slices, in execution order:
 [`M48`](../Milestones/3.%20completed/M48-the-first-networked-kill.md) (first networked kill +
-the in-process test rig),
-[`M49`](../Milestones/2.%20active/M49-the-gatekeepers-see-the-second-player.md) (the client
-is huntable and downable; no revive — gate cut 2026-08-13),
-[`M50`](../Milestones/1.%20planned/M50-the-client-lives-the-run.md) (the run's readout and
-endings on the client), and
-[`M51`](../Milestones/1.%20planned/M51-the-clients-hands.md) (repair, decoys and abilities
-over the wire — completes the loopback run). M50 and M51 were authored ahead of M48/M49
-landing on Zo's call (2026-08-12) and each carries a re-cut-before-start update trigger.
+the in-process test rig; shipped 2026-08-13),
+[`M49`](../Milestones/3.%20completed/M49-the-gatekeepers-see-the-second-player.md) (the client
+is huntable and downable; shipped 2026-08-13, Zo playtest),
+[`M50`](../Milestones/3.%20completed/M50-the-client-lives-the-run.md) (the run's readout and
+endings on the client; shipped 2026-08-13, fixture close),
+[`M51`](../Milestones/3.%20completed/M51-the-clients-hands.md) (repair, decoys and abilities
+over the wire — loopback run complete; shipped 2026-08-13, fixture close),
+[`M57`](../Milestones/1.%20planned/M57-the-downed-player-waits-on-the-ship.md) (get-up),
+[`M58`](../Milestones/1.%20planned/M58-a-build-two-machines-can-run.md) (player build),
+[`M60`](../Milestones/1.%20planned/M60-a-join-a-friend-can-use.md) (Steam join). M50 and M51
+were authored ahead of M48/M49 landing on Zo's call (2026-08-12) and each carries a
+re-cut-before-start update trigger.
 
 ## Where it stands
 
 M45 (completed 2026-08-12) removed the retrofit cost: no static mutable state in `Sim/`,
 registry-driven targeting, one gameplay `Instantiate` site, `RunContext`. M48 shipped the
-kill loop (2026-08-13). M49 is in build: the client becomes huntable. The epic's testability
+kill loop (2026-08-13). M49 shipped (2026-08-13, Zo playtest): the client is huntable and
+downable; down does not end the host Run. M50 shipped (2026-08-13, fixture close): readout
+and endings on the client. M51 shipped (2026-08-13, fixture close): client repair,
+decoy and world-acting abilities apply once, server-side. M57 planned
+(get-up). M58 planned (player build). M60 planned (Steam join). The epic's testability
 story is the `NetcodeIntegrationTest` fixture — every slice writes its gate against it and
 closes headless in the integration check — the single-developer constraint (Zo, 2026-08-12)
 makes that non-negotiable, so **a slice whose gate cannot be phrased against the fixture is
 not ready to graduate.**
 
+## Graduated — these left this file
+
+Link, never restate.
+
+| What | Milestone |
+|---|---|
+| In-run client verbs (repair, decoy, abilities) | [`M51`](../Milestones/3.%20completed/M51-the-clients-hands.md) |
+| Client down wait / get-up | [`M57`](../Milestones/1.%20planned/M57-the-downed-player-waits-on-the-ship.md) |
+| Steam, and a join surface a friend can use | [`M60`](../Milestones/1.%20planned/M60-a-join-a-friend-can-use.md) |
+
 ## Ideas
-
-### Steam, and a join surface a friend can use
-
-Facepunch transport over Steam relay (the decided path, with its known maintenance risk —
-`../Decisions.md` states the cost), a main-menu host/join surface replacing the F10/F11
-dev keys, and session lifecycle a non-developer can survive: join-in-Tethered, clean
-disconnect, host-quit messaging. Explicitly not host migration (rejected in M45's table).
-
-**Graduation test:** a full co-op run completes over loopback (M51 shipped) — transport
-swapping and front-end are worthless before there is a game to join, and the transport
-layer is the most swappable piece in the stack.
 
 ### Guest progression
 
@@ -55,36 +62,20 @@ needs design**, and M50/M51 are written so nothing forecloses it.
 **Graduation test:** M50 shipped and a real two-person run has produced an opinion about
 what the second player deserved from it — this one wants play data, not architecture.
 
-### After the client is down
-
-A loop rule: every co-op run, what the downed second player is doing until the run ends.
-Stay down, stand up on the next wave, revive-by-teammate, or something else — including
-no get-up at all. Solo play says there is no in-Run respawn (`../Play/A-Run.md`).
-
-**Kill it if** a two-person run shows the chosen wait is long enough that the downed
-player leaves, or the host cannot finish because a body they expected back never returns.
-
-**Touches** `NetPlayerAvatar` HP, `PlayerHealth` down, and whichever of `WaveStarted`
-(wave revive) or M50 end screens (stay down until the run ends) the rule picks. M49
-already ships down-does-not-end-the-host-run; it does not restore HP.
-
-**Graduation test:** Zo picks a rule. Cannot graduate while how-or-if is open. Do not
-fold this into M50 — that slice is readout and endings.
-
 ### Second-player presence beyond a capsule
 
 The avatar is deliberately a puppet capsule (M48's rejected-alternatives). A visible
 character rig, name label, third-person animations, a ping wheel, voice — each is real
-design work and none is needed for the loopback epic. Get-up after down is the entry
-above, not presence polish.
+design work and none is needed for the loopback epic. Get-up after down is
+[`M57`](../Milestones/1.%20planned/M57-the-downed-player-waits-on-the-ship.md).
 
-**Graduation test:** the loopback epic shipped and co-op sessions are actually being
-played — presence polish before then is paint on a room with no door.
+**Graduation test:** co-op sessions are actually being played — presence polish before
+then is paint on a room with no door.
 
 ## Watch
 
 - **The fixture cannot test MPPM, transports or the join surface** — those stay eyes-on.
   Keep everything else fixture-first or the single-dev constraint bites back.
-- **Ship-scene co-op is deliberately absent everywhere above.** The run is the game; the
-  ship between runs is host-local until a slice needs otherwise. If that assumption breaks
-  during M50, record it here.
+- **Shared ship-scene co-op is still absent.** M57 owns a client-local additive Ship for
+  the down wait only; the host does not walk a shared ship. If that assumption breaks
+  during a session, record it here.

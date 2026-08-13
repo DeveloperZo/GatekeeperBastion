@@ -44,9 +44,9 @@ namespace GatekeeperBastion.Game
             _view.SetShortcutRows(_shortcutRows, false);
         }
 
-        void PushPrepPanel(RunSim sim, int wave)
+        void PushPrepPanel(RunSim sim, int wave, float hatchHp, float hatchMax, long unbanked)
         {
-            if (sim.AllWavesCleared || wave >= WaveDirector.MaxWaves)
+            if (sim.AllWavesCleared)
             {
                 _view.SetPrepHeading(
                     "<b>BASTION STRIPPED</b> — all " + WaveDirector.MaxWaves + " waves cleared");
@@ -57,46 +57,86 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            // Short card — siphon/currency live TR; wave lives TL. Prep points at field terminals.
             int lvl = sim.Siphon.Level;
-            int here = _waves.NextWave(wave, lvl).enemyCount;
+            bool stripped = wave >= WaveDirector.MaxWaves;
+            int specIndex = stripped ? WaveDirector.MaxWaves - 1 : wave;
+            int here = _waves.NextWave(specIndex, lvl).enemyCount;
             _lineBuf.Clear();
-            _lineBuf.Append("<b>PREP</b>  ·  Wave ").Append(wave + 1).Append('/')
-                .Append(WaveDirector.MaxWaves).Append(" — use a field terminal");
+            _lineBuf.Append("<b>PREP</b>  ·  Wave ");
+            if (stripped)
+                _lineBuf.Append(WaveDirector.MaxWaves);
+            else
+                _lineBuf.Append(wave + 1);
+            _lineBuf.Append('/').Append(WaveDirector.MaxWaves);
+            if (stripped)
+                _lineBuf.Append(" — field stripped");
+            if (sim.SequentialFollowUpRemaining > 0f)
+            {
+                int sec = Mathf.CeilToInt(sim.SequentialFollowUpRemaining);
+                _lineBuf.Append(" — next Wave in ").Append(sec).Append("s");
+            }
+            else
+                _lineBuf.Append(" — use a field terminal");
             _view.SetPrepHeading(_lineBuf.ToString());
 
-            var hatch = sim.Ship.Hatch;
-            bool damaged = hatch.Hp < hatch.MaxHp - 0.01f;
+            bool damaged = hatchHp < hatchMax - 0.01f;
             _lineBuf.Clear();
-            _lineBuf.Append("HATCH ").Append(hatch.Hp.ToString("0")).Append('/')
-                .Append(hatch.MaxHp.ToString("0"));
+            _lineBuf.Append("HATCH ").Append(hatchHp.ToString("0")).Append('/')
+                .Append(hatchMax.ToString("0"));
             if (damaged) _lineBuf.Append("  ·  damaged — repair at hatch");
             else _lineBuf.Append("  ·  sealed");
             _view.SetPrepLine(1, _lineBuf.ToString());
 
             _lineBuf.Clear();
-            _lineBuf.Append(here).Append(" gatekeepers on the next terminal Wave");
+            if (stripped && unbanked > 0L)
+                _lineBuf.Append(here).Append(" gatekeepers on a Hatch-bank");
+            else
+                _lineBuf.Append(here).Append(" gatekeepers on the next terminal Wave");
             if (lvl < TetherSiphon.MaxLevel)
             {
-                int nextCount = _waves.NextWave(wave, lvl + 1).enemyCount;
+                int nextCount = _waves.NextWave(specIndex, lvl + 1).enemyCount;
                 _lineBuf.Append("  ·  [ ] raise L").Append(lvl + 1)
                     .Append(" → ").Append(nextCount);
             }
             _view.SetPrepLine(2, _lineBuf.ToString());
-            _view.SetPrepLine(3, null);
+
+            if (unbanked > 0L && sim.HatchBankSlotsLeft > 0)
+            {
+                _lineBuf.Clear();
+                _lineBuf.Append("<b>Hatch-bank — T at the Hatch</b>  (")
+                    .Append(unbanked).Append(" unbanked, ")
+                    .Append(sim.HatchBankSlotsLeft).Append(" slots)");
+                _view.SetPrepLine(3, _lineBuf.ToString());
+            }
+            else
+                _view.SetPrepLine(3, null);
             _view.SetPrepLine(4, null);
         }
 
-        void PushAssaultPanel(int wave, int remaining)
+        void PushAssaultPanel(RunSim sim, int wave, int remaining)
         {
-            if (remaining == _cacheAlive && wave == _cacheAssaultWave)
+            bool hatchBank = sim.Mode == WaveMode.HatchBank;
+            int bankSec = hatchBank ? Mathf.CeilToInt(sim.HatchBankRemaining) : 0;
+            if (remaining == _cacheAlive && wave == _cacheAssaultWave
+                && bankSec == _cacheHatchBankSec)
                 return;
             _cacheAlive = remaining;
             _cacheAssaultWave = wave;
+            _cacheHatchBankSec = bankSec;
             _lineBuf.Clear();
-            _lineBuf.Append("ASSAULT — wave ").Append(wave).Append('/')
-                .Append(WaveDirector.MaxWaves).Append("   |   enemies remaining: ")
-                .Append(remaining);
+            if (hatchBank)
+            {
+                _lineBuf.Append("HATCH-BANK — ").Append(bankSec).Append("s")
+                    .Append("   |   enemies remaining: ").Append(remaining);
+            }
+            else
+            {
+                int shown = wave;
+                if (shown > WaveDirector.MaxWaves) shown = WaveDirector.MaxWaves;
+                _lineBuf.Append("ASSAULT — wave ").Append(shown).Append('/')
+                    .Append(WaveDirector.MaxWaves).Append("   |   enemies remaining: ")
+                    .Append(remaining);
+            }
             _view.SetAssaultHeading(_lineBuf.ToString());
         }
     }

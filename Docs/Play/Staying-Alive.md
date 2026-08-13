@@ -2,7 +2,7 @@
 
 # Staying Alive
 
-Every tip here comes from a rule in the code, and each one says which rule. Keys and numbers are in the [Field Manual](Field-Manual.md).
+Every tactic here is a rule the room already runs. Bindings and numbers are in the [Field Manual](Field-Manual.md).
 
 The two things that end a Run are your health and the Hatch's, and neither comes back for free. Your health does not come back **at all** during a Run. The Hatch's comes back only when you stand at it with the Repair Rig equipped and spend banked Salvage. So every tactic below is really about the same thing: spending as little of those two pools as possible per Gatekeeper killed.
 
@@ -46,7 +46,7 @@ Three details about the stamina that are not shown to you:
 Each kind is defined by something it will not do, and that refusal tells you what ignoring it costs.
 
 - **Hunters never touch the Hatch.** Ignoring one costs you health and nothing else. If the door is the emergency, a Hunter on your back is the cheaper problem — right up until your health is the emergency instead.
-- **Rams never touch you and cannot be provoked.** Shooting one in the back changes nothing about it: not its target, not its speed, and it does not shout. Ignoring one costs the Hatch a serious bite and costs you nothing. They are slow, which is the offer — you have time to deal with a Ram *if you spend that time on it*.
+- **Rams hunt you on a field-terminal Wave and cannot be provoked.** Shooting one in the back changes nothing about it: not its speed, and it does not shout. Ignoring one costs you a slow, heavy body walking at you.
 - **Marchers are the only kind you can steer**, per the pull rule above.
 
 The practical read: when everything arrives at once, the Rams are on a clock against the door and the Hunters are on a clock against you. You almost always have more slack against the Hunters, because your health can absorb a swing and the Hatch's absorbs the bite badly.
@@ -70,6 +70,10 @@ It needs the Repair Rig equipped — without it, holding the key does nothing �
 
 Groups arrive at one spawn point at a time and the point rotates group by group, so pressure moves around the room predictably once you have watched a Wave. Fight where you can see the approach with something solid between you and the far sightlines, close enough to the Hatch to intercept marchers before they commit to it, far enough that you are not the thing standing where every path converges. That spot exists in the room; find it in your first Prep rather than during a Wave.
 
+## See also
+
+[Gatekeepers](Gatekeepers.md). [The Hatch](The-Hatch.md). [Weapons](Weapons.md). [A Run](A-Run.md).
+
 ## Gaps
 
 Tactics on this page that only work because of behaviour the game never tells you about:
@@ -77,10 +81,10 @@ Tactics on this page that only work because of behaviour the game never tells yo
 - **The permanence of a pull.** Nothing states that provoking a Gatekeeper is permanent for its life. Steering marchers away from the door with a single shot is only reliable because of this, and it is invisible.
 - **The Hatch commit latch.** Nothing states that a Gatekeeper close to the Hatch stops being provokable. Players who learn to pull will keep trying it at the door and quietly get nothing.
 - **The shout not relaying.** Nothing states that alerted Gatekeepers do not alert others. The "one shot pulls one clump" tactic depends entirely on this bound and there is no way to observe it except by inference.
-- **Line-of-sight noticing.** Nothing tells you that an un-provoked Gatekeeper can spot you at range through a clear sightline. Being pulled without firing reads as random aggro.
+- **Line-of-sight noticing.** Nothing tells you that an un-provoked Gatekeeper can spot you at range through a clear sightline. Being pulled without firing reads as random.
 - **The exhaustion latch.** The stamina bar refills visibly while sprint is still locked out. Nothing on screen distinguishes "recovering" from "usable", so the sprint you were counting on can simply not engage.
 - **The stamina regeneration delay**, and that it runs even while a panel is open. Neither is shown.
-- **That sprint outruns a chase and walking does not.** The relationship between your speeds and theirs is the single most important combat fact in the game and it appears nowhere the player can read it.
+- **That sprint outruns a chase and walking does not.** The relationship between your speeds and theirs is the single most important combat fact in the game and it appears nowhere on the Bastion.
 - **That ammo is unlimited.** Never stated, so players ration for no reason.
 - **That Rams cannot be provoked at all.** The HUD gives no feedback distinguishing "this thing is ignoring me" from "I am not doing enough damage", so players empty clips into Rams expecting them to turn.
 - **That repair drains the bank to zero if held.** The prompt shows the rate and the running total, but there is no warning at the point the purse is about to empty.

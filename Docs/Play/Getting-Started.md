@@ -1,10 +1,10 @@
-<!-- Purpose: first-run walkthrough for a new player, in order, plus the mistakes that cost first Runs. / Status: working / Update trigger: when the ship consoles, embark flow, unlock gating, or the first-Wave experience changes. / Last updated: 2026-08-09 -->
+<!-- Purpose: first-run walkthrough for a new player, in order, plus the mistakes that cost first Runs. / Status: working / Update trigger: when the ship consoles, embark flow, unlock gating, or the first-Wave experience changes. / Last updated: 2026-08-13 -->
 
 # Getting Started
 
-You have just installed it. Here is what to do, in order, and the three things that will otherwise eat your first few runs.
+You have just installed it. Here is what to do, in order, and the three things that will otherwise eat your first few Runs.
 
-Every key and every number on this page lives in the [Field Manual](Field-Manual.md). Read the panel in the bottom-left corner of the screen too — it lists whatever is live right now and changes as the state changes.
+The rest of the **Compendium** starts at [The Game](The-Game.md). Every binding and every number on this page lives in the [Field Manual](Field-Manual.md). Pause lists whatever is live right now and changes as the state changes.
 
 ## 1. Get a weapon. This is not optional.
 
@@ -31,19 +31,19 @@ You will load into the Bastion already tethered, standing near the Hatch. It is 
 
 Spend the first Prep looking around: find the Hatch, find the doors, notice how far the room runs. This is free.
 
-## 4. Pull the draw
+## 4. Walk to a field terminal
 
-The first Wave is all basic Gatekeepers — the kind that marches on the Hatch and ignores you until you hurt it. No Hunters, no Rams. It is the gentlest thing the game will ever send you and it exists to teach you the door.
+The first Wave is all basic Gatekeepers. On a Wave you start at a field terminal they come for you, not the Hatch. No Hunters, no Rams. It is the gentlest thing the game will ever send you and it exists to teach you the room.
 
-Shoot them before they reach the Hatch. That is the whole first Wave.
+Look at the terminal and Interact. That starts its Waves — on the first terminal, the Run's full five, with a short quiet after each clear. **T** at the Hatch is Hatch-bank, not a terminal start.
 
-## 5. Clear it, then use the quiet
+## 5. Fight the sequence
 
-When the last one drops you go back to Prep. Nothing else will happen until you pull the draw again. Use the pause: check the Hatch's health on the HUD, repair it if it's damaged (walk to it and hold the interact key, with the Repair Rig equipped), and set the dial if you want to.
+After each Wave drops you get a few seconds of Prep, then the next Wave starts. You do not go back to the terminal. Use the gap: reload, check the Hatch card, set the dial if you want to.
 
-## 6. Repeat, and go home
+## 6. Strip the field, then Hatch-bank
 
-Keep drawing until you clear the last Wave or something kills you. Either way you end on a screen with one button back to the Ship, and either way the money is already yours.
+Clear Wave 5 and the door opens. Unbanked stays. Prep names Hatch-bank — **T** at the Hatch. Survive that Wave and leftover converts. You are still aboard; walk through the door. Go down instead and leftover is gone.
 
 Then spend it. That's the loop.
 
@@ -51,7 +51,7 @@ Then spend it. That's the loop.
 
 ### Mistake 1: assuming you will heal
 
-You will not. There is no healing in a Run — no regeneration, no pickup, no medkit, no respawn. Health refills exactly once, at run start. The damage you take shrugging off the first Wave is damage you still have on the last one.
+You will not. There is no healing in a Run — no regeneration, no pickup, no medkit, no respawn. Health refills exactly once, at run start. The damage you take shrugging off the first Wave is damage you still have on the last one. In co-op, a second Boarder's down does not end the Run; the host's does.
 
 This changes how you should play from the very first Gatekeeper: taking a swing is not a cost you pay and recover from, it is a permanent bite out of the Run. Avoid damage you could have avoided even when you are winning comfortably.
 
@@ -63,7 +63,7 @@ Three things to internalise:
 
 - The Hatch does not repair itself. It only comes back when you stand at it and hold the repair — and only with the **Repair Rig** equipped. Without the Rig, holding the key does nothing at any price.
 - Repairing **costs banked Salvage per point of health** — the same purse you buy upgrades with. It is not free, and the game will happily drain your bank to zero doing it. That is usually the right trade, because a lost run stops the income entirely, but decide it rather than discovering it.
-- With an empty bank you cannot repair at all. On your very first Run you have nothing banked until you start killing, so the door is genuinely unfixable until income starts.
+- With an empty bank you cannot repair at all. On your very first Run you have nothing banked until a Hatch-bank converts, so the door is genuinely unfixable until then.
 
 Fix it during Prep, when nothing is hitting you. Fixing it during an Assault means standing still at the exact spot everything is walking toward.
 
@@ -78,6 +78,10 @@ So on a fresh save, banking a pile of Salvage and going to the ARMORY to make yo
 - **The dial starts at its lowest setting and nothing forces you to touch it.** You can leave it alone while you learn — but it is free money on the early Waves, and it only ever adds the basic marching kind.
 - **Freeing the cursor stops you firing.** If you press the free-cursor key and then wonder why left-click does nothing, click once to recapture it.
 - **Ammo is unlimited.** You have no reserve to run out of; reloading always refills the clip. Reload whenever you have a spare second.
+
+## See also
+
+[The Game](The-Game.md). [The Ship](The-Ship.md). [A Run](A-Run.md). [Field Manual](Field-Manual.md).
 
 ## Gaps
 

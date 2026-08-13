@@ -4,7 +4,7 @@
 Purpose: Authoring contract for files under Docs/Brainstorms/. A brainstorm is a mechanic area that is wanted but not yet specifiable; this file says what one contains and how it graduates into a milestone.
 Status: working
 Update trigger: when the brainstorm shape or the graduation rule changes.
-Last updated: 2026-08-06
+Last updated: 2026-08-13
 -->
 
 A **brainstorm** is a mechanic area the project intends to develop but cannot yet cut
@@ -44,11 +44,21 @@ unattributed assertion is indistinguishable from something an agent invented.
 
 ## Where they live
 
-`Docs/Brainstorms/<area>.md`. **No status folders** — every file here has the same
-status, which is *not yet a milestone*. One file per mechanic area, not per idea; ideas
-are entries inside the file.
+`Docs/Brainstorms/<area>.md`. One file per mechanic area, not per idea; ideas are
+entries inside the file. Areas are durable and few. `armory-and-weapons.md`, not
+`fourth-primary.md`.
 
-Areas are durable and few. `armory-and-weapons.md`, not `fourth-primary.md`.
+**Live files sit at the folder root.** They have at least one Idea or an unanswered
+Open row — something that can still become a milestone.
+
+**`Brainstorms/closed/`** is for a file whose Open table is empty and whose remaining
+Ideas are not mineable (Zo, 2026-08-13). The file is kept because Decided tables and
+rosters still stop re-proposal; it is not deleted. A closed file is not a source of
+new milestones until something is moved back to Open. Do not "restore" a closed file
+to the root because the contract used to forbid status folders.
+
+The previous rule was **no status folders**. Closed is the one exception, and it is
+narrower than a status: it means *nothing to mine*, not *deferred*.
 
 **`Master-Brainstorm.md` is the one exception and there is only ever one of it.** It is the
 pinned master-control chat's working surface: raw observations from a play session, grilled
@@ -93,8 +103,10 @@ graduates**. Either way:
 2. **Delete the idea's entry** from the brainstorm. The milestone is now the record.
 3. Add the row to `Roadmap.md` and log the graduation in its change log.
 
-The brainstorm file survives; only the graduated entry leaves. When a file's last entry
-graduates and no new ones exist, delete the file.
+The brainstorm file survives; only the graduated entry leaves. When a file's last
+Idea graduates and Open is empty, **move it to `Brainstorms/closed/`** rather than
+delete it, if Decided or a roster would otherwise have to be rediscovered. Delete
+only when the file has no remaining record worth keeping.
 
 **Do not graduate on enthusiasm** — your own. The test is whether someone else could build
 it from the milestone without asking a question. If Zo calls the graduation and a criterion
@@ -139,6 +151,10 @@ Last updated: YYYY-MM-DD
 
 ## Changelog
 
+- 2026-08-13: **`Brainstorms/closed/`** — a file with nothing to mine (empty Open, no
+  mineable Ideas) moves here instead of deletion, so Decided tables and rosters stay
+  searchable. Zo. Replaces "no status folders" / "delete the file when the last entry
+  graduates."
 - 2026-08-06: Graduation clarified — the graduation test is a default for undecided
   entries, not a gate on the owner. Zo graduates by decision; the milestone bar is unchanged.
 - 2026-08-04: Created. The roadmap's inline Brainstorm section had grown past what a

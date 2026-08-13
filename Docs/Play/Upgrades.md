@@ -12,8 +12,6 @@ Every track works the same way: each level costs more than the last, and each le
 
 **Stamina** raises your sprint pool. Read this as *seconds of running*, because that is what it is, and it is the most directly tactical track in the game: a Hunter is faster than your walk and slower than your sprint, so your sprint pool is literally your escape budget. When it runs out, the room stops being something you can leave.
 
-**Scavenging** raises the Salvage every kill pays. It is the only track that pays for itself.
-
 **Scavenging** raises what every Gatekeeper is worth, before the siphon dial is applied. It is the only track that pays for the other tracks.
 
 **Luck** buys critical-hit chance, and it is the only source of criticals in the entire game. Nothing else in the build grants crit chance or crit damage, on purpose — two sources would multiply and the panel numbers would stop meaning anything. Luck buys the chance a shot crits, never how hard a crit lands.
@@ -28,7 +26,7 @@ Every track works the same way: each level costs more than the last, and each le
 
 **Weapon Tiers at the ARMORY and the equipment slot at FABRICATION are both locked until you have lost a Run.** Everything else is buyable from the first minute.
 
-Everything at CREW QUARTERS, Hatch Armor at FABRICATION, and buying the weapons themselves are all available from the first minute of a fresh campaign. The reasoning is sound: attributes are the *answer* to dying, so a player who has just watched a Wave eat him should be able to spend on not-dying immediately. Gear is the opposite case — a player who has not lost yet does not know what he needs.
+Everything at CREW QUARTERS, Hatch Armor at FABRICATION, and buying the weapons themselves are all available from the first minute of a fresh campaign. Attributes are the answer to dying, so you can spend on not-dying immediately. Gear waits until you have been Lost once — until then you do not yet know what you need.
 
 The lock is the Run-loss counter, and **losing the Hatch trips it exactly as being Lost does.** The locked row says "survive a death first"; a door that fell while you were still standing counts.
 
@@ -47,6 +45,10 @@ The lock is the Run-loss counter, and **losing the Hatch trips it exactly as bei
 **Luck is a slow, real damage increase** that shows up over a whole Run rather than in any one fight. It is fine. It is not the thing to buy while you are still dying to Wave two.
 
 **Weapon upgrades are the deepest hole in the game and the money does not come back out.** An upgrade wheel belongs to one weapon. Take a gun a long way and then decide you wanted the other one, and you start from nothing. Only commit once you know which Primary you actually want to be carrying.
+
+## See also
+
+[The Ship](The-Ship.md). [Weapons](Weapons.md). [Salvage](Salvage.md). [The Hatch](The-Hatch.md).
 
 ## Gaps
 
