@@ -203,6 +203,29 @@ namespace GatekeeperBastion.Game
             PushValues();
         }
 
+        /// <summary>Client-only fight/assault lines read the mirror; host and solo read the sim.
+        /// Other HUD fields stay on local state and are allowed to be wrong on a client.</summary>
+        AssaultState ViewAssault(RunSim sim)
+        {
+            var net = _game != null ? _game.Net : null;
+            if (net != null && net.IsClientOnly && net.Mirror != null)
+                return (AssaultState)net.Mirror.Phase.Value;
+            return sim.Assault;
+        }
+
+        void ReadAssaultReadout(RunSim sim, out AssaultState assault, out int wave, out int alive)
+        {
+            assault = ViewAssault(sim);
+            wave = sim.CurrentWaveIndex;
+            alive = _spawner != null ? _spawner.AliveCount : 0;
+            var net = _game != null ? _game.Net : null;
+            if (net == null || !net.IsClientOnly) return;
+            var mirror = net.Mirror;
+            if (mirror == null) return;
+            wave = mirror.Wave.Value;
+            alive = mirror.Alive.Value;
+        }
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         void OnGUI()
         {
@@ -260,11 +283,12 @@ namespace GatekeeperBastion.Game
             }
 
             if (sim.Phase == _shownPhase
-                && (sim.Phase != RunPhase.Tethered || sim.Assault == _shownAssault))
+                && (sim.Phase != RunPhase.Tethered || ViewAssault(sim) == _shownAssault))
                 return;
 
             _shownPhase = sim.Phase;
-            _shownAssault = sim.Assault;
+            var assault = ViewAssault(sim);
+            _shownAssault = assault;
 
             switch (sim.Phase)
             {
@@ -274,12 +298,12 @@ namespace GatekeeperBastion.Game
                     _view.ShowArriving();
                     break;
                 case RunPhase.Tethered:
-                    if (sim.Assault == AssaultState.Prep && !_missionDrawerAutoOpened)
+                    if (assault == AssaultState.Prep && !_missionDrawerAutoOpened)
                     {
                         _missionDrawerAutoOpened = true;
                         Controls.SetMissionDrawerOpen(true);
                     }
-                    _view.ShowFight(sim.Assault == AssaultState.Prep);
+                    _view.ShowFight(assault == AssaultState.Prep);
                     break;
                 case RunPhase.Escaped:
                 case RunPhase.Lost:
@@ -300,7 +324,7 @@ namespace GatekeeperBastion.Game
             try
             {
                 if (_shownPhase != sim.Phase
-                    || (sim.Phase == RunPhase.Tethered && _shownAssault != sim.Assault))
+                    || (sim.Phase == RunPhase.Tethered && _shownAssault != ViewAssault(sim)))
                     ApplyPhase(sim);
 
                 switch (sim.Phase)

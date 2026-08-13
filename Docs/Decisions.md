@@ -148,10 +148,8 @@ FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
   requirement, and NGO names the mechanism (`AnticipatedNetworkVariable<T>` /
   `AnticipatedNetworkTransform`). NGO 2.x's distributed-authority topology is
   rejected deliberately: it is documented as unsuitable where one machine should
-  govern the simulation. The design treats co-op as first-class — hence the
-  Sim assembly boundary (one-directional dependency, no static mutable state;
-  `Architecture/1-Boundaries.md` section 1) and the ownership labels in
-  `Architecture.md` — but **nothing is built**. 2–4 players on one hull.
+  govern the simulation. First slice shipped over UnityTransport loopback (M48);
+  Steam transport still deferred. 2–4 players on one hull.
 - **Ship subsystems** (Reactor, TetherCore, Engines, LifeSupport) return with the
   bastion outfitting layer. `ShipSystems` stays the aggregate so the wiring keeps
   its shape.

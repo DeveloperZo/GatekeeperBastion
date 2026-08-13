@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-12
+Last updated: 2026-08-13
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -29,18 +29,17 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**M47 is active** (kit palette + authored bastion as the proof). **M48 is planned** (first
-networked kill). **M45 completed 2026-08-12** (two Runs in one process; harness 283 /
-Unity 315+23). **M42 completed 2026-08-12**. **M36 completed 2026-08-12**.
+**M47 is active** (kit palette + authored bastion as the proof). **M48 completed 2026-08-13**.
+**M52–M55 planned** (field loop). **M49–M51 planned** (later co-op).
+**M45 completed 2026-08-12**.
 
 **Recommended next**, in this order.
 
-1. **M47** — finish the authored bastion against its own criteria (kit in play, unlock
-   graph, sightline/path gates, M37 medians).
-2. **Play close-outs** — M32 criterion 7 (bore kills), M26 Path 2 / inventory, M31 pin
-   playthrough; see `GatekeeperZo Notes/verification.md`.
-3. **Ship station terminal UI** — panel chrome, Settings-shell strip, row readability.
-   Not filed yet; craft when that polish is the next cut.
+1. **M47** — close the authored bastion against its own criteria.
+2. **M52** — Waves start at a terminal (Hatch not a target; door opens on clear).
+3. **M53 → M54 → M55** — Hatch-bank convert, Master Control win, pay-for-intensity.
+4. **Play close-outs** — M32 criterion 7, M26 Path 2, M31 pin playthrough.
+5. **Ship station terminal UI** — unfiled; craft when that polish is the next cut.
 
 ## Order
 
@@ -94,7 +93,11 @@ this table — see the change log.
 | M45 | Two Runs in one process | completed, Aug 2026 | Two independent Run simulations advance in one process without touching each other, proved by an EditMode test that fails when a static is seeded back; no netcode library named anywhere in it | [`3. completed/M45`](Milestones/3.%20completed/M45-two-runs-in-one-process.md) |
 | M46 | The panel is authored | **cancelled, Aug 2026** | Cancelled (Zo) — authored-panel rewrite not a roadmap slot; station polish stays the unfiled Current cut | [`5. cancelled/M46`](Milestones/5.%20cancelled/M46-the-panel-is-authored.md) |
 | M47 | The bastion gets height and angles | next (current) | **Artifact = palette.** **Done = bastion from it** with H/S/T/D marks, unlock graph (Control Room last; order ≠ distance), sightline/path gates, M37 medians. Runtime terminals later | [`2. active/M47`](Milestones/2.%20active/M47-the-bastion-gets-height-and-angles.md) |
-| M48 | The first networked kill | later | Client joins over loopback (F10/F11, dev-only); shoots a server-spawned gatekeeper; damage applies once on the host; death on both screens; wave counter identical via `NetRunMirror`; **kill loop closes headless** (`NetKillTests` on NGO's in-process fixture, in the integration-check report); solo byte-identical; ten-day kill criterion on the NGO bet | [`1. planned/M48`](Milestones/1.%20planned/M48-the-first-networked-kill.md) |
+| M52 | Waves start at a terminal | later | Interact at a field terminal starts a Boarder-hunt Wave; Hatch takes no damage; door opens on clear; `T` refused | [`1. planned/M52`](Milestones/1.%20planned/M52-waves-start-at-a-terminal.md) |
+| M53 | Salvage leaves through the Hatch | later | Kills fill unbanked; Hatch-bank drips / attrits / dumps; 3 slots; fat pile ×1.25/×1.50 | [`1. planned/M53`](Milestones/1.%20planned/M53-salvage-leaves-through-the-hatch.md) |
+| M54 | Master Control is the win | later | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`1. planned/M54`](Milestones/1.%20planned/M54-master-control-is-the-win.md) |
+| M55 | Pay for intensity | later | `[` `]` spend 100 unbanked per step; HUD says Intensity; siphon dial retired; same `TetherSiphon` curve | [`1. planned/M55`](Milestones/1.%20planned/M55-pay-for-intensity.md) |
+| M48 | The first networked kill | completed, Aug 2026 | Client joins over loopback (F10/F11, dev-only); shoots a server-spawned gatekeeper; damage applies once on the host; death on both screens; wave counter identical via `NetRunMirror`; kill loop closed headless (`NetKillTests` Passed, PlayMode 24/0, report 2026-08-13T12:49:08Z) | [`3. completed/M48`](Milestones/3.%20completed/M48-the-first-networked-kill.md) |
 | M49 | The gatekeepers see the second player | later | Avatar carries a registered `PlayerHealth` + collider; a gatekeeper hunts the nearer client via the existing `NearestAlive` path with **no enemy code changes**; melee drops replicated HP and the owner's rig shows it; client down survivable (respawn next wave at hatch); `NetTargetingTests` headless; solo unchanged | [`1. planned/M49`](Milestones/1.%20planned/M49-the-gatekeepers-see-the-second-player.md) |
 | M50 | The client lives the run | later | Mirror carries the fight readout (salvage, hatch HP, elapsed at 1 Hz); client HUD reads it; all three endings reach the client as an `EndSummary` ClientRpc with the host's numbers; session ends clean and re-joins twice in a row; `NetRunMirrorTests` headless. **Re-cut against M48's landed shapes before start** | [`1. planned/M50`](Milestones/1.%20planned/M50-the-client-lives-the-run.md) |
 | M51 | The client's hands | later | Client repair channel, decoy placement and ability cone all apply once, server-side (per-verb single-application in `NetVerbTests`); denial reads back; one host wallet; **completes the loopback run** — Steam entry's graduation test. **Re-cut against M50 before start** | [`1. planned/M51`](Milestones/1.%20planned/M51-the-clients-hands.md) |

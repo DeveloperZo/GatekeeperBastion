@@ -185,6 +185,8 @@ not a temporary compromise.
 | Kit prefabs | agent | `gkb_bastion_kit_request.txt` |
 | Segment layout + H/S/T/D + unlock graph | agent | sketch under `Tools/bastion-sketch/`, then `gkb_bastion_sketch_request.txt` (path in file, or empty for default). Emits into `Bastion.unity` under `Environment`. |
 | Obstacle seed | agent | `GatekeeperBastion/Place Bastion Obstacles` (or `gkb_bastion_obstacles_request.txt`). Names encode intent (`LongLane_*`, `Corner_*`, `Choke_*`, `Mask_*`). Skips hatch bay `02` when already authored. |
+| Field consoles | agent | `gkb_bastion_terminals_request.txt` — Ship Desk/Screen/Label on each `BastionTerminal`; snaps progression gates to apertures; ensures `BastionLayout` on Environment. |
+| Passages vs gates | author | Segment **Door** with no `D` = passage (always walk). **`D` / `BastionDoor`** = progression gate (starts locked). Soft-lock parked. |
 | Hand finish | Zo | Move segments, sides, props, spawns in the Scene view. |
 | NavMesh | either | `GatekeeperBastion/Bake Bastion NavMesh` after geometry moves. |
 

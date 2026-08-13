@@ -111,13 +111,17 @@ namespace GatekeeperBastion.Tests
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         [Test]
-        public void DevCommands_TableCoversF1ThroughF9()
+        public void DevCommands_TableCoversF1ThroughF11()
         {
-            Assert.AreEqual(9, DevCommands.All.Length);
+            Assert.AreEqual(11, DevCommands.All.Length);
             Assert.AreEqual(KeyCode.F1, DevCommands.All[0].Key);
             Assert.AreEqual(KeyCode.F9, DevCommands.All[8].Key);
+            Assert.AreEqual(KeyCode.F10, DevCommands.All[9].Key);
+            Assert.AreEqual(KeyCode.F11, DevCommands.All[10].Key);
             Assert.AreEqual(DevCommands.Kind.ArmJumpToWave, DevCommands.All[2].Action);
             Assert.AreEqual(DevCommands.Kind.LoadoutPicker, DevCommands.All[6].Action);
+            Assert.AreEqual(DevCommands.Kind.StartCoopHost, DevCommands.All[9].Action);
+            Assert.AreEqual(DevCommands.Kind.StartCoopClient, DevCommands.All[10].Action);
         }
 #endif
     }

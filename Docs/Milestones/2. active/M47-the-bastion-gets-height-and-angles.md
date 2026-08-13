@@ -69,7 +69,13 @@ late doors open.
 | **H** | Hatch — the defend point (`HatchStation`). One per bastion. |
 | **S** | Spawn point. Behind a lock = nominal when that wing is live; else open-wing spawn. |
 | **T** | Terminal. Player use pressures tied **S** and contributes to unlocking a **D**. |
-| **D** | Locked door (Door side that starts sealed). Opens when its terminal set is done. |
+| **D** | Progression gate (`BastionDoor`). Starts locked. Opens when its terminal set is done. |
+
+**Passages vs gates (Zo, 2026-08-13):** a segment **Door** side with **no** `D` mark is a
+**passage** — always walkable, open/close later is cosmetic / non-event. A **`D` mark** is a
+**progression gate** — locked until its `T` set completes (Wave on that pull is M52). Soft locks
+(switch / salvage-repair) are parked in `../../Brainstorms/missions-and-destinations.md`. Do not
+put a `BastionDoor` on every Door side; Waves follow progression `T`s, not room or aperture count.
 
 **Rules**
 
@@ -185,5 +191,7 @@ Rejected: delivery banking / siphon replacement here.
 
 **Depends on M37** for criterion 17. Palette work does not wait on it.
 
-**Unblocks** `../../Brainstorms/missions-and-destinations.md` — delivery, field resources, spawn
-alteration, path display need a space worth moving through, and the palette to build the next one.
+**Unblocks** M52 (`../../Milestones/1. planned/M52-waves-start-at-a-terminal.md`) — field
+terminals, Hatch-bank, Master Control, and intensity need a bastion with **T**/**D** marks
+and the unlock graph. Remaining destination / telegraph ideas stay in
+`../../Brainstorms/missions-and-destinations.md`.

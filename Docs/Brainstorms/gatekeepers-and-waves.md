@@ -22,11 +22,10 @@ player and comes for the door. `WaveDirector`'s `HunterPerWave` / `RamPerWave` t
 the counts per Wave and `defaultCount` absorbs the remainder; the siphon dial's surplus
 is entirely Default, by design.
 
-All three resolve at the door **in the shipped one-room fight**. The intended loop
-(`missions-and-destinations.md`) keeps the **same mix** and changes **targeting mode**:
-terminal Wave hunts the Boarder; Hatch-bank Wave is Hatch-primary. Master Control uses
-both in one sequence (`missions-and-destinations.md`): first half terminal-mode, second
-half Hatch-bank.
+All three resolve at the door **in the shipped one-room fight**. Targeting mode (same mix,
+who they walk toward) is **M52 / M53** — terminal hunts the Boarder; Hatch-bank is
+Hatch-primary; Rams hunt the Boarder on terminal Waves only. Master Control uses both
+halves (**M54**).
 
 A **refusal** is the rule that defines a kind, in code, so a balance pass cannot soften it:
 Hunter never hurts the Hatch; Ram never hurts the Boarder; Default does both and provokes.
@@ -41,15 +40,6 @@ the door fell to too many bodies or to bodies standing too long, and a new kind 
 without that answer is a guess wearing a stat line.
 
 ## Ideas
-
-### Targeting mode follows the trigger (Zo, 2026-08-13)
-
-Same `HunterPerWave` / `RamPerWave` tables. The Wave type sets who they walk toward.
-**Decided:** Defaults switch with the mode. Hunters always the Boarder. **Rams hunt on
-terminal Waves only** (Zo, 2026-08-13) — dated break of “Ram never hurts you,” that mode
-only — and Hatch-only on Hatch-bank Waves. **What would kill it:** terminal-Wave Rams still
-read as the same fight as Defaults (the break bought nothing), or Hatch-bank Hunters never
-peel. **Touches:** `EnemyGatekeeper.Targeting`, `MayTargetHatch`. Composition tables stay.
 
 ### A gatekeeper you must leave the Hatch for
 A fourth kind that shells the Hatch from stand-off range and never closes, so killing it

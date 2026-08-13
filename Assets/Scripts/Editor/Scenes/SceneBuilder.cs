@@ -48,6 +48,7 @@ namespace GatekeeperBastion.EditorTools
         static string SentinelPath => Path.Combine(Root, "gkb_scene_build_request.txt");
         static string NavMeshSentinelPath => Path.Combine(Root, "gkb_bastion_navmesh_request.txt");
         static string ObstaclesSentinelPath => Path.Combine(Root, "gkb_bastion_obstacles_request.txt");
+        static string TerminalsSentinelPath => Path.Combine(Root, "gkb_bastion_terminals_request.txt");
 
         static SceneBuilder()
         {
@@ -60,6 +61,18 @@ namespace GatekeeperBastion.EditorTools
             _nextSentinelPoll = EditorApplication.timeSinceStartup + 1.0;
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
                 return;
+
+            if (File.Exists(TerminalsSentinelPath))
+            {
+                try { File.Delete(TerminalsSentinelPath); }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[SceneBuilder] terminals sentinel: " + e.Message);
+                    return;
+                }
+                WireBastionFieldConsolesInPlace();
+                return;
+            }
 
             if (File.Exists(ObstaclesSentinelPath))
             {
@@ -408,6 +421,60 @@ namespace GatekeeperBastion.EditorTools
             surface.navMeshData = AssetDatabase.LoadAssetAtPath<UnityEngine.AI.NavMeshData>(NavMeshDataPath);
         }
 
+        /// <summary>Attaches Ship Desk/Screen/Label graybox to every <see cref="BastionTerminal"/>
+        /// and ensures <see cref="BastionLayout"/> on Environment. Idempotent by Desk child.</summary>
+        public static void WireBastionFieldConsolesInPlace()
+        {
+            BastionSegment.SuppressValidateRebuild = true;
+            try
+            {
+                Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                GameObject env = GameObject.Find("Environment");
+                if (env == null)
+                {
+                    Debug.LogError("[SceneBuilder] No Environment root — cannot wire field consoles.");
+                    return;
+                }
+
+                if (env.GetComponent<BastionLayout>() == null)
+                    env.AddComponent<BastionLayout>();
+
+                int wired = 0;
+                BastionTerminal[] terminals = env.GetComponentsInChildren<BastionTerminal>(true);
+                for (int i = 0; i < terminals.Length; i++)
+                {
+                    if (BastionFieldConsole.AttachIfMissing(terminals[i]))
+                        wired++;
+                    else if (terminals[i] != null)
+                        BastionFieldConsole.ApplyScale(terminals[i].transform);
+                }
+
+                int gates = 0;
+                BastionDoor[] doors = env.GetComponentsInChildren<BastionDoor>(true);
+                for (int i = 0; i < doors.Length; i++)
+                {
+                    BastionDoor door = doors[i];
+                    if (door == null)
+                        continue;
+                    door.SnapToAperture();
+                    // Progression gates stay closed until the unlock graph opens them.
+                    if (door.StartsLocked)
+                        door.SetOpen(false);
+                    gates++;
+                }
+
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene, ScenePath);
+                Debug.Log("[SceneBuilder] Field consoles wired (" + wired + " new of "
+                    + terminals.Length + " terminals; scale=" + BastionFieldConsole.Scale
+                    + "); progression gates snapped=" + gates + ". BastionLayout on Environment.");
+            }
+            finally
+            {
+                BastionSegment.SuppressValidateRebuild = false;
+            }
+        }
+
         /// <summary>Places named graybox obstacles under each kit segment's <c>obstacles</c>
         /// child. Leaves existing props (hatch-bay Div/Rib under 02) alone. Idempotent by name.</summary>
         public static void PlaceBastionObstaclesInPlace()
@@ -572,3 +639,5 @@ namespace GatekeeperBastion.EditorTools
         }
     }
 }
+
+

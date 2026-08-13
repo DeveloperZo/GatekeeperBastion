@@ -4,8 +4,25 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
-Last updated: 2026-08-12
+Last updated: 2026-08-13
 -->
+
+- 2026-08-13: **Passage vs progression gate.** Door sides without a `D` mark stay walkable;
+  `BastionDoor` seals the aperture, starts locked, snaps to the segment opening. Soft-lock
+  (switch / salvage) parked in missions-and-destinations. Wave-on-`T` remains M52.
+- 2026-08-13: **M48 status next → completed.** First networked kill: NGO 2.13.1 +
+  MPPM 2.0.2, F10/F11 loopback, `NetKillTests` Passed in PlayMode 24/0 (was 23/0 at
+  M45). Report `gkb_verify_report.json` 2026-08-13T12:49:08Z. MPPM playthrough is
+  confirmation, not the gate. M47 stays current.
+- 2026-08-13: **M48 status later → next.** First networked kill is in build: NGO 2.13.1 +
+  MPPM 2.0.2 (3.0.0 is not on the Unity registry), F10/F11 loopback, `NetKillTests` fixture. Kill criterion clock started
+  2026-08-13. M47 stays current. Fence path corrected to `Architecture/3-Unity-Runtime.md`
+  (the allowlist `lint-arch` actually reads).
+- 2026-08-13: **M52–M55 created** in `1. planned/` (field loop, gameplay-impact order after
+  M47, before M48–M51). M52 *Waves start at a terminal*; M53 *Salvage leaves through the
+  Hatch*; M54 *Master Control is the win*; M55 *Pay for intensity*. Graduated out of
+  `Brainstorms/missions-and-destinations.md` and targeting-mode out of
+  `gatekeepers-and-waves.md`. Queue 8/10 planned.
 
 - 2026-08-12: **M47 status later → next (current).** Folder was already `2. active/`;
   frontmatter and the roadmap row now match. Current line names M47 as the active build;

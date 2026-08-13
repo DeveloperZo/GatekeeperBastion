@@ -1,5 +1,7 @@
 using GatekeeperBastion.Game;
 using GatekeeperBastion.Sim;
+using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
@@ -49,9 +51,10 @@ namespace GatekeeperBastion.EditorTools
             };
         }
 
-        /// <summary>One gatekeeper prefab: capsule, NavMeshAgent, Damageable, and the kind's own
-        /// EnemyGatekeeper subclass. <paramref name="scale"/> scales the silhouette AND the agent
-        /// footprint together, so a Ram takes up the room it looks like it takes up.</summary>
+        /// <summary>One gatekeeper prefab: capsule, NavMeshAgent, Damageable, the kind's own
+        /// EnemyGatekeeper subclass, and the net components (inert until a session Spawn()s).
+        /// <paramref name="scale"/> scales the silhouette AND the agent footprint together,
+        /// so a Ram takes up the room it looks like it takes up.</summary>
         static GameObject CreateGatekeeperPrefab<T>(string name, string path, Material material,
                                                  GatekeeperKind kind, float scale)
             where T : EnemyGatekeeper
@@ -82,6 +85,10 @@ namespace GatekeeperBastion.EditorTools
             // value can never drift with whatever this asset happens to carry.
             go.AddComponent<Damageable>().SetMaxHp(Mathf.Max(1f, stats.maxHp));
             go.AddComponent<T>();
+            go.AddComponent<NetworkObject>();
+            var netTransform = go.AddComponent<NetworkTransform>();
+            netTransform.AuthorityMode = NetworkTransform.AuthorityModes.Server;
+            go.AddComponent<NetEnemy>();
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
             UnityEngine.Object.DestroyImmediate(go);

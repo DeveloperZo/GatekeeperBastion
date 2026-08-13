@@ -51,6 +51,7 @@ Assets/Scripts/
     Input/     Controls  PlayerInputFrame  ShortcutPanel — one binding list + one input frame
     Settings/  Settings  SettingId  SettingDecl  ISettingsStore (moved out of Sim/, M45)
     Dev/       DevCommands  DevConsole (editor/dev-build only)
+    Net/       NetSession  NetRunMirror  NetPlayerAvatar  NetEnemy
   Editor/
     Scenes/  SceneBuilder(+.Ship, +.Enemies) — Environment/spawns/light/NavMesh; hosts+UI authored
     Tools/   IntegrationCheck (file-bridge test runner; formerly AutoVerify)  LogTools (Logs menu)

@@ -44,6 +44,9 @@ namespace GatekeeperBastion.Game
         [SerializeField, Tooltip("Hatch repair point. Authored in the scene.")]
         RepairInteractable _repair;
 
+        [SerializeField, OptionalBinding, Tooltip("Bastion net session. Null in solo / tests.")]
+        NetSession _net;
+
         /// <summary>Everything this Run owns (meta, sim, decoy state, spawn ids). Constructed
         /// in Awake; null only on a failed boot (no MetaState).</summary>
         public RunContext Run { get; private set; }
@@ -78,6 +81,9 @@ namespace GatekeeperBastion.Game
         /// Abilities reach live actors through here rather than a static list. Null on a
         /// spawnerless scene (tests); callers null-check.</summary>
         public WaveSpawner Spawner => _spawner;
+
+        /// <summary>Bastion net session. Null when unwired (solo, Ship, tests).</summary>
+        public NetSession Net => _net;
 
         /// <summary>True once the run has ended (terminal phase) — enemy AI and the spawner
         /// use this as their single "stop everything" test.</summary>
@@ -204,6 +210,16 @@ namespace GatekeeperBastion.Game
             float dt = Time.deltaTime;
 
             Controls.Sample();                                        // 1
+
+            // Client-only: the host owns the run. Keep local move + fire so RPCs can fire;
+            // do not tick the local sim or the spawner (that would fork a second live sim).
+            if (_net != null && _net.IsClientOnly)
+            {
+                if (_fpc != null) _fpc.Tick(dt);
+                if (_gun != null) _gun.Tick(dt);
+                return;
+            }
+
             Sim.Tick(dt);                                             // 2
 
             if (Sim.Phase == RunPhase.Tethered)

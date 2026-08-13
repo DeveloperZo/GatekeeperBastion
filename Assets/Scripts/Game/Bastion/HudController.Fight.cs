@@ -32,13 +32,14 @@ namespace GatekeeperBastion.Game
             long kill = sim.CurrentKillAward;
             long runSal = (long)sim.Salvage.RunSalvage;
             long banked = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
+            ReadAssaultReadout(sim, out AssaultState assault, out int wave, out int alive);
 
-            if (elapsed != _cacheElapsed || sim.CurrentWaveIndex != _cacheWave
+            if (elapsed != _cacheElapsed || wave != _cacheWave
                 || sim.Siphon.Level != _cacheSiphon || kill != _cacheKill
                 || runSal != _cacheRunSalvage || banked != _cacheBanked)
             {
                 _cacheElapsed = elapsed;
-                _cacheWave = sim.CurrentWaveIndex;
+                _cacheWave = wave;
                 _cacheSiphon = sim.Siphon.Level;
                 _cacheKill = kill;
                 _cacheRunSalvage = runSal;
@@ -52,7 +53,7 @@ namespace GatekeeperBastion.Game
                 _lineBuf.Clear();
                 _lineBuf.Append("Run ").Append(runSal)
                     .Append("  ·  Siphon L").Append(sim.Siphon.Level)
-                    .Append("  ·  Wave ").Append(sim.CurrentWaveIndex).Append('/')
+                    .Append("  ·  Wave ").Append(wave).Append('/')
                     .Append(WaveDirector.MaxWaves);
                 _view.SetScore(salvage, _lineBuf.ToString());
             }
@@ -104,10 +105,10 @@ namespace GatekeeperBastion.Game
             PushWeaponReadout(gc);
             if (leftOpen) PushShortcutPanel(sim);
 
-            if (sim.Assault == AssaultState.Prep)
-                PushPrepPanel(sim);
+            if (assault == AssaultState.Prep)
+                PushPrepPanel(sim, wave);
             else
-                PushAssaultPanel(sim);
+                PushAssaultPanel(wave, alive);
 
             PushCrosshair();
             PushPrompt();

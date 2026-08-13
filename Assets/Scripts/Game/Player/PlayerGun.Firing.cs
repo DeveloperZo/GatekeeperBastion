@@ -129,7 +129,11 @@ namespace GatekeeperBastion.Game
                     dmg *= pierceMul;
                 if (dmg > 0f)
                 {
-                    damageable.TakeDamage(dmg, _owner != null ? _owner.transform : transform, _activeSlot);
+                    var netEnemy = damageable.GetComponent<NetEnemy>();
+                    if (netEnemy != null && _game != null && _game.Net != null && _game.Net.IsClientOnly)
+                        netEnemy.SubmitHitServerRpc(dmg, (byte)_activeSlot);
+                    else
+                        damageable.TakeDamage(dmg, _owner != null ? _owner.transform : transform, _activeSlot);
                     bodiesDamaged++;
                     if (crit)
                         Log.Event("Combat", $"CRITICAL HIT — {dmg:0} damage (x{CritDamageMultiplier:0.#})");

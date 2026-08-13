@@ -5,7 +5,7 @@ Purpose: Where the lines in this codebase are, what enforces them, and which pop
 Status: working
 Authority: CRITICAL — the Sim seam and the mutation surface are load-bearing.
 Update trigger: when an assembly is added or split, when the wiring approach changes, or when a rejected pattern is reconsidered.
-Last updated: 2026-08-12
+Last updated: 2026-08-13
 -->
 
 ## 1. The Sim boundary: one-directional dependency, enforced by an assembly
@@ -86,9 +86,11 @@ The debate does not resolve, so the project should not depend on which side is r
 cannot cross scenes, and cannot reach runtime-instantiated objects — which is why the
 `HatchStation.Instance` locator, `PlayerRegistry` and the `SpawnPoint` registry exist, and
 why runtime-spawned actors get their references pushed (`Bind` / `Configure`) from the
-owning controller instead. Those are the seams a container would clean up. If the wiring
-graph ever stops fitting in the authored scenes plus the push calls, revisit this rather
-than adding a new static.
+owning controller instead. Spawned network prefabs (`NetRunMirror`, `NetPlayerAvatar`) are
+the same seam: they Find the scene session / local rig once at spawn, and those two sites
+are named on the scene-lookup allowlist in `3-Unity-Runtime.md`. Those are the seams a
+container would clean up. If the wiring graph ever stops fitting in the authored scenes
+plus the push calls, revisit this rather than adding a new static.
 
 **Rule: the existing "all sim mutation goes through `GameController`" convention stays, and
 its scope gets stated.** It is the Command pattern's single-writer property, and its real

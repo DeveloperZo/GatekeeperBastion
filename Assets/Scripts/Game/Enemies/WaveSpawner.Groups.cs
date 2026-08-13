@@ -1,5 +1,6 @@
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -204,6 +205,9 @@ namespace GatekeeperBastion.Game
                       WaveEmit emit)
         {
             if (_teardown) return false; // guard: never Instantiate into a scene that is unloading
+            if (_game != null && _game.Net != null && _game.Net.IsClientOnly)
+                return false;
+
             GameObject prefab = PrefabFor(kind);
             if (prefab == null)
             {
@@ -238,6 +242,13 @@ namespace GatekeeperBastion.Game
                 gatekeeper.SpawnId = _game.Run.TakeSpawnId();
                 gatekeeper.SpawnedAt = at;
                 _live.Add(gatekeeper); // spawn ledger: removed by Despawn; swept on teardown
+            }
+
+            if (_game != null && _game.Net != null && _game.Net.Active && !_game.Net.IsClientOnly)
+            {
+                var netObj = enemy.GetComponent<NetworkObject>();
+                if (netObj != null)
+                    netObj.Spawn(true);
             }
 
             AliveCount++;

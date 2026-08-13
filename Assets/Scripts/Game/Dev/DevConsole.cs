@@ -211,6 +211,16 @@ namespace GatekeeperBastion.Game
                     // Read-only overlay: log for criterion 5, but do not suppress saves.
                     Log.Event(Tag, _gatekeeperReadout ? "gatekeeper readout on" : "gatekeeper readout off");
                     break;
+
+                case DevCommands.Kind.StartCoopHost:
+                    if (gc != null) gc.StartCoopHost();
+                    else Log.Warn(Tag, "StartCoopHost refused — no GameController.");
+                    break;
+
+                case DevCommands.Kind.StartCoopClient:
+                    if (gc != null) gc.StartCoopClient();
+                    else Log.Warn(Tag, "StartCoopClient refused — no GameController.");
+                    break;
             }
         }
 

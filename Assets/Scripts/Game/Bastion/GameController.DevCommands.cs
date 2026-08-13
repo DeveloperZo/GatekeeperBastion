@@ -126,6 +126,30 @@ namespace GatekeeperBastion.Game
             Log.Event("Dev", $"GrantSalvage +{amount} — banked {meta.BankedSalvage}");
         }
 
+        /// <summary>F10: start a host session on loopback. Taints the session (dev command).</summary>
+        public void StartCoopHost()
+        {
+            GameSession.NotifyDevAction();
+            if (_net == null)
+            {
+                Log.Warn(Tag, "StartCoopHost refused — no NetSession wired.");
+                return;
+            }
+            _net.StartHost();
+        }
+
+        /// <summary>F11: join 127.0.0.1. Taints the session (dev command).</summary>
+        public void StartCoopClient()
+        {
+            GameSession.NotifyDevAction();
+            if (_net == null)
+            {
+                Log.Warn(Tag, "StartCoopClient refused — no NetSession wired.");
+                return;
+            }
+            _net.StartClient();
+        }
+
         /// <summary>Own, Tier, and equip a weapon into its catalog slot, then re-push the gun if
         /// a Bastion run is live. Taints the session (Save suppressed).</summary>
         public static void SetLoadout(int slot, int weaponId, int tier)

@@ -60,6 +60,11 @@ Thumbs.db
 /*_report.json
 /*_report.prev.json
 
+# Unity Test Runner PlayMode bootstrap scenes. Created per run, deleted on
+# teardown; leftovers are not project history.
+/Assets/InitTestScene*.unity
+/Assets/InitTestScene*.unity.meta
+
 # Scratch and staging directories. _to_delete/ exists because a connected
 # folder cannot be deleted through the device bridge — files are moved here
 # and removed by hand.
@@ -79,3 +84,17 @@ Assets/_Scratch/*
 # Skill eval output and the baseline-run staging dir. Generated per run, never history.
 .claude/skills/_evals/results/
 .claude/skills/_evals/.hidden/
+
+# Local UPM tarball staging and embedded copies of registry packages. Never commit;
+# the lock file + PackageCache are the install. These folders exist only while the
+# editor is being unblocked.
+/_upm_tmp/
+/Packages/com.unity.burst/
+/Packages/com.unity.collections/
+/Packages/com.unity.mathematics/
+/Packages/com.unity.multiplayer.playmode/
+/Packages/com.unity.netcode.gameobjects/
+/Packages/com.unity.nuget.mono-cecil/
+/Packages/com.unity.properties/
+/Packages/com.unity.test-framework.performance/
+/Packages/com.unity.transport/

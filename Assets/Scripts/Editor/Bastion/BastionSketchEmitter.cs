@@ -188,8 +188,18 @@ namespace GatekeeperBastion.EditorTools
 
         static void TryAddLayoutComponent(GameObject root)
         {
-            if (root.GetComponent<BastionLayout>() == null)
-                root.AddComponent<BastionLayout>();
+            // One layout host: Environment when present, else the kit root. Two hosts double-register.
+            GameObject env = GameObject.Find("Environment");
+            GameObject host = env != null ? env : root;
+            if (host.GetComponent<BastionLayout>() == null)
+                host.AddComponent<BastionLayout>();
+
+            if (env != null && root != env)
+            {
+                BastionLayout stray = root.GetComponent<BastionLayout>();
+                if (stray != null)
+                    UnityEngine.Object.DestroyImmediate(stray);
+            }
         }
 
         static void ApplyDoorSides(BastionSketch sketch, Dictionary<string, SideSet> map)
@@ -308,7 +318,10 @@ namespace GatekeeperBastion.EditorTools
                     GameObject go = CreateNamedMarker(room, "T_" + mark.RefId, typeof(BastionTerminal));
                     var terminal = go.GetComponent<BastionTerminal>();
                     if (terminal != null)
+                    {
                         terminal.Configure(mark.RefId, null, null);
+                        BastionFieldConsole.AttachIfMissing(terminal);
+                    }
                     return true;
                 }
                 default:
@@ -323,25 +336,24 @@ namespace GatekeeperBastion.EditorTools
             if (component != null)
             {
                 string[] unlocks = door.UnlockTerminalIds.ToArray();
-                component.Configure(door.DoorId, unlocks, door.Control, locked: true);
+                component.Configure(
+                    door.DoorId,
+                    unlocks,
+                    door.Control,
+                    ToDoorEdge(door.Direction),
+                    locked: true);
             }
+        }
 
-            // Offset door marker toward the named edge so it is not buried at room centre.
-            float edge = 0.45f;
-            switch (door.Direction)
+        static BastionDoorEdge ToDoorEdge(BastionSketchDirection direction)
+        {
+            switch (direction)
             {
-                case BastionSketchDirection.North:
-                    go.transform.localPosition = new Vector3(0f, 0f, edge);
-                    break;
-                case BastionSketchDirection.South:
-                    go.transform.localPosition = new Vector3(0f, 0f, -edge);
-                    break;
-                case BastionSketchDirection.East:
-                    go.transform.localPosition = new Vector3(edge, 0f, 0f);
-                    break;
-                case BastionSketchDirection.West:
-                    go.transform.localPosition = new Vector3(-edge, 0f, 0f);
-                    break;
+                case BastionSketchDirection.North: return BastionDoorEdge.North;
+                case BastionSketchDirection.South: return BastionDoorEdge.South;
+                case BastionSketchDirection.East: return BastionDoorEdge.East;
+                case BastionSketchDirection.West: return BastionDoorEdge.West;
+                default: return BastionDoorEdge.North;
             }
         }
 

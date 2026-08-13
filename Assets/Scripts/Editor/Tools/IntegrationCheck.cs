@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using GatekeeperBastion.Util;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
 
@@ -24,8 +25,9 @@ namespace GatekeeperBastion.EditorTools
         const string StageKey = "GKB_VERIFY_STAGE";           // "", "editmode", "playmode"
         const string EditResultsKey = "GKB_VERIFY_EDIT_JSON"; // leaf results captured after stage 1
         const string StageSinceKey = "GKB_VERIFY_STAGE_SINCE"; // last progress (stage set / RunStarted / TestStarted)
-        const string PlayKickKey = "GKB_VERIFY_PLAY_KICK";   // attempts to start PlayMode after EditMode
+        const string PlayKickKey = "GKB_VERIFY_PLAY_KICK";   // 0 = RunStarted; 1 = armed; -1 = Execute submitted
         const string PendingKey = "GKB_VERIFY_PENDING";      // sentinel consumed; run starts next idle tick
+        const string BastionScenePath = "Assets/Scenes/Bastion.unity";
         // Measured from last progress, not from stage entry: PlayMode suites idle between tests
         // while the editor is out of play, and a 90s-from-start timer aborted live runs.
         const double StuckStageSeconds = 180.0;
@@ -62,9 +64,12 @@ namespace GatekeeperBastion.EditorTools
             string stage = SessionState.GetString(StageKey, "");
             if (stage == "playmode")
             {
-                // delayCall chains die across domain reload. Re-arm the PlayMode kick so a
-                // reload between EditMode finish and PlayMode start cannot leave us idle until
-                // the stuck timer fires.
+                int kick = SessionState.GetInt(PlayKickKey, -1);
+                // 0 = PlayTests already started. -1 = Execute already submitted. Re-arming
+                // either starts a second TestJob that deletes the first job's InitTestScene,
+                // and RestoreSceneSetupTask then throws Invalid SceneManagerSetup.
+                if (kick == 0) return;
+                if (kick == -1 && EditorApplication.isPlayingOrWillChangePlaymode) return;
                 Debug.Log("[IntegrationCheck] Resuming PlayMode kick after domain reload.");
                 SchedulePlayMode();
                 return;
@@ -89,10 +94,11 @@ namespace GatekeeperBastion.EditorTools
             if (TryConsumeSentinel()) return;
             // A consumed sentinel starts once the refresh (and any compile it queued) settles.
             if (TryStartPending()) return;
-            // If PlayMode is armed but the kick loop went silent (lost delayCall), re-kick
-            // once per poll. PlayKickKey stays >0 until PlayTests RunStarted.
+            // If PlayMode is armed but the kick loop went silent (lost delayCall), re-enter
+            // KickPlayMode. PlayKickKey 1 = never submitted; -1 = submitted, waiting for
+            // RunStarted (KickPlayMode will no-op unless the wait timed out).
             if (SessionState.GetString(StageKey, "") == "playmode"
-                && SessionState.GetInt(PlayKickKey, -1) != 0)
+                && SessionState.GetInt(PlayKickKey, 0) != 0)
             {
                 KickPlayMode();
                 return;
@@ -298,8 +304,8 @@ namespace GatekeeperBastion.EditorTools
 
         /// <summary>
         /// EditMode's TestJob is still tearing down when RunFinished returns. A single delayCall
-        /// Execute for PlayMode often no-ops; retry on a short cadence until RunStarted clears
-        /// the kick counter or we give up.
+        /// Execute for PlayMode can no-op; KickPlayMode submits once, then waits up to 20s for
+        /// RunStarted before retrying. Overlapping jobs delete InitTestScene and break restore.
         /// </summary>
         static void SchedulePlayMode()
         {
@@ -313,50 +319,57 @@ namespace GatekeeperBastion.EditorTools
         static void KickPlayMode()
         {
             if (SessionState.GetString(StageKey, "") != "playmode") return;
-            if (EditorApplication.isCompiling || EditorApplication.isPlayingOrWillChangePlaymode)
+            if (EditorApplication.isCompiling)
             {
                 EditorApplication.delayCall += KickPlayMode;
                 return;
             }
 
-            int attempt = SessionState.GetInt(PlayKickKey, 0);
-            // PlayKickKey stays >0 until RunStarted. Attempt 0/1 fires immediately (1 is the
-            // armed seed from SchedulePlayMode); later attempts re-fire every 5 ticks.
-            bool shouldExecute = attempt <= 1 || (attempt % 5 == 0);
-            if (attempt >= 50)
+            int kick = SessionState.GetInt(PlayKickKey, 0);
+            if (kick == 0) return; // RunStarted already
+
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                string edit = SessionState.GetString(EditResultsKey, "");
-                SessionState.SetString(StageKey, "");
-                SessionState.SetFloat(StageSinceKey, -1f);
-                SessionState.SetInt(PlayKickKey, 0);
-                const string why =
-                    "PlayMode TestRunner.Execute never started after EditMode (gave up after retries).";
-                Debug.LogError("[IntegrationCheck] " + why);
-                WriteReport("error", "playmode", string.IsNullOrEmpty(edit) ? null : edit, null, why);
+                EditorApplication.delayCall += KickPlayMode;
                 return;
             }
 
-            SessionState.SetInt(PlayKickKey, attempt + 1);
-            if (shouldExecute)
+            // -1 = Execute already submitted. Re-Execute only if RunStarted never arrived
+            // (the original no-op case). A second overlapping job deletes the first job's
+            // InitTestScene and RestoreSceneSetupTask throws Invalid SceneManagerSetup.
+            if (kick == -1)
             {
-                try
-                {
-                    Debug.Log("[IntegrationCheck] PlayMode Execute attempt " + attempt);
-                    Run(TestMode.PlayMode);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning("[IntegrationCheck] PlayMode Execute attempt " + attempt + " threw: " + e.Message);
-                }
+                double since = SessionState.GetFloat(StageSinceKey, -1f);
+                if (since >= 0 && EditorApplication.timeSinceStartup - since < 20.0)
+                    return;
+                Debug.LogWarning("[IntegrationCheck] PlayMode Execute submitted but RunStarted never fired; retrying once.");
             }
 
-            // Reschedule while still waiting for RunStarted to zero PlayKickKey.
-            EditorApplication.delayCall += () =>
+            EnsureBastionIsTheSavedSetup();
+            SessionState.SetInt(PlayKickKey, -1);
+            MarkStage("playmode");
+            try
             {
-                if (SessionState.GetString(StageKey, "") != "playmode") return;
-                if (SessionState.GetInt(PlayKickKey, 0) == 0) return;
-                KickPlayMode();
-            };
+                Debug.Log("[IntegrationCheck] PlayMode Execute (single job)");
+                Run(TestMode.PlayMode);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[IntegrationCheck] PlayMode Execute threw: " + e.Message);
+                SessionState.SetInt(PlayKickKey, 1);
+            }
+        }
+
+        /// <summary>The TestJob snapshots the current SceneSetup before creating InitTestScene.
+        /// If that snapshot is a leftover InitTestScene (or nothing), restore after PlayMode
+        /// throws ArgumentException and the editor is left with zero loaded scenes.</summary>
+        static void EnsureBastionIsTheSavedSetup()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+            var active = EditorSceneManager.GetActiveScene();
+            if (active.IsValid() && active.path == BastionScenePath) return;
+            if (!File.Exists(Path.Combine(Root, BastionScenePath))) return;
+            EditorSceneManager.OpenScene(BastionScenePath, OpenSceneMode.Single);
         }
 
         sealed class Callbacks : ICallbacks, IErrorCallbacks
@@ -395,6 +408,7 @@ namespace GatekeeperBastion.EditorTools
                         : e.Message;
                     WriteReport("error", "report", null, null, why);
                     SessionState.SetString(StageKey, "");
+                    EnsureBastionIsTheSavedSetup();
                 }
             }
 
@@ -404,7 +418,19 @@ namespace GatekeeperBastion.EditorTools
                 // times. Only the first one owns the report — later duplicates would overwrite a
                 // diagnosed failure with an identical, or emptier, one.
                 string stage = SessionState.GetString(StageKey, "");
-                if (string.IsNullOrEmpty(stage)) return;
+                if (string.IsNullOrEmpty(stage))
+                {
+                    EnsureBastionIsTheSavedSetup();
+                    return;
+                }
+
+                // A second overlapping PlayMode job fails RestoreSceneSetup while the first is
+                // still running. Writing that as the report drops the real RunFinished.
+                if (stage == "playmode" && EditorApplication.isPlaying)
+                {
+                    Debug.LogWarning("[IntegrationCheck] Ignoring TestRunner OnError during live PlayMode: " + message);
+                    return;
+                }
 
                 string why = string.IsNullOrWhiteSpace(message)
                     ? "TestRunner OnError with no message."
@@ -414,6 +440,7 @@ namespace GatekeeperBastion.EditorTools
                 SessionState.SetString(StageKey, "");
                 SessionState.SetFloat(StageSinceKey, -1f);
                 WriteReport("error", stage, string.IsNullOrEmpty(edit) ? null : edit, null, why);
+                EnsureBastionIsTheSavedSetup();
             }
         }
 
@@ -458,6 +485,7 @@ namespace GatekeeperBastion.EditorTools
                 SessionState.SetFloat(StageSinceKey, -1f);
                 Debug.Log($"[IntegrationCheck] PlayMode done: {pass} passed, {fail} failed. Report written.");
                 WriteReport("complete", "done", editBlock, block);
+                EnsureBastionIsTheSavedSetup();
             }
         }
 

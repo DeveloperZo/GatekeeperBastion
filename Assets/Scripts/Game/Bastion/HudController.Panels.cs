@@ -44,9 +44,9 @@ namespace GatekeeperBastion.Game
             _view.SetShortcutRows(_shortcutRows, false);
         }
 
-        void PushPrepPanel(RunSim sim)
+        void PushPrepPanel(RunSim sim, int wave)
         {
-            if (sim.AllWavesCleared || sim.CurrentWaveIndex >= WaveDirector.MaxWaves)
+            if (sim.AllWavesCleared || wave >= WaveDirector.MaxWaves)
             {
                 _view.SetPrepHeading(
                     "<b>BASTION STRIPPED</b> — all " + WaveDirector.MaxWaves + " waves cleared");
@@ -59,7 +59,6 @@ namespace GatekeeperBastion.Game
 
             // Short card — siphon/currency live TR; wave lives TL. Prep only teaches the draw.
             int lvl = sim.Siphon.Level;
-            int wave = sim.CurrentWaveIndex;
             int here = _waves.NextWave(wave, lvl).enemyCount;
             _lineBuf.Clear();
             _lineBuf.Append("<b>PREP</b>  ·  Draw wave ").Append(wave + 1).Append('/')
@@ -88,15 +87,14 @@ namespace GatekeeperBastion.Game
             _view.SetPrepLine(4, null);
         }
 
-        void PushAssaultPanel(RunSim sim)
+        void PushAssaultPanel(int wave, int remaining)
         {
-            int remaining = _spawner != null ? _spawner.AliveCount : 0;
-            if (remaining == _cacheAlive && sim.CurrentWaveIndex == _cacheAssaultWave)
+            if (remaining == _cacheAlive && wave == _cacheAssaultWave)
                 return;
             _cacheAlive = remaining;
-            _cacheAssaultWave = sim.CurrentWaveIndex;
+            _cacheAssaultWave = wave;
             _lineBuf.Clear();
-            _lineBuf.Append("ASSAULT — wave ").Append(sim.CurrentWaveIndex).Append('/')
+            _lineBuf.Append("ASSAULT — wave ").Append(wave).Append('/')
                 .Append(WaveDirector.MaxWaves).Append("   |   enemies remaining: ")
                 .Append(remaining);
             _view.SetAssaultHeading(_lineBuf.ToString());

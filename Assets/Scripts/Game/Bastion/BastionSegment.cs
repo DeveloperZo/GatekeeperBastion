@@ -179,6 +179,81 @@ namespace GatekeeperBastion.Game
             return true;
         }
 
+        /// <summary>Local pose and blocker size for a Door aperture on <paramref name="edge"/>.
+        /// False when that side is not Door.</summary>
+        public bool TryGetDoorAperture(
+            BastionDoorEdge edge,
+            out Vector3 localPos,
+            out float yawY,
+            out Vector3 blockerSize)
+        {
+            localPos = Vector3.zero;
+            yawY = 0f;
+            blockerSize = Vector3.zero;
+
+            BastionSideKind side;
+            float along;
+            switch (edge)
+            {
+                case BastionDoorEdge.North:
+                    side = north;
+                    along = northDoorAlong;
+                    break;
+                case BastionDoorEdge.South:
+                    side = south;
+                    along = southDoorAlong;
+                    break;
+                case BastionDoorEdge.East:
+                    side = east;
+                    along = eastDoorAlong;
+                    break;
+                case BastionDoorEdge.West:
+                    side = west;
+                    along = westDoorAlong;
+                    break;
+                default:
+                    return false;
+            }
+
+            if (side != BastionSideKind.Door)
+                return false;
+
+            float width = BastionKit.FootprintWidth(blockKind);
+            float depth = BastionKit.FootprintDepth(blockKind);
+            float wallHeight = BastionKit.StoreyHeight - BastionKit.FloorSlabThickness;
+            float thickness = BastionKit.WallThickness;
+            float shortSide = Mathf.Min(width, depth);
+            float openingWidth = Mathf.Min(DoorOpeningWidth, shortSide * 0.4f);
+            float halfW = width * 0.5f;
+            float halfD = depth * 0.5f;
+
+            switch (edge)
+            {
+                case BastionDoorEdge.North:
+                    localPos = new Vector3(along, 0f, halfD);
+                    yawY = 0f;
+                    blockerSize = new Vector3(openingWidth, wallHeight, thickness);
+                    break;
+                case BastionDoorEdge.South:
+                    localPos = new Vector3(along, 0f, -halfD);
+                    yawY = 180f;
+                    blockerSize = new Vector3(openingWidth, wallHeight, thickness);
+                    break;
+                case BastionDoorEdge.East:
+                    localPos = new Vector3(halfW, 0f, along);
+                    yawY = 90f;
+                    blockerSize = new Vector3(openingWidth, wallHeight, thickness);
+                    break;
+                case BastionDoorEdge.West:
+                    localPos = new Vector3(-halfW, 0f, along);
+                    yawY = -90f;
+                    blockerSize = new Vector3(openingWidth, wallHeight, thickness);
+                    break;
+            }
+
+            return true;
+        }
+
         /// <summary>Clear prior generated geometry and emit floor plus four sides.</summary>
         public void Rebuild()
         {

@@ -5,6 +5,8 @@
         "GatekeeperBastion.Sim",
         "Michsky.UI.Shift",
         "Unity.AI.Navigation",
+        "Unity.Netcode.Runtime",
+        "Unity.Networking.Transport",
         "Unity.TextMeshPro",
         "UnityEngine.UI"
     ],

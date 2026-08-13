@@ -1,9 +1,10 @@
 # M48 — The first networked kill
 
 <!--
-Status: later
-Update trigger: when the NGO version, the transport, or the slice boundary changes
-Last updated: 2026-08-12
+Status: completed 2026-08-13
+Update trigger: closed
+Last updated: 2026-08-13
+Closed on: Unity suite EditMode 318/0, PlayMode 24/0 including NetKillTests.KillLoop_AppliesOnceOnHost_DespawnsAndMirrors (gkb_verify_report.json 2026-08-13T12:49:08Z; PlayMode was 23/0 at M45). lint-arch clean; rg "Unity.Netcode" Assets/Scripts/Sim/ empty. NGO 2.13.1 + MPPM 2.0.2. Editor.log [Net] lines in that run are only the fixture (hit + mirror); Bastion PlayMode tests emitted none. MPPM F10/F11 playthrough is confirmation, not the gate.
 -->
 
 The co-op slice M45's Watch section cut: **a second instance joins over loopback, shoots one
@@ -14,7 +15,8 @@ the NGO decision (`../../Decisions.md`, 2026-08-10).
 
 **This slice also ships the co-op test rig, and the rig is the point.** Zo is one developer;
 a milestone whose gate needs two hands on two keyboards cannot be verified here. NGO ships
-`NetcodeIntegrationTest` (`Unity.Netcode.TestHelpers.Runtime`), which runs a host and N
+`NetcodeIntegrationTest` (`Unity.Netcode.Runtime.Tests` in 2.13.1; namespace
+`Unity.Netcode.TestHelpers.Runtime`), which runs a host and N
 clients **inside one PlayMode test** — so the kill loop closes headless in the integration
 check, and MPPM play is confirmation, not the gate. **Multiplier:** every later co-op slice
 writes its gate against this same fixture and closes without a second player present.
@@ -38,7 +40,7 @@ Leverage tier (`../../Working-Rules.md`): **#10, structure** — no tuned number
 
 ## Kill criterion
 
-Work starts ____ (fill in on start). **If criterion 5 — the networked kill — cannot be
+Work starts 2026-08-13. **If criterion 5 — the networked kill — cannot be
 demonstrated within ten working days of start, stop.** Record what NGO blocked, and re-open
 the library decision against FishNet (the named runner-up) in `../../Decisions.md` before
 writing more netcode. Separately: if this slice forces a static back into `Sim/` or a second
@@ -48,9 +50,9 @@ route around it silently.
 ## Acceptance criteria
 
 1. `Packages/manifest.json` pins `com.unity.netcode.gameobjects` **2.13.1** and
-   `com.unity.multiplayer.playmode` **3.0.0** (latest for this editor, 6000.3.21f1, verified
-   2026-08-12); no other netcode package. `Tools/verify/run.sh` still compiles `Sim/` shim-only
-   and `rg "Unity.Netcode" Assets/Scripts/Sim/` returns nothing.
+   `com.unity.multiplayer.playmode` **2.0.2** (latest on the Unity registry for this editor,
+   6000.3.21f1; 3.0.0 is not published). No other netcode package. `Tools/verify/run.sh` still
+   compiles `Sim/` shim-only and `rg "Unity.Netcode" Assets/Scripts/Sim/` returns nothing.
 2. In a Bastion scene, **F10 starts a host and F11 joins `127.0.0.1` over UnityTransport**,
    dev-only (same `#if UNITY_EDITOR || DEVELOPMENT_BUILD` envelope as the rest of the dev
    console, listed on the F1 overlay). Host logs `[Net] host started`; on join, both
@@ -82,9 +84,10 @@ route around it silently.
 8. **Solo is unchanged**: with no session started, both Unity suites and the offline harness
    pass at their current counts, and a solo Bastion run's log contains no `[Net]` line.
 9. The two new one-shot `FindAnyObjectByType` calls (spawned network prefabs cannot be
-   scene-wired; see Implementation) are **added to the named-exemption fence** M45 left in
-   `../../Architecture/1-Boundaries.md`, in the same change, and `Tools/lint-arch/run.sh`
-   stays green.
+   scene-wired; see Implementation) are **added to the named-exemption fence** in
+   `../../Architecture/3-Unity-Runtime.md` (the mechanical allowlist `lint-arch` reads;
+   `../../Architecture/1-Boundaries.md` §2 names the exemption), in the same change, and
+   `Tools/lint-arch/run.sh` stays green.
 
 ## Implementation
 
@@ -104,7 +107,7 @@ is untouched. In order:
    writes them from `_game.Run.Sim` / `_game.Spawner.AliveCount` when they change. Spawned,
    not in-scene: with scene management off, a spawned prefab is the semantics-free path. On
    client, `OnNetworkSpawn` registers itself with the scene `NetSession` via one one-shot
-   `FindAnyObjectByType<NetSession>()` (exemption, criterion 8).
+   `FindAnyObjectByType<NetSession>()` (exemption, criterion 9).
 4. **Create** `NetPlayerAvatar.cs` + prefab `Assets/Prefabs/Net/NetPlayerAvatar.prefab` —
    capsule mesh, `NetworkObject` (set as NGO's default player prefab), `NetworkTransform`
    with **owner authority** (the client-auth own-movement mechanism named in
@@ -124,9 +127,12 @@ is untouched. In order:
    boarding path refuses when `Net.IsClientOnly` (criterion 4). `WaveSpawner`, `PlayerGun`
    and `HudController` reach the session through their existing `GameController` reference;
    if one has none, it gains its own optional binding instead.
-7. **Change** `WaveSpawner.Groups.cs` `SpawnOne` — after `Configure`, if a session is active
-   on the server, `GetComponent<NetworkObject>().Spawn(true)`. With no session the component
-   is inert and solo behaviour is byte-identical.
+7. **Change** `WaveSpawner.Groups.cs` `SpawnOne` — skip Instantiate when client-only; after
+   `Configure`, if a session is active on the server, `GetComponent<NetworkObject>().Spawn(true)`.
+   `WaveSpawner.Despawn` calls `NetworkObject.Despawn` when spawned so client clones die.
+   **Change** `SceneBuilder.Enemies.cs` — stamp `NetworkObject`, server-authoritative
+   `NetworkTransform` and `NetEnemy` so Build All does not wipe them. With no session the
+   components are inert and solo behaviour is byte-identical.
 8. **Change** `PlayerGun.Firing.cs` — at the single damage-application site (line 132
    today): if the target carries `NetEnemy` and the session is client-only, call
    `SubmitHitServerRpc` **instead of** local `TakeDamage`. No client-side HP prediction:
@@ -137,15 +143,15 @@ is untouched. In order:
    phase/wave/alive inputs to the fight and assault lines come from the mirror instead of
    `sim`. Every other panel keeps reading local state and is allowed to be wrong on a
    client — out of scope, named below.
-10. **Change** `DevCommands.cs` — two new `Binding` rows: `F10 host co-op session`,
-    `F11 join 127.0.0.1`.
+10. **Change** `Game/Dev/DevCommands.cs` — two new `Binding` rows: `F10 host co-op session`,
+    `F11 join 127.0.0.1`. `GameController.DevCommands.cs` and `DevConsole.cs` dispatch them.
 11. **Change** `Packages/manifest.json` again — add `com.unity.netcode.gameobjects` to
-    `"testables"` (how NGO exposes `Unity.Netcode.TestHelpers.Runtime` to a project's own
-    tests). This also surfaces NGO's package tests in the Test Runner window; the
-    integration check is unaffected because it pins `assemblyNames` to
-    `GatekeeperBastion.PlayTests`.
+    `"testables"` (how NGO exposes `NetcodeIntegrationTest` to a project's own tests). This
+    also surfaces NGO's package tests in the Test Runner window; the integration check is
+    unaffected because it pins `assemblyNames` to `GatekeeperBastion.PlayTests`.
 12. **Change** `Assets/Tests/PlayMode/GatekeeperBastion.PlayTests.asmdef` — add references
-    to `Unity.Netcode.Runtime` and `Unity.Netcode.TestHelpers.Runtime`.
+    to `Unity.Netcode.Runtime` and `Unity.Netcode.Runtime.Tests` (the 2.13.1 assembly that
+    contains `NetcodeIntegrationTest`).
 13. **Create** `Assets/Tests/PlayMode/NetKillTests.cs` — fixture derives
     `NetcodeIntegrationTest` with `NumberOfClients = 1`; registers the gatekeeper and
     mirror prefabs on both managers (`CreateNetworkObjectPrefab` for scratch objects, real

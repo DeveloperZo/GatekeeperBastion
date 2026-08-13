@@ -3,8 +3,8 @@
 <!--
 Purpose: The multiplayer epic beyond the filed slices — what is deliberately after a full loopback run, and the open design questions the slices must not decide by accident.
 Status: brainstorm
-Update trigger: when a filed slice (M48–M51) ships or is re-cut, or when the Steam entry graduates.
-Last updated: 2026-08-12
+Update trigger: when a filed slice (M49–M51) ships or is re-cut, or when the Steam entry graduates.
+Last updated: 2026-08-13
 -->
 
 ## What this covers
@@ -12,7 +12,7 @@ Last updated: 2026-08-12
 Everything co-op that is not yet a milestone. The decided ground lives in
 `../Decisions.md` (NGO, host-client, server-authoritative sim, client-auth own-movement,
 Steam relay eventually) and is not re-argued here. The filed slices, in execution order:
-[`M48`](../Milestones/1.%20planned/M48-the-first-networked-kill.md) (first networked kill +
+[`M48`](../Milestones/3.%20completed/M48-the-first-networked-kill.md) (first networked kill +
 the in-process test rig),
 [`M49`](../Milestones/1.%20planned/M49-the-gatekeepers-see-the-second-player.md) (the client
 is huntable and downable),

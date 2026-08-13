@@ -6,6 +6,8 @@
         "GatekeeperBastion",
         "Michsky.UI.Shift",
         "Unity.AI.Navigation",
+        "Unity.Netcode.Runtime",
+        "Unity.Networking.Transport",
         "UnityEditor.TestRunner",
         "UnityEngine.TestRunner",
         "UnityEngine.UI",

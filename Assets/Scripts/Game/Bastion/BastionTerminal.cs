@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>HOST-ONLY: terminal marker — player activation completes it in the unlock graph.</summary>
-    public sealed class BastionTerminal : MonoBehaviour
+    /// <summary>HOST-ONLY: field terminal — Ship-style console mesh + Interact completes it in the unlock graph.</summary>
+    public sealed class BastionTerminal : MonoBehaviour, IInteractable
     {
         [SerializeField] string terminalId;
         [SerializeField] string doorId;
@@ -45,9 +45,32 @@ namespace GatekeeperBastion.Game
                 _layout.UnregisterTerminal(this);
         }
 
-        /// <summary>POC: called by interact wiring later; completes this terminal in the graph.</summary>
+        public string Prompt
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(terminalId))
+                    return null;
+                string key = Controls.DisplayOf(ControlId.Interact);
+                if (_layout != null && _layout.IsTerminalDone(terminalId))
+                    return "Terminal " + terminalId + " — complete";
+                return "[" + key + "] Terminal " + terminalId;
+            }
+        }
+
+        /// <summary>Held Interact; Activate fires once on Interact Down (Ship station open pattern).</summary>
+        public void Interact(float dt)
+        {
+            if (!Controls.Down(ControlId.Interact))
+                return;
+            Activate();
+        }
+
+        /// <summary>Completes this terminal in the unlock graph and enables pressure spawns.</summary>
         public void Activate()
         {
+            if (_layout == null)
+                _layout = GetComponentInParent<BastionLayout>();
             if (_layout == null)
             {
                 Log.Warn("Terminal", terminalId + " has no BastionLayout");

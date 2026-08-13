@@ -3,6 +3,9 @@
     "references": [
         "GatekeeperBastion.Sim",
         "GatekeeperBastion",
+        "Unity.Netcode.Runtime",
+        "Unity.Netcode.Runtime.Tests",
+        "Unity.Networking.Transport",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

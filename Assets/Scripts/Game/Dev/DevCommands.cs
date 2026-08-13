@@ -19,6 +19,8 @@ namespace GatekeeperBastion.Game
             LoadoutPicker,
             GrantSalvage,
             ToggleGatekeeperReadout,
+            StartCoopHost,
+            StartCoopClient,
         }
 
         public readonly struct Binding
@@ -48,13 +50,15 @@ namespace GatekeeperBastion.Game
             new Binding(KeyCode.F7, "loadout picker (slot / weapon / tier)", Kind.LoadoutPicker),
             new Binding(KeyCode.F8, "grant 5,000 salvage", Kind.GrantSalvage),
             new Binding(KeyCode.F9, "toggle gatekeeper-state readout", Kind.ToggleGatekeeperReadout),
+            new Binding(KeyCode.F10, "host co-op session", Kind.StartCoopHost),
+            new Binding(KeyCode.F11, "join 127.0.0.1", Kind.StartCoopClient),
         };
 
         /// <summary>Compact panel token for the shortcut strip (e.g. "F2 replay"). Kept here so
         /// the DEV section and the F1 overlay cannot disagree on which keys exist.</summary>
         public static string PanelDisplay(Binding b)
         {
-            string key = b.Key.ToString(); // F1..F9
+            string key = b.Key.ToString(); // F1..F11
             string shortLabel = ShortLabel(b.Action);
             return string.IsNullOrEmpty(shortLabel) ? key : key + " " + shortLabel;
         }
@@ -72,6 +76,8 @@ namespace GatekeeperBastion.Game
                 case Kind.LoadoutPicker: return "loadout";
                 case Kind.GrantSalvage: return "salvage";
                 case Kind.ToggleGatekeeperReadout: return "readout";
+                case Kind.StartCoopHost: return "host";
+                case Kind.StartCoopClient: return "join";
                 default: return "";
             }
         }

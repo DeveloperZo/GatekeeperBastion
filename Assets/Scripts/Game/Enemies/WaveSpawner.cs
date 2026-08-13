@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
@@ -223,6 +224,9 @@ namespace GatekeeperBastion.Game
                     hatchDist, spawnDist)
                 : KillLog.FormatUnknownSlot(KindName(kind), award, AliveCount, hatchDist, spawnDist);
             if (actor != null) line = line + " id " + actor.SpawnId.ToString();
+            var netEnemy = actor != null ? actor.GetComponent<NetEnemy>() : null;
+            if (netEnemy != null && netEnemy.IsSpawned)
+                line = line + " netId=" + netEnemy.NetworkObjectId;
             Log.Event("Combat", line);
             CheckAssaultCleared();
         }
@@ -287,6 +291,12 @@ namespace GatekeeperBastion.Game
         {
             if (gatekeeper == null) return; // guard: destroyed between bookkeeping and here
             _live.Remove(gatekeeper);
+            var netObj = gatekeeper.GetComponent<NetworkObject>();
+            if (netObj != null && netObj.IsSpawned)
+            {
+                netObj.Despawn(true);
+                return;
+            }
             Destroy(gatekeeper.gameObject);
         }
 
