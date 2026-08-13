@@ -1,10 +1,9 @@
-using GatekeeperBastion.Game.Ui;
 using TMPro;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Binds the Ship hub's always-on HUD: Bastion corner cards minus Vitals
+    /// <summary>LOCAL-OWNER: binds the Ship hub's always-on HUD: Bastion corner cards minus Vitals
     /// (Profile TL, Score TR, Weapon BR), plus crosshair and interact prompt. Controllers
     /// push strings; nothing here sets a colour, a font size or a RectTransform.</summary>
     public sealed class ShipHudView : MonoBehaviour

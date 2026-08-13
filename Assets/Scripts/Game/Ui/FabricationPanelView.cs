@@ -1,11 +1,10 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Util;
 using TMPro;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Authored FABRICATION body: hatch, equipment and payload rows plus the bay
+    /// <summary>LOCAL-OWNER: authored FABRICATION body: hatch, equipment and payload rows plus the bay
     /// line. The HATCH / EQUIPMENT / PAYLOAD headings are authored scene text. A dumb binder —
     /// code writes text, toggles rows and wires clicks; layout, colour and font are the
     /// scene's.</summary>

@@ -4,9 +4,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
-    /// <summary>Binds the authored Bastion fight HUD: four corner cards, top-centre Hatch host,
+    /// <summary>LOCAL-OWNER: binds the authored Bastion fight HUD: four corner cards, top-centre Hatch host,
     /// left/right edge drawers, and the MsgGeneral / MsgPlayer lanes. Controllers push strings
     /// and values. The one RectTransform write allowed here is the MsgPlayer lane's anchored Y,
     /// which has to clear the left drawer's top edge and so cannot be authored.</summary>

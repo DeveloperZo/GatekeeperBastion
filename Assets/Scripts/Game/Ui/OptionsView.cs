@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
     /// <summary>One options row spec pushed by <see cref="OptionsScreen"/> — no Sim types.</summary>
     public struct OptionsRowSpec
@@ -33,7 +33,7 @@ namespace GatekeeperBastion.Game.Ui
         public string Label;
     }
 
-    /// <summary>Options presentation over Shift's authored Settings panel. Registers itself in
+    /// <summary>LOCAL-OWNER: options presentation over Shift's authored Settings panel. Registers itself in
     /// <see cref="Awake"/> so <see cref="OptionsScreen"/> reaches it without a scene search.
     /// All wiring is serialized; Shift's nested
     /// MainPanelManager owns sub-tab visuals — this class only records the active tab index,

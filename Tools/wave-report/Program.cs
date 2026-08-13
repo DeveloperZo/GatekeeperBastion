@@ -261,7 +261,7 @@ public static class WaveReport
 
         foreach (string raw in File.ReadLines(path))
         {
-            // Discriminator is stage=playmode, not the AutoVerify tag (M38 criterion 5).
+            // Discriminator is stage=playmode, not the IntegrationCheck/AutoVerify tag (M38 criterion 5).
             if (!filePlayMode
                 && raw.IndexOf("stage=playmode", StringComparison.OrdinalIgnoreCase) >= 0)
                 filePlayMode = true;

@@ -127,6 +127,12 @@ MIDTEXT_LINE_BASELINE="$(get_key "$RUNTIME_BLOCK" midtext_line_baseline "$RUNTIM
 MIDTEXT_FILE_BASELINE="$(get_key "$RUNTIME_BLOCK" midtext_file_baseline "$RUNTIME_DOC")" || exit 2
 IOL_PAT="$(get_key "$RUNTIME_BLOCK" initializeonload_pattern "$RUNTIME_DOC")" || exit 2
 IOL_ALLOW_RAW="$(get_key "$RUNTIME_BLOCK" initializeonload_allow "$RUNTIME_DOC")" || exit 2
+SCENELOOKUP_PAT="$(get_key "$RUNTIME_BLOCK" scenelookup_pattern "$RUNTIME_DOC")" || exit 2
+SCENELOOKUP_ALLOW_RAW="$(get_key "$RUNTIME_BLOCK" scenelookup_allow "$RUNTIME_DOC")" || exit 2
+AMBINPUT_PAT="$(get_key "$RUNTIME_BLOCK" ambientinput_pattern "$RUNTIME_DOC")" || exit 2
+AMBINPUT_ALLOW_RAW="$(get_key "$RUNTIME_BLOCK" ambientinput_allow "$RUNTIME_DOC")" || exit 2
+AMBRANDOM_PAT="$(get_key "$RUNTIME_BLOCK" ambientrandom_pattern "$RUNTIME_DOC")" || exit 2
+AMBRANDOM_ALLOW_RAW="$(get_key "$RUNTIME_BLOCK" ambientrandom_allow "$RUNTIME_DOC")" || exit 2
 SELFDELETE_PAT="$(get_key "$RUNTIME_BLOCK" selfdelete_pattern "$RUNTIME_DOC")" || exit 2
 SELFDELETE_MAX="$(get_key "$RUNTIME_BLOCK" selfdelete_enforced "$RUNTIME_DOC")" || exit 2
 NONSOURCE_MAX="$(get_key "$RUNTIME_BLOCK" nonsource_enforced "$RUNTIME_DOC")" || exit 2
@@ -142,6 +148,9 @@ require_num selfdelete_enforced "$SELFDELETE_MAX"
 require_num nonsource_enforced "$NONSOURCE_MAX"
 IFS=',' read -r -a WFS_NONLOOP <<< "$WFS_NONLOOP_RAW"
 IFS=',' read -r -a IOL_ALLOW <<< "$IOL_ALLOW_RAW"
+IFS=',' read -r -a SCENELOOKUP_ALLOW <<< "$SCENELOOKUP_ALLOW_RAW"
+IFS=',' read -r -a AMBINPUT_ALLOW <<< "$AMBINPUT_ALLOW_RAW"
+IFS=',' read -r -a AMBRANDOM_ALLOW <<< "$AMBRANDOM_ALLOW_RAW"
 
 SINGLETON_ALLOW_RAW="$(get_key "$SINGLETON_BLOCK" singleton_allow "$SINGLETON_DOC")" || exit 2
 SINGLETON_OWED_RAW="$(get_key "$SINGLETON_BLOCK" singleton_owed "$SINGLETON_DOC")" || exit 2
@@ -449,6 +458,63 @@ if [[ -n "$HITS" ]]; then
       continue
     fi
     printf '%s:%s: initializeonload-outside-allowlist\n' "$file" "$lineno"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  done <<< "$HITS"
+fi
+
+# --- Scene lookups outside the named exemptions (Game/ only) -----------------------
+# These three rows are the standing form of the two-runs milestone gate's manual greps
+# (criteria: no scene lookup / one input producer / seeded draws); the greps they replace
+# lived only in that milestone file.
+scan "$SCENELOOKUP_PAT" "$SCRIPTS_DIR/Game"
+if [[ -n "$HITS" ]]; then
+  while IFS= read -r hit; do
+    [[ -z "$hit" ]] && continue
+    file="${hit%%:*}"
+    rest="${hit#*:}"
+    lineno="${rest%%:*}"
+    short="$(scripts_rel "$file")"
+    if in_list "$short" "${SCENELOOKUP_ALLOW[@]}"; then
+      continue
+    fi
+    printf '%s:%s: scene-lookup-outside-allowlist
+' "$file" "$lineno"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  done <<< "$HITS"
+fi
+
+# --- Ambient Input reads outside the sole producer (Game/ only) ---------------------
+scan "$AMBINPUT_PAT" "$SCRIPTS_DIR/Game"
+if [[ -n "$HITS" ]]; then
+  while IFS= read -r hit; do
+    [[ -z "$hit" ]] && continue
+    file="${hit%%:*}"
+    rest="${hit#*:}"
+    lineno="${rest%%:*}"
+    short="$(scripts_rel "$file")"
+    if in_list "$short" "${AMBINPUT_ALLOW[@]}"; then
+      continue
+    fi
+    printf '%s:%s: ambient-input-outside-producer
+' "$file" "$lineno"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  done <<< "$HITS"
+fi
+
+# --- Ambient UnityEngine.Random outside the named cosmetic/crit sites (Game/ only) --
+scan "$AMBRANDOM_PAT" "$SCRIPTS_DIR/Game"
+if [[ -n "$HITS" ]]; then
+  while IFS= read -r hit; do
+    [[ -z "$hit" ]] && continue
+    file="${hit%%:*}"
+    rest="${hit#*:}"
+    lineno="${rest%%:*}"
+    short="$(scripts_rel "$file")"
+    if in_list "$short" "${AMBRANDOM_ALLOW[@]}"; then
+      continue
+    fi
+    printf '%s:%s: ambient-random-outside-allowlist
+' "$file" "$lineno"
     VIOLATIONS=$((VIOLATIONS + 1))
   done <<< "$HITS"
 fi

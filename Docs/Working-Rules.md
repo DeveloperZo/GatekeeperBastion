@@ -135,7 +135,7 @@ path. It earns that by being **used by more than one session for more than one
 question** — the same test that separates durable tooling from a chore
 (`_meta/_definitions/milestone.md`). It states its prerequisites in its own header: a
 tool nobody else can run is a script with documentation. Three exist: `Tools/verify/`,
-`Tools/docgen/`, and `Tools/wave-report/`. `Editor/Tools/AutoVerify.cs` is the Editor
+`Tools/docgen/`, and `Tools/wave-report/`. `Editor/Tools/IntegrationCheck.cs` is the Editor
 path beside them.
 
 **Menu item.** The highest bar, because the menu is the developer's surface and every
@@ -154,6 +154,8 @@ grow.** Seven rows existed on 2026-08-04; four survived that question.
 | Row | Earns it by |
 |---|---|
 | `Build All Scenes` | Scenes are generated and nothing else registers them (`Architecture.md`, gotcha 4). |
+| `Bake Bastion NavMesh` | Rebakes walkable mesh from authored Environment without wiping kit geometry. |
+| `Place Bastion Obstacles` | Seeds named LongLane/Corner/Choke/Mask props; Zo hand-finishes. Idempotent by name. |
 | `Run Verification Now` | Full EditMode + PlayMode in one click, with a report file. |
 | `Logs/Open Logs Folder` | The log is the evidence behind every gate; shortest path to it. |
 | `Logs/Copy Latest Log Path` | Hands the agent the exact file instead of a description of one. |
@@ -171,6 +173,33 @@ summary said *delete after M15 verify* and it was still firing days later. A too
 developer did not ask for, at a moment they did not choose, is the worst version of
 this failure — invisible, so nothing prompts anyone to remove it. One-shots do not go
 in `Assets/`.
+
+### Bastion authoring (seed, then hand-finish)
+
+Zo, 2026-08-12: agents **seed** kit segments, sketch placement, unlock marks, and named
+obstacle sets; Zo **hand-moves** them for the finishing effect. That split is the workflow —
+not a temporary compromise.
+
+| Step | Who | How |
+|---|---|---|
+| Kit prefabs | agent | `gkb_bastion_kit_request.txt` |
+| Segment layout + H/S/T/D + unlock graph | agent | sketch under `Tools/bastion-sketch/`, then `gkb_bastion_sketch_request.txt` (path in file, or empty for default). Emits into `Bastion.unity` under `Environment`. |
+| Obstacle seed | agent | `GatekeeperBastion/Place Bastion Obstacles` (or `gkb_bastion_obstacles_request.txt`). Names encode intent (`LongLane_*`, `Corner_*`, `Choke_*`, `Mask_*`). Skips hatch bay `02` when already authored. |
+| Hand finish | Zo | Move segments, sides, props, spawns in the Scene view. |
+| NavMesh | either | `GatekeeperBastion/Bake Bastion NavMesh` after geometry moves. |
+
+**Do not** run **Build All Scenes** against a kit bastion to “refresh” floors — when
+`BastionSegment`s are present, geometry wipe is skipped, but the habit still belongs to the
+old graybox. Sketch + obstacle place + NavMesh bake are the refresh path.
+
+Sentinels are for agents and batch; menus are for Zo. Same code path behind both where both
+exist.
+
+**Sides vs craft.** Enum sides seed `Gen_*` meshes under `_geom`. Hand fill that must survive
+rebuilds and NavMesh bake goes under `obstacles` (or under `_geom` **without** a `Gen_` name).
+`Gen_*` is owned by the segment. Door/Window openings shift with **Door Along** (metres from
+edge centre; N/S → ±X, E/W → ±Z) so a Full south Door can line up with a Half north Door
+without manual wall fill.
 
 ### One-shot editor work — the ladder (M41)
 
@@ -283,8 +312,9 @@ Three paths, in increasing cost:
    `--summary`, `--csv`, `--html <out>`. Needs `mono-devel`. Pin:
    `Logs/GatekeeperBastion_2026-08-07_16-34-30.log`. Bookmark for the same numbers in a
    page: `Docs/dashboard.html` (pick the Logs folder; parses in-browser).
-3. **AutoVerify file bridge** — write `<projectRoot>/gkb_verify_request.txt`;
-   with the editor open, `Editor/Tools/AutoVerify.cs` runs the full EditMode then
+3. **Integration-check file bridge** (formerly AutoVerify) — write
+   `<projectRoot>/gkb_verify_request.txt`;
+   with the editor open, `Editor/Tools/IntegrationCheck.cs` runs the full EditMode then
    PlayMode suites and writes `<projectRoot>/gkb_verify_report.json` with
    per-test results. Survives the domain reloads PlayMode causes. Also available
    as menu `GatekeeperBastion > Run Verification Now`. This is the only way to run
@@ -341,7 +371,7 @@ the harness, a session log, or a screenshot a human took.
 
 **If the editor is genuinely needed, batch it.** One session, one entry point, one pass —
 `-executeMethod` or a single menu item. Never a per-item loop, never a polling handshake, and
-never `[InitializeOnLoad]`. The AutoVerify bridge is the one file-sentinel mechanism this
+never `[InitializeOnLoad]`. The IntegrationCheck bridge is the one file-sentinel mechanism this
 project has and there is not a second one.
 
 **Never use the editor twice for the same answer.** If a value has to be checked repeatedly,

@@ -11,7 +11,7 @@ namespace GatekeeperBastion.Game
 
         void PushLose(GameController gc, RunSim sim)
         {
-            var report = sim.LastLossReport;
+            var report = sim.LastRunReport;
             string cause = report.cause == "player" ? "YOU DIED"
                          : report.cause == "hatch" ? "HATCH DESTROYED"
                          : Player != null && Player.IsDead ? "YOU DIED" : "RUN ENDED";
@@ -31,7 +31,7 @@ namespace GatekeeperBastion.Game
 
         void PushSuccess(GameController gc, RunSim sim)
         {
-            var report = sim.LastLossReport;
+            var report = sim.LastRunReport;
             long net = report.grossEarned - report.repairSpent;
 
             _view.SetEndScreen(

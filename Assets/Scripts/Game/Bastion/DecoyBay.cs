@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL + HOST entry for the drone bay's decoy: owns <see cref="DecoyState"/>,
+    /// <summary>HOST-ONLY: entry for the drone bay's decoy: owns <see cref="DecoyState"/>,
     /// spawns the live prop, and emits the per-Wave <c>Decoy</c> gatekeeper-seconds line.
     /// Placement confirm is HOST-ONLY; the ghost is local and predictive.</summary>
     public sealed class DecoyBay : MonoBehaviour
@@ -16,9 +16,11 @@ namespace GatekeeperBastion.Game
         public bool HasPayload { get; private set; }
 
         DecoyPlacement _placement;
+        // Pushed by GameController.ApplyMetaEffects (Bind); registration and the wave-tally
+        // event subscriptions run against this handle.
+        GameController _game;
         bool _waveTallyOpen;
         bool _subscribed;
-        bool _registered;
 
         public DecoyPlacement Placement => _placement;
 
@@ -31,10 +33,24 @@ namespace GatekeeperBastion.Game
             _placement.Bind(this, gun);
         }
 
+        /// <summary>Adopt the scene's GameController (called from ApplyMetaEffects at run
+        /// start): take the run's own DecoyState off its RunContext, register as its decoy
+        /// bay and subscribe to its Sim's wave events. The context owns the decoy bag so an
+        /// isolation test and the live bay read the same instance; the field initializer is
+        /// only the pre-Bind placeholder (Ship scene, unbound rigs).</summary>
+        public void Bind(GameController game)
+        {
+            _game = game;
+            if (game != null && game.Run != null) State = game.Run.Decoy;
+            Register();
+            Subscribe();
+        }
+
         void OnEnable()
         {
-            TryRegister();
-            TrySubscribe();
+            // Re-register on a disable/enable cycle; no-op until the controller has bound us.
+            Register();
+            Subscribe();
         }
 
         void OnDisable()
@@ -43,31 +59,22 @@ namespace GatekeeperBastion.Game
             Unsubscribe();
         }
 
-        void Update()
+        void Register()
         {
-            // The controller can enable after the bay; both hooks retry until it exists.
-            if (!_registered) TryRegister();
-            if (!_subscribed) TrySubscribe();
-        }
-
-        void TryRegister()
-        {
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc == null) return;
             gc.RegisterDecoyBay(this);
-            _registered = true;
         }
 
         void Unregister()
         {
-            _registered = false;
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc != null) gc.UnregisterDecoyBay(this);
         }
 
-        void TrySubscribe()
+        void Subscribe()
         {
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc == null || gc.Sim == null) return;
             if (_subscribed) return;
             gc.Sim.WaveStarted += OnWaveStarted;
@@ -77,7 +84,7 @@ namespace GatekeeperBastion.Game
 
         void Unsubscribe()
         {
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc != null && gc.Sim != null && _subscribed)
             {
                 gc.Sim.WaveStarted -= OnWaveStarted;
@@ -92,7 +99,9 @@ namespace GatekeeperBastion.Game
             HasPayload = equipped == PayloadId.Decoy;
             if (Live != null)
             {
-                Destroy(Live.gameObject);
+                // The prop's destroy belongs to DecoyObject (it creates itself in Spawn);
+                // the bay only drops its handle.
+                Live.Despawn();
                 Live = null;
             }
             State.ResetForRun(equipped);
@@ -128,8 +137,8 @@ namespace GatekeeperBastion.Game
         {
             if (_waveTallyOpen)
             {
-                int completed = GameController.Instance != null && GameController.Instance.Sim != null
-                    ? GameController.Instance.Sim.CurrentWaveIndex - 1
+                int completed = _game != null && _game.Sim != null
+                    ? _game.Sim.CurrentWaveIndex - 1
                     : 0;
                 LogWaveAbsorbed(completed);
             }
@@ -140,8 +149,8 @@ namespace GatekeeperBastion.Game
         void OnAssaultEnded()
         {
             if (!_waveTallyOpen) return;
-            int wave = GameController.Instance != null && GameController.Instance.Sim != null
-                ? GameController.Instance.Sim.CurrentWaveIndex
+            int wave = _game != null && _game.Sim != null
+                ? _game.Sim.CurrentWaveIndex
                 : 0;
             LogWaveAbsorbed(wave);
             _waveTallyOpen = false;

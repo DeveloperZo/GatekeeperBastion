@@ -360,8 +360,8 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual(50L, meta.BankedSalvage, "losing the hatch forfeits nothing");
             Assert.AreEqual(1, meta.PodEjections);
-            Assert.AreEqual("hatch", sim.LastLossReport.cause);
-            Assert.AreEqual(50L, sim.LastLossReport.grossEarned);
+            Assert.AreEqual("hatch", sim.LastRunReport.cause);
+            Assert.AreEqual(50L, sim.LastRunReport.grossEarned);
         }
 
         [Test]
@@ -373,8 +373,8 @@ namespace GatekeeperBastion.Tests
             sim.EngageTether(); // Prep, no draw pulled, zero salvage
             sim.Ship.Hatch.Damage(99999f);
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
-            Assert.AreEqual("hatch", sim.LastLossReport.cause);
-            Assert.AreEqual(0L, sim.LastLossReport.grossEarned, "a run with no kills earns nothing");
+            Assert.AreEqual("hatch", sim.LastRunReport.cause);
+            Assert.AreEqual(0L, sim.LastRunReport.grossEarned, "a run with no kills earns nothing");
             Assert.AreEqual(0L, meta.BankedSalvage);
             Assert.AreEqual(1, meta.PodEjections);
         }

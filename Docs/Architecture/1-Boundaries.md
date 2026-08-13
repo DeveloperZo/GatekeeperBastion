@@ -5,54 +5,63 @@ Purpose: Where the lines in this codebase are, what enforces them, and which pop
 Status: working
 Authority: CRITICAL — the Sim seam and the mutation surface are load-bearing.
 Update trigger: when an assembly is added or split, when the wiring approach changes, or when a rejected pattern is reconsidered.
-Last updated: 2026-08-09
+Last updated: 2026-08-12
 -->
 
-## 1. The Sim seam is a convention, not a boundary — and making it a boundary is free
+## 1. The Sim boundary: one-directional dependency, enforced by an assembly
 
-`Docs/Architecture.md` opens with the project's one structural rule: `Assets/Scripts/Sim/`
-is pure C#, no `using UnityEngine`, and it is the multiplayer seam.
+`Assets/Scripts/Sim/GatekeeperBastion.Sim.asmdef` exists with `"noEngineReferences": false`
+and no assembly references. `GatekeeperBastion`, `GatekeeperBastion.Editor`,
+`GatekeeperBastion.Tests` and `GatekeeperBastion.PlayTests` all reference it; nothing it
+depends on can ever reference back, because Unity prohibits cyclic assembly references and
+surfaces violations as compile errors
+([Referencing assemblies](https://docs.unity3d.com/6000.3/Documentation/Manual/assembly-definitions-referencing.html)).
 
-**Nothing in Unity enforces it.** `Assets/Scripts/GatekeeperBastion.asmdef` covers `Sim/`,
-`Game/` and `Util/` together, with `"noEngineReferences": false`. A `using UnityEngine` added
-to `RunSim` compiles cleanly and Unity says nothing.
+**Rule: inside `Sim/` there is no `MonoBehaviour`, no `GameObject`, no scene lookup, no
+`Time`, no ambient `Random`, no `SerializeField`, no `UnityEditor`, and no static mutable
+state.** (`static readonly` tables are fine. `Sim/Util/Log.cs` rides along in the Sim
+assembly — plain C# over `Debug`.)
 
-What does catch it today is `Tools/verify/run.sh`, which compiles `Sim/` plus `Util/Log.cs`
-with `mcs` and no Unity assemblies on the reference path — so a Unity type in Sim breaks the
-harness. **That is real enforcement, and it is fragile**: it only fires when someone runs the
-harness, and it disappears the moment anyone adds a Unity DLL to that script's references to
-make one thing compile.
+**Reason: testability and one-directional dependency — not engine purity.** What the
+boundary buys is EditMode tests that need no scene and no domain reload, logic that cannot
+silently depend on frame order, and two independent Runs that can advance in one process
+(`Assets/Tests/EditMode/Run/TwoRunIsolationTests.cs` asserts exactly that, including by
+reflection over the assembly for static mutable state). The earlier, stricter form of this
+rule — no `UnityEngine` types at all — was load-bearing for exactly one thing, cross-platform
+bitwise determinism for lockstep or deterministic rollback, and this project does neither:
 
-**The fix costs nothing here, which is unusual.** The standard objection to
-`noEngineReferences: true` is that you lose `Vector2/3`, `Quaternion`, `Mathf`, `Color`,
-`Random`, `[SerializeField]` and `Debug` — most projects flip the flag back off within a day.
-Audited 2026-08-09: `Sim/` uses **none of them**. Zero matches for `UnityEngine`, `Vector2`,
-`Vector3`, `Quaternion`, `Mathf`, `Color`, `Random.`, `SerializeField`, `Debug.` across the
-whole folder. The only outside dependency is `Util/Log.cs`, which is a five-method static
-wrapper that would move with it or behind an interface.
+- Unity's own docs: NGO *"doesn't support full client-side prediction and reconciliation"*
+  ([client anticipation](https://docs.unity3d.com/Packages/com.unity.netcode.gameobjects@2.7/manual/advanced-topics/client-anticipation.html)).
+- NGO's documented physics model runs Unity physics on the server
+  ([physics](https://docs.unity3d.com/Packages/com.unity.netcode.gameobjects@2.5/manual/advanced-topics/physics.html)),
+  which a type-pure sim could not call.
+- Unity's co-op reference sample puts game logic in `NetworkBehaviour` and uses
+  `NavMeshAgent` server-side
+  ([Boss Room architecture](https://docs.unity3d.com/Packages/com.unity.netcode.gameobjects@2.7/manual/samples/bossroom/architecture.html)).
+- Photon Quantum mandates float-freedom, not engine-freedom: `FP` fixed-point "completely
+  replaces all usages of floats and doubles to ensure cross-platform determinism"
+  ([Fixed Point](https://doc.photonengine.com/quantum/current/manual/quantum-ecs/fixed-point)).
+  A *deterministic* sim must own its math; that is not evidence a sim must leave the engine.
 
-**Rule: `Sim/` gets its own assembly definition with `noEngineReferences: true`.**
-**Reason:** Unity prohibits cyclic assembly references outright and surfaces violations as
-`CS0246` at compile time ([Referencing assemblies](https://docs.unity3d.com/6000.3/Documentation/Manual/assembly-definitions-referencing.html)),
-which turns the project's most load-bearing rule from a code-review item into a build error.
-Secondary benefit, measured: the same test suite runs ~18 s under the Unity Test Runner
-against ~2 s under a plain .NET runner, of which 0.38 s is compile and 3.45 s is domain
-reload before a single test executes ([gamedev.center](https://gamedev.center/run-unity-tests-faster-dotnet/)).
-**Counter-case:** asmdefs are not free. Each assembly carries fixed compile overhead — one
-measured report puts it near 2 s per asmdef, and an assembly that everything references
-produces a near-full rebuild on every edit ([Unity Discussions](https://discussions.unity.com/t/unity-assembly-definition-files-slower-not-faster-how-to-compile-faster/687349)).
-`Sim/` is edited constantly and `Game/` depends on all of it, so **this split will not make
-compiles faster and may make them slower.** Adopt it for the enforcement, not the speed, and
-say so — the widely circulated "10–100× faster iteration" figures for asmdefs are unsourced.
-**Status:** `[judgement]` on timing, `[documented]` on mechanism. Needs a milestone; the
-gate is that `using UnityEngine;` added to any file in `Sim/` fails the Unity compile.
+So `Vector3`, `Quaternion` and `Mathf` are permitted in `Sim/`, and the cost of banning them
+is named so the strict form is not re-proposed: no `Physics.Raycast` and no NavMesh inside
+the sim, and `INetworkSerializable` lives in an assembly that references UnityEngine, so
+strict purity buys a hand-written mapping layer for every replicated field, permanently.
 
-**Do not add more assemblies than that.** Unity's own package guidance is that one assembly
+**Enforcement is layered and none of it is a review item.** The asmdef makes the dependency
+direction a compile error. `Tools/verify/run.sh` compiles `Sim/` alone against the stub
+surface in `Tools/verify/Shims.cs` — CoreModule value types plus `Debug` — so a
+MonoBehaviour, scene call, `Time` or ambient `Random` in `Sim/` fails the offline harness at
+stage 1. And `TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState` fails the suite if
+a static mutable field appears anywhere in the Sim assembly.
+
+**Do not add more assemblies than these.** Unity's own package guidance is that one assembly
 per code folder — Editor, Runtime, Tests — "typically suffices"
 ([Create or edit assembly definitions](https://docs.unity3d.com/6000.4/Documentation/Manual/cus-asmdef.html)).
 Core/Gameplay/UI splits are community practice, not Unity guidance, and the usual outcome is
 a "Shared" assembly that everything references, which is the god-module you were avoiding.
-Three assemblies — `Sim`, `GatekeeperBastion`, `GatekeeperBastion.Editor` — is the target.
+`GatekeeperBastion.Sim`, `GatekeeperBastion`, `GatekeeperBastion.Editor` and the two test
+assemblies is the complete set.
 
 ## 2. Wiring: a composition root, not a container
 
@@ -73,11 +82,13 @@ it an anti-pattern because the constructor lies about what the class needs
 it for lifetime mismatches ([jimmybogard](https://www.jimmybogard.com/service-locator-is-not-an-anti-pattern/)).
 The debate does not resolve, so the project should not depend on which side is right.
 
-**Counter-case.** `SceneBuilder`-authored `[SerializeField]` wiring cannot express interfaces
-directly, cannot cross scenes, and cannot reach runtime-instantiated objects — which is why
-`GameController.Instance`, `HatchStation.Instance` and `PlayerRegistry` exist. Those are the
-seams a container would clean up. If the wiring graph ever stops fitting in `SceneBuilder`,
-revisit this rather than adding a fourth static.
+**Counter-case.** Authored `[SerializeField]` wiring cannot express interfaces directly,
+cannot cross scenes, and cannot reach runtime-instantiated objects — which is why the
+`HatchStation.Instance` locator, `PlayerRegistry` and the `SpawnPoint` registry exist, and
+why runtime-spawned actors get their references pushed (`Bind` / `Configure`) from the
+owning controller instead. Those are the seams a container would clean up. If the wiring
+graph ever stops fitting in the authored scenes plus the push calls, revisit this rather
+than adding a new static.
 
 **Rule: the existing "all sim mutation goes through `GameController`" convention stays, and
 its scope gets stated.** It is the Command pattern's single-writer property, and its real

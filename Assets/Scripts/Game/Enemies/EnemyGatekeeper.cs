@@ -3,7 +3,6 @@ using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
 using UnityEngine.AI;
-using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -69,9 +68,6 @@ namespace GatekeeperBastion.Game
         [SerializeField] float alertRadius = 12f;
         [SerializeField] float chaseSpeed = 5.6f;
 
-        static readonly System.Collections.Generic.List<EnemyGatekeeper> Gatekeepers =
-            new System.Collections.Generic.List<EnemyGatekeeper>();
-
         // The two refusals, pushed from GatekeeperStats at spawn. Read through the virtual
         // MayTargetHatch / MayTargetPlayer / CanBeProvoked in EnemyGatekeeper.Targeting.cs.
         protected bool ignoresHatch;
@@ -81,13 +77,19 @@ namespace GatekeeperBastion.Game
         bool _committedToHatch;
         bool _wasInRange;
         bool _loggedHatchHit;
-        float _committedAt;
+        float _committedAt; // diagnostic wall-clock (Time.time) for logs/readouts — not sim state
         Vector3? _standPoint;
         Vector3 _lastDestination = new Vector3(9999f, 9999f, 9999f);
         float _pinRemaining;
 
         NavMeshAgent _agent;
         Damageable _damageable;
+        // Pushed by WaveSpawner at spawn (Configure). Null on a hand-placed actor, which then
+        // treats the run as over and never acts — spawner-spawned is the supported path.
+        GameController _game;
+        // Pushed alongside _game at spawn: the one owner of this actor's destroy. Death routes
+        // through _spawner.Despawn so the spawn ledger and the Destroy live in one place.
+        WaveSpawner _spawner;
         PlayerHealth _player;
         HatchStation _hatchTarget;
         DecoyObject _decoyTarget;
@@ -99,6 +101,11 @@ namespace GatekeeperBastion.Game
         /// <summary>World position written once at Instantiate (the GroupSlot sample). Left at
         /// default when never spawned through WaveSpawner — kill line then writes spawnDist=-1.</summary>
         public Vector3 SpawnedAt;
+
+        /// <summary>Stable per-run spawn id (RunContext.TakeSpawnId), written once at spawn.
+        /// 0 on a hand-placed actor. The kill line quotes it so a body can be traced back to
+        /// its spawn across a whole run's log.</summary>
+        public int SpawnId { get; set; }
 
         /// <summary>Which kind this actor is. Identity only — behaviour comes from the flags, so
         /// this is what the kill line and the prefab palette read, never the AI.</summary>
@@ -118,9 +125,6 @@ namespace GatekeeperBastion.Game
         /// <summary>Dev F9 readout: seconds since hatch commit (0 when not parked).</summary>
         public float DevTimeParked =>
             _committedToHatch ? Mathf.Max(0f, Time.time - _committedAt) : 0f;
-
-        /// <summary>Every live gatekeeper. Used by ability cones — do not mutate.</summary>
-        public static IReadOnlyList<EnemyGatekeeper> AllLive => Gatekeepers;
 
         /// <summary>Crowd avoidance quality. 42 simultaneous agents is 3x the old load, so the
         /// chaff kinds get a cheaper solver; RamGatekeeper keeps a high-quality one because its whole
@@ -144,6 +148,22 @@ namespace GatekeeperBastion.Game
         {
             Configure(stats.playerDamage, stats.hatchDamage, stats.attackInterval,
                       stats.patrolSpeed, stats.chaseSpeed, stats.ignoresHatch, stats.ignoresPlayer);
+        }
+
+        /// <summary>Stats push plus the controller handle — the controller is what this actor
+        /// reads run state (RunIsOver, Decoys) from.</summary>
+        public void Configure(GatekeeperStats stats, GameController game)
+        {
+            _game = game;
+            Configure(stats);
+        }
+
+        /// <summary>WaveSpawner's spawn path: stats, controller, and the spawner that owns this
+        /// actor's lifetime — death routes back through <see cref="WaveSpawner.Despawn"/>.</summary>
+        public void Configure(GatekeeperStats stats, GameController game, WaveSpawner spawner)
+        {
+            _spawner = spawner;
+            Configure(stats, game);
         }
 
         /// <summary>The primitive form of <see cref="Configure(GatekeeperStats)"/> — the only place
@@ -202,17 +222,6 @@ namespace GatekeeperBastion.Game
                 _damageable.onDeath.RemoveListener(OnDeath);
                 _damageable.Damaged -= OnDamaged;
             }
-            Gatekeepers.Remove(this);
-        }
-
-        void OnEnable()
-        {
-            if (!Gatekeepers.Contains(this)) Gatekeepers.Add(this);
-        }
-
-        void OnDisable()
-        {
-            Gatekeepers.Remove(this);
         }
 
         void Start()
@@ -222,6 +231,10 @@ namespace GatekeeperBastion.Game
 
         void Update()
         {
+            // dt boundary: read once, thread into every sim-facing timer below. The Time.time
+            // reads elsewhere in this class are diagnostics (logs/readouts), not sim state.
+            float dt = Time.deltaTime;
+
             if (_damageable == null || _damageable.IsDead) return;
 
             // Terminal phase (player down / hatch lost) or scene teardown: stop, permanently.
@@ -234,14 +247,14 @@ namespace GatekeeperBastion.Game
 
             if (_pinRemaining > 0f)
             {
-                _pinRemaining -= Time.deltaTime;
+                _pinRemaining -= dt;
                 StopAgent();
                 if (_pinRemaining > 0f) return;
                 _pinRemaining = 0f;
                 _retargetTimer = 0f;
             }
 
-            _retargetTimer -= Time.deltaTime;
+            _retargetTimer -= dt;
             if (_chasingDecoy && (_decoyTarget == null || !_decoyTarget.IsAlive))
                 _retargetTimer = 0f;
             if (_retargetTimer <= 0f)
@@ -272,7 +285,7 @@ namespace GatekeeperBastion.Game
             // The swing clock runs on WALL TIME, not on time-spent-in-range. Ticking it only while
             // in range meant a gatekeeper in range 36% of frames swung at 36% of its rate — measured
             // straight off a play log: 84 hatch damage took 13.5s instead of 4.9s.
-            _attackTimer -= Time.deltaTime;
+            _attackTimer -= dt;
 
             // Arriving IS the attack: the first swing lands on contact, not an interval later.
             if (inRange && !_wasInRange) _attackTimer = 0f;
@@ -354,11 +367,11 @@ namespace GatekeeperBastion.Game
             return d.magnitude;
         }
 
-        /// <summary>True once the sim is in a terminal phase, or when there is no sim at all
-        /// (scene teardown / direct-play without a controller).</summary>
-        static bool RunIsOver()
+        /// <summary>True once the sim is in a terminal phase, or when no controller was bound
+        /// at spawn (scene teardown / hand-placed actor outside the spawner path).</summary>
+        bool RunIsOver()
         {
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc == null) return true; // no controller: nothing left to fight for
             return gc.RunIsOver;         // Lost/Escaped, or a null Sim
         }
@@ -405,10 +418,14 @@ namespace GatekeeperBastion.Game
         void OnDeath()
         {
             // The kill LINE belongs to WaveSpawner: it owns the alive count this death changes,
-            // and its listener closes over this gatekeeper's kind.
+            // and its listener closes over this gatekeeper's kind. So does the DESTROY —
+            // Despawn is the one path that removes a spawned actor from the ledger and the
+            // scene. A hand-placed actor has no spawner and cleans up after itself.
             StopAgent();
             SpawnDeathBurst();
-            Destroy(gameObject);
+            var spawner = _spawner;
+            if (spawner != null) spawner.Despawn(this);
+            else Destroy(gameObject);
         }
 
         /// <summary>Kill-confirm particle explosion so deaths read as an event, not a vanish. The

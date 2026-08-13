@@ -57,6 +57,7 @@ namespace GatekeeperBastion.Game
         }
 
         bool _overlay;
+        GameController _gameCached;
         bool _awaitingWaveDigit;
         bool _gatekeeperReadout;
         bool _loadoutPicker;
@@ -80,6 +81,17 @@ namespace GatekeeperBastion.Game
         void LateUpdate()
         {
             RefreshCapture();
+        }
+
+        /// <summary>Dev-only locator: cached scene lookup, re-resolved after a scene change
+        /// (the cached handle goes fake-null). Null on the Ship scene, by design.</summary>
+        GameController Game
+        {
+            get
+            {
+                if (_gameCached == null) _gameCached = FindFirstObjectByType<GameController>();
+                return _gameCached;
+            }
         }
 
         void RefreshCapture()
@@ -119,7 +131,7 @@ namespace GatekeeperBastion.Game
                     _awaitingWaveDigit = false;
                     _capture = CaptureKind.None;
                     _suppressFightKeys = true;
-                    var gc = GameController.Instance;
+                    var gc = Game;
                     if (gc != null) gc.JumpToWave(wave);
                     else Log.Warn(Tag, $"JumpToWave {wave} ignored — no GameController (Ship scene?).");
                     return;
@@ -145,7 +157,7 @@ namespace GatekeeperBastion.Game
             if (action != DevCommands.Kind.ArmJumpToWave)
                 _awaitingWaveDigit = false;
 
-            var gc = GameController.Instance;
+            var gc = Game;
 
             switch (action)
             {

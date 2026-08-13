@@ -7,13 +7,85 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-12
 -->
 
-Most recent first. **State transitions and structural edits only** — a milestone moving
-folder, a gate rewritten, a queue cap changed, a Brainstorm item graduating. Not progress
-notes, not tuning results, not anything the milestone file already holds.
+- 2026-08-12: **M47 status later → next (current).** Folder was already `2. active/`;
+  frontmatter and the roadmap row now match. Current line names M47 as the active build;
+  M48 stays planned; station-UI polish stays unfiled.
 
 This file is history. **`Roadmap.md` is what is next**: order, status, strategy and risks.
 `Milestones/` is the detail behind any entry here.
 
+- 2026-08-12: **M50 and M51 created** in `1. planned/` (Zo: author all slices now, refine
+  through implementation). M50 *The client lives the run* — mirror widened to the fight
+  readout, endings as an `EndSummary` ClientRpc, clean session shutdown; guest progression
+  explicitly left open. M51 *The client's hands* — repair channel, decoy placement and
+  abilities as server-validated RPCs with the per-verb single-application invariant;
+  completes the loopback epic. Both carry re-cut-before-start update triggers since they
+  are authored ahead of M48/M49 landing. `Brainstorms/co-op.md` rewritten: the two
+  graduated entries deleted, replaced by three that stay — Steam + join surface, guest
+  progression (unknown — needs design), presence beyond a capsule.
+- 2026-08-12: **The co-op epic is chunked** (Zo: single dev, so testing needs a framework).
+  Four slices to a full loopback run: M48 (kill + rig) → M49 (client is huntable) → "the
+  client lives the run" → "the client's hands", the last two as `Brainstorms/co-op.md`
+  entries with graduation tests tied to M48/M49's real shapes — pre-filing them would breed
+  the vague gates the contract forbids. Steam + join surface graduates only after a full
+  loopback run completes. **M48 revised**: it now also ships the in-process test rig
+  (`NetcodeIntegrationTest`, one host + one client in one PlayMode test; new criterion 7
+  `NetKillTests`), so the kill loop closes headless — the gate no longer needs two hands.
+  **M49 created** in `1. planned/` — avatar gains a registered `PlayerHealth` + collider;
+  targeting needs no enemy code changes (`NearestAlive` already multi-player).
+- 2026-08-12: **AutoVerify renamed IntegrationCheck** (Zo). `Editor/Tools/IntegrationCheck.cs`
+  (git mv), class, log tag and menu row (`Run Integration Check Now`) renamed; the sentinel
+  filenames `gkb_verify_request.txt` / `gkb_verify_report.json` are kept as the stable wire
+  protocol. Living docs updated (AGENTS §5, Working-Rules, Architecture map, 3-Unity-Runtime
+  `initializeonload_allow` fence, 4-Testing, 4-Data discriminator note, gkb-verification
+  skill); completed milestones and this log's history keep the old name as the record.
+- 2026-08-12: **M48 created** in `1. planned/` — *The first networked kill*, the co-op slice
+  M45's Watch section named: a second instance joins over UnityTransport loopback, kills one
+  server-spawned gatekeeper, and both screens read the same wave counter. First netcode
+  integration, so it carries a kill criterion testing the NGO choice (ten working days to
+  criterion 5 or the library decision re-opens against FishNet). Packages pinned NGO 2.13.1
+  / Multiplayer Play Mode 3.0.0.
+- 2026-08-12: **M45 completed.** Offline harness 283/283 with the poison proof observed
+  (a seeded static in `RunContext` failed both reflection teeth; green on revert); Unity
+  suite EditMode 315/0 including the four `TwoRunIsolationTests`, PlayMode 23/0. The one
+  PlayMode failure the first run surfaced — `CoreLoopPlayModeTests` hatch damage routing —
+  was the test building an empty scene without the serialized `_game` wiring the authored
+  scene carries; the test now wires it by reflection, the suite's established pattern.
+  File moved to `3. completed/`.
+- 2026-08-12: **M45 review closed the execution gaps.** Criterion 5's recorded narrowing said
+  the enemy live list was spawner-owned; the static `EnemyGatekeeper.Gatekeepers` list and
+  `AllLive` remained with three call sites — retired now (`WaveSpawner.Live` is the one
+  ledger; `PlayerAbility` reaches it through the bound controller, the provoke shout through
+  `_spawner`). `DecoyBay` now adopts `RunContext.Decoy` at Bind instead of a parallel
+  `DecoyState`. Criterion 1 corrected in an edit that says so: "references only CoreModule"
+  is not expressible in asmdef JSON; enforcement is the offline shim compile plus the
+  reflection tooth. Criterion 9's residual `Time.` sites named as exemptions (attribution
+  window, frame latch, hub lockouts). Roadmap row and Current moved to `2. active/`; status
+  string normalized to `next (current)`. Unity suite with the isolation tests still owed.
+- 2026-08-12: **M45 executed** (agent, on Zo's go; Unity gate pending one editor focus).
+  Sim asmdef landed (`noEngineReferences: false`, no references; Boundaries rule rewritten
+  to testability + one-directional dependency); `Settings` moved to `Game/Settings/` (Sim
+  holds zero static mutable state, reflection-asserted); `Log.cs` rides in the Sim assembly;
+  harness split two-stage (Sim compiles alone against Shims). `GameController.Instance`
+  retired (RunContext scene host; serialized refs + Bind pushes; singleton fence now
+  `HatchStation` only). 31 scene-lookup lines cleared to six named exempt files; input is
+  one `PlayerInputFrame` from `Controls.Sample()`; spawner delivery is tick-driven (no
+  WaitForSeconds), draws seeded-only, stable spawn ids from `RunContext`; the Bastion
+  advances in a written order from `GameController.Update`. Gate re-cut per its own
+  Verification step 4 (both original teeth green at HEAD; third tooth — no static mutable
+  Sim state — was red at HEAD on `Settings`' four statics). Three new lint fences replace
+  the milestone's manual greps. Poison proofs: shared meta, lint-evading static accessor,
+  ambient random — all fail the gate. Harness 283/283. File moved to `2. active/` pending
+  Unity suite + scene binding wiring validation.
+- 2026-08-12: **M42 completed.** One save-migration path, one falloff/repair/slot-select,
+  cut APIs deleted, kill lines quote banked amount, `LossReport`→`RunReport`, 43/43 R5
+  labels, one `Game/` namespace. Harness 279; AutoVerify EditMode 311 / PlayMode 23.
+  File moved to `3. completed/`.
+- 2026-08-12: **M45 refined** (Zo accepted review recommendations). Criterion 12 locked to
+  Sim-only `RunContext` isolation (two `MetaState`s); `DecoyBay.Instance` dropped from
+  criterion 5; HatchStation kept as locator; gun crit RNG stays ambient per Architecture;
+  editor play removed from criterion 14; kill criterion and Implementation signatures added;
+  live counts refreshed (2026-08-12 audit).
 - 2026-08-12: **M36 completed** (Zo playtest: Hatch always-on host accepted for this stage).
   Criteria 8–11 closed; file moved to `3. completed/`.
 - 2026-08-12: **M46 cancelled** (Zo). Authored-panel rewrite not a roadmap slot; station
@@ -32,6 +104,14 @@ This file is history. **`Roadmap.md` is what is next**: order, status, strategy 
 - 2026-08-12: **M34 cancelled** (Zo). Region order stays in `Architecture/7-File-Layout.md`
   for new files; tree-wide sweep and `Tools/lint-layout` are not a roadmap slot. File moved
   to `5. cancelled/`; Architecture "in flight" row retired.
+- 2026-08-13: **BastionSegment door along + craft-safe bake.** Per-edge Door/Window along offset
+  (metres from centre). OnEnable no longer rebuilds when `_geom` already has children; NavMesh /
+  obstacle place suppress validate rebuild so hand craft is not wiped.
+- 2026-08-12: **Bastion authoring workflow + field terminals.** Working-Rules: agent seeds
+  sketch/obstacles, Zo hand-finishes, NavMesh bake; menus for Place Obstacles / Bake NavMesh.
+  missions-and-destinations: reuse Ship console presentation; wing T opens D; distinct Control
+  Master terminal; T feeding a locked D starts a Wave (door after clear).
+- 2026-08-12: **Control Room multiple 76 → 47** (footprint 235 × 376 at scaler 5×8).
 - 2026-08-12: **M33 completed.** `Tools/docgen` splices ten countable blocks into
   `Design/4-Data.md`, repairs Field-Manual against `WeaponWheel` / `UpgradeTracks`, and
   `--check` runs from `Tools/verify/run.sh`.

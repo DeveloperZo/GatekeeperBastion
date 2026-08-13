@@ -27,7 +27,21 @@ namespace GatekeeperBastion.Game
 
         IInteractable _current;
 
+        /// <summary>True once the Bastion's tick owner drives this component; its own
+        /// Update then yields so the written system order is the only order. The Ship scene
+        /// has no tick owner and stays self-driven.</summary>
+        bool _hosted;
+
+        public void SetHosted(bool hosted) { _hosted = hosted; }
+
         void Update()
+        {
+            if (_hosted) return; // the Bastion tick owner calls Tick in the written order
+            Tick(Time.deltaTime);
+        }
+
+        /// <summary>Interact/repair: crosshair raycast and the held-interact drive.</summary>
+        public void Tick(float dt)
         {
             _current = null;
             CurrentPrompt = null;
@@ -40,7 +54,7 @@ namespace GatekeeperBastion.Game
             if (_current == null) return;
             CurrentPrompt = _current.Prompt;
             if (Controls.Held(ControlId.Interact))
-                _current.Interact(Time.deltaTime);
+                _current.Interact(dt);
         }
     }
 }

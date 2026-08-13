@@ -13,7 +13,7 @@ namespace GatekeeperBastion.Game
 
         [SerializeField] NavMapPanelView _body;
 
-        protected override string StationName => "NAV MAP";
+        public override string StationName => "NAV MAP";
 
         protected override string PromptHint
         {

@@ -4,7 +4,7 @@
 Purpose: The NAV MAP console, run structure inside a bastion, and having more than one place to go.
 Status: brainstorm
 Update trigger: when the Run gains structure beyond Waves, or when a second destination exists.
-Last updated: 2026-08-04
+Last updated: 2026-08-13
 -->
 
 ## What this covers
@@ -14,9 +14,13 @@ hits. The NAV MAP console, the console restructure, and destinations beyond ALPH
 
 ## Where it stands
 
-One destination, one room, one objective. `Game/Ship/MapStation.cs` embarks; M14 adds a
-start-Wave selector. A Run is five Waves of gatekeepers against one Hatch, in a 30 x 52 m
-floor with three spawn points, and it ends when the Waves are cleared or the door falls.
+One destination, one objective. `Game/Ship/MapStation.cs` embarks; M14 adds a start-Wave
+selector. A Run is five Waves against one Hatch and still ends when the Waves are cleared
+or the door falls. **M47 is active:** the kit palette (Quarter / Half / Full / Open Area /
+Control Room) and the unlock graph exist in Sim; `Bastion.unity` is being authored from
+those segments. Runtime terminal / door / wave-on-T is still this file, not M47's gate.
+The shipped fight the player can play today is still the one-room Hatch defence; the
+composed bastion is the M47 proof, not yet the loop.
 
 ## Graduation test
 
@@ -69,39 +73,60 @@ has been waiting for a shape since it was deferred.
 
 ## The loop
 
+**Zo, 2026-08-12 — two triggers, two fights.** The 2026-08-11 delivery loop below is the
+same job, split so the Hatch is only a defence when a bank is on the line.
+
 1. The bastion is **much larger** than today's 30 × 52 room, with **many spawn points**.
-2. The player explores and collects. **Nothing banks in the field.** Salvage accumulates at the
-   Hatch.
-3. **Gatekeepers reaching the Hatch take salvage as well as integrity** — and, later, other
-   things. Hoarding is not safe; the vault leaks.
-4. The player **triggers delivery** when ready. That is what signals the bastion.
-5. Waves come from the spawn points. The player defends.
-6. Waves end, the delivery banks to the ship, **more of the bastion opens**, and it repeats
-   until the Master Control.
+2. **Terminal trigger — accumulate.** A field terminal starts a Wave that hunts the
+   Boarder. Kills fill an unbanked pile. The Hatch is not a target and is not vulnerable.
+   Clearing the terminal Wave does **not** bank. A cleared terminal set still opens its **D**.
+   Intensity is visible as a number, not an exact composition. The player may **pay to
+   raise** that intensity (more danger, more Salvage into the pile). No pay-to-skip.
+3. The player may pull more terminals before banking. The pile grows. Hatch-banks per Run
+   are **limited**, so nibbling every terminal is spending a slot. Greed is carrying more
+   unbanked into fewer banks; the convert multiplier is higher when the pile is.
+4. **Hatch trigger — bank.** The Hatch starts a Wave whose primary is the Hatch, players
+   second. The Hatch is vulnerable only now. Unbanked **drips** into the ship bank for the
+   duration. Hatch hits attrit unbanked **and** Hatch HP. Hatch to 0: remaining unbanked
+   is wiped, already-dripped stays, the Run ends. Wave clears: remainder dumps to the ship
+   (so padding the Wave to farm drip time is useless). Unspent withdrawn rides with
+   unbanked. The player may pay to juice this Wave the same way.
+5. Repeat until bank slots are spent or the Master Control. Master Control is one
+   pull that starts a Wave sequence: terminal-mode Waves fought in the Control Room,
+   then the door opens and the remaining Waves are Hatch-bank. Leftover unbanked
+   converts on that Hatch-bank half.
 
 ## Why each piece is load-bearing
 
-**Delivering calls the wave, so greed authors the difficulty.** The natural coupling is the
-amount delivered sizing the wave: the player writes their own curve, and `MaxWaves` becomes
-emergent rather than the constant 5 with its fixed 18 / 30 / 42 / 54 / 66. The reference is
-surfacing with treasure in *Depth*.
+**Greed authors the Hatch-bank Wave and the convert.** Unbanked carried into the Hatch
+trigger sizes that Wave and raises the salvage multiplier. A player who risks more banks
+more than one who converts often. Hatch-banks per Run are capped so the safe nibble spends
+the slots. The cap count is a `4-Data.md` number when this ships, not a rule here.
 
-**This replaces the siphon dial rather than sitting beside it.** *Opt-in loot delivery* above
-says a second wager "needs the first wager to be worth taking before a second means anything."
-**Measured across every session log on disk: eleven Runs at siphon L0, two at L2.** The first
-wager is not being taken. Two dials nobody turns is worse than one the player cannot avoid
-making — the dial's multiplier becomes the delivery's rate.
+**The player-set siphon dial is replaced by visible intensity plus pay-to-juice** (Zo,
+2026-08-13), PoE 2 shape: more danger, more reward. There is no brick and no exact preview
+— an intensity number, not a composition list. Eleven Runs at L0, two at L2: the *free*
+stake was not being taken; a paid bump can fail the same way if base intensity is already
+the whole fight. Juice attaches to the trigger about to be pulled (terminal, Hatch, or Master Control).
+Pay from carried Salvage (unbanked or withdrawn), not from the ship bank sitting on the
+Ship. No pay-to-skip on doors.
 
-**The Hatch holding losable salvage is what answers "why explore".** Not a destination out in
-the field — a *stake* back home. Staying put does not protect it, because arrivals drain it.
-That is the difference between a game that punishes leaving and one that prices it.
+**The Hatch is only a defence when a bank is on the line.** Terminal Waves do not attack
+it. Hatch-sit during accumulate earns nothing. Master Control's first half is that rule;
+its second half is the Hatch-bank that converts leftover. The 10% resource-spawn rule
+stays **cut**.
 
-**Resources appear only once a wave is sufficiently spawned.** *(Zo's, and the sharpest piece
-here.)* The standard tower-defense failure is that leaving your emplacement is pure downside, so
-the correct play is always to stand still. Spawning field resources **during** the wave inverts
-it: moving away is an opportunity rather than a penalty, and it cannot be farmed before pulling
-the trigger. **"Sufficiently spawned" needs a definition** — share of the wave emitted, or first
-group landed — or it is exploitable by delivering and immediately running.
+**The Hatch-bank is a drip, not a lump** (Zo, 2026-08-13). Unbanked converts to the ship
+bank over the Wave. Hatch hits siphon unbanked and Hatch HP. Sloppy defence costs money
+without requiring a breach. Breach wipes what is still unbanked; what already dripped is
+off the bastion. **Remainder dumps on a successful clear** — otherwise leaving bodies alive
+to extend drip time is the dominant play, and a fat pile may not finish in one slot (that
+fights fewest-banks). Convert rate is a `4-Data.md` number when this ships.
+
+**Same mix, targeting mode changes.** Defaults switch with the mode. Hunters always the
+Boarder. Rams hunt on terminal Waves only (Zo, 2026-08-13 — dated break of “Ram never
+hurts you,” that mode only) and Hatch-only on Hatch-bank Waves. See
+`gatekeepers-and-waves.md`.
 
 **A main path exists and is chokeable; other spawn points bypass it.** That is the emplacement
 decision — you can hold the choke or cover a flank, not both, and the Drone Bay (charges, one
@@ -115,11 +140,31 @@ by `OnEnable` / `OnDisable`, so a spawn point reached and shut is nearly free me
 ### Layout marks (Zo, 2026-08-11) — space for M47, behaviour later
 
 Sketch: **H** Hatch defend, **S** spawns, **T** terminals, **D** locked doors, Open Areas as hubs,
-Full/Half for T/S wings, **Control Room (76) last in unlock order**. Completing terminals in an
+Full/Half for T/S wings, **Control Room (47) last in unlock order**. Completing terminals in an
 open wing opens a **D** and pressures the tied **S**. Spawns behind a lock are nominal for that
 wing once live. **Unlock order is authored independently of distance** — Master Control can sit
 near the Hatch and stay sealed until late. M47 authors the kit layout and the graph; runtime
 terminal / door / wave-on-T is still this entry's loop, not M47's gate.
+
+### Field terminals (Zo, 2026-08-12)
+
+**Reuse the Ship console.** Bastion field terminals are the same authored console presentation
+and interact pattern as Ship stations (`StationTerminal` chrome / prefab family) — not Ship
+panel content (Armory, Map, etc.). `BastionTerminal` stays the unlock-graph marker; the Ship
+console is what the player sees and uses.
+
+**Wing terminals open doors.** Completing the terminal set on a locked **D** is what opens that
+door (already the unlock graph). Progress through locked bulkheads is terminal work.
+
+**Control Room has a distinct Master terminal.** It is not another wing T. It is the last
+unlock target. One pull starts a Wave sequence (see Settled — Master Control).
+
+**Locked-door terminals start accumulate Waves** (Zo, 2026-08-12). Player-primary, Hatch
+not a target. Door opens after that Wave clears and the terminal set for the door is
+complete — not a silent unlock on interact alone.
+
+**The Hatch starts bank Waves.** Hatch-primary, players second. This is the only window
+the Hatch can be hurt — including Master Control's second half.
 
 ## Information is telegraphed, not guaranteed
 
@@ -136,46 +181,64 @@ Park it until a dedicated telegraph milestone or a later HUD cut.
 
 ## What would kill it
 
-**Framed as a gradient, not a gate** (Zo, 2026-08-11). Holding the Hatch stays a valid way to
-play. It should simply pay less.
+Holding the Hatch during accumulate now banks **0** by construction, so the old
+explore-vs-hold test would pass even if the field were decoration.
 
-**The test is two cleared Runs, deliberately different: one that explores, one that holds the
-Hatch bay. The exploring Run banks materially more salvage.** If the two bank the same, the
-field bought nothing and the expanded space is decoration. This is the same shape as M37's
-two-Run comparison, and it can be read straight off the end-of-Run report.
+**The test is two exploring Runs:** one that spends Hatch-bank slots on small piles, versus
+one that carries into fewer, fatter banks. The few-banks Run must credit more to the ship
+account. If they bank the same, the cap and the multiplier did nothing. If the fat-bank
+Run always loses the pile, greed is fake. Readable off the end-of-Run report.
 
-Note what this does *not* say: it does not require the holding Run to fail. A player who wants
-to turtle is making a lower-yield choice, not a wrong one, which is the same reasoning as
-spawning field resources during the wave rather than penalising the player for staying.
+**The weaker signal:** median `hatchDist` on terminal-Wave kills is not at the Hatch bay
+(M37 / `wave-report`).
 
-**The weaker second signal:** the drawn paths do not change where the player stands.
+**Master Control travel:** if a Run that never leaves the Control Room after the door
+opens still converts leftover (Hatch holds without the Boarder), the run-back is fake.
+Readable off Hatch HP and `hatchDist` on that sequence's Hatch-bank Waves.
 
 ## Settled
 
-**Death costs salvage and the player respawns.** One currency of failure: arrivals drain the
-Hatch, dying costs salvage. No drop-and-recover, no second loss model.
+**Only a Hatch-bank converts to the ship.** (Zo, 2026-08-13.) Terminal-clear opens the
+door and leaves the pile unbanked. During a Hatch-bank, unbanked drips to the ship bank;
+hatch hits attrit unbanked and Hatch HP; breach wipes remaining unbanked; clear dumps the
+remainder. Unspent withdrawn rides with unbanked. Musical-chairs rotor stays cut; expiry
+in `../Decisions.md`. Do not delay `AwardKill` in the one-room fight.
 
-**The Master Control ends the Run.** A bastion is a Run; the nav map holds many. Whether a
-bastion ever has more than one is not a question this entry needs answered.
+**A down ends the Run.** No in-Run respawn and no in-Run shop. **Ship stations stay open
+between Runs** (Zo, 2026-08-13). “No upgrades on respawn” was a rebuttal to in-Run
+respawn, not a locked ARMORY. Individual purchases may still gate on progression (Tiers
+already do). Deep start restores the unlock graph from the last successful Hatch-bank;
+unbanked is empty; bank slots reset.
 
-**Wave sizing is not decided here.** It is a number, and numbers are the weakest place to
-intervene — it gets set when there is something to tune against.
+**Hatch-banks per Run are limited**, and the convert multiplier is higher when the pile is
+larger, so few fat banks beat many thin ones (Zo, 2026-08-13).
 
-**Field resources appear once 10% of the wave has emitted** (Zo, 2026-08-11). At today's wave
-sizes that is two to seven gatekeepers on the floor — early, and deliberately so: the player
-leaves while pressure is still building rather than after it resolves. It also closes the
-deliver-then-immediately-run exploit, since the trigger is emission and not the clock.
+**Two start verbs, two fights.** Terminal = accumulate. Hatch = bank. Same mix; targeting
+mode follows the trigger. Rams hunt on terminal Waves only.
 
-**Nothing blocks the build.** The entry is complete against the contract in
-`../_meta/_definitions/brainstorm.md`.
+**Visible intensity, pay to raise it, no brick.** PoE 2: more danger, more reward. No
+pay-to-skip. Unspent withdrawn is at risk; spent stays.
+
+**Hatch defenses are not a system.** Repair Rig and Hatch Armor remain; auto-repair does not.
+
+**Master Control is a two-phase sequence** (Zo, 2026-08-13). Always in a Control Room.
+One pull starts the Waves; the player does not re-pull. First half: terminal-mode, Hatch
+not a target, pile still grows, Control Room door shut. That half clearing opens the door.
+Second half: Hatch-bank (drip, attrition, dump-on-clear). Travel back and defend. Survive
+it: leftover converts, Run ends (win). Breach or a down: remaining unbanked wiped,
+already-dripped stays. This Hatch-bank half does not spend a mid-Run bank slot. How many
+Waves sit in each half is a `4-Data.md` number when this ships (example: 5 then 5 of 10).
+Field terminals reuse Ship consoles; wing T opens D.
+
+**In-wave field resources at 10% — cut.** The terminal is the errand.
 
 ## Before it graduates
 
-**M37**, so "where they died" is measurable before and after. A field of approach that changed
-nothing would otherwise be indistinguishable from one that worked.
+**M47 playable**, so the two-trigger loop has a floor. **M37**, so `hatchDist` can tell
+terminal Waves from Hatch-bank Waves.
 
 **What it touches:** `SceneBuilder` geometry and the NavMesh bake, `SpawnPoint`, `WaveSpawner`,
-`WaveDirector` composition and `MaxWaves`, `TetherSiphon` and the dial, `RunSim`'s banking path,
-`HatchStation`, `DecoyBay` / `DecoyState`, the HUD, and the end-of-Run report. Pairs with **A
-gatekeeper you must leave the Hatch for** in `gatekeepers-and-waves.md`, which is the same move
-from the enemy side.
+`WaveDirector` (targeting mode, not mix tables), `TetherSiphon` (replaced by intensity +
+pay-to-juice), `RunSim`'s banking path and `EndRun`, `HatchStation` (vulnerable only on
+Hatch-bank), `DecoyBay`, the HUD intensity readout, M14 deep start, and the end-of-Run
+report. Targeting mode lives in `gatekeepers-and-waves.md`.

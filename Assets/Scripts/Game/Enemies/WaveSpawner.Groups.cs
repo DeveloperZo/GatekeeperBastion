@@ -1,4 +1,3 @@
-using System.Collections;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
@@ -7,8 +6,9 @@ using UnityEngine.AI;
 namespace GatekeeperBastion.Game
 {
     /// <summary>HOST-ONLY (see WaveSpawner.cs for the ownership contract): how a wave becomes
-    /// actors — the shuffled per-kind roster, and the group emission that puts groupSize of them
-    /// through ONE door at a time. Deep-start chains run several of these routines at once.</summary>
+    /// actors — the shuffled per-kind roster, and the tick-driven group delivery that puts
+    /// groupSize of them through ONE door at a time. Deep-start chains advance several waves
+    /// per tick.</summary>
     public sealed partial class WaveSpawner
     {
         /// <summary>Fill a wave emit's roster from the spec's three counts and shuffle it.</summary>
@@ -16,10 +16,11 @@ namespace GatekeeperBastion.Game
         /// first and every Ram last, so the mix a player has to triage would only ever exist for
         /// the few seconds the blocks overlap. Mixing is the whole reason there are three kinds.
         ///
-        /// The shuffle draws from RunSim.Rng — the sim's seeded stream — so the same seed replays
-        /// the same roster; it is host-side wave construction, not player input, so it belongs on
-        /// that stream (the reason PlayerGun's crits deliberately do not). UnityEngine.Random is
-        /// the fallback only when there is no sim, which is the same case in which nothing spawns.
+        /// The shuffle draws from RunSim.Rng — the sim's seeded stream, and ONLY that stream — so
+        /// the same seed replays the same roster; it is host-side wave construction, not player
+        /// input, so it belongs on that stream (the reason PlayerGun's crits deliberately do not).
+        /// No sim means no seeded stream: the roster is left in build order (deterministic), with
+        /// one warning — the same no-sim case in which nothing spawns anyway.
         /// </remarks>
         void BuildRoster(WaveEmit emit, WaveSpec spec)
         {
@@ -39,9 +40,18 @@ namespace GatekeeperBastion.Game
             }
 
             var rng = _sim != null ? _sim.Rng : null;
+            if (rng == null)
+            {
+                if (!_warnedNoRng)
+                {
+                    _warnedNoRng = true;
+                    Log.Warn(Tag, "No sim RNG; roster left unshuffled (deterministic build order).");
+                }
+                return;
+            }
             for (int i = emit.Queue.Count - 1; i > 0; i--)
             {
-                int j = rng != null ? rng.Next(i + 1) : Random.Range(0, i + 1);
+                int j = rng.Next(i + 1);
                 GatekeeperKind swap = emit.Queue[i];
                 emit.Queue[i] = emit.Queue[j];
                 emit.Queue[j] = swap;
@@ -53,46 +63,83 @@ namespace GatekeeperBastion.Game
             for (int i = 0; i < count; i++) emit.Queue.Add(kind);
         }
 
-        /// <summary>One group per spawnInterval until the roster is empty. spawnInterval is the gap
-        /// between GROUPS now, so the wave's total arrival time is unchanged in shape but the
-        /// pressure arrives in clumps. Respects MaxEnemyCount in aggregate across concurrent waves.</summary>
-        IEnumerator SpawnWaveRoutine(WaveEmit emit)
+        /// <summary>Advance every in-flight wave's group delivery by <paramref name="dt"/>.
+        /// One group per spawnInterval until each roster is empty. spawnInterval is the gap
+        /// between GROUPS, so the wave's total arrival time is unchanged in shape but the
+        /// pressure arrives in clumps. Respects MaxEnemyCount in aggregate across concurrent
+        /// waves. Allocates nothing: all state lives on the WaveEmit entries in _active.</summary>
+        public void TickDelivery(float dt)
+        {
+            if (_teardown) return; // latched: delivery never advances again
+            for (int i = 0; i < _active.Count; i++)
+            {
+                var emit = _active[i];
+                if (emit.Dead) continue; // bailed; waits in _active for the teardown sweep
+                if (emit.BornFrame == Time.frameCount) continue; // first advance ran at wave start
+                if (!AdvanceWave(emit, dt)) continue;
+                // Delivery finished for THIS wave: drop it, then re-test the assault.
+                _active.RemoveAt(i);
+                i--;
+                CheckAssaultCleared();
+            }
+        }
+
+        /// <summary>One tick of one wave's delivery. Returns true when the roster has emptied
+        /// and the delivery-complete notification has fired — the caller removes the wave from
+        /// _active and probes the assault-clear.
+        /// Ordering contract: the inter-group countdown runs down first and unconditionally;
+        /// only once it has expired do the teardown/phase bail-out and the aggregate alive-cap
+        /// hold apply, re-tested every tick until the group emits. The countdown does not
+        /// advance while cap-held. A positive spawnInterval emits at most ONE group per tick
+        /// however large dt is, and the next interval starts fresh at emission (overshoot
+        /// discarded); spawnInterval &lt;= 0 delivers group after group within one tick.</summary>
+        bool AdvanceWave(WaveEmit emit, float dt)
         {
             WaveSpec spec = emit.Spec;
             int groupSize = Mathf.Max(1, spec.groupSize);
-            int groupNumber = 0;
-            // spawnInterval is fixed for the wave, so the yield object is built once out here
-            // instead of once per group inside the loop.
-            WaitForSeconds groupGap = spec.spawnInterval > 0f
-                ? new WaitForSeconds(spec.spawnInterval)
-                : null;
+
+            if (!emit.CapWaiting && emit.Countdown > 0f)
+            {
+                emit.Countdown -= dt;
+                if (emit.Countdown > 0f) return false;
+            }
+
             while (emit.Queue.Count > 0)
             {
-                // Re-tested every iteration: the run can end (or the scene start unloading)
-                // during any of the WaitForSeconds below.
-                if (_teardown || _sim == null || _sim.Phase != RunPhase.Tethered) yield break;
+                // Re-tested every tick: the run can end (or the scene start unloading) while
+                // a group is counting down or cap-held. A bailed wave is marked Dead and stays
+                // in _active so the assault cannot read as cleared before teardown sweeps it.
+                if (_teardown || _sim == null || _sim.Phase != RunPhase.Tethered)
+                {
+                    emit.Dead = true;
+                    return false;
+                }
 
                 // Aggregate live-gatekeeper cap across a deep-start pile-up.
                 int want = Mathf.Min(groupSize, emit.Queue.Count);
-                while (!_teardown && AliveCount + want > WaveDirector.MaxEnemyCount)
+                if (AliveCount + want > WaveDirector.MaxEnemyCount)
                 {
-                    yield return null;
-                    if (_teardown || _sim == null || _sim.Phase != RunPhase.Tethered) yield break;
+                    emit.CapWaiting = true; // hold here; the countdown stays expired
+                    return false;
                 }
+                emit.CapWaiting = false;
 
-                groupNumber++;
-                EmitGroup(emit, groupSize, groupNumber);
+                emit.GroupNumber++;
+                EmitGroup(emit, groupSize, emit.GroupNumber);
                 CheckAssaultCleared();
-                if (groupGap != null && emit.Queue.Count > 0)
-                    yield return groupGap;
+
+                if (spec.spawnInterval > 0f && emit.Queue.Count > 0)
+                {
+                    emit.Countdown = spec.spawnInterval;
+                    return false; // one group per tick when an interval paces the wave
+                }
+                // spawnInterval <= 0: no gap between groups — keep emitting this tick.
             }
 
             // Delivery finished for THIS wave — may unlock the next chained wave.
             if (!_teardown && _sim != null && _sim.Phase == RunPhase.Tethered)
                 _sim.NotifyDeliveryComplete();
-
-            _active.Remove(emit);
-            CheckAssaultCleared();
+            return true;
         }
 
         /// <summary>Emit up to <paramref name="groupSize"/> actors from the roster AT ONE BREACH
@@ -184,21 +231,29 @@ namespace GatekeeperBastion.Game
             var gatekeeper = enemy.GetComponent<EnemyGatekeeper>();
             if (gatekeeper != null)
             {
-                gatekeeper.Configure(stats);
+                // The controller rides along with the stats push — spawned actors read run
+                // state (RunIsOver, Decoys) from it, never from a global — and so does this
+                // spawner, the one owner of the actor's destroy (Despawn).
+                gatekeeper.Configure(stats, _game, this);
+                gatekeeper.SpawnId = _game.Run.TakeSpawnId();
                 gatekeeper.SpawnedAt = at;
+                _live.Add(gatekeeper); // spawn ledger: removed by Despawn; swept on teardown
             }
 
             AliveCount++;
             emit.Spawned++;
 
-            // The listener captures ITS gatekeeper's KIND so the kill line can name what died.
+            // The listener captures ITS gatekeeper's KIND and ACTOR so the kill line can name
+            // what died (and its spawn id). Ledger removal is Despawn's job — the actor's own
+            // OnDeath routes there before this listener runs (it subscribed first, in Awake).
             // Damageable drops all listeners in OnDestroy, so the closure cannot outlive the
             // object it closed over.
             if (damageable != null)
             {
                 GatekeeperKind died = kind;
                 Damageable body = damageable;
-                damageable.onDeath.AddListener(() => OnGatekeeperDied(died, body));
+                EnemyGatekeeper actor = gatekeeper;
+                damageable.onDeath.AddListener(() => OnGatekeeperDied(died, body, actor));
             }
             return true;
         }

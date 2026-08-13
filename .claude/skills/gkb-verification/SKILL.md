@@ -53,8 +53,9 @@ metadata:
    passing names and game log lines. **It cannot see MonoBehaviours, scenes or the save file.**
 2. **`Tools/wave-report/run.sh`** — offline reader over session logs, and the authority on what
    happened in a Run. `Docs/dashboard.html` shows the same numbers in a page.
-3. **The AutoVerify file bridge** — write `gkb_verify_request.txt` at the project root; with the
-   editor open, `Assets/Scripts/Editor/Tools/AutoVerify.cs` runs the full EditMode then PlayMode
+3. **The integration-check file bridge** (formerly AutoVerify) — write `gkb_verify_request.txt`
+   at the project root; with the
+   editor open, `Assets/Scripts/Editor/Tools/IntegrationCheck.cs` runs the full EditMode then PlayMode
    suites and writes `gkb_verify_report.json`. It survives the domain reloads PlayMode causes,
    and is also a menu row. **The only way to run PlayMode, and the only authority on anything
    touching a MonoBehaviour, a scene or the save file.**

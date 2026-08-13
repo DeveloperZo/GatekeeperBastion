@@ -6,8 +6,8 @@
   <Project Path="GatekeeperBastion.Editor.csproj" />
   <Project Path="GatekeeperBastion.Tests.csproj" />
   <Project Path="Assembly-CSharp-firstpass.csproj" />
+  <Project Path="GatekeeperBastion.Sim.csproj" />
   <Project Path="GatekeeperBastion.PlayTests.csproj" />
   <Project Path="MCPForUnity.Runtime.csproj" />
   <Project Path="Assembly-CSharp-Editor-firstpass.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
 </Solution>

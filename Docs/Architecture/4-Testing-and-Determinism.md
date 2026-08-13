@@ -54,7 +54,7 @@ worst first — this is the section that matters, because a green harness is not
 
 **Rule: the EditMode mirror run is not optional.** The harness is the inner loop; a Unity
 EditMode run of the same tests is the outer loop, and it exists to catch the rows above. This
-is what AutoVerify's Path 1 / Path 2 split already encodes — the rule here is that a
+is what IntegrationCheck's Path 1 / Path 2 split already encodes — the rule here is that a
 milestone gate citing only Path 1 has not been verified.
 
 ## 3. Determinism

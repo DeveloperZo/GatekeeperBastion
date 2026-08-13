@@ -47,7 +47,7 @@ namespace GatekeeperBastion.Game
             Log.Info(Tag, $"Terminal phase {phase}: cursor freed " +
                           $"(lock={Cursor.lockState}, visible={Cursor.visible}).");
 
-            var r = Sim.LastLossReport;
+            var r = Sim.LastRunReport;
             long net = r.grossEarned - r.repairSpent;
             if (phase == RunPhase.Escaped)
             {
@@ -80,7 +80,9 @@ namespace GatekeeperBastion.Game
             }
 
             _loseScreenAge += Time.unscaledDeltaTime;
-            if (Input.anyKeyDown || Input.GetAxisRaw("Mouse X") != 0f || Input.GetAxisRaw("Mouse Y") != 0f)
+            // Watchdog reset only — any press or mouse motion proves the player is present.
+            var frame = Controls.Sample();
+            if (frame.anyPressDown || frame.lookX != 0f || frame.lookY != 0f)
                 _loseScreenAge = 0f;
 
             if (!_watchdogFired && _loseScreenAge >= LoseScreenWatchdogSeconds)

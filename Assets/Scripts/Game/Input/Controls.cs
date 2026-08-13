@@ -149,6 +149,11 @@ namespace GatekeeperBastion.Game
         static bool _collapsed;
         static bool _missionDrawerOpen;
 
+        // Input-frame plumbing (infrastructure, like the Collapsed state above): the frame
+        // sampled this frame and the Time.frameCount it was sampled on.
+        static PlayerInputFrame _frame;
+        static int _sampledFrameCount = -1;
+
         /// <summary>Built-in rows plus any test extras. Not a copy — do not mutate.</summary>
         public static IReadOnlyList<ControlBinding> All
         {
@@ -184,41 +189,122 @@ namespace GatekeeperBastion.Game
 
         public static void SetMissionDrawerOpen(bool open) => _missionDrawerOpen = open;
 
-        public static bool Down(ControlId id)
+        /// <summary>The input frame most recently produced by <see cref="Sample"/>. Read-only
+        /// view; callers that may run before any sampler this frame call Sample() instead.</summary>
+        public static PlayerInputFrame Frame => _frame;
+
+        /// <summary>Produce this frame's <see cref="PlayerInputFrame"/> — THE ONLY PLACE
+        /// UnityEngine.Input is read (DevConsole is dev-build-exempt). Idempotent per frame:
+        /// the Bastion tick samples first each frame; consumers in scenes with no tick owner
+        /// call Sample() defensively — the Time.frameCount guard makes the repeat call free.</summary>
+        public static PlayerInputFrame Sample()
         {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (DevConsole.Suppresses(id)) return false;
-#endif
+            int frameCount = Time.frameCount;
+            if (frameCount == _sampledFrameCount) return _frame;
+            _sampledFrameCount = frameCount;
+
+            var f = default(PlayerInputFrame);
+
+            f.moveX = Input.GetAxis("Horizontal");
+            f.moveY = Input.GetAxis("Vertical");
+            f.lookX = Input.GetAxis("Mouse X");
+            f.lookY = Input.GetAxis("Mouse Y");
+            f.scroll = Input.mouseScrollDelta.y;
+
+            f.click0Down = Input.GetMouseButtonDown(0);
+            f.click1Down = Input.GetMouseButtonDown(1);
+            f.anyPressDown = Input.anyKeyDown || f.click0Down || f.click1Down;
+            f.escapeDown = Input.GetKeyDown(KeyCode.Escape);
+
+            // Per-id bits via the binding table: every non-DisplayOnly row for an id (built-in
+            // and PushForTest extras alike) ORs into that id's bit, exactly as Down/Held polled.
             var rows = All;
             for (int i = 0; i < rows.Count; i++)
             {
                 var b = rows[i];
-                if (b.Id != id || b.DisplayOnly) continue;
-                if (b.Key != KeyCode.None && Input.GetKeyDown(b.Key)) return true;
-                if (b.AltKey != KeyCode.None && Input.GetKeyDown(b.AltKey)) return true;
+                if (b.DisplayOnly) continue;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (DevConsole.Suppresses(b.Id)) continue;
+#endif
+                bool down = (b.Key != KeyCode.None && Input.GetKeyDown(b.Key))
+                            || (b.AltKey != KeyCode.None && Input.GetKeyDown(b.AltKey));
+                bool held = (b.Key != KeyCode.None && Input.GetKey(b.Key))
+                            || (b.AltKey != KeyCode.None && Input.GetKey(b.AltKey));
+                if (!down && !held) continue;
+
+                switch (b.Id)
+                {
+                    case ControlId.Sprint: f.sprintHeld |= held; break;
+                    case ControlId.Fire: f.fireHeld |= held; f.fireDown |= down; break;
+                    case ControlId.AltFire: f.altFireDown |= down; break;
+                    case ControlId.Reload: f.reloadDown |= down; break;
+                    case ControlId.SlotPrimary: f.slotPrimaryDown |= down; break;
+                    case ControlId.SlotSecondary: f.slotSecondaryDown |= down; break;
+                    case ControlId.SlotDrone: f.slotDroneDown |= down; break;
+                    case ControlId.SlotLast: f.slotLastDown |= down; break;
+                    case ControlId.WeaponAbility: f.weaponAbilityDown |= down; break;
+                    case ControlId.Interact: f.interactHeld |= held; f.interactDown |= down; break;
+                    case ControlId.PullDraw: f.pullDrawDown |= down; break;
+                    case ControlId.DialUp: f.dialUpDown |= down; break;
+                    case ControlId.DialDown: f.dialDownDown |= down; break;
+                    case ControlId.WheelRotatePrev: f.wheelPrevDown |= down; break;
+                    case ControlId.WheelRotateNext: f.wheelNextDown |= down; break;
+                    case ControlId.FreeCursor: f.freeCursorDown |= down; break;
+                    case ControlId.Confirm: f.confirmDown |= down; break;
+                    case ControlId.TogglePanel: f.togglePanelDown |= down; break;
+                    case ControlId.ToggleMissionDrawer: f.toggleMissionDrawerDown |= down; break;
+                }
             }
-            return false;
+
+            _frame = f;
+            return _frame;
         }
 
+        /// <summary>Pressed-this-frame for <paramref name="id"/> — reads the sampled frame's bit.</summary>
+        public static bool Down(ControlId id)
+        {
+            var f = Sample();
+            switch (id)
+            {
+                case ControlId.Fire: return f.fireDown;
+                case ControlId.AltFire: return f.altFireDown;
+                case ControlId.Reload: return f.reloadDown;
+                case ControlId.SlotPrimary: return f.slotPrimaryDown;
+                case ControlId.SlotSecondary: return f.slotSecondaryDown;
+                case ControlId.SlotDrone: return f.slotDroneDown;
+                case ControlId.SlotLast: return f.slotLastDown;
+                case ControlId.WeaponAbility: return f.weaponAbilityDown;
+                case ControlId.Interact: return f.interactDown;
+                case ControlId.PullDraw: return f.pullDrawDown;
+                case ControlId.DialUp: return f.dialUpDown;
+                case ControlId.DialDown: return f.dialDownDown;
+                case ControlId.WheelRotatePrev: return f.wheelPrevDown;
+                case ControlId.WheelRotateNext: return f.wheelNextDown;
+                case ControlId.FreeCursor: return f.freeCursorDown;
+                case ControlId.Confirm: return f.confirmDown;
+                case ControlId.TogglePanel: return f.togglePanelDown;
+                case ControlId.ToggleMissionDrawer: return f.toggleMissionDrawerDown;
+                default: return false; // Move/Look/SlotCycle are DisplayOnly — never pressable
+            }
+        }
+
+        /// <summary>Held-this-frame for <paramref name="id"/> — reads the sampled frame's bit.
+        /// Only the ids gameplay holds (sprint, fire, interact) carry a held bit.</summary>
         public static bool Held(ControlId id)
         {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (DevConsole.Suppresses(id)) return false;
-#endif
-            var rows = All;
-            for (int i = 0; i < rows.Count; i++)
+            var f = Sample();
+            switch (id)
             {
-                var b = rows[i];
-                if (b.Id != id || b.DisplayOnly) continue;
-                if (b.Key != KeyCode.None && Input.GetKey(b.Key)) return true;
-                if (b.AltKey != KeyCode.None && Input.GetKey(b.AltKey)) return true;
+                case ControlId.Sprint: return f.sprintHeld;
+                case ControlId.Fire: return f.fireHeld;
+                case ControlId.Interact: return f.interactHeld;
+                default: return false;
             }
-            return false;
         }
 
         /// <summary>Mouse wheel for slot cycle — not a KeyCode, but owned here so the panel
         /// row and the gun cannot drift apart on whether wheel switching exists.</summary>
-        public static float ScrollDelta() => Input.mouseScrollDelta.y;
+        public static float ScrollDelta() => Sample().scroll;
 
         /// <summary>First display string for an id (e.g. prompts that must stay in sync with the list).</summary>
         public static string DisplayOf(ControlId id)

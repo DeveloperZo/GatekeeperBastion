@@ -12,7 +12,9 @@ namespace GatekeeperBastion.Game
         void PushEndScreenShortcut()
         {
             Controls.TickPanelToggle();
-            PushShortcutPanel(GameController.Instance.Sim, ControlContext.EndScreen);
+            var sim = _game != null ? _game.Sim : null;
+            if (sim == null) return; // guard: no controller/sim wired means no panel to fill
+            PushShortcutPanel(sim, ControlContext.EndScreen);
         }
 
         static ControlContext FightShortcutContext(RunSim sim)
@@ -88,7 +90,6 @@ namespace GatekeeperBastion.Game
 
         void PushAssaultPanel(RunSim sim)
         {
-            if (_spawner == null) _spawner = FindFirstObjectByType<WaveSpawner>();
             int remaining = _spawner != null ? _spawner.AliveCount : 0;
             if (remaining == _cacheAlive && sim.CurrentWaveIndex == _cacheAssaultWave)
                 return;

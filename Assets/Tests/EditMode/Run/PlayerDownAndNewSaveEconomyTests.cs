@@ -6,9 +6,9 @@ namespace GatekeeperBastion.Tests
     /// <summary>
     /// EditMode tests for the death-only run-end model and the new-save economy:
     /// NotifyPlayerDown, CreateNew at 0 banked, free MK-1 ownership, WeaponTier costs,
-    /// the first-death upgrade gate, and persistence of weapon fields.
+    /// the first-lost-run upgrade gate, and persistence of weapon fields.
     /// </summary>
-    public class PlayerDownAndGrubstakeTests
+    public class PlayerDownAndNewSaveEconomyTests
     {
         private static RunSim NewTetheredSim(out MetaState meta)
         {
@@ -39,8 +39,8 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual(50L, meta.BankedSalvage, "dying costs the player zero currency");
             Assert.AreEqual(1, meta.PodEjections);
-            Assert.AreEqual("player", sim.LastLossReport.cause);
-            Assert.AreEqual(50L, sim.LastLossReport.grossEarned);
+            Assert.AreEqual("player", sim.LastRunReport.cause);
+            Assert.AreEqual(50L, sim.LastRunReport.grossEarned);
         }
 
         [Test]
@@ -51,9 +51,9 @@ namespace GatekeeperBastion.Tests
             sim.NotifyPlayerDown();
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual(0L, meta.BankedSalvage);
-            Assert.AreEqual(0L, sim.LastLossReport.grossEarned);
+            Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
             Assert.AreEqual(1, meta.PodEjections);
-            Assert.AreEqual("player", sim.LastLossReport.cause);
+            Assert.AreEqual("player", sim.LastRunReport.cause);
         }
 
         [Test]
@@ -112,7 +112,7 @@ namespace GatekeeperBastion.Tests
             sim.TriggerDraw();
             sim.Ship.Hatch.Damage(99999f);
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
-            Assert.AreEqual("hatch", sim.LastLossReport.cause);
+            Assert.AreEqual("hatch", sim.LastRunReport.cause);
         }
 
         [Test]
@@ -125,7 +125,7 @@ namespace GatekeeperBastion.Tests
             sim.Ship.Hatch.Damage(99999f);
             sim.NotifyPlayerDown();
             Assert.AreEqual(1, meta.PodEjections);
-            Assert.AreEqual("hatch", sim.LastLossReport.cause);
+            Assert.AreEqual("hatch", sim.LastRunReport.cause);
         }
 
         [Test]
@@ -148,11 +148,11 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(RunPhase.Lost, simPlayer.Phase);
             Assert.AreEqual(metaHatch.BankedSalvage, metaPlayer.BankedSalvage, "same bank");
             Assert.AreEqual(84L, metaPlayer.BankedSalvage); // 3 * floor(28.75) at dial 2
-            Assert.AreEqual(simHatch.LastLossReport.grossEarned, simPlayer.LastLossReport.grossEarned);
-            Assert.AreEqual(84L, simPlayer.LastLossReport.grossEarned, "gross equals banked awards (M22)");
+            Assert.AreEqual(simHatch.LastRunReport.grossEarned, simPlayer.LastRunReport.grossEarned);
+            Assert.AreEqual(84L, simPlayer.LastRunReport.grossEarned, "gross equals banked awards (M22)");
             Assert.AreEqual(metaHatch.PodEjections, metaPlayer.PodEjections);
-            Assert.AreEqual("hatch", simHatch.LastLossReport.cause);
-            Assert.AreEqual("player", simPlayer.LastLossReport.cause);
+            Assert.AreEqual("hatch", simHatch.LastRunReport.cause);
+            Assert.AreEqual("player", simPlayer.LastRunReport.cause);
         }
 
         // ---- CreateNew: zero banked, free MK-1 ----
@@ -208,7 +208,7 @@ namespace GatekeeperBastion.Tests
         // ---- Upgrade gate: locked until the first death ----
 
         [Test]
-        public void UpgradesUnlocked_FalseAtZeroDeaths_TrueFromFirstDeath()
+        public void UpgradesUnlocked_FalseAtZeroLostRuns_TrueFromFirstLostRun()
         {
             var m = new MetaState();
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m), "fresh save: gate closed");

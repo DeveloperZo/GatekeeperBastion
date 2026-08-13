@@ -47,6 +47,7 @@ namespace GatekeeperBastion.EditorTools
         static string Root => Directory.GetParent(Application.dataPath).FullName;
         static string SentinelPath => Path.Combine(Root, "gkb_scene_build_request.txt");
         static string NavMeshSentinelPath => Path.Combine(Root, "gkb_bastion_navmesh_request.txt");
+        static string ObstaclesSentinelPath => Path.Combine(Root, "gkb_bastion_obstacles_request.txt");
 
         static SceneBuilder()
         {
@@ -59,6 +60,18 @@ namespace GatekeeperBastion.EditorTools
             _nextSentinelPoll = EditorApplication.timeSinceStartup + 1.0;
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
                 return;
+
+            if (File.Exists(ObstaclesSentinelPath))
+            {
+                try { File.Delete(ObstaclesSentinelPath); }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[SceneBuilder] obstacles sentinel: " + e.Message);
+                    return;
+                }
+                PlaceBastionObstaclesInPlace();
+                return;
+            }
 
             if (File.Exists(NavMeshSentinelPath))
             {
@@ -99,6 +112,15 @@ namespace GatekeeperBastion.EditorTools
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             BakeBastionNavMeshInPlace();
+        }
+
+        /// <summary>Idempotent graybox obstacles on kit segments (skips hatch bay 02 which is
+        /// already authored). Names encode LongLane / Corner / Choke / Mask for the height-and-angles criteria.</summary>
+        [MenuItem("GatekeeperBastion/Place Bastion Obstacles")]
+        public static void PlaceBastionObstaclesMenu()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            PlaceBastionObstaclesInPlace();
         }
 
         /// <summary>Batchmode entry: rebuild geometry/spawns/NavMesh only. UI is authored in scenes.</summary>
@@ -185,19 +207,27 @@ namespace GatekeeperBastion.EditorTools
         /// included). Does not rebuild or delete scene geometry.</summary>
         public static void BakeBastionNavMeshInPlace()
         {
-            Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-            GameObject env = GameObject.Find("Environment");
-            if (env == null)
+            BastionSegment.SuppressValidateRebuild = true;
+            try
             {
-                Debug.LogError("[SceneBuilder] No Environment root in Bastion.unity — cannot bake NavMesh.");
-                return;
-            }
+                Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                GameObject env = GameObject.Find("Environment");
+                if (env == null)
+                {
+                    Debug.LogError("[SceneBuilder] No Environment root in Bastion.unity — cannot bake NavMesh.");
+                    return;
+                }
 
-            BakeNavMesh(env);
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            AssetDatabase.SaveAssets();
-            Debug.Log("[SceneBuilder] Bastion NavMesh rebaked in place from Environment children.");
+                BakeNavMesh(env);
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene, ScenePath);
+                AssetDatabase.SaveAssets();
+                Debug.Log("[SceneBuilder] Bastion NavMesh rebaked in place from Environment children.");
+            }
+            finally
+            {
+                BastionSegment.SuppressValidateRebuild = false;
+            }
         }
 
         static bool BastionSceneHasKitSegments()
@@ -376,6 +406,156 @@ namespace GatekeeperBastion.EditorTools
             AssetDatabase.DeleteAsset(NavMeshDataPath);
             AssetDatabase.CreateAsset(surface.navMeshData, NavMeshDataPath);
             surface.navMeshData = AssetDatabase.LoadAssetAtPath<UnityEngine.AI.NavMeshData>(NavMeshDataPath);
+        }
+
+        /// <summary>Places named graybox obstacles under each kit segment's <c>obstacles</c>
+        /// child. Leaves existing props (hatch-bay Div/Rib under 02) alone. Idempotent by name.</summary>
+        public static void PlaceBastionObstaclesInPlace()
+        {
+            BastionSegment.SuppressValidateRebuild = true;
+            try
+            {
+                Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                GameObject env = GameObject.Find("Environment");
+                if (env == null)
+                {
+                    Debug.LogError("[SceneBuilder] No Environment root — cannot place obstacles.");
+                    return;
+                }
+
+                Material rib = AssetDatabase.LoadAssetAtPath<Material>(MaterialDir + "/Mat_Rib.mat");
+                if (rib == null)
+                {
+                    Palette pal = CreatePalette();
+                    rib = pal.Rib;
+                }
+
+                int placed = 0;
+                BastionSegment[] segments = env.GetComponentsInChildren<BastionSegment>(true);
+                for (int i = 0; i < segments.Length; i++)
+                {
+                    BastionSegment segment = segments[i];
+                    if (segment == null)
+                        continue;
+
+                    // Hatch bay 02 already carries Div/Spine/Ribs — do not add or clear.
+                    if (segment.gameObject.name.StartsWith("02", StringComparison.Ordinal))
+                        continue;
+
+                    Transform folder = EnsureObstaclesFolder(segment.transform);
+                    placed += PlaceObstaclesForSegment(segment, folder, rib);
+                }
+
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene, ScenePath);
+                BakeNavMesh(env);
+                EditorSceneManager.SaveScene(scene, ScenePath);
+                AssetDatabase.SaveAssets();
+                Debug.Log("[SceneBuilder] Bastion obstacles placed (" + placed + " new). NavMesh rebaked.");
+            }
+            finally
+            {
+                BastionSegment.SuppressValidateRebuild = false;
+            }
+        }
+
+        static Transform EnsureObstaclesFolder(Transform segment)
+        {
+            Transform existing = segment.Find("obstacles");
+            if (existing != null)
+                return existing;
+
+            var go = new GameObject("obstacles");
+            go.transform.SetParent(segment, false);
+            return go.transform;
+        }
+
+        static int PlaceObstaclesForSegment(BastionSegment segment, Transform folder, Material rib)
+        {
+            string name = segment.gameObject.name;
+            if (name.StartsWith("01", StringComparison.Ordinal))
+            {
+                // Hatch south bay: light flanks only — keep the defend floor open.
+                return PlaceIfMissing(folder, rib, "Cover_HatchFlank_W", new Vector3(-12f, 1.4f, 5f), new Vector3(6f, 2.8f, 0.8f), 15f)
+                    + PlaceIfMissing(folder, rib, "Cover_HatchFlank_E", new Vector3(12f, 1.4f, 8f), new Vector3(6f, 2.8f, 0.8f), -20f);
+            }
+
+            if (name.StartsWith("03", StringComparison.Ordinal))
+            {
+                // Approach hub: long lane + corners; mask breaks hatch LOS with flank bypass.
+                return PlaceIfMissing(folder, rib, "LongLane_Approach", new Vector3(-22f, 1.4f, -10f), new Vector3(1.2f, 2.8f, 90f), 0f)
+                    + PlaceIfMissing(folder, rib, "Mask_ApproachToHatch", new Vector3(0f, 1.2f, -68f), new Vector3(28f, 2.4f, 1.2f), 0f)
+                    + PlaceIfMissing(folder, rib, "Corner_ApproachSW", new Vector3(-38f, 1.4f, -45f), new Vector3(14f, 2.8f, 1.2f), -40f)
+                    + PlaceIfMissing(folder, rib, "Corner_ApproachNE", new Vector3(32f, 1.4f, 35f), new Vector3(12f, 2.8f, 1.2f), 35f);
+            }
+
+            if (name.StartsWith("04", StringComparison.Ordinal))
+            {
+                return PlaceIfMissing(folder, rib, "Cover_WestFull", new Vector3(5f, 1.4f, -25f), new Vector3(18f, 2.8f, 1.2f), 8f)
+                    + PlaceIfMissing(folder, rib, "Corner_WestFull", new Vector3(18f, 1.4f, 15f), new Vector3(10f, 2.8f, 1.2f), 28f);
+            }
+
+            if (name.StartsWith("05", StringComparison.Ordinal))
+            {
+                // West spawn alcove: screen the door so hatch cannot see the spawn pad.
+                return PlaceIfMissing(folder, rib, "Mask_WestSpawn", new Vector3(12f, 1.4f, 0f), new Vector3(1.2f, 2.8f, 22f), 0f)
+                    + PlaceIfMissing(folder, rib, "Corner_WestSpawn", new Vector3(-8f, 1.4f, 12f), new Vector3(8f, 2.8f, 1.2f), -30f);
+            }
+
+            if (name.StartsWith("06", StringComparison.Ordinal) && name.IndexOf("Quarter", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return PlaceIfMissing(folder, rib, "Mask_EastStub", new Vector3(-8f, 1.4f, 0f), new Vector3(1.2f, 2.8f, 14f), 0f);
+            }
+
+            if (name.StartsWith("06", StringComparison.Ordinal))
+            {
+                return PlaceIfMissing(folder, rib, "Cover_EastFull", new Vector3(-22f, 1.4f, 5f), new Vector3(1.2f, 2.8f, 28f), 0f)
+                    + PlaceIfMissing(folder, rib, "Corner_EastFull", new Vector3(12f, 1.4f, -28f), new Vector3(12f, 2.8f, 1.2f), -32f);
+            }
+
+            if (name.StartsWith("07", StringComparison.Ordinal))
+            {
+                // Staging: asymmetric choke + northbound lane.
+                return PlaceIfMissing(folder, rib, "Choke_Staging_W", new Vector3(-28f, 1.4f, -5f), new Vector3(22f, 2.8f, 1.2f), 5f)
+                    + PlaceIfMissing(folder, rib, "Choke_Staging_E", new Vector3(32f, 1.4f, 12f), new Vector3(20f, 2.8f, 1.2f), -8f)
+                    + PlaceIfMissing(folder, rib, "LongLane_Staging", new Vector3(10f, 1.4f, 35f), new Vector3(1.2f, 2.8f, 55f), 0f);
+            }
+
+            if (name.StartsWith("08", StringComparison.Ordinal))
+            {
+                return PlaceIfMissing(folder, rib, "Corner_Spine", new Vector3(-18f, 1.4f, 8f), new Vector3(14f, 2.8f, 1.2f), 42f)
+                    + PlaceIfMissing(folder, rib, "Cover_Spine", new Vector3(12f, 1.4f, -22f), new Vector3(20f, 2.8f, 1.2f), -6f);
+            }
+
+            if (name.StartsWith("09", StringComparison.Ordinal))
+            {
+                return PlaceIfMissing(folder, rib, "Corner_LateTerm", new Vector3(-5f, 1.4f, 18f), new Vector3(12f, 2.8f, 1.2f), -28f);
+            }
+
+            if (name.StartsWith("10", StringComparison.Ordinal))
+            {
+                // Control antechamber near the south door only.
+                return PlaceIfMissing(folder, rib, "Cover_ControlEntry", new Vector3(0f, 1.4f, -150f), new Vector3(48f, 2.8f, 1.2f), 0f)
+                    + PlaceIfMissing(folder, rib, "Corner_Control", new Vector3(40f, 1.4f, -120f), new Vector3(16f, 2.8f, 1.2f), 25f);
+            }
+
+            return 0;
+        }
+
+        static int PlaceIfMissing(
+            Transform folder,
+            Material rib,
+            string name,
+            Vector3 localPos,
+            Vector3 scale,
+            float yawDegrees)
+        {
+            if (folder.Find(name) != null)
+                return 0;
+
+            GameObject go = Box(name, localPos, scale, rib, folder);
+            go.transform.localRotation = Quaternion.Euler(0f, yawDegrees, 0f);
+            return 1;
         }
 
         // ---------- helpers ----------

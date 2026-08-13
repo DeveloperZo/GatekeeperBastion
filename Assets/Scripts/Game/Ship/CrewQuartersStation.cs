@@ -10,7 +10,7 @@ namespace GatekeeperBastion.Game
 
         [SerializeField] CrewQuartersPanelView _body;
 
-        protected override string StationName => "CREW QUARTERS";
+        public override string StationName => "CREW QUARTERS";
 
         protected override string PromptHint => "upgrade your own attributes";
 

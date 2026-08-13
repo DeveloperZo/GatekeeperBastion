@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
-using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {

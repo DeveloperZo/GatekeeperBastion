@@ -23,7 +23,11 @@ namespace GatekeeperBastion.PlayTests
 
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
             yield return PlayTestUtil.WaitUntil(
-                () => GameController.Instance != null && GameController.Instance.Sim != null, 10f);
+                () =>
+                {
+                    var g = UnityEngine.Object.FindFirstObjectByType<GameController>();
+                    return g != null && g.Sim != null;
+                }, 10f);
 
             var go = new GameObject("DecoyProbe");
             var bayHost = new GameObject("BayProbe");

@@ -5,7 +5,7 @@ using GatekeeperBastion.Sim;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Rebuilds floor and four sides from block kind and per-edge side state.
+    /// <summary>HOST-ONLY: rebuilds floor and four sides from block kind and per-edge side state.
     /// North = +Z, South = -Z, East = +X, West = -X.</summary>
     public sealed partial class BastionSegment : MonoBehaviour
     {
@@ -30,6 +30,11 @@ namespace GatekeeperBastion.Game
         [SerializeField] BastionSideKind east = BastionSideKind.Wall;
         [SerializeField] BastionSideKind south = BastionSideKind.Wall;
         [SerializeField] BastionSideKind west = BastionSideKind.Wall;
+        [Tooltip("Metres along the edge from centre for Door/Window opening. N/S: +X; E/W: +Z.")]
+        [SerializeField] float northDoorAlong;
+        [SerializeField] float eastDoorAlong;
+        [SerializeField] float southDoorAlong;
+        [SerializeField] float westDoorAlong;
         [SerializeField] Material floorMat;
         [SerializeField] Material wallMat;
 
@@ -63,6 +68,30 @@ namespace GatekeeperBastion.Game
             set => west = value;
         }
 
+        public float NorthDoorAlong
+        {
+            get => northDoorAlong;
+            set => northDoorAlong = value;
+        }
+
+        public float EastDoorAlong
+        {
+            get => eastDoorAlong;
+            set => eastDoorAlong = value;
+        }
+
+        public float SouthDoorAlong
+        {
+            get => southDoorAlong;
+            set => southDoorAlong = value;
+        }
+
+        public float WestDoorAlong
+        {
+            get => westDoorAlong;
+            set => westDoorAlong = value;
+        }
+
         public Material FloorMaterial
         {
             get => floorMat;
@@ -92,6 +121,13 @@ namespace GatekeeperBastion.Game
                 return;
             if (!CanMutateHierarchy())
                 return;
+
+            // Scene open / NavMesh bake must not wipe Gen_* or force a rebuild over craft.
+            // Inspector side changes still rebuild via OnValidate.
+            EnsureGeomRoot();
+            if (_geomRoot != null && _geomRoot.childCount > 0)
+                return;
+
             Rebuild();
         }
 
@@ -172,10 +208,10 @@ namespace GatekeeperBastion.Game
             Material wall = ResolveWallMaterial();
 
             BuildFloor(width, depth, floor);
-            BuildSide(SegmentEdge.North, north, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
-            BuildSide(SegmentEdge.South, south, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
-            BuildSide(SegmentEdge.East, east, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
-            BuildSide(SegmentEdge.West, west, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
+            BuildSide(SegmentEdge.North, north, northDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
+            BuildSide(SegmentEdge.South, south, southDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
+            BuildSide(SegmentEdge.East, east, eastDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
+            BuildSide(SegmentEdge.West, west, westDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
         }
 
         /// <summary>Strip generated meshes so a prefab asset stays component-only.</summary>

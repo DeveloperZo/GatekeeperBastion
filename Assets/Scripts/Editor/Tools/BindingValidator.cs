@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using GatekeeperBastion.Game.Ui;
+using GatekeeperBastion.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -16,7 +16,7 @@ namespace GatekeeperBastion.EditorTools
     /// build scenes that reports every null serialized UnityEngine.Object field on non-vendor
     /// MonoBehaviours, excluding fields marked [OptionalBinding]. Reflection-based so it runs
     /// before any view changes. Results go to <projectRoot>/gkb_bindings_report.json — a
-    /// separate file, so AutoVerify's fixed report schema is untouched. Every missed wire
+    /// separate file, so the integration check's fixed report schema is untouched. Every missed wire
     /// across the ~200 serialized references the authored scenes carry — and every future scene edit —
     /// becomes a headless failure instead of a mid-playthrough discovery.
     /// </summary>

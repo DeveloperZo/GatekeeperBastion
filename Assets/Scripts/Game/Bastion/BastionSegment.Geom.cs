@@ -20,6 +20,7 @@ namespace GatekeeperBastion.Game
         void BuildSide(
             SegmentEdge orientation,
             BastionSideKind kind,
+            float doorAlong,
             float width,
             float depth,
             float wallHeight,
@@ -41,10 +42,10 @@ namespace GatekeeperBastion.Game
                     BuildSolidWall(orientation, span, wallHeight, wallCenterY, thickness, edgeOffset, mat);
                     break;
                 case BastionSideKind.Door:
-                    BuildDoorWall(orientation, span, wallHeight, thickness, edgeOffset, openingWidth, mat);
+                    BuildDoorWall(orientation, span, wallHeight, thickness, edgeOffset, openingWidth, doorAlong, mat);
                     break;
                 case BastionSideKind.Window:
-                    BuildWindowWall(orientation, span, wallHeight, thickness, edgeOffset, openingWidth, mat);
+                    BuildWindowWall(orientation, span, wallHeight, thickness, edgeOffset, openingWidth, doorAlong, mat);
                     break;
             }
         }
@@ -70,38 +71,45 @@ namespace GatekeeperBastion.Game
             float thickness,
             float edgeOffset,
             float openingWidth,
+            float doorAlong,
             Material mat)
         {
-            float pillarWidth = (span - openingWidth) * 0.5f;
-            if (pillarWidth <= 0f)
+            if (!TryDoorPillars(span, openingWidth, doorAlong, out float openCenter, out float westWidth, out float eastWidth))
             {
                 BuildSolidWall(orientation, span, wallHeight, wallHeight * 0.5f, thickness, edgeOffset, mat);
                 return;
             }
 
-            float pillarCenterX = openingWidth * 0.5f + pillarWidth * 0.5f;
             float lintelHeight = wallHeight - DoorOpeningHeight;
 
-            CreateBox(
-                GenPrefix + orientation + "_Door_West",
-                SideCenter(orientation, -pillarCenterX, wallHeight * 0.5f, edgeOffset),
-                SideSize(orientation, pillarWidth, wallHeight, thickness),
-                mat,
-                true);
+            if (westWidth > 0.001f)
+            {
+                float westCenter = -span * 0.5f + westWidth * 0.5f;
+                CreateBox(
+                    GenPrefix + orientation + "_Door_West",
+                    SideCenter(orientation, westCenter, wallHeight * 0.5f, edgeOffset),
+                    SideSize(orientation, westWidth, wallHeight, thickness),
+                    mat,
+                    true);
+            }
 
-            CreateBox(
-                GenPrefix + orientation + "_Door_East",
-                SideCenter(orientation, pillarCenterX, wallHeight * 0.5f, edgeOffset),
-                SideSize(orientation, pillarWidth, wallHeight, thickness),
-                mat,
-                true);
+            if (eastWidth > 0.001f)
+            {
+                float eastCenter = span * 0.5f - eastWidth * 0.5f;
+                CreateBox(
+                    GenPrefix + orientation + "_Door_East",
+                    SideCenter(orientation, eastCenter, wallHeight * 0.5f, edgeOffset),
+                    SideSize(orientation, eastWidth, wallHeight, thickness),
+                    mat,
+                    true);
+            }
 
             if (lintelHeight > 0f)
             {
                 float lintelCenterY = DoorOpeningHeight + lintelHeight * 0.5f;
                 CreateBox(
                     GenPrefix + orientation + "_Door_Lintel",
-                    SideCenter(orientation, 0f, lintelCenterY, edgeOffset),
+                    SideCenter(orientation, openCenter, lintelCenterY, edgeOffset),
                     SideSize(orientation, openingWidth, lintelHeight, thickness),
                     mat,
                     true);
@@ -115,10 +123,17 @@ namespace GatekeeperBastion.Game
             float thickness,
             float edgeOffset,
             float openingWidth,
+            float doorAlong,
             Material mat)
         {
             float bandHeight = wallHeight - WindowSillHeight - WindowLintelHeight;
             if (bandHeight <= 0f)
+            {
+                BuildSolidWall(orientation, span, wallHeight, wallHeight * 0.5f, thickness, edgeOffset, mat);
+                return;
+            }
+
+            if (!TryDoorPillars(span, openingWidth, doorAlong, out float openCenter, out float westWidth, out float eastWidth))
             {
                 BuildSolidWall(orientation, span, wallHeight, wallHeight * 0.5f, thickness, edgeOffset, mat);
                 return;
@@ -140,29 +155,62 @@ namespace GatekeeperBastion.Game
                 mat,
                 true);
 
-            float pillarWidth = (span - openingWidth) * 0.5f;
             float bandCenterY = WindowSillHeight + bandHeight * 0.5f;
 
-            if (pillarWidth > 0f)
+            if (westWidth > 0.001f)
             {
-                float pillarCenterX = openingWidth * 0.5f + pillarWidth * 0.5f;
+                float westCenter = -span * 0.5f + westWidth * 0.5f;
                 CreateBox(
                     GenPrefix + orientation + "_Window_West",
-                    SideCenter(orientation, -pillarCenterX, bandCenterY, edgeOffset),
-                    SideSize(orientation, pillarWidth, bandHeight, thickness),
-                    mat,
-                    true);
-                CreateBox(
-                    GenPrefix + orientation + "_Window_East",
-                    SideCenter(orientation, pillarCenterX, bandCenterY, edgeOffset),
-                    SideSize(orientation, pillarWidth, bandHeight, thickness),
+                    SideCenter(orientation, westCenter, bandCenterY, edgeOffset),
+                    SideSize(orientation, westWidth, bandHeight, thickness),
                     mat,
                     true);
             }
 
-            Vector3 blockCenter = SideCenter(orientation, 0f, WindowWalkBlockHeight * 0.5f, edgeOffset);
+            if (eastWidth > 0.001f)
+            {
+                float eastCenter = span * 0.5f - eastWidth * 0.5f;
+                CreateBox(
+                    GenPrefix + orientation + "_Window_East",
+                    SideCenter(orientation, eastCenter, bandCenterY, edgeOffset),
+                    SideSize(orientation, eastWidth, bandHeight, thickness),
+                    mat,
+                    true);
+            }
+
+            Vector3 blockCenter = SideCenter(orientation, openCenter, WindowWalkBlockHeight * 0.5f, edgeOffset);
             Vector3 blockSize = SideSize(orientation, openingWidth, WindowWalkBlockHeight, thickness);
             CreateWalkBlock(GenPrefix + orientation + "_Window_WalkBlock", blockCenter, blockSize);
+        }
+
+        /// <summary>Splits an edge into west/east pillars around an opening centred at
+        /// <paramref name="doorAlong"/> (metres from edge centre). Returns false if the opening
+        /// cannot fit.</summary>
+        public static bool TryDoorPillars(
+            float span,
+            float openingWidth,
+            float doorAlong,
+            out float openCenter,
+            out float westWidth,
+            out float eastWidth)
+        {
+            openCenter = 0f;
+            westWidth = 0f;
+            eastWidth = 0f;
+            if (span <= openingWidth)
+                return false;
+
+            float maxAlong = (span - openingWidth) * 0.5f;
+            openCenter = doorAlong;
+            if (openCenter > maxAlong)
+                openCenter = maxAlong;
+            else if (openCenter < -maxAlong)
+                openCenter = -maxAlong;
+
+            westWidth = (openCenter - openingWidth * 0.5f) - (-span * 0.5f);
+            eastWidth = (span * 0.5f) - (openCenter + openingWidth * 0.5f);
+            return true;
         }
 
         static Vector3 SideSize(SegmentEdge orientation, float span, float height, float thickness)
@@ -192,7 +240,7 @@ namespace GatekeeperBastion.Game
             if (_geomRoot == null)
                 return;
 
-            // Avoid CreatePrimitive â€” during OnValidate / prefab save it orphans into the open scene.
+            // Avoid CreatePrimitive — during OnValidate / prefab save it orphans into the open scene.
             var go = new GameObject(name);
             go.transform.SetParent(_geomRoot, false);
             go.transform.localPosition = localCenter;
@@ -246,7 +294,7 @@ namespace GatekeeperBastion.Game
             if (_cubeMesh != null)
                 return _cubeMesh;
 
-            // Fallback unit cube (no CreatePrimitive â€” that orphans in the open scene).
+            // Fallback unit cube (no CreatePrimitive — that orphans in the open scene).
             _cubeMesh = new Mesh { name = "BastionKitCube" };
             _cubeMesh.vertices = new[]
             {

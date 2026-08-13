@@ -1,4 +1,3 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using Michsky.UI.Shift;
@@ -19,7 +18,9 @@ namespace GatekeeperBastion.Game
         [SerializeField] GameObject _canvasRoot;
         [SerializeField] MainPanelManager _panels;
 
+        [SerializeField, Tooltip("Ship-hub controller. Authored in the scene.")]
         ShipController _ship;
+
         float _reopenAllowedAt;
         int _lastContentHash;
         bool _wasOpen;
@@ -29,7 +30,7 @@ namespace GatekeeperBastion.Game
         CanvasGroup[] _panelGroups;
         bool _visibilityResolved;
 
-        protected abstract string StationName { get; }
+        public abstract string StationName { get; }
         protected abstract string PromptHint { get; }
 
         public bool IsOpen => _ship != null && _ship.OpenStation == this;
@@ -42,17 +43,16 @@ namespace GatekeeperBastion.Game
         /// and hold-based interactables (repair); do not open here.</summary>
         public void Interact(float dt) { }
 
-        ShipController Ship => _ship != null ? _ship : (_ship = FindFirstObjectByType<ShipController>());
+        ShipController Ship => _ship;
 
         protected virtual void Awake()
         {
-            _ship = FindFirstObjectByType<ShipController>();
             ValidateBindings();
         }
 
         void ValidateBindings()
         {
-            if (_view != null && _canvasRoot != null && _panels != null) return;
+            if (_view != null && _canvasRoot != null && _panels != null && _ship != null) return;
             if (_missingLogged) return;
             _missingLogged = true;
             if (_view == null)
@@ -61,6 +61,8 @@ namespace GatekeeperBastion.Game
                 Log.Error(Tag, StationName + ": missing serialized _canvasRoot.");
             if (_panels == null)
                 Log.Error(Tag, StationName + ": missing serialized _panels.");
+            if (_ship == null)
+                Log.Error(Tag, StationName + ": missing serialized _ship.");
         }
 
         /// <summary>Canvas on, this panel on, every other Main Panels child off (Top Panel stays).

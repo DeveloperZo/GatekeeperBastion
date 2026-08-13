@@ -4,9 +4,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
-    /// <summary>Sequenced end-of-run panel: verdict → headline →
+    /// <summary>LOCAL-OWNER: sequenced end-of-run panel: verdict → headline →
     /// staggered stats → salvage count-up → actions. Any input fast-forwards; a second input
     /// proceeds. Visibility is event-driven — Present once per end identity, not every frame.</summary>
     public sealed class EndScreenView : MonoBehaviour
@@ -271,9 +271,8 @@ namespace GatekeeperBastion.Game.Ui
 
         static bool AnyInputDown()
         {
-            if (Input.anyKeyDown) return true;
-            if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)) return true;
-            return false;
+            // Defensive sample: the end screen can outlive the fight's tick owner.
+            return Controls.Sample().anyPressDown;
         }
     }
 }

@@ -1,4 +1,3 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
@@ -21,7 +20,7 @@ namespace GatekeeperBastion.Game
         readonly int[] _centreIndexByWeapon = new int[WeaponCatalog.ArraySize];
         bool _wheelDirty;
 
-        protected override string StationName => "ARMORY";
+        public override string StationName => "ARMORY";
 
         protected override string PromptHint =>
             GameSession.Meta != null && !GameSession.Meta.OwnsAnyWeapon

@@ -2,9 +2,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
-    /// <summary>Lerps a numeric TMP display and/or Image fill toward a target; punch-scales
+    /// <summary>LOCAL-OWNER: lerps a numeric TMP display and/or Image fill toward a target; punch-scales
     /// (~1.15 → 1 over 150ms) on change. Unscaled time — safe behind non-blocking pause.</summary>
     public sealed class ValueAnimator : MonoBehaviour
     {

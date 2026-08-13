@@ -10,7 +10,8 @@ namespace GatekeeperBastion.Game
     {
         void TickEscape()
         {
-            if (!Input.GetKeyDown(KeyCode.Escape)) return;
+            // Defensive sample: free when the Bastion tick already sampled this frame.
+            if (!Controls.Sample().escapeDown) return;
 
             // Priority: open modal -> Settings -> pause -> end Confirm -> open pause.
             var modal = FindOpenModal();
@@ -33,7 +34,7 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc != null && gc.Sim != null
                 && (gc.Sim.Phase == Sim.RunPhase.Lost || gc.Sim.Phase == Sim.RunPhase.Escaped))
             {
@@ -99,7 +100,7 @@ namespace GatekeeperBastion.Game
             Cursor.visible = _pauseCapturedVisible;
             IsPauseOpen = false;
 
-            var sim = GameController.Instance != null ? GameController.Instance.Sim : null;
+            var sim = _game != null ? _game.Sim : null;
             if (sim != null && sim.Phase == Sim.RunPhase.Tethered && _fpc != null
                 && !_pauseCapturedLock)
             {
@@ -113,12 +114,12 @@ namespace GatekeeperBastion.Game
 
         ModalWindowManager FindOpenModal()
         {
-            var modals = FindObjectsByType<ModalWindowManager>(
-                FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            for (int i = 0; i < modals.Length; i++)
+            // Authored list (_modals); an entry counts as "open" only while active in hierarchy.
+            if (_modals == null) return null;
+            for (int i = 0; i < _modals.Length; i++)
             {
-                if (modals[i] != null && modals[i].gameObject.activeInHierarchy)
-                    return modals[i];
+                if (_modals[i] != null && _modals[i].gameObject.activeInHierarchy)
+                    return _modals[i];
             }
             return null;
         }

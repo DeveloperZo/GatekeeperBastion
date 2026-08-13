@@ -3,7 +3,7 @@ using UnityEngine.AI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Locked door gate — blocks walk until the unlock graph opens it.</summary>
+    /// <summary>HOST-ONLY: locked door gate — blocks walk until the unlock graph opens it.</summary>
     public sealed class BastionDoor : MonoBehaviour
     {
         [SerializeField] string doorId;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using Michsky.UI.Shift;
@@ -21,8 +20,19 @@ namespace GatekeeperBastion.Game
         /// <summary>True while the Shift pause overlay is up — fight input must not fire under it.</summary>
         public static bool IsPauseOpen { get; private set; }
 
-        Interactor _interactor;
+        [SerializeField, Tooltip("Bastion GameController. Authored in the scene.")]
+        GameController _game;
+
+        [SerializeField, Tooltip("Bastion wave spawner. Authored in the scene.")]
         WaveSpawner _spawner;
+
+        [SerializeField, Tooltip("'Canvas - Pause Menu' root object. Authored in the scene.")]
+        GameObject _pauseCanvas;
+
+        [SerializeField, Tooltip("Every pause/settings modal the Esc dispatcher may need to close. Authored in the scene.")]
+        ModalWindowManager[] _modals;
+
+        Interactor _interactor;
         PlayerGun _gun;
         PlayerAbility _ability;
         FirstPersonController _fpc;
@@ -96,12 +106,11 @@ namespace GatekeeperBastion.Game
         void Start()
         {
             ResolveRefs();
-            ApplyPhase(GameController.Instance != null ? GameController.Instance.Sim : null);
+            ApplyPhase(_game != null ? _game.Sim : null);
         }
 
         void ResolveRefs()
         {
-            if (_spawner == null) _spawner = FindFirstObjectByType<WaveSpawner>();
             var player = Player;
             if (player == null) return;
             if (_gun == null) _gun = player.GetComponentInChildren<PlayerGun>();
@@ -112,20 +121,19 @@ namespace GatekeeperBastion.Game
 
         void ResolvePauseHosts()
         {
-            var pauseCanvas = GameObject.Find("Canvas - Pause Menu");
-            if (pauseCanvas == null)
+            if (_pauseCanvas == null)
             {
                 Log.Error(Tag, "Canvas - Pause Menu not found.");
                 return;
             }
-            _pauseAnimator = pauseCanvas.GetComponent<Animator>();
-            _pauseGroup = pauseCanvas.GetComponent<CanvasGroup>();
-            _pauseBlur = pauseCanvas.GetComponentInChildren<BlurManager>(true);
+            _pauseAnimator = _pauseCanvas.GetComponent<Animator>();
+            _pauseGroup = _pauseCanvas.GetComponent<CanvasGroup>();
+            _pauseBlur = _pauseCanvas.GetComponentInChildren<BlurManager>(true);
         }
 
         void SubscribeSim()
         {
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc == null || gc.Sim == null || _subscribed) return;
             gc.Sim.PhaseChanged += OnSimPhaseChanged;
             gc.Sim.WaveStarted += OnWaveStarted;
@@ -135,7 +143,7 @@ namespace GatekeeperBastion.Game
 
         void UnsubscribeSim()
         {
-            var gc = GameController.Instance;
+            var gc = _game;
             if (!_subscribed || gc == null || gc.Sim == null) return;
             gc.Sim.PhaseChanged -= OnSimPhaseChanged;
             gc.Sim.WaveStarted -= OnWaveStarted;
@@ -146,12 +154,12 @@ namespace GatekeeperBastion.Game
         void OnSimPhaseChanged(RunPhase phase)
         {
             _endPresented = false;
-            ApplyPhase(GameController.Instance != null ? GameController.Instance.Sim : null);
+            ApplyPhase(_game != null ? _game.Sim : null);
         }
 
         void OnWaveStarted(WaveSpec _)
         {
-            var sim = GameController.Instance != null ? GameController.Instance.Sim : null;
+            var sim = _game != null ? _game.Sim : null;
             if (sim == null || sim.Phase != RunPhase.Tethered) return;
             if (_shownAssault != AssaultState.Assault)
             {
@@ -162,7 +170,7 @@ namespace GatekeeperBastion.Game
 
         void OnAssaultEnded()
         {
-            var sim = GameController.Instance != null ? GameController.Instance.Sim : null;
+            var sim = _game != null ? _game.Sim : null;
             if (sim == null || sim.Phase != RunPhase.Tethered) return;
             if (_shownAssault != AssaultState.Prep)
             {
@@ -211,7 +219,7 @@ namespace GatekeeperBastion.Game
         {
             if (_hatchAlert > 0f) _hatchAlert -= Time.deltaTime;
 
-            var gc = GameController.Instance;
+            var gc = _game;
             var sim = gc != null ? gc.Sim : null;
             if (sim == null)
             {
@@ -285,7 +293,7 @@ namespace GatekeeperBastion.Game
 
         void PushValues()
         {
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc == null || gc.Sim == null || _view == null) return;
             var sim = gc.Sim;
 
@@ -344,7 +352,7 @@ namespace GatekeeperBastion.Game
 
         void OnReturnClicked()
         {
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc != null) gc.ReturnToShip();
         }
 

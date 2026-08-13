@@ -2,9 +2,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
-    /// <summary>On enable, children fade and slide in over ~200ms, staggered 40–60ms apart.
+    /// <summary>LOCAL-OWNER: on enable, children fade and slide in over ~200ms, staggered 40–60ms apart.
     /// Uses unscaled time so pause (non-blocking) does not freeze the entrance.</summary>
     public sealed class StaggerEntrance : MonoBehaviour
     {

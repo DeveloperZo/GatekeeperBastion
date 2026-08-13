@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Terminal marker — player activation completes it in the unlock graph.</summary>
+    /// <summary>HOST-ONLY: terminal marker — player activation completes it in the unlock graph.</summary>
     public sealed class BastionTerminal : MonoBehaviour
     {
         [SerializeField] string terminalId;

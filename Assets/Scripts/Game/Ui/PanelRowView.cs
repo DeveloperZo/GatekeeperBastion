@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>One station priced row: name, cost, level, effect, action. Authored in the scene; view binds only.</summary>
+    /// <summary>LOCAL-OWNER: one station priced row: name, cost, level, effect, action. Authored in the scene; view binds only.</summary>
     public sealed class PanelRowView : MonoBehaviour
     {
         [SerializeField] TextMeshProUGUI _name;
@@ -43,7 +43,7 @@ namespace GatekeeperBastion.Game
             _action.gameObject.SetActive(showAction);
             if (!showAction) return;
 
-            Ui.UiBind.SetButtonLabel(_action, actionLabel);
+            UiBind.SetButtonLabel(_action, actionLabel);
 
             _action.onClick.RemoveAllListeners();
             if (onAction != null) _action.onClick.AddListener(() => onAction());

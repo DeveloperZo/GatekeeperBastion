@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
     /// <summary>Marks a serialized UnityEngine.Object field as legitimately allowed to be null
     /// in an authored scene (e.g. a view's unused widget slot). BindingValidator

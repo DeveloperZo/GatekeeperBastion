@@ -4,7 +4,7 @@
 Purpose: The gatekeeper roster and the Wave composition curve — what kinds exist, what each one refuses, and how Waves escalate across the five.
 Status: brainstorm
 Update trigger: when a gatekeeper kind is added or its refusal changes, or when the Wave composition tables move.
-Last updated: 2026-08-06
+Last updated: 2026-08-13
 -->
 
 ## What this covers
@@ -22,10 +22,15 @@ player and comes for the door. `WaveDirector`'s `HunterPerWave` / `RamPerWave` t
 the counts per Wave and `defaultCount` absorbs the remainder; the siphon dial's surplus
 is entirely Default, by design.
 
-All three resolve at the door. Standing at the Hatch is an answer to every threat in the
-game, which is why Waves 4 and 5 (M14) escalate by composition alone — more Hunters,
-more Rams — and why `../Working-Rules.md` files "a reason to be somewhere other than the
-Hatch" at the transformative tier.
+All three resolve at the door **in the shipped one-room fight**. The intended loop
+(`missions-and-destinations.md`) keeps the **same mix** and changes **targeting mode**:
+terminal Wave hunts the Boarder; Hatch-bank Wave is Hatch-primary. Master Control uses
+both in one sequence (`missions-and-destinations.md`): first half terminal-mode, second
+half Hatch-bank.
+
+A **refusal** is the rule that defines a kind, in code, so a balance pass cannot soften it:
+Hunter never hurts the Hatch; Ram never hurts the Boarder; Default does both and provokes.
+`1-Experience.md` §1.4. Overriding one for a Wave mode is a dated break.
 
 ## Graduation test
 
@@ -36,6 +41,15 @@ the door fell to too many bodies or to bodies standing too long, and a new kind 
 without that answer is a guess wearing a stat line.
 
 ## Ideas
+
+### Targeting mode follows the trigger (Zo, 2026-08-13)
+
+Same `HunterPerWave` / `RamPerWave` tables. The Wave type sets who they walk toward.
+**Decided:** Defaults switch with the mode. Hunters always the Boarder. **Rams hunt on
+terminal Waves only** (Zo, 2026-08-13) — dated break of “Ram never hurts you,” that mode
+only — and Hatch-only on Hatch-bank Waves. **What would kill it:** terminal-Wave Rams still
+read as the same fight as Defaults (the break bought nothing), or Hatch-bank Hunters never
+peel. **Touches:** `EnemyGatekeeper.Targeting`, `MayTargetHatch`. Composition tables stay.
 
 ### A gatekeeper you must leave the Hatch for
 A fourth kind that shells the Hatch from stand-off range and never closes, so killing it

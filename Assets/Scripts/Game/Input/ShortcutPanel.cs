@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {

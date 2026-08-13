@@ -2,7 +2,6 @@ using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
 using UnityEngine.AI;
-using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -38,7 +37,20 @@ namespace GatekeeperBastion.Game
             if (_invalidMat != null) Destroy(_invalidMat);
         }
 
+        /// <summary>True once the Bastion's tick owner drives this component; its own
+        /// Update then yields so the written system order is the only order.</summary>
+        bool _hosted;
+
+        public void SetHosted(bool hosted) { _hosted = hosted; }
+
         void Update()
+        {
+            if (_hosted) return; // the Bastion tick owner calls Tick in the written order
+            Tick(Time.deltaTime);
+        }
+
+        /// <summary>Placement aim state: cancel on slot switch or alt-fire, ghost update.</summary>
+        public void Tick(float dt)
         {
             if (_gun == null || _bay == null) return;
 

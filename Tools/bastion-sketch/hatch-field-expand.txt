@@ -25,7 +25,8 @@ room SpineTerm Full -10 495 T:T3
 room LateTerm Full 55 510 T:T4
 
 # Control Room last unlock; sits on the north spine
-room Control ControlRoom 40 851
+# Abuts SpineTerm north (z=547); half-depth 188 at multiple 47 → center z=735
+room Control ControlRoom 40 735
 
 # --- Sides: openings between abutting rooms ---
 side Approach S None

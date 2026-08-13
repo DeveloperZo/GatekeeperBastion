@@ -1,7 +1,6 @@
 using GatekeeperBastion.Util;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {

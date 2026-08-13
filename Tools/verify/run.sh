@@ -62,8 +62,9 @@ declare -A EXCLUDED=(
   ["Weapons/ReloadSwapTests.cs"]="needs PlayerGun MonoBehaviour, GameObject, and UnityEngine.TestTools.LogAssert"
   ["ControlsTests.cs"]="needs GatekeeperBastion.Game (Controls) and UnityEngine.Input/KeyCode"
   ["Ship/PremiseCopyTests.cs"]="needs GatekeeperBastion.Game (PremiseCopy) and scene strings"
+  ["Ship/StationPanelDriftTests.cs"]="needs GatekeeperBastion.Editor StationSceneGate assembly"
   ["Ui/ShortcutRowApiTests.cs"]="needs ShortcutRow MonoBehaviour, TMPro, and UnityEditor"
-  ["Ui/UiBindGatingTests.cs"]="needs GatekeeperBastion.Game.Ui, TMPro, and UnityEngine.UI"
+  ["Ui/UiBindGatingTests.cs"]="needs GatekeeperBastion.Game, TMPro, and UnityEngine.UI"
 )
 
 if ! command -v mcs >/dev/null 2>&1 || ! command -v mono >/dev/null 2>&1; then
@@ -74,17 +75,38 @@ fi
 
 SIM_DIR="$ROOT/Assets/Scripts/Sim"
 TEST_DIR="$ROOT/Assets/Tests/EditMode"
-LOG_CS="$ROOT/Assets/Scripts/Util/Log.cs"
+# Engine-free settings live in Game/ (they are per-player preferences, not Run state) but are
+# plain C#, so their tests keep offline coverage by compiling alongside the tests below.
+SETTINGS_DIR="$ROOT/Assets/Scripts/Game/Settings"
 
-for p in "$SIM_DIR" "$TEST_DIR" "$LOG_CS"; do
+for p in "$SIM_DIR" "$TEST_DIR" "$SETTINGS_DIR"; do
   if [[ ! -e "$p" ]]; then
     echo "harness: expected $p — is the repo laid out as this script assumes?" >&2
     exit 2
   fi
 done
 
-mapfile -t SOURCES < <(find "$SIM_DIR" -name '*.cs' | sort)
-SOURCES+=("$LOG_CS")
+mkdir -p "$OUT"
+
+# Stage 1 — Sim/ compiles ALONE into GatekeeperBastion.Sim.dll against the Shims stubs.
+# This is the offline enforcement of the Sim boundary: the stubs define the entire allowed
+# engine surface (CoreModule value types + Debug), so a MonoBehaviour, scene, Time or ambient
+# Random reference inside Sim/ fails HERE, not in a review. Sim/Util/Log.cs ships inside the
+# Sim assembly (it is plain C# over Debug), which mirrors the asmdef layout in Unity.
+mapfile -t SIM_SOURCES < <(find "$SIM_DIR" -name '*.cs' | sort)
+SIM_SOURCES+=("$HERE/Shims.cs")
+
+SIM_DLL="$OUT/GatekeeperBastion.Sim.dll"
+if ! mcs -nologo -langversion:latest -warn:0 -target:library -out:"$SIM_DLL" "${SIM_SOURCES[@]}" 2> "$OUT/compile-sim.log"; then
+  echo "SIM COMPILE FAILED — Sim/ referenced something outside its allowed surface" >&2
+  grep -E 'error CS' "$OUT/compile-sim.log" | head -40 >&2
+  echo "  full output: $OUT/compile-sim.log" >&2
+  exit 2
+fi
+
+# Stage 2 — tests (plus the engine-free settings sources) compile against the Sim dll, the
+# same dependency direction the Unity asmdefs enforce. Test code cannot donate helpers to Sim.
+mapfile -t SOURCES < <(find "$SETTINGS_DIR" -name '*.cs' | sort)
 
 SKIPPED=()
 while IFS= read -r f; do
@@ -96,17 +118,17 @@ while IFS= read -r f; do
   fi
 done < <(find "$TEST_DIR" -name '*.cs' | sort)
 
-SOURCES+=("$HERE/Shims.cs" "$HERE/Runner.cs")
+SOURCES+=("$HERE/Runner.cs")
 
-mkdir -p "$OUT"
 EXE="$OUT/editmode.exe"
 
-if ! mcs -nologo -langversion:latest -warn:0 -out:"$EXE" "${SOURCES[@]}" 2> "$OUT/compile.log"; then
+if ! mcs -nologo -langversion:latest -warn:0 -r:"$SIM_DLL" -out:"$EXE" "${SOURCES[@]}" 2> "$OUT/compile.log"; then
   echo "COMPILE FAILED" >&2
   grep -E 'error CS' "$OUT/compile.log" | head -40 >&2
   echo "  full output: $OUT/compile.log" >&2
   exit 2
 fi
+cp -f "$SIM_DLL" "$(dirname "$EXE")/" 2>/dev/null || true
 
 for s in "${SKIPPED[@]}"; do
   echo "skipped  $s"

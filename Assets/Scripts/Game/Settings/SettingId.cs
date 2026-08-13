@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeeperBastion.Game
 {
     /// <summary>Value shape for one <see cref="SettingDecl"/> row.</summary>
     public enum SettingType

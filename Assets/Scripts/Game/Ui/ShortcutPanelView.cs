@@ -4,7 +4,7 @@ using Michsky.UI.Shift;
 using TMPro;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
     /// <summary>One pooled keycap row of the shortcut strip: keycap label + description.
     /// The row object is an authored clone of a serialized template (Shift's
@@ -22,7 +22,7 @@ namespace GatekeeperBastion.Game.Ui
         public ShortcutButton shortcut;
     }
 
-    /// <summary>Binds Shift's <c>Shortcut Keys</c> strip. New path: pooled keycap rows fed by
+    /// <summary>LOCAL-OWNER: binds Shift's <c>Shortcut Keys</c> strip. New path: pooled keycap rows fed by
     /// <see cref="ShortcutPanel.FillRows"/>'s structured <see cref="ShortcutRow"/> API via
     /// <see cref="SetRows"/>. Legacy path: <see cref="SetLines"/> writes raw string lines into
     /// whatever labels the authored strip already holds — it dies when WP-3/WP-4 port

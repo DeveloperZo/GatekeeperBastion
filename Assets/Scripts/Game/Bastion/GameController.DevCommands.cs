@@ -163,7 +163,8 @@ namespace GatekeeperBastion.Game
             Log.Event("Dev",
                 $"SetLoadout — {def.displayName} T{tier} equipped in {def.slot} (requested slot={slot})");
 
-            var gc = Instance;
+            // Dev-only locator (static entry point; there is no process-global instance).
+            var gc = FindFirstObjectByType<GameController>();
             if (gc != null && gc.Sim != null && !gc.RunIsOver)
                 gc.ApplyMetaEffects();
         }

@@ -10,6 +10,13 @@ re-litigating a cut costs more than the cut saved.
   Wave, and whichever was current when you lost was forfeited. Built, then cut.
   **Currency is simply kept**: `AwardKill` banks each kill instantly and no
   ending moves Salvage. `SalvageLedger.BankCleanExit/BankPodded` are gone.
+  **Expiry, 2026-08-12 (Zo), for the field loop only:** unbanked Salvage since the
+  last Hatch-bank is lost on a down. The ship bank is still kept. The rotor stays
+  cut — this is a known pile the player authored, not a named random forfeit.
+  Voluntary withdraw-from-bank into the Run is settled 2026-08-13: unspent withdrawn
+  is lost on a down; spent stays. Pay-to-juice (more danger, more reward) is the in-Run
+  spend, not pay-to-skip (`Brainstorms/missions-and-destinations.md`). Do not delay
+  `AwardKill` in the shipped one-room fight.
 - **Leave-anytime tether / escape spool.** You cannot cut the tether at will.
   `EscapeSpool.cs` and `RunPhase.Spooling` / `WaveDirector.SpoolAssault` are
   dormant, kept only so the enum stays serialization-stable.
@@ -135,8 +142,15 @@ FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
   reload, not its form: a neutral default, and an opt-in that pays more and makes
   the Run harder. Explicitly **not** a QTE timing-bar mimic. Not built.
 - **Multiplayer.** Unity Netcode for GameObjects with a Steam (Facepunch)
-  transport, client-hosted, zero server cost. The design treats co-op as
-  first-class — hence the pure-C# sim seam and the ownership labels in
+  transport over Steam's relay, zero server cost. **Host-client,
+  server-authoritative simulation** (the host's `RunSim` is the one that counts),
+  with **client-authoritative own-movement** — correct for PvE with no anti-cheat
+  requirement, and NGO names the mechanism (`AnticipatedNetworkVariable<T>` /
+  `AnticipatedNetworkTransform`). NGO 2.x's distributed-authority topology is
+  rejected deliberately: it is documented as unsuitable where one machine should
+  govern the simulation. The design treats co-op as first-class — hence the
+  Sim assembly boundary (one-directional dependency, no static mutable state;
+  `Architecture/1-Boundaries.md` section 1) and the ownership labels in
   `Architecture.md` — but **nothing is built**. 2–4 players on one hull.
 - **Ship subsystems** (Reactor, TetherCore, Engines, LifeSupport) return with the
   bastion outfitting layer. `ShipSystems` stays the aggregate so the wiring keeps

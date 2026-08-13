@@ -57,9 +57,13 @@ namespace GatekeeperBastion.PlayTests
             {
                 yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
                 yield return PlayTestUtil.WaitUntil(
-                    () => GameController.Instance != null && GameController.Instance.Sim != null, 10f);
+                    () =>
+                    {
+                        var g = UnityEngine.Object.FindFirstObjectByType<GameController>();
+                        return g != null && g.Sim != null;
+                    }, 10f);
 
-                GameController gc = GameController.Instance;
+                GameController gc = UnityEngine.Object.FindFirstObjectByType<GameController>();
                 Assert.IsNotNull(gc, "Bastion scene has no GameController — the run never starts.");
                 Assert.IsNotNull(gc.Sim, "GameController.Sim was never created.");
                 Assert.IsNotNull(GameSession.Meta, "GameSession.Meta is null inside the Bastion scene.");
@@ -167,9 +171,13 @@ namespace GatekeeperBastion.PlayTests
             {
                 yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
                 yield return PlayTestUtil.WaitUntil(
-                    () => GameController.Instance != null && GameController.Instance.Sim != null, 10f);
+                    () =>
+                    {
+                        var g = UnityEngine.Object.FindFirstObjectByType<GameController>();
+                        return g != null && g.Sim != null;
+                    }, 10f);
 
-                GameController gc = GameController.Instance;
+                GameController gc = UnityEngine.Object.FindFirstObjectByType<GameController>();
                 MetaState meta = GameSession.Meta;
                 Assert.IsNotNull(meta);
 
@@ -243,9 +251,13 @@ namespace GatekeeperBastion.PlayTests
                 // ---- enter the Bastion ----
                 yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
                 yield return PlayTestUtil.WaitUntil(
-                    () => GameController.Instance != null && GameController.Instance.Sim != null, 10f);
+                    () =>
+                    {
+                        var g = UnityEngine.Object.FindFirstObjectByType<GameController>();
+                        return g != null && g.Sim != null;
+                    }, 10f);
 
-                GameController gc = GameController.Instance;
+                GameController gc = UnityEngine.Object.FindFirstObjectByType<GameController>();
                 Assert.IsNotNull(gc, "Bastion scene has no GameController.");
                 RunSim sim = gc.Sim;
                 Assert.IsNotNull(sim, "GameController.Sim was never created.");

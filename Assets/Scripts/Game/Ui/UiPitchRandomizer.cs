@@ -1,24 +1,24 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
-    /// <summary>Sets UI Audio pitch to ±5% before Shift <c>UIElementSound</c> plays.</summary>
+    /// <summary>LOCAL-OWNER: sets UI Audio pitch to ±5% before Shift <c>UIElementSound</c> plays.</summary>
     public sealed class UiPitchRandomizer : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler
     {
         const float Jitter = 0.05f;
+
+        [SerializeField, Tooltip("The 'UI Audio' AudioSource Shift plays through. Authored in the scene.")]
+        AudioSource _uiAudio;
 
         public void OnPointerEnter(PointerEventData eventData) => JitterPitch();
 
         public void OnPointerClick(PointerEventData eventData) => JitterPitch();
 
-        static void JitterPitch()
+        void JitterPitch()
         {
-            var go = GameObject.Find("UI Audio");
-            if (go == null) return;
-            var src = go.GetComponent<AudioSource>();
-            if (src == null) return;
-            src.pitch = Random.Range(1f - Jitter, 1f + Jitter);
+            if (_uiAudio == null) return;
+            _uiAudio.pitch = Random.Range(1f - Jitter, 1f + Jitter);
         }
     }
 }

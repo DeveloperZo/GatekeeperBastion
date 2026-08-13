@@ -1,6 +1,5 @@
 using System.Text;
 using GatekeeperBastion.Game;
-using GatekeeperBastion.Game.Ui;
 using Michsky.UI.Shift;
 using UnityEditor;
 using UnityEngine;
@@ -13,7 +12,7 @@ namespace GatekeeperBastion.EditorTools
     /// forbid <c>OK</c>.</summary>
     public static class StationSceneGate
     {
-        static readonly string[] Stations =
+        public static readonly string[] Stations =
             { "ARMORY", "FABRICATION", "CREW QUARTERS", "NAV MAP" };
 
         /// <summary>Returns false and appends FAIL lines when the Ship station open path

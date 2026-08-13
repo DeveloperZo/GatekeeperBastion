@@ -1,4 +1,3 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
@@ -11,7 +10,7 @@ namespace GatekeeperBastion.Game
 
         [SerializeField] FabricationPanelView _body;
 
-        protected override string StationName => "FABRICATION";
+        public override string StationName => "FABRICATION";
 
         protected override string PromptHint => "fabricate hatch armor, equipment, and payloads";
 

@@ -22,9 +22,8 @@ and it is the reason §6 matters here.
 
 ## 1. Allocation
 
-**Rule: nothing in a per-frame path allocates.** In this project the per-frame paths are the
-8 `Update()` methods, `OnGUI` (which runs at least twice per frame, Layout and Repaint), and
-the firing path.
+**Rule: nothing in a per-frame path allocates.** This applies to every `Update()`, `OnGUI`
+(which runs at least twice per frame, Layout and Repaint), and the firing path.
 
 Allocating constructs, all Unity-documented
 ([performance-reference-types](https://docs.unity3d.com/6000.0/Documentation/Manual/performance-reference-types.html)):
@@ -132,8 +131,8 @@ destroyed-object check. The legitimate optimization is hoisting the check out of
 
 ## 4. Update loops and time
 
-**8 `Update()` methods.** See `1-Boundaries.md` §5: no update manager. What applies at this
-scale:
+**Every `Update()`, `OnGUI`, and the firing path follows these rules.** See
+`1-Boundaries.md` §5: no update manager. What applies at this scale:
 
 - **Never declare an empty `Update`/`Start`/`OnGUI`.** Unity registers the callback only if
   the method exists, but an empty body is still invoked every frame. Audited: none present.
@@ -269,6 +268,9 @@ with `rg` over `Assets/Scripts` using the patterns in the fence.
 | A milestone ID (`M<digits>`) in an identifier — a file name, type, namespace, menu path or define | **enforced at 0** | 0 — true today (`M35Wp4OptionsPatch.cs`, the type, the file and its menu row, is already deleted). Zero exceptions |
 | A milestone ID in a comment or string literal | **enforced at 0** (stamped 2026-08-11) | 0 — the 66 baselined lines across 39 files were cleaned on 2026-08-11; comments now say what the code does, not which milestone touched it |
 | `[InitializeOnLoad]` outside the fence's allowlist | **enforced at 0** | 4 sites, all four in the allowlist |
+| A scene lookup (`FindFirstObjectByType` / `FindObjectsByType` / `FindAnyObjectByType` / legacy `FindObject(s)OfType` / `GameObject.Find` / `Camera.main`) in `Game/` outside the fence's allowlist | **enforced at 0** (stamped 2026-08-12) | 0 outside the six named files. Replaces the two-runs milestone gate's manual grep — the wiring rule is serialize/authored refs for scene-stable objects, pass-from-owner for runtime-spawned. The allowlist is the named-exemption list: cross-scene flow/audio dedupe (`SceneFlow`, `FrontEndMusic`), the settings-change volume broadcast (`AudioBuses`), the bind-time Shift-manager locator (`UiBind`), and the two dev files |
+| An `Input.` read in `Game/` outside `Controls.cs` (the sole producer) or the dev console | **enforced at 0** (stamped 2026-08-12) | 0 — `Controls.Sample()` produces one `PlayerInputFrame` per frame; gameplay reads the frame. Replaces the same milestone gate's input grep |
+| An ambient `UnityEngine.Random` draw in `Game/` outside the named sites | **enforced at 0** (stamped 2026-08-12) | 0 outside `PlayerGun.Firing.cs` (crit + pellet cone — deliberately off the replayable stream, see `4-Testing-and-Determinism.md`) and `UiPitchRandomizer.cs` (cosmetic). Spawn placement draws come from the seeded generator on `RunSim`. Replaces the same milestone gate's randomness grep |
 | `AssetDatabase.DeleteAsset` naming a `.cs` file (self-deleting script) | **enforced at 0** | 0 |
 | A non-source, non-`.meta` file under `Assets/Scripts/` (`.cs`, `.asmdef` and `.meta` are source here) | **enforced at 0** | 0 |
 | A `static Instance` on a type not named in `Architecture/README.md`'s fence | see that file's fence | 2 declarations, both named there (`DecoyBay`'s was retired 2026-08-11) |
@@ -297,7 +299,13 @@ midtext_pattern=\bM[0-9]{2,3}\b
 midtext_line_baseline=0
 midtext_file_baseline=0
 initializeonload_pattern=\[InitializeOnLoad\]
-initializeonload_allow=Editor/Scenes/SceneBuilder.cs,Editor/Tools/AutoVerify.cs,Editor/Tools/RepairStationPanels.cs,Editor/Tools/StripSettingsToStations.cs,Editor/Bastion/BastionKitEmitter.cs,Editor/Bastion/BastionSketchEmitter.cs
+initializeonload_allow=Editor/Scenes/SceneBuilder.cs,Editor/Tools/IntegrationCheck.cs,Editor/Tools/RepairStationPanels.cs,Editor/Tools/StripSettingsToStations.cs,Editor/Bastion/BastionKitEmitter.cs,Editor/Bastion/BastionSketchEmitter.cs
+scenelookup_pattern=\bFind(FirstObjectByType|AnyObjectByType|ObjectsByType|Objects?OfType)\b|\bGameObject\.Find\b|\bCamera\.main\b
+scenelookup_allow=Game/Flow/SceneFlow.cs,Game/Flow/FrontEndMusic.cs,Game/Ui/AudioBuses.cs,Game/Ui/UiBind.cs,Game/Dev/DevConsole.cs,Game/Bastion/GameController.DevCommands.cs
+ambientinput_pattern=(^|[^A-Za-z0-9_.])Input\.
+ambientinput_allow=Game/Input/Controls.cs,Game/Dev/DevConsole.cs
+ambientrandom_pattern=\bUnityEngine\.Random\b|(^|[^A-Za-z0-9_.])Random\.(Range|value|insideUnitSphere|onUnitSphere|rotation)\b
+ambientrandom_allow=Game/Player/PlayerGun.Firing.cs,Game/Ui/UiPitchRandomizer.cs
 selfdelete_pattern=AssetDatabase\.DeleteAsset[^\r\n]*\.cs
 selfdelete_enforced=0
 nonsource_enforced=0

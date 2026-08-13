@@ -1,10 +1,9 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Util;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Authored CREW QUARTERS body: one row per attribute track. The ATTRIBUTES
+    /// <summary>LOCAL-OWNER: authored CREW QUARTERS body: one row per attribute track. The ATTRIBUTES
     /// heading is authored scene text. A dumb binder — code writes text, toggles rows and
     /// wires clicks; layout, colour and font are the scene's.</summary>
     public sealed class CrewQuartersPanelView : MonoBehaviour

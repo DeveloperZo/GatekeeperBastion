@@ -140,7 +140,7 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void CatalogDial_MatchesMagnitudeAtZero()
+        public void CatalogAbility_MagnitudeAndCooldownAreSet()
         {
             foreach (WeaponId id in WeaponCatalog.ShopWeapons())
             {

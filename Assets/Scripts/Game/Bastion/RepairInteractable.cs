@@ -18,6 +18,9 @@ namespace GatekeeperBastion.Game
         [Tooltip("Hatch to repair. Wired by SceneBuilder; falls back to a sibling component.")]
         public HatchStation station;
 
+        [SerializeField, Tooltip("Bastion GameController. Authored in the scene.")]
+        GameController _game;
+
         [SerializeField] float repairPerSecond = 8f;
 
         bool _equipped;
@@ -57,7 +60,7 @@ namespace GatekeeperBastion.Game
             {
                 if (station == null) station = GetComponent<HatchStation>(); // re-resolve if fake-null
                 if (station == null) return null;
-                var gc = GameController.Instance;
+                var gc = _game;
                 if (gc == null || gc.RunIsOver) return null; // no repair prompt once the run is over
                 if (station.IsDestroyed) return "Hatch: DESTROYED";
                 if (station.Hp >= station.MaxHp) return "Hatch: sealed tight";
@@ -86,7 +89,7 @@ namespace GatekeeperBastion.Game
         public void Interact(float dt)
         {
             if (dt <= 0f || station == null) return;
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc == null || gc.RunIsOver || gc.Sim == null) return;
 
             _holding = true;

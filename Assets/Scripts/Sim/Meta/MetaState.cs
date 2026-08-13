@@ -20,6 +20,7 @@ namespace GatekeeperBastion.Sim
 
         public int TotalRuns;
         public int CleanExits;
+        // Save/API trap: PodEjections means lost Runs; keep this field and its JSON key unchanged.
         public int PodEjections;
 
         /// <summary>Highest 1-based wave the player has cleared this campaign. Starts at 1,
@@ -415,9 +416,9 @@ namespace GatekeeperBastion.Sim
             if (d.SaveVersion < 4)
                 MigrateLegacyRepairTracks(m, d.RepairRigLevel, d.EngineeringLevel);
 
-            m.RestoreSalvageLedger(
-                d.SaveVersion >= 2 ? d.LifetimeSalvageEarned : -1L,
-                d.SaveVersion >= 2 ? d.LifetimeSalvageSpent : -1L);
+            // Ledger fields carry the missing-key sentinel (-1) from the JSON path; do not
+            // re-derive them from SaveVersion here or the two pipelines diverge again.
+            m.RestoreSalvageLedger(d.LifetimeSalvageEarned, d.LifetimeSalvageSpent);
             m.SaveVersion = SaveData.CurrentVersion;
             return m;
         }
@@ -469,106 +470,97 @@ namespace GatekeeperBastion.Sim
 
         public string ToJson()
         {
-            EnsureArrays();
+            SaveData d = ToSaveData();
             var sb = new StringBuilder(256);
             sb.Append('{');
-            AppendField(sb, "SaveVersion", SaveVersion.ToString(CultureInfo.InvariantCulture), false);
-            AppendField(sb, "BankedSalvage", BankedSalvage.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "LifetimeSalvageEarned", LifetimeSalvageEarned.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "LifetimeSalvageSpent", LifetimeSalvageSpent.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "TotalRuns", TotalRuns.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "CleanExits", CleanExits.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "PodEjections", PodEjections.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "SaveVersion", d.SaveVersion.ToString(CultureInfo.InvariantCulture), false);
+            AppendField(sb, "BankedSalvage", d.BankedSalvage.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "LifetimeSalvageEarned", d.LifetimeSalvageEarned.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "LifetimeSalvageSpent", d.LifetimeSalvageSpent.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "TotalRuns", d.TotalRuns.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "CleanExits", d.CleanExits.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "PodEjections", d.PodEjections.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "DeepestWaveReached",
-                (DeepestWaveReached < 1 ? 1 : DeepestWaveReached).ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "HatchArmorLevel", HatchArmorLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "VitalityLevel", VitalityLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "StaminaLevel", StaminaLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "ScavengingLevel", ScavengingLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "LuckLevel", LuckLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquipmentSlotPurchased", EquipmentSlotPurchased ? "true" : "false", true);
-            AppendField(sb, "OwnedEquipmentMask", OwnedEquipmentMask.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquippedEquipment", ((int)EquippedEquipment).ToString(CultureInfo.InvariantCulture), true);
-            AppendBoolArray(sb, "WeaponsOwned", _weaponsOwned);
-            AppendIntArray(sb, "WeaponWheelPoints", _wheelPoints);
-            AppendField(sb, "EquippedPrimary", ((int)EquippedPrimary).ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquippedSecondary", ((int)EquippedSecondary).ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquippedDrone", ((int)EquippedDrone).ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "OwnedPayloadMask", OwnedPayloadMask.ToString(CultureInfo.InvariantCulture), true);
+                d.DeepestWaveReached.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "HatchArmorLevel", d.HatchArmorLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "VitalityLevel", d.VitalityLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "StaminaLevel", d.StaminaLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "ScavengingLevel", d.ScavengingLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "LuckLevel", d.LuckLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "EquipmentSlotPurchased", d.EquipmentSlotPurchased ? "true" : "false", true);
+            AppendField(sb, "OwnedEquipmentMask", d.OwnedEquipmentMask.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "EquippedEquipment", d.EquippedEquipment.ToString(CultureInfo.InvariantCulture), true);
+            AppendBoolArray(sb, "WeaponsOwned", d.WeaponsOwned);
+            AppendIntArray(sb, "WeaponWheelPoints", d.WeaponWheelPoints);
+            AppendField(sb, "EquippedPrimary", d.EquippedPrimary.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "EquippedSecondary", d.EquippedSecondary.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "EquippedDrone", d.EquippedDrone.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "OwnedPayloadMask", d.OwnedPayloadMask.ToString(CultureInfo.InvariantCulture), true);
             sb.Append('}');
             return sb.ToString();
         }
 
+        /// <summary>Parse keys into <see cref="SaveData"/> then migrate via
+        /// <see cref="FromSaveData"/>. Version gates live only in FromSaveData.</summary>
         public static MetaState FromJson(string json)
         {
             if (string.IsNullOrEmpty(json)) throw new ArgumentException("json is null or empty", "json");
-            var m = new MetaState();
-            int rawVersion = (int)ExtractLong(json, "SaveVersion", SaveData.CurrentVersion);
-            m.SaveVersion = rawVersion;
-            m.BankedSalvage = ExtractLong(json, "BankedSalvage", 0);
-            m.TotalRuns = (int)ExtractLong(json, "TotalRuns", 0);
-            m.CleanExits = (int)ExtractLong(json, "CleanExits", 0);
-            m.PodEjections = (int)ExtractLong(json, "PodEjections", 0);
+            var d = new SaveData();
+            d.SaveVersion = (int)ExtractLong(json, "SaveVersion", SaveData.CurrentVersion);
+            d.BankedSalvage = ExtractLong(json, "BankedSalvage", 0);
+            d.TotalRuns = (int)ExtractLong(json, "TotalRuns", 0);
+            d.CleanExits = (int)ExtractLong(json, "CleanExits", 0);
+            d.PodEjections = (int)ExtractLong(json, "PodEjections", 0);
             int deepest = (int)ExtractLong(json, "DeepestWaveReached", 1);
-            m.DeepestWaveReached = deepest < 1 ? 1 : deepest;
-            m.HatchArmorLevel = (int)ExtractLong(json, "HatchArmorLevel", 0);
-            m.VitalityLevel = (int)ExtractLong(json, "VitalityLevel", 0);
-            m.StaminaLevel = (int)ExtractLong(json, "StaminaLevel", 0);
-            m.ScavengingLevel = (int)ExtractLong(json, "ScavengingLevel", 0);
-            m.LuckLevel = (int)ExtractLong(json, "LuckLevel", 0);
-            m.EnsureArrays();
+            d.DeepestWaveReached = deepest < 1 ? 1 : deepest;
+            d.HatchArmorLevel = (int)ExtractLong(json, "HatchArmorLevel", 0);
+            d.VitalityLevel = (int)ExtractLong(json, "VitalityLevel", 0);
+            d.StaminaLevel = (int)ExtractLong(json, "StaminaLevel", 0);
+            d.ScavengingLevel = (int)ExtractLong(json, "ScavengingLevel", 0);
+            d.LuckLevel = (int)ExtractLong(json, "LuckLevel", 0);
 
-            // Legacy repair tracks — read before overwrite; grant if present on pre-v4 saves.
-            int legacyRepair = (int)ExtractLong(json, "RepairRigLevel", 0);
-            int legacyEng = (int)ExtractLong(json, "EngineeringLevel", 0);
+            // Missing ledger keys → -1 at any version (JSON contract; FromSaveData must not gate).
+            d.LifetimeSalvageEarned = ExtractLong(json, "LifetimeSalvageEarned", -1L);
+            d.LifetimeSalvageSpent = ExtractLong(json, "LifetimeSalvageSpent", -1L);
 
-            if (rawVersion >= 4)
-            {
-                m.EquipmentSlotPurchased = ExtractBool(json, "EquipmentSlotPurchased", false);
-                m.OwnedEquipmentMask = (int)ExtractLong(json, "OwnedEquipmentMask", 0);
-                m.EquippedEquipment = (EquipmentId)ExtractLong(json, "EquippedEquipment", (int)EquipmentId.None);
-            }
+            d.RepairRigLevel = (int)ExtractLong(json, "RepairRigLevel", 0);
+            d.EngineeringLevel = (int)ExtractLong(json, "EngineeringLevel", 0);
+
+            d.EquipmentSlotPurchased = ExtractBool(json, "EquipmentSlotPurchased", false);
+            d.OwnedEquipmentMask = (int)ExtractLong(json, "OwnedEquipmentMask", 0);
+            d.EquippedEquipment = (int)ExtractLong(json, "EquippedEquipment", (int)EquipmentId.None);
+            d.OwnedPayloadMask = (int)ExtractLong(json, "OwnedPayloadMask", 0);
 
             bool hasV3Weapons = json.IndexOf("\"WeaponsOwned\"", StringComparison.Ordinal) >= 0;
-            if (rawVersion >= 3 && hasV3Weapons)
+            if (hasV3Weapons)
             {
-                ExtractBoolArray(json, "WeaponsOwned", m._weaponsOwned);
-                m.EquippedPrimary = (WeaponId)ExtractLong(json, "EquippedPrimary", (int)WeaponId.None);
-                m.EquippedSecondary = (WeaponId)ExtractLong(json, "EquippedSecondary", (int)WeaponId.None);
-                m.EquippedDrone = SanitizePayloadId(
-                    (int)ExtractLong(json, "EquippedDrone", (int)PayloadId.None));
-                if (rawVersion >= 6)
-                    m.OwnedPayloadMask = (int)ExtractLong(json, "OwnedPayloadMask", 0);
+                d.WeaponsOwned = new bool[WeaponCatalog.ArraySize];
+                ExtractBoolArray(json, "WeaponsOwned", d.WeaponsOwned);
+                d.EquippedPrimary = (int)ExtractLong(json, "EquippedPrimary", (int)WeaponId.None);
+                d.EquippedSecondary = (int)ExtractLong(json, "EquippedSecondary", (int)WeaponId.None);
+                d.EquippedDrone = (int)ExtractLong(json, "EquippedDrone", (int)PayloadId.None);
 
                 bool hasWheel = json.IndexOf("\"WeaponWheelPoints\"", StringComparison.Ordinal) >= 0;
-                if (rawVersion >= 4 && hasWheel)
+                if (hasWheel)
                 {
-                    ExtractIntArray(json, "WeaponWheelPoints", m._wheelPoints);
+                    d.WeaponWheelPoints = new int[WeaponCatalog.ArraySize * WeaponWheel.AttrCount];
+                    ExtractIntArray(json, "WeaponWheelPoints", d.WeaponWheelPoints);
                 }
                 else
                 {
-                    var tiers = new int[WeaponCatalog.ArraySize];
-                    ExtractIntArray(json, "WeaponTiers", tiers);
-                    MigrateFlatTiersArray(m, tiers);
+                    d.WeaponTiers = new int[WeaponCatalog.ArraySize];
+                    ExtractIntArray(json, "WeaponTiers", d.WeaponTiers);
                 }
             }
             else
             {
-                MigrateV1WeaponFields(m,
-                    ExtractBool(json, "WeaponOwned", false),
-                    (int)ExtractLong(json, "GunDamageLevel", 0),
-                    (int)ExtractLong(json, "FireRateLevel", 0),
-                    (int)ExtractLong(json, "ClipSizeLevel", 0));
+                d.WeaponOwned = ExtractBool(json, "WeaponOwned", false);
+                d.GunDamageLevel = (int)ExtractLong(json, "GunDamageLevel", 0);
+                d.FireRateLevel = (int)ExtractLong(json, "FireRateLevel", 0);
+                d.ClipSizeLevel = (int)ExtractLong(json, "ClipSizeLevel", 0);
             }
 
-            if (rawVersion < 4)
-                MigrateLegacyRepairTracks(m, legacyRepair, legacyEng);
-
-            m.RestoreSalvageLedger(
-                ExtractLong(json, "LifetimeSalvageEarned", -1L),
-                ExtractLong(json, "LifetimeSalvageSpent", -1L));
-            m.SaveVersion = SaveData.CurrentVersion;
-            return m;
+            return FromSaveData(d);
         }
 
         static void AppendField(StringBuilder sb, string name, string value, bool leadingComma)

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Game.Ui;
+using GatekeeperBastion.Game;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;

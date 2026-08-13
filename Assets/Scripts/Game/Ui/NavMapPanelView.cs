@@ -1,5 +1,4 @@
 using System;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Util;
 using TMPro;
 using UnityEngine;
@@ -7,7 +6,7 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Authored NAV MAP body: nav panel (node grid), map panel (destination, premise,
+    /// <summary>LOCAL-OWNER: authored NAV MAP body: nav panel (node grid), map panel (destination, premise,
     /// start-wave picker, loadout warnings and the embark action). Exactly one panel shows at a
     /// time. The warning and load-failed texts are authored; code only toggles them. A dumb
     /// binder — layout, colour and font are the scene's.</summary>

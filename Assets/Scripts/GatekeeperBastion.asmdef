@@ -2,6 +2,7 @@
     "name": "GatekeeperBastion",
     "rootNamespace": "GatekeeperBastion",
     "references": [
+        "GatekeeperBastion.Sim",
         "Michsky.UI.Shift",
         "Unity.AI.Navigation",
         "Unity.TextMeshPro",

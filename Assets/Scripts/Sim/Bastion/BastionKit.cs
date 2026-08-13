@@ -19,7 +19,7 @@ namespace GatekeeperBastion.Sim
                 case BastionBlockKind.Half: return 8;
                 case BastionBlockKind.Full: return 13;
                 case BastionBlockKind.OpenArea: return 21;
-                case BastionBlockKind.ControlRoom: return 76;
+                case BastionBlockKind.ControlRoom: return 47;
                 default: return 5;
             }
         }

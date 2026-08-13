@@ -16,6 +16,8 @@ namespace GatekeeperBastion.Game
         const string Tag = "PlayerAbility";
 
         PlayerGun _gun;
+        // Pushed by GameController.ApplyMetaEffects (Bind); the wave-tally events come off its Sim.
+        GameController _game;
         float _cooldown;
         float _surgeRemaining;
         float _waveGatekeeperSeconds;
@@ -72,10 +74,18 @@ namespace GatekeeperBastion.Game
 
         void OnDisable() => Unsubscribe();
 
+        /// <summary>Adopt the scene's GameController (called from ApplyMetaEffects at run
+        /// start) and subscribe to its Sim's wave events right away.</summary>
+        public void Bind(GameController game)
+        {
+            _game = game;
+            EnsureSubscribed();
+        }
+
         void EnsureSubscribed()
         {
             if (_subscribed) return;
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc == null || gc.Sim == null) return;
             gc.Sim.WaveStarted += OnWaveStarted;
             gc.Sim.AssaultEnded += OnAssaultEnded;
@@ -85,7 +95,7 @@ namespace GatekeeperBastion.Game
         void Unsubscribe()
         {
             if (!_subscribed) return;
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc != null && gc.Sim != null)
             {
                 gc.Sim.WaveStarted -= OnWaveStarted;
@@ -94,7 +104,20 @@ namespace GatekeeperBastion.Game
             _subscribed = false;
         }
 
+        /// <summary>True once the Bastion's tick owner drives this component; its own
+        /// Update then yields so the written system order is the only order.</summary>
+        bool _hosted;
+
+        public void SetHosted(bool hosted) { _hosted = hosted; }
+
         void Update()
+        {
+            if (_hosted) return; // the Bastion tick owner calls Tick in the written order
+            Tick(Time.deltaTime);
+        }
+
+        /// <summary>Ability cooldown, surge window, pin decay and activation input.</summary>
+        public void Tick(float dt)
         {
             EnsureSubscribed();
 
@@ -104,7 +127,6 @@ namespace GatekeeperBastion.Game
                 if (_gun == null) return;
             }
 
-            float dt = Time.deltaTime;
             if (_cooldown > 0f) _cooldown -= dt;
             if (_surgeRemaining > 0f) _surgeRemaining -= dt;
 
@@ -214,7 +236,7 @@ namespace GatekeeperBastion.Game
 
             int hit = 0;
             float credited = 0f;
-            var live = EnemyGatekeeper.AllLive;
+            var live = LiveGatekeepers();
             for (int i = 0; i < live.Count; i++)
             {
                 var b = live[i];
@@ -235,10 +257,21 @@ namespace GatekeeperBastion.Game
             return true;
         }
 
+        /// <summary>Live gatekeepers via the spawner's ledger — the one list, reached through
+        /// the bound controller so there is no process-global actor list. Empty when unbound
+        /// or spawnerless (ability then finds no targets, same as an empty room).</summary>
+        System.Collections.Generic.IReadOnlyList<EnemyGatekeeper> LiveGatekeepers()
+        {
+            var gc = _game;
+            if (gc == null || gc.Spawner == null)
+                return System.Array.Empty<EnemyGatekeeper>();
+            return gc.Spawner.Live;
+        }
+
         bool TryManualPin(float seconds)
         {
             if (!_pinBuild.Ready || _pinBuild.TargetKey == 0) return false;
-            var live = EnemyGatekeeper.AllLive;
+            var live = LiveGatekeepers();
             for (int i = 0; i < live.Count; i++)
             {
                 var b = live[i];
@@ -315,8 +348,8 @@ namespace GatekeeperBastion.Game
             // previous wave's tally first or criterion 6 loses every wave but the last.
             if (_waveTallyOpen)
             {
-                int completed = GameController.Instance != null && GameController.Instance.Sim != null
-                    ? GameController.Instance.Sim.CurrentWaveIndex - 1
+                int completed = _game != null && _game.Sim != null
+                    ? _game.Sim.CurrentWaveIndex - 1
                     : 0;
                 LogWaveGatekeeperSeconds(completed);
             }
@@ -331,8 +364,8 @@ namespace GatekeeperBastion.Game
         void OnAssaultEnded()
         {
             if (!_waveTallyOpen) return;
-            int wave = GameController.Instance != null && GameController.Instance.Sim != null
-                ? GameController.Instance.Sim.CurrentWaveIndex
+            int wave = _game != null && _game.Sim != null
+                ? _game.Sim.CurrentWaveIndex
                 : 0;
             LogWaveGatekeeperSeconds(wave);
             _waveTallyOpen = false;

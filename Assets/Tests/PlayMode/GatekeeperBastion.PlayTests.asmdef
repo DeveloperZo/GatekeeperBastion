@@ -1,6 +1,7 @@
 {
     "name": "GatekeeperBastion.PlayTests",
     "references": [
+        "GatekeeperBastion.Sim",
         "GatekeeperBastion",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

@@ -153,8 +153,8 @@ can diverge without a rename.
 
 **The cost is a standing rename tax**, and this project has now paid it twice — M11's slots
 and the 2026-08-08 Boarder/Gatekeeper reversal. Renames that reach serialized data are
-migrations, not refactors: `SaveData`'s `"EquippedMelee"` JSON key stays spelled that way
-after the Drone rename, and `language.md` trap 3 records why.
+migrations, not refactors: `SaveData`'s `"EquippedMelee"` JSON key changed with the Drone
+rename, and compatibility shims are banned; `language.md` trap 3 records why.
 
 ## 6. Comments
 

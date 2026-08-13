@@ -96,8 +96,8 @@ namespace GatekeeperBastion.Tests
             long bankAtDeath = meta.BankedSalvage;
             sim.NotifyPlayerDown();
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
-            Assert.AreEqual("player", sim.LastLossReport.cause);
-            Assert.AreEqual(550L, sim.LastLossReport.grossEarned, "the run's whole take");
+            Assert.AreEqual("player", sim.LastRunReport.cause);
+            Assert.AreEqual(550L, sim.LastRunReport.grossEarned, "the run's whole take");
             Assert.AreEqual(bankAtDeath, meta.BankedSalvage, "dying moves no currency at all");
             Assert.AreEqual(550L, meta.BankedSalvage);
             Assert.AreEqual(1, meta.PodEjections);

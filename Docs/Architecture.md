@@ -2,14 +2,19 @@
 
 ## The one structural rule
 
-`Assets/Scripts/Sim/` (namespace `GatekeeperBastion.Sim`) is **pure C#**. No
-`using UnityEngine`. Deterministic, seedable (`RunSim.Seed` / `RunSim.Rng`),
-driven only by explicit `Tick(dt)`. Its only outside dependency is
-`Util/Log.cs`.
+`Assets/Scripts/Sim/` (namespace `GatekeeperBastion.Sim`) is its own assembly,
+`GatekeeperBastion.Sim.asmdef`, with no assembly references. Inside it: no
+`MonoBehaviour`, no `GameObject`, no scene lookup, no `Time`, no ambient
+`Random`, no `SerializeField`, no `UnityEditor`, no static mutable state.
+CoreModule value types (`Vector3`, `Quaternion`, `Mathf`) are permitted.
+Deterministic, seedable (`RunSim.Seed` / `RunSim.Rng`), driven only by explicit
+`Tick(dt)`. `Sim/Util/Log.cs` rides along inside the assembly.
 
-That is the **multiplayer seam**. When NGO lands, the sim runs host-authoritative
-and MonoBehaviours become replicated views. Anything you put in Sim that touches
-Unity has to be undone later at the worst possible time.
+The reason is **testability and one-directional dependency** — EditMode tests
+with no scene and no domain reload, and two independent Runs advancing in one
+process (`TwoRunIsolationTests`). When NGO lands, the sim runs host-authoritative
+and MonoBehaviours become replicated views; the full argument, with sources, is
+in `Architecture/1-Boundaries.md` section 1.
 
 `Assets/Scripts/Game/` MonoBehaviours are **thin views**: they read sim state and
 draw/spawn/move. They do not own rules.
@@ -22,15 +27,15 @@ Folders group by subject. **Namespaces do not follow folders** — everything un
 
 ```
 Assets/Scripts/
-  Sim/                       pure C#, no UnityEngine        (~2,700 lines)
-    Run/     RunSim  RunPhase  AssaultState  SalvageLedger  EscapeSpool
+  Sim/                       own assembly (GatekeeperBastion.Sim), no scene deps  (~2,800 lines)
+    Run/     RunSim  RunContext  RunPhase  AssaultState  SalvageLedger  EscapeSpool
     Waves/   WaveDirector  WaveSpec  GatekeeperKind  GatekeeperStats
     Meta/    MetaState  MetaUpgrades  SaveData  TetherSiphon
              EquipmentId  EquipmentCatalog
              WeaponId  WeaponSlot  WeaponDef  WeaponCatalog
              WeaponTier  WeaponWheel  WeaponAbility  WeaponCrosshair
     Ship/    ShipSystems  Subsystem
-    Settings/ Settings  SettingId  SettingDecl  ISettingsStore
+    Util/    Log (front end — rides inside the Sim assembly)
   Game/                      MonoBehaviours, thin views     (~7,700 lines)
     Player/    FirstPersonController  PlayerGun(+.Firing)  PlayerAbility
                PlayerHealth  PlayerRegistry  Interactor
@@ -43,15 +48,16 @@ Assets/Scripts/
                ArmoryStation  EngineeringStation(FABRICATION)  CrewQuartersStation  MapStation
     Flow/      SceneFlow  GameSession  SaveService  SplashController  MainMenuController
                PlayerPrefsSettingsStore
-    Input/     Controls  ShortcutPanel — single binding list + bottom-left key panel
+    Input/     Controls  PlayerInputFrame  ShortcutPanel — one binding list + one input frame
+    Settings/  Settings  SettingId  SettingDecl  ISettingsStore (moved out of Sim/, M45)
     Dev/       DevCommands  DevConsole (editor/dev-build only)
   Editor/
     Scenes/  SceneBuilder(+.Ship, +.Enemies) — Environment/spawns/light/NavMesh; hosts+UI authored
-    Tools/   AutoVerify (file-bridge test runner)  LogTools (Logs menu)
-  Util/      Log (front end)  LogFile (one file per session)
+    Tools/   IntegrationCheck (file-bridge test runner; formerly AutoVerify)  LogTools (Logs menu)
+  Util/      LogFile (one file per session)
 
 Assets/Tests/
-  EditMode/  Run/  Waves/  Meta/  Ship/     pure sim, 227 tests (last recorded AutoVerify run)
+  EditMode/  Run/  Waves/  Meta/  Ship/     pure sim, 227 tests (last recorded integration-check run)
   PlayMode/                                 scene contracts
 Assets/Prefabs/    prefab assets only
 Assets/Materials/  every Mat_*.mat; SceneBuilder writes here (MaterialDir)
@@ -78,7 +84,8 @@ directly above the live constants, which is exactly how a later session reverts 
 ## Conventions
 
 - **All sim mutation goes through `GameController` command methods.** Nothing
-  else calls `RunSim` mutators.
+  else calls `RunSim` mutators except `WaveSpawner`'s two sanctioned R1
+  delivery-handshake notifications.
 - **UI is read-only.** HUD and station panels read state and draw. Ship purchases
   go through `ShipCommands`; they never call `MetaUpgrades.Buy` or `GameSession.Save`
   directly.

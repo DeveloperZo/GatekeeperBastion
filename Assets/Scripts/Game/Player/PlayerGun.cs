@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
-using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
@@ -58,6 +57,9 @@ namespace GatekeeperBastion.Game
         Material _critSparkMat;
         PlayerHealth _owner;
         PlayerAbility _ability;
+        // Pushed by GameController.ApplyMetaEffects (the rig is runtime-resolved, so the
+        // controller binds itself). Null outside a fight scene.
+        GameController _game;
         string _lastRefusal;
         // 32: crowded pierce lines used to truncate at 16 when geometry filled the buffer
         // (Architecture/5-Audit-2026-08-09). Layer mask still pending — no Enemy/World layers yet.
@@ -67,7 +69,11 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Bodies the next shot pierces at full damage while Railshot is armed. 0 = idle.</summary>
         int _railshotPierceBodies;
-        float _railshotArmedUntil;
+        // Armed-window countdown, seconds; ticked down by Update while armed. Negative = lapsed.
+        // The arm frame itself never ticks (elapsed time starts at zero on arming), so the
+        // window's length does not depend on whether the arming script ran before this one.
+        float _railshotArmedRemaining;
+        int _railshotArmedFrame = -1;
 
         public WeaponSlot ActiveSlot => _activeSlot;
         public WeaponDef ActiveDef => _slots[(int)_activeSlot].def;
@@ -94,22 +100,24 @@ namespace GatekeeperBastion.Game
 
         /// <summary>True while Railshot is armed and has not lapsed.</summary>
         public bool RailshotArmed =>
-            _railshotPierceBodies > 0 && Time.time <= _railshotArmedUntil;
+            _railshotPierceBodies > 0 && _railshotArmedRemaining >= 0f;
 
         /// <summary>Arm the next shot as Railshot: pierce <paramref name="pierceBodies"/> at full
-        /// damage. Lapses after <paramref name="armedSeconds"/> if unfired.</summary>
+        /// damage. Lapses after <paramref name="armedSeconds"/> if unfired; re-arming resets
+        /// the window.</summary>
         public void ArmRailshot(int pierceBodies, float armedSeconds)
         {
             if (pierceBodies < 1) pierceBodies = 1;
             _railshotPierceBodies = pierceBodies;
-            _railshotArmedUntil = Time.time + Mathf.Max(0.01f, armedSeconds);
+            _railshotArmedRemaining = Mathf.Max(0.01f, armedSeconds);
+            _railshotArmedFrame = Time.frameCount;
         }
 
         /// <summary>Clear an armed Railshot that has lapsed unused.</summary>
         public void ClearExpiredRailshot()
         {
             if (_railshotPierceBodies <= 0) return;
-            if (Time.time <= _railshotArmedUntil) return;
+            if (_railshotArmedRemaining >= 0f) return;
             ClearRailshot();
         }
 
@@ -117,7 +125,14 @@ namespace GatekeeperBastion.Game
         public void ClearRailshot()
         {
             _railshotPierceBodies = 0;
-            _railshotArmedUntil = 0f;
+            _railshotArmedRemaining = 0f;
+        }
+
+        /// <summary>Adopt the scene's GameController (called from ApplyMetaEffects at run
+        /// start). CanFire reads run state through this handle.</summary>
+        public void Bind(GameController game)
+        {
+            _game = game;
         }
 
         /// <summary>Consume the armed Railshot for this shot. Returns false when idle or lapsed.</summary>
@@ -125,7 +140,7 @@ namespace GatekeeperBastion.Game
         {
             pierceBodies = 0;
             if (_railshotPierceBodies <= 0) return false;
-            if (Time.time > _railshotArmedUntil)
+            if (_railshotArmedRemaining < 0f)
             {
                 ClearRailshot();
                 return false;
@@ -309,13 +324,29 @@ namespace GatekeeperBastion.Game
             if (_critSparkMat != null) Destroy(_critSparkMat);
         }
 
+        /// <summary>True once the Bastion's tick owner drives this component (set by Bind);
+        /// its own Update then yields so the written system order is the only order.</summary>
+        bool _hosted;
+
+        public void SetHosted(bool hosted) { _hosted = hosted; }
+
         void Update()
         {
-            _cooldown -= Time.deltaTime;
+            if (_hosted) return; // the Bastion tick owner calls Tick in the written order
+            Tick(Time.deltaTime);
+        }
+
+        /// <summary>Combat actions: cooldowns, slot input, regen, reload, fire.</summary>
+        public void Tick(float dt)
+        {
+            _cooldown -= dt;
+            // The armed window only counts down while armed; idle stays parked at zero.
+            if (_railshotPierceBodies > 0 && Time.frameCount != _railshotArmedFrame)
+                _railshotArmedRemaining -= dt;
             TickSlotInput();
-            TickSecondaryRegen();
+            TickSecondaryRegen(dt);
             // Tick before fire so a reload started this frame is never immediately advanced.
-            TickReload(Time.deltaTime);
+            TickReload(dt);
 
             if (!CanFire()) return;
 
@@ -331,7 +362,7 @@ namespace GatekeeperBastion.Game
         /// <summary>Secondary never stays permanently dry — it regenerates its own ammo.
         /// Baseline always ticks on the Secondary slot; the MK-1 surge multiplies the rate only
         /// while that slot is active (PlayerAbility).</summary>
-        void TickSecondaryRegen()
+        void TickSecondaryRegen(float dt)
         {
             int si = (int)WeaponSlot.Secondary;
             ref var s = ref _slots[si];
@@ -353,7 +384,7 @@ namespace GatekeeperBastion.Game
             rate *= mult;
 
             int before = s.clipRemaining;
-            _secondaryRegenAcc += rate * Time.deltaTime;
+            _secondaryRegenAcc += rate * dt;
             while (_secondaryRegenAcc >= 1f && s.clipRemaining < cap)
             {
                 _secondaryRegenAcc -= 1f;
@@ -448,7 +479,7 @@ namespace GatekeeperBastion.Game
 
         bool CanFire()
         {
-            var gc = GameController.Instance;
+            var gc = _game;
             if (!SceneFlow.InCombatScene && gc == null)
                 return Refuse($"not a combat scene (active '{SceneFlow.ActiveSceneName}') and no GameController present", true);
 

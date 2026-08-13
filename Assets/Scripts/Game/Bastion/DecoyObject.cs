@@ -1,11 +1,10 @@
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
-using GatekeeperBastion.Game.Combat;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>HOST-OWNED placed decoy prop. Stats pushed at spawn — never serialized.
+    /// <summary>HOST-ONLY: placed decoy prop. Stats pushed at spawn — never serialized.
     /// Player fire cannot damage it: there is no <see cref="Damageable"/>; Gatekeepers call
     /// <see cref="ApplyDamage"/> with their Hatch-damage value.</summary>
     public sealed class DecoyObject : MonoBehaviour
@@ -40,6 +39,14 @@ namespace GatekeeperBastion.Game
                 Destroy(gameObject);
             }
             return destroyed;
+        }
+
+        /// <summary>Silent removal for a run reset: no destroyed line, no bay notify — the bay
+        /// clears its own handle and state. The prop's CREATE (<see cref="Spawn"/>) and both
+        /// DESTROY paths live in this file; nothing else destroys a live decoy.</summary>
+        public void Despawn()
+        {
+            Destroy(gameObject);
         }
 
         /// <summary>Build a gray-box decoy at world position. Caller registers it with the bay.</summary>

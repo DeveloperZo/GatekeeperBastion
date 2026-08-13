@@ -1,4 +1,3 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using Michsky.UI.Shift;
@@ -54,6 +53,7 @@ namespace GatekeeperBastion.Game
         void Start()
         {
             SetWalkMode(true);
+            // Direct-play/transition belt: embarking locks the loadout; returning to Ship unlocks it.
             if (GameSession.Meta != null)
                 GameSession.Meta.PayloadLoadoutLocked = false;
             Log.Event("Ship", "aboard the ship — " + GameSession.Meta.BankedSalvage + " banked, " +
@@ -90,12 +90,14 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Camera-forward ray, same range as <see cref="Interactor"/> — self-contained
-        /// so open does not depend on Interactor script order.</summary>
+        /// so open does not depend on Interactor script order. The ray comes from the local
+        /// rig's authored camera wire, never a scene-wide camera lookup.</summary>
         static StationTerminal ResolveTargetedStation()
         {
-            var cam = Camera.main;
+            var fpc = FindLocalController();
+            var cam = fpc != null ? fpc.cameraTransform : null;
             if (cam == null) return null;
-            if (!Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit hit,
+            if (!Physics.Raycast(cam.position, cam.forward, out RaycastHit hit,
                     InteractRange))
                 return null;
             return hit.collider.GetComponentInParent<StationTerminal>();
@@ -226,13 +228,12 @@ namespace GatekeeperBastion.Game
             Cursor.visible = !_walking;
         }
 
-        /// <summary>Registry first (the sanctioned lookup), scene scan as a last resort so a
-        /// registration-order surprise cannot leave the hub uncontrollable.</summary>
+        /// <summary>Registry only (the sanctioned lookup); the bind window in Update retries
+        /// until the rig registers, so a registration-order surprise resolves itself.</summary>
         static FirstPersonController FindLocalController()
         {
             var local = PlayerRegistry.Local;
-            var fpc = local != null ? local.GetComponent<FirstPersonController>() : null;
-            return fpc != null ? fpc : FindFirstObjectByType<FirstPersonController>();
+            return local != null ? local.GetComponent<FirstPersonController>() : null;
         }
     }
 }

@@ -9,7 +9,7 @@ namespace GatekeeperBastion.Tests
     /// Clearing all WaveDirector.MaxWaves waves is a success and death is a failure, but they
     /// are worth EXACTLY THE SAME MONEY: currency is credited the instant an enemy dies, so a
     /// run ending is pure bookkeeping — CleanExits vs PodEjections, Escaped vs Lost, and a
-    /// LossReport naming the cause. Nothing is staked, fractioned, or forfeited anywhere.
+    /// RunReport naming the cause. Nothing is staked, fractioned, or forfeited anywhere.
     /// </summary>
     public class RunCompleteTests
     {
@@ -78,8 +78,8 @@ namespace GatekeeperBastion.Tests
             // Different endings...
             Assert.AreEqual(RunPhase.Escaped, victory.Phase);
             Assert.AreEqual(RunPhase.Lost, death.Phase);
-            Assert.AreEqual("cleared", victory.LastLossReport.cause);
-            Assert.AreEqual("player", death.LastLossReport.cause);
+            Assert.AreEqual("cleared", victory.LastRunReport.cause);
+            Assert.AreEqual("player", death.LastRunReport.cause);
             Assert.AreEqual(1, metaVictory.CleanExits);
             Assert.AreEqual(0, metaVictory.PodEjections);
             Assert.AreEqual(0, metaDeath.CleanExits);
@@ -90,8 +90,8 @@ namespace GatekeeperBastion.Tests
                 "the ending must not move a single credit");
             Assert.AreEqual(5250L, metaVictory.BankedSalvage);
             Assert.AreEqual(5250L, metaDeath.BankedSalvage);
-            Assert.AreEqual(victory.LastLossReport.grossEarned, death.LastLossReport.grossEarned);
-            Assert.AreEqual(5250L, death.LastLossReport.grossEarned);
+            Assert.AreEqual(victory.LastRunReport.grossEarned, death.LastRunReport.grossEarned);
+            Assert.AreEqual(5250L, death.LastRunReport.grossEarned);
         }
 
         [Test]
@@ -162,8 +162,8 @@ namespace GatekeeperBastion.Tests
             var sim = NewTetheredSim(out meta);
             ClearWholeRun(sim, 0);
 
-            Assert.AreEqual("cleared", sim.LastLossReport.cause);
-            Assert.AreEqual(5250L, sim.LastLossReport.grossEarned);
+            Assert.AreEqual("cleared", sim.LastRunReport.cause);
+            Assert.AreEqual(5250L, sim.LastRunReport.grossEarned);
         }
 
         [Test]
@@ -179,7 +179,7 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(RunPhase.Escaped, sim.Phase);
             Assert.AreEqual(8215L, meta.BankedSalvage);   // 265 kills x floor(31.25)
             Assert.AreEqual(8215L, sim.Salvage.RunSalvage);
-            Assert.AreEqual(8215L, sim.LastLossReport.grossEarned);
+            Assert.AreEqual(8215L, sim.LastRunReport.grossEarned);
             Assert.AreEqual(1, meta.CleanExits);
         }
 
@@ -220,7 +220,7 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(5250L, sim.Salvage.RunSalvage);
             Assert.AreEqual(1, meta.CleanExits);
             Assert.AreEqual(0, meta.PodEjections);
-            Assert.AreEqual("cleared", sim.LastLossReport.cause);
+            Assert.AreEqual("cleared", sim.LastRunReport.cause);
         }
 
         // ================================================================
@@ -248,8 +248,8 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.IsFalse(sim.AllWavesCleared, "dying on the last wave clears nothing");
             Assert.AreEqual(3675L, meta.BankedSalvage, "and forfeits nothing");
-            Assert.AreEqual(3675L, sim.LastLossReport.grossEarned);
-            Assert.AreEqual("player", sim.LastLossReport.cause);
+            Assert.AreEqual(3675L, sim.LastRunReport.grossEarned);
+            Assert.AreEqual("player", sim.LastRunReport.cause);
             Assert.AreEqual(1, meta.PodEjections);
             Assert.AreEqual(0, meta.CleanExits);
         }
@@ -270,10 +270,10 @@ namespace GatekeeperBastion.Tests
             sim.Ship.Hatch.Damage(99999f);
 
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
-            Assert.AreEqual("hatch", sim.LastLossReport.cause);
+            Assert.AreEqual("hatch", sim.LastRunReport.cause);
             // Waves 1..4 cleared (18+30+42+54=144), died on wave 5 before any kill.
             Assert.AreEqual(3600L, meta.BankedSalvage, "144 kills * 25, kept in full");
-            Assert.AreEqual(3600L, sim.LastLossReport.grossEarned);
+            Assert.AreEqual(3600L, sim.LastRunReport.grossEarned);
             Assert.AreEqual(1, meta.PodEjections);
             Assert.AreEqual(0, meta.CleanExits);
             Assert.IsFalse(sim.AllWavesCleared);
@@ -303,7 +303,7 @@ namespace GatekeeperBastion.Tests
             Assert.IsFalse(sim.AllWavesCleared);
             Assert.AreEqual(0, meta.CleanExits);
             Assert.AreEqual(1, meta.PodEjections);
-            Assert.AreEqual("player", sim.LastLossReport.cause);
+            Assert.AreEqual("player", sim.LastRunReport.cause);
             Assert.AreEqual(5250L, meta.BankedSalvage, "all 210 kills, exactly as if it had completed");
         }
 
@@ -337,7 +337,7 @@ namespace GatekeeperBastion.Tests
 
             run2.NotifyPlayerDown(); // and dying in run 2 keeps run 1's earnings too
             Assert.AreEqual(5400L, meta.BankedSalvage);
-            Assert.AreEqual(150L, run2.LastLossReport.grossEarned, "earned is per-run, not cumulative");
+            Assert.AreEqual(150L, run2.LastRunReport.grossEarned, "earned is per-run, not cumulative");
             Assert.AreEqual(2, meta.TotalRuns);
         }
 
@@ -369,7 +369,7 @@ namespace GatekeeperBastion.Tests
             }
             Assert.AreEqual(RunPhase.Escaped, sim.Phase);
             Assert.AreEqual(0L, meta.BankedSalvage);
-            Assert.AreEqual(0L, sim.LastLossReport.grossEarned);
+            Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
             Assert.AreEqual(1, meta.CleanExits);
         }
     }

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Text;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 
 namespace GatekeeperBastion.Game
@@ -18,6 +17,7 @@ namespace GatekeeperBastion.Game
 
         void PushWeaponReadout(GameController gc)
         {
+            var bay = gc != null ? gc.Decoys : null;
             _view.SetAbilityBlockVisible(false);
             _weaponLines.Clear();
 
@@ -36,9 +36,9 @@ namespace GatekeeperBastion.Game
 
             if (_gun.ActiveSlot == WeaponSlot.Drone)
             {
-                PushDecoyReadout(_weaponLines);
-                _weaponLines.Add(SlotStrip(_gun));
-                PushWeaponCard("DECOY", SlotStrip(_gun), JoinWeaponLines());
+                PushDecoyReadout(_weaponLines, bay);
+                _weaponLines.Add(SlotStrip(_gun, bay));
+                PushWeaponCard("DECOY", SlotStrip(_gun, bay), JoinWeaponLines());
                 // The decoy has no clip. Dim the reserved row; keep a label so the slot is not blank.
                 _view.SetReloadLabel("—");
                 _view.SetReloadBar(0f);
@@ -80,7 +80,7 @@ namespace GatekeeperBastion.Game
             if (!string.IsNullOrEmpty(blocked))
                 _weaponLines.Add("HOLSTERED: " + blocked);
 
-            _weaponLines.Add(SlotStrip(_gun));
+            _weaponLines.Add(SlotStrip(_gun, bay));
             _lineBuf.Clear();
             _lineBuf.Append(_gun.EffectiveDamage.ToString("0")).Append(" dmg | ")
                 .Append(_gun.EffectiveFireRate.ToString("0.#")).Append("/s | clip ")
@@ -90,7 +90,7 @@ namespace GatekeeperBastion.Game
             _weaponLines.Add(_lineBuf.ToString());
 
             PushAbilityReadout(_weaponLines);
-            PushDecoyReadout(_weaponLines);
+            PushDecoyReadout(_weaponLines, bay);
             PushWeaponCard(name, ammo, JoinWeaponLines());
         }
 
@@ -120,10 +120,8 @@ namespace GatekeeperBastion.Game
             return _weaponBlock.ToString();
         }
 
-        void PushDecoyReadout(List<string> lines)
+        void PushDecoyReadout(List<string> lines, DecoyBay bay)
         {
-            var gc = GameController.Instance;
-            var bay = gc != null ? gc.Decoys : null;
             if (bay == null || !bay.HasPayload) return;
             _lineBuf.Clear();
             _lineBuf.Append("DECOY  ").Append(bay.State.ChargesRemaining).Append(" left  ·  ");
@@ -165,21 +163,19 @@ namespace GatekeeperBastion.Game
             lines.Add(_lineBuf.ToString());
         }
 
-        static string SlotStrip(PlayerGun gun)
+        static string SlotStrip(PlayerGun gun, DecoyBay bay)
         {
-            return Mark(gun, WeaponSlot.Primary, 1) + "   " +
-                   Mark(gun, WeaponSlot.Secondary, 2) + "   " +
-                   Mark(gun, WeaponSlot.Drone, 3);
+            return Mark(gun, bay, WeaponSlot.Primary, 1) + "   " +
+                   Mark(gun, bay, WeaponSlot.Secondary, 2) + "   " +
+                   Mark(gun, bay, WeaponSlot.Drone, 3);
         }
 
-        static string Mark(PlayerGun gun, WeaponSlot slot, int key)
+        static string Mark(PlayerGun gun, DecoyBay bay, WeaponSlot slot, int key)
         {
             bool live = gun.ActiveSlot == slot;
             string mark = live ? "▸" : "·";
             if (slot == WeaponSlot.Drone)
             {
-                var gc = GameController.Instance;
-                var bay = gc != null ? gc.Decoys : null;
                 if (bay == null || !bay.HasPayload)
                     return key + (live ? " ▸ —" : " — —");
                 return key + " " + mark + " Decoy" + (bay.State.IsLive ? " live" : "");

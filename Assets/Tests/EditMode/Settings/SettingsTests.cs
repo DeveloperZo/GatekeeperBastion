@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GatekeeperBastion.Sim;
+using GatekeeperBastion.Game;
 using NUnit.Framework;
 
 namespace GatekeeperBastion.Tests

@@ -5,7 +5,7 @@ Purpose: the ubiquitous language of Gatekeeper Bastion. One name per thing, used
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired — in the same commit as the rename.
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in
@@ -117,6 +117,7 @@ are named here.
 | **Equipment** | Gear bought at FABRICATION into the equipment slot (unlocked after first loss, bought once). The Repair Rig is the first piece. | payload *(that is the Drone's)*, item, kit, Utility |
 | **Tier** | A step on a weapon's upgrade track. | level, rank, mark, upgrade |
 | **ability** | A weapon's one activated effect, on a cooldown. | special, power, skill, ult |
+| **Crew ability** | A Boarder-owned burst: brief window, moderate-to-long cooldown, bought at CREW QUARTERS. *Designed, not built* (`../../Brainstorms/crew-skills-and-perks.md`). | skill, perk, track, weapon ability |
 | **loadout** | The Primary, Secondary and Drone a Boarder embarks with, plus their Equipment. | kit, gear, build |
 | **improvised cutter** | What a Boarder fights with having bought no weapon at all. Deliberately bad. | salvage cutter *(the code's old name)*, fists, melee, starter weapon |
 | **crit** | A critical hit. Chance comes from Luck. | critical strike, headshot |
@@ -157,7 +158,7 @@ Written in caps in player-facing text, matching what the player reads on the con
 | Term | Owns | Never called |
 |---|---|---|
 | **ARMORY** | The weapon in your hands. | weapons bay, shop, Armory *(caps, always)* |
-| **CREW QUARTERS** | The Boarder's own attributes. | barracks, skills |
+| **CREW QUARTERS** | The Boarder's Crew abilities (*designed*). Today still sells attribute tracks. | barracks, skills |
 | **FABRICATION** | The Ship's gear and the Hatch. | workshop |
 | **NAV MAP** | Where you go, and going there. | map, bridge, terminal |
 

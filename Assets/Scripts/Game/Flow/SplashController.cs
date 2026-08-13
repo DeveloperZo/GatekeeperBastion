@@ -70,8 +70,8 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        static bool ReadAnyInput() =>
-            Input.anyKeyDown || Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1);
+        // Defensive sample: the splash scene has no tick owner, so this is the frame's producer.
+        static bool ReadAnyInput() => Controls.Sample().anyPressDown;
 
         /// <summary>PlayMode tests — same path as press-any-key.</summary>
         public void Skip() => Advance();

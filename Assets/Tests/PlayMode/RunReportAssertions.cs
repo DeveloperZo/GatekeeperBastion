@@ -7,7 +7,7 @@ namespace GatekeeperBastion.PlayTests
 {
     /// <summary>
     /// TEST-OWNED helper for the one sim member both end-screen tests have to read:
-    /// RunSim.LastLossReport, shaped `{ string cause; long grossEarned; long repairSpent; }`.
+    /// RunSim.LastRunReport, shaped `{ string cause; long grossEarned; long repairSpent; }`.
     ///
     /// Every hop is taken by reflection on purpose. The sim is owned by another agent, and a
     /// direct field access here would turn any reshape of that struct into a compile error that
@@ -33,14 +33,14 @@ namespace GatekeeperBastion.PlayTests
             Assert.IsNotNull(sim, "No RunSim to read the run report from.");
 
             object report;
-            if (!TryReadMember(sim, "LastLossReport", out report))
+            if (!TryReadMember(sim, "LastRunReport", out report))
             {
-                Assert.Fail("RunSim exposes no readable 'LastLossReport'. BOTH end screens read it " +
+                Assert.Fail("RunSim exposes no readable 'LastRunReport'. BOTH end screens read it " +
                             "for their summary line, so neither can say what the run was worth. " +
                             "Public members: " + MemberNames(sim.GetType()));
                 return;
             }
-            Assert.IsNotNull(report, "RunSim.LastLossReport read as null after the run ended.");
+            Assert.IsNotNull(report, "RunSim.LastRunReport read as null after the run ended.");
             Type reportType = report.GetType();
 
             object cause;

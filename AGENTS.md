@@ -133,8 +133,10 @@ and saying why a higher tier is wrong.
 
 Full detail in `Docs/Architecture.md`. The three that break builds:
 
-- **`Assets/Scripts/Sim/` is pure C#.** No `using UnityEngine`. It is the multiplayer
-  seam.
+- **`Assets/Scripts/Sim/` is its own assembly with a one-directional dependency.** No
+  `MonoBehaviour`, no scene lookup, no `Time`, no ambient `Random`, no static mutable
+  state; CoreModule value types (`Vector3`, `Mathf`) are permitted. The reason is
+  testability, not engine purity.
 - **Prefabs freeze `[SerializeField]` values at creation.** Push tunables at spawn;
   never serialize and hope. This has eaten one full tuning pass already.
 - **No `GUILayout` in the Bastion HUD.** An exception between `BeginArea` and `EndArea`
@@ -147,8 +149,8 @@ UI canvases and gameplay hosts are authored scene content and survive Build All.
 
 ## 5. Verification
 
-- **Unity Test Runner**, or `gkb_verify_request.txt` → AutoVerify →
-  `gkb_verify_report.json` for the full suite headless. The report's `message` field
+- **Unity Test Runner**, or `gkb_verify_request.txt` → IntegrationCheck (formerly
+  AutoVerify) → `gkb_verify_report.json` for the full suite headless. The report's `message` field
   carries the failure reason; `status:"precheck"` means a test assembly did not compile
   and nothing ran.
 - **mcs + mono** compiles `Assets/Scripts/Sim/` plus `Assets/Tests/EditMode/` outside

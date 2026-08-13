@@ -1,5 +1,4 @@
 using System;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Util;
 using TMPro;
 using UnityEngine;
@@ -7,7 +6,7 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Authored ARMORY body: slot toggles, equipped block, wheel captions, catalog
+    /// <summary>LOCAL-OWNER: authored ARMORY body: slot toggles, equipped block, wheel captions, catalog
     /// rows. A dumb binder — every element exists in Ship.unity; code writes text, toggles
     /// rows and wires clicks. Layout, colour and font are the scene's.</summary>
     public sealed class ArmoryPanelView : MonoBehaviour

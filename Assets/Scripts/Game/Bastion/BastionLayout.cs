@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Scene root — builds the unlock graph from child doors and terminals.</summary>
+    /// <summary>HOST-ONLY: scene root — builds the unlock graph from child doors and terminals.</summary>
     public sealed class BastionLayout : MonoBehaviour
     {
         readonly List<BastionDoor> _doors = new List<BastionDoor>();

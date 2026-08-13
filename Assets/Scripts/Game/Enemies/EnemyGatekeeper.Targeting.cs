@@ -53,9 +53,14 @@ namespace GatekeeperBastion.Game
 
             if (!shout) return true;
             int joined = 0;
-            for (int i = 0; i < Gatekeepers.Count; i++)
+            // The spawner's ledger is the one list of live gatekeepers. A hand-placed actor has
+            // no spawner and shouts to nobody — it never acts anyway (see _game remarks).
+            var live = _spawner != null
+                ? _spawner.Live
+                : (System.Collections.Generic.IReadOnlyList<EnemyGatekeeper>)System.Array.Empty<EnemyGatekeeper>();
+            for (int i = 0; i < live.Count; i++)
             {
-                var other = Gatekeepers[i];
+                var other = live[i];
                 if (other == null || other == this) continue;
                 if (Vector3.Distance(transform.position, other.transform.position) > alertRadius) continue;
                 // Rams in the group silently decline; only gatekeepers that actually joined count.
@@ -136,7 +141,7 @@ namespace GatekeeperBastion.Game
             // Decoy pull: ahead of Hatch and player when in radius. Rams never; committed Defaults never.
             _decoyTarget = null;
             _chasingDecoy = false;
-            var gc = GameController.Instance;
+            var gc = _game;
             var bay = gc != null ? gc.Decoys : null;
             if (bay != null && bay.State.IsLive && bay.Live != null && bay.Live.IsAlive)
             {

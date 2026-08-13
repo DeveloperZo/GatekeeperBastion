@@ -114,9 +114,9 @@ namespace GatekeeperBastion.Tests
             sim.AwardKill();
             sim.NotifyPlayerDown();
 
-            Assert.AreEqual(100L, sim.LastLossReport.repairSpent);
-            Assert.AreEqual(25L, sim.LastLossReport.grossEarned);
-            Assert.AreEqual(25L - 100L, sim.LastLossReport.grossEarned - sim.LastLossReport.repairSpent);
+            Assert.AreEqual(100L, sim.LastRunReport.repairSpent);
+            Assert.AreEqual(25L, sim.LastRunReport.grossEarned);
+            Assert.AreEqual(25L - 100L, sim.LastRunReport.grossEarned - sim.LastRunReport.repairSpent);
         }
 
         [Test]

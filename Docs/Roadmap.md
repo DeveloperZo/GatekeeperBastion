@@ -29,18 +29,18 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**M36 completed 2026-08-12** (always-on top-centre Hatch HUD; Zo playtest closed criteria
-8–11).
+**M47 is active** (kit palette + authored bastion as the proof). **M48 is planned** (first
+networked kill). **M45 completed 2026-08-12** (two Runs in one process; harness 283 /
+Unity 315+23). **M42 completed 2026-08-12**. **M36 completed 2026-08-12**.
 
 **Recommended next**, in this order.
 
-1. **Ship station terminal UI** — panel chrome, Settings-shell strip, row readability,
-   criterion-41 screenshots. Not filed yet; craft when that polish is the next cut.
-2. **M45 — Two Runs in one process.** The co-op pre-work, done while the game is still
-   single-player: no singleton holding Run or player state, one spawn chokepoint, input as a
-   struct, seeded randomness. Depends on nothing. It replaces M39.
-3. **Play close-outs** — M32 criterion 7 (bore kills), M26 Path 2 / inventory, M31 pin
+1. **M47** — finish the authored bastion against its own criteria (kit in play, unlock
+   graph, sightline/path gates, M37 medians).
+2. **Play close-outs** — M32 criterion 7 (bore kills), M26 Path 2 / inventory, M31 pin
    playthrough; see `GatekeeperZo Notes/verification.md`.
+3. **Ship station terminal UI** — panel chrome, Settings-shell strip, row readability.
+   Not filed yet; craft when that polish is the next cut.
 
 ## Order
 
@@ -88,12 +88,16 @@ this table — see the change log.
 | M39 | The seam becomes a boundary | **cancelled, Aug 2026** | Premised on `noEngineReferences: true`, which is load-bearing only for deterministic lockstep. Replaced by M45 | [`5. cancelled/M39`](Milestones/5.%20cancelled/M39-the-seam-becomes-a-boundary.md) |
 | M40 | The rules become measurable | completed, Aug 2026 | One statement of the counted-line unit, linked from everywhere else; `Editor/` has a number; the two grandfathered singletons named by type; `5-Audit` corrected; **no file under `Assets/` edited** | [`3. completed/M40`](Milestones/3.%20completed/M40-the-rules-become-measurable.md) |
 | M41 | The rules get a check | completed, Aug 2026 | `Tools/lint-arch/run.sh` reads fenced rules from `Docs/Architecture/`, runs from `verify`, holds no literal from a fence and exits 2 on a deleted one; every row reproduces its measured baseline **and** catches a seeded violation | [`3. completed/M41`](Milestones/3.%20completed/M41-the-rules-get-a-check.md) |
-| M42 | One mechanism per job | later | One save-migration path (`grep "rawVersion >="` empty); falloff, repair and slot-select each one copy; `SalvagePerSecond`, `WaveEmit.Pending`, `abilityDial`, `ApplyRepair` deleted; kill lines quote the banked amount; `LossReport`→`RunReport`; 36/36 R5 labels; one `Game/` namespace; 265 harness / 282 Unity green | [`1. planned/M42`](Milestones/1.%20planned/M42-one-mechanism-per-job.md) |
+| M42 | One mechanism per job | completed, Aug 2026 | One save-migration path; falloff/repair/slot-select one copy; cut APIs gone; kill lines quote banked amount; `LossReport`→`RunReport`; 43/43 R5 labels; one `Game/` namespace; harness 279 / Unity 311+23 green | [`3. completed/M42`](Milestones/3.%20completed/M42-one-mechanism-per-job.md) |
 | M43 | A repository that reads as clean | **cancelled, Aug 2026** | Premises gone: package phantoms cleared, LFS already tracking binaries, history is 21 commits — orphan rewrite not warranted; root `gkb_*` junk is a chore | [`5. cancelled/M43`](Milestones/5.%20cancelled/M43-a-repository-that-reads-as-clean.md) |
 | M44 | Skills that pay for their tokens | completed, Aug 2026 | Five skills at `.claude/skills/`, portable frontmatter, bodies under 500 lines; **trigger gate 50/50** (`run.sh trigger`); `AGENTS.md` under 200 lines; always-on token count recorded before and after | [`3. completed/M44`](Milestones/3.%20completed/M44-skills-that-pay-for-their-tokens.md) |
-| M45 | Two Runs in one process | later | Two independent Run simulations advance in one process without touching each other, proved by an EditMode test that fails when a static is seeded back; no netcode library named anywhere in it | [`1. planned/M45`](Milestones/1.%20planned/M45-two-runs-in-one-process.md) |
+| M45 | Two Runs in one process | completed, Aug 2026 | Two independent Run simulations advance in one process without touching each other, proved by an EditMode test that fails when a static is seeded back; no netcode library named anywhere in it | [`3. completed/M45`](Milestones/3.%20completed/M45-two-runs-in-one-process.md) |
 | M46 | The panel is authored | **cancelled, Aug 2026** | Cancelled (Zo) — authored-panel rewrite not a roadmap slot; station polish stays the unfiled Current cut | [`5. cancelled/M46`](Milestones/5.%20cancelled/M46-the-panel-is-authored.md) |
-| M47 | The bastion gets height and angles | later | **Artifact = palette.** **Done = bastion from it** with H/S/T/D marks, unlock graph (Control Room last; order ≠ distance), sightline/path gates, M37 medians. Runtime terminals later | [`1. planned/M47`](Milestones/1.%20planned/M47-the-bastion-gets-height-and-angles.md) |
+| M47 | The bastion gets height and angles | next (current) | **Artifact = palette.** **Done = bastion from it** with H/S/T/D marks, unlock graph (Control Room last; order ≠ distance), sightline/path gates, M37 medians. Runtime terminals later | [`2. active/M47`](Milestones/2.%20active/M47-the-bastion-gets-height-and-angles.md) |
+| M48 | The first networked kill | later | Client joins over loopback (F10/F11, dev-only); shoots a server-spawned gatekeeper; damage applies once on the host; death on both screens; wave counter identical via `NetRunMirror`; **kill loop closes headless** (`NetKillTests` on NGO's in-process fixture, in the integration-check report); solo byte-identical; ten-day kill criterion on the NGO bet | [`1. planned/M48`](Milestones/1.%20planned/M48-the-first-networked-kill.md) |
+| M49 | The gatekeepers see the second player | later | Avatar carries a registered `PlayerHealth` + collider; a gatekeeper hunts the nearer client via the existing `NearestAlive` path with **no enemy code changes**; melee drops replicated HP and the owner's rig shows it; client down survivable (respawn next wave at hatch); `NetTargetingTests` headless; solo unchanged | [`1. planned/M49`](Milestones/1.%20planned/M49-the-gatekeepers-see-the-second-player.md) |
+| M50 | The client lives the run | later | Mirror carries the fight readout (salvage, hatch HP, elapsed at 1 Hz); client HUD reads it; all three endings reach the client as an `EndSummary` ClientRpc with the host's numbers; session ends clean and re-joins twice in a row; `NetRunMirrorTests` headless. **Re-cut against M48's landed shapes before start** | [`1. planned/M50`](Milestones/1.%20planned/M50-the-client-lives-the-run.md) |
+| M51 | The client's hands | later | Client repair channel, decoy placement and ability cone all apply once, server-side (per-verb single-application in `NetVerbTests`); denial reads back; one host wallet; **completes the loopback run** — Steam entry's graduation test. **Re-cut against M50 before start** | [`1. planned/M51`](Milestones/1.%20planned/M51-the-clients-hands.md) |
 
 ## Strategy
 
@@ -176,6 +180,7 @@ Moved out of this file. Mechanic areas that are wanted but not yet cuttable live
 | Crew attributes, skills, perks | [`Brainstorms/crew-skills-and-perks`](Brainstorms/crew-skills-and-perks.md) |
 | Missions, the console restructure, destinations | [`Brainstorms/missions-and-destinations`](Brainstorms/missions-and-destinations.md) |
 | Gatekeeper kinds and Wave composition | [`Brainstorms/gatekeepers-and-waves`](Brainstorms/gatekeepers-and-waves.md) |
+| Co-op beyond the filed slices | [`Brainstorms/co-op`](Brainstorms/co-op.md) |
 
 An entry graduates when its acceptance criteria can be written; the entry is deleted and
 a milestone replaces it (`_meta/_definitions/brainstorm.md`).

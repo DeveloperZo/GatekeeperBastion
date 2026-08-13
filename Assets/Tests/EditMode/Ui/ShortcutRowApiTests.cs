@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using GatekeeperBastion.Game;
-using GatekeeperBastion.Game.Ui;
 using NUnit.Framework;
 using TMPro;
 using UnityEditor;

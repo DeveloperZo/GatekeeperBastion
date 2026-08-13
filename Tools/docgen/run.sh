@@ -28,10 +28,10 @@ fi
 
 SIM_DIR="$ROOT/Assets/Scripts/Sim"
 CONTROLS="$ROOT/Assets/Scripts/Game/Input/Controls.cs"
-LOG_CS="$ROOT/Assets/Scripts/Util/Log.cs"
+INPUTFRAME="$ROOT/Assets/Scripts/Game/Input/PlayerInputFrame.cs"
 SHIMS="$ROOT/Tools/verify/Shims.cs"
 
-for p in "$SIM_DIR" "$CONTROLS" "$LOG_CS" "$SHIMS"; do
+for p in "$SIM_DIR" "$CONTROLS" "$INPUTFRAME" "$SHIMS"; do
   if [[ ! -e "$p" ]]; then
     echo "docgen: expected $p — is the repo laid out as this script assumes?" >&2
     exit 2
@@ -53,7 +53,7 @@ if grep -qE '(^|[^[:alnum:]_])new\(' "$CONTROLS_TMP"; then
 fi
 
 mapfile -t SOURCES < <(find "$SIM_DIR" -name '*.cs' | sort)
-SOURCES+=("$LOG_CS" "$CONTROLS_TMP" "$SHIMS" "$HERE/InputShims.cs" "$HERE/Program.cs")
+SOURCES+=("$CONTROLS_TMP" "$INPUTFRAME" "$SHIMS" "$HERE/InputShims.cs" "$HERE/Program.cs")
 
 if ! mcs -nologo -langversion:latest -warn:0 -out:"$EXE" "${SOURCES[@]}" 2> "$OUT/compile.log"; then
   echo "COMPILE FAILED" >&2

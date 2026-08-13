@@ -1,4 +1,3 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
@@ -15,6 +14,9 @@ namespace GatekeeperBastion.Game
 
         [SerializeField] MainMenuView _view;
 
+        [SerializeField, Tooltip("Scene-local 'Background Music' AudioSource — never the DDOL host. Authored in MainMenu.unity.")]
+        AudioSource _backgroundMusic;
+
         bool _loading;
 
         void Awake()
@@ -23,7 +25,7 @@ namespace GatekeeperBastion.Game
             AudioBuses.ApplyFromSettings();
 
             // Prefer the DDOL host from Splash. Only adopt this scene's source when cold-starting MainMenu.
-            FrontEndMusic.CaptureOrJoin(FindSceneBackgroundMusic());
+            FrontEndMusic.CaptureOrJoin(_backgroundMusic);
 
             if (_view == null)
             {
@@ -105,22 +107,5 @@ namespace GatekeeperBastion.Game
 #endif
         }
 
-        /// <summary>Scene-local Background Music only — never the DDOL host (Find is
-        /// ambiguous when both exist and would hand CaptureOrJoin the wrong source).</summary>
-        static AudioSource FindSceneBackgroundMusic()
-        {
-            var all = Object.FindObjectsByType<AudioSource>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None);
-            for (int i = 0; i < all.Length; i++)
-            {
-                var src = all[i];
-                if (src == null || src.gameObject.name != "Background Music") continue;
-                string sceneName = src.gameObject.scene.name;
-                if (string.IsNullOrEmpty(sceneName) || sceneName == "DontDestroyOnLoad")
-                    continue;
-                return src;
-            }
-            return null;
-        }
     }
 }

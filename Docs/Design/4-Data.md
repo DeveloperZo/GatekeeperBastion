@@ -349,7 +349,7 @@ Logs folder (or drop the files). Sample filters and era cutoffs:
 | Constant | Value | Source |
 |---|---|---|
 | Minimum Run duration | **5 s** | Runs shorter than this are excluded (crashed / aborted / PlayMode harness churn). Measured from `run begins` to `RUN OVER` / `BASTION STRIPPED` / next `run begins`. |
-| PlayMode discriminator | `stage=playmode` in the log | Not the `AutoVerify` tag — ordinary sessions can carry AutoVerify (`Logs/GatekeeperBastion_2026-08-09_15-21-59.log`). |
+| PlayMode discriminator | `stage=playmode` in the log | Not the `IntegrationCheck` tag (`AutoVerify` in logs before 2026-08-12) — ordinary sessions can carry it (`Logs/GatekeeperBastion_2026-08-09_15-21-59.log`). |
 | Era: pre-weapon | filename date **≤ 2026-08-03** | `Docs/_meta/Logs/` 2026-08-02/03, pre-horde (`2-Dynamics.md`). |
 | Era: horde retune | **2026-08-04 … 2026-08-07** | After M10 / horde body counts; before wheel-era sessions dominate. |
 | Era: weapons and wheel | **≥ 2026-08-08** | Primaries + upgrade wheel in session logs. |

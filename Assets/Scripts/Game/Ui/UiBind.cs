@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
     /// <summary>Lookup into the authored Shift hierarchy by name or component type, and the
     /// small set of writes a bound view is allowed to make: text, visibility, slider value,

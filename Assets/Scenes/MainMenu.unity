@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!29 &1
 OcclusionCullingSettings:
@@ -60541,7 +60541,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9041080689527b340a14381acacc03d2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.Ui.OptionsView
+  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.OptionsView
   _panels: {fileID: 172717248}
   _settingsPanel: Settings
   _homePanel: Home
@@ -60611,7 +60611,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e99527cfae62cc34a96a8bceaf1b6297, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.Ui.MainMenuView
+  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.MainMenuView
   _panels: {fileID: 172717248}
   _continueButton: {fileID: 607610355}
   _campaignLine: {fileID: 209542722}
@@ -60626,6 +60626,7 @@ MonoBehaviour:
   _exitConfirmBtn: {fileID: 2034160469}
   _exitCancelBtn: {fileID: 855079828}
   _modalBlur: {fileID: 67248831}
+  _mainPanelsRoot: {fileID: 1995884276}
 --- !u!114 &2029026621
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -60639,6 +60640,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.MainMenuController
   _view: {fileID: 2029026620}
+  _backgroundMusic: {fileID: 1094927080}
 --- !u!4 &2029026622
 Transform:
   m_ObjectHideFlags: 0

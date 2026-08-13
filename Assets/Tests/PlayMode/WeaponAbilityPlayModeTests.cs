@@ -26,17 +26,19 @@ namespace GatekeeperBastion.PlayTests
         public IEnumerator ShoveDoesNotUncommit()
         {
             var gatekeeper = SpawnGatekeeper();
+            // Retarget clears the latch when no hatch is available (blank fixture / destroyed
+            // scene hatch). Disable the tick so this test only measures Shove's contract.
+            gatekeeper.enabled = false;
             ForceCommit(gatekeeper);
             Assert.IsTrue(gatekeeper.IsCommittedToHatch, "precondition: committed");
 
             Vector3 before = gatekeeper.transform.position;
             gatekeeper.Shove(Vector3.back * 4f);
-            yield return null;
 
             Assert.IsTrue(gatekeeper.IsCommittedToHatch,
                 "shove must not clear the hatch-commit latch");
-            // Position may be unchanged if NavMesh sample fails in a blank scene — commit is the pin.
             Assert.AreEqual(before.y, gatekeeper.transform.position.y, 0.01f);
+            yield return null;
         }
 
         [UnityTest]

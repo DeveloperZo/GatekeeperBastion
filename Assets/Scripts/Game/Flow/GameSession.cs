@@ -1,5 +1,4 @@
 using System;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 
@@ -92,7 +91,7 @@ namespace GatekeeperBastion.Game
             Log.Event("Ship",
                 $"campaign continued — {Meta.BankedSalvage} banked, {Meta.LifetimeSalvageEarned} earned, " +
                 $"{Meta.LifetimeSalvageSpent} spent, {Meta.TotalRuns} run(s), " +
-                $"{Meta.PodEjections} death(s), {LoadoutLog(Meta)}");
+                $"{Meta.PodEjections} run(s) lost, {LoadoutLog(Meta)}");
 
             if (Meta.SalvageStatsWereRepaired)
             {

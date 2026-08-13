@@ -8,7 +8,7 @@ namespace GatekeeperBastion.EditorTools
 {
     /// <summary>
     /// Editor conveniences for the log file (GatekeeperBastion/Logs menu). Domain-reload close
-    /// of the sink lives in AutoVerify's static constructor so criterion 5's grep stays clean.
+    /// of the sink lives in IntegrationCheck's static constructor so criterion 5's grep stays clean.
     /// </summary>
     public static class LogTools
     {

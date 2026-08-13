@@ -1,4 +1,3 @@
-using GatekeeperBastion.Game.Ui;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game

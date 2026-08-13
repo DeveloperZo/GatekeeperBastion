@@ -4,7 +4,7 @@
 Purpose: The ARMORY console — the weapon catalog, the gun classes, slots, and what a weapon can be.
 Status: brainstorm
 Update trigger: when a weapon changes state in the roster, a class contract changes, or a row in Decided/Open moves.
-Last updated: 2026-08-08
+Last updated: 2026-08-12
 -->
 
 ## What this covers
@@ -20,12 +20,11 @@ carried-vs-installed line this paragraph used to state is retired with that move
 
 ## Where it stands
 
-Shipped in M11. `Sim/Meta/WeaponCatalog.cs` holds the catalog; three rows are buyable — MK-1
-Sidearm (Secondary, free), BR-12 Shotgun and MR-35 Rifle (Primary). Tiers 0–7 at
-`400 + 200 * tier` (`../Design/4-Data.md`). Firing modes are data fields on `WeaponDef` —
-pellets, spread, pierce, falloff — composable, proven by `WeaponId.ThrowawayComposite`.
-Adding a weapon is one catalog row. `WeaponSlot` is still `Primary / Secondary / Melee` in
-code; Melee ships empty and is being renamed (see *Decided*).
+Shipped in M11, then M21 (wheel), M26 Path 1 (SEC-D), M32 (PRI-C). `Sim/Meta/WeaponCatalog.cs`
+holds the catalog. Shop rows: MK-1 and SEC-D (Secondaries, both cost 0), BR-12, MR-35, PRI-C
+(Primaries). VK-7 stays disabled with its id reserved. Tiers are wheel purchases,
+`WeaponTier.MaxTier = 10`, cost `400 + 200 * currentTier` (`../Design/4-Data.md`). Firing
+modes are data fields on `WeaponDef`. `WeaponSlot` is `Primary / Secondary / Drone`.
 
 **The VK-7 Assault Rifle is retired** (2026-08-06). Its `WeaponId` value stays so old saves
 deserialize and the id is never reused. See `../Decisions.md`.
@@ -40,6 +39,7 @@ Link, never restate. If a detail below matters, it lives in the milestone.
 | Choice-driven upgrades, and both Primary rings | `M21 — The upgrade wheel` |
 | The repair rig as a carried Utility item | `M23 — The repair rig is a tool you bring` |
 | The swap-during-reload setting | `M25`, behind `M24 — An options menu` |
+| A Primary that wants the far wall (`PRI-C`, Railshot) | `M32 — A Primary that wants the far wall` |
 
 ## Graduation test
 
@@ -116,6 +116,11 @@ it; the rule above stands.
 A close-range shotgun and an all-round rifle. Depth comes from their ability and their ring
 (M20/M21), not from more rows. A third Primary was proposed as a rhythm extreme and
 **cancelled**; see *Open* for the risk that leaves.
+
+**Overturned in part 2026-08-09 by M32.** The cancelled identity was the rhythm extreme
+(huge magazine, punishing reload). M32 shipped `PRI-C` as a different third Primary: far-wall
+damage, no indoor falloff, Railshot on `F`. The rhythm-extreme row stays cancelled; the
+two-Primary cap does not.
 
 ### Repair rate and the Utility spokes (Zo, 2026-08-07)
 
@@ -278,11 +283,11 @@ When something opens, it goes here as a table — question, why it blocks, owner
 — and **nothing in it may be written into a milestone until it is answered**
 (`../_meta/_definitions/brainstorm.md`).
 
-**Standing risk, not a question:** with PRI-C cancelled, both Primaries sit at 65–72% uptime
-with a 1.4–2.6 s reload window. M21's wheel assumes a player can push a weapon toward what it
-is good at; with no weapon at a rhythm extreme, reload-focus and clip-focus may prove
-indistinguishable in play. If they do, the answer is a wider spread between the two existing
-weapons before it is a third weapon. *Unknown until the wheel is played.*
+**Standing risk, not a question:** both close Primaries (BR-12) and the far-wall PRI-C now
+exist beside the all-round MR-35. M21's wheel assumes a player can push a weapon toward what
+it is good at. Reload-focus vs clip-focus distinguishability on the MR-35 is still
+*unknown until the wheel is played*; PRI-C's 3.2 s reload is a different rhythm, not the
+cancelled huge-magazine identity.
 
 ## The roster
 
@@ -296,21 +301,19 @@ Each row is named by **what it refuses**, the same grammar the gatekeeper roster
 |---|---|---|---|---|
 | **BR-12 Shotgun** | Primary | range | Deletes a cluster in your face; useless past the doorway. | shipped |
 | **MR-35 Rifle** | Primary | close quarters | Punches through a line at distance; loses to anything already on you. | shipped |
-| PRI-C | Primary | recovery | Huge magazine, punishing reload. | **rejected** (Zo, 2026-08-06 — two Primaries is the roster) |
+| **PRI-C** | Primary | the near fight | Full damage at 50 m; Railshot on `F`. Not the cancelled rhythm-extreme identity. | shipped (M32) |
 | PRI-D | Primary | the doorway | Hardest hitting; damages the Hatch if fired at it from close. | candidate |
 | PRI-E | Primary | roaming | Strong, but only reloads near the Hatch. | candidate |
 | **MK-1 Sidearm** | Secondary | — (see O4) | The starting weapon. Regenerates its own ammo. | shipped |
 | SEC-B | Secondary | your attention | Fires by itself, only while the Primary is reloading. | **rejected** (Zo, 2026-08-07 — a Secondary must not work by interacting with the Primary) |
 | SEC-C | Secondary | sustain | One enormous shot, once per Wave. | **rejected** (Zo, 2026-08-07 — a Utility item wearing a Secondary label) |
-| SEC-D | Secondary | reach | Close-quarters sidearm: empties its pool fast, hits hard, useless past a few metres. | Path 1 shipped (Zo ability/ring still open) |
+| **SEC-D** | Secondary | reach | Close-quarters sidearm: empties its pool fast, hits hard, useless past a few metres. | Path 1 shipped (ability/ring still open) |
 
 **The repair rig and the UTL rows left this table 2026-08-08** — they are drone payloads
 now, and their one canonical list is the roster in [`fabrication`](fabrication.md).
 
-**Ship order for the picked rows**, if the goal is play data rather than coverage: `SEC-D` —
-it is one catalog row, it completes the pairing matrix, and it is the only picked row that
-changes a decision the player makes before their first Run. The payload ship order lives with
-the payloads. Everything else waits for a Run that says it is missing.
+**Ship order for remaining candidates:** nothing picked is unbuilt. PRI-D and PRI-E wait
+for a Run that says a fourth Primary is missing. Payload ship order lives with the payloads.
 
 ### Notes on the candidates
 
@@ -344,7 +347,9 @@ and it is still worth knowing before a fifth gun makes that shape feel settled.
 - **Fire rate scaling with Tier.** ⚠ **Overturned 2026-08-06 by M21** — identity becomes ring
   *position*, so raising cadence costs the far side of the ring. Recorded as a reversal in
   `../Decisions.md`.
-- **A third Primary** (PRI-C). Two is the roster; depth comes from ability and ring.
+- **A third Primary as a rhythm extreme** (huge magazine, punishing reload). Cancelled
+  2026-08-06 under "two Primaries is the roster." **M32 shipped a different third Primary**
+  (`PRI-C`, far-wall / Railshot) on 2026-08-09; that identity is not this rejection.
 - **`SEC-C`** (one enormous shot per Wave), 2026-08-07 — a Utility item wearing a Secondary
   label. See *What a Secondary has to be*.
 - ~~`SEC-D`~~ was rejected the same day as a stat variation, then **revived** once Zo supplied

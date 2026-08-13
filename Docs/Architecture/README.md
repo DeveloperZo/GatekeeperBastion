@@ -10,12 +10,15 @@ Last updated: 2026-08-11
 
 ## Never do
 
-- **Put `using UnityEngine` in `Sim/`.** That is the multiplayer seam and it is the one
-  structural rule this project has.
-- **Add a static MonoBehaviour singleton.** Two are grandfathered by type —
-  `GameController` and `HatchStation`. `DecoyBay`'s static was owed, not
-  grandfathered, and has been retired (see *The singletons, named*). There is
-  no third.
+- **Put a `MonoBehaviour`, a `GameObject`, a scene lookup, `Time`, ambient `Random`,
+  `SerializeField`, `UnityEditor` or static mutable state in `Sim/`.** That is the one
+  structural rule this project has; CoreModule value types (`Vector3`, `Mathf`) are fine.
+  The rule, the reason (testability and one-directional dependency, not engine purity) and
+  the enforcement are in `1-Boundaries.md` section 1.
+- **Add a static MonoBehaviour singleton.** One is grandfathered by type —
+  `HatchStation`, locator only. `GameController.Instance` was retired 2026-08-12
+  (the scene host now owns a `RunContext` and passes or serializes itself to every
+  consumer); `DecoyBay`'s static was retired 2026-08-11. There is no second.
 - **Add a counter, a rollup or a stats object** (`../Decisions.md`). Emit a log line.
 - **Use `?.`, `??`, `??=`, `is null` or `ReferenceEquals` on a `UnityEngine.Object.`**
   Only `== null`, `!= null`, `if (x)` respect Unity's lifetime check.
@@ -39,24 +42,31 @@ Last updated: 2026-08-11
 
 ## The singletons, named
 
-Measured 2026-08-11 (`rg -n "static\s+\w+\s+Instance" Assets/Scripts/Game` for the
-declarations, `rg -n "<Type>\.Instance" Assets/Scripts` for the call sites): exactly
-two `static Instance` declarations exist.
+Measured 2026-08-12 (`rg -n "static\s+\w+\s+Instance" Assets/Scripts/Game` for the
+declarations): exactly one `static Instance` declaration exists.
 
-- **`GameController`** — grandfathered. Declared `Game/Bastion/GameController.cs:41`;
-  41 call sites (re-measured 2026-08-11 after the DecoyBay retirement routed 5 more through it). It is the command surface every sim mutation already routes through.
-- **`HatchStation`** — grandfathered. Declared `Game/Bastion/HatchStation.cs:22`;
-  3 code call sites (`DevConsole.cs:362`, `EnemyGatekeeper.Targeting.cs:95`,
-  `PlayerAbility.cs:217`), plus the melee-range convention in `Architecture.md`
-  gotcha 2.
-- **`DecoyBay`** — **debt paid.** The static was owed, not grandfathered: it was
-  declared in `Game/Bastion/DecoyBay.cs` with three call sites (two in the
-  HudController weapon readout, one in `EnemyGatekeeper.Targeting`'s retarget tick).
-  Retired 2026-08-11: the bay now registers itself with `GameController` on enable
-  (and unregisters on disable), and every former call site reaches it through
-  `GameController.Instance.Decoys` — the command surface everything else already
-  routes through. The record stays so the debt's payment is not rediscovered as a
-  mystery.
+- **`HatchStation`** — grandfathered, **locator only** (a transform / pathing target;
+  it holds no Run or player state — its hatch-subsystem access goes through its
+  serialized `_game` reference). Declared `Game/Bastion/HatchStation.cs`.
+- **`GameController`** — **debt paid 2026-08-12.** The scene host constructs one
+  `RunContext` (meta, sim, decoy state, spawn ids) and hands itself out explicitly:
+  serialized references for scene-stable consumers (HUD, spawner, hatch, repair),
+  `Bind(this)` pushes for the runtime-resolved player rig (gun, ability, health,
+  bay), a `Configure(stats, game, spawner)` pass for spawned gatekeepers, and a
+  dev-only lazy lookup in `DevConsole`. Nothing singular remains that co-op would
+  have to make plural.
+- **`DecoyBay`** — debt paid 2026-08-11; its former call sites now reach the bay
+  through their own `GameController` reference (`.Decoys`). The record stays so the
+  payment is not rediscovered as a mystery.
+
+Scene REGISTRIES are a different shape and stay: `PlayerRegistry` (live players,
+self-registered OnEnable/OnDisable — the sanctioned "the player" lookup) and
+`SpawnPoint.All` (scene spawn markers; `SceneBuilder` rebuilds the points and wires
+nothing by contract). They hold lists of scene objects, not Run state; one Unity
+process can only ever host one Game-layer world (the NavMesh statics make two
+impossible), so scene-scoped and Run-scoped coincide at this layer. The Sim layer
+is where two Runs coexist, and it holds no statics at all — enforced by
+`TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState`.
 
 A fourth pattern existed when M40 was written (2026-08-09): `StationPanelView.EnsureInstance()`,
 a static factory — the same pattern under another name. It has since been removed
@@ -67,7 +77,7 @@ on any type not named in it fails the run. The owed list has been empty since
 2026-08-11 — an entry there would print as a baselined note rather than a pass.
 
 ```arch-lint
-singleton_allow=GameController,HatchStation
+singleton_allow=HatchStation
 singleton_owed=
 menu_root=GatekeeperBastion
 menu_rows=Build All Scenes,Run Verification Now,Validate Scene Bindings,Logs/Open Logs Folder,Logs/Copy Latest Log Path
@@ -95,7 +105,7 @@ deleted**, which is why this list is checked rather than trusted.
 | `6-InfinityQube-Precedence.md` | record | What was taken from InfinityQube, what was rejected, and on what evidence |
 | `7-File-Layout.md` | MANDATORY | The region order every file follows, and why the check matters more than the convention |
 
-**CRITICAL** means a violation breaks a load-bearing property — the multiplayer seam, or
+**CRITICAL** means a violation breaks a load-bearing property — the Sim dependency boundary, or
 correctness against the engine. MANDATORY means it is required and a deviation needs a reason
 in writing. A record is history: corrections only.
 
@@ -148,8 +158,8 @@ Audited 2026-08-09 across `Assets/Scripts` (68 files). Detail in `5-Audit`.
 
 | | Finding |
 |---|---|
-| **Already right** | No LINQ in runtime code. No empty `Update`/`Start` bodies. No `FindObjectOfType` — already on the Unity 6 forms. No `Manager`/`Helper`/`Utils` class anywhere. No fake-null bypass on any `UnityEngine.Object`. `Log.Info` already `[Conditional]`. 8 `Update()` methods total. |
-| **The structural gap** | `Sim/` is pure — zero `UnityEngine`, zero `Vector3`/`Mathf`/`Random` — and nothing enforces it, because it shares an assembly with `Game/`. The usual cost of fixing that is not payable here. `1-Boundaries.md` §1. |
+| **Already right** | No LINQ in runtime code. No empty `Update`/`Start` bodies. No `FindObjectOfType` — already on the Unity 6 forms. No `Manager`/`Helper`/`Utils` class anywhere. No fake-null bypass on any `UnityEngine.Object`. `Log.Info` already `[Conditional]`. Allocation rules cover every `Update()`, `OnGUI`, and the firing path. |
+| **The structural gap** | Was: `Sim/` pure by convention, unenforced, sharing an assembly with `Game/`. **Resolved 2026-08-12 (M45):** `GatekeeperBastion.Sim.asmdef` plus `TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState` enforce it at compile and test time. `1-Boundaries.md` §1. |
 | **The measured cost** | `Log.Event` and `Log.Metric` are not `[Conditional]` and ship in release; 61 of 147 call sites interpolate, which under C# 9 allocates and boxes whether or not anything reads the log. 47 more interpolations sit inside `OnGUI`. `3-Unity-Runtime.md` §6. |
 | **The name that started this** | `RegisterPinHitIfNeeded` is the **only** `*IfNeeded` in the codebase — and it is the one place an audit found a shipped bug. The name predicted the defect. `2-Naming.md` §2. |
 | **Convention, no check** | InfinityQube's region order is adopted (`7-File-Layout.md`) and governs new files. **M34 cancelled** — no tree-wide sweep, no `Tools/lint-layout` in verify. |

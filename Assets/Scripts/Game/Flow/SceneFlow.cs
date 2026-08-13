@@ -108,13 +108,13 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Rescue a Canvas that would render nothing. Shift's Main Menu Canvas is
         /// Screen Space – Camera on purpose, so this only repairs the two always-broken states —
-        /// see <see cref="Ui.UiCanvasGuard"/>.</summary>
+        /// see <see cref="UiCanvasGuard"/>.</summary>
         public static void RepairCanvas(GameObject root)
         {
             if (root == null) return;
             var canvas = root.GetComponent<Canvas>();
             if (canvas == null) canvas = root.GetComponentInChildren<Canvas>(true);
-            Ui.UiCanvasGuard.RepairIfBroken(canvas != null ? canvas.gameObject : root);
+            UiCanvasGuard.RepairIfBroken(canvas != null ? canvas.gameObject : root);
         }
 
         static bool Load(string sceneName)

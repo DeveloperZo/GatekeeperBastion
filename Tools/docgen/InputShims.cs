@@ -40,6 +40,14 @@ namespace UnityEngine
         public static bool GetKeyUp(KeyCode key) => false;
         public static float GetAxis(string name) => 0f;
         public static float GetAxisRaw(string name) => 0f;
+        public static bool GetMouseButtonDown(int button) => false;
+        public static bool anyKeyDown => false;
         public static Vector2 mouseScrollDelta => new Vector2(0f, 0f);
+    }
+
+    /// <summary>Frozen clock for the same reason: the generator never advances a frame.</summary>
+    public static class Time
+    {
+        public static int frameCount => 0;
     }
 }

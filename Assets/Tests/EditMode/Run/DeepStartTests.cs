@@ -208,7 +208,7 @@ namespace GatekeeperBastion.Tests
 
             sim.NotifyAssaultCleared();
             Assert.AreEqual(RunPhase.Escaped, sim.Phase);
-            Assert.AreEqual("cleared", sim.LastLossReport.cause);
+            Assert.AreEqual("cleared", sim.LastRunReport.cause);
             Assert.AreEqual(5, meta.DeepestWaveReached);
             Assert.AreEqual(1, meta.CleanExits);
         }

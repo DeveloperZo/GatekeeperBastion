@@ -9,15 +9,17 @@ using UnityEngine;
 namespace GatekeeperBastion.EditorTools
 {
     /// <summary>
-    /// File-bridge verification runner: when <projectRoot>/gkb_verify_request.txt exists (or the
-    /// menu item is used), runs the full EditMode suite then the PlayMode suite via TestRunnerApi
-    /// and writes <projectRoot>/gkb_verify_report.json with per-test results. Lets an external
-    /// agent request and read verification without any live MCP connection. Survives the domain
+    /// The integration check (formerly AutoVerify; renamed 2026-08-12, sentinel filenames kept
+    /// as the stable wire protocol). File-bridge test runner: when
+    /// <projectRoot>/gkb_verify_request.txt exists (or the menu item is used), runs the full
+    /// EditMode suite then the PlayMode suite via TestRunnerApi and writes
+    /// <projectRoot>/gkb_verify_report.json with per-test results. Lets an external agent
+    /// request and read verification without any live MCP connection. Survives the domain
     /// reloads PlayMode runs cause by re-registering callbacks from [InitializeOnLoad] and
     /// staging progress in SessionState.
     /// </summary>
     [InitializeOnLoad]
-    public static class AutoVerify
+    public static class IntegrationCheck
     {
         const string StageKey = "GKB_VERIFY_STAGE";           // "", "editmode", "playmode"
         const string EditResultsKey = "GKB_VERIFY_EDIT_JSON"; // leaf results captured after stage 1
@@ -37,7 +39,7 @@ namespace GatekeeperBastion.EditorTools
 
         static double _nextSentinelPoll;
 
-        static AutoVerify()
+        static IntegrationCheck()
         {
             // LogTools menu items must not carry [InitializeOnLoad].
             AssemblyReloadEvents.beforeAssemblyReload -= LogFile.Close;
@@ -63,7 +65,7 @@ namespace GatekeeperBastion.EditorTools
                 // delayCall chains die across domain reload. Re-arm the PlayMode kick so a
                 // reload between EditMode finish and PlayMode start cannot leave us idle until
                 // the stuck timer fires.
-                Debug.Log("[AutoVerify] Resuming PlayMode kick after domain reload.");
+                Debug.Log("[IntegrationCheck] Resuming PlayMode kick after domain reload.");
                 SchedulePlayMode();
                 return;
             }
@@ -80,7 +82,7 @@ namespace GatekeeperBastion.EditorTools
             // Domain reload / script compile leaves StageKey set and TestRunner mute —
             // do not treat that idle as a stuck stage, or a live PlayMode run is aborted.
             if (EditorApplication.isCompiling) return;
-            // BindingValidator writes its own report; don't block AutoVerify.
+            // BindingValidator writes its own report; don't block IntegrationCheck.
             TryConsumeBindingsRequest();
             // Sentinel always wins — same rule as OnEditorReady. A stuck StageKey from a
             // mid-run domain reload must not permanently ignore agent requests.
@@ -110,8 +112,8 @@ namespace GatekeeperBastion.EditorTools
             if (EditorApplication.timeSinceStartup - since < StuckStageSeconds) return;
 
             Debug.LogWarning(
-                $"[AutoVerify] Clearing stuck stage '{stage}' after {StuckStageSeconds:0}s idle " +
-                "(TestRunner never finished). Write gkb_verify_request.txt or use Run Verification Now.");
+                $"[IntegrationCheck] Clearing stuck stage '{stage}' after {StuckStageSeconds:0}s idle " +
+                "(TestRunner never finished). Write gkb_verify_request.txt or use Run Integration Check Now.");
             SessionState.SetString(StageKey, "");
             SessionState.SetFloat(StageSinceKey, -1f);
             WriteReport("error", "stuck", null, null,
@@ -132,17 +134,17 @@ namespace GatekeeperBastion.EditorTools
             try { File.Delete(BindingsRequestPath); }
             catch (Exception e)
             {
-                Debug.LogWarning("[AutoVerify] Could not delete bindings request: " + e.Message);
+                Debug.LogWarning("[IntegrationCheck] Could not delete bindings request: " + e.Message);
                 return;
             }
             try
             {
                 int missing = BindingValidator.RunHeadless();
-                Debug.Log($"[AutoVerify] BindingValidator finished — {missing} missing.");
+                Debug.Log($"[IntegrationCheck] BindingValidator finished — {missing} missing.");
             }
             catch (Exception e)
             {
-                Debug.LogError("[AutoVerify] BindingValidator failed: " + e.Message);
+                Debug.LogError("[IntegrationCheck] BindingValidator failed: " + e.Message);
             }
         }
 
@@ -159,20 +161,20 @@ namespace GatekeeperBastion.EditorTools
             // TestRunner throws "cannot be used during play mode" and wipes the report.
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                Debug.LogWarning("[AutoVerify] Sentinel waiting — editor is in play mode.");
+                Debug.LogWarning("[IntegrationCheck] Sentinel waiting — editor is in play mode.");
                 return false;
             }
             try { File.Delete(SentinelPath); }
             catch (Exception e)
             {
-                Debug.LogWarning("[AutoVerify] Could not delete sentinel: " + e.Message);
+                Debug.LogWarning("[IntegrationCheck] Could not delete sentinel: " + e.Message);
                 return false;
             }
             // Sentinel always wins: a stale stage from a dead run must not block this request.
             SessionState.SetString(StageKey, "");
             SessionState.SetFloat(StageSinceKey, -1f);
             SessionState.SetString(PendingKey, "sentinel file");
-            Debug.Log("[AutoVerify] Sentinel consumed — verification pending after refresh.");
+            Debug.Log("[IntegrationCheck] Sentinel consumed — verification pending after refresh.");
             // External agents edit scripts on disk; without a refresh Unity may still hold the
             // previous assemblies. Any compile/domain reload this queues happens before the
             // pending run starts.
@@ -194,7 +196,7 @@ namespace GatekeeperBastion.EditorTools
             return true;
         }
 
-        [MenuItem("GatekeeperBastion/Run Verification Now")]
+        [MenuItem("GatekeeperBastion/Run Integration Check Now")]
         public static void RunFromMenu() => BeginVerification("menu");
 
         // No Reset command: a stuck StageKey is already cleared by TryConsumeSentinel, which
@@ -204,12 +206,12 @@ namespace GatekeeperBastion.EditorTools
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                Debug.LogWarning("[AutoVerify] Refusing '" + trigger + "' — editor is in play mode.");
+                Debug.LogWarning("[IntegrationCheck] Refusing '" + trigger + "' — editor is in play mode.");
                 return;
             }
 
             try { if (File.Exists(SentinelPath)) File.Delete(SentinelPath); }
-            catch (Exception e) { Debug.LogWarning("[AutoVerify] Could not delete sentinel: " + e.Message); }
+            catch (Exception e) { Debug.LogWarning("[IntegrationCheck] Could not delete sentinel: " + e.Message); }
 
             // A test assembly that did not build is the most common failure here, and TestRunner
             // reports it as the same opaque "unexpected error" as everything else. Name it before
@@ -222,7 +224,7 @@ namespace GatekeeperBastion.EditorTools
             {
                 const string why =
                     "Scripts failed to compile — fix the errors in the Unity console; no tests were run.";
-                Debug.LogError($"[AutoVerify] {why}");
+                Debug.LogError($"[IntegrationCheck] {why}");
                 SessionState.SetString(StageKey, "");
                 SessionState.SetFloat(StageSinceKey, -1f);
                 WriteReport("error", "precheck", null, null, why);
@@ -236,14 +238,14 @@ namespace GatekeeperBastion.EditorTools
                     ? $"Editor is still compiling; '{missing}' is not loaded yet. Retry when compilation finishes."
                     : $"Test assembly '{missing}' is not loaded — it failed to compile. "
                       + "Fix the compile errors in the Unity console; no tests were run.";
-                Debug.LogError("[AutoVerify] " + why);
+                Debug.LogError("[IntegrationCheck] " + why);
                 SessionState.SetString(StageKey, "");
                 SessionState.SetFloat(StageSinceKey, -1f);
                 WriteReport("error", "precheck", null, null, why);
                 return;
             }
 
-            Debug.Log("[AutoVerify] Verification started (" + trigger + ").");
+            Debug.Log("[IntegrationCheck] Verification started (" + trigger + ").");
             MarkStage("editmode");
             SessionState.SetString(EditResultsKey, "");
             WriteReport("running", "editmode", null, null);
@@ -286,7 +288,7 @@ namespace GatekeeperBastion.EditorTools
             string assembly = mode == TestMode.PlayMode
                 ? "GatekeeperBastion.PlayTests"
                 : "GatekeeperBastion.Tests";
-            Debug.Log("[AutoVerify] TestRunner.Execute " + mode + " assembly=" + assembly);
+            Debug.Log("[IntegrationCheck] TestRunner.Execute " + mode + " assembly=" + assembly);
             _api.Execute(new ExecutionSettings(new Filter
             {
                 testMode = mode,
@@ -329,7 +331,7 @@ namespace GatekeeperBastion.EditorTools
                 SessionState.SetInt(PlayKickKey, 0);
                 const string why =
                     "PlayMode TestRunner.Execute never started after EditMode (gave up after retries).";
-                Debug.LogError("[AutoVerify] " + why);
+                Debug.LogError("[IntegrationCheck] " + why);
                 WriteReport("error", "playmode", string.IsNullOrEmpty(edit) ? null : edit, null, why);
                 return;
             }
@@ -339,12 +341,12 @@ namespace GatekeeperBastion.EditorTools
             {
                 try
                 {
-                    Debug.Log("[AutoVerify] PlayMode Execute attempt " + attempt);
+                    Debug.Log("[IntegrationCheck] PlayMode Execute attempt " + attempt);
                     Run(TestMode.PlayMode);
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning("[AutoVerify] PlayMode Execute attempt " + attempt + " threw: " + e.Message);
+                    Debug.LogWarning("[IntegrationCheck] PlayMode Execute attempt " + attempt + " threw: " + e.Message);
                 }
             }
 
@@ -369,7 +371,7 @@ namespace GatekeeperBastion.EditorTools
                 // kill the retry loop, leaving the stuck-idle timer to fire with no suite run.
                 if (stage == "playmode" && AdaptorContains(testsToRun, "GatekeeperBastion.PlayTests"))
                     SessionState.SetInt(PlayKickKey, 0);
-                Debug.Log("[AutoVerify] RunStarted stage=" + stage);
+                Debug.Log("[IntegrationCheck] RunStarted stage=" + stage);
             }
 
             public void TestStarted(ITestAdaptor test) => TouchProgress();
@@ -387,7 +389,7 @@ namespace GatekeeperBastion.EditorTools
                 try { HandleRunFinished(result); }
                 catch (Exception e)
                 {
-                    Debug.LogError("[AutoVerify] Report failed: " + e);
+                    Debug.LogError("[IntegrationCheck] Report failed: " + e);
                     string why = string.IsNullOrWhiteSpace(e.Message)
                         ? "Report assembly failed with no exception message."
                         : e.Message;
@@ -407,7 +409,7 @@ namespace GatekeeperBastion.EditorTools
                 string why = string.IsNullOrWhiteSpace(message)
                     ? "TestRunner OnError with no message."
                     : message;
-                Debug.LogError("[AutoVerify] Test run error: " + why);
+                Debug.LogError("[IntegrationCheck] Test run error: " + why);
                 string edit = SessionState.GetString(EditResultsKey, "");
                 SessionState.SetString(StageKey, "");
                 SessionState.SetFloat(StageSinceKey, -1f);
@@ -426,12 +428,12 @@ namespace GatekeeperBastion.EditorTools
             bool editLeaves = ResultContains(result, "GatekeeperBastion.Tests.");
             if (stage == "editmode" && playLeaves && !editLeaves)
             {
-                Debug.LogWarning("[AutoVerify] Ignoring PlayMode result while still in editmode stage.");
+                Debug.LogWarning("[IntegrationCheck] Ignoring PlayMode result while still in editmode stage.");
                 return;
             }
             if (stage == "playmode" && !playLeaves)
             {
-                Debug.LogWarning("[AutoVerify] Ignoring non-PlayMode RunFinished while waiting for PlayMode.");
+                Debug.LogWarning("[IntegrationCheck] Ignoring non-PlayMode RunFinished while waiting for PlayMode.");
                 return;
             }
 
@@ -445,7 +447,7 @@ namespace GatekeeperBastion.EditorTools
             {
                 SessionState.SetString(EditResultsKey, block);
                 MarkStage("playmode");
-                Debug.Log($"[AutoVerify] EditMode done: {pass} passed, {fail} failed. Starting PlayMode.");
+                Debug.Log($"[IntegrationCheck] EditMode done: {pass} passed, {fail} failed. Starting PlayMode.");
                 WriteReport("running", "playmode", block, null);
                 SchedulePlayMode();
             }
@@ -454,7 +456,7 @@ namespace GatekeeperBastion.EditorTools
                 string editBlock = SessionState.GetString(EditResultsKey, "null");
                 SessionState.SetString(StageKey, "");
                 SessionState.SetFloat(StageSinceKey, -1f);
-                Debug.Log($"[AutoVerify] PlayMode done: {pass} passed, {fail} failed. Report written.");
+                Debug.Log($"[IntegrationCheck] PlayMode done: {pass} passed, {fail} failed. Report written.");
                 WriteReport("complete", "done", editBlock, block);
             }
         }
@@ -530,7 +532,7 @@ namespace GatekeeperBastion.EditorTools
             try { File.WriteAllText(ReportPath, json); }
             catch (Exception e)
             {
-                Debug.LogError("[AutoVerify] Could not write report: " + e.Message);
+                Debug.LogError("[IntegrationCheck] Could not write report: " + e.Message);
                 // Last-chance path so an agent still sees why the bridge failed.
                 try
                 {

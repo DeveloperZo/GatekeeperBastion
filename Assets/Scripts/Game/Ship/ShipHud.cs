@@ -1,5 +1,4 @@
 using System.Text;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Sim;
 using UnityEngine;
 
@@ -16,7 +15,12 @@ namespace GatekeeperBastion.Game
 
         [SerializeField] ShipHudView _view;
 
+        [SerializeField, Tooltip("Ship-hub controller. Authored in the scene.")]
         ShipController _ship;
+
+        [SerializeField, Tooltip("Root under which the billboarded TextMesh station labels live. Authored in the scene.")]
+        Transform _labelsRoot;
+
         Interactor _interactor;
         FirstPersonController _fpc;
         Transform _camera;
@@ -35,8 +39,7 @@ namespace GatekeeperBastion.Game
 
         void Awake()
         {
-            _ship = GetComponent<ShipController>();
-            if (_ship == null) _ship = FindFirstObjectByType<ShipController>();
+            if (_ship == null) _ship = GetComponent<ShipController>();
             UiCanvasGuard.RepairIfBroken(gameObject);
             var canvas = GetComponentInParent<Canvas>();
             if (canvas != null)
@@ -149,23 +152,21 @@ namespace GatekeeperBastion.Game
 
         void Bind()
         {
-            if (_ship == null) _ship = FindFirstObjectByType<ShipController>();
-
+            // Registry only (the sanctioned lookup); the rebind timer retries until the rig registers.
             var player = PlayerRegistry.Local;
             if (player != null)
             {
                 _interactor = player.GetComponentInChildren<Interactor>();
                 _fpc = player.GetComponent<FirstPersonController>();
             }
-            if (_interactor == null) _interactor = FindFirstObjectByType<Interactor>();
-            if (_fpc == null) _fpc = FindFirstObjectByType<FirstPersonController>();
 
-            var cam = Camera.main;
-            _camera = cam != null ? cam.transform : null;
+            _camera = _fpc != null ? _fpc.cameraTransform : null;
 
             if (_labelsScanned) return;
             _labelsScanned = true;
-            _labels = FindObjectsByType<TextMesh>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            _labels = _labelsRoot != null
+                ? _labelsRoot.GetComponentsInChildren<TextMesh>(true)
+                : null;
         }
 
         void BillboardLabels()

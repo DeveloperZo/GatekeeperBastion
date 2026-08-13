@@ -2,6 +2,7 @@
     "name": "GatekeeperBastion.Editor",
     "rootNamespace": "GatekeeperBastion.EditorTools",
     "references": [
+        "GatekeeperBastion.Sim",
         "GatekeeperBastion",
         "Michsky.UI.Shift",
         "Unity.AI.Navigation",

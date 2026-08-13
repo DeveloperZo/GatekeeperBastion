@@ -1,9 +1,9 @@
 # M47 — The bastion gets height and angles
 
 <!--
-Status: later
+Status: next (current)
 Update trigger: when the scaler, the block multiples, or a side-state rule changes
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 -->
 
 **Two outputs.** The **artifact** is the palette — five golden-mean segments with per-side
@@ -41,7 +41,7 @@ Tweak the scaler to retune the whole kit; add a table row when another multiple 
 | **Half room** | 8 | 40 × 64 |
 | **Full room** | 13 | 65 × 104 |
 | **Open Area** | 21 | 105 × 168 |
-| **Control Room** | 76 | 380 × 608 |
+| **Control Room** | 47 | 235 × 376 |
 
 There is no connector kit. Each segment has **four sides**, each **Wall / Door / Window / None**.
 
@@ -60,7 +60,7 @@ later runtime), not a sixth side kind.
 
 Layout is half generated segments and half authored placement of **H / S / T / D** and unlock
 order. Zo's sketch (2026-08-11): defend at **H**, branch through Full/Half rooms with **T** and
-**S**, locked **D** gates between Open Areas, **Control Room (76) unlocked last**. Unlock order
+**S**, locked **D** gates between Open Areas, **Control Room (47) unlocked last**. Unlock order
 is authored — the Control Room may sit near the Hatch in space and still be unreachable until
 late doors open.
 
@@ -79,24 +79,26 @@ late doors open.
 3. **Locked wing:** **S** behind a closed **D** may still be nominal spawn sources once that door's
    stage is live; until then they are sealed with the wing.
 4. **Progression is unlock order, not distance.** A graph of T→D→T→D… ends at the **Control Room
-   (76)**. Reordering which terminals open which doors changes the path without moving rooms —
+   (47)**. Reordering which terminals open which doors changes the path without moving rooms —
    Master Control can be adjacent and still last.
 5. **Palette sizes on the spine:** Open Areas (21) as hubs / defend / staging; Full (13) for
-   terminal rooms; Half (8) for spawn alcoves; Control (76) once, last in the unlock graph.
+   terminal rooms; Half (8) for spawn alcoves; Control (47) once, last in the unlock graph.
    Quarter (5) as stubs. Break bilateral symmetry even when the sketch is mirrored.
 
-**Generate → tune → author:** emit segments, set sides (including which Door sides start locked),
-place H / S / T markers, write the unlock graph, obstacles, freeze. Build All never regenerates
-playable geometry.
+**Generate → tune → author:** agent seeds segments (sketch emit), sides, H/S/T/D, unlock graph,
+and named obstacles; Zo hand-moves for finish; bake NavMesh. Full workflow in
+`../../Working-Rules.md` (*Bastion authoring*). Build All never regenerates playable geometry.
 
-Runtime terminal interact polish and delivery banking remain
-`../../Brainstorms/missions-and-destinations.md`. M47 ships the unlock **graph**, markers, and
-sketch→kit emit so that loop has a place to land.
+Runtime terminal interact (Ship console reuse, wave-on-locked-T, Master terminal) and delivery
+banking remain `../../Brainstorms/missions-and-destinations.md`. M47 ships the unlock **graph**,
+markers, and sketch→kit emit so that loop has a place to land.
 
 ### Sketch emit
 
 Write `Tools/bastion-sketch/*.txt`, then create `gkb_bastion_sketch_request.txt` at the project
-root (empty = example layout). Emits kit rooms + H/S/T/D under `BastionKit` with `BastionLayout`.
+root (path to sketch, or empty for default). Emits kit rooms + H/S/T/D under `Environment`
+(with `BastionLayout`). Obstacle seed: menu **Place Bastion Obstacles** or
+`gkb_bastion_obstacles_request.txt`. NavMesh: **Bake Bastion NavMesh**.
 
 ## Acceptance criteria
 

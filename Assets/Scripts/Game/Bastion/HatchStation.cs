@@ -21,6 +21,9 @@ namespace GatekeeperBastion.Game
         /// <summary>The single hatch in the scene (one per bastion), or null if disabled.</summary>
         public static HatchStation Instance { get; private set; }
 
+        [SerializeField, Tooltip("Bastion GameController. Authored in the scene.")]
+        GameController _game;
+
         /// <summary>Clears the static handle at play-mode start (domain-reload-disabled safety).</summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
@@ -28,11 +31,11 @@ namespace GatekeeperBastion.Game
             Instance = null;
         }
 
-        static Subsystem SimHatch
+        Subsystem SimHatch
         {
             get
             {
-                var gc = GameController.Instance;
+                var gc = _game;
                 return gc != null && gc.Sim != null ? gc.Sim.Ship.Hatch : null;
             }
         }
@@ -105,7 +108,7 @@ namespace GatekeeperBastion.Game
         public void ApplyDamage(float amount)
         {
             if (amount <= 0f) return;
-            var gc = GameController.Instance;
+            var gc = _game;
             if (gc == null || gc.RunIsOver) return; // guard: no damage into a terminal/absent sim
             var hatch = SimHatch;
             if (hatch == null) return;

@@ -31,6 +31,20 @@ namespace GatekeeperBastion.PlayTests
             yield return null;
         }
 
+        /// <summary>In the authored Bastion scene the hatch's GameController arrives through a
+        /// serialized `_game` reference (M45's wiring rule: serialized for scene-stable objects).
+        /// This test builds its objects in an empty scene, so it stands in for the scene author —
+        /// by reflection, the same way WeaponAbilityPlayModeTests force-commits a gatekeeper.</summary>
+        static void WireHatchToController(HatchStation hatch, GameController gc)
+        {
+            var field = typeof(HatchStation).GetField("_game",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(field,
+                "HatchStation no longer has a serialized `_game` GameController reference — " +
+                "rewire this test to whatever replaced it.");
+            field.SetValue(hatch, gc);
+        }
+
         [UnityTest]
         public IEnumerator CoreLoop_AutoBoard_KillsBankImmediately_DeathTakesNothingBack()
         {
@@ -39,6 +53,7 @@ namespace GatekeeperBastion.PlayTests
             var gc = _gcObject.AddComponent<GameController>();
             _hatchObject = new GameObject("HatchStation");
             var hatch = _hatchObject.AddComponent<HatchStation>();
+            WireHatchToController(hatch, gc);
 
             yield return null; // Awake + Start have run
             Assert.IsNotNull(gc.Sim, "GameController created a sim");

@@ -1,4 +1,5 @@
 using GatekeeperBastion.Sim;
+using GatekeeperBastion.Util;
 using UnityEngine;
 
 namespace GatekeeperBastion.Game
@@ -42,7 +43,7 @@ namespace GatekeeperBastion.Game
                  "with MetaUpgrades.StaminaMax(meta.StaminaLevel).")]
         [SerializeField] float staminaMax = 100f;
 
-        [Tooltip("Camera child used for pitch. Wired by SceneBuilder; falls back to Camera.main.")]
+        [Tooltip("Camera child used for pitch. Wired by SceneBuilder; look is disabled when missing.")]
         public Transform cameraTransform;
 
         CharacterController _cc;
@@ -91,51 +92,73 @@ namespace GatekeeperBastion.Game
         void Awake()
         {
             _cc = GetComponent<CharacterController>();
-            if (cameraTransform == null && Camera.main != null)
-                cameraTransform = Camera.main.transform;
+            if (cameraTransform == null)
+            {
+                // Authoring-error-only path: the binding validator makes a missing wire a
+                // build failure, so there is no runtime fallback — look stays disabled.
+                Log.Error("FirstPersonController",
+                    "cameraTransform is not wired — mouse look is disabled (author the binding).");
+            }
             staminaMax = Mathf.Max(1f, staminaMax);
             _stamina = staminaMax;
         }
 
+        /// <summary>True once the Bastion's tick owner drives this component; its own
+        /// Update then yields so the written system order is the only order. Ship and menu
+        /// scenes have no tick owner and stay self-driven.</summary>
+        bool _hosted;
+
+        public void SetHosted(bool hosted) { _hosted = hosted; }
+
         void Update()
         {
+            if (_hosted) return; // the Bastion tick owner calls Tick in the written order
+            Tick(Time.deltaTime);
+        }
+
+        /// <summary>Locomotion: cursor lock, look, sprint and the CharacterController move.</summary>
+        public void Tick(float dt)
+        {
+            // Defensive sample: free when the scene's tick owner already sampled this frame.
+            var frame = Controls.Sample();
+
             if (Controls.Down(ControlId.FreeCursor)) SetCursorLocked(false);
             // Click-to-relock only during the fight; menu clicks must stay free for IMGUI buttons.
-            if (!MovementLocked && Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
+            if (!MovementLocked && frame.click0Down && Cursor.lockState != CursorLockMode.Locked)
                 SetCursorLocked(true);
 
             bool canControl = Cursor.lockState == CursorLockMode.Locked && !MovementLocked;
-            if (canControl)
+            // Look requires the authored camera wire: yaw without pitch is a half-broken camera,
+            // so a missing cameraTransform (already Log.Error'd in Awake) disables look entirely.
+            if (canControl && cameraTransform != null)
             {
                 float sens = Settings.GetFloat(SettingId.MouseSensitivity);
-                transform.Rotate(0f, Input.GetAxis("Mouse X") * sens, 0f);
-                _pitch = Mathf.Clamp(_pitch - Input.GetAxis("Mouse Y") * sens, -pitchLimit, pitchLimit);
-                if (cameraTransform != null)
-                    cameraTransform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+                transform.Rotate(0f, frame.lookX * sens, 0f);
+                _pitch = Mathf.Clamp(_pitch - frame.lookY * sens, -pitchLimit, pitchLimit);
+                cameraTransform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
             }
 
             Vector3 planar = Vector3.zero;
             if (canControl)
             {
                 var input = Vector3.ClampMagnitude(
-                    new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical")), 1f);
-                planar = transform.TransformDirection(input) * TickSprint(input.sqrMagnitude > 0.01f);
+                    new Vector3(frame.moveX, 0f, frame.moveY), 1f);
+                planar = transform.TransformDirection(input) * TickSprint(input.sqrMagnitude > 0.01f, dt);
             }
             else
             {
-                TickSprint(false); // locked out (panel/menu/down): no sprint, but stamina still returns
+                TickSprint(false, dt); // locked out (panel/menu/down): no sprint, but stamina still returns
             }
 
-            _verticalVelocity = _cc.isGrounded ? -1f : _verticalVelocity + gravity * Time.deltaTime;
-            _cc.Move((planar + Vector3.up * _verticalVelocity) * Time.deltaTime);
+            _verticalVelocity = _cc.isGrounded ? -1f : _verticalVelocity + gravity * dt;
+            _cc.Move((planar + Vector3.up * _verticalVelocity) * dt);
         }
 
         /// <summary>Resolve sprint for this frame and return the planar speed to move at.
         /// Sprint requires Left Shift AND actual movement input AND stamina — holding Shift while
         /// standing still must not drain the pool, or "sprint" becomes a tax on standing.</summary>
-        float TickSprint(bool moving)
+        float TickSprint(bool moving, float dt)
         {
-            float dt = Time.deltaTime;
             bool wants = moving && Controls.Held(ControlId.Sprint);
 
             if (_exhausted && _stamina >= staminaMax * ReengageFraction) _exhausted = false;

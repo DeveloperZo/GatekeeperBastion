@@ -1,12 +1,11 @@
 using System;
-using GatekeeperBastion.Game.Ui;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Binds the authored ARMORY upgrade wheel — five spokes placed around a hub in the
+    /// <summary>LOCAL-OWNER: binds the authored ARMORY upgrade wheel — five spokes placed around a hub in the
     /// scene, not by this class. <see cref="Configure"/> writes labels, marks the centre spoke and
     /// arms the buy action; the ring geometry and every colour are the authored panel's.</summary>
     public sealed class ArmoryWheelView : MonoBehaviour

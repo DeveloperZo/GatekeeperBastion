@@ -5,8 +5,9 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>HOST-ONLY: Bastion-scene bootstrap that owns the RunSim, ticks it every frame,
-    /// and exposes the command methods all sim mutation flows through (grandfathered singleton).</summary>
+    /// <summary>HOST-ONLY: Bastion-scene bootstrap that owns the RunContext, ticks its RunSim
+    /// every frame, and exposes the command methods all sim mutation flows through. Consumers
+    /// hold it by serialized scene reference or receive it via Bind — never through a static.</summary>
     /// <remarks>
     /// Scene flow: the ship hub is now a real scene (SceneFlow.Ship), so entering the Bastion
     /// starts fighting immediately — Start() calls StartRun + EngageTether and Docked is a
@@ -37,18 +38,25 @@ namespace GatekeeperBastion.Game
         [SerializeField, Tooltip("0 = randomize seed per run.")]
         int seed;
 
-        /// <summary>Scene-wide access point. Set in Awake, cleared in OnDestroy.</summary>
-        public static GameController Instance { get; private set; }
+        [SerializeField, Tooltip("Bastion wave spawner. Authored in the scene.")]
+        WaveSpawner _spawner;
+
+        [SerializeField, Tooltip("Hatch repair point. Authored in the scene.")]
+        RepairInteractable _repair;
+
+        /// <summary>Everything this Run owns (meta, sim, decoy state, spawn ids). Constructed
+        /// in Awake; null only on a failed boot (no MetaState).</summary>
+        public RunContext Run { get; private set; }
 
         /// <summary>The authoritative game simulation. MonoBehaviours are thin views over this.</summary>
-        public RunSim Sim { get; private set; }
+        public RunSim Sim => Run != null ? Run.Sim : null;
 
-        /// <summary>The player rig's decoy bay, registered by the bay itself — it rides the
-        /// player rig, so it cannot be wired as a scene reference here. Null until a bay
-        /// enables, and again after it disables.</summary>
+        /// <summary>The player rig's decoy bay — it rides the player rig, so it cannot be wired
+        /// as a scene reference here. ApplyMetaEffects binds the bay, which registers itself;
+        /// null until then, and again after the bay disables.</summary>
         public DecoyBay Decoys { get; private set; }
 
-        /// <summary>Command from DecoyBay.OnEnable: publish the bay through the controller.</summary>
+        /// <summary>Command from DecoyBay (Bind / re-enable): publish the bay through the controller.</summary>
         public void RegisterDecoyBay(DecoyBay bay) => Decoys = bay;
 
         /// <summary>Command from DecoyBay.OnDisable: drop the handle — only if it is still this
@@ -64,69 +72,58 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Gatekeepers spawned and still alive right now (spawner readout). Used for the
         /// death/hatch-loss context lines; 0 when no spawner is present.</summary>
-        public int EnemiesAlive
-        {
-            get
-            {
-                if (_spawner == null) _spawner = FindFirstObjectByType<WaveSpawner>();
-                return _spawner != null ? _spawner.AliveCount : 0;
-            }
-        }
+        public int EnemiesAlive => _spawner != null ? _spawner.AliveCount : 0;
+
+        /// <summary>The scene's wave spawner — the one owner of the live-gatekeeper ledger.
+        /// Abilities reach live actors through here rather than a static list. Null on a
+        /// spawnerless scene (tests); callers null-check.</summary>
+        public WaveSpawner Spawner => _spawner;
 
         /// <summary>True once the run has ended (terminal phase) — enemy AI and the spawner
         /// use this as their single "stop everything" test.</summary>
         public bool RunIsOver => Sim == null || IsTerminal(Sim.Phase);
 
         FirstPersonController _fpc;
-        WaveSpawner _spawner;
-        bool _discarded;      // this instance lost the duplicate race and is being destroyed
 
-        /// <summary>Clears the static handle at play-mode start (domain-reload-disabled safety).</summary>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics()
-        {
-            Instance = null;
-        }
+        // Hosted fight components, resolved from the rig at run start (ApplyMetaEffects).
+        // This controller owns their per-frame advance; see the written order in Update.
+        PlayerGun _gun;
+        PlayerAbility _ability;
+        Interactor _interactor;
+        DecoyPlacement _decoyPlacement;
 
+        // One GameController per scene, authored; there is no process-global instance left to protect.
         void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                // Guard: Destroy is deferred to end of frame, so Start/Update still run on this
-                // instance — _discarded makes them no-ops instead of NRE-ing on a null Sim.
-                _discarded = true;
-                Log.Warn(Tag, "Duplicate GameController destroyed.");
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
             SceneFlow.EnsureEventSystem();
 
             // Direct-play/test fallback: entering the Bastion without passing menu/ship.
             GameSession.EnsureLoaded();
             if (Meta == null)
             {
-                // Guard trip: RunSim's ctor throws on a null MetaState — fail loudly, not with a stack trace.
+                // Guard trip: RunContext's ctor throws on a null MetaState — fail loudly, not with a stack trace.
                 Log.Error(Tag, "No MetaState after GameSession.EnsureLoaded(); the run cannot start.");
-                _discarded = true;
                 return;
             }
 
             int runSeed = seed != 0 ? seed : Environment.TickCount;
-            Sim = new RunSim(Meta, runSeed);
+            Run = new RunContext(GameSession.Meta, runSeed);
             Subscribe();
         }
 
         void Start()
         {
-            if (_discarded || Sim == null) return; // guard: duplicate/failed boot must not touch a null Sim
+            if (Sim == null) return; // guard: failed boot must not touch a null Sim
             // The ship-menu phase is a real scene now: boarding is immediate, Docked transient.
             // PendingStartWave is set by MapStation; consumed once so direct-play falls back to 1.
             int startWave = GameSession.PendingStartWave;
             GameSession.PendingStartWave = 1;
             Sim.StartRun(startWave);
             Sim.EngageTether(); // → Tethered (Prep)
+            // The spawner's per-frame delivery advance belongs to this controller's
+            // written order from here on; its own Update yields.
+            if (_spawner != null) _spawner.SetHosted(true);
+
             ApplyMetaEffects();
 
             // Stable fields after the prose. The sentence stays readable;
@@ -134,7 +131,7 @@ namespace GatekeeperBastion.Game
             Log.Event("Run", $"run begins at {SceneFlow.BastionName} starting at wave {Sim.StartWave} — " +
                 $"{LoadoutSummary(Meta)}, " +
                 $"{Meta.BankedSalvage} banked, hatch {Sim.Ship.Hatch.MaxHp:0}hp " +
-                $"{RunBeginsFields(Meta, Sim.StartWave)}");
+                $"{RunBeginsFields(Meta, Sim.StartWave)}; seed {Run.Sim.Seed}");
         }
 
         /// <summary>Primary + Secondary with Tiers for the run-begins line — criterion 12 cannot
@@ -182,17 +179,46 @@ namespace GatekeeperBastion.Game
                    $"secondary={secondary} secondaryTier={secondaryTier} rig={rig} banked={banked}";
         }
 
+        /// <summary>
+        /// THE BASTION FIGHT ADVANCES IN THIS ORDER, FROM THIS ONE CALLER. Hosted components
+        /// (SetHosted) yield their own Update; Unity's script order no longer decides anything
+        /// the fight depends on.
+        ///   1. input sample (Controls.Sample — the sole producer's per-frame read)
+        ///   2. RunSim.Tick(dt)
+        ///   3. prep commands (siphon draw / dial)
+        ///   4. player locomotion
+        ///   5. combat actions (gun / ability / decoy placement)
+        ///   6. interact / repair
+        ///   7. enemy AI — engine-driven views (EnemyGatekeeper.Update); they read no ambient
+        ///      input and no process-global state, and their order among themselves is free
+        ///   8. spawn delivery (tick-driven group emission)
+        ///   9. assault-clear probe — fires inside the spawner on delivery-complete and death
+        ///  10. presentation last (HUD / VFX / audio keep their own Update/LateUpdate and Time)
+        /// Components tick every frame regardless of phase, as their own Updates always did;
+        /// each guards internally. Prep commands are Tethered-only, end-screen tick terminal-only.
+        /// </summary>
         void Update()
         {
-            if (_discarded || Sim == null) return; // guard: NRE at Sim.Tick on the duplicate-controller path
+            if (Sim == null) return; // guard: a failed boot leaves no Sim to Tick
 
-            Sim.Tick(Time.deltaTime);
+            float dt = Time.deltaTime;
+
+            Controls.Sample();                                        // 1
+            Sim.Tick(dt);                                             // 2
 
             if (Sim.Phase == RunPhase.Tethered)
-            {
-                TickFightInput();
+                TickFightInput();                                     // 3
+
+            if (_fpc != null) _fpc.Tick(dt);                          // 4
+            if (_gun != null) _gun.Tick(dt);                          // 5
+            if (_ability != null) _ability.Tick(dt);
+            if (_decoyPlacement != null) _decoyPlacement.Tick(dt);
+            if (_interactor != null) _interactor.Tick(dt);            // 6
+                                                                      // 7 — engine-driven
+            if (_spawner != null) _spawner.TickDelivery(dt);          // 8
+                                                                      // 9 — inside the spawner
+            if (Sim.Phase == RunPhase.Tethered)
                 return;
-            }
 
             // BOTH terminal phases run the end-screen tick: Escaped is a win, but it is exactly
             // as much of a dead end as Lost — same cursor, same button, same soft-lock risk.
@@ -204,6 +230,9 @@ namespace GatekeeperBastion.Game
         /// row belongs to weapon slots (see Controls), so Prep no longer double-fires on 1/2/3.</summary>
         void TickFightInput()
         {
+            // The Bastion tick samples the input frame first each frame; every other consumer's
+            // defensive Sample() call is then a free frame-guarded read.
+            Controls.Sample();
             if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
             if (Sim.Assault != AssaultState.Prep) return;
 
@@ -329,6 +358,23 @@ namespace GatekeeperBastion.Game
             var gun = local != null ? local.GetComponentInChildren<PlayerGun>() : null;
             if (gun != null)
             {
+                // The rig is runtime-resolved, so the controller pushes itself alongside the
+                // config, and adopts the component's per-frame advance (written order).
+                gun.Bind(this);
+                gun.SetHosted(true);
+                _gun = gun;
+                var ability = gun.GetComponent<PlayerAbility>();
+                if (ability != null)
+                {
+                    ability.Bind(this);
+                    ability.SetHosted(true);
+                }
+                _ability = ability;
+                var placement = gun.GetComponent<DecoyPlacement>();
+                if (placement == null && local != null)
+                    placement = local.GetComponentInChildren<DecoyPlacement>();
+                if (placement != null) placement.SetHosted(true);
+                _decoyPlacement = placement;
                 // Values are pushed at run start, never serialized onto a prefab (gotcha 1).
                 gun.ClearLoadout();
                 PushSlot(gun, Meta, WeaponSlot.Primary, Meta.EquippedPrimary);
@@ -345,17 +391,31 @@ namespace GatekeeperBastion.Game
             }
 
             // VITALITY. Heals to full by design — see PlayerHealth.ConfigureMaxHp.
-            if (local != null) local.ConfigureMaxHp(MetaUpgrades.PlayerMaxHp(Meta.VitalityLevel));
+            if (local != null)
+            {
+                local.Bind(this);
+                local.ConfigureMaxHp(MetaUpgrades.PlayerMaxHp(Meta.VitalityLevel));
+            }
             else Log.Warn(Tag, "ApplyMetaEffects: no local PlayerHealth to size from Vitality.");
 
             // STAMINA — the sprint pool. Without this push the controller keeps its serialized
             // 100 and the whole Stamina track is invisible to the player.
             var fpc = local != null ? local.GetComponent<FirstPersonController>() : null;
-            if (fpc != null) fpc.ConfigureStamina(MetaUpgrades.StaminaMax(Meta.StaminaLevel));
+            if (fpc != null)
+            {
+                fpc.ConfigureStamina(MetaUpgrades.StaminaMax(Meta.StaminaLevel));
+                fpc.SetHosted(true);
+                _fpc = fpc;
+            }
             else Log.Warn(Tag, "ApplyMetaEffects: no FirstPersonController to size the stamina pool on.");
 
+            var interactor = local != null ? local.GetComponentInChildren<Interactor>() : null;
+            if (interactor == null && fpc != null) interactor = fpc.GetComponentInChildren<Interactor>();
+            if (interactor != null) interactor.SetHosted(true);
+            _interactor = interactor;
+
             // Repair: flat rate from the equipped rig, or explicitly zero when unequipped.
-            var repair = FindFirstObjectByType<RepairInteractable>();
+            var repair = _repair;
             if (repair != null)
             {
                 bool equipped = Meta.HasRepairRigEquipped;
@@ -371,7 +431,11 @@ namespace GatekeeperBastion.Game
             var bay = local != null ? local.GetComponentInChildren<DecoyBay>() : null;
             if (bay == null && gun != null) bay = gun.GetComponent<DecoyBay>();
             if (bay != null)
+            {
+                // Bind registers the bay with this controller and subscribes it to Sim events.
+                bay.Bind(this);
                 bay.ResetForRun(Meta != null ? Meta.EquippedDrone : PayloadId.None);
+            }
             else
                 Log.Warn(Tag, "ApplyMetaEffects: no DecoyBay on the player rig.");
         }
@@ -461,7 +525,6 @@ namespace GatekeeperBastion.Game
         void OnDestroy()
         {
             Unsubscribe();
-            if (Instance == this) Instance = null;
         }
 
         /// <summary>Idempotent subscribe (-= before += so re-entry can never double-fire).</summary>

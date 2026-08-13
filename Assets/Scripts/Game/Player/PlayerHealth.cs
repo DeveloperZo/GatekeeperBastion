@@ -1,4 +1,3 @@
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Util;
 using UnityEngine;
 
@@ -36,6 +35,8 @@ namespace GatekeeperBastion.Game
         Quaternion _initialRotation;
         CharacterController _cc;
         FirstPersonController _fpc;
+        // Pushed by GameController.ApplyMetaEffects; Die() reports the run end through it.
+        GameController _game;
         Transform _lastAttacker; // death log only: who was on us, and how close
         float _lastAttackerTime;
 
@@ -73,11 +74,16 @@ namespace GatekeeperBastion.Game
             bool fatal = Hp <= 0f;
             if (fatal) Hp = 0f;
 
-            // Rate-limited to ~1 line/second, aggregating every swing inside that window. Recorded
-            // before Die() so the killing blow is in the transcript above the death line (which
-            // flushes this window on its way out).
+            // One line per damaging hit, recorded before Die() so the killing blow precedes death.
             Log.Event("Player", $"took {taken:0} damage — HP {Hp:0}/{maxHp:0}");
             if (fatal) Die();
+        }
+
+        /// <summary>Adopt the scene's GameController (called from ApplyMetaEffects at run
+        /// start). Death routes into the sim through this handle.</summary>
+        public void Bind(GameController game)
+        {
+            _game = game;
         }
 
         /// <summary>Apply the Crew Quarters VITALITY pool (GameController pushes
@@ -136,7 +142,7 @@ namespace GatekeeperBastion.Game
             if (_lastAttacker != null && Time.time - _lastAttackerTime < 5f)
                 killer = $"gatekeeper at {Vector3.Distance(transform.position, _lastAttacker.position):0.0}m";
 
-            var gc = GameController.Instance;
+            var gc = _game;
             // Logged before the sim is told: PlayerDied ends the run synchronously.
             Log.Event("Player", $"YOU DIED — killed by {killer}, {(gc != null ? gc.EnemiesAlive : 0)} gatekeepers still alive");
 

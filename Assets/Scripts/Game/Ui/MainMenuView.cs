@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game.Ui
+namespace GatekeeperBastion.Game
 {
-    /// <summary>Binds the authored Shift menu in <c>MainMenu.unity</c>. All wiring is by
+    /// <summary>LOCAL-OWNER: binds the authored Shift menu in <c>MainMenu.unity</c>. All wiring is by
     /// serialized reference — a null reference logs one error naming the
     /// field at scene load instead of silently no-opping. Panels switch through
     /// <see cref="MainPanelManager.OpenPanel"/>; the confirm modals are authored duplicates of
@@ -17,6 +17,8 @@ namespace GatekeeperBastion.Game.Ui
         public const string HomePanel = "Home";
 
         [SerializeField] MainPanelManager _panels;
+        [SerializeField, Tooltip("Shift 'Main Panels' root. Authored in MainMenu.unity.")]
+        GameObject _mainPanelsRoot;
         [SerializeField] GameObject _continueButton;
         [SerializeField] TextMeshProUGUI _campaignLine;
         [SerializeField] Button _continueBtn;
@@ -66,6 +68,7 @@ namespace GatekeeperBastion.Game.Ui
         void ValidateBindings()
         {
             Require(_panels, nameof(_panels));
+            Require(_mainPanelsRoot, nameof(_mainPanelsRoot));
             Require(_continueButton, nameof(_continueButton));
             Require(_campaignLine, nameof(_campaignLine));
             Require(_continueBtn, nameof(_continueBtn));
@@ -135,9 +138,9 @@ namespace GatekeeperBastion.Game.Ui
         /// <summary>Shift Main Panel Root defaults to Invisible (alpha 0). SplashScreenManager
         /// used to Play("Start"); without it the Home buttons never appear. Scene disables
         /// that Animator; this still Plays Start / forces the CanvasGroup if it is on.</summary>
-        static void RevealMainPanelsRoot()
+        void RevealMainPanelsRoot()
         {
-            var root = GameObject.Find("Main Panels");
+            var root = _mainPanelsRoot;
             if (root == null) return;
 
             var anim = root.GetComponent<Animator>();

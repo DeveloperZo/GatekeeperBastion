@@ -4,7 +4,7 @@
 Purpose: The FABRICATION console — the drone and its payloads, equipment, and the ship-systems shelf.
 Status: brainstorm
 Update trigger: when a payload row changes state, a drone control question in Open is answered, or the Hatch loss model changes.
-Last updated: 2026-08-08
+Last updated: 2026-08-13
 -->
 
 ## What this covers
@@ -20,8 +20,10 @@ where the item sits.
 ## Where it stands
 
 `Game/Ship/EngineeringStation.cs` (labelled FABRICATION in the UI) sells Hatch Armor,
-equipment, and the decoy payload (`M30`). **The drone bay and decoy shipped**; further
-payload rows in the roster below remain design.
+the equipment slot + Repair Rig (`M23`, shipped), and the decoy payload (`M30`, shipped).
+**The drone bay and decoy shipped**; further payload rows in the roster below remain design.
+Repair is hold-to-interact at the Hatch (`RepairInteractable`); rate is flat 8 HP/s, paid
+from banked Salvage as applied. The rig's upgrade shape is still TBD (Open).
 
 The Hatch still dies to `arrivals x dwell` (`../Design/3-Mechanics.md`); one level of Hatch
 Armor is +15 HP = +4.4 gatekeeper-seconds against a measured ~120 gatekeeper-second deficit at
@@ -180,9 +182,15 @@ its own slot, and the slot is unlocked through progression and bought with Salva
 
 | Piece | Enables | State |
 |---|---|---|
-| repair rig | Repairing the Hatch — impossible without it equipped. Bought (M23); upgradeable, shape TBD. | picked — `M23`, re-cut 2026-08-08, buildable |
+| repair rig | Repairing the Hatch — impossible without it equipped. Hold-to-interact at the Hatch. Upgradeable, shape TBD. | shipped — `M23` |
 
 ## Ideas
+
+### Deployed Repair Rig (Zo, 2026-08-12)
+
+**Parked — superseded the same day.** Hatch is invulnerable except during a Hatch-bank Wave
+(`missions-and-destinations.md`). Auto-repair was a leave-the-dying-door tool; that door is
+not dying while you are at a terminal.
 
 ### Ship systems with run-level consequences
 
@@ -200,6 +208,15 @@ are waiting on exactly this outfitting layer.
 - **"Something that reduces arrivals" / "something that reduces dwell" as standalone
   shelf items** (2026-08-08) — absorbed by the payload roster; the two terms live in the
   graduation test now.
+- **A persistent hatch turret as hatch defense** (Zo proposed 2026-08-12; grill same day) —
+  same job as player DPS at the door and as UTL-H. B1 already nearly cancels more dps at the
+  Hatch (`../Design/2-Dynamics.md` §2.3). `provoke-on-damage` on a Hatch-mounted gun pulls
+  Defaults to the door. Attrit-while-away stays the payload graduation test; UTL-H remains
+  the candidate if a gun during dead time is wanted.
+- **FABRICATION as a “hatch defenses” shelf** (Zo proposed 2026-08-12; grill same day;
+  **owner confirmed cut the same evening** — Hatch is only vulnerable during a Hatch-bank
+  Wave, so a defense shelf has no job). Equipment + payloads remains the split. **Hatch
+  Armor and the Repair Rig stay** (Zo, 2026-08-13). Auto-repair stays cut.
 
 ## Constraints
 

@@ -24,9 +24,13 @@ namespace GatekeeperBastion.PlayTests
 
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
             yield return PlayTestUtil.WaitUntil(
-                () => GameController.Instance != null && GameController.Instance.Sim != null, 10f);
+                () =>
+                {
+                    var g = UnityEngine.Object.FindFirstObjectByType<GameController>();
+                    return g != null && g.Sim != null;
+                }, 10f);
 
-            var gc = GameController.Instance;
+            var gc = UnityEngine.Object.FindFirstObjectByType<GameController>();
             Assert.IsNotNull(gc);
             Assert.IsNotNull(gc.Sim);
             Assert.IsNotNull(GameSession.Meta);

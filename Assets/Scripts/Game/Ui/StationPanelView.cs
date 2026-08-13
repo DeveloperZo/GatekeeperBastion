@@ -1,5 +1,4 @@
 using System;
-using GatekeeperBastion.Game.Ui;
 using GatekeeperBastion.Util;
 using TMPro;
 using UnityEngine;
@@ -7,7 +6,7 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>One authored station panel's chrome: header, close button and the ARMORY
+    /// <summary>LOCAL-OWNER: one authored station panel's chrome: header, close button and the ARMORY
     /// wheel host. The body is authored per station and bound by that station's panel view
     /// (<see cref="ArmoryPanelView"/> et al.); this class sets no colour, font size or rect.</summary>
     public sealed class StationPanelView : MonoBehaviour

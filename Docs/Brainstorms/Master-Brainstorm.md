@@ -6,7 +6,7 @@ observations after they have been grilled against the code and the logs, until e
 leaves for a topic brainstorm, a milestone, or the bin.
 Status: working — content cycles
 Update trigger: every session that produces a play report or a directive worth holding
-Last updated: 2026-08-08
+Last updated: 2026-08-12
 -->
 
 ## What this is
@@ -44,26 +44,6 @@ Source: Zo's play report, 2026-08-08, and session log
 `Logs/GatekeeperBastion_2026-08-08_17-00-15.log`. Zo's verdict on the whole: **fun, not
 tuned.**
 
-### Crew Quarters cannot compete with the weapon on price
-
-*Zo: I have not needed to use any of the stats in Crew Quarters.*
-
-Confirmed and the price curve says why. A track costs `200 * 2^level` to `MaxLevel` 5
-(`MetaUpgrades.cs`), so one track to L5 is 6,200 Salvage and all five are 31,000. Taking a
-weapon T0 to T7 costs **7,000 and returns up to 4.8x damage**. Today's session spent 4,200
-on the weapon and 600 on Vitality across 11 banked Runs. The tracks were the whole
-progression before M11 gave weapons Tiers; since M21 they are competing for the same
-Salvage against an offer they cannot match. **This is a structural comparison, not a
-tuning gap** — repricing the tracks does not give them something to do.
-
-**Exit: stays here, widened.** Zo, 2026-08-08: the area needs more brainstorming than a
-reprice — *tuning, new mechanics, and changing what the tracks impact at all.* That is
-larger than the existing `crew-skills-and-perks.md` entry and larger than one milestone.
-The next session on this entry starts from three questions rather than an answer: **what
-should a track own that a weapon cannot**, **what does a track cost against a 7,000-Salvage
-weapon ceiling**, and **which of the five survive being asked that**. Vitality and Stamina
-both already have a specific case against them below and above.
-
 ### Stamina has no destination
 
 *Zo: sprinting isn't necessary so stamina is useless.*
@@ -72,9 +52,10 @@ Confirmed, and it is downstream of a known problem rather than a Stamina problem
 Bastion gives the player nowhere to be except the Hatch — Zo's earlier note, "no incentive
 to move away from the hatch", is already recorded in `../Design/1-Experience.md`. Today's
 second Run took 24 Hatch arrivals across 210 bodies, which is a player standing at the
-door. Sprint is a cost with no errand. M30 (pull them off the door) and the console
-restructure in `missions-and-destinations.md` are both attempts at the errand; neither has
-shipped.
+door. Sprint is a cost with no errand. **M30 shipped** (drone bay + decoy); the decoy pulls
+bodies off the door, it does not give the player an errand away from it. The console
+restructure in `missions-and-destinations.md` and M47's composed bastion are the remaining
+attempts at the errand. If those ship and sprint still has no use, delete the track.
 
 **Exit: topic brainstorm `crew-skills-and-perks.md`,** filed against M30 as the thing that
 would falsify it. If M30 ships and sprint still has no use, the answer is to delete the
@@ -146,5 +127,7 @@ Rules any milestone leaving this page respects.
 
 | Entry | Date | Door | Where it went |
 |---|---|---|---|
+| Crew Quarters cannot compete with the weapon on price | 2026-08-12 | Topic brainstorm | **Answered:** tracks had no job. CREW sells Crew abilities (burst, long cooldown) — `crew-skills-and-perks.md`. Tracks and 5-skill parked. |
+| Loss / XP / hatch tools / specialization (Zo 2026-08-12) | 2026-08-12 | Topic brainstorm | `missions-and-destinations.md` (pile vs ship bank; two triggers), `fabrication.md` (hatch defenses cut), `crew-skills-and-perks.md` (Crew abilities) |
 | The Primary's ability has never fired | 2026-08-08 | Milestone | **Fixed in M31 Path 1.** `RegisterPinHitIfNeeded` ran once per damaged body; `PinBuildState.RegisterHit` zeroed `Hits` on target change. M31 gates the pin to the first damaged body. Playthrough criterion still open on the M31 file. |
 | The damage ceiling is ~4.8x and the pierce is free | 2026-08-08 | Milestone | **M31 closed criterion 6** — falloff table plus MR-35 `pierceDamageMul` **0.26** (Zo, 2026-08-09) so FocusAtMax pierce lands under Wave-5 78 HP. Far-room gap filled by **M32**. |

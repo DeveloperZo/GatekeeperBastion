@@ -1,0 +1,5 @@
+room R1 OpenArea 0 0 H
+room R2 Full 80 0 T:T1
+room R15 ControlRoom 0 900
+door D1 R1 N unlock=T1
+door D4 R15 S unlock=T1 control

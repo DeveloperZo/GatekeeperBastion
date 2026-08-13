@@ -1,29 +1,29 @@
 # Crew, skills and perks
 
 <!--
-Purpose: The CREW QUARTERS console — player attributes, and the skill/perk system designed but never built.
+Purpose: The CREW QUARTERS console — player burst abilities. The RPG attribute tracks and
+the unbuilt 5-skill pairing are parked.
 Status: brainstorm
-Update trigger: when an attribute changes, or when the skill pairing model is decided.
-Last updated: 2026-08-08
+Update trigger: when a Crew ability is added, or when the four tracks are deleted or revived.
+Last updated: 2026-08-13
 -->
 
 ## What this covers
 
-Everything about the player rather than the weapon or the ship: the five attributes, and
-the skill system sketched in `../Decisions.md` and never built.
+Everything about the player rather than the weapon or the ship: **Crew abilities** (Zo,
+2026-08-12) — a strong burst over a brief window with a moderate-to-long cooldown. The four
+attribute tracks and the 5-skill pairing in `../Design/3-Mechanics.md` §3.2 are parked.
 
 ## Where it stands
 
-`Game/Ship/CrewQuartersStation.cs` sells five attribute tracks — Vitality, Stamina,
-Engineering, Scavenging, Luck — each `base * (1 + 0.05 * level)`, five levels, on the
-`200 * 2^level` doubling curve (6,200 a track, 31,000 all five). Luck is the game's only
-source of crit. Engineering is already scheduled for deletion by M23 (planned) — see the
-entry below.
+`Game/Ship/CrewQuartersStation.cs` still sells four attribute tracks — Vitality, Stamina,
+Scavenging, Luck — each `base * (1 + 0.05 * level)`, five levels, on the
+`200 * 2^level` doubling curve. Luck is the game's only crit source. **Intended (Zo,
+2026-08-12): this station stops being an RPG sheet.** Session
+`Logs/GatekeeperBastion_2026-08-08_17-00-15.log` spent 4,200 on the weapon and 600 on
+Vitality; the tracks had no job a weapon cannot do.
 
-A skill system is designed and unbuilt: two slots, a Primary effect, a Secondary effect,
-and a passive layer — five families sketched: Leech (health), Reclaimer (ammo/reload),
-Marksman (distance and pierce), Breacher (AoE and double damage), Bulwark (defence).
-Power budget +20/+10/+8% in `../Decisions.md`.
+The 5-skill system in `../Design/3-Mechanics.md` §3.2 is unbuilt and parked (see below).
 
 **A level is smaller than the measured noise floor.** Attribute purchases are worth
 `+4.5%` against a `~20%` run-to-run spread (`../Design/2-Dynamics.md`), so no attribute
@@ -34,16 +34,54 @@ measured — the damage-taken one is computable from existing log transcripts.
 
 ## Graduation test
 
-One skill pair written as numbers — Primary, Secondary and the passive the pairing
-produces — with the arithmetic showing the strongest and weakest pairs within the stated
-power band. A 2026-08-08 attempt at this test stalled on missing exchange rates, not on
-authoring — see *The pricing wall*.
+One Crew ability written as window, cooldown, and what it refuses — and it is not a weapon
+ability (ARMORY, key `F`) and not a payload (FABRICATION, finite, placed). Until that
+sentence exists, a new row is a damage number with a cooldown.
+
+## Decided
+
+### CREW QUARTERS sells burst abilities, not attributes (Zo, 2026-08-12)
+
+A Crew ability is a strong power-up over a small-to-brief window with a moderate-to-long
+cooldown. **Liked, not ready to graduate** (Zo, 2026-08-13): it is how a Boarder differs
+from teammates besides gun and loadout, and it still has to be grounded in a bastion verb
+— not a second gun. **Loop:** press, a short window, a long wait. **What would kill it:**
+pressed on cooldown every time with no hold-for-a-moment, or one row is the only pick, or
+every row is silent +dps (a worse Tier). **Touches:** weapon abilities (`F`), payload
+contract, the four tracks, `language.md`. ARMORY is the gun; CREW is the Boarder; FAB is
+the drone.
+
+The four tracks and the 5-skill pairing stay **parked**. XP-as-crew-currency stays **cut**.
+Do not author a roster until one ability can be written against the graduation test.
+
+## Open — blocked until decided
+
+| Question | Why it blocks | Owner | Recommendation |
+|---|---|---|---|
+| One equipped Crew ability, or several? | Shop shape, a second cooldown key, co-op stacking. | Zo | One equipped per Boarder, same grain as the drone payload. Station sells a short roster (3–4). |
 
 ## Ideas
 
+### Experience as the CREW QUARTERS currency (Zo, 2026-08-12)
+
+**Cut the same day.** CREW now has a job (burst abilities). A second wallet was the wrong
+lever; see Decided.
+
+### Specialization with a stark hole (Zo, 2026-08-12)
+
+Walk back “never powerful as the player” toward: power on one axis guarantees a hole on
+another. Three players may stack the same axis; do not balance that away. The wheel already
+runs this. Crew abilities are a *window* of power, not a permanent hole-grammar — the
+cooldown *is* the hole. Do not author a second pair-flat skill system beside them.
+
+### Parked — 5-skill pairing (audit 2026-08-08)
+
+Superseded by Crew abilities (Decided, 2026-08-12). Kept so the pricing-wall and stat-inventory
+findings are not rediscovered. Do not graduate any of these entries.
+
 ### The spec exists in two incompatible readings
-Found by audit 2026-08-08: `../Decisions.md` gives each skill a Passive Link of its
-own — "both equipped passives apply" — which is **5 passives to author**; this file
+Found by audit 2026-08-08: `../Design/3-Mechanics.md` section 3.2 gives each skill a Passive
+Link of its own — "both equipped passives apply" — which is **5 passives to author**; this file
 previously said "each Link unique to its pair", which is **10**. They are different
 systems (a skill's passive is portable in one, pair-emergent in the other), and the
 "ten Links to author" stall belongs only to the second. Which reading is intended is
@@ -106,11 +144,9 @@ secret design. Two separable questions:
   to force. *Unknown which the game wants — needs the play data above.*
 
 ### Engineering is sold while scheduled for deletion
-M23 (planned) deletes the track and the rig track by name — no refund, and any save with
-≥1 level gets the same free rig, so L1's 200 and L5's 6,200 buy identical compensation.
-Until M23 lands, CREW QUARTERS sells up to 6,200 into a track a planned milestone
-deletes. Options: sell as today, freeze the row, annotate it. Zo's call; reordering M23
-is a roadmap move, not this file's.
+**Closed — M23 shipped.** The track is gone from `UpgradeTrack`; legacy save fields migrate
+to a free equipment slot + Repair Rig. Do not revive the name (`../_meta/_definitions/language.md`,
+trap 1).
 
 ### The attribute panel cannot show a player what a level is worth
 Each panel shows the current and next value of a track and never the ladder, so a player
@@ -153,21 +189,14 @@ beside the siphon? No comp ships three stacked reward wagers.
 
 ## Constraints
 
-- The weakest and strongest pair must not differ much in power, or the meta collapses to
-  one pairing and the rest is dead content.
-- Luck stays the only crit source. Two multiplicative sources of the same currency is how
-  one build becomes dominant.
-- The reload/clip/damage/fire-rate/ability currencies belong to the M21 wheel, the
-  Secondary regen rate is shared with the MK-1 surge, and mobility is cut
-  (`../Decisions.md`). A skill effect on any of these doubles an existing owner.
-- Skill slots need `MetaState`/`SaveData` fields and a `SaveVersion` bump — they join the
-  M21/M23 single-holder queue for that bump.
-- `_meta/_definitions/language.md`: "track" is never called skill or perk, and CREW
-  QUARTERS is "never called: skills" — shipping the system needs new language rows first.
-- The Remnant 2 archetype pairing this was modelled on is **cosmetic** in the original
-  (`../Decisions.md`); the mechanical version here is unvalidated by its own
-  reference.
-- Sprint speed versus a provoked Gatekeeper's chase speed decides whether backing away works,
-  and it appears nowhere a player can read it. Filed as known and
-  **not** a felt problem at the current room size — it becomes one when the space is large
-  enough that crossing it is a decision (Zo, 2026-08-06).
+- A Crew ability is not a weapon ability and not a payload. If it can be described as a
+  gun effect or a placed drone item, it belongs on that console.
+- Luck stays the only crit source.
+- The reload/clip/damage/fire-rate currencies belong to the M21 wheel. A Crew ability that
+  is a silent +dps during its window is a worse version of a Tier.
+- Mobility is cut (`../Decisions.md`).
+- `_meta/_definitions/language.md`: CREW QUARTERS is never called skills. **Crew ability**
+  is the working term until a fiction noun earns a row. Weapon **ability** stays the gun's
+  `F`.
+- Sprint vs chase speed is filed and not a felt problem at the current room size (Zo,
+  2026-08-06).
