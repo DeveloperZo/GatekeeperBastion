@@ -86,7 +86,7 @@ namespace GatekeeperBastion.Game
         Damageable _damageable;
         // Pushed by WaveSpawner at spawn (Configure). Null on a hand-placed actor, which then
         // treats the run as over and never acts — spawner-spawned is the supported path.
-        GameController _game;
+        protected GameController _game;
         // Pushed alongside _game at spawn: the one owner of this actor's destroy. Death routes
         // through _spawner.Despawn so the spawn ledger and the Destroy live in one place.
         WaveSpawner _spawner;

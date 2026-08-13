@@ -16,8 +16,6 @@ namespace GatekeeperBastion.Sim
         public struct TerminalSpec
         {
             public string TerminalId;
-            public string[] PressureSpawnIds;
-            public string DoorId;
         }
 
         readonly Dictionary<string, DoorSpec> _doors = new Dictionary<string, DoorSpec>();

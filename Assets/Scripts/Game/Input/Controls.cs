@@ -107,7 +107,7 @@ namespace GatekeeperBastion.Game
                 displayOnly: true),
             new(ControlId.WeaponAbility, KeyCode.F, KeyCode.None, "F", "ability", "FIGHT", FightAlways),
 
-            new(ControlId.PullDraw, KeyCode.T, KeyCode.None, "T", "siphon draw", "RUN", ControlContext.Prep),
+            new(ControlId.PullDraw, KeyCode.T, KeyCode.None, "T", "terminal starts the wave", "RUN", ControlContext.Prep),
             new(ControlId.DialDown, KeyCode.LeftBracket, KeyCode.None, "[", "siphon", "RUN", ControlContext.Prep),
             new(ControlId.DialUp, KeyCode.RightBracket, KeyCode.None, "]", "siphon", "RUN", ControlContext.Prep),
             // Same keys, Ship-only — Prep siphon and ARMORY wheel never share a live context.

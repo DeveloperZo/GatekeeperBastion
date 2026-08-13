@@ -98,6 +98,9 @@ namespace GatekeeperBastion.Game
         Interactor _interactor;
         DecoyPlacement _decoyPlacement;
 
+        /// <summary>Field terminal id waiting on the live Wave clear. Null when none pending.</summary>
+        string _pendingTerminalId;
+
         // One GameController per scene, authored; there is no process-global instance left to protect.
         void Awake()
         {
@@ -254,20 +257,8 @@ namespace GatekeeperBastion.Game
 
             if (Controls.Down(ControlId.PullDraw))
             {
-                // Both halves matter: AllWavesCleared is the sim's own "run completed" flag,
-                // but it only flips as the run goes Escaped, so the draw-budget test is what
-                // actually catches a refused T while still Tethered.
-                if (Sim.AllWavesCleared || Sim.CurrentWaveIndex >= WaveDirector.MaxWaves)
-                {
-                    Log.Event("Run", $"draw refused — the bastion is stripped, " +
-                                     $"all {WaveDirector.MaxWaves} waves cleared");
-                }
-                else
-                {
-                    Log.Event("Run", $"pulled the siphon draw at L{Sim.Siphon.Level} — " +
-                                     $"wave {Sim.CurrentWaveIndex + 1}/{WaveDirector.MaxWaves} incoming");
-                    Sim.TriggerDraw();
-                }
+                Log.Event("Run", "draw refused — Waves start at a terminal");
+                return;
             }
 
             int delta = 0;
@@ -325,11 +316,73 @@ namespace GatekeeperBastion.Game
             Sim.NotifyPlayerDown();
         }
 
-        /// <summary>Command from HatchStation: damage the authoritative sim Hatch.</summary>
+        /// <summary>Command from HatchStation: damage the authoritative sim Hatch.
+        /// Field-terminal Waves leave the Hatch invulnerable (M52).</summary>
         public void DamageHatch(float amount)
         {
             if (amount <= 0f || Sim == null || RunIsOver) return;
+            if (Sim.Mode == WaveMode.Terminal) return;
             Sim.Ship.Hatch.Damage(amount);
+        }
+
+        /// <summary>Field terminal Interact: start the next Wave; door opens only when that
+        /// Wave clears (<see cref="OnAssaultEnded"/>).</summary>
+        public bool StartTerminalWave(BastionTerminal terminal)
+        {
+            if (terminal == null)
+            {
+                Log.Warn(Tag, "StartTerminalWave refused — no terminal");
+                return false;
+            }
+
+            if (terminal.Kind != BastionTerminalKind.Field)
+            {
+                Log.Event("Terminal", terminal.TerminalId + " refused — kind=" + terminal.Kind);
+                return false;
+            }
+
+            if (Sim == null || RunIsOver)
+            {
+                Log.Event("Terminal", terminal.TerminalId + " refused — run not live");
+                return false;
+            }
+
+            if (Sim.Phase != RunPhase.Tethered || Sim.Assault != AssaultState.Prep)
+            {
+                Log.Event("Terminal", terminal.TerminalId + " refused — not in Prep");
+                return false;
+            }
+
+            if (Sim.AllWavesCleared || Sim.CurrentWaveIndex >= WaveDirector.MaxWaves)
+            {
+                Log.Event("Terminal", terminal.TerminalId + " refused — all waves cleared");
+                return false;
+            }
+
+            BastionLayout layout = terminal.Layout;
+            if (layout == null)
+                layout = FindFirstObjectByType<BastionLayout>();
+            if (layout != null && layout.IsTerminalDone(terminal.TerminalId))
+            {
+                Log.Event("Terminal", terminal.TerminalId + " refused — already complete");
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(_pendingTerminalId))
+            {
+                Log.Event("Terminal", terminal.TerminalId + " refused — wave already pending "
+                    + _pendingTerminalId);
+                return false;
+            }
+
+            // Field Wave Spawns register only while active; enable before TriggerDraw.
+            terminal.SetUnlockedSpawnsActive(true);
+
+            _pendingTerminalId = terminal.TerminalId;
+            Sim.TriggerDraw();
+            Log.Event("Terminal", terminal.TerminalId + " started wave " + Sim.CurrentWaveIndex
+                + " mode=terminal");
+            return true;
         }
 
         /// <summary>Command from RepairInteractable: heal the hatch by up to
@@ -492,7 +545,11 @@ namespace GatekeeperBastion.Game
                 EnsureCursorFree();
             }
 
-            if (IsTerminal(phase)) EnterTerminalPhase(phase); // GameController.EndScreen.cs
+            if (IsTerminal(phase))
+            {
+                _pendingTerminalId = null;
+                EnterTerminalPhase(phase); // GameController.EndScreen.cs
+            }
         }
 
         void OnWaveStarted(WaveSpec wave)
@@ -506,6 +563,27 @@ namespace GatekeeperBastion.Game
             Log.Event("Run", $"wave {Sim.CurrentWaveIndex}/{WaveDirector.MaxWaves} cleared — " +
                 $"salvage {Sim.Salvage.RunSalvage:0}, " +
                 $"hatch {Sim.Ship.Hatch.Hp:0}/{Sim.Ship.Hatch.MaxHp:0}");
+
+            if (string.IsNullOrEmpty(_pendingTerminalId))
+                return;
+
+            string id = _pendingTerminalId;
+            _pendingTerminalId = null;
+
+            BastionLayout layout = FindFirstObjectByType<BastionLayout>();
+            if (layout == null)
+            {
+                Log.Warn(Tag, "AssaultEnded: pending terminal " + id + " but no BastionLayout");
+                return;
+            }
+
+            if (!layout.TryCompleteTerminal(id, out string refuseReason))
+            {
+                Log.Event("Terminal", id + " complete refused — " + refuseReason);
+                return;
+            }
+
+            Log.Event("Terminal", id + " complete — wave cleared");
         }
 
         void OnApplicationQuit()

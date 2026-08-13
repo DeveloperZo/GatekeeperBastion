@@ -100,8 +100,10 @@ namespace GatekeeperBastion.Game
             var hatch = HatchStation.Instance;
             // MayTargetHatch folds straight into "is there a hatch for me": a Hunter simply lives
             // in a world with no hatch in it, so every hatch branch below is closed to it without
-            // a single kind test in the flow.
-            bool hatchAvailable = MayTargetHatch && hatch != null && !hatch.IsDestroyed;
+            // a single kind test in the flow. Field-terminal Waves leave Hatch out of the fight.
+            bool hatchMode = _game != null && _game.Sim != null
+                && _game.Sim.Mode == WaveMode.HatchBank;
+            bool hatchAvailable = MayTargetHatch && hatchMode && hatch != null && !hatch.IsDestroyed;
             bool playerNear = MayTargetPlayer && _player != null &&
                               Vector3.Distance(transform.position, _player.transform.position) <= aggroRadius;
 

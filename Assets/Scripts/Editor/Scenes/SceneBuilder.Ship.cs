@@ -1,3 +1,4 @@
+using GatekeeperBastion.Sim;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -85,7 +86,7 @@ namespace GatekeeperBastion.EditorTools
             var env = new GameObject("Environment");
             Transform t = env.transform;
             float y = ShipWallHeight * 0.5f;
-            const float th = WallThickness;
+            const float th = BastionKit.WallThickness;
 
             // Floors (one per room so nothing pokes outside the hull footprint).
             Box("Floor_Common", new Vector3(0f, -0.25f, 0f), new Vector3(14.5f, 0.5f, 14.5f), pal.Floor, t);

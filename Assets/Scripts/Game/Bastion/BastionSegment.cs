@@ -220,7 +220,6 @@ namespace GatekeeperBastion.Game
 
             float width = BastionKit.FootprintWidth(blockKind);
             float depth = BastionKit.FootprintDepth(blockKind);
-            float wallHeight = BastionKit.StoreyHeight - BastionKit.FloorSlabThickness;
             float thickness = BastionKit.WallThickness;
             float shortSide = Mathf.Min(width, depth);
             float openingWidth = Mathf.Min(DoorOpeningWidth, shortSide * 0.4f);
@@ -232,22 +231,22 @@ namespace GatekeeperBastion.Game
                 case BastionDoorEdge.North:
                     localPos = new Vector3(along, 0f, halfD);
                     yawY = 0f;
-                    blockerSize = new Vector3(openingWidth, wallHeight, thickness);
+                    blockerSize = new Vector3(openingWidth, DoorOpeningHeight, thickness * 2f);
                     break;
                 case BastionDoorEdge.South:
                     localPos = new Vector3(along, 0f, -halfD);
                     yawY = 180f;
-                    blockerSize = new Vector3(openingWidth, wallHeight, thickness);
+                    blockerSize = new Vector3(openingWidth, DoorOpeningHeight, thickness * 2f);
                     break;
                 case BastionDoorEdge.East:
                     localPos = new Vector3(halfW, 0f, along);
                     yawY = 90f;
-                    blockerSize = new Vector3(openingWidth, wallHeight, thickness);
+                    blockerSize = new Vector3(openingWidth, DoorOpeningHeight, thickness * 2f);
                     break;
                 case BastionDoorEdge.West:
                     localPos = new Vector3(-halfW, 0f, along);
                     yawY = -90f;
-                    blockerSize = new Vector3(openingWidth, wallHeight, thickness);
+                    blockerSize = new Vector3(openingWidth, DoorOpeningHeight, thickness * 2f);
                     break;
             }
 

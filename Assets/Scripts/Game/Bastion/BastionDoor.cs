@@ -14,24 +14,27 @@ namespace GatekeeperBastion.Game
         West = 3,
     }
 
-    /// <summary>HOST-ONLY: progression gate — starts locked, opens when its terminal set
-    /// completes. Not a passage: Door sides without this component are free explores.</summary>
+    /// <summary>HOST-ONLY: progression gate — a visible slab that fills the doorway while
+    /// locked, then hides when the unlock graph opens it. Not a passage.</summary>
     public sealed class BastionDoor : MonoBehaviour
     {
-        const string SlabName = "GateSlab";
+        public const string SlabName = "GateSlab";
 
         [SerializeField] string doorId;
-        [SerializeField] string[] requiredTerminalIds;
+        [SerializeField, Tooltip("Also filled by Field terminals that reference this door.")]
+        string[] requiredTerminalIds;
         [SerializeField] bool startsLocked = true;
         [SerializeField] bool opensControlRoom;
         [SerializeField] BastionDoorEdge apertureEdge = BastionDoorEdge.North;
         [SerializeField] SpawnPoint[] sealedSpawns;
+        [SerializeField] Material gateMat;
 
         BoxCollider _blockCollider;
         NavMeshObstacle _obstacle;
         Transform _slab;
         BastionLayout _layout;
         bool _open;
+        bool _blockersReady;
 
         public string DoorId => doorId;
         public string[] RequiredTerminalIds => requiredTerminalIds;
@@ -57,7 +60,7 @@ namespace GatekeeperBastion.Game
             apertureEdge = edge;
             startsLocked = locked;
             SnapToAperture();
-            EnsureBlockers();
+            EnsureGatePresentation();
             SetOpen(!locked);
         }
 
@@ -66,14 +69,28 @@ namespace GatekeeperBastion.Game
             sealedSpawns = spawns;
         }
 
+        public void SetGateMaterial(Material mat)
+        {
+            gateMat = mat;
+            if (_slab != null)
+                ApplySlabMaterial(_slab.gameObject);
+        }
+
         void Awake()
         {
-            SnapToAperture();
+            EnsureGatePresentation();
+        }
+
+        /// <summary>Size blockers and ensure GateSlab. Does not move the transform —
+        /// hand-authored placement wins; use <see cref="SnapToAperture"/> for sketch emit.</summary>
+        public void EnsureGatePresentation()
+        {
             EnsureBlockers();
+            _blockersReady = true;
         }
 
         /// <summary>Place this gate on the parent segment's Door opening for
-        /// <see cref="apertureEdge"/>.</summary>
+        /// <see cref="apertureEdge"/>. Sketch emit only — does not rewrite authored sides.</summary>
         public void SnapToAperture()
         {
             BastionSegment segment = GetComponentInParent<BastionSegment>();
@@ -89,11 +106,7 @@ namespace GatekeeperBastion.Game
 
         void EnsureBlockers()
         {
-            BastionSegment segment = GetComponentInParent<BastionSegment>();
-            Vector3 size = new Vector3(3f, BastionKit.StoreyHeight - BastionKit.FloorSlabThickness, BastionKit.WallThickness);
-            if (segment != null
-                && segment.TryGetDoorAperture(apertureEdge, out _, out _, out Vector3 apertureSize))
-                size = apertureSize;
+            Vector3 size = ResolveBlockerSize();
 
             _blockCollider = GetComponent<BoxCollider>();
             if (_blockCollider == null)
@@ -103,9 +116,19 @@ namespace GatekeeperBastion.Game
             if (_obstacle == null)
                 _obstacle = gameObject.AddComponent<NavMeshObstacle>();
             _obstacle.carving = true;
+            _obstacle.shape = NavMeshObstacleShape.Box;
 
             ApplyBlockerSize(size);
             EnsureSlab(size);
+        }
+
+        Vector3 ResolveBlockerSize()
+        {
+            BastionSegment segment = GetComponentInParent<BastionSegment>();
+            if (segment != null
+                && segment.TryGetDoorAperture(apertureEdge, out _, out _, out Vector3 apertureSize))
+                return apertureSize;
+            return new Vector3(3f, 3.5f, BastionKit.WallThickness * 2f);
         }
 
         void ApplyBlockerSize(Vector3 size)
@@ -138,34 +161,61 @@ namespace GatekeeperBastion.Game
             {
                 _slab = existing;
                 _slab.localPosition = new Vector3(0f, size.y * 0.5f, 0f);
+                _slab.localRotation = Quaternion.identity;
                 _slab.localScale = size;
+                ApplySlabMaterial(_slab.gameObject);
                 return;
             }
 
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            go.name = SlabName;
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = new Vector3(0f, size.y * 0.5f, 0f);
-            go.transform.localRotation = Quaternion.identity;
-            go.transform.localScale = size;
-
-            // Collider lives on the gate root; slab is presentation only.
-            var col = go.GetComponent<Collider>();
-            if (col != null)
-            {
 #if UNITY_EDITOR
-                if (!Application.isPlaying)
+            // GateSlab is scene-authored (terminals wire). Only create when missing in Edit mode.
+            if (!Application.isPlaying)
+            {
+                var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                go.name = SlabName;
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = new Vector3(0f, size.y * 0.5f, 0f);
+                go.transform.localRotation = Quaternion.identity;
+                go.transform.localScale = size;
+
+                var col = go.GetComponent<Collider>();
+                if (col != null)
                     DestroyImmediate(col);
-                else
+
+                ApplySlabMaterial(go);
+                _slab = go.transform;
+                return;
+            }
 #endif
-                    Destroy(col);
+            Debug.LogError(
+                "[BastionDoor] Missing GateSlab on " + name
+                + " — drop gkb_bastion_terminals_request.txt to author sealed doors.",
+                this);
+        }
+
+        void ApplySlabMaterial(GameObject slab)
+        {
+            var renderer = slab.GetComponent<MeshRenderer>();
+            if (renderer == null)
+                return;
+            if (gateMat != null)
+            {
+                renderer.sharedMaterial = gateMat;
+                return;
             }
 
-            _slab = go.transform;
+            BastionSegment segment = GetComponentInParent<BastionSegment>();
+            if (segment != null && segment.WallMaterial != null)
+            {
+                renderer.sharedMaterial = segment.WallMaterial;
+                return;
+            }
         }
 
         void OnEnable()
         {
+            if (!_blockersReady)
+                EnsureGatePresentation();
             _layout = GetComponentInParent<BastionLayout>();
             if (_layout != null)
                 _layout.RegisterDoor(this);
@@ -180,6 +230,9 @@ namespace GatekeeperBastion.Game
         /// <summary>When closed, block walk and show the slab; when open, clear both and unseal spawns.</summary>
         public void SetOpen(bool open)
         {
+            if (!_blockersReady)
+                EnsureGatePresentation();
+
             _open = open;
             if (_blockCollider != null)
                 _blockCollider.enabled = !open;

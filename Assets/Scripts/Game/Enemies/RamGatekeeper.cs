@@ -3,17 +3,14 @@ using UnityEngine.AI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>HOST-ONLY: the gatekeeper that NEVER targets the player and is NEVER provoked. It
-    /// walks to the hatch and hits it hard; shooting it changes nothing — not its target, not its
-    /// speed, and it does not shout for help. You have to kill it, and it is slow and tanky
-    /// (WaveDirector.StatsFor pushes its hp and speeds), so every second spent on a Ram is a
-    /// second the Hunters escorting it spend on you. That trade is the point of the kind.</summary>
+    /// <summary>HOST-ONLY: the gatekeeper that walks to the Hatch — except on field-terminal
+    /// Waves, where it hunts the Boarder (dated break, M52). Shooting still does not provoke it.</summary>
     /// <remarks>
     /// Two refusals, both hardened here rather than trusted from the pushed flags:
-    /// <see cref="MayTargetPlayer"/> is false, so aggro radius, line-of-sight and the whole
-    /// `_chasingPlayer` branch of Retarget() are closed; <see cref="CanBeProvoked"/> is false, so
-    /// Provoke() — the single gate that OnDamaged and a neighbour's shout both go through —
-    /// returns immediately without touching speed, target or the shout counter.
+    /// <see cref="MayTargetPlayer"/> is false on Hatch-bank Waves, so aggro radius, line-of-sight
+    /// and the whole `_chasingPlayer` branch of Retarget() are closed; <see cref="CanBeProvoked"/>
+    /// is always false, so Provoke() returns immediately without touching speed, target or the
+    /// shout counter.
     ///
     /// Crowd priority is INVERTED relative to the chaff: a Ram outranks every Default and Hunter
     /// (lower avoidancePriority wins in Unity), so a wall of bodies at the hatch parts for it
@@ -23,8 +20,9 @@ namespace GatekeeperBastion.Game
     {
         public override GatekeeperKind Kind => GatekeeperKind.Ram;
 
-        /// <summary>Never. The player is scenery to a Ram.</summary>
-        protected override bool MayTargetPlayer => false;
+        /// <summary>True on field-terminal Waves only (2026-08-13). Hatch-bank keeps the old rule.</summary>
+        protected override bool MayTargetPlayer =>
+            _game != null && _game.Sim != null && _game.Sim.Mode == WaveMode.Terminal;
 
         /// <summary>Never — stated separately from <see cref="MayTargetPlayer"/> so that "shooting
         /// it does nothing" is a written rule and not a side effect of one.</summary>

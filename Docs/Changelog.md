@@ -7,6 +7,31 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-13
 -->
 
+- 2026-08-13: **M49 gate cut — no in-run client respawn.** Wave-start revive is out of
+  criteria 5–6, Implementation, and `NetTargetingTests`. Client down still does not end
+  the host run; how or whether the client gets back up is parked in
+  `Docs/Brainstorms/co-op.md` (Zo: not decided). Live `WaveStarted` revive path removed
+  so the slice cannot decide it by shipping.
+- 2026-08-13: **M47 status next → completed.** Kit palette + authored Bastion; freestyle
+  `BuildBastion` removed from SceneBuilder; Decisions + Architecture §4 kit-authored.
+  Gate edit (Zo): criteria 13–16 close on author play (no raycast harness); criterion 18
+  left `unknown — needs wave-report`. Unblocks formal M52 close. M49 stays active.
+- 2026-08-13: **Field terminal inspector.** `kind` still gates the UI; Field shows
+  `Unlocks Door` + `Unlocked Spawns` again (hidden on HatchBank / Resource / Master).
+  Graph unions door `requiredTerminalIds` with terminals that reference that door.
+- 2026-08-13: **`BastionTerminalKind`.** Terminals carry `kind` (Field / HatchBank /
+  Resource / Master) only — no per-terminal door id or pressure-spawn list. Unlock is on
+  `BastionDoor.requiredTerminalIds`; sealed spawns enable when that door opens. Terminals
+  wire no longer moves gate transforms or rewrites Door/None sides.
+- 2026-08-13: **M49 status later → next.** Gatekeepers see the second player is in build:
+  capsule collider + server-registered `PlayerHealth` on the avatar, HP mirrored to the
+  owner, client down survivable (host run continues; revive next wave). M48 shapes adopted
+  (skip auto-register, client `Die()` does not call `PlayerDied`, `EnableSceneManagement` off in
+  the fixture). M47 stays current. Kill/hunt playthrough remains confirmation, not the gate.
+
+- 2026-08-13: **Field terminal starts the Wave.** Prep `T` refuses; Interact on a progression
+  `T` calls `TriggerDraw` (`WaveMode.Terminal`); Hatch invulnerable that Wave; clear completes
+  the terminal and opens its `D`. Terminal roles table in missions-and-destinations.
 - 2026-08-13: **Passage vs progression gate.** Door sides without a `D` mark stay walkable;
   `BastionDoor` seals the aperture, starts locked, snaps to the segment opening. Soft-lock
   (switch / salvage) parked in missions-and-destinations. Wave-on-`T` remains M52.

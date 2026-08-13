@@ -35,6 +35,7 @@ namespace GatekeeperBastion.Game
             else
                 Sim.SeekWave(wave); // Prep after clear: point the next draw at the same index
 
+            _pendingTerminalId = null;
             RestoreHatchAndPlayer();
             Sim.TriggerDraw();
             Log.Event("Dev", $"ReplayWave — re-drew wave {wave}/{WaveDirector.MaxWaves}");
@@ -59,6 +60,7 @@ namespace GatekeeperBastion.Game
             if (Sim.Assault == AssaultState.Assault)
                 Sim.AbortAssault();
 
+            _pendingTerminalId = null;
             Sim.SeekWave(oneBasedWave);
             RestoreHatchAndPlayer();
             Sim.TriggerDraw();

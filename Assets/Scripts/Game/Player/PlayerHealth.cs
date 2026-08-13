@@ -3,10 +3,12 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>REPLICATED-STATE: player hit points. Death is a RUN ENDER — no in-run respawn:
-    /// on death the player is locked down and GameController.PlayerDied() ends the run.</summary>
-    /// <remarks>Self-registers in PlayerRegistry (OnEnable/OnDisable) — the sanctioned way for
-    /// other systems to find players. ResetToSpawn remains for scene starts only.
+    /// <summary>REPLICATED-STATE: player hit points. On the local rig, death is a RUN ENDER:
+    /// the body locks and GameController.PlayerDied() ends the run. A networked puppet sets
+    /// endsTheRunOnDeath false so down does not take the host with it.</summary>
+    /// <remarks>Self-registers in PlayerRegistry (OnEnable/OnDisable) when contributeToRegistry
+    /// is true — the sanctioned way for other systems to find players. Networked avatars leave
+    /// that off and the server registers the remote body itself.
     /// Die() is idempotent and never leaves the player in a captured-cursor dead body: if no
     /// GameController is present to raise the lose screen it frees the cursor itself and logs
     /// an error, so "dead, mouse locked, no UI" cannot happen.</remarks>
@@ -18,6 +20,12 @@ namespace GatekeeperBastion.Game
 
         [Tooltip("Optional respawn transform; defaults to the player's starting pose.")]
         [OptionalBinding] public Transform spawnPoint;
+
+        [SerializeField, Tooltip("Off on networked avatars — the server registers the remote body.")]
+        bool contributeToRegistry = true;
+
+        [SerializeField, Tooltip("Off on networked avatars — puppet down must not end the host run.")]
+        bool endsTheRunOnDeath = true;
 
         /// <summary>Current hit points.</summary>
         public float Hp { get; private set; }
@@ -51,7 +59,8 @@ namespace GatekeeperBastion.Game
 
         void OnEnable()
         {
-            PlayerRegistry.Register(this);
+            if (contributeToRegistry)
+                PlayerRegistry.Register(this);
         }
 
         void OnDisable()
@@ -79,11 +88,49 @@ namespace GatekeeperBastion.Game
             if (fatal) Die();
         }
 
+        /// <summary>Off on networked avatars so OnEnable does not pollute PlayerRegistry.</summary>
+        public bool ContributeToRegistry
+        {
+            get { return contributeToRegistry; }
+            set
+            {
+                contributeToRegistry = value;
+                if (!value)
+                    PlayerRegistry.Unregister(this);
+            }
+        }
+
+        /// <summary>Off on networked avatars so puppet Die() does not call PlayerDied.</summary>
+        public bool EndsTheRunOnDeath
+        {
+            get { return endsTheRunOnDeath; }
+            set { endsTheRunOnDeath = value; }
+        }
+
         /// <summary>Adopt the scene's GameController (called from ApplyMetaEffects at run
         /// start). Death routes into the sim through this handle.</summary>
         public void Bind(GameController game)
         {
             _game = game;
+        }
+
+        /// <summary>Owner-side view of replicated HP. Does not write back, does not log a hit.
+        /// Lethal still runs Die(); a restore from 0 clears IsDead without moving the body.</summary>
+        public void ApplyReplicatedHp(float hp)
+        {
+            hp = Mathf.Clamp(hp, 0f, maxHp);
+            if (hp <= 0f)
+            {
+                Hp = 0f;
+                if (!IsDead) Die();
+                return;
+            }
+
+            Hp = hp;
+            if (!IsDead) return;
+            IsDead = false;
+            if (_fpc == null) _fpc = GetComponent<FirstPersonController>();
+            if (_fpc != null) _fpc.MovementLocked = false;
         }
 
         /// <summary>Apply the Crew Quarters VITALITY pool (GameController pushes
@@ -138,6 +185,12 @@ namespace GatekeeperBastion.Game
             if (_fpc == null) _fpc = GetComponent<FirstPersonController>(); // re-resolve if fake-null
             if (_fpc != null) _fpc.MovementLocked = true;
 
+            if (!endsTheRunOnDeath)
+            {
+                Log.Event("Player", "down — host run continues");
+                return;
+            }
+
             string killer = "unknown";
             if (_lastAttacker != null && Time.time - _lastAttackerTime < 5f)
                 killer = $"gatekeeper at {Vector3.Distance(transform.position, _lastAttacker.position):0.0}m";
@@ -148,6 +201,11 @@ namespace GatekeeperBastion.Game
 
             if (gc != null)
             {
+                if (gc.Net != null && gc.Net.IsClientOnly)
+                {
+                    Log.Event("Player", "down — client does not end the host run");
+                    return;
+                }
                 gc.PlayerDied();
                 return;
             }

@@ -66,6 +66,7 @@ namespace GatekeeperBastion.Game
                 return false;
 
             RefreshDoorStates();
+            RefreshTerminalStates();
             return true;
         }
 
@@ -88,27 +89,75 @@ namespace GatekeeperBastion.Game
             GetComponentsInChildren(true, _doors);
             GetComponentsInChildren(true, _terminals);
 
+            var requiredByDoor = new Dictionary<BastionDoor, List<string>>();
+            for (int i = 0; i < _doors.Count; i++)
+            {
+                BastionDoor door = _doors[i];
+                if (door == null)
+                    continue;
+                var list = new List<string>();
+                string[] authored = door.RequiredTerminalIds;
+                if (authored != null)
+                {
+                    for (int r = 0; r < authored.Length; r++)
+                    {
+                        if (!string.IsNullOrEmpty(authored[r]) && !list.Contains(authored[r]))
+                            list.Add(authored[r]);
+                    }
+                }
+
+                requiredByDoor[door] = list;
+            }
+
+            int fieldCount = 0;
+            for (int i = 0; i < _terminals.Count; i++)
+            {
+                BastionTerminal t = _terminals[i];
+                if (t == null || t.Kind != BastionTerminalKind.Field || string.IsNullOrEmpty(t.TerminalId))
+                    continue;
+                fieldCount++;
+
+                BastionDoor door = t.UnlocksDoor;
+                if (door == null)
+                    continue;
+                if (!requiredByDoor.TryGetValue(door, out List<string> list))
+                {
+                    list = new List<string>();
+                    requiredByDoor[door] = list;
+                }
+
+                if (!list.Contains(t.TerminalId))
+                    list.Add(t.TerminalId);
+            }
+
             var doorSpecs = new BastionUnlockGraph.DoorSpec[_doors.Count];
             for (int i = 0; i < _doors.Count; i++)
             {
                 BastionDoor door = _doors[i];
+                string[] required = System.Array.Empty<string>();
+                if (door != null && requiredByDoor.TryGetValue(door, out List<string> list))
+                    required = list.ToArray();
+
                 doorSpecs[i] = new BastionUnlockGraph.DoorSpec
                 {
-                    DoorId = door.DoorId,
-                    RequiredTerminalIds = door.RequiredTerminalIds,
-                    OpensControlRoom = door.OpensControlRoom,
+                    DoorId = door != null ? door.DoorId : null,
+                    RequiredTerminalIds = required,
+                    OpensControlRoom = door != null && door.OpensControlRoom,
                 };
             }
 
-            var terminalSpecs = new BastionUnlockGraph.TerminalSpec[_terminals.Count];
+            var terminalSpecs = new BastionUnlockGraph.TerminalSpec[fieldCount];
+            int w = 0;
             for (int i = 0; i < _terminals.Count; i++)
             {
                 BastionTerminal terminal = _terminals[i];
-                terminalSpecs[i] = new BastionUnlockGraph.TerminalSpec
+                if (terminal == null || terminal.Kind != BastionTerminalKind.Field)
+                    continue;
+                if (string.IsNullOrEmpty(terminal.TerminalId))
+                    continue;
+                terminalSpecs[w++] = new BastionUnlockGraph.TerminalSpec
                 {
                     TerminalId = terminal.TerminalId,
-                    PressureSpawnIds = terminal.PressureSpawnIds,
-                    DoorId = terminal.DoorId,
                 };
             }
 
@@ -158,9 +207,16 @@ namespace GatekeeperBastion.Game
         {
             if (terminal == null || _graph == null)
                 return;
+            if (terminal.Kind != BastionTerminalKind.Field)
+                return;
 
+            // Incomplete: keep Wave Spawns off so only a live pull (or sealed door open) registers
+            // them. Done: leave them on for continued pressure after the door opens.
             bool done = _graph.IsTerminalDone(terminal.TerminalId);
-            terminal.SetPressureSpawnsActive(done);
+            if (done)
+                terminal.SetUnlockedSpawnsActive(true);
+            else
+                terminal.SetUnlockedSpawnsActive(false);
         }
     }
 }

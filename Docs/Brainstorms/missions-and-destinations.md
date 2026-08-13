@@ -15,9 +15,19 @@ has graduated (table below).
 
 ## Where it stands
 
-**M47 is active** (kit bastion, unlock graph). The field loop is planned: **M52** terminal
+**M47 completed 2026-08-13** (kit bastion, unlock graph). The field loop is planned: **M52** terminal
 Waves, **M53** Hatch-bank, **M54** Master Control, **M55** intensity juice. One destination.
-The shipped fight until those land is still Hatch defence started by `T`.
+
+### Terminal roles (Zo, 2026-08-13)
+
+| Role | Does | Status |
+|---|---|---|
+| **Field / progression terminal** | Interact starts a Boarder-hunt Wave; clear completes the `T` and opens its **`D`** | M52 (in build) |
+| **Hatch-bank** | Starts Hatch-bank Wave; converts unbanked → banked | M53 (Hatch look-at + `T`, or console — same loop) |
+| **Resource terminal** | Resources / boosts | Parked until the two Wave roles have play data |
+| **Master Control** | Win sequence | M54 |
+
+Passages (Door side, no `D`) have no terminal. Soft-lock doors stay parked.
 
 ## Graduation test
 

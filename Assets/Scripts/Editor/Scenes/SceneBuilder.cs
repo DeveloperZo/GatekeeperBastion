@@ -23,8 +23,8 @@ namespace GatekeeperBastion.EditorTools
     /// (the Hatch did — RepairInteractable.station) must move out of it. Materials and the
     /// three gatekeeper prefabs (SceneBuilder.Enemies.cs) are refreshed under
     /// Assets/Materials and Assets/Prefabs with stable GUIDs.
-    /// Bastion kit segments under Environment skip the geometry wipe; rebake NavMesh only
-    /// via <c>gkb_bastion_navmesh_request.txt</c>.</summary>
+    /// Bastion kit segments under Environment are never wiped; Build All rebakes NavMesh only
+    /// via <c>gkb_bastion_navmesh_request.txt</c> (or the kit path of Build All).</summary>
     [InitializeOnLoad]
     public static partial class SceneBuilder
     {
@@ -36,11 +36,10 @@ namespace GatekeeperBastion.EditorTools
         const string PrefabDir = "Assets/Prefabs";
         const string MaterialDir = "Assets/Materials";
         const string EnemyPrefabPath = PrefabDir + "/EnemyGatekeeper.prefab";
-        const float WallHeight = 3.5f;
-        const float WallThickness = 0.5f;
 
         /// <summary>The rebuildable roots. A root name in this list is owned by the builder
-        /// and deleted before every rebuild; nothing else in the scene is touched.</summary>
+        /// and deleted before every rebuild; nothing else in the scene is touched.
+        /// Bastion kit layout under Environment is never wiped (see RebuildBastionGeometry).</summary>
         static readonly string[] OwnedRootNames = { "Environment", "SpawnPoints", "Directional Light" };
 
         static double _nextSentinelPoll;
@@ -193,7 +192,9 @@ namespace GatekeeperBastion.EditorTools
 
         static void RebuildBastionGeometry()
         {
-            // Kit halves live under Environment. Clearing that root would wipe authored layout.
+            // M47: Bastion playable geometry is kit-authored. Never regenerate freestyle floors/walls.
+            CreateEnemyPrefabs(CreatePalette()); // SceneBuilder.Enemies.cs — asset refresh, stable GUIDs
+
             if (BastionSceneHasKitSegments())
             {
                 Debug.LogWarning(
@@ -203,17 +204,9 @@ namespace GatekeeperBastion.EditorTools
                 return;
             }
 
-            Scene scene = OpenAndClearOwnedRoots(ScenePath);
-            Palette pal = CreatePalette();
-            CreateEnemyPrefabs(pal); // SceneBuilder.Enemies.cs — asset refresh, stable GUIDs
-
-            BuildLighting();
-            GameObject env = BuildBastion(pal);
-            BuildSpawnPoints(pal);
-            BakeNavMesh(env);
-
-            EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log($"[SceneBuilder] Rebuilt {ScenePath} in place: Environment, SpawnPoints, Directional Light, NavMesh. Authored content untouched.");
+            Debug.LogError(
+                "[SceneBuilder] Bastion.unity has no BastionSegment under Environment — Build All will not " +
+                "generate freestyle bastion geometry (M47 closed). Author kit segments or restore from VCS.");
         }
 
         /// <summary>Rebake <c>Bastion-NavMesh.asset</c> from current Environment children (kit floors
@@ -300,106 +293,7 @@ namespace GatekeeperBastion.EditorTools
 
         // The three gatekeeper prefabs are built in SceneBuilder.Enemies.cs.
 
-        // ---------- bastion scene content ----------
-
-        static void BuildLighting()
-        {
-            var go = new GameObject("Directional Light");
-            var light = go.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.intensity = 0.45f;
-            light.color = new Color(0.75f, 0.7f, 1f);
-            go.transform.rotation = Quaternion.Euler(60f, -30f, 0f);
-
-            RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.10f, 0.07f, 0.15f);
-        }
-
-        /// <summary>
-        /// The bastion interior. Coordinates (x: -15..15, z: -22..30):
-        ///   Hatch bay (south, z -22..-10)  — Hatch (authored, scene root) + player spawn.
-        ///   Main bore (z -10..2, 6 wide)   — single chokepoint away from home.
-        ///   Mid chamber (z 2..16, full width) — first fighting room, breach at its west end.
-        ///   NW / NE chambers (z 16..30, split by a spine) — deep rooms, breaches at far ends.
-        /// Diagonal "rib" blocks in the chambers break up sightlines for the alien feel.
-        /// </summary>
-        static GameObject BuildBastion(Palette pal)
-        {
-            var env = new GameObject("Environment");
-            Transform t = env.transform;
-            float y = WallHeight * 0.5f;
-
-            Box("Floor", new Vector3(0f, -0.25f, 4f), new Vector3(30f, 0.5f, 52f), pal.Floor, t);
-
-            // Outer shell.
-            Box("Shell_N", new Vector3(0f, y, 30.25f), new Vector3(30.5f, WallHeight, WallThickness), pal.Wall, t);
-            Box("Shell_S", new Vector3(0f, y, -22.25f), new Vector3(30.5f, WallHeight, WallThickness), pal.Wall, t);
-            Box("Shell_E", new Vector3(15.25f, y, 4f), new Vector3(WallThickness, WallHeight, 52f), pal.Wall, t);
-            Box("Shell_W", new Vector3(-15.25f, y, 4f), new Vector3(WallThickness, WallHeight, 52f), pal.Wall, t);
-
-            // Hatch bay narrows into the bore (gap x -3..3 at z = -10).
-            Box("Bay_W", new Vector3(-9f, y, -10f), new Vector3(12f, WallHeight, WallThickness), pal.Wall, t);
-            Box("Bay_E", new Vector3(9f, y, -10f), new Vector3(12f, WallHeight, WallThickness), pal.Wall, t);
-
-            // Main bore corridor walls (z -10..2).
-            Box("Bore_W", new Vector3(-3f, y, -4f), new Vector3(WallThickness, WallHeight, 12f), pal.Wall, t);
-            Box("Bore_E", new Vector3(3f, y, -4f), new Vector3(WallThickness, WallHeight, 12f), pal.Wall, t);
-
-            // Mid chamber / north chambers divider at z = 16, doorways at x = -8 and x = 8.
-            Box("Div_W", new Vector3(-13f, y, 16f), new Vector3(4f, WallHeight, WallThickness), pal.Wall, t);
-            Box("Div_C", new Vector3(0f, y, 16f), new Vector3(10f, WallHeight, WallThickness), pal.Wall, t);
-            Box("Div_E", new Vector3(13f, y, 16f), new Vector3(4f, WallHeight, WallThickness), pal.Wall, t);
-
-            // Spine splitting the two deep chambers (z 16..30).
-            Box("Spine", new Vector3(0f, y, 23f), new Vector3(WallThickness, WallHeight, 14f), pal.Wall, t);
-
-            // Alien ribs: canted blocks that break sightlines in the chambers.
-            MakeRib(pal, t, "Rib_Mid_A", new Vector2(-5f, 8f), 30f);
-            MakeRib(pal, t, "Rib_Mid_B", new Vector2(7f, 11f), -25f);
-            MakeRib(pal, t, "Rib_NW", new Vector2(-8f, 21f), 40f);
-            MakeRib(pal, t, "Rib_NE", new Vector2(8f, 24f), -35f);
-
-            return env;
-        }
-
-        static void MakeRib(Palette pal, Transform parent, string name, Vector2 posXZ, float yaw)
-        {
-            GameObject rib = Box(name, new Vector3(posXZ.x, WallHeight * 0.4f, posXZ.y),
-                new Vector3(3.5f, WallHeight * 0.8f, 0.8f), pal.Rib, parent);
-            rib.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
-        }
-
-        /// <summary>Three spawn points at the far ends of the chambers, deep in the bastion.
-        /// The authored WaveSpawner's explicit array stays empty; it resolves these through
-        /// the SpawnPoint registry at runtime, so the rebuild wires nothing.</summary>
-        static SpawnPoint[] BuildSpawnPoints(Palette pal)
-        {
-            var root = new GameObject("SpawnPoints");
-            return new[]
-            {
-                MakeSpawnPoint("Spawn_NW", new Vector3(-11f, 0f, 28f), pal, root.transform),
-                MakeSpawnPoint("Spawn_NE", new Vector3(11f, 0f, 28f), pal, root.transform),
-                MakeSpawnPoint("Spawn_MidWest", new Vector3(-13f, 0f, 9f), pal, root.transform),
-            };
-        }
-
-        static SpawnPoint MakeSpawnPoint(string name, Vector3 pos, Palette pal, Transform parent)
-        {
-            var go = new GameObject(name);
-            go.transform.SetParent(parent, false);
-            go.transform.localPosition = pos;
-
-            // Collider-free floor decal so breaches are visible in the gray-box.
-            var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            UnityEngine.Object.DestroyImmediate(marker.GetComponent<Collider>());
-            marker.name = "Marker";
-            marker.transform.SetParent(go.transform, false);
-            marker.transform.localPosition = new Vector3(0f, 0.03f, 0f);
-            marker.transform.localScale = new Vector3(1.2f, 0.05f, 1.2f);
-            marker.GetComponent<Renderer>().sharedMaterial = pal.Breach;
-
-            return go.AddComponent<SpawnPoint>();
-        }
+        // ---------- NavMesh ----------
 
         static void BakeNavMesh(GameObject env)
         {
@@ -450,14 +344,18 @@ namespace GatekeeperBastion.EditorTools
                 }
 
                 int gates = 0;
+                Material gateMat = AssetDatabase.LoadAssetAtPath<Material>(MaterialDir + "/Mat_Hatch.mat");
                 BastionDoor[] doors = env.GetComponentsInChildren<BastionDoor>(true);
                 for (int i = 0; i < doors.Length; i++)
                 {
                     BastionDoor door = doors[i];
                     if (door == null)
                         continue;
-                    door.SnapToAperture();
-                    // Progression gates stay closed until the unlock graph opens them.
+                    if (gateMat != null)
+                        door.SetGateMaterial(gateMat);
+                    // Existing BastionDoor markers only — never rewrite segment Door/None sides
+                    // or move hand-authored gate transforms.
+                    door.EnsureGatePresentation();
                     if (door.StartsLocked)
                         door.SetOpen(false);
                     gates++;
@@ -467,7 +365,7 @@ namespace GatekeeperBastion.EditorTools
                 EditorSceneManager.SaveScene(scene, ScenePath);
                 Debug.Log("[SceneBuilder] Field consoles wired (" + wired + " new of "
                     + terminals.Length + " terminals; scale=" + BastionFieldConsole.Scale
-                    + "); progression gates snapped=" + gates + ". BastionLayout on Environment.");
+                    + "); progression gates presented=" + gates + ". BastionLayout on Environment.");
             }
             finally
             {

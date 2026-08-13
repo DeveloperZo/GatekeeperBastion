@@ -57,12 +57,12 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            // Short card — siphon/currency live TR; wave lives TL. Prep only teaches the draw.
+            // Short card — siphon/currency live TR; wave lives TL. Prep points at field terminals.
             int lvl = sim.Siphon.Level;
             int here = _waves.NextWave(wave, lvl).enemyCount;
             _lineBuf.Clear();
-            _lineBuf.Append("<b>PREP</b>  ·  Draw wave ").Append(wave + 1).Append('/')
-                .Append(WaveDirector.MaxWaves);
+            _lineBuf.Append("<b>PREP</b>  ·  Wave ").Append(wave + 1).Append('/')
+                .Append(WaveDirector.MaxWaves).Append(" — use a field terminal");
             _view.SetPrepHeading(_lineBuf.ToString());
 
             var hatch = sim.Ship.Hatch;
@@ -75,7 +75,7 @@ namespace GatekeeperBastion.Game
             _view.SetPrepLine(1, _lineBuf.ToString());
 
             _lineBuf.Clear();
-            _lineBuf.Append(here).Append(" gatekeepers on the draw");
+            _lineBuf.Append(here).Append(" gatekeepers on the next terminal Wave");
             if (lvl < TetherSiphon.MaxLevel)
             {
                 int nextCount = _waves.NextWave(wave, lvl + 1).enemyCount;

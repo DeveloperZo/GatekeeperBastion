@@ -158,14 +158,15 @@ GUILayout; the Bastion HUD may not. GUIStyles there are per-instance, never
 static (static styles survive domain-reload-disabled sessions holding destroyed
 font references).
 
-**4. Geometry is generated; UI and gameplay hosts are authored.** `SceneBuilder` rebuilds
-only the `Environment` root, the `SpawnPoints` root, the Directional Light, and the
-NavMesh asset — in place, in the open scene. It does **not** touch stations, the player
-rig, `ShipController`, `GameSystems`, the `EventSystem`, or any UI canvas; those are
-authored scene content and survive Build All. Build settings list **Splash, MainMenu,
-Ship, Bastion**. After any geometry or spawn-point change, re-run
-**`GatekeeperBastion > Build All Scenes`**. Hand-editing **geometry** loses the edit on
-the next rebuild; hand-editing **UI or gameplay hosts** does not. A scene missing from
+**4. Bastion geometry is kit-authored; Ship graybox and NavMesh are generated.**
+`Bastion.unity` playable floors/walls are `BastionSegment` kit instances (M47) — Build All
+never regenerates them; it refreshes enemy prefabs and rebakes NavMesh when kit is present.
+`SceneBuilder` still rebuilds Ship `Environment` / light / NavMesh in place. It does **not**
+touch stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem`, or any UI
+canvas; those are authored scene content and survive Build All. Build settings list
+**Splash, MainMenu, Ship, Bastion**. After a spawn-point or kit-floor change, drop
+`gkb_bastion_navmesh_request.txt` (or Build All). Hand-editing **kit geometry** persists;
+hand-editing Ship graybox loses the edit on the next Ship rebuild. A scene missing from
 build settings makes `SceneManager.LoadScene` throw, which strands the player on the end
 screen — `SceneFlow` guards this and logs an error telling you to rebuild.
 

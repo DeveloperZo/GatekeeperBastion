@@ -43,7 +43,7 @@ is decoration and this slice did not create a second fight.
    not call `TriggerDraw`. Shortcut panel copy matches.
 2. **Looking at a wing field terminal in Prep, Interact Down starts the next Wave** in
    `WaveMode.Terminal`. Log: `[Terminal] <id> started wave <n> mode=terminal`. Already
-   complete, in Assault, or Master Control (`isMaster`) → logged refusal, no Wave.
+   complete, in Assault, or non-Field kind (`BastionTerminalKind`) → logged refusal, no Wave.
 3. **During `WaveMode.Terminal`, `GameController.DamageHatch` is a no-op.** Hatch HP does
    not move. The HUD Hatch card still shows. Loss this slice is Boarder down only.
 4. **Targeting follows the mode** (same `HunterPerWave` / `RamPerWave` tables):
@@ -52,7 +52,7 @@ is decoration and this slice did not create a second fight.
    `../../Brainstorms/gatekeepers-and-waves.md`). `MayTargetHatch` is false for every kind.
 5. **The terminal is not marked complete until that Wave clears.** Then
    `BastionUnlockGraph.TryCompleteTerminal`; if the door's set is done, `BastionDoor.SetOpen(true)`
-   and pressure spawns enable. Dying mid-Wave leaves the terminal incomplete.
+   and the unlock graph may open a `D` (sealed spawns on that door enable). Dying mid-Wave leaves the terminal incomplete.
 6. **Field terminals are `IInteractable` with a prompt** `[E] Terminal — start Wave` (or
    the refusal reason). They do **not** open a Ship station panel. Visual is the kit **T**
    mark / console mesh already in the scene — no new canvas.
@@ -78,7 +78,7 @@ to complete a pending terminal (do not put scene ids in Sim).
 pending terminal id (Game layer, not Sim). `DamageHatch`: if `Sim.Mode == Terminal`,
 return. On `AssaultEnded` / clear: call `BastionLayout.TryCompleteTerminal(pending)`.
 
-**Change** `BastionTerminal` — implement `IInteractable`. `isMaster` serialized; Master
+**Change** `BastionTerminal` — implement `IInteractable`. `BastionTerminalKind` serialized; Master
 Control Interact refuses (`Master Control — later`, M54). Interact Down in Prep calls
 `GameController.StartTerminalWave(this)` which `TriggerDraw`s and stores the id.
 Delete the POC `Activate` that completes immediately, or make it the clear-path only.
@@ -140,7 +140,7 @@ changing the five-Wave win (M54).
 
 - **`T` is also the language for field terminals.** The key and the mark are easy to
   conflate in logs; the log tag is `Terminal`, the key refusal names the key.
-- **Prefabs freeze `[SerializeField]`.** `isMaster` and interact colliders are authored
+- **Prefabs freeze `[SerializeField]`.** `kind` and interact colliders are authored
   on the kit instances, not pushed at spawn.
 - Existing EditMode tests call `TriggerDraw` directly — they stay valid and now run in
   Terminal mode. Hatch-loss tests that call `Ship.Hatch.Damage` still end the Run; enemy

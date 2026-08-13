@@ -85,6 +85,13 @@ documentation, version stability and the existence of a readable reference imple
 its feature list. A library the model writes correctly on the first attempt beats a better
 library it writes subtly wrong.
 
+## Locked — Bastion kit geometry (Zo, 2026-08-13)
+
+Playable Bastion floors and walls are **kit segments** (`BastionSegment` /
+`Assets/Prefabs/Bastion/Kit/`). No freestyle floor plates. Build All does not regenerate
+bastion Environment geometry; NavMesh rebake and enemy-prefab refresh only. Sketch emit
+and hand authoring compose rooms; Soft-lock doors stay parked.
+
 ## Locked — Bastion fight HUD corner starting point (Zo, 2026-08-10)
 
 The four always-on fight cards in `Bastion.unity` under `Canvas - Dynamic` are the

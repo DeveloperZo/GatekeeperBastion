@@ -143,7 +143,7 @@ namespace GatekeeperBastion.EditorTools
                     doorMarkerCount++;
                 }
 
-                WireTerminalPressure(sketch, spawnByName);
+                WireSealedSpawns(spawnByName);
 
                 if (bastionScene.IsValid())
                     EditorSceneManager.MarkSceneDirty(bastionScene);
@@ -319,7 +319,7 @@ namespace GatekeeperBastion.EditorTools
                     var terminal = go.GetComponent<BastionTerminal>();
                     if (terminal != null)
                     {
-                        terminal.Configure(mark.RefId, null, null);
+                        terminal.Configure(mark.RefId, BastionTerminalKind.Field);
                         BastionFieldConsole.AttachIfMissing(terminal);
                     }
                     return true;
@@ -357,45 +357,10 @@ namespace GatekeeperBastion.EditorTools
             }
         }
 
-        static void WireTerminalPressure(BastionSketch sketch, Dictionary<string, SpawnPoint> spawnByName)
+        /// <summary>Spawns behind progression gates stay inactive until the door opens.
+        /// Owned by <see cref="BastionDoor.SealedSpawns"/> — terminals do not reference them.</summary>
+        static void WireSealedSpawns(Dictionary<string, SpawnPoint> spawnByName)
         {
-            var doorByUnlockTerminal = new Dictionary<string, BastionSketchDoor>();
-            for (int i = 0; i < sketch.Doors.Count; i++)
-            {
-                BastionSketchDoor door = sketch.Doors[i];
-                for (int t = 0; t < door.UnlockTerminalIds.Count; t++)
-                    doorByUnlockTerminal[door.UnlockTerminalIds[t]] = door;
-            }
-
-            BastionTerminal[] terminals = UnityEngine.Object.FindObjectsByType<BastionTerminal>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-            for (int t = 0; t < terminals.Length; t++)
-            {
-                BastionTerminal terminal = terminals[t];
-                if (terminal == null || string.IsNullOrEmpty(terminal.TerminalId))
-                    continue;
-
-                string contributesTo = null;
-                if (doorByUnlockTerminal.TryGetValue(terminal.TerminalId, out BastionSketchDoor door))
-                    contributesTo = door.DoorId;
-
-                // Convention: T1 pressures S1, T2â†’S2, â€¦
-                SpawnPoint[] pressure = null;
-                if (terminal.TerminalId.Length >= 2 && terminal.TerminalId[0] == 'T')
-                {
-                    string spawnKey = "S" + terminal.TerminalId.Substring(1);
-                    if (spawnByName.TryGetValue(spawnKey, out SpawnPoint sp) && sp != null)
-                    {
-                        pressure = new[] { sp };
-                        sp.gameObject.SetActive(false);
-                    }
-                }
-
-                terminal.Configure(terminal.TerminalId, contributesTo, pressure);
-            }
-
-            // Seal locked-wing spawns (S3+) to the first non-D1 door that unlocks after open wing.
             BastionDoor[] doors = UnityEngine.Object.FindObjectsByType<BastionDoor>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None);
             var lockedWingSpawns = new List<SpawnPoint>();

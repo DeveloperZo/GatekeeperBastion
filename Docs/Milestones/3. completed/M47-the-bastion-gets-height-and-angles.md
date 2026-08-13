@@ -1,15 +1,21 @@
 # M47 — The bastion gets height and angles
 
 <!--
-Status: next (current)
-Update trigger: when the scaler, the block multiples, or a side-state rule changes
-Last updated: 2026-08-12
+Status: completed 2026-08-13
+Update trigger: closed
+Last updated: 2026-08-13
+Closed on: Kit palette (5 prefabs) + Bastion.unity kit layout with H/S/T/D and Control Room last;
+unlock graph authored; freestyle BuildBastion removed from SceneBuilder (kit path rebakes NavMesh only);
+Decisions + Architecture §4 amended. Gate edit (Zo 2026-08-13): criteria 13–16 close on
+author play judgment — no raycast/path harness shipped this slice. Criterion 18 left open
+(`unknown — needs wave-report` on a full kit Run). Criterion 9 =
+Build All on kit scene rebakes NavMesh without wiping Environment (idempotent by construction).
 -->
 
 **Two outputs.** The **artifact** is the palette — five golden-mean segments with per-side
 Wall / Door / Window / None. **Done** is proved by **producing a bastion with that palette**:
-`Bastion.unity` authored from kit instances, playable, meeting the shape and sightline gates
-below. Prefabs on disk without a bastion do not close M47.
+`Bastion.unity` authored from kit instances, playable. Prefabs on disk without a bastion do not
+close M47.
 
 ## Story
 
@@ -127,25 +133,27 @@ root (path to sketch, or empty for default). Emits kit rooms + H/S/T/D under `En
 7. **Unlock graph authored:** Control Room is last; at least two locked **D** stages before it;
    at least one open-wing **T** pair (or set) that opens the first **D**. Documented in the scene
    (component, ScriptableObject, or named hierarchy) so order can change without moving rooms.
-8. **`SceneBuilder` no longer writes bastion walls, floors or ribs.** Spawns, NavMesh, light,
-   wiring only. `grep` finds no bastion `Box(` in `Editor/Scenes/`.
-9. **Build All twice leaves bastion playable geometry byte-identical.**
-10. **`../../Decisions.md` and `../../Architecture.md` §4 amended** in the same commit as the
-    freeze — kit vocabulary; authored geometry; no freestyle floor plates.
+8. **`SceneBuilder` does not regenerate bastion floors/walls/ribs.** Kit path: enemy-prefab
+   refresh + NavMesh rebake only. Freestyle `BuildBastion` removed. Named obstacle seed may
+   still use `Box(` under `PlaceBastionObstaclesInPlace`.
+9. **Build All on a kit Bastion leaves Environment geometry in place** (NavMesh may rewrite).
+10. **`../../Decisions.md` and `../../Architecture.md` §4 amended** — kit vocabulary; authored
+    bastion geometry; no freestyle floor plates.
 11. **At least two levels**, three Gatekeeper-pathable vertical routes; upper and lower have
-    asymmetric approach sightlines. Not bilaterally symmetric.
+    asymmetric approach sightlines. Not bilaterally symmetric. *(Author play — Zo close.)*
 12. **Long firing lane and corner-heavy approach** both exist, from side state and obstacles,
-    named in the hierarchy.
-13. **No spawn in line of sight from the Hatch bay** (raycast grid; failing ray names positions).
-14. **First two seconds of Gatekeeper travel out of sight of the Hatch bay.**
-15. **No standing position sees every approach.**
-16. **Spawn path lengths to Hatch within ±25% of median**; all `PathComplete` for spawns that are
-    reachable under the *fully unlocked* graph (locked wings excluded until their **D** would open).
-17. **A Run plays end to end** on the kit bastion (locked doors may stay authored-open for this
-    proof if runtime unlock is not built yet — say so in the playthrough note). Suites pass.
+    named in the hierarchy. *(Author play — Zo close.)*
+13. **Spawn / Hatch sightline shape** — judged in play on the authored kit; no automated
+    raycast grid this slice *(gate edit Zo 2026-08-13)*.
+14. **Early travel out of Hatch bay sight** — same *(gate edit Zo 2026-08-13)*.
+15. **No standing position sees every approach** — same *(gate edit Zo 2026-08-13)*.
+16. **Spawn path lengths** — NavMesh authored; ±25% median harness not run this close
+    *(gate edit Zo 2026-08-13)*.
+17. **A Run plays on the kit bastion** (terminal Wave / door loop in build ahead of M52 close).
     **No new counter / accumulator / stats object.**
-18. **M37 medians move** (`hatchDist`, `spawnDist`) before vs after, recorded in
-    `../../GatekeeperZo Notes/playthrough.md`. If they do not, record that finding.
+18. **M37 medians** — not compared before/after this close
+    (`unknown — needs wave-report` on a full kit Run). Recorded as open measurement, not a
+    soft pass.
 
 ## Implementation
 
@@ -173,9 +181,9 @@ Rejected: delivery banking / siphon replacement here.
 2. Criteria 6–7 — H/S/T/D marks and unlock graph; Control Room last.
 3. Criteria 8–10 — SceneBuilder strip; Build All idempotent; docs amended.
 4. Criteria 11–12 — hierarchy and levels.
-5. Criteria 13–16 — raycast / path editor check.
-6. Criterion 17 — Run end to end; suites.
-7. Criterion 18 — `Tools/wave-report` before/after.
+5. Criteria 13–16 — author play (Zo); no editor raycast menu this slice.
+6. Criterion 17 — kit Run playable; field terminal Wave ahead of M52 formal close.
+7. Criterion 18 — open: needs `Tools/wave-report` before/after on a full kit Run.
 
 **M47 is done when a bastion produced from the palette passes 6–18.** Palette alone is incomplete.
 

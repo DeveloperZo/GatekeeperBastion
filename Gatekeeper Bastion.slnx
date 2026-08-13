@@ -3,6 +3,7 @@
   <Project Path="Michsky.UI.Shift.csproj" />
   <Project Path="Unity.Mathematics.csproj" />
   <Project Path="Unity.Collections.csproj" />
+  <Project Path="GatekeeperBastion.PlayTests.csproj" />
   <Project Path="Unity.Netcode.Runtime.Tests.csproj" />
   <Project Path="Unity.Collections.Tests.csproj" />
   <Project Path="GatekeeperBastion.csproj" />
@@ -25,7 +26,6 @@
   <Project Path="Unity.Networking.Editor.csproj" />
   <Project Path="GatekeeperBastion.Sim.csproj" />
   <Project Path="Unity.PerformanceTesting.Tests.Editor.csproj" />
-  <Project Path="GatekeeperBastion.PlayTests.csproj" />
   <Project Path="Unity.Collections.CodeGen.csproj" />
   <Project Path="Unity.Mathematics.Editor.csproj" />
   <Project Path="MCPForUnity.Runtime.csproj" />

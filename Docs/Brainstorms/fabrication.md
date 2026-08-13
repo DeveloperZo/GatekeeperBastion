@@ -82,7 +82,8 @@ instead of after it.
 Activation is **contextual per payload**. A payload placed in the world — the turret, the
 mine, the ammo box — shows a **placement ghost and deploys on confirm**, the standard
 pattern. Placed objects expire by supply, not by timer: the turret dies when its ammo is
-spent; the ammo box disappears when drained. A payload that is not a placement states its
+spent; the ammo box disappears when drained. **Amended 2026-08-13 (Zo): the turret's supply
+is not its own** — see the siphon decision below. A payload that is not a placement states its
 own activation on its row — the same per-item reading the Utility spokes used.
 
 ### Per player in co-op (Zo, 2026-08-08)
@@ -94,6 +95,22 @@ player's loadout; sim ownership is per player from the first payload coded (R-ru
 
 Neither M21 spokes nor FABRICATION tracks until a payload has been played. The shelf
 sells payloads flat; whether payload upgrades exist at all is play data's question.
+
+### The turret spends the player's ammo (Zo, 2026-08-13)
+
+`UTL-H` starts with a **modest onboard magazine** and then **siphons from the player's
+Primary reserve on the clock** for as long as it is deployed, whether or not it is firing.
+Life duration is a set number; it also dies early if the reserve runs dry. **The purpose is
+to discourage using it as parked Hatch cover** — and the Hatch is invulnerable outside a
+Hatch-bank Wave anyway (`missions-and-destinations.md`), so a turret at the door was never
+defending anything. The siphon makes leaving it there cost the exploring you walked away to
+do.
+
+This is `UTL-G`'s principle applied to firing rather than resupply: the payload **moves
+ammo, it does not create it**. It also holds the ammo variable still, which is what makes
+the row's open question answerable — total rounds per Run stays flat and only their
+distribution moves, so a change in outcome is attributable to the second firing position
+rather than to added dps. Graduated to `M56`.
 
 ### Equipment is the second category (Zo, 2026-08-08, superseding rig-as-payload from earlier the same day)
 
@@ -132,6 +149,7 @@ Link, never restate. If a detail below matters, it lives in the milestone.
 | What | Milestone |
 |---|---|
 | The drone bay, the ghost-placement pattern, the charge model, and the decoy | `M30 — Something to pull them off the door` |
+| `UTL-H`, the turret, and the ammo-siphon cost model | `M56 — The turret shoots with your ammo` |
 
 ## The payload roster
 
@@ -145,7 +163,7 @@ refusal grammar carried over from `armory-and-weapons.md` (migrated 2026-08-08).
 | UTL-E | small targets | Mine; arms only under a crowd, so it pays for letting one form. | candidate |
 | UTL-F | killing | Yanks one body off the Hatch. | candidate |
 | UTL-G | fighting at all | Preloaded ammo box, placed; gone when drained. | picked (Zo, 2026-08-08 — see *Decided*) |
-| UTL-H | downtime | Turret; fires while you reload, walk or repair, and dies when its ammo is spent. | candidate |
+| UTL-H | downtime | Turret; fires while you reload, walk or repair, on a modest onboard magazine and then on your reserve. | picked (Zo, 2026-08-13), graduated to `M56` |
 
 **Ship order for the picked rows**, if the goal is play data rather than coverage: the
 control payload graduated first (`M30`), and `UTL-C` is the damage half that follows — the

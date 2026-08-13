@@ -24,13 +24,9 @@ namespace GatekeeperBastion.Tests
                 },
                 new[]
                 {
-                    new BastionUnlockGraph.TerminalSpec { TerminalId = "T1", DoorId = "D1" },
-                    new BastionUnlockGraph.TerminalSpec { TerminalId = "T2", DoorId = "D1" },
-                    new BastionUnlockGraph.TerminalSpec
-                    {
-                        TerminalId = "T_control",
-                        DoorId = "D_control",
-                    },
+                    new BastionUnlockGraph.TerminalSpec { TerminalId = "T1" },
+                    new BastionUnlockGraph.TerminalSpec { TerminalId = "T2" },
+                    new BastionUnlockGraph.TerminalSpec { TerminalId = "T_control" },
                 });
         }
 
@@ -93,7 +89,7 @@ namespace GatekeeperBastion.Tests
                 },
                 new[]
                 {
-                    new BastionUnlockGraph.TerminalSpec { TerminalId = "T1", DoorId = "D1" },
+                    new BastionUnlockGraph.TerminalSpec { TerminalId = "T1" },
                 });
 
             Assert.AreEqual("graph has no control gate", graph.Validate());

@@ -84,6 +84,9 @@ namespace GatekeeperBastion.Sim
         /// Meaningful only while Phase == Tethered; always Prep otherwise.</summary>
         public AssaultState Assault { get; private set; }
 
+        /// <summary>Who the live Wave is for. Set on each <see cref="TriggerDraw"/>.</summary>
+        public WaveMode Mode { get; private set; }
+
         /// <summary>The risk/reward siphon dial.</summary>
         public TetherSiphon Siphon { get; private set; }
 
@@ -171,6 +174,7 @@ namespace GatekeeperBastion.Sim
             Salvage = new SalvageLedger();
             Phase = RunPhase.Docked;
             Assault = AssaultState.Prep;
+            Mode = WaveMode.Terminal;
 
             Ship.HatchDestroyed += OnHatchDestroyed;
         }
@@ -234,6 +238,7 @@ namespace GatekeeperBastion.Sim
                 Log.Info(Tag, "TriggerDraw refused: all " + WaveDirector.MaxWaves + " waves already drawn.");
                 return;
             }
+            Mode = WaveMode.Terminal;
             Assault = AssaultState.Assault;
 
             // Deep start: only the first assault of the run chains. Later draws are normal.
