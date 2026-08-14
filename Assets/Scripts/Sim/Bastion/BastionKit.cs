@@ -2,12 +2,13 @@ namespace GatekeeperBastion.Sim
 {
     /// <summary>Footprint multiples for bastion segment prefabs. Scaler retunes the whole kit.
     /// Pure floats — no UnityEngine (Sim seam + offline harness).
-    /// Multiples are metres at Scaler 1: rooms a player walks through, not hangars.
+    /// Scaler 2 over metre multiples: derelict-station scale (Half room 16 m), one lever.
+    /// Sketch room centres are world metres, so a scaler change re-authors the sketch too.
     /// ControlRoom is the wide finale hall — twice as wide as deep.</summary>
     public static class BastionKit
     {
-        public const float ScalerX = 1f;
-        public const float ScalerZ = 1f;
+        public const float ScalerX = 2f;
+        public const float ScalerZ = 2f;
 
         public const float StoreyHeight = 5f;
         public const float WallThickness = 0.5f;
