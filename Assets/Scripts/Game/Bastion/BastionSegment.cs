@@ -1,15 +1,16 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 using GatekeeperBastion.Sim;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>HOST-ONLY: rebuilds floor and four sides from block kind and per-edge side state.
-    /// North = +Z, South = -Z, East = +X, West = -X.</summary>
+    /// <summary>HOST-ONLY: rebuilds collision boxes and pack-mesh visuals for floor, ceiling and
+    /// four sides from block kind and per-edge side state. North = +Z, South = -Z, East = +X,
+    /// West = -X.</summary>
     public sealed partial class BastionSegment : MonoBehaviour
     {
-        enum SegmentEdge : byte
+        internal enum SegmentEdge : byte
         {
             North = 0,
             South = 1,
@@ -18,7 +19,7 @@ namespace GatekeeperBastion.Game
         }
 
         const string GeomRootName = "_geom";
-        const string GenPrefix = "Gen_";
+        internal const string GenPrefix = "Gen_";
         const float DoorOpeningWidth = 3f;
         const float DoorOpeningHeight = 3.5f;
         const float WindowSillHeight = 1.1f;
@@ -37,6 +38,14 @@ namespace GatekeeperBastion.Game
         [SerializeField] float westDoorAlong;
         [SerializeField] Material floorMat;
         [SerializeField] Material wallMat;
+        [Tooltip("Pack prefab assets, assigned by BastionKitEmitter at kit build time. Serialized so runtime rebuilds need no AssetDatabase.")]
+        [SerializeField] GameObject floorPiece;
+        [SerializeField] GameObject ceilingPiece;
+        [SerializeField] GameObject wallPiece;
+        [SerializeField] GameObject doorframePiece;
+        [SerializeField] GameObject windowPiece;
+        [SerializeField] GameObject cornerPiece;
+        [SerializeField] GameObject ceilingLightPiece;
 
         public BastionBlockKind BlockKind
         {
@@ -104,9 +113,83 @@ namespace GatekeeperBastion.Game
             set => wallMat = value;
         }
 
+        /// <summary>Pack prefab asset for floor tiles. Set by the kit emitter, serialized on the
+        /// kit prefab.</summary>
+        public GameObject FloorPiece
+        {
+            get => floorPiece;
+            set => floorPiece = value;
+        }
+
+        /// <summary>Pack prefab asset for ceiling tiles. Set by the kit emitter, serialized on the
+        /// kit prefab.</summary>
+        public GameObject CeilingPiece
+        {
+            get => ceilingPiece;
+            set => ceilingPiece = value;
+        }
+
+        /// <summary>Pack prefab asset for wall runs. Set by the kit emitter, serialized on the
+        /// kit prefab.</summary>
+        public GameObject WallPiece
+        {
+            get => wallPiece;
+            set => wallPiece = value;
+        }
+
+        /// <summary>Pack prefab asset for the Door side frame. Set by the kit emitter, serialized
+        /// on the kit prefab.</summary>
+        public GameObject DoorframePiece
+        {
+            get => doorframePiece;
+            set => doorframePiece = value;
+        }
+
+        /// <summary>Pack prefab asset for the Window side opening. Set by the kit emitter,
+        /// serialized on the kit prefab.</summary>
+        public GameObject WindowPiece
+        {
+            get => windowPiece;
+            set => windowPiece = value;
+        }
+
+        /// <summary>Pack prefab asset for corner pillars. Set by the kit emitter, serialized on
+        /// the kit prefab.</summary>
+        public GameObject CornerPiece
+        {
+            get => cornerPiece;
+            set => cornerPiece = value;
+        }
+
+        /// <summary>Pack prefab asset for ceiling light fixtures. Set by the kit emitter,
+        /// serialized on the kit prefab.</summary>
+        public GameObject CeilingLightPiece
+        {
+            get => ceilingLightPiece;
+            set => ceilingLightPiece = value;
+        }
+
+        /// <summary>Objects created by <see cref="Rebuild"/> since the last
+        /// <see cref="ResetRebuildCounters"/>. Counts collider boxes, walk blocks and visual piece
+        /// roots — everything that carries a <see cref="BastionGeneratedGeom"/> marker. The sketch
+        /// emitter resets before a batch and logs the totals after (created must equal marked).</summary>
+        public static int RebuildObjectsCreated;
+
+        /// <summary>BastionGeneratedGeom markers added by <see cref="Rebuild"/> since the last
+        /// <see cref="ResetRebuildCounters"/>.</summary>
+        public static int RebuildObjectsMarked;
+
+        /// <summary>Zeroes <see cref="RebuildObjectsCreated"/> / <see cref="RebuildObjectsMarked"/>
+        /// and clears the per-piece-metrics log-once set, so the next emit batch logs each piece
+        /// type's step and measured bounds again.</summary>
+        public static void ResetRebuildCounters()
+        {
+            RebuildObjectsCreated = 0;
+            RebuildObjectsMarked = 0;
+            BastionPackTiling.ResetMetricsLog();
+        }
+
         Transform _geomRoot;
-        Material _runtimeFloorMat;
-        Material _runtimeWallMat;
 
         /// <summary>When true, inspector changes do not rebuild (emitter / batch use explicit Rebuild).</summary>
         public static bool SuppressValidateRebuild;
@@ -166,7 +249,7 @@ namespace GatekeeperBastion.Game
 #endif
 
         /// <summary>True when parenting new meshes under this object is allowed (scene instance or
-        /// prefab stage). False for the Prefab Asset on disk â€” SetParent there orphans Gen_* into
+        /// prefab stage). False for the Prefab Asset on disk — SetParent there orphans Gen_* into
         /// the open scene.</summary>
         public bool CanMutateHierarchy()
         {
@@ -253,7 +336,9 @@ namespace GatekeeperBastion.Game
             return true;
         }
 
-        /// <summary>Clear prior generated geometry and emit floor plus four sides.</summary>
+        /// <summary>Clear prior generated geometry and emit both layers: collision boxes (floor
+        /// plus four sides, the exact box math the primitive kit shipped) and pack-mesh visuals
+        /// (floor, ceiling, walls, corners, ceiling lights).</summary>
         public void Rebuild()
         {
             if (this == null)
@@ -278,14 +363,13 @@ namespace GatekeeperBastion.Game
             float shortSide = Mathf.Min(width, depth);
             float openingWidth = Mathf.Min(DoorOpeningWidth, shortSide * 0.4f);
 
-            Material floor = ResolveFloorMaterial();
-            Material wall = ResolveWallMaterial();
+            BuildFloor(width, depth);
+            BuildSide(SegmentEdge.North, north, northDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth);
+            BuildSide(SegmentEdge.South, south, southDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth);
+            BuildSide(SegmentEdge.East, east, eastDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth);
+            BuildSide(SegmentEdge.West, west, westDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth);
 
-            BuildFloor(width, depth, floor);
-            BuildSide(SegmentEdge.North, north, northDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
-            BuildSide(SegmentEdge.South, south, southDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
-            BuildSide(SegmentEdge.East, east, eastDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
-            BuildSide(SegmentEdge.West, west, westDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth, wall);
+            BastionSegmentVisuals.Build(this, _geomRoot, width, depth, wallHeight, thickness);
         }
 
         /// <summary>Strip generated meshes so a prefab asset stays component-only.</summary>
@@ -331,39 +415,6 @@ namespace GatekeeperBastion.Game
 
                 DestroyObject(child.gameObject);
             }
-        }
-
-        Material ResolveFloorMaterial()
-        {
-            if (floorMat != null)
-                return floorMat;
-            if (_runtimeFloorMat == null)
-                _runtimeFloorMat = CreateRuntimeMaterial(new Color(0.55f, 0.55f, 0.55f));
-            return _runtimeFloorMat;
-        }
-
-        Material ResolveWallMaterial()
-        {
-            if (wallMat != null)
-                return wallMat;
-            if (_runtimeWallMat == null)
-                _runtimeWallMat = CreateRuntimeMaterial(Color.magenta);
-            return _runtimeWallMat;
-        }
-
-        static Material CreateRuntimeMaterial(Color color)
-        {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null)
-                shader = Shader.Find("Universal Render Pipeline/Unlit");
-            if (shader == null)
-                shader = Shader.Find("Unlit/Color");
-            if (shader == null)
-                return null;
-
-            var mat = new Material(shader);
-            mat.color = color;
-            return mat;
         }
 
         static void DestroyObject(GameObject go)

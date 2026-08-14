@@ -62,6 +62,7 @@ namespace GatekeeperBastion.Game
         long _cacheAlive = long.MinValue;
         long _cacheAssaultWave = long.MinValue;
         long _cacheHatchBankSec = long.MinValue;
+        long _cacheMasterLeft = long.MinValue;
         bool _missionDrawerAutoOpened;
 
         PlayerHealth Player => PlayerRegistry.Local;

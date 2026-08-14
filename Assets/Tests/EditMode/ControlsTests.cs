@@ -38,6 +38,22 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
+        public void AltFire_IsRightMouseButton()
+        {
+            var rows = Controls.All;
+            int n = 0;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                if (rows[i].Id != ControlId.AltFire) continue;
+                n++;
+                Assert.AreEqual(KeyCode.Mouse1, rows[i].Key);
+                Assert.AreEqual("RMB", rows[i].Display);
+                Assert.AreEqual("zoom", rows[i].Label);
+            }
+            Assert.AreEqual(1, n);
+        }
+
+        [Test]
         public void NoOverlappingContext_SharesAKey()
         {
             var rows = Controls.All;

@@ -36,7 +36,7 @@ The NAV MAP will warn you loudly if you own no weapon and then let you go anyway
 
 **Then CREW QUARTERS.** Weapon upgrades and the equipment slot are locked until you have lost a Run — attributes are not. Before your first loss, attributes and a weapon are the only things your Salvage can become, so there is no argument about it.
 
-**Of the attributes, Scavenging first if you intend to keep playing.** It raises what every Gatekeeper is worth for the rest of the campaign, and it compounds with the siphon dial rather than competing with it. Everything else you want to buy gets cheaper in real terms once it is in.
+**Of the attributes, Scavenging first if you intend to keep playing.** It raises what every Gatekeeper is worth for the rest of the campaign, and it compounds with intensity rather than competing with it. Everything else you want to buy gets cheaper in real terms once it is in.
 
 **Then whatever killed you.** If a Hunter ran you down, that is sprint. If you died standing in the open trading damage, that is health. If the Hatch fell while you were still standing, that is FABRICATION and not you at all.
 

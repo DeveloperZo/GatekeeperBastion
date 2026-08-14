@@ -100,7 +100,6 @@ namespace GatekeeperBastion.Tests
 
             var loaded = MetaState.FromJson(json);
             Assert.AreEqual(SaveData.CurrentVersion, loaded.SaveVersion);
-            Assert.AreEqual(6, SaveData.CurrentVersion);
             Assert.IsTrue(loaded.OwnsPayload(PayloadId.Decoy));
             Assert.AreEqual(PayloadId.Decoy, loaded.EquippedDrone);
         }

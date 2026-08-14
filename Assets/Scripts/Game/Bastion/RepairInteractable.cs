@@ -1,3 +1,4 @@
+using System.Text;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
@@ -5,7 +6,7 @@ using UnityEngine;
 namespace GatekeeperBastion.Game
 {
     /// <summary>REPLICATED-STATE: hold-E at the Hatch — repair when damaged (rig required),
-    /// withdraw when sealed in Prep with Unbanked 0 (no rig). Hatch-bank is Prep T, not E.
+    /// withdraw when sealed in Prep with Unbanked 0 (no rig). Hatch-bank is Prep E then T.
     /// <remarks>Every access to the station is Unity-null-safe: the hatch object can be destroyed
     /// (scene teardown once the run ends) while the Interactor still holds this interactable from
     /// its last raycast. Prefab serializes repairPerSecond = 8; GameController always pushes
@@ -28,6 +29,9 @@ namespace GatekeeperBastion.Game
         long _sessionSpent;
         long _sessionWithdrawn;
         float _sessionHp;
+
+        static readonly WaveDirector s_preview = new WaveDirector();
+        static readonly StringBuilder s_prompt = new StringBuilder(160);
 
         /// <summary>Apply the equipment repair rate and whether the rig is equipped.
         /// Always called from GameController — both args, every run (Architecture gotcha 1).</summary>
@@ -78,9 +82,19 @@ namespace GatekeeperBastion.Game
                 {
                     if (prep && unbanked > 0L && (slots < 0 || slots > 0))
                     {
-                        if (slots >= 0)
-                            return $"Hatch-bank — T  ({unbanked} unbanked, {slots} slots)";
-                        return $"Hatch-bank — T  ({unbanked} unbanked)";
+                        string e = Controls.DisplayOf(ControlId.Interact);
+                        bool armed = gc != null && gc.IsHatchBankArmed;
+                        s_prompt.Clear();
+                        if (armed)
+                            s_prompt.Append('[').Append(Controls.DisplayOf(ControlId.PullDraw))
+                                .Append("] Hatch-bank");
+                        else
+                            s_prompt.Append('[').Append(Controls.DisplayOf(ControlId.DialUp))
+                                .Append('/').Append(Controls.DisplayOf(ControlId.DialDown))
+                                .Append("] Hatch-bank");
+                        AppendStake(s_prompt, gc, unbanked);
+                        s_prompt.Append("  [").Append(e).Append(armed ? "] edit" : "] select");
+                        return s_prompt.ToString();
                     }
                     if (prep && unbanked == 0L && bank > 0L)
                     {
@@ -111,6 +125,20 @@ namespace GatekeeperBastion.Game
                 }
 
                 return $"Hatch damaged ({hp:0}/{maxHp:0}) — {rate:0} salvage/HP";
+            }
+        }
+
+        /// <summary>Prep, sealed, Unbanked waiting, a slot left — E can select, T can start.</summary>
+        public bool OffersHatchBank
+        {
+            get
+            {
+                var gc = _game;
+                if (gc == null || gc.RunIsOver) return false;
+                ReadRepairView(gc, out float hp, out float maxHp, out _, out bool destroyed,
+                    out long unbanked, out int slots, out bool prep);
+                return !destroyed && hp >= maxHp - 0.01f && prep && unbanked > 0L
+                    && (slots < 0 || slots > 0);
             }
         }
 
@@ -229,6 +257,33 @@ namespace GatekeeperBastion.Game
             unbanked = gc.Sim != null ? gc.Sim.Unbanked : 0L;
             slots = gc.Sim != null ? gc.Sim.HatchBankSlotsLeft : 0;
             prep = gc.Sim != null && gc.Sim.Assault == AssaultState.Prep;
+        }
+
+        static void AppendStake(StringBuilder sb, GameController gc, long unbanked)
+        {
+            int level = 0;
+            int bodies = 0;
+            if (gc != null && gc.Sim != null)
+            {
+                var sim = gc.Sim;
+                level = sim.Siphon.Level;
+                int carry = sim.Mode == WaveMode.HatchBank && sim.Assault == AssaultState.Assault
+                    ? sim.HatchCarry
+                    : HatchBank.ClampCarry(sim.WavesSinceBank);
+                int idx = HatchBank.CarryWaveIndex(carry);
+                bodies = s_preview.NextWave(idx, level).enemyCount;
+                sb.Append("  Intensity ").Append(level)
+                    .Append("  juice ").Append(IntensityJuice.CostPerStep)
+                    .Append("  unbanked ").Append(unbanked)
+                    .Append("  carry ").Append(carry)
+                    .Append("  ×").Append(HatchBank.CarryConvert(carry).ToString("0.00"))
+                    .Append("  ").Append(bodies);
+                return;
+            }
+            sb.Append("  Intensity ").Append(level)
+                .Append("  juice ").Append(IntensityJuice.CostPerStep)
+                .Append("  unbanked ").Append(unbanked)
+                .Append("  ").Append(bodies);
         }
     }
 }

@@ -18,6 +18,7 @@ namespace GatekeeperBastion.Sim
     ///       WeaponId.None and nothing else. Do not add a compatibility shim for it.
     ///   6 — EquippedDrone holds a PayloadId (was WeaponId.None sentinel); OwnedPayloadMask
     ///       added. Pre-v6 EquippedDrone values of -1 / unknown sanitize to PayloadId.None.
+    ///   7 — CompletedTerminalIds: last successful Hatch-bank unlock graph (deep start).
     /// Migration from earlier versions lives in <see cref="MetaState.FromJson"/> /
     /// <see cref="MetaState.FromSaveData"/>.
     /// </remarks>
@@ -25,7 +26,7 @@ namespace GatekeeperBastion.Sim
     public class SaveData
     {
         /// <summary>Schema version written by the current build.</summary>
-        public const int CurrentVersion = 6;
+        public const int CurrentVersion = 7;
 
         public int SaveVersion = CurrentVersion;
         public long BankedSalvage;
@@ -61,6 +62,9 @@ namespace GatekeeperBastion.Sim
         public int EquippedSecondary;
         /// <summary>PayloadId in the drone bay (v6+). Pre-v6 WeaponId sentinels sanitize to None.</summary>
         public int EquippedDrone;
+
+        /// <summary>v7: Field terminal ids complete at the last successful Hatch-bank.</summary>
+        public string[] CompletedTerminalIds;
 
         /// <summary>v4: weapon-major flat ArraySize×5 — index = weaponId * AttrCount + WheelAttr.</summary>
         public int[] WeaponWheelPoints;

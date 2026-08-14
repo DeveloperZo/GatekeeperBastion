@@ -53,7 +53,7 @@ The first Wave you start is Defaults only. Hunters start appearing after that an
 
 Two rules about composition are worth carrying in your head:
 
-- **Hunters and Rams are fixed per Wave.** The siphon dial does not add a single one of either. Every extra body the dial buys is a Default.
+- **Hunters and Rams are fixed per Wave.** Intensity does not add a single one of either. Every extra body intensity buys is a Default.
 - **Later Waves make everything tougher at once.** One health multiplier is applied to all three kinds, so a late Ram is not just a Ram that arrived later — it is meaningfully more shooting, and so is everything escorting it.
 
 Later Waves also send wider groups with less time between them. The Wave gets harder in three directions — more bodies, tougher bodies, denser delivery — and only the first of those is something you chose.

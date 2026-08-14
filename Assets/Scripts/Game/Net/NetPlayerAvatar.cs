@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER (puppet): a visible capsule for everyone except its owner.
+    /// <summary>LOCAL-OWNER (puppet): a visible Boarder for everyone except its owner.
     /// Owner-authoritative NetworkTransform. Capsule collider + PlayerHealth so the host
     /// targeting set can see a remote player. Copies the local rig's position and yaw each
     /// LateUpdate. Owner collider stays off so it does not double-physics with the FPS rig.</summary>

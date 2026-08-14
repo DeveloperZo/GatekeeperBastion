@@ -6,7 +6,7 @@ The Hatch is the umbilical junction back to your Ship, at one end of the Bastion
 
 It has its own health, separate from yours. It cannot be moved, closed, sealed, or traded away. **If it reaches zero the Run ends immediately** — the same ending as your own death, the same counter, the same screen. There is no version of the Run that continues without it.
 
-Field-terminal Waves leave it invulnerable. A Hatch-bank Wave is when it can be hurt, and when Unbanked converts to the ship — drip on the Score card, dump when the timer ends. Unbanked hitting 0 does not end the defense.
+Field-terminal Waves leave it invulnerable. A Hatch-bank Wave is when it can be hurt, and when Unbanked converts to the ship — drip on the Score card, dump when the timer ends. Unbanked hitting 0 does not end the defense. How hard that Wave is, and how much the convert pays, is how many field Waves you carried in before you called it.
 
 It starts every Run whole. Whatever happened to it last time did not carry over.
 
@@ -26,7 +26,7 @@ So the shape of the threat to the door depends entirely on what the Wave brought
 
 Stand at the Hatch and hold the interact key. It heals continuously while you hold, at a flat rate, but **only if you have the Repair Rig equipped** — without it, holding the key does nothing to a damaged Hatch. Let go and it stops. The rate is in the [Field Manual](Field-Manual.md).
 
-Prep `T` while looking at the Hatch, with Unbanked and a slot left, starts a Hatch-bank. That is not repair.
+Prep `E` then `T` while looking at the Hatch, with Unbanked and a slot left, starts a Hatch-bank. That is not repair.
 
 If the Hatch is full, Prep, and Unbanked is 0, hold Interact to **withdraw** banked Salvage back into Unbanked. Withdraw does not need the Repair Rig.
 

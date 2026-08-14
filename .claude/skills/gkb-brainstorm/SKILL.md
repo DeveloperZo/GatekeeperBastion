@@ -40,6 +40,9 @@ write the gate.
 
 **On graduation the milestone file is created and the entry is deleted.** Never both. An entry
 that survives its own milestone becomes a second, drifting description of the same thing.
+When a file's last Idea is gone and Open is empty, move it to `Docs/Brainstorms/closed/`
+if a roster or Decided table is still the record; delete only when nothing remains worth
+keeping.
 
 ## What stays an entry
 

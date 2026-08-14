@@ -1,8 +1,8 @@
-<!-- Purpose: the shape of one Run end to end — embarking, Prep and Assault, starting a Wave at a field terminal, and the two ways it can finish. / Status: working / Update trigger: when the Run's phases, the draw model, the deep-start option, or the Run-enders change. / Last updated: 2026-08-13 -->
+<!-- Purpose: the shape of one Run end to end — embarking, Prep and Assault, starting a Wave at a field terminal, Master Control, and the two ways it can finish. / Status: working / Update trigger: when the Run's phases, the draw model, the deep-start option, or the Run-enders change. / Last updated: 2026-08-13 -->
 
 # A Run
 
-A Run is one trip out to the Bastion and back. It starts on your Ship, it ends with you Lost or with Wave 5 cleared and nothing left Unbanked, and either way only Salvage that made it through a Hatch-bank is yours.
+A Run is one trip out to the Bastion and back. It starts on your Ship, it ends with you Lost or with Master Control's Hatch-bank survived, and either way only Salvage that made it through a Hatch-bank is yours.
 
 ## Before you leave: the Ship
 
@@ -22,17 +22,17 @@ It stays quiet. Nothing is coming, nothing is counting down, and nothing will ha
 
 Once aboard, the Run alternates between two states, and it will keep alternating until the Run ends.
 
-**Prep** is the quiet. No Gatekeepers exist, no Salvage is coming in, and the Run clock is the only thing moving. This is the only time the siphon dial can be changed, and it is the only time you can repair the Hatch without something chewing on it. Prep has no time limit whatsoever — you can stand in it as long as you like. It also pays nothing, so standing in it forever is not a strategy, just a rest.
+**Prep** is the quiet. No Gatekeepers exist, no Salvage is coming in, and the Run clock is the only thing moving. This is the only time you can juice intensity, and it is the only time you can repair the Hatch without something chewing on it. Prep has no time limit whatsoever — you can stand in it as long as you like. It also pays nothing, so standing in it forever is not a strategy, just a rest.
 
-**Assault** starts when you use a field terminal or Hatch-bank at the Hatch, and lasts until every Gatekeeper that Wave sent is dead. The dial locks the moment it starts. Kills pay Unbanked only while an Assault is live.
+**Assault** starts when you use a field terminal or Hatch-bank at the Hatch, and lasts until every Gatekeeper that Wave sent is dead. Intensity locks the moment it starts. Kills pay Unbanked only while an Assault is live.
 
 ## Starting a Wave
 
-A Wave starts when you look at a field terminal in Prep and Interact. That commits you to that terminal's remaining Waves at whatever the dial is set to, and it cannot be taken back or called off. There is no abort, no retreat, and no way to end an Assault except by killing everything in it.
+A Wave starts when you look at a field terminal in Prep. `+` / `-` juice if you want, then `E` selects — including intensity 0. `T` starts **one** Wave. There is no abort once Assault is live: the only way out is killing everything in it.
 
-The **T** key at the Hatch, looking at it in Prep, starts a Hatch-bank. Elsewhere it does not start a Wave. The terminal is still Interact.
+Juice while looking at the Hatch; `E` selects, `T` starts a Hatch-bank. `T` without a select does not start a Wave.
 
-A field terminal takes a fixed number of Waves to complete — the first one on the kit bastion takes the Run's full five. One Interact starts them all. After each Wave clears there is a short fixed quiet, then the next Wave. When the last of those clears, the terminal is done and its door opens.
+A field terminal takes a fixed number of Waves to complete — the first one on the kit bastion takes the Run's full five. Each `T` after `E` starts one. After it clears, Prep lasts as long as you want: Hatch-bank, or walk back to the terminal and pull the next. When the last of those clears, the terminal is done and its door opens.
 
 See the [Field Manual](Field-Manual.md) for how many Waves a Run holds.
 
@@ -42,7 +42,7 @@ Gatekeepers arrive in groups rather than a stream. Each group comes through one 
 
 The Wave is clear when the last Gatekeeper of it is dead **and** the Bastion has finished sending them. Not when the last group spawns — when the last body drops. A single Gatekeeper still alive somewhere keeps you in Assault, and nothing despawns on its own mid-run.
 
-When it clears you drop back to Prep for a short fixed gap, then the next Wave of that terminal starts on its own. That gap is when a Hatch-bank is offered — Prep names it if you have Unbanked. The dial unlocks during that gap. Clearing the last field Wave opens that terminal's door and leaves Unbanked in Prep. It does not end the Run.
+When it clears you drop back to Prep with no timer. That is when a Hatch-bank is offered — Prep names it if you have Unbanked. Intensity unlocks. Clearing the last field Wave of that terminal opens its door and leaves Unbanked in Prep. It does not end the Run.
 
 A Wave started at a field terminal hunts **you**. The Hatch cannot be hurt during that fight. Sitting at the Hatch earns nothing until you Hatch-bank.
 
@@ -58,11 +58,11 @@ Exactly three things end a Run, and only three.
 
 Both of those are **Lost**. The screen names which one happened, and that the Boarder was thrown off the Bastion.
 
-**You clear Wave 5 with nothing Unbanked.** That is **Escaped** — the screen reads BASTION STRIPPED. Clearing Wave 5 with Unbanked left does not. Hatch-bank after the field is stripped converts and leaves you in Prep; the door is already open.
+**You survive Master Control.** Juice once at the console — it covers the sequence — then `E` selects and `T` starts. The door seals; five Boarder-hunt Waves hit that room. The door opens; five Hatch-bank windows start. Leftover converts. That is **Escaped** — the screen reads BASTION STRIPPED. Clearing Wave 5 does not. Hatch-bank after the field is stripped converts and leaves you in Prep; the door is already open.
 
 ## What the endings actually mean
 
-Less than you would expect. Converted Salvage stays on the ship. Unbanked is wiped if you go down or the Hatch falls. Wave 5 does not wipe it. Clearing adds no bonus. The two endings differ in three things:
+Less than you would expect. Converted Salvage stays on the ship. Unbanked is wiped if you go down or the Hatch falls. Wave 5 does not wipe it. Master Control's Hatch-bank converts leftover, then the win. Clearing adds no bonus. The two endings differ in three things:
 
 - what the screen says;
 - which lifetime counter ticks — runs lost, or runs cleared;
@@ -80,16 +80,16 @@ This is not a skip. Starting deeper means the earlier Waves are **delivered back
 
 Concretely, if you start deep:
 
-- it is a single Assault, so the dial is locked for the whole chain;
+- it is a single Assault, so intensity is locked for the whole chain;
 - there is no quiet in the middle of it — no repositioning without pressure;
 - the earlier Waves keep their own composition and toughness; a first Wave delivered inside a chain is still a first Wave;
-- once the chain clears, the Run continues from the next field terminal, one Interact starting that terminal's remaining Waves.
+- once the chain clears, the Run continues from the next field terminal, one `T` per Wave.
 
 A condensed run, then. Same Waves, same total bodies, much less room.
 
 ## See also
 
-[Waves](Waves.md). [The Siphon Dial](The-Siphon-Dial.md). [The Hatch](The-Hatch.md). [Salvage](Salvage.md). [The Ship](The-Ship.md).
+[Waves](Waves.md). [Intensity](Intensity.md). [The Hatch](The-Hatch.md). [Salvage](Salvage.md). [The Ship](The-Ship.md).
 
 ## Gaps
 
@@ -97,7 +97,7 @@ A condensed run, then. Same Waves, same total bodies, much less room.
 - **Repairing the Hatch spends banked Salvage** — the same purse you shop with at the consoles. The prompt quotes the rate, but nothing tells you that the money is coming out of your upgrade budget, or that with an empty bank you cannot repair at all.
 - **Repairing needs the Repair Rig equipped.** Without it the key does nothing however much you have banked, and nothing in the Run says why.
 - Nothing states that there is **no way to leave a Run early**. Players look for a bail-out; there isn't one, and no screen says so.
-- Nothing states that the dial is **locked** during an Assault. The panel simply stops listing it.
+- Nothing states that intensity is **locked** during an Assault. The panel simply stops listing it.
 - The start-Wave ceiling is your deepest **cleared** Wave, not deepest reached. The NAV MAP shows the number without saying which of those it is.
 - During a deep-start chain the game holds spawns back when too many Gatekeepers are alive at once. You never see this; a chain can feel like it stalled when it is actually throttling itself.
 - The Wave-cleared test requires **every** spawned Gatekeeper dead. If one is stuck or lost somewhere in the Bastion, you stay in Assault with nothing visibly happening and no indication of where it is.

@@ -40,6 +40,12 @@ starts that terminal's remaining Waves as a sequence: each clear, then
 overlap — stacking T1's five would make the default Interact equal the NAV MAP's
 hardest start. T2/T3/T4 at N=1 are still one Wave.
 
+**Recut 2026-08-13 (Zo):** that chain recut is reversed. A new save banks 0 until a
+Hatch-bank, and the chain made the first convert a Wave-5 hatch defence with no repair.
+Interact starts **one** Wave. T1 still needs 5 clears to open D1. Prep after each clear
+is untimed; Hatch-bank is legal there. `ArmSequentialDraws` stays in Sim for later
+terminals that re-lock banking. Deep-start overlap is unchanged.
+
 ## Story
 
 As a Boarder, I want Interact at a field terminal to start that terminal's Waves, so that
@@ -69,11 +75,10 @@ field is decoration and this slice did not create a second fight.
 
 1. **Prep `T` (Siphon Draw) is a logged refusal** — `Waves start at a terminal` — and does
    not call `TriggerDraw`. Shortcut panel copy matches.
-2. **Looking at a wing field terminal in Prep, Interact Down starts that terminal's
-   remaining Waves** in `WaveMode.Terminal` (capped by Waves left in the Run). One
-   Interact. Log `[Terminal] <id> started wave <n> mode=terminal` on each draw of the
-   sequence. Already complete, in Assault, sequence already pending, or non-Field kind
-   → logged refusal, no Wave.
+2. **Looking at a wing field terminal in Prep, Interact Down starts one Wave** in
+   `WaveMode.Terminal`. Log `[Terminal] <id> started wave <n>`. T1 still needs 5 clears
+   to open D1. Already complete, in Assault, a Wave already pending, or non-Field kind
+   → logged refusal, no Wave. After the clear, Prep is untimed; Hatch-bank is legal.
 3. **During `WaveMode.Terminal`, `RunSim.DamageHatch` is a no-op.** Hatch HP does
    not move. The HUD Hatch card still shows. Loss this slice is Boarder down only.
    `GameController.DamageHatch` forwards to that method.
@@ -85,15 +90,12 @@ field is decoration and this slice did not create a second fight.
 5. **A Field terminal completes after N authored Waves, not after the first.**
    `wavesToComplete` on `BastionTerminal` (int, min 1, default 1), copied onto
    `BastionUnlockGraph.TerminalSpec.WavesToComplete` at graph build. **T1 in
-   `Bastion.unity` is 5.** One Interact arms `min(N − cleared, run Waves left)` sequential
-   draws. After each clear that is not the last of the sequence and not Wave 5,
-   `RunSim` waits `TerminalChainGap` (8 s) in Prep and `TriggerDraw`s the next. Log
+   `Bastion.unity` is 5.** Each Interact starts one Wave. Log
    `[Terminal] <id> wave <k>/<N> cleared` per assault. The Nth clear calls
    `TryCompleteTerminal`. Dying mid-Wave does not increment. A deep-start overlap on
    that first assault still records `CurrentWaveIndex − indexAtPull` toward N. T2/T3/T4
    stay 1 unless authored otherwise. M14's five-Wave run cap still holds — T1's five
-   are the run's five. The 8 s gap is a #12 constant serving this rule; it is not
-   `InterWaveGap` (3 s after *delivery* during a deep-start pile-up).
+   are the run's five. Field terminals do not arm `ArmSequentialDraws`.
 6. **The door is a player verb, not only a graph side-effect.** On the Nth clear,
    `UnlocksDoor` opens when that door's required set is done. If the slab is still up
    while Prep remains, Interact on the completed terminal is `[E] Open door` and opens
@@ -119,8 +121,8 @@ HatchBank is unused this slice; M53 is the first writer. *(Already in tree.)*
 
 **Change** `RunSim` — `WaveMode Mode { get; private set; }` (default Terminal).
 `TriggerDraw` sets `Mode = WaveMode.Terminal` and keeps today's deep-start overlap
-chain. `ArmSequentialDraws(total)` / `TerminalChainGap` auto-draw after each clear
-(Prep, not overlap). `DamageHatch(float amount)` no-ops when `Mode == Terminal`;
+chain. `ArmSequentialDraws` / `TerminalChainGap` remain for later terminals; the
+field loop does not arm them. `DamageHatch(float amount)` no-ops when `Mode == Terminal`;
 otherwise `Ship.Hatch.Damage`. `NotifyAssaultCleared` still fires per assault so the
 Game layer can record each clear; sequential follow-up arms after that if Waves remain.
 
@@ -131,10 +133,9 @@ of Sim.
 
 **Change** `GameController` — Prep `PullDraw` logs the criterion-1 refusal. Field-terminal
 start/clear live in `GameController.Terminals.cs`. Hold a pending terminal id, layout, and
-the `CurrentWaveIndex` at the last credited clear. `StartTerminalWave` arms
-`ArmSequentialDraws(min(remaining, run left))` then `TriggerDraw`. On `AssaultEnded`:
-`RecordWaveCleared` for this assault's delta, keep pending until the terminal is done.
-Dev replay/jump still nulls pending and cancels the sequence.
+the `CurrentWaveIndex` at pull. `StartTerminalWave` calls `TriggerDraw` once. On
+`AssaultEnded`: `RecordWaveCleared` for this assault's delta, then clear pending so the
+next Interact or a Hatch-bank is legal. Dev replay/jump still nulls pending.
 
 **Change** `BastionLayout` — pass `WavesToComplete` into `TerminalSpec` at build;
 `RecordWaveCleared` / `TryGetFieldProgress` forward to the graph and refresh doors on
@@ -175,8 +176,7 @@ those pages: field-terminal Waves hunt the Boarder; the Hatch is not in the figh
 Rejected: subclassing `StationTerminal` (opens Ship panels). Rejected: completing the
 terminal on Interact (silent unlock). Rejected: completing after the first Wave (the
 10:29:42 session). Rejected: delaying `AwardKill` (M53). Rejected: changing the five-Wave
-win (M54). Rejected: one Interact per Wave (Zo 2026-08-13 — walk-back to the console is
-not the loop). Rejected: overlapping the N Waves like a deep-start (T1's five would be
+win (M54). Rejected: overlapping the N Waves like a deep-start (T1's five would be
 the NAV MAP's hardest start). Rejected: delaying `Escaped` so the Boarder can walk
 through D1 (M54). Rejected: retuning `InterWaveGap` to serve this gap.
 
@@ -184,9 +184,9 @@ through D1 (M54). Rejected: retuning `InterWaveGap` to serve this gap.
 
 - **Driven by** Interact at a field terminal — here. `T` is the refusal.
 - **Shown by** the interact prompt and the shortcut-panel line — here.
-- **Reads back as** the sequence starting from one Interact, `(k/N)` then `next Wave
-  incoming`, D1 open in the log/graph on the Nth clear, Hatch HP unchanged — here.
-  Walking through D1 is M54.
+- **Reads back as** one Wave per Interact, `(k/N)` on the prompt, D1 open in the
+  log/graph on the Nth clear, Hatch HP unchanged, Hatch-bank legal in the Prep after
+  any clear — here. Walking through D1 is M54.
 
 ## Verification
 

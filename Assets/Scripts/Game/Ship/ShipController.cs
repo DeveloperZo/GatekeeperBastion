@@ -192,6 +192,8 @@ namespace GatekeeperBastion.Game
             OpenStation = station;
             SetWalkMode(false);
             station.OnOpenedByShip();
+            var boarder = _fpc != null ? _fpc.GetComponent<BoarderPresentation>() : null;
+            if (boarder != null) boarder.SetStationHidden(true);
         }
 
         /// <summary>Close the open panel (if it is the given one) and return to walking.</summary>
@@ -200,6 +202,8 @@ namespace GatekeeperBastion.Game
             if (OpenStation != station) return;
             OpenStation = null;
             SetWalkMode(true);
+            var boarder = _fpc != null ? _fpc.GetComponent<BoarderPresentation>() : null;
+            if (boarder != null) boarder.SetStationHidden(false);
         }
 
         void SetWalkMode(bool walking)

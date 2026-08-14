@@ -24,19 +24,19 @@ arrive already tethered. The Bastion is quiet, and it stays quiet until you use 
 pick your ground, or stand at a terminal and think.
 
 Then they come — in **groups**, with a gap between them. Kill them and the Salvage sits
-Unbanked until a Hatch-bank. One Interact at a field terminal starts that
-terminal's Waves; Prep `T` at the Hatch starts a Hatch-bank. A Run is a fixed number of
+Unbanked until a Hatch-bank. `+/-` then `E` then `T` at a field terminal starts that
+terminal's next Wave; the same keys at the Hatch start a Hatch-bank. A Run is a fixed number of
 field Waves. Clear them and the door opens; Unbanked stays until you Hatch-bank. How many:
 [Field Manual](Field-Manual.md).
 
 ## The wager
 
-Before each Wave you set the **siphon dial**. Higher pays more and sends more bodies.
+Before each Wave you juice **intensity** at the trigger. Higher pays more and sends more bodies.
 
-The dial does not make Gatekeepers tougher, does not tighten their spacing, and does not
-add a single extra Hunter or Ram — every body it adds is the basic kind. You are betting
+Intensity does not make Gatekeepers tougher, does not tighten their spacing, and does not
+add a single extra Hunter or Ram — every body it adds is a Default. You are betting
 that you can kill more of the same thing, not that you can survive a different fight.
-Once a Wave is live the dial locks.
+Once a Wave is live intensity locks.
 
 ## The three things that come at you
 

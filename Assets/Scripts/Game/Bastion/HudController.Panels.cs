@@ -49,7 +49,7 @@ namespace GatekeeperBastion.Game
             if (sim.AllWavesCleared)
             {
                 _view.SetPrepHeading(
-                    "<b>BASTION STRIPPED</b> — all " + WaveDirector.MaxWaves + " waves cleared");
+                    "<b>BASTION STRIPPED</b> — Master Control survived");
                 _view.SetPrepLine(1, "there is nothing left to draw");
                 _view.SetPrepLine(2, null);
                 _view.SetPrepLine(3, null);
@@ -62,20 +62,35 @@ namespace GatekeeperBastion.Game
             int specIndex = stripped ? WaveDirector.MaxWaves - 1 : wave;
             int here = _waves.NextWave(specIndex, lvl).enemyCount;
             _lineBuf.Clear();
-            _lineBuf.Append("<b>PREP</b>  ·  Wave ");
-            if (stripped)
-                _lineBuf.Append(WaveDirector.MaxWaves);
+            _lineBuf.Append("<b>PREP</b>  ·  ");
+            if (sim.MasterSequenceLive)
+            {
+                bool hatchHalf = sim.MasterPhase == MasterControlPhase.Hatch;
+                int n = hatchHalf ? MasterControl.HatchWaves : MasterControl.TerminalWaves;
+                int shown = n - sim.MasterWavesLeft + 1;
+                if (shown < 1) shown = 1;
+                if (shown > n) shown = n;
+                _lineBuf.Append("Master Control  ");
+                _lineBuf.Append(hatchHalf ? "Hatch-bank " : "terminal ");
+                _lineBuf.Append(shown).Append('/').Append(n);
+            }
             else
-                _lineBuf.Append(wave + 1);
-            _lineBuf.Append('/').Append(WaveDirector.MaxWaves);
-            if (stripped)
-                _lineBuf.Append(" — field stripped");
+            {
+                _lineBuf.Append("Wave ");
+                if (stripped)
+                    _lineBuf.Append(WaveDirector.MaxWaves);
+                else
+                    _lineBuf.Append(wave + 1);
+                _lineBuf.Append('/').Append(WaveDirector.MaxWaves);
+                if (stripped)
+                    _lineBuf.Append(" — field stripped");
+            }
             if (sim.SequentialFollowUpRemaining > 0f)
             {
                 int sec = Mathf.CeilToInt(sim.SequentialFollowUpRemaining);
                 _lineBuf.Append(" — next Wave in ").Append(sec).Append("s");
             }
-            else
+            else if (!sim.MasterSequenceLive)
                 _lineBuf.Append(" — use a field terminal");
             _view.SetPrepHeading(_lineBuf.ToString());
 
@@ -88,14 +103,14 @@ namespace GatekeeperBastion.Game
             _view.SetPrepLine(1, _lineBuf.ToString());
 
             _lineBuf.Clear();
-            if (stripped && unbanked > 0L)
+            if (sim.MasterPhase == MasterControlPhase.Hatch || (stripped && unbanked > 0L))
                 _lineBuf.Append(here).Append(" gatekeepers on a Hatch-bank");
             else
                 _lineBuf.Append(here).Append(" gatekeepers on the next terminal Wave");
             if (lvl < TetherSiphon.MaxLevel)
             {
                 int nextCount = _waves.NextWave(specIndex, lvl + 1).enemyCount;
-                _lineBuf.Append("  ·  [ ] raise L").Append(lvl + 1)
+                _lineBuf.Append("  ·  +/- raise Intensity ").Append(lvl + 1)
                     .Append(" → ").Append(nextCount);
             }
             _view.SetPrepLine(2, _lineBuf.ToString());
@@ -117,14 +132,31 @@ namespace GatekeeperBastion.Game
         {
             bool hatchBank = sim.Mode == WaveMode.HatchBank;
             int bankSec = hatchBank ? Mathf.CeilToInt(sim.HatchBankRemaining) : 0;
+            int masterLeft = sim.MasterWavesLeft;
             if (remaining == _cacheAlive && wave == _cacheAssaultWave
-                && bankSec == _cacheHatchBankSec)
+                && bankSec == _cacheHatchBankSec && masterLeft == _cacheMasterLeft)
                 return;
             _cacheAlive = remaining;
             _cacheAssaultWave = wave;
             _cacheHatchBankSec = bankSec;
+            _cacheMasterLeft = masterLeft;
             _lineBuf.Clear();
-            if (hatchBank)
+            if (sim.MasterSequenceLive)
+            {
+                bool hatchHalf = sim.MasterPhase == MasterControlPhase.Hatch;
+                int n = hatchHalf ? MasterControl.HatchWaves : MasterControl.TerminalWaves;
+                int shown = n - sim.MasterWavesLeft + 1;
+                if (shown < 1) shown = 1;
+                if (shown > n) shown = n;
+                if (hatchHalf)
+                    _lineBuf.Append("HATCH-BANK — Master Control ").Append(shown)
+                        .Append('/').Append(n).Append(" — ").Append(bankSec).Append("s");
+                else
+                    _lineBuf.Append("ASSAULT — Master Control ").Append(shown)
+                        .Append('/').Append(n);
+                _lineBuf.Append("   |   enemies remaining: ").Append(remaining);
+            }
+            else if (hatchBank)
             {
                 _lineBuf.Append("HATCH-BANK — ").Append(bankSec).Append("s")
                     .Append("   |   enemies remaining: ").Append(remaining);

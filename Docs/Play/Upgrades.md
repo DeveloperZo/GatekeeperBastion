@@ -12,7 +12,7 @@ Every track works the same way: each level costs more than the last, and each le
 
 **Stamina** raises your sprint pool. Read this as *seconds of running*, because that is what it is, and it is the most directly tactical track in the game: a Hunter is faster than your walk and slower than your sprint, so your sprint pool is literally your escape budget. When it runs out, the room stops being something you can leave.
 
-**Scavenging** raises what every Gatekeeper is worth, before the siphon dial is applied. It is the only track that pays for the other tracks.
+**Scavenging** raises what every Gatekeeper is worth, before intensity is applied. It is the only track that pays for the other tracks.
 
 **Luck** buys critical-hit chance, and it is the only source of criticals in the entire game. Nothing else in the build grants crit chance or crit damage, on purpose — two sources would multiply and the panel numbers would stop meaning anything. Luck buys the chance a shot crits, never how hard a crit lands.
 
@@ -32,7 +32,7 @@ The lock is the Run-loss counter, and **losing the Hatch trips it exactly as bei
 
 ## What is actually worth buying
 
-**Scavenging, early, if you are going to play more than a few Runs.** It is the only track that makes everything else cheaper, it compounds with the dial, and it is live on the very next kill after you buy it. Everything you buy later, you buy faster because of it.
+**Scavenging, early, if you are going to play more than a few Runs.** It is the only track that makes everything else cheaper, it compounds with intensity, and it is live on the very next kill after you buy it. Everything you buy later, you buy faster because of it.
 
 **Stamina before Vitality, usually.** Extra health lets you survive a mistake. Sprint lets you not make it. In a room where one Gatekeeper exists purely to chase you, distance is worth more than padding.
 
@@ -55,7 +55,7 @@ The lock is the Run-loss counter, and **losing the Hatch trips it exactly as bei
 - Nothing in the game lays out the gated/ungated split in one place. You infer it from a locked row at the ARMORY and a reassuring line on the other two panels.
 - The lock reads "survive a death first", but the counter it checks also ticks when the Hatch falls. Losing the door unlocks Tiers. Nothing says that.
 - Nothing reduces the Salvage cost of repairing. The Repair Rig is what lets you repair at all, at a fixed rate, and no panel says that owning it changes nothing about the price.
-- That Scavenging is applied *before* the siphon dial — so the two multiply — is never stated.
+- That Scavenging is applied *before* intensity — so the two multiply — is never stated.
 - Stamina is quoted both as a raw pool and as seconds of sprint. That the drain rate is fixed regardless of level, so seconds are the only thing the track really buys, is never said.
 - Tiers being per weapon and non-transferable is stated nowhere before you buy.
 - There is no respec and no refund. Nothing warns you.

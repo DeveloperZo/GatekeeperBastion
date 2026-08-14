@@ -31,7 +31,7 @@ It is slow. That is the offer — you have time to deal with a Ram if you spend 
 
 It has by far the most health in the game and that health scales up with the Wave like everything else, so the same Ram late in a Run is a substantially longer job than the first one you met. A Wave where the Rams stack up is a Wave where you should be picking your moment to burn one down rather than trading with chaff.
 
-The dial never adds Rams. However high you set it, the number of Rams is the Wave's, not yours.
+Intensity never adds Rams. However high you juice, the number of Rams is the Wave's, not yours.
 
 ## See also
 

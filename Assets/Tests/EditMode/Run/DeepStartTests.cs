@@ -191,7 +191,7 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void DeepStart_ClearingWaveFive_Escapes_FromAnyStart()
+        public void DeepStart_ClearingWaveFive_StaysPrep()
         {
             var meta = MetaState.CreateNew();
             meta.DeepestWaveReached = 5;
@@ -208,10 +208,11 @@ namespace GatekeeperBastion.Tests
             Assert.IsFalse(sim.ChainPending);
 
             sim.NotifyAssaultCleared();
-            Assert.AreEqual(RunPhase.Escaped, sim.Phase);
-            Assert.AreEqual("cleared", sim.LastRunReport.cause);
+            Assert.AreEqual(RunPhase.Tethered, sim.Phase);
+            Assert.AreEqual(AssaultState.Prep, sim.Assault);
+            Assert.IsFalse(sim.AllWavesCleared);
             Assert.AreEqual(5, meta.DeepestWaveReached);
-            Assert.AreEqual(1, meta.CleanExits);
+            Assert.AreEqual(0, meta.CleanExits);
         }
 
         [Test]

@@ -199,6 +199,36 @@ namespace GatekeeperBastion.Sim
         public bool ControlRoomReachable =>
             !string.IsNullOrEmpty(_controlGateId) && _openDoorSet.Contains(_controlGateId);
 
+        /// <summary>Sorted completed Field terminal ids for save / deep-start restore.</summary>
+        public string[] CopyCompletedTerminalIds()
+        {
+            if (_completedTerminals.Count == 0)
+                return Array.Empty<string>();
+            var ids = new string[_completedTerminals.Count];
+            _completedTerminals.CopyTo(ids);
+            Array.Sort(ids, StringComparer.Ordinal);
+            return ids;
+        }
+
+        /// <summary>Mark saved ids complete and open the doors they unlock. Unknown ids skipped.</summary>
+        public void RestoreCompletedTerminals(string[] ids)
+        {
+            if (ids == null)
+                return;
+            for (int i = 0; i < ids.Length; i++)
+            {
+                string id = ids[i];
+                if (string.IsNullOrEmpty(id))
+                    continue;
+                if (!_terminals.ContainsKey(id))
+                    continue;
+                if (_completedTerminals.Contains(id))
+                    continue;
+                _clearedWaves[id] = WavesNeeded(id);
+                TryCompleteTerminal(id, out _);
+            }
+        }
+
         /// <summary>Null when valid; otherwise a short reason.</summary>
         public string Validate()
         {

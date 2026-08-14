@@ -3,7 +3,10 @@ using System;
 namespace GatekeeperBastion.Sim
 {
     /// <summary>Hatch-bank convert rules. RunSim owns the live pile and calls these.
-    /// Numbers are #12 constants — retune here and the 4-Data GEN block together.</summary>
+    /// Numbers are #12 constants — retune here and the 4-Data GEN block together.
+    /// Convert and Hatch composition both read Waves carried since the last Hatch-bank.
+    /// Pile-size convert is gone: more Waves is more Unbanked, and two levers cannot be
+    /// attributed.</summary>
     public static class HatchBank
     {
         public const int SlotsPerRun = 3;
@@ -12,10 +15,10 @@ namespace GatekeeperBastion.Sim
         /// spawn plus a short fight so Unbanked visibly falls (20/s × 45 = 900) before dump.
         /// Enemy wipe and Unbanked hitting 0 do not end it.</summary>
         public const float DurationSeconds = 45f;
-        public const long MidAt = 400L;
-        public const long HighAt = 800L;
         public const float MultLow = 1.00f;
+        public const float Mult2 = 1.10f;
         public const float MultMid = 1.25f;
+        public const float Mult4 = 1.35f;
         public const float MultHigh = 1.50f;
 
         /// <summary>Salvage/s withdrawn at a full Hatch. Catalog repair HP/s times salvage/HP
@@ -24,11 +27,33 @@ namespace GatekeeperBastion.Sim
             EquipmentCatalog.Def(EquipmentId.RepairRig).repairPerSecond
             * ShipSystems.RepairSalvagePerHp;
 
-        public static float ConvertMultiplier(long unbanked)
+        /// <summary>Field Waves cleared since the last Hatch-bank, clamped to 1..MaxWaves.</summary>
+        public static int ClampCarry(int waves)
         {
-            if (unbanked >= HighAt) return MultHigh;
-            if (unbanked >= MidAt) return MultMid;
-            return MultLow;
+            if (waves < 1) return 1;
+            if (waves > WaveDirector.MaxWaves) return WaveDirector.MaxWaves;
+            return waves;
+        }
+
+        /// <summary>Convert multiplier for a Hatch-bank started after this many field Waves.
+        /// 1 → ×1.00, 5+ → ×1.50.</summary>
+        public static float CarryConvert(int waves)
+        {
+            switch (ClampCarry(waves))
+            {
+                case 1: return MultLow;
+                case 2: return Mult2;
+                case 3: return MultMid;
+                case 4: return Mult4;
+                default: return MultHigh;
+            }
+        }
+
+        /// <summary>0-based <see cref="WaveDirector.NextWave"/> index for that carry.
+        /// 1 Wave → Wave 1, 5 Waves → Wave 5.</summary>
+        public static int CarryWaveIndex(int waves)
+        {
+            return ClampCarry(waves) - 1;
         }
 
         public static long BankedFrom(long unbankedTaken, float multiplier)

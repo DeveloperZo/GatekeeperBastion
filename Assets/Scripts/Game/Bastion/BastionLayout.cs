@@ -13,6 +13,7 @@ namespace GatekeeperBastion.Game
 
         BastionUnlockGraph _graph;
         bool _built;
+        bool _controlRoomSealed;
 
         void Awake()
         {
@@ -139,6 +140,47 @@ namespace GatekeeperBastion.Game
 
         public bool ControlRoomReachable => _graph != null && _graph.ControlRoomReachable;
 
+        /// <summary>Seal the Control Room door for Master Control's terminal half. Graph refresh
+        /// cannot reopen it while sealed. Mutes every spawn under this layout so the fight is
+        /// only Master's UnlockedSpawns (caller re-enables those after the seal).</summary>
+        public void SetControlRoomSealed(bool sealedShut)
+        {
+            _controlRoomSealed = sealedShut;
+            RefreshDoorStates();
+            if (sealedShut)
+                MuteSpawns();
+            else
+                RefreshTerminalStates();
+        }
+
+        void MuteSpawns()
+        {
+            SpawnPoint[] points = GetComponentsInChildren<SpawnPoint>(true);
+            for (int i = 0; i < points.Length; i++)
+            {
+                SpawnPoint sp = points[i];
+                if (sp == null)
+                    continue;
+                sp.gameObject.SetActive(false);
+            }
+        }
+
+        public string[] CopyCompletedTerminalIds()
+        {
+            if (_graph == null)
+                return System.Array.Empty<string>();
+            return _graph.CopyCompletedTerminalIds();
+        }
+
+        public void RestoreCompletedTerminals(string[] ids)
+        {
+            if (_graph == null || ids == null || ids.Length == 0)
+                return;
+            _graph.RestoreCompletedTerminals(ids);
+            RefreshDoorStates();
+            RefreshTerminalStates();
+        }
+
         void RebuildGraph()
         {
             _doors.Clear();
@@ -247,6 +289,8 @@ namespace GatekeeperBastion.Game
                 return;
 
             bool open = !door.StartsLocked || _graph.IsDoorOpen(door.DoorId);
+            if (door.OpensControlRoom && _controlRoomSealed)
+                open = false;
             door.SetOpen(open);
         }
 

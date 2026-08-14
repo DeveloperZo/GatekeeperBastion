@@ -13,9 +13,17 @@ namespace GatekeeperBastion.Tests
             foreach (BastionBlockKind kind in Enum.GetValues(typeof(BastionBlockKind)))
             {
                 int multiple = BastionKit.Multiple(kind);
+                float aspect = kind == BastionBlockKind.ControlRoom ? BastionKit.ControlRoomAspect : 1f;
                 Assert.AreEqual(BastionKit.ScalerX * multiple, BastionKit.FootprintWidth(kind), 1e-4f, kind.ToString());
-                Assert.AreEqual(BastionKit.ScalerZ * multiple, BastionKit.FootprintDepth(kind), 1e-4f, kind.ToString());
+                Assert.AreEqual(BastionKit.ScalerZ * multiple * aspect, BastionKit.FootprintDepth(kind), 1e-4f, kind.ToString());
             }
+        }
+
+        [Test]
+        public void Footprint_ControlRoom_IsWideLandscapeHall()
+        {
+            Assert.AreEqual(76f, BastionKit.FootprintWidth(BastionBlockKind.ControlRoom), 1e-4f);
+            Assert.AreEqual(38f, BastionKit.FootprintDepth(BastionBlockKind.ControlRoom), 1e-4f);
         }
 
         [Test]

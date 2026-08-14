@@ -12,9 +12,9 @@ namespace GatekeeperBastion.Game
     /// Scene flow: the ship hub is now a real scene (SceneFlow.Ship), so entering the Bastion
     /// starts fighting immediately — Start() calls StartRun + EngageTether and Docked is a
     /// transient boot phase. A run now ends TWO ways: death (player death via PlayerDied →
-    /// Sim.NotifyPlayerDown, or hatch destruction) lands in Lost, and Wave 5 with nothing
-    /// unbanked lands in Escaped. Hatch-bank after the field is stripped stays Tethered.
-    /// Both terminal phases leave by exactly
+    /// Sim.NotifyPlayerDown, or hatch destruction) lands in Lost, and Master Control's
+    /// Hatch-bank half survived lands in Escaped. Hatch-bank after the field is stripped
+    /// stays Tethered. Wave 5 terminal does not Escaped. Both terminal phases leave by exactly
     /// one door: ReturnToShip (save + load the Ship scene) — the old in-place ResetRun/Respawn
     /// path is gone. MetaState comes from GameSession (with a direct-play fallback); no
     /// Time.timeScale pausing — the sim ignores Tick outside Tethered.
@@ -127,6 +127,8 @@ namespace GatekeeperBastion.Game
             GameSession.PendingStartWave = 1;
             Sim.StartRun(startWave);
             Sim.EngageTether(); // → Tethered (Prep)
+            if (Sim.StartWave > 1 && _layout != null && Meta != null)
+                _layout.RestoreCompletedTerminals(Meta.CompletedTerminalIds);
             // The spawner's per-frame delivery advance belongs to this controller's
             // written order from here on; its own Update yields.
             if (_spawner != null) _spawner.SetHosted(true);
@@ -242,7 +244,7 @@ namespace GatekeeperBastion.Game
                 TickLoseScreen();
         }
 
-        /// <summary>Prep-only inputs (siphon draw + dial stepper). Dial is [ ] — the number
+        /// <summary>Prep-only inputs (start T and juice +/-). Dial is +/- — the number
         /// row belongs to weapon slots (see Controls), so Prep no longer double-fires on 1/2/3.</summary>
         void TickFightInput()
         {
@@ -251,30 +253,7 @@ namespace GatekeeperBastion.Game
             Controls.Sample();
             if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
             if (Sim.Assault != AssaultState.Prep) return;
-
-            if (Controls.Down(ControlId.PullDraw))
-            {
-                if (_interactor != null && _interactor.Current is RepairInteractable)
-                    StartHatchBankWave();
-                else if (Sim.Unbanked > 0L && Sim.HatchBankSlotsLeft > 0)
-                    Log.Event("Hatch", "hatch-bank refused — look at the Hatch");
-                else
-                    Log.Event("Run", "draw refused — Waves start at a terminal");
-                return;
-            }
-
-            int delta = 0;
-            if (Controls.Down(ControlId.DialUp)) delta = 1;
-            else if (Controls.Down(ControlId.DialDown)) delta = -1;
-            if (delta == 0) return;
-
-            int before = Sim.Siphon.Level;
-            Sim.SetSiphonLevel(before + delta);
-            // Only a real change is worth a line; clamp at the ends and phase refusal are not.
-            if (Sim.Siphon.Level == before) return;
-            Log.Event("Run",
-                $"set siphon dial to L{Sim.Siphon.Level} — reward x{Sim.Siphon.RewardMultiplier:0.##} " +
-                $"(each kill +{Sim.CurrentKillAward} salvage)");
+            TickPrepCommands();
         }
 
         /// <summary>Command from WaveSpawner: one gatekeeper is down. Credits Unbanked; the
@@ -508,7 +487,7 @@ namespace GatekeeperBastion.Game
         void OnWaveStarted(WaveSpec wave)
         {
             Log.Event("Run", $"wave {Sim.CurrentWaveIndex}/{WaveDirector.MaxWaves} — {wave.enemyCount} gatekeepers, " +
-                $"siphon L{Sim.Siphon.Level} (each kill +{Sim.CurrentKillAward})");
+                $"intensity={Sim.Siphon.Level} juiced={Sim.JuiceSpentThisPull} (each kill +{Sim.CurrentKillAward})");
             if (!string.IsNullOrEmpty(_pendingTerminalId))
                 Log.Event("Terminal", _pendingTerminalId + " started wave " + Sim.CurrentWaveIndex
                     + " mode=terminal");
@@ -522,7 +501,15 @@ namespace GatekeeperBastion.Game
             if (Sim.Mode == WaveMode.HatchBank && _spawner != null)
                 _spawner.DespawnAllLive();
             RecordPendingTerminalClear();
-            RestoreHatchBankSpawns();
+            if (Sim.MasterPhase == MasterControlPhase.Hatch && Sim.Phase == RunPhase.Tethered)
+            {
+                if (_hatchBankLayout != null)
+                    _hatchBankLayout.ActivateHatchBankSpawns();
+            }
+            else
+                RestoreHatchBankSpawns();
+            if (Sim.Mode == WaveMode.HatchBank)
+                SnapshotHatchBankGraph();
         }
 
         void OnApplicationQuit()
@@ -568,6 +555,7 @@ namespace GatekeeperBastion.Game
             Sim.PhaseChanged += OnPhaseChanged;
             Sim.WaveStarted += OnWaveStarted;
             Sim.AssaultEnded += OnAssaultEnded;
+            Sim.MasterHatchHalfStarted += OnMasterHatchHalfStarted;
         }
 
         void Unsubscribe()
@@ -576,6 +564,7 @@ namespace GatekeeperBastion.Game
             Sim.PhaseChanged -= OnPhaseChanged;
             Sim.WaveStarted -= OnWaveStarted;
             Sim.AssaultEnded -= OnAssaultEnded;
+            Sim.MasterHatchHalfStarted -= OnMasterHatchHalfStarted;
         }
     }
 }

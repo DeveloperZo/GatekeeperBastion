@@ -24,12 +24,13 @@ namespace GatekeeperBastion.Sim
         Hatch = 0,
         Spawn = 1,
         Terminal = 2,
+        Master = 3,
     }
 
     public struct BastionSketchMark
     {
         public BastionSketchMarkKind Kind;
-        /// <summary>Spawn or terminal id from S:id / T:id. Empty for hatch.</summary>
+        /// <summary>Spawn or terminal id from S:id / T:id. Empty for hatch and master.</summary>
         public string RefId;
     }
 
@@ -47,6 +48,10 @@ namespace GatekeeperBastion.Sim
         public BastionSketchDirection Direction;
         public BastionSideKind Kind;
         public bool Locked;
+        /// <summary>Metres along the edge from centre for the opening. N/S sides: +X; E/W: +Z.
+        /// Abutting rooms whose centres differ on the shared axis need matching alongs or the
+        /// two wall apertures miss each other.</summary>
+        public float Along;
     }
 
     public sealed class BastionSketchDoor
@@ -56,6 +61,8 @@ namespace GatekeeperBastion.Sim
         public BastionSketchDirection Direction;
         public List<string> UnlockTerminalIds { get; } = new List<string>();
         public bool Control;
+        /// <summary>Metres along the edge from centre. Same axis rule as side overrides.</summary>
+        public float Along;
     }
 
     public struct BastionSketchParseResult

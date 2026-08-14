@@ -22,6 +22,7 @@ namespace GatekeeperBastion.Game
         public bool fireHeld;
         public bool fireDown;
         public bool altFireDown;
+        public bool altFireHeld;
         public bool reloadDown;
         public bool slotPrimaryDown;
         public bool slotSecondaryDown;

@@ -11,8 +11,8 @@ namespace GatekeeperBastion.Game
     /// <remarks>
     /// A run ends in one of TWO terminal phases and this file refuses to care which:
     ///   * Lost  — death (player down or hatch destroyed).
-    ///   * Escaped — Wave 5 terminal with Unbanked 0. Hatch-bank after the field is stripped
-    ///     stays Tethered.
+    ///   * Escaped — Master Control Hatch-bank half survived. Hatch-bank after the field
+    ///     is stripped stays Tethered. Wave 5 terminal does not Escaped.
     /// Leftover Unbanked is wiped on Lost, kept on Wave 5 until Hatch-bank. Gross on the report
     /// is converted this Run.
     /// All that is left here is the summary line and the exit.
@@ -54,7 +54,7 @@ namespace GatekeeperBastion.Game
             long net = r.grossEarned - r.repairSpent;
             if (phase == RunPhase.Escaped)
             {
-                Log.Event("Run", $"BASTION STRIPPED — all {WaveDirector.MaxWaves} waves cleared, " +
+                Log.Event("Run", $"BASTION STRIPPED — Master Control Hatch-bank survived, " +
                     $"gross {r.grossEarned}, repair {r.repairSpent}, net {net}, banked now {Meta.BankedSalvage}");
             }
             else

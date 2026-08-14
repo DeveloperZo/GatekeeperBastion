@@ -86,6 +86,7 @@ namespace GatekeeperBastion.Game
             ref var s = ref _slots[(int)_activeSlot];
             s.reloadTimer = Mathf.Max(0.01f, EffectiveReloadSeconds(_activeSlot));
             s.reloadLogged = true;
+            if (_view != null) _view.NotifyReload();
         }
 
         float EffectiveReloadSeconds(WeaponSlot slot)

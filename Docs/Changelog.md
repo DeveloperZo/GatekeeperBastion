@@ -4,9 +4,71 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 -->
 
+- 2026-08-14: **M59 recut — UI only; audio is M69.** Music and gun/foot SFX leave M59.
+  M59 adds Score overflow, hide Profile EXP, end-screen scrim, movement-lock and
+  start-Wave-cleared copy. M69 binds the five wavs already on disk; no store pack
+  (276617 stays rejected). Planned 15 against cap 10.
+- 2026-08-14: **M68 mapping recut — androids, not aliens.** Default `SM_Chr_RobotFemale_01`,
+  Hunter `SM_Chr_SpaceSoldier_HelmetArmor_Male_01` (helmet on, head/hair off), Ram
+  `SM_Chr_BR_War_Robot_01`. Organic aliens and unhelmeted faces rejected. EVA rejected
+  (Boarder is already the astronaut).
+- 2026-08-14: **M68 created — the garrison has a body.** Default / Hunter / Ram map to
+  Synty `SM_Chr_Alien_01` / `SM_Chr_Psionic_01` / `SM_Chr_BR_BigAlien_01` (SKU 138857).
+  Agent footprint unchanged. Mixamo Humanoid or keep capsules; no T-pose. Not folded into
+  `M61`, `M61-2`, or `M66`. Crew/soldier meshes rejected (wrong faction).
+- 2026-08-14: **M60 recut — Unity Relay, not Steam.** Join code on Main Menu Host/Join;
+  anonymous sign-in; LAN IP stays as fallback. Free tier 50 average monthly CCU (`M64`).
+  Steam / Facepunch deferred until a real appid. Kill criterion is two player builds, one
+  code, one kill, ten working days. `M66` does not include this.
+- 2026-08-14: **M61 packs closed — Synty POLYGON Sci-Fi Space (SKU 138857).** Guns are
+  wrapper prefabs under `Assets/Packs/Weapons/`; desks are `SM_Prop_ControlPanel_02` +
+  `SM_Prop_Screen_Small_01`. SFX are five wavs in `Assets/Resources/Audio/Sfx/`. Mixamo
+  fire/reload/walk files are Idle/Run stand-ins until distinct takes replace them.
+  Criterion 6 no longer bans Synty; kit footprints stay. Playthrough still the close.
+- 2026-08-13: **M61 store packs un-committed.** Mixamo owns body anims, so a gun pack
+  must be hand-parented meshes, not an FPS kit. Arsenal V2, Control Room 3, and the
+  5.3 GB SFX kit fail that test (0 ratings; V2 has no listed shotgun and unused anims;
+  SFX kit is 1173 files for five clips). Shortlist: PBR SciFi Weapons v3, original
+  Sci-fi Weapons Arsenal, Kenney Blaster Kit probe. Rooms follow the gun look. Open
+  section blocks M61 start until Zo picks.
+- 2026-08-13: **M61 Boarder is the Infinity Qube astronaut.** Idle+Run copied from
+  `InfinityQube/Assets/animations/Player/`; fire/reload/walk from Mixamo on that
+  Humanoid. Arsenal meshes parent to the right hand. Remote clients see the astronaut
+  this slice; M66 still owns colour and labels.
+- 2026-08-13: **M55 recut — `+/-` juice, `E` select, `T` start.** Juice still
+  100 Unbanked per step at the look-at. `E` locks the value; `T` starts Field,
+  Master, and Hatch-bank. `E` again unlocks. ARMORY `[` `]` stay on the wheel.
+- 2026-08-13: **M59/M61 recut.** M59 absorbs hull QoL (station chrome and copy,
+  player-build keys, pause bindings) plus the existing room pass. M61 is the gun, sight,
+  RMB FOV zoom, Ship consoles, fire and footsteps — contract phase-rule overridden for
+  this named slice. Three store packs: Sci-fi Arsenal V2 (246550), SciFi Control Room 3
+  (357948), Sci-fi Shooter SFX kit (276617, bound clips only). Synty rejected (fights
+  Shift). Kit footprints stay.
+- 2026-08-13: **Hatch-bank carry.** Convert and Hatch composition read field Waves
+  since the last bank: 1 → ×1.00 / Wave 1; 5 → ×1.50 / Wave 5. Pile-size convert retired.
+- 2026-08-13: **Field Interact is one Wave again.** T1 still needs 5 clears to open
+  D1. Prep after each clear is untimed; Hatch-bank is legal there. `ArmSequentialDraws`
+  stays in Sim for later terminals. New save can convert after Wave 1 (18×25 = 450
+  unbanked). Reverses the M52 recut that chained remaining Waves from one Interact.
+- 2026-08-13: **M54 status next → completed.** Wave 5 never Escaped; Master Control
+  is 5 terminal (door sealed, `S_Control`) then 5 Hatch-bank (no slot spend); dump
+  on last window. Zo playthrough. Harness 324/0; Unity `MasterControlTests` 8/8.
+  PlayMode Repair tick (229.5 vs 229.0) and door-aperture 4.5 vs 3.5 are not this
+  slice. Unblocks M55.
+- 2026-08-13: **M55 status later → next.** Juice spends Unbanked at the trigger;
+  HUD says Intensity; siphon dial retired in Play pages. Depends on M53/M54.
+- 2026-08-13: **M54 status later → next.** Wave 5 Unbanked-0 Escaped is the remaining
+  win path this slice removes. Recut on start: `BastionTerminalKind.Master`;
+  InterWaveGap of Prep after each clear (not overlap); Hatch-bank windows dump
+  only on half complete; SaveVersion 7; author `T_Master`. M57 stays planned.
+- 2026-08-13: **M57 recut — embark is Hatch-bank Prep.** M52/M53 shipped; "every Wave
+  is hatch-defense" and "if M50 has not shipped" were stale. Criterion 4 is
+  `Mode == HatchBank` Prep, matching the locked co-op-down rule in Decisions.md
+  (next hatch-defense Wave). Terminal Prep between field Waves is a refuse.
+  Gate rewrite, not a status change.
 - 2026-08-13: **M53 status next → completed.** Playthrough
   `Logs/GatekeeperBastion_2026-08-13_18-23-55_p92464.log` (Run clean): T1 five Waves
   hatch 300/300 salvage 0; Hatch-bank 18:31:53 unbanked=5250 slots=2, 78 bodies, `+0`,

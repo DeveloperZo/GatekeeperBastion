@@ -88,7 +88,7 @@ namespace GatekeeperBastion.PlayTests
 
             float killValue = gc.Sim.CurrentKillValue;
             Assert.Greater(killValue, 0f,
-                $"RunSim.CurrentKillValue is {killValue} at siphon L{gc.Sim.Siphon.Level}. " +
+                $"RunSim.CurrentKillValue is {killValue} at intensity {gc.Sim.Siphon.Level}. " +
                 "A kill must be worth something or there is no income at all.");
 
             long bankedBeforeKill = gc.Meta.BankedSalvage;

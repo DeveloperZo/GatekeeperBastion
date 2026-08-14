@@ -22,7 +22,7 @@ Waves, **M53** Hatch-bank, **M54** Master Control, **M55** intensity juice. One 
 
 | Role | Does | Status |
 |---|---|---|
-| **Field / progression terminal** | Interact starts that `T`'s remaining Boarder-hunt Waves (T1 = 5 from one Interact, 8 s Prep between clears) and opens its **`D`**; Open-door Interact if the slab is still up | M52 (next) |
+| **Field / progression terminal** | Interact starts one Boarder-hunt Wave; T1 opens its **`D`** on the 5th clear; Open-door Interact if the slab is still up. Hatch-bank is legal in the untimed Prep after each clear | M52 |
 | **Hatch-bank** | Starts Hatch-bank Wave; converts unbanked → banked | M53 (Hatch look-at + `T`, or console — same loop) |
 | **Resource terminal** | Resources / boosts | Parked until the two Wave roles have play data |
 | **Master Control** | Win sequence | M54 |
@@ -41,10 +41,10 @@ Link, never restate.
 
 | What | Milestone |
 |---|---|
-| Field terminal starts its remaining Boarder-hunt Waves from one Interact (T1 = 5, 8 s gap); Hatch invulnerable; door on Nth clear or Open-door Interact; targeting mode | [`M52`](../Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
+| Field terminal starts one Boarder-hunt Wave; T1 door on 5th clear; Hatch invulnerable during Terminal; Hatch-bank legal after each clear | [`M52`](../Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | Unbanked pile; Hatch-bank drip / attrition / dump; 3 slots; convert multiplier | [`M53`](../Milestones/2.%20active/M53-salvage-leaves-through-the-hatch.md) |
-| Master Control two-phase sequence is the win | [`M54`](../Milestones/1.%20planned/M54-master-control-is-the-win.md) |
-| Visible intensity; pay-to-juice; siphon dial retired | [`M55`](../Milestones/1.%20planned/M55-pay-for-intensity.md) |
+| Master Control two-phase sequence is the win | [`M54`](../Milestones/3.%20completed/M54-master-control-is-the-win.md) |
+| Visible intensity; pay-to-juice; siphon dial retired | [`M55`](../Milestones/2.%20active/M55-pay-for-intensity.md) |
 
 The console restructure, opt-in loot delivery, “a reason the bastion is a place,” and
 *Deliver-loot-before-the-run-ends* (`../Decisions.md`) went with those four.

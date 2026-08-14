@@ -156,6 +156,24 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
+        public void FieldClear_LeavesUntimedPrep_HatchBankAllowed()
+        {
+            var meta = new MetaState();
+            var sim = new RunSim(meta, seed: 1);
+            sim.StartRun(1);
+            sim.EngageTether();
+            sim.TriggerDraw();
+            sim.AwardKill();
+            sim.NotifyAssaultCleared();
+            Assert.IsFalse(sim.SequentialPending);
+            Assert.AreEqual(AssaultState.Prep, sim.Assault);
+            Assert.Greater(sim.Unbanked, 0L);
+            sim.TriggerDraw(WaveMode.HatchBank);
+            Assert.AreEqual(WaveMode.HatchBank, sim.Mode);
+            Assert.AreEqual(AssaultState.Assault, sim.Assault);
+        }
+
+        [Test]
         public void ArmSequentialDraws_One_DoesNotFollowUp()
         {
             var meta = new MetaState();

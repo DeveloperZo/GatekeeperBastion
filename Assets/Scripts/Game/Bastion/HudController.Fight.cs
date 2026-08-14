@@ -68,7 +68,7 @@ namespace GatekeeperBastion.Game
                 int shown = wave;
                 if (shown > WaveDirector.MaxWaves) shown = WaveDirector.MaxWaves;
                 _lineBuf.Append("Run ").Append(runSal)
-                    .Append("  ·  Siphon L").Append(sim.Siphon.Level)
+                    .Append("  ·  Intensity ").Append(sim.Siphon.Level)
                     .Append("  ·  Wave ").Append(shown).Append('/')
                     .Append(WaveDirector.MaxWaves)
                     .Append("  ·  ");

@@ -57,7 +57,7 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void TriggerDraw_RefusedAfterAllWaves()
+        public void TriggerDraw_AfterWave5_StillDrawsClamped()
         {
             MetaState meta;
             var sim = NewSim(out meta);
@@ -66,26 +66,23 @@ namespace GatekeeperBastion.Tests
             sim.StartRun();
             sim.EngageTether();
 
-            // Zero-kill Wave 5 Completes. Mid-assault draw is refused; after Escaped, so is another.
             for (int i = 0; i < WaveDirector.MaxWaves; i++)
             {
                 sim.TriggerDraw();
                 Assert.AreEqual(i + 1, sim.CurrentWaveIndex);
-                if (i < WaveDirector.MaxWaves - 1) sim.NotifyAssaultCleared();
+                sim.NotifyAssaultCleared();
             }
             Assert.AreEqual(WaveDirector.MaxWaves, waves);
-            Assert.AreEqual(WaveDirector.MaxWaves, sim.CurrentWaveIndex);
+            Assert.AreEqual(RunPhase.Tethered, sim.Phase);
+            Assert.IsFalse(sim.AllWavesCleared);
 
             sim.TriggerDraw();
-            Assert.AreEqual(WaveDirector.MaxWaves, waves);
-            sim.NotifyAssaultCleared();
-            sim.TriggerDraw();
-            Assert.AreEqual(WaveDirector.MaxWaves, waves, "Escaped refuses another draw");
-            Assert.AreEqual(WaveDirector.MaxWaves, sim.CurrentWaveIndex);
+            Assert.AreEqual(WaveDirector.MaxWaves + 1, waves);
+            Assert.AreEqual(WaveDirector.MaxWaves + 1, sim.CurrentWaveIndex);
         }
 
         [Test]
-        public void AllWavesCleared_FalseUntilTheLastWaveIsCleared()
+        public void AllWavesCleared_FalseAfterWave5()
         {
             MetaState meta;
             var sim = NewSim(out meta);
@@ -93,16 +90,13 @@ namespace GatekeeperBastion.Tests
             sim.EngageTether();
             Assert.IsFalse(sim.AllWavesCleared, "fresh run");
 
-            for (int w = 0; w < WaveDirector.MaxWaves - 1; w++)
+            for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
                 sim.TriggerDraw();
                 sim.NotifyAssaultCleared();
-                Assert.IsFalse(sim.AllWavesCleared, "wave " + (w + 1) + " down, more remain");
+                Assert.IsFalse(sim.AllWavesCleared, "wave " + (w + 1) + " down is not Escaped");
             }
-            sim.TriggerDraw();
-            Assert.IsFalse(sim.AllWavesCleared, "last wave launched but not yet dead");
-            sim.NotifyAssaultCleared();
-            Assert.IsTrue(sim.AllWavesCleared, "Wave 5 with Unbanked 0 Completes");
+            Assert.AreEqual(RunPhase.Tethered, sim.Phase);
         }
 
         [Test]
@@ -564,7 +558,7 @@ namespace GatekeeperBastion.Tests
         {
             // FromJson always migrates forward to CurrentVersion (gotcha: raw JSON version
             // is not preserved after load).
-            var loaded = MetaState.FromJson("{\"SaveVersion\":7,\"BankedSalvage\":5}");
+            var loaded = MetaState.FromJson("{\"SaveVersion\":8,\"BankedSalvage\":5}");
             Assert.AreEqual(SaveData.CurrentVersion, loaded.SaveVersion);
             Assert.AreEqual(5L, loaded.BankedSalvage);
         }

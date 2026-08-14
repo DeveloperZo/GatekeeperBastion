@@ -49,5 +49,16 @@ MonoBehaviour:
   east: 0
   south: 0
   west: 0
+  northDoorAlong: 0
+  eastDoorAlong: 0
+  southDoorAlong: 0
+  westDoorAlong: 0
   floorMat: {fileID: 2100000, guid: ad00e93ce3b9c004b86046edfdf17c4d, type: 2}
   wallMat: {fileID: 2100000, guid: d8ef51db08906954b9debfbf0724c3f4, type: 2}
+  floorPiece: {fileID: 1340423736621120, guid: 8fbbb487f67fdc34ab62d2f698ab9c3e, type: 3}
+  ceilingPiece: {fileID: 1114695960239948, guid: c6ca24f648280eb42aacc73b163e0f98, type: 3}
+  wallPiece: {fileID: 1168136811114946, guid: 103cc39f51141714b8910daa066c1d84, type: 3}
+  doorframePiece: {fileID: 1042108910498240, guid: 228d48af1edab9043b87d3048b297ff9, type: 3}
+  windowPiece: {fileID: 1240043249687844, guid: 99077309963a2c34a8f2d7e1dfb4f4ce, type: 3}
+  cornerPiece: {fileID: 1839242088426794, guid: 7eecc3884fdf1a54796bc19d450d5ec3, type: 3}
+  ceilingLightPiece: {fileID: 1107281013672346, guid: 402c5a51619eb754792b87e071f98b16, type: 3}

@@ -84,6 +84,8 @@ Assets/_Scratch/*
 # Skill eval output and the baseline-run staging dir. Generated per run, never history.
 .claude/skills/_evals/results/
 .claude/skills/_evals/.hidden/
+.claude/skills/_evals/raw_stream.jsonl
+.claude/skills/_evals/stderr.txt
 
 # Local UPM tarball staging and embedded copies of registry packages. Never commit;
 # the lock file + PackageCache are the install. These folders exist only while the
@@ -98,3 +100,9 @@ Assets/_Scratch/*
 /Packages/com.unity.properties/
 /Packages/com.unity.test-framework.performance/
 /Packages/com.unity.transport/
+
+# Asset Store vendor dumps. Project-owned wrappers stay in Assets/Packs/.
+# Reimport from the SKU recorded in Docs/Decisions.md; .meta GUIDs in the
+# store package must match the wrappers. Commit Assets/Synty.meta so the
+# folder GUID is stable on a clone before the pack is imported.
+/Assets/Synty/

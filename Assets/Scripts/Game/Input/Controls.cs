@@ -96,7 +96,8 @@ namespace GatekeeperBastion.Game
                 FightAlways | ControlContext.Ship),
 
             new(ControlId.Fire, KeyCode.Mouse0, KeyCode.None, "LMB", "fire", "FIGHT", FightAlways),
-            new(ControlId.AltFire, KeyCode.Mouse1, KeyCode.None, "RMB", "cancel place", "FIGHT", FightAlways),
+            new(ControlId.AltFire, KeyCode.Mouse1, KeyCode.None, "RMB", "zoom", "FIGHT",
+                FightAlways | ControlContext.Ship),
             new(ControlId.Reload, KeyCode.R, KeyCode.None, "R", "reload", "FIGHT", FightAlways),
             // Labels teach the mechanic (criterion 6): "weapons" not opaque "slots".
             new(ControlId.SlotPrimary, KeyCode.Alpha1, KeyCode.Keypad1, "1", "weapons", "FIGHT", FightAlways),
@@ -107,10 +108,10 @@ namespace GatekeeperBastion.Game
                 displayOnly: true),
             new(ControlId.WeaponAbility, KeyCode.F, KeyCode.None, "F", "ability", "FIGHT", FightAlways),
 
-            new(ControlId.PullDraw, KeyCode.T, KeyCode.None, "T", "Hatch-bank", "RUN", ControlContext.Prep),
-            new(ControlId.DialDown, KeyCode.LeftBracket, KeyCode.None, "[", "siphon", "RUN", ControlContext.Prep),
-            new(ControlId.DialUp, KeyCode.RightBracket, KeyCode.None, "]", "siphon", "RUN", ControlContext.Prep),
-            // Same keys, Ship-only — Prep siphon and ARMORY wheel never share a live context.
+            new(ControlId.PullDraw, KeyCode.T, KeyCode.None, "T", "start", "RUN", ControlContext.Prep),
+            new(ControlId.DialUp, KeyCode.Equals, KeyCode.KeypadPlus, "+", "juice", "RUN", ControlContext.Prep),
+            new(ControlId.DialDown, KeyCode.Minus, KeyCode.KeypadMinus, "-", "juice", "RUN", ControlContext.Prep),
+            // Same keys, Ship-only — Prep juice and ARMORY wheel never share a live context.
             new(ControlId.WheelRotatePrev, KeyCode.LeftBracket, KeyCode.None, "[", "wheel", "ARMORY",
                 ControlContext.Ship),
             new(ControlId.WheelRotateNext, KeyCode.RightBracket, KeyCode.None, "]", "wheel", "ARMORY",
@@ -226,17 +227,27 @@ namespace GatekeeperBastion.Game
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (DevConsole.Suppresses(b.Id)) continue;
 #endif
-                bool down = (b.Key != KeyCode.None && Input.GetKeyDown(b.Key))
+                bool down;
+                bool held;
+                if (TryMouseButton(b.Key, out int mouseBtn) || TryMouseButton(b.AltKey, out mouseBtn))
+                {
+                    down = Input.GetMouseButtonDown(mouseBtn);
+                    held = Input.GetMouseButton(mouseBtn);
+                }
+                else
+                {
+                    down = (b.Key != KeyCode.None && Input.GetKeyDown(b.Key))
                             || (b.AltKey != KeyCode.None && Input.GetKeyDown(b.AltKey));
-                bool held = (b.Key != KeyCode.None && Input.GetKey(b.Key))
+                    held = (b.Key != KeyCode.None && Input.GetKey(b.Key))
                             || (b.AltKey != KeyCode.None && Input.GetKey(b.AltKey));
+                }
                 if (!down && !held) continue;
 
                 switch (b.Id)
                 {
                     case ControlId.Sprint: f.sprintHeld |= held; break;
                     case ControlId.Fire: f.fireHeld |= held; f.fireDown |= down; break;
-                    case ControlId.AltFire: f.altFireDown |= down; break;
+                    case ControlId.AltFire: f.altFireHeld |= held; f.altFireDown |= down; break;
                     case ControlId.Reload: f.reloadDown |= down; break;
                     case ControlId.SlotPrimary: f.slotPrimaryDown |= down; break;
                     case ControlId.SlotSecondary: f.slotSecondaryDown |= down; break;
@@ -289,7 +300,7 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Held-this-frame for <paramref name="id"/> — reads the sampled frame's bit.
-        /// Only the ids gameplay holds (sprint, fire, interact) carry a held bit.</summary>
+        /// Only the ids gameplay holds (sprint, fire, interact, alt-fire / zoom) carry a held bit.</summary>
         public static bool Held(ControlId id)
         {
             var f = Sample();
@@ -298,6 +309,7 @@ namespace GatekeeperBastion.Game
                 case ControlId.Sprint: return f.sprintHeld;
                 case ControlId.Fire: return f.fireHeld;
                 case ControlId.Interact: return f.interactHeld;
+                case ControlId.AltFire: return f.altFireHeld;
                 default: return false;
             }
         }
@@ -341,5 +353,11 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Test hook: drop every PushForTest row.</summary>
         public static void ClearTestBindings() => Extra.Clear();
+
+        static bool TryMouseButton(KeyCode key, out int button)
+        {
+            button = (int)key - (int)KeyCode.Mouse0;
+            return button >= 0 && button <= 6;
+        }
     }
 }

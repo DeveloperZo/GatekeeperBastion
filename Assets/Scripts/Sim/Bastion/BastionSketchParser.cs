@@ -107,6 +107,12 @@ namespace GatekeeperBastion.Sim
                 return BastionSketchParseResult.Ok(null);
             }
 
+            if (string.Equals(token, "M", StringComparison.OrdinalIgnoreCase))
+            {
+                room.Marks.Add(new BastionSketchMark { Kind = BastionSketchMarkKind.Master });
+                return BastionSketchParseResult.Ok(null);
+            }
+
             int colon = token.IndexOf(':');
             if (colon <= 0 || colon >= token.Length - 1)
                 return BastionSketchParseResult.Fail("line " + lineNumber + ": invalid mark '" + token + "'");
@@ -142,12 +148,22 @@ namespace GatekeeperBastion.Sim
                 return BastionSketchParseResult.Fail("line " + lineNumber + ": invalid side kind '" + tokens[3] + "'");
 
             bool locked = false;
+            float along = 0f;
             for (int i = 4; i < tokens.Length; i++)
             {
                 if (string.Equals(tokens[i], "locked", StringComparison.OrdinalIgnoreCase))
+                {
                     locked = true;
+                }
+                else if (IsAlongToken(tokens[i]))
+                {
+                    if (!TryParseAlong(tokens[i], out along))
+                        return BastionSketchParseResult.Fail("line " + lineNumber + ": invalid along '" + tokens[i] + "'");
+                }
                 else
+                {
                     return BastionSketchParseResult.Fail("line " + lineNumber + ": unknown side flag '" + tokens[i] + "'");
+                }
             }
 
             sketch.Sides.Add(new BastionSketchSideOverride
@@ -156,6 +172,7 @@ namespace GatekeeperBastion.Sim
                 Direction = direction,
                 Kind = kind,
                 Locked = locked,
+                Along = along,
             });
             return BastionSketchParseResult.Ok(sketch);
         }
@@ -192,6 +209,14 @@ namespace GatekeeperBastion.Sim
                     continue;
                 }
 
+                if (IsAlongToken(token))
+                {
+                    if (!TryParseAlong(token, out float doorAlong))
+                        return BastionSketchParseResult.Fail("line " + lineNumber + ": invalid along '" + token + "'");
+                    door.Along = doorAlong;
+                    continue;
+                }
+
                 if (token.StartsWith("unlock=", StringComparison.OrdinalIgnoreCase))
                 {
                     string list = token.Substring("unlock=".Length);
@@ -224,6 +249,7 @@ namespace GatekeeperBastion.Sim
                 Direction = door.Direction,
                 Kind = BastionSideKind.Door,
                 Locked = true,
+                Along = door.Along,
             });
 
             return BastionSketchParseResult.Ok(sketch);
@@ -235,6 +261,7 @@ namespace GatekeeperBastion.Sim
                 return BastionSketchParseResult.Fail("sketch has no rooms");
 
             int hatchCount = 0;
+            int masterCount = 0;
             int controlRoomCount = 0;
             var terminalIds = new HashSet<string>();
 
@@ -249,6 +276,8 @@ namespace GatekeeperBastion.Sim
                     BastionSketchMark mark = room.Marks[m];
                     if (mark.Kind == BastionSketchMarkKind.Hatch)
                         hatchCount++;
+                    else if (mark.Kind == BastionSketchMarkKind.Master)
+                        masterCount++;
                     else if (mark.Kind == BastionSketchMarkKind.Terminal)
                         terminalIds.Add(mark.RefId);
                 }
@@ -256,6 +285,9 @@ namespace GatekeeperBastion.Sim
 
             if (hatchCount != 1)
                 return BastionSketchParseResult.Fail("sketch must have exactly one H mark (found " + hatchCount + ")");
+
+            if (masterCount != 1)
+                return BastionSketchParseResult.Fail("sketch must have exactly one M mark (found " + masterCount + ")");
 
             if (controlRoomCount != 1)
                 return BastionSketchParseResult.Fail("sketch must have exactly one ControlRoom (found " + controlRoomCount + ")");
@@ -329,6 +361,16 @@ namespace GatekeeperBastion.Sim
         static bool TryParseFloat(string text, out float value)
         {
             return float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+        }
+
+        static bool IsAlongToken(string token)
+        {
+            return token.StartsWith("along=", StringComparison.OrdinalIgnoreCase);
+        }
+
+        static bool TryParseAlong(string token, out float along)
+        {
+            return TryParseFloat(token.Substring("along=".Length), out along);
         }
 
         static bool TryParseBlockKind(string text, out BastionBlockKind kind)

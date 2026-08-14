@@ -55,13 +55,13 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void FillRows_SiphonRow_CarriesTheDialLevel()
+        public void FillRows_JuiceRow_CarriesIntensity()
         {
             ShortcutPanel.FillRows(ControlContext.Prep, _rows, dialLevel: 2);
 
-            var siphon = _rows.Where(r => r.Key == "[ ]").ToList();
-            Assert.AreEqual(1, siphon.Count, "The two dial bindings must merge into '[ ]'.");
-            Assert.AreEqual("siphon L2", siphon[0].Description);
+            var juice = _rows.Where(r => r.Key == "+ -").ToList();
+            Assert.AreEqual(1, juice.Count, "The two juice bindings must merge into '+ -'.");
+            Assert.AreEqual("Intensity 2", juice[0].Description);
         }
 
         [Test]

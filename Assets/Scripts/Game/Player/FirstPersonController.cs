@@ -47,11 +47,16 @@ namespace GatekeeperBastion.Game
         public Transform cameraTransform;
 
         CharacterController _cc;
+        Camera _cam;
+        DecoyPlacement _decoy;
+        AudioSource _footSfx;
+        AudioClip _footClip;
         float _pitch;
         float _verticalVelocity;
         float _stamina;
         float _regenDelay;   // > 0 while the post-sprint pause is still running
         bool _exhausted;     // latched at zero; cleared once ReengageFraction is back in the tank
+        float _footClock;
 
         /// <summary>After bottoming out, sprint stays locked until the pool is back above this
         /// fraction of max. Guard, not a design knob: without it a held Shift re-engages sprint on
@@ -71,6 +76,9 @@ namespace GatekeeperBastion.Game
         /// <summary>True on the frames the player is actually sprinting (Shift held, moving,
         /// stamina left). HUD reads this.</summary>
         public bool IsSprinting { get; private set; }
+
+        /// <summary>True when WASD is producing planar motion this tick.</summary>
+        public bool IsMoving { get; private set; }
 
         /// <summary>Apply the Crew Quarters stamina pool (GameController pushes MetaUpgrades values
         /// here). Fills the tank — called at run start, never mid-fight, so the player never
@@ -101,6 +109,25 @@ namespace GatekeeperBastion.Game
             }
             staminaMax = Mathf.Max(1f, staminaMax);
             _stamina = staminaMax;
+            if (cameraTransform != null)
+            {
+                _cam = cameraTransform.GetComponent<Camera>();
+                _decoy = cameraTransform.GetComponent<DecoyPlacement>();
+            }
+            if (_decoy == null)
+                _decoy = GetComponentInChildren<DecoyPlacement>(true);
+            var footGo = transform.Find("SfxFootsteps");
+            if (footGo != null) _footSfx = footGo.GetComponent<AudioSource>();
+            if (_footSfx == null)
+            {
+                var go = new GameObject("SfxFootsteps");
+                go.transform.SetParent(transform, false);
+                _footSfx = go.AddComponent<AudioSource>();
+                _footSfx.playOnAwake = false;
+                _footSfx.spatialBlend = 0f;
+            }
+            _footClip = Resources.Load<AudioClip>(WeaponView.FootstepWalk);
+            AudioBuses.ApplyFromSettings();
         }
 
         /// <summary>True once the Bastion's tick owner drives this component; its own
@@ -128,11 +155,14 @@ namespace GatekeeperBastion.Game
                 SetCursorLocked(true);
 
             bool canControl = Cursor.lockState == CursorLockMode.Locked && !MovementLocked;
+            TickZoom();
             // Look requires the authored camera wire: yaw without pitch is a half-broken camera,
             // so a missing cameraTransform (already Log.Error'd in Awake) disables look entirely.
             if (canControl && cameraTransform != null)
             {
                 float sens = Settings.GetFloat(SettingId.MouseSensitivity);
+                if (_cam != null)
+                    sens *= _cam.fieldOfView / WeaponView.HipFov;
                 transform.Rotate(0f, frame.lookX * sens, 0f);
                 _pitch = Mathf.Clamp(_pitch - frame.lookY * sens, -pitchLimit, pitchLimit);
                 cameraTransform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
@@ -143,15 +173,44 @@ namespace GatekeeperBastion.Game
             {
                 var input = Vector3.ClampMagnitude(
                     new Vector3(frame.moveX, 0f, frame.moveY), 1f);
-                planar = transform.TransformDirection(input) * TickSprint(input.sqrMagnitude > 0.01f, dt);
+                IsMoving = input.sqrMagnitude > 0.01f;
+                planar = transform.TransformDirection(input) * TickSprint(IsMoving, dt);
             }
             else
             {
+                IsMoving = false;
                 TickSprint(false, dt); // locked out (panel/menu/down): no sprint, but stamina still returns
             }
 
             _verticalVelocity = _cc.isGrounded ? -1f : _verticalVelocity + gravity * dt;
             _cc.Move((planar + Vector3.up * _verticalVelocity) * dt);
+            TickFootsteps(dt);
+        }
+
+        /// <summary>Hold RMB. Hip 60 / zoom 40. Decoy aim keeps RMB as cancel.</summary>
+        void TickZoom()
+        {
+            if (_cam == null) return;
+            bool decoyAiming = _decoy != null && _decoy.IsAiming;
+            bool zoom = !MovementLocked && !decoyAiming && Controls.Held(ControlId.AltFire);
+            float want = zoom ? WeaponView.ZoomFov : WeaponView.HipFov;
+            if (Mathf.Abs(_cam.fieldOfView - want) > 0.01f)
+                _cam.fieldOfView = want;
+        }
+
+        void TickFootsteps(float dt)
+        {
+            if (!IsMoving || MovementLocked || _cc == null || !_cc.isGrounded)
+            {
+                _footClock = 0f;
+                return;
+            }
+            float period = IsSprinting ? WeaponView.SprintFootstepSeconds : WeaponView.WalkFootstepSeconds;
+            _footClock += dt;
+            if (_footClock < period) return;
+            _footClock -= period;
+            if (_footSfx != null && _footClip != null)
+                _footSfx.PlayOneShot(_footClip, WeaponView.SfxOneShotScale);
         }
 
         /// <summary>Resolve sprint for this frame and return the planar speed to move at.

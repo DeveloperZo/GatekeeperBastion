@@ -4,14 +4,14 @@
 Purpose: The multiplayer epic beyond the filed slices — what is deliberately after a full loopback run, and the open design questions the slices must not decide by accident.
 Status: brainstorm
 Update trigger: when a filed slice (M50–M51 / M57–M60) ships or is re-cut.
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 -->
 
 ## What this covers
 
 Everything co-op that is not yet a milestone. The decided ground lives in
 `../Decisions.md` (NGO, host-client, server-authoritative sim, client-auth own-movement,
-Steam relay eventually) and is not re-argued here. The filed slices, in execution order:
+Unity Relay on UnityTransport) and is not re-argued here. The filed slices, in execution order:
 [`M48`](../Milestones/3.%20completed/M48-the-first-networked-kill.md) (first networked kill +
 the in-process test rig; shipped 2026-08-13),
 [`M49`](../Milestones/3.%20completed/M49-the-gatekeepers-see-the-second-player.md) (the client
@@ -22,7 +22,7 @@ endings on the client; shipped 2026-08-13, fixture close),
 over the wire — loopback run complete; shipped 2026-08-13, fixture close),
 [`M57`](../Milestones/1.%20planned/M57-the-downed-player-waits-on-the-ship.md) (get-up),
 [`M58`](../Milestones/1.%20planned/M58-a-build-two-machines-can-run.md) (player build),
-[`M60`](../Milestones/1.%20planned/M60-a-join-a-friend-can-use.md) (Steam join). M50 and M51
+[`M60`](../Milestones/1.%20planned/M60-a-join-a-friend-can-use.md) (Relay join). M50 and M51
 were authored ahead of M48/M49 landing on Zo's call (2026-08-12) and each carries a
 re-cut-before-start update trigger.
 
@@ -34,7 +34,7 @@ kill loop (2026-08-13). M49 shipped (2026-08-13, Zo playtest): the client is hun
 downable; down does not end the host Run. M50 shipped (2026-08-13, fixture close): readout
 and endings on the client. M51 shipped (2026-08-13, fixture close): client repair,
 decoy and world-acting abilities apply once, server-side. M57 planned
-(get-up). M58 planned (player build). M60 planned (Steam join). The epic's testability
+(get-up). M58 planned (player build). M60 planned (Relay join). The epic's testability
 story is the `NetcodeIntegrationTest` fixture — every slice writes its gate against it and
 closes headless in the integration check — the single-developer constraint (Zo, 2026-08-12)
 makes that non-negotiable, so **a slice whose gate cannot be phrased against the fixture is
@@ -48,19 +48,21 @@ Link, never restate.
 |---|---|
 | In-run client verbs (repair, decoy, abilities) | [`M51`](../Milestones/3.%20completed/M51-the-clients-hands.md) |
 | Client down wait / get-up | [`M57`](../Milestones/1.%20planned/M57-the-downed-player-waits-on-the-ship.md) |
-| Steam, and a join surface a friend can use | [`M60`](../Milestones/1.%20planned/M60-a-join-a-friend-can-use.md) |
+| A join surface a friend can use (Unity Relay) | [`M60`](../Milestones/1.%20planned/M60-a-join-a-friend-can-use.md) |
 
 ## Ideas
 
 ### Guest progression
 
-What a connected client takes home. M50's run summary banks to the host's meta only;
-whether a guest banks salvage, keeps unlocks, or is a pure visitor is untouched design
-with economy weight (split banking changes the salvage curve for two players). **Unknown —
-needs design**, and M50/M51 are written so nothing forecloses it.
+**Graduated 2026-08-14 to `M65`.** Settled: salvage splits **equally** among connected
+players, every player banks to their own meta, and what a player may bank is capped by their
+own `DeepestWaveReached`, which rises from co-op clears as well as solo ones. A player brings
+their own loadout and inherits nothing. The principle it encodes: **co-op gets you further,
+not richer.** Equal split was chosen over kill- or damage-weighted because this game has jobs
+that are not shooting, and weighting by contribution makes doing them cost money.
 
-**Graduation test:** M50 shipped and a real two-person run has produced an opinion about
-what the second player deserved from it — this one wants play data, not architecture.
+What is still open and belongs to play data rather than this file: whether a new guest joining
+a deep run needs a floor, and whether being carried should raise the banking cap at all.
 
 ### Second-player presence beyond a capsule
 

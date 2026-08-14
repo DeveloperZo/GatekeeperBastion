@@ -62,6 +62,77 @@ Do not author a roster until one ability can be written against the graduation t
 
 ## Ideas
 
+### Stealth is a layer, not an invisibility flag (Zo, 2026-08-14)
+
+**The rule.** Stealth is a shared visibility layer. Everyone in it sees everyone else in it,
+and nobody outside it. The world outside renders as orbs. Nothing else changes: collision,
+interaction and shooting all still work. You are simply unseen by things that are not in the
+layer, and they are shapes to you.
+
+**The principle that decides every case: whoever chose the shift is the one it favours.** An
+enemy that stealthed itself is stronger in there. An enemy you dragged in is weaker. A Cloaker
+that follows you in chose to, so it is strong. A Cloaker you force in is prey, which is the
+player's counter to the one enemy built to punish this ability.
+
+What the rule buys, none of which needs new systems:
+
+- Stealth stops being a safety button and becomes a change of *which* threats apply.
+- The Cloaker gets a second job with no new AI. Normally it is the thing you cannot see; in the
+  layer it is the thing you can.
+- **Being first stops paying.** A native stealther is strong whether it entered before or after
+  you, so the ordering heuristic that dominates other stealth games does not apply here. What
+  replaces it is reading whether the layer is already occupied, which is a question with an
+  answer you can work for.
+- **The Cloaker and the ability already compose into a scouting ritual.** The Cloaker is
+  invisible while you stand still and visible while you move, so the correct play before
+  cloaking is move, look, commit. Movement is the scan. No new mechanic.
+- The Cloaker taxes the ability by existing, so it does work even against a player who never
+  cloaks.
+
+**Upgrades change what it does, not how much**, which matters because a percentage is below
+this game's noise floor: kill rate sits at 0.61 to 1.08 per second regardless of loadout
+(`../Design/2-Dynamics.md`), so `+15% duration` would be imperceptible. Candidates: threat
+assessment, which reads identity among the orbs; and dragging a damaged enemy in with you.
+
+Settled in the same conversation: attacking drops you out; exit is instant, because a native
+stealther can kill you in there and a wind-up would make being caught a death with no input;
+orbs are positionally honest and identity-blind, so you see that twelve things stand between
+you and the Hatch but not which are Rams; the Hatch stays readable among the orbs; and a
+dragged enemy needs a visible tell so the player can tell which fight they are in.
+
+**Open:** how much of a Wave is layer-side, which sets how often the interaction happens rather
+than whether the rule works. And whether this lives here as a Crew burst or on a weapon
+(`Sim/Meta/WeaponAbility.cs`).
+
+**Not doing, with the reason:** shifting a *teammate*. Warframe's Limbo is the shipped version
+of this ability and one of that game's most disliked frames, entirely because he moves other
+players. DE's U23 stopped Stasis freezing allied projectiles and the community summary was that
+nobody complains about Limbo any more. Pulling an *enemy* in is Mordekaiser's Realm of Death,
+which shipped and works. Enemies yes, allies never.
+
+**Graduation test:** a logged Run in which the player cloaks once with a native stealther
+present and once without, and the two read as different decisions. If they feel the same, the
+layer is not populated enough and that is a Wave-composition finding, not an ability one.
+
+**Kill it if** players cloak on cooldown regardless of situation, or die in the layer more
+often than they escape with it. Either one means it is a reflex or a trap rather than a choice.
+
+### Abilities are defined by what they trade, not what they grant (Zo, 2026-08-14)
+
+The frame the stealth entry came out of. A dull ability is "gain X for N seconds." An
+interesting one is a simultaneous trade, and this game already has a shipped example: `M56`'s
+turret fires with rounds siphoned from the player's own reserve.
+
+Run through that filter, common abilities stop being generic. **Overclock** trades Hatch
+integrity for damage, drawing power from the thing you are defending. **Anchor** trades
+mobility for area control: plant, slow everything near you, and you cannot move until you
+unplant. **Recall** trades your unbanked salvage for escape, returning you to the Hatch and
+dropping the pile where you stood for a Reclaimer to find. **Ping** trades concealment for
+information, showing you every Gatekeeper through walls and showing every Gatekeeper exactly
+where you are, which in co-op becomes one player lighting themselves up so the others can act.
+
+None of these is picked. The filter is the point.
+
 ### Experience as the CREW QUARTERS currency (Zo, 2026-08-12)
 
 **Cut the same day.** CREW now has a job (burst abilities). A second wallet was the wrong

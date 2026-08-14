@@ -57,6 +57,7 @@ namespace GatekeeperBastion.Game
         Material _critSparkMat;
         PlayerHealth _owner;
         PlayerAbility _ability;
+        WeaponViewModel _view;
         // Pushed by GameController.ApplyMetaEffects (the rig is runtime-resolved, so the
         // controller binds itself). Null outside a fight scene.
         GameController _game;
@@ -276,6 +277,7 @@ namespace GatekeeperBastion.Game
             _owner = GetComponentInParent<PlayerHealth>();
             _ability = GetComponent<PlayerAbility>();
             if (_ability == null) _ability = gameObject.AddComponent<PlayerAbility>();
+            _view = GetComponentInParent<WeaponViewModel>();
         }
 
         void OnDestroy()

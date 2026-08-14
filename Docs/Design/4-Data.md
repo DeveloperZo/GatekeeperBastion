@@ -119,10 +119,11 @@ field to check if a Wave feels empty. **The dial's surplus is all Default** (Hun
 Ram counts are fixed per Wave), so L5 Wave 3 is 55 D + 6 H + 2 R: a bigger fight, not a
 different one, and the dial cannot multiply the scariest Gatekeeper.
 
-**`TerminalChainGap = 8s`** (`WaveDirector`). Prep after a field-terminal Wave clears
-before the next Wave of that Interact. Middle of a 5–10 s band. Not `InterWaveGap`
-(3 s after *delivery* during a deep-start overlap). Tier #12 serving the #9 rule
-(one Interact starts N). Do not retune `InterWaveGap` to steal this job.
+**`TerminalChainGap = 8s`** (`WaveDirector`). Unused by the field loop: `T` after `E`
+starts one Wave, Prep after the clear is untimed, Hatch-bank is legal there. The constant stays
+because `ArmSequentialDraws` still exists for later terminals that re-lock banking. Not
+`InterWaveGap` (3 s after *delivery* during a deep-start overlap). Do not retune
+`InterWaveGap` to steal this job.
 
 **One table drives reward AND body count, on purpose**: `WaveDirector` reads
 `TetherSiphon`, so payout and pressure cannot drift apart (it used to charge on three
@@ -150,6 +151,12 @@ baseline** every table below rests on:
 | 4 | ×1.35 | 24 | 89 |
 | 5 | ×1.50 | 27 | 99 |
 <!-- GKB:END dial -->
+
+<!-- GKB:GEN intensity-juice — IntensityJuice.CostPerStep -->
+| | |
+|---|---|
+| juice per step | 100 unbanked |
+<!-- GKB:END intensity-juice -->
 
 ## Hatch
 
@@ -182,22 +189,37 @@ free.
 
 ## Hatch-bank (M53)
 
-Kills fill `RunSim.Unbanked`. Only a Hatch-bank converts to the ship. The convert
-multiplier is snapshotted from Unbanked at Hatch-bank start and applied to drip and dump.
-The window is `DurationSeconds`; Unbanked hitting 0 does not end it. Leftover dumps when
-the timer ends.
+Kills fill `RunSim.Unbanked`. Only a Hatch-bank converts to the ship. Convert and Hatch
+composition both read field Waves cleared since the last Hatch-bank (snapshotted at
+start). The window is `DurationSeconds`; Unbanked hitting 0 does not end it. Leftover
+dumps when the timer ends.
 
-<!-- GKB:GEN hatch-bank — HatchBank.SlotsPerRun, DripPerSecond, DurationSeconds, MidAt, HighAt, Mult*, WithdrawPerSecond -->
+<!-- GKB:GEN hatch-bank — HatchBank.SlotsPerRun, DripPerSecond, DurationSeconds, CarryConvert, CarryWaveIndex, WithdrawPerSecond -->
 | | |
 |---|---|
 | slots / Run | 3 |
 | drip | 20 unbanked/s |
 | duration | 45 s |
-| convert < 400 | ×1.00 |
-| convert 400–799 | ×1.25 |
-| convert ≥ 800 | ×1.50 |
 | withdraw | 16 salvage/s |
+
+| Waves carried | convert | Hatch Wave | bodies at intensity 0 |
+|---|---|---|---|
+| 1 | ×1.00 | 1 | 18 |
+| 2 | ×1.10 | 2 | 30 |
+| 3 | ×1.25 | 3 | 42 |
+| 4 | ×1.35 | 4 | 54 |
+| 5 | ×1.50 | 5 | 66 |
 <!-- GKB:END hatch-bank -->
+
+Master Control is 5 terminal Waves then 5 Hatch-bank windows. Gap is `WaveDirector.InterWaveGap`.
+
+<!-- GKB:GEN master-control — MasterControl.TerminalWaves, HatchWaves, WaveDirector.InterWaveGap -->
+| | |
+|---|---|
+| terminal Waves | 5 |
+| Hatch-bank Waves | 5 |
+| gap | 3 s |
+<!-- GKB:END master-control -->
 
 Arithmetic for the 300/300 pair: a Run that dies on Wave 2 banks ~900 at dial 0 (pacing
 tables), so 600 fits inside one post-loss Run alongside a 400 wheel purchase — and prices the tool at
@@ -365,6 +387,26 @@ measured three-attempt series is in `2-Dynamics.md` (loop B1): a **20% run-to-ru
 against purchases worth `+4.5%` and `+3.0%`, signal to noise ~**0.23**. A step the player
 can feel has to clear roughly **20%**; one upgrade wheel purchase does (**+31%**, above), the
 attribute curve does not, and that is the trade for keeping attributes cheap early.
+
+## Bastion kit — mesh mapping (M61-2)
+
+`Sim/Bastion/BastionMeshMap.cs`, read by the kit emitter. One structural set for every
+block kind — Quarter / Half / Full / Open Area / Control Room share it; per-kind variety
+is the authoring pass. Pack is POLYGON Sci-Fi Space (Synty 138857). A side kind with no
+mapping throws at emit time — a loud fail, never a primitive.
+
+<!-- GKB:GEN bastion-mesh — BastionMeshMap constants, ForSide -->
+| Cell | Prefab |
+|---|---|
+| Floor | `SM_Bld_Floor_01` |
+| Ceiling | `SM_Bld_Ceiling_01` |
+| Wall | `SM_Bld_Wall_01` |
+| Door | `SM_Bld_Wall_Doorframe_01` |
+| Window | `SM_Bld_Wall_Exterior_Window_01` |
+| None | nothing emitted |
+| Wall corner | `SM_Bld_Wall_Corner_Pillar_01` |
+| Ceiling fixture | `SM_Prop_Light_Panel_01` |
+<!-- GKB:END bastion-mesh -->
 
 ## Wave-report dashboard (M38)
 

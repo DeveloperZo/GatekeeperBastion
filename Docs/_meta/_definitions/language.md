@@ -70,13 +70,14 @@ everything the game contains.
 | **the tether** | The line from the Ship to the Bastion. What the siphon runs along, and what the Hatch anchors. | cable, line, connection |
 | **Hatch** | The umbilical junction back to the Ship. The Boarder's way out, and the thing they must hold. | door, gate, objective, junction |
 | **embark** | Leaving the Ship for the Bastion, from the NAV MAP. | deploy, launch, start mission |
-| **Prep** | The quiet state between Waves. Untimed, pays nothing, the only time the dial moves. | downtime, intermission, break |
+| **Prep** | The quiet state between Waves. Untimed, pays nothing, the only time juice raises intensity. | downtime, intermission, break |
 | **Assault** | The state while a Wave is live. | combat, the fight |
-| **the Siphon Draw** | Retired as the Wave-start verb (M52). The dial still exists until M55. Prep `T` at the Hatch is **Hatch-bank**; elsewhere it is a logged refusal. | spawn, trigger, call the wave, the draw *(alone)* |
-| **Wave** | One delivery of Gatekeepers. Interact at a **field terminal** starts that terminal's remaining Waves (a short gap after each clear). Prep `T` at the Hatch is Hatch-bank. | round, horde |
-| **field terminal** | A bastion console marked **T**. Interact in Prep starts its remaining Boarder-hunt Waves. N clears complete it and open its **D**. | station *(alone)*, objective, console *(the Ship's four are stations)* |
-| **cleared** / **stripped** | Field Waves beaten. Wave 5 with leftover Unbanked is field stripped, not Escaped. | won, completed, extracted |
-| **Escaped** | Terminal, good: Wave 5 with nothing Unbanked. Hatch-bank after that stays aboard. | won, victory |
+| **the Siphon Draw** | Retired as the Wave-start verb (M52). Prep `T` starts the selected trigger (Field, Master, Hatch-bank). `T` without a select is a logged refusal. | spawn, trigger, call the wave, the draw *(alone)* |
+| **Wave** | One delivery of Gatekeepers. `+/-` juice, `E` selects, `T` starts at a **field terminal**. A terminal opens its door after its authored count (T1 is 5). Prep `E` then `T` at the Hatch is Hatch-bank. | round, horde |
+| **field terminal** | A bastion console marked **T**. `E` selects intensity; `T` starts one Boarder-hunt Wave. N clears complete it and open its **D**. | station *(alone)*, objective, console *(the Ship's four are stations)* |
+| **cleared** / **stripped** | Survived Master Control's Hatch-bank half. Field Waves beaten is field stripped, not Escaped. | won, completed, extracted |
+| **Escaped** | Terminal, good: Master Control's Hatch-bank half survived. Wave 5 does not Escaped. | won, victory |
+| **Master Control** | Control Room console. `E` then `T` starts 5 terminal Waves (door sealed) then 5 Hatch-bank windows (door open). That Hatch-bank does not spend a mid-Run slot. | win terminal, extract console, D1 *(the door is not the win)* |
 
 A Run that ends badly is **lost**: the Boarder went down, or the Hatch fell. It is listed
 under Run phases below only because `RunPhase.Lost` is a real enum value the code branches
@@ -93,7 +94,7 @@ are named here.
 | **Docked** | Aboard the Ship. Not yet boarded. | menu, lobby, idle |
 | **Tethered** | Aboard the Bastion with the tether live. The whole fight happens here. | in-run, active, boarded |
 | **Spooling** | Reserved, unused in v0 — the escape window after the tether is cut. | *(do not use it for anything else)* |
-| **Escaped** | Terminal, good: Wave 5 with nothing Unbanked. | won, victory |
+| **Escaped** | Terminal, good: Master Control's Hatch-bank half survived. Wave 5 does not Escaped. | won, victory |
 | **Lost** | Terminal, bad: the Boarder went down or the Hatch fell. | podded *(retired)*, death, game over, wipe, fail |
 
 ### What comes at you
@@ -138,9 +139,10 @@ mark in the commit that builds it.
 |---|---|---|
 | **Salvage** | The only currency. Kills fill **unbanked**; only a **Hatch-bank** converts it to the ship. | credits, scrap, cash, resources |
 | **unbanked** | Salvage earned this Run that has not gone through the Hatch. Lost on down or Hatch breach. | floating, pending, at-risk |
-| **Hatch-bank** | Prep `T` while looking at the Hatch: a Wave that converts unbanked to the ship. Capped per Run. | extract, cash-out, deposit |
+| **Hatch-bank** | Prep `E` then `T` while looking at the Hatch: a Wave that converts unbanked to the ship. Capped per Run. | extract, cash-out, deposit |
 | **banked** | Salvage on the ship that the player can spend. | stored, saved |
-| **the siphon dial** | The per-Wave wager: more Salvage per Gatekeeper, more Gatekeepers. | difficulty, risk slider, multiplier |
+| **intensity** | The per-Wave wager 0–5: more Salvage per Gatekeeper, more Gatekeepers. | siphon dial, difficulty, risk slider, multiplier *(as a name for this)* |
+| **juice** | Paying Unbanked at a trigger to raise intensity. | siphon, buy difficulty, map device |
 | **track** | A permanent upgrade line at CREW QUARTERS or FABRICATION. | skill, perk, stat line |
 
 ### The tracks
@@ -215,7 +217,7 @@ a term retired without a row here is a term the check does not know about (M28).
 ```language-lint
 # Comma-separated lists. Keys are fixed; the script parses this fence only.
 retired=derelict,Podded,podded,breach point,muster point
-builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization,hatchDist,spawnDist,Wave-defense,encyclopedia,lore bible,Codex
+builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization,hatchDist,spawnDist,Wave-defense,encyclopedia,lore bible,Codex,siphon dial
 stations_title=Armory,Crew Quarters,Fabrication,Nav Map
 boarder_enemy=boarders expected,the boarders,boarder kind,boarder-seconds
 ```

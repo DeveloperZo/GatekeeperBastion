@@ -40,6 +40,7 @@ namespace GatekeeperBastion.Game
 
             LastShotWasCrit = anyCrit;
             Effects.MuzzleFlash(origin + transform.forward * 0.45f + Vector3.down * 0.08f);
+            if (_view != null) _view.NotifyFired();
             if (pellets == 1)
                 SpawnTracer(origin + transform.forward * 0.4f, lastEnd, anyCrit, def);
             else

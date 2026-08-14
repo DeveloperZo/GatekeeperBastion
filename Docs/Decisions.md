@@ -44,6 +44,15 @@ re-litigating a cut costs more than the cut saved.
   almost all of it Shift's six demo scenes), and doing so trades a diffable, mergeable file
   for an opaque pointer. LFS takes true binaries only — `.png`, `.dll`, `.mp4`, `.ttf`,
   `.ogg` and the rest of the list in `../.gitattributes` (Zo, 2026-08-10).
+- **Asset Store vendor dumps in git.** The pack tree is not project history; the wrappers
+  that reference it are. `Assets/Synty/` is gitignored (260 MB / 6728 files on disk,
+  2026-08-14). Eight project files reference nine assets in it (`Assets/Packs/Weapons/*`,
+  `Assets/Packs/Boarder/Boarder.prefab`, `Assets/Scenes/Ship.unity`). After clone, import
+  [POLYGON Sci-Fi Space](https://assetstore.unity.com/packages/3d/environments/sci-fi/polygon-sci-fi-space-pack-art-by-synty-138857)
+  SKU **138857**, **v1.14.0**, to `Assets/Synty/PolygonSciFiSpace/` so those GUIDs resolve.
+  `Assets/Packs/` stays tracked. Shift, Odin (`Assets/Plugins/Sirenix/`), and MCPForUnity
+  stay tracked — the HUD and editor are built in those trees, not wrapped off them
+  (Zo, 2026-08-14).
 - **`core.autocrlf` as the line-ending fix.** Rejected in favour of `.gitattributes`. The
   config setting lives on one machine and does not travel with the repository, so the
   141-phantom-modification problem returns on the next clone or on CI. The repository is the
@@ -67,11 +76,11 @@ re-litigating a cut costs more than the cut saved.
   Nothing else in the field has a canonical implementation of this genre's exact shape.
   Lethal Company is the shipped existence proof — solo developer, Unity, 4-player PvE co-op,
   host authority, 10M+ copies.
-  **What this costs, stated so it is not a surprise:** the community Steam transport
-  (`com.community.netcode.transport.facepunch`) pins an old Facepunch.Steamworks build, so the
-  free-forever Steam path depends on a component Unity does not maintain. The fallback is Unity
-  Relay, which is metered above 50 average monthly CCU. **Transport is the most swappable layer
-  in the stack**, so this is a later problem, not a blocking one.
+  **What this costs, stated so it is not a surprise:** the internet path is Unity Relay on
+  the existing UnityTransport (`M60`). Free tier is 50 average monthly CCU and 150 GiB
+  egress; above that it is metered. Steam / Facepunch is deferred until a real Steamworks
+  appid exists (`M64`). **Transport is the most swappable layer in the stack**, so swapping
+  later is not a blocking problem.
   **Rejected: FishNet**, which was the pick until the AI-authorship criterion was raised. Better
   transport ownership (its Steam transports are by the netcode's own author) and no metered path,
   but thinner documentation and no reference game of Boss Room's scale.
@@ -151,20 +160,37 @@ Esc or Close returns to walk. Body rows clone from each panel's inactive
 Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW: four tracks;
 FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
 
-## Deferred, with intent
+## Shipped
 
 - **Deliver-loot-before-the-run-ends.** The *spirit* of Gears of War's active
   reload, not its form: a neutral default, and an opt-in that pays more and makes
-  the Run harder. Explicitly **not** a QTE timing-bar mimic. Not built.
-- **Multiplayer.** Unity Netcode for GameObjects with a Steam (Facepunch)
-  transport over Steam's relay, zero server cost. **Host-client,
-  server-authoritative simulation** (the host's `RunSim` is the one that counts),
-  with **client-authoritative own-movement** — correct for PvE with no anti-cheat
-  requirement, and NGO names the mechanism (`AnticipatedNetworkVariable<T>` /
-  `AnticipatedNetworkTransform`). NGO 2.x's distributed-authority topology is
-  rejected deliberately: it is documented as unsuitable where one machine should
-  govern the simulation. First slices shipped over UnityTransport loopback (M48, M49).
-  Steam transport still deferred (`M60`). 2–4 players on one hull.
+  the Run harder. Explicitly **not** a QTE timing-bar mimic. Juice is that opt-in:
+  Unbanked spent at a trigger to raise intensity. Shipped M55.
+
+## Deferred, with intent
+
+- **Multiplayer.** Unity Netcode for GameObjects, **host-client, server-authoritative
+  simulation** (the host's `RunSim` is the one that counts), with **client-authoritative
+  own-movement** — correct for PvE with no anti-cheat requirement, and NGO names the
+  mechanism (`AnticipatedNetworkVariable<T>` / `AnticipatedNetworkTransform`). NGO 2.x's
+  distributed-authority topology is rejected deliberately: it is documented as unsuitable
+  where one machine should govern the simulation. First slices shipped over UnityTransport
+  loopback (M48, M49). Internet path is **Unity Relay** on that same transport (`M60`):
+  anonymous sign-in, join code, free at 50 average monthly CCU. Steam / Facepunch deferred
+  until a real appid. Three players on one hull (host plus two guests); six is the recorded
+  intent, priced as a tuning pass (`M65`).
+- **Co-op salvage.** No single wallet. Salvage splits **equally among connected
+  players** at award, host included; **equal over kill- or damage-weighted**
+  because this game has jobs that are not shooting (repair, escorting a Thief,
+  clearing a Source, placing a turret) and a contribution split makes doing them
+  cost money at the moment doing them is correct. Damage weighting also pays the
+  best-geared player most, which is the host. Every player carries their own
+  unbanked pile and loses it on a down. At conversion a player banks at most what
+  their own `MetaState.DeepestWaveReached` justifies, excess lost not
+  redistributed; that cap rises from co-op clears as well as solo ones. Players
+  bring their own loadout and inherit nothing. **The principle: co-op gets you
+  further, not richer** — salvage per player per hour stays roughly flat as
+  players are added, and what co-op buys is depth. Zo, 2026-08-14; `M65`.
 - **Ship subsystems** (Reactor, TetherCore, Engines, LifeSupport) return with the
   bastion outfitting layer. `ShipSystems` stays the aggregate so the wiring keeps
   its shape.

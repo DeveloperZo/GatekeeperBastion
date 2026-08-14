@@ -16,7 +16,7 @@ namespace UnityEngine
         Backspace, Delete, Tab, Return, Escape, Space,
         Alpha0, Alpha1, Alpha2, Alpha3, Alpha4, Alpha5, Alpha6, Alpha7, Alpha8, Alpha9,
         Keypad0, Keypad1, Keypad2, Keypad3, Keypad4, Keypad5, Keypad6, Keypad7, Keypad8,
-        Keypad9, KeypadEnter,
+        Keypad9, KeypadEnter, KeypadPlus, KeypadMinus,
         A, B, C, D, E, F, G, H, I, J, K, L, M,
         N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
         LeftBracket, RightBracket, Semicolon, Comma, Period, Slash, Backslash, Minus, Equals,
@@ -41,6 +41,7 @@ namespace UnityEngine
         public static float GetAxis(string name) => 0f;
         public static float GetAxisRaw(string name) => 0f;
         public static bool GetMouseButtonDown(int button) => false;
+        public static bool GetMouseButton(int button) => false;
         public static bool anyKeyDown => false;
         public static Vector2 mouseScrollDelta => new Vector2(0f, 0f);
     }

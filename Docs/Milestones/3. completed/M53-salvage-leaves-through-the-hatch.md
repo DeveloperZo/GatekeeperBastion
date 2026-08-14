@@ -43,6 +43,11 @@ Prep. The T1 door is already open. Terminal draws past `MaxWaves` are allowed
 (composition clamps at `MaxWaves - 1`). `Escaped` is Wave 5 terminal with Unbanked 0
 only. Master Control remains M54.
 
+**Recut 2026-08-13 (carry):** convert and Hatch composition both read field Waves
+cleared since the last Hatch-bank. 1 Wave → ×1.00 and Wave 1 (18 bodies, 0 Rams).
+5 Waves → ×1.50 and Wave 5. Pile-size convert is gone. Same greed, counted in Waves
+so a new save can convert after Wave 1.
+
 ## Story
 
 As a Boarder, I want Salvage I earn in the bastion to stay at risk until I defend a
@@ -84,7 +89,7 @@ multiplier did nothing. If the fat-bank Run always loses the pile, greed is fake
    `[Hatch] hatch-bank refused — no slots`. `T` with nothing to bank:
    `[Run] draw refused — Waves start at a terminal`. Interact `E` at the Hatch is still repair
    (Prep and Assault). Host `T` only this slice (same as M52's T). Prep card names
-   Hatch-bank when Unbanked > 0 (the T1 sequence's 8 s gap, and untimed Prep after Wave 5).
+   Hatch-bank when Unbanked > 0 (untimed Prep after any field clear).
 4. **Hatch is vulnerable only during `WaveMode.HatchBank`.** `DamageHatch` applies; drip
    and attrition run; Defaults and Rams are Hatch-primary; Hunters still hunt the Boarder;
    Rams refuse the Boarder again (the terminal-only break is off).
@@ -95,8 +100,9 @@ multiplier did nothing. If the fat-bank Run always loses the pile, greed is fake
      Leftover dumps when the timer ends. A player who lost the pile to hatch hits still
      defends until the timer.
    - each Hatch HP of damage also removes that many unbanked (floor); destroyed, not converted
-   - **convert multiplier snapshotted from Unbanked at Hatch-bank start**, applied to every
-     drip and the dump: `< 400` → ×1.00; `400–799` → ×1.25; `≥ 800` → ×1.50
+   - **convert multiplier snapshotted from Waves carried at Hatch-bank start**, applied
+     to every drip and the dump: 1 → ×1.00; 2 → ×1.10; 3 → ×1.25; 4 → ×1.35; 5+ → ×1.50.
+     Hatch composition is `NextWave(carry − 1)` — the Wave equal to how many you carried.
    - Hatch to 0 or Boarder down: remaining unbanked wiped, already-converted stays, Run lost
 6. **`HatchBank.SlotsPerRun = 3`.** Each Hatch-bank start spends one. Slots do not refill
    mid-Run. A fourth start is the criterion-3 refusal.
@@ -107,7 +113,8 @@ multiplier did nothing. If the fat-bank Run always loses the pile, greed is fake
    withdrawn rides with unbanked (lost on down / breach). Repair still spends ship bank
    only, still requires the Rig. `Sim.RepairHatch` on a full Hatch still returns 0.
 8. **A Hatch-bank does not consume a field Wave** (`CurrentWaveIndex` does not advance).
-   Composition is `NextWave(CurrentWaveIndex)` — one step heavier than the last field Wave,
+   Composition is `NextWave(HatchBank.CarryWaveIndex(carry))` — the Wave equal to Waves
+   carried, not one step past the run index.
    including after Wave 5 (`NextWave(5)` vs Wave 5's `NextWave(4)`). Terminal `TriggerDraw`
    may continue past `MaxWaves`; composition clamps at `MaxWaves - 1`. Hatch-bank is
    allowed after the field is stripped.

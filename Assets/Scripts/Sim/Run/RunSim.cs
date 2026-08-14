@@ -29,16 +29,17 @@ namespace GatekeeperBastion.Sim
     /// codes against exactly this public API.
     ///
     /// v0 loop: Docked (aboard ship menu) → Tethered (fight in the bastion) → Lost (died)
-    /// or Escaped (Wave 5 terminal with nothing Unbanked). Death is the only FAILURE ender:
+    /// or Escaped (Master Control's Hatch-bank half survived). Death is the only FAILURE ender:
     /// either the Hatch is destroyed or the player goes down (NotifyPlayerDown) — both funnel
     /// through one EndRun path. The tether cannot be cut at will: there is no bail-out path
     /// in v0. BeginEscape/spool ticking were removed; they return with the escape-window design.
     /// Hatch-bank after the field is stripped stays Tethered so the opened door is usable.
+    /// Wave 5 terminal does not Escaped.
     ///
     /// Waves are DRAW-TRIGGERED and there are exactly WaveDirector.MaxWaves of them: while
-    /// Tethered the sim alternates Prep ↔ Assault. A field terminal Interact arms a
-    /// sequential run of draws (clear, TerminalChainGap of Prep, next draw). Tests and Dev
-    /// still call TriggerDraw() for a single assault.
+    /// Tethered the sim alternates Prep ↔ Assault. A field terminal Interact is one draw.
+    /// ArmSequentialDraws remains for later terminals that re-lock banking; the field loop
+    /// does not arm it.
     ///
     /// Deep start: StartRun(N) remembers a start wave. The first TriggerDraw delivers
     /// waves 1..N back to back — each next wave starts InterWaveGap seconds after the previous
@@ -71,9 +72,13 @@ namespace GatekeeperBastion.Sim
         int _followUpsLeft;       // sequential draws remaining after the live assault clears
         float _followUpTimer;     // counts down TerminalChainGap in Prep
         float _hatchConvertMul = HatchBank.MultLow;
+        int _hatchCarry = 1;
         float _dripAcc;
         float _withdrawAcc;
         float _hatchBankTimer;
+        MasterControlPhase _masterPhase;
+        int _masterLeft;
+        bool _masterHatchMulLocked;
 
         /// <summary>Seed passed at construction; all future run randomness derives from it.</summary>
         public int Seed { get; private set; }
@@ -103,10 +108,19 @@ namespace GatekeeperBastion.Sim
 
         /// <summary>Kill awards this Run that have not yet converted. Wiped on down, breach, or
         /// a terminal last-Wave clear. Converted only by Hatch-bank drip/dump.</summary>
-        public long Unbanked { get; private set; }
+        public long Unbanked { get; internal set; }
+
+        /// <summary>Unbanked spent raising intensity this pull. Reset on idle Prep after the pull.</summary>
+        public long JuiceSpentThisPull { get; internal set; }
 
         /// <summary>Hatch-bank starts remaining this Run. Starts at <see cref="HatchBank.SlotsPerRun"/>.</summary>
         public int HatchBankSlotsLeft { get; private set; }
+
+        /// <summary>Field Waves cleared since the last Hatch-bank. 0 until the first Terminal draw.</summary>
+        public int WavesSinceBank { get; private set; }
+
+        /// <summary>Carry snapshotted at the current Hatch-bank start (1..MaxWaves).</summary>
+        public int HatchCarry => _hatchCarry;
 
         /// <summary>Convert multiplier snapshotted at the last Hatch-bank start. 1 while unused.</summary>
         public float HatchConvertMultiplier => _hatchConvertMul;
@@ -129,16 +143,8 @@ namespace GatekeeperBastion.Sim
 
         /// <summary>True while a deep-start chain still has waves to launch (delivery wait or
         /// inter-wave gap). WaveSpawner must not NotifyAssaultCleared until this is false.</summary>
-        public bool ChainPending
-        {
-            get
-            {
-                if (!_chainActive) return false;
-                if (_awaitingDelivery) return true;
-                if (_interWaveTimer > 0f) return true;
-                return CurrentWaveIndex <= _chainUntil;
-            }
-        }
+        public bool ChainPending =>
+            _chainActive && (_awaitingDelivery || _interWaveTimer > 0f || CurrentWaveIndex <= _chainUntil);
 
         /// <summary>True while a field-terminal sequence still has a follow-up draw armed
         /// or counting down in Prep.</summary>
@@ -147,17 +153,26 @@ namespace GatekeeperBastion.Sim
         /// <summary>Seconds of Prep left before a sequential follow-up draw. 0 when none.</summary>
         public float SequentialFollowUpRemaining => _followUpTimer;
 
-        /// <summary>True once the run completed through CompleteRun (Wave 5 terminal with
-        /// nothing unbanked) rather than lost.</summary>
+        /// <summary>True once the run completed through CompleteRun (Master Control Hatch-bank
+        /// half survived) rather than lost.</summary>
         public bool AllWavesCleared { get; private set; }
+
+        /// <summary>None until <see cref="StartMasterControl"/>; Terminal then Hatch.</summary>
+        public MasterControlPhase MasterPhase => _masterPhase;
+
+        /// <summary>True while a Master Control sequence is driving Waves.</summary>
+        public bool MasterSequenceLive => _masterPhase != MasterControlPhase.None;
+
+        /// <summary>Waves left in the live Master Control half, including the current one.</summary>
+        public int MasterWavesLeft => _masterLeft;
+
+        /// <summary>True during the terminal half — the Control Room door should be shut.</summary>
+        public bool ControlRoomSealed => _masterPhase == MasterControlPhase.Terminal;
 
         /// <summary>Base salvage one kill is worth before the siphon multiplier: the Scavenging
         /// attribute's 25 + 5*level. Read fresh from the MetaState so a mid-session purchase is
         /// live on the very next kill.</summary>
-        private float BaseKillValue
-        {
-            get { return MetaUpgrades.SalvagePerKill(_meta.ScavengingLevel); }
-        }
+        private float BaseKillValue => MetaUpgrades.SalvagePerKill(_meta.ScavengingLevel);
 
         /// <summary>Salvage the next kill is worth right now:
         /// MetaUpgrades.SalvagePerKill(ScavengingLevel) times the siphon's hand-authored dial
@@ -183,6 +198,10 @@ namespace GatekeeperBastion.Sim
         /// <summary>Raised when NotifyAssaultCleared returns the run to Prep (including after the
         /// final wave, immediately before the run completes).</summary>
         public event Action AssaultEnded;
+
+        /// <summary>Raised when Master Control's terminal half has cleared and the Hatch half
+        /// is armed (door should open; Hatch-bank follow-up is on InterWaveGap).</summary>
+        public event Action MasterHatchHalfStarted;
 
         /// <summary>Raised on every phase transition (also once for Docked on StartRun).</summary>
         public event Action<RunPhase> PhaseChanged;
@@ -245,6 +264,9 @@ namespace GatekeeperBastion.Sim
             Siphon.Level = level;
         }
 
+        /// <summary>Paid intensity at a looked-at trigger. Lowering is free and does not refund.</summary>
+        public bool TryJuice(int delta, bool atTrigger) => IntensityJuice.Try(this, delta, atTrigger);
+
         /// <summary>
         /// Pull a Terminal Wave: Prep → Assault. Tests and Dev keep this signature.
         /// </summary>
@@ -267,18 +289,27 @@ namespace GatekeeperBastion.Sim
             }
             if (mode == WaveMode.HatchBank)
             {
-                if (Unbanked <= 0L)
+                bool masterHatch = _masterPhase == MasterControlPhase.Hatch;
+                if (!masterHatch)
                 {
-                    Log.Info(Tag, "hatch-bank refused — unbanked=0");
-                    return;
+                    if (Unbanked <= 0L)
+                    {
+                        Log.Info(Tag, "hatch-bank refused — unbanked=0");
+                        return;
+                    }
+                    if (HatchBankSlotsLeft <= 0)
+                    {
+                        Log.Info(Tag, "hatch-bank refused — no slots");
+                        return;
+                    }
+                    HatchBankSlotsLeft--;
+                    SnapshotHatchCarry();
                 }
-                if (HatchBankSlotsLeft <= 0)
+                else if (!_masterHatchMulLocked)
                 {
-                    Log.Info(Tag, "hatch-bank refused — no slots");
-                    return;
+                    SnapshotHatchCarry();
+                    _masterHatchMulLocked = true;
                 }
-                HatchBankSlotsLeft--;
-                _hatchConvertMul = HatchBank.ConvertMultiplier(Unbanked);
                 _dripAcc = 0f;
                 _hatchBankTimer = HatchBank.DurationSeconds;
                 _chainActive = false;
@@ -308,6 +339,42 @@ namespace GatekeeperBastion.Sim
                 _awaitingDelivery = true;
         }
 
+        /// <summary>One pull: 5 Terminal Waves then 5 Hatch-bank windows. Refuses outside
+        /// Tethered+Prep, or when a sequence is already live. Disables deep-start chaining.</summary>
+        public bool StartMasterControl()
+        {
+            if (Phase != RunPhase.Tethered || Assault != AssaultState.Prep)
+            {
+                Log.Info(Tag, "StartMasterControl ignored (phase " + Phase + ", " + Assault + ")");
+                return false;
+            }
+            if (_masterPhase != MasterControlPhase.None)
+            {
+                Log.Info(Tag, "StartMasterControl ignored: sequence already live");
+                return false;
+            }
+            if (SequentialPending)
+            {
+                Log.Info(Tag, "StartMasterControl ignored: sequence already pending");
+                return false;
+            }
+
+            _startWave = 1;
+            ClearChainState();
+            CancelSequentialDraws();
+            _masterPhase = MasterControlPhase.Terminal;
+            _masterLeft = MasterControl.TerminalWaves;
+            _masterHatchMulLocked = false;
+            TriggerDraw(WaveMode.Terminal);
+            if (Assault != AssaultState.Assault)
+            {
+                CancelMasterSequence();
+                Log.Info(Tag, "StartMasterControl ignored: draw did not start");
+                return false;
+            }
+            return true;
+        }
+
         /// <summary>Arm this draw plus <paramref name="total"/> − 1 follow-ups after each
         /// clear, separated by <see cref="WaveDirector.TerminalChainGap"/> of Prep. 1 is a
         /// single assault (tests and Dev).</summary>
@@ -323,6 +390,13 @@ namespace GatekeeperBastion.Sim
         {
             _followUpsLeft = 0;
             _followUpTimer = 0f;
+        }
+
+        void CancelMasterSequence()
+        {
+            _masterPhase = MasterControlPhase.None;
+            _masterLeft = 0;
+            _masterHatchMulLocked = false;
         }
 
         /// <summary>Hatch damage from the Game layer. Field-terminal Waves leave the Hatch
@@ -372,6 +446,7 @@ namespace GatekeeperBastion.Sim
             _hatchBankTimer = 0f;
             ClearChainState();
             CancelSequentialDraws();
+            CancelMasterSequence();
         }
 
         /// <summary>
@@ -395,6 +470,7 @@ namespace GatekeeperBastion.Sim
             _startWave = 1;
             ClearChainState();
             CancelSequentialDraws();
+            CancelMasterSequence();
         }
 
         /// <summary>
@@ -508,10 +584,9 @@ namespace GatekeeperBastion.Sim
         /// <summary>
         /// Game layer reports the wave dead (all spawned gatekeepers down, spawning finished, and
         /// any deep-start chain fully delivered): Assault → Prep and AssaultEnded fires. Raises
-        /// MetaState.DeepestWaveReached to CurrentWaveIndex when higher. Terminal Wave 5 with
-        /// Unbanked keeps Prep (door already opened by the terminal complete). Hatch-bank dump
-        /// after the field is stripped stays Prep so progression through that door continues.
-        /// Unbanked 0 on Wave 5 Completes (nothing to bank). Later terminal clears do not.
+        /// MetaState.DeepestWaveReached to CurrentWaveIndex when higher. Terminal Wave 5 never
+        /// Completes. Hatch-bank dump after the field is stripped stays Prep so progression
+        /// through that door continues. Master Control's Hatch half Completes on its last window.
         /// Ignored outside Tethered+Assault, and ignored while ChainPending.
         /// </summary>
         public void NotifyAssaultCleared()
@@ -536,7 +611,8 @@ namespace GatekeeperBastion.Sim
             if (hatchBank)
             {
                 _hatchBankTimer = 0f;
-                DumpUnbanked();
+                if (_masterPhase != MasterControlPhase.Hatch)
+                    DumpUnbanked();
             }
 
             // Cleared through CurrentWaveIndex (1-based wave number already launched).
@@ -550,23 +626,21 @@ namespace GatekeeperBastion.Sim
             var handler = AssaultEnded;
             if (handler != null) handler();
 
-            // Re-check the phase: an AssaultEnded listener is free to end the run (kill the
-            // player, drop the hatch), and a run already lost must not also complete.
-            if (Phase == RunPhase.Tethered && !hatchBank && Unbanked <= 0L
-                && CurrentWaveIndex == WaveDirector.MaxWaves && _followUpsLeft <= 0)
+            if (Phase == RunPhase.Tethered && _masterPhase != MasterControlPhase.None)
             {
-                CancelSequentialDraws();
-                CompleteRun();
+                AdvanceMasterControl(hatchBank);
                 return;
             }
 
             if (Phase == RunPhase.Tethered && CurrentWaveIndex >= WaveDirector.MaxWaves
                 && _followUpsLeft <= 0)
             {
-                if (hatchBank)
-                    Log.Info(Tag, "hatch-bank done — unbanked=" + Unbanked + " door is open");
-                else if (Unbanked > 0L)
-                    Log.Info(Tag, "field stripped — unbanked=" + Unbanked + " hatch-bank to convert");
+                string msg = hatchBank
+                    ? "hatch-bank done — unbanked=" + Unbanked + " door is open"
+                    : Unbanked > 0L
+                        ? "field stripped — unbanked=" + Unbanked + " hatch-bank to convert"
+                        : "field stripped — unbanked=0 Master Control is the win";
+                Log.Info(Tag, msg);
             }
 
             if (Phase == RunPhase.Tethered && _followUpsLeft > 0)
@@ -575,7 +649,42 @@ namespace GatekeeperBastion.Sim
                 _followUpTimer = WaveDirector.TerminalChainGap;
             }
             else
+            {
                 CancelSequentialDraws();
+                Siphon.Level = 0;
+                JuiceSpentThisPull = 0L;
+            }
+        }
+
+        void AdvanceMasterControl(bool hatchBank)
+        {
+            _masterLeft--;
+            if (_masterLeft > 0)
+            {
+                if (_masterPhase == MasterControlPhase.Hatch)
+                    Mode = WaveMode.HatchBank;
+                _followUpTimer = WaveDirector.InterWaveGap;
+                return;
+            }
+
+            if (_masterPhase == MasterControlPhase.Terminal)
+            {
+                _masterPhase = MasterControlPhase.Hatch;
+                _masterLeft = MasterControl.HatchWaves;
+                SnapshotHatchCarry();
+                _masterHatchMulLocked = true;
+                Mode = WaveMode.HatchBank;
+                _followUpTimer = WaveDirector.InterWaveGap;
+                var hatchHalf = MasterHatchHalfStarted;
+                if (hatchHalf != null) hatchHalf();
+                Log.Info(Tag, "master-control hatch half — hatchWaves=" + MasterControl.HatchWaves);
+                return;
+            }
+
+            if (hatchBank)
+                DumpUnbanked();
+            CancelMasterSequence();
+            CompleteRun();
         }
 
         /// <summary>
@@ -631,14 +740,26 @@ namespace GatekeeperBastion.Sim
 
         private void LaunchWave()
         {
-            int idx = CurrentWaveIndex;
-            if (Mode != WaveMode.HatchBank && idx >= WaveDirector.MaxWaves)
-                idx = WaveDirector.MaxWaves - 1;
+            int idx = Mode == WaveMode.HatchBank
+                ? HatchBank.CarryWaveIndex(_hatchCarry)
+                : CurrentWaveIndex >= WaveDirector.MaxWaves
+                    ? WaveDirector.MaxWaves - 1
+                    : CurrentWaveIndex;
             WaveSpec spec = _director.NextWave(idx, Siphon.Level);
             if (Mode != WaveMode.HatchBank)
+            {
                 CurrentWaveIndex++;
+                WavesSinceBank++;
+            }
             var handler = WaveStarted;
             if (handler != null) handler(spec);
+        }
+
+        void SnapshotHatchCarry()
+        {
+            _hatchCarry = HatchBank.ClampCarry(WavesSinceBank);
+            _hatchConvertMul = HatchBank.CarryConvert(_hatchCarry);
+            WavesSinceBank = 0;
         }
 
         private void ClearChainState()
@@ -674,6 +795,7 @@ namespace GatekeeperBastion.Sim
         {
             ClearChainState();
             CancelSequentialDraws();
+            CancelMasterSequence();
             WipeUnbanked();
             RunReport report = BuildRunReport(cause);
             _meta.PodEjections++;
@@ -686,7 +808,7 @@ namespace GatekeeperBastion.Sim
         }
 
         /// <summary>
-        /// The run-SUCCESS path: Wave 5 terminal with nothing left to bank. Bookkeeping only
+        /// The run-SUCCESS path: Master Control Hatch-bank half survived. Bookkeeping only
         /// — leftover Unbanked is wiped if any remains (should already be 0). CleanExits
         /// increments (PodEjections does NOT) and the run goes terminal Escaped. Called only
         /// from NotifyAssaultCleared. Hatch-bank after the field is stripped does not call this.
@@ -700,7 +822,7 @@ namespace GatekeeperBastion.Sim
             LastRunReport = report;
             SetPhase(RunPhase.Escaped);
             long net = report.grossEarned - report.repairSpent;
-            Log.Info(Tag, "Run CLEARED: all " + WaveDirector.MaxWaves + " waves down. Gross " +
+            Log.Info(Tag, "Run CLEARED: Master Control Hatch-bank survived. Gross " +
                           report.grossEarned + ", repair spent " + report.repairSpent +
                           ", net " + net + ".");
         }

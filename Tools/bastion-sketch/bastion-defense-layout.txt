@@ -1,0 +1,72 @@
+# Bastion Defense Layout — Zo's diagram, 2026-08-14. Units are metres (kit scaler 1).
+# North = +Z, East = +X. The authored HatchStation sits at world (0, 1.5, -20.5);
+# R1 is placed to enclose it.
+#
+# Progression: T1+T2 open D1; T3 opens D2; T4+T5 open the control door D3.
+# The diagram's "T3 unlocks D2" put T3 behind D2, a deadlock — here the hub-to-R9
+# passage is open and D2 sits north of R9 so T3 is reachable before its gate.
+# Spawn closets: S1/S2 live from the start; S3-S6 unseal when D2 opens.
+
+# --- South block (pre-D1) ---------------------------------------------------
+room R1 OpenArea 0 -20 H
+room R2 Full -17 -20 T:T1
+room R3 Full 17 -20 T:T2
+room R4 Half -17 -9.5 S:S1
+room R5 Half 17 -9.5 S:S2
+
+# --- Central hub (behind D1) ------------------------------------------------
+room R6 OpenArea 0 1
+room R7 Half -14.5 1 S:S3
+room R8 Half 14.5 1 S:S4
+
+# --- Spine (open passage from hub; T3 gates D2) -------------------------------
+room R9 Full 0 18 T:T3
+
+# --- Staging hall (behind D2) -------------------------------------------------
+room R10 OpenArea 0 35
+room R11 Full -17 31 T:T4
+room R12 Full 17 31 T:T5
+room R13 Half -14.5 41.5 S:S5
+room R14 Half 14.5 41.5 S:S6
+
+# --- Final control room (behind the control door) -----------------------------
+room R15 ControlRoom 0 64.5 M
+
+# --- Open passages: both faces carry a Door side; along= aligns the shared
+# aperture when room centres differ on that axis.
+side R2 E Door
+side R1 W Door
+side R3 W Door
+side R1 E Door
+side R4 S Door
+side R2 N Door
+side R5 S Door
+side R3 N Door
+side R6 S Door
+side R7 E Door
+side R6 W Door
+side R8 W Door
+side R6 E Door
+side R6 N Door
+side R9 S Door
+side R10 S Door
+side R11 E Door
+side R10 W Door along=-4
+side R12 W Door
+side R10 E Door along=-4
+side R13 S Door
+side R11 N Door along=2.5
+side R14 S Door
+side R12 N Door along=-2.5
+side R10 N Door
+
+# --- Windows to space (exterior faces only) -----------------------------------
+side R1 S Window
+side R9 E Window
+side R9 W Window
+side R15 N Window
+
+# --- Locked doors --------------------------------------------------------------
+door D1 R1 N unlock=T1,T2
+door D2 R9 N unlock=T3
+door D3 R15 S unlock=T4,T5 control

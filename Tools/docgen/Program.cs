@@ -21,7 +21,8 @@ public static class Docgen
     static readonly string[] KnownBlockIds =
     {
         "mk1-base", "wheel", "rings", "tier-cost", "abilities",
-        "gatekeepers", "waves", "dial", "hatch", "hatch-bank", "tracks"
+        "gatekeepers", "waves", "dial", "intensity-juice", "hatch", "hatch-bank", "master-control", "tracks",
+        "bastion-mesh"
     };
 
     public static int Main(string[] args)
@@ -325,9 +326,12 @@ public static class Docgen
         d["gatekeepers"] = EmitGatekeepers();
         d["waves"] = EmitWaves();
         d["dial"] = EmitDial();
+        d["intensity-juice"] = EmitIntensityJuice();
         d["hatch"] = EmitHatch();
         d["hatch-bank"] = EmitHatchBank();
+        d["master-control"] = EmitMasterControl();
         d["tracks"] = EmitTracks();
+        d["bastion-mesh"] = EmitBastionMesh();
         return d;
     }
 
@@ -504,6 +508,15 @@ public static class Docgen
         return sb.ToString().TrimEnd('\r', '\n');
     }
 
+    static string EmitIntensityJuice()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("| | |");
+        sb.AppendLine("|---|---|");
+        sb.AppendLine("| juice per step | " + IntensityJuice.CostPerStep + " unbanked |");
+        return sb.ToString().TrimEnd('\r', '\n');
+    }
+
     static string EmitHatch()
     {
         var rig = EquipmentCatalog.Def(EquipmentId.RepairRig);
@@ -524,19 +537,36 @@ public static class Docgen
 
     static string EmitHatchBank()
     {
+        var wd = new WaveDirector();
         var sb = new StringBuilder();
         sb.AppendLine("| | |");
         sb.AppendLine("|---|---|");
         sb.AppendLine("| slots / Run | " + HatchBank.SlotsPerRun + " |");
         sb.AppendLine("| drip | " + N(HatchBank.DripPerSecond) + " unbanked/s |");
         sb.AppendLine("| duration | " + N(HatchBank.DurationSeconds) + " s |");
-        sb.AppendLine("| convert < " + HatchBank.MidAt + " | ×" +
-                      HatchBank.MultLow.ToString("0.00", Inv) + " |");
-        sb.AppendLine("| convert " + HatchBank.MidAt + "–" + (HatchBank.HighAt - 1) + " | ×" +
-                      HatchBank.MultMid.ToString("0.00", Inv) + " |");
-        sb.AppendLine("| convert ≥ " + HatchBank.HighAt + " | ×" +
-                      HatchBank.MultHigh.ToString("0.00", Inv) + " |");
         sb.AppendLine("| withdraw | " + N(HatchBank.WithdrawPerSecond) + " salvage/s |");
+        sb.AppendLine();
+        sb.AppendLine("| Waves carried | convert | Hatch Wave | bodies at intensity 0 |");
+        sb.AppendLine("|---|---|---|---|");
+        for (int w = 1; w <= WaveDirector.MaxWaves; w++)
+        {
+            int idx = HatchBank.CarryWaveIndex(w);
+            var spec = wd.NextWave(idx, 0);
+            sb.AppendLine("| " + w + " | ×" +
+                          HatchBank.CarryConvert(w).ToString("0.00", Inv) +
+                          " | " + (idx + 1) + " | " + spec.enemyCount + " |");
+        }
+        return sb.ToString().TrimEnd('\r', '\n');
+    }
+
+    static string EmitMasterControl()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("| | |");
+        sb.AppendLine("|---|---|");
+        sb.AppendLine("| terminal Waves | " + MasterControl.TerminalWaves + " |");
+        sb.AppendLine("| Hatch-bank Waves | " + MasterControl.HatchWaves + " |");
+        sb.AppendLine("| gap | " + N(WaveDirector.InterWaveGap) + " s |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
 
@@ -579,6 +609,24 @@ public static class Docgen
         if (string.IsNullOrEmpty(v.Unit))
             return N(v.Value);
         return N(v.Value) + " " + v.Unit;
+    }
+
+    static string EmitBastionMesh()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("| Cell | Prefab |");
+        sb.AppendLine("|---|---|");
+        sb.AppendLine("| Floor | `" + BastionMeshMap.Floor + "` |");
+        sb.AppendLine("| Ceiling | `" + BastionMeshMap.Ceiling + "` |");
+        foreach (BastionSideKind side in Enum.GetValues(typeof(BastionSideKind)))
+        {
+            string prefab = BastionMeshMap.ForSide(side); // throws on an unmapped kind
+            sb.AppendLine("| " + side + " | " +
+                          (prefab == null ? "nothing emitted" : "`" + prefab + "`") + " |");
+        }
+        sb.AppendLine("| Wall corner | `" + BastionMeshMap.CornerPillar + "` |");
+        sb.AppendLine("| Ceiling fixture | `" + BastionMeshMap.CeilingLight + "` |");
+        return sb.ToString().TrimEnd('\r', '\n');
     }
 
     // ---------- field manual ----------
@@ -762,11 +810,11 @@ public static class Docgen
         sb.AppendLine("## The waves");
         sb.AppendLine();
         sb.AppendLine("**" + WaveDirector.MaxWaves + " waves to a run**, and none of them start until you use a");
-        sb.AppendLine("field terminal. One Interact starts that terminal's remaining Waves; after each");
-        sb.AppendLine("clear there are " + WaveDirector.TerminalChainGap.ToString("0") + " seconds of quiet, then the next Wave.");
-        sb.AppendLine("After the sequence, Prep lasts as long as you want. Gatekeepers arrive in groups, not a stream.");
+        sb.AppendLine("field terminal. `+/-` juice, `E` selects, `T` starts one Wave. A terminal opens its door after");
+        sb.AppendLine("its authored count (T1 is 5). Prep after a clear lasts as long as you want — Hatch-bank is legal there.");
+        sb.AppendLine("Gatekeepers arrive in groups, not a stream.");
         sb.AppendLine();
-        sb.AppendLine("At the dial's lowest setting:");
+        sb.AppendLine("At intensity 0:");
         sb.AppendLine();
         sb.AppendLine("| Wave | Bodies | Default | Hunter | Ram | HP × | Arrive in groups of | Every |");
         sb.AppendLine("|---|---|---|---|---|---|---|---|");
@@ -779,19 +827,21 @@ public static class Docgen
                           N(s.spawnInterval) + " s |");
         }
         sb.AppendLine();
-        sb.AppendLine("Hunters and Rams are on a fixed schedule — the dial never adds more of them.");
+        sb.AppendLine("Hunters and Rams are on a fixed schedule — intensity never adds more of them.");
         sb.AppendLine();
     }
 
     static void Dial(StringBuilder sb)
     {
-        sb.AppendLine("## The siphon dial — the wager");
+        sb.AppendLine("## Intensity — the wager");
         sb.AppendLine();
-        sb.AppendLine("Set between waves, locked once a wave is live. It pays more and sends more, and the");
-        sb.AppendLine("extra bodies are **all Defaults** — it cannot conjure a sixth Ram. It changes nothing");
-        sb.AppendLine("else: no extra health, no tighter spacing, no larger groups.");
+        sb.AppendLine("Juice at a field terminal, Master Control, or the Hatch (`+/-`), then `E` to select and `T` to start. Locked once a");
+        sb.AppendLine("wave is live. It pays more and sends more, and the extra bodies are **all Defaults** —");
+        sb.AppendLine("it cannot conjure a sixth Ram. It changes nothing else: no extra health, no tighter");
+        sb.AppendLine("spacing, no larger groups. Juice costs `" + IntensityJuice.CostPerStep +
+                      "` unbanked per step.");
         sb.AppendLine();
-        sb.AppendLine("| Dial | You earn | Wave 1 sends | Wave " + WaveDirector.MaxWaves + " sends |");
+        sb.AppendLine("| Intensity | You earn | Wave 1 sends | Wave " + WaveDirector.MaxWaves + " sends |");
         sb.AppendLine("|---|---|---|---|");
         var wd = new WaveDirector();
         for (int lvl = TetherSiphon.MinLevel; lvl <= TetherSiphon.MaxLevel; lvl++)
@@ -809,13 +859,13 @@ public static class Docgen
         sb.AppendLine("## Salvage");
         sb.AppendLine();
         sb.AppendLine("**Gatekeepers are worth Salvage, and that Salvage sits unbanked until a Hatch-bank.**");
-        sb.AppendLine("A kill does not credit the ship. Prep `T` at the Hatch starts the convert Wave:");
+        sb.AppendLine("A kill does not credit the ship. Prep `E` then `T` at the Hatch starts the convert Wave:");
         sb.AppendLine("drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A fatter pile");
         sb.AppendLine("converts at a higher multiplier. Dying keeps what already made it through the Hatch.");
         sb.AppendLine();
         sb.AppendLine("A kill pays `" + N(MetaUpgrades.SalvagePerKill(0)) + "` at Scavenging 0, up to `" +
                       N(MetaUpgrades.SalvagePerKill(MetaUpgrades.MaxLevel)) + "` at " +
-                      MetaUpgrades.MaxLevel + ", then multiplied by the dial.");
+                      MetaUpgrades.MaxLevel + ", then multiplied by intensity.");
         sb.AppendLine("Nothing pays per second except Hatch-bank drip (`" + N(HatchBank.DripPerSecond) +
                       "` unbanked/s), and the quiet between waves earns nothing at all.");
         sb.AppendLine();

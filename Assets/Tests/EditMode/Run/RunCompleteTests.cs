@@ -149,7 +149,7 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(AssaultState.Prep, sim.Assault);
             Assert.IsFalse(sim.AllWavesCleared);
             Assert.AreEqual(0L, sim.Unbanked);
-            Assert.AreEqual(HatchBank.BankedFrom(5250L, HatchBank.MultHigh), meta.BankedSalvage);
+            Assert.AreEqual(HatchBank.BankedFrom(5250L, HatchBank.CarryConvert(5)), meta.BankedSalvage);
             Assert.AreEqual(0, meta.CleanExits);
             Assert.AreEqual(0, meta.PodEjections, "hatch-bank after Wave 5 is not a run end");
         }
@@ -159,11 +159,7 @@ namespace GatekeeperBastion.Tests
         {
             MetaState meta;
             var sim = NewTetheredSim(out meta);
-            for (int w = 0; w < WaveDirector.MaxWaves; w++)
-            {
-                sim.TriggerDraw();
-                sim.NotifyAssaultCleared();
-            }
+            MasterControlTests.SurviveSequence(sim, 0);
 
             Assert.AreEqual("cleared", sim.LastRunReport.cause);
             Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
@@ -173,7 +169,7 @@ namespace GatekeeperBastion.Tests
         public void RunComplete_AtSiphonThree_BanksTheFullMultipliedTake()
         {
             // 265 gatekeepers at dial 3 (x1.25 bodies) at 25 * 1.25 = 31.25 each (x1.25 money) —
-            // AwardKill floors once per kill: 265 x 31 = 8215 unbanked. Hatch-bank after Wave 5
+            // AwardKill floors once per kill: 265 x 31 = 8215 unbanked. Five field Waves carry
             // converts at ×1.50.
             MetaState meta;
             var sim = NewTetheredSim(out meta);
@@ -183,7 +179,7 @@ namespace GatekeeperBastion.Tests
             HatchBankDump(sim);
 
             Assert.AreEqual(RunPhase.Tethered, sim.Phase);
-            long converted = HatchBank.BankedFrom(pile, HatchBank.ConvertMultiplier(pile));
+            long converted = HatchBank.BankedFrom(pile, HatchBank.CarryConvert(5));
             Assert.AreEqual(converted, meta.BankedSalvage);
             Assert.AreEqual(converted, sim.Salvage.RunSalvage);
             Assert.AreEqual(0, meta.CleanExits);
@@ -212,11 +208,7 @@ namespace GatekeeperBastion.Tests
         {
             MetaState meta;
             var sim = NewTetheredSim(out meta);
-            for (int w = 0; w < WaveDirector.MaxWaves; w++)
-            {
-                sim.TriggerDraw();
-                sim.NotifyAssaultCleared();
-            }
+            MasterControlTests.SurviveSequence(sim, 0);
             long banked = meta.BankedSalvage;
 
             for (int i = 0; i < 40; i++) sim.Tick(0.5f);
@@ -359,11 +351,7 @@ namespace GatekeeperBastion.Tests
         {
             MetaState meta;
             var sim = NewTetheredSim(out meta);
-            for (int w = 0; w < WaveDirector.MaxWaves; w++)
-            {
-                sim.TriggerDraw();
-                sim.NotifyAssaultCleared();
-            }
+            MasterControlTests.SurviveSequence(sim, 0);
 
             var loaded = MetaState.FromJson(meta.ToJson());
             Assert.AreEqual(1, loaded.CleanExits);
@@ -379,11 +367,7 @@ namespace GatekeeperBastion.Tests
             // waves is not itself paid, only kills are.
             MetaState meta;
             var sim = NewTetheredSim(out meta);
-            for (int w = 0; w < WaveDirector.MaxWaves; w++)
-            {
-                sim.TriggerDraw();
-                sim.NotifyAssaultCleared();
-            }
+            MasterControlTests.SurviveSequence(sim, 0);
             Assert.AreEqual(RunPhase.Escaped, sim.Phase);
             Assert.AreEqual(0L, meta.BankedSalvage);
             Assert.AreEqual(0L, sim.LastRunReport.grossEarned);

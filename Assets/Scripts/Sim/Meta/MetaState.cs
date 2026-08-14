@@ -29,6 +29,21 @@ namespace GatekeeperBastion.Sim
 
         public int SaveVersion = SaveData.CurrentVersion;
 
+        /// <summary>Terminal ids completed at the last successful Hatch-bank. Deep start restores
+        /// this graph; a Wave-1 start does not.</summary>
+        string[] _completedTerminalIds = Array.Empty<string>();
+
+        public string[] CompletedTerminalIds =>
+            _completedTerminalIds ?? (_completedTerminalIds = Array.Empty<string>());
+
+        /// <summary>Replace the Hatch-bank graph snapshot. Null or empty clears it.</summary>
+        public void SetCompletedTerminalIds(string[] ids)
+        {
+            _completedTerminalIds = ids == null || ids.Length == 0
+                ? Array.Empty<string>()
+                : (string[])ids.Clone();
+        }
+
         public int HatchArmorLevel;
 
         public int VitalityLevel;
@@ -360,6 +375,7 @@ namespace GatekeeperBastion.Sim
             d.EquippedSecondary = (int)EquippedSecondary;
             d.EquippedDrone = (int)EquippedDrone;
             d.OwnedPayloadMask = OwnedPayloadMask;
+            d.CompletedTerminalIds = (string[])CompletedTerminalIds.Clone();
             return d;
         }
 
@@ -415,6 +431,9 @@ namespace GatekeeperBastion.Sim
 
             if (d.SaveVersion < 4)
                 MigrateLegacyRepairTracks(m, d.RepairRigLevel, d.EngineeringLevel);
+
+            if (d.SaveVersion >= 7 && d.CompletedTerminalIds != null)
+                m.SetCompletedTerminalIds(d.CompletedTerminalIds);
 
             // Ledger fields carry the missing-key sentinel (-1) from the JSON path; do not
             // re-derive them from SaveVersion here or the two pipelines diverge again.
@@ -496,6 +515,7 @@ namespace GatekeeperBastion.Sim
             AppendField(sb, "EquippedSecondary", d.EquippedSecondary.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "EquippedDrone", d.EquippedDrone.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "OwnedPayloadMask", d.OwnedPayloadMask.ToString(CultureInfo.InvariantCulture), true);
+            AppendStringArray(sb, "CompletedTerminalIds", d.CompletedTerminalIds);
             sb.Append('}');
             return sb.ToString();
         }
@@ -530,6 +550,7 @@ namespace GatekeeperBastion.Sim
             d.OwnedEquipmentMask = (int)ExtractLong(json, "OwnedEquipmentMask", 0);
             d.EquippedEquipment = (int)ExtractLong(json, "EquippedEquipment", (int)EquipmentId.None);
             d.OwnedPayloadMask = (int)ExtractLong(json, "OwnedPayloadMask", 0);
+            d.CompletedTerminalIds = ExtractStringArray(json, "CompletedTerminalIds");
 
             bool hasV3Weapons = json.IndexOf("\"WeaponsOwned\"", StringComparison.Ordinal) >= 0;
             if (hasV3Weapons)
@@ -567,6 +588,42 @@ namespace GatekeeperBastion.Sim
         {
             if (leadingComma) sb.Append(',');
             sb.Append('"').Append(name).Append("\":").Append(value);
+        }
+
+        static void AppendStringArray(StringBuilder sb, string name, string[] values)
+        {
+            sb.Append(",\"").Append(name).Append("\":[");
+            if (values != null)
+            {
+                for (int i = 0; i < values.Length; i++)
+                {
+                    if (i > 0) sb.Append(',');
+                    sb.Append('"').Append(values[i] ?? "").Append('"');
+                }
+            }
+            sb.Append(']');
+        }
+
+        static string[] ExtractStringArray(string json, string key)
+        {
+            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*\\[([^\\]]*)\\]");
+            if (!match.Success) return Array.Empty<string>();
+            string inner = match.Groups[1].Value.Trim();
+            if (inner.Length == 0) return Array.Empty<string>();
+            string[] parts = inner.Split(',');
+            int n = 0;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string p = parts[i].Trim();
+                if (p.Length >= 2 && p[0] == '"' && p[p.Length - 1] == '"')
+                    p = p.Substring(1, p.Length - 2);
+                if (p.Length == 0) continue;
+                parts[n++] = p;
+            }
+            if (n == parts.Length) return parts;
+            var trimmed = new string[n];
+            Array.Copy(parts, trimmed, n);
+            return trimmed;
         }
 
         static void AppendBoolArray(StringBuilder sb, string name, bool[] values)

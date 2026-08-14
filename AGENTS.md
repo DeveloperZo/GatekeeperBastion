@@ -153,10 +153,11 @@ UI canvases and gameplay hosts are authored scene content and survive Build All.
   AutoVerify) → `gkb_verify_report.json` for the full suite headless. The report's `message` field
   carries the failure reason; `status:"precheck"` means a test assembly did not compile
   and nothing ran.
-- **mcs + mono** compiles `Assets/Scripts/Sim/` plus `Assets/Tests/EditMode/` outside
-  Unity in about a second. No harness is checked in — build the command from the two
-  directory globs. Fastest signal for sim-only changes.
-- A log containing `[Dev]` is tainted and cannot close a gate.
+- **`Tools/verify/run.sh`** compiles `Assets/Scripts/Sim/` plus `Assets/Tests/EditMode/`
+  outside Unity with mcs + mono and runs the tests, language lint, arch lint and docgen
+  checks in seconds. Fastest signal for sim-only changes.
+- A log containing `[Dev]` is tainted and cannot close a gate. F10/F11 host/join log
+  `[Net]` and do not taint — they start a session, they do not mutate one.
 
 Do not report work as verified on a suite you did not run.
 

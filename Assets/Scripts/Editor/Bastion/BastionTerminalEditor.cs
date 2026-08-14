@@ -44,6 +44,15 @@ namespace GatekeeperBastion.EditorTools
                         "Wave Spawns",
                         "Breach points used when this terminal starts a Wave. Enabled on Interact; stay available after clear."));
             }
+            else if (kind == BastionTerminalKind.Master)
+            {
+                EditorGUILayout.Space(4f);
+                EditorGUILayout.PropertyField(
+                    _unlockedSpawns,
+                    new GUIContent(
+                        "Wave Spawns",
+                        "Control Room spawn points. Re-enabled after the door seals."));
+            }
 
             EditorGUILayout.Space(4f);
             EditorGUILayout.PropertyField(_game);

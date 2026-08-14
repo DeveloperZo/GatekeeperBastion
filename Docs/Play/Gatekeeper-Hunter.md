@@ -30,7 +30,7 @@ Rams in the same group ignore the shout entirely and keep walking.
 
 Deal with them first and deal with them fast. They are the only kind that threatens your health at speed, they are the cheapest kind to kill, and every second one is alive is a second it spends closing on you regardless of what else you are doing.
 
-The dial never adds Hunters. If a Wave feels like it is drowning you in Hunters specifically, that is the Wave's fixed composition, not your wager — the dial's extra bodies are all Defaults.
+Intensity never adds Hunters. If a Wave feels like it is drowning you in Hunters specifically, that is the Wave's fixed composition, not your wager — intensity's extra bodies are all Defaults.
 
 ## See also
 

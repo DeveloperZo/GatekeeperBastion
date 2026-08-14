@@ -1,3 +1,4 @@
+using System.Text;
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using UnityEngine;
@@ -45,6 +46,19 @@ namespace GatekeeperBastion.Game
             wavesToComplete = waves < 1 ? 1 : waves;
         }
 
+        /// <summary>Editor/sketch emit — Interact and prompt arming dead-end without this.</summary>
+        public void SetGameController(GameController game)
+        {
+            _game = game;
+        }
+
+        /// <summary>Editor/sketch emit — doors exist only after all marks, so the door
+        /// reference cannot ride Configure.</summary>
+        public void SetUnlocksDoor(BastionDoor door)
+        {
+            unlocksDoor = door;
+        }
+
         void Reset()
         {
             kind = BastionTerminalKind.Field;
@@ -64,6 +78,9 @@ namespace GatekeeperBastion.Game
                 _layout.UnregisterTerminal(this);
         }
 
+        static readonly WaveDirector s_preview = new WaveDirector();
+        static readonly StringBuilder s_prompt = new StringBuilder(160);
+
         public string Prompt
         {
             get
@@ -71,10 +88,22 @@ namespace GatekeeperBastion.Game
                 if (string.IsNullOrEmpty(terminalId))
                     return null;
                 string key = Controls.DisplayOf(ControlId.Interact);
+                string startKey = Controls.DisplayOf(ControlId.PullDraw);
+                string plus = Controls.DisplayOf(ControlId.DialUp);
+                string minus = Controls.DisplayOf(ControlId.DialDown);
                 switch (kind)
                 {
                     case BastionTerminalKind.Master:
-                        return "[" + key + "] Master Control — later";
+                        s_prompt.Clear();
+                        bool masterArmed = _game != null && _game.IsWaveStartArmed(terminalId);
+                        if (masterArmed)
+                            s_prompt.Append('[').Append(startKey).Append("] Master Control");
+                        else
+                            s_prompt.Append('[').Append(plus).Append('/').Append(minus)
+                                .Append("] Master Control");
+                        AppendStake(s_prompt, _game);
+                        s_prompt.Append("  [").Append(key).Append(masterArmed ? "] edit" : "] select");
+                        return s_prompt.ToString();
                     case BastionTerminalKind.HatchBank:
                         return "[" + key + "] Hatch-bank — later";
                     case BastionTerminalKind.Resource:
@@ -98,12 +127,36 @@ namespace GatekeeperBastion.Game
                 int n = WavesToComplete;
                 if (_layout != null)
                     _layout.TryGetFieldProgress(terminalId, out k, out n);
-                string noun = n == 1 ? "Wave" : "Waves";
-                return "[" + key + "] Terminal " + terminalId + " — start " + noun + " (" + k + "/" + n + ")";
+                bool armed = gc != null && gc.IsWaveStartArmed(terminalId);
+                s_prompt.Clear();
+                if (armed)
+                    s_prompt.Append('[').Append(startKey).Append("] Terminal ").Append(terminalId)
+                        .Append(" — start Wave (").Append(k).Append('/').Append(n).Append(')');
+                else
+                    s_prompt.Append('[').Append(plus).Append('/').Append(minus)
+                        .Append("] Terminal ").Append(terminalId)
+                        .Append(" — Wave (").Append(k).Append('/').Append(n).Append(')');
+                AppendStake(s_prompt, gc);
+                s_prompt.Append("  [").Append(key).Append(armed ? "] edit" : "] select");
+                return s_prompt.ToString();
             }
         }
 
-        /// <summary>Held Interact; Field starts the Wave on Interact Down. Completed Field
+        static void AppendStake(StringBuilder sb, GameController gc)
+        {
+            if (gc == null || gc.Sim == null) return;
+            var sim = gc.Sim;
+            int idx = sim.CurrentWaveIndex;
+            if (idx >= WaveDirector.MaxWaves) idx = WaveDirector.MaxWaves - 1;
+            if (idx < 0) idx = 0;
+            int bodies = s_preview.NextWave(idx, sim.Siphon.Level).enemyCount;
+            sb.Append("  Intensity ").Append(sim.Siphon.Level)
+                .Append("  juice ").Append(IntensityJuice.CostPerStep)
+                .Append("  unbanked ").Append(sim.Unbanked)
+                .Append("  ").Append(bodies);
+        }
+
+        /// <summary>Held Interact. Wave start is Prep T after E-select. Completed Field
         /// with a shut door opens it.</summary>
         public void Interact(float dt)
         {
@@ -123,10 +176,7 @@ namespace GatekeeperBastion.Game
             {
                 unlocksDoor.SetOpen(true);
                 Log.Event("Terminal", terminalId + " opened " + unlocksDoor.DoorId);
-                return;
             }
-
-            _game.StartTerminalWave(this);
         }
 
         /// <summary>Field only — spawn points that wait on this terminal's clear.</summary>

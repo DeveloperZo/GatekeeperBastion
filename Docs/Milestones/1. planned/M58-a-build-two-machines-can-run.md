@@ -4,7 +4,7 @@
 Status: later
 Update trigger: when bind/join address, the Main Menu host/join surface, or
 EnableSceneManagement changes. Re-cut against M48's landed NetSession before starting.
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 -->
 
 Every gate so far closed in editor / PlayMode / MPPM loopback. F11 joins `127.0.0.1` only
@@ -23,8 +23,8 @@ The alpha gate needs a build someone who is not Zo can install. Leverage tier
 
 This is infrastructure with a developer-Story exception under
 `../../_meta/_definitions/milestone.md`: every friends session uses it after it ships.
-Multiplier: unblocks M61 (F10/F11 can leave the player panel) and M60 (Steam replaces typed
-IP). Durable: the menu join outlives this slice.
+Multiplier: unblocks M59 (F10/F11 can leave the player panel) and M60 (Relay join code
+replaces typed IP as the friends path). Durable: the menu join outlives this slice.
 
 No kill criterion — not a design bet. NGO already survived M48.
 
@@ -88,8 +88,8 @@ it, so a tiny intent object carries host/join across the scene load.
 6. **Change** docs: Roadmap row, Changelog.
 
 Rejected: keeping F10/F11 as the only join — a friend cannot be told to press F11 in a
-player build and type nothing. Rejected: Unity Relay — metered; Steam is the decided
-internet path (`../../Decisions.md`), later (M60). Rejected: a DDOL NetworkManager on
+player build and type nothing. Rejected: Unity Relay in this slice — that is M60, on this
+same UnityTransport. Rejected: a DDOL NetworkManager on
 MainMenu so listen starts before the scene load — second session object, fights Bastion-owned
 `NetSession`. Player-visible order is menu then Bastion; bind happens on the existing Net
 object after `LoadBastion`. Rejected: NGO scene management — both machines load Bastion
@@ -100,7 +100,7 @@ IPv4 dotted quad only (four octets 0–255). No hostnames.
 ## Supporting work
 
 - **Driven by** Main Menu Host / Join (typed IP + Connect) — here. F10/F11 stay as the
-  editor fallback until M61 unbinds them from player builds.
+  editor fallback until M59 unbinds them from player builds.
 - **Shown by** the Host and Join buttons on Home, and the Join panel's IP/port fields — here.
 - **Reads back as** both machines in Bastion, a kill on both screens, or a visible join
   refusal — here. Failed join may briefly load Bastion (where `NetSession` lives) then
@@ -123,16 +123,16 @@ IPv4 dotted quad only (four octets 0–255). No hostnames.
 
 | Not building | Why not |
 |---|---|
-| Steam / Facepunch transport | M60; transport is the most swappable layer (`../../Decisions.md`) |
+| Unity Relay / join code | M60; same UnityTransport, internet path (`../../Decisions.md`) |
 | Host migration | Rejected in M45 |
 | Client HUD / in-run verbs | M50 / M51 |
-| Friends-facing key strip | M61 |
+| Friends-facing key strip | M59 |
 | NGO scene management | Both load Bastion themselves (M48) |
 
 ## Watch
 
 - Development player builds still compile `DevCommands` (`DEVELOPMENT_BUILD`) — F2–F9
-  taint until M61. F10/F11 do not. Do not press F2–F9 in the criterion-4 log.
+  taint until M59. F10/F11 do not. Do not press F2–F9 in the criterion-4 log.
 - Windows Firewall on UDP 7777 — a bind that works and a join that hangs is often this,
   not netcode.
 - `EnableSceneManagement` stays false.
@@ -142,4 +142,4 @@ IPv4 dotted quad only (four octets 0–255). No hostnames.
 ## Depends on / Unblocks
 
 Depends on M48 (session exists). Recommended after M51 so there is a loop to join, but the
-gate itself only needs the M48 kill loop. Unblocks M61 (player-build keys) and M60.
+gate itself only needs the M48 kill loop. Unblocks M59 (player-build keys) and M60.

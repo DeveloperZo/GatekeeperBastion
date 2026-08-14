@@ -18,6 +18,8 @@ namespace GatekeeperBastion.EditorTools
     {
         const string KitDir = "Assets/Prefabs/Bastion/Kit";
         const string MaterialDir = "Assets/Materials";
+        const string PackBuildingsDir = "Assets/Synty/PolygonSciFiSpace/Prefabs/Buildings";
+        const string PackPropsDir = "Assets/Synty/PolygonSciFiSpace/Prefabs/Props";
 
         static readonly (BastionBlockKind kind, string prefabName)[] Blocks =
         {
@@ -72,6 +74,41 @@ namespace GatekeeperBastion.EditorTools
             Material floor = AssetDatabase.LoadAssetAtPath<Material>(MaterialDir + "/Mat_Floor.mat");
             Material wall = AssetDatabase.LoadAssetAtPath<Material>(MaterialDir + "/Mat_Wall.mat");
 
+            // Pack piece prefabs, resolved once and serialized onto every segment — runtime
+            // rebuilds have no AssetDatabase. Any miss aborts the whole build before a single
+            // prefab is written: half a kit reads worse than none.
+            string floorPiecePath = PackBuildingsDir + "/" + BastionMeshMap.Floor + ".prefab";
+            string ceilingPiecePath = PackBuildingsDir + "/" + BastionMeshMap.Ceiling + ".prefab";
+            string wallPiecePath = PackBuildingsDir + "/" + BastionMeshMap.Wall + ".prefab";
+            string doorframePiecePath = PackBuildingsDir + "/" + BastionMeshMap.Doorframe + ".prefab";
+            string windowPiecePath = PackBuildingsDir + "/" + BastionMeshMap.Window + ".prefab";
+            string cornerPiecePath = PackBuildingsDir + "/" + BastionMeshMap.CornerPillar + ".prefab";
+            string ceilingLightPiecePath = PackPropsDir + "/" + BastionMeshMap.CeilingLight + ".prefab";
+
+            GameObject floorPiece = AssetDatabase.LoadAssetAtPath<GameObject>(floorPiecePath);
+            GameObject ceilingPiece = AssetDatabase.LoadAssetAtPath<GameObject>(ceilingPiecePath);
+            GameObject wallPiece = AssetDatabase.LoadAssetAtPath<GameObject>(wallPiecePath);
+            GameObject doorframePiece = AssetDatabase.LoadAssetAtPath<GameObject>(doorframePiecePath);
+            GameObject windowPiece = AssetDatabase.LoadAssetAtPath<GameObject>(windowPiecePath);
+            GameObject cornerPiece = AssetDatabase.LoadAssetAtPath<GameObject>(cornerPiecePath);
+            GameObject ceilingLightPiece = AssetDatabase.LoadAssetAtPath<GameObject>(ceilingLightPiecePath);
+
+            string missing = null;
+            if (floorPiece == null) missing = AppendMissing(missing, floorPiecePath);
+            if (ceilingPiece == null) missing = AppendMissing(missing, ceilingPiecePath);
+            if (wallPiece == null) missing = AppendMissing(missing, wallPiecePath);
+            if (doorframePiece == null) missing = AppendMissing(missing, doorframePiecePath);
+            if (windowPiece == null) missing = AppendMissing(missing, windowPiecePath);
+            if (cornerPiece == null) missing = AppendMissing(missing, cornerPiecePath);
+            if (ceilingLightPiece == null) missing = AppendMissing(missing, ceilingLightPiecePath);
+            if (missing != null)
+            {
+                Debug.LogError(
+                    "[BastionKitEmitter] Missing pack piece prefab(s): " + missing
+                    + " — kit build aborted, no prefabs written.");
+                return;
+            }
+
             BastionSegment.SuppressValidateRebuild = true;
             try
             {
@@ -87,6 +124,13 @@ namespace GatekeeperBastion.EditorTools
                     segment.West = BastionSideKind.Wall;
                     if (floor != null) segment.FloorMaterial = floor;
                     if (wall != null) segment.WallMaterial = wall;
+                    segment.FloorPiece = floorPiece;
+                    segment.CeilingPiece = ceilingPiece;
+                    segment.WallPiece = wallPiece;
+                    segment.DoorframePiece = doorframePiece;
+                    segment.WindowPiece = windowPiece;
+                    segment.CornerPiece = cornerPiece;
+                    segment.CeilingLightPiece = ceilingLightPiece;
                     // Prefab asset is component-only. Meshes rebuild on scene instances (OnEnable).
                     segment.ClearGeneratedHierarchy();
 
@@ -103,6 +147,11 @@ namespace GatekeeperBastion.EditorTools
             CleanupOrphanGeneratedGeom();
             AssetDatabase.SaveAssets();
             Debug.Log("[BastionKitEmitter] Kit prefab build done (" + Blocks.Length + " blocks).");
+        }
+
+        static string AppendMissing(string missing, string path)
+        {
+            return missing == null ? path : missing + ", " + path;
         }
 
         /// <summary>Removes Gen_* / BastionGeneratedGeom objects that are not under a BastionSegment

@@ -2,164 +2,223 @@
 
 <!--
 Status: later
-Update trigger: when station chrome, pause key list, or player-build F-key policy changes.
-Last updated: 2026-08-13
+Update trigger: when Boarder prefab, Mixamo clip set, weapon mapping, zoom FOV, ship-console prefabs, or the bound SFX set changes.
+Last updated: 2026-08-14
 -->
 
-Second friends QoL pass, previously *The Ship is a hull*: the hull as something a stranger can operate. Three surfaces
-in one gate — station panels (chrome + the copy the panels still omit), playable keys,
-HUD gutters on the Ship — because M59 makes the Bastion a room and then dumps the friend
-into Settings leftovers, blank shop headers, and a shortcut strip that still lists god
-mode.
+The Boarder holds a gun, aims with a sight, can look down a lane, and walks a Ship that is
+not four coloured cubes. Zo 2026-08-13: this slice is the art/audio floor the milestone
+contract would have parked as a phase. The gate is still the numbered criteria. Kit
+footprints stay locked (`../../Decisions.md`).
 
-Not M46. Authored-panel rewrite stays cancelled. Layout of the four panels does not move;
-chrome, copy, and keys do.
+The Boarder body is the Mixamo astronaut already in Infinity Qube. That project only
+ships **Idle** and **Run** (`C:\Users\awill\Unity\InfinityQube\Assets\animations\Player\`,
+Humanoid `mixamorig`). Fire, reload, and walk clips are named Mixamo takes on the same
+avatar; the files currently in `Assets/Packs/Boarder/` are copies of Idle/Run until
+distinct Mixamo downloads replace them.
+
+**Store pack locked 2026-08-14:** [POLYGON Sci-Fi Space Pack](https://assetstore.unity.com/packages/3d/environments/sci-fi/polygon-sci-fi-space-pack-art-by-synty-138857) (SKU 138857, v1.14.0) at `Assets/Synty/PolygonSciFiSpace/`. Guns are hand-parented meshes on `mixamorig:RightHand`. Wrappers under `Assets/Packs/Weapons/` are the six distinct prefab refs (the pack ships pistol, rifle, shotgun, sword).
+
+| Source | Status | What we take |
+|---|---|---|
+| **Infinity Qube astronaut** | locked | `Anim_PlayerIdle.fbx`, `Anim_PlayerRun.fbx`. No IQ scripts. |
+| **Clips** | locked | `Anim_Walking.fbx` (Run copy), `Anim_RifleIdle.fbx` / `Anim_FiringRifle.fbx` / `Anim_Reloading.fbx` (Idle copies). Replace in place with Mixamo without-skin Humanoid takes of those names. |
+| **POLYGON Sci-Fi Space** | locked | Weapons + `SM_Prop_ControlPanel_02` / `SM_Prop_Screen_Small_01` on Ship stations. Demo scenes stay out of Build Settings. |
+| **SFX** | locked | `Assets/Resources/Audio/Sfx/Fire-Pistol.wav`, `Fire-Shotgun.wav`, `Fire-Rifle.wav`, `Reload.wav`, `Footstep-Walk.wav`. |
+
+## Packs (closed)
+
+Admitted: Synty Space Pack for meshes and desks. SFX are five bound wavs, not a store library. Six wrapper prefabs, no duplicates. FPS kits, FMOD, and the 5.3 GB SFX library stay out.
+
+**Rejected 2026-08-13 trio (unchanged):** Arsenal V2 [246550] (pack fire/reload anims Mixamo already covers; listing has no shotgun). Control Room 3 as a locked buy (unreviewed). Sound Design Starter Kit [276617] (5.31 GB / 1173 files for five clips).
 
 ## Story
 
-As a player who has never been briefed, I want the Ship's consoles, the key list, and the
-hub HUD to be separable and complete, so that I can embark, buy, and pause without a
-developer on voice chat.
+As a Boarder, I want to see and hear the gun in my hands, aim with a sight I can look
+through, and walk up to Ship consoles that fit a person, so that the session is a place
+rather than a graybox test area.
 
 ## Why it matters
 
-M35 closed the station **drive** path and deferred panel *detail*: Settings-shell strip,
-row chrome, readability over the live view (`../3. completed/M35-one-look-drawn-from-one-place.md`,
-criteria 18–25 soften; Open questions still name a scrim). `Ship.unity` still contains
-`Categories` and `Preview Image` objects. `StationPanelView.SetHeader` paints name + banked
-+ lifetime and nothing else.
+`Design/1-Experience.md` §1.2 ranks Sensation as not addressed: gray-box art, no audio
+pass. The fight HUD already names the weapon (`Hud Weapon`); nothing occupies the camera.
 
-`Play/The-Ship.md` Gaps: upgrades do not transfer; FABRICATION never states the Rig-and-Salvage
-deal before embark; nothing says there is no sell-back. Wheel lock copy already ships
-(`LOCKED — survive a death first`). Hatch look-at already quotes missing Rig and salvage/HP
-(`RepairInteractable.Prompt`) — do not rebuild that prompt.
+| Surface | Evidence | Now |
+|---|---|---|
+| Hands / body | No view-model. `PlayerGun.Fire` traces from `transform.position`. Co-op avatar is a capsule (`NetPlayerAvatar`). Infinity Qube already has the Mixamo astronaut (`Anim_PlayerIdle.fbx`) with Idle and Run only. | Empty first person; friends see a capsule. |
+| Sight | Bastion `Cross` is a 24×24 `Image` with `m_Sprite: {fileID: 0}` (`Bastion.unity` Crosshair). Unity draws a filled white quad. Ship Crosshair is 8×8, same. | A square block on the look point. |
+| Zoom | No `fieldOfView` write in `Assets/Scripts`. `ControlId.AltFire` is RMB, labelled "cancel place", used by `DecoyPlacement` only. | A 50 m PRI-C lane is a dot. |
+| Ship desks | Authored Desk `1.6 × 1.2 × 0.7` m (`Ship.unity`). | Alcoves filled by primitive cubes. |
+| Sound | `Assets/Resources/Audio/` holds two music files. `PlayerGun.Fire` plays no clip. | Shots are silent except particles. |
 
-M15 shipped F1–F9 on the shortcut panel because the person playing was the person
-developing (`../3. completed/M15-shortcut-panels.md`). `ShortcutPanel` appends DEV rows
-under `#if UNITY_EDITOR || DEVELOPMENT_BUILD`, so a Development player build still lists
-skip-wave / god / grant-salvage. Pause does not list playable keys at all.
-
-Leverage: **#6, information flows**. Stations, locks, Repair Rig, and bindings already
-work. What is missing is readable chrome, the sentence on the panel, and who is told about
-F2–F9. Rebinding / Input System is the wrong tier.
+Leverage: **#8, information flows**. No damage, spread, or range number moves. Zoom is FOV
+only. Kit segment geometry stays (M47 lock).
 
 ## Acceptance criteria
 
-1. **Station chrome is a panel, not a Settings shell.** While ARMORY / CREW QUARTERS /
-   FABRICATION / NAV MAP is open, `Categories` and `Preview Image` are inactive or deleted
-   on that canvas. Header, body, and close are separate RectTransforms with ≥16 canvas
-   units between header bottom and first body row, and between last body row and close.
-   A scrim covers the body (existing `BlurManager` idiom named in M35, or one authored
-   Image whose alpha is ≥ 0.65). Body TMP remains readable over the live Ship view. No
-   `GUILayout`.
-2. **Each station panel carries a purpose line** under the station name, the subject from
-   `../../_meta/_definitions/language.md` (The stations): ARMORY — the weapon in your hands;
-   CREW QUARTERS — you; FABRICATION — the Hatch and the Ship's gear; NAV MAP — where you go,
-   and going there. Visible at open. Empty purpose fails the test.
-3. **ARMORY states that upgrades stay on that weapon** before the first wheel purchase.
-   **FABRICATION states the Repair Rig deal before embark** (Rig required; salvage spent as
-   HP is applied; figure from `ShipSystems.RepairSalvagePerHp` at bind time). **No sell-back**
-   once, shared on `StationPanelView`. Locked rows keep naming the lock (pin, already ships).
-4. **Ship always-on HUD gutters.** The three Ship hosts (`Hud Profile`, `Hud Score`,
-   `Hud Weapon` — `../../Decisions.md`) have pairwise AABB gaps ≥24 canvas units at
-   1920×1080 and 1280×720. Interact prompt does not intersect `Hud Weapon`.
-5. **Player-build keys.** In a player build (Development and Release), `ShortcutPanel` does
-   not list F1–F9. **Player builds never bind F2–F9.** Editor Play Mode may still show and
-   bind them. After M58, F10/F11 also leave the player-build panel (join is the Main Menu);
-   until M58 they may remain on Development builds as the only join — this row is waived
-   until M58, or done in the same change if M58 is already in. Do not block M61 start on
-   M58.
-6. **Pause overlay** (Esc, already non-blocking) lists the current **playable** bindings
-   from the same `Controls` list the corner panel uses — no DEV section. Prep vs Assault
-   changes the list. Driven: Esc. Do not `GUILayout` in the Bastion HUD. Do not reuse
-   `OptionsScreen.BuildControlRows` (that dumps every context).
-7. **The player action:** Play → Ship, open all four consoles. A reader who has not been
-   briefed can answer from the panels: where weapons are; that wheel points do not follow a
-   new Primary; where the Repair Rig is and that repair costs Salvage; where EMBARK is.
-   Then EMBARK, Esc: pause lists playable keys only. Development player build: F2 does not
-   skip a Wave; corner panel has no F1–F9.
-8. EditMode: purpose strings non-empty and equal the language table; `AppendDevRows` /
-   player-build path has no F1–F9; HUD AABB on Ship hosts. Suites green. Solo unchanged.
+1. **The Boarder is the IQ astronaut, holding a gun from POLYGON Sci-Fi Space.**
+   Local first person: camera at eye height, head/helmet not rendered to the local
+   camera, weapon mesh on `mixamorig:RightHand`. Remote clients see the full astronaut
+   (this replaces the capsule). Hidden while a station panel is open. Switching `1` /
+   `2` changes the weapon mesh without reading the HUD. Animator: Idle / Walk / Run
+   from the IQ clips plus Mixamo-named Rifle Idle, Firing Rifle, Reloading — Humanoid
+   retarget, one rifle-hold set for every gun this slice. Mapping:
+
+   | `WeaponId` | Prefab |
+   |---|---|
+   | `Mk1Sidearm` | `Assets/Packs/Weapons/Mk1.prefab` (`SM_Wep_Pistol_01`) |
+   | `SecD` | `Assets/Packs/Weapons/SecD.prefab` (`SM_Wep_Pistol_01`, scale 0.88) |
+   | `Br12Shotgun` | `Assets/Packs/Weapons/Br12.prefab` (`SM_Wep_Shotgun_01`) |
+   | `Mr35Rifle` | `Assets/Packs/Weapons/Mr35.prefab` (`SM_Wep_Rifle_01`) |
+   | `PriC` | `Assets/Packs/Weapons/PriC.prefab` (`SM_Wep_Rifle_01`, localScale z 1.4) |
+   | none (cutter) | `Assets/Packs/Weapons/Cutter.prefab` (`SM_Wep_Sword_01`) |
+
+   Five shop weapons plus cutter, six prefabs, no duplicate prefab refs. The pack has
+   pistol, rifle, shotgun, sword — SecD and PriC are scale variants so the six refs stay
+   distinct.
+
+2. **Crosshair is strokes, not a filled quad.** No fight or Ship crosshair `Image` has a
+   null sprite and both sides > 6. Cross = four arms, thickness ≤ 2 px, gap at centre.
+   Dot ≤ 4×4. Brackets = four L-corners, 2 px strokes. `WeaponCrosshair` identity stays
+   (`Sim/Meta/WeaponCrosshair.cs`). Shift theme colour. Do not replace HUD hosts.
+
+3. **Hold RMB zooms.** Hip FOV **60**, zoom FOV **40**, on the local `Camera` under
+   `FirstPersonController.cameraTransform`. Look sensitivity scales by `currentFov / 60`.
+   No change to spread, damage, or falloff. While `DecoyPlacement.IsAiming`, RMB still
+   cancels place and does not zoom. Release returns to 60. `ControlId.AltFire` label
+   becomes `zoom`. Decoy place still cancels on RMB. Ship and fight both zoom.
+
+4. **Ship consoles are Synty `SM_Prop_ControlPanel_02` + `SM_Prop_Screen_Small_01` at human scale**, not the
+   1.6 m cubes. Desk top ≤ **1.0 m**, screen centre **1.4–1.6 m**, console width ≤ **1.2 m**. All four
+   stations. Interact collider still hits from 2.5 m at eye height (`ShipSceneContractTests`).
+   Cube Desk/Screen/Label on those four roots are inactive or deleted. Field terminals stay
+   M59 Scale 1 cubes; dressing those is optional trim, not a rebuild.
+
+5. **Graybox is dressed, not replaced.** Ship `Environment` colliders and Bastion kit
+   footprints stay. Synty props may sit on floors and in alcoves. No new kit segment.
+   Pack example scenes are not in Build Settings.
+
+6. **The player action:** Splash → Ship: astronaut arms and a gun in frame at the ARMORY;
+   consoles are desks a person uses. EMBARK: the same gun, stroke crosshair, hold RMB and
+   a far wall fills more of the view, the arms fire, the body walks. A second view (MPPM
+   or a client) sees an astronaut, not a capsule. `1` / `2` swap weapon meshes. Solo
+   unchanged. No `[Dev]` in the close log. Fire/walk audio is `M69`.
+
+7. EditMode: mapping table has six distinct prefab references; FOV constants 60 / 40;
+   the Boarder prefab has a Humanoid avatar and the five clips (Idle, Run, Walk, Firing
+   Rifle, Reloading). Scale/AABB tests from M59 still green. Suites green.
 
 ## Implementation
 
-1. **Change** `Ship.unity` station canvases — deactivate or delete `Categories` / `Preview
-   Image` on the four station opens (Esc Settings may keep its own). Add or bind a scrim.
-   Nudge header/body/close for the 16-unit gutters. Do not clone a new chrome tree. Do not
-   revive M46 row-uncloning.
-2. **Change** `StationPanelView.SetHeader` — add `string purpose`. Bind a TMP under the
-   title. Empty purpose logs and fails the test.
-3. **Change** each station — `Purpose` constant passed at `SetHeader`, matching language.md.
-   ARMORY persistent `Upgrades stay on this weapon.` FABRICATION Rig line reads
-   `ShipSystems.RepairSalvagePerHp`. Shared footer `No sell-back.`
-4. **Change** Ship HUD hosts only as far as criterion 4 requires.
-5. **Change** `ShortcutPanel.cs` — DEV append is `#if UNITY_EDITOR` for F1–F9. Extract
-   `AppendDevRows(..., DevSurface)` with `None | Editor | DevelopmentPlayerJoin` so EditMode
-   can exercise the player-build path. After M58 (or same change): no DEV rows outside the
-   editor.
-6. **Change** `DevConsole.cs` — poll F1–F9 under `#if UNITY_EDITOR` only. F10/F11 under
-   `#if UNITY_EDITOR || DEVELOPMENT_BUILD` until M58, then editor-only. Editor F1 overlay
-   unchanged.
-7. **Change** `HudController.Pause.cs` / `Bastion.unity` (`Canvas - Pause Menu`) — on
-   `OpenPause`, `ShortcutPanel.FillRows` with `FightShortcutContext`, into an authored
-   `ShortcutPanelView` on the pause canvas. No DEV section.
-8. **Create** `Assets/Tests/EditMode/Ship/StationPurposeTests.cs` and extend
-   `ShortcutRowApiTests` for `DevSurface.None`. HUD AABB sibling of M59's test, Ship hosts.
-9. **Change** `../../Play/The-Ship.md` Gaps: strike the rows this slice closes. Leave
-   Gaps this slice does not own (movement lock, empty Drone slot, start-Wave label vs
-   cleared, Dev-taint on the hub).
-10. **Change** docs: Roadmap row, Changelog. Delete `RepairStationPanels.cs` /
-    `StripSettingsToStations.cs` **if they still exist** when this closes (M35 criterion 5
-    sentinel). Architecture currently lists them; glob on 2026-08-13 found neither — do not
-    recreate them.
+1. **Copy** `Anim_PlayerIdle.fbx` and `Anim_PlayerRun.fbx` from Infinity Qube into
+   `Assets/Packs/Boarder/`. Author `Boarder.prefab` from the Idle FBX (skinned mesh +
+   Humanoid avatar). Convert materials to URP. Do not copy IQ scripts or the IQ
+   animator controller.
+2. **Clips on disk** under `Assets/Packs/Boarder/`: `Anim_PlayerIdle.fbx`,
+   `Anim_PlayerRun.fbx`, `Anim_Walking.fbx`, `Anim_RifleIdle.fbx`, `Anim_FiringRifle.fbx`,
+   `Anim_Reloading.fbx`. The last four are Mixamo-named; fire/reload/walk currently
+   duplicate Idle/Run until distinct Mixamo takes replace them in place. `Boarder.controller`
+   — Idle/Walk/Run locomotion, Rifle Idle when still, Firing Rifle on shot, Reloading
+   on reload. One rifle-hold set.
+3. **Imported** POLYGON Sci-Fi Space (SKU 138857). Do not add pack demo scenes to Build
+   Settings. Do not use a pack FPS controller, ammo script, HUD canvas, or pack weapon
+   animators.
+4. Mapping, clip names, and wavs are in Packs (closed) and criterion 1. Bound wavs:
+   `Fire-Pistol`, `Fire-Shotgun`, `Fire-Rifle`, `Reload`, `Footstep-Walk`.
+5. **Create** `Assets/Scripts/Game/Player/WeaponViewModel.cs` — LOCAL-OWNER. `Show(WeaponId)`
+   parents/enables the mapped mesh on `mixamorig:RightHand`. No spread or recoil
+   that moves the sim ray; the ray still comes from camera forward as today.
+6. **Change** player rigs in `Ship.unity` and `Bastion.unity` and `NetPlayerAvatar` —
+   `Boarder.prefab` is the visible body. Local camera does not render the head (layer
+   `LocalHead` excluded from that camera's culling mask, or the helmet renderer disabled
+   on the owner). Remote: full body, no view-model-only hide.
+7. **Change** `Bastion.unity` / `Ship.unity` Crosshair trees — stroke Images as criterion 2.
+   Keep `BastionHudView` Cross / Dot / Brackets slots.
+8. **Change** `FirstPersonController.cs` — hip/zoom FOV, sensitivity scale, footsteps.
+   Zoom input is `Controls.Held(ControlId.AltFire)` when not `MovementLocked` and not
+   decoy-aiming. Cache the `Camera` on `cameraTransform`.
+9. **Change** `Controls.cs` — AltFire display string `zoom`. Decoy cancel stays in
+   `DecoyPlacement` behaviour; do not add a second binding.
+10. **Change** `PlayerGun.Firing.cs` — `PlayOneShot` on the existing fire path (same place
+    `Effects.MuzzleFlash` already runs). Clip from a small map: shotgun vs rifle vs pistol.
+    AudioSource on the gun or Boarder, name without `Music`. Trigger `Firing Rifle` on the
+    Boarder animator from this same path.
+11. **Change** `Ship.unity` four station roots — swap cube Desk/Screen for the chosen
+    console prefabs at the sizes in criterion 4. Keep `ArmoryStation` / `EngineeringStation`
+    / `CrewQuartersStation` / `MapStation` on the roots. Re-run `ShipSceneContractTests`.
+12. **Copy** bound wavs to `Assets/Resources/Audio/Sfx/` (LFS already tracks `*.wav`).
+    Roughly: `Fire-Pistol`, `Fire-Shotgun`, `Fire-Rifle`, `Footstep-Walk`, `Reload` — exact
+    names pinned at import. Do not copy music loops from that kit; menu and Bastion tracks
+    stay Stardust Drifter / Whispers of the Void (M69).
+13. **Change** docs: Roadmap row, Changelog. `Design/1-Experience.md` Sensation row and
+    `Docs/README.md` "gray-box art" in the **close** commit, not before.
 
-Rejected: M46 panel rewrite. Rejected: a tutorial overlay. Rejected: Input System
-rebinding. Rejected: a third music clip for the Ship (Bastion track is M59; menu keeps
-Stardust Drifter; Ship stays silent this pass). Rejected: putting the Compendium on a
-station this slice.
+Rejected: FPS Animation Ultimate (ballistic M4/AK; we have a Mixamo Humanoid). Rejected:
+accuracy or damage change on zoom. Rejected: replacing Bastion kit segments. Rejected:
+pack example scenes in the build. Rejected: importing the 5 GB SFX library into git.
+Rejected: a third music clip. Rejected: Gatekeeper mesh swap (`M68`). Rejected: per-weapon
+Mixamo sets this slice. Rejected: FMOD. Rejected: copying IQ `PlayerManager` or any IQ
+gameplay script.
 
 ## Supporting work
 
-- **Driven by** walking to a console / Esc — existing.
-- **Shown by** purpose line, scrim, pause key list, no F1–F9 — here.
-- **Reads back as** those strings, F2 doing nothing in a player build, EditMode — here.
+- **Driven by** look / LMB / RMB / walk — existing. RMB zoom is here; decoy cancel stays
+  `DecoyPlacement`.
+- **Shown by** astronaut arms and a gun in frame, stroke crosshair, smaller Ship desks — here.
+- **Reads back as** mesh swap on `1`/`2`, FOV 40 while RMB held, a client seeing an astronaut
+  — here. SFX slider is `M69`.
 
-Bastion terminals / fight HUD / level track: [`M59`](M59-the-bastion-is-a-room.md).
-Compendium button on pause: [`M62`](M62-the-compendium-you-can-open.md) (this slice lists
-keys on pause; M62 adds the Compendium row).
+Bastion Scale 1 / fight HUD / station chrome / player-build keys:
+[`M59`](M59-the-polish-pass-1.md). Music and gun/foot SFX: [`M69`](M69-the-session-has-a-voice.md).
+Hit confirm, name labels, and player colour:
+[`M66`](M66-polish-pass-3.md) — the body is here; who-is-who is there.
 
 ## Verification
 
-1. Criteria 2, 5, 8 — `Tools/verify/run.sh --filter StationPurpose`; ShortcutRow
-   `DevSurface.None`; then `gkb_verify_request.txt` if MonoBehaviour binds changed.
-2. Criteria 1, 3, 4, 6, 7 — playthrough: Splash → Ship. Open all four. Confirm scrim,
-   gutters, purpose, ARMORY transfer, FABRICATION Rig + salvage/HP, no-sell-back, EMBARK.
-   EMBARK, Esc: playable keys, no F1–F9. Development player build: F2 does not replay a
-   Wave. Editor: F1 overlay still works.
+1. Criteria 1, 3, 7 — `Tools/verify/run.sh --filter WeaponView` (and FOV tests); then
+   `gkb_verify_request.txt` if MonoBehaviour binds changed.
+2. Criteria 2, 4, 5, 6 — playthrough: Splash → Ship (astronaut arms, gun in hands, consoles
+   at chest height) → EMBARK → fire anim, walk anim, hold RMB at a far wall, swap `1`/`2`.
+   Second view sees an astronaut. Log has no `[Dev]`. Fire/walk *sound* is M69.
+3. `ShipSceneContractTests` still reach each console. M59 Scale and HUD AABB still green.
 
 ## Do not build
 
 | Not building | Why not |
 |---|---|
-| Authored-panel rewrite / row un-cloning | M46 cancelled |
-| Bastion terminal scale, fight HUD, level track | M59 |
-| In-game Compendium | M62 |
-| Tutorial / first-run overlay | The panel is the teacher |
-| Ship music | Two clips in repo; menu + Bastion already own them |
-| Movement-lock warning, Drone-empty, start-Wave label | Remaining Gaps; not this pass |
+| Kit footprint / navmesh rebuild | Locked, M47 |
+| Station chrome, purpose copy, player-build keys | M59 |
+| Fire / footstep / reload SFX, Bastion music | M69 |
+| Gatekeeper meshes | `M68` — androids: RobotFemale / HelmetArmor / War_Robot |
+| Hit flash, pre-attack tells, name labels, player colour | M66 |
+| Compendium | M62 |
+| Pack FPS controller / pack HUD / pack ammo / pack weapon animators | We have `PlayerGun` and Mixamo |
+| Accuracy ADS | Zoom is a look |
+| A second weapon pack | One arsenal (Synty 138857) |
+| Per-weapon animation sets | One rifle-hold; mesh swap is the identity |
 
 ## Watch
 
-- Prefab `[SerializeField]` on panel TMP: bind in the scene (`../../Architecture.md` gotcha 1).
-- Countable salvage/HP belongs in the generated Field Manual; the panel *reads* the
-  constant.
-- NAV MAP already carries `PremiseBrief` (M27). Purpose line is the subject; do not
-  replace the premise.
-- Pause is non-blocking: listing keys must not touch `Time.timeScale`.
-- `FillLines` still has a DEV append — port or `#if` it the same way as `FillRows`.
+- Prefab freeze (`../../Architecture.md` gotcha 1): bind Boarder, gun meshes, and clips in
+  the scene / prefab, do not hope a code default instantiates the right mesh.
+- IQ `Stage.unity` binds the astronaut mesh to Unity's default material. After copy,
+  assign URP materials from the FBX textures (or a single Boarder material) so it is
+  not unlit-magenta / default-diffuse.
+- Mixamo clips must be Humanoid, without skin, or they fight the IQ avatar.
+- Unity culls by the SkinnedMeshRenderer GameObject layer, not `mixamorig:Head`. This
+  pack is one `Mesh1` SMR; LocalHead on the bone left the helmet in the local camera.
+- Mixamo root is at the feet. CharacterController centre is mid-capsule (height 1.8,
+  centre 0), so Boarder local y is **-0.9** or the camera sits inside the mesh.
+- Local owner poses Grip in camera space (`WeaponView.LocalGunForward` **0.38** m), including
+  from `WeaponViewModel.Awake` so the first frame is not bind-pose. Bind-pose hand is behind
+  the lens after LocalHead culls the body; remotes keep the hand parent.
+- Fire/reload/walk clips are Idle/Run stand-ins until Mixamo takes of those names land.
+- Footstep clock must not allocate per tick (`../../Architecture.md`).
+- Pause is non-blocking: zoom and view-model stay; do not `timeScale` them off.
+- `.fbx` / `.png` / `.wav` already LFS (`.gitattributes`). YAML prefabs stay text.
 
 ## Depends on / Unblocks
 
-Depends on M35 (stations exist) and M15 (the panel). Criterion 5's F10/F11 row waits on
-M58. Unblocks a friends session that can leave the Ship without a briefing and without
-being handed god mode. M62's pause Compendium row wants this pause list already there.
+Better after M59 (Scale 1 field terminals, HUD gutters) but not blocked on it:
+view-models and zoom do not need those. Does not wait on M58. Unblocks a friends session
+that is no longer empty air and silent cubes. M66 still owns whether a shot *landed*.

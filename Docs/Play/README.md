@@ -29,7 +29,7 @@ hours in order.
 ## II. A Run
 
 One trip out and back. [A Run](A-Run.md) is embark, Prep, the draw, Assault, and the two
-endings. [Waves](Waves.md) is how the room gets worse. [The Siphon Dial](The-Siphon-Dial.md)
+endings. [Waves](Waves.md) is how the room gets worse. [Intensity](Intensity.md)
 is the only wager, and it is honest: more of the same, not a different fight.
 [Salvage](Salvage.md) is the only currency. Kills fill Unbanked; a Hatch-bank converts it to the ship.
 [Staying Alive](Staying-Alive.md) is tactics traced to the rule that makes each one work.

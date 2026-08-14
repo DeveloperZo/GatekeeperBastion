@@ -2,7 +2,7 @@
 
 # Default Gatekeeper
 
-The plain one, and the one every other rule is stated against. It is the only kind in your first Wave, it is the body of every Wave after that, and it is the only kind the siphon dial adds more of.
+The plain one, and the one every other rule is stated against. It is the only kind in your first Wave, it is the body of every Wave after that, and it is the only kind intensity adds more of.
 
 Numbers — health, damage to you, damage to the Hatch, speeds: [Field Manual](Field-Manual.md).
 
@@ -39,7 +39,7 @@ Once a Default gets to the Hatch, it is finished negotiating. It will keep hitti
 
 They are individually the weakest thing to kill in the game and they win by count. What actually kills you is a Default group that flipped as one and reached you as one — the swing is not large per hit, but several of them in contact at once is a health bar disappearing quickly, and you do not heal during a Run.
 
-Late in a Run they are the same Gatekeeper with substantially more health. The dial's extra bodies land entirely here, so a high dial is a bet specifically on your ability to chew through more Defaults, not on anything else.
+Late in a Run they are the same Gatekeeper with substantially more health. Intensity's extra bodies land entirely here, so high intensity is a bet specifically on your ability to chew through more Defaults, not on anything else.
 
 ## See also
 

@@ -32,13 +32,17 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void ConvertMultiplier_Thresholds()
+        public void CarryConvert_Table()
         {
-            Assert.AreEqual(1.00f, HatchBank.ConvertMultiplier(0L), 1e-5f);
-            Assert.AreEqual(1.00f, HatchBank.ConvertMultiplier(399L), 1e-5f);
-            Assert.AreEqual(1.25f, HatchBank.ConvertMultiplier(400L), 1e-5f);
-            Assert.AreEqual(1.25f, HatchBank.ConvertMultiplier(799L), 1e-5f);
-            Assert.AreEqual(1.50f, HatchBank.ConvertMultiplier(800L), 1e-5f);
+            Assert.AreEqual(1.00f, HatchBank.CarryConvert(0), 1e-5f);
+            Assert.AreEqual(1.00f, HatchBank.CarryConvert(1), 1e-5f);
+            Assert.AreEqual(1.10f, HatchBank.CarryConvert(2), 1e-5f);
+            Assert.AreEqual(1.25f, HatchBank.CarryConvert(3), 1e-5f);
+            Assert.AreEqual(1.35f, HatchBank.CarryConvert(4), 1e-5f);
+            Assert.AreEqual(1.50f, HatchBank.CarryConvert(5), 1e-5f);
+            Assert.AreEqual(1.50f, HatchBank.CarryConvert(99), 1e-5f);
+            Assert.AreEqual(0, HatchBank.CarryWaveIndex(1));
+            Assert.AreEqual(4, HatchBank.CarryWaveIndex(5));
         }
 
         [Test]
@@ -79,7 +83,7 @@ namespace GatekeeperBastion.Tests
                 TerminalKillsThenPrep(sim, 8); // 8 * 25 = 200
                 Assert.AreEqual(200L, sim.Unbanked);
                 sim.TriggerDraw(WaveMode.HatchBank);
-                Assert.AreEqual(HatchBank.MultLow, sim.HatchConvertMultiplier, 1e-5f);
+                Assert.AreEqual(HatchBank.CarryConvert(1), sim.HatchConvertMultiplier, 1e-5f);
                 RunHatchBankWindow(sim);
                 ship += 200L;
                 Assert.AreEqual(0L, sim.Unbanked);
@@ -91,12 +95,15 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void OnePile600_Dump_Banks750()
+        public void ThreeWaves_CarryConvert_Banks750()
         {
             MetaState meta;
             var sim = Tethered(out meta);
-            TerminalKillsThenPrep(sim, 24); // 600
+            TerminalKillsThenPrep(sim, 8);
+            TerminalKillsThenPrep(sim, 8);
+            TerminalKillsThenPrep(sim, 8); // 600, carry 3 → ×1.25
             sim.TriggerDraw(WaveMode.HatchBank);
+            Assert.AreEqual(3, sim.HatchCarry);
             Assert.AreEqual(HatchBank.MultMid, sim.HatchConvertMultiplier, 1e-5f);
             RunHatchBankWindow(sim);
             Assert.AreEqual(0L, sim.Unbanked);
@@ -105,11 +112,13 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void OnePile600_DripThenDump_Still750()
+        public void ThreeWaves_DripThenDump_Still750()
         {
             MetaState meta;
             var sim = Tethered(out meta);
-            TerminalKillsThenPrep(sim, 24);
+            TerminalKillsThenPrep(sim, 8);
+            TerminalKillsThenPrep(sim, 8);
+            TerminalKillsThenPrep(sim, 8);
             sim.TriggerDraw(WaveMode.HatchBank);
             sim.Tick(10f); // 200 dripped ×1.25 = 250 ship, 400 left
             Assert.AreEqual(400L, sim.Unbanked);
@@ -196,13 +205,13 @@ namespace GatekeeperBastion.Tests
             var sim = Tethered(out meta);
             TerminalKillsThenPrep(sim, 24);
             sim.TriggerDraw(WaveMode.HatchBank);
-            sim.Tick(5f); // 100 dripped ×1.25 = 125
-            Assert.AreEqual(125L, meta.BankedSalvage);
+            sim.Tick(5f); // 100 dripped ×1.00 (carry 1)
+            Assert.AreEqual(100L, meta.BankedSalvage);
             sim.DamageHatch(99999f);
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual(0L, sim.Unbanked);
-            Assert.AreEqual(125L, meta.BankedSalvage);
-            Assert.AreEqual(125L, sim.LastRunReport.grossEarned);
+            Assert.AreEqual(100L, meta.BankedSalvage);
+            Assert.AreEqual(100L, sim.LastRunReport.grossEarned);
         }
 
         [Test]
@@ -258,7 +267,7 @@ namespace GatekeeperBastion.Tests
             Assert.AreEqual(RunPhase.Tethered, sim.Phase);
             Assert.AreEqual(AssaultState.Prep, sim.Assault);
             Assert.AreEqual(0L, sim.Unbanked);
-            Assert.AreEqual(HatchBank.BankedFrom(pile, HatchBank.ConvertMultiplier(pile)),
+            Assert.AreEqual(HatchBank.BankedFrom(pile, HatchBank.CarryConvert(5)),
                 meta.BankedSalvage);
             Assert.IsFalse(sim.AllWavesCleared);
         }
@@ -291,7 +300,7 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void HatchBank_StrongerThanPreviousFieldWave()
+        public void HatchBank_OneWave_MatchesWave1()
         {
             MetaState meta;
             var sim = Tethered(out meta);
@@ -300,12 +309,12 @@ namespace GatekeeperBastion.Tests
             sim.WaveStarted += s => hatch = s;
             TerminalKillsThenPrep(sim, 8);
             sim.TriggerDraw(WaveMode.HatchBank);
-            Assert.AreEqual(director.NextWave(1, 0).enemyCount, hatch.enemyCount);
-            Assert.Greater(hatch.enemyCount, director.NextWave(0, 0).enemyCount);
+            Assert.AreEqual(1, sim.HatchCarry);
+            Assert.AreEqual(director.NextWave(0, 0).enemyCount, hatch.enemyCount);
         }
 
         [Test]
-        public void HatchBank_AfterWave5_StrongerThanWave5()
+        public void HatchBank_FiveWaves_MatchesWave5()
         {
             MetaState meta;
             var sim = Tethered(out meta);
@@ -319,8 +328,8 @@ namespace GatekeeperBastion.Tests
                 sim.NotifyAssaultCleared();
             }
             sim.TriggerDraw(WaveMode.HatchBank);
-            Assert.AreEqual(director.NextWave(WaveDirector.MaxWaves, 0).enemyCount, hatch.enemyCount);
-            Assert.Greater(hatch.enemyCount, director.NextWave(WaveDirector.MaxWaves - 1, 0).enemyCount);
+            Assert.AreEqual(5, sim.HatchCarry);
+            Assert.AreEqual(director.NextWave(4, 0).enemyCount, hatch.enemyCount);
         }
 
         [Test]
@@ -350,7 +359,7 @@ namespace GatekeeperBastion.Tests
             long unbanked = sim.Unbanked;
             sim.Tick(1f);
             Assert.AreEqual(unbanked - 20L, sim.Unbanked);
-            Assert.AreEqual(HatchBank.BankedFrom(20L, HatchBank.MultMid), meta.BankedSalvage);
+            Assert.AreEqual(HatchBank.BankedFrom(20L, HatchBank.CarryConvert(1)), meta.BankedSalvage);
         }
 
         [Test]

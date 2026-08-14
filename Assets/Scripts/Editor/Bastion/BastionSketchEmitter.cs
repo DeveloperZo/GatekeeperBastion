@@ -16,8 +16,10 @@ namespace GatekeeperBastion.EditorTools
     public static class BastionSketchEmitter
     {
         const string KitDir = "Assets/Prefabs/Bastion/Kit";
-        const string DefaultSketchRelative = "Tools/bastion-sketch/example-zo-layout.txt";
+        const string DefaultSketchRelative = "Tools/bastion-sketch/bastion-defense-layout.txt";
         const string RootName = "BastionKit";
+        const string GeneratedName = "Generated";
+        const string AuthoredName = "Authored";
 
         static readonly Dictionary<BastionBlockKind, string> PrefabNames = new Dictionary<BastionBlockKind, string>
         {
@@ -98,15 +100,22 @@ namespace GatekeeperBastion.EditorTools
             try
             {
                 GameObject layoutRoot = FindOrCreateRoot();
-                ClearChildren(layoutRoot);
+                FindOrCreateSubtrees(layoutRoot, out GameObject generated, out GameObject authored);
+                MigrateLegacyChildren(layoutRoot, generated, authored);
+                ClearChildren(generated);
 
                 TryAddLayoutComponent(layoutRoot);
+
+                var game = UnityEngine.Object.FindAnyObjectByType<GameController>(FindObjectsInactive.Include);
+                if (game == null)
+                    Debug.LogError("[BastionSketchEmitter] No GameController in scene — terminals emit unwired and Interact dead-ends.");
 
                 var roomObjects = new Dictionary<string, GameObject>();
                 var effectiveSides = BuildEffectiveSides(sketch);
                 ApplyDoorSides(sketch, effectiveSides);
 
                 var spawnByName = new Dictionary<string, SpawnPoint>();
+                var terminalById = new Dictionary<string, BastionTerminal>();
 
                 for (int i = 0; i < sketch.Rooms.Count; i++)
                 {
@@ -116,8 +125,12 @@ namespace GatekeeperBastion.EditorTools
                         continue;
 
                     instance.name = room.Id;
-                    instance.transform.SetParent(layoutRoot.transform, false);
+                    instance.transform.SetParent(generated.transform, false);
                     instance.transform.position = new Vector3(room.CenterX, 0f, room.CenterZ);
+
+                    // Room roots carry BastionSegment, so CleanupOrphanGeneratedGeom skips them.
+                    if (instance.GetComponent<BastionGeneratedGeom>() == null)
+                        instance.AddComponent<BastionGeneratedGeom>();
 
                     var segment = instance.GetComponent<BastionSegment>();
                     if (segment != null && effectiveSides.TryGetValue(room.Id, out SideSet sides))
@@ -128,19 +141,30 @@ namespace GatekeeperBastion.EditorTools
 
                     for (int m = 0; m < room.Marks.Count; m++)
                     {
-                        if (CreateMark(instance.transform, room.Marks[m], spawnByName))
+                        if (CreateMark(instance.transform, room.Marks[m], spawnByName, terminalById, game))
                             markerCount++;
                     }
                 }
 
+                Material gateMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Mat_Hatch.mat");
                 for (int i = 0; i < sketch.Doors.Count; i++)
                 {
                     BastionSketchDoor door = sketch.Doors[i];
                     if (!roomObjects.TryGetValue(door.RoomId, out GameObject roomGo))
                         continue;
 
-                    CreateDoorMarker(roomGo.transform, door);
+                    BastionDoor component = CreateDoorMarker(roomGo.transform, door, gateMat);
                     doorMarkerCount++;
+
+                    // BastionLayout's unlock graph walks terminal.UnlocksDoor, not the door's
+                    // own required list — a terminal without this reference opens nothing.
+                    if (component == null)
+                        continue;
+                    for (int t = 0; t < door.UnlockTerminalIds.Count; t++)
+                    {
+                        if (terminalById.TryGetValue(door.UnlockTerminalIds[t], out BastionTerminal terminal))
+                            terminal.SetUnlocksDoor(component);
+                    }
                 }
 
                 WireSealedSpawns(spawnByName);
@@ -153,7 +177,10 @@ namespace GatekeeperBastion.EditorTools
                 BastionSegment.SuppressValidateRebuild = false;
             }
 
+            BastionSegment.ResetRebuildCounters();
             RebuildAllSegments();
+            int geomCreated = BastionSegment.RebuildObjectsCreated;
+            int geomMarked = BastionSegment.RebuildObjectsMarked;
             BastionKitEmitter.CleanupOrphanGeneratedGeom();
 
             if (bastionScene.IsValid())
@@ -162,12 +189,19 @@ namespace GatekeeperBastion.EditorTools
                 EditorSceneManager.SaveScene(bastionScene, "Assets/Scenes/Bastion.unity");
             }
 
+            if (geomCreated != geomMarked)
+                Debug.LogError("[BastionSketchEmitter] Rebuild created " + geomCreated
+                    + " object(s) but marked " + geomMarked + " with BastionGeneratedGeom.");
+
             Debug.Log("[BastionSketchEmitter] Emitted from " + sketchPath
                 + ": rooms=" + roomCount
                 + " markers=" + markerCount
                 + " doorMarkers=" + doorMarkerCount
                 + " doors=" + sketch.Doors.Count
-                + " sideOverrides=" + sketch.Sides.Count);
+                + " sideOverrides=" + sketch.Sides.Count
+                + (geomCreated == geomMarked
+                    ? " geomCreated=" + geomCreated + " geomMarked=" + geomMarked
+                    : ""));
         }
 
         static GameObject FindOrCreateRoot()
@@ -184,6 +218,51 @@ namespace GatekeeperBastion.EditorTools
                 existing.transform.SetParent(env.transform, true);
 
             return existing;
+        }
+
+        static void FindOrCreateSubtrees(GameObject root, out GameObject generated, out GameObject authored)
+        {
+            // Neither node gets BastionGeneratedGeom: CleanupOrphanGeneratedGeom destroys any
+            // marked object with no BastionSegment parent, and these sit above the segments.
+            generated = FindOrCreateChild(root, GeneratedName);
+
+            // Authored is Zo's subtree. This emitter creates it if absent and never reads,
+            // moves, clears or destroys anything in it.
+            authored = FindOrCreateChild(root, AuthoredName);
+        }
+
+        static GameObject FindOrCreateChild(GameObject root, string name)
+        {
+            Transform existing = root.transform.Find(name);
+            if (existing != null)
+                return existing.gameObject;
+
+            var go = new GameObject(name);
+            go.transform.SetParent(root.transform, false);
+            return go;
+        }
+
+        /// <summary>Sorts pre-split direct children of the kit root: old generated content
+        /// (anything holding a BastionSegment or BastionGeneratedGeom) is destroyed, the rest
+        /// is presumed hand-placed and moved under Authored. No-op after the first emit.</summary>
+        static void MigrateLegacyChildren(GameObject root, GameObject generated, GameObject authored)
+        {
+            for (int i = root.transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = root.transform.GetChild(i);
+                if (child == generated.transform || child == authored.transform)
+                    continue;
+
+                if (child.GetComponentInChildren<BastionSegment>(true) != null
+                    || child.GetComponentInChildren<BastionGeneratedGeom>(true) != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(child.gameObject);
+                    continue;
+                }
+
+                child.SetParent(authored.transform, true);
+                Debug.Log("[BastionSketchEmitter] Moved hand-placed \"" + child.name + "\" under " + AuthoredName + ".");
+            }
         }
 
         static void TryAddLayoutComponent(GameObject root)
@@ -213,13 +292,7 @@ namespace GatekeeperBastion.EditorTools
                     map[door.RoomId] = set;
                 }
 
-                switch (door.Direction)
-                {
-                    case BastionSketchDirection.North: set.North = BastionSideKind.Door; break;
-                    case BastionSketchDirection.East: set.East = BastionSideKind.Door; break;
-                    case BastionSketchDirection.South: set.South = BastionSideKind.Door; break;
-                    case BastionSketchDirection.West: set.West = BastionSideKind.Door; break;
-                }
+                set.Set(door.Direction, BastionSideKind.Door, door.Along);
             }
         }
 
@@ -261,6 +334,21 @@ namespace GatekeeperBastion.EditorTools
             public BastionSideKind East = BastionSideKind.Wall;
             public BastionSideKind South = BastionSideKind.Wall;
             public BastionSideKind West = BastionSideKind.Wall;
+            public float NorthAlong;
+            public float EastAlong;
+            public float SouthAlong;
+            public float WestAlong;
+
+            public void Set(BastionSketchDirection direction, BastionSideKind kind, float along)
+            {
+                switch (direction)
+                {
+                    case BastionSketchDirection.North: North = kind; NorthAlong = along; break;
+                    case BastionSketchDirection.East: East = kind; EastAlong = along; break;
+                    case BastionSketchDirection.South: South = kind; SouthAlong = along; break;
+                    case BastionSketchDirection.West: West = kind; WestAlong = along; break;
+                }
+            }
         }
 
         static Dictionary<string, SideSet> BuildEffectiveSides(BastionSketch sketch)
@@ -275,13 +363,7 @@ namespace GatekeeperBastion.EditorTools
                     map[side.RoomId] = set;
                 }
 
-                switch (side.Direction)
-                {
-                    case BastionSketchDirection.North: set.North = side.Kind; break;
-                    case BastionSketchDirection.East: set.East = side.Kind; break;
-                    case BastionSketchDirection.South: set.South = side.Kind; break;
-                    case BastionSketchDirection.West: set.West = side.Kind; break;
-                }
+                set.Set(side.Direction, side.Kind, side.Along);
             }
 
             return map;
@@ -293,6 +375,10 @@ namespace GatekeeperBastion.EditorTools
             segment.East = sides.East;
             segment.South = sides.South;
             segment.West = sides.West;
+            segment.NorthDoorAlong = sides.NorthAlong;
+            segment.EastDoorAlong = sides.EastAlong;
+            segment.SouthDoorAlong = sides.SouthAlong;
+            segment.WestDoorAlong = sides.WestAlong;
         }
 
         static bool CreateMark(
@@ -320,6 +406,17 @@ namespace GatekeeperBastion.EditorTools
                     if (terminal != null)
                     {
                         terminal.Configure(mark.RefId, BastionTerminalKind.Field);
+                        BastionFieldConsole.AttachIfMissing(terminal);
+                    }
+                    return true;
+                }
+                case BastionSketchMarkKind.Master:
+                {
+                    GameObject go = CreateNamedMarker(room, "T_Master", typeof(BastionTerminal));
+                    var terminal = go.GetComponent<BastionTerminal>();
+                    if (terminal != null)
+                    {
+                        terminal.Configure("Master", BastionTerminalKind.Master);
                         BastionFieldConsole.AttachIfMissing(terminal);
                     }
                     return true;
@@ -372,18 +469,26 @@ namespace GatekeeperBastion.EditorTools
                     lockedWingSpawns.Add(pair.Value);
             }
 
+            // Lowest door id after D1 owns the sealed list for graybox — FindObjectsByType
+            // order is undefined, so pick deterministically or the control door can win.
+            BastionDoor owner = null;
             for (int i = 0; i < doors.Length; i++)
             {
                 BastionDoor d = doors[i];
                 if (d == null || d.DoorId == "D1")
                     continue;
-                d.SetSealedSpawns(lockedWingSpawns.ToArray());
-                for (int s = 0; s < lockedWingSpawns.Count; s++)
-                {
-                    if (lockedWingSpawns[s] != null)
-                        lockedWingSpawns[s].gameObject.SetActive(false);
-                }
-                break; // first mid/control door owns sealed list for graybox
+                if (owner == null || string.CompareOrdinal(d.DoorId, owner.DoorId) < 0)
+                    owner = d;
+            }
+
+            if (owner == null)
+                return;
+
+            owner.SetSealedSpawns(lockedWingSpawns.ToArray());
+            for (int s = 0; s < lockedWingSpawns.Count; s++)
+            {
+                if (lockedWingSpawns[s] != null)
+                    lockedWingSpawns[s].gameObject.SetActive(false);
             }
         }
 
@@ -392,6 +497,10 @@ namespace GatekeeperBastion.EditorTools
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             go.transform.localPosition = Vector3.zero;
+
+            // Markers live under rooms, so GetComponentInParent<BastionSegment> in
+            // CleanupOrphanGeneratedGeom skips them despite the marker component.
+            go.AddComponent<BastionGeneratedGeom>();
 
             if (componentType != null && typeof(MonoBehaviour).IsAssignableFrom(componentType))
                 go.AddComponent(componentType);

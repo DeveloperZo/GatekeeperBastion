@@ -35,15 +35,15 @@ Spend the first Prep looking around: find the Hatch, find the doors, notice how 
 
 The first Wave is all basic Gatekeepers. On a Wave you start at a field terminal they come for you, not the Hatch. No Hunters, no Rams. It is the gentlest thing the game will ever send you and it exists to teach you the room.
 
-Look at the terminal and Interact. That starts its Waves — on the first terminal, the Run's full five, with a short quiet after each clear. **T** at the Hatch is Hatch-bank, not a terminal start.
+Look at the terminal. `+` / `-` juice if you want. `E` selects — including intensity 0. `T` starts **one** Wave. On the first terminal, five of those opens the door. After each clear, Prep lasts as long as you want. At the Hatch the same keys: `E` selects, `T` is Hatch-bank. You can bank after Wave 1.
 
-## 5. Fight the sequence
+## 5. Fight, then choose
 
-After each Wave drops you get a few seconds of Prep, then the next Wave starts. You do not go back to the terminal. Use the gap: reload, check the Hatch card, set the dial if you want to.
+Kill the Wave. Prep. Hatch-bank if you want the Salvage on the ship, or walk back to the terminal and pull the next. The door stays shut until that terminal's count is done.
 
 ## 6. Strip the field, then Hatch-bank
 
-Clear Wave 5 and the door opens. Unbanked stays. Prep names Hatch-bank — **T** at the Hatch. Survive that Wave and leftover converts. You are still aboard; walk through the door. Go down instead and leftover is gone.
+Clear Wave 5 and the door opens. You can Hatch-bank after any Wave, not only then. Unbanked stays until you do. Survive a Hatch-bank and leftover converts. You are still aboard. Walk through to **Master Control** in the Control Room. One pull seals the door for a last fight, then opens it and sends you home to Hatch-bank. Survive that and the Run is **Escaped**. Go down instead and leftover is gone.
 
 Then spend it. That's the loop.
 
@@ -75,7 +75,7 @@ So on a fresh save, banking a pile of Salvage and going to the ARMORY to make yo
 
 ## Also worth knowing on run one
 
-- **The dial starts at its lowest setting and nothing forces you to touch it.** You can leave it alone while you learn — but it is free money on the early Waves, and it only ever adds the basic marching kind.
+- **Intensity starts at 0. Confirm it.** You can leave it there while you learn. Juice spends Unbanked and only ever adds Defaults.
 - **Freeing the cursor stops you firing.** If you press the free-cursor key and then wonder why left-click does nothing, click once to recapture it.
 - **Ammo is unlimited.** You have no reserve to run out of; reloading always refills the clip. Reload whenever you have a spare second.
 

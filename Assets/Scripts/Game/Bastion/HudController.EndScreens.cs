@@ -37,7 +37,7 @@ namespace GatekeeperBastion.Game
 
             _view.SetEndScreen(
                 "BASTION STRIPPED",
-                ClearFraming + " — all " + WaveDirector.MaxWaves + " waves cleared",
+                ClearFraming + " — Master Control Hatch-bank survived",
                 "converted this run: " + report.grossEarned,
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
@@ -65,7 +65,7 @@ namespace GatekeeperBastion.Game
             {
                 _view.SetEndScreen(
                     "BASTION STRIPPED",
-                    ClearFraming + " — all " + WaveDirector.MaxWaves + " waves cleared",
+                    ClearFraming + " — Master Control Hatch-bank survived",
                     earned, repair, net, banked, deepest);
             }
             else

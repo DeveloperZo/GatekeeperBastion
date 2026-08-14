@@ -110,7 +110,7 @@ both sessions, that is a kill — Shown failed.
    `Canvas - Pause Menu` (Shift scroll + Rajdhani, same theme). Serialized references,
    no name-resolution fallback.
 4. **Change** `HudController.Pause.cs` / pause canvas — Compendium command, separate
-   from the key list. Open/close the view; pause listing of keys (M61) remains. If M61
+   from the key list. Open/close the view; pause listing of keys (M59) remains. If M59
    has not shipped, the command still works; the key list can be empty.
 5. **Create** `Assets/Tests/EditMode/Ui/CompendiumFormTests.cs` — criterion 1 (See also
    present; README has no `| Page | Answers |` table; visible bodies contain no `M[0-9]`
@@ -130,13 +130,13 @@ ever). Rejected: XP or a completion percentage as the reason to open.
 
 ## Supporting work
 
-- **Driven by** Esc → Compendium — here. Pause itself is M35; key list on pause is M61.
+- **Driven by** Esc → Compendium — here. Pause itself is M35; key list on pause is M59.
 - **Shown by** the command on the pause overlay — here. Not by a "new entry" ping; alpha
   is always-on, so the command has to be findable without a collectible tick.
 - **Reads back as** the open entry's title and body, and See also navigation — here.
 
-If M61 slips, this still ships with a Compendium command and no playable-key list on
-pause. If M59 slips, the reader still opens; the room may still be silent and oversized.
+If M59 slips, this still ships with a Compendium command and no playable-key list on
+pause. If M61 slips, the reader still opens; the gun may still be invisible.
 
 ## Verification
 
@@ -176,5 +176,5 @@ pause. If M59 slips, the reader still opens; the room may still be silent and ov
 
 ## Depends on / Unblocks
 
-Depends on M35 pause existing. Better after M61 (pause already lists keys) but not
+Depends on M35 pause existing. Better after M59 (pause already lists keys) but not
 blocked on it. Unblocks a friends session that can answer "what is a Ram" without Zo.

@@ -7,14 +7,14 @@ alpha gate and is not shipped.
 
 Your ship cuts into a **Bastion** — a garrisoned alien vessel — and siphons it for Salvage.
 You are the **Boarder**. You fight inside it, holding the **Hatch**, the umbilical back to
-your ship, while the **Gatekeepers** who hold the Bastion come to take it back. You set the
-siphon dial, which multiplies both reward and pressure. **You cannot leave a Run at will.**
+your ship, while the **Gatekeepers** who hold the Bastion come to take it back. You juice
+**intensity** at a trigger: more Salvage, more Gatekeepers. **You cannot leave a Run at will.**
 
 ## The pillars
 
 **The player sets both the pace and the stake, and the game supplies neither.** Nothing
 starts until you Interact at a field terminal, or press T at the Hatch. The clock never
-pays. The dial is a bet you place before you see what you bought.
+pays. Juice is a bet you place at the trigger before you see what you bought.
 
 **Every Gatekeeper kind is defined by what it refuses to do.** A Hunter can never hurt the Hatch.
 A Ram never turns when shot. On a Hatch-bank it never hunts you; on a field-terminal Wave it

@@ -2,7 +2,7 @@ namespace GatekeeperBastion.Sim
 {
     /// <summary>
     /// Lifecycle phases of a single run. v0 uses Docked → Tethered → Lost (lost) or
-    /// Escaped (all waves cleared). Spooling is reserved for the future escape-window
+    /// Escaped (Master Control Hatch-bank survived). Spooling is reserved for the future escape-window
     /// design and is UNUSED in v0 (kept so serialized values stay enum-stable when it lands).
     /// </summary>
     public enum RunPhase
@@ -16,7 +16,7 @@ namespace GatekeeperBastion.Sim
         /// <summary>UNUSED in v0. Reserved for escape windows: tether cut, spool running.</summary>
         Spooling,
 
-        /// <summary>Terminal ("Cleared"): run completed — all WaveDirector.MaxWaves waves cleared.</summary>
+        /// <summary>Terminal ("Cleared"): Master Control Hatch-bank half survived.</summary>
         Escaped,
 
         /// <summary>Terminal ("Lost"): Hatch destroyed or player down. Costs nothing but the run —

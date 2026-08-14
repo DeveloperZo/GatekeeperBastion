@@ -14,8 +14,9 @@ metadata:
 - **Report as verified what you did not observe.** "You should see X" is a prediction. Say what
   changed and what to look for.
 - **Report work verified on a suite you did not run.**
-- **Close a gate with a tainted log.** A session log carrying dev-command markers cannot support
-  a claim. Neither can a stale one: before a log speaks for current code, the
+- **Close a gate with a tainted log.** A session log carrying a `[Dev]` tag cannot support
+  a claim. F10/F11 host/join log `[Net]` and do not taint. Neither can a stale log: before
+  a log speaks for current code, the
   `Library/ScriptAssemblies` dll must be newer than the edited source and the log's literal
   strings must still exist in that source. A handoff once cited a FAIL log written by a dll
   two edits old.

@@ -47,7 +47,7 @@ namespace GatekeeperBastion.Game
         static readonly StringBuilder LineBuf = new StringBuilder(128);
 
         /// <summary>Fills <paramref name="rows"/> with one structured row per distinct binding
-        /// label, in <see cref="Controls"/> order: grouped labels ("weapons", "siphon",
+        /// label, in <see cref="Controls"/> order: grouped labels ("weapons", "juice",
         /// "return") merge their keycaps into one row. Dev rows are appended last with
         /// <see cref="ShortcutRow.Dev"/> set, only in dev builds. Does not call
         /// TickPanelToggle — the caller polls first.</summary>
@@ -72,8 +72,8 @@ namespace GatekeeperBastion.Game
                 }
 
                 string description = b.Label;
-                if (b.Label == "siphon" && dialLevel >= 0)
-                    description = "siphon L" + dialLevel;
+                if (b.Label == "juice" && dialLevel >= 0)
+                    description = "Intensity " + dialLevel;
 
                 rows.Add(new ShortcutRow(key, description, b.Section));
             }
@@ -212,9 +212,10 @@ namespace GatekeeperBastion.Game
                     if (IsGrouped(b.Label))
                     {
                         AppendGroupedDisplays(rows, section, b.Label);
-                        LineBuf.Append(' ').Append(b.Label);
-                        if (b.Label == "siphon" && dialLevel >= 0)
-                            LineBuf.Append(' ').Append('L').Append(dialLevel);
+                        if (b.Label == "juice" && dialLevel >= 0)
+                            LineBuf.Append(" Intensity ").Append(dialLevel);
+                        else
+                            LineBuf.Append(' ').Append(b.Label);
                     }
                     else
                     {
@@ -229,7 +230,7 @@ namespace GatekeeperBastion.Game
         }
 
         static bool IsGrouped(string label) =>
-            label == "weapons" || label == "siphon" || label == "return";
+            label == "weapons" || label == "juice" || label == "return";
 
         static void AppendGroupedDisplays(List<ControlBinding> rows, string section, string label)
         {

@@ -1,15 +1,20 @@
 namespace GatekeeperBastion.Sim
 {
     /// <summary>Footprint multiples for bastion segment prefabs. Scaler retunes the whole kit.
-    /// Pure floats — no UnityEngine (Sim seam + offline harness).</summary>
+    /// Pure floats — no UnityEngine (Sim seam + offline harness).
+    /// Multiples are metres at Scaler 1: rooms a player walks through, not hangars.
+    /// ControlRoom is the wide finale hall — twice as wide as deep.</summary>
     public static class BastionKit
     {
-        public const float ScalerX = 5f;
-        public const float ScalerZ = 8f;
+        public const float ScalerX = 1f;
+        public const float ScalerZ = 1f;
 
         public const float StoreyHeight = 5f;
         public const float WallThickness = 0.5f;
         public const float FloorSlabThickness = 0.5f;
+
+        /// <summary>Depth-to-width ratio for the ControlRoom's landscape footprint.</summary>
+        public const float ControlRoomAspect = 0.5f;
 
         public static int Multiple(BastionBlockKind kind)
         {
@@ -19,7 +24,7 @@ namespace GatekeeperBastion.Sim
                 case BastionBlockKind.Half: return 8;
                 case BastionBlockKind.Full: return 13;
                 case BastionBlockKind.OpenArea: return 21;
-                case BastionBlockKind.ControlRoom: return 47;
+                case BastionBlockKind.ControlRoom: return 76;
                 default: return 5;
             }
         }
@@ -31,7 +36,8 @@ namespace GatekeeperBastion.Sim
 
         public static float FootprintDepth(BastionBlockKind kind)
         {
-            return Multiple(kind) * ScalerZ;
+            float depth = Multiple(kind) * ScalerZ;
+            return kind == BastionBlockKind.ControlRoom ? depth * ControlRoomAspect : depth;
         }
     }
 }

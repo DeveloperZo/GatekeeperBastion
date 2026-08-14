@@ -2,11 +2,11 @@
 
 # Waves
 
-A Run is a fixed number of Waves, started from field terminals or as a Hatch-bank, each one bigger than the last. The first terminal on the kit bastion is the Run's full five, from one Interact. The counts, the composition table and the exact scaling are in the [Field Manual](Field-Manual.md); this page is what the escalation *does*.
+A Run is a fixed number of Waves, started from field terminals or as a Hatch-bank, each one bigger than the last. The first terminal on the kit bastion is the Run's full five; each `T` after `E` starts one, and the door opens on the fifth clear. The counts, the composition table and the exact scaling are in the [Field Manual](Field-Manual.md); this page is what the escalation *does*.
 
 ## Four things escalate, and they escalate together
 
-**More bodies.** Every Wave sends more than the one before it, before the dial is applied at all.
+**More bodies.** Every Wave sends more than the one before it, before intensity is applied at all.
 
 **Tougher bodies.** Each Wave multiplies every Gatekeeper's health — all kinds, the same multiplier. The kind that died to a burst in the first Wave takes noticeably more by the last. This is the axis players notice last and it is the one that most often makes a familiar weapon stop working.
 
@@ -14,11 +14,11 @@ A Run is a fixed number of Waves, started from field terminals or as a Hatch-ban
 
 **Shorter gaps.** The pause between groups shrinks each Wave. Combined with the wider groups, this is the real escalation: early on you deal with a group and then wait; late on the next group is already inside before you have finished the last.
 
-None of these four are affected by the siphon dial. The dial adds bodies on top.
+None of these four are affected by intensity. Intensity adds bodies on top.
 
 ## Composition: what shows up, and when
 
-The kinds are not tiers. They arrive on a fixed schedule that the dial cannot touch.
+The kinds are not tiers. They arrive on a fixed schedule that intensity cannot touch.
 
 - The **first Wave is all basic Gatekeepers** — the marchers. On a Wave started at a field terminal they hunt you, not the Hatch. On a Hatch-bank they march on the Hatch. Nothing else is in it. It exists to teach you the room.
 - **Hunters** enter after that, and their count grows every Wave. They never touch the Hatch. They are the reason you cannot stand still and hold the trigger.
@@ -43,17 +43,17 @@ The first Wave asks one question: can you stop a thing walking at you. The last 
 
 Not from the bodies. From **overlap**. A Wave's difficulty is roughly how much of it is in the room at the same time, and that rises from both ends: bigger groups arriving with less time between them, taking longer to kill because they're tougher.
 
-This is also exactly what the NAV MAP's deep start does deliberately: it delivers several Waves back to back with no Prep, so the overlap is between Waves rather than within one. Same content, stacked. That chain still starts from one Interact at a field terminal.
+This is also exactly what the NAV MAP's deep start does deliberately: it delivers several Waves back to back with no Prep, so the overlap is between Waves rather than within one. Same content, stacked. That chain still starts from one `T` at a field terminal — deep start is the exception that stacks.
 
 ## See also
 
-[A Run](A-Run.md). [Gatekeepers](Gatekeepers.md). [The Siphon Dial](The-Siphon-Dial.md). [Staying Alive](Staying-Alive.md).
+[A Run](A-Run.md). [Gatekeepers](Gatekeepers.md). [Intensity](Intensity.md). [Staying Alive](Staying-Alive.md).
 
 ## Gaps
 
 - Nothing in the fight tells you Gatekeeper health scales by Wave. The HUD shows your damage and the Gatekeeper's kind, never its health, so the same weapon quietly taking twice as long reads as the weapon being broken.
 - Nothing tells you that group width and the gap between groups change per Wave. These are the two numbers you feel most and the two you are never shown.
-- Nothing says that Hunter and Ram counts are fixed per Wave and immune to the dial. Players reasonably assume raising the dial multiplies everything.
+- Nothing says that Hunter and Ram counts are fixed per Wave and immune to intensity. Players reasonably assume raising intensity multiplies everything.
 - Groups arrive at spawn points in a fixed rotation, one point per group. You can learn the rotation by watching, but nothing marks the points and nothing indicates where the next group is coming from.
 - The members of a group spawn in a ring around their spawn point, which is why a wide group appears to arrive slightly spread out rather than in single file.
 - Every kind swings on the same clock — kinds differ in what they hit and how hard, never in how often. Nothing communicates this, so Hunters read as faster attackers than they are.

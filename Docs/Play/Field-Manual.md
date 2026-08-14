@@ -30,7 +30,7 @@ live right now, so this table is a reference, not something you have to memorise
 | Key | Does | Live when |
 |---|---|---|
 | `LMB` | fire | in the bastion |
-| `RMB` | cancel place | in the bastion |
+| `RMB` | zoom | in the bastion, on the ship |
 | `R` | reload | in the bastion |
 | `1` | weapons | in the bastion |
 | `2` | weapons | in the bastion |
@@ -43,9 +43,9 @@ live right now, so this table is a reference, not something you have to memorise
 
 | Key | Does | Live when |
 |---|---|---|
-| `T` | Hatch-bank | between waves |
-| `[` | siphon | between waves |
-| `]` | siphon | between waves |
+| `T` | start | between waves |
+| `+` | juice | between waves |
+| `-` | juice | between waves |
 | `ENTER` | return | end screen |
 | `SPACE` | return | end screen |
 | `ESC` | return | end screen |
@@ -117,11 +117,11 @@ HP above is the base line. Later waves multiply it (see the wave table).
 ## The waves
 
 **5 waves to a run**, and none of them start until you use a
-field terminal. One Interact starts that terminal's remaining Waves; after each
-clear there are 8 seconds of quiet, then the next Wave.
-After the sequence, Prep lasts as long as you want. Gatekeepers arrive in groups, not a stream.
+field terminal. `+/-` juice, `E` selects, `T` starts one Wave. A terminal opens its door after
+its authored count (T1 is 5). Prep after a clear lasts as long as you want — Hatch-bank is legal there.
+Gatekeepers arrive in groups, not a stream.
 
-At the dial's lowest setting:
+At intensity 0:
 
 | Wave | Bodies | Default | Hunter | Ram | HP × | Arrive in groups of | Every |
 |---|---|---|---|---|---|---|---|
@@ -131,15 +131,16 @@ At the dial's lowest setting:
 | 4 | 54 | 40 | 10 | 4 | 2.2 | 6 | 3.6 s |
 | 5 | 66 | 47 | 12 | 7 | 2.6 | 7 | 3.4 s |
 
-Hunters and Rams are on a fixed schedule — the dial never adds more of them.
+Hunters and Rams are on a fixed schedule — intensity never adds more of them.
 
-## The siphon dial — the wager
+## Intensity — the wager
 
-Set between waves, locked once a wave is live. It pays more and sends more, and the
-extra bodies are **all Defaults** — it cannot conjure a sixth Ram. It changes nothing
-else: no extra health, no tighter spacing, no larger groups.
+Juice at a field terminal, Master Control, or the Hatch (`+/-`), then `E` to select and `T` to start. Locked once a
+wave is live. It pays more and sends more, and the extra bodies are **all Defaults** —
+it cannot conjure a sixth Ram. It changes nothing else: no extra health, no tighter
+spacing, no larger groups. Juice costs `100` unbanked per step.
 
-| Dial | You earn | Wave 1 sends | Wave 5 sends |
+| Intensity | You earn | Wave 1 sends | Wave 5 sends |
 |---|---|---|---|
 | 0 | ×1.00 | 18 | 66 |
 | 1 | ×1.10 | 20 | 73 |
@@ -151,11 +152,11 @@ else: no extra health, no tighter spacing, no larger groups.
 ## Salvage
 
 **Gatekeepers are worth Salvage, and that Salvage sits unbanked until a Hatch-bank.**
-A kill does not credit the ship. Prep `T` at the Hatch starts the convert Wave:
+A kill does not credit the ship. Prep `E` then `T` at the Hatch starts the convert Wave:
 drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A fatter pile
 converts at a higher multiplier. Dying keeps what already made it through the Hatch.
 
-A kill pays `25` at Scavenging 0, up to `31.25` at 5, then multiplied by the dial.
+A kill pays `25` at Scavenging 0, up to `31.25` at 5, then multiplied by intensity.
 Nothing pays per second except Hatch-bank drip (`20` unbanked/s), and the quiet between waves earns nothing at all.
 
 The hatch is what you are defending: **300 HP** at Hatch Armor 0, up to **375**. Hold `E` near it to repair.

@@ -3,7 +3,7 @@
 <!--
 Status: later
 Update trigger: when a gate item is added or retired, when the transport choice changes, or when a friends session finds a failure the gate did not catch
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 -->
 
 The **Friends Alpha gate**: one checklist that says whether a build is safe to send, and an
@@ -56,8 +56,7 @@ Roughly fifty lines on top of the existing `UnityTransport`, with no transport s
 **Steam is the wrong tool this month.** A real appid is $100 with bank and identity
 onboarding and a 30-day wait, tied to an actual store product. Appid 480 shares a global
 lobby space with every other developer testing on it, and using another product's appid to
-distribute builds breaches the Steamworks SDK Access Agreement. `M60`'s Steam premise
-should be re-cut to Relay.
+distribute builds breaches the Steamworks SDK Access Agreement. `M60` is Relay.
 
 **Tailscale is the zero-engineering path available today.** It is free for personal use at
 six users, has best-in-class NAT traversal, survives CGNAT, and makes `M58`'s typed-address
@@ -142,8 +141,8 @@ failure.
 Same sentinel pattern as `gkb_verify_request.txt`.
 
 **Change** `Tools/verify/run.sh` to call it. **Change** M58 and M60 to close against this
-gate. **Change** `../../Decisions.md` to record Relay as the transport and Steam as
-deferred with its reason.
+gate. Relay as the internet path and Steam as deferred are already in
+`../../Decisions.md` (2026-08-14).
 
 Rejected: **a code-signing certificate.** Amber item, real cost, no benefit until there are
 strangers.
