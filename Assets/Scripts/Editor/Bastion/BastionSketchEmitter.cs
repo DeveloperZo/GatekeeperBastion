@@ -384,7 +384,9 @@ namespace GatekeeperBastion.EditorTools
         static bool CreateMark(
             Transform room,
             BastionSketchMark mark,
-            Dictionary<string, SpawnPoint> spawnByName)
+            Dictionary<string, SpawnPoint> spawnByName,
+            Dictionary<string, BastionTerminal> terminalById,
+            GameController game)
         {
             switch (mark.Kind)
             {
@@ -400,33 +402,34 @@ namespace GatekeeperBastion.EditorTools
                     return true;
                 }
                 case BastionSketchMarkKind.Terminal:
-                {
-                    GameObject go = CreateNamedMarker(room, "T_" + mark.RefId, typeof(BastionTerminal));
-                    var terminal = go.GetComponent<BastionTerminal>();
-                    if (terminal != null)
-                    {
-                        terminal.Configure(mark.RefId, BastionTerminalKind.Field);
-                        BastionFieldConsole.AttachIfMissing(terminal);
-                    }
-                    return true;
-                }
+                    return CreateTerminalMark(room, mark.RefId, BastionTerminalKind.Field, terminalById, game);
                 case BastionSketchMarkKind.Master:
-                {
-                    GameObject go = CreateNamedMarker(room, "T_Master", typeof(BastionTerminal));
-                    var terminal = go.GetComponent<BastionTerminal>();
-                    if (terminal != null)
-                    {
-                        terminal.Configure("Master", BastionTerminalKind.Master);
-                        BastionFieldConsole.AttachIfMissing(terminal);
-                    }
-                    return true;
-                }
+                    return CreateTerminalMark(room, "Master", BastionTerminalKind.Master, terminalById, game);
                 default:
                     return false;
             }
         }
 
-        static void CreateDoorMarker(Transform room, BastionSketchDoor door)
+        static bool CreateTerminalMark(
+            Transform room,
+            string id,
+            BastionTerminalKind kind,
+            Dictionary<string, BastionTerminal> terminalById,
+            GameController game)
+        {
+            GameObject go = CreateNamedMarker(room, "T_" + id, typeof(BastionTerminal));
+            var terminal = go.GetComponent<BastionTerminal>();
+            if (terminal != null)
+            {
+                terminal.Configure(id, kind);
+                terminal.SetGameController(game);
+                terminalById[id] = terminal;
+                BastionFieldConsole.AttachIfMissing(terminal);
+            }
+            return true;
+        }
+
+        static BastionDoor CreateDoorMarker(Transform room, BastionSketchDoor door, Material gateMat)
         {
             GameObject go = CreateNamedMarker(room, "D_" + door.DoorId, typeof(BastionDoor));
             var component = go.GetComponent<BastionDoor>();
@@ -439,7 +442,10 @@ namespace GatekeeperBastion.EditorTools
                     door.Control,
                     ToDoorEdge(door.Direction),
                     locked: true);
+                if (gateMat != null)
+                    component.SetGateMaterial(gateMat);
             }
+            return component;
         }
 
         static BastionDoorEdge ToDoorEdge(BastionSketchDirection direction)
