@@ -45,6 +45,37 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
+        public void UnownedOnShip_HidesTheMesh()
+        {
+            WeaponId id;
+            Assert.IsFalse(WeaponView.TryShownWeapon(false, false, WeaponId.Mk1Sidearm, out id));
+            Assert.AreEqual(WeaponId.None, id);
+        }
+
+        [Test]
+        public void UnownedInFight_ShowsCutter()
+        {
+            WeaponId id;
+            Assert.IsTrue(WeaponView.TryShownWeapon(false, true, WeaponId.None, out id));
+            Assert.AreEqual(WeaponId.None, id);
+        }
+
+        [Test]
+        public void OwnedEquipped_ShowsThatWeapon()
+        {
+            WeaponId id;
+            Assert.IsTrue(WeaponView.TryShownWeapon(true, false, WeaponId.Mk1Sidearm, out id));
+            Assert.AreEqual(WeaponId.Mk1Sidearm, id);
+        }
+
+        [Test]
+        public void OwnedEmptySlot_HidesTheMesh()
+        {
+            WeaponId id;
+            Assert.IsFalse(WeaponView.TryShownWeapon(true, true, WeaponId.None, out id));
+        }
+
+        [Test]
         public void SfxOneShotScale_IsHalf()
         {
             Assert.AreEqual(0.5f, WeaponView.SfxOneShotScale);

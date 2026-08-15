@@ -37,6 +37,22 @@ namespace GatekeeperBastion.Sim
         /// bursts at bus 0.9 were harsh; this is leverage #12, one number. Slider still multiplies.</summary>
         public const float SfxOneShotScale = 0.5f;
 
+        /// <summary>Which hand mesh to show. Unowned on the Ship is empty hands. Unowned in a
+        /// fight is the cutter (<see cref="WeaponId.None"/>). A shop mesh only when that id is
+        /// equipped.</summary>
+        /// <returns>False means hide every mesh. True means show <paramref name="id"/>.</returns>
+        public static bool TryShownWeapon(bool ownsAny, bool fightHosted, WeaponId equipped,
+            out WeaponId id)
+        {
+            if (!ownsAny)
+            {
+                id = WeaponId.None;
+                return fightHosted;
+            }
+            id = equipped;
+            return equipped != WeaponId.None;
+        }
+
         /// <summary>Prefab path for the mesh shown for this catalog id. <see cref="WeaponId.None"/>
         /// is the improvised cutter.</summary>
         public static string MeshPrefab(WeaponId id)

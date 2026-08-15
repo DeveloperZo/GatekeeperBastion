@@ -7,6 +7,17 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-14
 -->
 
+- 2026-08-14: **M61-2 status later → completed.** Kit blocks are POLYGON Sci-Fi Space
+  meshes on scaler-2 station rooms, functional sliding doors, bulkhead Hatch,
+  Generated/Authored split. Gates: `gkb_verify_report.json` 2026-08-15T00:09:20Z —
+  EditMode 394/5, PlayMode 30/1; both baseline reds unchanged, the other four are
+  `HudSeparationTests` from the parallel HUD pass, no reds of this slice's own. Scene
+  greps: 1 realtime light, 0 MeshColliders, 2735 renderers all on the one atlas
+  material, 2735 static-flagged, 179 shadow-off fixtures. Waves arrive on the final
+  geometry (logs `17-29-54`/`17-34-29`, untainted). Open play rows filed in
+  `GatekeeperZo Notes/verification.md`: criterion 4 eyes lines per block kind,
+  criterion 13 Stats after-numbers (before unrecoverable — the primitive bastion no
+  longer exists), criterion 14 one solo completion.
 - 2026-08-14: **M61 status later → completed.** IQ astronaut + Synty guns (six Packs
   wrappers), stroke crosshair, RMB zoom Hip 60 / Zoom 40, Ship `SM_Prop_ControlPanel_02`
   ×4 + `SM_Prop_Screen_Small_01`. Unity EditMode `WeaponViewTests`+`ControlsTests` 15/15;
@@ -36,6 +47,10 @@ Last updated: 2026-08-14
   wholesale). The open scene was regrouped in place via
   `GatekeeperBastion/Group Bastion Geom In Open Scene` — reparent only, no rebuild, so
   Zo's hand edits survive and world transforms are untouched.
+- 2026-08-14: **Unowned Ship hands are empty.** Boarder prefab left Mk1 active; Ship has
+  no PlayerGun so WeaponViewModel never hid it. `WeaponView.TryShownWeapon`: empty
+  hands on the Ship until a buy; cutter only in a fight with nothing owned. ARMORY
+  catalog Cost 180 / Effect 280, wrap off — `cost 1200` no longer stacks on the dps line.
 - 2026-08-14: **M61-2 rooms emit unpacked.** Zo: packed room instances block hierarchy
   edits during authoring. `BastionSketchEmitter` unpacks the outermost root at emit;
   the Synty pieces under `_geom` keep their prefab links. Zo then moved all 15 rooms

@@ -2,7 +2,7 @@
 
 # The Ship
 
-Between runs you are stood in your own ship, in first person, with a gun you cannot fire. This is the only place Salvage gets spent, and the only way back to the Bastion.
+Between runs you are stood in your own ship, in first person. Hands are empty until you buy a weapon at the ARMORY. You cannot fire here either way. This is the only place Salvage gets spent, and the only way back to the Bastion.
 
 You walk. You look at a console until the prompt appears at the bottom of the screen, you hold the interact key, and a panel opens: your movement locks, the cursor comes free, and the panel owns the screen until you close it. One panel at a time. Close it and you are walking again.
 

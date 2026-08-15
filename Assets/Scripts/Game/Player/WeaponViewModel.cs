@@ -62,6 +62,7 @@ namespace GatekeeperBastion.Game
             _fireRifle = Resources.Load<AudioClip>(WeaponView.FireRifle);
             _reload = Resources.Load<AudioClip>(WeaponView.Reload);
             AudioBuses.ApplyFromSettings();
+            ApplyShown();
             PoseLocalGun();
         }
 
@@ -75,20 +76,41 @@ namespace GatekeeperBastion.Game
                 _animator.SetFloat(SpeedHash, speed);
             }
 
-            if (_gun != null)
+            ApplyShown();
+            PoseLocalGun();
+        }
+
+        /// <summary>Ship has WeaponViewModel and no PlayerGun — LateUpdate used to leave the
+        /// prefab Mk1 visible while ARMORY said buy a Secondary. Meta owns the mesh; the gun
+        /// only supplies the fight-hosted cutter fallback.</summary>
+        void ApplyShown()
+        {
+            if (_gun != null && _gun.ActiveSlot == WeaponSlot.Drone)
             {
-                if (_gun.ActiveSlot == WeaponSlot.Drone)
-                {
-                    if (!_hidden) ShowHidden();
-                }
-                else
-                {
-                    WeaponId want = _gun.UsingSalvageCutter ? WeaponId.None : _gun.ActiveWeaponId;
-                    if (want != _shown || _hidden) Show(want);
-                }
+                if (!_hidden) ShowHidden();
+                return;
             }
 
-            PoseLocalGun();
+            var meta = GameSession.Meta;
+            bool owns = meta != null && meta.OwnsAnyWeapon;
+            bool fight = _gun != null && _gun.IsHosted;
+            WeaponId equipped = WeaponId.None;
+            if (_gun != null && !_gun.UsingSalvageCutter)
+                equipped = _gun.ActiveWeaponId;
+            else if (meta != null)
+            {
+                equipped = meta.EquippedPrimary != WeaponId.None
+                    ? meta.EquippedPrimary
+                    : meta.EquippedSecondary;
+            }
+
+            WeaponId id;
+            if (!WeaponView.TryShownWeapon(owns, fight, equipped, out id))
+            {
+                if (!_hidden) ShowHidden();
+                return;
+            }
+            if (id != _shown || _hidden) Show(id);
         }
 
         /// <summary>Keep the grip parented to the right hand, but place it in camera space so

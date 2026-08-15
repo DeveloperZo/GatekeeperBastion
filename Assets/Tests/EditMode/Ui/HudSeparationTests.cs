@@ -116,6 +116,20 @@ namespace GatekeeperBastion.Tests
             }
         }
 
+        [Test]
+        public void ArmoryCatalogCostAndEffect_DoNotWrap()
+        {
+            var scene = SceneHudYaml.Load("Assets/Scenes/Ship.unity");
+            for (int i = 1; i <= 3; i++)
+            {
+                string row = "Catalog Row " + i;
+                var cost = scene.TmpOf("Cost", row);
+                Assert.AreEqual(0, cost.WrapMode, row + " Cost wraps");
+                var effect = scene.TmpOf("Effect", row);
+                Assert.AreEqual(0, effect.WrapMode, row + " Effect wraps");
+            }
+        }
+
         static void AssertProfileExpInactive(string scenePath, string ancestor)
         {
             var scene = SceneHudYaml.Load(scenePath);

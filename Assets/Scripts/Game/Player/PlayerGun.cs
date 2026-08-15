@@ -291,6 +291,7 @@ namespace GatekeeperBastion.Game
         /// <summary>True once the Bastion's tick owner drives this component (set by Bind);
         /// its own Update then yields so the written system order is the only order.</summary>
         bool _hosted;
+        public bool IsHosted => _hosted;
 
         public void SetHosted(bool hosted) { _hosted = hosted; }
 

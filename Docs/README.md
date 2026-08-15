@@ -1,7 +1,8 @@
 # Gatekeeper Bastion — the game on one page
 
 Sci-fi wave-defense FPS. Unity 6, PC/Steam, first-person. The Boarder is the IQ astronaut
-with Synty guns; Ship desks are dressed. Bastion kit dressing is M61-2. Solo playable;
+with Synty guns; Ship desks and the Bastion kit are dressed (M61-2 closed 2026-08-14:
+scaler-2 station rooms, sliding doors, bulkhead Hatch). Solo playable;
 host-client co-op exists over UnityTransport loopback (F10/F11, editor/dev). A friends
 session (install a build, join without the developer, five-Wave run, end screen) is the
 alpha gate and is not shipped.

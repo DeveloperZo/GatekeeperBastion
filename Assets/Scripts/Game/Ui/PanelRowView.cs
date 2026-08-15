@@ -22,6 +22,7 @@ namespace GatekeeperBastion.Game
             if (_cost != null)
             {
                 _cost.text = cost != null ? cost : "";
+                SingleLine(_cost);
                 _cost.gameObject.SetActive(!string.IsNullOrEmpty(cost));
             }
             if (_level != null)
@@ -29,7 +30,11 @@ namespace GatekeeperBastion.Game
                 _level.text = level != null ? level : "";
                 _level.gameObject.SetActive(!string.IsNullOrEmpty(level));
             }
-            if (_effect != null) _effect.text = effect != null ? effect : "";
+            if (_effect != null)
+            {
+                _effect.text = effect != null ? effect : "";
+                SingleLine(_effect);
+            }
 
             bool hasReason = !string.IsNullOrEmpty(reason);
             bool showAction = _action != null && !string.IsNullOrEmpty(actionLabel);
@@ -53,6 +58,12 @@ namespace GatekeeperBastion.Game
             if (onAction != null && actionEnabled)
                 _action.onClick.AddListener(() => onAction());
             _action.interactable = actionEnabled;
+        }
+
+        static void SingleLine(TextMeshProUGUI tmp)
+        {
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            tmp.overflowMode = TextOverflowModes.Ellipsis;
         }
     }
 }
