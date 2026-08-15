@@ -5,7 +5,7 @@ using UnityEngine;
 namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: MainMenu front-end flow — CONTINUE / START NEW (overwrite
-    /// confirm) / OPTIONS / QUIT (exit confirm). Continue and Start load
+    /// confirm) / OPTIONS / QUIT. Continue and Start load
     /// <see cref="SceneFlow.Ship"/>; Embark to Bastion is a Ship-station action, not a menu
     /// action. Esc is not polled here — Shift's modal hotkeys own it on the menu.</summary>
     public sealed class MainMenuController : MonoBehaviour
@@ -95,17 +95,9 @@ namespace GatekeeperBastion.Game
                 _loading = false;
         }
 
-        /// <summary>Exit-modal confirm: quits the build, stops Play mode
-        /// in the editor.</summary>
-        void Quit()
-        {
-            Log.Event(Tag, "Quit confirmed from the menu.");
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
-        }
+        /// <summary>Home QUIT — one click. Overwrite still confirms; leaving the
+        /// process does not.</summary>
+        void Quit() => SceneFlow.QuitGame();
 
     }
 }

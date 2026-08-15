@@ -4,7 +4,7 @@
 Purpose: The single list of what is shipped but unproven, ordered so Zo can spend a playthrough on the items that matter and skip the ones that do not. Milestones own their own criteria; this is the condensed view across all of them.
 Status: working — regenerated as milestones ship and items close
 Update trigger: when a milestone ships with open rows, or when an item is verified
-Last updated: 2026-08-14
+Last updated: 2026-08-15
 -->
 
 ## How this works
@@ -91,7 +91,7 @@ Real, lower leverage. None of these blocks anything.
 | Save byte-identical | M24 | Needs one clean AutoVerify run |
 | Decoy Path 2 + PlayMode tests | M30 | `DecoyPlayModeTests` written, never run |
 | `FireRay` layer mask | M31 | No Enemy or World layers exist yet; buffer raised 16 to 32 with a full-buffer warning as the interim |
-| `SEC-D` ability and ring | M26 | **Blocked on Zo**, not on testing. Two design decisions: an ability meeting M20's contract, and a strength/weakness pair. M71 shipped the MK-1 ring, so the pattern to copy exists |
+| `SEC-D` ability | M26 | **Blocked on Zo**, not on testing. Ability meeting M20's contract. Ring shipped 2026-08-15 (F–A–R–C–D); Ability spoke not purchasable until this lands |
 
 ---
 
@@ -100,4 +100,5 @@ Real, lower leverage. None of these blocks anything.
 | Item | Milestone | Closed by |
 |---|---|---|
 | MK-1 wheel ring | M21 | 2026-08-14, M71: ring D–A–R–C–F authored, strength Reload / weakness Damage; `RingsAreUniqueAcrossShopWeapons` and `WeaknessNeverAdjacentToStrength` cover it, harness green |
+| SEC-D wheel ring | M21 | 2026-08-15, M71: ring F–A–R–C–D authored, strength FireRate / weakness Reload; Ability spoke not purchasable |
 | `— N live` on group lines, segment lands on zero | M29 | 2026-08-09 session `15-21-59`: group lines read `— 3 live`, `— 6 live`, `— 5 live`; the reader parses it and the Wave-3 segment resolves |

@@ -102,6 +102,13 @@ namespace GatekeeperBastion.Game
                     $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — {centre} not on ring");
                 return false;
             }
+            if (!WeaponWheel.SpokePurchasable(id, centre))
+            {
+                Log.Event("Ship",
+                    $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — " +
+                    $"{WeaponWheel.AttrLabel(centre)} is not purchasable on this weapon");
+                return false;
+            }
             if (!MetaUpgrades.UpgradesUnlocked(m))
             {
                 Log.Event("Ship",
@@ -117,7 +124,7 @@ namespace GatekeeperBastion.Game
                 return false;
             }
 
-            long price = WeaponTier.Cost(tier);
+            long price = WeaponTier.Cost(WeaponCatalog.Def(id).slot, tier);
             if (m.BankedSalvage < price)
             {
                 Log.Event("Ship",

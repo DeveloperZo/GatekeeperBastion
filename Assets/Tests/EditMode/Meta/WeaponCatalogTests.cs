@@ -55,8 +55,22 @@ namespace GatekeeperBastion.Tests
         {
             long[] expected = { 400L, 600L, 800L, 1000L, 1200L, 1400L, 1600L, 1800L, 2000L, 2200L };
             for (int t = 0; t < WeaponTier.MaxTier; t++)
+            {
                 Assert.AreEqual(expected[t], WeaponTier.Cost(t), "cost at T" + t);
+                Assert.AreEqual(expected[t], WeaponTier.Cost(WeaponSlot.Primary, t),
+                    "Primary slot overload must match the shared curve at T" + t);
+            }
             Assert.AreEqual(13000L, WeaponTier.SpentToReach(WeaponTier.MaxTier));
+        }
+
+        [Test]
+        public void SecondaryTierCosts_LinearRamp_SumsTo8250()
+        {
+            long[] expected = { 150L, 300L, 450L, 600L, 750L, 900L, 1050L, 1200L, 1350L, 1500L };
+            for (int t = 0; t < WeaponTier.MaxTier; t++)
+                Assert.AreEqual(expected[t], WeaponTier.Cost(WeaponSlot.Secondary, t), "cost at T" + t);
+            Assert.AreEqual(8250L,
+                WeaponTier.SpentToReach(WeaponSlot.Secondary, WeaponTier.MaxTier));
         }
 
         [Test]

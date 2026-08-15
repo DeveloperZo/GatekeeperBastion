@@ -47,7 +47,8 @@ namespace GatekeeperBastion.Sim
                         AbilityId.Mk1RegenSurge);
 
                 case WeaponId.SecD:
-                    // Close-quarters Secondary. Ability + ring are still an open call (Zo).
+                    // Close-quarters Secondary. Ring is authored; ability stays None (Zo)
+                    // and WeaponWheel.SpokePurchasable refuses a centred Ability purchase.
                     // Cost 0 so either Secondary is reachable as a campaign's first buy.
                     // Burst empties in clip/rate = 4/6 ≈ 0.67s (MK-1 ≈ 2.67s, ≥2×). Range 8 m /
                     // falloff from 3 m → near-zero at the MK-1's 12 m working distance.

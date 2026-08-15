@@ -46,7 +46,7 @@ namespace GatekeeperBastion.Game
             Wire(_continueBtn, () => { if (onContinue != null) onContinue.Invoke(); });
             Wire(_startNewBtn, () => { if (onStartNew != null) onStartNew.Invoke(); });
             Wire(_optionsBtn, () => { if (onOptions != null) onOptions.Invoke(); });
-            Wire(_quitBtn, ShowExitModal);
+            Wire(_quitBtn, () => { if (onQuitConfirm != null) onQuitConfirm.Invoke(); });
             Wire(_overwriteConfirmBtn, () =>
             {
                 HideModal(_overwriteModal);

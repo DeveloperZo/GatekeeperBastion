@@ -35,8 +35,7 @@ namespace GatekeeperBastion.Sim
         public const float ReloadPerPoint = 0.98035f;  // -1.965% → focus 35 ≈ ×0.50; focus 50 ≈ ×0.37
         public const float FireRatePerPoint = 1.0117f;
 
-        /// <summary>Cyclic ring for a weapon, or null when the ring is not authored yet
-        /// (SEC-D until its ability is decided).</summary>
+        /// <summary>Cyclic ring for a weapon, or null when the ring is not authored yet.</summary>
         public static WheelAttr[] RingOf(WeaponId id)
         {
             switch (id)
@@ -72,12 +71,32 @@ namespace GatekeeperBastion.Sim
                         WheelAttr.Clip, WheelAttr.Damage, WheelAttr.Reload,
                         WheelAttr.Ability, WheelAttr.FireRate
                     };
+                // Strength FireRate, weakness Reload — two apart. Ability sits beside FireRate
+                // so a cadence purchase dumps neighbour points into an unpurchasable spoke
+                // (SpokePurchasable); Damage is the other neighbour, Clip is not, so rate
+                // does not compound with clip on the 0.67 s dump (never-rival).
+                case WeaponId.SecD:
+                    return new[]
+                    {
+                        WheelAttr.FireRate, WheelAttr.Ability, WheelAttr.Reload,
+                        WheelAttr.Clip, WheelAttr.Damage
+                    };
                 default:
                     return null;
             }
         }
 
         public static bool HasRing(WeaponId id) => RingOf(id) != null;
+
+        /// <summary>False when the weapon has no ring, or when the spoke is Ability on a
+        /// weapon whose catalog ability is empty. Neighbour awards onto that spoke still
+        /// apply; only a centred purchase is refused.</summary>
+        public static bool SpokePurchasable(WeaponId id, WheelAttr spoke)
+        {
+            if (!HasRing(id)) return false;
+            if (spoke != WheelAttr.Ability) return true;
+            return !WeaponAbility.IsEmpty(WeaponCatalog.Def(id).abilityId);
+        }
 
         /// <summary>Declared identity for criterion 7. False when the weapon has no ring.</summary>
         public static bool TryIdentity(WeaponId id, out WheelAttr strength, out WheelAttr weakness)
@@ -99,6 +118,10 @@ namespace GatekeeperBastion.Sim
                 case WeaponId.PriC:
                     strength = WheelAttr.Damage;
                     weakness = WheelAttr.FireRate;
+                    return true;
+                case WeaponId.SecD:
+                    strength = WheelAttr.FireRate;
+                    weakness = WheelAttr.Reload;
                     return true;
                 default:
                     strength = WheelAttr.Reload;

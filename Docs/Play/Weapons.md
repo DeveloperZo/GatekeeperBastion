@@ -4,7 +4,7 @@
 Purpose: how weapons work as a system — slots, buying, equipping, Tiers, reloading,
 switching, and how to choose. / Status: working / Update trigger: when a weapon is
 added to or removed from the shop, when Tiers change what they scale, or when
-slot/reload behaviour changes. / Last updated: 2026-08-13
+slot/reload behaviour changes. / Last updated: 2026-08-15
 -->
 
 Everything about the gun in your hands is decided on the Ship. Nothing about it can be
@@ -44,9 +44,9 @@ furthest away. Award, steps and prices: [Field Manual](Field-Manual.md).
 A purchase never changes range, falloff, pellet count, spread, pierce, slot, or any other
 weapon you own. **Upgrade wheels are per weapon and never transfer.**
 
-The **MK-1** and **SEC-D** cannot be upgraded yet. Weapon
-upgrades are **locked until you have been Lost at least once**. Buying the weapons
-themselves is not. If the buttons read locked, a death is the key.
+Weapon upgrades are **locked until you have been Lost at least once**. Buying the weapons
+themselves is not. If the buttons read locked, a death is the key. SEC-D's Ability spoke
+cannot be bought; rotate off it.
 
 ## Abilities
 

@@ -99,7 +99,8 @@ after your first death. Full focus on one spoke is **50** points; each neighbour
 | reload | ×0.98 | ×0.37 | ×0.55 |
 | fire rate | ×1.01 | ×1.79 | ×1.42 |
 
-Each purchase costs 400 / 600 / 800 / 1,000 / 1,200 / 1,400 / 1,600 / 1,800 / 2,000 / 2,200 salvage — **13,000** to take one weapon all the way (10 purchases).
+Each Primary purchase costs 400 / 600 / 800 / 1,000 / 1,200 / 1,400 / 1,600 / 1,800 / 2,000 / 2,200 salvage — **13,000** to take one weapon all the way (10 purchases).
+Each Secondary purchase costs 150 / 300 / 450 / 600 / 750 / 900 / 1,050 / 1,200 / 1,350 / 1,500 salvage — **8,250** cumulative.
 
 ## What comes aboard
 

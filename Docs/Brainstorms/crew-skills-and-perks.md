@@ -52,9 +52,10 @@ XP-as-crew-currency stays **cut**.
 
 ## Open — blocked until decided
 
-Nothing open. The one-equipped-or-several question was answered in `M70` by adopting the
-recommendation on file (one equipped per Boarder, roster of four) — Zo can veto on that
-file.
+Nothing open. The one-equipped-or-several question was answered in `M70` first as
+one-equipped, then recut 2026-08-14 (Zo) to three slots — Crew (`G`, outward), Personal
+(`H`, on you), Passive (a rule, never a number) — with the overturn reasoning recorded on
+that file.
 
 ## Ideas
 

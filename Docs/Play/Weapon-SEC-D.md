@@ -4,7 +4,7 @@
 Purpose: how SEC-D wants to be used, and when it stops being enough.
 Status: working
 Update trigger: when SEC-D's catalog row, ability, or ring changes.
-Last updated: 2026-08-13
+Last updated: 2026-08-15
 -->
 
 Your **close-quarters Secondary**. Free at the ARMORY. The other free Secondary is the
@@ -32,7 +32,9 @@ for armour.
 
 ## Tiering it
 
-No ring yet, and no ability. The ARMORY will show the row and refuse upgrades.
+Ring is FireRate–Ability–Reload–Clip–Damage, strength FireRate, weakness Reload. Ability
+cannot be bought (`AbilityId.None`); the other four spokes can, on the Secondary cost
+curve, after the first lost Run.
 
 ## See also
 
@@ -40,6 +42,6 @@ No ring yet, and no ability. The ARMORY will show the row and refuse upgrades.
 
 ## Gaps
 
-- Ability and ring are blank until they are authored; without them it is a gun, not a build.
+- Ability is blank until authored; the Ability spoke cannot be bought. Without an ability it is a gun with a ring, not a full build.
 - Kill-share vs BR-12 needs a logged Run with SEC-D equipped.
 - Codename until identity is solid.

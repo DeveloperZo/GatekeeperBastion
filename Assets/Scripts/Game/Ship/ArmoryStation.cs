@@ -12,11 +12,12 @@ namespace GatekeeperBastion.Game
 
         [SerializeField] ArmoryPanelView _body;
 
-        // Primary first: it is the slot most likely to carry an authored upgrade ring,
-        // so the wheel is on screen at open. A fresh save (nothing equipped) sees the
-        // empty-slot line and the Primary catalog; the door prompt still steers first
-        // purchases to a Secondary.
-        WeaponSlot _viewSlot = WeaponSlot.Primary;
+        // Secondary first: the door prompt is "buy a Secondary", both Secondaries are
+        // free, and after a first buy this is the slot that already has a wheel. Primary
+        // stays one click away. OnStationOpened also snaps to whichever slot is equipped
+        // when the current tab is empty, so a Secondary buy is not hidden behind Primary:
+        // empty.
+        WeaponSlot _viewSlot = WeaponSlot.Secondary;
         readonly int[] _centreIndexByWeapon = new int[WeaponCatalog.ArraySize];
         bool _wheelDirty;
 
@@ -35,6 +36,17 @@ namespace GatekeeperBastion.Game
             base.Awake();
             if (_body == null)
                 Log.Error(Tag, StationName + ": missing serialized _body.");
+        }
+
+        protected override void OnStationOpened(MetaState m)
+        {
+            if (m.Equipped(_viewSlot) != WeaponId.None) return;
+            if (m.Equipped(WeaponSlot.Secondary) != WeaponId.None)
+                _viewSlot = WeaponSlot.Secondary;
+            else if (m.Equipped(WeaponSlot.Primary) != WeaponId.None)
+                _viewSlot = WeaponSlot.Primary;
+            else
+                _viewSlot = WeaponSlot.Secondary;
         }
 
         protected override void TickWhileOpen(MetaState m)
@@ -233,27 +245,31 @@ namespace GatekeeperBastion.Game
                 SpokeTicks = spokeTicks,
             };
 
+            long cost = maxed ? 0 : WeaponTier.Cost(def.slot, tier);
             if (lockedLabel != null)
             {
-                d.ReasonLine = lockedLabel;
+                d.ReasonLine = maxed
+                    ? lockedLabel
+                    : lockedLabel + " · " + cost + " salvage";
             }
             else if (maxed)
             {
                 d.ReasonLine = $"MAX — {WeaponTier.MaxTier} purchases spent";
             }
+            else if (!WeaponWheel.SpokePurchasable(id, centre))
+            {
+                d.ReasonLine =
+                    $"{WeaponWheel.AttrLabel(centre).ToUpperInvariant()} cannot be bought on this weapon · {cost} salvage";
+            }
+            else if (m.BankedSalvage >= cost)
+            {
+                d.ShowBuyButton = true;
+                d.BuyButtonLabel =
+                    $"BUY  {WeaponWheel.AttrLabel(centre).ToUpperInvariant()}  ·  {cost} salvage";
+            }
             else
             {
-                long cost = WeaponTier.Cost(tier);
-                if (m.BankedSalvage >= cost)
-                {
-                    d.ShowBuyButton = true;
-                    d.BuyButtonLabel =
-                        $"BUY  {WeaponWheel.AttrLabel(centre).ToUpperInvariant()}  ·  {cost} salvage";
-                }
-                else
-                {
-                    d.ReasonLine = $"need {cost - m.BankedSalvage} more salvage  (cost {cost})";
-                }
+                d.ReasonLine = $"need {cost - m.BankedSalvage} more salvage  (cost {cost})";
             }
 
             return d;
@@ -272,6 +288,13 @@ namespace GatekeeperBastion.Game
             }
         }
 
+        static string NextUpgradeCostLabel(MetaState m, WeaponId id)
+        {
+            int tier = m.TierOf(id);
+            if (tier >= WeaponTier.MaxTier) return "MAX";
+            return "upgrade " + WeaponTier.Cost(WeaponCatalog.Def(id).slot, tier);
+        }
+
         static void BindCatalogRow(PanelRowView row, MetaState m, WeaponId id, WeaponId equippedInSlot)
         {
             if (row == null) return;
@@ -279,14 +302,14 @@ namespace GatekeeperBastion.Game
             if (m.Owns(id))
             {
                 int tier = m.TierOf(id);
+                string cost = NextUpgradeCostLabel(m, id);
                 if (id == equippedInSlot)
                 {
-                    row.Bind(def.displayName, "", $"T{tier}", "owned", "EQUIP", null, false,
-                        "EQUIPPED");
+                    row.Bind(def.displayName, cost, $"T{tier}", "owned", "UPGRADE", null, false);
                 }
                 else
                 {
-                    row.Bind(def.displayName, "", $"T{tier}", "owned", "EQUIP",
+                    row.Bind(def.displayName, cost, $"T{tier}", "owned", "UPGRADE",
                         () => ShipCommands.EquipWeapon(id), true);
                 }
                 return;

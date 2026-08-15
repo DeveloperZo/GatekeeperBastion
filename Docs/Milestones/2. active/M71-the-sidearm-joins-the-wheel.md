@@ -4,7 +4,7 @@
 Status: next
 Update trigger: when the SEC-D ability decision lands (its ring copies this pattern), or
 when the per-point table moves
-Last updated: 2026-08-14
+Last updated: 2026-08-15
 -->
 
 The MK-1 gets an upgrade ring. Everything else — purchase command, pricing, ARMORY wheel
@@ -28,10 +28,14 @@ Leverage tier (`../../Working-Rules.md`): **#12, constants** — two data rows i
 existing rule. A higher tier is wrong because the rule (award spread, pricing, derived
 tier) already exists and nothing structural moves.
 
-Pacing constraint (Zo, 2026-08-14): the first wheel purchase must be affordable off one
-wave-1 clear. It already is — `WeaponTier.Cost(0)` is 400 against the 450 a wave-1 clear
-banks at Scavenging 0 (`WaveDirector.BaseEnemyCount` 18 × 25 base salvage) — criterion 5
-pins the pair so a retune of either side breaks loudly.
+Pacing constraint (Zo, 2026-08-14, amended same session): the first wheel purchase must
+cost at least 150 and leave headroom for a possible second off one wave-1 clear (450 =
+`WaveDirector.BaseEnemyCount` 18 × 25 base salvage). The shared curve's 400 entry allowed
+exactly one purchase with no headroom, so Secondaries get their own curve —
+`WeaponTier.Cost(WeaponSlot.Secondary, t)` = 150 + 150 × t, first two purchases 150 + 300
+= 450 exactly; Primaries keep 400 + 200 × t. This reverses the "reuse the primary cost
+curve" call made earlier the same session, on Zo's instruction. Leverage tier: still
+constants — a new lane on the existing linear-ramp rule, no structure moves.
 
 ## Kill criterion
 
@@ -48,22 +52,28 @@ first `Tools/verify/run.sh`; the slice is not shippable in a failing state.
    (`RingsAreUniqueAcrossShopWeapons`, `WeaknessNeverAdjacentToStrength`) pass unmodified.
 2. `WeaponWheel.TryIdentity(Mk1Sidearm)` returns true with **strength Reload, weakness
    Damage**.
-3. Player action: at the ARMORY with upgrades unlocked and ≥400 banked, the MK-1 row
+3. Player action: at the ARMORY with upgrades unlocked and ≥150 banked, the MK-1 row
    shows the wheel instead of "Upgrade ring not authored for this weapon yet."; clicking
-   a spoke spends `WeaponTier.Cost` and logs the existing
-   `bought MK-1 Sidearm focus … (+…, +…) for … — T…` line. The SEC-D row keeps the
-   not-authored note and refusal.
+   a spoke spends `WeaponTier.Cost(WeaponSlot.Secondary, tier)` and logs the existing
+   `bought MK-1 Sidearm focus … (+…, +…) for … — T…` line. The SEC-D row shows its own
+   wheel (FireRate–Ability–Reload–Clip–Damage); a centred Ability purchase is refused
+   (`SpokePurchasable`) with a reason that names the next salvage cost. The other four
+   spokes buy at `WeaponTier.Cost(WeaponSlot.Secondary, tier)`.
 4. `SecondariesNeverRivalPrimaries` passes with the ring live (its `t > 0` skip no longer
    exempts the MK-1), and a new test asserts the MK-1's damage-centred `FocusHistory`
    stays below each primary's damage-centred history in `EffectiveDps` at every purchase
    count 1..10. Cross-centre comparisons (damage-focused MK-1 against a reload-focused
    primary) are build expression, not rivalry — deliberately unasserted; that is the
    counter-case this rule does not cover.
-5. A new test asserts `WeaponTier.Cost(0)` ≤ `WaveDirector.BaseEnemyCount` × the base
-   salvage-per-kill constant (Scavenging level 0, the 25 in `../../Design/4-Data.md`) —
-   the pacing constraint from source constants, not literals. Availability is unchanged:
-   purchases stay gated on `MetaUpgrades.UpgradesUnlocked` (first lost run); this
-   criterion is affordability only.
+5. *(Recut 2026-08-14, same session — Zo widened the gate from "one purchase per wave-1
+   clear on the shared curve" to a Secondary-slot curve with headroom for two.)*
+   `WeaponTier.Cost(WeaponSlot.Secondary, t)` is 150 + 150 × t (150…1,500, cumulative
+   8,250; `SecondaryTierCosts_LinearRamp_SumsTo8250`), Primaries keep 400 + 200 × t.
+   A test asserts from source constants: the Secondary entry price is at least 150, and
+   the first two purchases together fit `WaveDirector.BaseEnemyCount` × the base
+   salvage-per-kill constant (Scavenging level 0, the 25 in `../../Design/4-Data.md`).
+   Availability is unchanged: purchases stay gated on `MetaUpgrades.UpgradesUnlocked`
+   (first lost run); this criterion is affordability only.
 6. Nonzero MK-1 wheel points survive a JSON save round-trip.
 7. Ability spoke reads back in play: with ability points bought, the Regen Surge log
    line's dial value changes (`WeaponAbility.Magnitude` — 4 s at 0 points, 10 s at
@@ -71,9 +81,9 @@ first `Tools/verify/run.sh`; the slice is not shippable in a failing state.
 8. Docs recut in the same change: `Tools/docgen/run.sh` regenerates the `rings`,
    `mk1-base` and `wheel` blocks; the hand prose claiming the MK-1 "never improves" and
    "cannot buy points" (`../../Design/4-Data.md`) and the "Unbuilt inside this lever"
-   paragraph (`../../Design/3-Mechanics.md`) are recut to name SEC-D as the only
-   unringed weapon; M21's Remaining-to-close MK-1 row and the `verification.md` MK-1 row
-   close, per that file's two-edit rule.
+   paragraph (`../../Design/3-Mechanics.md`) are recut to drop "SEC-D has no ring"; M21's
+   Remaining-to-close MK-1 row and the `verification.md` MK-1 row close, per that file's
+   two-edit rule. SEC-D ring recut 2026-08-15: ring authored, Ability purchase locked.
 
 ## Implementation
 
@@ -83,6 +93,17 @@ FireRate, not Clip — the rejected layouts that give Damage the {FireRate, Clip
 neighbourhood maximise duty-cycle compounding on a 1.4 s-reload gun, which is exactly the
 never-rival risk — and Ability sits beside the Reload strength, so the readiness build
 feeds Regen Surge (+3 ability per reload-centred purchase).
+
+**Change** `Assets/Scripts/Sim/Meta/WeaponTier.cs` — add `Cost(WeaponSlot, int)` and
+`SpentToReach(WeaponSlot, int)` overloads carrying the Secondary lane; the tier-only
+methods stay as the Primary/historical curve.
+
+**Change** `Assets/Scripts/Game/Ship/ShipCommands.cs` and
+`Assets/Scripts/Game/Ship/ArmoryStation.cs` — the charge and the ARMORY price label
+price by `WeaponCatalog.Def(id).slot`.
+
+**Change** `Tools/docgen/Program.cs` — the `tier-cost` block and the Field-Manual wheel
+section emit both curves.
 
 **Change** `Assets/Tests/EditMode/Meta/SecondaryCatalogTests.cs` — the criterion-4
 focused never-rival test and the criterion-5 pacing test.
@@ -94,14 +115,18 @@ test home) — criterion 6.
 `Docs/Milestones/3. completed/M21-the-upgrade-wheel.md`,
 `Docs/GatekeeperZo Notes/verification.md` — criterion 8. Run `Tools/docgen/run.sh`.
 
-**Nothing changes** in `ShipCommands`, `ArmoryStation`, `MetaState` or `SaveData` —
-purchase, UI gate, storage and persistence shipped slot-agnostic with M21. Named so
-nobody rebuilds them.
+**Nothing changes** in `MetaState` or `SaveData` — storage and persistence shipped
+slot-agnostic with M21. `MetaState.ReconstructSpentFromLevels` deliberately stays on the
+historical shared curve: it only runs for pre-wheel migration and tamper repair, and
+every purchase it reconstructs was made at that curve; pricing it by slot would misstate
+the v1-save history the ledger fixtures pin. Named so nobody rebuilds them.
 
-Rejected: **SEC-D ring** — its ability is `AbilityId.None`, so a ring would sell dead
-Ability points; stays on the M26 row, blocked on Zo's ability decision.
-Rejected: **a cheaper secondary cost curve** — Cost(0) 400 is already under the 450
-wave-1 take; new constants are unearned until play shows secondaries going unbought.
+Rejected (then reversed 2026-08-15, Zo): **SEC-D ring** — first kept off because
+`AbilityId.None` would sell dead Ability points; reversed when Zo asked for a SEC-D
+wheel with Ability purchase locked (`SpokePurchasable`) instead of no ring.
+Rejected (then reversed by the criterion-5 recut): **a cheaper secondary cost curve** —
+first kept off to avoid new constants, reversed the same session when Zo set the
+headroom-for-two constraint that the shared 400 entry cannot meet.
 Rejected: **a secondary-specific per-point table** — only on the kill criterion firing.
 
 ## Verification
@@ -114,8 +139,8 @@ Rejected: **a secondary-specific per-point table** — only on the kill criterio
    `gkb_verify_report.json` to the 2026-08-15T00:09:20Z baseline (door-aperture,
    `Repair_ClientChannel`, 4× `HudSeparationTests` are the knowns); no new names.
 4. Playthrough path — from Play: MainMenu → Ship → ARMORY. MK-1 row shows the wheel; buy
-   Reload focus on a save with one lost run and ≥400 banked; expect
-   `bought MK-1 Sidearm focus reload (+ability, +clip) for 400 — T1`. Embark, trigger
+   Reload focus on a save with one lost run and ≥150 banked; expect
+   `bought MK-1 Sidearm focus reload (+ability, +clip) for 150 — T1`. Embark, trigger
    Regen Surge; expect its log line's dial to reflect the ability points. Confirms
    Driven (spoke click), Shown (the wheel replaces the not-authored note), Reads back
    (purchase log line, tier label, surge dial).
@@ -130,5 +155,5 @@ Rejected: **a secondary-specific per-point table** — only on the kill criterio
 
 ## Depends on / Unblocks
 
-**Depends on** M20 (Regen Surge) and M21 (the wheel) — both shipped. **Unblocks** the
-SEC-D ring, which stays gated on the M26 ability decision (Zo).
+**Depends on** M20 (Regen Surge) and M21 (the wheel) — both shipped. **Unblocks** nothing
+further on the SEC-D ability, which stays gated on the M26 decision (Zo).

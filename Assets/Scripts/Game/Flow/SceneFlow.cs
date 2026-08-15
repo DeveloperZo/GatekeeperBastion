@@ -64,6 +64,18 @@ namespace GatekeeperBastion.Game
         /// <summary>Go to the campaign menu (MainMenu).</summary>
         public static bool LoadMainMenu() => Load(MainMenu);
 
+        /// <summary>Leave the process. Editor stops Play mode instead of calling
+        /// <see cref="Application.Quit"/>, which does nothing there.</summary>
+        public static void QuitGame()
+        {
+            Log.Event(Tag, "Quit.");
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
         /// <summary>Load the ship hub scene. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadShip() => Load(Ship);
 

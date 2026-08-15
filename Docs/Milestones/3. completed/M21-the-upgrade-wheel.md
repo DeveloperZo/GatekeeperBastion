@@ -41,7 +41,8 @@ in this milestone. Correction, not a retro-edit.
 
 | # | Status | Evidence |
 |---|---|---|
-| MK-1 ring | **closed 2026-08-14** | Authored in M71 (`../2. active/M71-the-sidearm-joins-the-wheel.md`): D–A–R–C–F, strength Reload / weakness Damage. Ring tests pass; SEC-D remains the only unringed weapon (M26 ability call). |
+| MK-1 ring | **closed 2026-08-14** | Authored in M71 (`../2. active/M71-the-sidearm-joins-the-wheel.md`): D–A–R–C–F, strength Reload / weakness Damage. |
+| SEC-D ring | **closed 2026-08-15** | Authored in M71: F–A–R–C–D, strength FireRate / weakness Reload. Ability spoke not purchasable (`AbilityId.None`). |
 | Playthrough feel | **open** | Two opposite 110-pt focuses on BR-12 — do they feel like different weapons? (`playthrough.md`) |
 
 ## Story

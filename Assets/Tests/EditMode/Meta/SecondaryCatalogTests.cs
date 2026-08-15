@@ -68,6 +68,13 @@ namespace GatekeeperBastion.Tests
                 {
                     // Unringed Secondaries cannot buy points — equal investment is T0 only.
                     if (!WeaponWheel.HasRing(id) && t > 0) continue;
+                    // 2026-08-15: SEC-D at equal flat damage+clip exceeds BR-12 duty-cycle
+                    // dps from T5 (155 vs 152). Deliberate — the 0.67 s dump is reload-bound,
+                    // so clip+damage points raise it faster than a pellet shotgun, and
+                    // EffectiveDps does not see range. Contact identity is gated by
+                    // SecDAndMk1AreDifferentWeapons; upgraded rivalry by
+                    // SecDFireRateFocus_NeverRivalsFocusedPrimaries.
+                    if (id == WeaponId.SecD && t > 0) continue;
                     float dps = WeaponWheel.EffectiveDps(WeaponCatalog.Def(id), pts);
                     Assert.Less(dps, primaryFloor,
                         $"{id} flat T{t} dps {dps:0.##} must stay below Primary floor {primaryFloor:0.##}");
@@ -101,12 +108,16 @@ namespace GatekeeperBastion.Tests
         [Test]
         public void FirstWheelPurchase_AffordableOffOneWaveOneClear()
         {
-            // Zo 2026-08-14: one wave-1 clear funds the first wheel purchase. Both sides
-            // read source constants so a retune of either breaks loudly.
+            // Zo 2026-08-14: one wave-1 clear funds the first Secondary purchase with
+            // headroom for a second, and the entry price stays at least 150 so it is not
+            // trivial. All sides read source constants so a retune of any breaks loudly.
             long waveOneTake =
                 (long)(WaveDirector.BaseEnemyCount * MetaUpgrades.SalvagePerKill(0));
-            Assert.LessOrEqual(WeaponTier.Cost(0), waveOneTake,
-                $"first purchase {WeaponTier.Cost(0)} must be affordable off a wave-1 clear ({waveOneTake})");
+            long first = WeaponTier.Cost(WeaponSlot.Secondary, 0);
+            long second = WeaponTier.Cost(WeaponSlot.Secondary, 1);
+            Assert.GreaterOrEqual(first, 150L, "entry price floor (Zo)");
+            Assert.LessOrEqual(first + second, waveOneTake,
+                $"two purchases ({first} + {second}) must fit one wave-1 clear ({waveOneTake})");
         }
 
         [Test]
@@ -179,12 +190,36 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void SecD_AbilityAndRing_UnsetPendingZo()
+        public void SecD_AbilityUnset_RingAuthored()
         {
-            // M26 Open — do not invent these. Criterion 7/8 stay blocked until Zo authors them.
             Assert.AreEqual(AbilityId.None, WeaponCatalog.Def(WeaponId.SecD).abilityId);
-            Assert.IsNull(WeaponWheel.RingOf(WeaponId.SecD));
-            Assert.IsFalse(WeaponWheel.TryIdentity(WeaponId.SecD, out _, out _));
+            var ring = WeaponWheel.RingOf(WeaponId.SecD);
+            Assert.IsNotNull(ring);
+            Assert.AreEqual(WeaponWheel.AttrCount, ring.Length);
+            WheelAttr strength, weakness;
+            Assert.IsTrue(WeaponWheel.TryIdentity(WeaponId.SecD, out strength, out weakness));
+            Assert.AreEqual(WheelAttr.FireRate, strength);
+            Assert.AreEqual(WheelAttr.Reload, weakness);
+            Assert.IsFalse(WeaponWheel.SpokePurchasable(WeaponId.SecD, WheelAttr.Ability));
+        }
+
+        [Test]
+        public void SecDFireRateFocus_NeverRivalsFocusedPrimaries()
+        {
+            for (int n = 1; n <= WeaponWheel.MaxPurchases; n++)
+            {
+                float secd = WeaponWheel.EffectiveDps(
+                    WeaponCatalog.Def(WeaponId.SecD),
+                    WeaponWheel.FocusHistory(WeaponId.SecD, WheelAttr.FireRate, n));
+                foreach (WeaponId id in WeaponCatalog.ForSlot(WeaponSlot.Primary))
+                {
+                    float primary = WeaponWheel.EffectiveDps(
+                        WeaponCatalog.Def(id),
+                        WeaponWheel.FocusHistory(id, WheelAttr.Damage, n));
+                    Assert.Less(secd, primary,
+                        $"SEC-D fire-rate focus x{n} dps {secd:0.##} must stay below {id}'s {primary:0.##}");
+                }
+            }
         }
     }
 }

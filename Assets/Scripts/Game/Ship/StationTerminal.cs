@@ -110,6 +110,7 @@ namespace GatekeeperBastion.Game
             var meta = GameSession.Meta;
             if (meta != null && !OptionsScreen.IsOpen)
             {
+                OnStationOpened(meta);
                 RefreshPanel(meta);
                 _lastContentHash = ContentHash(meta);
                 _wasOpen = true;
@@ -241,6 +242,10 @@ namespace GatekeeperBastion.Game
             }
             _wasOpen = true;
         }
+
+        /// <summary>Once per open, before the first <see cref="BuildPanel"/>. Override to pick
+        /// which tab the station shows from current meta.</summary>
+        protected virtual void OnStationOpened(MetaState meta) { }
 
         protected virtual void TickWhileOpen(MetaState meta) { }
 

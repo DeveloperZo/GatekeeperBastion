@@ -124,7 +124,7 @@ are named here.
 | **loadout** | The Primary, Secondary and Drone a Boarder embarks with, plus their Equipment. | kit, gear, build |
 | **improvised cutter** | What a Boarder fights with having bought no weapon at all. Deliberately bad. | salvage cutter *(the code's old name)*, fists, melee, starter weapon |
 | **crit** | A critical hit. Chance comes from Luck. | critical strike, headshot |
-| **upgrade wheel** | The ARMORY's five-spoke upgrade selector. *Built (M21) — MK-1 ring still unset.* | the wheel *(alone)*, carousel *(the shape is a wheel; the ring is undirected)*, tree |
+| **upgrade wheel** | The ARMORY's five-spoke upgrade selector. *Built (M21) — every shop weapon has a ring; SEC-D Ability is not purchasable.* | the wheel *(alone)*, carousel *(the shape is a wheel; the ring is undirected)*, tree |
 | **upgrade spoke** | One of the upgrade wheel's five attributes. | node, slot, stat |
 | **upgrade focus** | The upgrade spoke the player centres before buying. | specialisation, path, build *(a build is the result, not the act)* |
 | **clip** | Rounds in the weapon now. | magazine, mag, ammo |

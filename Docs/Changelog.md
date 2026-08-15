@@ -4,9 +4,40 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
-Last updated: 2026-08-14
+Last updated: 2026-08-15
 -->
 
+- 2026-08-15: **ARMORY shows every shop wheel, with cost.** Owned catalog rows say
+  UPGRADE (opens that weapon's wheel) instead of EQUIPPED; unowned stay BUY, so the
+  other Secondary remains purchasable after the first. The panel opens on Secondary
+  when Primary is empty. Wheel lock/short/Ability-blocked lines all name the salvage
+  cost (`150 + 150×t` on Secondaries). SEC-D ring authored F–A–R–C–D (strength
+  FireRate, weakness Reload); `SpokePurchasable` refuses a centred Ability buy while
+  `AbilityId.None`. Tests: `SecD_AbilityUnset_RingAuthored`,
+  `SecDFireRateFocus_NeverRivalsFocusedPrimaries`, `SpokePurchasable_FollowsCatalogAbility`,
+  `RingsAreUniqueAcrossShopWeapons` now includes SEC-D.
+- 2026-08-14: **Main Menu QUIT leaves in one click.** The Exit modal's GO AHEAD
+  is skipped; Start New still confirms overwrite.
+- 2026-08-14: **Secondary wheel purchases get their own cost curve** (M71 criterion 5
+  recut, Zo). The shared 400 entry ate a wave-1 clear (450) whole; Zo set the gate at
+  entry ≥150 with headroom for a possible second buy. `WeaponTier.Cost(WeaponSlot, int)`:
+  Secondary 150 + 150 × tier (150…1,500, cumulative 8,250), Primary unchanged
+  (400 + 200 × tier, 13,000). Charge and ARMORY price label price by slot;
+  `ReconstructSpentFromLevels` deliberately stays on the historical shared curve — it
+  only runs for pre-wheel migration and tamper repair, both priced there. Tests:
+  `SecondaryTierCosts_LinearRamp_SumsTo8250`, pacing test recut to entry ≥150 and
+  150 + 300 ≤ 450. Harness 360/4 — the four reds still the parallel HUD pass.
+- 2026-08-14: **M70 recut — one Crew ability became three slots.** Zo: every Boarder picks
+  from the ability pools into a Crew slot (`G`, acts on Gatekeepers or teammates: Anchor,
+  Ping), a Personal slot (`H`, acts on you: Cloak, Recall) and a Passive slot (standing
+  rules, never numbers: Ghost, Warden, Foresight — proposed rows, Zo-vetoable on the
+  file). The first cut's "several equipped with slots" rejection is overturned on
+  grammar — the slots answer different moments, and a new kill criterion instruments the
+  collapse case (one active slot under a fifth of the other's activations across ten
+  Runs). Its co-op-stacking half survives as an open question for M65. A Medic-lane
+  passive is deliberately absent until the `player {hp}/{max}` log instrument exists.
+  Turret half unchanged on FABRICATION. Full kit 3 × 400 = 1,200, 22.9% of the measured
+  5,250 clear.
 - 2026-08-14: **M71 authored and built — the sidearm joins the wheel.** MK-1 ring
   Damage–Ability–Reload–Clip–FireRate, strength Reload / weakness Damage (Zo). Wheel
   purchase, ARMORY UI, storage and save round-trip shipped slot-agnostic in M21, so the

@@ -59,16 +59,26 @@ namespace GatekeeperBastion.Tests
         public void RingsAreUniqueAcrossShopWeapons()
         {
             var seen = new HashSet<string>();
+            int ringed = 0;
             foreach (WeaponId id in WeaponCatalog.ShopWeapons())
             {
-                var def = WeaponCatalog.Def(id);
-                if (WeaponAbility.IsEmpty(def.abilityId)) continue;
                 var ring = WeaponWheel.RingOf(id);
-                if (ring == null) continue; // SEC-D: ring waits on its ability decision
+                if (ring == null) continue;
+                ringed++;
                 string key = WeaponWheel.CanonicalRingKey(ring);
                 Assert.IsTrue(seen.Add(key), $"{id} ring collides with another shop weapon ({key})");
             }
-            Assert.GreaterOrEqual(seen.Count, 2, "both Primaries must have rings");
+            Assert.AreEqual(5, ringed, "every shop weapon has a ring");
+        }
+
+        [Test]
+        public void SpokePurchasable_FollowsCatalogAbility()
+        {
+            Assert.IsTrue(WeaponWheel.SpokePurchasable(WeaponId.Mk1Sidearm, WheelAttr.Ability));
+            Assert.IsTrue(WeaponWheel.SpokePurchasable(WeaponId.Mk1Sidearm, WheelAttr.Reload));
+            Assert.IsTrue(WeaponWheel.SpokePurchasable(WeaponId.SecD, WheelAttr.FireRate));
+            Assert.IsFalse(WeaponWheel.SpokePurchasable(WeaponId.SecD, WheelAttr.Ability));
+            Assert.IsFalse(WeaponWheel.SpokePurchasable(WeaponId.None, WheelAttr.Damage));
         }
 
         [Test]

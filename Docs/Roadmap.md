@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-14
+Last updated: 2026-08-15
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -118,8 +118,8 @@ this table — see the change log.
 | M53 | Salvage leaves through the Hatch | completed, Aug 2026 | Kills fill Unbanked; Hatch-bank 45 s drip/attrit/dump, 3 slots, fat pile ×1.25/×1.50. Close log `18-23-55` (Run clean). Stay-Prep after dump is EditMode. Harness 316/0 | [`3. completed/M53`](Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | M54 | Master Control is the win | completed, Aug 2026 | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`3. completed/M54`](Milestones/3.%20completed/M54-master-control-is-the-win.md) |
 | M55 | Pay for intensity | next | `+/-` spend 100 unbanked per step; `E` select, `T` start; HUD says Intensity; siphon dial retired; same `TetherSiphon` curve | [`2. active/M55`](Milestones/2.%20active/M55-pay-for-intensity.md) |
-| M70 | The Boarder gets a verb | later | CREW sells a 4-ability roster (Cloak/Anchor/Recall/Ping) on `G`, one equipped; four tracks refunded and deleted, SaveVersion 8; verbs apply once server-side; `UTL-H` turret siphons Primary reserve on the clock, ghost-and-confirm | [`1. planned/M70`](Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md) |
-| M71 | The sidearm joins the wheel | next | MK-1 gets a ring (D–A–R–C–F, strength Reload / weakness Damage); purchase/UI/save shipped slot-agnostic in M21, so the slice is two switch cases plus tests: focused never-rival, wave-1 affordability (Cost(0) 400 ≤ 450 take); SEC-D stays gated on its M26 ability decision | [`2. active/M71`](Milestones/2.%20active/M71-the-sidearm-joins-the-wheel.md) |
+| M70 | The Boarder gets a verb | later | CREW sells ability pools into three slots — Crew `G` (Anchor/Ping), Personal `H` (Cloak/Recall), Passive (rules, never numbers: Ghost/Warden/Foresight); one pick each; four tracks refunded and deleted, SaveVersion 8; verbs apply once server-side; `UTL-H` turret siphons Primary reserve on the clock, ghost-and-confirm | [`1. planned/M70`](Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md) |
+| M71 | The sidearm joins the wheel | next | MK-1 ring D–A–R–C–F (Reload / Damage); SEC-D ring F–A–R–C–D (FireRate / Reload), Ability spoke not purchasable; Secondary-slot cost 150 + 150×t; focused never-rival holds | [`2. active/M71`](Milestones/2.%20active/M71-the-sidearm-joins-the-wheel.md) |
 
 ## Strategy
 

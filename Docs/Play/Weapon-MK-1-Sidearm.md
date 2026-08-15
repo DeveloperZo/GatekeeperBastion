@@ -1,4 +1,4 @@
-<!-- Purpose: how the MK-1 Sidearm actually wants to be used, and when it stops being enough. / Status: working / Update trigger: when the MK-1's catalog row changes, when a second Secondary becomes available, or when the free-purchase rule changes. / Last updated: 2026-08-06 -->
+<!-- Purpose: how the MK-1 Sidearm actually wants to be used, and when it stops being enough. / Status: working / Update trigger: when the MK-1's catalog row changes, when a second Secondary becomes available, or when the free-purchase rule changes. / Last updated: 2026-08-15 -->
 
 # MK-1 Sidearm
 
@@ -36,7 +36,8 @@ Two jobs, and they are different jobs.
 
 ## Tiering it
 
-**The sidearm cannot be upgraded.** Its upgrade wheel has no ring authored yet, so the ARMORY will show it and refuse. Whatever the MK-1 does for you, it does at its base numbers for the whole campaign, and every Salvage you spend on upgrades goes to the Primary you have committed to.
+The MK-1 has an upgrade ring (strength Reload, weakness Damage). Purchases cost
+150 + 150 × current tier on the Secondary curve, and unlock after the first lost Run.
 
 ## See also
 

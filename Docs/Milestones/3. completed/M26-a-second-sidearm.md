@@ -1,9 +1,9 @@
 # M26 — A second sidearm, and a loadout that has a shape
 
 <!--
-Status: Path 1 shipped, August 2026 — ability + ring still Zo's
+Status: Path 1 shipped, August 2026 — ability still Zo's; ring shipped 2026-08-15
 Update trigger: when SEC-D's ability, ring, or pairing matrix changes; when play closes the open rows
-Last updated: 2026-08-09
+Last updated: 2026-08-15
 -->
 
 `SEC-D` joins the catalog: a close-quarters sidearm that empties its regenerating pool fast and
@@ -15,14 +15,14 @@ becomes choosing a shape.
 **Met (code + EditMode Path 1).** Catalog row in every list; identity cues unique among shop
 weapons; power band and MK-1 differentiation pinned by `SecondaryCatalogTests`; kill lines name
 the slot via `KillLog` + `Damageable.LastDamagingSlot`; both Secondaries cost 0 so either is a
-valid first buy. Ability and ring intentionally unset (Open).
+valid first buy. Ability intentionally unset (Open). Ring authored 2026-08-15; Ability spoke not purchasable.
 
 ## Remaining to close
 
 | # | Status | Owner / evidence |
 |---|---|---|
 | Criterion 7 — ability | **blocked** | Zo authors a non-MK-1 ability meeting M20's contract |
-| Criterion 8 — ring | **blocked** | Zo authors strength/weakness (one line) meeting M21 criteria 6–7 |
+| Criterion 8 — ring | **closed 2026-08-15** | M71: F–A–R–C–D, strength FireRate / weakness Reload. Ability spoke not purchasable until criterion 7. |
 | Path 2 — ARMORY two Secondary rows + equip save round-trip | **open** | Play: buy SEC-D, quit, reload, confirm equipped |
 | Playthrough path | **open** | Embark MR-35 + SEC-D; Hunter at contact dies; Default across the room does nothing |
 | Play question in `GatekeeperZo Notes/playthrough.md` | **open** | Does SEC-D change how you fight, or only what you press when Primary is dry? |
@@ -110,9 +110,8 @@ Still open — see Remaining.
 
 ## Open
 
-- **`SEC-D`'s ability** (criterion 7) and **its ring** (criterion 8). Neither is authored.
-  Guessing a strength/weakness pair is how the rings stop meaning anything. *Zo's.* Catalog
-  shipped without them on purpose (`Depends on`).
+- **`SEC-D`'s ability** (criterion 7). Still unset. The ring (criterion 8) shipped
+  2026-08-15 with Ability purchase locked. *Zo's.*
 
 ## Watch
 

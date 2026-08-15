@@ -27,9 +27,9 @@ did are `2-Dynamics.md`.
 
 `Sim/Meta/WeaponCatalog.cs` (base row), `Sim/Meta/WeaponWheel.cs` (per-point multipliers).
 **There are no weapon "levels".** The flat Tier curve was replaced by the upgrade wheel. The
-MK-1 has a ring (strength Reload, weakness Damage — the rings table below); SEC-D is the one
-weapon with no ring authored (`WeaponWheel.RingOf` returns null until its ability is decided),
-so it alone never improves.
+MK-1 has a ring (strength Reload, weakness Damage — the rings table below). SEC-D has a
+ring (strength FireRate, weakness Reload); its Ability spoke is not purchasable because
+the catalog ability is still `AbilityId.None`.
 
 <!-- GKB:GEN mk1-base — WeaponCatalog.Def(Mk1Sidearm) -->
 | | base | | base |
@@ -46,11 +46,13 @@ dps = (clip * damage) / (clip/rate + reload)
 base: (8 * 14) / (8/3 + 1.4) = 112 / 4.07 = 27.5 dps
 ```
 
-Reload is an upgrade spoke (`ReloadPerPoint = 0.98035f`) for weapons that have a ring, so the
-duty cycle is not fixed across a campaign — it is only fixed for the SEC-D, which cannot buy
-points. The MK-1's damage-centred build stays under every primary's damage-centred build at
-equal purchases (`Mk1DamageFocus_NeverRivalsFocusedPrimaries`); its first purchase costs 400
-against the 450 a wave-1 clear banks at Scavenging 0
+Reload is an upgrade spoke (`ReloadPerPoint = 0.98035f`) for every shop weapon, so the
+duty cycle is not fixed across a campaign. The MK-1's damage-centred build stays under
+every primary's damage-centred build at equal purchases
+(`Mk1DamageFocus_NeverRivalsFocusedPrimaries`). The SEC-D's fire-rate-centred build does
+the same (`SecDFireRateFocus_NeverRivalsFocusedPrimaries`). Secondaries price on their
+own curve — the tier-cost block below — and the first two MK-1 purchases (150 + 300) equal
+the 450 a wave-1 clear banks at Scavenging 0
 (`FirstWheelPurchase_AffordableOffOneWaveOneClear`).
 
 **Crit** (`PlayerGun.RollCrit`, `CritDamageMultiplier = 2`): average multiplier is
@@ -281,8 +283,9 @@ damage, fire rate, ability). One purchase awards **5 / 3 / 3 / 0 / 0** by ring d
 Ten purchases, 110 points. Tier is derived (`total / 11`), never stored.
 
 <!-- GKB:GEN tier-cost — WeaponTier.Cost, SpentToReach -->
-Cost of the next purchase is still `400 + 200 × currentTier` = 400/600/800/1,000/1,200/1,400/1,600/1,800/2,000/2,200,
-**13,000** cumulative.
+Cost of the next purchase, Primary slot `400 + 200 × currentTier` = 400/600/800/1,000/1,200/1,400/1,600/1,800/2,000/2,200,
+**13,000** cumulative. Secondary slot `150 + 150 × currentTier` = 150/300/450/600/750/900/1,050/1,200/1,350/1,500,
+**8,250** cumulative.
 <!-- GKB:END tier-cost -->
 
 Per-point compound multipliers (dials — retune freely). Mid-ladder (35 pts) keeps the old
@@ -307,7 +310,7 @@ Rings (cycles; focus pays centre 5, neighbours 3):
 | MR-35 | R D C A F | damage | fire rate |
 | PRI-C | C D R A F | damage | fire rate |
 | MK-1 | D A R C F | reload | damage |
-| SEC-D | *unset* | — | — |
+| SEC-D | F A R C D | fire rate | reload |
 <!-- GKB:END rings -->
 
 Pre-wheel flat Tier N migrates to **6N damage + 5N clip** points (N×11 total), zero elsewhere.

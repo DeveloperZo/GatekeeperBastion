@@ -200,7 +200,7 @@ Delays are what make the loops readable, and two of them are load-bearing.
 | R1 closing | once per Run | A Run's difficulty is fixed at embark; no in-Run spiral. |
 | R1 unlocking | until the first death | Wheel purchases and the equipment slot gated on `MetaUpgrades.UpgradesUnlocked` = `PodEjections >= 1`. Buying a weapon and buying attributes are not. |
 | Inter-Wave gap on a deep start | 3s | A start-Wave of N chains Waves 1..N back to back. |
-| Reload | per weapon: MK-1 1.4s, BR-12 2.6s, MR-35 2.4s | A wheel spoke (`ReloadPerPoint = 0.98035`), so it shortens with focus — except on the MK-1, which has no ring. |
+| Reload | per weapon: MK-1 1.4s, BR-12 2.6s, MR-35 2.4s | A wheel spoke (`ReloadPerPoint = 0.98035`), so it shortens with focus. |
 | Stamina refill | 1s hold + 100/18 = 6.6s | Sprint beats the chase and the Hunter, so unlimited sprint would be free kiting. |
 
 **The five stamina numbers change together or not at all.** They encode one relationship —

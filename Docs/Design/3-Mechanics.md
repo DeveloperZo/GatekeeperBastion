@@ -76,8 +76,10 @@ bought.
 Because the far two are paid nothing, adjacency on a weapon's wheel is that weapon's identity,
 and the ring order is where the design decision sits. `RingOf` authors BR-12 as
 `Reload, Clip, Damage, Ability, FireRate`, MR-35 as `Reload, Damage, Clip, Ability, FireRate`,
-and PRI-C as `Clip, Damage, Reload, Ability, FireRate` (Clip/Reload swapped vs MR-35 so rings stay unique).
-Both declare strength Damage (`TryIdentity`); BR-12's weakness is Reload and MR-35/PRI-C's is FireRate,
+PRI-C as `Clip, Damage, Reload, Ability, FireRate` (Clip/Reload swapped vs MR-35 so rings stay unique),
+MK-1 as `Damage, Ability, Reload, Clip, FireRate` (strength Reload, weakness Damage), and
+SEC-D as `FireRate, Ability, Reload, Clip, Damage` (strength FireRate, weakness Reload).
+BR-12, MR-35 and PRI-C declare strength Damage (`TryIdentity`); BR-12's weakness is Reload and MR-35/PRI-C's is FireRate,
 each at ring distance 2 from Damage, so no single purchase can pay a weapon's strength and its
 weakness. Centring Damage feeds Clip and Ability on the BR-12 and Reload and Clip on the MR-35 —
 one choice, two guns. Centring Damage on PRI-C feeds Reload and Clip.
@@ -86,10 +88,9 @@ Centring an upgrade focus is a commitment that also feeds its neighbours. The pl
 one attribute alone, and the 3 that lands either side is the price of the 5. That is the
 authorship this lever hands over.
 
-**Unbuilt inside this lever:** the SEC-D has no authored ring — `RingOf` returns null and
-`HasRing` is false, so it cannot be focused at all until its ability is decided (the M26 open
-call). Rings exist for the BR-12, the MR-35, PRI-C and the MK-1 (strength Reload, weakness
-Damage; Ability rides beside Reload so the readiness build feeds Regen Surge).
+SEC-D's Ability spoke is on the ring so uniqueness and award arithmetic stay the same five
+spokes, but `WeaponWheel.SpokePurchasable` refuses a centred Ability purchase while the
+catalog ability is `AbilityId.None`. Neighbour awards onto Ability still apply.
 
 **Code-side authority, so a rule has one owner:** `ShipCommands` is the only path by which
 station UI mutates `MetaState`; `GameController` command methods are the only path to

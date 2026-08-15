@@ -403,12 +403,19 @@ public static class Docgen
 
     static string EmitTierCost()
     {
-        var costs = new List<string>();
+        var primary = new List<string>();
+        var secondary = new List<string>();
         for (int t = 0; t < WeaponTier.MaxTier; t++)
-            costs.Add(WeaponTier.Cost(t).ToString("N0", Inv));
-        return "Cost of the next purchase is still `400 + 200 × currentTier` = " +
-               string.Join("/", costs) + ",\n**" +
+        {
+            primary.Add(WeaponTier.Cost(t).ToString("N0", Inv));
+            secondary.Add(WeaponTier.Cost(WeaponSlot.Secondary, t).ToString("N0", Inv));
+        }
+        return "Cost of the next purchase, Primary slot `400 + 200 × currentTier` = " +
+               string.Join("/", primary) + ",\n**" +
                WeaponTier.SpentToReach(WeaponTier.MaxTier).ToString("N0", Inv) +
+               "** cumulative. Secondary slot `150 + 150 × currentTier` = " +
+               string.Join("/", secondary) + ",\n**" +
+               WeaponTier.SpentToReach(WeaponSlot.Secondary, WeaponTier.MaxTier).ToString("N0", Inv) +
                "** cumulative.";
     }
 
@@ -760,13 +767,20 @@ public static class Docgen
                       N(WeaponWheel.FireRateMul(WeaponWheel.NeighbourAtMax)) + " |");
         sb.AppendLine();
 
-        sb.Append("Each purchase costs ");
+        sb.Append("Each Primary purchase costs ");
         var costs = new List<string>();
         for (int t = 0; t < WeaponTier.MaxTier; t++)
             costs.Add(WeaponTier.Cost(t).ToString("N0", Inv));
         sb.AppendLine(string.Join(" / ", costs) + " salvage — **" +
                       WeaponTier.SpentToReach(WeaponTier.MaxTier).ToString("N0", Inv) +
                       "** to take one weapon all the way (" + WeaponTier.MaxTier + " purchases).");
+        sb.Append("Each Secondary purchase costs ");
+        var secCosts = new List<string>();
+        for (int t = 0; t < WeaponTier.MaxTier; t++)
+            secCosts.Add(WeaponTier.Cost(WeaponSlot.Secondary, t).ToString("N0", Inv));
+        sb.AppendLine(string.Join(" / ", secCosts) + " salvage — **" +
+                      WeaponTier.SpentToReach(WeaponSlot.Secondary, WeaponTier.MaxTier).ToString("N0", Inv) +
+                      "** cumulative.");
         sb.AppendLine();
     }
 
