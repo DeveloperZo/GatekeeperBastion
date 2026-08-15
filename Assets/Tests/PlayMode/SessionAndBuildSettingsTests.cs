@@ -44,7 +44,7 @@ namespace GatekeeperBastion.PlayTests
             {
                 Assert.Inconclusive(
                     "SKIPPED: no flow scene is in Build Settings at all — this is a fresh clone with no " +
-                    "generated scenes. Run menu GatekeeperBastion > Build All Scenes.");
+                    "generated scenes. Run menu GatekeeperBastion/Build/All Scenes.");
             }
 
             Assert.IsEmpty(missing,

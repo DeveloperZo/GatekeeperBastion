@@ -136,7 +136,7 @@ namespace GatekeeperBastion.Game
             {
                 // Guard trip: LoadScene would throw here and strand the caller (lose-screen soft-lock).
                 Log.Error(Tag, $"Cannot load scene '{sceneName}' — it is not in the build settings. " +
-                               "Run GatekeeperBastion/Build All Scenes to register Splash, MainMenu, Ship, Bastion.");
+                               "Run GatekeeperBastion/Build/All Scenes to register Splash, MainMenu, Ship, Bastion.");
                 return false;
             }
 

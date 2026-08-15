@@ -1,0 +1,320 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
+using UnityEngine;
+
+namespace GatekeeperBastion.Game
+{
+    /// <summary>LOCAL-OWNER: volumes and entry stems for the pause Compendium reader.
+    /// Runtime loads pages from StreamingAssets; EditMode tests read Docs/Play directly.</summary>
+    public static class CompendiumCatalog
+    {
+        public const string StreamingRelative = "Compendium";
+        public const string DocsRelative = "Docs/Play";
+
+        public struct Volume
+        {
+            public string Title;
+            public string[] EntryStems;
+        }
+
+        public struct Entry
+        {
+            public string Stem;
+            public string Title;
+            public string BodyMarkdown;
+        }
+
+        /// <summary>Six volumes plus appendix. Getting Started stays in Situation.</summary>
+        public static readonly Volume[] Volumes =
+        {
+            new Volume
+            {
+                Title = "Situation",
+                EntryStems = new[] { "The-Game", "Getting-Started" }
+            },
+            new Volume
+            {
+                Title = "A Run",
+                EntryStems = new[] { "A-Run", "Waves", "Intensity", "Salvage", "Staying-Alive" }
+            },
+            new Volume
+            {
+                Title = "Bastion",
+                EntryStems = new[] { "The-Hatch" }
+            },
+            new Volume
+            {
+                Title = "Garrison",
+                EntryStems = new[]
+                {
+                    "Gatekeepers", "Gatekeeper-Default", "Gatekeeper-Hunter", "Gatekeeper-Ram"
+                }
+            },
+            new Volume
+            {
+                Title = "Arms",
+                EntryStems = new[]
+                {
+                    "Weapons", "Weapon-MK-1-Sidearm", "Weapon-SEC-D", "Weapon-BR-12-Shotgun",
+                    "Weapon-MR-35-Rifle", "Weapon-PRI-C"
+                }
+            },
+            new Volume
+            {
+                Title = "Hull",
+                EntryStems = new[] { "The-Ship", "Upgrades" }
+            },
+            new Volume
+            {
+                Title = "Appendix",
+                EntryStems = new[] { "Field-Manual" }
+            }
+        };
+
+        static readonly Regex HtmlComment = new Regex(
+            @"<!--.*?-->", RegexOptions.Singleline | RegexOptions.Compiled);
+        static readonly Regex MdLink = new Regex(
+            @"\[([^\]]+)\]\(([^)]+\.md)\)", RegexOptions.Compiled);
+        static readonly Regex Bold = new Regex(
+            @"\*\*([^*]+)\*\*", RegexOptions.Compiled);
+        static readonly Regex GapsHeading = new Regex(
+            @"^##\s+Gaps\s*$", RegexOptions.Multiline | RegexOptions.Compiled);
+        static readonly Regex GameHeading = new Regex(
+            @"^##\s+Game\s*$", RegexOptions.Multiline | RegexOptions.Compiled);
+        static readonly Regex SeeAlsoHeading = new Regex(
+            @"^##\s+See also\s*$", RegexOptions.Multiline | RegexOptions.Compiled);
+        static readonly Regex H2Heading = new Regex(
+            @"^##\s+", RegexOptions.Multiline | RegexOptions.Compiled);
+
+        /// <summary>Folder the reader opens at runtime (StreamingAssets/Compendium).</summary>
+        public static string RuntimeFolder =>
+            Path.Combine(Application.streamingAssetsPath, StreamingRelative);
+
+        /// <summary>Docs/Play at the project root — editor and EditMode only.</summary>
+        public static string DocsFolder =>
+            Path.GetFullPath(Path.Combine(Application.dataPath, "..", DocsRelative));
+
+        public static bool TryLoadEntry(string stem, out Entry entry)
+        {
+            entry = default;
+            if (string.IsNullOrEmpty(stem)) return false;
+
+            string path = ResolvePagePath(stem);
+            if (path == null || !File.Exists(path)) return false;
+
+            string raw;
+            try { raw = File.ReadAllText(path); }
+            catch (Exception) { return false; }
+
+            string cleaned = StripBuilderAudit(raw);
+            string title = ExtractTitle(cleaned, stem);
+            string gameView = ExtractGameView(cleaned, title);
+            entry = new Entry
+            {
+                Stem = stem,
+                Title = title,
+                BodyMarkdown = gameView
+            };
+            return true;
+        }
+
+        public static string ResolvePagePath(string stem)
+        {
+            string file = stem.EndsWith(".md", StringComparison.OrdinalIgnoreCase)
+                ? stem
+                : stem + ".md";
+
+            string runtime = Path.Combine(RuntimeFolder, file);
+            if (File.Exists(runtime)) return runtime;
+
+#if UNITY_EDITOR
+            string docs = Path.Combine(DocsFolder, file);
+            if (File.Exists(docs)) return docs;
+#endif
+            return File.Exists(runtime) ? runtime : null;
+        }
+
+        /// <summary>Strip HTML comments and ## Gaps. Keeps Game, Reference, See also.</summary>
+        public static string StripBuilderAudit(string markdown)
+        {
+            if (string.IsNullOrEmpty(markdown)) return "";
+            string s = HtmlComment.Replace(markdown, "");
+            var match = GapsHeading.Match(s);
+            if (!match.Success) return s.Trim();
+
+            int start = match.Index;
+            int searchFrom = match.Index + match.Length;
+            int next = IndexOfNextH2(s, searchFrom);
+            if (next < 0) next = s.Length;
+            s = s.Remove(start, next - start);
+            return s.Trim();
+        }
+
+        /// <summary>Deprecated name — prefer <see cref="StripBuilderAudit"/> then
+        /// <see cref="ExtractGameView"/>.</summary>
+        public static string StripForPlayer(string markdown) =>
+            ExtractGameView(StripBuilderAudit(markdown), ExtractTitle(markdown, "Entry"));
+
+        /// <summary>In-game dimension: title + ## Game body + ## See also.
+        /// Pages without ## Game (Field Manual) return the full stripped markdown.</summary>
+        public static string ExtractGameView(string markdown, string title)
+        {
+            if (string.IsNullOrEmpty(markdown)) return "";
+
+            var game = GameHeading.Match(markdown);
+            if (!game.Success)
+                return markdown.Trim();
+
+            int gameBodyStart = game.Index + game.Length;
+            while (gameBodyStart < markdown.Length
+                   && (markdown[gameBodyStart] == '\r' || markdown[gameBodyStart] == '\n'))
+                gameBodyStart++;
+
+            int gameBodyEnd = IndexOfNextH2(markdown, gameBodyStart);
+            if (gameBodyEnd < 0) gameBodyEnd = markdown.Length;
+            string gameBody = markdown.Substring(gameBodyStart, gameBodyEnd - gameBodyStart).Trim();
+
+            string seeAlso = "";
+            var see = SeeAlsoHeading.Match(markdown);
+            if (see.Success)
+            {
+                int seeStart = see.Index;
+                int seeEnd = IndexOfNextH2(markdown, see.Index + see.Length);
+                if (seeEnd < 0) seeEnd = markdown.Length;
+                seeAlso = markdown.Substring(seeStart, seeEnd - seeStart).Trim();
+            }
+
+            var sb = new StringBuilder(gameBody.Length + seeAlso.Length + 64);
+            if (!string.IsNullOrEmpty(title))
+            {
+                sb.Append("# ");
+                sb.Append(title);
+                sb.Append("\n\n");
+            }
+            sb.Append(gameBody);
+            if (!string.IsNullOrEmpty(seeAlso))
+            {
+                sb.Append("\n\n");
+                sb.Append(seeAlso);
+            }
+            return sb.ToString().Trim();
+        }
+
+        static int IndexOfNextH2(string s, int from)
+        {
+            if (from < 0 || from >= s.Length) return -1;
+            var m = H2Heading.Match(s, from);
+            return m.Success ? m.Index : -1;
+        }
+
+        /// <summary>Convert the supported markdown subset to TMP rich text.</summary>
+        public static string ToTmpRichText(string markdown)
+        {
+            if (string.IsNullOrEmpty(markdown)) return "";
+
+            var sb = new StringBuilder(markdown.Length + 64);
+            using (var reader = new StringReader(markdown))
+            {
+                string line;
+                bool first = true;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (!first) sb.Append('\n');
+                    first = false;
+                    AppendLineAsTmp(sb, line);
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>Stem from a markdown link target like Gatekeeper-Ram.md.</summary>
+        public static string StemFromLinkTarget(string target)
+        {
+            if (string.IsNullOrEmpty(target)) return null;
+            string name = Path.GetFileName(target.Replace('\\', '/'));
+            if (name.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                return name.Substring(0, name.Length - 3);
+            return name;
+        }
+
+        public static IEnumerable<string> AllShippedStems()
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (int v = 0; v < Volumes.Length; v++)
+            {
+                var stems = Volumes[v].EntryStems;
+                for (int i = 0; i < stems.Length; i++)
+                {
+                    if (seen.Add(stems[i]))
+                        yield return stems[i];
+                }
+            }
+            if (seen.Add("README"))
+                yield return "README";
+        }
+
+        static void AppendLineAsTmp(StringBuilder sb, string line)
+        {
+            if (line.StartsWith("# ", StringComparison.Ordinal))
+            {
+                sb.Append("<size=136%><b>");
+                sb.Append(Inline(line.Substring(2).Trim()));
+                sb.Append("</b></size>");
+                return;
+            }
+            if (line.StartsWith("## ", StringComparison.Ordinal))
+            {
+                sb.Append("<size=118%><b>");
+                sb.Append(Inline(line.Substring(3).Trim()));
+                sb.Append("</b></size>");
+                return;
+            }
+            if (line.StartsWith("### ", StringComparison.Ordinal))
+            {
+                sb.Append("<b>");
+                sb.Append(Inline(line.Substring(4).Trim()));
+                sb.Append("</b>");
+                return;
+            }
+            if (line.StartsWith("- ", StringComparison.Ordinal))
+            {
+                sb.Append("• ");
+                sb.Append(Inline(line.Substring(2)));
+                return;
+            }
+            sb.Append(Inline(line));
+        }
+
+        static string Inline(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            string s = Bold.Replace(text, "<b>$1</b>");
+            s = MdLink.Replace(s, m =>
+            {
+                string label = m.Groups[1].Value;
+                string stem = StemFromLinkTarget(m.Groups[2].Value);
+                if (string.IsNullOrEmpty(stem)) return label;
+                return "<link=\"" + stem + "\"><u>" + label + "</u></link>";
+            });
+            return s;
+        }
+
+        static string ExtractTitle(string markdown, string fallbackStem)
+        {
+            using (var reader = new StringReader(markdown))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    line = line.Trim();
+                    if (line.StartsWith("# ", StringComparison.Ordinal))
+                        return line.Substring(2).Trim();
+                }
+            }
+            return fallbackStem.Replace('-', ' ');
+        }
+    }
+}

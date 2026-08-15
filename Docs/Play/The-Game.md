@@ -9,14 +9,17 @@ Update trigger: when the loop, the wager, or the Run-ender changes.
 Last updated: 2026-08-15
 -->
 
-You are the **Boarder**. Your Ship cuts into a garrisoned **Bastion** and siphons it for
-Salvage. **Gatekeepers** already hold it. The umbilical back to your Ship ends in the
-**Hatch** — your way home, and the thing you must hold. Lose the Hatch, or go down
-yourself (solo, or as host), and the Run is over.
+## Game
 
-Nothing arrives until you call it.
+You are the **Boarder**. Your Ship cuts into a garrisoned **Bastion** and siphons it for Salvage. **Gatekeepers** already hold it. The umbilical back to your Ship ends in the **Hatch** — your way home, and the thing you must hold. Lose the Hatch, or go down yourself, and the Run is over.
 
-## What a Run is
+Nothing arrives until you call it. Prep is yours. Intensity is a wager before each Wave — more Salvage, more Defaults, nothing else. Converted Salvage stays banked; Unbanked is gone if you go down or the Hatch falls.
+
+Between Runs, four consoles on your Ship each own one subject. The first weapon is free and still bought at the ARMORY. Numbers: [Field Manual](Field-Manual.md).
+
+## Reference
+
+### What a Run is
 
 You embark from your own Ship. The NAV MAP states the premise before you leave. You
 arrive already tethered. The Bastion is quiet, and it stays quiet until you use a
@@ -24,13 +27,13 @@ arrive already tethered. The Bastion is quiet, and it stays quiet until you use 
 pick your ground, or stand at a terminal and think.
 
 Then they come — in **groups**, with a gap between them. Kill them and the Salvage sits
-Unbanked until a Hatch-bank. `+/-` then `E` then `T` at a field terminal starts that
-terminal's next Wave; the same keys at the Hatch start a Hatch-bank. A Run is a fixed number of
+Unbanked until a Hatch-bank. At a field terminal, juice then select then start that
+terminal's next Wave; the same flow at the Hatch starts a Hatch-bank. A Run is a fixed number of
 field Waves. Clear them and the door opens; Unbanked stays until you Hatch-bank. Walk through
 to **Master Control** in the Control Room: survive its Hatch-bank and the Run is **Escaped**.
-Clearing Wave 5 does not. How many: [Field Manual](Field-Manual.md).
+Clearing Wave 5 does not. How many: [Field Manual](Field-Manual.md). Bindings: [Field Manual](Field-Manual.md).
 
-## The wager
+### The wager
 
 Before each Wave you juice **intensity** at the trigger. Higher pays more and sends more bodies.
 
@@ -39,7 +42,7 @@ add a single extra Hunter or Ram — every body it adds is a Default. You are be
 that you can kill more of the same thing, not that you can survive a different fight.
 Once a Wave is live intensity locks.
 
-## The three things that come at you
+### The three things that come at you
 
 They are not tiers of the same Gatekeeper. Each one is defined by something it
 **refuses** to do.
@@ -59,7 +62,7 @@ on it.
 
 The room asks three questions at once, and the answer to each makes the other two harder.
 
-## Losing, and what losing costs
+### Losing, and what losing costs
 
 There are exactly two ways a Run ends badly: **you die, or the Hatch dies.** There is no
 bail-out, no escape lever, no cutting the tether early, no respawn for the Boarder who
@@ -72,7 +75,7 @@ counter ticks, and whether your deepest Wave rises (it rises only on a clear).
 
 The Runs are dangerous. The failure is not.
 
-## Between Runs
+### Between Runs
 
 You walk your own Ship. Four consoles, each owning one subject.
 

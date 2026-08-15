@@ -1,12 +1,22 @@
-<!-- Purpose: the permanent upgrade tracks — what each changes about play, what is gated, and what is worth buying. / Status: working / Update trigger: when a track is added, removed, regated, or changes what it affects. / Last updated: 2026-08-09 -->
+<!-- Purpose: the permanent upgrade tracks — what each changes about play, what is gated, and what is worth buying. / Status: working / Update trigger: when a track is added, removed, regated, or changes what it affects. / Last updated: 2026-08-15 -->
 
 # Upgrades
+
+## Game
+
+Permanent, campaign-wide, bought at CREW QUARTERS and FABRICATION. Nothing here is lost when a Run ends badly.
+
+CREW QUARTERS changes you — how much you can take, how far you can sprint, how much each kill pays, and your only source of critical hits. FABRICATION changes the Hatch — how much it can absorb, and the Repair Rig without which you cannot repair at all.
+
+Weapon Tiers and the equipment slot stay locked until you have been Lost once. Attributes and Hatch Armor do not. Scavenging early makes everything else cheaper. Costs and curves: [Field Manual](Field-Manual.md).
+
+## Reference
 
 Permanent, campaign-wide, and bought at two consoles. Nothing here is lost when a Run ends badly. Once a level is bought it is yours for good.
 
 Every track works the same way: each level costs more than the last, and each level buys the same size of step. There are no cheap tracks and no expensive ones — only tracks whose step is worth more to you than another's.
 
-## CREW QUARTERS — the tracks that change you
+### CREW QUARTERS — the tracks that change you
 
 **Vitality** raises your own health. It does not stop anything hitting you; it buys you more mistakes before a Hunter finishes the job.
 
@@ -16,13 +26,13 @@ Every track works the same way: each level costs more than the last, and each le
 
 **Luck** buys critical-hit chance, and it is the only source of criticals in the entire game. Nothing else in the build grants crit chance or crit damage, on purpose — two sources would multiply and the panel numbers would stop meaning anything. Luck buys the chance a shot crits, never how hard a crit lands.
 
-## FABRICATION — the tracks that change the door
+### FABRICATION — the tracks that change the door
 
 **Hatch Armor** raises how much the Hatch can absorb before the Run ends. It applies from your next embark, so buying it changes nothing you can see standing on the Ship.
 
 **The Repair Rig is not a track.** It is a one-off piece of equipment at FABRICATION: buy the equipment slot, buy the Rig, and equip it. It repairs at a flat rate and nothing raises that rate. Without it equipped you cannot repair the Hatch at all. Both prices and the rate are in the [Field Manual](Field-Manual.md).
 
-## What is gated behind losing, and what is not
+### What is gated behind losing, and what is not
 
 **Weapon Tiers at the ARMORY and the equipment slot at FABRICATION are both locked until you have lost a Run.** Everything else is buyable from the first minute.
 
@@ -30,7 +40,7 @@ Everything at CREW QUARTERS, Hatch Armor at FABRICATION, and buying the weapons 
 
 The lock is the Run-loss counter, and **losing the Hatch trips it exactly as being Lost does.** The locked row says "survive a death first"; a door that fell while you were still standing counts.
 
-## What is actually worth buying
+### What is actually worth buying
 
 **Scavenging, early, if you are going to play more than a few Runs.** It is the only track that makes everything else cheaper, it compounds with intensity, and it is live on the very next kill after you buy it. Everything you buy later, you buy faster because of it.
 

@@ -35,6 +35,9 @@ namespace GatekeeperBastion.Game
         [SerializeField, OptionalBinding, Tooltip("Authored ShortcutPanelView on Canvas - Pause Menu.")]
         ShortcutPanelView _pauseShortcuts;
 
+        [SerializeField, OptionalBinding, Tooltip("Authored CompendiumView on Canvas - Pause Menu.")]
+        CompendiumView _compendium;
+
         Interactor _interactor;
         PlayerGun _gun;
         PlayerAbility _ability;

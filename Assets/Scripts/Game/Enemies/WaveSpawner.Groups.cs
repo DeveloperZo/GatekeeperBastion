@@ -311,7 +311,7 @@ namespace GatekeeperBastion.Game
             {
                 _warnedPrefab = true;
                 Log.Warn(Tag, $"No {KindName(kind)} prefab wired; using the default prefab " +
-                              "(behaviour is correct, colour is not). Re-run Build All Scenes.");
+                              "(behaviour is correct, colour is not). Re-run GatekeeperBastion/Build/All Scenes.");
             }
             return enemyPrefab;
         }

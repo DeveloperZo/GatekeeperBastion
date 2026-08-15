@@ -1,6 +1,16 @@
-<!-- Purpose: the defended objective — what threatens it, how repair works, and what repair costs. / Status: working / Update trigger: when the damage sources, the repair charge, or the loss condition change. / Last updated: 2026-08-06 -->
+<!-- Purpose: the defended objective — what threatens it, how repair works, and what repair costs. / Status: working / Update trigger: when the damage sources, the repair charge, or the loss condition change. / Last updated: 2026-08-15 -->
 
 # The Hatch
+
+## Game
+
+The Hatch is the umbilical junction back to your Ship. If it reaches zero the Run ends immediately — the same ending as your own death.
+
+Field-terminal Waves leave it invulnerable. A Hatch-bank is when it can be hurt, and when Unbanked converts to the ship. Defaults and Rams hit it on that Wave; Hunters never do.
+
+Repair needs the Repair Rig equipped and spends banked Salvage per point healed. Letting a Ram reach the door costs more than killing it. Health, rate and price: [Field Manual](Field-Manual.md).
+
+## Reference
 
 The Hatch is the umbilical junction back to your Ship, at one end of the Bastion. It is the only thing in the Run that is being defended, and it is why you are stood where you are stood.
 
@@ -10,23 +20,23 @@ Field-terminal Waves leave it invulnerable. A Hatch-bank Wave is when it can be 
 
 It starts every Run whole. Whatever happened to it last time did not carry over.
 
-## What damages it
+### What damages it
 
 Only two of the three things that come aboard will touch it.
 
 A **Default** walks at the Hatch and hits it. It will ignore you entirely unless you hurt it, at which point it comes for you instead — which is the trade: you can pull one off the door, and pulling it means it is now your problem.
 
-A **Ram** will *only* ever hit the Hatch. It will not turn on you, will not defend itself, and will keep walking while you empty a clip into its back. When it arrives it takes a serious bite. It is slow, and that slowness is the offer — you have time to deal with it if you spend the time on it.
+A **Ram** hunts you on a field-terminal Wave and walks to the Hatch on a Hatch-bank. On that Hatch-bank it will not turn on you, will not defend itself, and will keep walking while you empty a clip into its back. When it arrives it takes a serious bite. It is slow, and that slowness is the offer — you have time to deal with it if you spend the time on it.
 
 A **Hunter** never touches the Hatch. It only wants you.
 
-So the shape of the threat to the door depends entirely on what the Wave brought. A Wave with Rams in it is a Wave where the door is the thing at risk. A Wave without them is a Wave where you are.
+So the shape of the threat to the door depends entirely on what the Wave brought. A Hatch-bank with Rams in it is a Wave where the door is the thing at risk. A Wave without them is a Wave where you are.
 
-## Repairing it
+### Repairing it
 
-Stand at the Hatch and hold the interact key. It heals continuously while you hold, at a flat rate, but **only if you have the Repair Rig equipped** — without it, holding the key does nothing to a damaged Hatch. Let go and it stops. The rate is in the [Field Manual](Field-Manual.md).
+Stand at the Hatch and hold interact. It heals continuously while you hold, at a flat rate, but **only if you have the Repair Rig equipped** — without it, holding repair does nothing to a damaged Hatch. Let go and it stops. The rate is in the [Field Manual](Field-Manual.md). Binding: [Field Manual](Field-Manual.md).
 
-Prep `E` then `T` while looking at the Hatch, with Unbanked and a slot left, starts a Hatch-bank. That is not repair.
+Prep select then start while looking at the Hatch, with Unbanked and a slot left, starts a Hatch-bank. That is not repair.
 
 If the Hatch is full, Prep, and Unbanked is 0, hold Interact to **withdraw** banked Salvage back into Unbanked. Withdraw does not need the Repair Rig.
 
@@ -38,7 +48,7 @@ If your bank is empty, you cannot repair at all. Not slowly, not partially: the 
 
 If your bank is nearly empty, holding repair will heal as much as you can afford and leave you at zero.
 
-## What repairing costs you
+### What repairing costs you
 
 More than the number.
 

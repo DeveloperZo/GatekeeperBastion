@@ -17,8 +17,8 @@
   <Project Path="Unity.Netcode.Editor.Tests.csproj" />
   <Project Path="GatekeeperBastion.Tests.csproj" />
   <Project Path="Unity.Burst.Editor.csproj" />
-  <Project Path="Unity.Networking.Transport.csproj" />
   <Project Path="GatekeeperBastion.Editor.csproj" />
+  <Project Path="Unity.Networking.Transport.csproj" />
   <Project Path="Unity.Netcode.Editor.csproj" />
   <Project Path="Unity.Networking.Editor.csproj" />
   <Project Path="Unity.PerformanceTesting.Tests.Editor.csproj" />

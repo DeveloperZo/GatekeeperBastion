@@ -60,13 +60,14 @@ both sessions, that is a kill — Shown failed.
 1. **Form and voice (markdown).** `Docs/Play/README.md` is volume front matter —
    Situation, a Run, Bastion, Garrison, Arms, Hull, appendix — not a table of Page |
    Answers, and not builder instructions in the visible body. Every hand-written page in
-   that folder except `README.md` and `Field-Manual.md` has a `## See also` that names at
-   least one other entry. Countable facts and bindings stay only in `Field-Manual.md`.
-   Visible bodies pass `../../_meta/_definitions/language.md` *Player-facing voice* (rules
-   1–12). Kind and weapon pages are origin plus fight tells, one pause. Hubs are 2–4 short
-   paragraphs per section. `Tools/lint-language/run.sh` still passes; Play/ never uses the
-   never-called column (Codex, encyclopedia, wiki, lore bible) or the extra
-   `builder_play_ban` terms (`Wave-defense`, `Codex`).
+   that folder except `README.md` and `Field-Manual.md` has `## Game` (pause dimension),
+   `## Reference` (fuller brief), and a `## See also` that names at least one other entry.
+   Countable facts and bindings stay only in `Field-Manual.md`. The pause reader shows
+   title + Game + See also only. Visible Game bodies pass `../../_meta/_definitions/language.md`
+   *Player-facing voice* (rules 1–13). Kind and weapon Game sections are origin plus fight
+   tells, one pause. Hubs are 2–4 short paragraphs in Game. `Tools/lint-language/run.sh`
+   still passes; Play/ never uses the never-called column (Codex, encyclopedia, wiki, lore
+   bible) or the extra `builder_play_ban` terms (`Wave-defense`, `Codex`).
 2. **Pause opens Compendium.** Esc (already non-blocking) shows a **Compendium** command
    on the pause overlay as its own control, not a row inside the playable-key list.
    Activating it opens the reader without closing pause's ownership of input.
@@ -100,10 +101,11 @@ both sessions, that is a kill — Shown failed.
    fails until it is gone.
 2. **Create** `Assets/Scripts/Editor/Tools/CompendiumCopy.cs` — copies `Docs/Play/*.md`
    → `Assets/StreamingAssets/Compendium/`. Runs from the player-build pipeline and from
-   a menu `Gatekeeper/Compendium/Copy Pages`. `Field-Manual.md` included. No transform
-   of the prose except stripping HTML comments and `## Gaps` sections (and the rest of
-   that heading's body until the next `##`). Prefer keeping comments out of the rendered
-   body by stripping at copy, not by deleting them from `Docs/Play/`.
+   a menu `GatekeeperBastion/Build/Copy Compendium Pages`. `Field-Manual.md` included. No
+   transform of the prose except stripping HTML comments and `## Gaps` sections (and the
+   rest of that heading's body until the next `##`). Prefer keeping comments out of the
+   rendered body by stripping at copy, not by deleting them from `Docs/Play/`. Runtime
+   extracts the Game dimension from the copied page.
 3. **Create** `Assets/Scripts/Game/Ui/CompendiumView.cs` — LOCAL-OWNER. Volume list +
    entry body. Parses markdown enough for headings, bold, links of the form
    `[text](Other-Page.md)`. Full CommonMark is rejected. Authored on

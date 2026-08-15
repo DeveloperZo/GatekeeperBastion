@@ -199,13 +199,13 @@ not a temporary compromise.
 |---|---|---|
 | Kit prefabs | agent | `gkb_bastion_kit_request.txt` |
 | Segment layout + H/S/T/D + unlock graph | agent | sketch under `Tools/bastion-sketch/`, then `gkb_bastion_sketch_request.txt` (path in file, or empty for default). Emits into `Bastion.unity` under `Environment`. |
-| Obstacle seed | agent | `GatekeeperBastion/Place Bastion Obstacles` (or `gkb_bastion_obstacles_request.txt`). Names encode intent (`LongLane_*`, `Corner_*`, `Choke_*`, `Mask_*`). Skips hatch bay `02` when already authored. |
+| Obstacle seed | agent | `GatekeeperBastion/Build/Place Bastion Obstacles` (or `gkb_bastion_obstacles_request.txt`). Names encode intent (`LongLane_*`, `Corner_*`, `Choke_*`, `Mask_*`). Skips hatch bay `02` when already authored. |
 | Field consoles | agent | `gkb_bastion_terminals_request.txt` — Ship Desk/Screen/Label on each `BastionTerminal`; ensures GateSlab on existing `BastionDoor` markers only (does not move gates or change Door/None sides); ensures `BastionLayout` on Environment. |
 | Passages vs gates | author | Segment **Door** with no `D` = passage (always walk). **`D` / `BastionDoor`** = progression gate (starts locked). Soft-lock parked. |
 | Hand finish | Zo | Move segments, sides, props, spawns in the Scene view. |
-| NavMesh | either | `GatekeeperBastion/Bake Bastion NavMesh` after geometry moves. |
+| NavMesh | either | `GatekeeperBastion/Bake/Bastion NavMesh` after geometry moves. |
 
-**Do not** run **Build All Scenes** against a kit bastion or a dressed Ship to “refresh”
+**Do not** run **Build/All Scenes** against a kit bastion or a dressed Ship to “refresh”
 floors — when `BastionSegment`s or a `ShipDress` root are present, geometry wipe is skipped,
 but the habit still belongs to the old graybox. Sketch + obstacle place + NavMesh bake are
 the Bastion refresh path.
@@ -338,7 +338,7 @@ Three paths, in increasing cost:
    with the editor open, `Editor/Tools/IntegrationCheck.cs` runs the full EditMode then
    PlayMode suites and writes `<projectRoot>/gkb_verify_report.json` with
    per-test results. Survives the domain reloads PlayMode causes. Also available
-   as menu `GatekeeperBastion > Run Verification Now`. This is the only way to run
+   as menu `GatekeeperBastion/Validate/Integration Check`. This is the only way to run
    the PlayMode suite, and the only authority on anything touching a MonoBehaviour,
    a scene or the save file — path 1 cannot see those.
 4. **Compile errors** land in `Library/Bee/CachedNodeOutput` — read them there

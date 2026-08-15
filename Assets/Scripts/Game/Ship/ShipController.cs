@@ -24,6 +24,8 @@ namespace GatekeeperBastion.Game
         [SerializeField] GameObject _pauseMenuPanel;
         [SerializeField] GameObject _settingsPanel;
         [SerializeField, OptionalBinding] GameObject _embarkPauseButton;
+        [SerializeField, OptionalBinding, Tooltip("Authored CompendiumView on the Ship pause shell.")]
+        CompendiumView _compendium;
 
         /// <summary>The station panel currently open, or null while walking.</summary>
         public StationTerminal OpenStation { get; private set; }
@@ -156,6 +158,12 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
+            if (_compendium != null && _compendium.IsOpen)
+            {
+                _compendium.Close();
+                return;
+            }
+
             if (IsSettingsOpen)
             {
                 CloseSettings();
@@ -163,6 +171,18 @@ namespace GatekeeperBastion.Game
             }
 
             OpenSettings();
+        }
+
+        /// <summary>Wired from the pause Compendium button — reader stays under pause input ownership.</summary>
+        public void OpenCompendium()
+        {
+            if (!IsSettingsOpen) OpenSettings();
+            if (_compendium == null)
+            {
+                Log.Error(Tag, "CompendiumView not authored on Ship pause.");
+                return;
+            }
+            _compendium.Open();
         }
 
         void OpenSettings()
@@ -189,6 +209,8 @@ namespace GatekeeperBastion.Game
 
         void CloseSettings()
         {
+            if (_compendium != null && _compendium.IsOpen)
+                _compendium.Close();
             if (OptionsScreen.IsOpen) OptionsScreen.Close();
             if (_settingsPanel != null) _settingsPanel.SetActive(false);
             if (_pauseMenuPanel != null) _pauseMenuPanel.SetActive(false);

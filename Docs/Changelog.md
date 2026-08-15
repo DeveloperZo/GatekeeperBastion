@@ -7,10 +7,20 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-15
 -->
 
+- 2026-08-15: **M62 in progress — Game dimension.** Each hand-written `Docs/Play/` page
+  holds `## Game` (pause reader) + `## Reference` (fuller brief) + `## See also` +
+  `## Gaps`. Reader and StreamingAssets copy show Game + See also only. Pause command
+  on Bastion and Ship; menu `GatekeeperBastion/Build/Copy Compendium Pages`.
 - 2026-08-15: **M55 and M71 completed.** Intensity juice (`+/-` Unbanked, `E` then `T`,
   HUD Intensity); MK-1 ring D–A–R–C–F and SEC-D F–A–R–C–D with Secondary cost
   150+150×t. Zo close; M55 kill criterion and M71 Regen Surge mag sit on
   `GatekeeperZo Notes/verification.md`. Active 0/3.
+- 2026-08-15: **M70 recut — the Default Protocol.** Free-pick pools superseded (doctrine
+  needs a named carrier). Slice is STOCK / Anchor `G` / Bulkhead `H` / Ghost or
+  Foresight pick-1; turret to FORGE; specialists to their slices. Same-day audit:
+  Ghost **0.70×** named; doctrine is a `TryPlace` write, not a seam proof; repair is
+  not a place path; `PayloadLoadoutLocked` not renamed; Ghost does not delay Hunters;
+  file slug `M70-the-default-protocol.md`.
 - 2026-08-15: **M58 completed** — Windows Development player + Main Menu Host/Join
   (`0.0.0.0` listen, typed IPv4 join); dual-box
   `Tools/player-session/run.ps1` PASS with local Player present. Criterion 4 re-cut:

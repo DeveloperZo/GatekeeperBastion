@@ -12,7 +12,7 @@ Last updated: 2026-08-15
 
 Everything about the player rather than the weapon or the ship. The Crew-ability system and
 its starter roster graduated to
-[`M70`](../Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md) (Zo, 2026-08-14). What
+[`M70`](../Milestones/1.%20planned/M70-the-default-protocol.md) (Zo, 2026-08-14). What
 remains here: the parked attribute tracks and 5-skill record, the health/no-healing
 question, and perks as run modifiers.
 
@@ -43,7 +43,7 @@ answered. Nothing else here is mineable.
 
 ### CREW QUARTERS sells burst abilities, not attributes (Zo, 2026-08-12)
 
-**Graduated to [`M70`](../Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md)**
+**Graduated to [`M70`](../Milestones/1.%20planned/M70-the-default-protocol.md)**
 (Zo, 2026-08-14) — system, starter roster, kill criteria and the fate of the four tracks
 are decided there. The milestone is the record.
 
@@ -71,7 +71,7 @@ criteria) and the trade-filter entry (Overclock, Anchor, Recall, Ping) both move
 into `M70` (2026-08-14), and the 2026-08-15 protocol recut moved them again:
 [`boarder-protocols.md`](boarder-protocols.md) is now the spec of record for the layer
 (VEIL's Cloak), Ping, and Recall; Anchor ships on the recut
-[`M70`](../Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md); Overclock stays
+[`M70`](../Milestones/1.%20planned/M70-the-default-protocol.md); Overclock stays
 rejected by name on that file.
 
 ### Experience as the CREW QUARTERS currency (Zo, 2026-08-12)

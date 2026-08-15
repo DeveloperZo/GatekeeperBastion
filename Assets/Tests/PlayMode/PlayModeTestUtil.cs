@@ -62,13 +62,13 @@ namespace GatekeeperBastion.PlayTests
 
         /// <summary>Skip (INCONCLUSIVE, never a hard failure) when the scene has not been
         /// generated/registered yet — the fresh-clone case, since scenes are built by the
-        /// GatekeeperBastion > Build All Scenes editor tool and are not committed.</summary>
+        /// GatekeeperBastion/Build/All Scenes editor tool and are not committed.</summary>
         public static void RequireSceneInBuild(string sceneName)
         {
             if (IsSceneInBuild(sceneName)) return;
             Assert.Inconclusive(
                 $"SKIPPED: scene '{sceneName}' is not in Build Settings (registered: {RegisteredScenes()}). " +
-                "Run menu GatekeeperBastion > Build All Scenes, then re-run this test.");
+                "Run menu GatekeeperBastion/Build/All Scenes, then re-run this test.");
         }
 
         // ------------------------------------------------------------------ scene loading

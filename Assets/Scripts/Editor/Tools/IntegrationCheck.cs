@@ -181,6 +181,7 @@ namespace GatekeeperBastion.EditorTools
             try
             {
                 Directory.CreateDirectory(PlayerBuildOutDir);
+                CompendiumCopy.CopyPages(log: true);
                 var scenes = EditorBuildSettings.scenes;
                 var enabled = new System.Collections.Generic.List<string>();
                 for (int i = 0; i < scenes.Length; i++)

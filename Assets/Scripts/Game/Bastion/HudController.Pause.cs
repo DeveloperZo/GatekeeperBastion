@@ -29,6 +29,12 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
+            if (_compendium != null && _compendium.IsOpen)
+            {
+                _compendium.Close();
+                return;
+            }
+
             if (IsPauseOpen)
             {
                 ClosePause();
@@ -49,6 +55,18 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Wired from the pause RESUME button (and Esc while paused).</summary>
         public void ResumePause() => ClosePause();
+
+        /// <summary>Wired from the pause Compendium button — reader stays under pause input ownership.</summary>
+        public void OpenCompendium()
+        {
+            if (!IsPauseOpen) OpenPause();
+            if (_compendium == null)
+            {
+                Log.Error(Tag, "CompendiumView not authored on Bastion pause.");
+                return;
+            }
+            _compendium.Open();
+        }
 
         void OpenPause()
         {
@@ -95,6 +113,9 @@ namespace GatekeeperBastion.Game
         {
             if (!IsPauseOpen) return;
             if (_pauseAnimator == null) ResolvePauseHosts();
+
+            if (_compendium != null && _compendium.IsOpen)
+                _compendium.Close();
 
             if (_pauseAnimator != null) _pauseAnimator.Play("Window Out");
             if (_pauseBlur != null) _pauseBlur.BlurOutAnim();

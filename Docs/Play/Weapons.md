@@ -7,12 +7,17 @@ added to or removed from the shop, when Tiers change what they scale, or when
 slot/reload behaviour changes. / Last updated: 2026-08-15
 -->
 
-Everything about the gun in your hands is decided on the Ship. Nothing about it can be
-changed once you are on the Bastion.
+## Game
 
-Damage, clip, cadence, range and prices: [Field Manual](Field-Manual.md).
+Everything about the gun in your hands is decided on the Ship. Nothing about it can be changed once you are on the Bastion.
 
-## Two slots
+You carry a **Primary** and a **Secondary**. The **Drone** bay holds a payload, not a gun. Ownership and equipping happen only at the ARMORY. Ammunition is infinite; a reload costs only time. Switching cancels a reload in progress unless you changed that setting.
+
+Your Primary answers one of the room's three questions well. The others get harder. Damage, clip, cadence, range and prices: [Field Manual](Field-Manual.md).
+
+## Reference
+
+### Two slots
 
 You carry a **Primary** and a **Secondary**. That is the loadout you can fill. There is a
 third slot, the **Drone** bay. It holds a payload, not a gun. Today that payload is the
@@ -23,7 +28,7 @@ the shape of the fight. You can run with only the Secondary. If you own no weapo
 you still fire something: the **improvised cutter**, a scratch-built fallback that does a
 fraction of the damage at a fraction of the cadence. Buy the sidearm and it goes away.
 
-## Buying and equipping
+### Buying and equipping
 
 Both happen at the **ARMORY**, and only at the ARMORY.
 
@@ -34,7 +39,7 @@ which fills the slot. The choice is fixed for the whole Run.
 Your first Secondary costs nothing and is still bought at the ARMORY — MK-1 or SEC-D,
 both free. Which Secondary you take is already a build choice.
 
-## What an upgrade purchase does
+### What an upgrade purchase does
 
 Every shop weapon has its own **upgrade wheel**, bought at the ARMORY. Its spokes are
 **Reload**, **Clip**, **Damage**, **Fire Rate** and **Ability**, arranged in a ring. You
@@ -49,7 +54,7 @@ Weapon upgrades are **locked until you have been Lost at least once**. Buying th
 themselves is not. If the buttons read locked, a death is the key. SEC-D's Ability spoke
 cannot be bought; rotate off it.
 
-## Abilities
+### Abilities
 
 Every shop weapon except **SEC-D** carries one activated ability, on the same binding for all
 of them. The HUD names it and counts the cooldown. How hard it hits depends on that weapon's
@@ -64,7 +69,7 @@ mid-reload. SEC-D has none; its Ability spoke cannot be bought.
 - **PRI-C — Railshot.** The next shot pierces further, at full damage, then lapses if you
   do not fire.
 
-## Reloading
+### Reloading
 
 There is no reserve. Ammunition is infinite; the only thing a reload costs you is time.
 
@@ -72,7 +77,7 @@ Each slot has its own clip and its own reload. Reloading always fills the clip. 
 **Secondary refills itself**, slowly, without reloading, and faster while an MK-1 Regen
 Surge is running. The Primary does not. Firing on an empty clip starts the reload for you.
 
-## Switching slots
+### Switching slots
 
 Switching is instant. Bindings: [Field Manual](Field-Manual.md). Keys pointed at an empty
 slot do nothing.
@@ -87,7 +92,7 @@ turned the discard setting off.
 
 You begin a Run on your Primary if you have one, otherwise on the Secondary.
 
-## Choosing a Primary
+### Choosing a Primary
 
 The Bastion asks three questions at once and your Primary answers one of them well.
 

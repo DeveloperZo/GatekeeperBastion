@@ -2,20 +2,30 @@
 Purpose: intensity — juice Unbanked at a trigger to raise the per-Wave wager; what it changes; when it locks.
 Status: working
 Update trigger: when juice cost, the intensity readout, what intensity scales, or when it can be set changes.
-Last updated: 2026-08-13
+Last updated: 2026-08-15
 -->
 
 # Intensity
 
-Look at a field terminal, Master Control, or the Hatch. `+` / `-` juice — each step spends Unbanked. How much: [Field Manual](Field-Manual.md). `E` selects the value, including intensity 0. `T` starts the Wave. `E` again unlocks juice. Without a select the Wave does not start.
+## Game
+
+Intensity is the per-Wave wager. Raising it multiplies what each Gatekeeper pays and how many the next Wave sends. Both sides of that bet move together.
+
+It does not make Gatekeepers tougher. It does not change group spacing. Every extra body is a Default — the same fight with more of the easiest thing in it, and more money per body.
+
+You set it in Prep before you commit. Once Assault starts it locks. Turning it back down is free; nothing comes back. How much: [Field Manual](Field-Manual.md).
+
+## Reference
+
+Look at a field terminal, Master Control, or the Hatch. Juice raises intensity — each step spends Unbanked. How much: [Field Manual](Field-Manual.md). Select the value, including intensity 0, then start the Wave. Select again unlocks juice. Without a select the Wave does not start. Bindings: [Field Manual](Field-Manual.md).
 
 Lowering is free. Nothing comes back. Locked during Assault. One juice at Master Control covers the whole sequence.
 
-## What it changes
+### What it changes
 
 Raising intensity multiplies what each Gatekeeper pays, and how many the next Wave sends. Both sides read the same table. Payout and body count cannot come apart.
 
-## What it does not change
+### What it does not change
 
 - Gatekeepers are not tougher. Health is set by which Wave you are on.
 - They do not arrive faster or in bigger groups. Group size and the gap between groups belong to the Wave.
@@ -23,15 +33,15 @@ Raising intensity multiplies what each Gatekeeper pays, and how many the next Wa
 
 A raised intensity is the same fight with more of the easiest thing in it, and more money per body.
 
-## When you can set it
+### When you can set it
 
-Only in Prep, looking at the trigger, before `E` selects. `+/-` refuse after that until `E` again. Starting a Wave locks it for the whole Assault. That is deliberate: juice is a pre-commitment, not something you back out of when the room gets loud.
+Only in Prep, looking at the trigger, before select. Juice refuses after that until select again. Starting a Wave locks it for the whole Assault. That is deliberate: juice is a pre-commitment, not something you back out of when the room gets loud.
 
-If you start deep from the NAV MAP, the chain is one Assault — juice before that first `T` governs every Wave in it.
+If you start deep from the NAV MAP, the chain is one Assault — juice before that first start governs every Wave in it.
 
 The prompt prices the next step before you confirm: what a kill pays, how many bodies. Read it. The curve is in the [Field Manual](Field-Manual.md).
 
-## How to think about raising it
+### How to think about raising it
 
 Ask three questions, in this order.
 
@@ -50,7 +60,7 @@ Some practical shapes:
 - **Intensity you can't finish is worth nothing.** Losing the Hatch mid-Wave stops the income immediately; extra pay only lands on Gatekeepers you actually kill.
 - **Turning it back down is free.** No refund. Nothing commits you to a setting across Waves.
 
-## The one thing intensity is not
+### The one thing intensity is not
 
 It is not a difficulty setting for the Run. It is a per-Wave bet, and the game does not remember it. Every Prep at every trigger is a fresh decision.
 
@@ -61,7 +71,7 @@ It is not a difficulty setting for the Run. It is a per-Wave bet, and the game d
 ## Gaps
 
 - Nothing says intensity is locked during an Assault. The shortcut panel simply stops showing it, which reads as a bug rather than a rule.
-- Nothing warns you that starting deep from the NAV MAP means one juice before that first `T` governs the entire chained delivery — several Waves' worth of bodies, at a stake you chose before seeing any of them.
+- Nothing warns you that starting deep from the NAV MAP means one juice before that first start governs the entire chained delivery — several Waves' worth of bodies, at a stake you chose before seeing any of them.
 - The reward curve is hand-authored with uneven steps. The prompt shows the current and next values but never the shape, so "one more step" is worth a different amount at different points and you cannot see that coming.
 - Salvage is floored to a whole number per kill, so part of a raised intensity is quietly rounded away on every body.
 - Nothing tells you that intensity's surplus is entirely Defaults. Without that, raising it reasonably reads as "the Wave gets harder in every way", which is the wrong model and makes intensity look worse than it is.

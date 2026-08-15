@@ -16,7 +16,7 @@ Unity 6, PC/Steam, gray-box v0, solo now, 2–4 player co-op designed but not bu
 1. In Unity Hub, create a new **Unity 6 (6000.x)** project from the
    **Universal 3D** template. Open it once, then close it.
 2. Copy this repo's `Assets/` and `Packages/manifest.json` over the generated ones.
-3. Reopen the project. Run menu **GatekeeperBastion > Build All Scenes** (builds
+3. Reopen the project. Run menu **GatekeeperBastion > Build > All Scenes** (builds
    and registers Splash, MainMenu, Ship, Bastion).
 4. Press Play from the Splash scene. Main menu → **START NEW** → you spawn on the
    **Ship**. Buy the MK-1 at the ARMORY (you start with exactly its 100 salvage),
@@ -37,5 +37,5 @@ a run feels like.
 
 Window > General > Test Runner > **EditMode** > Run All. The sim core is pure C#
 and fully covered there. PlayMode tests cover scene contracts and the core loop.
-Menu **GatekeeperBastion > Run Verification Now** runs both and writes
+Menu **GatekeeperBastion > Validate > Integration Check** runs both and writes
 `gkb_verify_report.json`. Logs: see [README-LOGS.md](README-LOGS.md).

@@ -72,7 +72,7 @@ quota forcing filler pairs — pre-mortem 1 and kill criterion 5 exist for it.
 ## The grammar
 
 - One protocol equipped per Boarder. Bought flat at CREW QUARTERS; swap is Ship-only
-  under the one `LoadoutLocked` gate (M42 idiom, as `M70` plans).
+  under the one `PayloadLoadoutLocked` gate (M42 idiom; `M70` does not rename the flag).
 - **Doctrine is always on and never bought separately.** A transformed item priced above
   the plain item dies — Payday 2's 24–40-point sentries lost to 13-point doctor bags.
 - The sort test (carried from the pre-recut `M70`, owned here now): the Crew ability
@@ -203,8 +203,8 @@ competence without a specialty, so its rows are the plainest verb in each lane o
 cheapest seams, and it ships as `M70`'s recut — the frame's proof (Zo, 2026-08-15).
 
 **Doctrine: STOCK** — hardware exactly as sold, the reference every other doctrine
-recolors. Zero clauses; the doctrine plumbing (mode written onto the placed object at
-deploy) ships here and proves itself by changing nothing.
+recolors. Zero clauses; the doctrine mode is written onto the decoy at `TryPlace`.
+STOCK writes 0. VEIL is the first reader.
 
 **ANCHOR (`G`)** [M70, moved from AEGIS 2026-08-15] — plant; Gatekeepers within 8 m
 slow; you cannot move until unplant. The cheapest designed Crew verb, which is the
@@ -498,8 +498,8 @@ AEGIS-first cut, whose R micro-milestone would have gated the whole frame on a r
 decision):
 
 1. **`M70` recut — the Default Protocol:** the frame plus the plainest sheet.
-   Protocol equip state, `G`/`H` binds, doctrine-at-deploy plumbing proven by STOCK
-   changing nothing, the attribute tracks dying with their refund, embark logging,
+   Protocol equip state, `G`/`H` binds, doctrine mode written at decoy `TryPlace`
+   (STOCK = 0; VEIL is the first reader), the attribute tracks dying with their refund, embark logging,
    and the DEFAULT sheet naked (Anchor, Bulkhead, Ghost/Foresight pick). No Medium
    mechanic in the unit — bill 6 and 10 only. The turret leaves `M70` in the same
    recut: its criteria spend a "Primary reserve" that `PlayerGun` does not have.

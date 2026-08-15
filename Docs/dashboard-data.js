@@ -218,7 +218,7 @@ window.GKB_PROJECT = {
                                       "title":  "The Default Protocol",
                                       "statusFolder":  "planned",
                                       "gateOneLiner":  "CREW equips Boarder Protocols; the Default owned from the first session — STOCK doctrine written at decoy place, Anchor `G`, Bulkhead `H`, Ghost 0.70× / Foresight pick-1; four tracks refunded and deleted, SaveVersion 8; verbs apply once server-side; turret moved to the FORGE slice, specialist sheets and deed spine in `Brainstorms/boarder-protocols.md`",
-                                      "path":  "Docs/Milestones/1. planned/M70-the-boarder-gets-a-verb.md",
+                                      "path":  "Docs/Milestones/1. planned/M70-the-default-protocol.md",
                                       "roadmapRank":  59,
                                       "lastUpdated":  "2026-08-15"
                                   },

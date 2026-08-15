@@ -180,14 +180,17 @@ references are builder-only (never those titles in player text): Mass Effect's C
 (volumes, Primary vs appendix) and God of War 2018's journal (practical and world in the
 same pause entry).
 
-**Entry shape.** A kind or weapon page is an origin plus the fight tells, finishable in
-one pause. A hub (`The-Game`, `Gatekeepers`, `Weapons`, `The-Ship`, `A-Run`) is 2–4 short
-paragraphs per section, same budget. Numbers and bindings live in the Field Manual
-appendix. `## See also` is the cross-link; in-game bodies do not need a full markdown
-engine. `## Gaps` is builder audit; the reader omits it.
+**Dimensions.** Each hand-written Play page (not `README.md`, not generated
+`Field-Manual.md`) holds every dimension of the topic in one file:
 
-Test a Play page by reading the visible body (skip HTML comments and `## Gaps`). One hit
-fails.
+| Heading | Who reads it | In the pause reader |
+|---|---|---|
+| `## Game` | Boarder, one pause | **Shown** (plus title and `## See also`) |
+| `## Reference` | Builder / fuller brief | Omitted |
+| `## See also` | Both | Shown (navigation) |
+| `## Gaps` | Builder audit | Stripped at copy and at load |
+
+Test a Play page's Game dimension (skip HTML comments, Reference, and Gaps). One hit fails.
 
 | # | Rule | Good | Banned |
 |---|---|---|---|
@@ -203,6 +206,7 @@ fails.
 | 10 | No analysis vocabulary (rule 3). | "A group arrives together." | `gatekeeper-seconds`, `hatchDist`. |
 | 11 | Visible body starts as player prose. HTML comments and `## Gaps` are not the opening. | First readable line is the title, then the world. | Purpose / Status as the thing a Boarder reads. |
 | 12 | Do not teach by citing another game or by riddle. | "They arrive from garrison to repel an intrusion." | "Like a Left 4 Dead tank…" |
+| 13 | `## Game` is the pause dimension; `## Reference` holds the fuller brief. | Game then Reference then See also. | One undifferentiated body the reader dumps whole. |
 
 Always-on for friends alpha: every shipped entry is readable from the first pause. Unlock-
 on-encounter, a companion diary, a completion ledger, and a stat-block-as-entry are

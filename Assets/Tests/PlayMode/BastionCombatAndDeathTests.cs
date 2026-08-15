@@ -244,7 +244,7 @@ namespace GatekeeperBastion.PlayTests
                 $"DEAD END: scene '{SceneFlow.Ship}' is not in Build Settings (registered: " +
                 $"{PlayTestUtil.RegisteredScenes()}), but GameController.ReturnToShip() -> SceneFlow.LoadShip() " +
                 "is the lose screen's only exit. Pressing RETURN TO SHIP would throw and strand the player. " +
-                "Register all four flow scenes (GatekeeperBastion > Build All Scenes).");
+                "Register all four flow scenes (GatekeeperBastion/Build/All Scenes).");
 
             using (var logs = new PlayTestUtil.ErrorLogCapture())
             {

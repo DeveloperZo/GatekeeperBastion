@@ -1,10 +1,20 @@
-<!-- Purpose: the shape of one Run end to end — embarking, Prep and Assault, starting a Wave at a field terminal, Master Control, and the two ways it can finish. / Status: working / Update trigger: when the Run's phases, the draw model, the deep-start option, or the Run-enders change. / Last updated: 2026-08-13 -->
+<!-- Purpose: the shape of one Run end to end — embarking, Prep and Assault, starting a Wave at a field terminal, Master Control, and the two ways it can finish. / Status: working / Update trigger: when the Run's phases, the draw model, the deep-start option, or the Run-enders change. / Last updated: 2026-08-15 -->
 
 # A Run
 
+## Game
+
+A Run is one trip out to the Bastion and back. You embark already tethered near the Hatch. Nothing happens until you start a Wave.
+
+Prep is quiet and untimed. Assault lasts until every Gatekeeper that Wave sent is dead. A field-terminal Wave hunts you; a Hatch-bank hunts the Hatch and converts Unbanked.
+
+Three endings: you die, the Hatch falls, or you survive Master Control. Converted Salvage stays either way. Unbanked is wiped on Lost. How many Waves: [Field Manual](Field-Manual.md).
+
+## Reference
+
 A Run is one trip out to the Bastion and back. It starts on your Ship, it ends with you Lost or with Master Control's Hatch-bank survived, and either way only Salvage that made it through a Hatch-bank is yours.
 
-## Before you leave: the Ship
+### Before you leave: the Ship
 
 You walk your own Ship between runs. Four consoles, each owning one subject: **ARMORY** (weapons and their Tiers), **CREW QUARTERS** (your own attributes), **FABRICATION** (the Hatch and the repair rig), and **NAV MAP** (where you go, and the button that commits you).
 
@@ -12,13 +22,13 @@ Whatever you are carrying when you press EMBARK is what you have for the whole R
 
 The NAV MAP will let you embark with no weapon at all. It warns you and then lets you go, because you are allowed to make bad bets.
 
-## Boarding
+### Boarding
 
 There is no landing sequence. You embark, the Bastion scene loads, and you are already there, already tethered, standing near the Hatch with the Run live. The Bastion is quiet.
 
 It stays quiet. Nothing is coming, nothing is counting down, and nothing will happen at all until you decide it should.
 
-## Prep and Assault
+### Prep and Assault
 
 Once aboard, the Run alternates between two states, and it will keep alternating until the Run ends.
 
@@ -26,17 +36,17 @@ Once aboard, the Run alternates between two states, and it will keep alternating
 
 **Assault** starts when you use a field terminal or Hatch-bank at the Hatch, and lasts until every Gatekeeper that Wave sent is dead. Intensity locks the moment it starts. Kills pay Unbanked only while an Assault is live.
 
-## Starting a Wave
+### Starting a Wave
 
-A Wave starts when you look at a field terminal in Prep. `+` / `-` juice if you want, then `E` selects — including intensity 0. `T` starts **one** Wave. There is no abort once Assault is live: the only way out is killing everything in it.
+A Wave starts when you look at a field terminal in Prep. Juice if you want, then select — including intensity 0 — then start **one** Wave. There is no abort once Assault is live: the only way out is killing everything in it. Bindings: [Field Manual](Field-Manual.md).
 
-Juice while looking at the Hatch; `E` selects, `T` starts a Hatch-bank. `T` without a select does not start a Wave.
+Juice while looking at the Hatch; select, then start a Hatch-bank. Start without a select does not start a Wave.
 
-A field terminal takes a fixed number of Waves to complete — the first one on the kit bastion takes the Run's full five. Each `T` after `E` starts one. After it clears, Prep lasts as long as you want: Hatch-bank, or walk back to the terminal and pull the next. When the last of those clears, the terminal is done and its door opens.
+A field terminal takes a fixed number of Waves to complete — the first one on the kit bastion takes the Run's full five. Each start after a select delivers one. After it clears, Prep lasts as long as you want: Hatch-bank, or walk back to the terminal and pull the next. When the last of those clears, the terminal is done and its door opens.
 
 See the [Field Manual](Field-Manual.md) for how many Waves a Run holds.
 
-## Clearing a Wave
+### Clearing a Wave
 
 Gatekeepers arrive in groups rather than a stream. Each group comes through one spawn point together; the next group uses the next point in the rotation, so pressure moves around the room rather than pouring from one door.
 
@@ -48,7 +58,7 @@ A Wave started at a field terminal hunts **you**. The Hatch cannot be hurt durin
 
 A Hatch-bank Wave hunts the Hatch. It is one step heavier than the last field Wave. Defaults and Rams go for the door; Hunters still hunt you. Unbanked drips into Banked while the timer runs. Killing the Wave early, or Unbanked hitting 0, does not end it. The timer dumps whatever is left. A hatch hit also eats Unbanked.
 
-## What ends a Run
+### What ends a Run
 
 Exactly three things end a Run, and only three.
 
@@ -58,9 +68,9 @@ Exactly three things end a Run, and only three.
 
 Both of those are **Lost**. The screen names which one happened, and that the Boarder was thrown off the Bastion.
 
-**You survive Master Control.** Juice once at the console — it covers the sequence — then `E` selects and `T` starts. The door seals; five Boarder-hunt Waves hit that room. The door opens; five Hatch-bank windows start. Leftover converts. That is **Escaped** — the screen reads BASTION STRIPPED. Clearing Wave 5 does not. Hatch-bank after the field is stripped converts and leaves you in Prep; the door is already open.
+**You survive Master Control.** Juice once at the console — it covers the sequence — then select and start. The door seals; five Boarder-hunt Waves hit that room. The door opens; five Hatch-bank windows start. Leftover converts. That is **Escaped** — the screen reads BASTION STRIPPED. Clearing Wave 5 does not. Hatch-bank after the field is stripped converts and leaves you in Prep; the door is already open.
 
-## What the endings actually mean
+### What the endings actually mean
 
 Less than you would expect. Converted Salvage stays on the ship. Unbanked is wiped if you go down or the Hatch falls. Wave 5 does not wipe it. Master Control's Hatch-bank converts leftover, then the win. Clearing adds no bonus. The two endings differ in three things:
 
@@ -72,7 +82,7 @@ That last one is the only mechanical consequence of failing, and it only matters
 
 Both end screens are identical in shape: converted this Run, repair spent, net, what you have banked now, your deepest Wave, and one button back to the Ship. There is no other way off either screen.
 
-## Starting deeper: the NAV MAP start-Wave selector
+### Starting deeper: the NAV MAP start-Wave selector
 
 The NAV MAP has a stepper that picks which Wave to start at. Its ceiling is the deepest Wave you have **cleared**, so it only opens up by winning Waves, not by dying in them.
 
@@ -83,7 +93,7 @@ Concretely, if you start deep:
 - it is a single Assault, so intensity is locked for the whole chain;
 - there is no quiet in the middle of it — no repositioning without pressure;
 - the earlier Waves keep their own composition and toughness; a first Wave delivered inside a chain is still a first Wave;
-- once the chain clears, the Run continues from the next field terminal, one `T` per Wave.
+- once the chain clears, the Run continues from the next field terminal, one Wave at a time.
 
 A condensed run, then. Same Waves, same total bodies, much less room.
 
