@@ -50,7 +50,9 @@ Last updated: 2026-08-14
 - 2026-08-14: **Unowned Ship hands are empty.** Boarder prefab left Mk1 active; Ship has
   no PlayerGun so WeaponViewModel never hid it. `WeaponView.TryShownWeapon`: empty
   hands on the Ship until a buy; cutter only in a fight with nothing owned. ARMORY
-  catalog Cost 180 / Effect 280, wrap off — `cost 1200` no longer stacks on the dps line.
+  catalog columns are LayoutElement mins (Name 220 / Cost 160 / Effect 260) with
+  ChildControlWidth on; `cost 1200` no longer stacks, and `need N more` stays on
+  Reason instead of the action button.
 - 2026-08-14: **M61-2 rooms emit unpacked.** Zo: packed room instances block hierarchy
   edits during authoring. `BastionSketchEmitter` unpacks the outermost root at emit;
   the Synty pieces under `_geom` keep their prefab links. Zo then moved all 15 rooms

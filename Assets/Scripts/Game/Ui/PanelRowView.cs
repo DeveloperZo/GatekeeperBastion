@@ -18,7 +18,11 @@ namespace GatekeeperBastion.Game
         public void Bind(string name, string cost, string level, string effect,
             string actionLabel, Action onAction, bool actionEnabled, string reason = null)
         {
-            if (_name != null) _name.text = name != null ? name : "";
+            if (_name != null)
+            {
+                _name.text = name != null ? name : "";
+                SingleLine(_name);
+            }
             if (_cost != null)
             {
                 _cost.text = cost != null ? cost : "";
@@ -38,9 +42,9 @@ namespace GatekeeperBastion.Game
 
             bool hasReason = !string.IsNullOrEmpty(reason);
             bool showAction = _action != null && !string.IsNullOrEmpty(actionLabel);
-            // Disabled BUY + OWNED/EQUIPPED as a second label sat on the button.
-            // Status occupies the action slot; the aside Reason row stays off.
-            bool statusOnAction = showAction && !actionEnabled && hasReason;
+            // EQUIPPED occupies the action slot (no handler). Affordability stays on
+            // Reason — "need 1200 more" on the Shift button overlapped the dps line.
+            bool statusOnAction = showAction && !actionEnabled && hasReason && onAction == null;
             if (_reason != null)
             {
                 bool showAside = hasReason && !statusOnAction;

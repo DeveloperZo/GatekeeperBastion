@@ -125,8 +125,12 @@ namespace GatekeeperBastion.Tests
                 string row = "Catalog Row " + i;
                 var cost = scene.TmpOf("Cost", row);
                 Assert.AreEqual(0, cost.WrapMode, row + " Cost wraps");
+                Assert.GreaterOrEqual(scene.LayoutMinWidth("Cost", row), 160f,
+                    row + " Cost has no LayoutElement minWidth — ChildControlWidth 1 collapses it");
                 var effect = scene.TmpOf("Effect", row);
                 Assert.AreEqual(0, effect.WrapMode, row + " Effect wraps");
+                Assert.GreaterOrEqual(scene.LayoutMinWidth("Effect", row), 260f,
+                    row + " Effect has no LayoutElement minWidth");
             }
         }
 
@@ -214,6 +218,7 @@ namespace GatekeeperBastion.Tests
         readonly Dictionary<long, Go> _gos = new Dictionary<long, Go>();
         readonly Dictionary<long, Rt> _rects = new Dictionary<long, Rt>();
         readonly Dictionary<long, TmpFlags> _tmpByGo = new Dictionary<long, TmpFlags>();
+        readonly Dictionary<long, float> _leMinByGo = new Dictionary<long, float>();
         readonly Dictionary<long, long> _mbGo = new Dictionary<long, long>();
         long _prepHeadingMb;
         long _shipPromptMb;
@@ -258,6 +263,15 @@ namespace GatekeeperBastion.Tests
             long goId = FindGo(name, ancestor);
             Assert.IsTrue(_tmpByGo.ContainsKey(goId), "no TMP on " + name);
             return _tmpByGo[goId];
+        }
+
+        public float LayoutMinWidth(string name, string ancestor)
+        {
+            long goId = FindGo(name, ancestor);
+            Assert.AreNotEqual(0L, goId, "no '" + name + "' under " + ancestor);
+            float min;
+            Assert.IsTrue(_leMinByGo.TryGetValue(goId, out min), "no LayoutElement on " + name);
+            return min;
         }
 
         public bool IsActive(string name, string ancestor)
@@ -358,13 +372,15 @@ namespace GatekeeperBastion.Tests
             bool inHudController = false;
             bool inShipHud = false;
             bool inTmp = false;
+            bool inLe = false;
+            float leMin = -1f;
 
             foreach (string raw in File.ReadLines(path))
             {
                 var m = Header.Match(raw);
                 if (m.Success)
                 {
-                    Flush(kind, id, go, rt, mbGo, wrap, overflow, autoSize, inTmp);
+                    Flush(kind, id, go, rt, mbGo, wrap, overflow, autoSize, inTmp, inLe, leMin);
                     kind = m.Groups[1].Value;
                     id = long.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
                     go = default;
@@ -375,6 +391,8 @@ namespace GatekeeperBastion.Tests
                     inHudController = false;
                     inShipHud = false;
                     inTmp = false;
+                    inLe = false;
+                    leMin = -1f;
                     continue;
                 }
 
@@ -418,6 +436,8 @@ namespace GatekeeperBastion.Tests
                         inShipHud = true;
                     else if (raw.Contains("TextMeshProUGUI"))
                         inTmp = true;
+                    else if (raw.Contains("UnityEngine.UI.LayoutElement"))
+                        inLe = true;
                     else if (inHudController && raw.StartsWith("  _prepHeading:", StringComparison.Ordinal))
                         _prepHeadingMb = ParseFileId(raw);
                     else if (inShipHud && raw.StartsWith("  _prompt:", StringComparison.Ordinal))
@@ -428,13 +448,15 @@ namespace GatekeeperBastion.Tests
                         overflow = ParseInt(raw);
                     else if (inTmp && raw.StartsWith("  m_enableAutoSizing:", StringComparison.Ordinal))
                         autoSize = raw.IndexOf('1') >= 0;
+                    else if (inLe && raw.StartsWith("  m_MinWidth:", StringComparison.Ordinal))
+                        leMin = ParseFloat(raw);
                 }
             }
-            Flush(kind, id, go, rt, mbGo, wrap, overflow, autoSize, inTmp);
+            Flush(kind, id, go, rt, mbGo, wrap, overflow, autoSize, inTmp, inLe, leMin);
         }
 
         void Flush(string kind, long id, Go go, Rt rt, long mbGo, int wrap, int overflow,
-            bool autoSize, bool inTmp)
+            bool autoSize, bool inTmp, bool inLe, float leMin)
         {
             if (kind == "1")
                 _gos[id] = go;
@@ -452,6 +474,8 @@ namespace GatekeeperBastion.Tests
                 if (mbGo != 0) _mbGo[id] = mbGo;
                 if (inTmp && mbGo != 0)
                     _tmpByGo[mbGo] = new TmpFlags(wrap, overflow, autoSize);
+                if (inLe && mbGo != 0)
+                    _leMinByGo[mbGo] = leMin;
             }
         }
 
@@ -476,6 +500,15 @@ namespace GatekeeperBastion.Tests
             if (colon < 0) return 0;
             int.TryParse(raw.Substring(colon + 1).Trim(), NumberStyles.Integer,
                 CultureInfo.InvariantCulture, out int v);
+            return v;
+        }
+
+        static float ParseFloat(string raw)
+        {
+            int colon = raw.LastIndexOf(':');
+            if (colon < 0) return 0f;
+            float.TryParse(raw.Substring(colon + 1).Trim(), NumberStyles.Float,
+                CultureInfo.InvariantCulture, out float v);
             return v;
         }
 
