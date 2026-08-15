@@ -1,9 +1,14 @@
 # M67 — Playable from zero
 
 <!--
-Status: later
-Update trigger: when the observed performance band changes, when a structural invariant is added, or when a new progress gate is authored
-Last updated: 2026-08-14
+Status: cancelled, Aug 2026
+Update trigger: none — cancelled
+Last updated: 2026-08-15
+Cancelled 2026-08-15 (Zo via agent). Premise gone: M53's carry recut lets a new save
+convert after Wave 1 (`HatchBank.CarryConvert(1)`, `HatchBankTests.NibbleThreeTimes200_Banks600AtOneTimes`).
+The M52+M53 compound gate this suite was meant to catch no longer exists. A fresh-save
+dev command or kill-rate envelope can be filed later if a session needs them; they are
+not this file.
 -->
 
 Two played floor tests, a recorded performance envelope, and a short list of structural

@@ -7,6 +7,43 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-15
 -->
 
+- 2026-08-15: **M67 cancelled.** Premise was the M52+M53 compound gate (no bank
+  until a five-Wave clear). M53's carry recut already converts after Wave 1
+  (`HatchBank.CarryConvert(1)`, `HatchBankTests.NibbleThreeTimes200_Banks600AtOneTimes`).
+  File moved to `5. cancelled/`. Fresh-save tooling or a kill-rate envelope can
+  be refiled if a session needs them.
+- 2026-08-15: **M63 recut; M63-2 active — the three that walk.** M63 keeps the
+  twelve-kind roster, Ram→Thief in code, `in_build` filter, and door-time. Bodies,
+  Mixamo melee walk, player capsule mesh removal, and Thief-named Play pages for
+  Default / Hunter / Thief (code still Ram) are `M63-2`.
+- 2026-08-15: **M63 roster restored to the brainstorm.** The twelve kinds named when
+  M63 was cut (Default, Hunter, Thief, Source, Enabler, Alarmer, Bypasser, Reclaimer,
+  Exploder, Standoff Shooter, Ailment Shooter, Cloaker) were only in the milestone's
+  criteria list; `Brainstorms/gatekeepers-and-waves.md` still described three.
+  The roster table, property list, draw rule and Thief recording are in that file.
+  Play pages still cover the three in the build.
+- 2026-08-15: **M60 in progress** — Unity Relay join code on Main Menu Host/Join;
+  allocate on the menu before Bastion; LAN fallback; pause shows the code; F10/F11
+  editor-only. Kill criterion 2026-08-28. UGS project ID still empty — Host refuses
+  by name until linked. Packages: `com.unity.services.relay` 1.2.0 +
+  `com.unity.services.authentication` 3.7.0.
+- 2026-08-15: **M62 completed** — Compendium from pause (Bastion + Ship). Hand-written
+  Play pages hold `## Game` / `## Reference` / `## See also`; reader shows Game +
+  See also in a scrollable volume tree; StreamingAssets copy via
+  `GatekeeperBastion/Build/Copy Compendium Pages` (also player-build); HUD/pause chrome
+  hidden while open. Gate: `CompendiumFormTests`. Zo close; playthrough confirmation.
+- 2026-08-15: **M64 recut — both seats play the loop.** Definition of done is host and
+  client each shop on their own Ship, EMBARK, start Waves, fight with muzzle/SFX, repair
+  and decoy, and see an ending. Host/Join currently skip Ship; client Wave-start is an
+  explicit refuse in `GameController.Terminals`. Shareability machine checks stay. Five-Wave
+  clear, split wallets, Whispers, hit-confirm remain M65 / M69 / M66
+  (M67 later cancelled same day).
+- 2026-08-15: **M59 completed** — Field Scale 1; fight HUD pairwise ≥24 (Shortcut Keys
+  nudged for 1280×720); Score/Wave/Weapon overflow; Profile Exp inactive; station
+  Categories/Preview off, Background Blur α≥0.65, purpose/deal/footer copy; pause
+  `ShortcutPanelView` bound with `DevSurface.None`; end Scrim α≥0.65. Gate:
+  `HudSeparationTests` + `M59PolishChromeTests` + `StationPurposeTests` Passed
+  (`gkb_verify_report.json` 2026-08-15T18:03:48Z). Criterion 13 confirmation.
 - 2026-08-15: **M62 in progress — Game dimension.** Each hand-written `Docs/Play/` page
   holds `## Game` (pause reader) + `## Reference` (fuller brief) + `## See also` +
   `## Gaps`. Reader and StreamingAssets copy show Game + See also only. Pause command
