@@ -76,6 +76,40 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
+        public void Mk1DamageFocus_NeverRivalsFocusedPrimaries()
+        {
+            // The MK-1's meanest build (damage-centred) stays under every primary's own
+            // damage-centred build at equal purchases. Cross-centre comparisons — a
+            // damage-focused MK-1 against a reload-focused primary — are build
+            // expression, deliberately unasserted.
+            for (int n = 1; n <= WeaponWheel.MaxPurchases; n++)
+            {
+                float mk1 = WeaponWheel.EffectiveDps(
+                    WeaponCatalog.Def(WeaponId.Mk1Sidearm),
+                    WeaponWheel.FocusHistory(WeaponId.Mk1Sidearm, WheelAttr.Damage, n));
+                foreach (WeaponId id in WeaponCatalog.ForSlot(WeaponSlot.Primary))
+                {
+                    float primary = WeaponWheel.EffectiveDps(
+                        WeaponCatalog.Def(id),
+                        WeaponWheel.FocusHistory(id, WheelAttr.Damage, n));
+                    Assert.Less(mk1, primary,
+                        $"MK-1 damage focus x{n} dps {mk1:0.##} must stay below {id}'s {primary:0.##}");
+                }
+            }
+        }
+
+        [Test]
+        public void FirstWheelPurchase_AffordableOffOneWaveOneClear()
+        {
+            // Zo 2026-08-14: one wave-1 clear funds the first wheel purchase. Both sides
+            // read source constants so a retune of either breaks loudly.
+            long waveOneTake =
+                (long)(WaveDirector.BaseEnemyCount * MetaUpgrades.SalvagePerKill(0));
+            Assert.LessOrEqual(WeaponTier.Cost(0), waveOneTake,
+                $"first purchase {WeaponTier.Cost(0)} must be affordable off a wave-1 clear ({waveOneTake})");
+        }
+
+        [Test]
         public void SecDAndMk1AreDifferentWeapons()
         {
             var mk1 = WeaponCatalog.Def(WeaponId.Mk1Sidearm);

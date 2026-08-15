@@ -86,9 +86,10 @@ Centring an upgrade focus is a commitment that also feeds its neighbours. The pl
 one attribute alone, and the 3 that lands either side is the price of the 5. That is the
 authorship this lever hands over.
 
-**Unbuilt inside this lever:** the MK-1 and SEC-D have no authored ring — `RingOf` returns null and
-`HasRing` is false, so those Secondaries cannot be focused at all. Rings exist for the BR-12, the
-MR-35 and PRI-C. M21 lists the MK-1 ring as open on purpose, to be authored before a Secondary wheel.
+**Unbuilt inside this lever:** the SEC-D has no authored ring — `RingOf` returns null and
+`HasRing` is false, so it cannot be focused at all until its ability is decided (the M26 open
+call). Rings exist for the BR-12, the MR-35, PRI-C and the MK-1 (strength Reload, weakness
+Damage; Ability rides beside Reload so the readiness build feeds Regen Surge).
 
 **Code-side authority, so a rule has one owner:** `ShipCommands` is the only path by which
 station UI mutates `MetaState`; `GameController` command methods are the only path to

@@ -7,6 +7,17 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-14
 -->
 
+- 2026-08-14: **M71 authored and built — the sidearm joins the wheel.** MK-1 ring
+  Damage–Ability–Reload–Clip–FireRate, strength Reload / weakness Damage (Zo). Wheel
+  purchase, ARMORY UI, storage and save round-trip shipped slot-agnostic in M21, so the
+  build is two `WeaponWheel` switch cases plus gating tests: kill criterion did not fire
+  — `Mk1DamageFocus_NeverRivalsFocusedPrimaries` passes at every purchase count with the
+  shared per-point table, and `FirstWheelPurchase_AffordableOffOneWaveOneClear` pins Zo's
+  pacing constraint (`WeaponTier.Cost(0)` 400 ≤ 18 × 25 = 450). Harness 359/4, the four
+  reds all `HudSeparationTests` from the parallel HUD pass. SEC-D ring rejected this
+  slice — its ability is `AbilityId.None` (M26 row, blocked on Zo), a ring would sell
+  dead points. **Planned queue was 13 against the cap of 10 at authoring — cap waived by
+  Zo for this slice**; the file moved to active the same session.
 - 2026-08-14: **M61-2 status later → completed.** Kit blocks are POLYGON Sci-Fi Space
   meshes on scaler-2 station rooms, functional sliding doors, bulkhead Hatch,
   Generated/Authored split. Gates: `gkb_verify_report.json` 2026-08-15T00:09:20Z —

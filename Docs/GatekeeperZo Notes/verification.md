@@ -91,8 +91,7 @@ Real, lower leverage. None of these blocks anything.
 | Save byte-identical | M24 | Needs one clean AutoVerify run |
 | Decoy Path 2 + PlayMode tests | M30 | `DecoyPlayModeTests` written, never run |
 | `FireRay` layer mask | M31 | No Enemy or World layers exist yet; buffer raised 16 to 32 with a full-buffer warning as the interim |
-| `SEC-D` ability and ring | M26 | **Blocked on Zo**, not on testing. Two design decisions: an ability meeting M20's contract, and a strength/weakness pair |
-| MK-1 wheel ring | M21 | Deferred on purpose until the Secondary wheel exists |
+| `SEC-D` ability and ring | M26 | **Blocked on Zo**, not on testing. Two design decisions: an ability meeting M20's contract, and a strength/weakness pair. M71 shipped the MK-1 ring, so the pattern to copy exists |
 
 ---
 
@@ -100,4 +99,5 @@ Real, lower leverage. None of these blocks anything.
 
 | Item | Milestone | Closed by |
 |---|---|---|
+| MK-1 wheel ring | M21 | 2026-08-14, M71: ring D–A–R–C–F authored, strength Reload / weakness Damage; `RingsAreUniqueAcrossShopWeapons` and `WeaknessNeverAdjacentToStrength` cover it, harness green |
 | `— N live` on group lines, segment lands on zero | M29 | 2026-08-09 session `15-21-59`: group lines read `— 3 live`, `— 6 live`, `— 5 live`; the reader parses it and the Wave-3 segment resolves |

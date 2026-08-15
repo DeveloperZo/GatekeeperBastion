@@ -64,7 +64,7 @@ namespace GatekeeperBastion.Tests
                 var def = WeaponCatalog.Def(id);
                 if (WeaponAbility.IsEmpty(def.abilityId)) continue;
                 var ring = WeaponWheel.RingOf(id);
-                if (ring == null) continue; // MK-1: ability exists, ring not authored yet
+                if (ring == null) continue; // SEC-D: ring waits on its ability decision
                 string key = WeaponWheel.CanonicalRingKey(ring);
                 Assert.IsTrue(seen.Add(key), $"{id} ring collides with another shop weapon ({key})");
             }
@@ -116,6 +116,25 @@ namespace GatekeeperBastion.Tests
             float reloadRatio = Math.Max(reloadD, reloadR) / Math.Min(reloadD, reloadR);
             Assert.GreaterOrEqual(Math.Max(burstRatio, reloadRatio), 2f - 1e-3f,
                 $"burst {burstRatio:0.##}x reload {reloadRatio:0.##}x — need ≥2x on one");
+        }
+
+        [Test]
+        public void Mk1WheelPoints_SurviveJsonRoundTrip()
+        {
+            // Two reload-centred purchases on the MK-1 ring: Reload +5, neighbours
+            // Ability and Clip +3 each. Pins the ring's neighbour structure and the
+            // save path in one round trip.
+            var m = new MetaState();
+            m.SetOwned(WeaponId.Mk1Sidearm, true);
+            m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Reload);
+            m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Reload);
+            var loaded = MetaState.FromJson(m.ToJson());
+            Assert.AreEqual(10, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Reload));
+            Assert.AreEqual(6, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Ability));
+            Assert.AreEqual(6, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Clip));
+            Assert.AreEqual(0, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
+            Assert.AreEqual(0, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.FireRate));
+            Assert.AreEqual(2, loaded.TierOf(WeaponId.Mk1Sidearm));
         }
 
         [Test]

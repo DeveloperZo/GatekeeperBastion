@@ -36,11 +36,20 @@ namespace GatekeeperBastion.Sim
         public const float FireRatePerPoint = 1.0117f;
 
         /// <summary>Cyclic ring for a weapon, or null when the ring is not authored yet
-        /// (MK-1 until its row is decided).</summary>
+        /// (SEC-D until its ability is decided).</summary>
         public static WheelAttr[] RingOf(WeaponId id)
         {
             switch (id)
             {
+                // Strength Reload, weakness Damage — two apart. Ability adjacent to Reload
+                // so the readiness build feeds Regen Surge; Damage's neighbours exclude Clip
+                // to blunt duty-cycle compounding on a 1.4 s reload (never-rival).
+                case WeaponId.Mk1Sidearm:
+                    return new[]
+                    {
+                        WheelAttr.Damage, WheelAttr.Ability, WheelAttr.Reload,
+                        WheelAttr.Clip, WheelAttr.FireRate
+                    };
                 // Strength Damage, weakness Reload — two apart. Ability adjacent to Damage.
                 case WeaponId.Br12Shotgun:
                     return new[]
@@ -75,6 +84,10 @@ namespace GatekeeperBastion.Sim
         {
             switch (id)
             {
+                case WeaponId.Mk1Sidearm:
+                    strength = WheelAttr.Reload;
+                    weakness = WheelAttr.Damage;
+                    return true;
                 case WeaponId.Br12Shotgun:
                     strength = WheelAttr.Damage;
                     weakness = WheelAttr.Reload;

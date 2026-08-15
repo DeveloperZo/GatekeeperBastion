@@ -41,7 +41,7 @@ in this milestone. Correction, not a retro-edit.
 
 | # | Status | Evidence |
 |---|---|---|
-| MK-1 ring | **open (deferred)** | Ability exists (M20); ring unset on purpose — author before Secondary wheel. Primaries shipped without it. |
+| MK-1 ring | **closed 2026-08-14** | Authored in M71 (`../2. active/M71-the-sidearm-joins-the-wheel.md`): D–A–R–C–F, strength Reload / weakness Damage. Ring tests pass; SEC-D remains the only unringed weapon (M26 ability call). |
 | Playthrough feel | **open** | Two opposite 110-pt focuses on BR-12 — do they feel like different weapons? (`playthrough.md`) |
 
 ## Story

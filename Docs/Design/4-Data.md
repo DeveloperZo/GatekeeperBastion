@@ -26,8 +26,10 @@ did are `2-Dynamics.md`.
 ## Weapon — MK-1 Sidearm
 
 `Sim/Meta/WeaponCatalog.cs` (base row), `Sim/Meta/WeaponWheel.cs` (per-point multipliers).
-**There are no weapon "levels".** The flat Tier curve was replaced by the upgrade wheel; the MK-1
-has no ring authored (`WeaponWheel.RingOf` returns null for it), so it never improves.
+**There are no weapon "levels".** The flat Tier curve was replaced by the upgrade wheel. The
+MK-1 has a ring (strength Reload, weakness Damage — the rings table below); SEC-D is the one
+weapon with no ring authored (`WeaponWheel.RingOf` returns null until its ability is decided),
+so it alone never improves.
 
 <!-- GKB:GEN mk1-base — WeaponCatalog.Def(Mk1Sidearm) -->
 | | base | | base |
@@ -45,8 +47,11 @@ base: (8 * 14) / (8/3 + 1.4) = 112 / 4.07 = 27.5 dps
 ```
 
 Reload is an upgrade spoke (`ReloadPerPoint = 0.98035f`) for weapons that have a ring, so the
-duty cycle is not fixed across a campaign — it is only fixed for the MK-1, which cannot buy
-points.
+duty cycle is not fixed across a campaign — it is only fixed for the SEC-D, which cannot buy
+points. The MK-1's damage-centred build stays under every primary's damage-centred build at
+equal purchases (`Mk1DamageFocus_NeverRivalsFocusedPrimaries`); its first purchase costs 400
+against the 450 a wave-1 clear banks at Scavenging 0
+(`FirstWheelPurchase_AffordableOffOneWaveOneClear`).
 
 **Crit** (`PlayerGun.RollCrit`, `CritDamageMultiplier = 2`): average multiplier is
 `1 + critChance`; at Luck 5 (0.25), `27.5 x 1.25 = 34.4 dps`. Only crit source in the game.
@@ -301,7 +306,7 @@ Rings (cycles; focus pays centre 5, neighbours 3):
 | BR-12 | R C D A F | damage | reload |
 | MR-35 | R D C A F | damage | fire rate |
 | PRI-C | C D R A F | damage | fire rate |
-| MK-1 | *unset* | — | — |
+| MK-1 | D A R C F | reload | damage |
 | SEC-D | *unset* | — | — |
 <!-- GKB:END rings -->
 

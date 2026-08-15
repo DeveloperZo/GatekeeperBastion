@@ -119,6 +119,7 @@ this table — see the change log.
 | M54 | Master Control is the win | completed, Aug 2026 | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`3. completed/M54`](Milestones/3.%20completed/M54-master-control-is-the-win.md) |
 | M55 | Pay for intensity | next | `+/-` spend 100 unbanked per step; `E` select, `T` start; HUD says Intensity; siphon dial retired; same `TetherSiphon` curve | [`2. active/M55`](Milestones/2.%20active/M55-pay-for-intensity.md) |
 | M70 | The Boarder gets a verb | later | CREW sells a 4-ability roster (Cloak/Anchor/Recall/Ping) on `G`, one equipped; four tracks refunded and deleted, SaveVersion 8; verbs apply once server-side; `UTL-H` turret siphons Primary reserve on the clock, ghost-and-confirm | [`1. planned/M70`](Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md) |
+| M71 | The sidearm joins the wheel | next | MK-1 gets a ring (D–A–R–C–F, strength Reload / weakness Damage); purchase/UI/save shipped slot-agnostic in M21, so the slice is two switch cases plus tests: focused never-rival, wave-1 affordability (Cost(0) 400 ≤ 450 take); SEC-D stays gated on its M26 ability decision | [`2. active/M71`](Milestones/2.%20active/M71-the-sidearm-joins-the-wheel.md) |
 
 ## Strategy
 
