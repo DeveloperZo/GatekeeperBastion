@@ -4,8 +4,7 @@ using UnityEngine.AI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>Which segment edge a progression gate seals. Passages (Door side, no
-    /// <see cref="BastionDoor"/>) stay walkable with no gate mark.</summary>
+    /// <summary>Which segment edge a door seals.</summary>
     public enum BastionDoorEdge : byte
     {
         North = 0,
@@ -14,11 +13,18 @@ namespace GatekeeperBastion.Game
         West = 3,
     }
 
-    /// <summary>HOST-ONLY: progression gate — a visible slab that fills the doorway while
-    /// locked, then hides when the unlock graph opens it. Not a passage.</summary>
+    /// <summary>HOST-ONLY: a sliding door leaf in a doorway. Locked doors (progression gates)
+    /// stay shut until the unlock graph opens them; unlocked doors slide open for anyone
+    /// within range and shut behind them. NavMesh carving only while locked — unlocked
+    /// doorways stay pathable and the leaf outruns an approaching agent.</summary>
     public sealed class BastionDoor : MonoBehaviour
     {
         public const string SlabName = "GateSlab";
+
+        const float LeafThickness = 0.35f;
+        const float ProximityRange = 5f;
+        const float SlideSpeed = 8f;
+        const float PollInterval = 0.15f;
 
         [SerializeField] string doorId;
         [SerializeField, Tooltip("Also filled by Field terminals that reference this door.")]
@@ -29,11 +35,16 @@ namespace GatekeeperBastion.Game
         [SerializeField] SpawnPoint[] sealedSpawns;
         [SerializeField] Material gateMat;
 
+        static readonly Collider[] ProximityHits = new Collider[16];
+
         BoxCollider _blockCollider;
         NavMeshObstacle _obstacle;
         Transform _slab;
         BastionLayout _layout;
-        bool _open;
+        Vector3 _apertureSize;
+        bool _unlocked;
+        bool _leafOpen;
+        float _nextPoll;
         bool _blockersReady;
 
         public string DoorId => doorId;
@@ -42,7 +53,7 @@ namespace GatekeeperBastion.Game
         public bool OpensControlRoom => opensControlRoom;
         public BastionDoorEdge ApertureEdge => apertureEdge;
         public SpawnPoint[] SealedSpawns => sealedSpawns;
-        public bool IsOpen => _open;
+        public bool IsOpen => _unlocked;
 
         /// <summary>Editor/sketch emit — assigns ids and snaps to the segment Door aperture.</summary>
         public void Configure(
@@ -72,8 +83,7 @@ namespace GatekeeperBastion.Game
         public void SetGateMaterial(Material mat)
         {
             gateMat = mat;
-            if (_slab != null)
-                ApplySlabMaterial(_slab.gameObject);
+            ApplyLeafMaterial();
         }
 
         void Awake()
@@ -133,6 +143,7 @@ namespace GatekeeperBastion.Game
 
         void ApplyBlockerSize(Vector3 size)
         {
+            _apertureSize = size;
             float y = size.y * 0.5f;
             var center = new Vector3(0f, y, 0f);
             if (_blockCollider != null)
@@ -150,7 +161,7 @@ namespace GatekeeperBastion.Game
             if (_slab != null)
             {
                 _slab.localPosition = center;
-                _slab.localScale = size;
+                _slab.localScale = new Vector3(size.x, size.y, LeafThickness);
             }
         }
 
@@ -162,8 +173,8 @@ namespace GatekeeperBastion.Game
                 _slab = existing;
                 _slab.localPosition = new Vector3(0f, size.y * 0.5f, 0f);
                 _slab.localRotation = Quaternion.identity;
-                _slab.localScale = size;
-                ApplySlabMaterial(_slab.gameObject);
+                _slab.localScale = new Vector3(size.x, size.y, LeafThickness);
+                ApplyLeafMaterial();
                 return;
             }
 
@@ -176,40 +187,43 @@ namespace GatekeeperBastion.Game
                 go.transform.SetParent(transform, false);
                 go.transform.localPosition = new Vector3(0f, size.y * 0.5f, 0f);
                 go.transform.localRotation = Quaternion.identity;
-                go.transform.localScale = size;
+                go.transform.localScale = new Vector3(size.x, size.y, LeafThickness);
 
                 var col = go.GetComponent<Collider>();
                 if (col != null)
                     DestroyImmediate(col);
 
-                ApplySlabMaterial(go);
                 _slab = go.transform;
+                ApplyLeafMaterial();
                 return;
             }
 #endif
             Debug.LogError(
                 "[BastionDoor] Missing GateSlab on " + name
-                + " — drop gkb_bastion_terminals_request.txt to author sealed doors.",
+                + " — drop gkb_bastion_sketch_request.txt to re-emit doors.",
                 this);
         }
 
-        void ApplySlabMaterial(GameObject slab)
+        /// <summary>Locked reads as a sealed gate (gate material); unlocked reads as plain
+        /// station wall. The swap on unlock is the visible state change.</summary>
+        void ApplyLeafMaterial()
         {
-            var renderer = slab.GetComponent<MeshRenderer>();
+            if (_slab == null)
+                return;
+            var renderer = _slab.GetComponent<MeshRenderer>();
             if (renderer == null)
                 return;
-            if (gateMat != null)
-            {
-                renderer.sharedMaterial = gateMat;
-                return;
-            }
 
+            Material wall = null;
             BastionSegment segment = GetComponentInParent<BastionSegment>();
-            if (segment != null && segment.WallMaterial != null)
-            {
-                renderer.sharedMaterial = segment.WallMaterial;
-                return;
-            }
+            if (segment != null)
+                wall = segment.WallMaterial;
+
+            Material locked = gateMat != null ? gateMat : wall;
+            Material open = wall != null ? wall : gateMat;
+            Material pick = _unlocked ? open : locked;
+            if (pick != null)
+                renderer.sharedMaterial = pick;
         }
 
         void OnEnable()
@@ -227,24 +241,26 @@ namespace GatekeeperBastion.Game
                 _layout.UnregisterDoor(this);
         }
 
-        /// <summary>When closed, block walk and show the slab; when open, clear both and unseal spawns.</summary>
+        /// <summary>Unlock state from the graph. Locked: leaf shut, walk and nav blocked.
+        /// Unlocked: nav carve off for good; the leaf becomes a proximity door.</summary>
         public void SetOpen(bool open)
         {
             if (!_blockersReady)
                 EnsureGatePresentation();
 
-            _open = open;
-            if (_blockCollider != null)
-                _blockCollider.enabled = !open;
-
+            _unlocked = open;
             if (_obstacle != null)
             {
                 _obstacle.enabled = !open;
                 _obstacle.carving = !open;
             }
 
-            if (_slab != null)
-                _slab.gameObject.SetActive(!open);
+            if (!Application.isPlaying)
+                SetLeafInstant(false);
+            else if (!open)
+                _leafOpen = false;
+
+            ApplyLeafMaterial();
 
             if (sealedSpawns == null)
                 return;
@@ -256,6 +272,67 @@ namespace GatekeeperBastion.Game
                     continue;
                 sp.gameObject.SetActive(open);
             }
+        }
+
+        void SetLeafInstant(bool leafOpen)
+        {
+            _leafOpen = leafOpen;
+            if (_slab != null)
+            {
+                Vector3 p = _slab.localPosition;
+                p.y = LeafTargetY(leafOpen);
+                _slab.localPosition = p;
+            }
+            if (_blockCollider != null)
+                _blockCollider.enabled = !leafOpen;
+        }
+
+        float LeafTargetY(bool leafOpen)
+        {
+            float shut = _apertureSize.y * 0.5f;
+            return leafOpen ? shut + _apertureSize.y : shut;
+        }
+
+        void Update()
+        {
+            if (!Application.isPlaying || !_blockersReady || _slab == null)
+                return;
+
+            if (_unlocked && Time.time >= _nextPoll)
+            {
+                _nextPoll = Time.time + PollInterval;
+                _leafOpen = AnyoneNear();
+            }
+
+            Vector3 pos = _slab.localPosition;
+            float target = LeafTargetY(_leafOpen);
+            if (!Mathf.Approximately(pos.y, target))
+            {
+                pos.y = Mathf.MoveTowards(pos.y, target, SlideSpeed * Time.deltaTime);
+                _slab.localPosition = pos;
+            }
+
+            // Physical block only while the leaf actually fills the doorway.
+            if (_blockCollider != null)
+                _blockCollider.enabled = pos.y < LeafTargetY(false) + 0.3f;
+        }
+
+        bool AnyoneNear()
+        {
+            Vector3 center = transform.TransformPoint(0f, _apertureSize.y * 0.5f, 0f);
+            var half = new Vector3(_apertureSize.x * 0.5f + 1f, _apertureSize.y * 0.5f, ProximityRange);
+            int count = Physics.OverlapBoxNonAlloc(center, half, ProximityHits, transform.rotation);
+            for (int i = 0; i < count; i++)
+            {
+                Collider hit = ProximityHits[i];
+                if (hit == null || hit == _blockCollider)
+                    continue;
+                if (hit.GetComponentInParent<CharacterController>() != null
+                    || hit.GetComponentInParent<NavMeshAgent>() != null
+                    || hit.GetComponentInParent<BoarderPresentation>() != null)
+                    return true;
+            }
+            return false;
         }
     }
 }

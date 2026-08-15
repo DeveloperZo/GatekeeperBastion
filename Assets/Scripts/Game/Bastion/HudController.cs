@@ -32,6 +32,9 @@ namespace GatekeeperBastion.Game
         [SerializeField, Tooltip("Every pause/settings modal the Esc dispatcher may need to close. Authored in the scene.")]
         ModalWindowManager[] _modals;
 
+        [SerializeField, OptionalBinding, Tooltip("Authored ShortcutPanelView on Canvas - Pause Menu.")]
+        ShortcutPanelView _pauseShortcuts;
+
         Interactor _interactor;
         PlayerGun _gun;
         PlayerAbility _ability;
@@ -57,6 +60,7 @@ namespace GatekeeperBastion.Game
 
         readonly WaveDirector _waves = new WaveDirector();
         readonly List<ShortcutRow> _shortcutRows = new List<ShortcutRow>(16);
+        readonly List<ShortcutRow> _pauseShortcutRows = new List<ShortcutRow>(16);
         readonly StringBuilder _lineBuf = new StringBuilder(128);
 
         long _cacheAlive = long.MinValue;

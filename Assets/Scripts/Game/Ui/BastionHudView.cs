@@ -19,6 +19,9 @@ namespace GatekeeperBastion.Game
 
         static readonly Vector3[] Corners = new Vector3[4];
 
+        /// <summary>Profile rank line. There is no level/XP model; EXP stays hidden.</summary>
+        public const string ProfileRank = "BOARDER";
+
         public event Action ReturnClicked;
 
         [SerializeField] RectTransform _root;
@@ -136,6 +139,7 @@ namespace GatekeeperBastion.Game
             }
             if (_shortcuts != null) _shortcuts.EnsureBuilt();
             if (_endScreen != null) _endScreen.EnsureBuilt();
+            UiBind.Show(_profileExp, false);
         }
 
         void LogMissing(string field, UnityEngine.Object value)
@@ -168,6 +172,7 @@ namespace GatekeeperBastion.Game
             HideChrome();
             // Seed before the first PushFightValues so the card never flashes WEAPON/0/0.
             SetWeapon("—", "—");
+            SetProfile(ProfileRank, null);
             SetReloadLabel("CLIP");
             SetReloadBar(0f);
             SetReloadBlockVisible(true);
@@ -265,7 +270,7 @@ namespace GatekeeperBastion.Game
         public void SetProfile(string levelLine, string expLine)
         {
             UiBind.SetText(_profileLevel, levelLine);
-            UiBind.SetText(_profileExp, expLine != null ? expLine : "");
+            UiBind.Show(_profileExp, false);
         }
 
         public void SetScore(string salvageLine, string metaLine)

@@ -31,6 +31,7 @@ namespace GatekeeperBastion.EditorTools
         internal const float MaxMinutes = 20f;
 
         const string ShipScene = "Assets/Scenes/Ship.unity";
+        const string BastionScene = "Assets/Scenes/Bastion.unity";
         const string PendingKey = "GKB.GameplayRecorder.Pending";
 
         /// <summary>ScreenCapture writes in native backbuffer order, which is upside down against
@@ -44,10 +45,36 @@ namespace GatekeeperBastion.EditorTools
             return Path.GetFullPath(Path.Combine(Application.dataPath, "..", name));
         }
 
-        /// <summary>Starts recording in the current Play session, or opens the Ship scene and
-        /// enters Play mode first when the editor is stopped.</summary>
-        [MenuItem("GatekeeperBastion/Record Gameplay (F9 to stop)", false, 41)]
-        public static void Record()
+        /// <summary>Starts recording in the current Play session, or enters Play on a chosen
+        /// scene when the editor is stopped. Replaces the former single
+        /// <c>GatekeeperBastion/Record Gameplay (F9 to stop)</c> row.</summary>
+        [MenuItem("GatekeeperBastion/Record Gameplay/This scene (F9 to stop)", false, 41)]
+        public static void RecordThisScene()
+        {
+            Record(scenePath: null);
+        }
+
+        [MenuItem("GatekeeperBastion/Record Gameplay/Ship", false, 42)]
+        public static void RecordShip()
+        {
+            Record(ShipScene);
+        }
+
+        [MenuItem("GatekeeperBastion/Record Gameplay/Bastion", false, 43)]
+        public static void RecordBastion()
+        {
+            Record(BastionScene);
+        }
+
+        [MenuItem("GatekeeperBastion/Record Gameplay/This scene (F9 to stop)", true)]
+        [MenuItem("GatekeeperBastion/Record Gameplay/Ship", true)]
+        [MenuItem("GatekeeperBastion/Record Gameplay/Bastion", true)]
+        static bool RecordValidate()
+        {
+            return GameplayRecorderDriver.Active == null;
+        }
+
+        static void Record(string scenePath)
         {
             if (EditorApplication.isPlaying)
             {
@@ -57,15 +84,22 @@ namespace GatekeeperBastion.EditorTools
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
 
-            EditorSceneManager.OpenScene(ShipScene, OpenSceneMode.Single);
+            if (scenePath != null)
+            {
+                EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            }
+            else
+            {
+                var scene = EditorSceneManager.GetActiveScene();
+                if (!scene.IsValid() || !scene.isLoaded)
+                {
+                    Debug.LogError("[GameplayRecorder] No loaded scene to record.");
+                    return;
+                }
+            }
+
             SessionState.SetBool(PendingKey, true);
             EditorApplication.EnterPlaymode();
-        }
-
-        [MenuItem("GatekeeperBastion/Record Gameplay (F9 to stop)", true)]
-        static bool RecordValidate()
-        {
-            return GameplayRecorderDriver.Active == null;
         }
 
         [InitializeOnLoadMethod]
@@ -93,7 +127,7 @@ namespace GatekeeperBastion.EditorTools
     }
 
     /// <summary>Runtime half of <see cref="GameplayRecorder"/>. Survives scene loads, so a
-    /// recording started on the ship keeps running into the Bastion.</summary>
+    /// recording started in one scene keeps running through later loads.</summary>
     public sealed class GameplayRecorderDriver : MonoBehaviour
     {
         public static GameplayRecorderDriver Active { get; private set; }

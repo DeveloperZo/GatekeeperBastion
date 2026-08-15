@@ -11,6 +11,13 @@ namespace GatekeeperBastion.Game
         [SerializeField] FabricationPanelView _body;
 
         public override string StationName => "FABRICATION";
+        public const string PurposeLine = "the Hatch and the Ship's gear";
+        public override string Purpose => PurposeLine;
+
+        public static string RigDealLine() =>
+            "Repair Rig required. Repair costs " +
+            ShipSystems.RepairSalvagePerHp.ToString("0") +
+            " Salvage per HP.";
 
         protected override string PromptHint => "fabricate hatch armor, equipment, and payloads";
 
@@ -25,6 +32,8 @@ namespace GatekeeperBastion.Game
         {
             if (_body == null) return; // Awake already logged the missing binding.
 
+            view.SetDeal(RigDealLine());
+
             // HATCH / EQUIPMENT / PAYLOAD headings are authored scene text.
             UpgradeRow(_body.HatchRow, UpgradeTrack.HatchArmor, "Hatch Armor",
                 l => $"{MetaUpgrades.HatchHp(l):0} HP");
@@ -37,7 +46,7 @@ namespace GatekeeperBastion.Game
 
             BindPayloadRow(_body.DecoyRow, m, PayloadId.Decoy);
             string bay = m.EquippedDrone == PayloadId.None
-                ? "bay empty"
+                ? "Bay empty"
                 : $"bay: {PayloadCatalog.Def(m.EquippedDrone).displayName}";
             _body.SetBayLine(bay);
         }

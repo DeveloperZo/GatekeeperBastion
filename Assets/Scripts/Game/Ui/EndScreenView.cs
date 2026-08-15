@@ -102,6 +102,9 @@ namespace GatekeeperBastion.Game
             UiBind.Show(_detailsButton, hasDetails);
             UiBind.Show(_detailsRoot, false);
 
+            if (_scrim != null && _scrim.alpha < 0.65f)
+                _scrim.alpha = 0.65f;
+
             SetVisible(true);
             StopSequence();
             _sequence = StartCoroutine(PlaySequence());

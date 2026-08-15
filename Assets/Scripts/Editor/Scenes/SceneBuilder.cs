@@ -1,6 +1,7 @@
 using GatekeeperBastion.Game;
 using GatekeeperBastion.Sim;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Unity.AI.Navigation;
 using UnityEditor;
@@ -301,18 +302,39 @@ namespace GatekeeperBastion.EditorTools
             for (int i = existing.Length - 1; i >= 0; i--)
                 UnityEngine.Object.DestroyImmediate(existing[i]);
 
-            var surface = env.AddComponent<NavMeshSurface>();
-            surface.collectObjects = CollectObjects.Children;
-            surface.useGeometry = NavMeshCollectGeometry.RenderMeshes;
-            surface.BuildNavMesh();
-            if (surface.navMeshData == null)
+            // Door leaves render, and the bake reads render meshes — a shut leaf would bake a
+            // permanent hole no unlock can heal (runtime blocking is the door's NavMeshObstacle).
+            var hiddenLeaves = new List<GameObject>();
+            BastionDoor[] doors = env.GetComponentsInChildren<BastionDoor>(true);
+            for (int i = 0; i < doors.Length; i++)
             {
-                Debug.LogWarning("[SceneBuilder] NavMesh bake produced no data.");
-                return;
+                Transform slab = doors[i] != null ? doors[i].transform.Find(BastionDoor.SlabName) : null;
+                if (slab == null || !slab.gameObject.activeSelf)
+                    continue;
+                slab.gameObject.SetActive(false);
+                hiddenLeaves.Add(slab.gameObject);
             }
-            AssetDatabase.DeleteAsset(NavMeshDataPath);
-            AssetDatabase.CreateAsset(surface.navMeshData, NavMeshDataPath);
-            surface.navMeshData = AssetDatabase.LoadAssetAtPath<UnityEngine.AI.NavMeshData>(NavMeshDataPath);
+
+            try
+            {
+                var surface = env.AddComponent<NavMeshSurface>();
+                surface.collectObjects = CollectObjects.Children;
+                surface.useGeometry = NavMeshCollectGeometry.RenderMeshes;
+                surface.BuildNavMesh();
+                if (surface.navMeshData == null)
+                {
+                    Debug.LogWarning("[SceneBuilder] NavMesh bake produced no data.");
+                    return;
+                }
+                AssetDatabase.DeleteAsset(NavMeshDataPath);
+                AssetDatabase.CreateAsset(surface.navMeshData, NavMeshDataPath);
+                surface.navMeshData = AssetDatabase.LoadAssetAtPath<UnityEngine.AI.NavMeshData>(NavMeshDataPath);
+            }
+            finally
+            {
+                for (int i = 0; i < hiddenLeaves.Count; i++)
+                    hiddenLeaves[i].SetActive(true);
+            }
         }
 
         /// <summary>Attaches Ship Desk/Screen/Label graybox to every <see cref="BastionTerminal"/>

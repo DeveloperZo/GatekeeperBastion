@@ -8,6 +8,9 @@ namespace GatekeeperBastion.Game
     /// push strings; nothing here sets a colour, a font size or a RectTransform.</summary>
     public sealed class ShipHudView : MonoBehaviour
     {
+        /// <summary>Profile rank line. There is no level/XP model; EXP stays hidden.</summary>
+        public const string ProfileRank = "BOARDER";
+
         [SerializeField] RectTransform _root;
 
         [Header("Corner cards")]
@@ -47,6 +50,7 @@ namespace GatekeeperBastion.Game
             LogMissing(nameof(_weaponCardRoot), _weaponCardRoot);
             // Ship does not use a clip/reload bar; keep the Weapon card shell only.
             UiBind.Show(_reloadBlock, false);
+            UiBind.Show(_profileExp, false);
         }
 
         void LogMissing(string field, Object value)
@@ -58,7 +62,7 @@ namespace GatekeeperBastion.Game
         public void SetProfile(string levelLine, string expLine)
         {
             UiBind.SetText(_profileLevel, levelLine);
-            UiBind.SetText(_profileExp, expLine != null ? expLine : "");
+            UiBind.Show(_profileExp, false);
         }
 
         public void SetScore(string salvageLine, string metaLine)

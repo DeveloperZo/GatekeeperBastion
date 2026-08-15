@@ -31,6 +31,7 @@ namespace GatekeeperBastion.Game
         bool _visibilityResolved;
 
         public abstract string StationName { get; }
+        public abstract string Purpose { get; }
         protected abstract string PromptHint { get; }
 
         public bool IsOpen => _ship != null && _ship.OpenStation == this;
@@ -131,7 +132,29 @@ namespace GatekeeperBastion.Game
             if (!_view.gameObject.activeSelf)
                 _view.gameObject.SetActive(true);
             ShowPanelImmediate(_view.gameObject);
+            HideSettingsChrome();
             ForcePanelSubtreeVisible();
+        }
+
+        /// <summary>Settings-shell leftovers on the station canvas. Esc Settings may keep
+        /// its own copy on a different canvas.</summary>
+        void HideSettingsChrome()
+        {
+            HideNamed(_canvasRoot != null ? _canvasRoot.transform : null, "Categories");
+            HideNamed(_canvasRoot != null ? _canvasRoot.transform : null, "Preview Image");
+        }
+
+        static void HideNamed(Transform root, string name)
+        {
+            if (root == null) return;
+            if (root.name == name)
+            {
+                if (root.gameObject.activeSelf)
+                    root.gameObject.SetActive(false);
+                return;
+            }
+            for (int i = 0; i < root.childCount; i++)
+                HideNamed(root.GetChild(i), name);
         }
 
         static void ShowPanelImmediate(GameObject panel)
@@ -244,6 +267,7 @@ namespace GatekeeperBastion.Game
             _view.SetCloseLabel("CLOSE  (" + Controls.DisplayOf(ControlId.FreeCursor) + ")");
             _view.SetHeader(
                 StationName,
+                Purpose,
                 meta.BankedSalvage,
                 "Lifetime: " + meta.LifetimeSalvageEarned + " earned  —  " + meta.LifetimeSalvageSpent + " spent");
             BuildPanel(_view, meta);

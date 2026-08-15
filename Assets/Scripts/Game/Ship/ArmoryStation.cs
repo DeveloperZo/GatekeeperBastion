@@ -21,6 +21,9 @@ namespace GatekeeperBastion.Game
         bool _wheelDirty;
 
         public override string StationName => "ARMORY";
+        public const string PurposeLine = "the weapon in your hands";
+        public override string Purpose => PurposeLine;
+        public const string TransferLine = "Upgrades stay on this weapon.";
 
         protected override string PromptHint =>
             GameSession.Meta != null && !GameSession.Meta.OwnsAnyWeapon
@@ -60,6 +63,8 @@ namespace GatekeeperBastion.Game
             _wheelDirty = false;
             // rotate is also handled in TickWhileOpen; keep BuildPanel free of input polls.
             if (_body == null) return; // Awake already logged the missing binding.
+
+            view.SetDeal(TransferLine);
 
             _body.BindSlotButtons(
                 _viewSlot == WeaponSlot.Primary ? "[ PRIMARY ]" : "  Primary  ",

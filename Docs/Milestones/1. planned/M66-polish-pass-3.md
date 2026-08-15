@@ -117,7 +117,7 @@ Rejected: **growing the pass.** Three surfaces, and the kill criterion is what a
 
 Rejected: **Unity Relay / friends join.** That is `M60`.
 
-Rejected: **Gatekeeper meshes.** That is `M68` (androids: RobotFemale / HelmetArmor / War_Robot).
+Rejected: **Gatekeeper meshes.** That is `M63` (androids: RobotFemale / HelmetArmor / War_Robot).
 
 ## Verification
 

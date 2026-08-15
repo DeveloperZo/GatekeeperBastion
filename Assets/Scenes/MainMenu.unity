@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!29 &1
 OcclusionCullingSettings:
@@ -2117,7 +2117,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 314923696}
   m_HandleRect: {fileID: 314923694}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -6100,7 +6100,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.72, g: 0.71, b: 0.67, a: 1}
+  m_fontColor: {r: 0.98, g: 0.98, b: 0.95, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -9848,7 +9848,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1368.7262, y: -62.5}
+  m_AnchoredPosition: {x: 98.494995, y: -20}
   m_SizeDelta: {x: 0, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &316916673
@@ -15536,7 +15536,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 488880404}
   m_HandleRect: {fileID: 488880402}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -15670,7 +15670,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -399.99988, y: 0}
+  m_AnchoredPosition: {x: -399.99994, y: 0}
   m_SizeDelta: {x: -800, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &515350938
@@ -16821,7 +16821,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Graphics
+  m_text: VISUALS
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -18611,8 +18611,8 @@ RectTransform:
   - {fileID: 209542719}
   m_Father: {fileID: 806714377}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 960, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -18626,7 +18626,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
   m_MinWidth: -1
@@ -18646,7 +18646,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
   m_Padding:
     m_Left: 355
@@ -20825,7 +20825,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Graphics
+  m_text: VISUALS
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -24452,7 +24452,7 @@ MonoBehaviour:
   m_Padding:
     m_Left: 25
     m_Right: 45
-    m_Top: -26
+    m_Top: 25
     m_Bottom: 25
   m_ChildAlignment: 0
   m_Spacing: 25
@@ -29792,9 +29792,9 @@ RectTransform:
   - {fileID: 416787699}
   m_Father: {fileID: 1004072711}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 72.42, y: -62.5}
   m_SizeDelta: {x: 0, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1044266177
@@ -33403,7 +33403,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -399.99988, y: 0}
+  m_AnchoredPosition: {x: -399.99994, y: 0}
   m_SizeDelta: {x: -800, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &1131223642
@@ -38945,7 +38945,7 @@ MonoBehaviour:
   m_Padding:
     m_Left: 25
     m_Right: 45
-    m_Top: -26
+    m_Top: 25
     m_Bottom: 25
   m_ChildAlignment: 0
   m_Spacing: 25
@@ -41480,7 +41480,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Graphics
+  m_text: VISUALS
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -43800,7 +43800,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -399.99988, y: 0}
+  m_AnchoredPosition: {x: -399.99994, y: 0}
   m_SizeDelta: {x: -800, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &1504036553
@@ -54861,7 +54861,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -399.99988, y: 0}
+  m_AnchoredPosition: {x: -399.99994, y: 0}
   m_SizeDelta: {x: -800, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &1778574210
@@ -55182,7 +55182,7 @@ MonoBehaviour:
   m_Padding:
     m_Left: 25
     m_Right: 45
-    m_Top: -26
+    m_Top: 25
     m_Bottom: 25
   m_ChildAlignment: 0
   m_Spacing: 25
@@ -56704,8 +56704,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 155248872}
   m_HandleRect: {fileID: 155248870}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.48909545
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -57815,7 +57815,7 @@ MonoBehaviour:
   m_Padding:
     m_Left: 25
     m_Right: 45
-    m_Top: -26
+    m_Top: 25
     m_Bottom: 25
   m_ChildAlignment: 0
   m_Spacing: 25
@@ -58733,8 +58733,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1359982573}
   m_HandleRect: {fileID: 1359982571}
   m_Direction: 2
-  m_Value: 1.0000001
-  m_Size: 0.70415
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -60613,6 +60613,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.MainMenuView
   _panels: {fileID: 172717248}
+  _mainPanelsRoot: {fileID: 1995884276}
   _continueButton: {fileID: 607610355}
   _campaignLine: {fileID: 209542722}
   _continueBtn: {fileID: 1298626731}
@@ -60626,7 +60627,6 @@ MonoBehaviour:
   _exitConfirmBtn: {fileID: 2034160469}
   _exitCancelBtn: {fileID: 855079828}
   _modalBlur: {fileID: 67248831}
-  _mainPanelsRoot: {fileID: 1995884276}
 --- !u!114 &2029026621
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62815,8 +62815,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4294114042
+  m_fontColor: {r: 0.98, g: 0.98, b: 0.95, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -62828,7 +62828,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2

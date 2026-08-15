@@ -1,9 +1,18 @@
 # M61-2 — Polish Pass 2, the Bastion
 
 <!--
-Status: later
-Update trigger: when a kit block or side kind gains or loses a mesh mapping, when the Generated/Authored split changes, or when the pack changes
+Status: completed 2026-08-14
+Update trigger: closed
 Last updated: 2026-08-14
+Closed on: Zo 2026-08-14. Gates: `gkb_verify_report.json` 2026-08-15T00:09:20Z — EditMode
+394/5, PlayMode 30/1; both baseline reds unchanged (door-aperture, same miss;
+Repair_ClientChannel), the other four are HudSeparationTests from the parallel HUD pass —
+no reds of this slice's own. Scene greps: 1 realtime light, 0 MeshColliders, 2735
+renderers all on the one atlas material, 2735 static-flagged, 179 shadow-off fixtures.
+Waves arrive on the final geometry (logs 17-29-54 / 17-34-29 untainted, hatchDist down
+to 4.0 m). Open play rows in `GatekeeperZo Notes/verification.md`: criterion 4 eyes
+lines per block kind, criterion 13 Stats numbers (before-numbers unrecoverable — the
+primitive bastion no longer exists; after-only), criterion 14 one solo run completed.
 -->
 
 M61 dresses the Boarder, the guns and the Ship's consoles and explicitly leaves the Bastion in
@@ -18,6 +27,26 @@ new generator.
 Footprints stay locked (`M47`, `../../Decisions.md`). No new block kind, no new side kind, no
 NavMesh redesign. This cut takes deliberate tech debt to ship the look fast (Zo 2026-08-14);
 the debt is listed in **Do not build**, each item with its trigger.
+
+**Amendment, 2026-08-14 (Zo, mid-pass):** the footprint lock above is waived. The first
+emit at the 5×8 scaler read as one aircraft-carrier diagram, not a station; Zo re-framed
+to enclosed walkable rooms with doors, then to a bigger read — a huge lost station, hatch
+docked against a wall. `BastionKit` multiples are now metres on scaler 2 (Half 16 m,
+Full 26 m, OpenArea 42 m, ControlRoom 152×76 m), the layout is authored from Zo's diagram
+in `Tools/bastion-sketch/bastion-defense-layout.txt`, and the sketch grammar gained
+`along=` apertures and the `M` master mark. Emitted terminals also now get `_game` and
+`UnlocksDoor` wired at emit — without them Interact dead-ends and no door can open
+(`BastionLayout` builds the unlock graph from `terminal.UnlocksDoor`).
+
+**Amendment 2, 2026-08-14 (Zo, same pass): doors are functional.** `BastionDoor` carries a
+sliding leaf: locked gates hold an orange seal (`Mat_Hatch`) until their terminal's wave
+count clears, unlocked doors slide open for anyone within 5 m and shut behind them. Every
+open passage in the sketch gets an unlocked auto door at emit (`BastionSketchPassages`,
+Sim, offline-tested). The pack doorframe (`SM_Bld_Wall_Doorframe_01`) ships with a shut
+leaf baked into the prefab; the visuals layer disables it (`BastionMeshMap.DoorframeLeafPrefix`)
+— left active it reads as sealed and bakes a NavMesh wall across the doorway. The NavMesh
+bake also hides `GateSlab` leaves for the same reason. The Hatch is a 7×4.5 m bulkhead
+slab docked on R1's south wall in its own `Mat_Bulkhead`; fine placement is Zo's.
 
 ## Story
 
@@ -265,10 +294,9 @@ Debt taken on purpose (Zo 2026-08-14), each with its trigger:
 ## Depends on / Unblocks
 
 **Depends on `M47`'s kit** and on the pack imported for `M61` (already on disk at
-`Assets/Synty/PolygonSciFiSpace/`; M61 itself is still planned, not shipped — this slice
-does not wait on it). Does not depend on the Ship generator, though both exist for the same
-reason.
+`Assets/Synty/PolygonSciFiSpace/`; M61 closed 2026-08-14). Does not depend on the Ship
+generator, though both exist for the same reason.
 
 **Unblocks** the first friends session being a judgement of the game rather than of its
 placeholders, which `M61` starts and this finishes. Capsule Gatekeepers in a dressed room
-are `M68`.
+are `M63`.

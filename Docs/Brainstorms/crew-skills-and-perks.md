@@ -1,27 +1,28 @@
 # Crew, skills and perks
 
 <!--
-Purpose: The CREW QUARTERS console — player burst abilities. The RPG attribute tracks and
-the unbuilt 5-skill pairing are parked.
+Purpose: The CREW QUARTERS console — the player beyond weapon and ship. The burst-ability
+system graduated to M70; the RPG attribute tracks and the unbuilt 5-skill pairing are parked.
 Status: brainstorm
-Update trigger: when a Crew ability is added, or when the four tracks are deleted or revived.
-Last updated: 2026-08-13
+Update trigger: when M70 ships, or when a parked entry is revived or a remaining entry graduates.
+Last updated: 2026-08-14
 -->
 
 ## What this covers
 
-Everything about the player rather than the weapon or the ship: **Crew abilities** (Zo,
-2026-08-12) — a strong burst over a brief window with a moderate-to-long cooldown. The four
-attribute tracks and the 5-skill pairing in `../Design/3-Mechanics.md` §3.2 are parked.
+Everything about the player rather than the weapon or the ship. The Crew-ability system and
+its starter roster graduated to
+[`M70`](../Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md) (Zo, 2026-08-14). What
+remains here: the parked attribute tracks and 5-skill record, the health/no-healing
+question, and perks as run modifiers.
 
 ## Where it stands
 
 `Game/Ship/CrewQuartersStation.cs` still sells four attribute tracks — Vitality, Stamina,
 Scavenging, Luck — each `base * (1 + 0.05 * level)`, five levels, on the
-`200 * 2^level` doubling curve. Luck is the game's only crit source. **Intended (Zo,
-2026-08-12): this station stops being an RPG sheet.** Session
-`Logs/GatekeeperBastion_2026-08-08_17-00-15.log` spent 4,200 on the weapon and 600 on
-Vitality; the tracks had no job a weapon cannot do.
+`200 * 2^level` doubling curve. Luck is the game's only crit source. The conversion to
+Crew abilities, including what happens to the tracks and to saves holding levels in them,
+is `M70` (planned, not built).
 
 The 5-skill system in `../Design/3-Mechanics.md` §3.2 is unbuilt and parked (see below).
 
@@ -34,104 +35,37 @@ measured — the damage-taken one is computable from existing log transcripts.
 
 ## Graduation test
 
-One Crew ability written as window, cooldown, and what it refuses — and it is not a weapon
-ability (ARMORY, key `F`) and not a payload (FABRICATION, finite, placed). Until that
-sentence exists, a new row is a damage number with a cooldown.
+For the remaining entries: the health entry needs the `player {hp}/{max}` Wave-clear log
+line and Runs read through it; the perks entry needs the NAV-MAP-fork question under it
+answered. Nothing else here is mineable.
 
 ## Decided
 
 ### CREW QUARTERS sells burst abilities, not attributes (Zo, 2026-08-12)
 
-A Crew ability is a strong power-up over a small-to-brief window with a moderate-to-long
-cooldown. **Liked, not ready to graduate** (Zo, 2026-08-13): it is how a Boarder differs
-from teammates besides gun and loadout, and it still has to be grounded in a bastion verb
-— not a second gun. **Loop:** press, a short window, a long wait. **What would kill it:**
-pressed on cooldown every time with no hold-for-a-moment, or one row is the only pick, or
-every row is silent +dps (a worse Tier). **Touches:** weapon abilities (`F`), payload
-contract, the four tracks, `language.md`. ARMORY is the gun; CREW is the Boarder; FAB is
-the drone.
+**Graduated to [`M70`](../Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md)**
+(Zo, 2026-08-14) — system, starter roster, kill criteria and the fate of the four tracks
+are decided there. The milestone is the record.
 
-The four tracks and the 5-skill pairing stay **parked**. XP-as-crew-currency stays **cut**.
-Do not author a roster until one ability can be written against the graduation test.
+The four tracks and the 5-skill pairing stay **parked** as record below.
+XP-as-crew-currency stays **cut**.
 
 ## Open — blocked until decided
 
-| Question | Why it blocks | Owner | Recommendation |
-|---|---|---|---|
-| One equipped Crew ability, or several? | Shop shape, a second cooldown key, co-op stacking. | Zo | One equipped per Boarder, same grain as the drone payload. Station sells a short roster (3–4). |
+Nothing open. The one-equipped-or-several question was answered in `M70` by adopting the
+recommendation on file (one equipped per Boarder, roster of four) — Zo can veto on that
+file.
 
 ## Ideas
 
-### Stealth is a layer, not an invisibility flag (Zo, 2026-08-14)
+### Stealth layer and the trade filter — graduated to M70 (2026-08-14)
 
-**The rule.** Stealth is a shared visibility layer. Everyone in it sees everyone else in it,
-and nobody outside it. The world outside renders as orbs. Nothing else changes: collision,
-interaction and shooting all still work. You are simply unseen by things that are not in the
-layer, and they are shapes to you.
-
-**The principle that decides every case: whoever chose the shift is the one it favours.** An
-enemy that stealthed itself is stronger in there. An enemy you dragged in is weaker. A Cloaker
-that follows you in chose to, so it is strong. A Cloaker you force in is prey, which is the
-player's counter to the one enemy built to punish this ability.
-
-What the rule buys, none of which needs new systems:
-
-- Stealth stops being a safety button and becomes a change of *which* threats apply.
-- The Cloaker gets a second job with no new AI. Normally it is the thing you cannot see; in the
-  layer it is the thing you can.
-- **Being first stops paying.** A native stealther is strong whether it entered before or after
-  you, so the ordering heuristic that dominates other stealth games does not apply here. What
-  replaces it is reading whether the layer is already occupied, which is a question with an
-  answer you can work for.
-- **The Cloaker and the ability already compose into a scouting ritual.** The Cloaker is
-  invisible while you stand still and visible while you move, so the correct play before
-  cloaking is move, look, commit. Movement is the scan. No new mechanic.
-- The Cloaker taxes the ability by existing, so it does work even against a player who never
-  cloaks.
-
-**Upgrades change what it does, not how much**, which matters because a percentage is below
-this game's noise floor: kill rate sits at 0.61 to 1.08 per second regardless of loadout
-(`../Design/2-Dynamics.md`), so `+15% duration` would be imperceptible. Candidates: threat
-assessment, which reads identity among the orbs; and dragging a damaged enemy in with you.
-
-Settled in the same conversation: attacking drops you out; exit is instant, because a native
-stealther can kill you in there and a wind-up would make being caught a death with no input;
-orbs are positionally honest and identity-blind, so you see that twelve things stand between
-you and the Hatch but not which are Rams; the Hatch stays readable among the orbs; and a
-dragged enemy needs a visible tell so the player can tell which fight they are in.
-
-**Open:** how much of a Wave is layer-side, which sets how often the interaction happens rather
-than whether the rule works. And whether this lives here as a Crew burst or on a weapon
-(`Sim/Meta/WeaponAbility.cs`).
-
-**Not doing, with the reason:** shifting a *teammate*. Warframe's Limbo is the shipped version
-of this ability and one of that game's most disliked frames, entirely because he moves other
-players. DE's U23 stopped Stasis freezing allied projectiles and the community summary was that
-nobody complains about Limbo any more. Pulling an *enemy* in is Mordekaiser's Realm of Death,
-which shipped and works. Enemies yes, allies never.
-
-**Graduation test:** a logged Run in which the player cloaks once with a native stealther
-present and once without, and the two read as different decisions. If they feel the same, the
-layer is not populated enough and that is a Wave-composition finding, not an ability one.
-
-**Kill it if** players cloak on cooldown regardless of situation, or die in the layer more
-often than they escape with it. Either one means it is a reflex or a trap rather than a choice.
-
-### Abilities are defined by what they trade, not what they grant (Zo, 2026-08-14)
-
-The frame the stealth entry came out of. A dull ability is "gain X for N seconds." An
-interesting one is a simultaneous trade, and this game already has a shipped example: `M56`'s
-turret fires with rounds siphoned from the player's own reserve.
-
-Run through that filter, common abilities stop being generic. **Overclock** trades Hatch
-integrity for damage, drawing power from the thing you are defending. **Anchor** trades
-mobility for area control: plant, slow everything near you, and you cannot move until you
-unplant. **Recall** trades your unbanked salvage for escape, returning you to the Hatch and
-dropping the pile where you stood for a Reclaimer to find. **Ping** trades concealment for
-information, showing you every Gatekeeper through walls and showing every Gatekeeper exactly
-where you are, which in co-op becomes one player lighting themselves up so the others can act.
-
-None of these is picked. The filter is the point.
+The stealth-layer entry (shared visibility layer, whoever-chose-the-shift-is-favoured, the
+Cloaker interplay, the Limbo/Mordekaiser comp conclusions, its graduation test and kill
+criteria) and the trade-filter entry (Overclock, Anchor, Recall, Ping) both moved whole
+into [`M70`](../Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md). The milestone is
+the record: roster picked there, Overclock rejected there by name, the layer-side
+Wave-composition question carried there as open.
 
 ### Experience as the CREW QUARTERS currency (Zo, 2026-08-12)
 
@@ -265,7 +199,9 @@ beside the siphon? No comp ships three stacked reward wagers.
 - Luck stays the only crit source.
 - The reload/clip/damage/fire-rate currencies belong to the M21 wheel. A Crew ability that
   is a silent +dps during its window is a worse version of a Tier.
-- Mobility is cut (`../Decisions.md`).
+- Mobility is cut (`../Decisions.md`) — the cut governs permanent movement stats. `M70`
+  argues the verdict's 30 × 52 m premise expired for a priced burst (Recall); Zo can veto
+  there.
 - `_meta/_definitions/language.md`: CREW QUARTERS is never called skills. **Crew ability**
   is the working term until a fiction noun earns a row. Weapon **ability** stays the gun's
   `F`.

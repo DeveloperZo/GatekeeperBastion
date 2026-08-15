@@ -14,6 +14,8 @@ namespace GatekeeperBastion.Game
         [SerializeField] NavMapPanelView _body;
 
         public override string StationName => "NAV MAP";
+        public const string PurposeLine = "where you go, and going there";
+        public override string Purpose => PurposeLine;
 
         protected override string PromptHint
         {
@@ -67,7 +69,7 @@ namespace GatekeeperBastion.Game
             if (_startWave < 1) _startWave = 1;
             if (_startWave > deepest) _startWave = deepest;
 
-            _body.SetStartWaveLine($"START WAVE  {_startWave}  /  {deepest}");
+            _body.SetStartWaveLine(StartWaveLine(_startWave, deepest));
             _body.BindWaveControls(
                 $"  {_startWave}  ",
                 () => _startWave--, _startWave > 1,
@@ -96,6 +98,9 @@ namespace GatekeeperBastion.Game
             if (_loadFailed)
                 Log.Error("Ship", "embark refused — Bastion is not in Build Settings / not loadable");
         }
+
+        public static string StartWaveLine(int start, int deepest) =>
+            "START WAVE  " + start + "  /  cleared " + deepest;
 
         static string LoadoutBrief(MetaState m)
         {

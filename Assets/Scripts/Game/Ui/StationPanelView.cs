@@ -15,12 +15,18 @@ namespace GatekeeperBastion.Game
 
         [SerializeField] RectTransform _root;
         [SerializeField] TextMeshProUGUI _title;
+        [SerializeField, OptionalBinding] TextMeshProUGUI _purpose;
         [SerializeField] TextMeshProUGUI _banked;
         [SerializeField, OptionalBinding] TextMeshProUGUI _lifetime;
+        [SerializeField, OptionalBinding] TextMeshProUGUI _deal;
+        [SerializeField, OptionalBinding] TextMeshProUGUI _footer;
         [SerializeField] RectTransform _bodyContent;
         [SerializeField, OptionalBinding] RectTransform _wheelSlot;
         [SerializeField, OptionalBinding] ArmoryWheelView _wheel;
         [SerializeField] Button _closeButton;
+
+        public const string NoSellBack = "No sell-back.";
+        public const string MovementLock = "Opening a console locks movement.";
 
         Action _onClose;
         bool _closeWired;
@@ -89,12 +95,19 @@ namespace GatekeeperBastion.Game
             WireClose();
         }
 
-        public void SetHeader(string stationName, long banked, string lifetimeLine)
+        public void SetHeader(string stationName, string purpose, long banked, string lifetimeLine)
         {
+            if (string.IsNullOrWhiteSpace(purpose))
+                Log.Error(Tag, name + ": empty purpose.");
             UiBind.SetText(_title, stationName);
+            UiBind.SetText(_purpose, purpose != null ? purpose : "");
             UiBind.SetText(_banked, "Banked salvage: " + banked);
             UiBind.SetText(_lifetime, lifetimeLine);
+            SetDeal(null);
+            UiBind.SetText(_footer, NoSellBack + "\n" + MovementLock);
         }
+
+        public void SetDeal(string dealLine) => UiBind.SetTextOrHide(_deal, dealLine);
 
         public void SetCloseLabel(string label) => UiBind.SetButtonLabel(_closeButton, label);
     }

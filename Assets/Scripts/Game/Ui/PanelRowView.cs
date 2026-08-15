@@ -32,21 +32,26 @@ namespace GatekeeperBastion.Game
             if (_effect != null) _effect.text = effect != null ? effect : "";
 
             bool hasReason = !string.IsNullOrEmpty(reason);
+            bool showAction = _action != null && !string.IsNullOrEmpty(actionLabel);
+            // Disabled BUY + OWNED/EQUIPPED as a second label sat on the button.
+            // Status occupies the action slot; the aside Reason row stays off.
+            bool statusOnAction = showAction && !actionEnabled && hasReason;
             if (_reason != null)
             {
-                _reason.text = reason != null ? reason : "";
-                _reason.gameObject.SetActive(hasReason);
+                bool showAside = hasReason && !statusOnAction;
+                _reason.text = showAside ? reason : "";
+                _reason.gameObject.SetActive(showAside);
             }
 
             if (_action == null) return;
-            bool showAction = !string.IsNullOrEmpty(actionLabel);
             _action.gameObject.SetActive(showAction);
             if (!showAction) return;
 
-            UiBind.SetButtonLabel(_action, actionLabel);
+            UiBind.SetButtonLabel(_action, statusOnAction ? reason : actionLabel);
 
             _action.onClick.RemoveAllListeners();
-            if (onAction != null) _action.onClick.AddListener(() => onAction());
+            if (onAction != null && actionEnabled)
+                _action.onClick.AddListener(() => onAction());
             _action.interactable = actionEnabled;
         }
     }

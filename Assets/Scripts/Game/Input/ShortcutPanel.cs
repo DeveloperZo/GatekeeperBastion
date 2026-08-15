@@ -27,6 +27,15 @@ namespace GatekeeperBastion.Game
         }
     }
 
+    /// <summary>Which Dev rows <see cref="ShortcutPanel.FillRows"/> may append.
+    /// Pause always passes <see cref="None"/>. Player builds never list F1–F9.</summary>
+    public enum DevSurface : byte
+    {
+        None = 0,
+        Editor = 1,
+        DevelopmentPlayerJoin = 2,
+    }
+
     /// <summary>Builds structured shortcut rows from <see cref="Controls"/>. Rendering is
     /// <see cref="Ui.ShortcutPanelView"/>'s pooled keycap rows. The legacy string-line path
     /// (<see cref="FillLines"/>) remains only until WP-3/WP-4 port ShipHud and HudController
@@ -46,12 +55,36 @@ namespace GatekeeperBastion.Game
         static readonly HashSet<string> SeenLabels = new HashSet<string>();
         static readonly StringBuilder LineBuf = new StringBuilder(128);
 
+        /// <summary>Editor Play Mode lists F1–F11. A Development player build may list
+        /// F10/F11 (join) until the Main Menu owns join. Release and pause pass
+        /// <see cref="DevSurface.None"/>.</summary>
+        public static DevSurface DefaultDevSurface()
+        {
+#if UNITY_EDITOR
+            return DevSurface.Editor;
+#elif DEVELOPMENT_BUILD
+            return DevSurface.DevelopmentPlayerJoin;
+#else
+            return DevSurface.None;
+#endif
+        }
+
+        /// <summary>F1–F9 are editor-only. Player builds must neither list nor bind them.</summary>
+        public static bool IsEditorOnlyDevKey(KeyCode key) =>
+            key >= KeyCode.F1 && key <= KeyCode.F9;
+
         /// <summary>Fills <paramref name="rows"/> with one structured row per distinct binding
         /// label, in <see cref="Controls"/> order: grouped labels ("weapons", "juice",
         /// "return") merge their keycaps into one row. Dev rows are appended last with
-        /// <see cref="ShortcutRow.Dev"/> set, only in dev builds. Does not call
-        /// TickPanelToggle — the caller polls first.</summary>
+        /// <see cref="ShortcutRow.Dev"/> set, gated by <see cref="DefaultDevSurface"/>.
+        /// Does not call TickPanelToggle — the caller polls first.</summary>
         public static void FillRows(ControlContext active, IList<ShortcutRow> rows, int dialLevel = -1)
+        {
+            FillRows(active, rows, dialLevel, DefaultDevSurface());
+        }
+
+        public static void FillRows(ControlContext active, IList<ShortcutRow> rows, int dialLevel,
+            DevSurface surface)
         {
             rows.Clear();
             Controls.CollectPanelRows(active, RowBuf);
@@ -78,22 +111,7 @@ namespace GatekeeperBastion.Game
                 rows.Add(new ShortcutRow(key, description, b.Section));
             }
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if ((active & (Controls.FightAlways | ControlContext.Ship | ControlContext.EndScreen)) != 0)
-            {
-                var all = DevCommands.All;
-                for (int i = 0; i < all.Length; i++)
-                {
-                    // PanelDisplay is "<key> <short label>"; split so the keycap carries the key.
-                    string key = all[i].Key.ToString();
-                    string display = DevCommands.PanelDisplay(all[i]);
-                    string description = display.Length > key.Length + 1
-                        ? display.Substring(key.Length + 1)
-                        : "";
-                    rows.Add(new ShortcutRow(key, description, "DEV", dev: true));
-                }
-            }
-#endif
+            AppendDevRows(active, rows, surface);
         }
 
         /// <summary>Legacy string-line fill for uGUI. Consumed by ShipHud / HudController until
@@ -101,14 +119,18 @@ namespace GatekeeperBastion.Game
         /// polls first.</summary>
         public static void FillLines(ControlContext active, IList<string> lines, int dialLevel = -1)
         {
+            FillLines(active, lines, dialLevel, DefaultDevSurface());
+        }
+
+        public static void FillLines(ControlContext active, IList<string> lines, int dialLevel,
+            DevSurface surface)
+        {
             lines.Clear();
             Controls.CollectPanelRows(active, RowBuf);
             BuildSections(RowBuf, dialLevel);
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if ((active & (Controls.FightAlways | ControlContext.Ship | ControlContext.EndScreen)) != 0)
-                AppendDevSection();
-#endif
+                AppendDevSection(surface);
 
             BuildDrawLines(lines, BandWidth - 28f);
             if (lines.Count > 0)
@@ -245,20 +267,49 @@ namespace GatekeeperBastion.Game
             }
         }
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        static void AppendDevSection()
+        static void AppendDevRows(ControlContext active, IList<ShortcutRow> rows, DevSurface surface)
         {
-            LineBuf.Clear();
+            if (surface == DevSurface.None) return;
+            if ((active & (Controls.FightAlways | ControlContext.Ship | ControlContext.EndScreen)) == 0)
+                return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             var all = DevCommands.All;
             for (int i = 0; i < all.Length; i++)
             {
-                if (i > 0) LineBuf.Append(" · ");
+                if (surface == DevSurface.DevelopmentPlayerJoin
+                    && IsEditorOnlyDevKey(all[i].Key))
+                    continue;
+                // PanelDisplay is "<key> <short label>"; split so the keycap carries the key.
+                string key = all[i].Key.ToString();
+                string display = DevCommands.PanelDisplay(all[i]);
+                string description = display.Length > key.Length + 1
+                    ? display.Substring(key.Length + 1)
+                    : "";
+                rows.Add(new ShortcutRow(key, description, "DEV", dev: true));
+            }
+#endif
+        }
+
+        static void AppendDevSection(DevSurface surface)
+        {
+            if (surface == DevSurface.None) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            LineBuf.Clear();
+            var all = DevCommands.All;
+            int written = 0;
+            for (int i = 0; i < all.Length; i++)
+            {
+                if (surface == DevSurface.DevelopmentPlayerJoin
+                    && IsEditorOnlyDevKey(all[i].Key))
+                    continue;
+                if (written > 0) LineBuf.Append(" · ");
                 LineBuf.Append(DevCommands.PanelDisplay(all[i]));
+                written++;
             }
             if (LineBuf.Length == 0) return;
             SectionBuf["DEV"] = LineBuf.ToString();
             if (!OrderBuf.Contains("DEV")) OrderBuf.Add("DEV");
-        }
 #endif
+        }
     }
 }

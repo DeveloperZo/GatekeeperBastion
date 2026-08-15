@@ -19,7 +19,7 @@ namespace GatekeeperBastion.Game
         }
 
         const string GeomRootName = "_geom";
-        internal const string GenPrefix = "Gen_";
+        public const string GenPrefix = "Gen_";
         const float DoorOpeningWidth = 3f;
         const float DoorOpeningHeight = 3.5f;
         const float WindowSillHeight = 1.1f;
@@ -46,6 +46,12 @@ namespace GatekeeperBastion.Game
         [SerializeField] GameObject windowPiece;
         [SerializeField] GameObject cornerPiece;
         [SerializeField] GameObject ceilingLightPiece;
+
+        // Hash of the geometry inputs the last Rebuild used. OnValidate fires on every
+        // script reload (compiles, play-mode entry), not just inspector edits — without
+        // this stamp each reload rebuilt _geom and destroyed hand-authored content
+        // (it wiped Zo's unpacked pieces on 2026-08-14). Zero means pre-stamp instance.
+        [SerializeField, HideInInspector] int rebuildStamp;
 
         public BastionBlockKind BlockKind
         {
@@ -221,6 +227,22 @@ namespace GatekeeperBastion.Game
             if (!CanMutateHierarchy())
                 return;
 
+            // Rebuild only when the geometry inputs changed. Reloads re-fire OnValidate
+            // with identical settings — those must never touch _geom.
+            int hash = SettingsHash();
+            if (rebuildStamp == hash)
+                return;
+            if (rebuildStamp == 0)
+            {
+                Transform geom = transform.Find(GeomRootName);
+                if (geom != null && geom.childCount > 0)
+                {
+                    // Pre-stamp scene instance with built geometry: adopt, don't rebuild.
+                    rebuildStamp = hash;
+                    return;
+                }
+            }
+
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
@@ -370,6 +392,28 @@ namespace GatekeeperBastion.Game
             BuildSide(SegmentEdge.West, west, westDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth);
 
             BastionSegmentVisuals.Build(this, _geomRoot, width, depth, wallHeight, thickness);
+            rebuildStamp = SettingsHash();
+        }
+
+        /// <summary>Hash of everything <see cref="Rebuild"/> reads to shape geometry.
+        /// Piece and material refs are excluded — the kit emitter swaps those and calls
+        /// Rebuild explicitly. Never returns 0 (0 is the pre-stamp sentinel).</summary>
+        int SettingsHash()
+        {
+            unchecked
+            {
+                int h = 17;
+                h = h * 31 + (int)blockKind;
+                h = h * 31 + (int)north;
+                h = h * 31 + (int)east;
+                h = h * 31 + (int)south;
+                h = h * 31 + (int)west;
+                h = h * 31 + northDoorAlong.GetHashCode();
+                h = h * 31 + eastDoorAlong.GetHashCode();
+                h = h * 31 + southDoorAlong.GetHashCode();
+                h = h * 31 + westDoorAlong.GetHashCode();
+                return h == 0 ? 1 : h;
+            }
         }
 
         /// <summary>Strip generated meshes so a prefab asset stays component-only.</summary>
@@ -387,6 +431,13 @@ namespace GatekeeperBastion.Game
                     || child.GetComponent<BastionGeneratedGeom>() != null)
                     DestroyObject(child.gameObject);
             }
+        }
+
+        /// <summary>The _geom container, or null before the first rebuild. Editor tooling
+        /// entry point — the name is private.</summary>
+        public Transform FindGeomRoot()
+        {
+            return transform.Find(GeomRootName);
         }
 
         void EnsureGeomRoot()
@@ -407,12 +458,19 @@ namespace GatekeeperBastion.Game
 
         void ClearGeneratedChildren()
         {
+            // Group nodes (Walls/Floors/Ceiling) carry the marker, not the Gen_ prefix —
+            // a rebuild clears them wholesale and re-emits grouped.
             for (int i = _geomRoot.childCount - 1; i >= 0; i--)
             {
                 Transform child = _geomRoot.GetChild(i);
-                if (!child.name.StartsWith(GenPrefix))
+                if (!child.name.StartsWith(GenPrefix, StringComparison.Ordinal)
+                    && child.GetComponent<BastionGeneratedGeom>() == null)
                     continue;
 
+                // Play-mode Destroy defers to end of frame — detach first, or
+                // EnsureGeomGroup finds the doomed group and parents the fresh
+                // geometry into it, and the whole room dies with the group.
+                child.SetParent(null);
                 DestroyObject(child.gameObject);
             }
         }

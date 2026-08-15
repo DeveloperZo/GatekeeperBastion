@@ -33,6 +33,18 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
+        public void BastionFieldConsole_ScaleIsOne_DeskAndScreenMatchUseHeight()
+        {
+            float s = BastionKit.FieldConsoleScale;
+            Assert.AreEqual(1f, s, 1e-4f);
+            Assert.AreEqual(1.6f, BastionKit.FieldConsoleDeskWidth * s, 1e-4f);
+            Assert.AreEqual(1.2f, BastionKit.FieldConsoleDeskHeight * s, 1e-4f);
+            Assert.AreEqual(0.7f, BastionKit.FieldConsoleDeskDepth * s, 1e-4f);
+            Assert.AreEqual(0.6f, BastionKit.FieldConsoleDeskCentreY * s, 1e-4f);
+            Assert.AreEqual(1.7f, BastionKit.FieldConsoleScreenCentreY * s, 1e-4f);
+        }
+
+        [Test]
         public void BlockKind_EnumHasExactlyFiveTableRows()
         {
             var values = (BastionBlockKind[])Enum.GetValues(typeof(BastionBlockKind));

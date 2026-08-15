@@ -32,6 +32,8 @@ namespace GatekeeperBastion.Game
                 ctx |= ControlContext.NearInteract;
 
             int dialLevel = sim.Assault == AssaultState.Prep ? sim.Siphon.Level : -1;
+            if (IsPauseOpen) FillPauseShortcuts(sim, ctx, dialLevel);
+
             // Left drawer open ⇒ Collapsed false; fill full keycaps (no tip-only mode).
             if (Controls.Collapsed)
             {
@@ -42,6 +44,14 @@ namespace GatekeeperBastion.Game
 
             ShortcutPanel.FillRows(ctx, _shortcutRows, dialLevel);
             _view.SetShortcutRows(_shortcutRows, false);
+        }
+
+        void FillPauseShortcuts(RunSim sim, ControlContext ctx, int dialLevel)
+        {
+            if (_pauseShortcuts == null || sim == null) return;
+            ShortcutPanel.FillRows(ctx, _pauseShortcutRows, dialLevel, DevSurface.None);
+            _pauseShortcuts.SetCollapsed(false);
+            _pauseShortcuts.SetRows(_pauseShortcutRows);
         }
 
         void PushPrepPanel(RunSim sim, int wave, float hatchHp, float hatchMax, long unbanked)

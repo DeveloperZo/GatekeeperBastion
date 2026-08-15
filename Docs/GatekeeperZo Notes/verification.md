@@ -4,7 +4,7 @@
 Purpose: The single list of what is shipped but unproven, ordered so Zo can spend a playthrough on the items that matter and skip the ones that do not. Milestones own their own criteria; this is the condensed view across all of them.
 Status: working — regenerated as milestones ship and items close
 Update trigger: when a milestone ships with open rows, or when an item is verified
-Last updated: 2026-08-09
+Last updated: 2026-08-14
 -->
 
 ## How this works
@@ -67,6 +67,8 @@ Real, lower leverage. None of these blocks anything.
 
 | Item | Milestone | What to do |
 |---|---|---|
+| A solo run completes on the dressed bastion | M61-2 | Criterion 14: play one run through to the end screen. Waves already proven to arrive on the final geometry (log `2026-08-14_17-29-54`, untainted, hatchDist to 4.0 m) — only the completion is unproven |
+| Walk every block kind in the dressed bastion | M61-2 | Criterion 4: stand in each block kind — no sky through walls, no gaps at neighbours, no floating fixtures. One dated line per kind in `playthrough.md`, screenshot anything questionable |
 | PRI-C owns the far wall | M32 | Buy PRI-C, embark Wave 3, stand at the Hatch and fire up the bore; expect far kills. Swap to MR-35 at the same Tier; expect those kills not to land. Then `F` for Railshot into a line — expect `railshot armed` / `railshot fired` Ability lines |
 | Options reach the fight | M24 | Menu OPTIONS, set sensitivity, embark, press `O` mid-Assault, confirm Gatekeepers keep moving and the change applies in the same Run. One `[Settings]` line per commit |
 | Reload discard warning | M25 | Mid-reload, read `SWAP DISCARDS THIS RELOAD`, swap, confirm the discard line. Then turn it off in options and confirm `reload paused` |
@@ -83,6 +85,7 @@ Real, lower leverage. None of these blocks anything.
 
 | Item | Milestone | Blocker |
 |---|---|---|
+| Stats baseline for the dressed bastion | M61-2 | Criterion 13: Stats window standing in the ControlRoom at 1080p, numbers into `playthrough.md`. The before-numbers are unrecoverable — the primitive bastion no longer exists — so record after-only as the baseline the next pass argues from |
 | Pinned fixture logs | M29 | `GatekeeperBastion_2026-08-07_16-34-30.log` and `..._2026-08-03_19-18-22.log` are **absent from this machine** and are cited across `Design/` and two milestones. Restore from backup or the pins are unverifiable forever |
 | EditMode suite green | M29 | AutoVerify hit `stuck` at 180 s twice while tests were still running. Re-run from the menu once the editor is quiet |
 | Save byte-identical | M24 | Needs one clean AutoVerify run |

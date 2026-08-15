@@ -202,6 +202,14 @@ rulemaking authority lives there.
 
 ## Retunes that already happened
 
+- **Bastion kit re-scaled to station rooms (Zo, 2026-08-14, `M61-2`).** The M47
+  footprint lock is waived: multiples are now metres on `BastionKit` scaler 2 —
+  Half 16 m, Full 26 m, OpenArea 42 m, ControlRoom 152×76 m (multiple 76, aspect 0.5)
+  — sized so a room is a place a Boarder walks through and the whole station reads
+  as one huge lost structure. Sketch room centres are world metres, so the scaler
+  and the sketch move together (`Tools/bastion-sketch/bastion-defense-layout.txt`).
+  The old 5×8 scaler produced one aircraft-carrier diagram, not rooms; play feedback,
+  same day.
 - **Global +5%/level — attributes and ship tracks only.** Every CREW QUARTERS and
   FABRICATION track is `base * (1 + 0.05*level)`, CritChance additive at the same slope.
   The old per-track slopes (+4 damage/level, +20 HP/level, +0.15 repair-speed/level,

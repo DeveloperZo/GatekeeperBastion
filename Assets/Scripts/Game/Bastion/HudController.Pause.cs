@@ -1,3 +1,4 @@
+using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using Michsky.UI.Shift;
 using UnityEngine;
@@ -80,6 +81,13 @@ namespace GatekeeperBastion.Game
             _pauseAnimator.Play("Window In");
             if (_pauseBlur != null) _pauseBlur.BlurInAnim();
             IsPauseOpen = true;
+            var sim = _game != null ? _game.Sim : null;
+            if (sim != null)
+            {
+                var ctx = FightShortcutContext(sim);
+                int dialLevel = sim.Assault == AssaultState.Prep ? sim.Siphon.Level : -1;
+                FillPauseShortcuts(sim, ctx, dialLevel);
+            }
             // Criterion 31: never touch timeScale; fight canvas stays enabled.
         }
 
@@ -102,7 +110,7 @@ namespace GatekeeperBastion.Game
             IsPauseOpen = false;
 
             var sim = _game != null ? _game.Sim : null;
-            if (sim != null && sim.Phase == Sim.RunPhase.Tethered && _fpc != null
+            if (sim != null && sim.Phase == RunPhase.Tethered && _fpc != null
                 && !_pauseCapturedLock)
             {
                 if (_pauseCapturedCursor == CursorLockMode.Locked)

@@ -30,7 +30,7 @@ files written before that date still carry one and are a record.
 ## Current
 
 **M55** is active.
-**M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13.
+**M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** completed 2026-08-14.
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
 developer touching a keyboard, play a full five-wave run with both participating, and the
@@ -40,13 +40,14 @@ sentence.
 **Recommended next**, in this order.
 
 1. **M57** — The downed player waits on the Ship.
-2. **M58 → M59 → M61 → M69 → M62 → M60** — player build + LAN join, QoL (room + hull), gun/sight, session audio,
+2. **M58 → M59 → M69 → M62 → M60** — player build + LAN join, QoL (room + hull), session audio,
    Compendium from pause, then Relay join.
-3. **M56** — turret (after M55).
+3. **M70** — the turret half of the ability slice (after M55).
 4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
-   playthrough, M47 criterion 18 wave-report. Not a reason to jump the queue.
+   playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14 (eyes lines, Stats
+   after-numbers, solo completion). Not a reason to jump the queue.
 
-Planned count is **15** (cap 10, already breached).
+Planned count is **14** (cap 10, already breached).
 
 ## Order
 
@@ -107,16 +108,17 @@ this table — see the change log.
 | M51 | The client's hands | completed, Aug 2026 | Client repair, decoy and world-acting abilities apply once, server-side; all five `NetVerbTests` Passed (`gkb_verify_report.json` 2026-08-13T18:09:48Z, PlayMode 31/0). Criterion 6 confirmation not the gate; hatch-under-attack waits on M53 | [`3. completed/M51`](Milestones/3.%20completed/M51-the-clients-hands.md) |
 | M58 | A build two machines can run | later | Windows player build; Main Menu Host listens `0.0.0.0:7777`; Join typed IPv4; one networked kill on two machines; connect failure reads back | [`1. planned/M58`](Milestones/1.%20planned/M58-a-build-two-machines-can-run.md) |
 | M59 | Polish Pass 1 | later | Field Scale 1; fight HUD ≥24; overflow; no EXP; station chrome+copy; player-build keys; pause; end scrim | [`1. planned/M59`](Milestones/1.%20planned/M59-the-polish-pass-1.md) |
-| M61 | Polish Pass 2 | later | IQ astronaut + Synty Space guns/desks (SKU 138857); Mixamo fire/reload stand-ins; stroke crosshair; RMB zoom | [`1. planned/M61`](Milestones/1.%20planned/M61-the-polish-pass-2.md) |
+| M61 | Polish Pass 2 | completed, Aug 2026 | IQ astronaut + Synty Space guns/desks (SKU 138857); Mixamo fire/reload stand-ins; stroke crosshair; RMB zoom | [`3. completed/M61`](Milestones/3.%20completed/M61-the-polish-pass-2.md) |
+| M61-2 | Polish Pass 2, the Bastion | completed, Aug 2026 | Kit blocks are POLYGON Sci-Fi Space meshes; re-framed mid-pass to scaler-2 station rooms with functional sliding doors and a bulkhead Hatch; Generated/Authored split; suite 2026-08-15T00:09Z adds no reds of its own; eyes/Stats/solo-run rows open in verification.md | [`3. completed/M61-2`](Milestones/3.%20completed/M61-2-polish-pass-2-the-bastion.md) |
 | M69 | The session has a voice | later | Bastion Whispers loop; fire/reload/footsteps on SFX bus; no store pack | [`1. planned/M69`](Milestones/1.%20planned/M69-the-session-has-a-voice.md) |
-| M68 | The garrison has a body | later | Default/Hunter/Ram are Synty RobotFemale / HelmetArmor / War_Robot; no faces; agent footprint unchanged; Mixamo walk or keep capsules | [`1. planned/M68`](Milestones/1.%20planned/M68-the-garrison-has-a-body.md) |
+| M63 | The garrison: a roster with bodies | later | Twelve-kind roster + properties + draw rule recorded; Ram→Thief; Garrison volume with `in_build` flags; door-time logged; Default/Hunter/Thief get Synty RobotFemale / HelmetArmor / War_Robot, Mixamo walk or keep capsules; agent footprint unchanged | [`1. planned/M63`](Milestones/1.%20planned/M63-the-garrison-a-roster-with-bodies.md) |
 | M62 | The Compendium you can open | later | Pause opens volume reader; Play pages already in Boarder voice; always-on; Gaps omitted | [`1. planned/M62`](Milestones/1.%20planned/M62-the-compendium-you-can-open.md) |
 | M60 | A join a friend can use | later | Unity Relay join code from Main Menu; join-in-Tethered; clean disconnect; host-quit message; LAN IP fallback; two-build internet playthrough eyes-on | [`1. planned/M60`](Milestones/1.%20planned/M60-a-join-a-friend-can-use.md) |
 | M52 | Waves start at a terminal | completed, Aug 2026 | Interact starts T1's five Boarder-hunt Waves; Hatch invulnerable; D1 on Nth clear; Wave 5 `Escaped`. Close log `14-46-59` (no `[Dev]`). AwardKill-to-bank is M53 | [`3. completed/M52`](Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | M53 | Salvage leaves through the Hatch | completed, Aug 2026 | Kills fill Unbanked; Hatch-bank 45 s drip/attrit/dump, 3 slots, fat pile ×1.25/×1.50. Close log `18-23-55` (Run clean). Stay-Prep after dump is EditMode. Harness 316/0 | [`3. completed/M53`](Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | M54 | Master Control is the win | completed, Aug 2026 | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`3. completed/M54`](Milestones/3.%20completed/M54-master-control-is-the-win.md) |
 | M55 | Pay for intensity | next | `+/-` spend 100 unbanked per step; `E` select, `T` start; HUD says Intensity; siphon dial retired; same `TetherSiphon` curve | [`2. active/M55`](Milestones/2.%20active/M55-pay-for-intensity.md) |
-| M56 | The turret shoots with your ammo | later | `UTL-H` turret siphons Primary reserve on the clock; onboard 30; life 45 s; ghost-and-confirm | [`1. planned/M56`](Milestones/1.%20planned/M56-the-turret-shoots-with-your-ammo.md) |
+| M70 | The Boarder gets a verb | later | CREW sells a 4-ability roster (Cloak/Anchor/Recall/Ping) on `G`, one equipped; four tracks refunded and deleted, SaveVersion 8; verbs apply once server-side; `UTL-H` turret siphons Primary reserve on the clock, ghost-and-confirm | [`1. planned/M70`](Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md) |
 
 ## Strategy
 
@@ -128,13 +130,13 @@ M53 closed. Unbanked and Hatch-bank are in the loop. M57 is the down rule, not f
 into M50. M58 is the unproven player build. **M59** is QoL: Bastion as a room and Ship as
 something a stranger can operate (terminals, HUD, station chrome and copy, keys).
 **M69** is the Bastion loop and fire/footstep audio; no store pack.
-**M61** is the gun, the sight, zoom, and Ship desks — Zo overrode the
-phase rule for this named slice (three store packs, kit footprints stay). **M68** is the
-three Gatekeeper bodies from that same pack. **M62** is the
+**M61** closed 2026-08-14: gun, sight, zoom, Ship desks. **M63** is the
+garrison roster plus the three Gatekeeper bodies from that same pack. **M62** is the
 Compendium from pause. M60 is Unity Relay join, gated on M51+M58, authored ahead. Starting
 bastion (M47 kit) is the demo floor.
 
-M54 closed. M55–M56 remain the field-loop rest; they stay queued after the session is possible.
+M54 closed. M55 and M70's turret remain the field-loop rest; they stay queued after the
+session is possible.
 
 Critical path: `M0 ✅ → M10 ✅ → M13 → M11 → M2 → M15 → M16 → M14`.
 
@@ -187,9 +189,9 @@ what keeps the back half reachable — which is why the Wave count and the start
 selector are one milestone rather than two.
 
 **A Steam page, and replacing Bastion kit meshes, remain a phase, not a milestone.**
-They previously sat in this table as "M9 — off gray-box". **M61 is the named exception**
-(Zo, 2026-08-13): view models, sight, zoom, Ship consoles, fire and footsteps, from three
-purchased packs. Kit footprints stay locked. Nothing above depends on a Steam page.
+They previously sat in this table as "M9 — off gray-box". **M61 shipped that exception**
+(Zo, 2026-08-13 / closed 2026-08-14): view models, sight, zoom, Ship consoles. Fire and
+footsteps are M69. Kit footprints stay locked. Nothing above depends on a Steam page.
 
 **M20 before M21, and the reason is arithmetic.** The wheel's expressive surface is the
 ring: five attributes give 12 distinct arrangements and exclude two per focus, four give

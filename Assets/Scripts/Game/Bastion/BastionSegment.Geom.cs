@@ -217,6 +217,40 @@ namespace GatekeeperBastion.Game
             }
         }
 
+        public const string GroupFloors = "Floors";
+        public const string GroupCeiling = "Ceiling";
+        public const string GroupWalls = "Walls";
+
+        /// <summary>Which group node a generated piece belongs under (Zo 2026-08-14: geom
+        /// grouped by category for authoring). Gen_Floor* → Floors, Gen_Ceiling* → Ceiling
+        /// (tiles and lights), every other Gen_* — walls, doorframes, windows, corners,
+        /// walk blocks — → Walls.</summary>
+        public static string GeomGroupNameFor(string pieceName)
+        {
+            if (pieceName.StartsWith(GenPrefix + "Floor", System.StringComparison.Ordinal))
+                return GroupFloors;
+            if (pieceName.StartsWith(GenPrefix + "Ceiling", System.StringComparison.Ordinal))
+                return GroupCeiling;
+            return GroupWalls;
+        }
+
+        /// <summary>Group node under the geom root, created on first use. Carries the
+        /// generated marker so <see cref="ClearGeneratedHierarchy"/> and rebuilds clear it
+        /// wholesale — hand-placed content belongs outside _geom.</summary>
+        public static Transform EnsureGeomGroup(Transform geomRoot, string groupName)
+        {
+            Transform existing = geomRoot.Find(groupName);
+            if (existing != null)
+                return existing;
+
+            var go = new GameObject(groupName);
+            go.transform.SetParent(geomRoot, false);
+            RebuildObjectsCreated++;
+            go.AddComponent<BastionGeneratedGeom>();
+            RebuildObjectsMarked++;
+            return go.transform;
+        }
+
         void CreateBox(string name, Vector3 localCenter, Vector3 size)
         {
             if (_geomRoot == null)
@@ -225,7 +259,7 @@ namespace GatekeeperBastion.Game
             // Collider-only: the visual layer brings the pack meshes. The unit BoxCollider under
             // the box's localScale keeps the exact physics footprint the primitive kit shipped.
             var go = new GameObject(name);
-            go.transform.SetParent(_geomRoot, false);
+            go.transform.SetParent(EnsureGeomGroup(_geomRoot, GeomGroupNameFor(name)), false);
             go.transform.localPosition = localCenter;
             go.transform.localRotation = Quaternion.identity;
             go.transform.localScale = size;
@@ -246,7 +280,7 @@ namespace GatekeeperBastion.Game
                 return;
 
             var go = new GameObject(name);
-            go.transform.SetParent(_geomRoot, false);
+            go.transform.SetParent(EnsureGeomGroup(_geomRoot, GeomGroupNameFor(name)), false);
             go.transform.localPosition = localCenter;
             go.transform.localRotation = Quaternion.identity;
             go.transform.localScale = size;

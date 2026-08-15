@@ -143,6 +143,9 @@ namespace GatekeeperBastion.Game
             for (int i = 0; i < DevCommands.All.Length; i++)
             {
                 var b = DevCommands.All[i];
+#if !UNITY_EDITOR
+                if (ShortcutPanel.IsEditorOnlyDevKey(b.Key)) continue;
+#endif
                 if (!Input.GetKeyDown(b.Key)) continue;
                 Invoke(b.Action);
                 RefreshCapture();

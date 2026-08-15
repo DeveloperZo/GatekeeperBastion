@@ -1,9 +1,14 @@
 # M61 — Polish Pass 2
 
 <!--
-Status: later
-Update trigger: when Boarder prefab, Mixamo clip set, weapon mapping, zoom FOV, ship-console prefabs, or the bound SFX set changes.
+Status: completed 2026-08-14
+Update trigger: closed
 Last updated: 2026-08-14
+Closed on: Zo 2026-08-14. Playthrough Zo (editor was in Play when close was requested;
+no `Logs/` session file on disk). Gate: Unity EditMode `WeaponViewTests`+`ControlsTests`
+15/15; PlayMode `ShipSceneContractTests` 5/5. Offline harness skipped (mcs/mono not on
+PATH). `HudSeparationTests` 4 fail — M59's open AABB/EXP gates, not this slice.
+Fire/walk audio is M69.
 -->
 
 The Boarder holds a gun, aims with a sight, can look down a lane, and walks a Ship that is
@@ -156,7 +161,7 @@ only. Kit segment geometry stays (M47 lock).
 Rejected: FPS Animation Ultimate (ballistic M4/AK; we have a Mixamo Humanoid). Rejected:
 accuracy or damage change on zoom. Rejected: replacing Bastion kit segments. Rejected:
 pack example scenes in the build. Rejected: importing the 5 GB SFX library into git.
-Rejected: a third music clip. Rejected: Gatekeeper mesh swap (`M68`). Rejected: per-weapon
+Rejected: a third music clip. Rejected: Gatekeeper mesh swap (`M63`). Rejected: per-weapon
 Mixamo sets this slice. Rejected: FMOD. Rejected: copying IQ `PlayerManager` or any IQ
 gameplay script.
 
@@ -189,7 +194,7 @@ Hit confirm, name labels, and player colour:
 | Kit footprint / navmesh rebuild | Locked, M47 |
 | Station chrome, purpose copy, player-build keys | M59 |
 | Fire / footstep / reload SFX, Bastion music | M69 |
-| Gatekeeper meshes | `M68` — androids: RobotFemale / HelmetArmor / War_Robot |
+| Gatekeeper meshes | `M63` — androids: RobotFemale / HelmetArmor / War_Robot |
 | Hit flash, pre-attack tells, name labels, player colour | M66 |
 | Compendium | M62 |
 | Pack FPS controller / pack HUD / pack ammo / pack weapon animators | We have `PlayerGun` and Mixamo |

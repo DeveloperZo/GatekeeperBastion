@@ -1,4 +1,4 @@
-<!-- Purpose: the hub between runs — what each console owns, how to use one, and what to buy first. / Status: working / Update trigger: when a station is added, removed, or changes what it sells. / Last updated: 2026-08-06 -->
+<!-- Purpose: the hub between runs — what each console owns, how to use one, and what to buy first. / Status: working / Update trigger: when a station is added, removed, or changes what it sells. / Last updated: 2026-08-14 -->
 
 # The Ship
 
@@ -20,7 +20,7 @@ Each console owns exactly one subject. Nothing is sold in two places.
 
 **FABRICATION — the Hatch.** How much the door can take before it falls, plus the equipment slot and the Repair Rig, which is what lets you repair the door at all. What it buys applies from your next embark onward, not retroactively.
 
-**NAV MAP — where you go, and going there.** One destination. A selector for which Wave you start on, capped by how deep you have got before. And the EMBARK button, which is the point of no return: once the Bastion loads, the only exits are clearing it and losing.
+**NAV MAP — where you go, and going there.** One destination. A selector for which Wave you start on, capped by the deepest Wave you have cleared. And the EMBARK button, which is the point of no return: once the Bastion loads, the only exits are clearing it and losing.
 
 ## The start-Wave selector
 
@@ -48,15 +48,10 @@ The NAV MAP will warn you loudly if you own no weapon and then let you go anyway
 
 ## Gaps
 
-- The ship never tells you that repairing the Hatch costs Salvage. FABRICATION sells the repair rig and quotes its rate, and there is no price per point healed anywhere on the hub. You find out standing at the door mid-Run, with the bill already running.
 - Nothing anywhere lays out which purchases are gated behind losing a Run and which are not. There is no one place that shows you the split.
-- Nothing warns you before you buy that upgrades are per weapon and never transfer. You can sink a campaign's savings into one gun, buy a different Primary, and discover the investment did not come with you.
-- There is no refund, no sell-back, and no respec, and nothing in any panel says so.
-- Nothing tells you that opening a console panel locks your movement. You find out by pressing forward and not moving.
 - Your save has a Drone slot. No console sells a payload that fills it. It is not a secret to find; it is an empty slot.
 - The upgrade tracks all have a ceiling and you only learn where by seeing a row read MAX. Nothing shows you the whole ladder in advance.
 - Repairing needs the Repair Rig equipped, and nothing on the Hatch or in the fight says so until you try to repair and nothing happens.
-- The start-Wave selector is capped by the deepest Wave you have *cleared*, but the label reads as though it were the deepest you reached. Dying on a Wave does not unlock starting there.
 - An older weapon exists in the code and can still sit in an old save. It is not sold, cannot be equipped, and will not reach your hands.
 - If a developer command has been used in a play session, nothing saves for the rest of that session. The hub gives you no visible sign — everything looks bought, and none of it is there next time.
 

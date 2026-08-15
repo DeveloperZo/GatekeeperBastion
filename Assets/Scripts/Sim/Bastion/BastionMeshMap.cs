@@ -9,6 +9,11 @@ namespace GatekeeperBastion.Sim
         public const string Ceiling = "SM_Bld_Ceiling_01";
         public const string Wall = "SM_Bld_Wall_01";
         public const string Doorframe = "SM_Bld_Wall_Doorframe_01";
+
+        /// <summary>The doorframe prefab carries a shut leaf child (SM_Bld_Wall_Door_01).
+        /// The visuals layer disables it: BastionDoor's sliding slab is the one moving
+        /// leaf, and a rendered shut leaf bakes a NavMesh wall across every doorway.</summary>
+        public const string DoorframeLeafPrefix = "SM_Bld_Wall_Door_";
         public const string Window = "SM_Bld_Wall_Exterior_Window_01";
         public const string CornerPillar = "SM_Bld_Wall_Corner_Pillar_01";
         public const string CeilingLight = "SM_Prop_Light_Panel_01";

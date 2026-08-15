@@ -166,7 +166,7 @@ Rejected: Input System rebinding. Rejected: a duration floor on the bound wavs.
 - **Reads back as** F2 doing nothing in a player build; EditMode Scale + HUD AABB + purpose
   strings — here. Music slider is `M69`.
 
-Guns, zoom, ship desks as art: [`M61`](M61-the-polish-pass-2.md). Music and gun/foot SFX:
+Guns, zoom, ship desks as art: [`M61`](../3.%20completed/M61-the-polish-pass-2.md). Music and gun/foot SFX:
 [`M69`](M69-the-session-has-a-voice.md). Compendium: [`M62`](M62-the-compendium-you-can-open.md).
 
 ## Verification

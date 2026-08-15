@@ -14,6 +14,16 @@ namespace GatekeeperBastion.Sim
         public const float WallThickness = 0.5f;
         public const float FloorSlabThickness = 0.5f;
 
+        /// <summary>Field-terminal Desk/Screen/Label multiplier. 1 is Ship-console size (a
+        /// Boarder can use the desk). StoreyHeight/2.5 (=2 at storey 5) was room-fill and put
+        /// the desk top at 2.4 m.</summary>
+        public const float FieldConsoleScale = 1f;
+        public const float FieldConsoleDeskWidth = 1.6f;
+        public const float FieldConsoleDeskHeight = 1.2f;
+        public const float FieldConsoleDeskDepth = 0.7f;
+        public const float FieldConsoleDeskCentreY = 0.6f;
+        public const float FieldConsoleScreenCentreY = 1.7f;
+
         /// <summary>Depth-to-width ratio for the ControlRoom's landscape footprint.</summary>
         public const float ControlRoomAspect = 0.5f;
 

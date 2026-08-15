@@ -80,6 +80,33 @@ namespace GatekeeperBastion.Tests
             }
         }
 
+        [Test]
+        public void FillRows_DevSurfaceNone_HasNoF1ThroughF9()
+        {
+            ShortcutPanel.FillRows(ControlContext.Fight, _rows, -1, DevSurface.None);
+            AssertNoEditorOnlyDevKeys(_rows);
+            Assert.IsFalse(_rows.Exists(r => r.Dev), "Pause and player-build None must omit DEV.");
+        }
+
+        [Test]
+        public void FillRows_DevelopmentPlayerJoin_OmitsF1ThroughF9()
+        {
+            ShortcutPanel.FillRows(ControlContext.Fight, _rows, -1, DevSurface.DevelopmentPlayerJoin);
+            AssertNoEditorOnlyDevKeys(_rows);
+        }
+
+        static void AssertNoEditorOnlyDevKeys(List<ShortcutRow> rows)
+        {
+            for (int i = 0; i < rows.Count; i++)
+            {
+                string key = rows[i].Key;
+                Assert.IsFalse(
+                    key == "F1" || key == "F2" || key == "F3" || key == "F4" || key == "F5"
+                    || key == "F6" || key == "F7" || key == "F8" || key == "F9",
+                    "Player-build path listed " + key);
+            }
+        }
+
         // ---------- SetRows: pooled view ----------
 
         ShortcutPanelView MakeView(out RectTransform rowsRoot, out GameObject template)

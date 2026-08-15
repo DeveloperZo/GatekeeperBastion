@@ -58,7 +58,7 @@ namespace GatekeeperBastion.Game
                 _cacheBanked = banked;
                 _cacheUnbanked = unbanked;
 
-                _view.SetProfile("LV 1", "EXP —");
+                _view.SetProfile(BastionHudView.ProfileRank, null);
 
                 _lineBuf.Clear();
                 _lineBuf.Append("Unbanked ").Append(unbanked)

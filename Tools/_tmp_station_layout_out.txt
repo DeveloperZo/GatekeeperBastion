@@ -1,0 +1,421 @@
+﻿=== Station-named GameObjects ===
+ARMORY active=0 path=Canvas/Main Panels/ARMORY
+CREW QUARTERS active=0 path=Canvas/Main Panels/CREW QUARTERS
+FABRICATION active=1 path=Canvas/Main Panels/FABRICATION
+NAV MAP active=0 path=Canvas/Main Panels/NAV MAP
+
+=== PanelRowView hosts (all) ===
+
+[ARMORY] Catalog Row 1
+  path=Canvas/Main Panels/ARMORY/List/List Content/Catalog Row 1
+  ROW: apos=(943.4234, -998.0) size=(1826.8468, 72.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(102.735, -36.0) size=(205.47, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='BR-12 Shotgun'
+  child `Cost`: apos=(276.855, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 300'
+  child `Level`: apos=(348.24, -36.0) size=(0.0, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child `Effect`: apos=(440.26498, -36.0) size=(136.05, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='"9\\xD76 @ 1.1/s"'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000061 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(102.735, -36.0) size=(205.47, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='BR-12 Shotgun'
+  bind _cost -> `Cost` apos=(276.855, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 300'
+  bind _level -> `Level` apos=(348.24, -36.0) size=(0.0, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _effect -> `Effect` apos=(440.26498, -36.0) size=(136.05, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='"9\\xD76 @ 1.1/s"'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000063 (no GO map)
+
+[ARMORY] Catalog Row 2
+  path=Canvas/Main Panels/ARMORY/List/List Content/Catalog Row 2
+  ROW: apos=(943.4234, -1086.0) size=(1826.8468, 72.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(79.365, -36.0) size=(158.73, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='MR-35 Rifle'
+  child `Cost`: apos=(182.73, -36.0) size=(0.0, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child `Level`: apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='T9'
+  child `Effect`: apos=(243.505, -36.0) size=(73.55, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='owned'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000096 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(79.365, -36.0) size=(158.73, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='MR-35 Rifle'
+  bind _cost -> `Cost` apos=(182.73, -36.0) size=(0.0, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _level -> `Level` apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='T9'
+  bind _effect -> `Effect` apos=(243.505, -36.0) size=(73.55, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='owned'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000098 (no GO map)
+
+[ARMORY] Catalog Row 3
+  path=Canvas/Main Panels/ARMORY/List/List Content/Catalog Row 3
+  ROW: apos=(943.4234, -1174.0) size=(1826.8468, 72.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(75.175, -36.0) size=(150.35, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='PRI-C Rifle'
+  child `Cost`: apos=(221.735, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 400'
+  child `Level`: apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child `Effect`: apos=(371.61, -36.0) size=(156.98, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='24 dmg @ 5/s'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000131 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(75.175, -36.0) size=(150.35, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='PRI-C Rifle'
+  bind _cost -> `Cost` apos=(221.735, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 400'
+  bind _level -> `Level` apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _effect -> `Effect` apos=(371.61, -36.0) size=(156.98, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='24 dmg @ 5/s'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000133 (no GO map)
+
+[CREW QUARTERS] Luck Row
+  path=Canvas/Main Panels/CREW QUARTERS/List/List Content/Luck Row
+  ROW: apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(0.0, 0.0) size=(220.0, 40.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='Luck'
+  child `Cost`: apos=(0.0, 0.0) size=(120.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 80'
+  child `Level`: apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='1/10'
+  child `Effect`: apos=(0.0, 0.0) size=(280.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='"2% crit \\u2192 3.5% crit"'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000502 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(0.0, 0.0) size=(220.0, 40.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='Luck'
+  bind _cost -> `Cost` apos=(0.0, 0.0) size=(120.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 80'
+  bind _level -> `Level` apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='1/10'
+  bind _effect -> `Effect` apos=(0.0, 0.0) size=(280.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='"2% crit \\u2192 3.5% crit"'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000504 (no GO map)
+
+[CREW QUARTERS] Scavenging Row
+  path=Canvas/Main Panels/CREW QUARTERS/List/List Content/Scavenging Row
+  ROW: apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(0.0, 0.0) size=(220.0, 40.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='Scavenging'
+  child `Cost`: apos=(0.0, 0.0) size=(120.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 80'
+  child `Level`: apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='1/10'
+  child `Effect`: apos=(0.0, 0.0) size=(280.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='"10 per kill \\u2192 12 per kill"'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000467 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(0.0, 0.0) size=(220.0, 40.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='Scavenging'
+  bind _cost -> `Cost` apos=(0.0, 0.0) size=(120.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 80'
+  bind _level -> `Level` apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='1/10'
+  bind _effect -> `Effect` apos=(0.0, 0.0) size=(280.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='"10 per kill \\u2192 12 per kill"'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000469 (no GO map)
+
+[CREW QUARTERS] Stamina Row
+  path=Canvas/Main Panels/CREW QUARTERS/List/List Content/Stamina Row
+  ROW: apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(0.0, 0.0) size=(220.0, 40.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='Stamina'
+  child `Cost`: apos=(0.0, 0.0) size=(120.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 80'
+  child `Level`: apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='1/10'
+  child `Effect`: apos=(0.0, 0.0) size=(280.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='"6.4s sprint \\u2192 7.1s sprint"'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000432 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(0.0, 0.0) size=(220.0, 40.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='Stamina'
+  bind _cost -> `Cost` apos=(0.0, 0.0) size=(120.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 80'
+  bind _level -> `Level` apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='1/10'
+  bind _effect -> `Effect` apos=(0.0, 0.0) size=(280.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='"6.4s sprint \\u2192 7.1s sprint"'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000434 (no GO map)
+
+[CREW QUARTERS] Vitality Row
+  path=Canvas/Main Panels/CREW QUARTERS/List/List Content/Vitality Row
+  ROW: apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(0.0, 0.0) size=(220.0, 40.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='Vitality'
+  child `Cost`: apos=(0.0, 0.0) size=(120.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 80'
+  child `Level`: apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='1/10'
+  child `Effect`: apos=(0.0, 0.0) size=(280.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='"100 max HP \\u2192 110 max HP"'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000397 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(0.0, 0.0) size=(220.0, 40.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='Vitality'
+  bind _cost -> `Cost` apos=(0.0, 0.0) size=(120.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 80'
+  bind _level -> `Level` apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='1/10'
+  bind _effect -> `Effect` apos=(0.0, 0.0) size=(280.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='"100 max HP \\u2192 110 max HP"'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000399 (no GO map)
+
+[FABRICATION] Decoy Row
+  path=Canvas/Main Panels/FABRICATION/List/List Content/Decoy Row
+  ROW: apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(42.21, -36.0) size=(84.42, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='Decoy'
+  child `Cost`: apos=(155.805, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 150'
+  child `Level`: apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child `Effect`: apos=(319.78, -36.0) size=(185.18, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='"2 ch \\xB7 90 HP pull"'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000313 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(42.21, -36.0) size=(84.42, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='Decoy'
+  bind _cost -> `Cost` apos=(155.805, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 150'
+  bind _level -> `Level` apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _effect -> `Effect` apos=(319.78, -36.0) size=(185.18, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='"2 ch \\xB7 90 HP pull"'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000315 (no GO map)
+
+[FABRICATION] Equipment Slot Row
+  path=Canvas/Main Panels/FABRICATION/List/List Content/Equipment Slot Row
+  ROW: apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(102.21, -36.0) size=(204.42, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='Equipment Slot'
+  child `Cost`: apos=(275.805, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 300'
+  child `Level`: apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child `Effect`: apos=(484.84, -36.0) size=(275.3, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='"buy once \\u2014 300 salvage"'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000235 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(102.21, -36.0) size=(204.42, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='Equipment Slot'
+  bind _cost -> `Cost` apos=(275.805, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 300'
+  bind _level -> `Level` apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _effect -> `Effect` apos=(484.84, -36.0) size=(275.3, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='"buy once \\u2014 300 salvage"'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000237 (no GO map)
+
+[FABRICATION] Hatch Armor Row
+  path=Canvas/Main Panels/FABRICATION/List/List Content/Hatch Armor Row
+  ROW: apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(84.77, -36.0) size=(169.54, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='Hatch Armor'
+  child `Cost`: apos=(240.92499, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 120'
+  child `Level`: apos=(336.73, -36.0) size=(48.84, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='2/10'
+  child `Effect`: apos=(488.06, -36.0) size=(205.82, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='"160 HP \\u2192 180 HP"'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000192 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(84.77, -36.0) size=(169.54, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='Hatch Armor'
+  bind _cost -> `Cost` apos=(240.92499, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 120'
+  bind _level -> `Level` apos=(336.73, -36.0) size=(48.84, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='2/10'
+  bind _effect -> `Effect` apos=(488.06, -36.0) size=(205.82, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='"160 HP \\u2192 180 HP"'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000194 (no GO map)
+
+[FABRICATION] Repair Rig Row
+  path=Canvas/Main Panels/FABRICATION/List/List Content/Repair Rig Row
+  ROW: apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  LayoutElement minW=-1.0 prefW=-1.0 flexW=-1.0
+  child `Name`: apos=(70.99, -36.0) size=(141.98, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 wrap=None text='Repair Rig'
+  child `Cost`: apos=(213.36499, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='cost 200'
+  child `Level`: apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child `Effect`: apos=(410.625, -36.0) size=(251.75, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text='3 HP/s when equipped'
+  child `Reason`: apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=25.0 ov=Overflow auto=0 wrap=None text=''
+  child fileID=9200000000000000270 (missing RectTransform ù prefab/external)
+  bind _name -> `Name` apos=(70.99, -36.0) size=(141.98, 40.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=30.0 ov=Overflow text='Repair Rig'
+  bind _cost -> `Cost` apos=(213.36499, -36.0) size=(94.77, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='cost 200'
+  bind _level -> `Level` apos=(0.0, 0.0) size=(80.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _effect -> `Effect` apos=(410.625, -36.0) size=(251.75, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text='3 HP/s when equipped'
+  bind _reason -> `Reason` apos=(0.0, 0.0) size=(220.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5) TMP font=25.0 ov=Overflow text=''
+  bind _action comp=9200000000000000272 (no GO map)
+
+=== Chrome / body objects under each station ===
+
+---- ARMORY ----
+  Background: path=Canvas/Main Panels/ARMORY/Background
+    apos=(0.0, 0.0) size=(70.0, 70.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 0.5)
+  Banked Salvage: path=Canvas/Main Panels/ARMORY/Banked Salvage
+    apos=(48.0, -172.0) size=(480.0, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.0, 1.0)
+    TMP font=30.0 ov=Overflow auto=0 text="'Banked salvage: 0'"
+  Lifetime: path=Canvas/Main Panels/ARMORY/Lifetime
+    apos=(48.0, -210.0) size=(720.0, 32.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.0, 1.0)
+    TMP font=25.0 ov=Overflow auto=0 text=''
+  List Content: path=Canvas/Main Panels/ARMORY/List/List Content
+    apos=(0.0, 0.0) size=(0.0, 325.56982) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 1.0)
+    VLG spacing=16.0 pad=(30, 30, 10, 20)
+  Catalog Heading: path=Canvas/Main Panels/ARMORY/List/List Content/Catalog Heading
+    apos=(943.4234, -928.0) size=(1826.8468, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=28.0 ov=Overflow auto=0 text='CATALOG'
+  Catalog Row 1: path=Canvas/Main Panels/ARMORY/List/List Content/Catalog Row 1
+    apos=(943.4234, -998.0) size=(1826.8468, 72.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  Catalog Row 2: path=Canvas/Main Panels/ARMORY/List/List Content/Catalog Row 2
+    apos=(943.4234, -1086.0) size=(1826.8468, 72.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  Catalog Row 3: path=Canvas/Main Panels/ARMORY/List/List Content/Catalog Row 3
+    apos=(943.4234, -1174.0) size=(1826.8468, 72.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  Equipped Line: path=Canvas/Main Panels/ARMORY/List/List Content/Equipped Line
+    apos=(943.4234, -104.0) size=(1826.8468, 44.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=38.0 ov=Overflow auto=0 text='"MR-35 Rifle  \\xB7  T9/10"'
+  Ring Note: path=Canvas/Main Panels/ARMORY/List/List Content/Ring Note
+    apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 text='Upgrade ring not authored for this weapon yet.'
+  Rotate Hint: path=Canvas/Main Panels/ARMORY/List/List Content/Rotate Hint
+    apos=(943.4234, -204.0) size=(1826.8468, 28.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=22.0 ov=Overflow auto=0 text='"[Q / E] rotate   \\xB7   click a spoke"'
+  Rows Missing: path=Canvas/Main Panels/ARMORY/List/List Content/Rows Missing
+    apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 text='"ROWS MISSING \\u2014 see log"'
+  Slot Row: path=Canvas/Main Panels/ARMORY/List/List Content/Slot Row
+    apos=(943.4234, -38.0) size=(1826.8468, 56.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  Stat Line: path=Canvas/Main Panels/ARMORY/List/List Content/Stat Line
+    apos=(943.4234, -158.0) size=(1826.8468, 32.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+    TMP font=26.0 ov=Overflow auto=0 text='31.2 dmg    3/s    clip 12    reload 1.4s'
+  Wheel Slot: path=Canvas/Main Panels/ARMORY/List/List Content/Wheel Slot
+    apos=(943.4234, -564.0) size=(1826.8468, 660.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+
+---- NAV MAP ----
+  Background: path=Canvas/Main Panels/NAV MAP/Background
+    apos=(0.0, 0.0) size=(70.0, 70.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 0.5)
+  Banked Salvage: path=Canvas/Main Panels/NAV MAP/Banked Salvage
+    apos=(48.0, -172.0) size=(480.0, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.0, 1.0)
+    TMP font=30.0 ov=Overflow auto=0 text="'Banked salvage: 0'"
+  Lifetime: path=Canvas/Main Panels/NAV MAP/Lifetime
+    apos=(48.0, -210.0) size=(720.0, 32.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.0, 1.0)
+    TMP font=25.0 ov=Overflow auto=0 text=''
+  List Content: path=Canvas/Main Panels/NAV MAP/List/List Content
+    apos=(0.0, 0.0) size=(0.0, 0.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 1.0)
+    VLG spacing=16.0 pad=(30, 30, 10, 20)
+  Nav Panel: path=Canvas/Main Panels/NAV MAP/List/Nav Panel
+    apos=(0.0, 0.0) size=(0.0, 0.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 0.5)
+  No Rig Warning: path=Canvas/Main Panels/NAV MAP/List/List Content/No Rig Warning
+    apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 text='NO REPAIR RIG'
+  No Weapon Warning: path=Canvas/Main Panels/NAV MAP/List/List Content/No Weapon Warning
+    apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 text='NO WEAPON'
+  Start Wave Line: path=Canvas/Main Panels/NAV MAP/List/List Content/Start Wave Line
+    apos=(0.0, 0.0) size=(200.0, 44.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=36.0 ov=Overflow auto=0 text='START WAVE  1  /  5'
+  Wave Row: path=Canvas/Main Panels/NAV MAP/List/List Content/Wave Row
+    apos=(0.0, 0.0) size=(100.0, 100.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  Wave Value: path=Canvas/Main Panels/NAV MAP/List/List Content/Wave Row/Wave Value
+    apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+    TMP font=30.0 ov=Overflow auto=0 text="'  1  '"
+
+---- FABRICATION ----
+  Background: path=Canvas/Main Panels/FABRICATION/Background
+    apos=(0.0, 0.0) size=(70.0, 70.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 0.5)
+  Banked Salvage: path=Canvas/Main Panels/FABRICATION/Banked Salvage
+    apos=(48.0, -172.0) size=(480.0, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.0, 1.0)
+    TMP font=30.0 ov=Overflow auto=0 text="'Banked salvage: 0'"
+  Lifetime: path=Canvas/Main Panels/FABRICATION/Lifetime
+    apos=(48.0, -210.0) size=(720.0, 32.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.0, 1.0)
+    TMP font=25.0 ov=Overflow auto=0 text=''
+  List Content: path=Canvas/Main Panels/FABRICATION/List/List Content
+    apos=(0.0, 0.0) size=(0.0, 0.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 1.0)
+    VLG spacing=16.0 pad=(30, 30, 10, 20)
+  Decoy Row: path=Canvas/Main Panels/FABRICATION/List/List Content/Decoy Row
+    apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  Equipment Heading: path=Canvas/Main Panels/FABRICATION/List/List Content/Equipment Heading
+    apos=(0.0, 0.0) size=(0.0, 36.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+    TMP font=28.0 ov=Overflow auto=0 text='EQUIPMENT'
+  Equipment Slot Row: path=Canvas/Main Panels/FABRICATION/List/List Content/Equipment Slot Row
+    apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  Hatch Armor Row: path=Canvas/Main Panels/FABRICATION/List/List Content/Hatch Armor Row
+    apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  Hatch Heading: path=Canvas/Main Panels/FABRICATION/List/List Content/Hatch Heading
+    apos=(0.0, 0.0) size=(0.0, 36.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+    TMP font=28.0 ov=Overflow auto=0 text='HATCH'
+  Payload Heading: path=Canvas/Main Panels/FABRICATION/List/List Content/Payload Heading
+    apos=(0.0, 0.0) size=(0.0, 36.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+    TMP font=28.0 ov=Overflow auto=0 text='PAYLOAD'
+  Repair Rig Row: path=Canvas/Main Panels/FABRICATION/List/List Content/Repair Rig Row
+    apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+
+---- CREW QUARTERS ----
+  Background: path=Canvas/Main Panels/CREW QUARTERS/Background
+    apos=(0.0, 0.0) size=(70.0, 70.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 0.5)
+  Banked Salvage: path=Canvas/Main Panels/CREW QUARTERS/Banked Salvage
+    apos=(48.0, -172.0) size=(480.0, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.0, 1.0)
+    TMP font=30.0 ov=Overflow auto=0 text="'Banked salvage: 0'"
+  Lifetime: path=Canvas/Main Panels/CREW QUARTERS/Lifetime
+    apos=(48.0, -210.0) size=(720.0, 32.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.0, 1.0)
+    TMP font=25.0 ov=Overflow auto=0 text=''
+  List Content: path=Canvas/Main Panels/CREW QUARTERS/List/List Content
+    apos=(0.0, 0.0) size=(0.0, 0.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 1.0)
+    VLG spacing=16.0 pad=(30, 30, 10, 20)
+  Attributes Heading: path=Canvas/Main Panels/CREW QUARTERS/List/List Content/Attributes Heading
+    apos=(0.0, 0.0) size=(200.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+    TMP font=28.0 ov=Overflow auto=0 text='ATTRIBUTES'
+  Luck Row: path=Canvas/Main Panels/CREW QUARTERS/List/List Content/Luck Row
+    apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  Scavenging Row: path=Canvas/Main Panels/CREW QUARTERS/List/List Content/Scavenging Row
+    apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  Stamina Row: path=Canvas/Main Panels/CREW QUARTERS/List/List Content/Stamina Row
+    apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  Vitality Row: path=Canvas/Main Panels/CREW QUARTERS/List/List Content/Vitality Row
+    apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+
+=== List Content children + VLG ===
+
+[ARMORY] List Content apos=(0.0, 0.0) size=(0.0, 325.56982) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 1.0)
+  VLG spacing=16.0 pad=(30, 30, 10, 20) ctrl=1/0
+  - Slot Row: apos=(943.4234, -38.0) size=(1826.8468, 56.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  - Equipped Line: apos=(943.4234, -104.0) size=(1826.8468, 44.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  - Stat Line: apos=(943.4234, -158.0) size=(1826.8468, 32.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  - Rotate Hint: apos=(943.4234, -204.0) size=(1826.8468, 28.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  - Ring Note: apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - Wheel Slot: apos=(943.4234, -564.0) size=(1826.8468, 660.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  - Catalog Heading: apos=(943.4234, -928.0) size=(1826.8468, 36.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  - Catalog Row 1: apos=(943.4234, -998.0) size=(1826.8468, 72.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  - Catalog Row 2: apos=(943.4234, -1086.0) size=(1826.8468, 72.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  - Catalog Row 3: apos=(943.4234, -1174.0) size=(1826.8468, 72.0) amin=(0.0, 1.0) amax=(0.0, 1.0) pivot=(0.5, 0.5)
+  - Rows Missing: apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+
+[FABRICATION] List Content apos=(0.0, 0.0) size=(0.0, 0.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 1.0)
+  VLG spacing=16.0 pad=(30, 30, 10, 20) ctrl=1/0
+  - Hatch Heading: apos=(0.0, 0.0) size=(0.0, 36.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  - Hatch Armor Row: apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  - Equipment Heading: apos=(0.0, 0.0) size=(0.0, 36.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  - Equipment Slot Row: apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  - Repair Rig Row: apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  - Payload Heading: apos=(0.0, 0.0) size=(0.0, 36.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  - Decoy Row: apos=(0.0, 0.0) size=(0.0, 72.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+  - Bay Line: apos=(0.0, 0.0) size=(0.0, 38.0) amin=(0.0, 0.0) amax=(0.0, 0.0) pivot=(0.5, 0.5)
+
+[NAV MAP] List Content apos=(0.0, 0.0) size=(0.0, 0.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 1.0)
+  VLG spacing=16.0 pad=(30, 30, 10, 20) ctrl=1/0
+  - Destination Line: apos=(0.0, 0.0) size=(200.0, 44.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - Premise Line: apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - Start Wave Line: apos=(0.0, 0.0) size=(200.0, 44.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - Wave Row: apos=(0.0, 0.0) size=(100.0, 100.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - No Weapon Warning: apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - No Rig Warning: apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - fileID=9000000000000000001 (missing)
+  - Load Failed Line: apos=(0.0, 0.0) size=(200.0, 38.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+
+[CREW QUARTERS] List Content apos=(0.0, 0.0) size=(0.0, 0.0) amin=(0.0, 0.0) amax=(1.0, 1.0) pivot=(0.5, 1.0)
+  VLG spacing=16.0 pad=(30, 30, 10, 20) ctrl=1/0
+  - Attributes Heading: apos=(0.0, 0.0) size=(200.0, 36.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - Vitality Row: apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - Stamina Row: apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - Scavenging Row: apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)
+  - Luck Row: apos=(0.0, 0.0) size=(100.0, 72.0) amin=(0.5, 0.5) amax=(0.5, 0.5) pivot=(0.5, 0.5)

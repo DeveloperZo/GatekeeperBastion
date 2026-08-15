@@ -167,6 +167,28 @@ namespace GatekeeperBastion.EditorTools
                     }
                 }
 
+                // Every open passage gets an unlocked auto door: proximity slides the leaf,
+                // no terminal gates it. Locked gates above keep the gate material; these fall
+                // back to the segment wall material so they read as doors, not seals.
+                List<BastionSketchPassage> passages = BastionSketchPassages.Find(sketch);
+                for (int i = 0; i < passages.Count; i++)
+                {
+                    BastionSketchPassage passage = passages[i];
+                    if (!roomObjects.TryGetValue(passage.RoomId, out GameObject roomGo))
+                        continue;
+                    GameObject go = CreateNamedMarker(roomGo.transform, "D_" + passage.Id, typeof(BastionDoor));
+                    var auto = go.GetComponent<BastionDoor>();
+                    if (auto == null)
+                        continue;
+                    auto.Configure(
+                        passage.Id,
+                        System.Array.Empty<string>(),
+                        controlGate: false,
+                        ToDoorEdge(passage.Direction),
+                        locked: false);
+                    doorMarkerCount++;
+                }
+
                 WireSealedSpawns(spawnByName);
 
                 if (bastionScene.IsValid())
@@ -324,6 +346,12 @@ namespace GatekeeperBastion.EditorTools
                 Debug.LogError("[BastionSketchEmitter] Failed to instantiate " + path);
                 return null;
             }
+
+            // Rooms emit unpacked (Zo 2026-08-14): packed instances block hierarchy edits
+            // during authoring. Outermost only — the Synty pieces under _geom keep their
+            // prefab links so pack updates still propagate.
+            PrefabUtility.UnpackPrefabInstance(
+                instance, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
 
             return instance;
         }

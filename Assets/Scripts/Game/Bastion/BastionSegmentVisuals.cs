@@ -39,17 +39,23 @@ namespace GatekeeperBastion.Game
             Bounds cornerB = BastionPackTiling.Measure(segment.CornerPiece);
             Bounds lightB = BastionPackTiling.Measure(segment.CeilingLightPiece);
 
+            // Pieces group by category (Walls/Floors/Ceiling) — the builders parent to
+            // whatever transform they are handed. Lights ride Ceiling, corners ride Walls.
+            Transform floors = BastionSegment.EnsureGeomGroup(geomRoot, BastionSegment.GroupFloors);
+            Transform ceiling = BastionSegment.EnsureGeomGroup(geomRoot, BastionSegment.GroupCeiling);
+            Transform walls = BastionSegment.EnsureGeomGroup(geomRoot, BastionSegment.GroupWalls);
+
             // Floor walking surface at local y = 0; ceiling underside at wallHeight.
-            BuildSlabGrid(geomRoot, segment.FloorPiece, floorB, width, depth, -floorB.max.y, "FloorTile");
-            BuildSlabGrid(geomRoot, segment.CeilingPiece, ceilingB, width, depth, wallHeight - ceilingB.min.y, "CeilingTile");
+            BuildSlabGrid(floors, segment.FloorPiece, floorB, width, depth, -floorB.max.y, "FloorTile");
+            BuildSlabGrid(ceiling, segment.CeilingPiece, ceilingB, width, depth, wallHeight - ceilingB.min.y, "CeilingTile");
 
-            BuildFace(segment, geomRoot, SegmentEdge.North, segment.North, segment.NorthDoorAlong, width, depth, wallHeight, thickness, wallB, doorframeB, windowB);
-            BuildFace(segment, geomRoot, SegmentEdge.South, segment.South, segment.SouthDoorAlong, width, depth, wallHeight, thickness, wallB, doorframeB, windowB);
-            BuildFace(segment, geomRoot, SegmentEdge.East, segment.East, segment.EastDoorAlong, width, depth, wallHeight, thickness, wallB, doorframeB, windowB);
-            BuildFace(segment, geomRoot, SegmentEdge.West, segment.West, segment.WestDoorAlong, width, depth, wallHeight, thickness, wallB, doorframeB, windowB);
+            BuildFace(segment, walls, SegmentEdge.North, segment.North, segment.NorthDoorAlong, width, depth, wallHeight, thickness, wallB, doorframeB, windowB);
+            BuildFace(segment, walls, SegmentEdge.South, segment.South, segment.SouthDoorAlong, width, depth, wallHeight, thickness, wallB, doorframeB, windowB);
+            BuildFace(segment, walls, SegmentEdge.East, segment.East, segment.EastDoorAlong, width, depth, wallHeight, thickness, wallB, doorframeB, windowB);
+            BuildFace(segment, walls, SegmentEdge.West, segment.West, segment.WestDoorAlong, width, depth, wallHeight, thickness, wallB, doorframeB, windowB);
 
-            BuildCorners(segment, geomRoot, width, depth, wallHeight, cornerB);
-            BuildLights(segment, geomRoot, width, depth, wallHeight, lightB, BastionPackTiling.Step(ceilingB.size.x));
+            BuildCorners(segment, walls, width, depth, wallHeight, cornerB);
+            BuildLights(segment, ceiling, width, depth, wallHeight, lightB, BastionPackTiling.Step(ceilingB.size.x));
         }
 
         static void BuildSlabGrid(
@@ -147,7 +153,7 @@ namespace GatekeeperBastion.Game
             // and Y-scaled like walls.
             float pieceScaleAlong = step / Mathf.Max(pieceB.size.x, 0.01f);
             float pieceScaleY = wallHeight / Mathf.Max(pieceB.max.y, 0.01f);
-            SpawnFacePiece(
+            GameObject spawned = SpawnFacePiece(
                 geomRoot,
                 piece,
                 pieceB,
@@ -156,6 +162,23 @@ namespace GatekeeperBastion.Game
                 edgeOffset,
                 new Vector3(pieceScaleAlong, pieceScaleY, 1f),
                 BastionSegment.GenPrefix + orientation + role);
+            if (isDoor)
+                DisableBuiltInLeaf(spawned);
+        }
+
+        /// <summary>The pack doorframe ships with a shut leaf baked in. Deactivate it (prefab
+        /// instances forbid child destroy) so the doorway is open: BastionDoor's slab is the
+        /// moving leaf, and an active leaf both reads as sealed and bakes a NavMesh wall.</summary>
+        static void DisableBuiltInLeaf(GameObject frame)
+        {
+            if (frame == null)
+                return;
+            Transform[] children = frame.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < children.Length; i++)
+            {
+                if (children[i].name.StartsWith(BastionMeshMap.DoorframeLeafPrefix, System.StringComparison.Ordinal))
+                    children[i].gameObject.SetActive(false);
+            }
         }
 
         static void BuildWallRun(
@@ -205,7 +228,7 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        static void SpawnFacePiece(
+        static GameObject SpawnFacePiece(
             Transform geomRoot,
             GameObject prefab,
             Bounds b,
@@ -223,7 +246,7 @@ namespace GatekeeperBastion.Game
             Vector3 offset = rot * Vector3.Scale(pieceScale, new Vector3(b.center.x, 0f, b.center.z));
             Vector3 desired = BastionSegment.SideCenter(orientation, alongCenter, 0f, edgeOffset);
             Vector3 pos = new Vector3(desired.x - offset.x, 0f, desired.z - offset.z);
-            SpawnPiece(geomRoot, prefab, goName, pos, rot, pieceScale, true);
+            return SpawnPiece(geomRoot, prefab, goName, pos, rot, pieceScale, true);
         }
 
         static void BuildCorners(

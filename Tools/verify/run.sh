@@ -62,6 +62,7 @@ declare -A EXCLUDED=(
   ["Weapons/ReloadSwapTests.cs"]="needs PlayerGun MonoBehaviour, GameObject, and UnityEngine.TestTools.LogAssert"
   ["ControlsTests.cs"]="needs GatekeeperBastion.Game (Controls) and UnityEngine.Input/KeyCode"
   ["Ship/PremiseCopyTests.cs"]="needs GatekeeperBastion.Game (PremiseCopy) and scene strings"
+  ["Ship/StationPurposeTests.cs"]="needs GatekeeperBastion.Game (station Purpose constants)"
   ["Ship/StationPanelDriftTests.cs"]="needs GatekeeperBastion.Editor StationSceneGate assembly"
   ["Ui/ShortcutRowApiTests.cs"]="needs ShortcutRow MonoBehaviour, TMPro, and UnityEditor"
   ["Ui/UiBindGatingTests.cs"]="needs GatekeeperBastion.Game, TMPro, and UnityEngine.UI"

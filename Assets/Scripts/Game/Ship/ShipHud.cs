@@ -56,7 +56,7 @@ namespace GatekeeperBastion.Game
             {
                 _view.EnsureBuilt();
                 // Same Profile slots as Bastion until a real level/XP model exists.
-                _view.SetProfile("LV 1", "EXP —");
+                _view.SetProfile(ShipHudView.ProfileRank, null);
                 _view.SetScore("", "");
                 _view.SetWeapon("—", "—");
                 _view.SetCrosshairVisible(true);
@@ -108,14 +108,14 @@ namespace GatekeeperBastion.Game
                 _cachedRuns = runs;
                 _cachedDeepest = deepest;
 
-                _view.SetProfile("LV 1", "EXP —");
+                _view.SetProfile(ShipHudView.ProfileRank, null);
 
                 _lineBuf.Clear();
                 _lineBuf.Append("Salvage ").Append(m.BankedSalvage);
                 string salvage = _lineBuf.ToString();
                 _lineBuf.Clear();
                 if (deepest < 1) deepest = 1;
-                _lineBuf.Append("Wave ").Append(deepest)
+                _lineBuf.Append("cleared ").Append(deepest)
                     .Append("  ·  ").Append(runs).Append(" runs");
                 _view.SetScore(salvage, _lineBuf.ToString());
 

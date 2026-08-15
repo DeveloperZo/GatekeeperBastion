@@ -7,6 +7,90 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-14
 -->
 
+- 2026-08-14: **M61 status later → completed.** IQ astronaut + Synty guns (six Packs
+  wrappers), stroke crosshair, RMB zoom Hip 60 / Zoom 40, Ship `SM_Prop_ControlPanel_02`
+  ×4 + `SM_Prop_Screen_Small_01`. Unity EditMode `WeaponViewTests`+`ControlsTests` 15/15;
+  PlayMode `ShipSceneContractTests` 5/5. Audio is M69.
+- 2026-08-14: **M61-2 rebuild-on-reload landmine defused after it destroyed authored
+  geometry.** `BastionSegment.OnValidate` fires on every script reload, not just
+  inspector edits, and it rebuilt `_geom` each time — every compile silently reset all
+  rooms to canonical packed pieces. The compile for the grouping change fired it and
+  wiped Zo's fully-unpacked geometry; the grouping tool's save then wrote that over his
+  scene. Unrecoverable (no scene backups); everything outside `_geom` — room roots,
+  doors, terminals, spawns, hatch — survived. Fix: a serialized `rebuildStamp` hash of
+  the geometry inputs (block kind, side kinds, alongs) gates OnValidate — reloads with
+  unchanged settings never touch `_geom`, inspector changes still rebuild. Pre-stamp
+  instances with built geometry adopt the hash without rebuilding. The unpacked state
+  was restored via `GatekeeperBastion/Unpack Bastion Geom In Open Scene` (0 packed
+  `Gen_` pieces, 2854 plain, stamps persisted); piece-level hand tweaks from that
+  window, if any, are lost. Same window, second defect: a play-mode rebuild parented
+  its fresh geometry into groups that deferred `Destroy` was about to kill, so every
+  collider died at end of frame one — the "player falls through the floor" report.
+  `ClearGeneratedChildren` now detaches before destroying; live-verified (player
+  standing at y 0.98 on R1's floor in play mode).
+- 2026-08-14: **M61-2 room geometry grouped by category.** Zo: walls, floors and ceiling
+  items each under a parent node. Every segment's `_geom` now holds three group nodes —
+  `Walls` (wall runs, doorframes, windows, corners, walk blocks, side colliders),
+  `Floors`, `Ceiling` (tiles and lights) — and rebuilds emit grouped natively
+  (`EnsureGeomGroup`; groups carry the generated marker so a rebuild clears them
+  wholesale). The open scene was regrouped in place via
+  `GatekeeperBastion/Group Bastion Geom In Open Scene` — reparent only, no rebuild, so
+  Zo's hand edits survive and world transforms are untouched.
+- 2026-08-14: **M61-2 rooms emit unpacked.** Zo: packed room instances block hierarchy
+  edits during authoring. `BastionSketchEmitter` unpacks the outermost root at emit;
+  the Synty pieces under `_geom` keep their prefab links. Zo then moved all 15 rooms
+  under `Authored/` — the layout is his now. `Generated/` is empty: a re-emit builds a
+  second layout on top of the authored one, so the sketch emitter is retired for this
+  bastion unless the authored copy is deleted first.
+- 2026-08-14: **M61-2 doors made functional; hatch is a bulkhead.** Zo: passage doors
+  open/close, terminal doors stay locked until their wave count clears, hatch styled
+  uniquely. `BastionDoor` is now a sliding leaf — locked gates hold an orange seal until
+  the unlock graph opens them, unlocked doors slide for anyone in range and shut behind
+  (already the graph's contract; the leaf just moves now). Every open passage gets an
+  auto door at emit (`BastionSketchPassages`, 11 on this layout). Two defects fixed the
+  same pass: rooms had re-emitted at old half-spacing so 42 m footprints overlapped
+  (the "walking through walls" and stray-slab reads), and the pack doorframe ships with
+  a shut leaf baked in — it read as sealed and baked a NavMesh wall across every doorway;
+  the visuals now disable it and the NavMesh bake hides door slabs. The Hatch is a
+  7×4.5 m bulkhead slab on R1's south wall in its own `Mat_Bulkhead` (yellow, emissive).
+- 2026-08-14: **M56 folded into M70 — the turret is an ability (Zo).** `UTL-H` keeps its
+  decided shape — FABRICATION payload, ghost-and-confirm, onboard 30 then a 2/s clock
+  siphon off the Primary reserve, life 45 s, no weapon-upgrade inheritance — and ships in
+  the ability slice beside the Crew roster. Its console does not move: a placed drone item
+  stays on the payload shelf, not on `G`. Turret kill criterion carried whole (ten Runs;
+  parked-at-Hatch or never-placed recuts once, a second same ten cuts the row). Leverage
+  tier restated per the ladder (M56's file said #9 rules; rules are #5, the second firing
+  position #10). Queue position survives: the turret reads best after M55. M56's number
+  retires; file deleted. Planned 14 against cap 10.
+- 2026-08-14: **M70 created — CREW QUARTERS sells Crew abilities, not attributes.** Graduated
+  from `Brainstorms/crew-skills-and-perks.md` (Decided 2026-08-12; stealth layer and trade
+  filter 2026-08-14); one unified milestone — system plus starter roster — by Zo's call.
+  Roster of four on `G`, one equipped per Boarder: Cloak (shared visibility layer), Anchor
+  (plant and slow), Recall (unbanked pile for escape), Ping (concealment for information).
+  Overclock rejected — its grant is the wheel's damage currency. The four attribute tracks
+  are deleted and refunded at exact spend (`200×(2^level−1)`, SaveVersion 8); crit chance is
+  0 with the roll kept. Stealth kill criteria date from the Cloaker slice (M63 roster).
+  Planned 15 against cap 10.
+- 2026-08-14: **M68 folded into M63 — the garrison: a roster with bodies.** One slice now
+  carries the twelve-kind roster record, Ram→Thief, the Garrison volume with `in_build`
+  flags, the door-time log line, and the three in-build bodies (Default
+  `SM_Chr_RobotFemale_01`, Hunter `SM_Chr_SpaceSoldier_HelmetArmor_Male_01`, Thief
+  `SM_Chr_BR_War_Robot_01`; Mixamo Humanoid or keep capsules). The rename lands before the
+  wrappers, so the body work is Thief-named from the start. Leverage tier stated once as
+  #6 information flows (M68's file said #8). M68's number retires; file deleted.
+  Planned 14 against cap 10.
+- 2026-08-14: **M61-2 re-framed mid-pass — station rooms, not one giant diagram.** Zo:
+  enclosed space station, individual walkable rooms with doors, hatch docked against a
+  wall, scale up to read as a huge lost station. Kit multiples became metres on scaler 2
+  (Half 16 m, Full 26 m, OpenArea 42 m, ControlRoom 152×76 m); layout re-authored from
+  Zo's diagram as `Tools/bastion-sketch/bastion-defense-layout.txt` (15 rooms, T1+T2→D1,
+  T3→D2, T4+T5→D3 control). M47's footprint lock is waived by Zo for this pass. Sketch
+  emit now wires `_game` and `UnlocksDoor` on terminals — emitted terminals were
+  inert without them.
+- 2026-08-14: **Settings list first row.** Each tab's `List Content` VerticalLayoutGroup
+  had `m_Top: -26`, which placed the first row above the mask (Resolution is 60px,
+  so ~26px of the label was clipped). All four tabs in MainMenu, Ship, and Bastion
+  now use top 25, matching left/bottom.
 - 2026-08-14: **M59 recut — UI only; audio is M69.** Music and gun/foot SFX leave M59.
   M59 adds Score overflow, hide Profile EXP, end-screen scrim, movement-lock and
   start-Wave-cleared copy. M69 binds the five wavs already on disk; no store pack

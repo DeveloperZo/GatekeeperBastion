@@ -11,9 +11,10 @@ namespace GatekeeperBastion.EditorTools
     public static class BastionFieldConsole
     {
         const string MaterialDir = "Assets/Materials";
-        /// <summary>Ship Desk/Screen/Label × this. <see cref="BastionKit.StoreyHeight"/> / 2.5
-        /// → 2 at storey 5 so props read in Full/Open rooms. Label Y is clamped under the ceiling.</summary>
-        public static float Scale => BastionKit.StoreyHeight / 2.5f;
+        /// <summary>Ship Desk/Screen/Label × this. <see cref="BastionKit.FieldConsoleScale"/>
+        /// is 1 (usable). StoreyHeight/2.5 (=2) was rejected — room-fill, not use.
+        /// Label Y is clamped under the ceiling.</summary>
+        public static float Scale => BastionKit.FieldConsoleScale;
 
         static readonly Color LabelColor = new Color(242f / 255f, 128f / 255f, 26f / 255f);
 
@@ -35,8 +36,14 @@ namespace GatekeeperBastion.EditorTools
                 : terminal.TerminalId.ToUpperInvariant();
 
             float s = Scale;
-            MeshPart(t, "Desk", new Vector3(0f, 0.6f * s, 0f), new Vector3(1.6f * s, 1.2f * s, 0.7f * s), body);
-            MeshPart(t, "Screen", new Vector3(0f, 1.7f * s, -0.15f * s), new Vector3(1.6f * s, 0.9f * s, 0.12f * s), body);
+            MeshPart(t, "Desk",
+                new Vector3(0f, BastionKit.FieldConsoleDeskCentreY * s, 0f),
+                new Vector3(BastionKit.FieldConsoleDeskWidth * s,
+                    BastionKit.FieldConsoleDeskHeight * s,
+                    BastionKit.FieldConsoleDeskDepth * s), body);
+            MeshPart(t, "Screen",
+                new Vector3(0f, BastionKit.FieldConsoleScreenCentreY * s, -0.15f * s),
+                new Vector3(BastionKit.FieldConsoleDeskWidth * s, 0.9f * s, 0.12f * s), body);
             FloatingLabel(t, label, s);
             return true;
         }
@@ -50,15 +57,17 @@ namespace GatekeeperBastion.EditorTools
             Transform desk = terminalRoot.Find("Desk");
             if (desk != null)
             {
-                desk.localPosition = new Vector3(0f, 0.6f * s, 0f);
-                desk.localScale = new Vector3(1.6f * s, 1.2f * s, 0.7f * s);
+                desk.localPosition = new Vector3(0f, BastionKit.FieldConsoleDeskCentreY * s, 0f);
+                desk.localScale = new Vector3(BastionKit.FieldConsoleDeskWidth * s,
+                    BastionKit.FieldConsoleDeskHeight * s,
+                    BastionKit.FieldConsoleDeskDepth * s);
             }
 
             Transform screen = terminalRoot.Find("Screen");
             if (screen != null)
             {
-                screen.localPosition = new Vector3(0f, 1.7f * s, -0.15f * s);
-                screen.localScale = new Vector3(1.6f * s, 0.9f * s, 0.12f * s);
+                screen.localPosition = new Vector3(0f, BastionKit.FieldConsoleScreenCentreY * s, -0.15f * s);
+                screen.localScale = new Vector3(BastionKit.FieldConsoleDeskWidth * s, 0.9f * s, 0.12f * s);
             }
 
             Transform label = terminalRoot.Find("Label");
