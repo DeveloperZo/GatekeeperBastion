@@ -198,7 +198,7 @@ namespace GatekeeperBastion.Game
                 return;
             }
 #endif
-            Debug.LogError(
+            Debug.LogWarning(
                 "[BastionDoor] Missing GateSlab on " + name
                 + " — drop gkb_bastion_sketch_request.txt to re-emit doors.",
                 this);

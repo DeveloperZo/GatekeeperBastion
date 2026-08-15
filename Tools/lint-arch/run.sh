@@ -154,8 +154,22 @@ IFS=',' read -r -a AMBRANDOM_ALLOW <<< "$AMBRANDOM_ALLOW_RAW"
 
 SINGLETON_ALLOW_RAW="$(get_key "$SINGLETON_BLOCK" singleton_allow "$SINGLETON_DOC")" || exit 2
 SINGLETON_OWED_RAW="$(get_key "$SINGLETON_BLOCK" singleton_owed "$SINGLETON_DOC")" || exit 2
+MENU_ROOT="$(trim "$(get_key "$SINGLETON_BLOCK" menu_root "$SINGLETON_DOC")")" || exit 2
+MENU_ROWS_RAW="$(get_key "$SINGLETON_BLOCK" menu_rows "$SINGLETON_DOC")" || exit 2
 IFS=',' read -r -a SINGLETON_ALLOW <<< "$SINGLETON_ALLOW_RAW"
 IFS=',' read -r -a SINGLETON_OWED <<< "$SINGLETON_OWED_RAW"
+IFS=',' read -r -a MENU_ROWS <<< "$MENU_ROWS_RAW"
+if [[ -z "$MENU_ROOT" ]]; then
+  echo "lint-arch: menu_root is empty in $SINGLETON_DOC" >&2
+  exit 2
+fi
+for i in "${!MENU_ROWS[@]}"; do
+  MENU_ROWS[$i]="$(trim "${MENU_ROWS[$i]}")"
+done
+if (( ${#MENU_ROWS[@]} == 0 )) || [[ -z "${MENU_ROWS[0]}" ]]; then
+  echo "lint-arch: menu_rows is empty in $SINGLETON_DOC" >&2
+  exit 2
+fi
 
 VIOLATIONS=0
 
@@ -540,6 +554,55 @@ if [[ -n "$HITS" ]]; then
     VIOLATIONS=$((VIOLATIONS + 1))
   done <<< "$HITS"
 fi
+
+# --- Editor menu: one root, every row named in the fence ---------------------------
+# Concatenated MenuItem paths are invisible to the fence, so they fail first.
+scan '\[MenuItem\((?!\s*")' "$SCRIPTS_DIR"
+if [[ -n "$HITS" ]]; then
+  while IFS= read -r hit; do
+    [[ -z "$hit" ]] && continue
+    file="${hit%%:*}"
+    rest="${hit#*:}"
+    lineno="${rest%%:*}"
+    printf '%s:%s: menu-item-not-a-literal\n' "$file" "$lineno"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  done <<< "$HITS"
+fi
+
+FOUND_ROWS=()
+scan '\[MenuItem\(\s*"([^"]+)"' "$SCRIPTS_DIR"
+if [[ -n "$HITS" ]]; then
+  while IFS= read -r hit; do
+    [[ -z "$hit" ]] && continue
+    file="${hit%%:*}"
+    rest="${hit#*:}"
+    lineno="${rest%%:*}"
+    text="${rest#*:}"
+    path="$(printf '%s\n' "$text" | sed -E 's/.*\[MenuItem\([ \t]*"([^"]+)".*/\1/')"
+    prefix="$MENU_ROOT/"
+    if [[ "$path" != "$prefix"* ]]; then
+      printf '%s:%s: menu-item-outside-root (%s)\n' "$file" "$lineno" "$path"
+      VIOLATIONS=$((VIOLATIONS + 1))
+      continue
+    fi
+    row="${path#"$prefix"}"
+    if ! in_list "$row" "${MENU_ROWS[@]}"; then
+      printf '%s:%s: menu-item-not-in-fence (%s)\n' "$file" "$lineno" "$row"
+      VIOLATIONS=$((VIOLATIONS + 1))
+      continue
+    fi
+    if (( ${#FOUND_ROWS[@]} == 0 )) || ! in_list "$row" "${FOUND_ROWS[@]}"; then
+      FOUND_ROWS+=("$row")
+    fi
+  done <<< "$HITS"
+fi
+for expected in "${MENU_ROWS[@]}"; do
+  [[ -z "$expected" ]] && continue
+  if (( ${#FOUND_ROWS[@]} == 0 )) || ! in_list "$expected" "${FOUND_ROWS[@]}"; then
+    printf 'menu-row-missing-from-code: %s\n' "$expected"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  fi
+done
 
 # --- Non-source files under Assets/Scripts (enforced) ------------------------------
 # Source here is .cs, .asmdef and Unity's .meta — see 3-Unity-Runtime.md section 9.

@@ -20,7 +20,9 @@ metadata:
   script delete itself.
 - **Add a `[MenuItem]` without asking first.** Menu entries are a shared, permanent surface and
   they are added far more easily than they are removed. Ask, and name the row you propose to
-  replace. **There is one menu root, `GatekeeperBastion/`** — a second root is never the answer.
+  replace. **There is one menu root, `GatekeeperBastion/`, with five folders: Record, Logs,
+  Build, Bake, Validate.** A second root is never the answer. A new row updates `menu_rows`
+  in `Docs/Architecture/README.md` in the same change.
 - **Put `MonoBehaviour`, `GameObject`, a scene lookup, `Time` or `UnityEngine.Random` in
   `Sim/`.** *A seeded generator the sim owns and is handed is required, not forbidden.*
 - **Use `?.`, `??`, `??=` or `is null` on a `UnityEngine.Object`.** *Scoped: see below. In `Sim/`

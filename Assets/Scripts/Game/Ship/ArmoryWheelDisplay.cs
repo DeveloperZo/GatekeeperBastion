@@ -11,8 +11,8 @@ namespace GatekeeperBastion.Game
         public string[] SpokeLabels;
         public int[] SpokeRingIndices;
         public int[] SpokeDistances;
-        /// <summary>Filled tick count per axis, 0..5 — share of the maximum a single
-        /// attribute can hold at max tier (<see cref="WeaponWheel.FocusAtMax"/>).</summary>
+        /// <summary>Filled tick count per spoke (0–5). One tick ≈
+        /// <see cref="WeaponWheel.FocusAtMax"/>/5 points.</summary>
         public int[] SpokeTicks;
         public string HubTitle;
         public string ProjFireLine;

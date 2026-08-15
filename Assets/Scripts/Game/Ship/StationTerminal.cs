@@ -301,6 +301,10 @@ namespace GatekeeperBastion.Game
 
         protected abstract void BuildPanel(StationPanelView view, MetaState m);
 
+        /// <summary>Esc first chance: nested UI (ARMORY wheel) pops before the station closes.
+        /// Return true when Esc was consumed.</summary>
+        public virtual bool TryBack() => false;
+
         /// <summary>Esc or Close — hide panel + canvas, restore walk.</summary>
         public void Close(string reason = null)
         {

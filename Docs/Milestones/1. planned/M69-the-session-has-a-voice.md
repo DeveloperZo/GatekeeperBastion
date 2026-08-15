@@ -7,8 +7,8 @@ Last updated: 2026-08-14
 -->
 
 After EMBARK a track is playing, and fire / reload / walk are audible on the SFX slider.
-Menu track stays Stardust Drifter. Both must not play at once. Split out of M59 so the UI
-pass is not also an audio pass.
+Menu is **Stardust Drifter**. Ship and Bastion are **Whispers of the Void**. Split out of M59 so
+the UI pass is not also an audio pass.
 
 No store SFX pack. Bind the five wavs and two mp3s already in the repo. Shift Hover/Click
 stay the UI bus. Pre-attack tells, Hatch hit, and downed cue stay `M66`.
@@ -21,9 +21,8 @@ sound on the SFX bus, so the session is not silent once the menu ends.
 ## Why it matters
 
 `Design/1-Experience.md` §1.2 ranks Sensation as not addressed: no audio pass. The menu
-loop **Stardust Drifter** stops on Continue/Start New (`FrontEndMusic.Stop`). Bastion never
-starts a replacement. **Whispers of the Void** sits unused (`Assets/Resources/Audio/`,
-5.50 MB, 229 s). `PlayerGun.Fire` / footsteps already call `PlayOneShot` against
+loop **Stardust Drifter** stops on Continue/Start New (`FrontEndMusic.Stop`). Ship and
+Bastion play **Whispers of the Void** (`Assets/Resources/Audio/`, 5.50 MB, 229 s). `PlayerGun.Fire` / footsteps already call `PlayOneShot` against
 `Assets/Resources/Audio/Sfx/` (Fire-Pistol **4012 B / 0.090 s**, Fire-Rifle **0.070 s**,
 Fire-Shotgun **0.180 s**, Reload **0.220 s**, Footstep-Walk **0.080 s**, all PCM 16-bit
 mono 22050 Hz). `WeaponView.SfxOneShotScale` is **0.5** because those bursts were harsh at
@@ -34,13 +33,12 @@ library is the 5 GB mistake again.
 
 ## Acceptance criteria
 
-1. **Bastion plays a looping track.** On Bastion load, an `AudioSource` named so
-   `AudioBuses.IsMusic` matches it (name contains `Music`) plays **Whispers of the Void**
-   (`Assets/Resources/Audio/Whispers of the Void.mp3`, guid `482f8aea…`), looped, 2D,
-   volume from `SettingId.MusicVolume`. Host name **Level Music** (not `Background Music`).
-   Menu track stays Stardust Drifter. Both must not play at once: `FrontEndMusic.Stop`
-   still runs on Continue/Start New; the Bastion source stops when Bastion unloads or Main
-   Menu captures again.
+1. **Whispers plays on Ship and Bastion.** Host name **Level Music** (not `Background Music`).
+   Clip is **Whispers of the Void** (`Assets/Resources/Audio/Whispers of the Void.mp3`,
+   guid `482f8aea…`), looped, 2D, volume from `SettingId.MusicVolume`. `FrontEndMusic.Stop`
+   runs on Continue / Start / Host / Join. Ship and Bastion each author a scene copy that
+   `LevelMusic.CaptureOrJoin` joins or yields. Direct-play adopts the scene source.
+   Returning to MainMenu stops Level Music; Stardust starts again. Both must not play at once.
 2. **Fire, reload, and footsteps ride the SFX slider.** `PlayerGun.Fire` plays the class
    one-shot (pistol / shotgun / rifle). Reload plays `Reload`. Walk/sprint footsteps on the
    existing clock (`WeaponView.WalkFootstepSeconds` / `SprintFootstepSeconds`). Clips are
@@ -49,30 +47,25 @@ library is the 5 GB mistake again.
 3. **No store SFX pack imported.** Shift `Click.ogg` / `Hover.ogg` remain the UI bus
    (`UiPitchRandomizer` / UIManager). No FMOD. No second DDOL music host that fights
    FrontEndMusic across Splash.
-4. **The player action:** Splash → Ship → EMBARK. A track is playing; Music slider in pause
-   Settings moves it. Fire and walk are heard. SFX 0 silences shots and footsteps; Music 0
-   silences the loop independently. QUIT TO MENU: Stardust Drifter, not both. Solo
-   unchanged. No `[Dev]` in the close log.
-5. EditMode: a Bastion music host is classified as Music; stopping FrontEndMusic does not
-   leave two `*Music*` sources playing; SFX clips load from Resources. Suites green.
+4. **The player action:** Splash → Ship → EMBARK. Whispers is playing on Ship and on
+   Bastion; Music slider in pause Settings moves it. Fire and walk are heard. SFX 0
+   silences shots and footsteps; Music 0 silences the loop independently. QUIT TO MENU:
+   Stardust, not both. Solo unchanged. No `[Dev]` in the close log.
+5. EditMode: Ship and Bastion YAML host `Level Music` bound to Whispers; Splash/MainMenu
+   host `Background Music` bound to Stardust; SFX clips load from Resources. Suites green.
 
 ## Implementation
 
-1. **Create** `Assets/Scripts/Game/Flow/LevelMusic.cs` — same capture/join/stop shape as
-   `FrontEndMusic`, host name **Level Music**. `CaptureOrJoin` on Bastion start
-   (`GameController` or a small scene-local source authored in `Bastion.unity`). Clip via
-   authored reference on that source (prefab freeze: push or author in the scene, do not
-   hope a code default plays). `Stop` when returning to Main Menu (`SceneFlow.LoadMainMenu`
-   / end-screen return).
-2. **Change** `AudioBuses` only if `IsMusic` would miss **Level Music** — it already
-   matches `"Music"` in the GameObject name.
-3. Fire / reload / footsteps already play from `WeaponViewModel` / `FirstPersonController`.
+1. `FrontEndMusic.Stop` on Continue / Start / Host / Join. ShipController and
+   GameController `LevelMusic.CaptureOrJoin(null)`. Clip via authored reference on each
+   scene's `Level Music`. `LevelMusic.Stop` on load to MainMenu / Splash.
+2. Fire / reload / footsteps already play from `WeaponViewModel` / `FirstPersonController`.
    Confirm source names omit `Music` and `AudioBuses.ApplyFromSettings` classifies them as
    SFX. Do not replace the five wavs this slice.
-4. **Change** docs: Roadmap row, Changelog. `Design/1-Experience.md` Sensation row in the
+3. **Change** docs: Roadmap row, Changelog. `Design/1-Experience.md` Sensation row in the
    **close** commit, not before.
 
-Rejected: composing a new track. Rejected: playing Stardust Drifter in the Bastion.
+Rejected: playing Stardust on Ship/Bastion. Rejected: composing a new track.
 Rejected: Sound Design Starter Kit **276617** (5.31 GB / 1173 files). Rejected: importing
 328565 / 258432 / 126448 / 123544 this slice. Rejected: a duration floor on the bound wavs
 (feel proxy; reversal below). Rejected: FMOD. Rejected: M66 tells.
@@ -90,8 +83,8 @@ UI / terminals / keys: [`M59`](M59-the-polish-pass-1.md). View-models and zoom:
 
 ## Verification
 
-1. Criteria 1, 5 — EditMode music-host classification; playthrough EMBARK, hear Whispers of
-   the Void; Music 0 silences it; QUIT TO MENU, Stardust Drifter, not both.
+1. Criteria 1, 5 — EditMode Whispers host on Ship and Bastion; playthrough Splash → Ship →
+   EMBARK, hear Whispers; Music 0 silences it; QUIT TO MENU, Stardust, not both.
 2. Criteria 2–4 — fire and walk audible; SFX 0 / Music unchanged; Music 0 / SFX unchanged.
    Log has no `[Dev]`.
 
@@ -99,8 +92,7 @@ UI / terminals / keys: [`M59`](M59-the-polish-pass-1.md). View-models and zoom:
 
 - Prefab `[SerializeField]` on an authored Bastion AudioSource: bind the clip in the
   scene (`../../Architecture.md` gotcha 1).
-- Level Music host name must not be `Background Music` or FrontEndMusic will steal or
-  destroy it.
+- Scene copies of `Level Music` must yield to the DDOL host; PlayOnAwake stays off.
 - Pause is non-blocking: music keeps playing; do not `timeScale` it off.
 - Shift `Background.ogg` must not replace Stardust. `Start.ogg` is unused PCM misnamed
   `.ogg`.

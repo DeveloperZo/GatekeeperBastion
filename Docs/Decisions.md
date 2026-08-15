@@ -27,6 +27,10 @@ re-litigating a cut costs more than the cut saved.
   add counters, rollups, or a stats object.
 - **A two-stream logger.** One file per session, one write path.
 - **A mobility skill.** Mobility is not a mechanic in a 30 x 52 m bastion.
+  **Expiry argued 2026-08-14 (M70), not stamped:** the M61-2 rescale is 152 × 76 m, and
+  Recall is a priced burst rather than a permanent movement stat. Recall moved to the
+  LEDGER slice in the 2026-08-15 protocol recut (`Brainstorms/boarder-protocols.md`);
+  Zo stamps this or vetoes the row when that slice is cut.
 - **A pause that stops the game.** `Time.timeScale = 0` is off the table (Zo, 2026-08-09).
   Pause in any multiplayer setting is a menu for one player while time keeps flowing, so the
   overlay is non-blocking from the start: duck audio, blur the frame, keep the sim ticking
@@ -99,8 +103,8 @@ library it writes subtly wrong.
 
 A client Boarder at 0 HP does not end the host's Run (`M49`, `endsTheRunOnDeath` false
 on the avatar). Get-up is a wait on the Ship, then embark on the next hatch-defense Wave
-via NAV MAP or pause (`Milestones/1. planned/M57-the-downed-player-waits-on-the-ship.md`);
-decided, not built. Solo and host: no in-Run respawn.
+via NAV MAP or pause (`Milestones/3. completed/M57-the-downed-player-waits-on-the-ship.md`);
+built 2026-08-15. Solo and host: no in-Run respawn.
 
 ## Locked — Bastion kit geometry (Zo, 2026-08-13)
 

@@ -23,6 +23,7 @@ namespace GatekeeperBastion.Game
         [SerializeField] ModalWindowManager _exitModal;
         [SerializeField] GameObject _pauseMenuPanel;
         [SerializeField] GameObject _settingsPanel;
+        [SerializeField, OptionalBinding] GameObject _embarkPauseButton;
 
         /// <summary>The station panel currently open, or null while walking.</summary>
         public StationTerminal OpenStation { get; private set; }
@@ -52,9 +53,11 @@ namespace GatekeeperBastion.Game
 
         void Start()
         {
+            LevelMusic.CaptureOrJoin(null);
             SetWalkMode(true);
             // Direct-play/transition belt: embarking locks the loadout; returning to Ship unlocks it.
-            if (GameSession.Meta != null)
+            // A down-wait is still a live Run — do not reopen the shop.
+            if (!NetShipWait.IsActive && GameSession.Meta != null)
                 GameSession.Meta.PayloadLoadoutLocked = false;
             Log.Event("Ship", "aboard the ship — " + GameSession.Meta.BankedSalvage + " banked, " +
                                         GameSession.Meta.PodEjections + " run(s) lost, " +
@@ -85,8 +88,25 @@ namespace GatekeeperBastion.Game
         {
             if (station == null || OpenStation != null || IsSettingsOpen || OptionsScreen.IsOpen)
                 return false;
+            if (NetShipWait.IsActive && !(station is MapStation))
+            {
+                Log.Event("Net", "station refused — live Run " + station.StationName);
+                return false;
+            }
             OpenStationPanel(station);
             return true;
+        }
+
+        /// <summary>Pause EMBARK — same word and same RPC as NAV MAP during a down wait.</summary>
+        public void TryEmbarkFromPause()
+        {
+            var avatar = NetPlayerAvatar.LocalOwner;
+            if (avatar == null)
+            {
+                Log.Event("Net", "embark refused — no avatar");
+                return;
+            }
+            avatar.RequestEmbark();
         }
 
         /// <summary>Camera-forward ray, same range as <see cref="Interactor"/> — self-contained
@@ -125,6 +145,7 @@ namespace GatekeeperBastion.Game
 
             if (OpenStation != null)
             {
+                if (OpenStation.TryBack()) return;
                 OpenStation.Close();
                 return;
             }
@@ -149,6 +170,8 @@ namespace GatekeeperBastion.Game
             if (_stationCanvas != null && !_stationCanvas.activeSelf) _stationCanvas.SetActive(true);
             if (_settingsPanel != null && _settingsPanel.activeSelf) _settingsPanel.SetActive(false);
             if (_pauseMenuPanel != null) _pauseMenuPanel.SetActive(true);
+            if (_embarkPauseButton != null)
+                _embarkPauseButton.SetActive(NetShipWait.IsActive);
             IsSettingsOpen = true;
             SetWalkMode(false);
         }

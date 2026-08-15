@@ -33,7 +33,7 @@ namespace GatekeeperBastion.EditorTools
             public string Field;
         }
 
-        [MenuItem("GatekeeperBastion/Validate Scene Bindings")]
+        [MenuItem("GatekeeperBastion/Validate/Scene Bindings", false, 101)]
         public static void RunFromMenu()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

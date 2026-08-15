@@ -6,8 +6,9 @@ using UnityEngine.SceneManagement;
 
 namespace GatekeeperBastion.EditorTools
 {
-    /// <summary>Ship hull on the Synty 5 m occupancy grid. Visual kit is generated
-    /// into ShipDress; this rebuilds Environment colliders + light only.</summary>
+    /// <summary>Ship hull on the Synty 5 m occupancy grid. Visual kit lives in
+    /// ShipDress. When that root is present, RebuildShipGeometry does not wipe
+    /// Environment. Without it, this rebuilds collider graybox + light only.</summary>
     public static partial class SceneBuilder
     {
         const float ShipWallHeight = 3f;
@@ -24,7 +25,16 @@ namespace GatekeeperBastion.EditorTools
         /// </summary>
         static void RebuildShipGeometry()
         {
-            Scene scene = OpenAndClearOwnedRoots(ShipScenePath);
+            Scene scene = EditorSceneManager.OpenScene(ShipScenePath, OpenSceneMode.Single);
+            if (SceneHasRootNamed(scene, "ShipDress"))
+            {
+                Debug.LogWarning(
+                    "[SceneBuilder] Ship.unity has ShipDress — skipping Environment wipe. " +
+                    "Build All still registers scenes.");
+                return;
+            }
+
+            ClearOwnedRoots(scene);
             ShipPalette pal = CreateShipPalette();
             BuildShipLighting();
             BuildShipHull(pal);

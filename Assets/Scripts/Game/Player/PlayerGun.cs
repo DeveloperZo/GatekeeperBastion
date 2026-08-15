@@ -399,6 +399,9 @@ namespace GatekeeperBastion.Game
             if (gc != null && gc.RunIsOver)
                 return Refuse("the run is over (terminal phase)", false);
 
+            if (NetShipWait.IsActive)
+                return Refuse("waiting on the Ship", false);
+
             if (_owner == null) _owner = GetComponentInParent<PlayerHealth>();
             if (_owner != null && _owner.IsDead)
                 return Refuse("the player is down", false);

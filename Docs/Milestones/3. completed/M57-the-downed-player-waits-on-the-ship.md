@@ -1,9 +1,15 @@
 # M57 — The downed player waits on the Ship
 
 <!--
-Status: later
-Update trigger: when the embark window (HatchBank vs any Prep) or additive Ship path changes
-Last updated: 2026-08-13
+Status: completed 2026-08-15
+Update trigger: closed
+Last updated: 2026-08-15
+Closed on: 2026-08-15. Gate is criterion 7 — both `NetDownWaitTests` Passed in Unity
+PlayMode (2/0, 1.69s). Log: `[Net] client down → ship clientId=1`,
+`embark refused — not Hatch-bank Prep`, `embark refused — Assault is live`,
+`client embark hatch-bank clientId=1`. Host Die() → `RunPhase.Lost`, `WaitingOnShip`
+false. Criterion 8 MPPM playthrough is confirmation, not the gate (same as M48).
+lint-arch clean. Full integration-check report not re-run this close.
 -->
 
 After M49 a client who hits 0 HP stays on the floor until the run ends. This slice sends them

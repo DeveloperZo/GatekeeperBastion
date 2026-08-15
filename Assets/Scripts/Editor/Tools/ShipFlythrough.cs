@@ -83,7 +83,7 @@ namespace GatekeeperBastion.EditorTools
             return new Vector3((cell.x + 0.5f) * Grid, y, (cell.y + 0.5f) * Grid);
         }
 
-        [MenuItem("GatekeeperBastion/Record Ship Flythrough", false, 40)]
+        [MenuItem("GatekeeperBastion/Record/Ship Flythrough", false, 22)]
         public static void Record()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)

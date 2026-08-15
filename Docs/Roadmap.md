@@ -29,8 +29,9 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**M55** is active.
-**M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** completed 2026-08-14.
+**M55** and **M71** are active.
+**M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** and **M61-2**
+completed 2026-08-14. **M57** and **M58** completed 2026-08-15.
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
 developer touching a keyboard, play a full five-wave run with both participating, and the
@@ -39,15 +40,19 @@ sentence.
 
 **Recommended next**, in this order.
 
-1. **M57** — The downed player waits on the Ship.
-2. **M58 → M59 → M69 → M62 → M60** — player build + LAN join, QoL (room + hull), session audio,
-   Compendium from pause, then Relay join.
-3. **M70** — the turret half of the ability slice (after M55).
+1. **M64 → M59 → M69 → M62 → M60** — shareability gate (includes player-build kill eyes-on
+   deferred from M58), QoL (room + hull), session audio, Compendium from pause, then Relay
+   join.
+2. **M70** — the Default Protocol (protocol frame + plainest sheet); the turret half
+   moved to the future FORGE/turret slice (recut 2026-08-15).
+3. **M67** before a friends send — composition floor. **M65 → M66** after a two-player
+   session exists.
 4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14 (eyes lines, Stats
-   after-numbers, solo completion). Not a reason to jump the queue.
+   after-numbers, solo completion). Next-Run play list is `GatekeeperZo Notes/verification.md`
+   (M31 pin, M30 decoy, M26 fight-feel, M21 opposite focuses). Not a reason to jump the queue.
 
-Planned count is **14** (cap 10, already breached).
+Planned count is **10** (cap 10). Active **2** (cap 3).
 
 ## Order
 
@@ -104,9 +109,10 @@ this table — see the change log.
 | M48 | The first networked kill | completed, Aug 2026 | Client joins over loopback (F10/F11, dev-only); shoots a server-spawned gatekeeper; damage applies once on the host; death on both screens; wave counter identical via `NetRunMirror`; kill loop closed headless (`NetKillTests` Passed, PlayMode 24/0, report 2026-08-13T12:49:08Z) | [`3. completed/M48`](Milestones/3.%20completed/M48-the-first-networked-kill.md) |
 | M49 | The gatekeepers see the second player | completed, Aug 2026 | Avatar `PlayerHealth` + collider; nearer client hunted via existing `NearestAlive` with no enemy code changes; melee drops replicated HP; client down does not end host run; get-up is M57 not this slice; `NetTargetingTests`; solo unchanged. Closed Zo playtest 2026-08-13 | [`3. completed/M49`](Milestones/3.%20completed/M49-the-gatekeepers-see-the-second-player.md) |
 | M50 | The client lives the run | completed, Aug 2026 | Mirror salvage/hatch/elapsed; client HUD `m:ss`; three `EndSummary` kinds as ClientRpc; `NetRunMirrorTests` Passed 2026-08-13T15:19:01Z. Playthrough 2–5 recut: one-wave loop and hatch invuln cannot prove them (M52/M53) | [`3. completed/M50`](Milestones/3.%20completed/M50-the-client-lives-the-run.md) |
-| M57 | The downed player waits on the Ship | later | Client down → additive Ship; embark in next Hatch-bank Prep via NAV or pause; full HP at Hatch; no Hatch-bank left → wait until ending; host/solo unchanged; `NetDownWaitTests` | [`1. planned/M57`](Milestones/1.%20planned/M57-the-downed-player-waits-on-the-ship.md) |
+| M57 | The downed player waits on the Ship | completed, Aug 2026 | Client down → additive Ship; embark in Hatch-bank Prep via NAV or pause; full HP at Hatch; host Die() still Lost; `NetDownWaitTests` 2/0. Criterion 8 MPPM is confirmation | [`3. completed/M57`](Milestones/3.%20completed/M57-the-downed-player-waits-on-the-ship.md) |
 | M51 | The client's hands | completed, Aug 2026 | Client repair, decoy and world-acting abilities apply once, server-side; all five `NetVerbTests` Passed (`gkb_verify_report.json` 2026-08-13T18:09:48Z, PlayMode 31/0). Criterion 6 confirmation not the gate; hatch-under-attack waits on M53 | [`3. completed/M51`](Milestones/3.%20completed/M51-the-clients-hands.md) |
-| M58 | A build two machines can run | later | Windows player build; Main Menu Host listens `0.0.0.0:7777`; Join typed IPv4; one networked kill on two machines; connect failure reads back | [`1. planned/M58`](Milestones/1.%20planned/M58-a-build-two-machines-can-run.md) |
+| M58 | A build two machines can run | completed, Aug 2026 | Windows player build; Main Menu Host `0.0.0.0:7777`; Join typed IPv4; dual-box connect + local Player; refusal reads back — player-build kill eyes-on deferred to M64 | [`3. completed/M58`](Milestones/3.%20completed/M58-a-build-two-machines-can-run.md) |
+| M64 | A build you can hand to a friend | later | `Release-Gate.md` + `Tools/release-gate/run.sh`; red items block a send; player-build kill + dual-box chrome; gates M60 | [`1. planned/M64`](Milestones/1.%20planned/M64-a-build-you-can-hand-to-a-friend.md) |
 | M59 | Polish Pass 1 | later | Field Scale 1; fight HUD ≥24; overflow; no EXP; station chrome+copy; player-build keys; pause; end scrim | [`1. planned/M59`](Milestones/1.%20planned/M59-the-polish-pass-1.md) |
 | M61 | Polish Pass 2 | completed, Aug 2026 | IQ astronaut + Synty Space guns/desks (SKU 138857); Mixamo fire/reload stand-ins; stroke crosshair; RMB zoom | [`3. completed/M61`](Milestones/3.%20completed/M61-the-polish-pass-2.md) |
 | M61-2 | Polish Pass 2, the Bastion | completed, Aug 2026 | Kit blocks are POLYGON Sci-Fi Space meshes; re-framed mid-pass to scaler-2 station rooms with functional sliding doors and a bulkhead Hatch; Generated/Authored split; suite 2026-08-15T00:09Z adds no reds of its own; eyes/Stats/solo-run rows open in verification.md | [`3. completed/M61-2`](Milestones/3.%20completed/M61-2-polish-pass-2-the-bastion.md) |
@@ -114,11 +120,14 @@ this table — see the change log.
 | M63 | The garrison: a roster with bodies | later | Twelve-kind roster + properties + draw rule recorded; Ram→Thief; Garrison volume with `in_build` flags; door-time logged; Default/Hunter/Thief get Synty RobotFemale / HelmetArmor / War_Robot, Mixamo walk or keep capsules; agent footprint unchanged | [`1. planned/M63`](Milestones/1.%20planned/M63-the-garrison-a-roster-with-bodies.md) |
 | M62 | The Compendium you can open | later | Pause opens volume reader; Play pages already in Boarder voice; always-on; Gaps omitted | [`1. planned/M62`](Milestones/1.%20planned/M62-the-compendium-you-can-open.md) |
 | M60 | A join a friend can use | later | Unity Relay join code from Main Menu; join-in-Tethered; clean disconnect; host-quit message; LAN IP fallback; two-build internet playthrough eyes-on | [`1. planned/M60`](Milestones/1.%20planned/M60-a-join-a-friend-can-use.md) |
+| M65 | Three players, and a fight that counts them | later | Three supported, six cheap; waves scale by player count; salvage split to own wallets | [`1. planned/M65`](Milestones/1.%20planned/M65-three-players-and-a-fight-that-counts-them.md) |
+| M66 | Polish Pass 3 | later | Hit confirm, per-kind pre-attack audio, players distinct at lane range | [`1. planned/M66`](Milestones/1.%20planned/M66-polish-pass-3.md) |
 | M52 | Waves start at a terminal | completed, Aug 2026 | Interact starts T1's five Boarder-hunt Waves; Hatch invulnerable; D1 on Nth clear; Wave 5 `Escaped`. Close log `14-46-59` (no `[Dev]`). AwardKill-to-bank is M53 | [`3. completed/M52`](Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | M53 | Salvage leaves through the Hatch | completed, Aug 2026 | Kills fill Unbanked; Hatch-bank 45 s drip/attrit/dump, 3 slots, fat pile ×1.25/×1.50. Close log `18-23-55` (Run clean). Stay-Prep after dump is EditMode. Harness 316/0 | [`3. completed/M53`](Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | M54 | Master Control is the win | completed, Aug 2026 | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`3. completed/M54`](Milestones/3.%20completed/M54-master-control-is-the-win.md) |
 | M55 | Pay for intensity | next | `+/-` spend 100 unbanked per step; `E` select, `T` start; HUD says Intensity; siphon dial retired; same `TetherSiphon` curve | [`2. active/M55`](Milestones/2.%20active/M55-pay-for-intensity.md) |
-| M70 | The Boarder gets a verb | later | CREW sells ability pools into three slots — Crew `G` (Anchor/Ping), Personal `H` (Cloak/Recall), Passive (rules, never numbers: Ghost/Warden/Foresight); one pick each; four tracks refunded and deleted, SaveVersion 8; verbs apply once server-side; `UTL-H` turret siphons Primary reserve on the clock, ghost-and-confirm | [`1. planned/M70`](Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md) |
+| M70 | The Default Protocol | later | CREW equips Boarder Protocols; the Default owned from the first session — STOCK doctrine (hardware as sold, seam proven by changing nothing), Anchor `G`, Bulkhead `H`, Ghost/Foresight pick-1; four tracks refunded and deleted, SaveVersion 8; verbs apply once server-side; turret moved to the FORGE slice, specialist sheets and deed spine in `Brainstorms/boarder-protocols.md` | [`1. planned/M70`](Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md) |
+| M67 | Playable from zero | later | Fresh-save floor; level-zero PlayMode banks >0; null-input ends clean; composition invariants fail the suite | [`1. planned/M67`](Milestones/1.%20planned/M67-playable-from-zero.md) |
 | M71 | The sidearm joins the wheel | next | MK-1 ring D–A–R–C–F (Reload / Damage); SEC-D ring F–A–R–C–D (FireRate / Reload), Ability spoke not purchasable; Secondary-slot cost 150 + 150×t; focused never-rival holds | [`2. active/M71`](Milestones/2.%20active/M71-the-sidearm-joins-the-wheel.md) |
 
 ## Strategy
@@ -127,8 +136,10 @@ this table — see the change log.
 friends install a build, join, play five Waves, both participate, and an end screen names
 what happened. Until this date the filter was whether the design works when Zo plays.
 
-M53 closed. Unbanked and Hatch-bank are in the loop. M57 is the down rule, not folded
-into M50. M58 is the unproven player build. **M59** is QoL: Bastion as a room and Ship as
+M53 closed. Unbanked and Hatch-bank are in the loop. M57 closed: a downed client waits
+on the Ship and embarks in Hatch-bank Prep. **M58** closed 2026-08-15: player-build Host/Join
+connect with local Player; networked kill and dual-box fight readability sit on **M64**.
+**M59** is QoL: Bastion as a room and Ship as
 something a stranger can operate (terminals, HUD, station chrome and copy, keys).
 **M69** is the Bastion loop and fire/footstep audio; no store pack.
 **M61** closed 2026-08-14: gun, sight, zoom, Ship desks. **M63** is the
@@ -136,8 +147,8 @@ garrison roster plus the three Gatekeeper bodies from that same pack. **M62** is
 Compendium from pause. M60 is Unity Relay join, gated on M51+M58, authored ahead. Starting
 bastion (M47 kit) is the demo floor.
 
-M54 closed. M55 and M70's turret remain the field-loop rest; they stay queued after the
-session is possible.
+M54 closed. M55 and the FORGE/turret slice remain the field-loop rest; they stay queued
+after the session is possible.
 
 Critical path: `M0 ✅ → M10 ✅ → M13 → M11 → M2 → M15 → M16 → M14`.
 
@@ -214,6 +225,7 @@ Moved out of this file. Mechanic areas that are wanted but not yet cuttable live
 
 | Area | File |
 |---|---|
+| Working surface (entries exit into a topic file) | [`Brainstorms/Master-Brainstorm`](Brainstorms/Master-Brainstorm.md) |
 | Fabrication, ship systems, deployables | [`Brainstorms/fabrication`](Brainstorms/fabrication.md) |
 | Crew attributes, skills, perks | [`Brainstorms/crew-skills-and-perks`](Brainstorms/crew-skills-and-perks.md) |
 | Missions, the console restructure, destinations | [`Brainstorms/missions-and-destinations`](Brainstorms/missions-and-destinations.md) |
@@ -273,10 +285,11 @@ project — the cadence is the work, not a meeting.
 One file per milestone in `Milestones/<status>/`, named `M#-slug.md`. **The folder
 is the status**, so changing status is `git mv` plus the table row, in one commit.
 Folders, numbered so they sort in workflow order: `1. planned/`, `2. active/`,
-`3. completed/`, `4. deferred/`. **`Milestones/5. cancelled/` also exists on disk, empty.**
+`3. completed/`, `4. deferred/`. **`Milestones/5. cancelled/` holds four files** (M34, M39,
+M43, M46) and the Order table already links them.
 `_meta/_definitions/milestone.md` says four is the set and forbids new status folders, so
-either the contract gains a fifth row or the folder goes — **Zo's call**. Recorded here on
-2026-08-09 rather than deleted silently.
+either the contract gains a fifth row or the folder is folded into completed-with-cancelled
+status — **Zo's call**, still open since 2026-08-09.
 
 The authoring contract — required sections, the copyable scaffold, the
 link-never-copy rule, and the lifecycle — is `_meta/_definitions/milestone.md`. Read it

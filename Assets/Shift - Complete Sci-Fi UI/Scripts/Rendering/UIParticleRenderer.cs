@@ -63,6 +63,8 @@ namespace Michsky.UI.Shift
                     pRenderer.enabled = false;
 
                 Shader foundShader = Shader.Find("UI/Particles/Additive");
+                if (foundShader == null)
+                    return false;
                 Material pMaterial = new Material(foundShader);
 
                 if (material == null)

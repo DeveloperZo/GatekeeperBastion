@@ -1,10 +1,19 @@
 # M58 — A build two machines can run
 
 <!--
-Status: later
-Update trigger: when bind/join address, the Main Menu host/join surface, or
-EnableSceneManagement changes. Re-cut against M48's landed NetSession before starting.
-Last updated: 2026-08-14
+Status: completed 2026-08-15
+Update trigger: closed
+Last updated: 2026-08-15
+Closed on: 2026-08-15. Gate is criteria 1–3, 5–7 plus criterion 4 as re-cut below
+(connect + local Player in a player build). Evidence: `gkb_player_build_report.json`
+status ok; `Tools/player-session/run.ps1` PASS — host
+`[Net] host started … bind=0.0.0.0:7777 join=127.0.0.1:7777`, client `role=client`,
+no `No FirstPersonController found` (logs
+`GatekeeperBastion_2026-08-15_12-08-18_p61168.log` /
+`…_12-08-20_p60040.log` and interactive
+`…_12-08-45_p35508.log` / `…_12-08-51_p57636.log`). Criterion 4 originally required
+a client kill visible on both screens; Zo 2026-08-15 closed connect-only and moved
+player-build fight readability (HUD / VFX / bullets / networked kill eyes-on) to M64.
 -->
 
 Every gate so far closed in editor / PlayMode / MPPM loopback. F11 joins `127.0.0.1` only
@@ -38,10 +47,11 @@ No kill criterion — not a design bet. NGO already survived M48.
    still off; both machines load Bastion themselves).
 3. **Main Menu Join** takes a typed IPv4 and port (default 7777) and connects via
    UnityTransport. F11 / `127.0.0.1` remains as an editor/dev fallback, not the friends path.
-4. **The player action:** two player-build instances (or one player build + one editor as
-   the second machine) on two machines or two LAN addresses: host Host, client types the
-   host LAN IP, both appear in Bastion; client kills one server-spawned gatekeeper; death on
-   both screens (M48 loop in a player build).
+4. **The player action (re-cut 2026-08-15):** two player-build instances (same machine dual-box
+   or two LAN addresses) Host / Join into Bastion; host log has `[Net] host started`, client
+   log has `role=client`, and neither logs `No FirstPersonController found`. **Deferred to
+   M64:** client kills one server-spawned gatekeeper with death on both screens, and both
+   windows show fight HUD / muzzle / hit feedback.
 5. A failed connect (wrong IP, host not listening) **reads back** a visible refusal within a
    few seconds — no silent hang. Logged.
 6. Solo player-build launch (no Host) still reaches Ship → Bastion as today. No `[Net]` in
@@ -64,9 +74,9 @@ it, so a tiny intent object carries host/join across the scene load.
    keeps working). F11 calls `StartClient("127.0.0.1", 7777)`.
 2. **Create** `Assets/Scripts/Game/Net/NetJoinIntent.cs` — static, Game/ only: `RequestHost()`,
    `RequestJoin(string address, ushort port)`, `LastError`. Consumed once in
-   `NetSession.Awake` (all Awakes run before Starts, so `IsClientOnly` is true before
-   `GameController.Start`). Not a field on `NetSession` — that type's no-statics contract
-   stays.
+   `NetSession.Awake`; `StartHost` / `StartClient` run from `NetSession.Start` at
+   `DefaultExecutionOrder(-100)` so `IsClientOnly` is true before `GameController.Start`.
+   Not a field on `NetSession` — that type's no-statics contract stays.
 3. **Change** `MainMenuController.cs` / `MainMenuView.cs` / `MainMenu.unity` — Home gains
    **Host** and **Join** next to Continue / Start New. Join opens a Shift
    `MainPanelManager` panel (`"Join"`): IPv4 field, port field default 7777, Connect, Back,
@@ -76,16 +86,20 @@ it, so a tiny intent object carries host/join across the scene load.
    must **not** call `GameSession.NotifyDevAction` — a `[Dev]`-tainted log cannot close
    criterion 4. F10/F11 already skip that call (2026-08-13): they stay on the Dev key
    table so they compile out of release, but they are session start, not a mutation.
-4. **Change** `NetSession.cs` — subscribe `OnClientDisconnectCallback`. If the client never
+4. **Change** `GameController.Start` — when `NetSession.IsClientOnly` is already true
+   (menu join started in `NetSession.Start`), skip `StartRun` / spawner host and still
+   `ApplyMetaEffects`. F10/F11 join after Start has run, so they keep the wipe-on-`StartClient`
+   path.
+5. **Change** `NetSession.cs` — subscribe `OnClientDisconnectCallback`. If the client never
    became a connected peer, set `LastError`, log `[Net] join refused reason=… address=…`,
    `SceneFlow.LoadMainMenu()`. `UnityTransport.ConnectTimeoutMS = 4000`. Invalid IPv4 or
    empty address refuses on the Join panel without loading Bastion. MainMenu paints
-   `LastError` on the refusal label.
-5. **Create** `Assets/Tests/PlayMode/NetSessionAddressTests.cs` — spawn a
+   `LastError` on the refusal label. Fixtures with no `GameController` do not load MainMenu.
+6. **Create** `Assets/Tests/PlayMode/NetSessionAddressTests.cs` — spawn a
    NetworkManager + UnityTransport + NetSession; `StartClient("10.0.0.1", 7777)` then assert
    `UnityTransport.ConnectionData.Address` is `10.0.0.1` (and Host configures listen
    `0.0.0.0`). Shutdown. Do not actually connect to 10.0.0.1. `NetKillTests` untouched.
-6. **Change** docs: Roadmap row, Changelog.
+7. **Change** docs: Roadmap row, Changelog.
 
 Rejected: keeping F10/F11 as the only join — a friend cannot be told to press F11 in a
 player build and type nothing. Rejected: Unity Relay in this slice — that is M60, on this
@@ -102,22 +116,24 @@ IPv4 dotted quad only (four octets 0–255). No hostnames.
 - **Driven by** Main Menu Host / Join (typed IP + Connect) — here. F10/F11 stay as the
   editor fallback until M59 unbinds them from player builds.
 - **Shown by** the Host and Join buttons on Home, and the Join panel's IP/port fields — here.
-- **Reads back as** both machines in Bastion, a kill on both screens, or a visible join
-  refusal — here. Failed join may briefly load Bastion (where `NetSession` lives) then
-  return; the refusal is the MainMenu line plus the log.
+- **Reads back as** both machines in Bastion with a connected client (and a local Player), or
+  a visible join refusal — here. Networked kill on both screens is M64. Failed join may briefly
+  load Bastion (where `NetSession` lives) then return; the refusal is the MainMenu line plus
+  the log.
 
 ## Verification
 
 1. Criteria 6, 7 — `gkb_verify_request.txt`; integration-check report green at current
    counts plus `NetSessionAddressTests`; `NetKillTests` still green; harness and lint-arch
    green. Solo player-build log: no `[Net]`.
-2. Criterion 1 — File → Build Profiles → Windows, player build, launch the .exe; Splash →
-   MainMenu; confirm a file under `persistentDataPath/Logs/`.
-3. Criteria 2–5 — playthrough path: two machines (or two LAN addresses). Development
-   player builds are fine (logs). Host: Main Menu Host. Client: Join, type the host's LAN
-   IPv4, Connect. Both in Bastion; client kills one gatekeeper; both screens despawn it
-   (M48 lines in both logs). Wrong IP: refusal on MainMenu within ~4 s, `[Net] join
-   refused` in the client log. One editor instance may stand in for the second machine.
+2. Criterion 1 — write `gkb_player_build_request.txt` (or File → Build Profiles → Windows);
+   launch `Logs/Builds/GatekeeperBastion.exe`; Splash → MainMenu; a file under
+   `persistentDataPath/Logs/`.
+3. Criteria 2–5 — playthrough path: two machines (or two LAN addresses), **or** same-machine
+   dual-box via `Tools/player-session/run.ps1` (host `-gkb-host`, join `-gkb-join 127.0.0.1`;
+   PASS when host log has `host started`, client log has `role=client`, and no
+   `No FirstPersonController found`). Wrong IP: refusal on MainMenu within ~4 s,
+   `[Net] join refused`. Networked kill + fight readability on both screens: M64.
 
 ## Do not build
 

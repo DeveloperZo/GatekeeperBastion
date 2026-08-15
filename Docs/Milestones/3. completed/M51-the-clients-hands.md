@@ -139,4 +139,4 @@ per-player wallets; folding M57 or M52 into this slice; `GetInstanceID` over the
 
 Depends on M50 (the client can see salvage and hatch). Completes the loopback epic
 for in-run verbs. Relay join is still [`M60`](../1.%20planned/M60-a-join-a-friend-can-use.md).
-Get-up is [`M57`](../1.%20planned/M57-the-downed-player-waits-on-the-ship.md).
+Get-up is [`M57`](../3.%20completed/M57-the-downed-player-waits-on-the-ship.md).

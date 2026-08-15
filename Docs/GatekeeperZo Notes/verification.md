@@ -69,6 +69,7 @@ Real, lower leverage. None of these blocks anything.
 |---|---|---|
 | A solo run completes on the dressed bastion | M61-2 | Criterion 14: play one run through to the end screen. Waves already proven to arrive on the final geometry (log `2026-08-14_17-29-54`, untainted, hatchDist to 4.0 m) — only the completion is unproven |
 | Walk every block kind in the dressed bastion | M61-2 | Criterion 4: stand in each block kind — no sky through walls, no gaps at neighbours, no floating fixtures. One dated line per kind in `playthrough.md`, screenshot anything questionable |
+| M37 median compare on the kit bastion | M47 | Criterion 18: `wave-report` on a kit-bastion log vs the old pin; *unknown — needs wave-report* |
 | PRI-C owns the far wall | M32 | Buy PRI-C, embark Wave 3, stand at the Hatch and fire up the bore; expect far kills. Swap to MR-35 at the same Tier; expect those kills not to land. Then `F` for Railshot into a line — expect `railshot armed` / `railshot fired` Ability lines |
 | Options reach the fight | M24 | Menu OPTIONS, set sensitivity, embark, press `O` mid-Assault, confirm Gatekeepers keep moving and the change applies in the same Run. One `[Settings]` line per commit |
 | Reload discard warning | M25 | Mid-reload, read `SWAP DISCARDS THIS RELOAD`, swap, confirm the discard line. Then turn it off in options and confirm `reload paused` |
@@ -87,8 +88,8 @@ Real, lower leverage. None of these blocks anything.
 |---|---|---|
 | Stats baseline for the dressed bastion | M61-2 | Criterion 13: Stats window standing in the ControlRoom at 1080p, numbers into `playthrough.md`. The before-numbers are unrecoverable — the primitive bastion no longer exists — so record after-only as the baseline the next pass argues from |
 | Pinned fixture logs | M29 | `GatekeeperBastion_2026-08-07_16-34-30.log` and `..._2026-08-03_19-18-22.log` are **absent from this machine** and are cited across `Design/` and two milestones. Restore from backup or the pins are unverifiable forever |
-| EditMode suite green | M29 | AutoVerify hit `stuck` at 180 s twice while tests were still running. Re-run from the menu once the editor is quiet |
-| Save byte-identical | M24 | Needs one clean AutoVerify run |
+| EditMode suite green | M29 | IntegrationCheck hit `stuck` at 180 s twice while tests were still running. Re-run from the menu once the editor is quiet |
+| Save byte-identical | M24 | Needs one clean IntegrationCheck run |
 | Decoy Path 2 + PlayMode tests | M30 | `DecoyPlayModeTests` written, never run |
 | `FireRay` layer mask | M31 | No Enemy or World layers exist yet; buffer raised 16 to 32 with a full-buffer warning as the interim |
 | `SEC-D` ability | M26 | **Blocked on Zo**, not on testing. Ability meeting M20's contract. Ring shipped 2026-08-15 (F–A–R–C–D); Ability spoke not purchasable until this lands |

@@ -121,6 +121,19 @@ namespace GatekeeperBastion.Game
         void Start()
         {
             if (Sim == null) return; // guard: failed boot must not touch a null Sim
+
+            LevelMusic.CaptureOrJoin(null);
+
+            // Menu join consumes intent in NetSession.Awake and starts the client in
+            // NetSession.Start (execution order -100), so IsClientOnly is already true here.
+            // Do not StartRun — that would fork a second live sim. F10/F11 join after this
+            // Start has already run, so they keep the existing wipe-on-StartClient path.
+            if (_net != null && _net.IsClientOnly)
+            {
+                ApplyMetaEffects();
+                return;
+            }
+
             // The ship-menu phase is a real scene now: boarding is immediate, Docked transient.
             // PendingStartWave is set by MapStation; consumed once so direct-play falls back to 1.
             int startWave = GameSession.PendingStartWave;

@@ -22,7 +22,8 @@ namespace GatekeeperBastion.Game
         public const string Splash = "Splash";
 
         /// <summary>Campaign-menu scene. Owns the Shift Main Menu Canvas
-        /// (Continue / Start / Options / Quit). Continue and Start load <see cref="Ship"/>.</summary>
+        /// (Continue / Start / Host / Join / Options / Quit). Continue and Start load
+        /// <see cref="Ship"/>; Host and Join load <see cref="Bastion"/>.</summary>
         public const string MainMenu = "MainMenu";
 
         /// <summary>Walkable ship-hub scene name
@@ -142,6 +143,8 @@ namespace GatekeeperBastion.Game
             // Deliberately NOT an Event: Effects' sceneLoaded hook logs the single scene-entry line
             // a moment later, and two lines per transition is the structural noise we removed.
             Log.Info(Tag, $"Scene transition: '{ActiveSceneName}' -> '{sceneName}'.");
+            if (sceneName == MainMenu || sceneName == Splash)
+                LevelMusic.Stop();
             Effects.SuspendForSceneChange(); // no FX GameObjects created into a scene that is unloading
             try
             {

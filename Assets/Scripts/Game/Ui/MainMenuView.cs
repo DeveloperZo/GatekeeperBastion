@@ -15,6 +15,7 @@ namespace GatekeeperBastion.Game
     public sealed class MainMenuView : MonoBehaviour
     {
         public const string HomePanel = "Home";
+        public const string JoinPanel = "Join";
 
         [SerializeField] MainPanelManager _panels;
         [SerializeField, Tooltip("Shift 'Main Panels' root. Authored in MainMenu.unity.")]
@@ -23,6 +24,8 @@ namespace GatekeeperBastion.Game
         [SerializeField] TextMeshProUGUI _campaignLine;
         [SerializeField] Button _continueBtn;
         [SerializeField] Button _startNewBtn;
+        [SerializeField] Button _hostBtn;
+        [SerializeField] Button _joinBtn;
         [SerializeField] Button _optionsBtn;
         [SerializeField] Button _quitBtn;
         [SerializeField] ModalWindowManager _overwriteModal;
@@ -32,12 +35,24 @@ namespace GatekeeperBastion.Game
         [SerializeField] Button _exitConfirmBtn;
         [SerializeField] Button _exitCancelBtn;
         [SerializeField] BlurManager _modalBlur;
+        [SerializeField] TMP_InputField _joinAddressField;
+        [SerializeField] TMP_InputField _joinPortField;
+        [SerializeField] Button _joinConnectBtn;
+        [SerializeField] Button _joinBackBtn;
+        [SerializeField] TextMeshProUGUI _joinRefusal;
 
         public Action onContinue;
         public Action onStartNew;
+        public Action onHost;
+        public Action onJoin;
+        public Action onJoinConnect;
+        public Action onJoinBack;
         public Action onOptions;
         public Action onOverwriteConfirm;
         public Action onQuitConfirm;
+
+        public string JoinAddressText => _joinAddressField != null ? _joinAddressField.text : "";
+        public string JoinPortText => _joinPortField != null ? _joinPortField.text : "";
 
         void Awake()
         {
@@ -45,8 +60,12 @@ namespace GatekeeperBastion.Game
 
             Wire(_continueBtn, () => { if (onContinue != null) onContinue.Invoke(); });
             Wire(_startNewBtn, () => { if (onStartNew != null) onStartNew.Invoke(); });
+            Wire(_hostBtn, () => { if (onHost != null) onHost.Invoke(); });
+            Wire(_joinBtn, () => { if (onJoin != null) onJoin.Invoke(); });
             Wire(_optionsBtn, () => { if (onOptions != null) onOptions.Invoke(); });
             Wire(_quitBtn, () => { if (onQuitConfirm != null) onQuitConfirm.Invoke(); });
+            Wire(_joinConnectBtn, () => { if (onJoinConnect != null) onJoinConnect.Invoke(); });
+            Wire(_joinBackBtn, () => { if (onJoinBack != null) onJoinBack.Invoke(); });
             Wire(_overwriteConfirmBtn, () =>
             {
                 HideModal(_overwriteModal);
@@ -73,6 +92,8 @@ namespace GatekeeperBastion.Game
             Require(_campaignLine, nameof(_campaignLine));
             Require(_continueBtn, nameof(_continueBtn));
             Require(_startNewBtn, nameof(_startNewBtn));
+            Require(_hostBtn, nameof(_hostBtn));
+            Require(_joinBtn, nameof(_joinBtn));
             Require(_optionsBtn, nameof(_optionsBtn));
             Require(_quitBtn, nameof(_quitBtn));
             Require(_overwriteModal, nameof(_overwriteModal));
@@ -82,6 +103,11 @@ namespace GatekeeperBastion.Game
             Require(_exitConfirmBtn, nameof(_exitConfirmBtn));
             Require(_exitCancelBtn, nameof(_exitCancelBtn));
             Require(_modalBlur, nameof(_modalBlur));
+            Require(_joinAddressField, nameof(_joinAddressField));
+            Require(_joinPortField, nameof(_joinPortField));
+            Require(_joinConnectBtn, nameof(_joinConnectBtn));
+            Require(_joinBackBtn, nameof(_joinBackBtn));
+            Require(_joinRefusal, nameof(_joinRefusal));
         }
 
         void Require(UnityEngine.Object reference, string field)
@@ -133,6 +159,27 @@ namespace GatekeeperBastion.Game
             RevealMainPanelsRoot();
             OpenPanel(HomePanel);
             FocusDefault();
+        }
+
+        /// <summary>Opens the authored Join panel. Port defaults to 7777 when empty.</summary>
+        public void ShowJoin()
+        {
+            HideModal(_overwriteModal);
+            HideModal(_exitModal);
+            RevealMainPanelsRoot();
+            if (_joinAddressField != null && string.IsNullOrEmpty(_joinAddressField.text))
+                _joinAddressField.text = "127.0.0.1";
+            if (_joinPortField != null && string.IsNullOrEmpty(_joinPortField.text))
+                _joinPortField.text = "7777";
+            OpenPanel(JoinPanel);
+            var es = EventSystem.current;
+            if (es != null && _joinAddressField != null)
+                es.SetSelectedGameObject(_joinAddressField.gameObject);
+        }
+
+        public void SetJoinRefusal(string message)
+        {
+            UiBind.SetText(_joinRefusal, message != null ? message : "");
         }
 
         /// <summary>Shift Main Panel Root defaults to Invisible (alpha 0). SplashScreenManager

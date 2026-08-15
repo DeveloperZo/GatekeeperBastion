@@ -43,11 +43,19 @@ namespace GatekeeperBastion.Game
             }
         }
 
+        /// <summary>True when this GameObject name is a Music bus (contains
+        /// "Music"). SFX one-shot hosts must not match.</summary>
+        public static bool NameReadsAsMusic(string gameObjectName)
+        {
+            return !string.IsNullOrEmpty(gameObjectName)
+                   && gameObjectName.IndexOf("Music", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         static bool IsMusic(AudioSource src)
         {
             var go = src.gameObject;
             string name = go.name;
-            if (name.IndexOf("Music", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            if (NameReadsAsMusic(name))
                 return true;
             // Optional Music layer — absent in TagManager today; name match covers Shift BG music.
             int layer = go.layer;

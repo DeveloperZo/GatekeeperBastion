@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Gatekeeper Bastion — session dashboard</title>
+<title>Gatekeeper Bastion — dashboard</title>
 <style>
 :root {
   --ink: #1c1b19;
@@ -418,63 +418,373 @@ body.drag {
   outline: 3px dashed var(--accent);
   outline-offset: -6px;
 }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-top: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.tabs button {
+  appearance: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--muted);
+  padding: 8px 14px;
+  font: inherit;
+  font-weight: 650;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tabs button:hover { color: var(--ink); }
+.tabs button.on {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+#sessionChrome { display: none; margin-top: 14px; }
+#sessionChrome.on { display: block; }
+.tab-panel { display: none; }
+.tab-panel.on { display: block; }
+.missing-data {
+  padding: 28px;
+  border: 1px dashed var(--line);
+  background: var(--card);
+  color: var(--muted);
+}
+
+/* Focus — insight-first */
+.synth {
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 42rem;
+  margin: 0 0 20px;
+  color: var(--ink);
+}
+.do-now {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  padding: 16px 18px;
+  margin: 0 0 18px;
+}
+.do-now .kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.do-now h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.do-now h2 .id {
+  font-variant-numeric: tabular-nums;
+  margin-right: 6px;
+}
+.do-now .action {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--ink);
+}
+.do-now .evidence,
+.insight .evidence,
+.next3 .blocked {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+.do-now .evidence li,
+.insight .evidence li { margin: 2px 0; }
+.insights {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+.insight {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--muted);
+  padding: 12px 14px;
+}
+.insight.critical { border-left-color: var(--alert); }
+.insight.attention { border-left-color: var(--warn); }
+.insight.healthy { border-left-color: var(--ok); }
+.insight .sev {
+  display: inline-block;
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.insight.critical .sev { color: var(--alert); }
+.insight.attention .sev { color: var(--warn); }
+.insight.healthy .sev { color: var(--ok); }
+.insight h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+.insight .why,
+.insight .act {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.insight .act { color: var(--muted); }
+.insight .act strong { color: var(--ink); font-weight: 650; }
+.focus-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 16px;
+  margin: 0 0 8px;
+  align-items: start;
+}
+.next3 {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.next3 li {
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+.next3 .qid { font-weight: 650; font-variant-numeric: tabular-nums; margin-right: 8px; }
+.next3 .blocked { display: block; margin-top: 2px; color: var(--warn); font-size: 12px; }
+.gate-line {
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+.gate-line .head { font-weight: 650; margin-right: 6px; }
+.lane-meters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+.lane-meter {
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+}
+.lane-meter .lab {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 650;
+}
+.lane-meter .lab .n {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.lane-meter .track.over > i { background: var(--bar-lost); }
+.status-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-left: 6px;
+}
+.status-chip.active { color: var(--ok); border-color: var(--ok); }
+.status-chip.planned { color: var(--warn); border-color: var(--warn); }
+.foot-meta { margin-top: 24px; color: var(--muted); font-size: 12px; }
+
+/* Project inventory (demoted) */
+.mile-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mile-list li {
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+.mile-list .mid { font-weight: 650; font-variant-numeric: tabular-nums; margin-right: 8px; }
+.mile-list .gate { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+.count-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.commit-timeline {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  border-left: 2px solid var(--line);
+}
+.commit-timeline li {
+  position: relative;
+  padding: 6px 0 6px 14px;
+  font-size: 13px;
+}
+.commit-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 12px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+}
+.commit-timeline .hash {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 650;
+  margin-right: 8px;
+}
+.commit-timeline .when {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+}
+.q-groups { display: flex; flex-direction: column; gap: 14px; }
+.q-group h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.q-group .badge {
+  display: inline-block;
+  min-width: 1.4em;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  background: #efeae2;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: var(--muted);
+  text-align: center;
+}
+.q-group.blocking .badge { color: var(--alert); border-color: var(--alert); }
+.q-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.q-group li {
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+.q-group .src {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+}
+@media (max-width: 900px) {
+  .focus-row, .lane-meters { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 <header>
-  <h1>Gatekeeper Bastion — session dashboard</h1>
-  <p class="lede">Open this file, then point it at your session logs. The page parses them
-  in the browser — no server, no regenerate script. (A page opened as
-  <code>file://</code> is not allowed to scan <code>Logs/</code> by itself; you choose the
-  folder once.)</p>
-  <div class="picker">
-    <label class="btn">Choose Logs folder
-      <input id="dir" type="file" webkitdirectory multiple accept=".log,text/plain">
-    </label>
-    <label class="btn" style="background:#4a463f">Or pick .log files
-      <input id="files" type="file" multiple accept=".log,text/plain">
-    </label>
-    <span class="hint">Also: drag files or a folder onto this page.</span>
-  </div>
-  <details class="tunables" id="tunables">
-    <summary>Tunables</summary>
-    <div class="body">
-      <label>
-        <span class="name">MIN_RUN_SEC</span>
-        <input type="number" id="t_MIN_RUN_SEC" step="1" min="0" value="5">
-        <span class="desc">Exclude runs shorter than this (seconds).</span>
+  <h1>Gatekeeper Bastion — dashboard</h1>
+  <p class="lede">Focus is the judgment call for this hour — synthesis from Design, Roadmap,
+  lane caps, and play debt. Project is inventory. Session is log evidence.
+  Regen Focus/Project with <code>Tools/dashboard-data/run.ps1</code>.</p>
+  <nav class="tabs" role="tablist" aria-label="Dashboard">
+    <button type="button" class="tab on" data-tab="focus" aria-selected="true">Focus</button>
+    <button type="button" class="tab" data-tab="project" aria-selected="false">Project</button>
+    <button type="button" class="tab" data-tab="session" aria-selected="false">Session</button>
+  </nav>
+  <div id="sessionChrome">
+    <div class="picker">
+      <label class="btn">Choose Logs folder
+        <input id="dir" type="file" webkitdirectory multiple accept=".log,text/plain">
       </label>
-      <label>
-        <span class="name">EASY_LIVE</span>
-        <input type="number" id="t_EASY_LIVE" step="0.1" min="0" value="5">
-        <span class="desc">meanLive below this contributes to ease flag.</span>
+      <label class="btn" style="background:#4a463f">Or pick .log files
+        <input id="files" type="file" multiple accept=".log,text/plain">
       </label>
-      <label>
-        <span class="name">SECONDARY_SHARE_MIN</span>
-        <input type="number" id="t_SECONDARY_SHARE_MIN" step="0.01" min="0" max="1" value="0.15">
-        <span class="desc">Flag secondary share below this when kills ≥ 10.</span>
-      </label>
-      <label>
-        <span class="name">ARRIVAL_WEIGHT</span>
-        <input type="number" id="t_ARRIVAL_WEIGHT" step="0.1" min="0" value="1">
-        <span class="desc">Weight on under-attack lines in door threat.</span>
-      </label>
-      <label>
-        <span class="name">CLUSTER_MS</span>
-        <input type="number" id="t_CLUSTER_MS" step="1" min="0" value="100">
-        <span class="desc">Multi-kill cluster window (ms).</span>
-      </label>
-      <label>
-        <span class="name">EFFICIENCY_SCALE</span>
-        <input type="number" id="t_EFFICIENCY_SCALE" step="0.1" min="0" value="1">
-        <span class="desc">Scale on net / max(1, meanLive × seconds).</span>
-      </label>
+      <span class="hint">Also: drag files or a folder onto this page.</span>
     </div>
-  </details>
-  <div id="status">Waiting for logs.</div>
+    <details class="tunables" id="tunables">
+      <summary>Tunables</summary>
+      <div class="body">
+        <label>
+          <span class="name">MIN_RUN_SEC</span>
+          <input type="number" id="t_MIN_RUN_SEC" step="1" min="0" value="5">
+          <span class="desc">Exclude runs shorter than this (seconds).</span>
+        </label>
+        <label>
+          <span class="name">EASY_LIVE</span>
+          <input type="number" id="t_EASY_LIVE" step="0.1" min="0" value="5">
+          <span class="desc">meanLive below this contributes to ease flag.</span>
+        </label>
+        <label>
+          <span class="name">SECONDARY_SHARE_MIN</span>
+          <input type="number" id="t_SECONDARY_SHARE_MIN" step="0.01" min="0" max="1" value="0.15">
+          <span class="desc">Flag secondary share below this when kills ≥ 10.</span>
+        </label>
+        <label>
+          <span class="name">ARRIVAL_WEIGHT</span>
+          <input type="number" id="t_ARRIVAL_WEIGHT" step="0.1" min="0" value="1">
+          <span class="desc">Weight on under-attack lines in door threat.</span>
+        </label>
+        <label>
+          <span class="name">CLUSTER_MS</span>
+          <input type="number" id="t_CLUSTER_MS" step="1" min="0" value="100">
+          <span class="desc">Multi-kill cluster window (ms).</span>
+        </label>
+        <label>
+          <span class="name">EFFICIENCY_SCALE</span>
+          <input type="number" id="t_EFFICIENCY_SCALE" step="0.1" min="0" value="1">
+          <span class="desc">Scale on net / max(1, meanLive × seconds).</span>
+        </label>
+      </div>
+    </details>
+    <div id="status">Waiting for logs.</div>
+  </div>
 </header>
 
 <main>
+  <div id="panel-focus" class="tab-panel on">
+    <div id="focusRoot"></div>
+  </div>
+  <div id="panel-project" class="tab-panel">
+    <div id="projectRoot"></div>
+  </div>
+  <div id="panel-session" class="tab-panel">
   <div id="empty">Choose <code>Logs</code> (and optionally <code>Docs/_meta/Logs</code>)
   containing <code>GatekeeperBastion_*.log</code>.</div>
   <div id="app">
@@ -665,8 +975,10 @@ body.drag {
       </details>
     </section>
   </div>
+  </div>
 </main>
 
+<script src="dashboard-data.js"></script>
 <script>
 (function () {
   'use strict';
@@ -680,7 +992,7 @@ body.drag {
   var GROUP_LIVE = /^group\s+\d+:\s+.+?\s+breached\s+at\s+\S+\s+\((\d+)\/(\d+)\)\s+[—\-]\s+(\d+)\s+live\b/i;
   var GROUP = /^group\s+\d+:\s+(.+?)\s+breached\s+at\s+\S+\s+\((\d+)\/(\d+)\)\s*$/i;
   var SOLO = /^boarder\s+(\d+)\/(\d+)\s+breached\s+at\s+\S+\s*$/i;
-  var KILL_FULL = /^killed\s+a\s+(\w+)(?:\s+with\s+(Primary|Secondary|Drone))?\s+\(\+(\d+)\s+salvage\)/i;
+  var KILL_FULL = /^killed\s+a\s+(\w+)(?:\s+with\s+(Primary|Secondary|Drone))?\s+\(\+(\d+)\s+(?:salvage|unbanked)\)/i;
   var KILL_ANY = /^killed\s+a\s+(\w+)\b/i;
   var KIND = /(\d+)\s+(Gatekeepers?|Hunters?|Rams?|boarders?|gatekeepers?)\b/gi;
   var TRACK = /\btrack=(weapon|crew|fabrication|equipment)\b/i;
@@ -2070,6 +2382,249 @@ body.drag {
 
     loadFileList(dt.files);
   });
+
+  function setTab(name) {
+    var tabs = ['focus', 'project', 'session'];
+    if (tabs.indexOf(name) < 0) name = 'focus';
+    tabs.forEach(function (t) {
+      var panel = document.getElementById('panel-' + t);
+      var btn = document.querySelector('.tabs button[data-tab="' + t + '"]');
+      var on = t === name;
+      if (panel) panel.classList.toggle('on', on);
+      if (btn) {
+        btn.classList.toggle('on', on);
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      }
+    });
+    var chrome = document.getElementById('sessionChrome');
+    if (chrome) chrome.classList.toggle('on', name === 'session');
+  }
+
+  function missingProjectHtml() {
+    return '<div class="missing-data">No project data. Run <code>Tools/dashboard-data/run.ps1</code> to write sibling <code>dashboard-data.js</code>.</div>';
+  }
+
+  function evidenceList(items) {
+    if (!items || !items.length) return '';
+    return '<ul class="evidence">' + items.map(function (e) {
+      return '<li>' + esc(e) + '</li>';
+    }).join('') + '</ul>';
+  }
+
+  function laneMeterHtml(label, n, max) {
+    var pct = max > 0 ? Math.min(100, Math.round(100 * n / max)) : 0;
+    var over = n > max ? ' over' : '';
+    return '<div class="lane-meter">' +
+      '<div class="lab"><span>' + esc(label) + '</span><span class="n">' + n + '/' + max + '</span></div>' +
+      '<div class="track' + over + '"><i style="width:' + pct + '%"></i></div>' +
+      '</div>';
+  }
+
+  function asList(v) {
+    if (!v) return [];
+    if (Array.isArray(v) && v.length === 1 && Array.isArray(v[0])) return v[0];
+    if (Array.isArray(v)) return v;
+    return [];
+  }
+
+  function renderFocus(P) {
+    var root = document.getElementById('focusRoot');
+    if (!root) return;
+    if (!P) {
+      root.innerHTML = missingProjectHtml();
+      return;
+    }
+    var focus = P.focus || {};
+    var primary = focus.primary;
+    var html = '';
+
+    if (P.synthesis) {
+      html += '<p class="synth">' + esc(P.synthesis) + '</p>';
+    }
+
+    if (primary) {
+      html += '<div class="do-now">';
+      html += '<p class="kicker">Do this now</p>';
+      html += '<h2><span class="id">' + esc(primary.id) + '</span> ' + esc(primary.title) + '</h2>';
+      if (primary.action) {
+        html += '<p class="action">' + esc(primary.action) + '</p>';
+      }
+      html += evidenceList(primary.evidence);
+      html += '</div>';
+    }
+
+    var insights = asList(P.insights);
+    var show = insights.filter(function (i) { return i.severity !== 'healthy'; });
+    var healthy = insights.filter(function (i) { return i.severity === 'healthy'; });
+    if (show.length) {
+      html += '<div class="insights">';
+      show.forEach(function (ins) {
+        html += '<article class="insight ' + esc(ins.severity || '') + '">';
+        html += '<div class="sev">' + esc(ins.severity) + '</div>';
+        html += '<h3>' + esc(ins.headline) + '</h3>';
+        if (ins.why) html += '<p class="why">' + esc(ins.why) + '</p>';
+        if (ins.action) html += '<p class="act"><strong>Move:</strong> ' + esc(ins.action) + '</p>';
+        html += evidenceList(ins.evidence);
+        html += '</article>';
+      });
+      html += '</div>';
+    }
+
+    var queue = asList(focus.queue).slice(0, 3);
+    var gate = P.friendsGate || {};
+    var caps = P.caps || {};
+    var lanes = P.lanes || {};
+    var plannedN = asList(lanes.planned).length;
+    var activeN = asList(lanes.active).length;
+
+    html += '<div class="focus-row">';
+    html += '<section><h2>Next three</h2>';
+    if (!queue.length) {
+      html += '<p class="empty">Empty.</p>';
+    } else {
+      html += '<ol class="next3">';
+      queue.forEach(function (q) {
+        html += '<li><span class="qid">' + esc(q.id) + '</span>' + esc(q.title) +
+          '<span class="status-chip ' + esc(q.status || '') + '">' + esc(q.status || '') + '</span>';
+        if (q.blockedBy) {
+          html += '<span class="blocked">blocked by ' + esc(q.blockedBy) + '</span>';
+        }
+        html += '</li>';
+      });
+      html += '</ol>';
+    }
+    html += '</section>';
+
+    html += '<section><h2>Pressure</h2>';
+    html += '<div class="lane-meters">' +
+      laneMeterHtml('Planned', plannedN, caps.plannedMax || 0) +
+      laneMeterHtml('Active', activeN, caps.activeMax || 0) +
+      '</div>';
+    html += '<div class="gate-line"><span class="head">' + esc(gate.headId || '\u2014') +
+      '</span>' + esc(gate.summary || '') + '</div>';
+    html += '</section></div>';
+
+    if (healthy.length) {
+      html += '<section><h2>Still true</h2><div class="insights">';
+      healthy.forEach(function (ins) {
+        html += '<article class="insight healthy">';
+        html += '<div class="sev">healthy</div>';
+        html += '<h3>' + esc(ins.headline) + '</h3>';
+        if (ins.why) html += '<p class="why">' + esc(ins.why) + '</p>';
+        if (ins.action) html += '<p class="act"><strong>Move:</strong> ' + esc(ins.action) + '</p>';
+        html += evidenceList(ins.evidence);
+        html += '</article>';
+      });
+      html += '</div></section>';
+    }
+
+    html += '<p class="foot-meta">Generated ' + esc(P.generatedAt || '') +
+      ' · inventory on Project · regen <code>Tools/dashboard-data/run.ps1</code></p>';
+
+    root.innerHTML = html;
+  }
+
+  function mileListHtml(items) {
+    if (!items || !items.length) return '<p class="empty">None.</p>';
+    return '<ul class="mile-list">' + items.map(function (m) {
+      return '<li><span class="mid">' + esc(m.id) + '</span>' + esc(m.title) +
+        (m.gateOneLiner ? '<span class="gate">' + esc(m.gateOneLiner) + '</span>' : '') +
+        '</li>';
+    }).join('') + '</ul>';
+  }
+
+  function renderProjectPanel(P) {
+    var root = document.getElementById('projectRoot');
+    if (!root) return;
+    if (!P) {
+      root.innerHTML = missingProjectHtml();
+      return;
+    }
+    var lanes = P.lanes || {};
+    var active = asList(lanes.active);
+    var planned = asList(lanes.planned);
+    var html = '<p class="hint">Inventory only. Judgment lives on Focus.</p>';
+
+    html += '<section><h2>Active <span class="chip muted"><span class="v">' +
+      active.length + '</span></span></h2>' + mileListHtml(active) + '</section>';
+    html += '<section><h2>Planned <span class="chip muted"><span class="v">' +
+      planned.length + '</span></span></h2>' + mileListHtml(planned) + '</section>';
+
+    html += '<section><h2>Closed lanes</h2><div class="count-row">' +
+      '<span class="chip"><span class="k">completed</span><span class="v">' +
+      (lanes.completedCount || 0) + '</span></span>' +
+      '<span class="chip"><span class="k">cancelled</span><span class="v">' +
+      (lanes.cancelledCount || 0) + '</span></span>' +
+      '<span class="chip"><span class="k">deferred</span><span class="v">' +
+      (lanes.deferredCount || 0) + '</span></span>' +
+      '</div></section>';
+
+    var commits = asList(P.commits).slice(0, 12);
+    html += '<section><h2>Recent commits</h2>';
+    if (!commits.length) {
+      html += '<p class="empty">None.</p>';
+    } else {
+      html += '<ol class="commit-timeline">';
+      commits.forEach(function (c) {
+        html += '<li><span class="hash">' + esc(c.short || c.hash) + '</span>' +
+          esc(c.subject) +
+          '<span class="when">' + esc(c.authoredAt || '') + '</span></li>';
+      });
+      html += '</ol>';
+    }
+    html += '</section>';
+
+    var order = ['blocking', 'play', 'deferred', 'brainstorm'];
+    var byPri = { blocking: [], play: [], deferred: [], brainstorm: [] };
+    asList(P.questions).forEach(function (q) {
+      var p = q.priority || 'brainstorm';
+      if (!byPri[p]) byPri[p] = [];
+      byPri[p].push(q);
+    });
+    html += '<section><h2>Questions by priority</h2><div class="q-groups">';
+    order.forEach(function (pri) {
+      var list = byPri[pri] || [];
+      if (!list.length) return;
+      html += '<div class="q-group ' + pri + '"><h3>' + esc(pri) +
+        ' <span class="badge">' + list.length + '</span></h3><ul>';
+      list.forEach(function (q) {
+        html += '<li>' + esc(q.text) +
+          '<span class="src">' + esc(q.sourcePath || '') +
+          (q.milestoneId ? ' · ' + esc(q.milestoneId) : '') +
+          '</span></li>';
+      });
+      html += '</ul></div>';
+    });
+    html += '</div></section>';
+
+    var brains = asList(P.brainstorms);
+    if (brains.length) {
+      html += '<section><h2>Brainstorms</h2><div class="count-row">';
+      brains.forEach(function (b) {
+        html += '<span class="chip" title="' + esc(b.file || '') + '"><span class="k">' +
+          esc(b.status) + '</span><span class="v">' + esc(b.title) + '</span></span>';
+      });
+      html += '</div></section>';
+    }
+
+    html += '<p class="foot-meta">Generated ' + esc(P.generatedAt || '') + '</p>';
+    root.innerHTML = html;
+  }
+
+  function renderProject() {
+    var P = (typeof window !== 'undefined' && window.GKB_PROJECT) ? window.GKB_PROJECT : null;
+    renderFocus(P);
+    renderProjectPanel(P);
+  }
+
+  document.querySelectorAll('.tabs button[data-tab]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setTab(btn.getAttribute('data-tab'));
+    });
+  });
+
+  setTab('focus');
+  renderProject();
 })();
 </script>
 </body>

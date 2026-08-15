@@ -42,12 +42,20 @@ namespace Michsky.UI.Shift
         void Awake()
         {
             selectorAnimator = gameObject.GetComponent<Animator>();
-            label = transform.Find("Text").GetComponent<TextMeshProUGUI>();
-            labeHelper = transform.Find("Text Helper").GetComponent<TextMeshProUGUI>();
+            Transform text = transform.Find("Text");
+            Transform textHelper = transform.Find("Text Helper");
+            if (text == null || textHelper == null)
+                return;
+            label = text.GetComponent<TextMeshProUGUI>();
+            labeHelper = textHelper.GetComponent<TextMeshProUGUI>();
         }
 
         void Start()
         {
+            if (label == null || labeHelper == null)
+                return;
+            if (itemList == null || itemList.Count == 0)
+                return;
             if (saveValue == true)
             {
                 if (PlayerPrefs.HasKey(selectorTag + "HSelectorValue") == true) { defaultIndex = PlayerPrefs.GetInt(selectorTag + "HSelectorValue"); }
@@ -60,6 +68,8 @@ namespace Michsky.UI.Shift
 
             if(enableIndicators == true)
             {
+                if (indicatorParent == null || indicatorObject == null)
+                    return;
                 foreach (Transform child in indicatorParent)
                     Destroy(child.gameObject);
 
@@ -90,7 +100,8 @@ namespace Michsky.UI.Shift
 
             else
             {
-                Destroy(indicatorParent);
+                if (indicatorParent != null)
+                    Destroy(indicatorParent);
             }
 
             if (invokeAtStart == true)

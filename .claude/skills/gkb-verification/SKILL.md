@@ -26,8 +26,10 @@ metadata:
 - **Add a verification path without naming the one it replaces.**
 - **Add a menu row without asking first.** Naming the row it replaces is the argument you bring
   to the ask, not a substitute for it. A menu entry outlives the reason it was added.
-- **Add a second menu root.** There is one, `GatekeeperBastion/`, and its members are
-  deliberate. `Gatekeeper/HUD/` appeared from two one-shot migration tools
+- **Add a second menu root.** There is one, `GatekeeperBastion/`, with five folders
+  (Record, Logs, Build, Bake, Validate). Members are named in
+  `Docs/Architecture/README.md` `menu_rows` and `Tools/lint-arch/run.sh` checks both
+  directions. `Gatekeeper/HUD/` appeared from two one-shot migration tools
   (`Editor/Tools/PullBastionHudToShip.cs`, `Editor/Tools/RestoreShiftArmorHealth.cs`, ~220 lines
   each) that should not have been in the tracked tree at all — the sprawl arrives as a menu, but
   it starts as a script nobody deleted.

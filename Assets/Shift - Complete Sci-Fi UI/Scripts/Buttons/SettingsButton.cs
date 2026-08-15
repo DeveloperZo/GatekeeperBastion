@@ -29,11 +29,16 @@ namespace Michsky.UI.Shift
 
         void Start()
         {
+            if (buttonTitleObj == null)
+                return;
             if (useCustomContent == false) { buttonTitleObj.text = buttonTitle; }
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            if (detailImage == null || detailIcon == null || detailBackground == null
+                || detailTitle == null || detailDescription == null)
+                return;
             if (enableIconPreview == true)
             {
                 detailImage.gameObject.SetActive(false);

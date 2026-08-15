@@ -46,29 +46,28 @@ namespace GatekeeperBastion.EditorTools
         }
 
         /// <summary>Starts recording in the current Play session, or enters Play on a chosen
-        /// scene when the editor is stopped. Replaces the former single
-        /// <c>GatekeeperBastion/Record Gameplay (F9 to stop)</c> row.</summary>
-        [MenuItem("GatekeeperBastion/Record Gameplay/This scene (F9 to stop)", false, 41)]
+        /// scene when the editor is stopped.</summary>
+        [MenuItem("GatekeeperBastion/Record/Gameplay/This scene (F9 to stop)", false, 10)]
         public static void RecordThisScene()
         {
             Record(scenePath: null);
         }
 
-        [MenuItem("GatekeeperBastion/Record Gameplay/Ship", false, 42)]
+        [MenuItem("GatekeeperBastion/Record/Gameplay/Ship", false, 11)]
         public static void RecordShip()
         {
             Record(ShipScene);
         }
 
-        [MenuItem("GatekeeperBastion/Record Gameplay/Bastion", false, 43)]
+        [MenuItem("GatekeeperBastion/Record/Gameplay/Bastion", false, 12)]
         public static void RecordBastion()
         {
             Record(BastionScene);
         }
 
-        [MenuItem("GatekeeperBastion/Record Gameplay/This scene (F9 to stop)", true)]
-        [MenuItem("GatekeeperBastion/Record Gameplay/Ship", true)]
-        [MenuItem("GatekeeperBastion/Record Gameplay/Bastion", true)]
+        [MenuItem("GatekeeperBastion/Record/Gameplay/This scene (F9 to stop)", true)]
+        [MenuItem("GatekeeperBastion/Record/Gameplay/Ship", true)]
+        [MenuItem("GatekeeperBastion/Record/Gameplay/Bastion", true)]
         static bool RecordValidate()
         {
             return GameplayRecorderDriver.Active == null;

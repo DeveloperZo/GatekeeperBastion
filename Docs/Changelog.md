@@ -7,6 +7,58 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-15
 -->
 
+- 2026-08-15: **M58 completed** — Windows Development player + Main Menu Host/Join
+  (`0.0.0.0` listen, typed IPv4 join); dual-box
+  `Tools/player-session/run.ps1` PASS with local Player present. Criterion 4 re-cut:
+  connect + Player; networked kill / both-screens HUD+VFX moved to M64 (items 18–19).
+  `-popupwindow` removed from the harness (no title-bar handles). Planned count 10/10.
+
+- 2026-08-15: **Dashboard Focus is judgment, not inventory.** Synthesis paragraph,
+  templated insight cards (severity + move + evidence), friends-alpha as do-now over
+  off-path actives, Project demoted to lists. Regen: `Tools/dashboard-data/run.ps1`.
+
+- 2026-08-15: **Dashboard grows Focus / Project tabs.** `Docs/dashboard.html` keeps the
+  Session log picker (M38) and adds lane meters, milestone lists, commit timeline,
+  outstanding questions by priority, and a rule-based next-focus card from
+  `Docs/dashboard-data.js` (`Tools/dashboard-data/run.ps1`). Kill lines with
+  `(+N unbanked)` count toward kill salvage again.
+
+- 2026-08-15: **Bastion Player restored for dual-box.** Working-tree Bastion had lost the
+  local Player rig (FPC / PlayerHealth); `-gkb-host` connected but neither window was
+  drivable. Restored from HEAD plus Boarder prefab instance. Shift UI null-guards and
+  always-included `UI/Particles/Additive` stop the Development Console overlay.
+  Bastion OptionsView stays disabled until its dead fileIDs are rewired. `one-click.cmd`
+  is interactive windowed dual-box (no auto-quit).
+- 2026-08-15: **Same-machine dual-box harness.** Host advertises `127.0.0.1` while
+  listening on `0.0.0.0` (typed `0.0.0.0` join is refused — that was the failed dual-box
+  log). `PlayerLaunch` args `-gkb-host` / `-gkb-join` skip Splash into Bastion.
+  `Tools/player-session/run.ps1` launches two player builds and greps connect lines.
+  File bridge `gkb_player_build_request.txt` builds a Development Windows player into
+  `Logs/Builds/` without SceneBuilder.
+
+- 2026-08-15: **Build All skips a dressed Ship.** A `ShipDress` root is treated like
+  Bastion kit: scenes still register, Environment is not wiped. ARMORY wheel BUY now
+  writes Shift `buttonText`, so the salvage cost shows on the control.
+- 2026-08-15: **Bastion plays Whispers of the Void** on a `Level Music` host after
+  EMBARK (menu Stardust still stops on Continue). Reload and footstep wavs got a
+  12 ms / 8 ms fade-in so the first sample is no longer a click. M69 playthrough
+  gate still open.
+- 2026-08-15: **M57 completed** — client down loads Ship additively; Hatch-bank Prep
+  EMBARK (NAV or pause) restores full HP at the Hatch; Assault and Terminal-Prep
+  refuse. Gate: `NetDownWaitTests` 2/0. Criterion 8 MPPM is confirmation.
+- 2026-08-15: **Main Menu Host / Join.** Host listens `0.0.0.0:7777`; Join takes a typed
+  IPv4 and port (default 7777). Intent crosses the Bastion load via `NetJoinIntent`;
+  `NetSession.StartHost` / `StartClient` push the address (no serialized loopback).
+  Failed connect logs `[Net] join refused` and returns to the Join panel. F10/F11 stay
+  as the editor fallback. `NetSessionAddressTests` asserts the transport address.
+- 2026-08-15: **Document refresh.** Roadmap Current named only M55 and claimed planned
+  14 / cancelled-empty; disk is M55+M71 active, planned 12, `5. cancelled/` holds M34/M39/M43/M46.
+  M64–M67 existed as planned files with no Order rows — indexed. Design 1–3 and the
+  one-pager still described Interact-to-start, a free siphon dial, Wave-5 Escaped, and a
+  Ram that never hunts; code is juice / `E` / `T`, Master Control Hatch-bank for Escaped,
+  Ram hunts on field Waves. Play overview, language Ram row, Architecture singleton and
+  scene-edit claims, 4-Data block count, and the M53 brainstorm link brought into line.
+  Mobility cut in Decisions records M70's expiry argument, unstamped.
 - 2026-08-15: **ARMORY shows every shop wheel, with cost.** Owned catalog rows say
   UPGRADE (opens that weapon's wheel) instead of EQUIPPED; unowned stay BUY, so the
   other Secondary remains purchasable after the first. The panel opens on Secondary

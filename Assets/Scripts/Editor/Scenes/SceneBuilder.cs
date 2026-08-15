@@ -24,8 +24,9 @@ namespace GatekeeperBastion.EditorTools
     /// (the Hatch did — RepairInteractable.station) must move out of it. Materials and the
     /// three gatekeeper prefabs (SceneBuilder.Enemies.cs) are refreshed under
     /// Assets/Materials and Assets/Prefabs with stable GUIDs.
-    /// Bastion kit segments under Environment are never wiped; Build All rebakes NavMesh only
-    /// via <c>gkb_bastion_navmesh_request.txt</c> (or the kit path of Build All).</summary>
+    /// Bastion kit segments under Environment are never wiped; a ShipDress root skips the
+    /// Ship Environment wipe the same way. Build All rebakes Bastion NavMesh only via
+    /// <c>gkb_bastion_navmesh_request.txt</c> (or the kit path of Build All).</summary>
     [InitializeOnLoad]
     public static partial class SceneBuilder
     {
@@ -40,7 +41,8 @@ namespace GatekeeperBastion.EditorTools
 
         /// <summary>The rebuildable roots. A root name in this list is owned by the builder
         /// and deleted before every rebuild; nothing else in the scene is touched.
-        /// Bastion kit layout under Environment is never wiped (see RebuildBastionGeometry).</summary>
+        /// Bastion kit layout under Environment is never wiped (see RebuildBastionGeometry).
+        /// A ShipDress root skips the Ship wipe (see RebuildShipGeometry).</summary>
         static readonly string[] OwnedRootNames = { "Environment", "SpawnPoints", "Directional Light" };
 
         static double _nextSentinelPoll;
@@ -111,7 +113,7 @@ namespace GatekeeperBastion.EditorTools
 
         // ---------- menu items ----------
 
-        [MenuItem("GatekeeperBastion/Build All Scenes")]
+        [MenuItem("GatekeeperBastion/Build/All Scenes", false, 60)]
         public static void BuildAll()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -120,7 +122,7 @@ namespace GatekeeperBastion.EditorTools
 
         /// <summary>Rebakes Bastion-NavMesh.asset from current Environment children without
         /// wiping kit / authored geometry. Prefer this after moving halves or floors.</summary>
-        [MenuItem("GatekeeperBastion/Bake Bastion NavMesh")]
+        [MenuItem("GatekeeperBastion/Bake/Bastion NavMesh", false, 80)]
         public static void BakeBastionNavMeshMenu()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -129,7 +131,7 @@ namespace GatekeeperBastion.EditorTools
 
         /// <summary>Idempotent graybox obstacles on kit segments (skips hatch bay 02 which is
         /// already authored). Names encode LongLane / Corner / Choke / Mask for the height-and-angles criteria.</summary>
-        [MenuItem("GatekeeperBastion/Place Bastion Obstacles")]
+        [MenuItem("GatekeeperBastion/Build/Place Bastion Obstacles", false, 61)]
         public static void PlaceBastionObstaclesMenu()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -169,12 +171,21 @@ namespace GatekeeperBastion.EditorTools
             };
         }
 
-        /// <summary>Opens the scene single (saving nothing) and deletes the owned roots.
-        /// Returns the open scene. Only exact root-name matches in
-        /// <see cref="OwnedRootNames"/> are deleted — authored content is never touched.</summary>
-        static Scene OpenAndClearOwnedRoots(string scenePath)
+        static bool SceneHasRootNamed(Scene scene, string name)
         {
-            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                if (root != null && root.name == name)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>Deletes the owned roots of an already-open scene. Only exact root-name
+        /// matches in <see cref="OwnedRootNames"/> are deleted — authored content is never
+        /// touched.</summary>
+        static void ClearOwnedRoots(Scene scene)
+        {
             foreach (GameObject root in scene.GetRootGameObjects())
             {
                 foreach (string owned in OwnedRootNames)
@@ -186,7 +197,6 @@ namespace GatekeeperBastion.EditorTools
                     }
                 }
             }
-            return scene;
         }
 
         // ---------- Bastion ----------

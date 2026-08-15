@@ -138,12 +138,12 @@ Rejected: **a secondary-specific per-point table** — only on the kill criterio
 3. Criteria 15-style regression — `gkb_verify_request.txt`, compare
    `gkb_verify_report.json` to the 2026-08-15T00:09:20Z baseline (door-aperture,
    `Repair_ClientChannel`, 4× `HudSeparationTests` are the knowns); no new names.
-4. Playthrough path — from Play: MainMenu → Ship → ARMORY. MK-1 row shows the wheel; buy
-   Reload focus on a save with one lost run and ≥150 banked; expect
-   `bought MK-1 Sidearm focus reload (+ability, +clip) for 150 — T1`. Embark, trigger
-   Regen Surge; expect its log line's dial to reflect the ability points. Confirms
-   Driven (spoke click), Shown (the wheel replaces the not-authored note), Reads back
-   (purchase log line, tier label, surge dial).
+4. Playthrough path — from Play: MainMenu → Ship → ARMORY. Panel opens on Secondary.
+   Owned row says UPGRADE and shows `upgrade 150`; the other Secondary stays BUY (free).
+   Wheel lock line or BUY button names salvage (150 on T0). SEC-D wheel is live;
+   Ability spoke says it cannot be bought and still names 150. MK-1 Reload buy on a
+   save with one lost run and ≥150 banked: `bought MK-1 Sidearm focus reload
+   (+ability, +clip) for 150 — T1`.
 
 ## Watch
 

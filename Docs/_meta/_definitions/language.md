@@ -104,7 +104,7 @@ are named here.
 | **Gatekeeper** | Any enemy. They hold the Bastion; you are the intruder. | enemy, mob, creature, hostile, boarder *(that is the player now)* |
 | **Default** | The Gatekeeper that marches on the Hatch and can be provoked onto the Boarder. | grunt, basic, marcher *(descriptive prose may say "marcher"; the kind's name is Default)* |
 | **Hunter** | The Gatekeeper that only ever wants the Boarder. | chaser, stalker |
-| **Ram** | The Gatekeeper that only ever wants the Hatch and cannot be provoked. | brute, tank, charger |
+| **Ram** | The Gatekeeper that hunts the Boarder on a field-terminal Wave and the Hatch on a Hatch-bank Wave; shooting it never shouts. | brute, tank, charger |
 | **spawn point** | Where a group of Gatekeepers enters the fight. They garrison the Bastion; they do not breach it. | breach point *(retired 2026-08-08: the Boarder is the one who breaches)*, muster point *(coined and struck the same day; do not reintroduce)*, portal, door |
 | **group** | The unit Gatekeepers arrive in — one spawn point, several bodies, at once. | pack, squad, cluster |
 | **provoke** | To make a Default target the Boarder. Permanent for that Gatekeeper's life. | aggro *(builder shorthand only, never player-facing)* |

@@ -16,7 +16,7 @@ If you embark without it, you are not blocked — the **NAV MAP** warns you, the
 
 There are four consoles and each owns exactly one subject, so you always know where a thing is bought.
 
-- **ARMORY** — the weapon in your hands: the weapons themselves, and Tiers for whichever one you carry. Upgrades are per weapon, so pouring Salvage into a gun is a commitment to that gun.
+- **ARMORY** — the weapon in your hands: the weapons themselves, and the upgrade wheel for whichever one you carry. Upgrades are per weapon, so pouring Salvage into a gun is a commitment to that gun.
 - **CREW QUARTERS** — you: how much you can take, how far you can sprint, how much you earn, and your only source of critical hits.
 - **FABRICATION** — the Ship: how much the Hatch can take, and the Repair Rig, the equipment that makes repairing the Hatch possible at all.
 - **NAV MAP** — where you go, the Wave you start at, and the button that commits you.

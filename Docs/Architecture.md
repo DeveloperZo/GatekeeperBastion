@@ -27,8 +27,8 @@ Folders group by subject. **Namespaces do not follow folders** — everything un
 
 ```
 Assets/Scripts/
-  Sim/                       own assembly (GatekeeperBastion.Sim), no scene deps  (~2,800 lines)
-    Run/     RunSim  RunContext  RunPhase  AssaultState  SalvageLedger  EscapeSpool
+  Sim/                       own assembly (GatekeeperBastion.Sim), no scene deps
+    Run/     RunSim  RunContext  RunPhase  AssaultState  SalvageLedger  EscapeSpool  IntensityJuice
     Waves/   WaveDirector  WaveSpec  GatekeeperKind  GatekeeperStats
     Meta/    MetaState  MetaUpgrades  SaveData  TetherSiphon
              EquipmentId  EquipmentCatalog
@@ -36,7 +36,7 @@ Assets/Scripts/
              WeaponTier  WeaponWheel  WeaponAbility  WeaponCrosshair
     Ship/    ShipSystems  Subsystem
     Util/    Log (front end — rides inside the Sim assembly)
-  Game/                      MonoBehaviours, thin views     (~7,700 lines)
+  Game/                      MonoBehaviours, thin views
     Player/    FirstPersonController  PlayerGun(+.Firing, +.Slots)  PlayerAbility
                PlayerHealth  PlayerRegistry  Interactor
     Enemies/   EnemyGatekeeper(+.Targeting)  HunterGatekeeper  RamGatekeeper
@@ -47,18 +47,21 @@ Assets/Scripts/
     Ship/      ShipController  ShipHud  StationTerminal  ShipCommands
                ArmoryStation  EngineeringStation(FABRICATION)  CrewQuartersStation  MapStation
     Flow/      SceneFlow  GameSession  SaveService  SplashController  MainMenuController
-               PlayerPrefsSettingsStore
+               PlayerLaunch  PlayerPrefsSettingsStore
     Input/     Controls  PlayerInputFrame  ShortcutPanel — one binding list + one input frame
     Settings/  Settings  SettingId  SettingDecl  ISettingsStore (moved out of Sim/, M45)
     Dev/       DevCommands  DevConsole (editor/dev-build only)
-    Net/       NetSession  NetRunMirror  NetPlayerAvatar  NetEnemy  NetVerbs
+    Net/       NetSession  NetJoinIntent  NetRunMirror  NetPlayerAvatar  NetShipWait  NetEnemy  NetVerbs
   Editor/
     Scenes/  SceneBuilder(+.Ship, +.Enemies) — Environment/spawns/light/NavMesh; hosts+UI authored
-    Tools/   IntegrationCheck (file-bridge test runner; formerly AutoVerify)  LogTools (Logs menu)
+    Bastion/ BastionKitEmitter  BastionSketchEmitter  BastionGeomGroupTool
+             BastionFieldConsole  BastionTerminalEditor
+    Tools/   IntegrationCheck  BindingValidator  LogTools  GameplayRecorder
+             ShipFlythrough  StationSceneGate
   Util/      LogFile (one file per session)
 
 Assets/Tests/
-  EditMode/  Run/  Waves/  Meta/  Ship/     pure sim, 227 tests (last recorded integration-check run)
+  EditMode/  Run/  Waves/  Meta/  Ship/     pure sim (last recorded 2026-08-15T00:09Z: EditMode 394/5)
   PlayMode/                                 scene contracts
 Assets/Prefabs/    prefab assets only
 Assets/Materials/  every Mat_*.mat; SceneBuilder writes here (MaterialDir)
@@ -90,8 +93,9 @@ directly above the live constants, which is exactly how a later session reverts 
 - **UI is read-only.** HUD and station panels read state and draw. Ship purchases
   go through `ShipCommands`; they never call `MetaUpgrades.Buy` or `GameSession.Save`
   directly.
-- **No new static MonoBehaviour singletons.** `GameController.Instance` and
-  `HatchStation.Instance` are grandfathered. Use `PlayerRegistry` for players.
+- **No new static MonoBehaviour singletons.** `HatchStation.Instance` is grandfathered
+  (locator only). `GameController.Instance` was retired 2026-08-12. Use `PlayerRegistry`
+  for players.
 - **Every MonoBehaviour class comment starts with an ownership label**:
   `HOST-ONLY:`, `LOCAL-OWNER:`, or `REPLICATED-STATE:`. This is the co-op
   homework done in advance; a class with no label is a class nobody has thought
@@ -158,16 +162,16 @@ GUILayout; the Bastion HUD may not. GUIStyles there are per-instance, never
 static (static styles survive domain-reload-disabled sessions holding destroyed
 font references).
 
-**4. Bastion geometry is kit-authored; Ship graybox and NavMesh are generated.**
+**4. Bastion geometry is kit-authored; a dressed Ship is too.**
 `Bastion.unity` playable floors/walls are `BastionSegment` kit instances (M47) — Build All
 never regenerates them; it refreshes enemy prefabs and rebakes NavMesh when kit is present.
-`SceneBuilder` still rebuilds Ship `Environment` / light / NavMesh in place. It does **not**
-touch stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem`, or any UI
-canvas; those are authored scene content and survive Build All. Build settings list
-**Splash, MainMenu, Ship, Bastion**. After a spawn-point or kit-floor change, drop
-`gkb_bastion_navmesh_request.txt` (or Build All). Hand-editing **kit geometry** persists;
-hand-editing Ship graybox loses the edit on the next Ship rebuild. A scene missing from
-build settings makes `SceneManager.LoadScene` throw, which strands the player on the end
+`Ship.unity` with a `ShipDress` root is the same: Build All registers scenes and skips the
+Environment wipe. Without `ShipDress`, it still rebuilds collider graybox + light. It does
+**not** touch stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem`,
+or any UI canvas. Build settings list **Splash, MainMenu, Ship, Bastion**. After a
+spawn-point or kit-floor change, drop `gkb_bastion_navmesh_request.txt` (or Build All).
+Hand-editing **kit geometry** and **ShipDress** persists. A scene missing from build
+settings makes `SceneManager.LoadScene` throw, which strands the player on the end
 screen — `SceneFlow` guards this and logs an error telling you to rebuild.
 
 Do not re-invent the deleted mutators: `ShiftFrontEndMutate`, `ShiftShipUiImport`,

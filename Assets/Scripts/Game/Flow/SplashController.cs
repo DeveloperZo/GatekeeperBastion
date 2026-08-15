@@ -41,6 +41,14 @@ namespace GatekeeperBastion.Game
             }
 
             FrontEndMusic.CaptureOrJoin(_music);
+
+            // Player-session harness: -gkb-host / -gkb-join skip the key wait and load Bastion.
+            if (PlayerLaunch.TryBootFromCommandLine())
+            {
+                _activated = true;
+                return;
+            }
+
             Log.Event(Tag, "waiting for any key/click");
         }
 

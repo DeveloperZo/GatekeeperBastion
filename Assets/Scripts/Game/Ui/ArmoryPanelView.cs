@@ -21,6 +21,8 @@ namespace GatekeeperBastion.Game
         [SerializeField] TextMeshProUGUI _ringNote;
         [SerializeField] PanelRowView[] _catalogRows;
         [SerializeField] TextMeshProUGUI _rowsMissing;
+        [SerializeField, OptionalBinding] GameObject _catalogHeading;
+        [SerializeField, OptionalBinding] Button _backButton;
 
         bool _bindingsChecked;
 
@@ -79,6 +81,34 @@ namespace GatekeeperBastion.Game
         {
             UiBind.SetTextOrHide(_rotateHint, rotateHint);
             UiBind.SetTextOrHide(_ringNote, ringNote);
+        }
+
+        /// <summary>Catalog list (heading + rows). Off while the upgrade wheel is open.</summary>
+        public void SetCatalogVisible(bool visible)
+        {
+            UiBind.Show(_catalogHeading, visible);
+            if (_catalogRows != null)
+            {
+                for (int i = 0; i < _catalogRows.Length; i++)
+                {
+                    if (!visible)
+                        UiBind.Show(_catalogRows[i], false);
+                }
+            }
+            if (!visible) ShowRowsMissing(false);
+        }
+
+        /// <summary>Back from wheel to catalog. Null hides the button.</summary>
+        public void BindBack(Action onBack)
+        {
+            if (_backButton == null) return;
+            bool show = onBack != null;
+            UiBind.Show(_backButton, show);
+            if (!show) return;
+            UiBind.SetButtonLabel(_backButton, "BACK");
+            _backButton.onClick.RemoveAllListeners();
+            _backButton.onClick.AddListener(() => onBack.Invoke());
+            _backButton.interactable = true;
         }
 
         /// <summary>The overflow line's text is authored; code only toggles it.</summary>

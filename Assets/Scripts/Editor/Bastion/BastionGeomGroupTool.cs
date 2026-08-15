@@ -13,7 +13,7 @@ namespace GatekeeperBastion.EditorTools
     /// landed. Idempotent; world transforms untouched (groups sit at local zero).</summary>
     public static class BastionGeomGroupTool
     {
-        [MenuItem("GatekeeperBastion/Group Bastion Geom In Open Scene")]
+        [MenuItem("GatekeeperBastion/Build/Group Bastion Geom In Open Scene", false, 62)]
         public static void GroupOpenScene()
         {
             BastionSegment[] segments = UnityEngine.Object.FindObjectsByType<BastionSegment>(
@@ -47,7 +47,7 @@ namespace GatekeeperBastion.EditorTools
         /// <summary>Unpacks every prefab instance under every segment's _geom completely,
         /// so the geometry is plain GameObjects Zo can edit freely. One-way: pack updates
         /// stop propagating to unpacked pieces — that is the point.</summary>
-        [MenuItem("GatekeeperBastion/Unpack Bastion Geom In Open Scene")]
+        [MenuItem("GatekeeperBastion/Build/Unpack Bastion Geom In Open Scene", false, 63)]
         public static void UnpackOpenScene()
         {
             BastionSegment[] segments = UnityEngine.Object.FindObjectsByType<BastionSegment>(

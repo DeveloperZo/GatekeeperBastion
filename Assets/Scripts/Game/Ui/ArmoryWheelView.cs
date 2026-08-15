@@ -16,8 +16,8 @@ namespace GatekeeperBastion.Game
         [SerializeField] TMP_Text[] _spokeLabels = new TMP_Text[SpokeCount];
         /// <summary>Optional per-spoke "this is the centre" decoration, authored from Shift parts.</summary>
         [SerializeField] GameObject[] _spokeSelected;
-        /// <summary>Radar ticks, axis-major: element i * 5 + k is the k-th fill on axis i.
-        /// Authored bright marks toggled over always-on dim frames; this class sets no colour.</summary>
+        /// <summary>Radar ticks, axis-major: element i * 5 + k is the k-th fill on axis i
+        /// (inner→outer). Each fill is ~10 focus points (<see cref="WeaponWheel.FocusAtMax"/>/5).</summary>
         [SerializeField] GameObject[] _tickFills;
         [SerializeField] TMP_Text _hubTitle;
         [SerializeField] TMP_Text _hubSub;
@@ -33,7 +33,9 @@ namespace GatekeeperBastion.Game
         {
             if (_hubLabeled) return;
             _hubLabeled = true;
-            UiBind.SetText(_hubSub, "FOCUS");
+            // Hub chrome is optional — when disabled in the scene, focus is the bold centre spoke.
+            if (_hubSub != null && _hubSub.gameObject.activeSelf)
+                UiBind.SetText(_hubSub, "FOCUS");
         }
 
         public void Configure(ArmoryWheelDisplay d, Action<int> onSelectCentre, Action buy)
@@ -78,7 +80,8 @@ namespace GatekeeperBastion.Game
                 _spokes[i].onClick.AddListener(() => { if (onSelectCentre != null) onSelectCentre.Invoke(captured); });
             }
 
-            UiBind.SetText(_hubTitle, d.HubTitle);
+            if (_hubTitle != null && _hubTitle.gameObject.activeSelf)
+                UiBind.SetText(_hubTitle, d.HubTitle);
             UiBind.SetText(_projFire, d.ProjFireLine);
             UiBind.SetText(_projReload, d.ProjReloadLine);
 
@@ -89,7 +92,9 @@ namespace GatekeeperBastion.Game
                 _buyButton.onClick.RemoveAllListeners();
                 if (showBuy) _buyButton.onClick.AddListener(() => { if (buy != null) buy.Invoke(); });
             }
-            if (showBuy) UiBind.SetText(_buyLabel, d.BuyButtonLabel);
+            // Shift MainButton owns the visible label; writing only _buyLabel leaves
+            // buttonText as the authored "BUY" and the salvage cost never shows.
+            if (showBuy) UiBind.SetButtonLabel(_buyButton, d.BuyButtonLabel);
 
             UiBind.SetTextOrHide(_reasonLabel, showBuy ? null : d.ReasonLine);
         }

@@ -134,9 +134,19 @@ the path pointed at nothing. Put the *answer* in the milestone; let the script d
 path. It earns that by being **used by more than one session for more than one
 question** — the same test that separates durable tooling from a chore
 (`_meta/_definitions/milestone.md`). It states its prerequisites in its own header: a
-tool nobody else can run is a script with documentation. Three exist: `Tools/verify/`,
-`Tools/docgen/`, and `Tools/wave-report/`. `Editor/Tools/IntegrationCheck.cs` is the Editor
-path beside them.
+tool nobody else can run is a script with documentation.
+
+| Path | What |
+|---|---|
+| `Tools/verify/run.sh` | EditMode harness (path 1). Runs lint-language and lint-arch first. |
+| `Tools/lint-arch/run.sh` | Architecture fence, including the menu allowlist. |
+| `Tools/lint-language/run.sh` | Language table. |
+| `Tools/docgen/run.sh` | Field Manual + `4-Data.md` countable blocks. |
+| `Tools/wave-report/run.sh` | Session-log reader (path 2). |
+| `Tools/dashboard-data/run.ps1` | Regen `Docs/dashboard-data.js`. |
+| `Tools/player-session/` | Dual-box player harness (`run.ps1`, `one-click.cmd`). |
+| `Tools/bastion-sketch/` | Sketch files; emitter is sentinel-only. |
+| `Editor/Tools/IntegrationCheck.cs` | Full EditMode+PlayMode + player-build file bridge. |
 
 **Menu item.** The highest bar, because the menu is the developer's surface and every
 row costs a scan. It has to **save real time or make a playthrough verifiable more
@@ -148,20 +158,25 @@ directly**, and:
   defect with a button on it;
 - not put in the Editor console what belongs in a file.
 
-**Adding a row means naming the row it replaces, or arguing why the count should
-grow.** Seven rows existed on 2026-08-04; four survived that question.
+**One root, five folders.** `GatekeeperBastion/{Record,Logs,Build,Bake,Validate}`.
+Unity draws a separator when priority differs by 11 or more; bands below are that
+structure. The fence in `Architecture/README.md` is what lint-arch checks — this table
+is why each row exists. If they disagree, the fence wins.
 
-| Row | Earns it by |
-|---|---|
-| `Build All Scenes` | Scenes are generated and nothing else registers them (`Architecture.md`, gotcha 4). |
-| `Bake Bastion NavMesh` | Rebakes walkable mesh from authored Environment without wiping kit geometry. |
-| `Place Bastion Obstacles` | Seeds named LongLane/Corner/Choke/Mask props; Zo hand-finishes. Idempotent by name. |
-| `Run Verification Now` | Full EditMode + PlayMode in one click, with a report file. |
-| `Logs/Open Logs Folder` | The log is the evidence behind every gate; shortest path to it. |
-| `Logs/Copy Latest Log Path` | Hands the agent the exact file instead of a description of one. |
+| Folder | Priority | Rows | Earns it by |
+|---|---|---|---|
+| **Record/** | 10 | Gameplay/This scene (F9 to stop), Gameplay/Ship, Gameplay/Bastion, Ship Flythrough (22) | Playtest capture. F9 stops. |
+| **Logs/** | 40 | Open Logs Folder, Copy Latest Log Path | The log is the evidence behind every gate. |
+| **Build/** | 60 | All Scenes, Place Bastion Obstacles, Group Bastion Geom In Open Scene, Unpack Bastion Geom In Open Scene | Scene generation and kit authoring (`Architecture.md`, gotcha 4). |
+| **Bake/** | 80 | Bastion NavMesh | Rebake walkable mesh without wiping kit. |
+| **Validate/** | 100 | Integration Check, Scene Bindings | Full suites; missing serialized refs. |
 
-If this table and the code disagree, **the code wins** — but a row in the code and not
-in this table is a row that was added without answering the question.
+Sentinel-only, no menu: kit emit, sketch emit, field consoles, player build. Menus are
+for Zo; sentinels are for agents. Same code path behind both where both exist.
+
+**Adding a row means naming the folder, naming the row it replaces, and updating
+`menu_rows` in the same change.** Seven rows existed on 2026-08-04; four survived that
+question. The count grew since for capture, bake, obstacle seed, and kit geom group/unpack.
 
 Cut on 2026-08-04, worth not re-adding: **Build Bastion Scene** (narrower duplicate),
 **Reset Verification State** (a workaround — the sentinel path already self-heals),
@@ -190,9 +205,10 @@ not a temporary compromise.
 | Hand finish | Zo | Move segments, sides, props, spawns in the Scene view. |
 | NavMesh | either | `GatekeeperBastion/Bake Bastion NavMesh` after geometry moves. |
 
-**Do not** run **Build All Scenes** against a kit bastion to “refresh” floors — when
-`BastionSegment`s are present, geometry wipe is skipped, but the habit still belongs to the
-old graybox. Sketch + obstacle place + NavMesh bake are the refresh path.
+**Do not** run **Build All Scenes** against a kit bastion or a dressed Ship to “refresh”
+floors — when `BastionSegment`s or a `ShipDress` root are present, geometry wipe is skipped,
+but the habit still belongs to the old graybox. Sketch + obstacle place + NavMesh bake are
+the Bastion refresh path.
 
 Sentinels are for agents and batch; menus are for Zo. Same code path behind both where both
 exist.
@@ -314,8 +330,9 @@ Three paths, in increasing cost:
 2. **`Tools/wave-report/run.sh`** — mean live Gatekeepers per Wave from session logs
    (`Design/1-Experience.md`, section 1.3). Offline reader; no band, no verify hook.
    `--summary`, `--csv`, `--html <out>`. Needs `mono-devel`. Pin:
-   `Logs/GatekeeperBastion_2026-08-07_16-34-30.log`. Bookmark for the same numbers in a
-   page: `Docs/dashboard.html` (pick the Logs folder; parses in-browser).
+   `Logs/GatekeeperBastion_2026-08-07_16-34-30.log`. Interactive page:
+   `Docs/dashboard.html` Session tab (pick Logs/). Focus / Project tabs: regen with
+   `Tools/dashboard-data/run.ps1` → `Docs/dashboard-data.js`.
 3. **Integration-check file bridge** (formerly AutoVerify) — write
    `<projectRoot>/gkb_verify_request.txt`;
    with the editor open, `Editor/Tools/IntegrationCheck.cs` runs the full EditMode then

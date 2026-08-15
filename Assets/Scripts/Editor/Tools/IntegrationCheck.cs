@@ -38,6 +38,10 @@ namespace GatekeeperBastion.EditorTools
         static string SentinelPath => Path.Combine(Root, "gkb_verify_request.txt");
         static string ReportPath => Path.Combine(Root, "gkb_verify_report.json");
         static string BindingsRequestPath => Path.Combine(Root, "gkb_bindings_request.txt");
+        static string PlayerBuildRequestPath => Path.Combine(Root, "gkb_player_build_request.txt");
+        static string PlayerBuildReportPath => Path.Combine(Root, "gkb_player_build_report.json");
+        static string PlayerBuildOutDir => Path.Combine(Root, "Logs", "Builds");
+        static string PlayerBuildExe => Path.Combine(PlayerBuildOutDir, "GatekeeperBastion.exe");
 
         static double _nextSentinelPoll;
 
@@ -89,6 +93,8 @@ namespace GatekeeperBastion.EditorTools
             if (EditorApplication.isCompiling) return;
             // BindingValidator writes its own report; don't block IntegrationCheck.
             TryConsumeBindingsRequest();
+            // Windows player into Logs/Builds — never runs SceneBuilder / Build All.
+            TryConsumePlayerBuildRequest();
             // Sentinel always wins — same rule as OnEditorReady. A stuck StageKey from a
             // mid-run domain reload must not permanently ignore agent requests.
             if (TryConsumeSentinel()) return;
@@ -119,7 +125,7 @@ namespace GatekeeperBastion.EditorTools
 
             Debug.LogWarning(
                 $"[IntegrationCheck] Clearing stuck stage '{stage}' after {StuckStageSeconds:0}s idle " +
-                "(TestRunner never finished). Write gkb_verify_request.txt or use Run Integration Check Now.");
+                "(TestRunner never finished). Write gkb_verify_request.txt or use Validate/Integration Check.");
             SessionState.SetString(StageKey, "");
             SessionState.SetFloat(StageSinceKey, -1f);
             WriteReport("error", "stuck", null, null,
@@ -151,6 +157,80 @@ namespace GatekeeperBastion.EditorTools
             catch (Exception e)
             {
                 Debug.LogError("[IntegrationCheck] BindingValidator failed: " + e.Message);
+            }
+        }
+
+        /// <summary>File bridge for a Windows Development player. Agents write
+        /// <c>gkb_player_build_request.txt</c>; report is <c>gkb_player_build_report.json</c>;
+        /// exe under <c>Logs/Builds/</c>. Does not call SceneBuilder or Build All.</summary>
+        static void TryConsumePlayerBuildRequest()
+        {
+            if (!File.Exists(PlayerBuildRequestPath)) return;
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning("[IntegrationCheck] Player build waiting — editor is in play mode.");
+                return;
+            }
+            try { File.Delete(PlayerBuildRequestPath); }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[IntegrationCheck] Could not delete player-build request: " + e.Message);
+                return;
+            }
+
+            try
+            {
+                Directory.CreateDirectory(PlayerBuildOutDir);
+                var scenes = EditorBuildSettings.scenes;
+                var enabled = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < scenes.Length; i++)
+                {
+                    if (scenes[i] != null && scenes[i].enabled && !string.IsNullOrEmpty(scenes[i].path))
+                        enabled.Add(scenes[i].path);
+                }
+                if (enabled.Count == 0)
+                {
+                    WritePlayerBuildReport("error", "No scenes in EditorBuildSettings.");
+                    return;
+                }
+
+                var opts = new BuildPlayerOptions
+                {
+                    scenes = enabled.ToArray(),
+                    locationPathName = PlayerBuildExe,
+                    target = BuildTarget.StandaloneWindows64,
+                    options = BuildOptions.Development
+                };
+                var report = BuildPipeline.BuildPlayer(opts);
+                bool ok = report != null
+                    && report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded;
+                string msg = ok
+                    ? "Built " + PlayerBuildExe
+                    : (report != null
+                        ? "BuildResult=" + report.summary.result
+                        : "BuildPlayer returned null");
+                WritePlayerBuildReport(ok ? "ok" : "error", msg);
+                Debug.Log("[IntegrationCheck] Player build " + (ok ? "ok" : "failed") + " — " + msg);
+            }
+            catch (Exception e)
+            {
+                WritePlayerBuildReport("error", e.GetType().Name + ": " + e.Message);
+                Debug.LogError("[IntegrationCheck] Player build failed: " + e.Message);
+            }
+        }
+
+        static void WritePlayerBuildReport(string status, string message)
+        {
+            string safe = (message ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
+            string exe = PlayerBuildExe.Replace("\\", "/");
+            string json = "{\"status\":\"" + status
+                + "\",\"message\":\"" + safe
+                + "\",\"exe\":\"" + exe
+                + "\",\"timestampUtc\":\"" + DateTime.UtcNow.ToString("o") + "\"}";
+            try { File.WriteAllText(PlayerBuildReportPath, json); }
+            catch (Exception e)
+            {
+                Debug.LogError("[IntegrationCheck] Could not write player-build report: " + e.Message);
             }
         }
 
@@ -202,7 +282,7 @@ namespace GatekeeperBastion.EditorTools
             return true;
         }
 
-        [MenuItem("GatekeeperBastion/Run Integration Check Now")]
+        [MenuItem("GatekeeperBastion/Validate/Integration Check", false, 100)]
         public static void RunFromMenu() => BeginVerification("menu");
 
         // No Reset command: a stuck StageKey is already cleared by TryConsumeSentinel, which

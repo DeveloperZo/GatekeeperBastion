@@ -1,8 +1,9 @@
 # 4 — Data
 
 <!-- GENERATED BLOCKS — DO NOT EDIT INSIDE GKB:GEN … GKB:END MARKERS.
-     Tools/docgen/run.sh splices these ten blocks from Sim/: mk1-base, wheel, rings,
-     tier-cost, abilities, gatekeepers, waves, dial, hatch, tracks. Prose outside the
+     Tools/docgen/run.sh splices these fourteen blocks from Sim/: mk1-base, wheel, rings,
+     tier-cost, abilities, gatekeepers, waves, dial, intensity-juice, hatch, hatch-bank,
+     master-control, tracks, bastion-mesh. Prose outside the
      markers is hand-written and preserved byte-for-byte on regenerate. Run
      Tools/docgen/run.sh after any Sim/ change that owns a block; --check fails on drift. -->
 
@@ -102,7 +103,7 @@ old 6 x 90) — a redistribution, not an inflation.
   or seen within 26 m; a provoked gatekeeper alerts others within 12 m; inside 8 m
   of the Hatch a Default commits to the Hatch regardless (a Hunter never does).
 
-## Waves and the siphon dial
+## Waves and intensity
 
 `WaveDirector.NextWave(waveIndex, siphonLevel)`; `MaxWaves = 5`. The dial is a
 hand-authored table, never a formula — `TetherSiphon.RewardMultiplierFor` =
@@ -418,8 +419,10 @@ mapping throws at emit time — a loud fail, never a primitive.
 
 ## Wave-report dashboard (M38)
 
-`Docs/dashboard.html` parses `GatekeeperBastion_*.log` in the browser after you choose the
-Logs folder (or drop the files). Sample filters and era cutoffs:
+`Docs/dashboard.html` Session tab parses `GatekeeperBastion_*.log` in the browser after you
+choose the Logs folder (or drop the files). Focus / Project tabs read
+`Docs/dashboard-data.js` from `Tools/dashboard-data/run.ps1` (milestones, commits, questions,
+rule-based next focus). Sample filters and era cutoffs:
 
 | Constant | Value | Source |
 |---|---|---|

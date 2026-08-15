@@ -102,9 +102,29 @@ namespace GatekeeperBastion.Game
 
         void Awake()
         {
+            if (!HasRequiredBindings())
+            {
+                // Bastion's Settings panel still has dead fileIDs; logging Error opens the
+                // Development Console over both dual-box windows. Stay quiet and disabled.
+                enabled = false;
+                return;
+            }
             Registered = this;
             ValidateBindings();
             WireControls();
+        }
+
+        bool HasRequiredBindings()
+        {
+            return _panels != null
+                && _resetButton != null
+                && _backButton != null
+                && _displayRevertLabel != null
+                && _keepDisplayButton != null
+                && _controlsRowsRoot != null
+                && _controlsRowTemplate != null
+                && _tabButtons != null && _tabButtons.Length > 0
+                && _rowBindings != null && _rowBindings.Length > 0;
         }
 
         void OnDestroy()

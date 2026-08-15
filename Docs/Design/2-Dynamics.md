@@ -9,11 +9,13 @@ So this file is where a design intention gets checked against what the game actu
 and everything in it is measured or derived. Two balance models have already been falsified
 by play data; one is kept below, marked wrong, so it is not re-derived.
 
-**A pacing or difficulty complaint usually lands here rather than in `4-Data.md`.** The
+**A pacing or difficulty complaint usually lands here rather than in** `4-Data.md`**.** The
 largest effects on record in this project came from loop structure and from geometry, not
 from stats.
 
 ---
+
+
 
 ## 2.1 The loop the player is actually in (#6)
 
@@ -40,11 +42,13 @@ disconnected at the wire, invisible until feedback caught it.
 
 Three channels, each with a rule:
 
-| Channel | Rule | Where |
-|---|---|---|
-| The HUD | absolute `GUI` rects only in the Bastion, never `GUILayout`; a layout exception strands the player on the end screen. | `../Architecture.md` gotcha 3 |
-| The log | a line when a player-visible thing happened, or when a refusal must be answerable from the log alone ("I clicked BUY and nothing happened"). Once per distinct reason, never per frame. No counters, no aggregation. | `../Working-Rules.md` |
-| The docs | anything countable is generated from the code; anything arguable is written. | `../README.md` |
+
+| Channel  | Rule                                                                                                                                                                                                                 | Where                         |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| The HUD  | absolute `GUI` rects only in the Bastion, never `GUILayout`; a layout exception strands the player on the end screen.                                                                                                | `../Architecture.md` gotcha 3 |
+| The log  | a line when a player-visible thing happened, or when a refusal must be answerable from the log alone ("I clicked BUY and nothing happened"). Once per distinct reason, never per frame. No counters, no aggregation. | `../Working-Rules.md`         |
+| The docs | anything countable is generated from the code; anything arguable is written.                                                                                                                                         | `../README.md`                |
+
 
 **The deliberate silences are audited.** Every page in `../Play/` ends with a `## Gaps`
 section listing what the game never tells the player. That list is this tier's backlog: a
@@ -52,6 +56,8 @@ rule the wiki has to explain because the game keeps it secret is a rule the play
 playing without, which means it is not in their model and cannot change their action.
 
 ---
+
+
 
 ## 2.2 Loops, not arcs
 
@@ -69,6 +75,8 @@ that should be asked after Fellowship or Expression is answered in `1-Experience
 before.
 
 ---
+
+
 
 ## 2.3 The four loops (#7 gain, #8 balance)
 
@@ -88,18 +96,19 @@ point, at `DamagePerPoint = 1.0456`, `ClipPerPoint = 1.0283`, `ReloadPerPoint = 
 `FireRatePerPoint = 1.0117`. Ability carries no dps term.
 
 Step size is therefore a function of where the focus lands. MR-35 (`WeaponCatalog`: damage
-32, 1.6 shots/s, clip 10, reload 2.4s) with its spoke order `Reload, Damage, Clip, Ability,
-FireRate` (`WeaponWheel.RingOf`), at `WeaponWheel.EffectiveDps` =
+32, 1.6 shots/s, clip 10, reload 2.4s) with its spoke order `Reload, Damage, Clip, Ability, FireRate` (`WeaponWheel.RingOf`), at `WeaponWheel.EffectiveDps` =
 `clip × damage ÷ (clip ÷ rate + reload)`, is 10 × 32 ÷ (10 ÷ 1.6 + 2.4) = **36.99 dps**
 before any purchase. One purchase, by centre:
 
-| centre | points awarded | dps | step |
-|---|---|---|---|
-| Damage | Damage +5, Reload +3, Clip +3 | 48.15 | +30.2% |
-| Reload | Reload +5, Damage +3, FireRate +3 | 44.56 | +20.5% |
-| Clip | Clip +5, Damage +3, Ability +3 | 43.38 | +17.3% |
-| FireRate | FireRate +5, Reload +3, Ability +3 | 39.22 | +6.0% |
-| Ability | Ability +5, Clip +3, FireRate +3 | 38.94 | +5.3% |
+
+| centre   | points awarded                     | dps   | step   |
+| -------- | ---------------------------------- | ----- | ------ |
+| Damage   | Damage +5, Reload +3, Clip +3      | 48.15 | +30.2% |
+| Reload   | Reload +5, Damage +3, FireRate +3  | 44.56 | +20.5% |
+| Clip     | Clip +5, Damage +3, Ability +3     | 43.38 | +17.3% |
+| FireRate | FireRate +5, Reload +3, Ability +3 | 39.22 | +6.0%  |
+| Ability  | Ability +5, Clip +3, FireRate +3   | 38.94 | +5.3%  |
+
 
 Arithmetic on the constants above, not measured. The Damage row in full: damage
 32 × 1.0456^5 = 39.99, clip `round(10 × 1.0283^3)` = 11, reload 2.4 × 0.98035^3 = 2.261,
@@ -124,13 +133,15 @@ clip left `MetaUpgrades` for `WeaponCatalog`, `WeaponTier` (the cost curve) and
 slopes. CREW QUARTERS is four tracks now that M23 deleted Engineering:
 `UpgradeTrack` is `HatchArmor, Vitality, Stamina, Scavenging, Luck`.
 
-### R2 — the dial: the player's hand on the gain
+### R2 — intensity: the player's hand on the gain
 
-`Sim/Meta/TetherSiphon.cs`. Raising the dial multiplies reward and body count off the same
+`Sim/Meta/TetherSiphon.cs` is still the body-count table. The player authors the stake by
+juicing Unbanked at a look-at trigger (`Sim/Run/IntensityJuice.cs`): raise costs, lower is
+free, `E` selects, `T` starts. Raising intensity multiplies reward and body count off the same
 hand-authored table, so payout and pressure cannot drift apart. They did once, and the
 result was +600% Gatekeeper HP for +50% money.
 
-**The dial adds only Default gatekeepers.** HP, group size and spawn gap ignore it. R2 raises
+**Intensity adds only Default gatekeepers.** HP, group size and spawn gap ignore it. R2 raises
 R1's gain by adding load to B1 and nothing else — one lever, one mechanism. Changeable in
 Prep only, so the player raises the gain before seeing the Wave.
 
@@ -142,11 +153,13 @@ Hatch damage is `arrivals × dwell`, and raising dps cuts dwell while raising ar
 Wave-2 attempts, one purchase between each. The bought column names the pre-wheel
 per-attribute levels; the measurement stands, the purchase shape it was bought with does not:
 
-| attempt | bought | kill rate | effective | killed | reached Hatch | duration | outcome |
-|---|---|---|---|---|---|---|---|
-| 1 | Clip L2 | 0.81/s | 28.2 HP/s | 58% | 15 | 27.5s | BREACH |
-| 2 | Damage L3 | 0.96/s | 33.8 HP/s | 70% | 19 | 29.2s | BREACH |
-| 3 | FireRate L3, dial 0 | 0.93/s | 33.1 HP/s | 83% | 22 | 31.5s | BREACH |
+
+| attempt | bought              | kill rate | effective | killed | reached Hatch | duration | outcome |
+| ------- | ------------------- | --------- | --------- | ------ | ------------- | -------- | ------- |
+| 1       | Clip L2             | 0.81/s    | 28.2 HP/s | 58%    | 15            | 27.5s    | BREACH  |
+| 2       | Damage L3           | 0.96/s    | 33.8 HP/s | 70%    | 19            | 29.2s    | BREACH  |
+| 3       | FireRate L3, dial 0 | 0.93/s    | 33.1 HP/s | 83%    | 22            | 31.5s    | BREACH  |
+
 
 Kill fraction rose 58% → 83% and arrivals rose 15 → 22, because surviving longer gives more
 of the Wave time to walk to the door. **The two nearly cancel.** Three consecutive upgrade
@@ -156,12 +169,14 @@ more dps.
 **Delivery rate is the lever that targets the mechanism.** Wave 2 at dial 0 delivered 1.74
 bodies/s against a measured 0.93 kill rate:
 
-| group gap | delivery | in/s | leak vs 0.93 kill/s |
-|---|---|---|---|
-| 2.47s (pre-M10) | 17.3s | 1.74 | +0.81/s |
-| 3.00s | 21.0s | 1.43 | +0.50/s |
-| 3.50s | 24.5s | 1.22 | +0.29/s |
-| 4.00s | 28.0s | 1.07 | +0.14/s |
+
+| group gap       | delivery | in/s | leak vs 0.93 kill/s |
+| --------------- | -------- | ---- | ------------------- |
+| 2.47s (pre-M10) | 17.3s    | 1.74 | +0.81/s             |
+| 3.00s           | 21.0s    | 1.43 | +0.50/s             |
+| 3.50s           | 24.5s    | 1.22 | +0.29/s             |
+| 4.00s           | 28.0s    | 1.07 | +0.14/s             |
+
 
 M10 shipped `max(0.4, 4.2 − 0.20×wave)`. Earlier softens were not enough after the horde and
 swing-landing fixes.
@@ -190,24 +205,30 @@ Wave narrows the margin to 1.7× at Wave 2 and 1.2× at Wave 3, and fails at Wav
 
 ---
 
+
+
 ## 2.4 The delays (#9)
 
 Delays are what make the loops readable, and two of them are load-bearing.
 
-| Delay | Length | What it does |
-|---|---|---|
-| Deep breach → Hatch | ~15s (48.5 m of z at 3.2 m/s patrol) | The largest structural quantity in the fight (`3-Mechanics.md`). |
-| R1 closing | once per Run | A Run's difficulty is fixed at embark; no in-Run spiral. |
-| R1 unlocking | until the first death | Wheel purchases and the equipment slot gated on `MetaUpgrades.UpgradesUnlocked` = `PodEjections >= 1`. Buying a weapon and buying attributes are not. |
-| Inter-Wave gap on a deep start | 3s | A start-Wave of N chains Waves 1..N back to back. |
-| Reload | per weapon: MK-1 1.4s, BR-12 2.6s, MR-35 2.4s | A wheel spoke (`ReloadPerPoint = 0.98035`), so it shortens with focus. |
-| Stamina refill | 1s hold + 100/18 = 6.6s | Sprint beats the chase and the Hunter, so unlimited sprint would be free kiting. |
+
+| Delay                          | Length                                        | What it does                                                                                                                                          |
+| ------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deep breach → Hatch            | ~15s (48.5 m of z at 3.2 m/s patrol)          | The largest structural quantity in the fight (`3-Mechanics.md`).                                                                                      |
+| R1 closing                     | once per Run                                  | A Run's difficulty is fixed at embark; no in-Run spiral.                                                                                              |
+| R1 unlocking                   | until the first death                         | Wheel purchases and the equipment slot gated on `MetaUpgrades.UpgradesUnlocked` = `PodEjections >= 1`. Buying a weapon and buying attributes are not. |
+| Inter-Wave gap on a deep start | 3s                                            | A start-Wave of N chains Waves 1..N back to back.                                                                                                     |
+| Reload                         | per weapon: MK-1 1.4s, BR-12 2.6s, MR-35 2.4s | A wheel spoke (`ReloadPerPoint = 0.98035`), so it shortens with focus.                                                                                |
+| Stamina refill                 | 1s hold + 100/18 = 6.6s                       | Sprint beats the chase and the Hunter, so unlimited sprint would be free kiting.                                                                      |
+
 
 **The five stamina numbers change together or not at all.** They encode one relationship —
 sprint must outrun a chase for a bounded time — and moving one silently converts kiting from
 a resource into a tactic.
 
 ---
+
+
 
 ## 2.5 The pacing target — no Wave costs more than three deaths
 
@@ -218,13 +239,15 @@ curve.
 Required effective dps per Wave assumes a survivable leak of 0.15 bodies/s and the measured
 0.74 realization factor (theoretical dps → dps actually delivered):
 
+
 | Wave | in/s | avg HP | need HP/s | need theoretical | cheapest Tier | cumulative cost |
-|---|---|---|---|---|---|---|
-| 1 | 0.86 | 30.0 | 21 | 29 | T0 | 900 |
-| 2 | 1.07 | 35.8 | 33 | 45 | T1 | 1,300 |
-| 3 | 1.38 | 49.3 | 61 | 82 | T3 | 2,700 |
-| 4 | 1.88 | 60.9 | 105 | 142 | T6 | 6,300 |
-| 5 | 2.16 | 75.5 | 151 | 205 | T7 | 7,900 |
+| ---- | ---- | ------ | --------- | ---------------- | ------------- | --------------- |
+| 1    | 0.86 | 30.0   | 21        | 29               | T0            | 900             |
+| 2    | 1.07 | 35.8   | 33        | 45               | T1            | 1,300           |
+| 3    | 1.38 | 49.3   | 61        | 82               | T3            | 2,700           |
+| 4    | 1.88 | 60.9   | 105       | 142              | T6            | 6,300           |
+| 5    | 2.16 | 75.5   | 151       | 205              | T7            | 7,900           |
+
 
 **This table was derived pre-wheel and is kept as the record of what the seven-Tier decision
 was sized on. Do not read the last two columns as current.** It assumed one Tier was one
@@ -238,12 +261,14 @@ re-derivation**. The pre-wheel seven-Tier record below still uses 7,000 / Tier 7
 Against three failed Runs' earnings at that Wave (a Run dying on Wave N banks the Waves
 below it plus ~60% of N, at 25/kill and dial 0):
 
-| die on | earns/Run | ×3 | needs | margin |
-|---|---|---|---|---|
-| Wave 2 | 900 | 2,700 | 1,300 | 2.1× |
-| Wave 3 | 1,830 | 5,490 | 2,700 | 2.0× |
-| Wave 4 | 3,060 | 9,180 | 6,300 | 1.5× |
-| Wave 5 | 4,590 | 13,770 | 7,900 | 1.7× |
+
+| die on | earns/Run | ×3     | needs | margin |
+| ------ | --------- | ------ | ----- | ------ |
+| Wave 2 | 900       | 2,700  | 1,300 | 2.1×   |
+| Wave 3 | 1,830     | 5,490  | 2,700 | 2.0×   |
+| Wave 4 | 3,060     | 9,180  | 6,300 | 1.5×   |
+| Wave 5 | 4,590     | 13,770 | 7,900 | 1.7×   |
+
 
 **Every Wave clears inside two deaths' earnings** before repair costs. B2 narrows this.
 
@@ -261,6 +286,8 @@ check to re-run whenever either curve moves.
 
 ---
 
+
+
 ## 2.6 Five-Wave session — measured 2026-08-07
 
 **The player's report comes first, because it is the only evidence about the experience:**
@@ -270,14 +297,16 @@ below is instrumentation, and none of it overrides that.
 Two Runs, same player, same weapon, same start Wave, dial 0, twenty minutes apart
 (`Logs/GatekeeperBastion_2026-08-07_16-34-30.log`):
 
-| | MR-35 **T1** | MR-35 **T4** |
-|---|---|---|
-| Wave 2 | 272/300 | 300/300 |
-| Wave 3 | breached | 300/300 |
-| Wave 4 | — | 300/300 |
-| Wave 5 | — | 300/300 |
-| repair spent | 56 | 0 |
-| outcome | lost on Wave 3 after 134s | BASTION STRIPPED, gross 5250 |
+
+|              | MR-35 **T1**              | MR-35 **T4**                 |
+| ------------ | ------------------------- | ---------------------------- |
+| Wave 2       | 272/300                   | 300/300                      |
+| Wave 3       | breached                  | 300/300                      |
+| Wave 4       | —                         | 300/300                      |
+| Wave 5       | —                         | 300/300                      |
+| repair spent | 56                        | 0                            |
+| outcome      | lost on Wave 3 after 134s | BASTION STRIPPED, gross 5250 |
+
 
 **The door collapses non-linearly once arrivals accumulate.** In the T1 Run the Hatch went
 224 → 148 → 72 → breached in **6.4 seconds** with eight or more bodies parked on it, which is
@@ -296,6 +325,8 @@ second attempt at the same content, or both — the session cannot separate them
 
 ---
 
+
+
 ## 2.7 Kill rate vs delivery rate — the model that failed
 
 Intent: an unupgraded player clears Wave 1 and dies on Wave 2; a fully upgraded one clears
@@ -303,11 +334,13 @@ all three. The model below was the gate used to justify that. **It is wrong and 
 so it is not re-derived.** `pool = (D×30 + H×20 + R×120) × hpMultiplier`, `TTK = pool / dps`,
 unupgraded 32 dps and maxed 62.5:
 
+
 | Wave | count (D/H/R) | HP pool | delivery | TTK @32 | TTK @62.5 |
-|---|---|---|---|---|---|
-| 1 | 18 (18/0/0) | 540 | 13.0s | 16.9s | 8.6s |
-| 2 | 30 (26/4/0) | 1075 | 17.3s | 33.6s | 17.2s |
-| 3 | 42 (34/6/2) | 2070 | 18.7s | 64.7s | 33.1s |
+| ---- | ------------- | ------- | -------- | ------- | --------- |
+| 1    | 18 (18/0/0)   | 540     | 13.0s    | 16.9s   | 8.6s      |
+| 2    | 30 (26/4/0)   | 1075    | 17.3s    | 33.6s   | 17.2s     |
+| 3    | 42 (34/6/2)   | 2070    | 18.7s    | 64.7s   | 33.1s     |
+
 
 Checked against ten logged sessions in `../_meta/Logs/` (2026-08-02/03, pre-horde build:
 6/10/14 gatekeepers at 90 HP, so Wave 1's pool is identical at 540 and compares directly). Both
@@ -331,6 +364,8 @@ log `[Player] took 4 damage`, the prefab-drift build where gatekeepers hit at 22
 the untouched-Hatch triple clear came from there.
 
 ---
+
+
 
 ## 2.8 Archetypes to watch
 

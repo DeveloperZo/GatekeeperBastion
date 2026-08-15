@@ -1,3 +1,4 @@
+using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -8,7 +9,8 @@ namespace GatekeeperBastion.Game
     /// <summary>LOCAL-OWNER (puppet): a visible Boarder for everyone except its owner.
     /// Owner-authoritative NetworkTransform. Capsule collider + PlayerHealth so the host
     /// targeting set can see a remote player. Copies the local rig's position and yaw each
-    /// LateUpdate. Owner collider stays off so it does not double-physics with the FPS rig.</summary>
+    /// LateUpdate. Owner collider stays off so it does not double-physics with the FPS rig.
+    /// A non-host owner at 0 HP waits on an additive Ship and embarks in Hatch-bank Prep.</summary>
     [RequireComponent(typeof(NetworkObject))]
     [RequireComponent(typeof(NetworkTransform))]
     [RequireComponent(typeof(CapsuleCollider))]
@@ -25,6 +27,7 @@ namespace GatekeeperBastion.Game
         PlayerHealth _health;
         Collider _collider;
         Renderer[] _renderers;
+        GameController _game;
         #endregion
 
         #region State
@@ -37,7 +40,24 @@ namespace GatekeeperBastion.Game
         public NetworkVariable<float> Hp = new NetworkVariable<float>(
             100f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        public NetworkVariable<bool> WaitingOnShip = new NetworkVariable<bool>(
+            false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         public PlayerHealth Body => _health;
+
+        /// <summary>This machine's player object avatar, or null until spawned.</summary>
+        public static NetPlayerAvatar LocalOwner
+        {
+            get
+            {
+                var nm = NetworkManager.Singleton;
+                if (nm == null || !nm.IsListening) return null;
+                if (!nm.ConnectedClients.TryGetValue(nm.LocalClientId, out var client))
+                    return null;
+                var po = client.PlayerObject;
+                return po != null ? po.GetComponent<NetPlayerAvatar>() : null;
+            }
+        }
         #endregion
 
         #region Unity Lifecycle
@@ -55,6 +75,7 @@ namespace GatekeeperBastion.Game
             base.OnNetworkSpawn();
             _renderers = GetComponentsInChildren<Renderer>(true);
             Hp.OnValueChanged += OnHpChanged;
+            WaitingOnShip.OnValueChanged += OnWaitingChanged;
             ApplyOwnerPresentation();
 
             if (IsOwner)
@@ -68,6 +89,12 @@ namespace GatekeeperBastion.Game
             {
                 if (_health != null)
                     Hp.Value = _health.Hp;
+                if (_game == null)
+                {
+                    var session = NetworkManager.GetComponent<NetSession>();
+                    if (session != null)
+                        Bind(session.Game);
+                }
                 SyncRegistration();
             }
         }
@@ -75,6 +102,7 @@ namespace GatekeeperBastion.Game
         public override void OnNetworkDespawn()
         {
             Hp.OnValueChanged -= OnHpChanged;
+            WaitingOnShip.OnValueChanged -= OnWaitingChanged;
             if (_registered)
             {
                 if (_health != null)
@@ -95,6 +123,7 @@ namespace GatekeeperBastion.Game
             }
             ApplyOwnerPresentation();
             if (!IsOwner) return;
+            if (WaitingOnShip.Value) return;
             if (_rig == null) return;
             Transform t = _rig.transform;
             transform.SetPositionAndRotation(
@@ -103,13 +132,37 @@ namespace GatekeeperBastion.Game
         }
         #endregion
 
+        #region Public API
+        /// <summary>Fixture bind when no scene <see cref="NetSession"/> exists.</summary>
+        public void Bind(GameController game)
+        {
+            _game = game;
+        }
+
+        /// <summary>Owner request: return from the Ship wait into the live Run.</summary>
+        public void RequestEmbark()
+        {
+            RequestEmbarkServerRpc();
+        }
+        #endregion
+
         #region Private
         void SyncHp()
         {
             if (_health == null) return;
             float current = _health.Hp;
-            if (Hp.Value == current) return;
-            Hp.Value = current;
+            if (Hp.Value != current)
+                Hp.Value = current;
+            TryMarkWaiting(current);
+        }
+
+        void TryMarkWaiting(float current)
+        {
+            if (current > 0f) return;
+            if (WaitingOnShip.Value) return;
+            if (IsOwner) return;
+            WaitingOnShip.Value = true;
+            Log.Event(Tag, "client down → ship clientId=" + OwnerClientId);
         }
 
         void SyncRegistration()
@@ -150,6 +203,38 @@ namespace GatekeeperBastion.Game
             if (_collider != null)
                 _collider.enabled = !hide;
         }
+
+        void TryAcceptEmbark()
+        {
+            if (!WaitingOnShip.Value) return;
+
+            var sim = _game != null ? _game.Sim : null;
+            if (sim == null) return;
+
+            if (sim.Phase != RunPhase.Tethered)
+                return;
+
+            if (sim.Assault != AssaultState.Prep)
+            {
+                Log.Event(Tag, "embark refused — Assault is live clientId=" + OwnerClientId);
+                return;
+            }
+
+            if (sim.Mode != WaveMode.HatchBank)
+            {
+                Log.Event(Tag, "embark refused — not Hatch-bank Prep clientId=" + OwnerClientId);
+                return;
+            }
+
+            if (_health != null)
+            {
+                _health.HealToFull();
+                Hp.Value = _health.Hp;
+            }
+            WaitingOnShip.Value = false;
+            Log.Event(Tag, "client embark hatch-bank clientId=" + OwnerClientId);
+            EmbarkAcceptedClientRpc();
+        }
         #endregion
 
         #region Events
@@ -159,6 +244,31 @@ namespace GatekeeperBastion.Game
             if (_rigHealth == null) return;
             _rigHealth.ApplyReplicatedHp(next);
             if (previous <= 0f && next > 0f)
+                _rigHealth.ResetToSpawn();
+        }
+
+        void OnWaitingChanged(bool previous, bool next)
+        {
+            if (!IsOwner) return;
+            if (next && !previous)
+                NetShipWait.Enter();
+            else if (!next && previous)
+                NetShipWait.Exit();
+        }
+
+        [Rpc(SendTo.Server)]
+        void RequestEmbarkServerRpc()
+        {
+            if (!IsServer) return;
+            TryAcceptEmbark();
+        }
+
+        [Rpc(SendTo.Owner)]
+        void EmbarkAcceptedClientRpc()
+        {
+            if (NetShipWait.IsActive)
+                NetShipWait.Exit();
+            if (_rigHealth != null)
                 _rigHealth.ResetToSpawn();
         }
         #endregion

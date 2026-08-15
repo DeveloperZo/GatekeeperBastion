@@ -5,17 +5,21 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>HOST / CLIENT: Bastion-scene session. Starts a host or joins 127.0.0.1 over
+    /// <summary>HOST / CLIENT: Bastion-scene session. Starts a host or joins over
     /// UnityTransport. Scene management stays off — both instances load Bastion themselves.
-    /// No statics; consumers take this through a serialized GameController.Net reference.</summary>
+    /// No statics; consumers take this through a serialized GameController.Net reference.
+    /// Menu host/join arrives via <see cref="NetJoinIntent"/> consumed in Awake.</summary>
     [RequireComponent(typeof(NetworkManager))]
     [RequireComponent(typeof(UnityTransport))]
+    [DefaultExecutionOrder(-100)]
     public sealed class NetSession : MonoBehaviour
     {
         #region Constants
         const string Tag = "Net";
+        const string BindAllAddress = "0.0.0.0";
         const string LoopbackAddress = "127.0.0.1";
-        const ushort LoopbackPort = 7777;
+        const ushort DefaultPort = 7777;
+        const int ConnectTimeoutMs = 4000;
         #endregion
 
         #region Inspector
@@ -40,6 +44,13 @@ namespace GatekeeperBastion.Game
         NetworkManager _nm;
         UnityTransport _transport;
         NetRunMirror _mirror;
+        string _connectAddress;
+        ushort _connectPort;
+        bool _becamePeer;
+        bool _returningToMenu;
+        NetJoinIntent.Kind _pendingKind;
+        string _pendingAddress;
+        ushort _pendingPort;
         #endregion
 
         #region Properties
@@ -94,7 +105,23 @@ namespace GatekeeperBastion.Game
                 _nm.NetworkConfig.PlayerPrefab = _avatarPrefab;
 
             _nm.OnClientConnectedCallback += OnClientConnected;
+            _nm.OnClientDisconnectCallback += OnClientDisconnect;
             _nm.OnClientStopped += OnClientStopped;
+
+            // Consume here so a second Bastion load is solo. StartHost/StartClient wait for
+            // Start — NetworkManager.Awake has not run yet when this type is order -100.
+            _pendingKind = NetJoinIntent.Consume();
+            _pendingAddress = NetJoinIntent.Address;
+            _pendingPort = NetJoinIntent.Port;
+        }
+
+        void Start()
+        {
+            if (_pendingKind == NetJoinIntent.Kind.Host)
+                StartHost();
+            else if (_pendingKind == NetJoinIntent.Kind.Join)
+                StartClient(_pendingAddress, _pendingPort);
+            _pendingKind = NetJoinIntent.Kind.None;
         }
 
         void OnDestroy()
@@ -102,14 +129,16 @@ namespace GatekeeperBastion.Game
             if (_nm != null)
             {
                 _nm.OnClientConnectedCallback -= OnClientConnected;
+                _nm.OnClientDisconnectCallback -= OnClientDisconnect;
                 _nm.OnClientStopped -= OnClientStopped;
             }
         }
         #endregion
 
         #region Public API
-        /// <summary>Start a listen-server on loopback and spawn the run mirror.</summary>
-        public void StartHost()
+        /// <summary>Start a listen-server on all interfaces (default 0.0.0.0:7777) and spawn
+        /// the run mirror. 0.0.0.0 still accepts loopback, so MPPM F11 keeps working.</summary>
+        public void StartHost(string bindAddress = BindAllAddress, ushort port = DefaultPort)
         {
             if (_nm == null)
             {
@@ -122,7 +151,11 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            ConfigureTransport();
+            // Listen on bindAddress (0.0.0.0 = all NICs). Advertise loopback so
+            // SetConnectionData is not given 0.0.0.0 as a connect target — that address
+            // is what the failed same-machine join typed (log 2026-08-15 09:01:41).
+            string advertise = bindAddress == BindAllAddress ? LoopbackAddress : bindAddress;
+            ConfigureTransport(advertise, port, bindAddress);
             if (!_nm.enabled) _nm.enabled = true;
             EnsurePrefabsRegistered();
             if (!_nm.StartHost())
@@ -131,12 +164,15 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            LogSessionSnapshot("host started localId=" + _nm.LocalClientId);
+            LogSessionSnapshot("host started localId=" + _nm.LocalClientId
+                + " bind=" + bindAddress + ":" + port
+                + " join=" + advertise + ":" + port);
             SpawnMirror();
         }
 
-        /// <summary>Join 127.0.0.1:7777. The host owns the run; this instance must not board.</summary>
-        public void StartClient()
+        /// <summary>Join address:port. The host owns the run; this instance must not board.
+        /// F11 uses 127.0.0.1:7777 as the editor/dev fallback.</summary>
+        public void StartClient(string address, ushort port = DefaultPort)
         {
             if (_nm == null)
             {
@@ -149,16 +185,28 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            ConfigureTransport();
+            if (!NetJoinIntent.IsJoinableAddress(address))
+            {
+                _connectAddress = address;
+                _connectPort = port;
+                RefuseJoin("0.0.0.0 is a listen address — use 127.0.0.1 on this machine or the host LAN IPv4");
+                return;
+            }
+
+            _connectAddress = address;
+            _connectPort = port;
+            _becamePeer = false;
+            ConfigureTransport(address, port);
             if (!_nm.enabled) _nm.enabled = true;
             EnsurePrefabsRegistered();
             if (!_nm.StartClient())
             {
                 Log.Warn(Tag, "StartClient refused — NetworkManager.StartClient returned false.");
+                RefuseJoin("StartClient returned false");
                 return;
             }
 
-            Log.Event(Tag, "client starting — host owns the run");
+            Log.Event(Tag, "client starting — host owns the run address=" + address + ":" + port);
             if (_game != null && _game.Spawner != null)
             {
                 int wiped = _game.Spawner.DespawnAllLive();
@@ -189,17 +237,35 @@ namespace GatekeeperBastion.Game
         #endregion
 
         #region Private
-        void ConfigureTransport()
+        void ConfigureTransport(string address, ushort port, string listenAddress = null)
         {
             if (_transport == null) _transport = GetComponent<UnityTransport>();
             if (_transport == null)
             {
-                Log.Warn(Tag, "no UnityTransport — cannot bind " + LoopbackAddress + ":" + LoopbackPort);
+                Log.Warn(Tag, "no UnityTransport — cannot bind " + address + ":" + port);
                 return;
             }
             if (_nm != null && _nm.NetworkConfig.NetworkTransport == null)
                 _nm.NetworkConfig.NetworkTransport = _transport;
-            _transport.SetConnectionData(LoopbackAddress, LoopbackPort);
+            _transport.ConnectTimeoutMS = ConnectTimeoutMs;
+            if (string.IsNullOrEmpty(listenAddress))
+                _transport.SetConnectionData(address, port);
+            else
+                _transport.SetConnectionData(address, port, listenAddress);
+        }
+
+        void RefuseJoin(string reason)
+        {
+            string address = string.IsNullOrEmpty(_connectAddress)
+                ? "?"
+                : _connectAddress + ":" + _connectPort;
+            Log.Event(Tag, "join refused reason=" + reason + " address=" + address);
+            // Fixtures spawn NetSession with no GameController; do not dump the test into MainMenu.
+            if (_game == null) return;
+            NetJoinIntent.LastError = "Could not reach " + address + " — " + reason;
+            if (_returningToMenu) return;
+            _returningToMenu = true;
+            SceneFlow.LoadMainMenu();
         }
 
         /// <summary>After NetworkManager.Awake has built the authored list, add any missing
@@ -275,6 +341,8 @@ namespace GatekeeperBastion.Game
 
         void OnClientConnected(ulong clientId)
         {
+            if (_nm != null && !_nm.IsServer && clientId == _nm.LocalClientId)
+                _becamePeer = true;
             if (_nm != null && _nm.IsServer
                 && _nm.ConnectedClients.TryGetValue(clientId, out var client)
                 && client.PlayerObject != null)
@@ -282,6 +350,9 @@ namespace GatekeeperBastion.Game
                 var verbs = client.PlayerObject.GetComponent<NetVerbs>();
                 if (verbs != null)
                     verbs.Bind(_game);
+                var avatar = client.PlayerObject.GetComponent<NetPlayerAvatar>();
+                if (avatar != null)
+                    avatar.Bind(_game);
             }
             if (_nm == null) return;
             if (_nm.IsServer && clientId == _nm.LocalClientId)
@@ -298,11 +369,23 @@ namespace GatekeeperBastion.Game
                 + " role=client");
         }
 
+        void OnClientDisconnect(ulong clientId)
+        {
+            if (_nm == null || _nm.IsServer) return;
+            if (clientId != _nm.LocalClientId) return;
+            if (_becamePeer) return;
+            string reason = _nm.DisconnectReason;
+            if (string.IsNullOrEmpty(reason)) reason = "timeout";
+            RefuseJoin(reason);
+        }
+
         void OnClientStopped(bool wasHost)
         {
             _mirror = null;
             Log.Event(Tag, "session stopped");
             if (wasHost) return;
+            if (_returningToMenu) return;
+            if (_game == null) return;
             SceneFlow.LoadMainMenu();
         }
         #endregion

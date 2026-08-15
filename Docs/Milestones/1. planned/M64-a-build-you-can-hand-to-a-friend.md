@@ -3,7 +3,7 @@
 <!--
 Status: later
 Update trigger: when a gate item is added or retired, when the transport choice changes, or when a friends session finds a failure the gate did not catch
-Last updated: 2026-08-14
+Last updated: 2026-08-15
 -->
 
 The **Friends Alpha gate**: one checklist that says whether a build is safe to send, and an
@@ -11,7 +11,9 @@ editor check that fails the ones a machine can judge. Nothing here is a feature.
 so a friends session is spent playing rather than troubleshooting, and so "is it ready"
 stops being a feeling.
 
-**M58 and M60 close against this gate.** A build that fails any red item is not sent.
+**M60 closes against this gate.** M58 closed 2026-08-15 on player-build Host/Join connect
+(local Player present); the player-build networked-kill and dual-box fight readability
+rows below are what that close deferred. A build that fails any red item is not sent.
 
 ## Story
 
@@ -118,15 +120,22 @@ connections, and detecting that costs an evening.
     `-screen-fullscreen 0 -screen-width 1280 -screen-height 720 -force-d3d11`, as the escape
     hatch for the display and GPU cases the gate cannot predict. The Unity resolution dialog
     was removed after 2019.1 and does not exist to fall back on.
+18. **Player-build networked kill (deferred from M58, Zo 2026-08-15).** Two player builds
+    (or player + editor): Host / Join, client kills one server-spawned gatekeeper, death on
+    both screens. Both windows show fight HUD and muzzle / hit feedback — connect-only is
+    not enough to send.
+19. **Dual-box chrome.** `Tools/player-session/run.ps1` launches with normal window
+    chrome (title bar, min/max). `-popupwindow` is rejected for eyes-on; it hid those
+    handles on the 2026-08-15 dual-box.
 
 ### Amber, recorded and sent anyway
 
-18. **SmartScreen will warn**, because the exe is unsigned. A certificate is the only real
+20. **SmartScreen will warn**, because the exe is unsigned. A certificate is the only real
     fix and is not worth it yet. The mitigation is the send message.
-19. **Antivirus may quarantine the download**, which the friend sees as a missing file
+21. **Antivirus may quarantine the download**, which the friend sees as a missing file
     rather than a warning. Check the build on VirusTotal before sending and name what to
     whitelist.
-20. **The one-page send message ships with the build** and covers: extract the whole folder
+22. **The one-page send message ships with the build** and covers: extract the whole folder
     first, SmartScreen More info then Run anyway, what to whitelist, the host ticks both
     Private and Public on the firewall prompt, where to report a problem, and the
     `Player.log` path.
@@ -140,9 +149,9 @@ failure.
 `PlayerSettings` and build-profile flags to JSON, so the shell check has something to read.
 Same sentinel pattern as `gkb_verify_request.txt`.
 
-**Change** `Tools/verify/run.sh` to call it. **Change** M58 and M60 to close against this
-gate. Relay as the internet path and Steam as deferred are already in
-`../../Decisions.md` (2026-08-14).
+**Change** `Tools/verify/run.sh` to call it. **Change** M60 to close against this gate
+(M58 already closed on connect). Relay as the internet path and Steam as deferred are
+already in `../../Decisions.md` (2026-08-14).
 
 Rejected: **a code-signing certificate.** Amber item, real cost, no benefit until there are
 strangers.
@@ -160,14 +169,15 @@ per the kill criterion.
 
 1. Criteria 4 to 12 — `Tools/verify/run.sh` red on a deliberately bad build (flip
    Development Build on) and green on a good one. A gate that cannot fail is not a gate.
-2. Criteria 13 to 17 — one full dry run on a second machine, from zip to a joined session,
-   with the profile folders deleted first.
+2. Criteria 13 to 19 — one full dry run on a second machine, from zip to a joined session
+   with a networked kill visible on both screens, profile folders deleted first; dual-box
+   harness has normal window chrome.
 3. Criterion 15 — start a client with no host running and confirm a named failure inside
    ten seconds.
 
 ## Watch
 
-- **The human half is the half that rots.** Machine items stay true; items 13 to 17 get
+- **The human half is the half that rots.** Machine items stay true; items 13 to 19 get
   skipped when a send feels urgent. That is exactly when they matter.
 - **The gate is not a quality bar for the game.** It says the build is operable, not that it
   is fun. Do not let a green gate stand in for a played session.
@@ -177,7 +187,8 @@ per the kill criterion.
 
 ## Depends on / Unblocks
 
-**Depends on nothing.** The document and the check can land before M58.
+**Depends on M58** (player-build Host/Join exists). Document and machine checks can still
+land without a friends send.
 
-**Gates M58 and M60**, and is the marker for the alpha sentence: two friends install a build,
+**Gates M60**, and is the marker for the alpha sentence: two friends install a build,
 join without Zo touching a keyboard, play a full run, and see an ending.

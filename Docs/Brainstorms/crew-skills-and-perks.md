@@ -5,7 +5,7 @@ Purpose: The CREW QUARTERS console — the player beyond weapon and ship. The bu
 system graduated to M70; the RPG attribute tracks and the unbuilt 5-skill pairing are parked.
 Status: brainstorm
 Update trigger: when M70 ships, or when a parked entry is revived or a remaining entry graduates.
-Last updated: 2026-08-14
+Last updated: 2026-08-15
 -->
 
 ## What this covers
@@ -50,12 +50,16 @@ are decided there. The milestone is the record.
 The four tracks and the 5-skill pairing stay **parked** as record below.
 XP-as-crew-currency stays **cut**.
 
-## Open — blocked until decided
+## Open — graduated
 
-Nothing open. The one-equipped-or-several question was answered in `M70` first as
-one-equipped, then recut 2026-08-14 (Zo) to three slots — Crew (`G`, outward), Personal
-(`H`, on you), Passive (a rule, never a number) — with the overturn reasoning recorded on
-that file.
+**Boarder Protocols** (Zo, 2026-08-15): accepted and graduated the same day — `M70`
+recut as the Default Protocol, and every specialist protocol is its own milestone.
+[`boarder-protocols.md`](boarder-protocols.md) (Graduation) is the record; the
+three-slot grammar lives on inside protocols as `G`/`H`/Passive with twists later.
+
+The one-equipped-or-several question closed at one equipped protocol: the 2026-08-14
+three-free-slots recut was itself superseded by the protocol structure the next day,
+with the reasoning recorded in the brainstorm's "Recut 2026-08-15" note.
 
 ## Ideas
 
@@ -64,14 +68,19 @@ that file.
 The stealth-layer entry (shared visibility layer, whoever-chose-the-shift-is-favoured, the
 Cloaker interplay, the Limbo/Mordekaiser comp conclusions, its graduation test and kill
 criteria) and the trade-filter entry (Overclock, Anchor, Recall, Ping) both moved whole
-into [`M70`](../Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md). The milestone is
-the record: roster picked there, Overclock rejected there by name, the layer-side
-Wave-composition question carried there as open.
+into `M70` (2026-08-14), and the 2026-08-15 protocol recut moved them again:
+[`boarder-protocols.md`](boarder-protocols.md) is now the spec of record for the layer
+(VEIL's Cloak), Ping, and Recall; Anchor ships on the recut
+[`M70`](../Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md); Overclock stays
+rejected by name on that file.
 
 ### Experience as the CREW QUARTERS currency (Zo, 2026-08-12)
 
 **Cut the same day.** CREW now has a job (burst abilities). A second wallet was the wrong
-lever; see Decided.
+lever; see Decided. The cut now stands whole: the Boarder Protocols unlock model
+(Zo, 2026-08-15) is deed counters — the more you do the thing, the more it unlocks —
+with no XP field in any form; salvage stays the only wallet. Recorded in
+[`boarder-protocols.md`](boarder-protocols.md).
 
 ### Specialization with a stark hole (Zo, 2026-08-12)
 

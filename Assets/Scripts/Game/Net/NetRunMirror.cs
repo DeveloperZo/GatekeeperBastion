@@ -128,6 +128,8 @@ namespace GatekeeperBastion.Game
         [ClientRpc]
         void ShowEndScreenClientRpc(EndSummary summary)
         {
+            if (NetShipWait.IsActive)
+                NetShipWait.Exit();
             _lastEnd = summary;
             _hasEnd = true;
             Log.Event(Tag, "end kind=" + (byte)summary.Kind

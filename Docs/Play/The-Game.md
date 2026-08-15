@@ -6,7 +6,7 @@ is, and why the three kinds exist. Hand-written prose; no tables of numbers.
 Every number, key, weapon and Wave lives in Field-Manual.md, which is generated.
 Status: working
 Update trigger: when the loop, the wager, or the Run-ender changes.
-Last updated: 2026-08-13
+Last updated: 2026-08-15
 -->
 
 You are the **Boarder**. Your Ship cuts into a garrisoned **Bastion** and siphons it for
@@ -26,8 +26,9 @@ pick your ground, or stand at a terminal and think.
 Then they come — in **groups**, with a gap between them. Kill them and the Salvage sits
 Unbanked until a Hatch-bank. `+/-` then `E` then `T` at a field terminal starts that
 terminal's next Wave; the same keys at the Hatch start a Hatch-bank. A Run is a fixed number of
-field Waves. Clear them and the door opens; Unbanked stays until you Hatch-bank. How many:
-[Field Manual](Field-Manual.md).
+field Waves. Clear them and the door opens; Unbanked stays until you Hatch-bank. Walk through
+to **Master Control** in the Control Room: survive its Hatch-bank and the Run is **Escaped**.
+Clearing Wave 5 does not. How many: [Field Manual](Field-Manual.md).
 
 ## The wager
 
@@ -51,8 +52,8 @@ A **Hunter** will never touch the Hatch. It wants you, it is faster than your wa
 slower than your sprint, and it dies quickly. It is the reason you cannot park in front
 of the Hatch and hold the trigger.
 
-A **Ram** will never touch you. You can empty a clip into its back and it will not turn
-around. It is walking to the Hatch, and if it gets there it takes a serious bite. It is
+A **Ram** hunts you on a field-terminal Wave; shooting it will not shout. On a Hatch-bank it
+walks to the Hatch and never turns. It takes a serious bite if it arrives. It is
 slow. That slowness is the offer: you have time to deal with it, if you spend that time
 on it.
 

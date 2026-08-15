@@ -15,7 +15,8 @@ Damage, clip, cadence, range and prices: [Field Manual](Field-Manual.md).
 ## Two slots
 
 You carry a **Primary** and a **Secondary**. That is the loadout you can fill. There is a
-third slot, the **Drone**. Nothing fills it. Selecting it does nothing.
+third slot, the **Drone** bay. It holds a payload, not a gun. Today that payload is the
+**Decoy**, bought at FABRICATION.
 
 A weapon belongs to exactly one slot, permanently. Which Secondary and which Primary is
 the shape of the fight. You can run with only the Secondary. If you own no weapon at all,
@@ -35,7 +36,7 @@ both free. Which Secondary you take is already a build choice.
 
 ## What an upgrade purchase does
 
-Every Primary has its own **upgrade wheel**, bought at the ARMORY. Its spokes are
+Every shop weapon has its own **upgrade wheel**, bought at the ARMORY. Its spokes are
 **Reload**, **Clip**, **Damage**, **Fire Rate** and **Ability**, arranged in a ring. You
 centre one spoke as your **upgrade focus**, and a purchase pays out by distance around
 the ring: most to the spoke you centred, less to each neighbour, nothing to the two
@@ -50,9 +51,10 @@ cannot be bought; rotate off it.
 
 ## Abilities
 
-Every weapon carries one activated ability, on the same binding for all of them. The HUD
-names it and counts the cooldown. How hard it hits depends on that weapon's Ability
-spoke. At zero points it still works, at its floor. An ability cannot be used mid-reload.
+Every shop weapon except **SEC-D** carries one activated ability, on the same binding for all
+of them. The HUD names it and counts the cooldown. How hard it hits depends on that weapon's
+Ability spoke. At zero points it still works, at its floor. An ability cannot be used
+mid-reload. SEC-D has none; its Ability spoke cannot be bought.
 
 - **BR-12 — Concussive Breach.** Shoves Gatekeepers back out of a cone in front of you.
 - **MR-35 — Pin Shot.** Hits charge a meter. The shot that completes it pins whatever is
@@ -91,8 +93,8 @@ The Bastion asks three questions at once and your Primary answers one of them we
 
 - **Hunters** run straight at you and die fast. A weapon that hits hard up close answers
   them.
-- **Rams** walk to the Hatch, ignore you, cannot be provoked. You want reach and damage
-  per shot.
+- **Rams** hunt you on a field-terminal Wave and walk to the Hatch on a Hatch-bank. Shooting
+  them never shouts. You want reach and damage per shot.
 - **Defaults** march on the Hatch, turn if you hurt them, and line up in corridors, which
   is where a shot that continues through bodies pays.
 

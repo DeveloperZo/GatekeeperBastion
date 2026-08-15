@@ -5,7 +5,7 @@ Purpose: the Boarder's working knowledge of the game — volumes of related entr
 Builder path stays Docs/Play/ (M28 language lint). Player-facing name is Compendium.
 Status: working
 Update trigger: when a volume or entry is added or removed, or when the in-game reader ships (M62).
-Last updated: 2026-08-13
+Last updated: 2026-08-15
 Builder notes (omitted in-game): Gaps sections are builder audit; the reader strips them
 and HTML comments. Countable facts live only in Field-Manual.md (Tools/docgen/run.sh
 --check). Until pause opens these volumes, this folder is the Compendium.
@@ -28,8 +28,8 @@ hours in order.
 
 ## II. A Run
 
-One trip out and back. [A Run](A-Run.md) is embark, Prep, the draw, Assault, and the two
-endings. [Waves](Waves.md) is how the room gets worse. [Intensity](Intensity.md)
+One trip out and back. [A Run](A-Run.md) is embark, Prep, intensity, Assault, Hatch-bank,
+and Master Control for **Escaped**. [Waves](Waves.md) is how the room gets worse. [Intensity](Intensity.md)
 is the only wager, and it is honest: more of the same, not a different fight.
 [Salvage](Salvage.md) is the only currency. Kills fill Unbanked; a Hatch-bank converts it to the ship.
 [Staying Alive](Staying-Alive.md) is tactics traced to the rule that makes each one work.

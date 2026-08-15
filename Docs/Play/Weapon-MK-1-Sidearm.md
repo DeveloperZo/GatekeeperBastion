@@ -48,5 +48,4 @@ The MK-1 has an upgrade ring (strength Reload, weakness Damage). Purchases cost
 - It is free but must still be bought. A new campaign that never opens the ARMORY fights the entire Bastion with the improvised cutter for no stated reason.
 - Its main long-term value is as a swap target during your Primary's reload. Nothing in the game suggests using the Secondary this way.
 - Swapping to it mid-reload cancels the Primary's reload progress permanently, so the swap is only free if you were not already reloading.
-- Its upgrade wheel is unbuyable, so the ARMORY shows an upgrade the sidearm can never take, with nothing saying it is unfinished rather than unaffordable.
 - Falloff starts at 12 m; past maximum range it does nothing, with no visible cue where that line is.

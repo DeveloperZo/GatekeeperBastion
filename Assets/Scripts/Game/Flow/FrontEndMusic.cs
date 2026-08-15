@@ -2,9 +2,10 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>One looping front-end track across Splash → MainMenu. Scene
-    /// <c>Background Music</c> sources join or yield to the live host; Ship/Bastion
-    /// call <see cref="Stop"/> so combat is silent until the menu returns.</summary>
+    /// <summary>One looping Stardust Drifter host across Splash → MainMenu. Scene
+    /// <c>Background Music</c> sources join or yield to the live host. Continue /
+    /// Start / Host / Join call <see cref="Stop"/>. Ship/Bastion music is
+    /// <see cref="LevelMusic"/> (Whispers of the Void).</summary>
     public static class FrontEndMusic
     {
         const string HostName = "Background Music";

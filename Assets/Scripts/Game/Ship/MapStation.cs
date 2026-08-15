@@ -49,7 +49,7 @@ namespace GatekeeperBastion.Game
             unchecked
             {
                 return base.ContentHash(m) * 397 ^ _startWave * 17 ^ (_embarking ? 1 : 0) ^ (_loadFailed ? 2 : 0)
-                    ^ (_mapOpen ? 1 << 12 : 0);
+                    ^ (_mapOpen ? 1 << 12 : 0) ^ (NetShipWait.IsActive ? 1 << 13 : 0);
             }
         }
 
@@ -69,6 +69,16 @@ namespace GatekeeperBastion.Game
             if (_startWave < 1) _startWave = 1;
             if (_startWave > deepest) _startWave = deepest;
 
+            if (NetShipWait.IsActive)
+            {
+                _body.ShowStartWavePicker(false);
+                _body.ShowWarnings(false, false);
+                _body.BindEmbark("EMBARK", () => TryEmbark(m));
+                _body.ShowLoadFailed(false);
+                return;
+            }
+
+            _body.ShowStartWavePicker(true);
             _body.SetStartWaveLine(StartWaveLine(_startWave, deepest));
             _body.BindWaveControls(
                 $"  {_startWave}  ",
@@ -86,6 +96,18 @@ namespace GatekeeperBastion.Game
 
         void TryEmbark(MetaState m)
         {
+            if (NetShipWait.IsActive)
+            {
+                var avatar = NetPlayerAvatar.LocalOwner;
+                if (avatar == null)
+                {
+                    Log.Event("Net", "embark refused — no avatar");
+                    return;
+                }
+                avatar.RequestEmbark();
+                return;
+            }
+
             if (_embarking) return;
             GameSession.PendingStartWave = _startWave;
             Log.Event("Ship",

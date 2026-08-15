@@ -3,9 +3,9 @@
 Sci-fi wave-defense FPS. Unity 6, PC/Steam, first-person. The Boarder is the IQ astronaut
 with Synty guns; Ship desks and the Bastion kit are dressed (M61-2 closed 2026-08-14:
 scaler-2 station rooms, sliding doors, bulkhead Hatch). Solo playable;
-host-client co-op exists over UnityTransport loopback (F10/F11, editor/dev). A friends
-session (install a build, join without the developer, five-Wave run, end screen) is the
-alpha gate and is not shipped.
+host-client co-op exists over UnityTransport (Main Menu Host / Join typed IPv4; F10/F11
+stay the editor fallback). A friends session (install a build, join without the developer,
+five-Wave run, end screen) is the alpha gate and is not shipped.
 
 Your ship cuts into a **Bastion** — a garrisoned alien vessel — and siphons it for Salvage.
 You are the **Boarder**. You fight inside it, holding the **Hatch**, the umbilical back to
@@ -15,14 +15,15 @@ your ship, while the **Gatekeepers** who hold the Bastion come to take it back. 
 ## The pillars
 
 **The player sets both the pace and the stake, and the game supplies neither.** Nothing
-starts until you Interact at a field terminal, or press T at the Hatch. The clock never
-pays. Juice is a bet you place at the trigger before you see what you bought.
+starts until you juice, select with `E`, and press `T` at a field terminal, Master Control,
+or the Hatch. The clock never pays. Juice is a bet you place at the trigger before you see
+what you bought.
 
 **Every Gatekeeper kind is defined by what it refuses to do.** A Hunter can never hurt the Hatch.
 A Ram never turns when shot. On a Hatch-bank it never hunts you; on a field-terminal Wave it
 does. These are rules in code, not tuning values, so no balance pass can soften one by accident.
 
-**The weapon is the build.** Progression is a weapon and its Tiers, not a stat sheet.
+**The weapon is the build.** Progression is a weapon and its upgrade wheel, not a stat sheet.
 Attributes are a side investment and stay cheap and slow on purpose.
 
 **Death is the only thing that ends a Run early.** There is no bail-out and no respawn
@@ -34,19 +35,20 @@ Boarder going down does not end the host's Run (`M49`).
 ```
                  SHIP                                    BASTION
    ┌───────────────────────────────┐        ┌──────────────────────────────────┐
-   │  ARMORY      weapon + Tiers   │        │   PREP    quiet. no income.      │
+   │  ARMORY      weapon + wheel   │        │   PREP    quiet. no income.      │
    │  CREW Q.     attributes       │        │           repair, reposition,    │
-   │  FABRICATION hatch + rig      │───────▶│           set the dial           │
-   │  NAV MAP     where, how deep  │ embark │              │ Interact          │
+   │  FABRICATION hatch + rig      │───────▶│           juice intensity        │
+   │  NAV MAP     where, how deep  │ embark │              │ E then T          │
    └───────────────────────────────┘        │              ▼                   │
                    ▲                        │   ASSAULT gatekeepers walk in from  │
                    │                        │           spawn pts. kills pay     │
-                   │  RETURN TO SHIP        │           Unbanked; dial locked. │
-                   │  (died, or stripped    │              │                   │
-                   │   the bastion)        │              ▼                   │
+                   │  RETURN TO SHIP        │           Unbanked; intensity locked│
+                   │  (died, or Master      │              │                   │
+                   │   Control survived)    │              ▼                   │
                    └────────────────────────┤   wave clear ──▶ PREP  (xN)      │
-                       Hatch-bank converts  │   hatch breached ──▶ run over    │
-                       Unbanked to the ship │   you die        ──▶ run over    │
+                       Hatch-bank converts  │   Master Control Hatch-bank ──▶ Escaped│
+                       Unbanked to the ship │   hatch breached ──▶ run over    │
+                                            │   you die        ──▶ run over    │
                                             └──────────────────────────────────┘
 ```
 
@@ -105,11 +107,12 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 and `Roadmap.md` before starting work. **If you have never played it**, start instead with the Compendium:
 `Play/README.md` (the volumes), then `Play/The-Game.md`. Numbers: `Play/Field-Manual.md`.
 
-**Wave dashboard:** open [`dashboard.html`](dashboard.html). Choose the `Logs` folder (or
-drop `GatekeeperBastion_*.log`). Parses in the browser: mean live by era, per-weapon and
-per-kind kill share, spend/SKU, salvage ledger, hatch pressure, ability credit, and
-editable qualitative scores. Far-wall / `hatchDist` is on the kill line; `wave-report`
-prints median and far-wall share per kind.
+**Dashboard:** open [`dashboard.html`](dashboard.html). **Focus** / **Project** read
+[`dashboard-data.js`](dashboard-data.js) (regen with `Tools/dashboard-data/run.ps1`) —
+lane caps, milestones, commits, outstanding questions, rule-based next focus.
+**Session** chooses the `Logs` folder (or drop `GatekeeperBastion_*.log`) and parses in
+the browser: mean live by era, kills, spend/SKU, hatch pressure, ability credit. Far-wall
+/ `hatchDist` is on the kill line; `wave-report` prints median and far-wall share per kind.
 
 ### Three standing rules
 

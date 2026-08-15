@@ -5,7 +5,7 @@ Purpose: Governs how code in this project is structured, named and written. Rule
 Status: working
 Authority: MASTER REFERENCE for how code is written. Docs/Architecture.md remains the reference for what this codebase is.
 Update trigger: when a rule is added, changed or retired, or when a new audit finds a rule nobody follows.
-Last updated: 2026-08-11
+Last updated: 2026-08-15
 -->
 
 ## Never do
@@ -23,7 +23,10 @@ Last updated: 2026-08-11
 - **Use `?.`, `??`, `??=`, `is null` or `ReferenceEquals` on a `UnityEngine.Object.`**
   Only `== null`, `!= null`, `if (x)` respect Unity's lifetime check.
 - **Mutate Run or Meta state from anywhere but a `GameController` command method.**
-- **Hand-edit a generated scene.** `SceneBuilder` writes them; your edit is lost on rebuild.
+- **Run Build All to refresh a dressed Ship.** A `ShipDress` root skips the Environment
+  wipe (`../Architecture.md` gotcha 4). Bastion kit geometry already persists the same
+  way. Stations, hosts and UI are authored and survive Build All. Without `ShipDress`,
+  collider graybox is still generated.
 - **Allocate in a per-frame path** — no LINQ, no `params`, no capturing closure, no
   interpolated string, no `foreach` over an interface.
 - **Commit a partial method body or an incomplete control structure.** See *Complete unit*.
@@ -80,13 +83,16 @@ on any type not named in it fails the run. The owed list has been empty since
 singleton_allow=HatchStation
 singleton_owed=
 menu_root=GatekeeperBastion
-menu_rows=Build All Scenes,Run Verification Now,Validate Scene Bindings,Logs/Open Logs Folder,Logs/Copy Latest Log Path
+menu_rows=Record/Gameplay/This scene (F9 to stop),Record/Gameplay/Ship,Record/Gameplay/Bastion,Record/Ship Flythrough,Logs/Open Logs Folder,Logs/Copy Latest Log Path,Build/All Scenes,Build/Place Bastion Obstacles,Build/Group Bastion Geom In Open Scene,Build/Unpack Bastion Geom In Open Scene,Bake/Bastion NavMesh,Validate/Integration Check,Validate/Scene Bindings
 ```
 
-**One menu root, and every row is named above.** A `[MenuItem]` under any other root fails the
-run; a row not in `menu_rows` fails it too. **Adding a row requires permission before it is
-written**, and the ask names the row it replaces — a menu entry is a shared, permanent surface
-that outlives the reason it was added.
+**One menu root, five folders, and every row is named above.** Folders are Record, Logs,
+Build, Bake, Validate — catalog and priority bands in `../Working-Rules.md`. A `[MenuItem]`
+under any other root fails the run; a row not in `menu_rows` fails it too; a fence row
+missing from the code fails it too. Paths must be string literals (`MenuRoot + "…"` is
+invisible to the check). **Adding a row requires permission before it is written**, names
+the folder and the row it replaces, and updates this fence in the same change — a menu
+entry is a shared, permanent surface that outlives the reason it was added.
 
 `Gatekeeper/HUD/` existed until 2026-08-11. It was created by two one-shot HUD migration tools
 (`PullBastionHudToShip.cs`, `RestoreShiftArmorHealth.cs`, ~220 lines each) that should never
@@ -104,6 +110,7 @@ deleted**, which is why this list is checked rather than trusted.
 | `5-Audit-2026-08-09.md` | record | What this codebase does against the rules above, with `file:line` |
 | `6-InfinityQube-Precedence.md` | record | What was taken from InfinityQube, what was rejected, and on what evidence |
 | `7-File-Layout.md` | MANDATORY | The region order every file follows, and why the check matters more than the convention |
+| `8-Scene-Authoring.md` | MANDATORY | Scene roots, what an agent may edit, and what a scene edit must assert |
 
 **CRITICAL** means a violation breaks a load-bearing property — the Sim dependency boundary, or
 correctness against the engine. MANDATORY means it is required and a deviation needs a reason

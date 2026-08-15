@@ -12,8 +12,6 @@ namespace GatekeeperBastion.EditorTools
     /// </summary>
     public static class LogTools
     {
-        const string MenuRoot = "GatekeeperBastion/Logs/";
-
         /// <summary>Newest session file in the log directory, or null if there is none.</summary>
         static string LatestLog()
         {
@@ -35,7 +33,7 @@ namespace GatekeeperBastion.EditorTools
             }
         }
 
-        [MenuItem(MenuRoot + "Open Logs Folder", false, 100)]
+        [MenuItem("GatekeeperBastion/Logs/Open Logs Folder", false, 40)]
         public static void OpenLogsFolder()
         {
             try
@@ -56,7 +54,7 @@ namespace GatekeeperBastion.EditorTools
         // worse at reading files, and the agent reads the log itself (Docs/Working-Rules.md,
         // "Runtime bugs"). Open the folder, or copy the path and hand it over.
 
-        [MenuItem(MenuRoot + "Copy Latest Log Path", false, 101)]
+        [MenuItem("GatekeeperBastion/Logs/Copy Latest Log Path", false, 41)]
         public static void CopyLatestLogPath()
         {
             try

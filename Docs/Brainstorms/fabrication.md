@@ -111,7 +111,10 @@ ammo, it does not create it**. It also holds the ammo variable still, which is w
 the row's open question answerable — total rounds per Run stays flat and only their
 distribution moves, so a change in outcome is attributable to the second firing position
 rather than to added dps. Graduated to `M56`, folded into `M70` (the turret is an ability
-— Zo, 2026-08-14).
+— Zo, 2026-08-14), then moved out of `M70` to the future FORGE/turret slice
+(2026-08-15): the siphon spends an ammo reserve `PlayerGun` does not have, and that
+reserve is a weapons-lane decision made at the turret's own milestone
+(`boarder-protocols.md`, mechanics bill 4).
 
 ### Equipment is the second category (Zo, 2026-08-08, superseding rig-as-payload from earlier the same day)
 
@@ -150,7 +153,7 @@ Link, never restate. If a detail below matters, it lives in the milestone.
 | What | Milestone |
 |---|---|
 | The drone bay, the ghost-placement pattern, the charge model, and the decoy | `M30 — Something to pull them off the door` |
-| `UTL-H`, the turret, and the ammo-siphon cost model | `M70 — The Boarder gets a verb` (was `M56`, folded 2026-08-14) |
+| `UTL-H`, the turret, and the ammo-siphon cost model | The FORGE/turret slice (was `M56`, folded into `M70` 2026-08-14, moved out 2026-08-15 behind the ammo-reserve decision) |
 
 ## The payload roster
 
@@ -164,7 +167,7 @@ refusal grammar carried over from `closed/armory-and-weapons.md` (migrated 2026-
 | UTL-E | small targets | Mine; arms only under a crowd, so it pays for letting one form. | candidate |
 | UTL-F | killing | Yanks one body off the Hatch. | candidate |
 | UTL-G | fighting at all | Preloaded ammo box, placed; gone when drained. | picked (Zo, 2026-08-08 — see *Decided*) |
-| UTL-H | downtime | Turret; fires while you reload, walk or repair, on a modest onboard magazine and then on your reserve. | picked (Zo, 2026-08-13), graduated to `M70` (was `M56`) |
+| UTL-H | downtime | Turret; fires while you reload, walk or repair, on a modest onboard magazine and then on your reserve. | picked (Zo, 2026-08-13), waits at the FORGE/turret slice (was `M56`, then `M70`) |
 
 **Ship order for the picked rows**, if the goal is play data rather than coverage: the
 control payload graduated first (`M30`), and `UTL-C` is the damage half that follows — the

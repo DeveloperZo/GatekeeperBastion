@@ -62,8 +62,10 @@ namespace GatekeeperBastion.Game
 
             if (!MetaUpgrades.UpgradesUnlocked(m))
             {
-                row.Bind("Equipment Slot", "", "locked", "slot", "BUY", null, false,
-                    "unlocks after first lost Run");
+                // No BUY control — putting the lock line on the Shift button overlapped
+                // "Equipment Slot" / "locked slot" in the row.
+                row.Bind("Equipment Slot", "", "locked", "unlocks after first lost Run",
+                    null, null, false);
                 return;
             }
 

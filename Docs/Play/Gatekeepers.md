@@ -1,5 +1,3 @@
-<!-- Purpose: what a Gatekeeper is, how the three kinds are built, and how they path, target and arrive. / Status: working / Update trigger: when a kind is added or removed, when the targeting rule changes, or when Wave composition stops being fixed-per-Wave. / Last updated: 2026-08-09 -->
-
 # Gatekeepers
 
 Gatekeepers hold the Bastion. You are the Boarder who cut in; they are already home. They come because the siphon is theirs to stop and the Hatch is your way out — reclaim the room, cut the umbilical, throw the Boarder off. They arrive from garrison to repel an intrusion.
@@ -10,11 +8,13 @@ For every number on this page — health, damage, speed, how many of each kind a
 
 ## The three kinds
 
-| Kind | Wants | Refuses |
-|---|---|---|
-| [Default](Gatekeeper-Default.md) | you, on a Wave started at a field terminal | nothing |
-| [Hunter](Gatekeeper-Hunter.md) | you, from the moment it arrives | to touch the Hatch, ever, at any range |
-| [Ram](Gatekeeper-Ram.md) | you, on a Wave started at a field terminal | to shout, or to speed up when shot |
+
+| Kind                             | Wants                                      | Refuses                                |
+| -------------------------------- | ------------------------------------------ | -------------------------------------- |
+| [Default](Gatekeeper-Default.md) | you, on a Wave started at a field terminal | nothing                                |
+| [Hunter](Gatekeeper-Hunter.md)   | you, from the moment it arrives            | to touch the Hatch, ever, at any range |
+| [Ram](Gatekeeper-Ram.md)         | you, on a Wave started at a field terminal | to shout, or to speed up when shot     |
+
 
 Read that as a set of answers to one question: *can this thing be moved off what it is doing?* A Default can, and moving it costs you. A Hunter is already on you and cannot be moved anywhere else. A Ram hunts you and still will not shout.
 
@@ -58,7 +58,7 @@ Two rules about composition are worth carrying in your head:
 
 Later Waves also send wider groups with less time between them. The Wave gets harder in three directions — more bodies, tougher bodies, denser delivery — and only the first of those is something you chose.
 
-If you start a Run at a deeper Wave from the Ship, your first Interact delivers every Wave up to that one back to back, with no Prep in between. The overlap is intentional: you get the later Wave's composition on top of the earlier Wave's leftovers.
+If you start a Run at a deeper Wave from the Ship, your first `T` after `E` at a terminal delivers every Wave up to that one back to back, with no Prep in between. The overlap is intentional: you get the later Wave's composition on top of the earlier Wave's leftovers.
 
 ## What killing them is for
 
@@ -80,3 +80,4 @@ Being Lost ends the Run, and so does losing the Hatch. Both keep everything alre
 - Entry points rotate per group, and the game never shows you where they are or which one is next.
 - Your health does not regenerate at any point in a Run, and nothing on the Bastion restores it. Damage taken in the first Wave is still missing in the last one.
 - There are no weak points and no headshots. Where you hit a Gatekeeper does not matter.
+

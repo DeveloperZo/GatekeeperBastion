@@ -6,7 +6,7 @@ Salvage is the only currency in the game. There is nothing else to collect, no s
 
 ## How you earn it
 
-**By killing Gatekeepers, and by nothing else — until you Hatch-bank.** A kill fills Unbanked. Prep `T` at the Hatch starts a Hatch-bank Wave: drip while it is live, dump on clear. That convert is what credits the ship. The quiet of Prep earns nothing. Walking the room earns nothing. Clearing the Bastion pays no completion bonus.
+**By killing Gatekeepers, and by nothing else — until you Hatch-bank.** A kill fills Unbanked. Prep `E` then `T` at the Hatch starts a Hatch-bank Wave: drip while it is live, dump on clear. That convert is what credits the ship. The quiet of Prep earns nothing. Walking the room earns nothing. Clearing the Bastion pays no completion bonus.
 
 What one body is worth is your Scavenging level multiplied by wherever you left intensity. Those two multiply against each other, so high intensity is worth more to a player who has invested in Scavenging than to one who has not. More field Waves before the Hatch-bank convert at a higher multiplier, and the Hatch-bank fight is the Wave equal to how many you carried.
 

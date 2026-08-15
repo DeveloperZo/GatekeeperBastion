@@ -74,6 +74,15 @@ namespace GatekeeperBastion.Game
 
         public void SetStartWaveLine(string text) => UiBind.SetText(_startWaveLine, text);
 
+        /// <summary>Wait-return hides the start-wave picker — this is not a new Run.</summary>
+        public void ShowStartWavePicker(bool show)
+        {
+            UiBind.Show(_startWaveLine, show);
+            UiBind.Show(_wavePrev, show);
+            UiBind.Show(_waveValue, show);
+            UiBind.Show(_waveNext, show);
+        }
+
         /// <summary>Code writes the stepper labels — ASCII &lt; / &gt;, because LiberationSans
         /// lacks the triangle glyphs — then wires clicks and enablement.</summary>
         public void BindWaveControls(string waveValue, Action onPrev, bool prevEnabled,

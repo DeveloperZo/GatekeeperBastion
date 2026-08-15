@@ -130,7 +130,7 @@ namespace GatekeeperBastion.Game
             Log.Event("Dev", $"GrantSalvage +{amount} — banked {meta.BankedSalvage}");
         }
 
-        /// <summary>F10: start a host session on loopback. Session start, not a Dev
+        /// <summary>F10: start a host session on 0.0.0.0:7777. Session start, not a Dev
         /// mutation — does not taint. Logs <c>[Net]</c> from <see cref="NetSession"/>.</summary>
         public void StartCoopHost()
         {
@@ -142,7 +142,8 @@ namespace GatekeeperBastion.Game
             _net.StartHost();
         }
 
-        /// <summary>F11: join 127.0.0.1. Session start, not a Dev mutation — does not taint.</summary>
+        /// <summary>F11: join 127.0.0.1:7777. Editor/dev fallback, not the friends path.
+        /// Session start, not a Dev mutation — does not taint.</summary>
         public void StartCoopClient()
         {
             if (_net == null)
@@ -150,7 +151,7 @@ namespace GatekeeperBastion.Game
                 Log.Warn(Tag, "StartCoopClient refused — no NetSession wired.");
                 return;
             }
-            _net.StartClient();
+            _net.StartClient("127.0.0.1", 7777);
         }
 
         /// <summary>Own, Tier, and equip a weapon into its catalog slot, then re-push the gun if
