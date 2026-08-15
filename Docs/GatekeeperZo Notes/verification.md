@@ -73,6 +73,8 @@ Real, lower leverage. None of these blocks anything.
 | PRI-C owns the far wall | M32 | Buy PRI-C, embark Wave 3, stand at the Hatch and fire up the bore; expect far kills. Swap to MR-35 at the same Tier; expect those kills not to land. Then `F` for Railshot into a line — expect `railshot armed` / `railshot fired` Ability lines |
 | Options reach the fight | M24 | Menu OPTIONS, set sensitivity, embark, press `O` mid-Assault, confirm Gatekeepers keep moving and the change applies in the same Run. One `[Settings]` line per commit |
 | Reload discard warning | M25 | Mid-reload, read `SWAP DISCARDS THIS RELOAD`, swap, confirm the discard line. Then turn it off in options and confirm `reload paused` |
+| Juice unused on ten Runs | M55 | Kill criterion: if every post-close start-Wave line is `intensity=0`, stop. Readable off `intensity=` |
+| MK-1 Regen Surge mag after wheel points | M71 | Criterion 7: with ability points bought, the Regen Surge line's dial value changes (4 s at 0, 10 s at focus-max 50) |
 | First Run with no rig | M23 | The Hatch budget numbers assume the rig. Play one Run without buying it and see whether the door survives Wave 2 |
 | Rig prices 300 + 300 | M23 | Marked *tunable, needs play data*. Only worth an opinion after the item above |
 | Cold-start premise | M27 | Needs **another person**. Someone who has not read the wiki embarks and then says who the Gatekeepers are and what the Hatch does |

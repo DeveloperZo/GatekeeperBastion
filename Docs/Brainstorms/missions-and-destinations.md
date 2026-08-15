@@ -44,7 +44,7 @@ Link, never restate.
 | Field terminal starts one Boarder-hunt Wave; T1 door on 5th clear; Hatch invulnerable during Terminal; Hatch-bank legal after each clear | [`M52`](../Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | Unbanked pile; Hatch-bank drip / attrition / dump; 3 slots; convert multiplier | [`M53`](../Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | Master Control two-phase sequence is the win | [`M54`](../Milestones/3.%20completed/M54-master-control-is-the-win.md) |
-| Visible intensity; pay-to-juice; siphon dial retired | [`M55`](../Milestones/2.%20active/M55-pay-for-intensity.md) |
+| Visible intensity; pay-to-juice; siphon dial retired | [`M55`](../Milestones/3.%20completed/M55-pay-for-intensity.md) |
 
 The console restructure, opt-in loot delivery, “a reason the bastion is a place,” and
 *Deliver-loot-before-the-run-ends* (`../Decisions.md`) went with those four.

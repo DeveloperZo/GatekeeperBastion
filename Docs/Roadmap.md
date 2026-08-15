@@ -29,9 +29,9 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**M55** and **M71** are active.
+Active empty.
 **M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** and **M61-2**
-completed 2026-08-14. **M57** and **M58** completed 2026-08-15.
+completed 2026-08-14. **M55, M57, M58, M71** completed 2026-08-15.
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
 developer touching a keyboard, play a full five-wave run with both participating, and the
@@ -49,10 +49,11 @@ sentence.
    session exists.
 4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14 (eyes lines, Stats
-   after-numbers, solo completion). Next-Run play list is `GatekeeperZo Notes/verification.md`
+   after-numbers, solo completion), M55 juice unused on ten Runs, M71 Regen Surge mag.
+   Next-Run play list is `GatekeeperZo Notes/verification.md`
    (M31 pin, M30 decoy, M26 fight-feel, M21 opposite focuses). Not a reason to jump the queue.
 
-Planned count is **10** (cap 10). Active **2** (cap 3).
+Planned count is **10** (cap 10). Active **0** (cap 3).
 
 ## Order
 
@@ -125,10 +126,10 @@ this table — see the change log.
 | M52 | Waves start at a terminal | completed, Aug 2026 | Interact starts T1's five Boarder-hunt Waves; Hatch invulnerable; D1 on Nth clear; Wave 5 `Escaped`. Close log `14-46-59` (no `[Dev]`). AwardKill-to-bank is M53 | [`3. completed/M52`](Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | M53 | Salvage leaves through the Hatch | completed, Aug 2026 | Kills fill Unbanked; Hatch-bank 45 s drip/attrit/dump, 3 slots, fat pile ×1.25/×1.50. Close log `18-23-55` (Run clean). Stay-Prep after dump is EditMode. Harness 316/0 | [`3. completed/M53`](Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | M54 | Master Control is the win | completed, Aug 2026 | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`3. completed/M54`](Milestones/3.%20completed/M54-master-control-is-the-win.md) |
-| M55 | Pay for intensity | next | `+/-` spend 100 unbanked per step; `E` select, `T` start; HUD says Intensity; siphon dial retired; same `TetherSiphon` curve | [`2. active/M55`](Milestones/2.%20active/M55-pay-for-intensity.md) |
+| M55 | Pay for intensity | completed, Aug 2026 | `+/-` spend 100 unbanked per step; `E` select, `T` start; HUD says Intensity; siphon dial retired; same `TetherSiphon` curve | [`3. completed/M55`](Milestones/3.%20completed/M55-pay-for-intensity.md) |
 | M70 | The Default Protocol | later | CREW equips Boarder Protocols; the Default owned from the first session — STOCK doctrine (hardware as sold, seam proven by changing nothing), Anchor `G`, Bulkhead `H`, Ghost/Foresight pick-1; four tracks refunded and deleted, SaveVersion 8; verbs apply once server-side; turret moved to the FORGE slice, specialist sheets and deed spine in `Brainstorms/boarder-protocols.md` | [`1. planned/M70`](Milestones/1.%20planned/M70-the-boarder-gets-a-verb.md) |
 | M67 | Playable from zero | later | Fresh-save floor; level-zero PlayMode banks >0; null-input ends clean; composition invariants fail the suite | [`1. planned/M67`](Milestones/1.%20planned/M67-playable-from-zero.md) |
-| M71 | The sidearm joins the wheel | next | MK-1 ring D–A–R–C–F (Reload / Damage); SEC-D ring F–A–R–C–D (FireRate / Reload), Ability spoke not purchasable; Secondary-slot cost 150 + 150×t; focused never-rival holds | [`2. active/M71`](Milestones/2.%20active/M71-the-sidearm-joins-the-wheel.md) |
+| M71 | The sidearm joins the wheel | completed, Aug 2026 | MK-1 ring D–A–R–C–F (Reload / Damage); SEC-D ring F–A–R–C–D (FireRate / Reload), Ability spoke not purchasable; Secondary-slot cost 150 + 150×t; focused never-rival holds | [`3. completed/M71`](Milestones/3.%20completed/M71-the-sidearm-joins-the-wheel.md) |
 
 ## Strategy
 
@@ -147,7 +148,7 @@ garrison roster plus the three Gatekeeper bodies from that same pack. **M62** is
 Compendium from pause. M60 is Unity Relay join, gated on M51+M58, authored ahead. Starting
 bastion (M47 kit) is the demo floor.
 
-M54 closed. M55 and the FORGE/turret slice remain the field-loop rest; they stay queued
+M55 closed. The FORGE/turret slice remains the field-loop rest; it stays queued
 after the session is possible.
 
 Critical path: `M0 ✅ → M10 ✅ → M13 → M11 → M2 → M15 → M16 → M14`.

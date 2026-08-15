@@ -7,6 +7,10 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-15
 -->
 
+- 2026-08-15: **M55 and M71 completed.** Intensity juice (`+/-` Unbanked, `E` then `T`,
+  HUD Intensity); MK-1 ring D–A–R–C–F and SEC-D F–A–R–C–D with Secondary cost
+  150+150×t. Zo close; M55 kill criterion and M71 Regen Surge mag sit on
+  `GatekeeperZo Notes/verification.md`. Active 0/3.
 - 2026-08-15: **M58 completed** — Windows Development player + Main Menu Host/Join
   (`0.0.0.0` listen, typed IPv4 join); dual-box
   `Tools/player-session/run.ps1` PASS with local Player present. Criterion 4 re-cut:

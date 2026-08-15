@@ -1,10 +1,15 @@
 # M71 — The sidearm joins the wheel
 
 <!--
-Status: next
-Update trigger: when the SEC-D ability decision lands (its ring copies this pattern), or
-when the per-point table moves
+Status: completed 2026-08-15
+Update trigger: closed
 Last updated: 2026-08-15
+Closed on: Zo 2026-08-15. Gate: RingOf/TryIdentity, Mk1DamageFocus_NeverRivalsFocusedPrimaries,
+SecondaryTierCosts_LinearRamp_SumsTo8250, Mk1WheelPoints_SurviveJsonRoundTrip in
+gkb_verify_report.json 2026-08-15T02:31:18Z (SEC-D ring tests authored after that
+report). ARMORY purchase line in 12-29-44 (Dev-tainted; Zo closed). Criterion 7
+Regen Surge mag in play remains on verification.md. Shared-table kill criterion
+did not fire.
 -->
 
 The MK-1 gets an upgrade ring. Everything else — purchase command, pricing, ARMORY wheel

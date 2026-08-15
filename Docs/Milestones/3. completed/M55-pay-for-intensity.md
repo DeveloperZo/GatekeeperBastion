@@ -1,9 +1,14 @@
 # M55 — Pay for intensity
 
 <!--
-Status: next
-Update trigger: when juice cost, the intensity readout, the terminal confirm, or siphon-dial removal changes
-Last updated: 2026-08-13
+Status: completed 2026-08-15
+Update trigger: closed
+Last updated: 2026-08-15
+Closed on: Zo 2026-08-15. Gate: IntensityJuiceTests 6/0 in gkb_verify_report.json
+2026-08-15T02:31:18Z; lint-language clean 2026-08-15; HUD writes Intensity N.
+Playthrough (E/T at a trigger, juice refusals) closed by Zo; no clean session log
+on disk. Kill criterion (juice unused on ten post-close Runs) remains on
+verification.md.
 -->
 
 The siphon dial as a free Prep stepper goes away. **Intensity is a visible number on the
