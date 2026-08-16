@@ -28,11 +28,11 @@ Gatekeeper Bastion's atom, one Wave at a time:
 ```
 model    "I can hold the door if I thin the group before it lands"
   |
-action   press T, pick targets, repair, set the dial next time
+action   juice, E then T at a field terminal / Hatch / Master Control; pick targets; repair; Hatch-bank
   |
-feedback hatch HP falling, gatekeepers parked on the door, the end screen, the log
+feedback hatch HP falling, gatekeepers parked on the door, Unbanked vs Banked, the end screen, the log
   |
-model'   "eight parked is already lost" / "the deep breach is the one that matters"
+model'   "eight parked is already lost" / "Unbanked is not mine until it goes through the Hatch"
 ```
 
 **Feedback is the return path, so #6 is a dynamics problem, not a presentation one.** A full
@@ -45,7 +45,7 @@ Three channels, each with a rule:
 
 | Channel  | Rule                                                                                                                                                                                                                 | Where                         |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| The HUD  | absolute `GUI` rects only in the Bastion, never `GUILayout`; a layout exception strands the player on the end screen.                                                                                                | `../Architecture.md` gotcha 3 |
+| The HUD  | fight and end screens draw through `Game/Ui/` views (`BastionHudView`); `HudController.OnGUI` is the Dev-taint banner only. Never `GUILayout` on the Bastion HUD. | `../Architecture.md` gotcha 3 |
 | The log  | a line when a player-visible thing happened, or when a refusal must be answerable from the log alone ("I clicked BUY and nothing happened"). Once per distinct reason, never per frame. No counters, no aggregation. | `../Working-Rules.md`         |
 | The docs | anything countable is generated from the code; anything arguable is written.                                                                                                                                         | `../README.md`                |
 
@@ -84,9 +84,11 @@ Two drive, two damp, and the player holds the gain knob on one of them.
 
 ### R1 — kills → Salvage → upgrades → faster kills
 
-The progression loop, and the only reinforcing loop in the meta. `AwardKill` banks
-`floor(SalvagePerKill(Scavenging) × TetherSiphon.RewardMultiplier)` per body; Salvage buys
-upgrade wheel purchases (`Sim/Meta/WeaponWheel.cs`) and attributes (+5%/level).
+The progression loop, and the only reinforcing loop in the meta. `AwardKill` fills
+**Unbanked** (`RunSim`); a Hatch-bank drip/dump is what credits `MetaState.BankedSalvage`.
+Kill value is flat `MetaUpgrades.SalvagePerKill()` × intensity (`TetherSiphon.RewardMultiplier`).
+Banked Salvage buys upgrade wheel purchases (`Sim/Meta/WeaponWheel.cs`) and Hatch Armor.
+CREW QUARTERS does not sell attributes; Default Protocol is equipped, not bought.
 
 **A purchase is 11 points spread over three adjacent spokes, so R1's gain is no longer one
 number.** `ShipCommands.BuyWheelUpgrade` centres one upgrade spoke and awards
@@ -124,14 +126,13 @@ one, and it is what makes a Run's difficulty a fixed quantity the moment you emb
 **And it does not close at all until you have died once.** Wheel purchases and the equipment
 slot are gated on `MetaUpgrades.UpgradesUnlocked == (PodEjections >= 1)`. A first Run is
 played at whatever the loop's gain was before the loop existed. Buying a weapon is not
-gated, and attributes are deliberately exempt.
+gated. Hatch Armor and the protocol are not gated. Attribute tracks were refunded (save v8).
 
 **Two cost curves in one shop, deliberately.** Weapons are the progression and must stay
-reachable; attributes are a side investment and should get expensive. Damage, fire rate and
+reachable; Hatch Armor is the remaining doubling-curve track. Damage, fire rate and
 clip left `MetaUpgrades` for `WeaponCatalog`, `WeaponTier` (the cost curve) and
 `WeaponWheel` (the multipliers) to make that split structural rather than a matter of two
-slopes. CREW QUARTERS is four tracks now that M23 deleted Engineering:
-`UpgradeTrack` is `HatchArmor, Vitality, Stamina, Scavenging, Luck`.
+slopes. `UpgradeTrack` is `HatchArmor` only. CREW QUARTERS equips `BoarderProtocol`.
 
 ### R2 — intensity: the player's hand on the gain
 
@@ -214,9 +215,9 @@ Delays are what make the loops readable, and two of them are load-bearing.
 
 | Delay                          | Length                                        | What it does                                                                                                                                          |
 | ------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Deep breach → Hatch            | ~15s (48.5 m of z at 3.2 m/s patrol)          | The largest structural quantity in the fight (`3-Mechanics.md`).                                                                                      |
+| Deep breach → Hatch            | unknown — needs measurement (kit rooms, M61-2; graybox 48.5 m is retired) | Structure still dominates stats (`3-Mechanics.md`). The old 30×52 / 48.5 m figure is the graybox floor. |
 | R1 closing                     | once per Run                                  | A Run's difficulty is fixed at embark; no in-Run spiral.                                                                                              |
-| R1 unlocking                   | until the first death                         | Wheel purchases and the equipment slot gated on `MetaUpgrades.UpgradesUnlocked` = `PodEjections >= 1`. Buying a weapon and buying attributes are not. |
+| R1 unlocking                   | until the first death                         | Wheel purchases and the equipment slot gated on `MetaUpgrades.UpgradesUnlocked` = `PodEjections >= 1`. Buying a weapon is not. Hatch Armor and protocol are not. |
 | Inter-Wave gap on a deep start | 3s                                            | A start-Wave of N chains Waves 1..N back to back.                                                                                                     |
 | Reload                         | per weapon: MK-1 1.4s, BR-12 2.6s, MR-35 2.4s | A wheel spoke (`ReloadPerPoint = 0.98035`), so it shortens with focus.                                                                                |
 | Stamina refill                 | 1s hold + 100/18 = 6.6s                       | Sprint beats the chase and the Hunter, so unlimited sprint would be free kiting.                                                                      |
@@ -258,8 +259,10 @@ cumulative 13,000) sit far apart. On MR-35 off a 36.99 base, ten purchases all c
 Damage reach ~436 dps (arithmetic in `4-Data.md`) and a spread buy is **unknown, needs
 re-derivation**. The pre-wheel seven-Tier record below still uses 7,000 / Tier 7.
 
-Against three failed Runs' earnings at that Wave (a Run dying on Wave N banks the Waves
-below it plus ~60% of N, at 25/kill and dial 0):
+Against three failed Runs' earnings at that Wave. **This earnings table is pre-M53 / pre-juice:**
+it assumed a Run dying on Wave N banks the Waves below it plus ~60% of N. After Hatch-bank,
+down/breach wipes Unbanked; only prior convert survives. Do not treat the margins as a current
+constraint without new logs.
 
 
 | die on | earns/Run | ×3     | needs | margin |

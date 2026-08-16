@@ -14,7 +14,7 @@ A Run is one trip out to the Bastion and back. It starts on your Ship, it ends w
 
 ### Before you leave: the Ship
 
-You walk your own Ship between runs. Four consoles, each owning one subject: **ARMORY** (weapons and their Tiers), **CREW QUARTERS** (your own attributes), **FABRICATION** (the Hatch and the repair rig), and **NAV MAP** (where you go, and the button that commits you).
+You walk your own Ship between runs. Four consoles, each owning one subject: **ARMORY** (weapons and their Tiers), **CREW QUARTERS** (the protocol you embark wearing), **FABRICATION** (the Hatch, the Repair Rig, and the Decoy), and **NAV MAP** (where you go, and the button that commits you). On a friends session the Ship is shared; only the party lead's EMBARK commits the party.
 
 Whatever you are carrying when you press EMBARK is what you have for the whole Run. There is no way to change your weapons once you are aboard the Bastion — the fight-time weapon keys only switch between the slots you already carry.
 
@@ -54,13 +54,13 @@ When it clears you drop back to Prep with no timer. That is when a Hatch-bank is
 
 A Wave started at a field terminal hunts **you**. The Hatch cannot be hurt during that fight. Sitting at the Hatch earns nothing until you Hatch-bank.
 
-A Hatch-bank Wave hunts the Hatch. It is one step heavier than the last field Wave. Defaults and Thieves go for the door; Hunters still hunt you. Unbanked drips into Banked while the timer runs. Killing the Wave early, or Unbanked hitting 0, does not end it. The timer dumps whatever is left. A hatch hit also eats Unbanked.
+A Hatch-bank Wave hunts the Hatch. It is one step heavier than the last field Wave. Defaults and Thieves go for the door; Hunters still hunt you. Unbanked drips into Banked while the timer runs. Killing the Wave early, or Unbanked hitting 0, does not end it. The timer dumps whatever is left. A hatch hit also eats Unbanked. A Run has a limited number of Hatch-banks; when they are gone the Hatch refuses. How many: [Field Manual](Field-Manual.md).
 
 ### What ends a Run
 
 Exactly three things end a Run, and only three.
 
-**You die.** Your health does not come back during a Run — there is no healing, no regeneration, no pickup, no respawn. What you take, you keep until the Run ends. When it runs out you go down, and the Run is over — for solo, and for the host. If a second Boarder is in the Bastion, their down does not end the Run.
+**You die.** Your health does not come back during a Run — there is no healing, no regeneration, no pickup, no respawn. What you take, you keep until the Run ends. When it runs out you go down, and the Run is over — for solo, and for the host. If a second Boarder is in the Bastion, their down does not end the Run; they wait on the Ship and can embark again while the host is in Hatch-bank Prep.
 
 **The Hatch falls.** The Hatch is the umbilical junction back to your Ship. When its health reaches zero the Run ends on the spot, whatever else was happening, and it cannot be repaired back from zero.
 

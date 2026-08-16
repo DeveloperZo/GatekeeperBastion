@@ -1,4 +1,4 @@
-<!-- Purpose: tactics that follow from verified mechanics — how the AI, sprint, repair and weapon systems actually behave. / Status: working / Update trigger: when gatekeeper targeting, provocation, sprint/stamina, repair costs or weapon slot handling change. / Last updated: 2026-08-15 -->
+<!-- Purpose: tactics that follow from verified mechanics — how the AI, sprint, repair and weapon systems actually behave. / Status: working / Update trigger: when gatekeeper targeting, provocation, sprint/stamina, repair costs or weapon slot handling change. / Last updated: 2026-08-16 -->
 
 # Staying Alive
 
@@ -6,9 +6,9 @@
 
 Your health does not come back during a Run. The Hatch comes back only when you repair it with the Repair Rig and banked Salvage. Every tactic here is about spending as little of those two pools as possible per kill.
 
-Hurt Defaults on the approach — a pull is permanent, and once they commit to the Hatch they will not leave. One shot shouts one group, not the whole Bastion. Sprint outruns a chase; walking does not.
+On a Hatch-bank, hurt Defaults on the approach — a pull is permanent, and once they commit to the Hatch they will not leave. On a field-terminal Wave they are already on you. One shot shouts one group, not the whole Bastion. Sprint outruns a chase; walking does not.
 
-Triage by refusal: Hunters cost health, Thieves cost the door on a Hatch-bank and your attention on a field Wave, Defaults are the only kind you can steer. Bindings and numbers: [Field Manual](Field-Manual.md).
+Triage by refusal: Hunters cost health, Thieves cost the door on a Hatch-bank and your attention on a field Wave (they never hurt you), Defaults are the only kind you can steer. Bindings and numbers: [Field Manual](Field-Manual.md).
 
 ## Reference
 
@@ -16,9 +16,11 @@ Every tactic here is a rule the room already runs. Bindings and numbers are in t
 
 The two things that end a Run are your health and the Hatch's, and neither comes back for free. Your health does not come back **at all** during a Run. The Hatch's comes back only when you stand at it with the Repair Rig equipped and spend banked Salvage. So every tactic below is really about the same thing: spending as little of those two pools as possible per Gatekeeper killed.
 
-### Pull them off the door early, because a pull is permanent
+### Pull them off the door on a Hatch-bank, because a pull is permanent
 
-A basic Gatekeeper marches on the Hatch and ignores you — until you hurt it. Hurting it flips it onto you **for the rest of its life**. It does not calm down, it does not go back to the door, it does not lose interest.
+On a **field-terminal Wave** nobody is walking to the Hatch. They are walking at you. Pulling is not a door trade there.
+
+On a **Hatch-bank**, a basic Gatekeeper marches on the Hatch and ignores you — until you hurt it. Hurting it flips it onto you **for the rest of its life**. It does not calm down, it does not go back to the door, it does not lose interest.
 
 That makes damage a steering tool. A marcher you shoot on its way in is a marcher that will never touch the Hatch, even if you then leave it alone to deal with something else.
 
@@ -56,10 +58,10 @@ Three details about the stamina that are not shown to you:
 Each kind is defined by something it will not do, and that refusal tells you what ignoring it costs.
 
 - **Hunters never touch the Hatch.** Ignoring one costs you health and nothing else. If the door is the emergency, a Hunter on your back is the cheaper problem — right up until your health is the emergency instead.
-- **Thieves hunt you on a field-terminal Wave and cannot be provoked.** Shooting one in the back changes nothing about it: not its speed, and it does not shout. Ignoring one costs you a slow, heavy body walking at you.
-- **Marchers are the only kind you can steer**, per the pull rule above.
+- **Thieves hunt you on a field-terminal Wave and cannot be provoked.** Shooting one in the back changes nothing about it: not its speed, and it does not shout. It never hurts you. On a Hatch-bank, ignoring one costs the door a slow, heavy bite.
+- **Marchers are the only kind you can steer**, per the pull rule above — and only on a Hatch-bank.
 
-The practical read: when everything arrives at once, the Thieves are on a clock against the door and the Hunters are on a clock against you. You almost always have more slack against the Hunters, because your health can absorb a swing and the Hatch's absorbs the bite badly.
+The practical read: when everything arrives at once on a Hatch-bank, the Thieves are on a clock against the door and the Hunters are on a clock against you. You almost always have more slack against the Hunters, because your health can absorb a swing and the Hatch's absorbs the bite badly. On a field-terminal Wave the Hatch is invulnerable; the clock is only yours.
 
 ### Repair in Prep, not in Assault
 
@@ -74,7 +76,7 @@ It needs the Repair Rig equipped — without it, holding repair does nothing —
 - **Each slot keeps its own clip.** Switching weapons is not a free reload, but it is faster than one: if your primary runs dry mid-group, switching to the sidearm and firing is quicker than reloading, and you can reload the primary afterwards in the quiet.
 - **Switching cancels a reload in progress, and the progress is lost** (default). The HUD warns while you reload if another slot is occupied; the log names what was discarded. Do not switch mid-reload unless you mean it.
 - **Ammo is unlimited.** There is no reserve. Reload at every opportunity — the only cost is the time.
-- **Crits come only from Luck**, and Luck buys the chance a shot crits, never the size of the crit. Nothing else in the game grants crit chance or crit damage, so there is no build to assemble and no reason to expect burst damage you have not bought.
+- **Crits do not happen.** Chance is frozen at nothing. There is no Luck track at CREW QUARTERS and nothing else grants crit chance. Do not play for burst you have not bought.
 
 ### Positioning, in one paragraph
 
@@ -82,7 +84,7 @@ Groups arrive at one spawn point at a time and the point rotates group by group,
 
 ## See also
 
-[Gatekeepers](Gatekeepers.md). [The Hatch](The-Hatch.md). [Weapons](Weapons.md). [A Run](A-Run.md).
+[Gatekeepers](Gatekeepers.md). [The Hatch](The-Hatch.md). [Weapons](Weapons.md). [A Run](A-Run.md). [Upgrades](Upgrades.md).
 
 ## Gaps
 

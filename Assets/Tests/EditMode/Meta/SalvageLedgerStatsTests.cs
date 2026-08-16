@@ -55,8 +55,8 @@ namespace GatekeeperBastion.Tests
         {
             var m = new MetaState();
             m.EarnSalvage(10000);
-            Assert.IsTrue(MetaUpgrades.Buy(m, ref m.VitalityLevel));   // 200
-            Assert.IsTrue(MetaUpgrades.Buy(m, ref m.VitalityLevel));   // 400
+            Assert.IsTrue(MetaUpgrades.Buy(m, ref m.HatchArmorLevel));   // 200
+            Assert.IsTrue(MetaUpgrades.Buy(m, ref m.HatchArmorLevel));   // 400
             // Free MK-1: own without SpendSalvage (cost 0).
             m.SetOwned(WeaponId.Mk1Sidearm, true);
             Assert.IsTrue(m.SpendSalvage(WeaponTier.Cost(0))); // Tier 0→1 = 400
@@ -72,7 +72,7 @@ namespace GatekeeperBastion.Tests
         {
             var m = new MetaState();
             m.EarnSalvage(5000);
-            MetaUpgrades.Buy(m, ref m.VitalityLevel);
+            MetaUpgrades.Buy(m, ref m.HatchArmorLevel);
             var loaded = MetaState.FromJson(m.ToJson());
             Assert.AreEqual(m.BankedSalvage, loaded.BankedSalvage);
             Assert.AreEqual(m.LifetimeSalvageEarned, loaded.LifetimeSalvageEarned);
@@ -95,7 +95,7 @@ namespace GatekeeperBastion.Tests
         {
             // A version-1 save: banked and levels only, no lifetime fields at all.
             // Gun/Fire/Clip migrate to MK-1 Tier = min(7, max(3,3,2)) = 3 → SpentToReach = 400+600+800 = 1800.
-            // Tracks: HatchArmor3=1400, Vitality2=600, Stamina1=200, Luck1=200.
+            // Tracks: HatchArmor3=1400. Crew tracks refund: Vitality2=600, Stamina1=200, Luck1=200.
             // RepairRig2 is a deleted track: ReconstructSpentFromLevels does not count it, but
             // criterion 8 grants slot + rig free from the legacy level.
             const string v1 =
@@ -108,11 +108,15 @@ namespace GatekeeperBastion.Tests
             Assert.IsTrue(m.Owns(WeaponId.Mk1Sidearm));
             Assert.AreEqual(3, m.TierOf(WeaponId.Mk1Sidearm));
             Assert.IsTrue(m.HasRepairRigEquipped, "legacy RepairRigLevel grants the equipment");
-            long expected = 1800L + 1400L + 600L + 200L + 200L; // 4200 — RepairRig spend dropped
-            Assert.AreEqual(expected, m.LifetimeSalvageSpent);
-            Assert.AreEqual(1739L + expected, m.LifetimeSalvageEarned);
+            long crewRefund = 600L + 200L + 200L;
+            long expectedSpent = 1800L + 1400L; // weapon + hatch; crew refunded
+            Assert.AreEqual(expectedSpent, m.LifetimeSalvageSpent);
+            Assert.AreEqual(1739L + crewRefund, m.BankedSalvage);
+            Assert.AreEqual(1739L + expectedSpent + crewRefund, m.LifetimeSalvageEarned);
             Assert.IsTrue(m.SalvageStatsWereRepaired);
             Assert.IsTrue(m.SalvageLedgerBalances);
+            Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
+            Assert.AreEqual(BoarderAbilityId.Ghost, m.EquippedPassive);
             Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion, "loading migrates the save forward");
         }
 

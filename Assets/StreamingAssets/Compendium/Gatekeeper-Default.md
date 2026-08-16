@@ -2,7 +2,7 @@
 
 ## Game
 
-The plain one, and the one every other rule is stated against. It walks to the Hatch and will pass you to get there — until something flips it onto you for the rest of its life. It closes and swings: melee contact.
+The plain one, and the one every other rule is stated against. On a Wave started at a field terminal it walks at you. On a Hatch-bank it walks to the Hatch and will pass you to get there — until something flips it onto you for the rest of its life. It closes and swings: melee contact.
 
 Shooting it, being seen at range, or standing near it puts it on you. The first two are permanent; nearness is temporary. Once it flips it shouts, and the whole group joins. Once it reaches the Hatch it stops negotiating — kill it there, or the door takes the hits.
 
@@ -12,7 +12,7 @@ Numbers — health, damage to you, damage to the Hatch, speeds: [Field Manual](F
 
 ### What it does
 
-It walks to the Hatch and hits it. It is not interested in you and it will pass you to get there.
+It walks to the Hatch and hits it — on a Hatch-bank. On a Wave started at a field terminal the Hatch is out of the fight, so it walks at you from the start.
 
 It is also the only kind that can change its mind, and it changes its mind in one direction only: **once it decides you are the problem, it hunts you for the rest of its life.** There is no cooling off, no losing it, no breaking line of sight and having it wander back to what it was doing. It also picks up speed when it flips — a provoked Default is faster than your walk, so backing away from one while shooting it does not create distance. Sprinting does.
 

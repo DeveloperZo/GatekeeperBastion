@@ -1,10 +1,13 @@
 # M63-2 — The three that walk
 
 <!--
-Status: next (current)
-Update trigger: when a kind-to-mesh mapping changes, when the Mixamo retarget fails, or
-when the player capsule renderer is restored
+Status: completed 2026-08-15
+Update trigger: closed
 Last updated: 2026-08-15
+Closed on: Zo 2026-08-15. Gate: GatekeeperPresentationTests
+Wrappers_ExistAsThreeDistinctAssets + EnemyPrefabs_KeepPreSliceAgentFootprint
+Passed; CompendiumFormTests green (`gkb_verify_report.json` 2026-08-15T21:47:12Z).
+Criterion 4 silhouette Zo-closed. Mixamo kill criterion did not fire.
 -->
 
 Default, Hunter and Thief (still `GatekeeperKind.Ram` in code until `M63`) get Synty

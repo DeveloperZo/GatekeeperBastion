@@ -5,9 +5,8 @@ using UnityEngine;
 namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: MainMenu front-end flow — CONTINUE / START NEW (overwrite
-    /// confirm) / HOST / JOIN / OPTIONS / QUIT. Continue, Start, Host and Join all load
-    /// <see cref="SceneFlow.Ship"/>; Bastion is reached by EMBARK. Host EMBARKs first so
-    /// <see cref="NetSession"/> is listening before the client EMBARKs.</summary>
+    /// confirm) / HOST / JOIN / OPTIONS / QUIT. Solo Continue / Start New load Ship
+    /// offline. Host / Join start a DDOL <see cref="NetSession"/> then party-load Ship.</summary>
     public sealed class MainMenuController : MonoBehaviour
     {
         const string Tag = "MainMenu";
@@ -128,6 +127,7 @@ namespace GatekeeperBastion.Game
             _busy = false;
             if (!result.Ok)
             {
+                NetJoinIntent.LastError = result.Error;
                 _view.SetHostStatus(result.Error);
                 _view.SetHostLanVisible(true);
                 return;
@@ -155,26 +155,50 @@ namespace GatekeeperBastion.Game
                 if (_view != null) _view.SetHostStatus("No join code yet — wait or Host on LAN.");
                 return;
             }
-            EnterBastionHost(relay: true);
+            EnterSessionHost(relay: true);
         }
 
         void OnHostLan()
         {
             if (_loading || _busy) return;
-            EnterBastionHost(relay: false);
+            EnterSessionHost(relay: false);
         }
 
-        void EnterBastionHost(bool relay)
+        void EnterSessionHost(bool relay)
         {
+            var existing = NetSession.FindLive();
+            if (existing != null && existing.Active)
+            {
+                if (_view != null)
+                    _view.SetHostStatus("Already hosting — leave the session first.");
+                Log.Warn(Tag, "Host refused — session already active.");
+                return;
+            }
+
             _loading = true;
             LoadCampaignForNet();
             NetJoinIntent.LastError = null;
-            if (relay)
-                NetJoinIntent.RequestHostRelay(_pendingRelay, _pendingJoinCode);
-            else
-                NetJoinIntent.RequestHost();
+            NetJoinIntent.Clear();
             FrontEndMusic.Stop();
-            if (!SceneFlow.LoadShip())
+
+            var session = NetSession.CreateBootstrap();
+            if (session == null)
+            {
+                _loading = false;
+                if (_view != null) _view.SetHostStatus("Net session bootstrap missing.");
+                return;
+            }
+            if (relay)
+                session.StartHostRelay(_pendingRelay, _pendingJoinCode);
+            else
+                session.StartHost();
+            if (!session.Active)
+            {
+                _loading = false;
+                if (_view != null) _view.SetHostStatus("Host start failed.");
+                return;
+            }
+            if (!session.LoadLobbyShip())
                 _loading = false;
         }
 
@@ -191,8 +215,7 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Join panel Connect. A six-character code is the friends path and
-        /// allocates on the menu. Empty code falls through to typed IPv4. Invalid values
-        /// refuse here without loading Bastion.</summary>
+        /// allocates on the menu. Empty code falls through to typed IPv4.</summary>
         async void OnJoinConnect()
         {
             if (_loading || _busy || _view == null) return;
@@ -210,10 +233,11 @@ namespace GatekeeperBastion.Game
                 _busy = false;
                 if (!result.Ok)
                 {
+                    NetJoinIntent.LastError = result.Error;
                     _view.SetJoinRefusal(result.Error);
                     return;
                 }
-                EnterBastionJoinRelay(result.Payload, result.JoinCode);
+                EnterSessionJoinRelay(result.Payload, result.JoinCode);
                 return;
             }
 
@@ -233,23 +257,65 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            _loading = true;
-            NetJoinIntent.LastError = null;
-            LoadCampaignForNet();
-            NetJoinIntent.RequestJoin(ip, port);
-            FrontEndMusic.Stop();
-            if (!SceneFlow.LoadShip())
-                _loading = false;
+            EnterSessionJoinLan(ip, port);
         }
 
-        void EnterBastionJoinRelay(RelayJoin.Payload payload, string joinCode)
+        void EnterSessionJoinRelay(RelayJoin.Payload payload, string joinCode)
         {
+            var existing = NetSession.FindLive();
+            if (existing != null && existing.Active)
+            {
+                if (_view != null)
+                    _view.SetJoinRefusal("Already in a session — leave first.");
+                Log.Warn(Tag, "Join refused — session already active.");
+                return;
+            }
+
             _loading = true;
             NetJoinIntent.LastError = null;
             LoadCampaignForNet();
-            NetJoinIntent.RequestJoinRelay(payload, joinCode);
+            NetJoinIntent.Clear();
             FrontEndMusic.Stop();
-            if (!SceneFlow.LoadShip())
+
+            var session = NetSession.CreateBootstrap();
+            if (session == null)
+            {
+                _loading = false;
+                if (_view != null) _view.SetJoinRefusal("Net session bootstrap missing.");
+                return;
+            }
+            session.StartClientRelay(payload, joinCode);
+            if (!session.Active)
+                _loading = false;
+            // Guest lands in the host's networked Ship via NetworkSceneManager.
+        }
+
+        void EnterSessionJoinLan(string ip, ushort port)
+        {
+            var existing = NetSession.FindLive();
+            if (existing != null && existing.Active)
+            {
+                if (_view != null)
+                    _view.SetJoinRefusal("Already in a session — leave first.");
+                Log.Warn(Tag, "Join refused — session already active.");
+                return;
+            }
+
+            _loading = true;
+            NetJoinIntent.LastError = null;
+            LoadCampaignForNet();
+            NetJoinIntent.Clear();
+            FrontEndMusic.Stop();
+
+            var session = NetSession.CreateBootstrap();
+            if (session == null)
+            {
+                _loading = false;
+                if (_view != null) _view.SetJoinRefusal("Net session bootstrap missing.");
+                return;
+            }
+            session.StartClient(ip, port);
+            if (!session.Active)
                 _loading = false;
         }
 

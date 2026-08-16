@@ -34,7 +34,7 @@ So the shape of the threat to the door depends entirely on what the Wave brought
 
 Stand at the Hatch and hold interact. It heals continuously while you hold, at a flat rate, but **only if you have the Repair Rig equipped** — without it, holding repair does nothing to a damaged Hatch. Let go and it stops. The rate is in the [Field Manual](Field-Manual.md). Binding: [Field Manual](Field-Manual.md).
 
-Prep select then start while looking at the Hatch, with Unbanked and a slot left, starts a Hatch-bank. That is not repair.
+Prep select then start while looking at the Hatch, with Unbanked and a slot left, starts a Hatch-bank. That is not repair. A Run has a limited number of Hatch-banks; when they are gone the Hatch refuses. How many: [Field Manual](Field-Manual.md).
 
 If the Hatch is full, Prep, and Unbanked is 0, hold Interact to **withdraw** banked Salvage back into Unbanked. Withdraw does not need the Repair Rig.
 

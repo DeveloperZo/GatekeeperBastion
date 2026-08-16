@@ -358,7 +358,22 @@ namespace GatekeeperBastion.Game
             return true;
         }
 
-        /// <summary>Buy the next level of an attribute/fab upgrade track.</summary>
+        /// <summary>Ship-only passive re-pick. Refusals logged with track=crew.</summary>
+        public static bool PickPassive(BoarderAbilityId id)
+        {
+            var m = GameSession.Meta;
+            if (m == null)
+            {
+                Log.Warn(Tag, "PickPassive refused: no session loaded.");
+                return false;
+            }
+            if (!m.SetEquippedPassive(id))
+                return false;
+            GameSession.Save();
+            Log.Event("Ship", "equipped " + BoarderProtocol.DisplayName(id) + " track=crew");
+            return true;
+        }
+
         public static bool BuyUpgrade(UpgradeTrack track)
         {
             var m = GameSession.Meta;
@@ -375,10 +390,6 @@ namespace GatekeeperBastion.Game
             switch (track)
             {
                 case UpgradeTrack.HatchArmor: bought = MetaUpgrades.Buy(m, ref m.HatchArmorLevel); break;
-                case UpgradeTrack.Vitality: bought = MetaUpgrades.Buy(m, ref m.VitalityLevel); break;
-                case UpgradeTrack.Stamina: bought = MetaUpgrades.Buy(m, ref m.StaminaLevel); break;
-                case UpgradeTrack.Scavenging: bought = MetaUpgrades.Buy(m, ref m.ScavengingLevel); break;
-                case UpgradeTrack.Luck: bought = MetaUpgrades.Buy(m, ref m.LuckLevel); break;
                 default: bought = false; break;
             }
 
@@ -417,10 +428,6 @@ namespace GatekeeperBastion.Game
             switch (track)
             {
                 case UpgradeTrack.HatchArmor: return m.HatchArmorLevel;
-                case UpgradeTrack.Vitality: return m.VitalityLevel;
-                case UpgradeTrack.Stamina: return m.StaminaLevel;
-                case UpgradeTrack.Scavenging: return m.ScavengingLevel;
-                case UpgradeTrack.Luck: return m.LuckLevel;
                 default: return 0;
             }
         }

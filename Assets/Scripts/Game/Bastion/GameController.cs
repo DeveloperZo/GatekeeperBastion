@@ -96,6 +96,7 @@ namespace GatekeeperBastion.Game
         // This controller owns their per-frame advance; see the written order in Update.
         PlayerGun _gun;
         PlayerAbility _ability;
+        PlayerProtocolAbilities _protocol;
         Interactor _interactor;
         DecoyPlacement _decoyPlacement;
 
@@ -113,9 +114,45 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
+            RebindNetSession();
+
             int runSeed = seed != 0 ? seed : Environment.TickCount;
             Run = new RunContext(GameSession.Meta, runSeed);
             Subscribe();
+        }
+
+        /// <summary>Adopt the DDOL friends session when Bastion loads via NetworkSceneManager.
+        /// Scene-authored _net is disabled on Bastion — prefer live NetworkManager session.</summary>
+        void RebindNetSession()
+        {
+            var live = NetSession.FindLive();
+            if (live != null)
+            {
+                _net = live;
+                live.BindGame(this);
+                return;
+            }
+
+            // CLI / Splash (-gkb-host/-gkb-join): intent set, Bastion scene Net disabled.
+            if (NetJoinIntent.HasPending)
+            {
+                var created = NetSession.CreateBootstrap();
+                if (created != null)
+                {
+                    _net = created;
+                    created.BindGame(this);
+                    created.ApplyPendingIntent();
+                    return;
+                }
+            }
+
+            // Bastion scene Net is disabled; friends sessions use DDOL Resources/Net/NetSession.
+            if (_net != null && _net.isActiveAndEnabled)
+            {
+                _net.BindGame(this);
+                return;
+            }
+            _net = null;
         }
 
         void Start()
@@ -124,10 +161,9 @@ namespace GatekeeperBastion.Game
 
             LevelMusic.CaptureOrJoin(null);
 
-            // Menu join consumes intent in NetSession.Awake and starts the client in
-            // NetSession.Start (execution order -100), so IsClientOnly is already true here.
-            // Do not StartRun — that would fork a second live sim. F10/F11 join after this
-            // Start has already run, so they keep the existing wipe-on-StartClient path.
+            // Menu join starts the DDOL session before Ship; by Bastion load IsClientOnly
+            // is already true here. Do not StartRun — that would fork a second live sim.
+            // F10/F11 join after this Start has already run keeps wipe-on-StartClient.
             if (_net != null && _net.IsClientOnly)
             {
                 ApplyMetaEffects();
@@ -135,8 +171,10 @@ namespace GatekeeperBastion.Game
             }
 
             // The ship-menu phase is a real scene now: boarding is immediate, Docked transient.
-            // PendingStartWave is set by MapStation; consumed once so direct-play falls back to 1.
+            // PendingStartWave is set by MapStation / party lobby; consumed once so direct-play falls back to 1.
             int startWave = GameSession.PendingStartWave;
+            if (_net != null && _net.Lobby != null && _net.Lobby.PendingStartWave.Value > 0)
+                startWave = _net.Lobby.PendingStartWave.Value;
             GameSession.PendingStartWave = 1;
             Sim.StartRun(startWave);
             Sim.EngageTether(); // → Tethered (Prep)
@@ -154,51 +192,6 @@ namespace GatekeeperBastion.Game
                 $"{LoadoutSummary(Meta)}, " +
                 $"{Meta.BankedSalvage} banked, hatch {Sim.Ship.Hatch.MaxHp:0}hp " +
                 $"{RunBeginsFields(Meta, Sim.StartWave)}; seed {Run.Sim.Seed}");
-        }
-
-        /// <summary>Primary + Secondary with Tiers for the run-begins line — criterion 12 cannot
-        /// be read from a log that does not say which weapon it came from.</summary>
-        static string LoadoutSummary(MetaState meta)
-        {
-            if (meta == null)
-                return "no weapon (improvised cutter); no repair rig";
-            string weapons = !meta.OwnsAnyWeapon
-                ? "no weapon (improvised cutter)"
-                : $"{SlotSummary("Primary", meta.EquippedPrimary, meta)}; " +
-                  $"{SlotSummary("Secondary", meta.EquippedSecondary, meta)}";
-            string rig = meta.HasRepairRigEquipped ? "repair rig equipped" : "no repair rig";
-            return $"{weapons}; {rig}";
-        }
-
-        static string SlotSummary(string label, WeaponId id, MetaState meta)
-        {
-            if (id == WeaponId.None) return $"{label}=—";
-            return $"{label}={WeaponCatalog.Def(id).displayName} T{meta.TierOf(id)}";
-        }
-
-        /// <summary>Machine-readable tail for the run-begins line.</summary>
-        static string RunBeginsFields(MetaState meta, int startWave)
-        {
-            string primary = "none", primaryTier = "0", secondary = "none", secondaryTier = "0";
-            string rig = "none";
-            long banked = 0;
-            if (meta != null)
-            {
-                banked = meta.BankedSalvage;
-                if (meta.EquippedPrimary != WeaponId.None)
-                {
-                    primary = WeaponCatalog.Def(meta.EquippedPrimary).displayName;
-                    primaryTier = meta.TierOf(meta.EquippedPrimary).ToString();
-                }
-                if (meta.EquippedSecondary != WeaponId.None)
-                {
-                    secondary = WeaponCatalog.Def(meta.EquippedSecondary).displayName;
-                    secondaryTier = meta.TierOf(meta.EquippedSecondary).ToString();
-                }
-                if (meta.HasRepairRigEquipped) rig = "repair";
-            }
-            return $"startWave={startWave} primary={primary} primaryTier={primaryTier} " +
-                   $"secondary={secondary} secondaryTier={secondaryTier} rig={rig} banked={banked}";
         }
 
         /// <summary>
@@ -245,6 +238,7 @@ namespace GatekeeperBastion.Game
             if (_fpc != null) _fpc.Tick(dt);                          // 4
             if (_gun != null) _gun.Tick(dt);                          // 5
             if (_ability != null) _ability.Tick(dt);
+            if (_protocol != null) _protocol.Tick(dt);
             if (_decoyPlacement != null) _decoyPlacement.Tick(dt);
             if (_interactor != null) _interactor.Tick(dt);            // 6
                                                                       // 7 — engine-driven
@@ -377,6 +371,7 @@ namespace GatekeeperBastion.Game
                     ability.SetHosted(true);
                 }
                 _ability = ability;
+                BindProtocol(local);
                 var placement = gun.GetComponent<DecoyPlacement>();
                 if (placement == null && local != null)
                     placement = local.GetComponentInChildren<DecoyPlacement>();
@@ -401,7 +396,7 @@ namespace GatekeeperBastion.Game
             if (local != null)
             {
                 local.Bind(this);
-                local.ConfigureMaxHp(MetaUpgrades.PlayerMaxHp(Meta.VitalityLevel));
+                local.ConfigureMaxHp(MetaUpgrades.PlayerMaxHp());
             }
             else Log.Warn(Tag, "ApplyMetaEffects: no local PlayerHealth to size from Vitality.");
 
@@ -410,7 +405,7 @@ namespace GatekeeperBastion.Game
             var fpc = local != null ? local.GetComponent<FirstPersonController>() : null;
             if (fpc != null)
             {
-                fpc.ConfigureStamina(MetaUpgrades.StaminaMax(Meta.StaminaLevel));
+                fpc.ConfigureStamina(MetaUpgrades.StaminaMax());
                 fpc.SetHosted(true);
                 _fpc = fpc;
             }
@@ -454,14 +449,6 @@ namespace GatekeeperBastion.Game
             }
             else
                 Log.Warn(Tag, "ApplyMetaEffects: no DecoyBay on the player rig.");
-        }
-
-        static void PushSlot(PlayerGun gun, MetaState meta, WeaponSlot slot, WeaponId id)
-        {
-            if (id == WeaponId.None || meta == null) return;
-            // Disabled catalog rows (e.g. VK-7) stay in saves but never reach the rig.
-            if (!WeaponCatalog.IsAvailable(id)) return;
-            gun.Configure(slot, WeaponCatalog.Def(id), meta.PointsOf(id), id);
         }
 
         /// <summary>Phase transitions themselves are NOT logged: the death / hatch-loss line that

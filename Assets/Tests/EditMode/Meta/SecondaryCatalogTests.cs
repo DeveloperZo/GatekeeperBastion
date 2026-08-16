@@ -112,7 +112,7 @@ namespace GatekeeperBastion.Tests
             // headroom for a second, and the entry price stays at least 150 so it is not
             // trivial. All sides read source constants so a retune of any breaks loudly.
             long waveOneTake =
-                (long)(WaveDirector.BaseEnemyCount * MetaUpgrades.SalvagePerKill(0));
+                (long)(WaveDirector.BaseEnemyCount * MetaUpgrades.SalvagePerKill());
             long first = WeaponTier.Cost(WeaponSlot.Secondary, 0);
             long second = WeaponTier.Cost(WeaponSlot.Secondary, 1);
             Assert.GreaterOrEqual(first, 150L, "entry price floor (Zo)");

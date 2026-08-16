@@ -15,7 +15,7 @@ grown until something runs.
 
 They feed each other in one direction, and that is what balance means here:
 
-- **Play** produces the only evidence about quality (`GatkeeperZo Notes/playthrough.md`) and
+- **Play** produces the only evidence about quality (`GatekeeperZo Notes/playthrough.md`) and
   the only numbers worth trusting.
 - **Brainstorm** turns loose observations from play into ideas with a graduation test.
 - **Milestone → build** turns an idea into something to play.

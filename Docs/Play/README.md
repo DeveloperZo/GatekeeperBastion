@@ -5,10 +5,10 @@ Purpose: the Boarder's working knowledge of the game — volumes of related entr
 Builder path stays Docs/Play/ (M28 language lint). Player-facing name is Compendium.
 Status: working
 Update trigger: when a volume or entry is added or removed, or when the in-game reader ships (M62).
-Last updated: 2026-08-15
+Last updated: 2026-08-16
 Builder notes (omitted in-game): Gaps sections are builder audit; the reader strips them
 and HTML comments. Countable facts live only in Field-Manual.md (Tools/docgen/run.sh
---check). Until pause opens these volumes, this folder is the Compendium.
+--check). Pause opens these volumes (M62, Esc → Compendium).
 -->
 
 This is the Boarder's **Compendium**: the working knowledge of the place you cut into, the

@@ -34,18 +34,17 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
-        public void FractionalScavenging_AndDial_UnbankedAgreesWithFloor()
+        public void FractionalDial_UnbankedAgreesWithFloor()
         {
             var meta = new MetaState();
-            meta.ScavengingLevel = 3;
             var sim = LiveAssault(meta, siphonLevel: 3);
-            Assert.AreEqual(35.9375f, sim.CurrentKillValue, 1e-4f);
+            Assert.AreEqual(31.25f, sim.CurrentKillValue, 1e-4f);
 
             long before = meta.BankedSalvage;
             const int kills = 9;
             for (int i = 0; i < kills; i++) sim.AwardKill();
 
-            long expected = kills * 35L;
+            long expected = kills * 31L;
             Assert.AreEqual(expected, sim.Unbanked);
             Assert.AreEqual(before, meta.BankedSalvage);
         }

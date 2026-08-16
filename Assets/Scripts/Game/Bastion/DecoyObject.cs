@@ -16,16 +16,24 @@ namespace GatekeeperBastion.Game
         DecoyBay _bay;
         float _hp;
         float _maxHp;
+        DoctrineMode _mode;
 
         public float Hp => _hp;
         public float MaxHp => _maxHp;
         public bool IsAlive => _hp > 0f;
+        public DoctrineMode Mode => _mode;
 
         public void Configure(DecoyBay bay, float hp)
+        {
+            Configure(bay, hp, DoctrineMode.Stock);
+        }
+
+        public void Configure(DecoyBay bay, float hp, DoctrineMode mode)
         {
             _bay = bay;
             _maxHp = hp;
             _hp = hp;
+            _mode = mode;
         }
 
         /// <summary>Gatekeeper Hatch-damage intake. Returns true when this hit destroys the decoy.</summary>

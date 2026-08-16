@@ -161,7 +161,7 @@ namespace GatekeeperBastion.Game
             get
             {
                 var meta = GameSession.Meta;
-                return meta == null ? 0f : Mathf.Clamp01(MetaUpgrades.CritChance(meta.LuckLevel));
+                return 0f;
             }
         }
 

@@ -137,8 +137,23 @@ namespace GatekeeperBastion.Game
 
             if (_net != null && _net.IsClientOnly)
             {
+                if (_net.Active)
+                {
+                    var lobby = _net.Lobby;
+                    if (lobby != null)
+                    {
+                        _leavingScene = true;
+                        Log.Event("Ship", "guest requesting party return to Ship");
+                        lobby.RequestPartyReturnToShip();
+                        return;
+                    }
+                    Log.Event("Ship", "guest return — no lobby; shutting down to MainMenu");
+                    _leavingScene = true;
+                    _net.ShutdownSession();
+                    return;
+                }
                 _leavingScene = true;
-                _net.ShutdownSession();
+                SceneFlow.LoadMainMenu();
                 return;
             }
 
@@ -153,8 +168,15 @@ namespace GatekeeperBastion.Game
             Log.Event("Ship", $"returning to the ship — {(Meta != null ? Meta.BankedSalvage : 0)} banked");
             GameSession.Save();
 
-            if (_net != null && _net.Active)
-                _net.ShutdownSession();
+            if (_net != null && _net.Active && _net.IsPartyLead)
+            {
+                if (_net.LoadPartyShip()) return;
+                _leavingScene = false;
+                _loseScreenAge = 0f;
+                _watchdogFired = false;
+                Log.Error(Tag, "RETURN TO SHIP party load failed; staying on the end screen.");
+                return;
+            }
 
             if (SceneFlow.LoadShip()) return;
 

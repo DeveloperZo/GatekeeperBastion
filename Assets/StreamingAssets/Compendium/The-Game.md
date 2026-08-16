@@ -14,7 +14,7 @@ Between Runs, four consoles on your Ship each own one subject. The first weapon 
 
 ### What a Run is
 
-You embark from your own Ship. The NAV MAP states the premise before you leave. You
+You embark from the Ship (solo hub, or shared Ship when hosting/joining). The NAV MAP states the premise before you leave. You
 arrive already tethered. The Bastion is quiet, and it stays quiet until you use a
 **field terminal**. There is no Wave timer. Prep is yours: repair the Hatch, walk the room,
 pick your ground, or stand at a terminal and think.
@@ -59,7 +59,8 @@ The room asks three questions at once, and the answer to each makes the other tw
 
 There are exactly two ways a Run ends badly: **you die, or the Hatch dies.** There is no
 bail-out, no escape lever, no cutting the tether early, no respawn for the Boarder who
-owns the Run (solo or host). A second Boarder going down does not end the Run.
+owns the Run (solo or host). A second Boarder going down does not end the Run — they wait
+on the Ship and can embark again while the host is in Hatch-bank Prep.
 
 Losing is cheap for what already made it through the Hatch. **Converted Salvage stays
 banked.** Unbanked is wiped if you go down or the Hatch falls. Clearing takes nothing
@@ -76,8 +77,9 @@ You walk your own Ship. Four consoles, each owning one subject.
 for whichever one you are carrying. Upgrades are per weapon. Your Primary is chosen here
 and fixed for the Run.
 
-**CREW QUARTERS** owns you: how much you can take, how far you can sprint, how much you
-earn, and your only source of critical hits.
+**CREW QUARTERS** owns the protocol you embark wearing: how hardware deploys, a field you
+plant for the crew, one hit you chose to eat, and the rule that says how Gatekeepers read
+you. You own it from the first session.
 
 **FABRICATION** owns the Ship: how much the Hatch can take, and the Repair Rig — the
 equipment without which the Hatch cannot be repaired at all.

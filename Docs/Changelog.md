@@ -4,9 +4,38 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
-Last updated: 2026-08-15
+Last updated: 2026-08-16
 -->
 
+- 2026-08-16: **Docs hydration** — Play/Compendium, Design 1–4, Architecture map,
+  language.md party terms. Field Manual regen: CREW protocol, Decoy, Hatch Armor only,
+  crit frozen. Dashboard Session labels PlayMode/short/Dev instead of dropping them
+  (hatch-bank era ≥ 2026-08-13). `dashboard-data` friends head is M72. M72 still
+  open (polish + two-machine criterion 9). M70 in tree, not closed.
+- 2026-08-16: **Bastion kit stamps unpack; Authored rooms are not rebuilt.** Kit prefabs
+  remain generate-once templates. `BastionSketchEmitter` unpacks `Completely` (was
+  outermost, leaving Synty links). `SpawnPiece` unpacks on editor Rebuild. Emit
+  `RebuildAllSegments` skips `Authored/`, so a re-emit cannot replace unique rooms
+  with a fresh pack stamp.
+- 2026-08-15: **M72 kernel in tree** — DDOL `NetSession` from menu Host/Join;
+  `EnableSceneManagement` on; party Ready + 5s countdown (`NetPartyLobby`); guest
+  local Bastion refuse; party ReturnToShip without shutdown. Release-Gate #19 →
+  shared Ship / party EMBARK. Eyes-on criterion 9 still open.
+- 2026-08-15: **M60, M63-2, M71 completed.** M60 Relay join code Zo-closed (criterion 4
+  eyes-on; `NetSessionAddressTests` green at `gkb_verify_report.json`
+  2026-08-15T21:47:12Z; Multiplayer Services package removed). M63-2 three meshes +
+  player capsule off (`GatekeeperPresentationTests`; silhouette Zo-closed). M71 already
+  stamped earlier the same day; stale `2. active/` copy removed. Active empty; next is
+  M72 then M69.
+- 2026-08-15: **M72 active / hardened** — grill locked DDOL + ESM + Ready-before-commit +
+  5s cancel-only. Kernel in tree; post-grill fix: `Spawn(destroyWithScene:false)`,
+  SceneEvent lobby-ship log, guest party-return RPC, pause Ready. Criterion 9 eyes-on
+  still open.
+- 2026-08-15: **M72 created** — co-op polish / shared Ship lobby. Party lead owns NAV;
+  personal resources (M65); seamless same-instance join; party-wide scene loads
+  (ready + 5s countdown); Bastion verbs unaffected. Overturns M64 solo-Ship friends
+  shape after dual-box Relay failure. Queue: M72 / M69. Kill clock 2026-08-28 (was
+  shared with M60 criterion 4; M60 now closed).
 - 2026-08-15: **M64 completed** — friends send gate. Machine: `Docs/Release-Gate.md`,
   `Tools/release-gate/run.sh` PASS (company Gatekeeper), Host/Join → `LoadShip`,
   `NetPrep` + `NetPrepTests` 3/0 Passed (juice/start/range;
@@ -14,7 +43,8 @@ Last updated: 2026-08-15
   version, `FrameBudget`, `run-windowed.bat`, `Docs/Release-Send.md`. Criteria 13–18
   and 19–25 playthrough are confirmation (same as M59/M62) — not claimed played this
   session. Unrelated suite reds: `BastionDoorApertureTests`, `SessionMusicHostTests`,
-  `NetVerbTests.Repair` epsilon — not this slice.
+  `NetVerbTests.Repair` epsilon — not this slice. Solo-Ship product bar superseded by
+  M72 after eyes-on failure the same day.
 - 2026-08-15: **M65 completed** — three players supported (six cheap); waves scale by
   player count; salvage splits to own wallets with banking capped by own deepest Wave.
   Gate: EditMode `PlayerWalletTests`, `WavePlayerCountTests`; PlayMode
@@ -66,6 +96,10 @@ Last updated: 2026-08-15
   HUD Intensity); MK-1 ring D–A–R–C–F and SEC-D F–A–R–C–D with Secondary cost
   150+150×t. Zo close; M55 kill criterion and M71 Regen Surge mag sit on
   `GatekeeperZo Notes/verification.md`. Active 0/3.
+- 2026-08-15: **M70 Default Protocol in tree.** CREW equips Default (STOCK / Anchor `G` /
+  Bulkhead `H` / Ghost or Foresight); save v8 refunds crew tracks; `PayloadLoadoutLocked`
+  unchanged. PlayMode `NetProtocolTests` Passed. HUD protocol TMP authored on
+  `Hud Vitals` (host stayed 400×150). Not closed — playthrough still owed.
 - 2026-08-15: **M70 recut — the Default Protocol.** Free-pick pools superseded (doctrine
   needs a named carrier). Slice is STOCK / Anchor `G` / Bulkhead `H` / Ghost or
   Foresight pick-1; turret to FORGE; specialists to their slices. Same-day audit:

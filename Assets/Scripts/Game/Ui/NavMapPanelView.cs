@@ -27,6 +27,9 @@ namespace GatekeeperBastion.Game
         [SerializeField] TextMeshProUGUI _noRigWarning;
         [SerializeField] Button _embarkButton;
         [SerializeField] TextMeshProUGUI _loadFailed;
+        [SerializeField, OptionalBinding] Button _readyButton;
+        [SerializeField, OptionalBinding] Button _cancelButton;
+        [SerializeField, OptionalBinding] TextMeshProUGUI _countdownLine;
 
         bool _bindingsChecked;
 
@@ -105,7 +108,39 @@ namespace GatekeeperBastion.Game
         {
             if (_embarkButton == null) return;
             UiBind.SetButtonLabel(_embarkButton, label);
-            WireButton(_embarkButton, onEmbark, true);
+            WireButton(_embarkButton, onEmbark, onEmbark != null);
+        }
+
+        /// <summary>Party Ready / Cancel / countdown. Optional bindings — null fields no-op.
+        /// Wire _readyButton / _cancelButton / _countdownLine on NavMapPanelView when authoring.</summary>
+        public void BindPartyLobby(bool showReady, Action onReady, bool readyOn,
+            Action onCancel, string countdownLine)
+        {
+            if (_readyButton != null)
+            {
+                UiBind.Show(_readyButton, showReady);
+                if (showReady)
+                {
+                    UiBind.SetButtonLabel(_readyButton, readyOn ? "READY ✓" : "READY");
+                    WireButton(_readyButton, onReady, onReady != null);
+                }
+            }
+            if (_cancelButton != null)
+            {
+                bool showCancel = onCancel != null;
+                UiBind.Show(_cancelButton, showCancel);
+                if (showCancel)
+                {
+                    UiBind.SetButtonLabel(_cancelButton, "CANCEL");
+                    WireButton(_cancelButton, onCancel, true);
+                }
+            }
+            if (_countdownLine != null)
+            {
+                bool show = !string.IsNullOrEmpty(countdownLine);
+                UiBind.Show(_countdownLine, show);
+                if (show) UiBind.SetText(_countdownLine, countdownLine);
+            }
         }
 
         public void ShowLoadFailed(bool failed) => UiBind.Show(_loadFailed, failed);

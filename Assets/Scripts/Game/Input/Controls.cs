@@ -21,6 +21,8 @@ namespace GatekeeperBastion.Game
         SlotLast,
         SlotCycle,
         WeaponAbility,
+        CrewAbility,
+        PersonalAbility,
         Interact,
         PullDraw,
         DialDown,
@@ -107,6 +109,8 @@ namespace GatekeeperBastion.Game
             new(ControlId.SlotCycle, KeyCode.None, KeyCode.None, "WHEEL", "cycle", "FIGHT", FightAlways,
                 displayOnly: true),
             new(ControlId.WeaponAbility, KeyCode.F, KeyCode.None, "F", "ability", "FIGHT", FightAlways),
+            new(ControlId.CrewAbility, KeyCode.G, KeyCode.None, "G", "crew", "FIGHT", FightAlways),
+            new(ControlId.PersonalAbility, KeyCode.H, KeyCode.None, "H", "self", "FIGHT", FightAlways),
 
             new(ControlId.PullDraw, KeyCode.T, KeyCode.None, "T", "start", "RUN", ControlContext.Prep),
             new(ControlId.DialUp, KeyCode.Equals, KeyCode.KeypadPlus, "+", "juice", "RUN", ControlContext.Prep),
@@ -254,6 +258,8 @@ namespace GatekeeperBastion.Game
                     case ControlId.SlotDrone: f.slotDroneDown |= down; break;
                     case ControlId.SlotLast: f.slotLastDown |= down; break;
                     case ControlId.WeaponAbility: f.weaponAbilityDown |= down; break;
+                    case ControlId.CrewAbility: f.crewAbilityDown |= down; break;
+                    case ControlId.PersonalAbility: f.personalAbilityDown |= down; break;
                     case ControlId.Interact: f.interactHeld |= held; f.interactDown |= down; break;
                     case ControlId.PullDraw: f.pullDrawDown |= down; break;
                     case ControlId.DialUp: f.dialUpDown |= down; break;
@@ -285,6 +291,8 @@ namespace GatekeeperBastion.Game
                 case ControlId.SlotDrone: return f.slotDroneDown;
                 case ControlId.SlotLast: return f.slotLastDown;
                 case ControlId.WeaponAbility: return f.weaponAbilityDown;
+                case ControlId.CrewAbility: return f.crewAbilityDown;
+                case ControlId.PersonalAbility: return f.personalAbilityDown;
                 case ControlId.Interact: return f.interactDown;
                 case ControlId.PullDraw: return f.pullDrawDown;
                 case ControlId.DialUp: return f.dialUpDown;

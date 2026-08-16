@@ -14,7 +14,7 @@ namespace GatekeeperBastion.Game
         public const string PurposeLine = "you";
         public override string Purpose => PurposeLine;
 
-        protected override string PromptHint => "upgrade your own attributes";
+        protected override string PromptHint => "your protocol";
 
         protected override void Awake()
         {
@@ -28,31 +28,50 @@ namespace GatekeeperBastion.Game
             unchecked
             {
                 return base.ContentHash(m)
-                    ^ m.VitalityLevel * 17
-                    ^ m.StaminaLevel * 31
-                    ^ m.ScavengingLevel * 41
-                    ^ m.LuckLevel * 59;
+                    ^ (int)m.EquippedProtocol * 17
+                    ^ (int)m.EquippedPassive * 31;
             }
         }
 
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
-            if (_body == null) return; // Awake already logged the missing binding.
+            if (_body == null) return;
+            var ids = BoarderProtocol.ShopProtocols();
+            var id = ids.Length > 0 ? ids[0] : BoarderProtocolId.Default;
+            string crew = BoarderProtocol.DisplayName(BoarderProtocol.CrewAbilityOf(id));
+            string personal = BoarderProtocol.DisplayName(BoarderProtocol.PersonalAbilityOf(id));
+            _body.ProtocolRow.Bind(
+                BoarderProtocol.ProtocolName(id),
+                "",
+                "EQUIPPED",
+                BoarderProtocol.DoctrineText(id) + "  G " + crew + "  H " + personal,
+                "",
+                null,
+                false);
 
-            // The ATTRIBUTES heading is authored scene text.
-            UpgradeRow(_body.VitalityRow, UpgradeTrack.Vitality, "Vitality",
-                l => $"{MetaUpgrades.PlayerMaxHp(l):0} max HP");
-            UpgradeRow(_body.StaminaRow, UpgradeTrack.Stamina, "Stamina",
-                l => $"{SprintSeconds(l):0.#}s sprint");
-            UpgradeRow(_body.ScavengingRow, UpgradeTrack.Scavenging, "Scavenging",
-                l => $"{MetaUpgrades.SalvagePerKill(l):0} per kill");
-            UpgradeRow(_body.LuckRow, UpgradeTrack.Luck, "Luck",
-                l => $"{MetaUpgrades.CritChance(l) * 100f:0.#}% crit");
+            int n = BoarderProtocol.PassiveCount(id);
+            BindPassive(_body.GhostRow, m, id, 0, n > 0);
+            BindPassive(_body.ForesightRow, m, id, 1, n > 1);
+            if (_body.UnusedRow != null)
+                _body.UnusedRow.gameObject.SetActive(false);
         }
 
-        static float SprintSeconds(int level)
+        void BindPassive(PanelRowView row, MetaState m, BoarderProtocolId protocol, int index, bool show)
         {
-            return MetaUpgrades.StaminaMax(level) / FirstPersonController.SprintDrainPerSecond;
+            if (row == null) return;
+            row.gameObject.SetActive(show);
+            if (!show) return;
+            var pid = BoarderProtocol.PassiveAt(protocol, index);
+            bool equipped = m.EquippedPassive == pid;
+            var capture = pid;
+            row.Bind(
+                BoarderProtocol.DisplayName(pid),
+                "",
+                equipped ? "EQUIPPED" : "",
+                pid == BoarderAbilityId.Ghost ? "reduced acquisition" : "next Wave kinds",
+                equipped ? "EQUIPPED" : "EQUIP",
+                () => ShipCommands.PickPassive(capture),
+                !equipped && !m.PayloadLoadoutLocked);
         }
     }
 }

@@ -347,11 +347,10 @@ namespace GatekeeperBastion.EditorTools
                 return null;
             }
 
-            // Rooms emit unpacked (Zo 2026-08-14): packed instances block hierarchy edits
-            // during authoring. Outermost only — the Synty pieces under _geom keep their
-            // prefab links so pack updates still propagate.
+            // Kit prefabs stamp a room quickly; Completely unpacks so the scene owns unique
+            // geometry. Pack updates do not propagate into authored rooms.
             PrefabUtility.UnpackPrefabInstance(
-                instance, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
+                instance, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
 
             return instance;
         }
@@ -551,8 +550,23 @@ namespace GatekeeperBastion.EditorTools
                 BastionSegment segment = segments[i];
                 if (segment == null || !segment.CanMutateHierarchy())
                     continue;
+                // Authored rooms are unique scene geometry. Rebuilding them from kit
+                // prefabs would replace hand edits with a fresh stamp.
+                if (IsUnderNamed(segment.transform, AuthoredName))
+                    continue;
                 segment.Rebuild();
             }
+        }
+
+        static bool IsUnderNamed(Transform t, string name)
+        {
+            while (t != null)
+            {
+                if (t.name == name)
+                    return true;
+                t = t.parent;
+            }
+            return false;
         }
 
         /// <summary>Batchmode entry: emit default sketch then exit with code 0.</summary>

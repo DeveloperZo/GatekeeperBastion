@@ -65,6 +65,10 @@ namespace GatekeeperBastion.Game
         const float ReengageFraction = 0.2f;
 
         /// <summary>When true (menu/lose screen, dead/respawning) look and movement input are ignored.</summary>
+        /// <summary>Anchor plant: WASD off, look and fire stay. Distinct from
+        /// <see cref="MovementLocked"/> (pause / death / fighting gate).</summary>
+        public bool Rooted { get; set; }
+
         public bool MovementLocked { get; set; }
 
         /// <summary>Current sprint stamina, 0..StaminaMax. HUD reads this.</summary>
@@ -160,11 +164,12 @@ namespace GatekeeperBastion.Game
             if (!MovementLocked && frame.click0Down && Cursor.lockState != CursorLockMode.Locked)
                 SetCursorLocked(true);
 
-            bool canControl = Cursor.lockState == CursorLockMode.Locked && !MovementLocked;
+            bool canLook = Cursor.lockState == CursorLockMode.Locked && !MovementLocked;
+            bool canMove = canLook && !Rooted;
             TickZoom();
             // Look requires the authored camera wire: yaw without pitch is a half-broken camera,
             // so a missing cameraTransform (already Log.Error'd in Awake) disables look entirely.
-            if (canControl && cameraTransform != null)
+            if (canLook && cameraTransform != null)
             {
                 float sens = Settings.GetFloat(SettingId.MouseSensitivity);
                 if (_cam != null)
@@ -175,7 +180,7 @@ namespace GatekeeperBastion.Game
             }
 
             Vector3 planar = Vector3.zero;
-            if (canControl)
+            if (canMove)
             {
                 var input = Vector3.ClampMagnitude(
                     new Vector3(frame.moveX, 0f, frame.moveY), 1f);

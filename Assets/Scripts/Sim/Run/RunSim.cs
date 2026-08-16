@@ -205,10 +205,10 @@ namespace GatekeeperBastion.Sim
         /// <summary>Base salvage one kill is worth before the siphon multiplier: the Scavenging
         /// attribute's 25 + 5*level. Read fresh from the MetaState so a mid-session purchase is
         /// live on the very next kill.</summary>
-        private float BaseKillValue => MetaUpgrades.SalvagePerKill(_meta.ScavengingLevel);
+        private float BaseKillValue => MetaUpgrades.SalvagePerKill();
 
         /// <summary>Salvage the next kill is worth right now:
-        /// MetaUpgrades.SalvagePerKill(ScavengingLevel) times the siphon's hand-authored dial
+        /// MetaUpgrades.SalvagePerKill() times the siphon's hand-authored dial
         /// multiplier (1 / 1.1 / 1.15 / 1.25 / 1.35 / 1.5) — 25 at both dials down, 46.875 at
         /// Scavenging 5 / siphon 5. The HUD shows this; it is the whole income model.</summary>
         public float KillValueAt(int siphonLevel) =>

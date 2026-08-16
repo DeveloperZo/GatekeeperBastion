@@ -26,7 +26,7 @@ has had; no tuning pass has come close.
 | Clearing the last Wave is not the win. Master Control's Hatch-bank is. | Wave 5 terminal clear does not `CompleteRun`. `Escaped` / `CleanExits++` only after the Master Control Hatch half (`AdvanceMasterControl`). Both endings exit by one door: RETURN TO SHIP. |
 | Shooting a Default makes it come for you. | `EnemyGatekeeper.OnDamaged`. |
 | A Hunter can never hurt the door, at any tuning. | `hatchDamage = 0`, `ignoresHatch`. |
-| A Ram hunts the Boarder on a field-terminal Wave; shooting it still will not shout. | `RamGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`; `CanBeProvoked` stays false. |
+| A Thief hunts the Boarder on a field-terminal Wave; shooting it still will not shout. | `RamGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`; `CanBeProvoked` stays false. Player-facing name Thief; code id `Ram` until M63. |
 | All three kinds share one swing clock. | `GatekeeperAttackInterval`. A kind differs by what it hits and how hard, never by cadence. |
 | Gatekeepers arrive in groups with a gap, not as a stream. | `WaveSpawner(+.Groups)`. |
 | Kills pay, and only in `Tethered + Assault`. | `RunSim.AwardKill` → Unbanked. Prep pays nothing. |
@@ -52,9 +52,11 @@ for a number.
 |---|---|---|
 | Intensity juice | Prep only, looking at a trigger. `IntensityJuice.Try` spends Unbanked to raise; lower is free, no refund. `SetSiphonLevel` remains for tests. `E` selects; `T` starts. Locked in Assault. | The draw size is a pre-commitment. Choosing the stake after seeing the Wave is not a choice. |
 | The weapon and where its wheel points | Ship only. `ShipCommands.BuyWheelUpgrade`; Bastion code never calls `EquipWeapon`. | The weapon is the build; a Run is played with the one you brought. |
-| Attributes | Ship only. | |
+| Boarder Protocol / Passive | Ship only. `CrewQuartersStation` / `ShipCommands.PickPassive`. Default sheet owned from first session. | A Run is played with the sheet you brought. G/H fire in Assault (`PlayerProtocolAbilities`). |
+| Hatch-bank | Prep, looking at the Hatch, Unbanked and a slot left. `GameController.StartHatchBankWave`. | Convert is a fight, not a shop action. Slot count: `4-Data.md` Hatch-bank GEN. |
+| Party Ready / EMBARK | Ship, friends session. Host is party lead (`NetPartyLobby`). | In tree (`M72`); two-machine close still open. Solo Continue never starts a session. |
 | The equipment slot | Ship only. `ShipCommands.BuyEquipmentSlot()` unlocks the slot for `EquipmentCatalog.SlotPrice = 300`, then `ShipCommands.BuyEquipment(EquipmentId)` fills it. | Repairing needs the rig owned *and* carried (`GameController.ApplyMetaEffects` configures `RepairInteractable` to 0 HP/s when it is not), so how much door the Boarder can buy back is settled before embarking. Purchasable in-Run it would turn a failing Hatch into a wallet check. |
-| Start Wave | NAV MAP, before embarking. | A start of N delivers Waves 1..N back to back. |
+| Start Wave | NAV MAP, before embarking. Party lead's pick in a friends session. | A start of N delivers Waves 1..N back to back. |
 
 **What the player may never change:** whether the Run can be left, when a Wave arrives, or
 what a Gatekeeper kind refuses to do. Those are section 3.1 and they are not negotiable from inside a
@@ -99,6 +101,8 @@ station UI mutates `MetaState`; `GameController` command methods are the only pa
 
 ### Designed, not built — the 5-skill system
 
+Dated 2026-08-15: Boarder Protocols occupy CREW QUARTERS; this 5-skill design stays parked in `../Brainstorms/crew-skills-and-perks.md` and is not what CREW sells.
+
 The remaining expansion of this tier, and the last unbuilt surface for player expression,
 which is the top-ranked aesthetic (`1-Experience.md`). No milestone owns it; this section is
 the record until one does. It moved here from `../Decisions.md` on 2026-08-08 — it is a design,
@@ -125,9 +129,10 @@ The five skills:
 
 **Power budget**: primary +20%, secondary +10%, passive +8%. Effects are priced by expected
 value, and **two effects must never multiply the same currency** — that is how one build
-silently becomes dominant. It is the same rule that keeps Luck the only crit source in the game
-(`MetaUpgrades.CritChance`, `PlayerGun.CritDamageMultiplier`): a second crit source would
+silently becomes dominant. It is the same rule that keeps crit chance a single source
+(`MetaUpgrades.CritChance`, `PlayerGun.CritDamageMultiplier`): a second source would
 multiply against the first and the dps curve would stop being readable from the Armory panel.
+Chance is frozen at 0; there is no Luck shop.
 
 **Research finding, recorded so it isn't assumed away:** Remnant 2 has **no mechanical
 dual-archetype combination** — pairing two archetypes only generates a cosmetic combined name.
@@ -141,9 +146,10 @@ needs play data.*
 
 ### Geometry beats stats here
 
-The floor is 30 × 52 m. The Hatch is at z −20.5; the three spawn points sit at z 28 (two) and
-z 9 (`Editor/Scenes/SceneBuilder.cs`, `BuildSpawnPoints`). The deep pair is **48.5 m of z from
-the door, about 15 seconds at the 3.2 m/s patrol speed** (`WaveDirector.GatekeeperPatrolSpeed`).
+The fight is kit rooms (M61-2 scaler-2 station volumes, Control Room last). Graybox
+`BuildSpawnPoints` coords (30 × 52 m, Hatch z −20.5, deep pair 48.5 m) are retired as the
+live floor. Sketch Hatch dock is `z = -61` (`Sim/Bastion`); player travel time across the
+dressed Bastion is **unknown — needs measurement**.
 
 Gatekeeper stats barely register against that. This is the clearest case in the project of
 structure beating constants, and it is the first thing to check when a Wave feels wrong: a
@@ -193,8 +199,8 @@ Wave** than before either change.
 | Hatch HP | `RunSim.RepairHatch`, paid from banked Salvage | gatekeeper dwell × landing rate |
 | Unbanked Salvage | `AwardKill` | juice spend, Hatch-bank drip/dump, attrition, wipe on down/breach |
 | Banked Salvage | Hatch-bank drip/dump | repair, withdraw, Ship purchases |
-| Player HP | CREW QUARTERS Vitality, between Runs only | gatekeeper swings |
-| Stamina | regen after a 1s delay | sprint |
+| Player HP | run start / bind; pool is frozen (`MetaUpgrades.PlayerMaxHp`) | gatekeeper swings |
+| Stamina | regen after a 1s delay; pool is frozen | sprint |
 | Clip | reload | firing |
 
 **Banked Salvage is the only stock that survives a Run.** Unbanked does not. Sizes are `4-Data.md`.
@@ -211,10 +217,12 @@ scene content. `SceneBuilder` registers build settings and never touches hosts o
 it, collider graybox is still generated. Kit geometry persists.
 
 - **Splash** — title card; any key or a 2.5s timeout advances.
-- **MainMenu** — CONTINUE / START NEW (with overwrite confirm) / OPTIONS / QUIT.
+- **MainMenu** — CONTINUE / START NEW (with overwrite confirm) / HOST / JOIN / OPTIONS / QUIT.
+  Host/Join start a friends session (`NetSession` DDOL) before Ship. Solo Continue never does.
 - **Ship** — walkable hub, four station consoles, one per alcove. No Run sim here. ARMORY
   west, FABRICATION east, CREW QUARTERS south, NAV MAP north
-  (`Editor/Scenes/SceneBuilder.Ship.cs`). `MapStation.StationName` is `NAV MAP`, and the
+  (`Editor/Scenes/SceneBuilder.Ship.cs`). Friends session: shared Ship, party lead owns
+  EMBARK (`M72` in tree). `MapStation.StationName` is `NAV MAP`, and the
   floating console label the builder writes is `NAV MAP` too
   (`Editor/Scenes/SceneBuilder.Ship.cs`, the `pal.ConsoleMap` console). The class name is
   still a known debt (`../_meta/_definitions/language.md`, trap 2).

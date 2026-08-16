@@ -18,6 +18,11 @@ namespace GatekeeperBastion.Game
         long _cacheHatchHp = long.MinValue;
         long _cacheHatchMax = long.MinValue;
         long _cachePlayerHp = long.MinValue;
+        long _cacheCrewWindow = long.MinValue;
+        long _cacheCrewCd = long.MinValue;
+        long _cachePersonalWindow = long.MinValue;
+        long _cachePersonalCd = long.MinValue;
+        string _cachePassive = "\0";
         bool _cacheAlarm;
         bool _cachePlayerDead;
 
@@ -125,6 +130,7 @@ namespace GatekeeperBastion.Game
                     _view.SetPlayerBar(player.Hp, player.MaxHp);
                 }
                 PushStamina();
+                PushProtocolReadout();
             }
 
             PushWeaponReadout(gc);
@@ -156,6 +162,59 @@ namespace GatekeeperBastion.Game
             _view.SetStaminaBlockVisible(true);
             _view.SetStaminaLabel(_fpc.IsSprinting ? "<b>SPRINT</b>" : "STAMINA");
             _view.SetStaminaBar(_fpc.Stamina, _fpc.StaminaMax);
+        }
+
+        void PushProtocolReadout()
+        {
+            if (_protocol == null)
+            {
+                ResolveRefs();
+                if (_protocol == null)
+                {
+                    if (_cachePassive != null)
+                    {
+                        _cachePassive = null;
+                        _view.SetProtocolLine(null);
+                    }
+                    return;
+                }
+            }
+
+            long crewW = (long)(_protocol.CrewWindow * 10f);
+            long crewC = (long)(_protocol.CrewCooldown * 10f);
+            long persW = (long)(_protocol.PersonalWindow * 10f);
+            long persC = (long)(_protocol.PersonalCooldown * 10f);
+            string passive = _protocol.PassiveName;
+            if (crewW == _cacheCrewWindow && crewC == _cacheCrewCd
+                && persW == _cachePersonalWindow && persC == _cachePersonalCd
+                && passive == _cachePassive)
+                return;
+            _cacheCrewWindow = crewW;
+            _cacheCrewCd = crewC;
+            _cachePersonalWindow = persW;
+            _cachePersonalCd = persC;
+            _cachePassive = passive;
+
+            _lineBuf.Clear();
+            AppendAbilitySlot(_lineBuf, ControlId.CrewAbility, _protocol.CrewName,
+                _protocol.CrewWindow, _protocol.CrewCooldown);
+            _lineBuf.Append('\n');
+            AppendAbilitySlot(_lineBuf, ControlId.PersonalAbility, _protocol.PersonalName,
+                _protocol.PersonalWindow, _protocol.PersonalCooldown);
+            _lineBuf.Append('\n').Append(passive);
+            _view.SetProtocolLine(_lineBuf.ToString());
+        }
+
+        static void AppendAbilitySlot(System.Text.StringBuilder buf, ControlId key, string name,
+            float window, float cooldown)
+        {
+            buf.Append(Controls.DisplayOf(key)).Append(' ').Append(name).Append("  ");
+            if (window > 0.05f)
+                buf.Append(window.ToString("0.0")).Append('s');
+            else if (cooldown > 0.05f)
+                buf.Append(cooldown.ToString("0.0")).Append('s');
+            else
+                buf.Append("READY");
         }
 
         void PushPrompt()

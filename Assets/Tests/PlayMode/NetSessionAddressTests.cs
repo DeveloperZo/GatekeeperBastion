@@ -80,6 +80,8 @@ namespace GatekeeperBastion.PlayTests
             var session = go.AddComponent<NetSession>();
             Assert.IsNotNull(session);
             yield return null;
+            // NetSession.Awake enables scene management for friends sessions; fixtures force off.
+            nm.NetworkConfig.EnableSceneManagement = false;
 
             session.StartClient("10.0.0.1", 7777);
             Assert.AreEqual("10.0.0.1", transport.ConnectionData.Address);
@@ -104,6 +106,7 @@ namespace GatekeeperBastion.PlayTests
             var session = go.AddComponent<NetSession>();
             Assert.IsNotNull(session);
             yield return null;
+            nm.NetworkConfig.EnableSceneManagement = false;
 
             session.StartHost();
             Assert.AreEqual("0.0.0.0", transport.ConnectionData.ServerListenAddress);
@@ -129,6 +132,7 @@ namespace GatekeeperBastion.PlayTests
             var session = go.AddComponent<NetSession>();
             Assert.IsNotNull(session);
             yield return null;
+            nm.NetworkConfig.EnableSceneManagement = false;
 
             session.StartClient("0.0.0.0", 7777);
             Assert.IsFalse(nm.IsListening, "0.0.0.0 must not start a client session");

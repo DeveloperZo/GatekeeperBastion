@@ -67,6 +67,7 @@ namespace GatekeeperBastion.Game
         [SerializeField] float noticeRange = 26f;
         [SerializeField] float alertRadius = 12f;
         [SerializeField] float chaseSpeed = 5.6f;
+        float _patrolSpeed = 3.2f;
 
         // The two refusals, pushed from GatekeeperStats at spawn. Read through the virtual
         // MayTargetHatch / MayTargetPlayer / CanBeProvoked in EnemyGatekeeper.Targeting.cs.
@@ -179,14 +180,13 @@ namespace GatekeeperBastion.Game
             hatchDamage = Mathf.Max(0f, toHatch);
             attackInterval = Mathf.Max(0.05f, interval);
             chaseSpeed = Mathf.Max(0.1f, chase);
+            _patrolSpeed = Mathf.Max(0.1f, patrol);
             ignoresHatch = noHatch;
             ignoresPlayer = noPlayer;
             if (_agent == null) _agent = GetComponent<NavMeshAgent>();
             if (_agent != null)
             {
-                // A kind whose patrol speed equals its chase speed (Hunter) is already at full
-                // tilt from the breach; nothing needs to provoke it into moving properly.
-                _agent.speed = _provoked ? chaseSpeed : Mathf.Max(0.1f, patrol);
+                RecomputeSpeed();
                 // The hatch destination is inside the box's collider, so the agent's path ends on
                 // the navmesh edge beside it; a 1.6m stopping distance then parks it short of
                 // melee range. Close all the way in and let attackRange decide.
@@ -263,6 +263,8 @@ namespace GatekeeperBastion.Game
                 _retargetTimer = 0f;
             }
 
+            RecomputeSpeed();
+
             _retargetTimer -= dt;
             if (_chasingDecoy && (_decoyTarget == null || !_decoyTarget.IsAlive))
                 _retargetTimer = 0f;
@@ -325,6 +327,11 @@ namespace GatekeeperBastion.Game
             DriveAnimator();
         }
 
+        // Damping on the Speed float, not on the thresholds: agent velocity jitters across the
+        // 0.15 and 0.85*chase lines every few frames (avoidance shoving), and an undamped write
+        // snapped the blend tree between idle/walk/run poses at that rate.
+        const float SpeedDampSeconds = 0.15f;
+
         /// <summary>Boarder Speed float: 0 idle, 0.5 walk, 1 run. NavMeshAgent owns translation.</summary>
         void DriveAnimator()
         {
@@ -336,7 +343,7 @@ namespace GatekeeperBastion.Game
                 if (v > 0.15f)
                     speed = v >= chaseSpeed * 0.85f ? 1f : 0.5f;
             }
-            _animator.SetFloat(AnimSpeed, speed);
+            _animator.SetFloat(AnimSpeed, speed, SpeedDampSeconds, Time.deltaTime);
         }
 
         /// <summary>Push this gatekeeper along a planar delta without clearing the hatch-commit
@@ -406,6 +413,9 @@ namespace GatekeeperBastion.Game
         void Stop(string reason)
         {
             StopAgent();
+            // Hard write, not the damped one: Update stops with the component, so a damped Speed
+            // would freeze mid-blend and leave the corpse-to-be treadmilling on the lose screen.
+            if (_animator != null) _animator.SetFloat(AnimSpeed, 0f);
             enabled = false;
             Log.Info(Tag, $"Gatekeeper stopped: {reason}.");
         }
@@ -413,6 +423,14 @@ namespace GatekeeperBastion.Game
         void StopAgent()
         {
             if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = true;
+        }
+
+        /// <summary>One write for agent speed: base (chase or patrol) times any Anchor slow.</summary>
+        public void RecomputeSpeed()
+        {
+            if (_agent == null || !_agent.isOnNavMesh) return;
+            float baseSpeed = _provoked ? chaseSpeed : _patrolSpeed;
+            _agent.speed = baseSpeed * AnchorField.SlowMulAt(transform.position);
         }
 
         void Attack()

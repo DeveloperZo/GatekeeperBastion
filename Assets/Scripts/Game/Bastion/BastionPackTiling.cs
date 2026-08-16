@@ -92,42 +92,31 @@ namespace GatekeeperBastion.Game
             return step;
         }
 
-        /// <summary>Full pieces of <paramref name="step"/> along <paramref name="length"/>.
-        /// <paramref name="remainder"/> is the leftover metres (0 when negligible), filled by one
-        /// extra piece scaled remainder/step along the run — non-uniform scale, no small-piece
-        /// infill.</summary>
-        internal static int RunCount(float length, float step, out float remainder)
+        /// <summary>Tile count that covers <paramref name="length"/> near
+        /// <paramref name="nominalStep"/>. Leftover metres are absorbed into every tile's step
+        /// (scale stays near 1) instead of one 0.2–0.4 sliver that reads as a hole.
+        /// Half 16 m / 5 m → 3 tiles at 5.333 m (scale 1.067), not 3×5 + a 1 m strip.</summary>
+        internal static int RunCount(float length, float nominalStep, out float tileStep)
         {
-            int full = Mathf.FloorToInt(length / step + 0.001f);
-            if (full < 0)
-                full = 0;
-            remainder = length - full * step;
-            if (remainder <= RemainderEpsilon)
-                remainder = 0f;
-            return full;
+            float step = Mathf.Max(nominalStep, RemainderEpsilon);
+            int count = Mathf.Max(1, Mathf.RoundToInt(length / step));
+            tileStep = length / count;
+            return count;
         }
 
         /// <summary>Centre and along-axis scale of tile <paramref name="index"/> in a run starting
-        /// at <paramref name="start"/>. Indices past <paramref name="fullCount"/> address the one
-        /// remainder tile.</summary>
+        /// at <paramref name="start"/>. <paramref name="tileStep"/> is the actual spacing;
+        /// <paramref name="nominalStep"/> is the pack piece size the scale is relative to.</summary>
         internal static void RunAt(
             int index,
-            int fullCount,
             float start,
-            float step,
-            float remainder,
+            float tileStep,
+            float nominalStep,
             out float center,
             out float scale)
         {
-            if (index < fullCount)
-            {
-                center = start + (index + 0.5f) * step;
-                scale = 1f;
-                return;
-            }
-
-            center = start + fullCount * step + remainder * 0.5f;
-            scale = remainder / step;
+            center = start + (index + 0.5f) * tileStep;
+            scale = tileStep / Mathf.Max(nominalStep, RemainderEpsilon);
         }
     }
 }

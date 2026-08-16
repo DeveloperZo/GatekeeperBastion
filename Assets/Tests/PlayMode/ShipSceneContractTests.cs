@@ -213,6 +213,40 @@ namespace GatekeeperBastion.PlayTests
         }
 
         // =====================================================================
+        // B1c. Esc opens pause without painting a station panel over it
+        // =====================================================================
+
+        [UnityTest]
+        public IEnumerator ShipScene_Escape_OpensPause_WithoutArmoryPanel()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            yield return PlayTestUtil.WaitUntil(() => PlayerRegistry.Local != null, 5f);
+
+            var ship = UnityEngine.Object.FindFirstObjectByType<ShipController>();
+            Assert.IsNotNull(ship, "ShipController missing");
+
+            MethodInfo handle = typeof(ShipController).GetMethod("HandleEscape",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(handle, "ShipController.HandleEscape missing");
+            handle.Invoke(ship, null);
+            yield return null;
+
+            Assert.IsTrue(ship.IsSettingsOpen, "Esc with no station open must open pause.");
+
+            var armoryPanel = UnityEngine.Object.FindFirstObjectByType<ArmoryPanelView>(
+                FindObjectsInactive.Include);
+            Assert.IsNotNull(armoryPanel, "ARMORY panel missing");
+            Assert.IsFalse(armoryPanel.gameObject.activeInHierarchy,
+                "ARMORY is authored active on the shared station canvas and sits above Pause Menu; " +
+                "Esc must hide it or it paints over pause.");
+
+            var pause = GameObject.Find("Pause Menu");
+            Assert.IsNotNull(pause, "Pause Menu missing after Esc");
+            Assert.IsTrue(pause.activeInHierarchy, "Pause Menu must be visible after Esc");
+        }
+
+        // =====================================================================
         // B2. Opening a station panel frees the cursor again
         // =====================================================================
 

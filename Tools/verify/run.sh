@@ -66,6 +66,7 @@ declare -A EXCLUDED=(
   ["Ship/StationPanelDriftTests.cs"]="needs GatekeeperBastion.Editor StationSceneGate assembly"
   ["Ui/ShortcutRowApiTests.cs"]="needs ShortcutRow MonoBehaviour, TMPro, and UnityEditor"
   ["Ui/UiBindGatingTests.cs"]="needs GatekeeperBastion.Game, TMPro, and UnityEngine.UI"
+  ["Ui/CompendiumFormTests.cs"]="needs GatekeeperBastion.Game (CompendiumCatalog) and UnityEngine.Application"
   ["Bastion/BastionDoorApertureTests.cs"]="needs BastionSegment MonoBehaviour, GameObject, and UnityEngine"
   ["Bastion/BastionSegmentDoorAlongTests.cs"]="needs GatekeeperBastion.Game (BastionSegment.TryDoorPillars)"
 )

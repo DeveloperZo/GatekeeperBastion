@@ -1,10 +1,14 @@
 # M60 — A join a friend can use
 
 <!--
-Status: next (current)
-Update trigger: when the Relay / Steam decision in Decisions.md changes, or when
-criterion 4's kill date is hit.
+Status: completed 2026-08-15
+Update trigger: closed
 Last updated: 2026-08-15
+Closed on: Zo 2026-08-15. Gate: Relay + Authentication packages locked (1.2.0 /
+3.7.0); cloudProjectId linked; NetSessionAddressTests all Passed incl.
+TryParseJoinCode (`gkb_verify_report.json` 2026-08-15T21:47:12Z); Sim has no
+Netcode/Services. Criterion 4 eyes-on Zo-closed. Multiplayer Services 2.3.0
+removed (rejected). Kill criterion satisfied by close before 2026-08-28.
 -->
 
 Graduates `../../Brainstorms/co-op.md` "a join surface a friend can use". M58 is typed LAN

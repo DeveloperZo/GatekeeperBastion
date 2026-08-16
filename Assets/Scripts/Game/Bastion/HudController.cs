@@ -41,6 +41,7 @@ namespace GatekeeperBastion.Game
         Interactor _interactor;
         PlayerGun _gun;
         PlayerAbility _ability;
+        PlayerProtocolAbilities _protocol;
         FirstPersonController _fpc;
         BastionHudView _view;
 
@@ -129,6 +130,7 @@ namespace GatekeeperBastion.Game
             if (player == null) return;
             if (_gun == null) _gun = player.GetComponentInChildren<PlayerGun>();
             if (_ability == null && _gun != null) _ability = _gun.GetComponent<PlayerAbility>();
+            if (_protocol == null) _protocol = player.GetComponent<PlayerProtocolAbilities>();
             if (_interactor == null) _interactor = player.GetComponentInChildren<Interactor>();
             if (_fpc == null) _fpc = player.GetComponent<FirstPersonController>();
         }

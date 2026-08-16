@@ -37,8 +37,14 @@ namespace GatekeeperBastion.Game
         public bool IsSettingsOpen { get; private set; }
 
         /// <summary>QUIT TO MENU on the Ship Settings panel — state is
-        /// already saved at purchase time; no confirm.</summary>
-        public void QuitToMenu() => SceneFlow.LoadMainMenu();
+        /// already saved at purchase time; no confirm. Active session shuts down.</summary>
+        public void QuitToMenu()
+        {
+            var session = NetSession.FindLive();
+            if (session != null && session.Active)
+                session.ShutdownSession();
+            SceneFlow.LoadMainMenu();
+        }
 
         FirstPersonController _fpc;
         bool _walking = true;
@@ -99,16 +105,39 @@ namespace GatekeeperBastion.Game
             return true;
         }
 
-        /// <summary>Pause EMBARK — same word and same RPC as NAV MAP during a down wait.</summary>
+        /// <summary>Pause EMBARK — Hatch-bank get-up, or party Ready / Cancel countdown.</summary>
         public void TryEmbarkFromPause()
         {
-            var avatar = NetPlayerAvatar.LocalOwner;
-            if (avatar == null)
+            if (NetShipWait.IsActive)
             {
-                Log.Event("Net", "embark refused — no avatar");
+                var avatar = NetPlayerAvatar.LocalOwner;
+                if (avatar == null)
+                {
+                    Log.Event("Net", "embark refused — no avatar");
+                    return;
+                }
+                avatar.RequestEmbark();
                 return;
             }
-            avatar.RequestEmbark();
+
+            var session = NetSession.FindLive();
+            if (session == null || !session.Active || session.Lobby == null)
+            {
+                Log.Event("Net", "pause Ready refused — no party lobby");
+                return;
+            }
+            if (session.Lobby.IsCountingDown)
+            {
+                session.Lobby.CancelCountdown();
+                return;
+            }
+            var local = NetPlayerAvatar.LocalOwner;
+            if (local == null)
+            {
+                Log.Event("Net", "ready refused — no avatar");
+                return;
+            }
+            session.Lobby.SetReady(!local.LobbyReady.Value);
         }
 
         /// <summary>Camera-forward ray, same range as <see cref="Interactor"/> — self-contained
@@ -187,11 +216,19 @@ namespace GatekeeperBastion.Game
 
         void OpenSettings()
         {
+            HideStationPanels();
             if (_stationCanvas != null && !_stationCanvas.activeSelf) _stationCanvas.SetActive(true);
             if (_settingsPanel != null && _settingsPanel.activeSelf) _settingsPanel.SetActive(false);
             if (_pauseMenuPanel != null) _pauseMenuPanel.SetActive(true);
             if (_embarkPauseButton != null)
-                _embarkPauseButton.SetActive(NetShipWait.IsActive);
+            {
+                bool wait = NetShipWait.IsActive;
+                var session = NetSession.FindLive();
+                bool partyGuest = !wait && session != null && session.Active && !session.IsPartyLead;
+                bool partyCountdown = !wait && session != null && session.Lobby != null
+                    && session.Lobby.IsCountingDown;
+                _embarkPauseButton.SetActive(wait || partyGuest || partyCountdown);
+            }
             IsSettingsOpen = true;
             SetWalkMode(false);
         }
@@ -202,6 +239,21 @@ namespace GatekeeperBastion.Game
             if (_pauseMenuPanel != null) _pauseMenuPanel.SetActive(false);
             if (_settingsPanel != null) _settingsPanel.SetActive(true);
             OptionsScreen.Open(_fpc != null ? _fpc : FindLocalController());
+        }
+
+        /// <summary>Station panels share this canvas and ARMORY is authored active (edit-mode
+        /// preview). Hide them so pause is the only Main Panels body that paints.</summary>
+        void HideStationPanels()
+        {
+            if (_panels == null) return;
+            var list = _panels.panels;
+            if (list == null) return;
+            for (int i = 0; i < list.Count; i++)
+            {
+                var go = list[i].panelObject;
+                if (go == null || go == _pauseMenuPanel) continue;
+                if (go.activeSelf) go.SetActive(false);
+            }
         }
 
         /// <summary>Resume button on the Pause Menu shell — same as pressing Esc from the shell.</summary>

@@ -46,10 +46,10 @@ namespace GatekeeperBastion.Sim
 
         public int HatchArmorLevel;
 
-        public int VitalityLevel;
-        public int StaminaLevel;
-        public int ScavengingLevel;
-        public int LuckLevel;
+        /// <summary>Equipped protocol. Defaults to Default; owned from the first session.</summary>
+        public BoarderProtocolId EquippedProtocol = BoarderProtocolId.Default;
+        /// <summary>Equipped passive. Ghost is the granted first Passive.</summary>
+        public BoarderAbilityId EquippedPassive = BoarderAbilityId.Ghost;
 
         // ---- Equipment ----
         public bool EquipmentSlotPurchased;
@@ -142,6 +142,22 @@ namespace GatekeeperBastion.Sim
             }
             if (id != PayloadId.None && !OwnsPayload(id)) return false;
             EquippedDrone = id;
+            return true;
+        }
+
+        public bool SetEquippedPassive(BoarderAbilityId id)
+        {
+            if (PayloadLoadoutLocked)
+            {
+                Log.Event("Ship", "PickPassive refused — run in progress track=crew");
+                return false;
+            }
+            if (!BoarderProtocol.OwnsPassive(EquippedProtocol, id))
+            {
+                Log.Event("Ship", "PickPassive refused — not on this protocol track=crew");
+                return false;
+            }
+            EquippedPassive = id;
             return true;
         }
 
@@ -284,10 +300,6 @@ namespace GatekeeperBastion.Sim
         {
             long spent = 0;
             spent += SpentOnTrack(HatchArmorLevel);
-            spent += SpentOnTrack(VitalityLevel);
-            spent += SpentOnTrack(StaminaLevel);
-            spent += SpentOnTrack(ScavengingLevel);
-            spent += SpentOnTrack(LuckLevel);
 
             EnsureArrays();
             for (int i = 0; i < _weaponsOwned.Length; i++)
@@ -304,20 +316,25 @@ namespace GatekeeperBastion.Sim
             return spent;
         }
 
-        static long SpentOnTrack(int level)
+        public static long SpentOnTrack(int level)
         {
             if (level <= 0) return 0;
             if (level > MetaUpgrades.MaxLevel) level = MetaUpgrades.MaxLevel;
             return MetaUpgrades.BaseCost * ((1L << level) - 1L);
         }
 
-        void RestoreSalvageLedger(long earnedRaw, long spentRaw)
+        void RestoreSalvageLedger(long earnedRaw, long spentRaw, long crewRefund)
         {
-            long floor = ReconstructSpentFromLevels();
+            long floor = ReconstructSpentFromLevels() + crewRefund;
             LifetimeSalvageSpent = spentRaw > floor ? spentRaw : floor;
             LifetimeSalvageEarned = BankedSalvage + LifetimeSalvageSpent;
             SalvageStatsWereRepaired =
                 spentRaw != LifetimeSalvageSpent || earnedRaw != LifetimeSalvageEarned;
+            if (crewRefund <= 0) return;
+            BankedSalvage += crewRefund;
+            LifetimeSalvageSpent -= crewRefund;
+            if (LifetimeSalvageSpent < 0L) LifetimeSalvageSpent = 0L;
+            Log.Event("Save", "crew tracks refunded " + crewRefund);
         }
 
         public static MetaState CreateNew()
@@ -359,10 +376,8 @@ namespace GatekeeperBastion.Sim
             d.PodEjections = PodEjections;
             d.DeepestWaveReached = DeepestWaveReached < 1 ? 1 : DeepestWaveReached;
             d.HatchArmorLevel = HatchArmorLevel;
-            d.VitalityLevel = VitalityLevel;
-            d.StaminaLevel = StaminaLevel;
-            d.ScavengingLevel = ScavengingLevel;
-            d.LuckLevel = LuckLevel;
+            d.EquippedProtocol = (int)EquippedProtocol;
+            d.EquippedPassive = (int)EquippedPassive;
             d.EquipmentSlotPurchased = EquipmentSlotPurchased;
             d.OwnedEquipmentMask = OwnedEquipmentMask;
             d.EquippedEquipment = (int)EquippedEquipment;
@@ -390,10 +405,6 @@ namespace GatekeeperBastion.Sim
             m.PodEjections = d.PodEjections;
             m.DeepestWaveReached = d.DeepestWaveReached < 1 ? 1 : d.DeepestWaveReached;
             m.HatchArmorLevel = d.HatchArmorLevel;
-            m.VitalityLevel = d.VitalityLevel;
-            m.StaminaLevel = d.StaminaLevel;
-            m.ScavengingLevel = d.ScavengingLevel;
-            m.LuckLevel = d.LuckLevel;
             m.EnsureArrays();
 
             if (d.SaveVersion >= 4)
@@ -435,9 +446,8 @@ namespace GatekeeperBastion.Sim
             if (d.SaveVersion >= 7 && d.CompletedTerminalIds != null)
                 m.SetCompletedTerminalIds(d.CompletedTerminalIds);
 
-            // Ledger fields carry the missing-key sentinel (-1) from the JSON path; do not
-            // re-derive them from SaveVersion here or the two pipelines diverge again.
-            m.RestoreSalvageLedger(d.LifetimeSalvageEarned, d.LifetimeSalvageSpent);
+            long refund = BoarderProtocol.ApplySaveEquip(m, d);
+            m.RestoreSalvageLedger(d.LifetimeSalvageEarned, d.LifetimeSalvageSpent, refund);
             m.SaveVersion = SaveData.CurrentVersion;
             return m;
         }
@@ -502,10 +512,8 @@ namespace GatekeeperBastion.Sim
             AppendField(sb, "DeepestWaveReached",
                 d.DeepestWaveReached.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "HatchArmorLevel", d.HatchArmorLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "VitalityLevel", d.VitalityLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "StaminaLevel", d.StaminaLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "ScavengingLevel", d.ScavengingLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "LuckLevel", d.LuckLevel.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "EquippedProtocol", d.EquippedProtocol.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "EquippedPassive", d.EquippedPassive.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "EquipmentSlotPurchased", d.EquipmentSlotPurchased ? "true" : "false", true);
             AppendField(sb, "OwnedEquipmentMask", d.OwnedEquipmentMask.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "EquippedEquipment", d.EquippedEquipment.ToString(CultureInfo.InvariantCulture), true);
@@ -534,6 +542,8 @@ namespace GatekeeperBastion.Sim
             int deepest = (int)ExtractLong(json, "DeepestWaveReached", 1);
             d.DeepestWaveReached = deepest < 1 ? 1 : deepest;
             d.HatchArmorLevel = (int)ExtractLong(json, "HatchArmorLevel", 0);
+            d.EquippedProtocol = (int)ExtractLong(json, "EquippedProtocol", (int)BoarderProtocolId.Default);
+            d.EquippedPassive = (int)ExtractLong(json, "EquippedPassive", (int)BoarderAbilityId.Ghost);
             d.VitalityLevel = (int)ExtractLong(json, "VitalityLevel", 0);
             d.StaminaLevel = (int)ExtractLong(json, "StaminaLevel", 0);
             d.ScavengingLevel = (int)ExtractLong(json, "ScavengingLevel", 0);

@@ -80,8 +80,21 @@ namespace GatekeeperBastion.Game
         /// <summary>Load the ship hub scene. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadShip() => Load(Ship);
 
-        /// <summary>Load the bastion combat scene. Returns false (and logs an error) if it cannot load.</summary>
-        public static bool LoadBastion() => Load(Bastion);
+        /// <summary>Load the bastion combat scene. Returns false (and logs an error) if it cannot load.
+        /// Guests in an active friends session must use party EMBARK — local load is refused.</summary>
+        public static bool LoadBastion()
+        {
+            var session = NetSession.FindLive();
+            if (session != null && session.Active)
+            {
+                if (session.IsClientOnly)
+                    Log.Event("Net", "embark refused — not party lead");
+                else
+                    Log.Event("Net", "embark refused — use party EMBARK");
+                return false;
+            }
+            return Load(Bastion);
+        }
 
         /// <summary>Exactly one EventSystem for uGUI. Shift Canvas variants nest one; scenes may
         /// bake another — keep a single live system and destroy extras.</summary>

@@ -1,4 +1,4 @@
-<!-- Purpose: how the BR-12 Shotgun wants to be played, what it cannot do, and which Gatekeeper it answers. / Status: working / Update trigger: when the BR-12's catalog row changes (pellets, spread, falloff, range), or when Hunter behaviour changes. / Last updated: 2026-08-15 -->
+<!-- Purpose: how the BR-12 Shotgun wants to be played, what it cannot do, and which Gatekeeper it answers. / Status: working / Update trigger: when the BR-12's catalog row changes (pellets, spread, falloff, range), or when Hunter behaviour changes. / Last updated: 2026-08-16 -->
 
 # BR-12 Shotgun
 
@@ -46,7 +46,7 @@ Its cadence is slow, its clip is small, and its reload is the longest of the thr
 
 Damage is raised **per pellet**, and an upgrade purchase moves damage, clip, reload and cadence together, weighted by the spoke you centred — so where you put your upgrade focus decides whether the BR-12 gets a harder shot, more shots, or a shorter wait between clips. Range, spread, pellet count and falloff never move.
 
-One quiet consequence: critical hits are rolled per pellet, so this weapon gets more crit rolls per trigger pull than a single-shot weapon. If you are also buying Luck at CREW QUARTERS, the two stack better here than anywhere else.
+One quiet consequence: critical hits are rolled per pellet, so this weapon would get more crit rolls per trigger pull than a single-shot weapon. Crit chance is frozen at nothing; there is no Luck track to buy.
 
 ## See also
 
@@ -58,6 +58,6 @@ One quiet consequence: critical hits are rolled per pellet, so this weapon gets 
 - Its reach is far shorter than either other weapon's. Past the edge, pellets do literally nothing — no damage, not reduced damage.
 - Pellets do not pierce, so the cone does not spread damage across a crowd the way it looks like it should. Aiming "between" two Gatekeepers wastes the shot.
 - The bracket crosshair is an identity cue for this weapon, not a spread indicator. It does not grow or shrink to show accuracy.
-- Crit chance is rolled per pellet, making Luck worth more on this weapon than on the others. Nothing in the game says so.
+- Crit chance is rolled per pellet. Chance is frozen at nothing, so the extra rolls currently buy nothing.
 - Its clip and reload make it structurally poor against Thieves, which the game never flags at the moment you buy it.
 - Swapping to the sidearm is usually better than reloading under pressure — and swapping mid-reload destroys the reload progress.

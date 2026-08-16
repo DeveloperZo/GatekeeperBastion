@@ -16,6 +16,7 @@ namespace GatekeeperBastion.Sim
         public float PullRadius { get; private set; }
         public float PlaceRange { get; private set; }
         public int MaxLive { get; private set; }
+        public DoctrineMode Mode { get; private set; }
 
         /// <summary>Damage absorbed this Wave, converted at <see cref="PayloadCatalog.DecoyEffectiveDps"/>.</summary>
         public float AbsorbedSeconds => DamageTaken / PayloadCatalog.DecoyEffectiveDps;
@@ -44,8 +45,14 @@ namespace GatekeeperBastion.Sim
             WaveDamageTaken = 0f;
         }
 
-        /// <summary>Attempt to place at world position. Returns false with a reason when refused.</summary>
+        /// <summary>Attempt to place at world position. STOCK (0) when callers omit a mode.</summary>
         public bool TryPlace(float x, float y, float z, out string reason)
+        {
+            return TryPlace(x, y, z, DoctrineMode.Stock, out reason);
+        }
+
+        /// <summary>Attempt to place at world position. Writes <paramref name="mode"/> on success.</summary>
+        public bool TryPlace(float x, float y, float z, DoctrineMode mode, out string reason)
         {
             if (ChargesRemaining <= 0)
             {
@@ -63,6 +70,7 @@ namespace GatekeeperBastion.Sim
             PosZ = z;
             Hp = MaxHp;
             IsLive = true;
+            Mode = mode;
             ChargesRemaining--;
             reason = null;
             return true;
@@ -88,6 +96,7 @@ namespace GatekeeperBastion.Sim
             IsLive = false;
             Hp = 0f;
             PosX = PosY = PosZ = 0f;
+            Mode = DoctrineMode.Stock;
         }
 
         /// <summary>Whether a Gatekeeper of this kind should path to the live decoy.

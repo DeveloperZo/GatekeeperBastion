@@ -4,7 +4,7 @@
 Purpose: How scenes are structured so an agent can work on one part without breaking the rest, and what a scene edit must assert.
 Status: working
 Update trigger: when a scene root is added or renamed, when UI moves out of a gameplay scene, or when a swap rule changes.
-Last updated: 2026-08-14
+Last updated: 2026-08-16
 -->
 
 ## Why this file exists
@@ -42,8 +42,10 @@ Anything that has to be *authored* belongs in a prefab. The scene holds instance
 transforms. Then changing what a thing looks like is a prefab edit with local scope, and the
 scene diff is a reference swap.
 
-`Bastion.unity` already works this way because M47 made it a kit, and it is the reason bastion
-art can be changed in one edit. `Ship.unity` does not, and that is the difference.
+**Bastion rooms are the exception.** Kit prefabs (`Assets/Prefabs/Bastion/Kit`) generate a
+layout quickly. Once a room sits under `Environment/BastionKit/Authored/`, it is unpacked
+completely — unique scene geometry, not a prefab instance. Emit unpacks `Completely`;
+Rebuild skips `Authored/` so a re-stamp cannot replace hand edits.
 
 ### 2. UI does not live in a gameplay scene
 

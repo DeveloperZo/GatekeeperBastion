@@ -44,7 +44,7 @@ Its cadence is slow, its clip is small, and its reload is the longest of the thr
 
 Damage is raised **per pellet**, and an upgrade purchase moves damage, clip, reload and cadence together, weighted by the spoke you centred — so where you put your upgrade focus decides whether the BR-12 gets a harder shot, more shots, or a shorter wait between clips. Range, spread, pellet count and falloff never move.
 
-One quiet consequence: critical hits are rolled per pellet, so this weapon gets more crit rolls per trigger pull than a single-shot weapon. If you are also buying Luck at CREW QUARTERS, the two stack better here than anywhere else.
+One quiet consequence: critical hits are rolled per pellet, so this weapon would get more crit rolls per trigger pull than a single-shot weapon. Crit chance is frozen at nothing; there is no Luck track to buy.
 
 ## See also
 

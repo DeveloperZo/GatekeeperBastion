@@ -44,6 +44,7 @@ namespace GatekeeperBastion.Game
         [SerializeField, OptionalBinding] CanvasGroup _staminaGroup;
         [SerializeField] TMP_Text _staminaLabel;
         [SerializeField] Slider _staminaBar;
+        [SerializeField, OptionalBinding] TMP_Text _protocolLine;
         [SerializeField] GameObject _weaponCardRoot;
         [SerializeField] TMP_Text _weaponName;
         [SerializeField] TMP_Text _weaponAmmo;
@@ -379,6 +380,8 @@ namespace GatekeeperBastion.Game
         public void SetStaminaLabel(string text) => UiBind.SetText(_staminaLabel, text);
 
         public void SetStaminaBar(float value, float max) => UiBind.SetBar(_staminaBar, value, max);
+
+        public void SetProtocolLine(string text) => UiBind.SetTextOrHide(_protocolLine, text);
 
         public void SetReloadBlockVisible(bool visible) =>
             UiBind.SetRelevant(_reloadBlock, _reloadGroup, visible, IrrelevantAlpha);

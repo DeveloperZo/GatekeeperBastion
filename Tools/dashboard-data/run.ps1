@@ -95,7 +95,7 @@ foreach ($line in ($roadmapText -split "`n")) {
 }
 
 $friendsSummary = "two friends install a build, join without the developer touching a keyboard, play a full five-wave run with both participating, and the run ends with a screen that tells them what happened."
-if ($roadmapText -match '(?s)\*\*Friends alpha gate\*\*[^\n]*\n([^\n]+(?:\n(?!\*\*)[^\n]+)*)') {
+if ($roadmapText -match '(?s)\*\*Friends alpha gate\*\*[^:\n]*:\s*(.+?)(?=\n\n|\n\*\*)') {
     $friendsSummary = (($Matches[1] -replace '\s+', ' ').Trim())
 }
 
@@ -109,7 +109,7 @@ if ($roadmapText -match '(?s)\*\*Recommended next\*\*[^\n]*\n(.*?)(?=\nPlanned c
 }
 
 function Sort-Lane($items) {
-    return @($items | Sort-Object @{
+    return , @($items | Sort-Object @{
             Expression = { if ($null -eq $_.roadmapRank) { 9999 } else { $_.roadmapRank } }
         }, id)
 }
@@ -220,7 +220,7 @@ function Add-Insight([string]$sev, [string]$headline, [string]$why, [string]$act
         })
 }
 
-$friendsHead = "M58"
+$friendsHead = "M72"
 $headStillOpen = ($byId.ContainsKey($friendsHead) -and
     ($byId[$friendsHead].statusFolder -eq "planned" -or $byId[$friendsHead].statusFolder -eq "active"))
 $headTitle = if ($headStillOpen) { $byId[$friendsHead].title } else { $null }
@@ -238,8 +238,8 @@ if ($headStillOpen) {
     [void]$reasonCodes.Add("friends_alpha")
     [void]$evidence.Add("Docs/Roadmap.md Friends alpha gate")
     [void]$evidence.Add("Docs/Roadmap.md ## Current Recommended next")
-    [void]$evidence.Add(("Docs/Milestones/1. planned/{0}" -f (Split-Path $primary.path -Leaf)))
-    $doNowAction = ("Ship {0} ({1}): {2}" -f $primary.id, $primary.title, $(if ($headGate) { $headGate } else { "player build two machines can run" }))
+    [void]$evidence.Add($primary.path)
+    $doNowAction = ("Ship {0} ({1}): {2}" -f $primary.id, $primary.title, $(if ($headGate) { $headGate } else { "two-machine shared Ship and party EMBARK" }))
 }
 elseif ($active.Count -gt 0) {
     $primary = $active[0]
@@ -302,7 +302,7 @@ if ($headStillOpen) {
             ("Friends-alpha head is {0}: {1}." -f $friendsHead, $headTitle) `
             "Co-op verbs already run over loopback; the product still fails the install-and-join sentence." `
             $doNowAction `
-            @("Docs/Roadmap.md Friends alpha gate", ("Docs/Milestones/{0}" -f $primary.path))
+            @("Docs/Roadmap.md Friends alpha gate", $primary.path)
     }
 }
 
@@ -367,13 +367,19 @@ if ($questions.Count -gt 15) {
 Add-Insight "healthy" `
     "Expression is largely served by the upgrade wheel and rings; Fellowship's done-state is an installable session, not more net verbs." `
     "Ordering work against aesthetics stops polishing intensity while the second player still needs Zo's machine." `
-    "Treat M58/M60 as Fellowship completion. Treat wheel feel-checks and M70 as Expression residue after the session exists." `
+    "Treat M72 two-machine close as Fellowship completion. Treat wheel feel-checks and M70 as Expression residue after the session exists." `
     @("Docs/Design/1-Experience.md (Expression / Fellowship)", "Docs/Roadmap.md Strategy")
 
 # Executive synthesis (templated from the same facts)
 $activeTitles = (@($active | ForEach-Object { "{0}" -f $_.id }) -join "/")
+$activeIdsForSynth = @($active | ForEach-Object { $_.id })
 if ($headStillOpen) {
-    $synthesis = ("Fellowship is the open aesthetic that gates the product: co-op already runs over loopback, but friends-alpha still fails until {0} ships a stranger-installable join. Planned sits at {1}/{2} while actives {3} sit off that path. Expression is largely served; what remains is play proof of {4} Next Run claims and whether protocols earn another planning slot after the cap clears." -f $friendsHead, $planned.Count, $plannedMax, $(if ($activeTitles) { $activeTitles } else { "(none)" }), $blockingQs.Count)
+    if ($activeIdsForSynth -contains $friendsHead) {
+        $synthesis = ("Fellowship still fails the install-and-join sentence until {0} two-machine close. Planned {1}/{2}; {0} is the active head. Expression is largely served; {3} Next Run claims still lack a clean play log." -f $friendsHead, $planned.Count, $plannedMax, $blockingQs.Count)
+    }
+    else {
+        $synthesis = ("Fellowship is the open aesthetic that gates the product: co-op already runs over loopback, but friends-alpha still fails until {0} ships a stranger-installable join. Planned sits at {1}/{2} while actives {3} sit off that path. Expression is largely served; what remains is play proof of {4} Next Run claims and whether protocols earn another planning slot after the cap clears." -f $friendsHead, $planned.Count, $plannedMax, $(if ($activeTitles) { $activeTitles } else { "(none)" }), $blockingQs.Count)
+    }
 }
 else {
     $synthesis = ("Friends-alpha head is clear. Planned {0}/{1}; active {2}/{3}. Next work follows Roadmap recommended order, then play debt." -f $planned.Count, $plannedMax, $active.Count, $activeMax)

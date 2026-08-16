@@ -3,9 +3,8 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER: authored CREW QUARTERS body: one row per attribute track. The ATTRIBUTES
-    /// heading is authored scene text. A dumb binder — code writes text, toggles rows and
-    /// wires clicks; layout, colour and font are the scene's.</summary>
+    /// <summary>LOCAL-OWNER: authored CREW QUARTERS body. Serialized names stay so Ship.unity
+    /// bindings survive: vitality→protocol, stamina→Ghost, scavenging→Foresight, luck hidden.</summary>
     public sealed class CrewQuartersPanelView : MonoBehaviour
     {
         const string Tag = "CrewQuartersPanelView";
@@ -17,14 +16,13 @@ namespace GatekeeperBastion.Game
 
         bool _bindingsChecked;
 
-        public PanelRowView VitalityRow => _vitalityRow;
-        public PanelRowView StaminaRow => _staminaRow;
-        public PanelRowView ScavengingRow => _scavengingRow;
-        public PanelRowView LuckRow => _luckRow;
+        public PanelRowView ProtocolRow => _vitalityRow;
+        public PanelRowView GhostRow => _staminaRow;
+        public PanelRowView ForesightRow => _scavengingRow;
+        public PanelRowView UnusedRow => _luckRow;
 
         void Awake() => ValidateRequiredBindings();
 
-        /// <summary>Logs one error per missing field.</summary>
         public void ValidateRequiredBindings()
         {
             if (_bindingsChecked) return;
@@ -32,7 +30,6 @@ namespace GatekeeperBastion.Game
             Require(nameof(_vitalityRow), _vitalityRow);
             Require(nameof(_staminaRow), _staminaRow);
             Require(nameof(_scavengingRow), _scavengingRow);
-            Require(nameof(_luckRow), _luckRow);
         }
 
         void Require(string field, UnityEngine.Object value)

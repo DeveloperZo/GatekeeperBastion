@@ -47,7 +47,7 @@ namespace GatekeeperBastion.Game
             if (_provoked || _damageable == null || _damageable.IsDead) return false;
             _provoked = true;
             _chasingPlayer = true;
-            if (_agent != null && _agent.isOnNavMesh) _agent.speed = chaseSpeed;
+            RecomputeSpeed();
             _retargetTimer = 0f; // re-path this frame, not up to 0.75s later
             Retarget();
 
@@ -80,7 +80,7 @@ namespace GatekeeperBastion.Game
             Vector3 eye = transform.position + Vector3.up * 1.2f;
             Vector3 target = _player.transform.position + Vector3.up * 1.0f;
             Vector3 to = target - eye;
-            if (to.magnitude > noticeRange) return false;
+            if (to.magnitude > NoticeRangeFor(_player)) return false;
             // Anything solid between us blocks the sighting; the player's own collider does not.
             if (Physics.Raycast(eye, to.normalized, out RaycastHit hit, to.magnitude,
                                 ~0, QueryTriggerInteraction.Ignore))
@@ -105,7 +105,7 @@ namespace GatekeeperBastion.Game
                 && _game.Sim.Mode == WaveMode.HatchBank;
             bool hatchAvailable = MayTargetHatch && hatchMode && hatch != null && !hatch.IsDestroyed;
             bool playerNear = MayTargetPlayer && _player != null &&
-                              Vector3.Distance(transform.position, _player.transform.position) <= aggroRadius;
+                              Vector3.Distance(transform.position, _player.transform.position) <= AggroRadiusFor(_player);
 
             // Seeing the player down a sightline counts as encountering them.
             if (!_provoked && MayTargetPlayer && _player != null && !playerNear && CanSeePlayer())
@@ -194,6 +194,18 @@ namespace GatekeeperBastion.Game
             }
             goal = default;
             return false;
+        }
+
+        float NoticeRangeFor(PlayerHealth player)
+        {
+            float mul = player != null ? player.AcquisitionMul : 1f;
+            return noticeRange * mul;
+        }
+
+        float AggroRadiusFor(PlayerHealth player)
+        {
+            float mul = player != null ? player.AcquisitionMul : 1f;
+            return aggroRadius * mul;
         }
     }
 }

@@ -38,6 +38,8 @@ live right now, so this table is a reference, not something you have to memorise
 | `Q` | last | in the bastion |
 | `WHEEL` | cycle | in the bastion |
 | `F` | ability | in the bastion |
+| `G` | crew | in the bastion |
+| `H` | self | in the bastion |
 
 **RUN**
 
@@ -73,7 +75,7 @@ live right now, so this table is a reference, not something you have to memorise
 
 ## Weapons
 
-You carry one **Primary** and one **Secondary** at once, plus an empty Drone slot.
+You carry one **Primary** and one **Secondary** at once. The Drone bay holds a payload — today the **Decoy**, sold at FABRICATION.
 The Primary is chosen at the ARMORY before you embark and is fixed for the run;
 switching in the bastion swaps between the slots you already carry, never between
 owned weapons. Each slot keeps its own clip, so switching is not a free reload.
@@ -111,7 +113,7 @@ the same 0.7 s clock — they differ in what they hit, never in how often.
 |---|---|---|---|---|---|
 | **Default** | 30 | 6 | 4 | 3.2 → 5.6 m/s when provoked | nothing — it will march, and it will turn on you if you hurt it |
 | **Hunter** | 20 | 6 | — | 6.5 m/s | to touch the hatch; it only ever wants you |
-| **Ram** | 120 | — | 20 | 2.2 m/s | to notice you at all, even while you shoot it |
+| **Ram** | 120 | — | 20 | 2.2 m/s | to turn when shot; Hatch-bank it marches the Hatch, field-terminal it hunts you — it never hurts you |
 
 HP above is the base line. Later waves multiply it (see the wave table).
 
@@ -157,7 +159,7 @@ A kill does not credit the ship. Prep `E` then `T` at the Hatch starts the conve
 drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A fatter pile
 converts at a higher multiplier. Dying keeps what already made it through the Hatch.
 
-A kill pays `25` at Scavenging 0, up to `31.25` at 5, then multiplied by intensity.
+A kill pays `25`, then multiplied by intensity.
 Nothing pays per second except Hatch-bank drip (`20` unbanked/s), and the quiet between waves earns nothing at all.
 
 The hatch is what you are defending: **300 HP** at Hatch Armor 0, up to **375**. Hold `E` near it to repair.
@@ -171,27 +173,23 @@ Between runs you walk your own ship. Four consoles, each owning one subject.
 | Console | Owns | Sells |
 |---|---|---|
 | **ARMORY** | the weapon in your hands | weapons, and wheel purchases for whichever you carry |
-| **CREW QUARTERS** | you | Vitality, Stamina, Scavenging, Luck |
-| **FABRICATION** | the ship | Hatch Armor, Equipment slot, Repair Rig |
+| **CREW QUARTERS** | you | Default Protocol (STOCK — hardware as sold; Crew Anchor; Personal Bulkhead; Passive Ghost or Foresight) |
+| **FABRICATION** | the ship | Hatch Armor, Equipment slot, Repair Rig, Decoy |
 | **NAV MAP** | where you go | the destination, and embarking |
 
-Attribute and ship tracks run 0–5 at +5% a level, costing 200 × 2^level — 200 / 400 / 800 / 1,600 / 3,200.
+Hatch Armor runs 0–5 at +5% a level, costing 200 × 2^level — 200 / 400 / 800 / 1,600 / 3,200.
 
 | Track | Level 0 | Level 5 |
 |---|---|---|
 | Hatch Armor — hatch HP | 300 HP | 375 HP |
-| Vitality — your HP | 100 HP | 125 HP |
-| Stamina — sprint pool | 100 | 125 |
-| Scavenging — salvage per kill | 25 | 31.25 |
-| Luck — crit chance (double damage) | 0% | 25% |
 | Equipment slot (once, after first loss) | — | 300 salvage |
 | Repair Rig — flat repair rate | 8 HP/s | 300 salvage |
+| Decoy — Drone payload | 3 charges | 250 salvage |
 
-Luck is the only source of critical hits in the game, on purpose: two sources would
-multiply against each other and the numbers on the panel would stop meaning anything.
+Crit chance is frozen at 0. There is no Luck shop. The Default Protocol is owned
+from the first session; CREW QUARTERS equips it rather than selling levels.
 
-**Attributes are never locked.** They are the answer to dying, so you can buy them
-before you have died. Weapon wheel purchases and the equipment slot unlock after your first death.
+Weapon wheel purchases and the equipment slot unlock after your first death.
 
 ---
 

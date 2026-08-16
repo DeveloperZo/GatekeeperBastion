@@ -68,11 +68,35 @@ namespace GatekeeperBastion.Game
             PlayerRegistry.Unregister(this);
         }
 
+        /// <summary>Ghost acquisition multiplier. 1 = unbiased. Pushed at spawn, never serialized.</summary>
+        public float AcquisitionMul { get; private set; } = 1f;
+
+        bool _bulkheadArmed;
+
+        public void ConfigureAcquisition(float mul)
+        {
+            AcquisitionMul = mul > 0f ? mul : 1f;
+        }
+
+        public void ArmBulkhead() { _bulkheadArmed = true; }
+
         /// <summary>Applies damage; a killing blow ends the run via GameController.PlayerDied().
         /// <paramref name="source"/> is optional and only enriches the death log.</summary>
         public void TakeDamage(float amount, Transform source = null)
         {
             if (IsDead || amount <= 0f || Invulnerable) return;
+            if (_bulkheadArmed && source != null)
+            {
+                var gk = source.GetComponent<EnemyGatekeeper>();
+                if (gk != null)
+                {
+                    _bulkheadArmed = false;
+                    Log.Event("Protocol", "Bulkhead negated " + amount.ToString("0") + " from " + gk.name);
+                    var proto = GetComponent<PlayerProtocolAbilities>();
+                    if (proto != null) proto.NotifyBulkheadConsumed();
+                    return;
+                }
+            }
             if (source != null)
             {
                 _lastAttacker = source;

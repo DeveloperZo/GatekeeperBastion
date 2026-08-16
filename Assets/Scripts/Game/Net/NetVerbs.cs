@@ -65,6 +65,16 @@ namespace GatekeeperBastion.Game
         {
             RequestPinServerRpc(targetNetId, seconds);
         }
+
+        public void RequestAnchor(Vector3 position, bool planting)
+        {
+            RequestAnchorServerRpc(position, planting);
+        }
+
+        public void RequestBulkhead()
+        {
+            RequestBulkheadServerRpc();
+        }
         #endregion
 
         #region Private
@@ -190,6 +200,29 @@ namespace GatekeeperBastion.Game
             gk.Pin(seconds);
             Log.Event("Ability",
                 "pin held " + seconds.ToString("0.##") + "s on " + gk.Kind);
+        }
+
+        AnchorField _anchor;
+
+        [Rpc(SendTo.Server)]
+        void RequestAnchorServerRpc(Vector3 position, bool planting)
+        {
+            if (!IsServer) return;
+            if (_anchor != null)
+            {
+                AnchorField.Uproot(_anchor);
+                _anchor = null;
+            }
+            if (!planting) return;
+            _anchor = AnchorField.Plant(position);
+        }
+
+        [Rpc(SendTo.Server)]
+        void RequestBulkheadServerRpc()
+        {
+            if (!IsServer) return;
+            var health = GetComponent<PlayerHealth>();
+            if (health != null) health.ArmBulkhead();
         }
         #endregion
     }

@@ -34,6 +34,43 @@ namespace GatekeeperBastion.Tests
             AssertAgent("Assets/Prefabs/RamGatekeeper.prefab", 0.4f * 1.4f, 2f * 1.4f);
         }
 
+        // Colour is the tutorial: each kind glows its own palette tint. Exact colours live in
+        // SceneBuilder's palette; this gates that emission is on, per-kind, and actually worn.
+        [Test]
+        public void Wrappers_WearDistinctEmissionTints()
+        {
+            string d = AssertEmissiveMatWorn("Default");
+            string h = AssertEmissiveMatWorn("Hunter");
+            string t = AssertEmissiveMatWorn("Thief");
+            Assert.AreNotEqual(d, h, "Default and Hunter share an emission tint");
+            Assert.AreNotEqual(d, t, "Default and Thief share an emission tint");
+            Assert.AreNotEqual(h, t, "Hunter and Thief share an emission tint");
+        }
+
+        static readonly Regex EmissionColorLine = new Regex(
+            @"_Emission_Color:\s*\{r:\s*([-\d.]+),\s*g:\s*([-\d.]+),\s*b:\s*([-\d.]+)",
+            RegexOptions.Compiled);
+        static readonly Regex EmissionEnabledLine = new Regex(
+            @"_Enable_Emission:\s*1\b", RegexOptions.Compiled);
+
+        /// <summary>Asserts the kind material exists with emission on and that the kind's wrapper
+        /// prefab references it; returns the emission colour triple for the distinctness check.</summary>
+        static string AssertEmissiveMatWorn(string kind)
+        {
+            string matPath = "Assets/Packs/Gatekeepers/" + kind + ".mat";
+            Assert.IsTrue(File.Exists(Path.GetFullPath(matPath)), matPath + " missing");
+            string yaml = File.ReadAllText(Path.GetFullPath(matPath));
+            Assert.IsTrue(EmissionEnabledLine.IsMatch(yaml), matPath + " emission not enabled");
+            var m = EmissionColorLine.Match(yaml);
+            Assert.IsTrue(m.Success, matPath + " has no _Emission_Color");
+
+            string guid = GuidOf(matPath);
+            string prefab = File.ReadAllText(
+                Path.GetFullPath("Assets/Packs/Gatekeepers/" + kind + ".prefab"));
+            Assert.IsTrue(prefab.Contains(guid), kind + ".prefab does not wear " + kind + ".mat");
+            return m.Groups[1].Value + "," + m.Groups[2].Value + "," + m.Groups[3].Value;
+        }
+
         static string GuidOf(string prefabPath)
         {
             string meta = Path.GetFullPath(prefabPath + ".meta");

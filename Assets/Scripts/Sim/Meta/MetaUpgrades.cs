@@ -3,26 +3,21 @@ using System;
 namespace GatekeeperBastion.Sim
 {
     /// <summary>
-    /// The ship-shop: permanent upgrade tracks bought with BANKED salvage between runs.
-    /// Pure static arithmetic — the LEVELS live on MetaState (so they persist with the save);
-    /// this class only prices, validates, and applies purchases, and maps levels to effects.
+    /// The ship-shop: Hatch Armor bought with BANKED salvage between runs, plus the
+    /// Boarder's frozen HP / stamina / kill-value constants (crew tracks deleted in save v8).
+    /// Pure static arithmetic — Hatch Armor LEVEL lives on MetaState; this class prices,
+    /// validates, and applies that purchase, and maps the remaining constants.
     /// </summary>
     /// <remarks>
-    /// Three invariants, each of which has a failure behind it. Docs/Design/4-Data.md has the
-    /// effect table and the reasoning; do not restate either here.
-    ///   1. ONE SHAPE FOR EVERY (attribute/fab) TRACK: base * (1 + 0.05 * level). No per-track
-    ///      slopes — a uniform ramp is what keeps the shop legible. CritChance is additive at
-    ///      the same slope only because a chance of zero has nothing to scale.
-    ///   2. Cost is exactly 200 * 2^currentLevel. Never "roughly doubles".
-    ///   3. ATTRIBUTES ARE NOT GATED behind the first death. They are the answer to dying, so
-    ///      they must be buyable before you have died. Weapon Tiers AND the equipment slot ARE
-    ///      gated (UpgradesUnlocked).
+    /// Cost is exactly 200 * 2^currentLevel. Never "roughly doubles".
+    /// Weapon Tiers AND the equipment slot are gated (UpgradesUnlocked).
     /// Weapon damage / fire rate / clip no longer live here — see WeaponCatalog + WeaponWheel.
     /// Repair rate no longer lives here — see EquipmentCatalog (flat 8 HP/s on the rig).
+    /// Luck is the only source of crit chance or crit damage in the game, even at chance 0.
     /// </remarks>
     public static class MetaUpgrades
     {
-        /// <summary>Highest level of every attribute/fab track.</summary>
+        /// <summary>Highest level of Hatch Armor.</summary>
         public const int MaxLevel = 5;
 
         /// <summary>Cost of level 0 → 1; each further level doubles.</summary>
@@ -47,7 +42,7 @@ namespace GatekeeperBastion.Sim
 
         /// <summary>
         /// Buy the next level of a track: pass the MetaState and a ref to its level field
-        /// (e.g. Buy(meta, ref meta.VitalityLevel)). Deducts BankedSalvage and increments
+        /// (e.g. Buy(meta, ref meta.HatchArmorLevel)). Deducts BankedSalvage and increments
         /// the level. Returns false (no mutation) when maxed or unaffordable.
         /// </summary>
         public static bool Buy(MetaState meta, ref int levelField)
@@ -62,7 +57,7 @@ namespace GatekeeperBastion.Sim
 
         /// <summary>
         /// True once weapon Tier purchases and the equipment slot are unlocked — gated until
-        /// the first death. Buying a weapon itself is NOT gated, and neither are attributes.
+        /// the first death. Buying a weapon itself is NOT gated.
         /// </summary>
         public static bool UpgradesUnlocked(MetaState m)
         {
@@ -78,40 +73,32 @@ namespace GatekeeperBastion.Sim
             return 300f * (1f + 0.05f * lvl);
         }
 
-        // ---- PLAYER ATTRIBUTES ----
+        // ---- BOARDER CONSTANTS (crew tracks deleted) ----
 
-        /// <summary>VITALITY — player max HP.</summary>
-        public static float PlayerMaxHp(int level)
+        /// <summary>Player max HP. Frozen at the old level-0 value.</summary>
+        public static float PlayerMaxHp()
         {
-            return 100f * (1f + 0.05f * ClampLevel(level));
+            return 100f;
         }
 
-        /// <summary>STAMINA — max stamina pool.</summary>
-        public static float StaminaMax(int level)
+        /// <summary>Sprint stamina pool. Frozen at the old level-0 value.</summary>
+        public static float StaminaMax()
         {
-            return 100f * (1f + 0.05f * ClampLevel(level));
+            return 100f;
         }
 
-        /// <summary>LUCK — critical-hit chance as a FRACTION. A crit deals DOUBLE damage.
-        /// THE RULE: Luck is the only source of crit chance or crit damage in the game.</summary>
-        public static float CritChance(int level)
+        /// <summary>LUCK — critical-hit chance as a FRACTION. Frozen at 0.
+        /// THE RULE: Luck is the only source of crit chance or crit damage in the game.
+        /// The 2× roll in PlayerGun.Firing stays.</summary>
+        public static float CritChance()
         {
-            return 0.05f * ClampLevel(level);
+            return 0f;
         }
 
-        /// <summary>SCAVENGING — base salvage for one downed gatekeeper, BEFORE the siphon
-        /// multiplier.</summary>
-        public static float SalvagePerKill(int level)
+        /// <summary>Base salvage for one downed gatekeeper, BEFORE the siphon multiplier.</summary>
+        public static float SalvagePerKill()
         {
-            return 25f * (1f + 0.05f * ClampLevel(level));
-        }
-
-        /// <summary>Clamp a track level into 0..MaxLevel.</summary>
-        private static int ClampLevel(int level)
-        {
-            if (level < 0) return 0;
-            if (level > MaxLevel) return MaxLevel;
-            return level;
+            return 25f;
         }
     }
 }

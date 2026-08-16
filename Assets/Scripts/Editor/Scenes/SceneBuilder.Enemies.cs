@@ -25,7 +25,8 @@ namespace GatekeeperBastion.EditorTools
     /// (0.22, 0.17, 0.30) — a genuinely dark violet body against a dark violet hull is invisible,
     /// which is the opposite of the point. Its size does the rest of the work.
     /// Silhouette is now the Synty mesh (Default robot, Hunter helmet-armor, Thief war-robot);
-    /// colour-and-size on the capsule is the history this comment keeps.
+    /// colour returns as a per-kind emission tint on the mesh's authored glow regions (eyes,
+    /// panels — the pack's _Emission_Map), same palette the capsules wore.
     ///
     /// NUMBERS DO NOT LIVE HERE. Everything baked below (hp, agent speed) is read from
     /// WaveDirector.StatsFor so the saved asset matches the sim, and every one of them is pushed
@@ -52,6 +53,8 @@ namespace GatekeeperBastion.EditorTools
         const string ClipIdle = "Assets/Packs/Boarder/Anim_PlayerIdle.fbx";
         const string ClipWalk = "Assets/Packs/Boarder/Anim_Walking.fbx";
         const string ClipRun = "Assets/Packs/Boarder/Anim_PlayerRun.fbx";
+        const string PackCharacterMat =
+            "Assets/Synty/PolygonSciFiSpace/Materials/PolygonScifiSpace_01_A.mat";
 
         /// <summary>The three gatekeeper prefabs, wired into the WaveSpawner as a set.</summary>
         sealed class EnemyPrefabs
@@ -70,7 +73,7 @@ namespace GatekeeperBastion.EditorTools
             }
             else
             {
-                EnsureGatekeeperWrappers();
+                EnsureGatekeeperWrappers(pal);
             }
 
             return new EnemyPrefabs
@@ -279,7 +282,7 @@ namespace GatekeeperBastion.EditorTools
             return true;
         }
 
-        static void EnsureGatekeeperWrappers()
+        static void EnsureGatekeeperWrappers(Palette pal)
         {
             if (!AssetDatabase.IsValidFolder("Assets/Packs"))
                 AssetDatabase.CreateFolder("Assets", "Packs");
@@ -292,6 +295,59 @@ namespace GatekeeperBastion.EditorTools
             EnsureWrapper(GatekeeperKind.Default, controller);
             EnsureWrapper(GatekeeperKind.Hunter, controller);
             EnsureWrapper(GatekeeperKind.Ram, controller);
+
+            // Colour is the tutorial: kind-tinted emission on the pack's authored glow regions.
+            // Runs after EnsureWrapper every build, so an already-dressed wrapper still converges.
+            EnsureWrapperEmission(GatekeeperKind.Default, pal.Enemy.color);
+            EnsureWrapperEmission(GatekeeperKind.Hunter, pal.Hunter.color);
+            EnsureWrapperEmission(GatekeeperKind.Ram, pal.Ram.color);
+        }
+
+        /// <summary>One material per kind, copied from the Synty character material (atlas and
+        /// alpha-clip carry over) with _Emission_Color tinted to the kind's palette colour. The
+        /// pack's _Emission_Map limits the glow to authored regions — eyes and panels, not the
+        /// whole body. Assigned to every renderer slot in the wrapper; all slots share the one
+        /// Synty base today.</summary>
+        static void EnsureWrapperEmission(GatekeeperKind kind, Color tint)
+        {
+            var baseMat = AssetDatabase.LoadAssetAtPath<Material>(PackCharacterMat);
+            if (baseMat == null)
+            {
+                Debug.LogError("[SceneBuilder] pack material missing: " + PackCharacterMat);
+                return;
+            }
+
+            string matPath = GatekeeperPackDir + "/" + VisualChildName(kind) + ".mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+            if (mat == null)
+            {
+                mat = new Material(baseMat);
+                AssetDatabase.CreateAsset(mat, matPath);
+            }
+            mat.SetFloat("_Enable_Emission", 1f);
+            // The Synty graph exposes both spellings; set both so whichever it samples agrees.
+            mat.SetColor("_Emission_Color", tint);
+            mat.SetColor("_EmissionColor", tint);
+            EditorUtility.SetDirty(mat);
+
+            string wrapperPath = WrapperPath(kind);
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(wrapperPath) == null) return;
+            GameObject root = PrefabUtility.LoadPrefabContents(wrapperPath);
+            bool changed = false;
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Material[] mats = renderers[i].sharedMaterials;
+                for (int m = 0; m < mats.Length; m++)
+                {
+                    if (mats[m] == mat) continue;
+                    mats[m] = mat;
+                    changed = true;
+                }
+                renderers[i].sharedMaterials = mats;
+            }
+            if (changed) PrefabUtility.SaveAsPrefabAsset(root, wrapperPath);
+            PrefabUtility.UnloadPrefabContents(root);
         }
 
         static void EnsureWrapper(GatekeeperKind kind, AnimatorController controller)

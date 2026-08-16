@@ -744,7 +744,7 @@ body.drag {
         <label>
           <span class="name">MIN_RUN_SEC</span>
           <input type="number" id="t_MIN_RUN_SEC" step="1" min="0" value="5">
-          <span class="desc">Exclude runs shorter than this (seconds).</span>
+          <span class="desc">Label runs shorter than this (seconds). Uncheck Short to hide them.</span>
         </label>
         <label>
           <span class="name">EASY_LIVE</span>
@@ -773,6 +773,12 @@ body.drag {
         </label>
       </div>
     </details>
+    <div class="picker" id="cohorts" style="margin-top:8px">
+      <label class="btn"><input type="checkbox" id="c_playmode" checked> Include PlayMode</label>
+      <label class="btn"><input type="checkbox" id="c_short" checked> Include short</label>
+      <label class="btn"><input type="checkbox" id="c_devcharts" checked> Dev in charts</label>
+      <span class="hint">Corpus is small — labeled, not dropped. Uncheck to hide a cohort.</span>
+    </div>
     <div id="status">Waiting for logs.</div>
   </div>
 </header>
@@ -797,7 +803,7 @@ body.drag {
 
     <section>
       <h2>Is the room full?</h2>
-      <p class="hint">Clean segments only. Dev Runs stay out of the curves.</p>
+      <p class="hint">Segments shown for included cohorts. Dev in charts is on until the sample is large.</p>
       <div id="eras"></div>
     </section>
 
@@ -985,6 +991,7 @@ body.drag {
 
   var ERA_HORDE = '2026-08-04';
   var ERA_WEAPONS = '2026-08-08';
+  var ERA_HATCHBANK = '2026-08-13';
 
   var TS_RE = /^\[(\d{2}):(\d{2}):(\d{2})\.(\d{3})\]/;
   var WAVE_START = /^wave\s+(\d+)\/(\d+)\s+[—\-]\s+(\d+)\s+(gatekeepers|boarders)\b/i;
@@ -994,7 +1001,7 @@ body.drag {
   var SOLO = /^boarder\s+(\d+)\/(\d+)\s+breached\s+at\s+\S+\s*$/i;
   var KILL_FULL = /^killed\s+a\s+(\w+)(?:\s+with\s+(Primary|Secondary|Drone))?\s+\(\+(\d+)\s+(?:salvage|unbanked)\)/i;
   var KILL_ANY = /^killed\s+a\s+(\w+)\b/i;
-  var KIND = /(\d+)\s+(Gatekeepers?|Hunters?|Rams?|boarders?|gatekeepers?)\b/gi;
+  var KIND = /(\d+)\s+(Gatekeepers?|Hunters?|Rams?|Thieves?|Thief|boarders?|gatekeepers?)\b/gi;
   var TRACK = /\btrack=(weapon|crew|fabrication|equipment)\b/i;
   var LOG_DATE = /GatekeeperBastion_(\d{4}-\d{2}-\d{2})_/i;
   var END_GROSS = /gross\s+(\d+)\s*,\s*repair\s+(\d+)\s*,\s*net\s+(\d+)\s*,\s*banked now\s+(\d+)/i;
@@ -1022,8 +1029,16 @@ body.drag {
       SECONDARY_SHARE_MIN: num('t_SECONDARY_SHARE_MIN', 0.15),
       ARRIVAL_WEIGHT: num('t_ARRIVAL_WEIGHT', 1),
       CLUSTER_MS: num('t_CLUSTER_MS', 100),
-      EFFICIENCY_SCALE: num('t_EFFICIENCY_SCALE', 1)
+      EFFICIENCY_SCALE: num('t_EFFICIENCY_SCALE', 1),
+      INCLUDE_PLAYMODE: chk('c_playmode', true),
+      INCLUDE_SHORT: chk('c_short', true),
+      DEV_IN_CHARTS: chk('c_devcharts', true)
     };
+  }
+
+  function chk(id, fallback) {
+    var el = document.getElementById(id);
+    return el ? el.checked : fallback;
   }
 
   function esc(s) {
@@ -1041,14 +1056,16 @@ body.drag {
     var d = m[1];
     if (d < ERA_HORDE) return 'pre-weapon';
     if (d < ERA_WEAPONS) return 'horde-retune';
-    return 'weapons-and-wheel';
+    if (d < ERA_HATCHBANK) return 'weapons-and-wheel';
+    return 'hatch-bank-loop';
   }
 
   function eraLabel(id) {
     return ({
       'pre-weapon': 'pre-weapon (<= 2026-08-03)',
       'horde-retune': 'horde retune (2026-08-04 .. 2026-08-07)',
-      'weapons-and-wheel': 'weapons and wheel (>= 2026-08-08)'
+      'weapons-and-wheel': 'weapons and wheel (2026-08-08 .. 2026-08-12)',
+      'hatch-bank-loop': 'hatch-bank loop (>= 2026-08-13)'
     })[id] || id;
   }
 
@@ -1058,6 +1075,7 @@ body.drag {
       return 'Gatekeeper';
     if (k === 'hunter' || k === 'hunters') return 'Hunter';
     if (k === 'ram' || k === 'rams') return 'Ram';
+    if (k === 'thief' || k === 'thieves') return 'Thief';
     if (!raw) return 'Unknown';
     return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
   }
@@ -1065,6 +1083,7 @@ body.drag {
   function inferTrack(msg) {
     if (/Repair Rig|Decoy|equipment slot|Equipment Slot/i.test(msg)) return 'equipment';
     if (/Hatch Armor/i.test(msg)) return 'fabrication';
+    if (/Default Protocol|Ghost|Foresight|Anchor|Bulkhead|STOCK/i.test(msg)) return 'crew';
     if (/Vitality|Stamina|Scavenging|Luck/i.test(msg)) return 'crew';
     if (/MK-1|MR-35|BR-12|SEC-D|PRI-C|VK-7|Sidearm|Rifle|Shotgun|focus |Damage L|Fire Rate L|Clip Size L|Clip L|Reload L/i.test(msg))
       return 'weapon';
@@ -1310,7 +1329,12 @@ body.drag {
         abilityActivations: 0,
         abilityZeroWaves: [],
         playerDamageHits: 0,
-        spawnedByKind: {}
+        spawnedByKind: {},
+        intensity: null,
+        juiceSpent: 0,
+        hatchBanks: 0,
+        netSeen: false,
+        protocolSeen: false
       };
       runs.push(run);
     }
@@ -1331,6 +1355,12 @@ body.drag {
       if (tagL === 'dev' || /\[Dev\]/i.test(msg)) {
         if (run && !run.closed) run.dev = true;
       }
+
+      if (tagL === 'hatch' && /hatch-bank/i.test(msg)) {
+        if (run && !run.closed) run.hatchBanks = (run.hatchBanks || 0) + 1;
+      }
+      if (tagL === 'net' && run && !run.closed) run.netSeen = true;
+      if (tagL === 'protocol' && run && !run.closed) run.protocolSeen = true;
 
       if (tagL === 'ship' && (/^bought /i.test(msg) || /equipment slot unlocked/i.test(msg))) {
         var buy = parsePurchase(msg);
@@ -1391,6 +1421,10 @@ body.drag {
           }
           run.hadWave = true;
           run.sawDraw = false;
+          var im = /intensity=(\d+)/i.exec(msg);
+          if (im) run.intensity = parseInt(im[1], 10);
+          var jm = /juiced=(\d+)/i.exec(msg);
+          if (jm) run.juiceSpent += parseInt(jm[1], 10);
           continue;
         }
 
@@ -1542,11 +1576,16 @@ body.drag {
   }
 
   function finalize(allRuns, T) {
-    var exclPlay = 0, exclShort = 0;
+    var exclPlay = 0, exclShort = 0, labeledDev = 0;
     var kept = [];
     allRuns.forEach(function (r) {
-      if (r.playMode) { exclPlay++; return; }
-      if (r.duration < T.MIN_RUN_SEC) { exclShort++; return; }
+      var isShort = r.duration < T.MIN_RUN_SEC;
+      if (r.playMode) exclPlay++;
+      else if (isShort) exclShort++;
+      if (r.dev) labeledDev++;
+      r.cohort = r.playMode ? 'playmode' : (isShort ? 'short' : 'session');
+      if (r.playMode && !T.INCLUDE_PLAYMODE) return;
+      if (isShort && !T.INCLUDE_SHORT) return;
       kept.push(r);
     });
 
@@ -1677,6 +1716,7 @@ body.drag {
       exclusions: {
         playmode: exclPlay,
         short: exclShort,
+        dev: labeledDev,
         shortRule: 'duration < ' + T.MIN_RUN_SEC + 's'
       },
       runs: kept,
@@ -1687,9 +1727,10 @@ body.drag {
       kinds: kinds,
       ability: { credit: abilityCredit, decoy: decoyAbsorbed, zeroWaves: zeroWaves },
       eras: [
-        { id: 'pre-weapon', label: eraLabel('pre-weapon') },
+        { id: 'hatch-bank-loop', label: eraLabel('hatch-bank-loop') },
+        { id: 'weapons-and-wheel', label: eraLabel('weapons-and-wheel') },
         { id: 'horde-retune', label: eraLabel('horde-retune') },
-        { id: 'weapons-and-wheel', label: eraLabel('weapons-and-wheel') }
+        { id: 'pre-weapon', label: eraLabel('pre-weapon') }
       ],
       tunables: T
     };
@@ -1737,6 +1778,34 @@ body.drag {
     if (!runs.length) {
       out.push({ sev: 'alert', text: 'No kept Runs in this sample — nothing to read.' });
       return out.slice(0, 6);
+    }
+
+    var hb = runs.filter(function (r) { return r.hatchBanks > 0; });
+    if (hb.length) {
+      out.push({
+        sev: 'info',
+        text: hb.length + ' Run(s) started a Hatch-bank. Intensity on those: ' +
+          hb.map(function (r) { return r.intensity == null ? '—' : String(r.intensity); }).slice(0, 8).join(', ') +
+          (hb.length > 8 ? '…' : '') + '.'
+      });
+    } else if (out.length < 6) {
+      var eraHb = runs.filter(function (r) { return r.era === 'hatch-bank-loop'; });
+      if (eraHb.length) {
+        out.push({
+          sev: 'warn',
+          text: eraHb.length + ' hatch-bank-era Run(s) and no Hatch-bank start parsed — convert never happened, or the line is missing.'
+        });
+      }
+    }
+
+    var juiced = runs.filter(function (r) { return (r.juiceSpent || 0) > 0 || (r.intensity || 0) > 0; });
+    if (juiced.length && out.length < 6) {
+      out.push({
+        sev: 'info',
+        text: juiced.length + ' Run(s) juiced above 0. Protocol lines on ' +
+          runs.filter(function (r) { return r.protocolSeen; }).length +
+          '; [Net] on ' + runs.filter(function (r) { return r.netSeen; }).length + '.'
+      });
     }
 
     var dead = runs.filter(abilityDead);
@@ -1878,15 +1947,20 @@ body.drag {
     var ex = D.exclusions;
     var runs = D.runs;
     var segs = D.segments;
-    var cleanSegs = segs.filter(function (s) { return !s.dev && !s.parseFailed; });
+    var cleanSegs = segs.filter(function (s) {
+      if (s.parseFailed) return false;
+      if (s.dev && !(D.tunables && D.tunables.DEV_IN_CHARTS)) return false;
+      return true;
+    });
     var lostRuns = runs.filter(function (r) { return r.outcome === 'lost'; }).length;
-    var excluded = ex.playmode + ex.short;
+    var labeled = (ex.playmode || 0) + (ex.short || 0);
 
     document.getElementById('sampleStrip').innerHTML =
       '<span class="chip"><span class="v">' + runs.length + '</span><span class="k">kept</span></span>' +
       '<span class="chip lost"><span class="v">' + lostRuns + '</span><span class="k">lost</span></span>' +
-      '<span class="chip muted"><span class="v">' + excluded + '</span><span class="k">excluded</span></span>' +
-      '<span class="chip muted"><span class="v">' + cleanSegs.length + '</span><span class="k">clean segs</span></span>' +
+      '<span class="chip muted"><span class="v">' + labeled + '</span><span class="k">labeled playmode/short</span></span>' +
+      '<span class="chip muted"><span class="v">' + (ex.dev || 0) + '</span><span class="k">dev</span></span>' +
+      '<span class="chip muted"><span class="v">' + cleanSegs.length + '</span><span class="k">chart segs</span></span>' +
       '<span class="chip muted"><span class="v">' + fileCount + '</span><span class="k">files</span></span>' +
       '<span class="chip muted"><span class="k">' + esc(ex.shortRule) +
         ' · playmode ' + ex.playmode + ' · short ' + ex.short + '</span></span>';
@@ -1965,7 +2039,7 @@ body.drag {
       document.getElementById('weaponCaption').textContent = '';
     }
 
-    var kindOrder = ['Gatekeeper', 'Hunter', 'Ram'];
+    var kindOrder = ['Gatekeeper', 'Hunter', 'Ram', 'Thief'];
     var kindByName = {};
     D.kinds.forEach(function (k) { kindByName[k.kind] = k; });
     var kindRows = kindOrder.map(function (name) {
@@ -2277,8 +2351,9 @@ body.drag {
     var status = document.getElementById('status');
     status.className = '';
     status.textContent = 'Loaded ' + LAST_FILE_COUNT + ' file(s) · kept ' +
-      data.runs.length + ' Run(s) · excluded playmode ' + data.exclusions.playmode +
-      ', short ' + data.exclusions.short + ' · tunables applied.';
+      data.runs.length + ' Run(s) · labeled playmode ' + data.exclusions.playmode +
+      ', short ' + data.exclusions.short + ', dev ' + (data.exclusions.dev || 0) +
+      ' · tunables applied.';
     render(data, LAST_FILE_COUNT);
   }
 
@@ -2319,7 +2394,7 @@ body.drag {
   }
 
   ['t_MIN_RUN_SEC', 't_EASY_LIVE', 't_SECONDARY_SHARE_MIN', 't_ARRIVAL_WEIGHT',
-   't_CLUSTER_MS', 't_EFFICIENCY_SCALE'].forEach(function (id) {
+   't_CLUSTER_MS', 't_EFFICIENCY_SCALE', 'c_playmode', 'c_short', 'c_devcharts'].forEach(function (id) {
     var el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('input', rerenderFromCache);

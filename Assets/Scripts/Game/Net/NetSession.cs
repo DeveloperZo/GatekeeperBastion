@@ -1,29 +1,30 @@
 using GatekeeperBastion.Util;
 using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>HOST / CLIENT: Bastion-scene session. Starts a host or joins over
-    /// UnityTransport. Scene management stays off — both instances load Bastion themselves.
-    /// No statics; consumers take this through a serialized GameController.Net reference.
-    /// Menu host/join arrives via <see cref="NetJoinIntent"/> consumed in Awake.</summary>
+    /// <summary>HOST / CLIENT: DDOL session. Main Menu Host/Join starts this before Ship.
+    /// <see cref="NetworkConfig.EnableSceneManagement"/> is true for friends sessions;
+    /// solo never creates this object. Additive wait never uses NetworkSceneManager.
+    /// Prefab fixtures keep forcing scene management off on their own managers.</summary>
     [RequireComponent(typeof(NetworkManager))]
-    [RequireComponent(typeof(UnityTransport))]
+    [RequireComponent(typeof(Unity.Netcode.Transports.UTP.UnityTransport))]
     [DefaultExecutionOrder(-100)]
-    public sealed class NetSession : MonoBehaviour
+    public sealed partial class NetSession : MonoBehaviour
     {
         #region Constants
         const string Tag = "Net";
         const string BindAllAddress = "0.0.0.0";
         const string LoopbackAddress = "127.0.0.1";
         const ushort DefaultPort = 7777;
-        const int ConnectTimeoutMs = 4000;
+        const int ConnectTimeoutMs = 10000;
+        const string BootstrapResource = "Net/NetSession";
         #endregion
 
         #region Inspector
-        [SerializeField, Tooltip("Bastion GameController. Authored in the scene.")]
+        [SerializeField, Tooltip("Bastion GameController. Bound when Bastion loads; null on Ship.")]
         GameController _game;
 
         [SerializeField, Tooltip("Spawned on host start; replicates phase/wave/alive.")]
@@ -42,13 +43,16 @@ namespace GatekeeperBastion.Game
 
         #region References
         NetworkManager _nm;
-        UnityTransport _transport;
+        Unity.Netcode.Transports.UTP.UnityTransport _transport;
         NetRunMirror _mirror;
+        NetPartyLobby _lobby;
         string _connectAddress;
         ushort _connectPort;
         bool _becamePeer;
         bool _returningToMenu;
         bool _leavingOnPurpose;
+        bool _lobbyShipLogged;
+        bool _menuBootstrap;
         NetJoinIntent.Kind _pendingKind;
         string _pendingAddress;
         ushort _pendingPort;
@@ -57,17 +61,23 @@ namespace GatekeeperBastion.Game
         #endregion
 
         #region Properties
-        /// <summary>The wired GameController. Null in fixture tests that spawn no scene session.</summary>
+        /// <summary>The wired GameController. Null on Ship / fixtures without a Bastion host.</summary>
         public GameController Game => _game;
 
         /// <summary>The live mirror after host spawn / client clone. Null until spawned.</summary>
         public NetRunMirror Mirror => _mirror;
+
+        /// <summary>Party lobby after host spawn. Null until spawned / fixtures without one.</summary>
+        public NetPartyLobby Lobby => _lobby;
 
         /// <summary>True while this instance's NetworkManager is listening.</summary>
         public bool Active => _nm != null && _nm.IsListening;
 
         /// <summary>True on a connected client that is not also the server.</summary>
         public bool IsClientOnly => Active && _nm != null && _nm.IsClient && !_nm.IsServer;
+
+        /// <summary>True when this seat is the party lead (listen-server host).</summary>
+        public bool IsPartyLead => Active && _nm != null && _nm.IsServer;
 
         /// <summary>Relay join code for this session. Null on LAN / solo.</summary>
         public string JoinCode => _joinCode;
@@ -93,11 +103,50 @@ namespace GatekeeperBastion.Game
         }
         #endregion
 
+        #region Static
+        /// <summary>DDOL session on the live NetworkManager, or null when solo / none.</summary>
+        public static NetSession FindLive()
+        {
+            var nm = NetworkManager.Singleton;
+            if (nm == null) return null;
+            return nm.GetComponent<NetSession>();
+        }
+
+        /// <summary>Instantiate the Resources bootstrap, mark DDOL, return the session.
+        /// Refuses a second live session.</summary>
+        public static NetSession CreateBootstrap()
+        {
+            var live = FindLive();
+            if (live != null && live.Active)
+            {
+                Log.Warn(Tag, "CreateBootstrap refused — session already active.");
+                return live;
+            }
+            if (live != null)
+                return live;
+
+            var prefab = Resources.Load<GameObject>(BootstrapResource);
+            if (prefab == null)
+            {
+                Log.Error(Tag, "CreateBootstrap refused — Resources/" + BootstrapResource
+                    + " missing. Create Prefabs/Net/NetSession and copy under Resources/Net/.");
+                return null;
+            }
+            var go = Instantiate(prefab);
+            go.name = "Net";
+            DontDestroyOnLoad(go);
+            var session = go.GetComponent<NetSession>();
+            if (session != null)
+                session._menuBootstrap = true;
+            return session;
+        }
+        #endregion
+
         #region Unity Lifecycle
         void Awake()
         {
             _nm = GetComponent<NetworkManager>();
-            _transport = GetComponent<UnityTransport>();
+            _transport = GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>();
             if (_nm == null)
             {
                 Log.Error(Tag, "NetworkManager missing on Net; session disabled.");
@@ -106,7 +155,10 @@ namespace GatekeeperBastion.Game
             if (_nm.NetworkConfig == null)
                 _nm.NetworkConfig = new NetworkConfig();
 
-            _nm.NetworkConfig.EnableSceneManagement = false;
+            // Friends session always. PlayMode Net* fixtures use their own managers and
+            // force EnableSceneManagement = false there — not this object.
+            _nm.NetworkConfig.EnableSceneManagement = true;
+            _nm.NetworkConfig.ConnectionApproval = true;
             if (_nm.NetworkConfig.NetworkTransport == null && _transport != null)
                 _nm.NetworkConfig.NetworkTransport = _transport;
             if (_avatarPrefab != null)
@@ -115,11 +167,10 @@ namespace GatekeeperBastion.Game
             _nm.OnClientConnectedCallback += OnClientConnected;
             _nm.OnClientDisconnectCallback += OnClientDisconnect;
             _nm.OnClientStopped += OnClientStopped;
+            _nm.ConnectionApprovalCallback = OnConnectionApproval;
 
-            // Consume here so a second Bastion load is solo. StartHost/StartClient wait for
-            // Start — NetworkManager.Awake has not run yet when this type is order -100.
-            // Relay bytes survive Consume for pause / LastError, but only bind them when this
-            // load actually requested Host or Join.
+            // CLI / Splash smoke may still set intent; menu Host/Join usually starts directly.
+            // Consume so a second load is solo.
             _pendingKind = NetJoinIntent.Consume();
             _pendingAddress = NetJoinIntent.Address;
             _pendingPort = NetJoinIntent.Port;
@@ -130,6 +181,46 @@ namespace GatekeeperBastion.Game
         }
 
         void Start()
+        {
+            ApplyPendingIntent();
+        }
+
+        void OnDestroy()
+        {
+            if (_nm != null)
+            {
+                _nm.OnClientConnectedCallback -= OnClientConnected;
+                _nm.OnClientDisconnectCallback -= OnClientDisconnect;
+                _nm.OnClientStopped -= OnClientStopped;
+                if (_nm.ConnectionApprovalCallback == OnConnectionApproval)
+                    _nm.ConnectionApprovalCallback = null;
+                if (_nm.SceneManager != null)
+                    _nm.SceneManager.OnLoadEventCompleted -= OnLoadEventCompleted;
+            }
+        }
+        #endregion
+
+        #region Public API
+        /// <summary>Rebind Bastion GameController after a networked Bastion load.</summary>
+        public void BindGame(GameController game)
+        {
+            _game = game;
+            if (_mirror != null)
+                _mirror.Bind(game);
+            if (_nm == null || !_nm.IsServer) return;
+            foreach (var pair in _nm.ConnectedClients)
+            {
+                var po = pair.Value.PlayerObject;
+                if (po == null) continue;
+                var verbs = po.GetComponent<NetVerbs>();
+                if (verbs != null) verbs.Bind(game);
+                var avatar = po.GetComponent<NetPlayerAvatar>();
+                if (avatar != null) avatar.Bind(game);
+            }
+        }
+
+        /// <summary>Consume pending CLI intent into StartHost / StartClient. Idempotent.</summary>
+        public void ApplyPendingIntent()
         {
             if (_pendingKind == NetJoinIntent.Kind.Host)
             {
@@ -148,32 +239,18 @@ namespace GatekeeperBastion.Game
             _pendingKind = NetJoinIntent.Kind.None;
         }
 
-        void OnDestroy()
-        {
-            if (_nm != null)
-            {
-                _nm.OnClientConnectedCallback -= OnClientConnected;
-                _nm.OnClientDisconnectCallback -= OnClientDisconnect;
-                _nm.OnClientStopped -= OnClientStopped;
-            }
-        }
-        #endregion
-
-        #region Public API
         /// <summary>Start a listen-server on all interfaces (default 0.0.0.0:7777) and spawn
-        /// the run mirror. Always LAN — Relay host goes through StartHostRelay from intent.</summary>
+        /// the run mirror. Always LAN — Relay host goes through StartHostRelay.</summary>
         public void StartHost(string bindAddress = BindAllAddress, ushort port = DefaultPort)
         {
             if (!CanStart("StartHost")) return;
             string advertise = bindAddress == BindAllAddress ? LoopbackAddress : bindAddress;
-            // Listen on bindAddress (0.0.0.0 = all NICs). Advertise loopback so
-            // SetConnectionData is not given 0.0.0.0 as a connect target.
             ConfigureTransport(advertise, port, bindAddress);
             if (!FinishHostStart()) return;
             LogSessionSnapshot("host started localId=" + _nm.LocalClientId
                 + " bind=" + bindAddress + ":" + port
                 + " join=" + advertise + ":" + port);
-            SpawnMirror();
+            SpawnSessionObjects();
         }
 
         /// <summary>Join address:port. Always LAN — Relay join goes through StartClientRelay.</summary>
@@ -196,6 +273,22 @@ namespace GatekeeperBastion.Game
             ClearLocalGatekeepers();
         }
 
+        /// <summary>Relay listen-server. Menu binds allocation before Ship.</summary>
+        public void StartHostRelay(RelayJoin.Payload payload, string joinCode)
+        {
+            _pendingRelay = payload;
+            _joinCode = joinCode;
+            StartHostRelay();
+        }
+
+        /// <summary>Relay client. Menu binds allocation before Ship.</summary>
+        public void StartClientRelay(RelayJoin.Payload payload, string joinCode)
+        {
+            _pendingRelay = payload;
+            _joinCode = joinCode;
+            StartClientRelay();
+        }
+
         void StartHostRelay()
         {
             if (!CanStart("StartHost")) return;
@@ -203,7 +296,7 @@ namespace GatekeeperBastion.Game
             if (!FinishHostStart()) return;
             LogSessionSnapshot("host started localId=" + _nm.LocalClientId
                 + " relay joinCode=" + _joinCode);
-            SpawnMirror();
+            SpawnSessionObjects();
         }
 
         void StartClientRelay()
@@ -218,6 +311,66 @@ namespace GatekeeperBastion.Game
             ClearLocalGatekeepers();
         }
 
+        /// <summary>Host: NetworkSceneManager loads the shared Ship lobby.</summary>
+        public bool LoadLobbyShip()
+        {
+            if (_nm == null || !_nm.IsServer)
+            {
+                Log.Warn(Tag, "LoadLobbyShip refused — not party lead.");
+                return false;
+            }
+            if (!_nm.IsListening)
+            {
+                Log.Warn(Tag, "LoadLobbyShip refused — session not listening.");
+                return false;
+            }
+            if (!SceneFlow.CanLoad(SceneFlow.Ship))
+            {
+                Log.Error(Tag, "LoadLobbyShip refused — Ship not in Build Settings.");
+                return false;
+            }
+            _nm.SceneManager.LoadScene(SceneFlow.Ship, LoadSceneMode.Single);
+            Log.Event(Tag, "party load Ship");
+            return true;
+        }
+
+        /// <summary>Host: NetworkSceneManager loads Bastion for every seat after countdown.</summary>
+        public void ServerLoadPartyBastion(int startWave)
+        {
+            if (_nm == null || !_nm.IsServer) return;
+            GameSession.PendingStartWave = startWave;
+            if (!SceneFlow.CanLoad(SceneFlow.Bastion))
+            {
+                Log.Error(Tag, "party Bastion load refused — Bastion not in Build Settings.");
+                return;
+            }
+            _nm.SceneManager.LoadScene(SceneFlow.Bastion, LoadSceneMode.Single);
+            Log.Event(Tag, "party load Bastion startWave=" + startWave);
+        }
+
+        /// <summary>Host: NetworkSceneManager returns the party to Ship without shutdown.</summary>
+        public bool LoadPartyShip()
+        {
+            if (_nm == null || !_nm.IsServer)
+            {
+                Log.Warn(Tag, "LoadPartyShip refused — not party lead.");
+                return false;
+            }
+            if (!_nm.IsListening)
+            {
+                Log.Warn(Tag, "LoadPartyShip refused — session not listening.");
+                return false;
+            }
+            if (!SceneFlow.CanLoad(SceneFlow.Ship))
+            {
+                Log.Error(Tag, "LoadPartyShip refused — Ship not in Build Settings.");
+                return false;
+            }
+            _nm.SceneManager.LoadScene(SceneFlow.Ship, LoadSceneMode.Single);
+            Log.Event(Tag, "party return Ship");
+            return true;
+        }
+
         /// <summary>Client clones register here from OnNetworkSpawn. Null-safe for fixture tests
         /// that spawn a mirror with no scene session.</summary>
         public void RegisterMirror(NetRunMirror mirror)
@@ -227,236 +380,23 @@ namespace GatekeeperBastion.Game
                 mirror.Bind(_game);
         }
 
-        /// <summary>Drop the session. A non-host then loads MainMenu from OnClientStopped.
-        /// Host ReturnToShip loads Ship itself after this returns.</summary>
+        public void RegisterLobby(NetPartyLobby lobby) => _lobby = lobby;
+
+        public void UnregisterLobby(NetPartyLobby lobby)
+        {
+            if (_lobby == lobby) _lobby = null;
+        }
+
+        /// <summary>Drop the session. A non-host then loads MainMenu from OnClientStopped.</summary>
         public void ShutdownSession()
         {
             _mirror = null;
+            _lobby = null;
             _leavingOnPurpose = true;
             if (_nm == null) return;
             if (!_nm.IsListening) return;
             Log.Event(Tag, "session shutdown");
             _nm.Shutdown();
-        }
-        #endregion
-
-        #region Private
-        bool CanStart(string op)
-        {
-            if (_nm == null)
-            {
-                Log.Warn(Tag, op + " refused — no NetworkManager.");
-                return false;
-            }
-            if (_nm.IsListening)
-            {
-                Log.Warn(Tag, op + " refused — session already active.");
-                return false;
-            }
-            return true;
-        }
-
-        void ArmNetwork()
-        {
-            if (!_nm.enabled) _nm.enabled = true;
-            EnsurePrefabsRegistered();
-        }
-
-        bool FinishHostStart()
-        {
-            ArmNetwork();
-            if (_nm.StartHost()) return true;
-            Log.Warn(Tag, "StartHost refused — NetworkManager.StartHost returned false.");
-            return false;
-        }
-
-        bool FinishClientStart()
-        {
-            ArmNetwork();
-            if (_nm.StartClient()) return true;
-            Log.Warn(Tag, "StartClient refused — NetworkManager.StartClient returned false.");
-            RefuseJoin("StartClient returned false");
-            return false;
-        }
-
-        void ClearLocalGatekeepers()
-        {
-            if (_game == null || _game.Spawner == null) return;
-            int wiped = _game.Spawner.DespawnAllLive();
-            if (wiped > 0)
-                Log.Event(Tag, "client starting — cleared " + wiped + " local gatekeepers");
-        }
-
-        void BindRelayTransport()
-        {
-            if (_transport == null) _transport = GetComponent<UnityTransport>();
-            if (_transport == null)
-            {
-                Log.Warn(Tag, "no UnityTransport — cannot bind Relay");
-                return;
-            }
-            if (_nm != null && _nm.NetworkConfig.NetworkTransport == null)
-                _nm.NetworkConfig.NetworkTransport = _transport;
-            _transport.ConnectTimeoutMS = ConnectTimeoutMs;
-            RelayJoin.Apply(_transport, _pendingRelay);
-        }
-
-        void ConfigureTransport(string address, ushort port, string listenAddress = null)
-        {
-            if (_transport == null) _transport = GetComponent<UnityTransport>();
-            if (_transport == null)
-            {
-                Log.Warn(Tag, "no UnityTransport — cannot bind " + address + ":" + port);
-                return;
-            }
-            if (_nm != null && _nm.NetworkConfig.NetworkTransport == null)
-                _nm.NetworkConfig.NetworkTransport = _transport;
-            _transport.ConnectTimeoutMS = ConnectTimeoutMs;
-            if (string.IsNullOrEmpty(listenAddress))
-                _transport.SetConnectionData(address, port);
-            else
-                _transport.SetConnectionData(address, port, listenAddress);
-        }
-
-        void RefuseJoin(string reason)
-        {
-            string address = string.IsNullOrEmpty(_connectAddress)
-                ? "?"
-                : _connectAddress + ":" + _connectPort;
-            Log.Event(Tag, "join refused reason=" + reason + " address=" + address);
-            // Fixtures spawn NetSession with no GameController; do not dump the test into MainMenu.
-            if (_game == null) return;
-            NetJoinIntent.LastError = "Could not reach " + address + " — " + reason;
-            if (_returningToMenu) return;
-            _returningToMenu = true;
-            SceneFlow.LoadMainMenu();
-        }
-
-        /// <summary>After NetworkManager.Awake has built the authored list, add any missing
-        /// prefab. Calling this from Awake duplicates GlobalObjectIdHash against the list.</summary>
-        void EnsurePrefabsRegistered()
-        {
-            RegisterPrefab(_avatarPrefab);
-            RegisterPrefab(_mirrorPrefab);
-            RegisterPrefab(_gatekeeperPrefab);
-            RegisterPrefab(_hunterPrefab);
-            RegisterPrefab(_ramPrefab);
-            RegisterPrefab(_decoyPrefab);
-        }
-
-        void RegisterPrefab(GameObject prefab)
-        {
-            if (prefab == null || _nm == null) return;
-            var prefabs = _nm.NetworkConfig.Prefabs;
-            if (prefabs == null) return;
-            if (prefabs.Contains(prefab)) return;
-            prefabs.Add(new NetworkPrefab { Prefab = prefab });
-        }
-
-        /// <summary>Wave / assault / alive at this instant. netAlive is how many live
-        /// bodies are actually Spawn()'d — 0 with alive &gt; 0 means the session started
-        /// after the wave, so the client will not see those actors.</summary>
-        void LogSessionSnapshot(string head)
-        {
-            var sim = _game != null ? _game.Sim : null;
-            int wave = sim != null ? sim.CurrentWaveIndex : 0;
-            string assault = sim != null ? sim.Assault.ToString() : "none";
-            int alive = _game != null ? _game.EnemiesAlive : 0;
-            Log.Event(Tag, head
-                + " wave=" + wave
-                + " assault=" + assault
-                + " alive=" + alive
-                + " netAlive=" + CountNetworkSpawned());
-        }
-
-        int CountNetworkSpawned()
-        {
-            if (_game == null || _game.Spawner == null) return 0;
-            var live = _game.Spawner.Live;
-            int n = 0;
-            for (int i = 0; i < live.Count; i++)
-            {
-                var gk = live[i];
-                if (gk == null) continue;
-                var net = gk.GetComponent<NetworkObject>();
-                if (net != null && net.IsSpawned) n++;
-            }
-            return n;
-        }
-
-        void SpawnMirror()
-        {
-            if (_mirrorPrefab == null)
-            {
-                Log.Warn(Tag, "StartHost — no NetRunMirror prefab assigned.");
-                return;
-            }
-
-            var go = Instantiate(_mirrorPrefab);
-            var netObj = go.GetComponent<NetworkObject>();
-            if (netObj == null)
-            {
-                Log.Warn(Tag, "StartHost — NetRunMirror prefab has no NetworkObject.");
-                Destroy(go);
-                return;
-            }
-            netObj.Spawn(true);
-        }
-
-        void OnClientConnected(ulong clientId)
-        {
-            if (_nm != null && !_nm.IsServer && clientId == _nm.LocalClientId)
-                _becamePeer = true;
-            if (_nm != null && _nm.IsServer
-                && _nm.ConnectedClients.TryGetValue(clientId, out var client)
-                && client.PlayerObject != null)
-            {
-                var verbs = client.PlayerObject.GetComponent<NetVerbs>();
-                if (verbs != null)
-                    verbs.Bind(_game);
-                var avatar = client.PlayerObject.GetComponent<NetPlayerAvatar>();
-                if (avatar != null)
-                    avatar.Bind(_game);
-            }
-            if (_nm == null) return;
-            if (_nm.IsServer && clientId == _nm.LocalClientId)
-                return;
-            if (_nm.IsServer)
-            {
-                LogSessionSnapshot("connected clientId=" + clientId
-                    + " localId=" + _nm.LocalClientId
-                    + " role=host");
-                return;
-            }
-            Log.Event(Tag, "connected clientId=" + clientId
-                + " localId=" + _nm.LocalClientId
-                + " role=client");
-        }
-
-        void OnClientDisconnect(ulong clientId)
-        {
-            if (_nm == null || _nm.IsServer) return;
-            if (clientId != _nm.LocalClientId) return;
-            if (_becamePeer) return;
-            string reason = _nm.DisconnectReason;
-            if (string.IsNullOrEmpty(reason)) reason = "timeout";
-            RefuseJoin(reason);
-        }
-
-        void OnClientStopped(bool wasHost)
-        {
-            _mirror = null;
-            Log.Event(Tag, "session stopped");
-            if (wasHost) return;
-            if (_returningToMenu) return;
-            if (_game == null) return;
-            if (_becamePeer && !_leavingOnPurpose)
-            {
-                Log.Event(Tag, "host left");
-                NetJoinIntent.LastError = "Host left the session.";
-            }
-            _returningToMenu = true;
-            SceneFlow.LoadMainMenu();
         }
         #endregion
     }

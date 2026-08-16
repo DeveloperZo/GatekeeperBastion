@@ -23,12 +23,13 @@ public static class WaveReport
 {
     static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
-    /// <summary>M38 - Runs shorter than this are excluded from the dashboard sample.</summary>
+    /// <summary>Dashboard labels runs shorter than this. wave-report prints every Run.</summary>
     public const double MinRunSeconds = 5.0;
 
     // Era cutoffs from filename date (Docs/Design/4-Data.md, wave-report section).
     static readonly DateTime EraHordeStart = new DateTime(2026, 8, 4);
     static readonly DateTime EraWeaponsStart = new DateTime(2026, 8, 8);
+    static readonly DateTime EraHatchBankStart = new DateTime(2026, 8, 13);
 
     static readonly Regex TsRe = new Regex(
         @"^\[(\d{2}):(\d{2}):(\d{2})\.(\d{3})\]", RegexOptions.Compiled);

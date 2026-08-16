@@ -69,20 +69,18 @@ namespace GatekeeperBastion.Game
         {
             float stepX = BastionPackTiling.Step(b.size.x);
             float stepZ = BastionPackTiling.Step(b.size.z);
-            int fullX = BastionPackTiling.RunCount(width, stepX, out float remX);
-            int fullZ = BastionPackTiling.RunCount(depth, stepZ, out float remZ);
-            int totalX = fullX + (remX > 0f ? 1 : 0);
-            int totalZ = fullZ + (remZ > 0f ? 1 : 0);
+            int totalX = BastionPackTiling.RunCount(width, stepX, out float tileStepX);
+            int totalZ = BastionPackTiling.RunCount(depth, stepZ, out float tileStepZ);
             float startX = -width * 0.5f;
             float startZ = -depth * 0.5f;
             int index = 0;
 
             for (int ix = 0; ix < totalX; ix++)
             {
-                BastionPackTiling.RunAt(ix, fullX, startX, stepX, remX, out float cx, out float sx);
+                BastionPackTiling.RunAt(ix, startX, tileStepX, stepX, out float cx, out float sx);
                 for (int iz = 0; iz < totalZ; iz++)
                 {
-                    BastionPackTiling.RunAt(iz, fullZ, startZ, stepZ, remZ, out float cz, out float sz);
+                    BastionPackTiling.RunAt(iz, startZ, tileStepZ, stepZ, out float cz, out float sz);
 
                     // Pack slab pivots are corner pivots — position from the measured bounds
                     // centre, never the pivot.
@@ -193,11 +191,10 @@ namespace GatekeeperBastion.Game
             float scaleY,
             ref int index)
         {
-            int full = BastionPackTiling.RunCount(length, step, out float remainder);
-            int total = full + (remainder > 0f ? 1 : 0);
+            int total = BastionPackTiling.RunCount(length, step, out float tileStep);
             for (int i = 0; i < total; i++)
             {
-                BastionPackTiling.RunAt(i, full, start, step, remainder, out float center, out float scaleAlong);
+                BastionPackTiling.RunAt(i, start, tileStep, step, out float center, out float scaleAlong);
                 SpawnFacePiece(
                     geomRoot,
                     wallPiece,
@@ -361,7 +358,16 @@ namespace GatekeeperBastion.Game
             GameObject go;
 #if UNITY_EDITOR
             if (!Application.isPlaying)
+            {
                 go = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(prefab, geomRoot);
+                // Kit pieces are templates. Completely unpacks so Rebuild cannot leave
+                // packed Gen_* in an authored scene.
+                if (go != null)
+                    UnityEditor.PrefabUtility.UnpackPrefabInstance(
+                        go,
+                        UnityEditor.PrefabUnpackMode.Completely,
+                        UnityEditor.InteractionMode.AutomatedAction);
+            }
             else
                 go = Object.Instantiate(prefab, geomRoot);
 #else

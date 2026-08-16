@@ -118,13 +118,14 @@ namespace GatekeeperBastion.Game
         public bool TryPlace(Vector3 position)
         {
             if (!HasPayload) return false;
-            if (!State.TryPlace(position.x, position.y, position.z, out string reason))
+            if (!State.TryPlace(position.x, position.y, position.z, PlaceMode(), out string reason))
             {
                 Log.Event(Tag, $"place refused — {reason}");
                 return false;
             }
 
             Live = DecoyObject.Spawn(position, this, State.MaxHp, ResolveSpawnPrefab());
+            if (Live != null) Live.Configure(this, State.MaxHp, State.Mode);
             Log.Event(Tag,
                 $"placed — charges left {State.ChargesRemaining}, hp {State.MaxHp:0}");
             return true;
@@ -172,6 +173,13 @@ namespace GatekeeperBastion.Game
             var gc = _game;
             if (gc == null || gc.Net == null) return null;
             return gc.Net.DecoyPrefab;
+        }
+
+        DoctrineMode PlaceMode()
+        {
+            var meta = _game != null ? _game.Meta : null;
+            if (meta == null) return DoctrineMode.Stock;
+            return BoarderProtocol.DoctrineOf(meta.EquippedProtocol);
         }
     }
 }

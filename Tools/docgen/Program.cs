@@ -21,7 +21,7 @@ public static class Docgen
     static readonly string[] KnownBlockIds =
     {
         "mk1-base", "wheel", "rings", "tier-cost", "abilities",
-        "gatekeepers", "waves", "dial", "intensity-juice", "hatch", "hatch-bank", "master-control", "tracks",
+        "gatekeepers", "waves", "dial", "player-count", "intensity-juice", "hatch", "hatch-bank", "master-control", "tracks",
         "bastion-mesh"
     };
 
@@ -625,10 +625,6 @@ public static class Docgen
 
     static string FormatTrackValue(UpgradeTrack track, UpgradeTracks.ValueAtResult v)
     {
-        if (track == UpgradeTrack.Luck)
-            return N(v.Value) + "%";
-        if (track == UpgradeTrack.Scavenging)
-            return N(v.Value);
         if (string.IsNullOrEmpty(v.Unit))
             return N(v.Value);
         return N(v.Value) + " " + v.Unit;
@@ -730,7 +726,7 @@ public static class Docgen
 
         sb.AppendLine("## Weapons");
         sb.AppendLine();
-        sb.AppendLine("You carry one **Primary** and one **Secondary** at once, plus an empty Drone slot.");
+        sb.AppendLine("You carry one **Primary** and one **Secondary** at once. The Drone bay holds a payload — today the **Decoy**, sold at FABRICATION.");
         sb.AppendLine("The Primary is chosen at the ARMORY before you embark and is fixed for the run;");
         sb.AppendLine("switching in the bastion swaps between the slots you already carry, never between");
         sb.AppendLine("owned weapons. Each slot keeps its own clip, so switching is not a free reload.");
@@ -816,7 +812,7 @@ public static class Docgen
         AppendManualGk(sb, GatekeeperKind.Hunter, "Hunter",
             "to touch the hatch; it only ever wants you");
         AppendManualGk(sb, GatekeeperKind.Ram, "Ram",
-            "to notice you at all, even while you shoot it");
+            "to turn when shot; Hatch-bank it marches the Hatch, field-terminal it hunts you — it never hurts you");
         sb.AppendLine();
         sb.AppendLine("HP above is the base line. Later waves multiply it (see the wave table).");
         sb.AppendLine();
@@ -893,9 +889,7 @@ public static class Docgen
         sb.AppendLine("drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A fatter pile");
         sb.AppendLine("converts at a higher multiplier. Dying keeps what already made it through the Hatch.");
         sb.AppendLine();
-        sb.AppendLine("A kill pays `" + N(MetaUpgrades.SalvagePerKill(0)) + "` at Scavenging 0, up to `" +
-                      N(MetaUpgrades.SalvagePerKill(MetaUpgrades.MaxLevel)) + "` at " +
-                      MetaUpgrades.MaxLevel + ", then multiplied by intensity.");
+        sb.AppendLine("A kill pays `" + N(MetaUpgrades.SalvagePerKill()) + "`, then multiplied by intensity.");
         sb.AppendLine("Nothing pays per second except Hatch-bank drip (`" + N(HatchBank.DripPerSecond) +
                       "` unbanked/s), and the quiet between waves earns nothing at all.");
         sb.AppendLine();
@@ -925,19 +919,23 @@ public static class Docgen
             byStation[st].Add(UpgradeTracks.Label(track));
         }
 
-        string crew = byStation.ContainsKey("CREW QUARTERS")
-            ? string.Join(", ", byStation["CREW QUARTERS"]) : "—";
+        string crew = BoarderProtocol.ProtocolName(BoarderProtocolId.Default)
+            + " (" + BoarderProtocol.DoctrineText(BoarderProtocolId.Default)
+            + "; Crew " + BoarderProtocol.DisplayName(BoarderAbilityId.Anchor)
+            + "; Personal " + BoarderProtocol.DisplayName(BoarderAbilityId.Bulkhead)
+            + "; Passive " + BoarderProtocol.DisplayName(BoarderAbilityId.Ghost)
+            + " or " + BoarderProtocol.DisplayName(BoarderAbilityId.Foresight) + ")";
         string fabTracks = byStation.ContainsKey("FABRICATION")
             ? string.Join(", ", byStation["FABRICATION"]) : "";
         string fabSells = fabTracks;
         if (fabSells.Length > 0) fabSells += ", ";
-        fabSells += "Equipment slot, Repair Rig";
+        fabSells += "Equipment slot, Repair Rig, Decoy";
 
         sb.AppendLine("| **CREW QUARTERS** | you | " + crew + " |");
         sb.AppendLine("| **FABRICATION** | the ship | " + fabSells + " |");
         sb.AppendLine("| **NAV MAP** | where you go | the destination, and embarking |");
         sb.AppendLine();
-        sb.AppendLine("Attribute and ship tracks run 0–" + MetaUpgrades.MaxLevel + " at +5% a level, costing " +
+        sb.AppendLine("Hatch Armor runs 0–" + MetaUpgrades.MaxLevel + " at +5% a level, costing " +
                       MetaUpgrades.NextCost(0).ToString("N0", Inv) + " × 2^level — " +
                       Enumerable.Range(0, MetaUpgrades.MaxLevel)
                                 .Select(l => MetaUpgrades.NextCost(l).ToString("N0", Inv))
@@ -961,12 +959,14 @@ public static class Docgen
         sb.AppendLine("| Repair Rig — flat repair rate | " +
                       N(rig.repairPerSecond) + " HP/s | " +
                       rig.cost.ToString("N0", Inv) + " salvage |");
+        var decoy = PayloadCatalog.Def(PayloadId.Decoy);
+        sb.AppendLine("| Decoy — Drone payload | " + decoy.charges + " charges | " +
+                      decoy.cost.ToString("N0", Inv) + " salvage |");
         sb.AppendLine();
-        sb.AppendLine("Luck is the only source of critical hits in the game, on purpose: two sources would");
-        sb.AppendLine("multiply against each other and the numbers on the panel would stop meaning anything.");
+        sb.AppendLine("Crit chance is frozen at 0. There is no Luck shop. The Default Protocol is owned");
+        sb.AppendLine("from the first session; CREW QUARTERS equips it rather than selling levels.");
         sb.AppendLine();
-        sb.AppendLine("**Attributes are never locked.** They are the answer to dying, so you can buy them");
-        sb.AppendLine("before you have died. Weapon wheel purchases and the equipment slot unlock after your first death.");
+        sb.AppendLine("Weapon wheel purchases and the equipment slot unlock after your first death.");
         sb.AppendLine();
     }
 
@@ -975,10 +975,6 @@ public static class Docgen
         switch (track)
         {
             case UpgradeTrack.HatchArmor: return "hatch HP";
-            case UpgradeTrack.Vitality: return "your HP";
-            case UpgradeTrack.Stamina: return "sprint pool";
-            case UpgradeTrack.Scavenging: return "salvage per kill";
-            case UpgradeTrack.Luck: return "crit chance (double damage)";
             default: return "";
         }
     }

@@ -5,7 +5,7 @@ Purpose: the ubiquitous language of Gatekeeper Bastion. One name per thing, used
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired, or when player-facing voice rules change.
-Last updated: 2026-08-15
+Last updated: 2026-08-16
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in
@@ -91,7 +91,7 @@ are named here.
 
 | Term | Means | Never called |
 |---|---|---|
-| **Docked** | Aboard the Ship. Not yet boarded. | menu, lobby, idle |
+| **Docked** | Aboard the Ship. Not yet boarded. Solo hub, or a friends session's shared Ship. | menu, lobby, idle |
 | **Tethered** | Aboard the Bastion with the tether live. The whole fight happens here. | in-run, active, boarded |
 | **Spooling** | Reserved, unused in v0 — the escape window after the tether is cut. | *(do not use it for anything else)* |
 | **Escaped** | Terminal, good: Master Control's Hatch-bank half survived. Wave 5 does not Escaped. | won, victory |
@@ -120,10 +120,15 @@ are named here.
 | **Equipment** | Gear bought at FABRICATION into the equipment slot (unlocked after first loss, bought once). The Repair Rig is the first piece. | payload *(that is the Drone's)*, item, kit, Utility |
 | **Tier** | A step on a weapon's upgrade track. | level, rank, mark, upgrade |
 | **ability** | A weapon's one activated effect, on a cooldown. | special, power, skill, ult |
-| **Crew ability** | A Boarder-owned burst: brief window, moderate-to-long cooldown, bought at CREW QUARTERS. *Designed, not built* (`../../Brainstorms/crew-skills-and-perks.md`). | skill, perk, track, weapon ability |
+| **Boarder Protocol** | The named sheet CREW QUARTERS equips: one doctrine, one Crew ability, one Personal ability, one Passive pick. Owned from the first session. Working name **DEFAULT** for the first sheet — renameable. | archetype, class, kit, loadout *(loadout is weapons)* |
+| **doctrine** | How a protocol treats hardware at decoy place. **STOCK** (working name, renameable) is hardware as sold. Written at `TryPlace`, not on repair. | stance, mode-as-flavour |
+| **Crew ability** | A Boarder-owned burst on `G`: brief window, moderate-to-long cooldown. Default sheet: **Anchor** (working name, renameable). | skill, perk, track, weapon ability |
+| **Personal ability** | A Boarder-owned burst on `H`: brief window, long cooldown, for the presser. Default sheet: **Bulkhead** (working name, renameable). | skill, perk, ult, weapon ability |
+| **Passive** | Always-on protocol rule, pick-one, Ship-only re-pick. Default sheet: **Ghost** or **Foresight** (working names, renameable). A rule, never a number. | stat, track, perk |
+| **twist** | Reserved protocol modifier. Ships later. | mutator, relic, charm |
 | **loadout** | The Primary, Secondary and Drone a Boarder embarks with, plus their Equipment. | kit, gear, build |
 | **improvised cutter** | What a Boarder fights with having bought no weapon at all. Deliberately bad. | salvage cutter *(the code's old name)*, fists, melee, starter weapon |
-| **crit** | A critical hit. Chance comes from Luck. | critical strike, headshot |
+| **crit** | A critical hit. Chance is 0; the Luck track is gone. | critical strike, headshot |
 | **upgrade wheel** | The ARMORY's five-spoke upgrade selector. *Built (M21) — every shop weapon has a ring; SEC-D Ability is not purchasable.* | the wheel *(alone)*, carousel *(the shape is a wheel; the ring is undirected)*, tree |
 | **upgrade spoke** | One of the upgrade wheel's five attributes. | node, slot, stat |
 | **upgrade focus** | The upgrade spoke the player centres before buying. | specialisation, path, build *(a build is the result, not the act)* |
@@ -143,7 +148,12 @@ mark in the commit that builds it.
 | **banked** | Salvage on the ship that the player can spend. | stored, saved |
 | **intensity** | The per-Wave wager 0–5: more Salvage per Gatekeeper, more Gatekeepers. | siphon dial, difficulty, risk slider, multiplier *(as a name for this)* |
 | **juice** | Paying Unbanked at a trigger to raise intensity. | siphon, buy difficulty, map device |
-| **track** | A permanent upgrade line at CREW QUARTERS or FABRICATION. | skill, perk, stat line |
+| **track** | A permanent upgrade line at FABRICATION (Hatch Armor). | skill, perk, stat line |
+| **party** | Connected seats in a friends session. | group, team |
+| **party lead** | The host. Owns NAV EMBARK. | leader, captain |
+| **Ready** | Guest session control before party EMBARK. | prepared, set |
+| **join code** | Relay code shown on Host, typed at Join. | room code, lobby code |
+| **shared Ship** | The one Ship instance a friends session stands on. | lobby *(player-facing)* |
 
 ### The tracks
 
@@ -152,10 +162,6 @@ Every track is on screen and in the wiki, so every track is named here.
 | Term | Owns | Bought at |
 |---|---|---|
 | **Hatch Armor** | The Hatch's maximum HP. | FABRICATION |
-| **Vitality** | The Boarder's maximum HP. | CREW QUARTERS |
-| **Stamina** | The sprint pool. | CREW QUARTERS |
-| **Scavenging** | Base Salvage per kill. | CREW QUARTERS |
-| **Luck** | Crit chance. | CREW QUARTERS |
 
 ### The stations
 
@@ -164,7 +170,7 @@ Written in caps in player-facing text, matching what the player reads on the con
 | Term | Owns | Never called |
 |---|---|---|
 | **ARMORY** | The weapon in your hands. | weapons bay, shop, Armory *(caps, always)* |
-| **CREW QUARTERS** | The Boarder's Crew abilities (*designed*). Today still sells attribute tracks. | barracks, skills |
+| **CREW QUARTERS** | The Boarder's protocol — doctrine, Crew and Personal abilities, Passive pick. | barracks, skills, attributes |
 | **FABRICATION** | The Ship's gear and the Hatch. | workshop |
 | **NAV MAP** | Where you go, and going there. | map, bridge, terminal |
 | **Compendium** | The Boarder's working knowledge of the game: volumes of related entries (situation, Run, Bastion, garrison, arms, hull), not a glossary of terms. Markdown lives in `Docs/Play/` (M28 language lint). In-game reader shipped (`M62`, Esc → Compendium). | Codex, encyclopedia, wiki, lore bible, Hyrule Compendium, Persona Compendium |
@@ -221,7 +227,7 @@ a term retired without a row here is a term the check does not know about (M28).
 ```language-lint
 # Comma-separated lists. Keys are fixed; the script parses this fence only.
 retired=derelict,Podded,podded,breach point,muster point
-builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization,hatchDist,spawnDist,Wave-defense,encyclopedia,lore bible,Codex,siphon dial
+builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization,hatchDist,spawnDist,Wave-defense,encyclopedia,lore bible,Codex,siphon dial,lobby
 stations_title=Armory,Crew Quarters,Fabrication,Nav Map
 boarder_enemy=boarders expected,the boarders,boarder kind,boarder-seconds
 ```
@@ -241,12 +247,7 @@ than a bug to be silently renamed on its own.
 The slot has been called three things: `Melee` in code, Utility in this table until that
 day, and Drone in the fabrication brainstorm. Drone is the answer; Utility and melee are
 both retired. The Repair Rig is **equipment**, not a weapon-slot occupant — M23 shipped
-that cut.
-
-**Closed 2026-08-08, all the way down.** `WeaponSlot.Drone`, `ControlId.SlotDrone`,
-`MetaState.EquippedDrone`, `SaveData.EquippedDrone`, and the save's JSON key
-`"EquippedDrone"`. `PlayerGun` still skips the slot as empty, which is correct until a
-payload exists.
+that cut. The Decoy is the payload that fills the bay (`PayloadCatalog`, FABRICATION).
 
 **The save key changed with it and the schema went to v5.** Zo's call: this project is not
 deep enough to carry save compatibility, and the slot has never held anything, so a v4 save

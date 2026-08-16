@@ -154,7 +154,22 @@ namespace GatekeeperBastion.Game
                 .Append("  juice ").Append(IntensityJuice.CostPerStep)
                 .Append("  unbanked ").Append(sim.TotalUnbanked)
                 .Append("  ").Append(bodies);
+            if (gc.Meta != null && gc.Meta.EquippedPassive == BoarderAbilityId.Foresight)
+            {
+                var spec = s_preview.NextWave(idx, 0, sim.PlayerCount);
+                sb.Append(' ').Append(spec.hunterCount).Append('H')
+                    .Append('/').Append(spec.ramCount).Append('R')
+                    .Append('/').Append(spec.defaultCount).Append('D');
+                if (idx != _foresightLoggedWave)
+                {
+                    _foresightLoggedWave = idx;
+                    Log.Event("Protocol", "foresight wave " + idx
+                        + " H" + spec.hunterCount + " R" + spec.ramCount + " D" + spec.defaultCount);
+                }
+            }
         }
+
+        static int _foresightLoggedWave = int.MinValue;
 
         /// <summary>Held Interact. Wave start is Prep T after E-select. Completed Field
         /// with a shut door opens it.</summary>

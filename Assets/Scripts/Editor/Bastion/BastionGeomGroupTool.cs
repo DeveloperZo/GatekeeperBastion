@@ -44,9 +44,9 @@ namespace GatekeeperBastion.EditorTools
                 + segments.Length + " segment(s) in " + scene.name + ".");
         }
 
-        /// <summary>Unpacks every prefab instance under every segment's _geom completely,
-        /// so the geometry is plain GameObjects Zo can edit freely. One-way: pack updates
-        /// stop propagating to unpacked pieces — that is the point.</summary>
+        /// <summary>Recovery: unpacks leftover pack instances under every segment's _geom.
+        /// Emit and Rebuild already unpack Completely; this is for scenes that still have
+        /// nested links. One-way: pack updates stop propagating — that is the point.</summary>
         [MenuItem("GatekeeperBastion/Build/Unpack Bastion Geom In Open Scene", false, 63)]
         public static void UnpackOpenScene()
         {

@@ -5,7 +5,7 @@ Purpose: The CREW QUARTERS console — the player beyond weapon and ship. The bu
 system graduated to M70; the RPG attribute tracks and the unbuilt 5-skill pairing are parked.
 Status: brainstorm
 Update trigger: when M70 ships, or when a parked entry is revived or a remaining entry graduates.
-Last updated: 2026-08-15
+Last updated: 2026-08-16
 -->
 
 ## What this covers
@@ -18,11 +18,10 @@ question, and perks as run modifiers.
 
 ## Where it stands
 
-`Game/Ship/CrewQuartersStation.cs` still sells four attribute tracks — Vitality, Stamina,
-Scavenging, Luck — each `base * (1 + 0.05 * level)`, five levels, on the
-`200 * 2^level` doubling curve. Luck is the game's only crit source. The conversion to
-Crew abilities, including what happens to the tracks and to saves holding levels in them,
-is `M70` (planned, not built).
+`Game/Ship/CrewQuartersStation.cs` equips a Boarder Protocol (`BoarderProtocol`, save v8).
+Vitality, Stamina, Scavenging and Luck were refunded and deleted. Hatch Armor remains at
+FABRICATION on the `200 * 2^level` curve. Crit chance is frozen at 0. `M70` is in tree and
+not closed (PlayMode / HUD / play criteria still owed).
 
 The 5-skill system in `../Design/3-Mechanics.md` §3.2 is unbuilt and parked (see below).
 

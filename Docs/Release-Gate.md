@@ -2,7 +2,7 @@
 
 <!--
 Update trigger: when an M64 gate item is added or retired, or when a friends session finds a failure the gate did not catch
-Last updated: 2026-08-15
+Last updated: 2026-08-16
 -->
 
 Friends Alpha send checklist. Red blocks the send. Amber is recorded and sent anyway.
@@ -26,7 +26,7 @@ Human items: eyes and a second machine. Send copy: `Release-Send.md`.
 | 16 | red | Audio on another machine, including device change after launch | Silent build; no way to know fight SFX landed | human |
 | 17 | red | `run-windowed.bat` beside the exe | No escape hatch for bad display/GPU | human (file ships; machine can prove template exists) |
 | 18 | red | Dual-box chrome: normal window (no `-popupwindow`) | Eyes-on session has no title bar / min-max | human |
-| 19 | red | Host and Join: own Ship before Bastion; host EMBARKs first | Client cannot shop; join hangs or lands mid-run | human |
+| 19 | red | Host and Join: shared Ship; party lead EMBARK | No co-presence; guest local embark; hang | human |
 | 20 | red | ARMORY change on that Ship is the gun in Bastion (both seats) | Wrong loadout; CREW/FAB feel broken | human |
 | 21 | red | Client prep verbs once, server-side (`E` / `+/-` / `T`) | Client cannot start a Wave or juice | human (+ PlayMode) |
 | 22 | red | M51 verbs in a player build (repair, decoy, ability) | Client can move/shoot only | human |

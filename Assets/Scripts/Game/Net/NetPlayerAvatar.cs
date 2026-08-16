@@ -15,10 +15,16 @@ namespace GatekeeperBastion.Game
     [RequireComponent(typeof(NetworkTransform))]
     [RequireComponent(typeof(CapsuleCollider))]
     [RequireComponent(typeof(PlayerHealth))]
-    public sealed class NetPlayerAvatar : NetworkBehaviour
+    public sealed partial class NetPlayerAvatar : NetworkBehaviour
     {
         #region Constants
         const string Tag = "Net";
+        /// <summary>Matches WeaponViewModel / Boarder.controller blend thresholds.</summary>
+        static readonly int SpeedHash = Animator.StringToHash("Speed");
+        /// <summary>Planar m/s below this is idle — absorbs NetworkTransform jitter.</summary>
+        const float MoveEpsMps = 0.4f;
+        /// <summary>At/above this planar m/s → run (1); else walk (0.5). Midway walk 5 / sprint 7.5.</summary>
+        const float SprintEpsMps = 6.25f;
         #endregion
 
         #region References
@@ -27,6 +33,8 @@ namespace GatekeeperBastion.Game
         PlayerHealth _health;
         Collider _collider;
         Renderer[] _renderers;
+        Renderer _seatMarker;
+        Animator _animator;
         GameController _game;
         #endregion
 
@@ -35,6 +43,8 @@ namespace GatekeeperBastion.Game
         bool _hideApplied;
         bool _hideInit;
         bool _spawnOffsetApplied;
+        bool _haveAnimSample;
+        Vector3 _lastAnimPos;
         #endregion
 
         #region Properties
@@ -53,7 +63,28 @@ namespace GatekeeperBastion.Game
         public NetworkVariable<long> Banked = new NetworkVariable<long>(
             0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        public NetworkVariable<int> ProtocolId = new NetworkVariable<int>(
+            (int)BoarderProtocolId.Default,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public NetworkVariable<int> PassiveId = new NetworkVariable<int>(
+            (int)BoarderAbilityId.Ghost,
+            NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public NetworkVariable<bool> LobbyReady = new NetworkVariable<bool>(
+            false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         public PlayerHealth Body => _health;
+
+        static readonly Color[] SeatTints =
+        {
+            new Color(0.85f, 0.85f, 0.9f),
+            new Color(0.35f, 0.75f, 1f),
+            new Color(1f, 0.55f, 0.2f),
+            new Color(0.7f, 0.4f, 1f),
+            new Color(0.4f, 0.9f, 0.45f),
+            new Color(1f, 0.85f, 0.3f)
+        };
 
         /// <summary>This machine's player object avatar, or null until spawned.</summary>
         public static NetPlayerAvatar LocalOwner
@@ -84,19 +115,17 @@ namespace GatekeeperBastion.Game
         {
             base.OnNetworkSpawn();
             _renderers = GetComponentsInChildren<Renderer>(true);
+            _animator = GetComponentInChildren<Animator>(true);
+            _haveAnimSample = false;
             Hp.OnValueChanged += OnHpChanged;
             WaitingOnShip.OnValueChanged += OnWaitingChanged;
             Slot.OnValueChanged += OnSlotChanged;
             ApplyOwnerPresentation();
+            ApplySeatTint();
+            // Presence line on every seat (host id 0 included). Targeting registration is
+            // separate and server/remote-only — see SyncRegistration.
+            Log.Event(Tag, "avatar registered clientId=" + OwnerClientId);
 
-            if (IsOwner)
-            {
-                _rig = FindAnyObjectByType<FirstPersonController>();
-                if (_rig != null)
-                    _rigHealth = _rig.GetComponent<PlayerHealth>();
-                OffsetOwnerRig();
-                int deepest = GameSession.Meta != null ? GameSession.Meta.DeepestWaveReached : 1;
-                ReportDeepestServerRpc(deepest);
             }
 
             if (IsServer)
@@ -104,6 +133,7 @@ namespace GatekeeperBastion.Game
                 AssignSlot();
                 if (_health != null)
                     Hp.Value = _health.Hp;
+                // Ship lobby has no GameController — Bind must tolerate null.
                 if (_game == null)
                 {
                     var session = NetworkManager.GetComponent<NetSession>();
@@ -112,6 +142,41 @@ namespace GatekeeperBastion.Game
                 }
                 SyncRegistration();
             }
+        }
+
+        public override void OnGainedOwnership()
+        {
+            base.OnGainedOwnership();
+            if (!IsSpawned || !IsOwner) return;
+            BindOwnerRig();
+            ReportOwnerMeta();
+        }
+
+        void BindOwnerRig()
+        {
+            var found = FindAnyObjectByType<FirstPersonController>();
+            // Host avatar often spawns on MainMenu before an FPC exists; Ship/Bastion
+            // loads replace the rig. Rebind when missing, destroyed, or a different instance.
+            // Do not treat "both null" as a successful bind — that left the host puppet at
+            // origin until a later path happened to call again (2026-08-16 dual-box).
+            if (found != null && found == _rig) return;
+            if (found == null && _rig == null) return;
+            _spawnOffsetApplied = false;
+            _rig = found;
+            _rigHealth = _rig != null ? _rig.GetComponent<PlayerHealth>() : null;
+            OffsetOwnerRig();
+            if (_rig != null)
+                Log.Event(Tag, "owner rig bound clientId=" + OwnerClientId);
+        }
+
+        void ReportOwnerMeta()
+        {
+            int deepest = GameSession.Meta != null ? GameSession.Meta.DeepestWaveReached : 1;
+            ReportDeepestServerRpc(deepest);
+            var meta = GameSession.Meta;
+            int proto = meta != null ? (int)meta.EquippedProtocol : (int)BoarderProtocolId.Default;
+            int passive = meta != null ? (int)meta.EquippedPassive : (int)BoarderAbilityId.Ghost;
+            ReportProtocolServerRpc(proto, passive);
         }
 
         public override void OnNetworkDespawn()
@@ -139,18 +204,25 @@ namespace GatekeeperBastion.Game
                 SyncWallet();
             }
             ApplyOwnerPresentation();
-            if (!IsOwner) return;
-            if (WaitingOnShip.Value) return;
-            if (_rig == null) return;
-            Transform t = _rig.transform;
-            transform.SetPositionAndRotation(
-                t.position,
-                Quaternion.Euler(0f, t.eulerAngles.y, 0f));
+            if (IsOwner)
+            {
+                if (WaitingOnShip.Value) return;
+                if (_rig == null)
+                    BindOwnerRig();
+                if (_rig == null) return;
+                Transform t = _rig.transform;
+                transform.SetPositionAndRotation(
+                    t.position,
+                    Quaternion.Euler(0f, t.eulerAngles.y, 0f));
+                return;
+            }
+
+            DriveRemoteAnimator();
         }
         #endregion
 
         #region Public API
-        /// <summary>Fixture bind when no scene <see cref="NetSession"/> exists.</summary>
+        /// <summary>Fixture / session bind. Null game is valid on the shared Ship lobby.</summary>
         public void Bind(GameController game)
         {
             _game = game;
@@ -172,10 +244,18 @@ namespace GatekeeperBastion.Game
             PushProgressClientRpc(deepest);
         }
 
-        /// <summary>Owner request: return from the Ship wait into the live Run.</summary>
+        /// <summary>Owner request: return from the Ship wait into the live Run (Hatch-bank).
+        /// Not the party lobby EMBARK — that is <see cref="NetPartyLobby.RequestPartyEmbark"/>.</summary>
         public void RequestEmbark()
         {
             RequestEmbarkServerRpc();
+        }
+
+        /// <summary>Server: lobby Ready flag for party embark quorum.</summary>
+        public void ServerSetLobbyReady(bool ready)
+        {
+            if (!IsServer) return;
+            LobbyReady.Value = ready;
         }
         #endregion
 
@@ -207,9 +287,75 @@ namespace GatekeeperBastion.Game
 
         void OnSlotChanged(int previous, int next)
         {
+            ApplySeatTint();
             if (previous == next) return;
             if (previous > 0) return;
             OffsetOwnerRig();
+        }
+
+        void ApplySeatTint()
+        {
+            int slot = Slot.Value;
+            if (slot < 0) slot = 0;
+            Color tint = SeatTints[slot % SeatTints.Length];
+            if (_renderers != null)
+            {
+                for (int i = 0; i < _renderers.Length; i++)
+                {
+                    var r = _renderers[i];
+                    if (r == null) continue;
+                    if (_seatMarker != null && r == _seatMarker) continue;
+                    var block = new MaterialPropertyBlock();
+                    r.GetPropertyBlock(block);
+                    // URP Lit may ignore _BaseColor on some materials — marker below is the
+                    // seat discriminator when MPB tint no-ops.
+                    block.SetColor("_BaseColor", tint);
+                    block.SetColor("_Color", tint);
+                    r.SetPropertyBlock(block);
+                }
+            }
+            EnsureSeatMarker(slot, tint);
+        }
+
+        /// <summary>Floating quad above the capsule — size scales with seat index so peers
+        /// stay distinguishable even when body tint fails.</summary>
+        void EnsureSeatMarker(int slot, Color tint)
+        {
+            if (_seatMarker == null)
+            {
+                Transform existing = transform.Find("SeatMarker");
+                if (existing != null)
+                    _seatMarker = existing.GetComponent<Renderer>();
+            }
+            if (_seatMarker == null)
+            {
+                var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                go.name = "SeatMarker";
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = new Vector3(0f, 2.15f, 0f);
+                go.transform.localRotation = Quaternion.identity;
+                var col = go.GetComponent<Collider>();
+                if (col != null) Destroy(col);
+                _seatMarker = go.GetComponent<Renderer>();
+                if (_seatMarker != null)
+                {
+                    var shader = Shader.Find("Universal Render Pipeline/Unlit");
+                    if (shader == null) shader = Shader.Find("Unlit/Color");
+                    if (shader != null)
+                        _seatMarker.sharedMaterial = new Material(shader);
+                }
+            }
+            if (_seatMarker == null) return;
+            float s = 0.28f + slot * 0.12f;
+            _seatMarker.transform.localScale = new Vector3(s, s, s);
+            var markerBlock = new MaterialPropertyBlock();
+            _seatMarker.GetPropertyBlock(markerBlock);
+            markerBlock.SetColor("_BaseColor", tint);
+            markerBlock.SetColor("_Color", tint);
+            _seatMarker.SetPropertyBlock(markerBlock);
+            // Owner hides body renderers in ApplyOwnerPresentation; marker is created after
+            // that pass, so mirror the hide here.
+            _seatMarker.enabled = !IsOwner;
         }
 
         void SyncWallet()
@@ -244,13 +390,14 @@ namespace GatekeeperBastion.Game
 
         void SyncRegistration()
         {
+            // Server registers remote puppets for targeting only — never the owner's body
+            // (owner collider is off; local FPC is the scene rig in PlayerRegistry).
             bool should = IsSpawned && IsServer && !IsOwner && _health != null;
             if (should)
             {
                 if (_registered) return;
                 PlayerRegistry.Register(_health);
                 _registered = true;
-                Log.Event(Tag, "avatar registered clientId=" + OwnerClientId);
                 return;
             }
 
@@ -277,8 +424,37 @@ namespace GatekeeperBastion.Game
                 }
             }
 
+            if (_seatMarker != null)
+                _seatMarker.enabled = !hide;
+
             if (_collider != null)
                 _collider.enabled = !hide;
+        }
+
+        /// <summary>Remote clients: Boarder.controller Speed from replicated transform delta.
+        /// Owner mesh is hidden; local FPC + WeaponViewModel own first-person anim.</summary>
+        void DriveRemoteAnimator()
+        {
+            if (_animator == null) return;
+            Vector3 pos = transform.position;
+            if (!_haveAnimSample)
+            {
+                _lastAnimPos = pos;
+                _haveAnimSample = true;
+                _animator.SetFloat(SpeedHash, 0f);
+                return;
+            }
+
+            float dt = Time.deltaTime;
+            Vector3 delta = pos - _lastAnimPos;
+            _lastAnimPos = pos;
+            if (dt <= 0f) return;
+            delta.y = 0f;
+            float mps = delta.magnitude / dt;
+            float speed = 0f;
+            if (mps > MoveEpsMps)
+                speed = mps >= SprintEpsMps ? 1f : 0.5f;
+            _animator.SetFloat(SpeedHash, speed);
         }
 
         void TryAcceptEmbark()

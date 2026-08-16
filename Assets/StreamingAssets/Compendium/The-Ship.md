@@ -2,7 +2,7 @@
 
 ## Game
 
-Between Runs you stand in your own Ship. This is the only place Salvage gets spent, and the only way back to the Bastion. Four consoles, each owning one subject: **ARMORY**, **CREW QUARTERS**, **FABRICATION**, **NAV MAP**.
+Between Runs you stand on the Ship. Solo: your own hub. Friends session: the shared Ship — party lead owns NAV EMBARK; each seat shops their own loadout. This is the only place Salvage gets spent, and the only way back to the Bastion. Four consoles, each owning one subject: **ARMORY**, **CREW QUARTERS**, **FABRICATION**, **NAV MAP**.
 
 Buy the free sidearm first. Then CREW QUARTERS — weapon upgrades and the equipment slot wait until you have been Lost once. The NAV MAP warns if you own no weapon and lets you go anyway. Numbers and bindings: [Field Manual](Field-Manual.md).
 
@@ -22,11 +22,11 @@ Each console owns exactly one subject. Nothing is sold in two places.
 
 **ARMORY — the weapon in your hands.** Weapons, and the upgrade wheel for a weapon you already own. This is also the only place you decide which owned weapon fills your Primary slot and which fills your Secondary; in the Bastion the weapon keys only swap between the slots you are already carrying, never between things you own. Buying a weapon equips it into its own slot straight away. Upgrades are bought per weapon, so Salvage poured into one gun stays in that gun — buy a different Primary and its upgrade wheel starts at nothing.
 
-**CREW QUARTERS — you.** How much punishment you take, how long you can sprint, how much each kill pays, and your only source of critical hits. Repairing the Hatch is not here; that is the Repair Rig at FABRICATION. See [Upgrades](Upgrades.md).
+**CREW QUARTERS — you.** The protocol you embark wearing: how hardware deploys, a field you plant for the crew, one hit you chose to eat, and the rule that says how Gatekeepers read you. You own it from the first session. Repairing the Hatch is not here; that is the Repair Rig at FABRICATION.
 
-**FABRICATION — the Hatch.** How much the door can take before it falls, plus the equipment slot and the Repair Rig, which is what lets you repair the door at all. What it buys applies from your next embark onward, not retroactively.
+**FABRICATION — the Hatch.** How much the door can take before it falls, plus the equipment slot, the Repair Rig, and the Decoy that fills the Drone bay. What it buys applies from your next embark onward, not retroactively.
 
-**NAV MAP — where you go, and going there.** One destination. A selector for which Wave you start on, capped by the deepest Wave you have cleared. And the EMBARK button, which is the point of no return: once the Bastion loads, the only exits are clearing it and losing.
+**NAV MAP — where you go, and going there.** One destination. A selector for which Wave you start on, capped by the deepest Wave you have cleared. And the EMBARK button, which is the point of no return: once the Bastion loads, the only exits are clearing it and losing. On a friends session only the party lead's EMBARK commits the party.
 
 ### The start-Wave selector
 
@@ -40,11 +40,9 @@ The NAV MAP will warn you loudly if you own no weapon and then let you go anyway
 
 **The free sidearm at the ARMORY, before anything.** It costs nothing, and the only reason it is sold rather than given is so that the first thing you learn is that weapons come from that console.
 
-**Then CREW QUARTERS.** Weapon upgrades and the equipment slot are locked until you have lost a Run — attributes are not. Before your first loss, attributes and a weapon are the only things your Salvage can become, so there is no argument about it.
+**Then CREW QUARTERS.** Weapon upgrades and the equipment slot are locked until you have lost a Run — the protocol is not. You already wear it; on the Ship you pick how Gatekeepers read you. Hatch Armor at FABRICATION is also open from the first minute.
 
-**Of the attributes, Scavenging first if you intend to keep playing.** It raises what every Gatekeeper is worth for the rest of the campaign, and it compounds with intensity rather than competing with it. Everything else you want to buy gets cheaper in real terms once it is in.
-
-**Then whatever killed you.** If a Hunter ran you down, that is sprint. If you died standing in the open trading damage, that is health. If the Hatch fell while you were still standing, that is FABRICATION and not you at all.
+**Then whatever killed you.** If the Hatch fell while you were still standing, that is FABRICATION and not you at all.
 
 **Save the big weapon purchase for when you know which fight you want.** A Primary is fixed for the whole Run, and its upgrade wheel does not follow you to the next gun. Buying one is committing to a range and a cadence, not just spending money.
 

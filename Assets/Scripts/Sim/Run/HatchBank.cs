@@ -72,7 +72,7 @@ namespace GatekeeperBastion.Sim
             int d = deepestWave < 1 ? 1 : deepestWave;
             if (d > WaveDirector.MaxWaves) d = WaveDirector.MaxWaves;
             var director = new WaveDirector();
-            long perKill = (long)Math.Floor((double)MetaUpgrades.SalvagePerKill(0));
+            long perKill = (long)Math.Floor((double)MetaUpgrades.SalvagePerKill());
             long cap = 0L;
             for (int i = 0; i < d; i++)
                 cap += (long)director.NextWave(i, 0, 1).enemyCount * perKill;

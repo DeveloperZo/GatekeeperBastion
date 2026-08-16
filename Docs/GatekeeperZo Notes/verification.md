@@ -4,7 +4,7 @@
 Purpose: The single list of what is shipped but unproven, ordered so Zo can spend a playthrough on the items that matter and skip the ones that do not. Milestones own their own criteria; this is the condensed view across all of them.
 Status: working — regenerated as milestones ship and items close
 Update trigger: when a milestone ships with open rows, or when an item is verified
-Last updated: 2026-08-15
+Last updated: 2026-08-16
 -->
 
 ## How this works
@@ -33,7 +33,7 @@ These are the four claims the game currently rests on that nothing has tested.
 **Code fix landed 2026-08-11** (weapon-scoped charge; corpse tipping shots do not spend).
 Still needs a clean play log. Embark with MR-35, land three first-body hits within 1.25 s
 (trash kills count), then a hit on a living body — expect `MR-35 Rifle — Pin Shot` and
-`pin held Ns`. At T10 the living tip is usually a Ram.
+`pin held Ns`. At T10 the living tip is usually a Thief (code id Ram).
 
 - **If no pin line appears, stop and say so.**
 
@@ -42,7 +42,7 @@ Still needs a clean play log. Embark with MR-35, land three first-body hits with
 The answer to the oldest open design problem in the project, and it has never been played.
 
 - Buy the drone payload, embark at Wave 3, place a decoy **away from the Hatch**.
-- Expect Defaults and Hunters to peel, and **every Ram to walk straight past it**.
+- Expect Defaults and Hunters to peel, and **every Thief to walk straight past it**.
 - Use three charges, then try a fourth: expect a refusal.
 - Read the `Decoy` line on the Wave summary.
 
@@ -61,6 +61,17 @@ and that is worth knowing now that M32 has added a third Primary to it.
 
 ---
 
+## Two machines — M72 criterion 9
+
+Does not close from a solo Run. Two player builds, two networks (LAN same-build does not
+close). Host shows join code → guest joins → both on the shared Ship and see each other →
+each completes one local ARMORY or CREW change → all Ready → lead EMBARK → countdown →
+both in Bastion → one networked kill on both screens.
+
+Kill clock 2026-08-28. Kernel is in tree; polish and this eyes-on still open.
+
+---
+
 ## When convenient
 
 Real, lower leverage. None of these blocks anything.
@@ -74,6 +85,7 @@ Real, lower leverage. None of these blocks anything.
 | Options reach the fight | M24 | Menu OPTIONS, set sensitivity, embark, press `O` mid-Assault, confirm Gatekeepers keep moving and the change applies in the same Run. One `[Settings]` line per commit |
 | Reload discard warning | M25 | Mid-reload, read `SWAP DISCARDS THIS RELOAD`, swap, confirm the discard line. Then turn it off in options and confirm `reload paused` |
 | Juice unused on ten Runs | M55 | Kill criterion: if every post-close start-Wave line is `intensity=0`, stop. Readable off `intensity=` |
+| Default Protocol in a Run | M70 | In tree, milestone not closed. Embark wearing Ghost, then Foresight; plant Anchor; eat Bulkhead. Expect `[Protocol]` lines. HUD G/H named. |
 | MK-1 Regen Surge mag after wheel points | M71 | Criterion 7: with ability points bought, the Regen Surge line's dial value changes (4 s at 0, 10 s at focus-max 50) |
 | First Run with no rig | M23 | The Hatch budget numbers assume the rig. Play one Run without buying it and see whether the door survives Wave 2 |
 | Rig prices 300 + 300 | M23 | Marked *tunable, needs play data*. Only worth an opinion after the item above |

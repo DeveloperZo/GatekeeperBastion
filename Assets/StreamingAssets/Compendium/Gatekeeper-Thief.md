@@ -4,7 +4,7 @@
 
 The Thief is walking to the Hatch — on a Hatch-bank. On a Wave started at a field terminal it walks at you instead. Shooting it does not provoke it. It does not shout, does not speed up, and the Defaults standing beside it stay on their own hunt.
 
-It closes and swings: melee contact. It is the safe thing to fire into in a crowd, and the thing to start on early. Its slowness is a budget, not a reprieve — backing away buys seconds, not a solution.
+It never hurts you. On a Hatch-bank it bites the Hatch. It is the safe thing to fire into in a crowd, and the thing to start on early. Its slowness is a budget, not a reprieve — backing away buys seconds, not a solution.
 
 Health, damage, speed and how many appear per Wave: [Field Manual](Field-Manual.md).
 
@@ -12,7 +12,7 @@ Health, damage, speed and how many appear per Wave: [Field Manual](Field-Manual.
 
 ### What it does
 
-It walks — slowly, the slowest thing on the Bastion — at you. On a Wave started at a field terminal it does not go to the Hatch. On a Hatch-bank it walks to the Hatch.
+It walks — slowly, the slowest thing on the Bastion — at you. On a Wave started at a field terminal it does not go to the Hatch, and it never takes your health. On a Hatch-bank it walks to the Hatch and bites that.
 
 Shooting it does not provoke it. It does not speed up, it does not shout, and the Defaults standing beside it stay on their own hunt.
 

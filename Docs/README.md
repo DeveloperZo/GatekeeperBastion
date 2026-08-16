@@ -3,9 +3,10 @@
 Sci-fi wave-defense FPS. Unity 6, PC/Steam, first-person. The Boarder is the IQ astronaut
 with Synty guns; Ship desks and the Bastion kit are dressed (M61-2 closed 2026-08-14:
 scaler-2 station rooms, sliding doors, bulkhead Hatch). Solo playable;
-host-client co-op exists over UnityTransport (Main Menu Host / Join typed IPv4; F10/F11
-stay the editor fallback). A friends session (install a build, join without the developer,
-five-Wave run, end screen) is the alpha gate and is not shipped.
+host-client co-op exists over UnityTransport (Main Menu Host / Join by Relay code or
+typed IPv4; F10/F11 stay the editor fallback). A friends session (install a build, join
+without the developer, five-Wave run, end screen) is the alpha gate and is not shipped —
+shared Ship and party EMBARK are in tree (`M72`) and still need two-machine verification.
 
 Your ship cuts into a **Bastion** — a garrisoned alien vessel — and siphons it for Salvage.
 You are the **Boarder**. You fight inside it, holding the **Hatch**, the umbilical back to
@@ -20,15 +21,15 @@ or the Hatch. The clock never pays. Juice is a bet you place at the trigger befo
 what you bought.
 
 **Every Gatekeeper kind is defined by what it refuses to do.** A Hunter can never hurt the Hatch.
-A Ram never turns when shot. On a Hatch-bank it never hunts you; on a field-terminal Wave it
+A Thief never turns when shot (code identifier `Ram` until M63). On a Hatch-bank it never hunts you; on a field-terminal Wave it
 does. These are rules in code, not tuning values, so no balance pass can soften one by accident.
 
 **The weapon is the build.** Progression is a weapon and its upgrade wheel, not a stat sheet.
-Attributes are a side investment and stay cheap and slow on purpose.
+CREW QUARTERS equips a Boarder Protocol, not buyable attributes.
 
 **Death is the only thing that ends a Run early.** There is no bail-out and no respawn
 for the Boarder who owns the Run (solo or host), and losing takes nothing back. A second
-Boarder going down does not end the host's Run (`M49`).
+Boarder going down waits on the Ship (`M57`) and does not end the host's Run (`M49`).
 
 ## The loop
 
@@ -36,7 +37,7 @@ Boarder going down does not end the host's Run (`M49`).
                  SHIP                                    BASTION
    ┌───────────────────────────────┐        ┌──────────────────────────────────┐
    │  ARMORY      weapon + wheel   │        │   PREP    quiet. no income.      │
-   │  CREW Q.     attributes       │        │           repair, reposition,    │
+   │  CREW Q.     protocol         │        │           repair, reposition,    │
    │  FABRICATION hatch + rig      │───────▶│           juice intensity        │
    │  NAV MAP     where, how deep  │ embark │              │ E then T          │
    └───────────────────────────────┘        │              ▼                   │
@@ -111,8 +112,10 @@ and `Roadmap.md` before starting work. **If you have never played it**, start in
 [`dashboard-data.js`](dashboard-data.js) (regen with `Tools/dashboard-data/run.ps1`) —
 lane caps, milestones, commits, outstanding questions, rule-based next focus.
 **Session** chooses the `Logs` folder (or drop `GatekeeperBastion_*.log`) and parses in
-the browser: mean live by era, kills, spend/SKU, hatch pressure, ability credit. Far-wall
-/ `hatchDist` is on the kill line; `wave-report` prints median and far-wall share per kind.
+the browser: mean live by era (hatch-bank loop ≥ 2026-08-13), kills, spend/SKU, hatch
+pressure, intensity, Hatch-bank starts, ability credit. PlayMode / short / Dev are
+**labeled**, not dropped, until the corpus is large. Far-wall / `hatchDist` is on the
+kill line; `wave-report` prints median and far-wall share per kind.
 
 ### Three standing rules
 

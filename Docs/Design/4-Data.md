@@ -53,11 +53,11 @@ every primary's damage-centred build at equal purchases
 (`Mk1DamageFocus_NeverRivalsFocusedPrimaries`). The SEC-D's fire-rate-centred build does
 the same (`SecDFireRateFocus_NeverRivalsFocusedPrimaries`). Secondaries price on their
 own curve — the tier-cost block below — and the first two MK-1 purchases (150 + 300) equal
-the 450 a wave-1 clear banks at Scavenging 0
+the 450 a wave-1 Hatch-bank can convert at kill-value 25 and intensity 0
 (`FirstWheelPurchase_AffordableOffOneWaveOneClear`).
 
-**Crit** (`PlayerGun.RollCrit`, `CritDamageMultiplier = 2`): average multiplier is
-`1 + critChance`; at Luck 5 (0.25), `27.5 x 1.25 = 34.4 dps`. Only crit source in the game.
+**Crit** (`PlayerGun.RollCrit`, `CritDamageMultiplier = 2`): `MetaUpgrades.CritChance()` is
+frozen at 0. Average multiplier is therefore 1. There is no Luck shop.
 **No MK-1 → improvised cutter**: 40% damage, 50% rate → 5.6 dmg at 1.5/s,
 clip 8 → `44.8 / 6.73 = 6.7 dps`. A hard Run, not a dead end.
 
@@ -65,9 +65,9 @@ clip 8 → `44.8 / 6.73 = 6.7 dps`. A hard Run, not a dead end.
 
 `Game/Player/FirstPersonController.cs`, `Game/Player/PlayerHealth.cs`, `Game/Player/Interactor.cs`.
 
-- 100 HP (L0; 125 at Vitality 5).
+- 100 HP (frozen; Vitality track deleted).
 - Walk 5 m/s, sprint 7.5 m/s. No jump.
-- Stamina 100 (125 at L5), drain 25/s, regen 18/s after a 1s delay →
+- Stamina 100 (frozen; Stamina track deleted), drain 25/s, regen 18/s after a 1s delay →
   **4.0s of sprint = 30 m**; a full refill costs `1 + 100/18 = 6.6s`. Sprint beats the
   5.6 m/s chase and the Hunter's 6.5, so unlimited sprint would be a free kiting
   exploit. Change the five stamina numbers together or not at all.
@@ -88,12 +88,15 @@ old 6 x 90) — a redistribution, not an inflation.
 | Ram | 120 | **0** | 20 | 2.2 | 2.2 | the player (`ignoresPlayer`; never provoked) |
 <!-- GKB:END gatekeepers -->
 
+GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game override
+(`RamGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`). Player-facing name is Thief.
+
 - **Default** 30 HP = **3 shots** (14/28/42) = `30/27.5 = 1.09s`. 6 dmg/0.7s = 8.6 dps
   each: three on you kill a 100 HP player in **3.9s**, five in **2.3s** (at the old
   18 dmg, five were 128.6 dps and **0.8s** — why damage fell as bodies tripled).
   Hatch 4/0.7s = 5.7 dps: one leaker needs 52s, so leaks are a crowd problem now.
 - **Hunter** 20 HP = **2 shots** = `20/27.5 = 0.73s`. 6.5 m/s beats the 5 m/s walk and loses to the
-  7.5 m/s sprint — the first Gatekeeper that makes **Stamina** worth buying. Zero Hatch
+  7.5 m/s sprint — the first Gatekeeper that makes **sprint** load-bearing. Zero Hatch
   damage: it cannot be answered by standing on the Hatch.
 - **Ram** 120 HP = **9 shots** = `120/27.5 = 4.36s` of focused fire while dealing
   `20/0.7 = 28.6` dps → `28.6 x 3.75 = 107` HP, a third of the 300 HP door, per Ram that
@@ -291,8 +294,8 @@ Salvage of drift on 2026-08-04 Runs). Instant kill-into-bank ended with M53.
 ## Upgrade tracks
 
 **Two cost curves, on purpose.** Weapon purchases are linear and reachable because weapons
-are the progression; player and ship attributes keep the doubling curve because they
-are a side investment.
+are the progression. Hatch Armor keeps the doubling curve. CREW attribute tracks are gone
+(save v8 refund). Default Protocol is equipped at CREW QUARTERS, not bought as levels.
 
 **Weapon upgrade wheel** (`Sim/Meta/WeaponWheel.cs`) — five attributes (reload, clip,
 damage, fire rate, ability). One purchase awards **5 / 3 / 3 / 0 / 0** by ring distance.
@@ -388,11 +391,10 @@ on that line is worth **+31%** (BR-12 `33.2 → 43.6`), which is the number the 
 below is measured against. Whether Wave 5 still clears against a 383/436 ceiling is
 **unknown — needs play data** (old sizing assumed ~187/214 at seven purchases).
 
-**Attributes** (`Sim/Meta/UpgradeTracks` + `MetaUpgrades.cs`) — `base * (1 + 0.05 * level)`,
-exactly +25% at level 5; CritChance is additive `0.05 * level` because a chance of zero has
-nothing to scale. Engineering and `RepairRigLevel` are off the enum entirely; they survive
-only as legacy save fields, which `MetaState.MigrateLegacyRepairTracks` converts into a free
-equipment slot and Repair Rig.
+**Hatch Armor** (`Sim/Meta/UpgradeTracks` + `MetaUpgrades.cs`) — `base * (1 + 0.05 * level)`,
+exactly +25% at level 5. Crit chance is frozen at 0; there is no Luck shop. Engineering and
+`RepairRigLevel` are off the enum entirely; they survive only as legacy save fields, which
+`MetaState.MigrateLegacyRepairTracks` converts into a free equipment slot and Repair Rig.
 
 <!-- GKB:GEN tracks — UpgradeTracks.All, MetaUpgrades.NextCost -->
 Cost `200 * 2^currentLevel` = 200/400/800/1,600/3,200, **6,200** to max a track.
@@ -400,17 +402,13 @@ Cost `200 * 2^currentLevel` = 200/400/800/1,600/3,200, **6,200** to max a track.
 | Track | Station | Level 0 | Level 5 |
 |---|---|---|---|
 | Hatch Armor | FABRICATION | 300 HP | 375 HP |
-| Vitality | CREW QUARTERS | 100 HP | 125 HP |
-| Stamina | CREW QUARTERS | 100 | 125 |
-| Scavenging | CREW QUARTERS | 25 | 31.25 |
-| Luck | CREW QUARTERS | 0% | 25% |
 <!-- GKB:END tracks -->
 
-**A level is smaller than the noise, so no *attribute* purchase is perceptible.** The
-measured three-attempt series is in `2-Dynamics.md` (loop B1): a **20% run-to-run spread**
-against purchases worth `+4.5%` and `+3.0%`, signal to noise ~**0.23**. A step the player
-can feel has to clear roughly **20%**; one upgrade wheel purchase does (**+31%**, above), the
-attribute curve does not, and that is the trade for keeping attributes cheap early.
+**A Hatch Armor level is smaller than the noise.** The measured three-attempt series is in
+`2-Dynamics.md` (loop B1): a **20% run-to-run spread** against purchases worth `+4.5%` and
+`+3.0%`, signal to noise ~**0.23**. A step the player can feel has to clear roughly **20%**;
+one upgrade wheel purchase does (**+31%**, above). Hatch Armor is a buffer, not a perceptible
+fight change. There is no attribute shop.
 
 ## Bastion kit — mesh mapping (M61-2)
 
@@ -437,15 +435,18 @@ mapping throws at emit time — a loud fail, never a primitive.
 `Docs/dashboard.html` Session tab parses `GatekeeperBastion_*.log` in the browser after you
 choose the Logs folder (or drop the files). Focus / Project tabs read
 `Docs/dashboard-data.js` from `Tools/dashboard-data/run.ps1` (milestones, commits, questions,
-rule-based next focus). Sample filters and era cutoffs:
+rule-based next focus). Sample filters and era cutoffs. Until the corpus is large, Session **labels** PlayMode,
+short, and Dev rather than dropping them from the sample (see `Docs/dashboard.html`).
+wave-report still prints every Run; Dev is soft-excluded from summary means only.
 
 | Constant | Value | Source |
 |---|---|---|
-| Minimum Run duration | **5 s** | Runs shorter than this are excluded (crashed / aborted / PlayMode harness churn). Measured from `run begins` to `RUN OVER` / `BASTION STRIPPED` / next `run begins`. |
-| PlayMode discriminator | `stage=playmode` in the log | Not the `IntegrationCheck` tag (`AutoVerify` in logs before 2026-08-12) — ordinary sessions can carry it (`Logs/GatekeeperBastion_2026-08-09_15-21-59.log`). |
+| Short Run label | **5 s** | Runs shorter than this are labeled `short` (crashed / aborted / PlayMode harness churn). Measured from `run begins` to `RUN OVER` / `BASTION STRIPPED` / next `run begins`. |
+| PlayMode discriminator | `stage=playmode` in the log | File-level. Not the `IntegrationCheck` tag (`AutoVerify` in logs before 2026-08-12). Labeled `playmode`; not dropped. |
 | Era: pre-weapon | filename date **≤ 2026-08-03** | `Docs/_meta/Logs/` 2026-08-02/03, pre-horde (`2-Dynamics.md`). |
 | Era: horde retune | **2026-08-04 … 2026-08-07** | After M10 / horde body counts; before wheel-era sessions dominate. |
-| Era: weapons and wheel | **≥ 2026-08-08** | Primaries + upgrade wheel in session logs. |
+| Era: weapons and wheel | **2026-08-08 … 2026-08-12** | Primaries + upgrade wheel in session logs. |
+| Era: hatch-bank loop | **≥ 2026-08-13** | Field terminals, Unbanked, Hatch-bank, intensity juice, Master Control. |
 
 `Tools/wave-report` remains the terminal/`--html` reader; the page is the bookmark.
 

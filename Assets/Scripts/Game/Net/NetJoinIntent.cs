@@ -2,10 +2,11 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER: Main Menu host/join carried across Ship then Bastion. Static on
-    /// purpose — MainMenu and Ship cannot hold a <see cref="NetSession"/> (that object lives
-    /// on Bastion). Pending survives Ship; consumed once in <see cref="NetSession.Awake"/>
-    /// after EMBARK. Cleared on domain reload only
+    /// <summary>LOCAL-OWNER: Main Menu host/join intent for CLI / Splash smoke, plus
+    /// LastError for the Join panel. Friends Host/Join starts the DDOL
+    /// <see cref="NetSession"/> from the menu directly — intent is not held across an
+    /// offline Ship. Pending is consumed when a session bootstraps (Awake), not deferred
+    /// until Bastion. Cleared on domain reload
     /// (<see cref="RuntimeInitializeLoadType.SubsystemRegistration"/>).</summary>
     public static class NetJoinIntent
     {
@@ -32,6 +33,9 @@ namespace GatekeeperBastion.Game
         #endregion
 
         #region Properties
+        /// <summary>True when a host/join request is waiting to be consumed.</summary>
+        public static bool HasPending => _pending != Kind.None;
+
         /// <summary>Last failed-join line for the Main Menu refusal label. Null when none.</summary>
         public static string LastError
         {
@@ -107,7 +111,7 @@ namespace GatekeeperBastion.Game
             _relay = payload;
         }
 
-        /// <summary>Returns the pending kind and clears it so a second Bastion load is solo.</summary>
+        /// <summary>Returns the pending kind and clears it so a second session start is solo.</summary>
         public static Kind Consume()
         {
             Kind kind = _pending;

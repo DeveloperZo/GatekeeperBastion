@@ -130,13 +130,14 @@ namespace GatekeeperBastion.Game
             Log.Event("Dev", $"GrantSalvage +{amount} — banked {meta.BankedSalvage}");
         }
 
-        /// <summary>F10: start a host session on 0.0.0.0:7777. Session start, not a Dev
-        /// mutation — does not taint. Logs <c>[Net]</c> from <see cref="NetSession"/>.</summary>
+        /// <summary>F10: start a host session on 0.0.0.0:7777. Editor/dev LAN smoke — may
+        /// skip the shared Ship lobby. Session start, not a Dev mutation — does not taint.</summary>
         public void StartCoopHost()
         {
+            EnsureNetForDevSmoke();
             if (_net == null)
             {
-                Log.Warn(Tag, "StartCoopHost refused — no NetSession wired.");
+                Log.Warn(Tag, "StartCoopHost refused — no NetSession.");
                 return;
             }
             _net.StartHost();
@@ -146,12 +147,29 @@ namespace GatekeeperBastion.Game
         /// Session start, not a Dev mutation — does not taint.</summary>
         public void StartCoopClient()
         {
+            EnsureNetForDevSmoke();
             if (_net == null)
             {
-                Log.Warn(Tag, "StartCoopClient refused — no NetSession wired.");
+                Log.Warn(Tag, "StartCoopClient refused — no NetSession.");
                 return;
             }
             _net.StartClient("127.0.0.1", 7777);
+        }
+
+        void EnsureNetForDevSmoke()
+        {
+            if (_net != null && _net.Active) return;
+            var live = NetSession.FindLive();
+            if (live != null)
+            {
+                _net = live;
+                live.BindGame(this);
+                return;
+            }
+            var created = NetSession.CreateBootstrap();
+            if (created == null) return;
+            _net = created;
+            created.BindGame(this);
         }
 
         /// <summary>Own, Tier, and equip a weapon into its catalog slot, then re-push the gun if

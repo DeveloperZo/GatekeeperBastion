@@ -6,7 +6,7 @@
 
 Everything about the gun in your hands is decided on the Ship. Nothing about it can be changed once you are on the Bastion.
 
-You carry a **Primary** and a **Secondary**. The **Drone** bay holds a payload, not a gun. Ownership and equipping happen only at the ARMORY. Ammunition is infinite; a reload costs only time. Switching cancels a reload in progress unless you changed that setting.
+You carry a **Primary** and a **Secondary**. The **Drone** bay holds a payload, not a gun — the Decoy, bought at FABRICATION. Guns are owned and equipped only at the ARMORY. Ammunition is infinite; a reload costs only time. Switching cancels a reload in progress unless you changed that setting.
 
 Your Primary answers one of the room's three questions well. The others get harder. Damage, clip, cadence, range and prices: [Field Manual](Field-Manual.md).
 
@@ -25,7 +25,7 @@ fraction of the damage at a fraction of the cadence. Buy the sidearm and it goes
 
 ### Buying and equipping
 
-Both happen at the **ARMORY**, and only at the ARMORY.
+Guns happen at the **ARMORY**, and only at the ARMORY. The Decoy is sold at **FABRICATION**.
 
 Pay the Salvage and the weapon is yours **and immediately equipped into its own slot**.
 Ownership is permanent. Once you own more than one Primary, the ARMORY is where you pick
@@ -103,8 +103,8 @@ answer to things that do not. The **PRI-C** is the answer to the far half of the
 Whichever you take, the other questions get harder.
 
 Gatekeepers get tougher every Wave of a Run while your Tier does not move mid-Run. Plan
-for the late Wave. Critical hits come only from Luck at CREW QUARTERS. Crits are rolled
-per pellet.
+for the late Wave. Crit chance is frozen at nothing. Crits, if they ever rolled, would
+be per pellet.
 
 ## See also
 

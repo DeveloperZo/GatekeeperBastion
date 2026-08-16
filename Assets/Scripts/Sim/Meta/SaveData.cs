@@ -19,6 +19,8 @@ namespace GatekeeperBastion.Sim
     ///   6 — EquippedDrone holds a PayloadId (was WeaponId.None sentinel); OwnedPayloadMask
     ///       added. Pre-v6 EquippedDrone values of -1 / unknown sanitize to PayloadId.None.
     ///   7 — CompletedTerminalIds: last successful Hatch-bank unlock graph (deep start).
+    ///   8 — Boarder Protocol + Passive; Vitality/Stamina/Scavenging/Luck levels become
+    ///       parse-only and refund 200×(2^level−1) into banked.
     /// Migration from earlier versions lives in <see cref="MetaState.FromJson"/> /
     /// <see cref="MetaState.FromSaveData"/>.
     /// </remarks>
@@ -26,7 +28,7 @@ namespace GatekeeperBastion.Sim
     public class SaveData
     {
         /// <summary>Schema version written by the current build.</summary>
-        public const int CurrentVersion = 7;
+        public const int CurrentVersion = 8;
 
         public int SaveVersion = CurrentVersion;
         public long BankedSalvage;
@@ -43,10 +45,9 @@ namespace GatekeeperBastion.Sim
 
         public int HatchArmorLevel;
 
-        public int VitalityLevel;
-        public int StaminaLevel;
-        public int ScavengingLevel;
-        public int LuckLevel;
+        /// <summary>v8: BoarderProtocolId / BoarderAbilityId as ints.</summary>
+        public int EquippedProtocol = (int)BoarderProtocolId.Default;
+        public int EquippedPassive = (int)BoarderAbilityId.Ghost;
 
         // ---- Equipment (v4) ----
         public bool EquipmentSlotPurchased;
@@ -71,6 +72,10 @@ namespace GatekeeperBastion.Sim
 
         // ---- Legacy fields: parse-only so old saves migrate ----
         public int[] WeaponTiers;
+        public int VitalityLevel;
+        public int StaminaLevel;
+        public int ScavengingLevel;
+        public int LuckLevel;
         public int RepairRigLevel;
         public int EngineeringLevel;
         public int GunDamageLevel;

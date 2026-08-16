@@ -36,6 +36,68 @@ namespace GatekeeperBastion.Game
             if (rate <= 0f) return;
             Sim.Withdraw(requestedHp / rate);
         }
+
+        void BindProtocol(PlayerHealth local)
+        {
+            if (local == null || Meta == null) return;
+            var proto = local.GetComponent<PlayerProtocolAbilities>();
+            if (proto == null) proto = local.gameObject.AddComponent<PlayerProtocolAbilities>();
+            proto.Bind(this, Meta.EquippedProtocol, Meta.EquippedPassive);
+            proto.SetHosted(true);
+            _protocol = proto;
+            Log.Event("Protocol", "embark " + BoarderProtocol.ProtocolName(Meta.EquippedProtocol)
+                + " " + BoarderProtocol.DisplayName(Meta.EquippedPassive));
+        }
+
+        static void PushSlot(PlayerGun gun, MetaState meta, WeaponSlot slot, WeaponId id)
+        {
+            if (id == WeaponId.None || meta == null) return;
+            if (!WeaponCatalog.IsAvailable(id)) return;
+            gun.Configure(slot, WeaponCatalog.Def(id), meta.PointsOf(id), id);
+        }
+
+        static string LoadoutSummary(MetaState meta)
+        {
+            if (meta == null)
+                return "no weapon (improvised cutter); no repair rig";
+            string weapons = !meta.OwnsAnyWeapon
+                ? "no weapon (improvised cutter)"
+                : SlotSummary("Primary", meta.EquippedPrimary, meta) + "; " +
+                  SlotSummary("Secondary", meta.EquippedSecondary, meta);
+            string rig = meta.HasRepairRigEquipped ? "repair rig equipped" : "no repair rig";
+            return weapons + "; " + rig;
+        }
+
+        static string SlotSummary(string label, WeaponId id, MetaState meta)
+        {
+            if (id == WeaponId.None) return label + "=—";
+            return label + "=" + WeaponCatalog.Def(id).displayName + " T" + meta.TierOf(id);
+        }
+
+        static string RunBeginsFields(MetaState meta, int startWave)
+        {
+            string primary = "none", primaryTier = "0", secondary = "none", secondaryTier = "0";
+            string rig = "none";
+            long banked = 0;
+            if (meta != null)
+            {
+                banked = meta.BankedSalvage;
+                if (meta.EquippedPrimary != WeaponId.None)
+                {
+                    primary = WeaponCatalog.Def(meta.EquippedPrimary).displayName;
+                    primaryTier = meta.TierOf(meta.EquippedPrimary).ToString();
+                }
+                if (meta.EquippedSecondary != WeaponId.None)
+                {
+                    secondary = WeaponCatalog.Def(meta.EquippedSecondary).displayName;
+                    secondaryTier = meta.TierOf(meta.EquippedSecondary).ToString();
+                }
+                if (meta.HasRepairRigEquipped) rig = "repair";
+            }
+            return "startWave=" + startWave + " primary=" + primary + " primaryTier=" + primaryTier
+                + " secondary=" + secondary + " secondaryTier=" + secondaryTier
+                + " rig=" + rig + " banked=" + banked;
+        }
         #endregion
 
         #region Private
@@ -45,6 +107,7 @@ namespace GatekeeperBastion.Game
             if (_fpc != null) _fpc.Tick(dt);
             if (_gun != null) _gun.Tick(dt);
             if (_ability != null) _ability.Tick(dt);
+            if (_protocol != null) _protocol.Tick(dt);
             if (_decoyPlacement != null) _decoyPlacement.Tick(dt);
             if (_interactor != null) _interactor.Tick(dt);
             TickClientPrepCommands();

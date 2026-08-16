@@ -4,7 +4,7 @@
 Purpose: The FABRICATION console — the drone and its payloads, equipment, and the ship-systems shelf.
 Status: brainstorm
 Update trigger: when a payload row changes state, a drone control question in Open is answered, or the Hatch loss model changes.
-Last updated: 2026-08-13
+Last updated: 2026-08-15
 -->
 
 ## What this covers
@@ -23,7 +23,9 @@ where the item sits.
 the equipment slot + Repair Rig (`M23`, shipped), and the decoy payload (`M30`, shipped).
 **The drone bay and decoy shipped**; further payload rows in the roster below remain design.
 Repair is hold-to-interact at the Hatch (`RepairInteractable`); rate is flat 8 HP/s, paid
-from banked Salvage as applied. The rig's upgrade shape is still TBD (Open).
+from banked Salvage as applied. The rig's upgrade shape is still TBD (Open). Decoy
+**place** writes a doctrine mode onto the live decoy (`DecoyState.TryPlace`); STOCK is
+hardware as sold. Repair is not a place path and does not write doctrine.
 
 The Hatch still dies to `arrivals x dwell` (`../Design/3-Mechanics.md`); one level of Hatch
 Armor is +15 HP = +4.4 gatekeeper-seconds against a measured ~120 gatekeeper-second deficit at

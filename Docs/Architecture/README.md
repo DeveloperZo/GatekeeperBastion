@@ -22,7 +22,8 @@ Last updated: 2026-08-15
 - **Add a counter, a rollup or a stats object** (`../Decisions.md`). Emit a log line.
 - **Use `?.`, `??`, `??=`, `is null` or `ReferenceEquals` on a `UnityEngine.Object.`**
   Only `== null`, `!= null`, `if (x)` respect Unity's lifetime check.
-- **Mutate Run or Meta state from anywhere but a `GameController` command method.**
+- **Mutate Run state from anywhere but a `GameController` command method.** Meta / save
+  mutation is `ShipCommands` only.
 - **Run Build All to refresh a dressed Ship.** A `ShipDress` root skips the Environment
   wipe (`../Architecture.md` gotcha 4). Bastion kit geometry already persists the same
   way. Stations, hosts and UI are authored and survive Build All. Without `ShipDress`,

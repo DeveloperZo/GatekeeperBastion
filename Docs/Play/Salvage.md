@@ -1,4 +1,4 @@
-<!-- Purpose: the currency — where it comes from, why Unbanked is at risk until a Hatch-bank, and what competes for it. / Status: working / Update trigger: when the award path, Hatch-bank convert, the repair charge, or the Run-end settlement changes. / Last updated: 2026-08-15 -->
+<!-- Purpose: the currency — where it comes from, why Unbanked is at risk until a Hatch-bank, and what competes for it. / Status: working / Update trigger: when the award path, Hatch-bank convert, the repair charge, or the Run-end settlement changes. / Last updated: 2026-08-16 -->
 
 # Salvage
 
@@ -8,7 +8,7 @@ Salvage is the only currency. Kills fill Unbanked; only a Hatch-bank converts it
 
 Unbanked is wiped if you go down or the Hatch falls. What already converted stays. Repairing the Hatch spends banked Salvage from the same purse you shop with — a Run that beats on the door costs you twice.
 
-Everything on the Ship competes for that pile: weapons, Tiers, attributes, Hatch Armor, the Repair Rig, and mid-Run repair. Rates: [Field Manual](Field-Manual.md).
+A Run has a limited number of Hatch-banks. When they are gone, the Hatch refuses. Everything on the Ship competes for the converted pile: weapons, Tiers, Hatch Armor, the Repair Rig, the Decoy, and mid-Run repair. Rates: [Field Manual](Field-Manual.md).
 
 ## Reference
 
@@ -18,11 +18,13 @@ Salvage is the only currency in the game. There is nothing else to collect, no s
 
 **By killing Gatekeepers, and by nothing else — until you Hatch-bank.** A kill fills Unbanked. Prep select then start at the Hatch starts a Hatch-bank Wave: drip while it is live, dump on clear. That convert is what credits the ship. The quiet of Prep earns nothing. Walking the room earns nothing. Clearing the Bastion pays no completion bonus.
 
-What one body is worth is your Scavenging level multiplied by wherever you left intensity. Those two multiply against each other, so high intensity is worth more when Scavenging is invested than when it is not. More field Waves before the Hatch-bank convert at a higher multiplier, and the Hatch-bank fight is the Wave equal to how many you carried.
+What one body is worth is a flat kill payout multiplied by wherever you left intensity. Those two multiply against each other. More field Waves before the Hatch-bank convert at a higher multiplier, and the Hatch-bank fight is the Wave equal to how many you carried.
 
 ### Why it is at risk
 
 **A Gatekeeper's Salvage sits Unbanked until a Hatch-bank.** Not in your shop purse the moment it drops. Down, or Hatch to zero, wipes what you have not converted. What already dripped or dumped stays on the ship.
+
+A Run has a limited number of Hatch-banks. How many: [Field Manual](Field-Manual.md). When they are gone, looking at the Hatch and starting refuses. Juice also spends Unbanked, so a raise you cannot convert is a raise you never banked.
 
 This is why leaving the Hatch is an economy, not just a door. Being Lost keeps converted Salvage. Losing the Hatch keeps converted Salvage. There is no named forfeit. A Run that fell apart early paid you only for what made it through a Hatch-bank.
 
@@ -40,9 +42,10 @@ Everything wants the same pile:
 
 - **A weapon** at the ARMORY. The largest single decision, and the one that fixes what kind of fight you are good at.
 - **Weapon Tiers**, also at the ARMORY, per weapon. The deepest sink in the game and the least transferable — the money goes into one gun and stays there.
-- **Your attributes** at CREW QUARTERS. The cheapest early, and the only serious thing you can buy before your first loss.
-- **The Hatch** at FABRICATION: a bigger pool (Hatch Armor), and the Repair Rig that makes repairing possible at all.
+- **The Hatch** at FABRICATION: a bigger pool (Hatch Armor), the Repair Rig that makes repairing possible at all, and the Decoy.
 - **Repairs, mid-Run.** The one bill you did not plan for.
+
+CREW QUARTERS does not spend Salvage on you. The protocol is owned from the first session; the Passive pick is free.
 
 There is no order that is correct for everyone, but there is a wrong instinct: treating the bank as a score. It is not banked so you can look at it. See [Upgrades](Upgrades.md) for what to do with it.
 
@@ -57,5 +60,6 @@ There is no order that is correct for everyone, but there is a wrong instinct: t
 - Every station panel shows lifetime earned and lifetime spent. Neither is explained anywhere, neither is a resource, and neither can be used for anything.
 - If a save is old or damaged, those lifetime figures are silently rebuilt from what you own. Your bank is always the truth; the lifetime lines may be a reconstruction.
 - There is no way to sell anything back or refund a purchase, and nothing tells you that before you spend.
+- The Hatch-bank slot count is in the Field Manual. Nothing on the Hatch names how many you have left until a start is refused.
 
 *Rates, costs and multipliers: [Field Manual](Field-Manual.md).*

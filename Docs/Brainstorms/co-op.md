@@ -14,8 +14,8 @@ endings on the client; shipped 2026-08-13, fixture close),
 `[M51](../Milestones/3.%20completed/M51-the-clients-hands.md)` (repair, decoys and abilities
 over the wire — loopback run complete; shipped 2026-08-13, fixture close),
 `[M57](../Milestones/3.%20completed/M57-the-downed-player-waits-on-the-ship.md)` (get-up; shipped 2026-08-15),
-`[M58](../Milestones/1.%20planned/M58-a-build-two-machines-can-run.md)` (player build),
-`[M60](../Milestones/2.%20active/M60-a-join-a-friend-can-use.md)` (Relay join). M50 and M51
+`[M58](../Milestones/3.%20completed/M58-a-build-two-machines-can-run.md)` (player build),
+`[M60](../Milestones/3.%20completed/M60-a-join-a-friend-can-use.md)` (Relay join). M50 and M51
 were authored ahead of M48/M49 landing on Zo's call (2026-08-12) and each carries a
 re-cut-before-start update trigger.
 
@@ -27,11 +27,12 @@ kill loop (2026-08-13). M49 shipped (2026-08-13, Zo playtest): the client is hun
 downable; down does not end the host Run. M50 shipped (2026-08-13, fixture close): readout
 and endings on the client. M51 shipped (2026-08-13, fixture close): client repair,
 decoy and world-acting abilities apply once, server-side. M57 shipped 2026-08-15
-(get-up: Ship wait, Hatch-bank Prep embark). M58 planned (player build). M60 planned (Relay join). The epic's testability
-story is the `NetcodeIntegrationTest` fixture — every slice writes its gate against it and
-closes headless in the integration check — the single-developer constraint (Zo, 2026-08-12)
-makes that non-negotiable, so **a slice whose gate cannot be phrased against the fixture is
-not ready to graduate.**
+(get-up: Ship wait, Hatch-bank Prep embark). M58 shipped 2026-08-15 (player build).
+M60 shipped 2026-08-15 (Relay join; Zo eyes-on). Remaining co-op surface is M72 (shared
+Ship lobby). The epic's testability story is the `NetcodeIntegrationTest` fixture —
+every slice writes its gate against it and closes headless in the integration check —
+the single-developer constraint (Zo, 2026-08-12) makes that non-negotiable, so **a slice
+whose gate cannot be phrased against the fixture is not ready to graduate.**
 
 ## Graduated — these left this file
 
@@ -42,7 +43,7 @@ Link, never restate.
 | ---------------------------------------------- | -------------------------------------------------------------------------------- |
 | In-run client verbs (repair, decoy, abilities) | `[M51](../Milestones/3.%20completed/M51-the-clients-hands.md)`                   |
 | Client down wait / get-up                      | `[M57](../Milestones/3.%20completed/M57-the-downed-player-waits-on-the-ship.md)` |
-| A join surface a friend can use (Unity Relay)  | `[M60](../Milestones/2.%20active/M60-a-join-a-friend-can-use.md)`               |
+| A join surface a friend can use (Unity Relay)  | `[M60](../Milestones/3.%20completed/M60-a-join-a-friend-can-use.md)`               |
 
 
 
@@ -79,8 +80,8 @@ then is paint on a room with no door.
 
 - **The fixture cannot test MPPM, transports or the join surface** — those stay eyes-on.
 Keep everything else fixture-first or the single-dev constraint bites back.
-- **Shared ship-scene co-op is still absent.** M57 owns a client-local additive Ship for
-the down wait only; the host does not walk a shared ship. **M64** shipped
-own-Ship-before-Bastion (each player shops their own save, then EMBARK); that is not a
-shared ship. If the shared-ship assumption breaks during a session, record it here.
+- **Shared Ship lobby is M72.** M64's own-Ship-before-Bastion failed the friends path in
+play (2026-08-15 Relay dual-box: no co-presence, host EMBARK moved one seat). M57's
+additive Ship remains the *downed client* wait only. Party lobby + party-wide scene
+loads: `[M72](../Milestones/2.%20active/M72-the-party-shares-a-ship.md)`.
 

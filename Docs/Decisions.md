@@ -31,6 +31,13 @@ re-litigating a cut costs more than the cut saved.
   Recall is a priced burst rather than a permanent movement stat. Recall moved to the
   LEDGER slice in the 2026-08-15 protocol recut (`Brainstorms/boarder-protocols.md`);
   Zo stamps this or vetoes the row when that slice is cut.
+- **Sold archetypes as CREW grammar.** Overturned 2026-08-15
+  (`Brainstorms/boarder-protocols.md`): identity is a named, equipped Boarder Protocol,
+  not an emergent read of free picks. The 2026-08-14 free-pick pools recut of M70 is
+  superseded. Do not rebuild free-pick pools.
+- **CREW QUARTERS first-loss lock.** Narrowed 2026-08-15: the protocol is owned from
+  the first session. The remaining first-loss gate is FABRICATION's equipment slot
+  (and ARMORY Tiers). Do not re-lock CREW behind a death.
 - **A pause that stops the game.** `Time.timeScale = 0` is off the table (Zo, 2026-08-09).
   Pause in any multiplayer setting is a menu for one player while time keeps flowing, so the
   overlay is non-blocking from the start: duck audio, blur the frame, keep the sim ticking
@@ -125,7 +132,7 @@ not replace them with homemade bars or ghost Shadow chrome. Shift package rows (
 | `Hud Profile` | TL `(64, −24)` | 320 × 64 | Shadow, **Profile Icon** (sprite), Profile Level, Profile Exp |
 | `Hud Score` | TR `(−24, −24)` | 320 × 72 | Shadow, Score Salvage, Wave Counter (VLG) |
 | `Hud Hatch` | Top centre `(0, −24)`, anchors `(0.5, 1)` | 360 × 72 | Shadow, Shift **Hatch** row (Icon Border / Slider / Text) + value `hp/max` |
-| `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows (Icon Border / Slider / Text), VLG |
+| `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows, protocol G/H + Passive TMP inside the card, VLG |
 | `Hud Weapon` | BR `(−24, 24)` | 400 × 150 | Shadow, Weapon Name, Weapon Ammo, Shift **Reload** row (same bar recipe as vitals), VLG |
 
 `BastionHudView` wires those hosts. EXP-as-slider and further polish are manual on top
@@ -161,7 +168,7 @@ kept; Categories / Preview / top Button List stripped via
 `Gatekeeper/HUD/Strip Settings Shell Onto Stations`. Only that menu takes input.
 Esc or Close returns to walk. Body rows clone from each panel's inactive
 `Templates` under the Settings `List` — that host must survive `ClearBody`.
-Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW: four tracks;
+Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW: protocol + Passive pick;
 FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
 
 ## Shipped
@@ -196,6 +203,13 @@ FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
   bring their own loadout and inherit nothing. **The principle: co-op gets you
   further, not richer** — salvage per player per hour stays roughly flat as
   players are added, and what co-op buys is depth. Zo, 2026-08-14; `M65`.
+- **Shared Ship lobby (Zo, 2026-08-15).** Friends session: Ship is a shared lobby;
+  party lead (host) is ship owner for NAV / EMBARK; each player still owns their
+  own resources (above). Party-wide scene loads (ready-up + declared countdown).
+  NGO `EnableSceneManagement` on for that topology — expires M58/M60's
+  "both load Bastion themselves" rule for the friends path. M64's solo-Ship stamp
+  failed play. `M72`. M57 additive Ship remains down-wait only, not the party lobby.
+  Landed: DDOL `NetSession` from menu Host/Join; `ConnectTimeoutMs` 10000.
 - **Ship subsystems** (Reactor, TetherCore, Engines, LifeSupport) return with the
   bastion outfitting layer. `ShipSystems` stays the aggregate so the wiring keeps
   its shape.
@@ -221,8 +235,10 @@ rulemaking authority lives there.
   0.03 crit/level) are gone; uniform ramps keep the shop legible. **Weapons left this
   curve**: damage, fire rate and clip moved out of `MetaUpgrades` into `WeaponCatalog` +
   `WeaponTier`, which are per weapon and on a linear cost ramp. Two curves in one shop is
-  deliberate — weapons are the progression and must stay reachable; attributes are a side
-  investment and should get expensive.
+  deliberate — weapons are the progression and must stay reachable; attributes were a side
+  investment and should get expensive. **Crew tracks deleted save v8 (2026-08-15):**
+  Vitality / Stamina / Scavenging / Luck refunded. Hatch Armor is the remaining +5% track.
+  CritChance is frozen at 0. CREW QUARTERS equips Boarder Protocol.
 - **Fire rate becomes upgradeable (M21, 2026-08-08).** Cadence was previously frozen as
   the weapon's identity (`WeaponTier` never scaled fire rate). The wheel keeps identity via
   **ring position** instead: changing cadence costs the far side of the ring. The flat

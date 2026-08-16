@@ -29,6 +29,8 @@ namespace GatekeeperBastion.Game
         public bool slotDroneDown;
         public bool slotLastDown;
         public bool weaponAbilityDown;
+        public bool crewAbilityDown;
+        public bool personalAbilityDown;
         public bool interactHeld;
         public bool interactDown;
         public bool pullDrawDown;

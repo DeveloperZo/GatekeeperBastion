@@ -39,14 +39,23 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        /// <summary>The locally-owned player (in solo: the only one), or null. Never returns a
-        /// destroyed component — a fake-null Local silently disables cursor release on death.</summary>
+        /// <summary>The local FPS rig (FirstPersonController), or null. Prefers a registry
+        /// entry that has an FPC so remote NetPlayerAvatar puppets registered for targeting
+        /// cannot steal Local after a NetworkSceneManager load. Never returns a destroyed
+        /// component — a fake-null Local silently disables cursor release on death.</summary>
         public static PlayerHealth Local
         {
             get
             {
                 Prune();
-                return Registry.Count > 0 ? Registry[0] : null;
+                for (int i = 0; i < Registry.Count; i++)
+                {
+                    var candidate = Registry[i];
+                    if (candidate == null) continue;
+                    if (candidate.GetComponent<FirstPersonController>() != null)
+                        return candidate;
+                }
+                return null;
             }
         }
 
