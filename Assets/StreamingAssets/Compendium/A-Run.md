@@ -54,7 +54,7 @@ When it clears you drop back to Prep with no timer. That is when a Hatch-bank is
 
 A Wave started at a field terminal hunts **you**. The Hatch cannot be hurt during that fight. Sitting at the Hatch earns nothing until you Hatch-bank.
 
-A Hatch-bank Wave hunts the Hatch. It is one step heavier than the last field Wave. Defaults and Rams go for the door; Hunters still hunt you. Unbanked drips into Banked while the timer runs. Killing the Wave early, or Unbanked hitting 0, does not end it. The timer dumps whatever is left. A hatch hit also eats Unbanked.
+A Hatch-bank Wave hunts the Hatch. It is one step heavier than the last field Wave. Defaults and Thieves go for the door; Hunters still hunt you. Unbanked drips into Banked while the timer runs. Killing the Wave early, or Unbanked hitting 0, does not end it. The timer dumps whatever is left. A hatch hit also eats Unbanked.
 
 ### What ends a Run
 

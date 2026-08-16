@@ -54,6 +54,36 @@ namespace GatekeeperBastion.Game
             _terminals.Remove(terminal);
         }
 
+        /// <summary>Registered terminal with this id, or null.</summary>
+        public BastionTerminal FindTerminal(string terminalId)
+        {
+            if (string.IsNullOrEmpty(terminalId)) return null;
+            for (int i = 0; i < _terminals.Count; i++)
+            {
+                BastionTerminal t = _terminals[i];
+                if (t != null && t.TerminalId == terminalId)
+                    return t;
+            }
+            return null;
+        }
+
+        /// <summary>True when <paramref name="from"/> is within <paramref name="range"/> of a
+        /// Field or Master terminal.</summary>
+        public bool AnyTriggerInRange(Vector3 from, float range)
+        {
+            float lim = range + 0.05f;
+            for (int i = 0; i < _terminals.Count; i++)
+            {
+                BastionTerminal t = _terminals[i];
+                if (t == null) continue;
+                if (t.Kind != BastionTerminalKind.Field && t.Kind != BastionTerminalKind.Master)
+                    continue;
+                if (Vector3.Distance(from, t.transform.position) <= lim)
+                    return true;
+            }
+            return false;
+        }
+
         public bool TryCompleteTerminal(string terminalId, out string refuseReason)
         {
             refuseReason = null;

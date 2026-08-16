@@ -326,6 +326,7 @@ public static class Docgen
         d["gatekeepers"] = EmitGatekeepers();
         d["waves"] = EmitWaves();
         d["dial"] = EmitDial();
+        d["player-count"] = EmitPlayerCount();
         d["intensity-juice"] = EmitIntensityJuice();
         d["hatch"] = EmitHatch();
         d["hatch-bank"] = EmitHatchBank();
@@ -512,6 +513,21 @@ public static class Docgen
                           wd.NextWave(0, lvl).enemyCount + " | " +
                           wd.NextWave(WaveDirector.MaxWaves - 1, lvl).enemyCount + " |");
         }
+        return sb.ToString().TrimEnd('\r', '\n');
+    }
+
+    static string EmitPlayerCount()
+    {
+        var wd = new WaveDirector();
+        var sb = new StringBuilder();
+        sb.AppendLine("| | |");
+        sb.AppendLine("|---|---|");
+        sb.AppendLine("| supported | " + WaveDirector.SupportedPlayerCount + " (host plus two) |");
+        sb.AppendLine("| capacity | " + WaveDirector.PlayerCapacity + " |");
+        sb.AppendLine("| wave 1 bodies ×1 / ×3 | " + wd.NextWave(0, 0, 1).enemyCount +
+                      " / " + wd.NextWave(0, 0, 3).enemyCount + " |");
+        sb.AppendLine("| bank cap deepest 1 | " + HatchBank.BankCap(1) + " |");
+        sb.AppendLine("| bank cap deepest 2 | " + HatchBank.BankCap(2) + " |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
 

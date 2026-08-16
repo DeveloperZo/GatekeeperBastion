@@ -34,6 +34,7 @@ namespace GatekeeperBastion.Game
         bool _registered;
         bool _hideApplied;
         bool _hideInit;
+        bool _spawnOffsetApplied;
         #endregion
 
         #region Properties
@@ -42,6 +43,15 @@ namespace GatekeeperBastion.Game
 
         public NetworkVariable<bool> WaitingOnShip = new NetworkVariable<bool>(
             false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public NetworkVariable<int> Slot = new NetworkVariable<int>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public NetworkVariable<long> Unbanked = new NetworkVariable<long>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public NetworkVariable<long> Banked = new NetworkVariable<long>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         public PlayerHealth Body => _health;
 
@@ -76,6 +86,7 @@ namespace GatekeeperBastion.Game
             _renderers = GetComponentsInChildren<Renderer>(true);
             Hp.OnValueChanged += OnHpChanged;
             WaitingOnShip.OnValueChanged += OnWaitingChanged;
+            Slot.OnValueChanged += OnSlotChanged;
             ApplyOwnerPresentation();
 
             if (IsOwner)
@@ -83,10 +94,14 @@ namespace GatekeeperBastion.Game
                 _rig = FindAnyObjectByType<FirstPersonController>();
                 if (_rig != null)
                     _rigHealth = _rig.GetComponent<PlayerHealth>();
+                OffsetOwnerRig();
+                int deepest = GameSession.Meta != null ? GameSession.Meta.DeepestWaveReached : 1;
+                ReportDeepestServerRpc(deepest);
             }
 
             if (IsServer)
             {
+                AssignSlot();
                 if (_health != null)
                     Hp.Value = _health.Hp;
                 if (_game == null)
@@ -103,6 +118,7 @@ namespace GatekeeperBastion.Game
         {
             Hp.OnValueChanged -= OnHpChanged;
             WaitingOnShip.OnValueChanged -= OnWaitingChanged;
+            Slot.OnValueChanged -= OnSlotChanged;
             if (_registered)
             {
                 if (_health != null)
@@ -120,6 +136,7 @@ namespace GatekeeperBastion.Game
             {
                 SyncRegistration();
                 SyncHp();
+                SyncWallet();
             }
             ApplyOwnerPresentation();
             if (!IsOwner) return;
@@ -139,6 +156,22 @@ namespace GatekeeperBastion.Game
             _game = game;
         }
 
+        /// <summary>Server: credit this owner's local Meta. Host slot 0 already wrote host Meta.</summary>
+        public void CreditBanked(long credited)
+        {
+            if (!IsServer || credited <= 0L) return;
+            CreditBankedClientRpc(credited);
+        }
+
+        /// <summary>Server: raise this owner's DeepestWaveReached from a co-op clear.</summary>
+        public void PushProgress(int deepest)
+        {
+            if (!IsServer) return;
+            if (_game != null && _game.Sim != null)
+                _game.Sim.SetSlotDeepest(Slot.Value, deepest);
+            PushProgressClientRpc(deepest);
+        }
+
         /// <summary>Owner request: return from the Ship wait into the live Run.</summary>
         public void RequestEmbark()
         {
@@ -147,6 +180,48 @@ namespace GatekeeperBastion.Game
         #endregion
 
         #region Private
+        void AssignSlot()
+        {
+            var nm = NetworkManager;
+            if (nm == null) return;
+            var clients = nm.ConnectedClientsList;
+            for (int i = 0; i < clients.Count; i++)
+            {
+                if (clients[i].ClientId != OwnerClientId) continue;
+                Slot.Value = i;
+                return;
+            }
+        }
+
+        void OffsetOwnerRig()
+        {
+            if (!IsOwner || _rig == null) return;
+            int slot = Slot.Value;
+            if (slot <= 0) return;
+            if (_spawnOffsetApplied) return;
+            _spawnOffsetApplied = true;
+            Vector3 origin = _rig.transform.position;
+            _rig.transform.position = origin
+                + Quaternion.Euler(0f, slot * 120f, 0f) * Vector3.forward * 2.5f;
+        }
+
+        void OnSlotChanged(int previous, int next)
+        {
+            if (previous == next) return;
+            if (previous > 0) return;
+            OffsetOwnerRig();
+        }
+
+        void SyncWallet()
+        {
+            if (_game == null || _game.Sim == null) return;
+            long u = _game.Sim.UnbankedOf(Slot.Value);
+            if (Unbanked.Value != u) Unbanked.Value = u;
+            if (Slot.Value != 0 || _game.Meta == null) return;
+            long b = _game.Meta.BankedSalvage;
+            if (Banked.Value != b) Banked.Value = b;
+        }
+
         void SyncHp()
         {
             if (_health == null) return;
@@ -162,6 +237,8 @@ namespace GatekeeperBastion.Game
             if (WaitingOnShip.Value) return;
             if (IsOwner) return;
             WaitingOnShip.Value = true;
+            if (_game != null && _game.Sim != null)
+                _game.Sim.WipeUnbankedSlot(Slot.Value);
             Log.Event(Tag, "client down → ship clientId=" + OwnerClientId);
         }
 
@@ -270,6 +347,31 @@ namespace GatekeeperBastion.Game
                 NetShipWait.Exit();
             if (_rigHealth != null)
                 _rigHealth.ResetToSpawn();
+        }
+
+        [Rpc(SendTo.Server)]
+        void ReportDeepestServerRpc(int deepest)
+        {
+            if (!IsServer) return;
+            if (_game != null && _game.Sim != null)
+                _game.Sim.SetSlotDeepest(Slot.Value, deepest);
+        }
+
+        [Rpc(SendTo.Owner)]
+        void CreditBankedClientRpc(long credited)
+        {
+            if (credited <= 0L) return;
+            if (GameSession.Meta != null)
+                GameSession.Meta.EarnSalvage(credited);
+        }
+
+        [Rpc(SendTo.Owner)]
+        void PushProgressClientRpc(int deepest)
+        {
+            var meta = GameSession.Meta;
+            if (meta == null) return;
+            if (deepest > meta.DeepestWaveReached)
+                meta.DeepestWaveReached = deepest;
         }
         #endregion
     }

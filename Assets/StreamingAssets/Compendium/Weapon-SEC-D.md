@@ -27,7 +27,7 @@ quiet. Do not bother aiming it at the far Hatch bay; the MK-1 owns that job.
 ### What it is bad at
 
 **Reach.** At the MK-1's working distance it is a dead trigger. **Sustain.** The clip is
-gone in a fraction of a second; regen is slow relative to dump rate. **Rams.** Wrong tool
+gone in a fraction of a second; regen is slow relative to dump rate. **Thieves.** Wrong tool
 for armour.
 
 ### Tiering it

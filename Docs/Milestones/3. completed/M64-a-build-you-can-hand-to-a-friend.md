@@ -1,9 +1,18 @@
 # M64 — A build you can hand to a friend
 
 <!--
-Status: later
-Update trigger: when a gate item is added or retired, when the transport choice changes, or when a friends session finds a failure the gate did not catch
+Status: completed 2026-08-15
+Update trigger: closed
 Last updated: 2026-08-15
+Closed on: 2026-08-15. Machine gates: `Docs/Release-Gate.md`,
+`Tools/release-gate/run.sh` PASS (company Gatekeeper, Product/Version set, build-profile
+reds off), Host/Join → `SceneFlow.LoadShip`, `NetPrep` + `NetPrepTests` 3/0 Passed
+(juice / start / range; `gkb_verify_report.json` 2026-08-15T21:47:12Z),
+`NetRunMirror` Intensity, menu version, `FrameBudget`, `run-windowed.bat`,
+`Docs/Release-Send.md`. Criteria 13–18 and 19–25 playthrough are confirmation, not
+the gate (same as M59/M62) — not claimed played this session. Full suite still has
+unrelated reds (`BastionDoorApertureTests`, `SessionMusicHostTests`,
+`NetVerbTests.Repair_ClientChannel` epsilon); not this slice.
 -->
 
 The **Friends Alpha gate**: a player build both seats can play, and a machine check that

@@ -38,7 +38,7 @@ Clearing Wave 5 does not. How many: [Field Manual](Field-Manual.md). Bindings: [
 Before each Wave you juice **intensity** at the trigger. Higher pays more and sends more bodies.
 
 Intensity does not make Gatekeepers tougher, does not tighten their spacing, and does not
-add a single extra Hunter or Ram — every body it adds is a Default. You are betting
+add a single extra Hunter or Thief — every body it adds is a Default. You are betting
 that you can kill more of the same thing, not that you can survive a different fight.
 Once a Wave is live intensity locks.
 
@@ -55,7 +55,7 @@ A **Hunter** will never touch the Hatch. It wants you, it is faster than your wa
 slower than your sprint, and it dies quickly. It is the reason you cannot park in front
 of the Hatch and hold the trigger.
 
-A **Ram** hunts you on a field-terminal Wave; shooting it will not shout. On a Hatch-bank it
+A **Thief** hunts you on a field-terminal Wave; shooting it will not shout. On a Hatch-bank it
 walks to the Hatch and never turns. It takes a serious bite if it arrives. It is
 slow. That slowness is the offer: you have time to deal with it, if you spend that time
 on it.

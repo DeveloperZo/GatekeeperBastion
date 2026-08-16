@@ -103,10 +103,17 @@ namespace GatekeeperBastion.Game
             string trimmed = text.Trim();
             int colon = trimmed.LastIndexOf(':');
             if (colon < 0)
-                return NetJoinIntent.TryParseIpv4(trimmed, out address);
-            if (!NetJoinIntent.TryParseIpv4(trimmed.Substring(0, colon), out address))
-                return false;
-            return NetJoinIntent.TryParsePort(trimmed.Substring(colon + 1), out port);
+            {
+                if (!NetJoinIntent.TryParseIpv4(trimmed, out address)) return false;
+            }
+            else
+            {
+                if (!NetJoinIntent.TryParseIpv4(trimmed.Substring(0, colon), out address))
+                    return false;
+                if (!NetJoinIntent.TryParsePort(trimmed.Substring(colon + 1), out port))
+                    return false;
+            }
+            return NetJoinIntent.IsJoinableAddress(address);
         }
 
         static bool TryParseSeconds(string text, out float seconds)

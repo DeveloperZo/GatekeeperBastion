@@ -54,9 +54,9 @@ namespace GatekeeperBastion.Game
             }
         }
 
-        /// <summary>Boarder skins and weapon meshes, not the Player capsule. Closing a station
-        /// panel used to set enabled on every child renderer, including the debug capsule the
-        /// camera sits inside.</summary>
+        /// <summary>Boarder skins and weapon meshes. Skip the Player root so SetStationHidden
+        /// cannot re-enable a capsule renderer that used to sit around the camera (the mesh
+        /// is gone; the skip stays in case a leftover root renderer appears).</summary>
         Renderer[] CollectBodyRenderers()
         {
             Renderer[] all = GetComponentsInChildren<Renderer>(true);

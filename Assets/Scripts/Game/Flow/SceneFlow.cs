@@ -22,8 +22,8 @@ namespace GatekeeperBastion.Game
         public const string Splash = "Splash";
 
         /// <summary>Campaign-menu scene. Owns the Shift Main Menu Canvas
-        /// (Continue / Start / Host / Join / Options / Quit). Continue and Start load
-        /// <see cref="Ship"/>; Host and Join load <see cref="Bastion"/>.</summary>
+        /// (Continue / Start / Host / Join / Options / Quit). All four campaign paths
+        /// load <see cref="Ship"/>; Bastion is EMBARK from the nav map.</summary>
         public const string MainMenu = "MainMenu";
 
         /// <summary>Walkable ship-hub scene name

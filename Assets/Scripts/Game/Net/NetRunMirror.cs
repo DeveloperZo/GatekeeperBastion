@@ -48,6 +48,9 @@ namespace GatekeeperBastion.Game
         public NetworkVariable<long> Unbanked = new NetworkVariable<long>(
             0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        public NetworkVariable<int> Intensity = new NetworkVariable<int>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         public bool HasEnd => _hasEnd;
         public EndSummary LastEnd => _lastEnd;
         #endregion
@@ -90,7 +93,8 @@ namespace GatekeeperBastion.Game
             }
             int elapsed = (int)sim.RunElapsed;
             long banked = _game.Meta != null ? _game.Meta.BankedSalvage : 0L;
-            long unbanked = sim.Unbanked;
+            long unbanked = sim.TotalUnbanked;
+            int intensity = sim.Siphon != null ? sim.Siphon.Level : 0;
 
             if (Phase.Value != phase) Phase.Value = phase;
             if (Wave.Value != wave) Wave.Value = wave;
@@ -101,6 +105,7 @@ namespace GatekeeperBastion.Game
             if (ElapsedSeconds.Value != elapsed) ElapsedSeconds.Value = elapsed;
             if (Banked.Value != banked) Banked.Value = banked;
             if (Unbanked.Value != unbanked) Unbanked.Value = unbanked;
+            if (Intensity.Value != intensity) Intensity.Value = intensity;
         }
         #endregion
 

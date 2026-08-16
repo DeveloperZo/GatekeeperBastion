@@ -6,7 +6,7 @@
 
 A **Primary** for things that come to you. One pull throws a cone of pellets — strong only when the target is close and filling the crosshair. Shortest reach in the game; no pierce.
 
-Let them close. Deletes Hunters. Wrong tool for Rams and long corridors — start a Ram early and expect to spend time on it while Hunters use that time on you.
+Let them close. Deletes Hunters. Wrong tool for Thieves and long corridors — start a Thief early and expect to spend time on it while Hunters use that time on you.
 
 Numbers: [Field Manual](Field-Manual.md).
 
@@ -31,7 +31,7 @@ Its cadence is slow, its clip is small, and its reload is the longest of the thr
 ### What it is bad at
 
 - **Range.** Not merely worse at distance: at distance it is close to useless. There is no visible cue for where falloff starts, so a shot that looks like a hit can do almost nothing.
-- **Rams.** A Ram is slow, tough, and walking to the Hatch on a Hatch-bank. To hurt it you must be standing next to it — safe on a field Wave where it hunts you without shouting, but with this weapon's clip and reload, killing one takes several full cycles. If the Ram is close to the Hatch when you start, you will not finish in time. This is the shotgun's structural weakness and it gets worse every Wave.
+- **Thieves.** A Thief is slow, tough, and walking to the Hatch on a Hatch-bank. To hurt it you must be standing next to it — safe on a field Wave where it hunts you without shouting, but with this weapon's clip and reload, killing one takes several full cycles. If the Thief is close to the Hatch when you start, you will not finish in time. This is the shotgun's structural weakness and it gets worse every Wave.
 - **Lines of Gatekeepers.** No pierce, so a queue in a corridor is one shot per body.
 - **Long defensive holds.** Its reload keeps taking you out of the fight at exactly the moments a crowd is building.
 - **Missing.** With this few trigger pulls per clip, a wasted shot is a large fraction of your ammunition.
@@ -40,7 +40,7 @@ Its cadence is slow, its clip is small, and its reload is the longest of the thr
 
 - **Hunter — yes, emphatically.** Hunters ignore the Hatch, sprint straight at you, arrive at close range by design, and have the least health of anything in the Bastion. That is the exact target this weapon was built to delete, and it usually does so in one pull. Wave for Wave, Hunters are the thing that punishes a Primary that cannot handle a target in your face, and the BR-12 does not have that problem.
 - **Default — yes, at your ground.** One at a time, up close, in a doorway. Be aware that hurting one shouts and pulls its neighbours onto you: with this weapon that is sometimes what you *want*, because it brings them into your range instead of leaving them at the Hatch. Just do not pull more than a clip's worth.
-- **Ram — no.** Nothing about this weapon suits a Ram except that on a field-terminal Wave it will not shout while you stand next to it. If your Primary is the BR-12, plan to start on a Ram early, and expect to spend a long time on it while Hunters use that time on you.
+- **Thief — no.** Nothing about this weapon suits a Thief except that on a field-terminal Wave it will not shout while you stand next to it. If your Primary is the BR-12, plan to start on a Thief early, and expect to spend a long time on it while Hunters use that time on you.
 
 ### Tiering it
 
@@ -59,5 +59,5 @@ One quiet consequence: critical hits are rolled per pellet, so this weapon gets 
 - Pellets do not pierce, so the cone does not spread damage across a crowd the way it looks like it should. Aiming "between" two Gatekeepers wastes the shot.
 - The bracket crosshair is an identity cue for this weapon, not a spread indicator. It does not grow or shrink to show accuracy.
 - Crit chance is rolled per pellet, making Luck worth more on this weapon than on the others. Nothing in the game says so.
-- Its clip and reload make it structurally poor against Rams, which the game never flags at the moment you buy it.
+- Its clip and reload make it structurally poor against Thieves, which the game never flags at the moment you buy it.
 - Swapping to the sidearm is usually better than reloading under pressure — and swapping mid-reload destroys the reload progress.

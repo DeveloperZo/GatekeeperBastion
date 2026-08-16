@@ -5,9 +5,9 @@ using UnityEngine;
 namespace GatekeeperBastion.Game
 {
     /// <summary>LOCAL-OWNER: MainMenu front-end flow — CONTINUE / START NEW (overwrite
-    /// confirm) / HOST / JOIN / OPTIONS / QUIT. Continue and Start load
-    /// <see cref="SceneFlow.Ship"/>; Host and Join load <see cref="SceneFlow.Bastion"/>.
-    /// Esc is not polled here — Shift's modal hotkeys own it on the menu.</summary>
+    /// confirm) / HOST / JOIN / OPTIONS / QUIT. Continue, Start, Host and Join all load
+    /// <see cref="SceneFlow.Ship"/>; Bastion is reached by EMBARK. Host EMBARKs first so
+    /// <see cref="NetSession"/> is listening before the client EMBARKs.</summary>
     public sealed class MainMenuController : MonoBehaviour
     {
         const string Tag = "MainMenu";
@@ -18,6 +18,9 @@ namespace GatekeeperBastion.Game
         AudioSource _backgroundMusic;
 
         bool _loading;
+        bool _busy;
+        RelayJoin.Payload _pendingRelay;
+        string _pendingJoinCode;
 
         void Awake()
         {
@@ -40,6 +43,10 @@ namespace GatekeeperBastion.Game
             _view.onJoin = OnJoin;
             _view.onJoinConnect = OnJoinConnect;
             _view.onJoinBack = OnJoinBack;
+            _view.onHostCopy = OnHostCopy;
+            _view.onHostEnter = OnHostEnter;
+            _view.onHostLan = OnHostLan;
+            _view.onHostBack = OnJoinBack;
             _view.onOptions = () => OptionsScreen.Open(null);
             _view.onOverwriteConfirm = StartNewAndGoToShip;
             _view.onQuitConfirm = Quit;
@@ -65,7 +72,7 @@ namespace GatekeeperBastion.Game
             int banked = meta != null ? (int)meta.BankedSalvage : 0;
             int runs = meta != null ? meta.TotalRuns : 0;
             int deepest = meta != null ? meta.DeepestWaveReached : 0;
-            _view.SetCampaignStrip(banked, runs, deepest);
+            _view.SetCampaignStrip(banked, runs, deepest, Application.version);
             if (!string.IsNullOrEmpty(NetJoinIntent.LastError))
             {
                 _view.ShowJoin();
@@ -105,40 +112,114 @@ namespace GatekeeperBastion.Game
                 _loading = false;
         }
 
-        /// <summary>Home HOST — continue the save if one exists, else a new campaign.
-        /// No overwrite modal. Does not taint. Loads Bastion with a host intent.</summary>
-        void OnHost()
+        /// <summary>Home HOST — allocate a Relay join code on the menu, then confirm.
+        /// LAN fallback is on the Host panel when Relay is down.</summary>
+        async void OnHost()
         {
-            if (_loading) return;
+            if (_loading || _busy || _view == null) return;
+            _busy = true;
+            _pendingRelay = default;
+            _pendingJoinCode = null;
+            _view.SetHostCode("");
+            _view.SetHostLanVisible(false);
+            _view.SetHostStatus("Requesting join code…");
+            _view.ShowHost();
+            RelayJoin.Result result = await RelayJoin.TryHost();
+            _busy = false;
+            if (!result.Ok)
+            {
+                _view.SetHostStatus(result.Error);
+                _view.SetHostLanVisible(true);
+                return;
+            }
+            _pendingRelay = result.Payload;
+            _pendingJoinCode = result.JoinCode;
+            _view.SetHostCode(result.JoinCode);
+            GUIUtility.systemCopyBuffer = result.JoinCode;
+            _view.SetHostStatus("Copied to clipboard.");
+            _view.SetHostLanVisible(false);
+        }
+
+        void OnHostCopy()
+        {
+            if (string.IsNullOrEmpty(_pendingJoinCode)) return;
+            GUIUtility.systemCopyBuffer = _pendingJoinCode;
+            if (_view != null) _view.SetHostStatus("Copied to clipboard.");
+        }
+
+        void OnHostEnter()
+        {
+            if (_loading || _busy) return;
+            if (!RelayJoin.HasPayload(_pendingRelay) || string.IsNullOrEmpty(_pendingJoinCode))
+            {
+                if (_view != null) _view.SetHostStatus("No join code yet — wait or Host on LAN.");
+                return;
+            }
+            EnterBastionHost(relay: true);
+        }
+
+        void OnHostLan()
+        {
+            if (_loading || _busy) return;
+            EnterBastionHost(relay: false);
+        }
+
+        void EnterBastionHost(bool relay)
+        {
             _loading = true;
             LoadCampaignForNet();
             NetJoinIntent.LastError = null;
-            NetJoinIntent.RequestHost();
+            if (relay)
+                NetJoinIntent.RequestHostRelay(_pendingRelay, _pendingJoinCode);
+            else
+                NetJoinIntent.RequestHost();
             FrontEndMusic.Stop();
-            if (!SceneFlow.LoadBastion())
+            if (!SceneFlow.LoadShip())
                 _loading = false;
         }
 
         void OnJoin()
         {
-            if (_loading) return;
+            if (_loading || _busy) return;
             _view.ShowJoin();
         }
 
         void OnJoinBack()
         {
-            if (_loading) return;
+            if (_loading || _busy) return;
             _view.ShowMain();
         }
 
-        /// <summary>Join panel Connect. Invalid IPv4 or port refuses here without loading
-        /// Bastion. Valid: same campaign load as Host, then Bastion with a join intent.</summary>
-        void OnJoinConnect()
+        /// <summary>Join panel Connect. A six-character code is the friends path and
+        /// allocates on the menu. Empty code falls through to typed IPv4. Invalid values
+        /// refuse here without loading Bastion.</summary>
+        async void OnJoinConnect()
         {
-            if (_loading || _view == null) return;
+            if (_loading || _busy || _view == null) return;
+            string codeText = _view.JoinCodeText;
+            if (!string.IsNullOrEmpty(codeText) && codeText.Trim().Length > 0)
+            {
+                if (!NetJoinIntent.TryParseJoinCode(codeText, out string code))
+                {
+                    _view.SetJoinRefusal("Enter a six-character join code.");
+                    return;
+                }
+                _busy = true;
+                _view.SetJoinRefusal("Joining…");
+                RelayJoin.Result result = await RelayJoin.TryJoin(code);
+                _busy = false;
+                if (!result.Ok)
+                {
+                    _view.SetJoinRefusal(result.Error);
+                    return;
+                }
+                EnterBastionJoinRelay(result.Payload, result.JoinCode);
+                return;
+            }
+
             if (!NetJoinIntent.TryParseIpv4(_view.JoinAddressText, out string ip))
             {
-                _view.SetJoinRefusal("Enter a dotted IPv4 address.");
+                _view.SetJoinRefusal("Enter a join code, or a dotted IPv4 address.");
                 return;
             }
             if (!NetJoinIntent.IsJoinableAddress(ip))
@@ -157,7 +238,18 @@ namespace GatekeeperBastion.Game
             LoadCampaignForNet();
             NetJoinIntent.RequestJoin(ip, port);
             FrontEndMusic.Stop();
-            if (!SceneFlow.LoadBastion())
+            if (!SceneFlow.LoadShip())
+                _loading = false;
+        }
+
+        void EnterBastionJoinRelay(RelayJoin.Payload payload, string joinCode)
+        {
+            _loading = true;
+            NetJoinIntent.LastError = null;
+            LoadCampaignForNet();
+            NetJoinIntent.RequestJoinRelay(payload, joinCode);
+            FrontEndMusic.Stop();
+            if (!SceneFlow.LoadShip())
                 _loading = false;
         }
 

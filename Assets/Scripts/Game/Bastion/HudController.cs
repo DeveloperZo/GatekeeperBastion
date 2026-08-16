@@ -92,6 +92,11 @@ namespace GatekeeperBastion.Game
         void OnDestroy()
         {
             if (_view != null) _view.ReturnClicked -= OnReturnClicked;
+            if (_compendium != null && _compendiumClosedBound)
+            {
+                _compendium.Closed -= OnCompendiumClosed;
+                _compendiumClosedBound = false;
+            }
             UnsubscribeSim();
             if (IsPauseOpen) ForceClearPauseFlag();
         }

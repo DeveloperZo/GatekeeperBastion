@@ -1,12 +1,12 @@
 ﻿<Solution>
   <Project Path="MCPForUnity.Editor.csproj" />
   <Project Path="Michsky.UI.Shift.csproj" />
+  <Project Path="GatekeeperBastion.csproj" />
   <Project Path="Unity.Mathematics.csproj" />
   <Project Path="Unity.Collections.csproj" />
   <Project Path="GatekeeperBastion.PlayTests.csproj" />
   <Project Path="Unity.Netcode.Runtime.Tests.csproj" />
   <Project Path="Unity.Collections.Tests.csproj" />
-  <Project Path="GatekeeperBastion.csproj" />
   <Project Path="Unity.PerformanceTesting.Editor.csproj" />
   <Project Path="Unity.Burst.csproj" />
   <Project Path="Unity.Netcode.Runtime.csproj" />

@@ -31,7 +31,7 @@ files written before that date still carry one and are a record.
 
 Active **M60** and **M63-2**.
 **M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** and **M61-2**
-completed 2026-08-14. **M55, M57, M58, M59, M62, M71** completed 2026-08-15.
+completed 2026-08-14. **M55, M57, M58, M59, M62, M64, M65, M71** completed 2026-08-15.
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
 developer touching a keyboard, play a full five-wave run with both participating, and the
@@ -40,19 +40,19 @@ sentence.
 
 **Recommended next**, in this order.
 
-1. **M64 → M69 → M60** — friends playability gate (own Ship then Bastion from both
-   seats, client Wave-start, player-build kill + SFX/VFX, plus the send checklist), session
-   audio, then Relay join. Compendium (M62) closed.
+1. **M69 → M60** — session audio, then Relay join. **M64** closed 2026-08-15 (machine
+   gates green; criteria 13–25 playthrough confirmation). Compendium (M62) closed.
 2. **M70** — the Default Protocol (protocol frame + plainest sheet); the turret half
    moved to the future FORGE/turret slice (recut 2026-08-15).
-3. **M65 → M66** after a two-player session exists.
+3. **M66** after a two-player session exists. **M65** closed 2026-08-15 (three players,
+   wave scale, split wallets).
 4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14 (eyes lines, Stats
-   after-numbers, solo completion), M55 juice unused on ten Runs, M71 Regen Surge mag.
-   Next-Run play list is `GatekeeperZo Notes/verification.md`
+   after-numbers, solo completion), M55 juice unused on ten Runs, M71 Regen Surge mag,
+   M64 criteria 13–25 dry-run. Next-Run play list is `GatekeeperZo Notes/verification.md`
    (M31 pin, M30 decoy, M26 fight-feel, M21 opposite focuses). Not a reason to jump the queue.
 
-Planned count is **6** (cap 10). Active **2** (cap 3).
+Planned count is **4** (cap 10). Active **2** (cap 3).
 
 ## Order
 
@@ -112,7 +112,7 @@ this table — see the change log.
 | M57 | The downed player waits on the Ship | completed, Aug 2026 | Client down → additive Ship; embark in Hatch-bank Prep via NAV or pause; full HP at Hatch; host Die() still Lost; `NetDownWaitTests` 2/0. Criterion 8 MPPM is confirmation | [`3. completed/M57`](Milestones/3.%20completed/M57-the-downed-player-waits-on-the-ship.md) |
 | M51 | The client's hands | completed, Aug 2026 | Client repair, decoy and world-acting abilities apply once, server-side; all five `NetVerbTests` Passed (`gkb_verify_report.json` 2026-08-13T18:09:48Z, PlayMode 31/0). Criterion 6 confirmation not the gate; hatch-under-attack waits on M53 | [`3. completed/M51`](Milestones/3.%20completed/M51-the-clients-hands.md) |
 | M58 | A build two machines can run | completed, Aug 2026 | Windows player build; Main Menu Host `0.0.0.0:7777`; Join typed IPv4; dual-box connect + local Player; refusal reads back — player-build kill eyes-on deferred to M64 | [`3. completed/M58`](Milestones/3.%20completed/M58-a-build-two-machines-can-run.md) |
-| M64 | A build you can hand to a friend | later | Both seats: own Ship then Bastion loop (ARMORY, client Wave-start, repair/decoy, kill + muzzle/SFX, end screen); `Release-Gate.md` machine checks; gates M60 | [`1. planned/M64`](Milestones/1.%20planned/M64-a-build-you-can-hand-to-a-friend.md) |
+| M64 | A build you can hand to a friend | completed, Aug 2026 | Both seats: own Ship then Bastion loop; `Release-Gate.md` + `release-gate/run.sh`; Host/Join → LoadShip; `NetPrep` + `NetPrepTests` 3/0 (`gkb_verify_report.json` 2026-08-15T21:34:37Z). Criteria 13–25 confirmation | [`3. completed/M64`](Milestones/3.%20completed/M64-a-build-you-can-hand-to-a-friend.md) |
 | M59 | Polish Pass 1 | completed, Aug 2026 | Field Scale 1; fight HUD ≥24; overflow; no EXP; station chrome+copy; player-build keys; pause shortcuts; end scrim α≥0.65. EditMode HudSeparation + M59PolishChrome + StationPurpose green (`gkb_verify_report.json` 2026-08-15T18:03:48Z) | [`3. completed/M59`](Milestones/3.%20completed/M59-the-polish-pass-1.md) |
 | M61 | Polish Pass 2 | completed, Aug 2026 | IQ astronaut + Synty Space guns/desks (SKU 138857); Mixamo fire/reload stand-ins; stroke crosshair; RMB zoom | [`3. completed/M61`](Milestones/3.%20completed/M61-the-polish-pass-2.md) |
 | M61-2 | Polish Pass 2, the Bastion | completed, Aug 2026 | Kit blocks are POLYGON Sci-Fi Space meshes; re-framed mid-pass to scaler-2 station rooms with functional sliding doors and a bulkhead Hatch; Generated/Authored split; suite 2026-08-15T00:09Z adds no reds of its own; eyes/Stats/solo-run rows open in verification.md | [`3. completed/M61-2`](Milestones/3.%20completed/M61-2-polish-pass-2-the-bastion.md) |
@@ -121,7 +121,7 @@ this table — see the change log.
 | M63-2 | The three that walk | next | Default/Hunter/Thief (Ram) Synty meshes + Mixamo melee walk; player capsule mesh removed; Play pages Thief-named | [`2. active/M63-2`](Milestones/2.%20active/M63-2-the-three-that-walk.md) |
 | M62 | The Compendium you can open | completed, Aug 2026 | Esc → Compendium; Game dimension + scroll nav; StreamingAssets copy; HUD hidden while open; `CompendiumFormTests` | [`3. completed/M62`](Milestones/3.%20completed/M62-the-compendium-you-can-open.md) |
 | M60 | A join a friend can use | next | Unity Relay join code from Main Menu; join-in-Tethered; clean disconnect; host-quit message; LAN IP fallback; two-build internet playthrough eyes-on | [`2. active/M60`](Milestones/2.%20active/M60-a-join-a-friend-can-use.md) |
-| M65 | Three players, and a fight that counts them | later | Three supported, six cheap; waves scale by player count; salvage split to own wallets | [`1. planned/M65`](Milestones/1.%20planned/M65-three-players-and-a-fight-that-counts-them.md) |
+| M65 | Three players, and a fight that counts them | completed, Aug 2026 | Three supported, six cheap; waves scale by player count; salvage split to own wallets. Gate: `PlayerWalletTests`, `WavePlayerCountTests`, `NetThreePlayerTests` (cumulative BankCap; `RunSim.Wallets.cs`). Full suite still has unrelated reds | [`3. completed/M65`](Milestones/3.%20completed/M65-three-players-and-a-fight-that-counts-them.md) |
 | M66 | Polish Pass 3 | later | Hit confirm, per-kind pre-attack audio, players distinct at lane range | [`1. planned/M66`](Milestones/1.%20planned/M66-polish-pass-3.md) |
 | M52 | Waves start at a terminal | completed, Aug 2026 | Interact starts T1's five Boarder-hunt Waves; Hatch invulnerable; D1 on Nth clear; Wave 5 `Escaped`. Close log `14-46-59` (no `[Dev]`). AwardKill-to-bank is M53 | [`3. completed/M52`](Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | M53 | Salvage leaves through the Hatch | completed, Aug 2026 | Kills fill Unbanked; Hatch-bank 45 s drip/attrit/dump, 3 slots, fat pile ×1.25/×1.50. Close log `18-23-55` (Run clean). Stay-Prep after dump is EditMode. Harness 316/0 | [`3. completed/M53`](Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
@@ -139,15 +139,17 @@ what happened. Until this date the filter was whether the design works when Zo p
 
 M53 closed. Unbanked and Hatch-bank are in the loop. M57 closed: a downed client waits
 on the Ship and embarks in Hatch-bank Prep. **M58** closed 2026-08-15: player-build Host/Join
-connect with local Player. **M64** recut 2026-08-15: the send gate is a full loop from
-both seats (own Ship, client Wave-start, M51 verbs, kill + muzzle/SFX), not connect-plus-one-kill.
-**M59** closed 2026-08-15: Bastion as a room and Ship as something a stranger can
+connect with local Player. **M64** closed 2026-08-15: send gate machine checks + both-seat
+prep path (own Ship → Bastion, `NetPrep`, mirrored Intensity); criteria 13–25 playthrough
+confirmation. **M59** closed 2026-08-15: Bastion as a room and Ship as something a stranger can
 operate (terminals, HUD, station chrome and copy, keys, pause list, end scrim).
 **M69** is the Bastion loop and fire/footstep audio; no store pack.
 **M61** closed 2026-08-14: gun, sight, zoom, Ship desks. **M63-2** is the three
 in-build Gatekeeper bodies from that same pack. **M63** is the roster record,
-Ram→Thief in code, and door-time. **M62** closed 2026-08-15: Compendium from pause. M60 is Unity Relay join, gated on M64, authored ahead. Starting
-bastion (M47 kit) is the demo floor.
+Ram→Thief in code, and door-time. **M62** closed 2026-08-15: Compendium from pause.
+**M65** closed 2026-08-15: three players, wave scale, split wallets. M60 is Unity Relay join
+(M64 machine gate closed; dry-run confirmation still open). Starting bastion (M47 kit) is
+the demo floor.
 
 M55 closed. The FORGE/turret slice remains the field-loop rest; it stays queued
 after the session is possible.

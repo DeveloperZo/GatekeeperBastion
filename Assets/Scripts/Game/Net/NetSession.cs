@@ -48,9 +48,12 @@ namespace GatekeeperBastion.Game
         ushort _connectPort;
         bool _becamePeer;
         bool _returningToMenu;
+        bool _leavingOnPurpose;
         NetJoinIntent.Kind _pendingKind;
         string _pendingAddress;
         ushort _pendingPort;
+        RelayJoin.Payload _pendingRelay;
+        string _joinCode;
         #endregion
 
         #region Properties
@@ -65,6 +68,9 @@ namespace GatekeeperBastion.Game
 
         /// <summary>True on a connected client that is not also the server.</summary>
         public bool IsClientOnly => Active && _nm != null && _nm.IsClient && !_nm.IsServer;
+
+        /// <summary>Relay join code for this session. Null on LAN / solo.</summary>
+        public string JoinCode => _joinCode;
 
         /// <summary>Host-spawned decoy prefab. Null in solo when unwired.</summary>
         public GameObject DecoyPrefab => _decoyPrefab;
@@ -97,6 +103,8 @@ namespace GatekeeperBastion.Game
                 Log.Error(Tag, "NetworkManager missing on Net; session disabled.");
                 return;
             }
+            if (_nm.NetworkConfig == null)
+                _nm.NetworkConfig = new NetworkConfig();
 
             _nm.NetworkConfig.EnableSceneManagement = false;
             if (_nm.NetworkConfig.NetworkTransport == null && _transport != null)
@@ -110,17 +118,33 @@ namespace GatekeeperBastion.Game
 
             // Consume here so a second Bastion load is solo. StartHost/StartClient wait for
             // Start — NetworkManager.Awake has not run yet when this type is order -100.
+            // Relay bytes survive Consume for pause / LastError, but only bind them when this
+            // load actually requested Host or Join.
             _pendingKind = NetJoinIntent.Consume();
             _pendingAddress = NetJoinIntent.Address;
             _pendingPort = NetJoinIntent.Port;
+            _joinCode = _pendingKind != NetJoinIntent.Kind.None ? NetJoinIntent.JoinCode : null;
+            _pendingRelay = _pendingKind != NetJoinIntent.Kind.None && NetJoinIntent.HasRelay
+                ? NetJoinIntent.Relay
+                : default;
         }
 
         void Start()
         {
             if (_pendingKind == NetJoinIntent.Kind.Host)
-                StartHost();
+            {
+                if (RelayJoin.HasPayload(_pendingRelay))
+                    StartHostRelay();
+                else
+                    StartHost();
+            }
             else if (_pendingKind == NetJoinIntent.Kind.Join)
-                StartClient(_pendingAddress, _pendingPort);
+            {
+                if (RelayJoin.HasPayload(_pendingRelay))
+                    StartClientRelay();
+                else
+                    StartClient(_pendingAddress, _pendingPort);
+            }
             _pendingKind = NetJoinIntent.Kind.None;
         }
 
@@ -137,54 +161,25 @@ namespace GatekeeperBastion.Game
 
         #region Public API
         /// <summary>Start a listen-server on all interfaces (default 0.0.0.0:7777) and spawn
-        /// the run mirror. 0.0.0.0 still accepts loopback, so MPPM F11 keeps working.</summary>
+        /// the run mirror. Always LAN — Relay host goes through StartHostRelay from intent.</summary>
         public void StartHost(string bindAddress = BindAllAddress, ushort port = DefaultPort)
         {
-            if (_nm == null)
-            {
-                Log.Warn(Tag, "StartHost refused — no NetworkManager.");
-                return;
-            }
-            if (_nm.IsListening)
-            {
-                Log.Warn(Tag, "StartHost refused — session already active.");
-                return;
-            }
-
-            // Listen on bindAddress (0.0.0.0 = all NICs). Advertise loopback so
-            // SetConnectionData is not given 0.0.0.0 as a connect target — that address
-            // is what the failed same-machine join typed (log 2026-08-15 09:01:41).
+            if (!CanStart("StartHost")) return;
             string advertise = bindAddress == BindAllAddress ? LoopbackAddress : bindAddress;
+            // Listen on bindAddress (0.0.0.0 = all NICs). Advertise loopback so
+            // SetConnectionData is not given 0.0.0.0 as a connect target.
             ConfigureTransport(advertise, port, bindAddress);
-            if (!_nm.enabled) _nm.enabled = true;
-            EnsurePrefabsRegistered();
-            if (!_nm.StartHost())
-            {
-                Log.Warn(Tag, "StartHost refused — NetworkManager.StartHost returned false.");
-                return;
-            }
-
+            if (!FinishHostStart()) return;
             LogSessionSnapshot("host started localId=" + _nm.LocalClientId
                 + " bind=" + bindAddress + ":" + port
                 + " join=" + advertise + ":" + port);
             SpawnMirror();
         }
 
-        /// <summary>Join address:port. The host owns the run; this instance must not board.
-        /// F11 uses 127.0.0.1:7777 as the editor/dev fallback.</summary>
+        /// <summary>Join address:port. Always LAN — Relay join goes through StartClientRelay.</summary>
         public void StartClient(string address, ushort port = DefaultPort)
         {
-            if (_nm == null)
-            {
-                Log.Warn(Tag, "StartClient refused — no NetworkManager.");
-                return;
-            }
-            if (_nm.IsListening)
-            {
-                Log.Warn(Tag, "StartClient refused — session already active.");
-                return;
-            }
-
+            if (!CanStart("StartClient")) return;
             if (!NetJoinIntent.IsJoinableAddress(address))
             {
                 _connectAddress = address;
@@ -192,27 +187,35 @@ namespace GatekeeperBastion.Game
                 RefuseJoin("0.0.0.0 is a listen address — use 127.0.0.1 on this machine or the host LAN IPv4");
                 return;
             }
-
             _connectAddress = address;
             _connectPort = port;
             _becamePeer = false;
             ConfigureTransport(address, port);
-            if (!_nm.enabled) _nm.enabled = true;
-            EnsurePrefabsRegistered();
-            if (!_nm.StartClient())
-            {
-                Log.Warn(Tag, "StartClient refused — NetworkManager.StartClient returned false.");
-                RefuseJoin("StartClient returned false");
-                return;
-            }
-
+            if (!FinishClientStart()) return;
             Log.Event(Tag, "client starting — host owns the run address=" + address + ":" + port);
-            if (_game != null && _game.Spawner != null)
-            {
-                int wiped = _game.Spawner.DespawnAllLive();
-                if (wiped > 0)
-                    Log.Event(Tag, "client starting — cleared " + wiped + " local gatekeepers");
-            }
+            ClearLocalGatekeepers();
+        }
+
+        void StartHostRelay()
+        {
+            if (!CanStart("StartHost")) return;
+            BindRelayTransport();
+            if (!FinishHostStart()) return;
+            LogSessionSnapshot("host started localId=" + _nm.LocalClientId
+                + " relay joinCode=" + _joinCode);
+            SpawnMirror();
+        }
+
+        void StartClientRelay()
+        {
+            if (!CanStart("StartClient")) return;
+            _connectAddress = _joinCode;
+            _connectPort = DefaultPort;
+            _becamePeer = false;
+            BindRelayTransport();
+            if (!FinishClientStart()) return;
+            Log.Event(Tag, "client starting — host owns the run joinCode=" + _joinCode);
+            ClearLocalGatekeepers();
         }
 
         /// <summary>Client clones register here from OnNetworkSpawn. Null-safe for fixture tests
@@ -229,6 +232,7 @@ namespace GatekeeperBastion.Game
         public void ShutdownSession()
         {
             _mirror = null;
+            _leavingOnPurpose = true;
             if (_nm == null) return;
             if (!_nm.IsListening) return;
             Log.Event(Tag, "session shutdown");
@@ -237,6 +241,66 @@ namespace GatekeeperBastion.Game
         #endregion
 
         #region Private
+        bool CanStart(string op)
+        {
+            if (_nm == null)
+            {
+                Log.Warn(Tag, op + " refused — no NetworkManager.");
+                return false;
+            }
+            if (_nm.IsListening)
+            {
+                Log.Warn(Tag, op + " refused — session already active.");
+                return false;
+            }
+            return true;
+        }
+
+        void ArmNetwork()
+        {
+            if (!_nm.enabled) _nm.enabled = true;
+            EnsurePrefabsRegistered();
+        }
+
+        bool FinishHostStart()
+        {
+            ArmNetwork();
+            if (_nm.StartHost()) return true;
+            Log.Warn(Tag, "StartHost refused — NetworkManager.StartHost returned false.");
+            return false;
+        }
+
+        bool FinishClientStart()
+        {
+            ArmNetwork();
+            if (_nm.StartClient()) return true;
+            Log.Warn(Tag, "StartClient refused — NetworkManager.StartClient returned false.");
+            RefuseJoin("StartClient returned false");
+            return false;
+        }
+
+        void ClearLocalGatekeepers()
+        {
+            if (_game == null || _game.Spawner == null) return;
+            int wiped = _game.Spawner.DespawnAllLive();
+            if (wiped > 0)
+                Log.Event(Tag, "client starting — cleared " + wiped + " local gatekeepers");
+        }
+
+        void BindRelayTransport()
+        {
+            if (_transport == null) _transport = GetComponent<UnityTransport>();
+            if (_transport == null)
+            {
+                Log.Warn(Tag, "no UnityTransport — cannot bind Relay");
+                return;
+            }
+            if (_nm != null && _nm.NetworkConfig.NetworkTransport == null)
+                _nm.NetworkConfig.NetworkTransport = _transport;
+            _transport.ConnectTimeoutMS = ConnectTimeoutMs;
+            RelayJoin.Apply(_transport, _pendingRelay);
+        }
+
         void ConfigureTransport(string address, ushort port, string listenAddress = null)
         {
             if (_transport == null) _transport = GetComponent<UnityTransport>();
@@ -386,6 +450,12 @@ namespace GatekeeperBastion.Game
             if (wasHost) return;
             if (_returningToMenu) return;
             if (_game == null) return;
+            if (_becamePeer && !_leavingOnPurpose)
+            {
+                Log.Event(Tag, "host left");
+                NetJoinIntent.LastError = "Host left the session.";
+            }
+            _returningToMenu = true;
             SceneFlow.LoadMainMenu();
         }
         #endregion

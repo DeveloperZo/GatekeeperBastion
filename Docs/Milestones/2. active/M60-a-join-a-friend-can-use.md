@@ -1,16 +1,15 @@
 # M60 — A join a friend can use
 
 <!--
-Status: later
-Update trigger: re-cut against M51 and M58's landed menu/session shapes before starting
-(Zo, 2026-08-13: author now, same pattern as M50/M51). Also when the Relay / Steam
-decision in Decisions.md changes.
-Last updated: 2026-08-14
+Status: next (current)
+Update trigger: when the Relay / Steam decision in Decisions.md changes, or when
+criterion 4's kill date is hit.
+Last updated: 2026-08-15
 -->
 
 Graduates `../../Brainstorms/co-op.md` "a join surface a friend can use". M58 is typed LAN
 IP. This is the internet/friends path: **Unity Relay on the existing UnityTransport**,
-recorded in `../../Milestones/1. planned/M64-a-build-you-can-hand-to-a-friend.md` and
+recorded in `../../Milestones/3. completed/M64-a-build-you-can-hand-to-a-friend.md` and
 locked in `../../Decisions.md`. Steam is deferred until a real appid exists.
 
 ## Story
@@ -39,11 +38,12 @@ criterion.
 
 ## Kill criterion
 
-Work starts on the day implementation begins. **If criterion 4 — two player builds, one
-Relay join code, one kill on both screens — cannot be demonstrated within ten working days
-of start, stop.** Record what Relay / Authentication / the UGS project blocked, and re-open
-the transport decision in `../../Decisions.md` before writing more netcode. Same shape as
-M48's NGO kill criterion.
+Work started 2026-08-15. **If criterion 4 — two player builds, one Relay join code, one
+kill on both screens — cannot be demonstrated by 2026-08-28 (ten working days), stop.**
+Record what Relay / Authentication / the UGS project blocked, and re-open the transport
+decision in `../../Decisions.md` before writing more netcode. Same shape as M48's NGO kill
+criterion. UGS project ID is empty in `ProjectSettings` at start — Host must refuse by
+name until Zo links the Unity project.
 
 ## Acceptance criteria
 
@@ -67,45 +67,65 @@ M48's NGO kill criterion.
 
 ## Implementation
 
-Re-cut this file against whatever M58 actually landed for the menu before writing code.
-The menu Host / Join / intent / Bastion-owned `NetSession` are M58's; this slice adds Relay
-on that UnityTransport and changes the Join contents to a code.
+Recut 2026-08-15 against M58's landed menu. Host / Join live on `MainMenuController` /
+`MainMenuView` / the authored Join panel. Intent is `NetJoinIntent` (static, Game/ only).
+`NetSession` stays Bastion-owned; `EnableSceneManagement` stays false. Player-build CLI
+(`PlayerLaunch` `-gkb-host` / `-gkb-join`) stays the LAN dual-box path.
 
-1. **Change** `Packages/manifest.json` — add `com.unity.services.relay` and
-   `com.unity.services.authentication`. Resolve versions compatible with NGO 2.13.1 at
-   start and record them here. Do not add `com.community.netcode.transport.facepunch`.
-2. **Open, labelled:** Unity Cloud / UGS project ID is Zo's. Host cannot allocate until
-   the Unity project is linked. Anonymous sign-in; no per-player Unity account.
-3. **Change** `NetSession.cs` — friends Host: `SignInAnonymouslyAsync`,
-   `CreateAllocationAsync(maxConnections: 3)` (host plus two guests; `M65` raises the
-   count, not this slice), `GetJoinCodeAsync`, `UnityTransport.SetRelayServerData`, then
-   `StartHost` as M58. Friends Join: `JoinAllocationAsync(code)`, `SetRelayServerData`,
-   `StartClient`. LAN fallback keeps M58 `SetConnectionData`. Do not enable NGO scene
-   management. Do not enable host migration. Do not add Unity Lobby.
-4. **Change** Main Menu — Host: after a successful allocation, show the join code on the
-   Host confirmation and copy it. Join panel default is a code field + Connect; LAN IP
-   fields remain as the fallback row. Invalid / empty code refuses on the panel without
-   loading Bastion. Allocation or auth failure paints a named refusal (same `LastError`
-   path as M58). Rejected: a browsable server list. Rejected: requiring both players to
-   still be on the menu — join-in-Tethered is criterion 2.
-5. **Change** pause — while a Relay session is live, the join code is readable there so a
-   late joiner can be told it. Do not add a new always-on HUD row
+1. **Change** `Packages/manifest.json` — `com.unity.services.relay` **1.2.0** and
+   `com.unity.services.authentication` **3.7.0**, compatible with NGO 2.13.1 and this
+   project's embedded `com.unity.transport` 2.6.0. Do not add
+   `com.community.netcode.transport.facepunch`. **Rejected:** `com.unity.services.multiplayer`
+   2.3.0 — it depends on transport 2.7.3 and collections 2.6.7 against the embedded
+   2.6.0 / 2.2.1 pair, and it wraps Lobby, which this slice rejects. Standalone Relay
+   1.2.0 is deprecated on Unity 6 and is the last 1.x; `UnityTransport.SetHostRelayData`
+   / `SetClientRelayData` on the existing transport is the integration. **Resolved lock
+   (2026-08-15):** authentication **3.7.0**, relay **1.2.0** (`Packages/packages-lock.json`).
+2. **Open, labelled:** Unity Cloud / UGS project ID is Zo's. `cloudProjectId` is empty in
+   `ProjectSettings` at start. Host cannot allocate until the Unity project is linked.
+   Anonymous sign-in; no per-player Unity account. Missing ID fails Host with a named
+   refusal, not a hang.
+3. **Create** `Assets/Scripts/Game/Net/RelayJoin.cs` — allocate / join / named errors /
+   `Apply(UnityTransport, Payload)`. No NetworkManager. Max connections 3 (host plus two
+   guests; `M65` raises the count). **Change** `NetJoinIntent.cs` — `TryParseJoinCode`
+   (six alphanumeric, case-insensitive), `RequestHostRelay` / `RequestJoinRelay` carrying
+   `RelayJoin.Payload`, `JoinCode` readable after Consume. LAN `RequestHost` /
+   `RequestJoin(address, port)` unchanged.
+4. **Change** `NetSession.cs` — if the consumed intent has a Relay payload, `RelayJoin.Apply`
+   then `StartHost` / `StartClient` as M58; else M58 `SetConnectionData`. Expose `JoinCode`
+   for pause. Do not enable NGO scene management. Do not enable host migration. Do not add
+   Unity Lobby.
+5. **Change** Main Menu — Host click allocates on the menu (async) *before* `LoadBastion`,
+   so the code can show on a Host confirmation without a DDOL NetworkManager (rejected in
+   M58). Success: show the code, copy it, Enter Bastion. Failure: named refusal + **Host
+   on LAN** (M58 `RequestHost`). Join panel default is a code field + Connect; LAN IP/port
+   remain the fallback row. Invalid / empty code refuses on the panel without loading
+   Bastion. Join allocation failure refuses on the panel (no Bastion bounce). Rejected: a
+   browsable server list. Rejected: requiring both players to still be on the menu —
+   join-in-Tethered is criterion 2.
+6. **Change** pause — while a Relay session is live, the join code is a pause shortcut
+   row (`CODE` / the six characters / `SESSION`). Do not add a new always-on HUD row
    (`../../Architecture/README.md`).
-6. **Change** disconnect — client quit: `NetworkManager.Shutdown()`, `SceneFlow.LoadMainMenu`,
-   host session continues. Host quit: client sees a visible message, log `[Net] host left`,
-   return to MainMenu. Reuse M50's clean shutdown; add the host-quit *message* here if M50
-   only disconnects.
-7. **Change** F10/F11 — editor-only once M58/M59 have landed; not the friends path.
-8. Headless: no new Relay fixture. Keep UnityTransport shutdown/rejoin coverage.
-9. **Change** docs: Roadmap row, Changelog; co-op.md join entry graduates on close.
-   `rg "Unity.Netcode" Assets/Scripts/Sim/` stays empty; lint-arch green. Close against
-   `M64`'s gate if that file has shipped; if it has not, criterion 4 still needs two
-   player builds on two networks.
+7. **Change** `GameController.QuitToMenu` — if a session is active, `ShutdownSession`
+   before `LoadMainMenu`. Client quit: host continues. Host quit: client log `[Net] host
+   left`, `LastError` = `Host left the session.`, return to MainMenu (M50 shutdown plus
+   the message M50 did not paint).
+8. **Change** F10/F11 — `UNITY_EDITOR` only in `DevCommands.All`. Development player
+   builds no longer list or bind them (`ShortcutPanel.DefaultDevSurface` → `None`). Not
+   the friends path.
+9. Headless: no new Relay fixture. Keep UnityTransport shutdown/rejoin coverage.
+   `NetSessionAddressTests` gains `TryParseJoinCode`; LAN address tests stay.
+10. **Change** docs: Roadmap row, Changelog; co-op.md join entry graduates on close.
+    `rg "Unity.Netcode" Assets/Scripts/Sim/` stays empty; `rg "Unity.Services" Assets/Scripts/Sim/`
+    stays empty; lint-arch green. Close against `M64`'s gate if that file has shipped; if
+    it has not, criterion 4 still needs two player builds on two networks.
 
 Rejected: host migration (M45). Rejected: Unity Lobby (M64 — the join code is enough).
 Rejected: Steam / Facepunch as this slice's path (real appid cost; 480 is not a
 distribution path). Rejected: port forwarding and Tailscale as the shipping answer
-(Tailscale is the zero-engineering path *until this ships*, per M64).
+(Tailscale is the zero-engineering path *until this ships*, per M64). Rejected: allocating
+after Bastion loads — Host confirmation could not show the code without a second session
+object.
 
 ## Supporting work
 

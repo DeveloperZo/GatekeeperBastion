@@ -98,7 +98,7 @@ The Bastion asks three questions at once and your Primary answers one of them we
 
 - **Hunters** run straight at you and die fast. A weapon that hits hard up close answers
   them.
-- **Rams** hunt you on a field-terminal Wave and walk to the Hatch on a Hatch-bank. Shooting
+- **Thieves** hunt you on a field-terminal Wave and walk to the Hatch on a Hatch-bank. Shooting
   them never shouts. You want reach and damage per shot.
 - **Defaults** march on the Hatch, turn if you hurt them, and line up in corridors, which
   is where a shot that continues through bodies pays.

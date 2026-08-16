@@ -11,7 +11,6 @@ namespace GatekeeperBastion.EditorTools
     /// can select the Game dimension at runtime. Does not rewrite voice.</summary>
     public static class CompendiumCopy
     {
-        const string MenuPath = "GatekeeperBastion/Build/Copy Compendium Pages";
         const string StreamingRel = "Assets/StreamingAssets/Compendium";
 
         static readonly Regex HtmlComment = new Regex(
@@ -21,7 +20,7 @@ namespace GatekeeperBastion.EditorTools
         static readonly Regex H2Heading = new Regex(
             @"^##\s+", RegexOptions.Multiline | RegexOptions.Compiled);
 
-        [MenuItem(MenuPath, false, 64)]
+        [MenuItem("GatekeeperBastion/Build/Copy Compendium Pages", false, 64)]
         public static void CopyFromMenu()
         {
             int n = CopyPages(log: true);

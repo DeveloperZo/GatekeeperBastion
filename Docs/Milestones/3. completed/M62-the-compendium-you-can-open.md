@@ -1,10 +1,17 @@
 # M62 — The Compendium you can open
 
 <!--
-Status: later
-Update trigger: when pause grows a reader, when Docs/Play/ volume shape or voice rules
-change, or when unlock-on-encounter is reconsidered.
-Last updated: 2026-08-13
+Status: completed 2026-08-15
+Update trigger: closed
+Last updated: 2026-08-15
+Closed on: 2026-08-15. Gate: `CompendiumFormTests` 6/0 (Game + See also on every
+hand-written page, no Page|Answers table, Game dimension has no milestone IDs,
+StreamingAssets stem set matches Docs/Play, ExtractGameView omits Reference/Gaps,
+catalog volumes cover every Play page except README). Menu
+`GatekeeperBastion/Build/Copy Compendium Pages`; player-build hooks the copy.
+Pause Esc → Compendium on Bastion and Ship; scroll nav of all volumes/entries;
+Game body + See also; HUD hidden while open. Zo close — criteria 2–6 playthrough
+is confirmation (same as M57/M59).
 -->
 
 The Compendium is the Boarder's working knowledge of the game — volumes of related
@@ -142,12 +149,10 @@ pause. If M61 slips, the reader still opens; the gun may still be invisible.
 
 ## Verification
 
-1. Criterion 1, 7 — `Tools/verify/run.sh --filter CompendiumForm`;
-   `Tools/lint-language/run.sh` green.
-2. Criteria 2–6 — playthrough: EMBARK, Esc, Compendium, Garrison → Gatekeepers → Ram,
-   Hull → The Ship, appendix Field Manual. Gaps headings must not appear in the body.
-   HTML comments must not appear. Close, still in Prep. Player build: same path, pages
-   resolve from StreamingAssets.
+1. Criterion 1, 7 — `CompendiumFormTests` (6/0). Closed 2026-08-15.
+2. Criteria 2–6 — Zo close. Playthrough (EMBARK → Esc → Compendium → Garrison → Ram,
+   Hull → The Ship, Field Manual; Gaps/comments absent; HUD off while open) is
+   confirmation, not the gate.
 
 ## Do not build
 

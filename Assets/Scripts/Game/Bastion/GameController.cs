@@ -235,6 +235,8 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
+            RefreshPlayerCount();
+
             Sim.Tick(dt);                                             // 2
 
             if (Sim.Phase == RunPhase.Tethered)
@@ -523,6 +525,7 @@ namespace GatekeeperBastion.Game
                 RestoreHatchBankSpawns();
             if (Sim.Mode == WaveMode.HatchBank)
                 SnapshotHatchBankGraph();
+            PushGuestProgress();
         }
 
         void OnApplicationQuit()
@@ -538,6 +541,8 @@ namespace GatekeeperBastion.Game
             _leavingScene = true;
             Log.Event("Ship", $"quit to menu — {(Meta != null ? Meta.BankedSalvage : 0)} banked");
             GameSession.Save();
+            if (_net != null && _net.Active)
+                _net.ShutdownSession();
             if (SceneFlow.LoadMainMenu()) return;
             _leavingScene = false;
             Log.Error(Tag, "QUIT TO MENU failed to load MainMenu; staying in Bastion.");
@@ -569,6 +574,7 @@ namespace GatekeeperBastion.Game
             Sim.WaveStarted += OnWaveStarted;
             Sim.AssaultEnded += OnAssaultEnded;
             Sim.MasterHatchHalfStarted += OnMasterHatchHalfStarted;
+            Sim.GuestConverted += OnGuestConverted;
         }
 
         void Unsubscribe()
@@ -578,6 +584,7 @@ namespace GatekeeperBastion.Game
             Sim.WaveStarted -= OnWaveStarted;
             Sim.AssaultEnded -= OnAssaultEnded;
             Sim.MasterHatchHalfStarted -= OnMasterHatchHalfStarted;
+            Sim.GuestConverted -= OnGuestConverted;
         }
     }
 }

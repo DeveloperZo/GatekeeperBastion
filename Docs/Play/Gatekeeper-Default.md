@@ -4,7 +4,7 @@
 
 ## Game
 
-The plain one, and the one every other rule is stated against. It walks to the Hatch and will pass you to get there — until something flips it onto you for the rest of its life.
+The plain one, and the one every other rule is stated against. It walks to the Hatch and will pass you to get there — until something flips it onto you for the rest of its life. It closes and swings: melee contact.
 
 Shooting it, being seen at range, or standing near it puts it on you. The first two are permanent; nearness is temporary. Once it flips it shouts, and the whole group joins. Once it reaches the Hatch it stops negotiating — kill it there, or the door takes the hits.
 
@@ -33,7 +33,7 @@ This cuts both ways and you should be deliberate about which way you are using i
 - **Pulling on purpose** takes a group off the Hatch and puts it on you, in the open, where you can fight it on ground you chose. That is often the right trade, and it is the only way to move Defaults at all.
 - **Pulling by accident** — clipping a Default while shooting past it at a Hunter, or spraying into a crowd — hands you a fight you did not schedule, usually while your attention is elsewhere.
 
-The Ram is the exception in both directions: shooting a Ram alerts nobody, and no shout ever reaches one.
+The Thief is the exception in both directions: shooting a Thief alerts nobody, and no shout ever reaches one.
 
 ### The one you cannot pull
 
@@ -49,7 +49,7 @@ Late in a Run they are the same Gatekeeper with substantially more health. Inten
 
 ## See also
 
-[Gatekeepers](Gatekeepers.md). [Hunter](Gatekeeper-Hunter.md). [Ram](Gatekeeper-Ram.md). [The Hatch](The-Hatch.md).
+[Gatekeepers](Gatekeepers.md). [Hunter](Gatekeeper-Hunter.md). [Thief](Gatekeeper-Thief.md). [The Hatch](The-Hatch.md).
 
 ## Gaps
 

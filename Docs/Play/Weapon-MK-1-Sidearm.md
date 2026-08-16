@@ -6,7 +6,7 @@
 
 Your **ranged Secondary**. Free at the ARMORY, and still bought there. The other free Secondary is **SEC-D** (contact).
 
-Early it is your whole loadout if you picked reach. Later it is the bridge — what you fire while the Primary reloads. Accurate single shots, no pierce: finish wounded bodies, swap under pressure, leave Rams alone.
+Early it is your whole loadout if you picked reach. Later it is the bridge — what you fire while the Primary reloads. Accurate single shots, no pierce: finish wounded bodies, swap under pressure, leave Thieves alone.
 
 Numbers: [Field Manual](Field-Manual.md).
 
@@ -31,14 +31,14 @@ Two jobs, and they are different jobs.
 
 - **Volume.** Small clip, modest damage, and Gatekeeper health climbs every Wave of a Run. Deep in a Run it takes visibly more trigger pulls per body than it did on the first Wave, and against a big group it simply cannot keep up.
 - **Anything armoured.** It has no pierce, so every shot stops on the first body. A queue of Gatekeepers in a doorway takes one shot each, in order.
-- **Rams.** A Ram has far more health than anything else in the game and does not care that you are shooting it. Emptying the sidearm into one repeatedly, with a reload between each clip, is usually slower than the Ram's walk to the Hatch.
+- **Thieves.** A Thief has far more health than anything else in the game and does not care that you are shooting it. Emptying the sidearm into one repeatedly, with a reload between each clip, is usually slower than the Thief's walk to the Hatch.
 - **Being your only weapon past the first couple of Waves.** It is a fine opener and a poor finisher.
 
 ### Which Gatekeeper it answers
 
 - **Default** — well enough, early. One at a time, at range, before it reaches the Hatch. Remember that hurting one shouts and pulls its neighbours onto you, so with only the sidearm in hand, do not start a fight you cannot finish.
 - **Hunter** — workable, because a Hunter runs straight at you and gets easier to hit the closer it gets, and it is the least healthy thing in the Bastion. It is also faster than your walk, so you will not reliably back away from one.
-- **Ram** — no. This is the wrong tool. If a Ram is on the Bastion and the sidearm is all you have, you are trading the Hatch for time.
+- **Thief** — no. This is the wrong tool. If a Thief is on the Bastion and the sidearm is all you have, you are trading the Hatch for time.
 
 ### Tiering it
 

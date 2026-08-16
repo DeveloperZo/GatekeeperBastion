@@ -1,8 +1,8 @@
 # 4 — Data
 
 <!-- GENERATED BLOCKS — DO NOT EDIT INSIDE GKB:GEN … GKB:END MARKERS.
-     Tools/docgen/run.sh splices these fourteen blocks from Sim/: mk1-base, wheel, rings,
-     tier-cost, abilities, gatekeepers, waves, dial, intensity-juice, hatch, hatch-bank,
+     Tools/docgen/run.sh splices these fifteen blocks from Sim/: mk1-base, wheel, rings,
+     tier-cost, abilities, gatekeepers, waves, dial, player-count, intensity-juice, hatch, hatch-bank,
      master-control, tracks, bastion-mesh. Prose outside the
      markers is hand-written and preserved byte-for-byte on regenerate. Run
      Tools/docgen/run.sh after any Sim/ change that owns a block; --check fails on drift. -->
@@ -159,6 +159,21 @@ baseline** every table below rests on:
 | 4 | ×1.35 | 24 | 89 |
 | 5 | ×1.50 | 27 | 99 |
 <!-- GKB:END dial -->
+
+Body count scales linearly with connected players: `min(120 × n, round((18 + 12×i) × dial) × n)`.
+`n = 1` is the table above. Hunters and Rams stay on the per-wave rows; surplus is Default.
+Bank cap at conversion is solo expected unbanked for waves 1..DeepestWaveReached at dial 0 /
+scavenging 0, and applies only when `n > 1`.
+
+<!-- GKB:GEN player-count — WaveDirector.SupportedPlayerCount, NextWave n, HatchBank.BankCap -->
+| | |
+|---|---|
+| supported | 3 (host plus two) |
+| capacity | 6 |
+| wave 1 bodies ×1 / ×3 | 18 / 54 |
+| bank cap deepest 1 | 450 |
+| bank cap deepest 2 | 1200 |
+<!-- GKB:END player-count -->
 
 <!-- GKB:GEN intensity-juice — IntensityJuice.CostPerStep -->
 | | |

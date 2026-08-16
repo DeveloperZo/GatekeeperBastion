@@ -43,7 +43,7 @@ Spend the first Prep looking around: find the Hatch, find the doors, notice how 
 
 ### 4. Walk to a field terminal
 
-The first Wave is all basic Gatekeepers. On a Wave you start at a field terminal they come for you, not the Hatch. No Hunters, no Rams. It is the gentlest thing the game will ever send you and it exists to teach you the room.
+The first Wave is all basic Gatekeepers. On a Wave you start at a field terminal they come for you, not the Hatch. No Hunters, no Thieves. It is the gentlest thing the game will ever send you and it exists to teach you the room.
 
 Look at the terminal. Juice if you want. Select — including intensity 0 — then start **one** Wave. On the first terminal, five of those opens the door. After each clear, Prep lasts as long as you want. At the Hatch the same flow: select, then Hatch-bank. You can bank after Wave 1. Bindings: [Field Manual](Field-Manual.md).
 

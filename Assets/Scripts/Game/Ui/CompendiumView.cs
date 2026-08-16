@@ -8,28 +8,50 @@ using UnityEngine.UI;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER: pause Compendium reader — volume list left, entry body right.
-    /// Parses headings, bold, and <c>[text](Other-Page.md)</c> links into TMP rich text.
-    /// Authored on the pause canvas; serialized references only.</summary>
+    /// <summary>LOCAL-OWNER: pause Compendium reader. Left: one scroll of volume
+    /// headers with every entry under them (organized + exhaustive). Right: Game body.</summary>
     public sealed class CompendiumView : MonoBehaviour, IPointerClickHandler
     {
         const string Tag = "Compendium";
 
+        static readonly Color VolumeHeaderColor = new Color(0.55f, 0.62f, 0.72f, 1f);
+        static readonly Color EntryNormalColor = new Color(0.88f, 0.90f, 0.94f, 1f);
+        static readonly Color EntrySelectedColor = new Color(0.95f, 0.78f, 0.35f, 1f);
+        static readonly Color EntrySelectedBg = new Color(0.28f, 0.32f, 0.40f, 1f);
+        static readonly Color EntryNormalBg = new Color(0.15f, 0.18f, 0.22f, 0.0f);
+
         [SerializeField] GameObject _root;
-        [SerializeField] RectTransform _volumeListRoot;
-        [SerializeField] GameObject _volumeButtonTemplate;
-        [SerializeField] RectTransform _entryListRoot;
+        [SerializeField, Tooltip("Content root under the left nav ScrollRect.")]
+        RectTransform _navContent;
+        [SerializeField] GameObject _volumeHeaderTemplate;
         [SerializeField] GameObject _entryButtonTemplate;
+        [SerializeField] ScrollRect _navScroll;
         [SerializeField] TextMeshProUGUI _titleLabel;
         [SerializeField] TextMeshProUGUI _bodyLabel;
         [SerializeField] ScrollRect _bodyScroll;
         [SerializeField] Button _closeButton;
 
-        readonly List<Button> _volumeButtons = new List<Button>(8);
-        readonly List<Button> _entryButtons = new List<Button>(16);
-        int _openVolume = -1;
+        [SerializeField, OptionalBinding, Tooltip("HUD / pause chrome hidden while the reader is open.")]
+        GameObject[] _hideWhileOpen;
+
+        // Legacy wires from the first authoring pass — used if _navContent is unset.
+        [SerializeField, OptionalBinding] RectTransform _volumeListRoot;
+        [SerializeField, OptionalBinding] GameObject _volumeButtonTemplate;
+        [SerializeField, OptionalBinding] RectTransform _entryListRoot;
+
+        readonly List<NavEntry> _navEntries = new List<NavEntry>(32);
+        readonly List<bool> _hideWasActive = new List<bool>(8);
         string _openStem;
         bool _built;
+        bool _hidingHud;
+
+        struct NavEntry
+        {
+            public string Stem;
+            public Button Button;
+            public TextMeshProUGUI Label;
+            public Image Background;
+        }
 
         public bool IsOpen => _root != null && _root.activeSelf;
 
@@ -39,10 +61,9 @@ namespace GatekeeperBastion.Game
         {
             if (_closeButton != null)
                 _closeButton.onClick.AddListener(Close);
-            if (_volumeButtonTemplate != null)
-                _volumeButtonTemplate.SetActive(false);
-            if (_entryButtonTemplate != null)
-                _entryButtonTemplate.SetActive(false);
+            HideTemplate(_volumeHeaderTemplate);
+            HideTemplate(_entryButtonTemplate);
+            HideTemplate(_volumeButtonTemplate);
             if (_root != null)
                 _root.SetActive(false);
         }
@@ -55,11 +76,12 @@ namespace GatekeeperBastion.Game
                 return;
             }
             EnsureBuilt();
+            SetHudHidden(true);
             _root.SetActive(true);
             if (!string.IsNullOrEmpty(preferredStem) && TryOpenStem(preferredStem))
                 return;
-            if (_openVolume < 0)
-                SelectVolume(0);
+            if (string.IsNullOrEmpty(_openStem) && _navEntries.Count > 0)
+                TryOpenStem(_navEntries[0].Stem);
             else
                 RefreshBody();
         }
@@ -68,7 +90,43 @@ namespace GatekeeperBastion.Game
         {
             if (_root == null || !_root.activeSelf) return;
             _root.SetActive(false);
+            SetHudHidden(false);
             if (Closed != null) Closed.Invoke();
+        }
+
+        void OnDisable()
+        {
+            // Domain reload / canvas disable must not leave HUD permanently off.
+            SetHudHidden(false);
+        }
+
+        void SetHudHidden(bool hide)
+        {
+            if (_hideWhileOpen == null || _hideWhileOpen.Length == 0) return;
+
+            if (hide)
+            {
+                if (_hidingHud) return;
+                _hideWasActive.Clear();
+                for (int i = 0; i < _hideWhileOpen.Length; i++)
+                {
+                    var go = _hideWhileOpen[i];
+                    bool was = go != null && go.activeSelf;
+                    _hideWasActive.Add(was);
+                    if (go != null && was) go.SetActive(false);
+                }
+                _hidingHud = true;
+                return;
+            }
+
+            if (!_hidingHud) return;
+            for (int i = 0; i < _hideWhileOpen.Length && i < _hideWasActive.Count; i++)
+            {
+                var go = _hideWhileOpen[i];
+                if (go != null && _hideWasActive[i]) go.SetActive(true);
+            }
+            _hideWasActive.Clear();
+            _hidingHud = false;
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -87,72 +145,89 @@ namespace GatekeeperBastion.Game
         {
             if (_built) return;
             _built = true;
-            if (_volumeListRoot == null || _volumeButtonTemplate == null)
+
+            RectTransform content = ResolveNavContent();
+            GameObject headerTemplate = ResolveHeaderTemplate();
+            GameObject entryTemplate = ResolveEntryTemplate();
+            if (content == null || headerTemplate == null || entryTemplate == null)
             {
-                Log.Error(Tag, "Volume list template not authored.");
+                Log.Error(Tag, "Nav content or templates not authored.");
                 return;
             }
 
-            for (int i = 0; i < CompendiumCatalog.Volumes.Length; i++)
+            // Clear any leftover authored placeholders under the content root.
+            for (int i = content.childCount - 1; i >= 0; i--)
             {
-                int volumeIndex = i;
-                var go = Instantiate(_volumeButtonTemplate, _volumeListRoot);
-                go.name = "Volume_" + CompendiumCatalog.Volumes[i].Title;
-                go.SetActive(true);
-                var label = go.GetComponentInChildren<TextMeshProUGUI>(true);
-                if (label != null) label.text = CompendiumCatalog.Volumes[i].Title;
-                var btn = go.GetComponent<Button>();
-                if (btn != null)
+                var child = content.GetChild(i).gameObject;
+                if (child == headerTemplate || child == entryTemplate) continue;
+                if (child == _volumeButtonTemplate || child == _entryButtonTemplate) continue;
+                Destroy(child);
+            }
+
+            _navEntries.Clear();
+            for (int v = 0; v < CompendiumCatalog.Volumes.Length; v++)
+            {
+                var volume = CompendiumCatalog.Volumes[v];
+                SpawnHeader(content, headerTemplate, volume.Title);
+
+                for (int i = 0; i < volume.EntryStems.Length; i++)
                 {
-                    btn.onClick.AddListener(() => SelectVolume(volumeIndex));
-                    _volumeButtons.Add(btn);
+                    string stem = volume.EntryStems[i];
+                    string title = CompendiumCatalog.DisplayTitle(stem);
+                    SpawnEntry(content, entryTemplate, stem, title);
                 }
+            }
+
+            if (_navScroll != null)
+                _navScroll.verticalNormalizedPosition = 1f;
+        }
+
+        void SpawnHeader(RectTransform parent, GameObject template, string title)
+        {
+            var go = Instantiate(template, parent);
+            go.name = "Volume_" + title.Replace(' ', '_');
+            go.SetActive(true);
+
+            var btn = go.GetComponent<Button>();
+            if (btn != null) btn.interactable = false;
+
+            var label = go.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
+            {
+                label.text = title.ToUpperInvariant();
+                label.color = VolumeHeaderColor;
+                label.fontStyle = FontStyles.Bold;
             }
         }
 
-        void SelectVolume(int index)
+        void SpawnEntry(RectTransform parent, GameObject template, string stem, string title)
         {
-            if (index < 0 || index >= CompendiumCatalog.Volumes.Length) return;
-            _openVolume = index;
-            RebuildEntryList();
-            var stems = CompendiumCatalog.Volumes[index].EntryStems;
-            if (stems.Length > 0)
-                TryOpenStem(stems[0]);
-        }
+            var go = Instantiate(template, parent);
+            go.name = "Entry_" + stem;
+            go.SetActive(true);
 
-        void RebuildEntryList()
-        {
-            if (_entryListRoot == null || _entryButtonTemplate == null) return;
-
-            for (int i = 0; i < _entryButtons.Count; i++)
+            var label = go.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
             {
-                if (_entryButtons[i] != null)
-                    Destroy(_entryButtons[i].gameObject);
+                label.text = "  " + title;
+                label.color = EntryNormalColor;
             }
-            _entryButtons.Clear();
 
-            if (_openVolume < 0) return;
-            var stems = CompendiumCatalog.Volumes[_openVolume].EntryStems;
-            for (int i = 0; i < stems.Length; i++)
+            var btn = go.GetComponent<Button>();
+            var bg = go.GetComponent<Image>();
+            if (btn != null)
             {
-                string stem = stems[i];
-                string title = stem.Replace('-', ' ');
-                if (CompendiumCatalog.TryLoadEntry(stem, out var entry))
-                    title = entry.Title;
-
-                var go = Instantiate(_entryButtonTemplate, _entryListRoot);
-                go.name = "Entry_" + stem;
-                go.SetActive(true);
-                var label = go.GetComponentInChildren<TextMeshProUGUI>(true);
-                if (label != null) label.text = title;
-                var btn = go.GetComponent<Button>();
-                if (btn != null)
-                {
-                    string captured = stem;
-                    btn.onClick.AddListener(() => TryOpenStem(captured));
-                    _entryButtons.Add(btn);
-                }
+                string captured = stem;
+                btn.onClick.AddListener(() => TryOpenStem(captured));
             }
+
+            _navEntries.Add(new NavEntry
+            {
+                Stem = stem,
+                Button = btn,
+                Label = label,
+                Background = bg
+            });
         }
 
         bool TryOpenStem(string stem)
@@ -163,20 +238,27 @@ namespace GatekeeperBastion.Game
                 return false;
             }
 
-            int volume = FindVolumeForStem(stem);
-            if (volume >= 0 && volume != _openVolume)
-            {
-                _openVolume = volume;
-                RebuildEntryList();
-            }
-
             _openStem = stem;
             if (_titleLabel != null) _titleLabel.text = entry.Title;
             if (_bodyLabel != null)
                 _bodyLabel.text = CompendiumCatalog.ToTmpRichText(entry.BodyMarkdown);
             if (_bodyScroll != null)
                 _bodyScroll.verticalNormalizedPosition = 1f;
+
+            PaintSelection(stem);
             return true;
+        }
+
+        void PaintSelection(string stem)
+        {
+            for (int i = 0; i < _navEntries.Count; i++)
+            {
+                bool selected = string.Equals(_navEntries[i].Stem, stem, StringComparison.OrdinalIgnoreCase);
+                if (_navEntries[i].Label != null)
+                    _navEntries[i].Label.color = selected ? EntrySelectedColor : EntryNormalColor;
+                if (_navEntries[i].Background != null)
+                    _navEntries[i].Background.color = selected ? EntrySelectedBg : EntryNormalBg;
+            }
         }
 
         void RefreshBody()
@@ -185,18 +267,27 @@ namespace GatekeeperBastion.Game
                 TryOpenStem(_openStem);
         }
 
-        static int FindVolumeForStem(string stem)
+        RectTransform ResolveNavContent()
         {
-            for (int v = 0; v < CompendiumCatalog.Volumes.Length; v++)
-            {
-                var stems = CompendiumCatalog.Volumes[v].EntryStems;
-                for (int i = 0; i < stems.Length; i++)
-                {
-                    if (string.Equals(stems[i], stem, StringComparison.OrdinalIgnoreCase))
-                        return v;
-                }
-            }
-            return -1;
+            if (_navContent != null) return _navContent;
+            if (_volumeListRoot != null) return _volumeListRoot;
+            return null;
+        }
+
+        GameObject ResolveHeaderTemplate()
+        {
+            if (_volumeHeaderTemplate != null) return _volumeHeaderTemplate;
+            return _volumeButtonTemplate;
+        }
+
+        GameObject ResolveEntryTemplate()
+        {
+            return _entryButtonTemplate;
+        }
+
+        static void HideTemplate(GameObject template)
+        {
+            if (template != null) template.SetActive(false);
         }
     }
 }

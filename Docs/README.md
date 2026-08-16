@@ -100,7 +100,7 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `Milestones/` | One file per milestone, filed in a folder named for its status. |
 | `Brainstorms/` | Ideas before they graduate. |
 | `_meta/_definitions/` | `milestone.md`, `brainstorm.md`, and `language.md` — the ubiquitous language every doc, log line and player-facing string uses. |
-| `Play/` | The **Compendium** — volumes of related entries. Each hand-written page holds `## Game` (what pause shows) and `## Reference` (fuller brief). Folder path is `Play/` (language lint); player-facing name is Compendium. In-game reader is M62. |
+| `Play/` | The **Compendium** — volumes of related entries. Each hand-written page holds `## Game` (what pause shows) and `## Reference` (fuller brief). Folder path is `Play/` (language lint); player-facing name is Compendium. In-game reader shipped (M62, Esc → Compendium). |
 
 **Cold start:** this page, then `Design/` 1 → 4, then `Architecture.md` and
 `Working-Rules.md` before touching anything, then `Decisions.md` before proposing a feature

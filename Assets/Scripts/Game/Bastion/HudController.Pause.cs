@@ -65,8 +65,26 @@ namespace GatekeeperBastion.Game
                 Log.Error(Tag, "CompendiumView not authored on Bastion pause.");
                 return;
             }
+            if (_view != null) _view.HideChrome();
+            BindCompendiumClosed();
             _compendium.Open();
         }
+
+        void BindCompendiumClosed()
+        {
+            if (_compendium == null || _compendiumClosedBound) return;
+            _compendium.Closed += OnCompendiumClosed;
+            _compendiumClosedBound = true;
+        }
+
+        void OnCompendiumClosed()
+        {
+            if (_closingPause || !IsPauseOpen) return;
+            RestoreFightHudUnderPause();
+        }
+
+        bool _compendiumClosedBound;
+        bool _closingPause;
 
         void OpenPause()
         {
@@ -114,8 +132,10 @@ namespace GatekeeperBastion.Game
             if (!IsPauseOpen) return;
             if (_pauseAnimator == null) ResolvePauseHosts();
 
+            _closingPause = true;
             if (_compendium != null && _compendium.IsOpen)
                 _compendium.Close();
+            _closingPause = false;
 
             if (_pauseAnimator != null) _pauseAnimator.Play("Window Out");
             if (_pauseBlur != null) _pauseBlur.BlurOutAnim();
@@ -152,6 +172,17 @@ namespace GatekeeperBastion.Game
                     return _modals[i];
             }
             return null;
+        }
+
+        void RestoreFightHudUnderPause()
+        {
+            if (_view == null || !IsPauseOpen) return;
+            var sim = _game != null ? _game.Sim : null;
+            if (sim == null || sim.Phase != RunPhase.Tethered) return;
+            _view.ShowFight(sim.Assault == AssaultState.Prep);
+            var ctx = FightShortcutContext(sim);
+            int dialLevel = sim.Assault == AssaultState.Prep ? sim.Siphon.Level : -1;
+            FillPauseShortcuts(sim, ctx, dialLevel);
         }
     }
 }

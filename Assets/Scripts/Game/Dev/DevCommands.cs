@@ -50,8 +50,10 @@ namespace GatekeeperBastion.Game
             new Binding(KeyCode.F7, "loadout picker (slot / weapon / tier)", Kind.LoadoutPicker),
             new Binding(KeyCode.F8, "grant 5,000 salvage", Kind.GrantSalvage),
             new Binding(KeyCode.F9, "toggle gatekeeper-state readout", Kind.ToggleGatekeeperReadout),
+#if UNITY_EDITOR
             new Binding(KeyCode.F10, "host co-op session", Kind.StartCoopHost),
             new Binding(KeyCode.F11, "join 127.0.0.1", Kind.StartCoopClient),
+#endif
         };
 
         /// <summary>Compact panel token for the shortcut strip (e.g. "F2 replay"). Kept here so

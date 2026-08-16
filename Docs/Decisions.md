@@ -182,7 +182,8 @@ FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
   loopback (M48, M49). Internet path is **Unity Relay** on that same transport (`M60`):
   anonymous sign-in, join code, free at 50 average monthly CCU. Steam / Facepunch deferred
   until a real appid. Three players on one hull (host plus two guests); six is the recorded
-  intent, priced as a tuning pass (`M65`).
+  intent, priced as a tuning pass on spawn placement and HUD layout (`M65`) — not
+  architecture.
 - **Co-op salvage.** No single wallet. Salvage splits **equally among connected
   players** at award, host included; **equal over kill- or damage-weighted**
   because this game has jobs that are not shooting (repair, escorting a Thief,

@@ -149,10 +149,10 @@ namespace GatekeeperBastion.Game
             int idx = sim.CurrentWaveIndex;
             if (idx >= WaveDirector.MaxWaves) idx = WaveDirector.MaxWaves - 1;
             if (idx < 0) idx = 0;
-            int bodies = s_preview.NextWave(idx, sim.Siphon.Level).enemyCount;
+            int bodies = s_preview.NextWave(idx, sim.Siphon.Level, sim.PlayerCount).enemyCount;
             sb.Append("  Intensity ").Append(sim.Siphon.Level)
                 .Append("  juice ").Append(IntensityJuice.CostPerStep)
-                .Append("  unbanked ").Append(sim.Unbanked)
+                .Append("  unbanked ").Append(sim.TotalUnbanked)
                 .Append("  ").Append(bodies);
         }
 

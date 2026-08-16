@@ -27,35 +27,35 @@ namespace GatekeeperBastion.Game
             public string BodyMarkdown;
         }
 
-        /// <summary>Six volumes plus appendix. Getting Started stays in Situation.</summary>
+        /// <summary>Six volumes plus appendix. Titles match Docs/Play/README.md.</summary>
         public static readonly Volume[] Volumes =
         {
             new Volume
             {
-                Title = "Situation",
+                Title = "I. The Situation",
                 EntryStems = new[] { "The-Game", "Getting-Started" }
             },
             new Volume
             {
-                Title = "A Run",
+                Title = "II. A Run",
                 EntryStems = new[] { "A-Run", "Waves", "Intensity", "Salvage", "Staying-Alive" }
             },
             new Volume
             {
-                Title = "Bastion",
+                Title = "III. The Bastion",
                 EntryStems = new[] { "The-Hatch" }
             },
             new Volume
             {
-                Title = "Garrison",
+                Title = "IV. The Garrison",
                 EntryStems = new[]
                 {
-                    "Gatekeepers", "Gatekeeper-Default", "Gatekeeper-Hunter", "Gatekeeper-Ram"
+                    "Gatekeepers", "Gatekeeper-Default", "Gatekeeper-Hunter", "Gatekeeper-Thief"
                 }
             },
             new Volume
             {
-                Title = "Arms",
+                Title = "V. Arms",
                 EntryStems = new[]
                 {
                     "Weapons", "Weapon-MK-1-Sidearm", "Weapon-SEC-D", "Weapon-BR-12-Shotgun",
@@ -64,7 +64,7 @@ namespace GatekeeperBastion.Game
             },
             new Volume
             {
-                Title = "Hull",
+                Title = "VI. The Hull",
                 EntryStems = new[] { "The-Ship", "Upgrades" }
             },
             new Volume
@@ -119,6 +119,27 @@ namespace GatekeeperBastion.Game
                 BodyMarkdown = gameView
             };
             return true;
+        }
+
+        /// <summary>Nav label for a stem — page title when loadable, else stem with dashes spaced.</summary>
+        public static string DisplayTitle(string stem)
+        {
+            if (TryLoadEntry(stem, out var entry) && !string.IsNullOrEmpty(entry.Title))
+                return entry.Title;
+            return string.IsNullOrEmpty(stem) ? "" : stem.Replace('-', ' ');
+        }
+
+        /// <summary>Every Play page stem that belongs in a volume (excludes README).</summary>
+        public static HashSet<string> VolumeStemSet()
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (int v = 0; v < Volumes.Length; v++)
+            {
+                var stems = Volumes[v].EntryStems;
+                for (int i = 0; i < stems.Length; i++)
+                    set.Add(stems[i]);
+            }
+            return set;
         }
 
         public static string ResolvePagePath(string stem)
@@ -230,7 +251,7 @@ namespace GatekeeperBastion.Game
             return sb.ToString();
         }
 
-        /// <summary>Stem from a markdown link target like Gatekeeper-Ram.md.</summary>
+        /// <summary>Stem from a markdown link target like Gatekeeper-Thief.md.</summary>
         public static string StemFromLinkTarget(string target)
         {
             if (string.IsNullOrEmpty(target)) return null;

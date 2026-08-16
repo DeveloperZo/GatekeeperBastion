@@ -46,17 +46,22 @@ namespace GatekeeperBastion.Sim
     /// wave's *delivery* finishes, with no Prep between them. Overlap in the room is the point.
     /// After that chain clears, the run continues normally through wave MaxWaves.
     ///
-    /// ECONOMY: AwardKill() credits Unbanked. Hatch-bank drip/dump calls EarnSalvage into
-    /// MetaState.BankedSalvage. Down and hatch breach wipe leftover Unbanked without converting.
+    /// ECONOMY: AwardKill() splits Unbanked equally among PlayerCount slots (slot 0 is solo /
+    /// host). Hatch-bank drip/dump converts each slot; slot 0 EarnSalvage into host MetaState;
+    /// slots 1+ raise GuestConverted. Down of one guest wipes that slot; host down / hatch
+    /// breach wipe leftover Unbanked without converting.
     /// Terminal Wave-5 clear keeps Unbanked; Hatch-bank after the field is stripped converts
     /// and stays Prep. RepairHatch spends from the ship bank only.
     /// </summary>
-    public sealed class RunSim
-    {
+        public sealed partial class RunSim
+        {
         private const string Tag = "RunSim";
 
         private readonly MetaState _meta;
         private readonly WaveDirector _director = new WaveDirector();
+        private readonly PlayerWallets _wallets = new PlayerWallets();
+        /// <summary>Salvage already credited this Hatch-bank window, per slot. Cap is cumulative.</summary>
+        private readonly long[] _convertedThisBank = new long[WaveDirector.PlayerCapacity];
         private bool _runStarted;
 
         /// <summary>Fractional HP requested across RepairHatch ticks that has not yet bought a
@@ -106,12 +111,40 @@ namespace GatekeeperBastion.Sim
         /// Resets with each new run (each run gets a fresh RunSim and therefore a fresh ledger).</summary>
         public SalvageLedger Salvage { get; private set; }
 
-        /// <summary>Kill awards this Run that have not yet converted. Wiped on down, breach, or
-        /// a terminal last-Wave clear. Converted only by Hatch-bank drip/dump.</summary>
-        public long Unbanked { get; internal set; }
+        /// <summary>Kill awards this Run that have not yet converted, for slot 0 (solo / host).
+        /// Juice and bank-withdraw still spend this pile. Hatch-bank start looks at
+        /// <see cref="TotalUnbanked"/>. Converted only by Hatch-bank drip/dump.</summary>
+        public long Unbanked
+        {
+            get { return _wallets.Of(0); }
+            internal set { _wallets.Set(0, value); }
+        }
+
+        /// <summary>Sum of every connected slot's unbanked. Hatch-bank start/refuse uses this.</summary>
+        public long TotalUnbanked => _wallets.Total;
+
+        /// <summary>Connected players this Run is counting. 1 in solo. Capped at
+        /// <see cref="WaveDirector.PlayerCapacity"/>.</summary>
+        public int PlayerCount => _wallets.Count;
+
+        /// <summary>Raised when a guest slot converts salvage. Slot 0 never fires — that
+        /// path writes host <see cref="MetaState"/> directly.</summary>
+        public event Action<int, long> GuestConverted;
 
         /// <summary>Unbanked spent raising intensity this pull. Reset on idle Prep after the pull.</summary>
         public long JuiceSpentThisPull { get; internal set; }
+
+        /// <summary>Unbanked pile for a connected slot. Slot 0 is solo / host.</summary>
+        public long UnbankedOf(int slot) => _wallets.Of(slot);
+
+        /// <summary>How many piles AwardKill splits across, and the n in NextWave. 1 in solo.</summary>
+        public void SetPlayerCount(int count) => _wallets.SetCount(count);
+
+        /// <summary>Guest progress for the banking cap. Slot 0 reads host Meta instead.</summary>
+        public void SetSlotDeepest(int slot, int deepest) => _wallets.SetDeepest(slot, deepest);
+
+        /// <summary>Guest down: wipe that slot's unbanked. Host down still ends the Run.</summary>
+        public void WipeUnbankedSlot(int slot) => _wallets.Wipe(slot);
 
         /// <summary>Hatch-bank starts remaining this Run. Starts at <see cref="HatchBank.SlotsPerRun"/>.</summary>
         public int HatchBankSlotsLeft { get; private set; }
@@ -215,7 +248,6 @@ namespace GatekeeperBastion.Sim
             Siphon = new TetherSiphon();
             Ship = new ShipSystems(MetaUpgrades.HatchHp(meta.HatchArmorLevel));
             Salvage = new SalvageLedger();
-            Unbanked = 0L;
             HatchBankSlotsLeft = HatchBank.SlotsPerRun;
             Phase = RunPhase.Docked;
             Assault = AssaultState.Prep;
@@ -292,7 +324,7 @@ namespace GatekeeperBastion.Sim
                 bool masterHatch = _masterPhase == MasterControlPhase.Hatch;
                 if (!masterHatch)
                 {
-                    if (Unbanked <= 0L)
+                    if (TotalUnbanked <= 0L)
                     {
                         Log.Info(Tag, "hatch-bank refused — unbanked=0");
                         return;
@@ -311,6 +343,7 @@ namespace GatekeeperBastion.Sim
                     _masterHatchMulLocked = true;
                 }
                 _dripAcc = 0f;
+                ResetConvertedThisBank();
                 _hatchBankTimer = HatchBank.DurationSeconds;
                 _chainActive = false;
                 _chainUntil = CurrentWaveIndex;
@@ -474,8 +507,9 @@ namespace GatekeeperBastion.Sim
         }
 
         /// <summary>
-        /// Game layer reports one gatekeeper killed. Credits Unbanked with the floored kill
-        /// award. Does not touch the ship bank. Valid only while Tethered + Assault.
+        /// Game layer reports one gatekeeper killed. Splits the floored kill award equally
+        /// across <see cref="PlayerCount"/> piles. Does not touch the ship bank. Valid only
+        /// while Tethered + Assault.
         /// </summary>
         public void AwardKill()
         {
@@ -486,7 +520,7 @@ namespace GatekeeperBastion.Sim
             }
             long award = CurrentKillAward;
             if (award <= 0L) return;
-            Unbanked += award;
+            _wallets.AwardSplit(award);
         }
 
         /// <summary>
@@ -620,6 +654,8 @@ namespace GatekeeperBastion.Sim
             if (deepest > WaveDirector.MaxWaves) deepest = WaveDirector.MaxWaves;
             if (deepest > _meta.DeepestWaveReached)
                 _meta.DeepestWaveReached = deepest;
+            for (int i = 0; i < PlayerCount; i++)
+                _wallets.SetDeepest(i, deepest);
 
             ClearChainState();
             Assault = AssaultState.Prep;
@@ -636,9 +672,9 @@ namespace GatekeeperBastion.Sim
                 && _followUpsLeft <= 0)
             {
                 string msg = hatchBank
-                    ? "hatch-bank done — unbanked=" + Unbanked + " door is open"
-                    : Unbanked > 0L
-                        ? "field stripped — unbanked=" + Unbanked + " hatch-bank to convert"
+                    ? "hatch-bank done — unbanked=" + TotalUnbanked + " door is open"
+                    : TotalUnbanked > 0L
+                        ? "field stripped — unbanked=" + TotalUnbanked + " hatch-bank to convert"
                         : "field stripped — unbanked=0 Master Control is the win";
                 Log.Info(Tag, msg);
             }
@@ -701,7 +737,7 @@ namespace GatekeeperBastion.Sim
 
             if (Assault == AssaultState.Assault && Mode == WaveMode.HatchBank)
             {
-                if (Unbanked > 0L)
+                if (TotalUnbanked > 0L)
                     DripTick(dt);
                 _hatchBankTimer -= dt;
                 if (_hatchBankTimer <= 0f)
@@ -745,7 +781,7 @@ namespace GatekeeperBastion.Sim
                 : CurrentWaveIndex >= WaveDirector.MaxWaves
                     ? WaveDirector.MaxWaves - 1
                     : CurrentWaveIndex;
-            WaveSpec spec = _director.NextWave(idx, Siphon.Level);
+            WaveSpec spec = _director.NextWave(idx, Siphon.Level, PlayerCount);
             if (Mode != WaveMode.HatchBank)
             {
                 CurrentWaveIndex++;
@@ -825,42 +861,6 @@ namespace GatekeeperBastion.Sim
             Log.Info(Tag, "Run CLEARED: Master Control Hatch-bank survived. Gross " +
                           report.grossEarned + ", repair spent " + report.repairSpent +
                           ", net " + net + ".");
-        }
-
-        private void DripTick(float dt)
-        {
-            long units = HatchBank.DripUnits(dt, ref _dripAcc);
-            CreditConverted(units);
-        }
-
-        private void DumpUnbanked()
-        {
-            CreditConverted(Unbanked);
-        }
-
-        private void AttritUnbanked(long units)
-        {
-            if (units <= 0L) return;
-            if (units > Unbanked) units = Unbanked;
-            Unbanked -= units;
-        }
-
-        private void WipeUnbanked()
-        {
-            Unbanked = 0L;
-            _dripAcc = 0f;
-            _withdrawAcc = 0f;
-        }
-
-        private void CreditConverted(long unbankedTaken)
-        {
-            if (unbankedTaken <= 0L) return;
-            if (unbankedTaken > Unbanked) unbankedTaken = Unbanked;
-            Unbanked -= unbankedTaken;
-            long credited = HatchBank.BankedFrom(unbankedTaken, _hatchConvertMul);
-            if (credited <= 0L) return;
-            Salvage.Earn(credited);
-            _meta.EarnSalvage(credited);
         }
 
         RunReport BuildRunReport(string cause)

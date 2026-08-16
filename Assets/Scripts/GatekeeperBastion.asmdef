@@ -7,6 +7,9 @@
         "Unity.AI.Navigation",
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
+        "Unity.Services.Authentication",
+        "Unity.Services.Core",
+        "Unity.Services.Relay",
         "Unity.TextMeshPro",
         "UnityEngine.UI"
     ],

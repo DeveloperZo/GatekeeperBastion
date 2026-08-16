@@ -44485,14 +44485,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.CompendiumView
   _root: {fileID: 764059601}
-  _volumeListRoot: {fileID: 352918608}
-  _volumeButtonTemplate: {fileID: 1207666177}
-  _entryListRoot: {fileID: 1076822678}
+  _navContent: {fileID: 0}
+  _volumeHeaderTemplate: {fileID: 0}
   _entryButtonTemplate: {fileID: 167844383}
+  _navScroll: {fileID: 0}
   _titleLabel: {fileID: 272171535}
   _bodyLabel: {fileID: 911925234}
   _bodyScroll: {fileID: 527426658}
   _closeButton: {fileID: 1675433630}
+  _hideWhileOpen: []
+  _volumeListRoot: {fileID: 352918608}
+  _volumeButtonTemplate: {fileID: 1207666177}
+  _entryListRoot: {fileID: 1076822678}
 --- !u!224 &911925233
 RectTransform:
   m_ObjectHideFlags: 0
@@ -88326,8 +88330,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1766099747}
-  - component: {fileID: 1766099746}
-  - component: {fileID: 1766099745}
   - component: {fileID: 1766099744}
   - component: {fileID: 1766099743}
   - component: {fileID: 1766099742}
@@ -88399,63 +88401,6 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
---- !u!23 &1766099745
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1766099741}
-  m_Enabled: 0
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: fb9ed449cdde47a44a7b07321ecedb8b, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 1
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &1766099746
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1766099741}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &1766099747
 Transform:
   m_ObjectHideFlags: 0

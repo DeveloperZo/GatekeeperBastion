@@ -55,15 +55,12 @@ namespace GatekeeperBastion.Game
         static readonly HashSet<string> SeenLabels = new HashSet<string>();
         static readonly StringBuilder LineBuf = new StringBuilder(128);
 
-        /// <summary>Editor Play Mode lists F1–F11. A Development player build may list
-        /// F10/F11 (join) until the Main Menu owns join. Release and pause pass
-        /// <see cref="DevSurface.None"/>.</summary>
+        /// <summary>Editor Play Mode lists F1–F11. Player builds pass
+        /// <see cref="DevSurface.None"/> — Main Menu owns host/join.</summary>
         public static DevSurface DefaultDevSurface()
         {
 #if UNITY_EDITOR
             return DevSurface.Editor;
-#elif DEVELOPMENT_BUILD
-            return DevSurface.DevelopmentPlayerJoin;
 #else
             return DevSurface.None;
 #endif

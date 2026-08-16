@@ -63,6 +63,22 @@ namespace GatekeeperBastion.Sim
             return (long)Math.Floor(unbankedTaken * (double)multiplier);
         }
 
+        /// <summary>Max salvage one guest may bank from a conversion, given their 1-based
+        /// <c>DeepestWaveReached</c>. Solo expected unbanked for waves 1..deepest at dial 0
+        /// and scavenging 0 (25 / kill). Excess is lost, not redistributed. Not applied when
+        /// only one player is in the Run — that path must stay byte-identical.</summary>
+        public static long BankCap(int deepestWave)
+        {
+            int d = deepestWave < 1 ? 1 : deepestWave;
+            if (d > WaveDirector.MaxWaves) d = WaveDirector.MaxWaves;
+            var director = new WaveDirector();
+            long perKill = (long)Math.Floor((double)MetaUpgrades.SalvagePerKill(0));
+            long cap = 0L;
+            for (int i = 0; i < d; i++)
+                cap += (long)director.NextWave(i, 0, 1).enemyCount * perKill;
+            return cap;
+        }
+
         public static long DripUnits(float dt, ref float accrued)
         {
             if (dt <= 0f) return 0L;

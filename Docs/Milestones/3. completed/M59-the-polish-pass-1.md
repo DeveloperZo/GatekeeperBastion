@@ -1,14 +1,22 @@
 # M59 — Polish Pass 1
 
 <!--
-Status: later
-Update trigger: when field-console scale, fight-HUD hosts, station chrome, pause key list, or HUD overflow rules change.
-Last updated: 2026-08-14
+Status: completed 2026-08-15
+Update trigger: closed
+Last updated: 2026-08-15
+Closed on: 2026-08-15. Gate is EditMode: `HudSeparationTests` 7/0 (AABB ≥24 both
+resolutions, overflow, Profile Exp inactive), `M59PolishChromeTests` 5/0 (pause
+binding, Categories/Preview inactive, station scrim α≥0.65, end Scrim α≥0.65,
+header gutters ≥16), `StationPurposeTests` 4/0, `ShortcutRowApiTests` DevSurface.None,
+`BastionFieldConsole_ScaleIsOne_DeskAndScreenMatchUseHeight` Passed.
+`gkb_verify_report.json` 2026-08-15T18:03:48Z EditMode 422/2 — remaining reds are
+`BastionDoorApertureTests` (M61-2) and `SessionMusicHostTests` (M69), not this slice.
+Criterion 13 playthrough is confirmation, not the gate (same as M57).
 -->
 
 Friends QoL: the Bastion as a room a person stands in, and the Ship as something a stranger
 can operate. Field terminals, fight HUD, station chrome and copy, player-build keys. Music
-and gun/foot SFX are [`M69`](M69-the-session-has-a-voice.md). Guns, zoom, ship-console art
+and gun/foot SFX are [`M69`](../1.%20planned/M69-the-session-has-a-voice.md). Guns, zoom, ship-console art
 are `M61`. Compendium is `M62`.
 
 ## Story
@@ -166,8 +174,8 @@ Rejected: Input System rebinding. Rejected: a duration floor on the bound wavs.
 - **Reads back as** F2 doing nothing in a player build; EditMode Scale + HUD AABB + purpose
   strings — here. Music slider is `M69`.
 
-Guns, zoom, ship desks as art: [`M61`](../3.%20completed/M61-the-polish-pass-2.md). Music and gun/foot SFX:
-[`M69`](M69-the-session-has-a-voice.md). Compendium: [`M62`](M62-the-compendium-you-can-open.md).
+Guns, zoom, ship desks as art: [`M61`](M61-the-polish-pass-2.md). Music and gun/foot SFX:
+[`M69`](../1.%20planned/M69-the-session-has-a-voice.md). Compendium: [`M62`](M62-the-compendium-you-can-open.md).
 
 ## Verification
 

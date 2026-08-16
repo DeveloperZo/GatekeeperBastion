@@ -44,7 +44,7 @@ prices: [Field Manual](Field-Manual.md).
 
 ## See also
 
-[Weapons](Weapons.md). [MR-35 Rifle](Weapon-MR-35-Rifle.md). [Ram](Gatekeeper-Ram.md). [The Hatch](The-Hatch.md).
+[Weapons](Weapons.md). [MR-35 Rifle](Weapon-MR-35-Rifle.md). [Thief](Gatekeeper-Thief.md). [The Hatch](The-Hatch.md).
 
 ## Gaps
 

@@ -88,6 +88,33 @@ namespace GatekeeperBastion.Tests
         }
 
         [Test]
+        public void CatalogVolumes_CoverEveryPlayPageExceptReadme()
+        {
+            string folder = ProjectPlayFolder();
+            var volumeStems = CompendiumCatalog.VolumeStemSet();
+            var missing = new List<string>();
+            var extras = new List<string>();
+
+            foreach (string path in Directory.GetFiles(folder, "*.md"))
+            {
+                string stem = Path.GetFileNameWithoutExtension(path);
+                if (string.Equals(stem, "README", StringComparison.OrdinalIgnoreCase)) continue;
+                if (!volumeStems.Contains(stem))
+                    missing.Add(stem);
+            }
+
+            foreach (string stem in volumeStems)
+            {
+                string path = Path.Combine(folder, stem + ".md");
+                if (!File.Exists(path))
+                    extras.Add(stem);
+            }
+
+            Assert.IsEmpty(missing, "Play pages not in any volume: " + string.Join(", ", missing));
+            Assert.IsEmpty(extras, "Volume stems with no Play page: " + string.Join(", ", extras));
+        }
+
+        [Test]
         public void StreamingAssets_StemSetMatchesPlay()
         {
             string play = ProjectPlayFolder();

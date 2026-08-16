@@ -5,7 +5,7 @@ Purpose: the ubiquitous language of Gatekeeper Bastion. One name per thing, used
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired, or when player-facing voice rules change.
-Last updated: 2026-08-13
+Last updated: 2026-08-15
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in
@@ -104,7 +104,7 @@ are named here.
 | **Gatekeeper** | Any enemy. They hold the Bastion; you are the intruder. | enemy, mob, creature, hostile, boarder *(that is the player now)* |
 | **Default** | The Gatekeeper that marches on the Hatch and can be provoked onto the Boarder. | grunt, basic, marcher *(descriptive prose may say "marcher"; the kind's name is Default)* |
 | **Hunter** | The Gatekeeper that only ever wants the Boarder. | chaser, stalker |
-| **Ram** | The Gatekeeper that hunts the Boarder on a field-terminal Wave and the Hatch on a Hatch-bank Wave; shooting it never shouts. | brute, tank, charger |
+| **Thief** | The Gatekeeper that hunts the Boarder on a field-terminal Wave and the Hatch on a Hatch-bank Wave; shooting it never shouts. Code identifier is still `Ram` until M63. | brute, tank, charger, Ram *(player-facing)* |
 | **spawn point** | Where a group of Gatekeepers enters the fight. They garrison the Bastion; they do not breach it. | breach point *(retired 2026-08-08: the Boarder is the one who breaches)*, muster point *(coined and struck the same day; do not reintroduce)*, portal, door |
 | **group** | The unit Gatekeepers arrive in — one spawn point, several bodies, at once. | pack, squad, cluster |
 | **provoke** | To make a Default target the Boarder. Permanent for that Gatekeeper's life. | aggro *(builder shorthand only, never player-facing)* |
@@ -167,7 +167,7 @@ Written in caps in player-facing text, matching what the player reads on the con
 | **CREW QUARTERS** | The Boarder's Crew abilities (*designed*). Today still sells attribute tracks. | barracks, skills |
 | **FABRICATION** | The Ship's gear and the Hatch. | workshop |
 | **NAV MAP** | Where you go, and going there. | map, bridge, terminal |
-| **Compendium** | The Boarder's working knowledge of the game: volumes of related entries (situation, Run, Bastion, garrison, arms, hull), not a glossary of terms. Markdown lives in `Docs/Play/` (M28 language lint). In-game reader is `M62`. | Codex, encyclopedia, wiki, lore bible, Hyrule Compendium, Persona Compendium |
+| **Compendium** | The Boarder's working knowledge of the game: volumes of related entries (situation, Run, Bastion, garrison, arms, hull), not a glossary of terms. Markdown lives in `Docs/Play/` (M28 language lint). In-game reader shipped (`M62`, Esc → Compendium). | Codex, encyclopedia, wiki, lore bible, Hyrule Compendium, Persona Compendium |
 
 ## Player-facing voice
 
@@ -195,14 +195,14 @@ Test a Play page's Game dimension (skip HTML comments, Reference, and Gaps). One
 | # | Rule | Good | Banned |
 |---|---|---|---|
 | 1 | Person is *you* / the Boarder. No *I*, named diarist, or "the player". | "You cut in. They are already home." | "I've watched them stomp…" / "The player should…" |
-| 2 | Sentence one is a situating fact in this world. | "The Ram is walking to the Hatch." | "A first-person Wave-defense game…" |
+| 2 | Sentence one is a situating fact in this world. | "The Thief is walking to the Hatch." | "A first-person Wave-defense game…" |
 | 3 | The first paragraph states a playable rule the HUD does not print. | "Shooting it does not provoke it." | Opening that only restates HP, clip, or a key already on pause. |
-| 4 | Numbers and bindings only by linking Field Manual. | "How many: [Field Manual](Field-Manual.md)." | "The Ram has 180 HP." / "Press F." |
+| 4 | Numbers and bindings only by linking Field Manual. | "How many: [Field Manual](Field-Manual.md)." | "The Thief has 180 HP." / "Press F." |
 | 5 | No milestone IDs, "not built", or builder paths in the visible body. | The page describes what ships. | "M23 shipped the Repair Rig." |
 | 6 | No never-called terms from the table above. | Hatch, Gatekeeper, siphon draw. | Codex, encyclopedia, wiki, enemy, aggro, mission. |
 | 7 | Humor is the situation's exactness. No pun, slang persona, or pop-culture aside. | "You are scenery." | "Think of it as the tank from every horde game." |
 | 8 | Fiction is a frame, not a plot. No byline, Day N, or origin myth. | "Gatekeepers hold the Bastion." | "Day 12. The garrison still will not yield. — J." |
-| 9 | `## See also` names at least one other Play page. The page is not a glossary stub. | Ram → Hatch, Waves. | "Ram — a large Gatekeeper." as the whole page. |
+| 9 | `## See also` names at least one other Play page. The page is not a glossary stub. | Thief → Hatch, Waves. | "Thief — a large Gatekeeper." as the whole page. |
 | 10 | No analysis vocabulary (rule 3). | "A group arrives together." | `gatekeeper-seconds`, `hatchDist`. |
 | 11 | Visible body starts as player prose. HTML comments and `## Gaps` are not the opening. | First readable line is the title, then the world. | Purpose / Status as the thing a Boarder reads. |
 | 12 | Do not teach by citing another game or by riddle. | "They arrive from garrison to repel an intrusion." | "Like a Left 4 Dead tank…" |
@@ -273,6 +273,11 @@ one rename in the file that fails silently rather than loudly.
 the forbidden Hatch synonym already listed above. None earned a row. NAV MAP now says the
 Bastion is garrisoned; the upgrade lock is named as a lock. Do not reintroduce `Gate` as a
 fiction noun.
+
+**7. Player-facing name is Thief; the code identifier is still `Ram` until M63.**
+Play pages, this table, and the Compendium use Thief. `GatekeeperKind.Ram`,
+`RamGatekeeper`, and the generated Field Manual stay Ram until M63's rename
+commit. Do not half-fix the code in a Play-page change.
 
 ## Adding a term
 

@@ -32,7 +32,7 @@ namespace GatekeeperBastion.Game
             int carry = sim.Mode == WaveMode.HatchBank && sim.Assault == AssaultState.Assault
                 ? sim.HatchCarry
                 : sim.WavesSinceBank;
-            return s_preview.NextWave(HatchBank.CarryWaveIndex(carry), sim.Siphon.Level).enemyCount;
+            return s_preview.NextWave(HatchBank.CarryWaveIndex(carry), sim.Siphon.Level, sim.PlayerCount).enemyCount;
         }
 
         int FieldPreviewBodies()
@@ -40,7 +40,7 @@ namespace GatekeeperBastion.Game
             int idx = Sim.CurrentWaveIndex;
             if (idx >= WaveDirector.MaxWaves) idx = WaveDirector.MaxWaves - 1;
             if (idx < 0) idx = 0;
-            return s_preview.NextWave(idx, Sim.Siphon.Level).enemyCount;
+            return s_preview.NextWave(idx, Sim.Siphon.Level, Sim.PlayerCount).enemyCount;
         }
 
         void TickPrepCommands()
@@ -82,7 +82,7 @@ namespace GatekeeperBastion.Game
                         StartTerminalWave(lookingTerminal);
                     return;
                 }
-                if (Sim.Unbanked > 0L && Sim.HatchBankSlotsLeft > 0)
+                if (Sim.TotalUnbanked > 0L && Sim.HatchBankSlotsLeft > 0)
                     Log.Event("Hatch", "hatch-bank refused — look at the Hatch");
                 else
                     Log.Event("Run", "draw refused — Waves start at a terminal");
@@ -301,7 +301,7 @@ namespace GatekeeperBastion.Game
             if (!_armedHatch)
                 return HatchBankRefuse("select intensity first");
             _armedHatch = false;
-            if (Sim.Unbanked <= 0L)
+            if (Sim.TotalUnbanked <= 0L)
                 return HatchBankRefuse("unbanked=0");
             if (Sim.HatchBankSlotsLeft <= 0)
                 return HatchBankRefuse("no slots");
@@ -333,7 +333,7 @@ namespace GatekeeperBastion.Game
             Log.Event("Hatch", "hatch-bank started wave " + Sim.CurrentWaveIndex
                 + " carry=" + Sim.HatchCarry
                 + " convert=" + Sim.HatchConvertMultiplier.ToString("0.00")
-                + " unbanked=" + Sim.Unbanked
+                + " unbanked=" + Sim.TotalUnbanked
                 + " slots=" + Sim.HatchBankSlotsLeft
                 + " intensity=" + intensity
                 + " juiced=" + juiced);

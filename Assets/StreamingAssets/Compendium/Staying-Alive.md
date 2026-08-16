@@ -6,7 +6,7 @@ Your health does not come back during a Run. The Hatch comes back only when you 
 
 Hurt Defaults on the approach — a pull is permanent, and once they commit to the Hatch they will not leave. One shot shouts one group, not the whole Bastion. Sprint outruns a chase; walking does not.
 
-Triage by refusal: Hunters cost health, Rams cost the door on a Hatch-bank and your attention on a field Wave, Defaults are the only kind you can steer. Bindings and numbers: [Field Manual](Field-Manual.md).
+Triage by refusal: Hunters cost health, Thieves cost the door on a Hatch-bank and your attention on a field Wave, Defaults are the only kind you can steer. Bindings and numbers: [Field Manual](Field-Manual.md).
 
 ## Reference
 
@@ -54,10 +54,10 @@ Three details about the stamina that are not shown to you:
 Each kind is defined by something it will not do, and that refusal tells you what ignoring it costs.
 
 - **Hunters never touch the Hatch.** Ignoring one costs you health and nothing else. If the door is the emergency, a Hunter on your back is the cheaper problem — right up until your health is the emergency instead.
-- **Rams hunt you on a field-terminal Wave and cannot be provoked.** Shooting one in the back changes nothing about it: not its speed, and it does not shout. Ignoring one costs you a slow, heavy body walking at you.
+- **Thieves hunt you on a field-terminal Wave and cannot be provoked.** Shooting one in the back changes nothing about it: not its speed, and it does not shout. Ignoring one costs you a slow, heavy body walking at you.
 - **Marchers are the only kind you can steer**, per the pull rule above.
 
-The practical read: when everything arrives at once, the Rams are on a clock against the door and the Hunters are on a clock against you. You almost always have more slack against the Hunters, because your health can absorb a swing and the Hatch's absorbs the bite badly.
+The practical read: when everything arrives at once, the Thieves are on a clock against the door and the Hunters are on a clock against you. You almost always have more slack against the Hunters, because your health can absorb a swing and the Hatch's absorbs the bite badly.
 
 ### Repair in Prep, not in Assault
 

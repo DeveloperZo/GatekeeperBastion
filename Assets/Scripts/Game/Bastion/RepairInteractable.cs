@@ -254,7 +254,7 @@ namespace GatekeeperBastion.Game
             maxHp = station.MaxHp;
             bank = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
             destroyed = station.IsDestroyed;
-            unbanked = gc.Sim != null ? gc.Sim.Unbanked : 0L;
+            unbanked = gc.Sim != null ? gc.Sim.TotalUnbanked : 0L;
             slots = gc.Sim != null ? gc.Sim.HatchBankSlotsLeft : 0;
             prep = gc.Sim != null && gc.Sim.Assault == AssaultState.Prep;
         }
@@ -271,7 +271,7 @@ namespace GatekeeperBastion.Game
                     ? sim.HatchCarry
                     : HatchBank.ClampCarry(sim.WavesSinceBank);
                 int idx = HatchBank.CarryWaveIndex(carry);
-                bodies = s_preview.NextWave(idx, level).enemyCount;
+                bodies = s_preview.NextWave(idx, level, sim.PlayerCount).enemyCount;
                 sb.Append("  Intensity ").Append(level)
                     .Append("  juice ").Append(IntensityJuice.CostPerStep)
                     .Append("  unbanked ").Append(unbanked)

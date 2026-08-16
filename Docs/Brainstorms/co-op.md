@@ -15,7 +15,7 @@ endings on the client; shipped 2026-08-13, fixture close),
 over the wire — loopback run complete; shipped 2026-08-13, fixture close),
 `[M57](../Milestones/3.%20completed/M57-the-downed-player-waits-on-the-ship.md)` (get-up; shipped 2026-08-15),
 `[M58](../Milestones/1.%20planned/M58-a-build-two-machines-can-run.md)` (player build),
-`[M60](../Milestones/1.%20planned/M60-a-join-a-friend-can-use.md)` (Relay join). M50 and M51
+`[M60](../Milestones/2.%20active/M60-a-join-a-friend-can-use.md)` (Relay join). M50 and M51
 were authored ahead of M48/M49 landing on Zo's call (2026-08-12) and each carries a
 re-cut-before-start update trigger.
 
@@ -42,7 +42,7 @@ Link, never restate.
 | ---------------------------------------------- | -------------------------------------------------------------------------------- |
 | In-run client verbs (repair, decoy, abilities) | `[M51](../Milestones/3.%20completed/M51-the-clients-hands.md)`                   |
 | Client down wait / get-up                      | `[M57](../Milestones/3.%20completed/M57-the-downed-player-waits-on-the-ship.md)` |
-| A join surface a friend can use (Unity Relay)  | `[M60](../Milestones/1.%20planned/M60-a-join-a-friend-can-use.md)`               |
+| A join surface a friend can use (Unity Relay)  | `[M60](../Milestones/2.%20active/M60-a-join-a-friend-can-use.md)`               |
 
 
 
@@ -53,12 +53,14 @@ Link, never restate.
 
 ### Guest progression
 
-**Graduated 2026-08-14 to** `M65`**.** Settled: salvage splits **equally** among connected
-players, every player banks to their own meta, and what a player may bank is capped by their
-own `DeepestWaveReached`, which rises from co-op clears as well as solo ones. A player brings
-their own loadout and inherits nothing. The principle it encodes: **co-op gets you further,
-not richer.** Equal split was chosen over kill- or damage-weighted because this game has jobs
-that are not shooting, and weighting by contribution makes doing them cost money.
+**Graduated 2026-08-14 to** `M65`**; shipped 2026-08-15**
+([`3. completed/M65`](../Milestones/3.%20completed/M65-three-players-and-a-fight-that-counts-them.md)).
+Settled: salvage splits **equally** among connected players, every player banks to their own
+meta, and what a player may bank is capped by their own `DeepestWaveReached`, which rises from
+co-op clears as well as solo ones. A player brings their own loadout and inherits nothing. The
+principle it encodes: **co-op gets you further, not richer.** Equal split was chosen over kill-
+or damage-weighted because this game has jobs that are not shooting, and weighting by
+contribution makes doing them cost money.
 
 What is still open and belongs to play data rather than this file: whether a new guest joining
 a deep run needs a floor, and whether being carried should raise the banking cap at all.
@@ -78,6 +80,7 @@ then is paint on a room with no door.
 - **The fixture cannot test MPPM, transports or the join surface** — those stay eyes-on.
 Keep everything else fixture-first or the single-dev constraint bites back.
 - **Shared ship-scene co-op is still absent.** M57 owns a client-local additive Ship for
-the down wait only; the host does not walk a shared ship. If that assumption breaks
-during a session, record it here.
+the down wait only; the host does not walk a shared ship. **M64** shipped
+own-Ship-before-Bastion (each player shops their own save, then EMBARK); that is not a
+shared ship. If the shared-ship assumption breaks during a session, record it here.
 

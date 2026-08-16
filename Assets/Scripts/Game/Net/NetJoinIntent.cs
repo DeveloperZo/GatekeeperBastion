@@ -2,10 +2,11 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER: Main Menu host/join carried across the Bastion load. Static on
-    /// purpose — MainMenu cannot hold a <see cref="NetSession"/> (that object lives on Bastion).
-    /// Consumed once in <see cref="NetSession.Awake"/>. Not a field on NetSession; that type's
-    /// no-statics contract stays.</summary>
+    /// <summary>LOCAL-OWNER: Main Menu host/join carried across Ship then Bastion. Static on
+    /// purpose — MainMenu and Ship cannot hold a <see cref="NetSession"/> (that object lives
+    /// on Bastion). Pending survives Ship; consumed once in <see cref="NetSession.Awake"/>
+    /// after EMBARK. Cleared on domain reload only
+    /// (<see cref="RuntimeInitializeLoadType.SubsystemRegistration"/>).</summary>
     public static class NetJoinIntent
     {
         #region Constants
@@ -26,6 +27,8 @@ namespace GatekeeperBastion.Game
         static string _address;
         static ushort _port;
         static string _lastError;
+        static string _joinCode;
+        static RelayJoin.Payload _relay;
         #endregion
 
         #region Properties
@@ -41,16 +44,31 @@ namespace GatekeeperBastion.Game
 
         /// <summary>Port captured by <see cref="RequestHost"/> / <see cref="RequestJoin"/>.</summary>
         public static ushort Port => _port;
+
+        /// <summary>Relay join code. Still readable after Consume so pause can show it.</summary>
+        public static string JoinCode => _joinCode;
+
+        /// <summary>Relay payload captured by RequestHostRelay / RequestJoinRelay.</summary>
+        public static RelayJoin.Payload Relay => _relay;
+
+        /// <summary>True when the pending (or last consumed) intent carries Relay data.</summary>
+        public static bool HasRelay => RelayJoin.HasPayload(_relay);
         #endregion
 
         #region Public API
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics()
+        static void ResetStatics() => Clear();
+
+        /// <summary>Drop pending host/join and Relay bytes. Fixtures call this so a prior
+        /// menu intent cannot bind Relay onto an explicit LAN StartHost/StartClient.</summary>
+        public static void Clear()
         {
             _pending = Kind.None;
             _address = null;
             _port = DefaultPort;
             _lastError = null;
+            _joinCode = null;
+            _relay = default;
         }
 
         public static void RequestHost()
@@ -58,6 +76,17 @@ namespace GatekeeperBastion.Game
             _pending = Kind.Host;
             _address = null;
             _port = DefaultPort;
+            _joinCode = null;
+            _relay = default;
+        }
+
+        public static void RequestHostRelay(RelayJoin.Payload payload, string joinCode)
+        {
+            _pending = Kind.Host;
+            _address = null;
+            _port = DefaultPort;
+            _joinCode = joinCode;
+            _relay = payload;
         }
 
         public static void RequestJoin(string address, ushort port)
@@ -65,6 +94,17 @@ namespace GatekeeperBastion.Game
             _pending = Kind.Join;
             _address = address;
             _port = port;
+            _joinCode = null;
+            _relay = default;
+        }
+
+        public static void RequestJoinRelay(RelayJoin.Payload payload, string joinCode)
+        {
+            _pending = Kind.Join;
+            _address = null;
+            _port = DefaultPort;
+            _joinCode = joinCode;
+            _relay = payload;
         }
 
         /// <summary>Returns the pending kind and clears it so a second Bastion load is solo.</summary>
@@ -82,6 +122,27 @@ namespace GatekeeperBastion.Game
         {
             if (!TryParseIpv4(address, out string normalized)) return false;
             return normalized != "0.0.0.0";
+        }
+
+        /// <summary>Six alphanumeric characters, case-insensitive. Empty is not a code.</summary>
+        public static bool TryParseJoinCode(string text, out string normalized)
+        {
+            normalized = null;
+            if (string.IsNullOrEmpty(text)) return false;
+            string trimmed = text.Trim();
+            if (trimmed.Length != 6) return false;
+            var chars = new char[6];
+            for (int i = 0; i < 6; i++)
+            {
+                char ch = trimmed[i];
+                if (ch >= 'a' && ch <= 'z') ch = (char)(ch - 32);
+                bool letter = ch >= 'A' && ch <= 'Z';
+                bool digit = ch >= '0' && ch <= '9';
+                if (!letter && !digit) return false;
+                chars[i] = ch;
+            }
+            normalized = new string(chars);
+            return true;
         }
 
         /// <summary>IPv4 dotted quad only — four octets 0–255. No hostnames.</summary>

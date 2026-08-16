@@ -7,6 +7,20 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-15
 -->
 
+- 2026-08-15: **M64 completed** — friends send gate. Machine: `Docs/Release-Gate.md`,
+  `Tools/release-gate/run.sh` PASS (company Gatekeeper), Host/Join → `LoadShip`,
+  `NetPrep` + `NetPrepTests` 3/0 Passed (juice/start/range;
+  `gkb_verify_report.json` 2026-08-15T21:34:37Z), `NetRunMirror` Intensity, menu
+  version, `FrameBudget`, `run-windowed.bat`, `Docs/Release-Send.md`. Criteria 13–18
+  and 19–25 playthrough are confirmation (same as M59/M62) — not claimed played this
+  session. Unrelated suite reds: `BastionDoorApertureTests`, `SessionMusicHostTests`,
+  `NetVerbTests.Repair` epsilon — not this slice.
+- 2026-08-15: **M65 completed** — three players supported (six cheap); waves scale by
+  player count; salvage splits to own wallets with banking capped by own deepest Wave.
+  Gate: EditMode `PlayerWalletTests`, `WavePlayerCountTests`; PlayMode
+  `NetThreePlayerTests`. `Convert_GuestDeepest2` fixed to cumulative BankCap;
+  `RunSim.Wallets.cs` partial for the line cap. Full suite still has unrelated reds
+  (`BastionDoorApertureTests`, `SessionMusicHostTests`); not claimed green.
 - 2026-08-15: **M67 cancelled.** Premise was the M52+M53 compound gate (no bank
   until a five-Wave clear). M53's carry recut already converts after Wave 1
   (`HatchBank.CarryConvert(1)`, `HatchBankTests.NibbleThreeTimes200_Banks600AtOneTimes`).

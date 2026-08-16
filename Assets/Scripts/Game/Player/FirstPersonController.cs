@@ -143,6 +143,12 @@ namespace GatekeeperBastion.Game
             Tick(Time.deltaTime);
         }
 
+        void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus)
+                SetCursorLocked(false);
+        }
+
         /// <summary>Locomotion: cursor lock, look, sprint and the CharacterController move.</summary>
         public void Tick(float dt)
         {

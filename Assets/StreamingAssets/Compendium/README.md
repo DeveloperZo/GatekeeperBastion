@@ -37,8 +37,8 @@ Gatekeepers live here. They are not tiers of one kind. Each kind is defined by w
 what puts one on you, how Waves mix them.
 
 Then the kinds: [Default](Gatekeeper-Default.md) (the only one you can steer),
-[Hunter](Gatekeeper-Hunter.md) (you, never the Hatch), [Ram](Gatekeeper-Ram.md) (the Hatch,
-never you, and nothing you do turns it).
+[Hunter](Gatekeeper-Hunter.md) (you, never the Hatch), [Thief](Gatekeeper-Thief.md) (you on a
+field-terminal Wave, the Hatch on a Hatch-bank; shooting it never shouts).
 
 ## V. Arms
 

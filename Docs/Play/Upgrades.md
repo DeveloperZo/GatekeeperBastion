@@ -50,7 +50,7 @@ The lock is the Run-loss counter, and **losing the Hatch trips it exactly as bei
 
 **Hatch Armor when you are losing Runs with your health bar full.** That is a clean signal: the Run ended at the door, not at you, and no amount of personal upgrade fixes it.
 
-**The Repair Rig only if you intend to repair at all** — and be honest that repairing is treating the symptom. The Rig does not make repair *cheaper*; it is what makes repair possible, and the Salvage bill per point healed is unchanged by owning it. If you are repairing a lot, the real fix is killing Rams further from the door.
+**The Repair Rig only if you intend to repair at all** — and be honest that repairing is treating the symptom. The Rig does not make repair *cheaper*; it is what makes repair possible, and the Salvage bill per point healed is unchanged by owning it. If you are repairing a lot, the real fix is killing Thieves further from the door.
 
 **Luck is a slow, real damage increase** that shows up over a whole Run rather than in any one fight. It is fine. It is not the thing to buy while you are still dying to Wave two.
 

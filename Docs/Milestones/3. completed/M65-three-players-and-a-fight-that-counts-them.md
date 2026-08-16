@@ -1,9 +1,15 @@
 # M65 — Three players, and a fight that counts them
 
 <!--
-Status: later
-Update trigger: when the supported player count changes, when the wave-scaling rule changes, or when the split or the banking cap changes
-Last updated: 2026-08-14
+Status: completed 2026-08-15
+Update trigger: closed
+Last updated: 2026-08-15
+Closed on: 2026-08-15. Gate: EditMode `PlayerWalletTests` 7/0,
+`WavePlayerCountTests` 3/0; PlayMode `NetThreePlayerTests` Passed
+(`gkb_verify_report.json` 2026-08-15T20:34:58Z). Cumulative BankCap across drip
+ticks; `RunSim.Wallets.cs` partial for the Sim line cap; guest spawn offset after
+Slot sync. Full suite still carries unrelated reds (BastionDoorAperture, SessionMusicHost,
+NetSessionAddress, NetVerb repair epsilon) — not this slice.
 -->
 
 **Three players: a host and two guests.** Stated once, tested with three, and built so that

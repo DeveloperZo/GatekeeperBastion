@@ -4,9 +4,9 @@
 
 The Hatch is the umbilical junction back to your Ship. If it reaches zero the Run ends immediately — the same ending as your own death.
 
-Field-terminal Waves leave it invulnerable. A Hatch-bank is when it can be hurt, and when Unbanked converts to the ship. Defaults and Rams hit it on that Wave; Hunters never do.
+Field-terminal Waves leave it invulnerable. A Hatch-bank is when it can be hurt, and when Unbanked converts to the ship. Defaults and Thieves hit it on that Wave; Hunters never do.
 
-Repair needs the Repair Rig equipped and spends banked Salvage per point healed. Letting a Ram reach the door costs more than killing it. Health, rate and price: [Field Manual](Field-Manual.md).
+Repair needs the Repair Rig equipped and spends banked Salvage per point healed. Letting a Thief reach the door costs more than killing it. Health, rate and price: [Field Manual](Field-Manual.md).
 
 ## Reference
 
@@ -24,11 +24,11 @@ Only two of the three things that come aboard will touch it.
 
 A **Default** walks at the Hatch and hits it. It will ignore you entirely unless you hurt it, at which point it comes for you instead — which is the trade: you can pull one off the door, and pulling it means it is now your problem.
 
-A **Ram** hunts you on a field-terminal Wave and walks to the Hatch on a Hatch-bank. On that Hatch-bank it will not turn on you, will not defend itself, and will keep walking while you empty a clip into its back. When it arrives it takes a serious bite. It is slow, and that slowness is the offer — you have time to deal with it if you spend the time on it.
+A **Thief** hunts you on a field-terminal Wave and walks to the Hatch on a Hatch-bank. On that Hatch-bank it will not turn on you, will not defend itself, and will keep walking while you empty a clip into its back. When it arrives it takes a serious bite. It is slow, and that slowness is the offer — you have time to deal with it if you spend the time on it.
 
 A **Hunter** never touches the Hatch. It only wants you.
 
-So the shape of the threat to the door depends entirely on what the Wave brought. A Hatch-bank with Rams in it is a Wave where the door is the thing at risk. A Wave without them is a Wave where you are.
+So the shape of the threat to the door depends entirely on what the Wave brought. A Hatch-bank with Thieves in it is a Wave where the door is the thing at risk. A Wave without them is a Wave where you are.
 
 ### Repairing it
 
@@ -52,7 +52,7 @@ More than the number.
 
 **Repair is paid for out of the same Salvage you were saving for a weapon.** Every point you put back into the door is a point that does not go into the thing that would have stopped the door being hit. That is why a Run where the Hatch takes a beating is a Run that costs you twice — you pay for the damage, and then you get back to the Ship and find you cannot afford what you went in for.
 
-The honest consequence: **letting a Ram reach the door is more expensive than killing it, every time.** Not in danger — in money. That is the whole reason to walk out and meet one instead of holding the doorway.
+The honest consequence: **letting a Thief reach the door is more expensive than killing it, every time.** Not in danger — in money. That is the whole reason to walk out and meet one instead of holding the doorway.
 
 The end screen breaks out what you spent on repairs, if you spent anything. It is worth reading, because it is the only place the Run tells you what the door cost you.
 

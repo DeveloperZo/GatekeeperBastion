@@ -50,6 +50,10 @@ namespace GatekeeperBastion.Game
         {
             if (_pauseShortcuts == null || sim == null) return;
             ShortcutPanel.FillRows(ctx, _pauseShortcutRows, dialLevel, DevSurface.None);
+            var net = _game != null ? _game.Net : null;
+            string code = net != null ? net.JoinCode : null;
+            if (!string.IsNullOrEmpty(code))
+                _pauseShortcutRows.Add(new ShortcutRow("CODE", code, "SESSION"));
             _pauseShortcuts.SetCollapsed(false);
             _pauseShortcuts.SetRows(_pauseShortcutRows);
         }
@@ -70,7 +74,7 @@ namespace GatekeeperBastion.Game
             int lvl = sim.Siphon.Level;
             bool stripped = wave >= WaveDirector.MaxWaves;
             int specIndex = stripped ? WaveDirector.MaxWaves - 1 : wave;
-            int here = _waves.NextWave(specIndex, lvl).enemyCount;
+            int here = _waves.NextWave(specIndex, lvl, sim.PlayerCount).enemyCount;
             _lineBuf.Clear();
             _lineBuf.Append("<b>PREP</b>  ·  ");
             if (sim.MasterSequenceLive)
@@ -119,7 +123,7 @@ namespace GatekeeperBastion.Game
                 _lineBuf.Append(here).Append(" gatekeepers on the next terminal Wave");
             if (lvl < TetherSiphon.MaxLevel)
             {
-                int nextCount = _waves.NextWave(specIndex, lvl + 1).enemyCount;
+                int nextCount = _waves.NextWave(specIndex, lvl + 1, sim.PlayerCount).enemyCount;
                 _lineBuf.Append("  ·  +/- raise Intensity ").Append(lvl + 1)
                     .Append(" → ").Append(nextCount);
             }

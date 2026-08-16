@@ -12,6 +12,23 @@ namespace GatekeeperBastion.PlayTests
     /// Does not connect to 10.0.0.1 — Shutdown runs before the timeout.</summary>
     public class NetSessionAddressTests
     {
+        [SetUp]
+        public void ClearJoinIntent() => NetJoinIntent.Clear();
+
+        [Test]
+        public void TryParseJoinCode_AcceptsSixAlphanumeric_CaseInsensitive()
+        {
+            Assert.IsTrue(NetJoinIntent.TryParseJoinCode("abc123", out string a));
+            Assert.AreEqual("ABC123", a);
+            Assert.IsTrue(NetJoinIntent.TryParseJoinCode("  Z9K2M1 ", out string b));
+            Assert.AreEqual("Z9K2M1", b);
+            Assert.IsFalse(NetJoinIntent.TryParseJoinCode("", out _));
+            Assert.IsFalse(NetJoinIntent.TryParseJoinCode("abc12", out _));
+            Assert.IsFalse(NetJoinIntent.TryParseJoinCode("abc1234", out _));
+            Assert.IsFalse(NetJoinIntent.TryParseJoinCode("abc12!", out _));
+            Assert.IsFalse(NetJoinIntent.TryParseJoinCode("10.0.0.1", out _));
+        }
+
         [Test]
         public void TryParseIpv4_AcceptsDottedQuad_RejectsHostnames()
         {
@@ -52,12 +69,17 @@ namespace GatekeeperBastion.PlayTests
         [UnityTest]
         public IEnumerator StartClient_SetsTransportAddress()
         {
+            NetJoinIntent.Clear();
             var go = new GameObject("NetSessionAddressClient");
             var nm = go.AddComponent<NetworkManager>();
             var transport = go.AddComponent<UnityTransport>();
+            if (nm.NetworkConfig == null)
+                nm.NetworkConfig = new NetworkConfig();
             nm.NetworkConfig.EnableSceneManagement = false;
             nm.NetworkConfig.NetworkTransport = transport;
             var session = go.AddComponent<NetSession>();
+            Assert.IsNotNull(session);
+            yield return null;
 
             session.StartClient("10.0.0.1", 7777);
             Assert.AreEqual("10.0.0.1", transport.ConnectionData.Address);
@@ -71,12 +93,17 @@ namespace GatekeeperBastion.PlayTests
         [UnityTest]
         public IEnumerator StartHost_ListensOnAllInterfaces()
         {
+            NetJoinIntent.Clear();
             var go = new GameObject("NetSessionAddressHost");
             var nm = go.AddComponent<NetworkManager>();
             var transport = go.AddComponent<UnityTransport>();
+            if (nm.NetworkConfig == null)
+                nm.NetworkConfig = new NetworkConfig();
             nm.NetworkConfig.EnableSceneManagement = false;
             nm.NetworkConfig.NetworkTransport = transport;
             var session = go.AddComponent<NetSession>();
+            Assert.IsNotNull(session);
+            yield return null;
 
             session.StartHost();
             Assert.AreEqual("0.0.0.0", transport.ConnectionData.ServerListenAddress);
@@ -91,12 +118,17 @@ namespace GatekeeperBastion.PlayTests
         [UnityTest]
         public IEnumerator StartClient_RejectsListenAllAddress()
         {
+            NetJoinIntent.Clear();
             var go = new GameObject("NetSessionRejectAll");
             var nm = go.AddComponent<NetworkManager>();
             var transport = go.AddComponent<UnityTransport>();
+            if (nm.NetworkConfig == null)
+                nm.NetworkConfig = new NetworkConfig();
             nm.NetworkConfig.EnableSceneManagement = false;
             nm.NetworkConfig.NetworkTransport = transport;
             var session = go.AddComponent<NetSession>();
+            Assert.IsNotNull(session);
+            yield return null;
 
             session.StartClient("0.0.0.0", 7777);
             Assert.IsFalse(nm.IsListening, "0.0.0.0 must not start a client session");

@@ -87,6 +87,11 @@ Assets/_Scratch/*
 .claude/skills/_evals/raw_stream.jsonl
 .claude/skills/_evals/stderr.txt
 
+# Local secrets — never commit. Service-account keys for Unity Cloud stay outside git.
+Docs/_meta/unity.env
+Docs/_meta/*.env
+*.env.local
+
 # Local UPM tarball staging and embedded copies of registry packages. Never commit;
 # the lock file + PackageCache are the install. These folders exist only while the
 # editor is being unblocked.

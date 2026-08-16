@@ -82,8 +82,12 @@ namespace GatekeeperBastion.Game
         Vector3 _lastDestination = new Vector3(9999f, 9999f, 9999f);
         float _pinRemaining;
 
+        static readonly int AnimSpeed = Animator.StringToHash("Speed");
+        static readonly int AnimAttack = Animator.StringToHash("Attack");
+
         NavMeshAgent _agent;
         Damageable _damageable;
+        Animator _animator;
         // Pushed by WaveSpawner at spawn (Configure). Null on a hand-placed actor, which then
         // treats the run as over and never acts — spawner-spawned is the supported path.
         protected GameController _game;
@@ -205,6 +209,7 @@ namespace GatekeeperBastion.Game
         void Awake()
         {
             _agent = GetComponent<NavMeshAgent>();
+            _animator = GetComponentInChildren<Animator>(true);
             _damageable = GetComponent<Damageable>();
             if (_damageable != null)
             {
@@ -249,7 +254,11 @@ namespace GatekeeperBastion.Game
             {
                 _pinRemaining -= dt;
                 StopAgent();
-                if (_pinRemaining > 0f) return;
+                if (_pinRemaining > 0f)
+                {
+                    DriveAnimator();
+                    return;
+                }
                 _pinRemaining = 0f;
                 _retargetTimer = 0f;
             }
@@ -266,6 +275,7 @@ namespace GatekeeperBastion.Game
             if (!TryGetGoal(out Vector3 goal))
             {
                 StopAgent();
+                DriveAnimator();
                 return;
             }
 
@@ -311,6 +321,22 @@ namespace GatekeeperBastion.Game
                     _lastDestination = goal;
                 }
             }
+
+            DriveAnimator();
+        }
+
+        /// <summary>Boarder Speed float: 0 idle, 0.5 walk, 1 run. NavMeshAgent owns translation.</summary>
+        void DriveAnimator()
+        {
+            if (_animator == null) return;
+            float speed = 0f;
+            if (_agent != null && _agent.isOnNavMesh && !_agent.isStopped)
+            {
+                float v = _agent.velocity.magnitude;
+                if (v > 0.15f)
+                    speed = v >= chaseSpeed * 0.85f ? 1f : 0.5f;
+            }
+            _animator.SetFloat(AnimSpeed, speed);
         }
 
         /// <summary>Push this gatekeeper along a planar delta without clearing the hatch-commit
@@ -392,6 +418,7 @@ namespace GatekeeperBastion.Game
         void Attack()
         {
             if (RunIsOver()) return; // guard: the run can end between the range test and the swing
+            if (_animator != null) _animator.SetTrigger(AnimAttack);
 
             if (_chasingPlayer && _player != null && !_player.IsDead)
             {

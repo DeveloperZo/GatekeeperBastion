@@ -34,6 +34,7 @@ namespace GatekeeperBastion.Game
             long kill = sim.CurrentKillAward;
             long banked = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
             long unbanked = sim.Unbanked;
+            int siphon = sim.Siphon.Level;
             var net = gc.Net;
             if (net != null && net.IsClientOnly)
             {
@@ -41,18 +42,23 @@ namespace GatekeeperBastion.Game
                 if (mirror != null)
                 {
                     banked = mirror.Banked.Value;
-                    unbanked = mirror.Unbanked.Value;
+                    siphon = mirror.Intensity.Value;
                 }
+                var avatar = NetPlayerAvatar.LocalOwner;
+                if (avatar != null)
+                    unbanked = avatar.Unbanked.Value;
+                else if (mirror != null)
+                    unbanked = mirror.Unbanked.Value;
             }
 
             if (elapsed != _cacheElapsed || wave != _cacheWave
-                || sim.Siphon.Level != _cacheSiphon || kill != _cacheKill
+                || siphon != _cacheSiphon || kill != _cacheKill
                 || runSal != _cacheRunSalvage || banked != _cacheBanked
                 || unbanked != _cacheUnbanked)
             {
                 _cacheElapsed = elapsed;
                 _cacheWave = wave;
-                _cacheSiphon = sim.Siphon.Level;
+                _cacheSiphon = siphon;
                 _cacheKill = kill;
                 _cacheRunSalvage = runSal;
                 _cacheBanked = banked;
@@ -68,7 +74,7 @@ namespace GatekeeperBastion.Game
                 int shown = wave;
                 if (shown > WaveDirector.MaxWaves) shown = WaveDirector.MaxWaves;
                 _lineBuf.Append("Run ").Append(runSal)
-                    .Append("  ·  Intensity ").Append(sim.Siphon.Level)
+                    .Append("  ·  Intensity ").Append(siphon)
                     .Append("  ·  Wave ").Append(shown).Append('/')
                     .Append(WaveDirector.MaxWaves)
                     .Append("  ·  ");
@@ -125,7 +131,7 @@ namespace GatekeeperBastion.Game
             if (leftOpen) PushShortcutPanel(sim);
 
             if (assault == AssaultState.Prep)
-                PushPrepPanel(sim, wave, hatchHp, hatchMax, unbanked);
+                PushPrepPanel(sim, wave, hatchHp, hatchMax, sim.TotalUnbanked);
             else
                 PushAssaultPanel(sim, wave, alive);
 

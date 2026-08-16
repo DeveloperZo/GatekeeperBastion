@@ -22,7 +22,7 @@ Raising intensity multiplies what each Gatekeeper pays, and how many the next Wa
 
 - Gatekeepers are not tougher. Health is set by which Wave you are on.
 - They do not arrive faster or in bigger groups. Group size and the gap between groups belong to the Wave.
-- Every extra body is a Default. Intensity cannot add a Hunter or Ram.
+- Every extra body is a Default. Intensity cannot add a Hunter or Thief.
 
 A raised intensity is the same fight with more of the easiest thing in it, and more money per body.
 
@@ -49,7 +49,7 @@ Juice spends Unbanked you have not Hatch-banked yet.
 Some practical shapes:
 
 - **Early Waves are the cheap place to raise it.** They send the fewest bodies and the softest ones.
-- **Late Waves are where a raise actually hurts**, because the surplus lands on top of a Wave that already has the most Hunters and Rams in it and the toughest bodies.
+- **Late Waves are where a raise actually hurts**, because the surplus lands on top of a Wave that already has the most Hunters and Thieves in it and the toughest bodies.
 - **Intensity you can't finish is worth nothing.** Losing the Hatch mid-Wave stops the income immediately; extra pay only lands on Gatekeepers you actually kill.
 - **Turning it back down is free.** No refund. Nothing commits you to a setting across Waves.
 

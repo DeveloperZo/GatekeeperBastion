@@ -154,3 +154,14 @@ if ! bash "$DOCGEN" --check; then
   echo "verify: docgen check failed (Tools/docgen/run.sh --check)" >&2
   exit 1
 fi
+
+# M64 — Friends Alpha release-gate machine checks (PlayerSettings / build profile / frame budget).
+RELEASE_GATE="$ROOT/Tools/release-gate/run.sh"
+if [[ ! -f "$RELEASE_GATE" ]]; then
+  echo "verify: expected $RELEASE_GATE" >&2
+  exit 2
+fi
+if ! bash "$RELEASE_GATE"; then
+  echo "verify: release-gate check failed (Tools/release-gate/run.sh)" >&2
+  exit 1
+fi

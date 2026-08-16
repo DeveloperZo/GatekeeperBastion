@@ -77,7 +77,7 @@ Rejected: Sound Design Starter Kit **276617** (5.31 GB / 1173 files). Rejected: 
 - **Reads back as** Music slider moving the Bastion loop; SFX slider moving fire and
   footsteps — here.
 
-UI / terminals / keys: [`M59`](M59-the-polish-pass-1.md). View-models and zoom:
+UI / terminals / keys: [`M59`](../3.%20completed/M59-the-polish-pass-1.md). View-models and zoom:
 [`M61`](../3.%20completed/M61-the-polish-pass-2.md). Hit confirm and per-kind tells:
 [`M66`](M66-polish-pass-3.md).
 

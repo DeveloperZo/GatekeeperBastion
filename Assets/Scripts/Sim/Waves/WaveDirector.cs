@@ -3,8 +3,8 @@ using System;
 namespace GatekeeperBastion.Sim
 {
     /// <summary>
-    /// Deterministic wave scaling. Pure functions of (waveIndex, siphonLevel) — no randomness,
-    /// so host and clients agree byte-for-byte.
+    /// Deterministic wave scaling. Pure functions of (waveIndex, siphonLevel, playerCount) —
+    /// no randomness, so host and clients agree byte-for-byte.
     /// </summary>
     /// <remarks>
     /// Every number here is justified in Docs/Design/4-Data.md. Retune there and here together;
@@ -24,9 +24,17 @@ namespace GatekeeperBastion.Sim
         /// <summary>Extra gatekeepers per wave index.</summary>
         public const int CountPerWave = 12;
 
-        /// <summary>Hard cap per wave AND aggregate live gatekeepers across a deep-start chain.
-        /// At dial 5 wave 5 the largest single wave is 99; the cap is still a guard, not a knob.</summary>
+        /// <summary>Hard cap per wave AND aggregate live gatekeepers across a deep-start chain,
+        /// per player. Solo (playerCount 1) stays 120. At dial 5 wave 5 the largest single wave
+        /// is 99; the cap is still a guard, not a knob.</summary>
         public const int MaxEnemyCount = 120;
+
+        /// <summary>Supported friends-alpha count (host plus two). Six is the intent;
+        /// <see cref="NextWave"/> takes an int so six is a tuning pass, not a rewrite.</summary>
+        public const int SupportedPlayerCount = 3;
+
+        /// <summary>Capacity the code must not assume below. Spawn, HUD and wallets size to this.</summary>
+        public const int PlayerCapacity = 6;
 
         /// <summary>Floor on seconds between spawn GROUPS.</summary>
         public const float MinSpawnInterval = 0.4f;
@@ -129,7 +137,8 @@ namespace GatekeeperBastion.Sim
         /// <summary>
         /// Spec for the given wave.
         ///
-        ///   enemyCount            = min(120, round((18 + 12*waveIndex) * dial))
+        ///   enemyCount            = min(120 * n, round((18 + 12*waveIndex) * dial) * n)
+        ///                           n = playerCount (clamped >= 1). n = 1 is today's table.
         ///                           dial = TetherSiphon.RewardMultiplierFor(siphonLevel)
         ///   hunterCount           = {0,4,6,10,12}[waveIndex]   (never scaled by the dial)
         ///   ramCount              = {0,0,2,4,7}[waveIndex]     (never scaled by the dial)
@@ -143,10 +152,11 @@ namespace GatekeeperBastion.Sim
         /// see it, and the dial's surplus is entirely Default so it cannot multiply Hunters or
         /// Rams. Both rules are load-bearing — see Docs/Design/2-Dynamics.md before relaxing either.
         /// </summary>
-        public WaveSpec NextWave(int waveIndex, int siphonLevel)
+        public WaveSpec NextWave(int waveIndex, int siphonLevel, int playerCount = 1)
         {
             if (waveIndex < 0) waveIndex = 0;
             siphonLevel = ClampLevel(siphonLevel);
+            if (playerCount < 1) playerCount = 1;
 
             var spec = new WaveSpec();
 
@@ -159,8 +169,8 @@ namespace GatekeeperBastion.Sim
             // that has nothing to do with tuning. Midpoints go up, always.
             double scaled = Math.Round((double)(BaseEnemyCount + CountPerWave * waveIndex) * dial,
                                        4, MidpointRounding.AwayFromZero);
-            spec.enemyCount = Math.Min(MaxEnemyCount,
-                (int)Math.Round(scaled, MidpointRounding.AwayFromZero));
+            int bodies = (int)Math.Round(scaled, MidpointRounding.AwayFromZero);
+            spec.enemyCount = Math.Min(MaxEnemyCount * playerCount, bodies * playerCount);
 
             // The Min() calls only bite on probe indices past the five real waves, and exist so
             // the three counts ALWAYS sum to enemyCount — the Game layer's spawn loop relies on

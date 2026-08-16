@@ -16,6 +16,7 @@ namespace GatekeeperBastion.Game
     {
         public const string HomePanel = "Home";
         public const string JoinPanel = "Join";
+        public const string HostPanel = JoinPanel;
 
         [SerializeField] MainPanelManager _panels;
         [SerializeField, Tooltip("Shift 'Main Panels' root. Authored in MainMenu.unity.")]
@@ -35,11 +36,19 @@ namespace GatekeeperBastion.Game
         [SerializeField] Button _exitConfirmBtn;
         [SerializeField] Button _exitCancelBtn;
         [SerializeField] BlurManager _modalBlur;
+        [SerializeField] TextMeshProUGUI _sessionTitle;
         [SerializeField] TMP_InputField _joinAddressField;
         [SerializeField] TMP_InputField _joinPortField;
+        [SerializeField] TMP_InputField _joinCodeField;
         [SerializeField] Button _joinConnectBtn;
         [SerializeField] Button _joinBackBtn;
         [SerializeField] TextMeshProUGUI _joinRefusal;
+        [SerializeField] TextMeshProUGUI _hostCodeLabel;
+        [SerializeField] Button _hostCopyBtn;
+        [SerializeField] Button _hostEnterBtn;
+        [SerializeField] Button _hostLanBtn;
+        [SerializeField] Button _hostBackBtn;
+        [SerializeField] TextMeshProUGUI _hostStatus;
 
         public Action onContinue;
         public Action onStartNew;
@@ -47,12 +56,18 @@ namespace GatekeeperBastion.Game
         public Action onJoin;
         public Action onJoinConnect;
         public Action onJoinBack;
+        public Action onHostCopy;
+        public Action onHostEnter;
+        public Action onHostLan;
+        public Action onHostBack;
         public Action onOptions;
         public Action onOverwriteConfirm;
         public Action onQuitConfirm;
 
         public string JoinAddressText => _joinAddressField != null ? _joinAddressField.text : "";
         public string JoinPortText => _joinPortField != null ? _joinPortField.text : "";
+        public string JoinCodeText => _joinCodeField != null ? _joinCodeField.text : "";
+        public string HostCodeText => _hostCodeLabel != null ? _hostCodeLabel.text : "";
 
         void Awake()
         {
@@ -66,6 +81,13 @@ namespace GatekeeperBastion.Game
             Wire(_quitBtn, () => { if (onQuitConfirm != null) onQuitConfirm.Invoke(); });
             Wire(_joinConnectBtn, () => { if (onJoinConnect != null) onJoinConnect.Invoke(); });
             Wire(_joinBackBtn, () => { if (onJoinBack != null) onJoinBack.Invoke(); });
+            Wire(_hostCopyBtn, () => { if (onHostCopy != null) onHostCopy.Invoke(); });
+            Wire(_hostEnterBtn, () => { if (onHostEnter != null) onHostEnter.Invoke(); });
+            Wire(_hostLanBtn, () => { if (onHostLan != null) onHostLan.Invoke(); });
+            Wire(_hostBackBtn, () => { if (onHostBack != null) onHostBack.Invoke(); });
+            UiBind.SetButtonLabel(_hostCopyBtn, "COPY");
+            UiBind.SetButtonLabel(_hostEnterBtn, "TO SHIP");
+            UiBind.SetButtonLabel(_hostLanBtn, "HOST ON LAN");
             Wire(_overwriteConfirmBtn, () =>
             {
                 HideModal(_overwriteModal);
@@ -103,11 +125,19 @@ namespace GatekeeperBastion.Game
             Require(_exitConfirmBtn, nameof(_exitConfirmBtn));
             Require(_exitCancelBtn, nameof(_exitCancelBtn));
             Require(_modalBlur, nameof(_modalBlur));
+            Require(_sessionTitle, nameof(_sessionTitle));
             Require(_joinAddressField, nameof(_joinAddressField));
             Require(_joinPortField, nameof(_joinPortField));
+            Require(_joinCodeField, nameof(_joinCodeField));
             Require(_joinConnectBtn, nameof(_joinConnectBtn));
             Require(_joinBackBtn, nameof(_joinBackBtn));
             Require(_joinRefusal, nameof(_joinRefusal));
+            Require(_hostCodeLabel, nameof(_hostCodeLabel));
+            Require(_hostCopyBtn, nameof(_hostCopyBtn));
+            Require(_hostEnterBtn, nameof(_hostEnterBtn));
+            Require(_hostLanBtn, nameof(_hostLanBtn));
+            Require(_hostBackBtn, nameof(_hostBackBtn));
+            Require(_hostStatus, nameof(_hostStatus));
         }
 
         void Require(UnityEngine.Object reference, string field)
@@ -135,11 +165,12 @@ namespace GatekeeperBastion.Game
             if (target != null) es.SetSelectedGameObject(target.gameObject);
         }
 
-        public void SetCampaignStrip(int banked, int runs, int deepestWave)
+        public void SetCampaignStrip(int banked, int runs, int deepestWave, string version = null)
         {
             string deepest = deepestWave < 1 ? "1" : deepestWave.ToString();
+            string ver = string.IsNullOrEmpty(version) ? Application.version : version;
             UiBind.SetText(_campaignLine,
-                $"{banked} banked  —  {runs} run(s)  —  deepest Wave {deepest}");
+                $"{banked} banked  —  {runs} run(s)  —  deepest Wave {deepest}  —  v{ver}");
         }
 
         public void SetContinueVisible(bool visible) => UiBind.Show(_continueButton, visible);
@@ -161,25 +192,66 @@ namespace GatekeeperBastion.Game
             FocusDefault();
         }
 
-        /// <summary>Opens the authored Join panel. Port defaults to 7777 when empty.</summary>
+        /// <summary>Opens the authored Join panel. Code field is the default; LAN IP/port
+        /// stay as the fallback row. Port defaults to 7777 when empty.</summary>
         public void ShowJoin()
         {
             HideModal(_overwriteModal);
             HideModal(_exitModal);
             RevealMainPanelsRoot();
-            if (_joinAddressField != null && string.IsNullOrEmpty(_joinAddressField.text))
-                _joinAddressField.text = "127.0.0.1";
             if (_joinPortField != null && string.IsNullOrEmpty(_joinPortField.text))
                 _joinPortField.text = "7777";
+            ApplySessionLayout(host: false);
             OpenPanel(JoinPanel);
             var es = EventSystem.current;
-            if (es != null && _joinAddressField != null)
-                es.SetSelectedGameObject(_joinAddressField.gameObject);
+            if (es != null && _joinCodeField != null)
+                es.SetSelectedGameObject(_joinCodeField.gameObject);
         }
 
         public void SetJoinRefusal(string message)
         {
             UiBind.SetText(_joinRefusal, message != null ? message : "");
+        }
+
+        /// <summary>Same Shift panel as Join; host widgets replace the code/IP rows.</summary>
+        public void ShowHost()
+        {
+            HideModal(_overwriteModal);
+            HideModal(_exitModal);
+            RevealMainPanelsRoot();
+            ApplySessionLayout(host: true);
+            OpenPanel(HostPanel);
+        }
+
+        public void SetHostCode(string code)
+        {
+            UiBind.SetText(_hostCodeLabel, code != null ? code : "");
+        }
+
+        public void SetHostStatus(string message)
+        {
+            UiBind.SetText(_hostStatus, message != null ? message : "");
+        }
+
+        public void SetHostLanVisible(bool visible)
+        {
+            if (_hostLanBtn != null) UiBind.Show(_hostLanBtn.gameObject, visible);
+        }
+
+        /// <summary>Host and Join share one authored panel. Toggle which rows are live.</summary>
+        void ApplySessionLayout(bool host)
+        {
+            UiBind.SetText(_sessionTitle, host ? "HOST" : "JOIN");
+            UiBind.Show(_joinCodeField, !host);
+            UiBind.Show(_joinAddressField, !host);
+            UiBind.Show(_joinPortField, !host);
+            UiBind.Show(_joinConnectBtn, !host);
+            UiBind.Show(_joinRefusal, !host);
+            UiBind.Show(_hostCodeLabel, host);
+            UiBind.Show(_hostCopyBtn, host);
+            UiBind.Show(_hostEnterBtn, host);
+            UiBind.Show(_hostStatus, host);
+            if (!host) SetHostLanVisible(false);
         }
 
         /// <summary>Shift Main Panel Root defaults to Invisible (alpha 0). SplashScreenManager
