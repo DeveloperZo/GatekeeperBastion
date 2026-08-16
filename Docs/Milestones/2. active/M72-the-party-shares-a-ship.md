@@ -128,7 +128,8 @@ Overloading M57 `RequestEmbark`.
 1. Criteria 1–4, 6 (party load) — named PlayMode lobby fixture Passed in
    `gkb_verify_report.json`; assert ESM true on session managers; guest local Bastion
    refuse logged. Fixtures: `NetLobbySessionTests.NetSession_StartHost_EnablesSceneManagement`,
-   `NetLobbySessionTests.Guest_LocalBastionLoad_RefusedWhileSessionActive`.
+   `NetLobbySessionTests.Host_LocalBastionLoad_RefusedWhileSessionActive`,
+   `NetLobbySessionTests.SceneFlow_LoadBastion_RefuseLines_PresentInSource`.
 2. Criteria 5, 7, 8 — Ready/cancel and party return covered in fixture where possible;
    Relay lifetime eyes-on.
 3. Criterion 9 — eyes-on two player builds, two networks, Relay code.
@@ -136,9 +137,12 @@ Overloading M57 `RequestEmbark`.
    host stays in Bastion; Hatch-bank EMBARK still works. Not a substitute for criterion 9.
 5. Regression (non-gating): after party EMBARK, one NetPrep Wave-start + one M51 client
    verb still apply once server-side.
-6. **2026-08-16 dual-box presence** — PlayMode `NetLobbyPresenceTests` Passed:
-   `OwnerAvatar_TracksFpcAfterLateBind`, `SpawnMirror_SpawnsUnparented_DestroyWithSceneFalse`,
-   `BothSeats_AvatarsPresentOnHostAndClient`, `DriveRemoteAnimator_SetsSpeedWhenMoved`.
+6. **2026-08-16 dual-box presence** — PlayMode `NetLobbyPresenceTests` Passed
+   (`gkb_verify_report.json` 2026-08-16T16:01:57Z): late FPC track; production
+   `SpawnUnparentedMirror`; both seats' avatars; remote Animator Speed. Multiagent review
+   (same day) hardened false-green SpawnMirror test and Bastion client StartRun boot.
+7. **Not dual-box until** loopback NetLobby* green on current dll (above). Criterion 9
+   (Relay, two networks) remains eyes-on only — do not treat presence fixtures as AC9.
 
 ## Do not build
 

@@ -9,12 +9,12 @@ unlock model, the growth levers, the five protocol sheets (the Default plus four
 specialists), the candidate axes toward the 8–10 roster, and the doctrine matrix. It
 spans the crew-skills and fabrication brainstorm areas, which is why it has its own
 file.
-Status: graduating — Zo directed 2026-08-15 that `M70` recuts as the Default Protocol
-(see Graduation); the specialist sheets await his veto pass.
+Status: graduating — `M70` recut 2026-08-16 is the Default claim + Barrage/Rush;
+specialist sheets await their slices.
 Update trigger: when Zo vetoes or accepts a row, doctrine or structure call; when a gate
 named on an expansion row ships; when a candidate axis earns or loses a sheet; when
 the M70 recut closes.
-Last updated: 2026-08-15
+Last updated: 2026-08-16
 -->
 
 ## What this is
@@ -50,7 +50,7 @@ authored elite where dilution stays legible (The modifier pool, a bet with kill
 questions, below).
 
 Target roster: **8–10 protocols** (Zo, 2026-08-15). Five sheets are below — the
-**Default Protocol**, owned from the first session, plus four specialists; the rest
+**Default Protocol**, a 0-salvage CREW claim, plus four specialists; the rest
 are candidate axes that earn a sheet one at a time (The roster to 8–10). Protocols
 unlock on Albion's rule — **doing the thing unlocks it**: each protocol names a deed
 counter on play the game already logs (Zo's example: destroying X Default
@@ -136,13 +136,12 @@ detour.
 | Protocol deed | The next protocol becomes buyable | One themed counter per protocol, visible with progress from day one (Albion's destiny board). Zo's example on record: destroy X Default Gatekeepers |
 | Protocol play | That protocol's three paced unlocks — the Crew twist slot, the Personal twist slot, the second Passive | Counters on using the protocol itself — the activation log lines exist by design; OMD3 gates a trap's fork behind mastery with that trap, and a twist is only a choice once the naked ability is understood |
 
-- **Identity ships at hour zero.** The **Default Protocol is owned and equipped from
-  the first session** — no purchase, no deed (its sheet is first below). It is also
-  the one exemption from the paced unlocks: both its passives sit on the panel from
-  day one with the pick free, because the play counters that pace entries ship with
-  the protocols that need them — pacing starts at VEIL. Killing Floor 2's level 0 —
-  passives too weak to feel, no skill until level 5 — is the documented
-  dead-early-game case.
+- **Identity ships at hour zero.** Recut 2026-08-16: the **Default Protocol is a
+  0-salvage CREW claim** (Mk1 shape), not auto-owned. CREW shows VEIL / AEGIS /
+  LEDGER as Coming Soon copy until those slices add catalog ids. Default has no
+  Passive pick and no paced unlocks; pacing starts at VEIL. Killing Floor 2's
+  level 0 — passives too weak to feel, no skill until level 5 — is still the
+  dead-early-game case this claim exists to avoid.
 - **Deed candidates, themed so earning a protocol rehearses it** (#12 values, each
   named for real at its protocol's slice): VEIL — destroy X Default Gatekeepers
   (Zo's example, the first deed to ship); AEGIS — complete X Hatch repairs;
@@ -185,11 +184,9 @@ scarce clause created the healer role by itself).
 
 Working names on the codename rule (`../Decisions.md`) — renameable when play earns a
 fiction noun. Each sheet: a Crew ability and a Personal ability, each with **one twist
-slot (pick 1 of 2)**, and two Passives (pick 1). Abilities marked **[M70]** carry
-their designs from the pre-recut `M70` (2026-08-14); the recut `M70` ships only the
-Default sheet, so **this file is now the spec of record** for every other marked row
-— designed, not built; the source-audited cost of every sheet is in The mechanics
-bill below. Under each ability, the **parked pair** is the
+slot (pick 1 of 2)**, and two Passives (pick 1). Default (M70 recut 2026-08-16) has
+no Passive pick and no twist slots. This file is the spec of record for every
+specialist row — designed, not built. Under each ability, the **parked pair** is the
 recorded candidate for its future second twist slot (growth lever), and the alternates
 record keeps the cuts and the wall each one hit. Live pairs were selected 2026-08-15
 under the twist-pair law: solo-strong on both sides, unflagged, clearest axis; every
@@ -197,43 +194,24 @@ co-op-weighted, mobility-flagged or rule-bending twist parks.
 
 ### DEFAULT — the unmodified Boarder
 
-The Default Gatekeeper's mirror: the plain kind, worn by a player. Owned and equipped
-from the first session; every other protocol reads as a deviation from it. Its job is
-competence without a specialty, so its rows are the plainest verb in each lane on the
-cheapest seams, and it ships as `M70`'s recut — the frame's proof (Zo, 2026-08-15).
+The assault identity: Advance Wars' Andy / Mass Effect's Soldier. A 0-salvage CREW
+claim (Mk1 shape). Every later protocol reads as a deviation from it. `M70` recut
+2026-08-16.
 
-**Doctrine: STOCK** — hardware exactly as sold, the reference every other doctrine
-recolors. Zero clauses; the doctrine mode is written onto the decoy at `TryPlace`.
-STOCK writes 0. VEIL is the first reader.
+**Doctrine: STOCK** — hardware as sold. Written at decoy `TryPlace`. STOCK writes 0.
+VEIL is the first reader.
 
-**ANCHOR (`G`)** [M70, moved from AEGIS 2026-08-15] — plant; Gatekeepers within 8 m
-slow; you cannot move until unplant. The cheapest designed Crew verb, which is the
-Default's claim on it *(source check 2026-08-15: no slow API exists —
-`EnemyGatekeeper.Provoke()` writes `_agent.speed` directly, so the slow must land as
-a multiplier in one speed-recompute funnel that `Configure`, `Provoke` and ring
-enter/leave all route through, or a provoked Gatekeeper sheds the slow mid-ring; the
-`M70` recut carries that funnel, and Suppressor and Ward Stone later land in it)*.
-Ships naked; when its twist slot arrives the recorded candidates are **Ward Stone /
-Sieve** (Challenge leaves the pair — it is AEGIS's signature now).
+**BARRAGE (`G`)** — `Rooted`; caster fire rate ×2.0; other Boarders within 8 m also
+×2.0, not rooted. Stand and dump. Cooldown starts at unplant.
 
-**BULKHEAD (`H`)** [new, moved from AEGIS 2026-08-15] — window: the first Gatekeeper
-swing that lands on you is negated; the window ends on that negation. The plainest
-personal verb on the smallest absent mechanic (bill 6). Its live pair
-(**Turnstile / Deadbolt**) moves with it, due when its twist slot ships. Its old
-parked pair split in the move: **Doorplate** seeds AEGIS's re-authored Personal;
-**Sentinel** (co-op-weighted) parks here as a second-slot candidate.
+**RUSH (`H`)** — caster fire rate ×1.5; you move. No plant.
 
-Passives, pick 1 of 2: **Ghost** [M70, moved from VEIL] — reduced acquisition range;
-the cheapest passive on any sheet. **Foresight** [M70, moved from FORGE] — terminal
-previews of the next wave (bill 10, Small).
+No Passive pick. Twist slots later.
 
-The reallocations this forces, each due at the donor's own slice, none now: AEGIS
-re-authors around its actual identity — Challenge promotes from twist to Crew
-signature, its Personal re-authors on the Hatch-geometry lane (Doorplate lineage,
-bill 7), and Warden/Doorward plus its three matrix clauses stand (Bastion totem and
-Steadfast at AEGIS's slice; Suppressor earlier, with the turret column at FORGE's).
-VEIL's second passive re-authors beside Sightline. FORGE's second passive re-authors
-beside Magnet Hands.
+Anchor, Bulkhead, Ghost and Foresight are **not** on this sheet. They return to
+AEGIS (Anchor / Bulkhead — already on that sheet below), VEIL (Ghost, beside
+Sightline), FORGE (Foresight, beside Magnet Hands). The 2026-08-15 move onto
+Default is overturned.
 
 ### VEIL — who notices you, and what you know
 
@@ -286,12 +264,10 @@ render in-world (Mark of the Ninja) — and a second to re-author at VEIL's slic
 ### AEGIS — aggro rules and geometry
 
 **Deferred (Zo, 2026-08-15) — AEGIS must not block the system.** Its Steadfast clause
-waits on the damage-interrupts-repair pre-req (R), and the Default sheet took Anchor
-and Bulkhead, so AEGIS re-authors before its slice: Challenge promotes to Crew
-signature, the Personal re-authors on the Hatch-geometry lane (Doorplate lineage,
-bill 7). Warden/Doorward and all three of its matrix clauses stand as authored
-(Suppressor ships earlier, with the turret column at the FORGE slice). The sheet
-below is the pre-recut record, kept until that re-authoring.
+waits on the damage-interrupts-repair pre-req (R). Anchor and Bulkhead sit on this
+sheet (returned from Default, 2026-08-16 recut). Challenge remains a twist until
+AEGIS's slice re-authors. Warden/Doorward and all three of its matrix clauses stand
+as authored (Suppressor ships earlier, with the turret column at the FORGE slice).
 
 The Paladin translated. Shipped tanks speak in damage-reduction percentages; what
 survives the numeric-passive ban untouched is aggro rules and geometry. Two AEGIS
@@ -497,12 +473,10 @@ the system — and `M70` recuts as the Default Protocol; this supersedes the sam
 AEGIS-first cut, whose R micro-milestone would have gated the whole frame on a rules
 decision):
 
-1. **`M70` recut — the Default Protocol:** the frame plus the plainest sheet.
-   Protocol equip state, `G`/`H` binds, doctrine mode written at decoy `TryPlace`
-   (STOCK = 0; VEIL is the first reader), the attribute tracks dying with their refund, embark logging,
-   and the DEFAULT sheet naked (Anchor, Bulkhead, Ghost/Foresight pick). No Medium
-   mechanic in the unit — bill 6 and 10 only. The turret leaves `M70` in the same
-   recut: its criteria spend a "Primary reserve" that `PlayerGun` does not have.
+1. **`M70` recut 2026-08-16 — the Default Protocol:** CREW claim at 0 salvage,
+   Coming Soon stubs, Barrage `G` / Rush `H` (windowed fire-rate mul), Fight
+   shortcut cooldown readout. Frame already in tree (catalog, v8 refund, `G`/`H`
+   binds, STOCK at place, net ids). No Passive pick. No specialist ids.
 2. **VEIL + the unlock spine:** bill 1, 2, 5, 12. The second protocol brings the
    system's remaining sockets: the first deed gate (destroy X Default Gatekeepers,
    Zo's example) with its persistent counter and catalog row, the twist-slot
@@ -819,20 +793,11 @@ per proc (`Doctrine` tag).
 
 ## Graduation
 
-Graduated by direction (Zo, 2026-08-15): **`M70` recuts as the Default Protocol** —
-the frame plus the plainest sheet — and every further protocol is its own milestone
-per the slice list (VEIL carries the unlock spine and the first deed; AEGIS goes
-last, behind its R pre-req and re-authoring). The recut rewrites `M70`'s "Sold
-archetypes" Do-not-build row and its per-ability-upgrades deferral with the overturns
-above, moves the turret half out to the FORGE slice, moves Ping/Cloak/Recall/Warden
-out to their protocols, and carries `language.md` rows (Protocol, doctrine, twist,
-the working names) and the `fabrication.md` doctrine note in the same change. The
-deed-counter exception to `M70` criterion 12 is named at VEIL's slice, where the
-counters ship. This supersedes the same-day AEGIS-first graduation plan. Standing
-Zo calls on this file: the Default sheet's moved rows (vetoable), Testament (due at
-LEDGER), and the parked rule-benders when their slots ship. The turret flip is
-stamped (Zo, 2026-08-15 — the doctrine matrix); only its clause texts remain open at
-their slices.
+Graduated by direction (Zo, 2026-08-15): **`M70` is the Default Protocol**. Recut
+2026-08-16 (Zo): Default is a CREW claim, Barrage/Rush replace Anchor/Bulkhead/Ghost/
+Foresight on that sheet, Coming Soon stubs stand in for specialists, Fight shortcut
+is the G/H readout. Specialist slices unchanged (VEIL carries the unlock spine;
+AEGIS last).
 
 ## Open questions
 

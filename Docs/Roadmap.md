@@ -42,9 +42,9 @@ sentence.
 **Recommended next**, in this order.
 
 1. **Finish M72** — shared Ship + party EMBARK (eyes-on criterion 9). Then **M69**.
-2. **Close M70** — Default Protocol is in tree (`BoarderProtocol`, CREW equip); the
-   milestone is not closed (PlayMode / HUD / play criteria still owed). Turret half
-   moved to the future FORGE/turret slice (recut 2026-08-15).
+2. **Close M70** — recut 2026-08-16: Default CREW claim; Barrage `G` / Rush `H`;
+   Coming Soon stubs; Fight/Pause shortcut cooldown fill. Frame in tree; shop +
+   fire-rate sheet + HUD are the remaining build.
 3. **M66** after a two-player session exists. **M65** closed 2026-08-15 (three players,
    wave scale, split wallets).
 4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
@@ -129,7 +129,7 @@ this table — see the change log.
 | M53 | Salvage leaves through the Hatch | completed, Aug 2026 | Kills fill Unbanked; Hatch-bank 45 s drip/attrit/dump, 3 slots, fat pile ×1.25/×1.50. Close log `18-23-55` (Run clean). Stay-Prep after dump is EditMode. Harness 316/0 | [`3. completed/M53`](Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | M54 | Master Control is the win | completed, Aug 2026 | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`3. completed/M54`](Milestones/3.%20completed/M54-master-control-is-the-win.md) |
 | M55 | Pay for intensity | completed, Aug 2026 | `+/-` spend 100 unbanked per step; `E` select, `T` start; HUD says Intensity; siphon dial retired; same `TetherSiphon` curve | [`3. completed/M55`](Milestones/3.%20completed/M55-pay-for-intensity.md) |
-| M70 | The Default Protocol | later | CREW equips Boarder Protocols; the Default owned from the first session — STOCK doctrine written at decoy place, Anchor `G`, Bulkhead `H`, Ghost 0.70× / Foresight pick-1; four tracks refunded and deleted, SaveVersion 8; verbs apply once server-side; turret moved to the FORGE slice, specialist sheets and deed spine in `Brainstorms/boarder-protocols.md` | [`1. planned/M70`](Milestones/1.%20planned/M70-the-default-protocol.md) |
+| M70 | The Default Protocol | later | CREW sells Default as a 0-salvage claim (Barrage `G`, Rush `H`); VEIL/AEGIS/LEDGER Coming Soon; Fight shortcut names keys + cooldown; frame (v8 refund, STOCK, net ids) already in tree | [`1. planned/M70`](Milestones/1.%20planned/M70-the-default-protocol.md) |
 | M67 | Playable from zero | **cancelled, Aug 2026** | Premise gone — M53 carry convert after Wave 1; M52+M53 compound gate no longer exists | [`5. cancelled/M67`](Milestones/5.%20cancelled/M67-playable-from-zero.md) |
 | M71 | The sidearm joins the wheel | completed, Aug 2026 | MK-1 ring D–A–R–C–F (Reload / Damage); SEC-D ring F–A–R–C–D (FireRate / Reload), Ability spoke not purchasable; Secondary-slot cost 150 + 150×t; focused never-rival holds | [`3. completed/M71`](Milestones/3.%20completed/M71-the-sidearm-joins-the-wheel.md) |
 
@@ -238,6 +238,7 @@ Moved out of this file. Mechanic areas that are wanted but not yet cuttable live
 | Gatekeeper kinds and Wave composition | [`Brainstorms/gatekeepers-and-waves`](Brainstorms/gatekeepers-and-waves.md) |
 | Co-op beyond the filed slices | [`Brainstorms/co-op`](Brainstorms/co-op.md) |
 | Boarder Protocols beyond Default | [`Brainstorms/boarder-protocols`](Brainstorms/boarder-protocols.md) |
+| First Bastion demo onboarding | [`Brainstorms/first-session`](Brainstorms/first-session.md) |
 
 Closed — Open table empty, kept as record (`Brainstorms/closed/`):
 

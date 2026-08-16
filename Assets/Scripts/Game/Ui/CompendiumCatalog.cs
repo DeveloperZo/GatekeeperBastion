@@ -11,6 +11,7 @@ namespace GatekeeperBastion.Game
     /// Runtime loads pages from StreamingAssets; EditMode tests read Docs/Play directly.</summary>
     public static class CompendiumCatalog
     {
+        public const string FieldManualStem = "Field-Manual";
         public const string StreamingRelative = "Compendium";
         public const string DocsRelative = "Docs/Play";
 
@@ -27,7 +28,8 @@ namespace GatekeeperBastion.Game
             public string BodyMarkdown;
         }
 
-        /// <summary>Six volumes plus appendix. Titles match Docs/Play/README.md.</summary>
+        /// <summary>Six pause volumes. Field Manual stays in Docs/Play; the reader has
+        /// no table layout and does not open it.</summary>
         public static readonly Volume[] Volumes =
         {
             new Volume
@@ -66,11 +68,6 @@ namespace GatekeeperBastion.Game
             {
                 Title = "VI. The Hull",
                 EntryStems = new[] { "The-Ship", "Upgrades" }
-            },
-            new Volume
-            {
-                Title = "Appendix",
-                EntryStems = new[] { "Field-Manual" }
             }
         };
 
@@ -101,6 +98,8 @@ namespace GatekeeperBastion.Game
         {
             entry = default;
             if (string.IsNullOrEmpty(stem)) return false;
+            if (string.Equals(stem, FieldManualStem, StringComparison.OrdinalIgnoreCase))
+                return false;
 
             string path = ResolvePagePath(stem);
             if (path == null || !File.Exists(path)) return false;
@@ -180,7 +179,7 @@ namespace GatekeeperBastion.Game
             ExtractGameView(StripBuilderAudit(markdown), ExtractTitle(markdown, "Entry"));
 
         /// <summary>In-game dimension: title + ## Game body + ## See also.
-        /// Pages without ## Game (Field Manual) return the full stripped markdown.</summary>
+        /// Pages without ## Game return the full stripped markdown.</summary>
         public static string ExtractGameView(string markdown, string title)
         {
             if (string.IsNullOrEmpty(markdown)) return "";
@@ -318,6 +317,8 @@ namespace GatekeeperBastion.Game
                 string label = m.Groups[1].Value;
                 string stem = StemFromLinkTarget(m.Groups[2].Value);
                 if (string.IsNullOrEmpty(stem)) return label;
+                if (string.Equals(stem, FieldManualStem, StringComparison.OrdinalIgnoreCase))
+                    return label;
                 return "<link=\"" + stem + "\"><u>" + label + "</u></link>";
             });
             return s;

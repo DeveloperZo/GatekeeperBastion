@@ -35,9 +35,15 @@ re-litigating a cut costs more than the cut saved.
   (`Brainstorms/boarder-protocols.md`): identity is a named, equipped Boarder Protocol,
   not an emergent read of free picks. The 2026-08-14 free-pick pools recut of M70 is
   superseded. Do not rebuild free-pick pools.
-- **CREW QUARTERS first-loss lock.** Narrowed 2026-08-15: the protocol is owned from
-  the first session. The remaining first-loss gate is FABRICATION's equipment slot
-  (and ARMORY Tiers). Do not re-lock CREW behind a death.
+- **CREW QUARTERS first-loss lock.** Narrowed 2026-08-15, recut 2026-08-16: Default
+  is a **0-salvage CREW claim** (Mk1 shape), not auto-owned. First-loss still does
+  not lock CREW; FABRICATION's equipment slot (and ARMORY Tiers) remain the
+  first-loss gate. Do not re-lock CREW behind a death.
+- **Windowed fire-rate as a protocol verb.** Exception 2026-08-16 (M70 recut):
+  Default's Barrage / Rush multiply `PlayerGun.EffectiveFireRate` for a window.
+  The M21 wheel still owns baseline fire rate; this is not a spoke and not an
+  always-on Passive. The 2026-08-15 "no damage-granting row" cut still bans
+  Overclock-as-spoke, always-on dps passives, and crit sources.
 - **A pause that stops the game.** `Time.timeScale = 0` is off the table (Zo, 2026-08-09).
   Pause in any multiplayer setting is a menu for one player while time keeps flowing, so the
   overlay is non-blocking from the start: duck audio, blur the frame, keep the sim ticking
@@ -132,7 +138,7 @@ not replace them with homemade bars or ghost Shadow chrome. Shift package rows (
 | `Hud Profile` | TL `(64, −24)` | 320 × 64 | Shadow, **Profile Icon** (sprite), Profile Level, Profile Exp |
 | `Hud Score` | TR `(−24, −24)` | 320 × 72 | Shadow, Score Salvage, Wave Counter (VLG) |
 | `Hud Hatch` | Top centre `(0, −24)`, anchors `(0.5, 1)` | 360 × 72 | Shadow, Shift **Hatch** row (Icon Border / Slider / Text) + value `hp/max` |
-| `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows, protocol G/H + Passive TMP inside the card, VLG |
+| `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows, VLG. Protocol G/H readout is the Fight shortcut strip (M70 recut 2026-08-16), not a Vitals TMP |
 | `Hud Weapon` | BR `(−24, 24)` | 400 × 150 | Shadow, Weapon Name, Weapon Ammo, Shift **Reload** row (same bar recipe as vitals), VLG |
 
 `BastionHudView` wires those hosts. EXP-as-slider and further polish are manual on top
@@ -168,7 +174,7 @@ kept; Categories / Preview / top Button List stripped via
 `Gatekeeper/HUD/Strip Settings Shell Onto Stations`. Only that menu takes input.
 Esc or Close returns to walk. Body rows clone from each panel's inactive
 `Templates` under the Settings `List` — that host must survive `ClearBody`.
-Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW: protocol + Passive pick;
+Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW: Default claim + Coming Soon stubs;
 FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
 
 ## Shipped

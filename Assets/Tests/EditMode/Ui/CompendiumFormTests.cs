@@ -99,6 +99,7 @@ namespace GatekeeperBastion.Tests
             {
                 string stem = Path.GetFileNameWithoutExtension(path);
                 if (string.Equals(stem, "README", StringComparison.OrdinalIgnoreCase)) continue;
+                if (string.Equals(stem, "Field-Manual", StringComparison.OrdinalIgnoreCase)) continue;
                 if (!volumeStems.Contains(stem))
                     missing.Add(stem);
             }
@@ -112,6 +113,14 @@ namespace GatekeeperBastion.Tests
 
             Assert.IsEmpty(missing, "Play pages not in any volume: " + string.Join(", ", missing));
             Assert.IsEmpty(extras, "Volume stems with no Play page: " + string.Join(", ", extras));
+        }
+
+        [Test]
+        public void PauseVolumes_OmitFieldManual()
+        {
+            Assert.IsFalse(
+                CompendiumCatalog.VolumeStemSet().Contains("Field-Manual"),
+                "Field Manual is Docs/Play only; pause has no table layout.");
         }
 
         [Test]

@@ -2,411 +2,287 @@
 
 <!--
 Status: later
-Update trigger: when a Default sheet row is renamed, moved or cut, when a window or
-cooldown moves off its starting value, when the doctrine mode enum gains a value, or
-when the VEIL slice ships and the deed spine lands.
-Last updated: 2026-08-15
+Update trigger: when the Default sheet's G/H rows are renamed or cut, when a
+window or fire-rate mul moves off its starting value, or when a specialist
+protocol ships and this slice's Coming Soon stub is replaced by a catalog id.
+Last updated: 2026-08-16
 -->
 
-CREW QUARTERS stops selling the four attribute tracks and equips **Boarder
-Protocols**. This slice ships the protocol frame and one protocol: the **Default
-Protocol** — the Default Gatekeeper's mirror, the plain kind worn by a player. Its
-doctrine is **STOCK** (hardware exactly as sold), its Crew ability is **Anchor** on
-`G`, its Personal ability is **Bulkhead** on `H`, and its passive is a pick of
-**Ghost** or **Foresight**. Owned and equipped from the first session; every later
-protocol reads as a deviation from it. The specialist sheets and the deed unlock
-model stay in `../../Brainstorms/boarder-protocols.md`.
+CREW QUARTERS sells **Boarder Protocols**. This slice is the shop, one buyable
+sheet, and the Fight readout that makes `G`/`H` findable. The **Default Protocol**
+is the plain assault identity (Advance Wars' Andy / Mass Effect's Soldier): you
+shoot faster, on purpose, in a window you can hear. Other protocols are **Coming
+Soon** stubs — names on the panel, no enum ids, no sheets.
 
-**Recut 2026-08-15 (Zo): free-pick pools became protocols, and this slice shrank to
-the Default.** The 2026-08-14 cut (three slots, free picks per pool, formerly titled
-"The Boarder gets a verb") is superseded: identity moves from emergent reads of picks
-to named protocols, per the brainstorm's overturn of this file's own "Sold
-archetypes" Do-not-build row — the doctrine layer has no carrier in free-pick
-grammar. AEGIS was cut from the slice by direction (it must not block the system; its
-Steadfast clause waits on a damage-interrupts-repair pre-req). The **turret half
-(`UTL-H`) moves out whole** to the FORGE slice: its criteria spent a "Primary
-reserve" that `PlayerGun` does not have (`clipRemaining` / `MagazineCapacity` only),
-so it waits on the ammo-reserve decision at its own milestone. Ping, Cloak, Recall
-and Warden move to their protocols' slices (VEIL, LEDGER, AEGIS).
+**Recut 2026-08-16 (Zo):** the 2026-08-15 sheet (Anchor / Bulkhead / Ghost /
+Foresight, auto-owned from the first session, HUD as a Vitals TMP) is superseded.
+Play could not find `G`/`H`; Bastion no longer binds `_protocolLine`; auto-equip
+meant CREW had nothing to buy. The first protocol has to be a purchase you walk
+to, and a fire-rate verb you can see without a document. Anchor, Bulkhead, Ghost
+and Foresight return to their donor sheets in `../../Brainstorms/boarder-protocols.md`.
+
+**Already in tree — do not rebuild:** `BoarderProtocol` catalog + `BoarderAbilityState`;
+SaveVersion **8** and the four-track refund; `UpgradeTrack.HatchArmor` only;
+`Controls` `G`/`H`; `PlayerProtocolAbilities` tick + `Rooted`; decoy `TryPlace`
+writes STOCK; spawn RPC + `ProtocolId`/`PassiveId` NetworkVariables;
+`NetPlayerAvatar` partials (Protocol / Presentation); CREW heading PROTOCOL;
+`Hud Vitals` host **400 × 150** (do not grow it); Fight shortcut already lists
+`G`/`H` from `Controls` (`crew` / `self` labels).
 
 ## Story
 
-As a Boarder, I embark wearing the Default Protocol — I can plant an Anchor to slow
-the room for my crew, arm a Bulkhead to eat one hit I chose in advance, and pick the
-rule that says how Gatekeepers read me — so that `G` and `H` are verbs my teammates
-can name, and CREW QUARTERS equips identity a Run can feel rather than percentages it
-cannot.
+As a Boarder, I buy the Default Protocol at CREW QUARTERS and then press `G` and
+`H` in a fight to dump fire and to rush fire — so that CREW is a shop, the first
+sheet is an assault identity I can hear, and the keys that drive it are on screen
+with a cooldown.
 
 ## Why it matters
 
-The tracks had no job a weapon cannot do: a level's `+4.5%` sits under the measured
-`~20%` run-to-run spread (`../../Design/4-Data.md`, quoting B1 in
-`../../Design/2-Dynamics.md`) — no attribute purchase was ever perceptible.
-Abilities change *what* the Boarder can do rather than *how much*, the only kind of
-purchase that clears that floor.
+The attribute tracks sat under the measured ~20% run-to-run spread
+(`../../Design/4-Data.md`, quoting B1 in `../../Design/2-Dynamics.md`). A
+windowed fire-rate mul is a verb: 2× for eight seconds is not a +4.5% that play
+cannot see. Always-on fire-rate as a Passive would fail that floor; this slice
+has no Passive pick.
 
-Every row is a trade, not a grant (Zo, 2026-08-14): Anchor buys area control with
-your mobility, Bulkhead buys one negated hit with timing paid in advance. No row
-grants damage — the reload/clip/damage/fire-rate currencies belong to the M21 wheel.
-A Passive is a rule, never a number; identity lives in the always-on layer.
+M11 shipped weapon slots nobody could find; the contract
+(`../../_meta/_definitions/milestone.md`, *Usable, or it did not ship*) exists
+because of that. The 2026-08-15 HUD criterion was a change-gated string on Hud
+Vitals. The scene no longer binds `_protocolLine`. The Fight shortcut strip
+already lists the keys. That strip is the Shown / Reads-back surface. Weapon `F`
+already reads back as READY/countdown text in the weapon drawer
+(`HudController.Weapon`); `G`/`H` copy that text onto the shortcut rows and add
+a fill on those two keycaps.
 
-The Default ships first because the frame has no player-visible existence without one
-sheet, and the Default's rows are the plainest verbs on the cheapest seams — no
-Medium mechanic in the unit (brainstorm mechanics bill: items 6 and 10 only; Anchor
-needs one speed-recompute funnel beside `Provoke()`'s existing `_agent.speed`
-writes, Bulkhead the one Small hook, Ghost is a parameter change).
-
-Leverage tier (`../../Working-Rules.md`): **#5, rules** — what CREW QUARTERS sells
-and what a Boarder can do changes. Windows, cooldowns and radii below are **#12
-starting values** tuned only after logged Runs.
+Leverage (`../../Working-Rules.md`): **#5, rules**. Fire-rate muls and windows
+below are **#12 starting values**. The wheel still owns baseline fire rate
+(M21). This slice adds a **windowed multiplier** on `PlayerGun.EffectiveFireRate`.
+Dated in `../../Decisions.md`.
 
 ## Kill criteria
 
-This is a bet. Evaluate at **10** logged Runs after close, or by **2026-09-30**,
-whichever comes first. Loop, not arc: roster × hardware × twists × waves is the
-ongoing cycle; this slice is that loop's first cycle with no rival protocol.
+Bet. Evaluate at **10** logged Runs after close, or by **2026-09-30**, whichever
+comes first. Loop: one assault sheet × hardware × waves.
 
-1. **Reflex, not decision** — every activation on either active slot fires within
-   **2 s** of the cooldown ending (the activation line carries seconds-sat-ready).
-   Stop and recut. Mash-on-cooldown fires this; that is the observation.
-2. **The split collapsed** — one active slot carries fewer than a fifth of the
-   other's activations (both counts are in the log, per slot). The slots answered the
-   same moment; fold back to one. This tests abandonment, not the Crew-beneficiary
-   rule (a Crew press that helped only the presser is a co-op observation, named for
-   M65 / VEIL, not this sample).
-3. **Dead first session** — a fresh save's first embark logs both abilities unused.
-   The Default sheet is too thin; widen it (brainstorm kill criterion 7). Session
-   notes do not close this.
-4. **Bulkhead is a guess** — more than half of Bulkhead windows in the sample expire
-   un-triggered (the expiry line exists for this). The window is unreadable; recut
-   the window length or the arming rule, once. There is no graze path today
-   (`EnemyGatekeeper.Attack` → `PlayerHealth.TakeDamage(playerDamage)`); the
-   negation line logs the amount so a later smaller-hit source has data.
-5. **Ghost wiring / Foresight unused** — Ghost dies this slice only if
-   Ghost-equipped Runs show acquisition at the unbiased `noticeRange` / `aggroRadius`
-   (bias not applied). Perceptibility waits on VEIL's Sightline; do not apply the
-   kill-rate ~20% floor to time-to-first-acquisition (`../../Brainstorms/crew-skills-and-perks.md`).
-   Foresight dies if Foresight-equipped Runs contain zero preview lines.
+1. **Reflex, not decision** — every `G`/`H` activation fires within **2 s** of
+   cooldown ending (activation line carries seconds-sat-ready). Mash-on-cooldown
+   fires this.
+2. **The split collapsed** — one slot has fewer than a fifth of the other's
+   activations. Fold to one key.
+3. **Dead first session** — a fresh save's first embark after the CREW claim logs
+   both abilities unused. The sheet is invisible; the HUD recut failed.
+4. **Rush is unused motion** — more than half of Rush windows contain no shot
+   between the activate line and the expiry line (weapon fire is already logged;
+   no new counter). Recut the window or the mul, once.
+5. **Coming Soon reads as live** — a Coming Soon row changes `EquippedProtocol`
+   or spends salvage. The stub leaked into the catalog.
 
 ## The Default sheet
 
-Windows, cooldowns and radii are #12 starting values. They sit far above the
-weapon-ability band (`WeaponAbility.Cooldown` 6–12 s) so `F`, `G` and `H` read as
-different classes of thing. The sheet ships naked: twist slots and their pairs are
-later slices per the brainstorm's paced-unlock grammar.
+No Passive pick. Twist slots stay later. Windows / cooldowns / muls are #12.
 
 | Slot | Row | Rule | Trade | Window / Cooldown |
 |---|---|---|---|---|
-| Doctrine | **STOCK** | Hardware exactly as sold; deployed decoys carry the mode field, and STOCK writes 0 | The reference other doctrines recolor | always on |
-| Crew `G` | **Anchor** | Plant in place; Gatekeepers within 8 m move at 0.5×; unplant to move | Your mobility for area control | up to 8 s / 30 s |
-| Personal `H` | **Bulkhead** | Window: the first Gatekeeper swing that lands on you is negated (`TakeDamage` from `Attack`); the window ends on that negation | One hit erased, bought in advance with timing | 6 s / 40 s |
-| Passive (pick 1) | **Ghost** | Gatekeepers acquire you at **0.70×** `noticeRange` and `aggroRadius` — a bias on the existing tests | Never invisibility; a bias, not a veto | — |
-| Passive (pick 1) | **Foresight** | Field terminals name the next Wave's `hunterCount` / `ramCount` / `defaultCount` from `WaveDirector.NextWave(idx, siphonLevel: 0)` — never the juiced `enemyCount` | Information, not power | — |
+| Doctrine | **STOCK** | Hardware as sold; decoy `TryPlace` writes 0 | Reference other doctrines recolor | always on |
+| Crew `G` | **Barrage** | You `Rooted` (WASD locked, look/fire stay). Caster `EffectiveFireRate` × **2.0**. Other Boarders inside 8 m × **2.0**, not rooted, checked every tick (leave the radius and the mul drops). `G` again or window end unplants; cooldown starts then | Your mobility for a dump the crew can hear | 8 s / 30 s |
+| Personal `H` | **Rush** | You move. Caster × **1.5**. No plant. No `ArmBulkhead` | Timing, not a spoke | 6 s / 40 s |
 
-Kind refusals stand everywhere: a Ram never retargets, a Hunter never touches the
-Hatch, and no row above overrides either. Ghost's counter-case is in Watch: it does
-not delay a Hunter's hunt-from-breach.
+`BoarderAbilityId`: keep `Anchor=1`, `Bulkhead=2`, `Ghost=3`, `Foresight=4`
+(never renumber). Append `Barrage=5`, `Rush=6`. Default binds Barrage / Rush /
+passive `None`. `IsLegalPair(Default, None)` is the only legal Default pair.
+
+Kind refusals unchanged: Ram never retargets, Hunter never Hatch. Barrage does
+not slow Gatekeepers.
+
+## Locks
+
+Implementer does not choose these.
+
+| Topic | Lock |
+|---|---|
+| Claim API | `ShipCommands.BuyProtocol(BoarderProtocolId)` mutates local `GameSession.Meta` and `Save()`, Mk1 shape. Cost **0**. Refuse `None`, already-owned, `PayloadLoadoutLocked`. Sim has no shop. |
+| Bind `None` | Stays `None`. Do not coerce to Default or Ghost. |
+| Barrage field | **Create** `BarrageField` (same plant-list shape as `AnchorField`). Do not plant `AnchorField`. `EnemyGatekeeper` slow stays 1 unless a later sheet plants Anchor. |
+| Stacking | Barrage × Rush **multiply** (caster in both = **3.0**). Two Barrage plants on one ally **SET max 2.0**, never 2×2. One multiply in `EffectiveFireRate`, never also in `TryFire` / `Fire()`. |
+| Who gets the mul | Cutter **yes** (same getter). Drone slot **no** (place, not a shot clock). |
+| Rooted | Owner-local on Plant/Unplant. No NetworkVariable. Death: Unplant + `EndWindowEarly` on both slots (one close line each, cooldown starts). |
+| Ally radius | Continuous: each owner's gun samples live plants every tick. |
+| Net RPCs | Keep `RequestAnchor` / `RequestBulkhead` names. Server: Barrage plant / Rush window. ClientRpc the plant so each owner sees 8 m. Magnitudes clamped to catalog. Cooldowns stay client-side. |
+| F vs G/H | No exclusion. Weapon ability and protocol may fire the same frame. |
+| Guest CREW | Local meta, same as `BuyWeapon`. Party EMBARK does not require every seat equipped. |
+| Logs (`Tag` `Protocol`) | Activate: `crew Barrage sat-ready=` / `self Rush sat-ready=` plus the number. Early `G`: `crew Barrage unplant sat-ready=` only. Natural end: `crew Barrage window ended` or `self Rush window ended` only — never both for one close. Cooldown: `crew refused — {n}s left` / `self refused — {n}s left`. Open Rush: `self refused — window open`. Unequipped: `crew refused — no protocol` / `self refused — no protocol`. |
+| CREW copy | Default name `Default Protocol`; effect `STOCK — hardware as sold  G Barrage  H Rush`; unowned action `BUY` enabled; owned level `EQUIPPED`, action disabled. Stubs named `VEIL`, `AEGIS`, `LEDGER`; action label `Coming Soon`; action disabled; cost empty. |
+| NAV | `ShowWarnings(noWeapon, noRig, noProtocol)`. PromptHint includes `no protocol` the same way as no-weapon / no-rig. EMBARK ANYWAY if any of the three. Author `_noProtocolWarning` on `NavMapPanelView` in `Ship.unity` (same recipe as no-weapon). |
+| HUD | After `FillRows`, rewrite rows whose Key equals `Controls.DisplayOf(CrewAbility)` / `PersonalAbility`: description is `Barrage READY` / `Rush 3.2` (one decimal) / `Barrage` while windowed with remaining seconds. Do not change `Controls` labels. Fight and Pause strips both rewrite. |
+| Keycap fill | Author a child Image named `CooldownFill` on the Fight **and** Pause shortcut row templates in `Bastion.unity` (`m_Type` Filled, Radial360, `fillAmount` 1). `ShortcutRowBinding` OptionalBinding; resolve by child name if unset. fill: READY = 1; window = remaining/window; cooldown = 1 − remaining/cooldown. Log once if missing; text still writes. |
+| Hear | Gun cadence is the audio. No new clip, no activate SFX. |
+| World | Barrage plant: 0.2 m unlit disc at the caster's feet (Unlit/Color, destroyed on unplant). No radius ring, no screen FX, no ally buff VFX. |
+| Docgen | Change `Tools/docgen/Program.cs` CREW line: Default claim, Barrage/Rush, no Passive, not "from the first session". Regen Field Manual in this change. |
 
 ## Acceptance criteria
 
-1. **CREW QUARTERS shows the protocol.** One PROTOCOLS panel: the Default Protocol
-   named, its doctrine text ("STOCK — hardware as sold"), both abilities with key
-   labels, and the passive pick (two rows, one EQUIPPED); no attribute row remains.
-   Purpose line stays "you" (M59 criterion 7). The authored heading in `Ship.unity`
-   reads PROTOCOL (SceneBuilder does not own it).
-2. **The Default is owned and equipped from the first session.** Fresh saves and
-   migrated saves alike embark with it — no purchase, no deed, no empty slot state.
-   Passive re-pick is free and Ship-only under `PayloadLoadoutLocked` (M42 idiom, not
-   renamed — M57's shipped text uses that name); a mid-Run re-pick is a logged
-   refusal. Ghost is the granted first Passive; the pick is not forced.
-3. **Anchor plants.** `G` locks WASD (`FirstPersonController.Rooted`); look and fire
-   stay. Gatekeepers inside 8 m move at 0.5× agent speed while inside; `G` again (or
-   window end) unplants; cooldown starts at unplant. `G` during cooldown is criterion
-   6, not a second plant.
-4. **Bulkhead negates one hit.** `H` arms the window; the first `PlayerHealth.TakeDamage`
-   from `EnemyGatekeeper.Attack` on the caster zeroes the amount and clears the flag,
-   one logged line naming the Gatekeeper and the negated amount; a window that expires
-   un-triggered logs its expiry. Arming during cooldown, or while the window is already
-   open, is a logged refusal (no refresh).
-5. **The passive leaves a trace.** The embark log names protocol and passive. Ghost's
-   0.70× applies server-side in `CanSeePlayer()` and the `Retarget()` aggro-radius
-   check only — never inside `PlayerRegistry.NearestAlive`. Foresight: `BastionTerminal.AppendStake`
-   lists the three siphon-0 kind counts when Foresight is equipped, and never the
-   juiced `enemyCount`. Intensity / juice / unbanked stay on the stake as today.
-6. **Cooldown reads back on both keys.** `G` or `H` during that slot's cooldown is
-   one logged refusal naming seconds left; each activation line carries the slot and
-   seconds-sat-ready (kill criteria 1 and 2 read these).
-7. **HUD.** `Hud Vitals` gains two ability lines — Crew and Personal, each name plus
-   READY / countdown / window state — and the passive's name beside them, extending
-   the locked host (`../../Decisions.md`), no `GUILayout`. Authored TMPs on
-   `BastionHudView` in `Bastion.unity` (they survive Build All). If the host grows,
-   the Decisions size cell updates in this change and the M59 ≥24 AABB check is
-   re-run at 1920×1080 and 1280×720 as this criterion's last step. The shortcut panel
-   shows `G crew` and `H self` from the `Controls` list with no panel edit.
-8. **Doctrine mode is written at decoy place.** `DecoyState.TryPlace` takes the
-   placing player's `DoctrineMode` and stores it; STOCK is 0. An EditMode test asserts
-   the field equals the placer's equipped doctrine **and** that pull radius, max-live,
-   HP and decoy pull match today's baseline. Repair is hold-E (`RepairInteractable`),
-   not a place path, and is out of this slice. The field is a write for VEIL to read;
-   STOCK-equals-baseline does not prove a later clause.
-9. **Net.** Each verb applies once, server-side (M48 invariant): a client Anchor
-   slows host bodies; Bulkhead's negation runs in the host's damage path; Ghost's
-   bias lives in server-side targeting state set from the equipped ids at spawn;
-   Foresight's preview is served from the host's `WaveDirector`. Requester gates on
-   equipped-in-slot (M51 rig-gate idiom); cooldowns run client-side, same as M51 —
-   the server does not track protocol cooldown. `NetProtocolTests` proves single
-   application. Spawn RPC carries protocol and passive ids; server accepts any
-   catalog-legal Default pair (Ghost or Foresight). Deed-gated protocols need a
-   server unlock copy — that is VEIL.
-10. **The tracks are gone.** `UpgradeTrack` holds only `HatchArmor`; `MetaUpgrades.PlayerMaxHp()`,
-    `StaminaMax()`, `SalvagePerKill()` become parameterless and return **100**, **100**,
-    **25**; `CritChance()` returns 0; the 2× roll in `PlayerGun.Firing` stays — Luck-shaped
-    crit may return, and no Boarder ability may ever be a crit source. `RunSim.BaseKillValue`
-    and `GameController.ApplyMetaEffects` call the parameterless methods. Docgen drops
-    the rows from `4-Data.md` with no generator edit (M33).
-11. **Old saves refund.** Loading v7 or older refunds exactly `200 × (2^level − 1)`
-    per track into banked (max case: 4 maxed tracks = **24,800**), matching
-    `MetaState.SpentOnTrack`; `SalvageLedgerBalances` stays true, `SaveVersion` is
-    **8**, the refund is one logged line. Level fields leave `MetaState`; `SaveData`
-    keeps them parse-only beside `RepairRigLevel`.
-12. **Solo unchanged otherwise.** Both suites green plus the new tests; language lint
-    passes; no `[Dev]` in any close log. **No new counter, no accumulator, no stats
-    object** (`../../Decisions.md`) — the protocol and passive equip fields are
-    state, not counters, and the deed counters are explicitly not this slice (their
-    exception is named at the VEIL slice that ships them). **No new menu row without
-    asking** (`../../Architecture/README.md`).
+1. **CREW is a shop.** Panel matches the CREW copy lock. No Ghost, Foresight, or
+   attribute row. Purpose stays "you". Authored heading PROTOCOL. Serialized
+   field names stay (`_vitalityRow` Default; stamina / scavenging / luck the
+   three stubs; luck shown).
+2. **Default is a claim.** Fresh `CreateNew`: `EquippedProtocol` `None`,
+   `EquippedPassive` `None`. `BuyProtocol(Default)` owns and equips. Mid-Run
+   buy is a logged refusal (`PayloadLoadoutLocked`, not renamed). v&lt;8 refunds
+   `200 × (2^level − 1)` per track then `None`/`None`. v8 Default stays Default;
+   Default+Ghost/Foresight coerces to Default+None. Illegal pairs → None/None.
+3. **Barrage dumps.** `G` with Default: `Rooted`; caster ×2.0; other Boarders
+   inside 8 m ×2.0 each tick; leave radius and the ally mul is 1; `G` or window
+   end unplants and starts cooldown. Disc at feet while planted. Stacking lock
+   holds. `G` during cooldown is criterion 6.
+4. **Rush is mobile fire.** `H` arms ×1.5 on the caster; WASD stay; no
+   Bulkhead absorb. Arming during cooldown or while the window is open is a
+   logged refusal (no refresh).
+5. **Unequipped is a warning, not a wall.** NAV lock. `G`/`H` with `None` log
+   `refused — no protocol`. Improvised cutter path unchanged. Cutter takes the
+   protocol mul; drone slot does not.
+6. **Cooldown reads back.** Log strings match the log lock (seconds left,
+   sat-ready, one close line).
+7. **Fight HUD names the keys and the cooldown.** Fight and Pause shortcut `G`/`H`
+   rows match the HUD lock (name + READY/countdown + `CooldownFill`). Hud Vitals
+   stays **400 × 150**. Do not re-author a Vitals protocol TMP. If the shortcut
+   **host** grew, M59 ≥24 AABB at 1920×1080 and 1280×720 is this criterion's
+   last step. Do not grow Hud Vitals. EditMode pins the Filled `CooldownFill`
+   child on both templates.
+8. **STOCK still writes at decoy place.** Existing EditMode pin stays. Repair
+   is not a place.
+9. **Net.** Barrage caster mul and 8 m ally mul apply per the stacking lock,
+   from `RequestAnchor` + plant ClientRpc. Rush from `RequestBulkhead` as the
+   personal window. Spawn RPC still carries ids; server accepts only
+   Default+None. `NetProtocolTests`: SET once per source, product 3.0 when both
+   open on the caster, overlapping Barrages stay 2.0. Coming Soon names are not
+   ids and are not networked. Rooted is not replicated.
+10. **Frame still holds.** Tracks gone, parameterless HP/stamina/salvage/crit,
+    refund arithmetic, SaveVersion 8, language lint, docgen `--check` 0 after
+    regen, no `[Dev]` close log, no new counter, no new menu row.
+    `Tools/verify/run.sh --filter BoarderProtocol` plus recut PlayMode tests
+    green. Unrelated reds (Ship Level Music, HUD gap 22 at 1280×720 with host
+    150, M59 polish) are not this gate.
 
 ## Implementation
 
-Order: sim types and migration, then the solo verbs, then net, then station and HUD,
-then docs.
+Do not recreate the frame. Delta only. Every "or" is already locked above.
 
-1. **Create** `Assets/Scripts/Sim/Meta/BoarderProtocol.cs` — `BoarderProtocolId`
-   (`None=0, Default=1`; save-adjacent, never renumber), `DoctrineMode`
-   (`Stock=0`; later protocols append), `BoarderAbilityId`
-   (`None=0, Anchor=1, Bulkhead=2, Ghost=3, Foresight=4`), a catalog binding the
-   protocol to its doctrine, ability and passive ids **and holding every number as a
-   function of ability id** — `Window(id)`, `Cooldown(id)`, `Magnitude(id)`, the
-   `WeaponAbility` idiom (`Magnitude(Ghost)` is **0.70**; `Magnitude(Anchor)` is the
-   0.5× slow). The verbs and step 9's server clamps read only these, so a later twist
-   inherits them untouched. `BoarderAbilityState` for the two active slots
-   (`WindowRemaining`, `CooldownRemaining`, `Tick(dt)`, `TryActivate()`,
-   `EndWindowEarly()`) — pure, dumb on purpose (trigger policy stays with the
-   caller; later twists change who calls, not the struct), mirroring `WeaponAbility`
-   + `PinBuildState`, harness-testable. Passives carry no state struct.
-2. **Change** `Sim/Meta/MetaState.cs` — `EquippedProtocol` (defaulting to `Default`)
-   and `EquippedPassive` (defaulting to Ghost; re-pick Ship-only). Gate the passive
-   pick on existing `PayloadLoadoutLocked` (one lock, one mechanism — M42). Do not
-   rename the flag. Delete `VitalityLevel`/`StaminaLevel`/`ScavengingLevel`/
-   `LuckLevel`; drop their lines from `ReconstructSpentFromLevels`; in `FromSaveData`,
-   v<8 refunds `Σ 200×(2^level −1)` — `BankedSalvage +=`, `LifetimeSalvageSpent −=`,
-   so the ledger identity holds unchanged.
-3. **Change** `Sim/Meta/SaveData.cs` — `CurrentVersion` 8; protocol + passive fields;
-   the four level fields move to the legacy parse-only region beside
-   `RepairRigLevel`.
-4. **Change** `Sim/Meta/UpgradeTrack.cs` / `MetaUpgrades.cs` — enum keeps
-   `HatchArmor` only; the four formulas become the parameterless methods in
-   criterion 10; `CritChance()` returns 0 and `PlayerGun.CritChance` returns 0 (the
-   2× roll in `PlayerGun.Firing` stays). `UpgradeTracks.All` drops the four. Call
-   sites that passed a level (`RunSim.BaseKillValue`, `GameController.ApplyMetaEffects`)
-   switch to the no-arg form.
-5. **Change** `Game/Input/Controls.cs` **and** `Game/Input/PlayerInputFrame.cs` —
-   `ControlId.CrewAbility`, `KeyCode.G`, display `G`, label `crew`;
-   `ControlId.PersonalAbility`, `KeyCode.H`, display `H`, label `self`; both section
-   FIGHT, `FightAlways`. Add `crewAbilityDown` / `personalAbilityDown` bits; wire
-   `Sample`, `Down` (and `Held` only if a later twist channels). `F` is the gun's
-   ability, `G` is the crew's, `H` is yours. Shortcut panel rows follow
-   `Controls.CollectPanelRows` with no panel edit.
-6. **Create** `Game/Player/PlayerProtocolAbilities.cs` — LOCAL-OWNER, the
-   `PlayerAbility` pattern: reads the equipped ids pushed at `ApplyMetaEffects`
-   (push-at-spawn, `../../Architecture.md` gotcha 1 — never serialize them), polls
-   both control ids, `SetHosted` tick, exposes name/window/cooldown per slot and the
-   passive name for the HUD, logs `Log.Event("Protocol", ...)` with slot and
-   seconds-sat-ready on every activation and refusal. Sets `FirstPersonController.Rooted`
-   while Anchor is planted (move locked, look and fire stay — `MovementLocked` is the
-   pause/death freeze and must not be stomped).
-7. **Create** the verbs, game-side:
-   - Anchor: `Game/Bastion/AnchorField.cs` — host-only planted marker at the Boarder's
-     position, static live list, 8 m radius from the catalog. `EnemyGatekeeper` gains
-     `RecomputeSpeed()`: `_agent.speed = (provoked ? chaseSpeed : patrol) * slowMul`,
-     where `slowMul` is 0.5 when inside any live field, else 1. `Configure`, `Provoke`,
-     and ring enter/leave all call it (Suppressor and Ward Stone later land in the
-     same funnel). Never write `_agent.speed` elsewhere. FPC `Rooted` while planted.
-   - Bulkhead: an armed-window flag consumed at the top of `PlayerHealth.TakeDamage`
-     when `source` is a Gatekeeper — zero the amount, clear the flag, log. Invulnerable
-     and dead still return before the flag.
-   - Ghost: multiply `noticeRange` and `aggroRadius` by `Magnitude(Ghost)` **at the
-     test**, against the `_player` currently selected — never write the serialized
-     fields (gotcha 1). `Retarget` still assigns `_player = PlayerRegistry.NearestAlive`
-     first; Ghost does not change who. In 2p, a nearer Ghost Boarder can occupy
-     `_player` and fail acquire while a farther one is never checked — accepted this
-     slice; "who" is the windowed-override family's seam.
-   - Foresight: `BastionTerminal.AppendStake` asks `WaveDirector.NextWave(idx, 0)` and
-     appends `hunterCount`/`ramCount`/`defaultCount` when the local (host-served)
-     equipped passive is Foresight. `idx` is `sim.CurrentWaveIndex` (the wave that
-     would start if you pulled now). No new panel.
-8. **Change** `Sim/Run/DecoyState.cs` — `DoctrineMode Mode` set by
-   `TryPlace(float x, y, z, DoctrineMode mode, out reason)`; `DecoyObject.Configure`
-   mirrors it for display. Callers (`NetVerbs.PlaceDecoyServerRpc` and the solo place
-   path) pass the placing player's equipped protocol's mode. STOCK is the only value
-   this slice; the EditMode test pins field-is-written and baseline pull/hp/max-live.
-   Do not thread a mode through `RepairInteractable`.
-9. **Change** `Game/Net/NetVerbs.cs` —
-   `RequestAnchorServerRpc(Vector3 position, bool planting)`,
-   `RequestBulkheadServerRpc()`; server applies exactly as the solo path; magnitudes
-   clamped to catalog values like the pin/concussive RPCs. Passives need no per-use
-   RPC. **Change** `Game/Net/NetPlayerAvatar.cs` — no shipped mechanism carries a
-   client's equip state (`Hp` and `WaitingOnShip` only). Add one spawn RPC carrying
-   the equipped **protocol and passive ids**; the server stores them on the avatar
-   (two `NetworkVariable<int>`, server-write, like `Hp`) and derives Ghost's bias and
-   doctrine-at-deploy from the catalog. Ids, never derived flags: every later
-   protocol, doctrine deploy and elite read rides this one push.
-10. **Change** `Game/Ship/CrewQuartersStation.cs` + `Game/Ui/CrewQuartersPanelView.cs`
-    — the PROTOCOLS panel of criterion 1 replaces the attribute rows, and it
-    **enumerates catalog rows** (the ARMORY `WeaponCatalog.ShopWeapons()` precedent)
-    — one row today, never a hardcoded Default, so VEIL is a catalog row and a deed
-    line, not a panel edit; `ContentHash` from protocol + passive; `PromptHint` "your
-    protocol"; the authored ATTRIBUTES heading in `Ship.unity` becomes PROTOCOL.
-    `SprintSeconds` dies with the rows.
-11. **Change** `Game/Ship/ShipCommands.cs` — `PickPassive(id)` on the payload idiom
-    (refusals logged, `track=crew` token); the four cases leave `BuyUpgrade`
-    (`HatchArmor` stays).
-12. **Change** `Game/Bastion/HudController.Fight.cs` / `Game/Ui/BastionHudView.cs` —
-    two ability lines plus the passive name under the `Hud Vitals` rows, the
-    weapon-detail string idiom from `HudController.Weapon.cs`. Author the TMPs in
-    `Bastion.unity`; do not have SceneBuilder emit them.
-13. **Create** tests — EditMode `Assets/Tests/EditMode/Meta/BoarderProtocolTests.cs`
-    (catalog pins including Ghost 0.70, state machine, passive pick + lock, refund
-    arithmetic, ledger balance, removed-track APIs gone — the M23 `RemovedTracksAreGone`
-    shape in `EquipmentTests`; STOCK field-written + baseline decoy); PlayMode
-    `Assets/Tests/PlayMode/NetProtocolTests.cs` (M48 `NetcodeIntegrationTest` fixture
-    as `NetKillTests` / `NetVerbTests`; criterion 9).
-14. **Change** docs — `language.md`: **Boarder Protocol**, **doctrine**, **Crew
-    ability** (drop *designed, not built*; retarget off `crew-skills-and-perks.md` onto
-    this file), **Personal ability**, **Passive**, **twist** (reserved, ships later),
-    working-name rows (DEFAULT, STOCK, Anchor, Bulkhead, Ghost, Foresight) marked
-    renameable; four track rows leave the tracks table; stations table CREW line.
-    `../../Decisions.md`: Locked ship-terminals CREW line narrows to FABRICATION,
-    dated; HUD Vitals contents/size cell if the host grew; the "Sold archetypes"
-    overturn is recorded there, dated, citing the brainstorm (no such row exists in
-    Decisions today — this is the first write). `../../Brainstorms/fabrication.md`
-    gains the doctrine note (decoy place writes a mode field; repair is not a place).
-    `Play/The-Ship.md` CREW section recut in the Play voice. `1-Experience.md` CREW
-    row: protocols, not four tracks. `3-Mechanics.md` §3.2 (5-skill) gains a dated
-    line that protocols occupy CREW and 5-skill stays parked in
-    `crew-skills-and-perks.md`. `4-Data.md` regenerates via `Tools/docgen/run.sh`.
-    Roadmap row and Changelog per lifecycle.
+1. **Change** `Sim/Meta/BoarderProtocol.cs` — append Barrage=5, Rush=6. Default:
+   Crew Barrage, Personal Rush, `PassiveCount` 0, `IsLegalPair` only
+   `(Default, None)`. Catalog numbers from the sheet. `ApplySaveEquip` per
+   criterion 2. `ShopProtocols()` stays `{ Default }`.
+2. **Change** `Sim/Meta/MetaState.cs` + `SaveData.cs` — new saves `None`/`None`
+   (ints 0). Drop Ghost default.
+3. **Change** `Game/Ship/ShipCommands.cs` — `BuyProtocol` per the claim lock.
+   `PickPassive` stays a logged refusal (no panel caller).
+4. **Change** `Game/Ship/CrewQuartersStation.cs` + `CrewQuartersPanelView.cs` —
+   CREW copy lock; show `_luckRow`.
+5. **Change** `Game/Ship/MapStation.cs` + `Game/Ui/NavMapPanelView.cs` +
+   `Assets/Scenes/Ship.unity` — NAV lock (`ShowWarnings` third flag + authored
+   warning).
+6. **Create** `Game/Bastion/BarrageField.cs` — static live list, Plant/Uproot/
+   `FireMulAt(Vector3)` returns 2.0 inside any live 8 m plant else 1. Disc
+   child per the world lock. **Change** `PlayerProtocolAbilities` — Barrage
+   plants this, sets `Rooted`, caster mul 2.0; Rush caster mul 1.5, never
+   `ArmBulkhead`. Unequipped refusals. Death cleanup. Logs per lock.
+   **Change** `PlayerGun.Slots.cs` `EffectiveFireRate` — `wheelOrCutter *
+   protocolMul * barrageMul` (protocolMul from local Rush/Barrage caster,
+   barrageMul from `BarrageField.FireMulAt` on this rig). Default 1.
+   **Change** `Game/Bastion/GameController.Client.cs` — Bind with `None` is
+   legal. **Do not** call `PlayerHealth.ArmBulkhead` on Default Personal.
+7. **Change** `Game/Net/NetVerbs.cs` + `NetPlayerAvatar.Protocol.cs` — RPC
+   apply + Default+None accept; plant ClientRpc. Clamp to catalog.
+8. **Change** `HudController.Fight.cs` / `HudController.Panels.cs` /
+   `ShortcutPanelView.cs` / `Bastion.unity` — HUD + fill locks. Fight and
+   Pause templates. Stop gating on `_protocolLine`; leave `SetProtocolLine`
+   harmless. **Do not grow Hud Vitals.** Do not grow the shortcut host.
+9. **Change** tests — `BoarderProtocolTests`: claim, None default, Coming Soon
+   not in `ShopProtocols`, Barrage/Rush pins, `IsLegalPair(Default, Ghost)`
+   false, v&lt;8 refund + None, v8 Default+Ghost → Default+None, stacking
+   arithmetic 2 / 1.5 / 3. `NetProtocolTests`: SET once per source, product
+   3.0, overlapping Barrage 2.0, Default acquisition mul 1.0. EditMode: CREW
+   Coming Soon labels; both shortcut templates have Filled `CooldownFill`.
+10. **Change** `Tools/docgen/Program.cs` — CREW emitter per the docgen lock;
+    `Tools/docgen/run.sh` then `--check`. Docs already recut
+    (`language.md`, `Decisions.md`, brainstorm DEFAULT, `Play/The-Ship.md`,
+    `Upgrades.md`, `Salvage.md`, `1-Experience.md`); regen Field Manual here.
 
-Rejected, by name: **free-pick pools** — the 2026-08-14 grammar; a stealth player
-choosing between rival rows was a false choice, and the doctrine layer has no carrier
-without a named, equipped protocol (`../../Brainstorms/boarder-protocols.md`, "Recut
-2026-08-15"). **AEGIS in this slice** — deferred by direction (Zo, 2026-08-15); it
-must not block the system, and its Steadfast clause needs the damage-interrupts-repair
-pre-req first. **The turret in this slice** — moved to the FORGE slice whole; its
-criteria spend an ammo reserve that is a weapons-lane decision, not a protocol task.
-**Ping, Cloak, Recall, Warden in this slice** — they are VEIL, LEDGER and AEGIS
-material now; each ships with its protocol. **Twist slots in this slice** — the
-machinery ships with the first authored pairs (VEIL's slice). **Deed counters in this
-slice** — the unlock spine ships with its first customer, the second protocol; a gate
-with no prize is vapor. **Overclock, or any damage-granting row** — the wheel owns
-dps. **Numeric passives** — an attribute track wearing a new panel. **A Medic or heal
-row** — no heal path exists; the lane waits on the `player {hp}/{max}` instrument.
-**XP in any form** — the deed model deletes the XP field entirely; the 2026-08-12 cut
-stands stronger than before. **Grant instead of refund** — no ability succeeds an
-attribute, so the refund lets the player re-decide. **Renaming `PayloadLoadoutLocked`**
-— cosmetic; shipped M57 text uses the current name. **Doctrine on repair** — not a
-place path. **STOCK-equals-baseline as seam proof** — that test never inspects a
-reader; VEIL's Phantom / Ghost-hands is the first reader.
+Rejected, by name: **rebuilding the frame**. **Auto-own Default**. **Ghost /
+Foresight pick on Default**. **Always-on fire-rate Passive**. **Re-authoring
+Hud Vitals protocol TMP**. **Growing Hud Vitals**. **`BoarderProtocolId.Veil`**.
+**Renaming the existing RPCs**. **Renaming `PayloadLoadoutLocked`**. **A salvage
+price on Default**. **Enemy slow as the first Crew verb**. **Reuse `AnchorField`
+for Barrage**. **Activate SFX / radius ring / screen FX**. **Replicating
+Rooted**. **Adding `ControlId` to `ShortcutRow`** — match keycap `G`/`H`.
 
 ## Supporting work
 
-- **Driven by** `G` and `H` (two new `Controls` rows) and the CREW QUARTERS panel —
-  here.
-- **Shown by** the shortcut panel rows (automatic from `Controls`), the PROTOCOLS
-  panel, and the `Hud Vitals` ability lines — here.
-- **Reads back as** the HUD countdowns, one `Protocol` log line per activation and
-  refusal with slot and seconds-sat-ready, the Bulkhead negation and expiry lines,
-  the passive trace lines, and the embark line naming protocol + passive — here.
+- **Driven by** CREW BUY, then `G`/`H` — here.
+- **Shown by** the PROTOCOLS shop row + Coming Soon stubs, NAV no-protocol
+  warn, Fight/Pause shortcut `G`/`H` rows (name + READY/countdown + fill),
+  Barrage disc — here.
+- **Reads back as** faster shot clock, `Rooted` on Barrage, disc while
+  planted, shortcut fill, `Protocol` log lines — here. Audio is the gun's
+  existing cadence, not a new clip.
 
 ## Verification
 
-1. Criteria 10–11 — `Tools/verify/run.sh --filter BoarderProtocol` plus the migration
-   tests: seed a v7 save with known levels, assert banked rises by the exact refund
-   and `SalvageLedgerBalances`. Docgen check: `Tools/docgen/run.sh --check` exits 0
-   only after regeneration.
-2. Criterion 9 — `gkb_verify_request.txt`; `NetProtocolTests` Passed in
-   `gkb_verify_report.json`.
-3. Criterion 8 — the STOCK field-written + baseline EditMode test.
-4. Criterion 7 last step — M59 AABB ≥24 at 1920×1080 and 1280×720 if `Hud Vitals`
-   grew.
-5. Playthrough path — fresh save → Ship: PROTOCOLS panel shows the Default equipped
-   (Ghost), pick Foresight → embark → start a Wave → `G` plants Anchor (WASD dead,
-   look/fire live) and Gatekeepers inside 8 m drop to 0.5×; `H` arms Bulkhead and the
-   next `Attack` that lands is negated with its log line (amount included); both keys
-   during cooldown log refusals naming seconds left; `H` while the window is open
-   logs a refusal. Terminal stake shows hunter/ram/default at siphon 0, and the
-   juiced extra Defaults are absent from that list after juicing. Close log carries
-   one `Protocol` line per activation with slot and seconds-sat-ready, and no
-   `[Dev]`.
-6. Criterion 2's migration half — load a v7 save: refund line, Default equipped,
-   Ghost passive, embark works with no purchase.
+1. Criteria 2 and 10 — `Tools/verify/run.sh --filter BoarderProtocol`: fresh
+   save None; BUY then Default+None; v7 seed refunds exact salvage and lands
+   None; v8 Default+Ghost → Default+None; catalog Barrage 2.0 / Rush 1.5 /
+   product 3; Coming Soon names absent from `ShopProtocols`. Docgen `--check`
+   exits 0 after regen.
+2. Criterion 9 — `gkb_verify_request.txt`; recut `NetProtocolTests` Passed
+   (the 2026-08-16T14:01Z report asserted Anchor/Bulkhead/Ghost and does not
+   close this cut).
+3. Criterion 8 — existing STOCK EditMode pin still passes.
+4. Criterion 7 — EditMode: both templates have Filled `CooldownFill`.
+   Playthrough Game view: shortcut `G`/`H` show Barrage/Rush and READY; after
+   `G`, fill and countdown move. AABB only if the shortcut host grew. Hud
+   Vitals still 400 × 150 in `Bastion.unity`.
+5. Playthrough — new save → ARMORY free sidearm → CREW: Default BUY, three
+   Coming Soon not clickable → NAV EMBARK (no-protocol warn gone after BUY) →
+   Wave → `G` roots, disc at feet, gun dumps; `H` rushes without root; both
+   keys on cooldown refuse with seconds left; shortcut rows match. Close log:
+   one `Protocol` line per activation/close, no `[Dev]`.
+6. Unequipped path — new save, skip CREW, NAV EMBARK ANYWAY: warn shows
+   protocol; `G`/`H` log `refused — no protocol`.
 
 ## Do not build
 
 | Not building | Why not |
 |---|---|
-| A second protocol, or the deed spine | VEIL's slice; the spine ships with its first customer |
-| Twist slots or any twist pair | Later slices per the paced-unlock grammar |
-| The `UTL-H` turret | FORGE slice, behind the ammo-reserve decision |
-| Doctrine clauses that change behavior | STOCK writes 0; the first reader is VEIL |
-| Doctrine on the Repair Rig | Hold-E channel, not a place; fabrication note only |
-| Overclock, or any damage-granting row | The wheel owns dps; named kill condition |
-| A numeric passive | Under the ~20% floor by construction |
-| A heal or revive row | No heal path; M57 owns the down rule |
-| A crit source anywhere | Luck stays the only crit source, even at chance 0 |
-| Teammate displacement, permanent mobility | Cut and locked; Anchor roots only the caster |
-| `PayloadLoadoutLocked` rename | Shipped M57 vocabulary |
+| A second protocol sheet, or deed spine | Coming Soon is the placeholder; VEIL is the first customer |
+| Twist slots | Later, with the first authored pairs |
+| `UTL-H` turret | FORGE slice |
+| Doctrine clauses that change behavior | STOCK writes 0 |
+| Ghost / Foresight / Anchor / Bulkhead on Default | Donor sheets; ids stay reserved |
+| Always-on fire-rate Passive | ~20% floor |
+| A fire-rate wheel spoke | M21 already owns that spoke |
+| Activate SFX, radius ring, screen FX, ally VFX | Cadence + Rooted + disc + fill are the readout |
+| A heal, a crit source, XP | Cut list unchanged |
+| `BoarderProtocolId` for VEIL/AEGIS/LEDGER/FORGE | Copy, not saves |
+| Hud Vitals growth or a new Vitals TMP gate | Shortcut strip is the readout |
+| New menu row | Ask first |
 
 ## Watch
 
-- **This slice's whole bet is that plain is playable.** The Default has no doctrine
-  clause and no twists — kill criterion 3 (dead first session) is the instrument. If
-  the Default reads as an empty tutorial rather than a plain identity, the fix is
-  widening its sheet, not rushing VEIL.
-- **Ghost does not delay a Hunter.** `Retarget` sets `_chasingPlayer` for a Hunter
-  via `!hatchAvailable` (`EnemyGatekeeper.Targeting.cs`); the notice and aggro tests
-  never have to pass for that hunt to start. Ghost's bias is Default acquisition
-  (sight / aggro to *start* a hunt). A Hunter never gains a Hatch path from Ghost
-  (`MayTargetHatch` is false). A Ram never retargets (`CanBeProvoked` is false).
-- **STOCK field-written is the slice's regression net**, not a proof VEIL can read
-  it. Threading the field through `TryPlace` is exactly where behavior drifts
-  silently.
-- **Deed fairness.** Kills made before the VEIL slice ships do not count toward its
-  deed — the counter starts when the node exists. Albion-visible-from-day-one is a
-  VEIL panel question (show the locked node), not a reason to start a counter here.
-- Push the equipped ids at spawn; a serialized field on the rig prefab is gotcha 1
-  waiting to happen. Ghost's 0.70× is applied at the test, never written onto
-  `noticeRange` / `aggroRadius`.
-- No `GUILayout` in the Bastion HUD (gotcha 3) — the ability lines are bound TMPs on
-  the locked host.
-- `Rooted` must not stomp `MovementLocked` (pause, death, and `GameController`'s
-  fighting gate all write that flag).
-- M59 re-gates HUD card gaps at ≥24; two ability lines grow `Hud Vitals`, so that
-  check is criterion 7's last step, not a later slice's problem.
+- Barrage ally mul is owner-gun state. Host NPC speed is the wrong pipe.
+- `Rooted` must not stomp `MovementLocked`.
+- Prefabs freeze `[SerializeField]`; push muls at spawn.
+- No `GUILayout` in the Bastion HUD.
+- FORGE has no fifth CREW row; it is not a Coming Soon stub until a row exists.
+- Pause shortcut template is a second authored fill (`197274592` path) — both
+  or criterion 7 fails in pause.
+- `NavMapPanelView.ShowWarnings` today is two bools; a missing third warning
+  GO is a silent no-protocol path.
 
 ## Open questions
 
-- **Every number except Ghost's 0.70×** — Anchor's 8 m / 0.5× / 8 s / 30 s,
-  Bulkhead's 6 s / 40 s: #12 starting values; first tune only after the
-  kill-criteria Runs exist. *Unknown, needs play data.* Ghost 0.70× is the same
-  tier, named so the implementer does not invent it; first tune in the same pass.
+- Barrage 2.0 / Rush 1.5 / 8 s / 6 s / 30 s / 40 s / 8 m — #12, first tune
+  after the kill-criteria Runs. *Unknown, needs play data.*
 
 ## Depends on / Unblocks
 
-Depends on nothing unbuilt: M51's net verbs, M23's migration pattern and M42's
-loadout lock are shipped; the slice's own new seams are the speed-recompute funnel
-(step 7), `Rooted` (step 6), the player-damage hook (Bulkhead) and the equip-id push
-(step 9), each sized in Implementation. Unblocks the VEIL slice (the second protocol,
-the deed spine, the twist machinery), the FORGE slice (the turret and the
-ammo-reserve decision), and gives `M65`'s co-op sessions protocol identity to read.
-The brainstorm holds every specialist sheet and the roster path to 8–10.
+Depends on nothing unbuilt. Unblocks VEIL (first real second row, replacing
+one Coming Soon stub with a catalog id), and gives M65/M72 sessions an assault
+identity that reads on the shortcut strip.

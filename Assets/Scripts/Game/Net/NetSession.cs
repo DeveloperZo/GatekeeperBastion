@@ -201,6 +201,26 @@ namespace GatekeeperBastion.Game
         #endregion
 
         #region Public API
+        /// <summary>Instantiate the run mirror, Spawn unparented with destroyWithScene false.
+        /// StartHost uses this; PlayMode presence fixture must call the same path (never a
+        /// reimplemented Instantiate+Spawn).</summary>
+        public static NetworkObject SpawnUnparentedMirror(GameObject mirrorPrefab)
+        {
+            if (mirrorPrefab == null) return null;
+            var go = Object.Instantiate(mirrorPrefab);
+            // Spawn before any parenting. NetSession has no NetworkObject, so do not
+            // parent under it — NGO forbids NetworkObject under a non-NetworkObject parent.
+            // destroyWithScene false: survives NetworkSceneManager Single Ship/Bastion loads.
+            var netObj = go.GetComponent<NetworkObject>();
+            if (netObj == null)
+            {
+                Object.Destroy(go);
+                return null;
+            }
+            netObj.Spawn(destroyWithScene: false);
+            return netObj;
+        }
+
         /// <summary>Rebind Bastion GameController after a networked Bastion load.</summary>
         public void BindGame(GameController game)
         {

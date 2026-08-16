@@ -5,9 +5,11 @@ using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>HOST-ONLY: Bastion-scene bootstrap that owns the RunContext, ticks its RunSim
-    /// every frame, and exposes the command methods all sim mutation flows through. Consumers
-    /// hold it by serialized scene reference or receive it via Bind — never through a static.</summary>
+    /// <summary>HOST + CLIENT presentation: Bastion-scene bootstrap that owns the RunContext,
+    /// ticks its RunSim every frame on host, and exposes the command methods all sim mutation
+    /// flows through. Consumers hold it by serialized scene reference or receive it via Bind —
+    /// never through a static. Client StartRun+EngageTether for local phase/UI; Update skips
+    /// Sim.Tick so the host remains the only live sim.</summary>
     /// <remarks>
     /// Scene flow: the ship hub is now a real scene (SceneFlow.Ship), so entering the Bastion
     /// starts fighting immediately — Start() calls StartRun + EngageTether and Docked is a
@@ -100,6 +102,10 @@ namespace GatekeeperBastion.Game
         Interactor _interactor;
         DecoyPlacement _decoyPlacement;
 
+        // Party Bastion load can spawn the local avatar after Start — retry bind like ShipController.
+        const float MetaBindWindowSeconds = 5f;
+        float _metaBindWindow;
+
         // One GameController per scene, authored; there is no process-global instance left to protect.
         void Awake()
         {
@@ -122,11 +128,11 @@ namespace GatekeeperBastion.Game
         }
 
         /// <summary>Adopt the DDOL friends session when Bastion loads via NetworkSceneManager.
-        /// Scene-authored _net is disabled on Bastion — prefer live NetworkManager session.</summary>
+        /// Scene-authored _net is disabled on Bastion — prefer a live listening session only.</summary>
         void RebindNetSession()
         {
             var live = NetSession.FindLive();
-            if (live != null)
+            if (live != null && live.Active)
             {
                 _net = live;
                 live.BindGame(this);
@@ -147,7 +153,8 @@ namespace GatekeeperBastion.Game
             }
 
             // Bastion scene Net is disabled; friends sessions use DDOL Resources/Net/NetSession.
-            if (_net != null && _net.isActiveAndEnabled)
+            // Never bind a disabled / non-listening scene Net.
+            if (_net != null && _net.isActiveAndEnabled && _net.Active)
             {
                 _net.BindGame(this);
                 return;
@@ -161,21 +168,18 @@ namespace GatekeeperBastion.Game
 
             LevelMusic.CaptureOrJoin(null);
 
-            // Menu join starts the DDOL session before Ship; by Bastion load IsClientOnly
-            // is already true here. Do not StartRun — that would fork a second live sim.
-            // F10/F11 join after this Start has already run keeps wipe-on-StartClient.
-            if (_net != null && _net.IsClientOnly)
-            {
-                ApplyMetaEffects();
-                return;
-            }
-
-            // The ship-menu phase is a real scene now: boarding is immediate, Docked transient.
             // PendingStartWave is set by MapStation / party lobby; consumed once so direct-play falls back to 1.
             int startWave = GameSession.PendingStartWave;
             if (_net != null && _net.Lobby != null && _net.Lobby.PendingStartWave.Value > 0)
                 startWave = _net.Lobby.PendingStartWave.Value;
             GameSession.PendingStartWave = 1;
+
+            // Bind FPC/gun before Docked so OnPhaseChanged has a controller. Client still
+            // StartRun+EngageTether for local phase/UI; Update skips Sim.Tick (no second live sim).
+            ApplyMetaEffects();
+            if (_fpc == null)
+                _metaBindWindow = MetaBindWindowSeconds;
+
             Sim.StartRun(startWave);
             Sim.EngageTether(); // → Tethered (Prep)
             if (Sim.StartWave > 1 && _layout != null && Meta != null)
@@ -184,7 +188,8 @@ namespace GatekeeperBastion.Game
             // written order from here on; its own Update yields.
             if (_spawner != null) _spawner.SetHosted(true);
 
-            ApplyMetaEffects();
+            if (_net != null && _net.IsClientOnly)
+                return;
 
             // Stable fields after the prose. The sentence stays readable;
             // wave-report reads startWave=/primary=/… without re-parsing the prose.
@@ -219,6 +224,16 @@ namespace GatekeeperBastion.Game
             float dt = Time.deltaTime;
 
             Controls.Sample();                                        // 1
+
+            if (_fpc == null && _metaBindWindow > 0f)
+            {
+                _metaBindWindow -= dt;
+                if (PlayerRegistry.Local != null)
+                {
+                    ApplyMetaEffects();
+                    if (_fpc != null) _metaBindWindow = 0f;
+                }
+            }
 
             // Client-only: the host owns the run. Local move/fire/verbs so RPCs can fire;
             // do not tick the local sim or the spawner (that would fork a second live sim).

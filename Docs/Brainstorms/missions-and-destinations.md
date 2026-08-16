@@ -4,7 +4,7 @@
 Purpose: The NAV MAP console, run structure inside a bastion, and having more than one place to go.
 Status: brainstorm
 Update trigger: when a remaining entry graduates, or when a second destination exists.
-Last updated: 2026-08-13
+Last updated: 2026-08-16
 -->
 
 ## What this covers
@@ -15,8 +15,11 @@ has graduated (table below).
 
 ## Where it stands
 
-**M47 completed 2026-08-13** (kit bastion, unlock graph). The field loop is planned: **M52** terminal
+**M47 completed 2026-08-13** (kit bastion, unlock graph). Field loop shipped: **M52** terminal
 Waves, **M53** Hatch-bank, **M54** Master Control, **M55** intensity juice. One destination.
+Cold-start recut of T1's door and the Hatch-bank checkpoint for the **first
+Bastion demo** lives in [`first-session.md`](first-session.md); do not restamp
+those here as campaign rules.
 
 ### Terminal roles (Zo, 2026-08-13)
 

@@ -7,6 +7,24 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-16
 -->
 
+- 2026-08-16: **First-session brainstorm recut to the first-Bastion demo.**
+  Wake, repair NAV, grant weapon, one terminal, designed Hatch-bank loss, ARMORY
+  cap 2, start Wave 2. Extra sequences: second terminal, Default Protocol.
+  Not FAB / juice / Thieves / Master Control.
+  [`Brainstorms/first-session.md`](Brainstorms/first-session.md).
+- 2026-08-16: **Pause Compendium drops Field Manual.** The generated tables have no
+  TMP layout and the body scroll does not move, so the appendix stays in `Docs/Play/`
+  only. Field Manual links in Game copy render as labels, not entries.
+- 2026-08-16: **Ship plays Whispers of the Void.** The Ship host was still named
+  `Background Music` and bound to Stardust; `LevelMusic.CaptureOrJoin` only adopts
+  `Level Music`, so the loop started on Bastion. Renamed and bound to Whispers
+  (`guid: 482f8aea…`), PlayOnAwake off, matching Bastion.
+- 2026-08-16: **M70 recut refined** — locks for BarrageField (not AnchorField),
+  Barrage×Rush product 3.0, CREW/NAV copy, shortcut `CooldownFill` on Fight and
+  Pause templates, disc marker, docgen, no activate SFX. Not closed.
+- 2026-08-16: **M70 recut** — Default is a 0-salvage CREW claim (Andy/Soldier:
+  Barrage `G` / Rush `H`); Coming Soon stubs; Fight shortcut is the G/H readout.
+  Anchor/Bulkhead/Ghost/Foresight leave Default. Frame in tree stays. Not closed.
 - 2026-08-16: **Docs hydration** — Play/Compendium, Design 1–4, Architecture map,
   language.md party terms. Field Manual regen: CREW protocol, Decoy, Hatch Armor only,
   crit frozen. Dashboard Session labels PlayMode/short/Dev instead of dropping them

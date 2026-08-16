@@ -1,4 +1,5 @@
 using System.Collections;
+using System.IO;
 using GatekeeperBastion.Game;
 using NUnit.Framework;
 using Unity.Netcode;
@@ -8,11 +9,12 @@ using UnityEngine.TestTools;
 
 namespace GatekeeperBastion.PlayTests
 {
-    /// <summary>Friends-session lobby kernel: ESM true on NetSession; guest local Bastion
+    /// <summary>Friends-session lobby kernel: ESM true on NetSession; host local Bastion
     /// load refused. Full host NetworkSceneManager party-load of Ship/Bastion across two
     /// NetcodeIntegrationTest managers is deferred — NGO multi-NM + ESM true needs build
     /// scenes registered on both and fights the M48 fixture's ESM-false contract
-    /// (POC: dual NetworkManager scene sync in-process).</summary>
+    /// (POC: dual NetworkManager scene sync in-process). Guest IsClientOnly refuse is
+    /// covered by SceneFlow source strings (this fixture only starts a host).</summary>
     public class NetLobbySessionTests
     {
         [SetUp]
@@ -44,17 +46,19 @@ namespace GatekeeperBastion.PlayTests
             yield return null;
         }
 
+        /// <summary>Lead-only fixture: StartHost → IsClientOnly is false, so LoadBastion
+        /// logs "use party EMBARK". Guest "not party lead" is asserted via source strings
+        /// in <see cref="SceneFlow_LoadBastion_RefuseLines_PresentInSource"/>.</summary>
         [UnityTest]
-        public IEnumerator Guest_LocalBastionLoad_RefusedWhileSessionActive()
+        public IEnumerator Host_LocalBastionLoad_RefusedWhileSessionActive()
         {
             NetJoinIntent.Clear();
-            var go = new GameObject("NetLobbyGuestRefuse");
+            var go = new GameObject("NetLobbyHostRefuse");
             var nm = go.AddComponent<NetworkManager>();
             var transport = go.AddComponent<UnityTransport>();
             if (nm.NetworkConfig == null)
                 nm.NetworkConfig = new NetworkConfig();
-            nm.NetworkConfig.NetworkTransport = transport;
-            // Keep ESM false here so StartClient does not pull build scenes in the fixture.
+            // Keep ESM false here so StartHost does not pull build scenes in the fixture.
             nm.NetworkConfig.EnableSceneManagement = false;
             go.AddComponent<NetSession>();
             yield return null;
@@ -65,12 +69,11 @@ namespace GatekeeperBastion.PlayTests
             session.StartHost();
             Assert.IsTrue(session.Active);
             Assert.IsTrue(session.IsPartyLead);
+            Assert.IsFalse(session.IsClientOnly,
+                "this fixture is host-only; guest IsClientOnly refuse is source-string covered");
 
-            // Simulate a client-only seat by starting a second manager is heavy; assert the
-            // session-active refuse. Lead sees "use party EMBARK"; guests see "not party lead"
-            // (SceneFlow.LoadBastion branches on IsClientOnly).
             LogAssert.Expect(LogType.Log, new System.Text.RegularExpressions.Regex(
-                "embark refused — use party EMBARK|embark refused — not party lead"));
+                "embark refused — use party EMBARK"));
             Assert.IsFalse(SceneFlow.LoadBastion());
 
             // POC: dual-manager NetworkSceneManager Ship/Bastion party load not covered —
@@ -80,6 +83,20 @@ namespace GatekeeperBastion.PlayTests
             if (nm.IsListening) nm.Shutdown();
             Object.Destroy(go);
             yield return null;
+        }
+
+        /// <summary>Guest refuse line cannot be exercised without a second listening client
+        /// (IsClientOnly = Active &amp;&amp; IsClient &amp;&amp; !IsServer). Lock both SceneFlow
+        /// refuse strings in source so a rename cannot drop the guest branch silently.</summary>
+        [Test]
+        public void SceneFlow_LoadBastion_RefuseLines_PresentInSource()
+        {
+            string path = Path.GetFullPath("Assets/Scripts/Game/Flow/SceneFlow.cs");
+            Assert.IsTrue(File.Exists(path), path);
+            string src = File.ReadAllText(path);
+            StringAssert.Contains("embark refused — not party lead", src);
+            StringAssert.Contains("embark refused — use party EMBARK", src);
+            StringAssert.Contains("IsClientOnly", src);
         }
     }
 }

@@ -191,18 +191,8 @@ namespace GatekeeperBastion.Game
                 return;
             }
 
-            var go = Instantiate(_mirrorPrefab);
-            var netObj = go.GetComponent<NetworkObject>();
-            if (netObj == null)
-            {
+            if (SpawnUnparentedMirror(_mirrorPrefab) == null)
                 Log.Warn(Tag, "StartHost — NetRunMirror prefab has no NetworkObject.");
-                Destroy(go);
-                return;
-            }
-            // Spawn before any parenting. NetSession has no NetworkObject, so do not
-            // parent under it — NGO forbids NetworkObject under a non-NetworkObject parent.
-            // destroyWithScene false: survives NetworkSceneManager Single Ship/Bastion loads.
-            netObj.Spawn(destroyWithScene: false);
         }
 
         void OnConnectionApproval(

@@ -162,7 +162,7 @@ The player's incentive is split across four stations, and the split is the desig
 | Station       | What it is for                                                                                                  | Gated                                                      |
 | ------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | ARMORY        | the weapon in your hands, and what that weapon becomes                                                          | Tiers locked until the first death; buying a weapon is not |
-| CREW QUARTERS | the Boarder's protocol — doctrine, Crew and Personal abilities, Passive pick                                    | never: owned from the first session                        |
+| CREW QUARTERS | the Boarder's protocol — doctrine, Crew and Personal abilities; Default is a 0-salvage claim | never: Coming Soon stubs are not a death gate |
 | FABRICATION   | the Ship's gear and the Hatch — the Hatch Armor track, the Decoy payload, plus the equipment slot and the Equipment bought into it | Hatch Armor and Decoy never; equipment slot locked until the first death |
 | NAV MAP       | where you go and how deep you start                                                                             | never                                                      |
 

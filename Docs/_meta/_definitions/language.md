@@ -120,11 +120,11 @@ are named here.
 | **Equipment** | Gear bought at FABRICATION into the equipment slot (unlocked after first loss, bought once). The Repair Rig is the first piece. | payload *(that is the Drone's)*, item, kit, Utility |
 | **Tier** | A step on a weapon's upgrade track. | level, rank, mark, upgrade |
 | **ability** | A weapon's one activated effect, on a cooldown. | special, power, skill, ult |
-| **Boarder Protocol** | The named sheet CREW QUARTERS equips: one doctrine, one Crew ability, one Personal ability, one Passive pick. Owned from the first session. Working name **DEFAULT** for the first sheet — renameable. | archetype, class, kit, loadout *(loadout is weapons)* |
+| **Boarder Protocol** | The named sheet CREW QUARTERS sells: one doctrine, one Crew ability, one Personal ability. Default is a 0-salvage claim; specialists show as Coming Soon until their slice. Working name **DEFAULT** — renameable. | archetype, class, kit, loadout *(loadout is weapons)* |
 | **doctrine** | How a protocol treats hardware at decoy place. **STOCK** (working name, renameable) is hardware as sold. Written at `TryPlace`, not on repair. | stance, mode-as-flavour |
-| **Crew ability** | A Boarder-owned burst on `G`: brief window, moderate-to-long cooldown. Default sheet: **Anchor** (working name, renameable). | skill, perk, track, weapon ability |
-| **Personal ability** | A Boarder-owned burst on `H`: brief window, long cooldown, for the presser. Default sheet: **Bulkhead** (working name, renameable). | skill, perk, ult, weapon ability |
-| **Passive** | Always-on protocol rule, pick-one, Ship-only re-pick. Default sheet: **Ghost** or **Foresight** (working names, renameable). A rule, never a number. | stat, track, perk |
+| **Crew ability** | A Boarder-owned burst on `G`: brief window, moderate-to-long cooldown. Default sheet: **Barrage** (working name, renameable). | skill, perk, track, weapon ability |
+| **Personal ability** | A Boarder-owned burst on `H`: brief window, long cooldown, for the presser. Default sheet: **Rush** (working name, renameable). | skill, perk, ult, weapon ability |
+| **Passive** | Always-on protocol rule. Reserved — Default has none. Specialist sheets pick one later. A rule, never a number. | stat, track, perk |
 | **twist** | Reserved protocol modifier. Ships later. | mutator, relic, charm |
 | **loadout** | The Primary, Secondary and Drone a Boarder embarks with, plus their Equipment. | kit, gear, build |
 | **improvised cutter** | What a Boarder fights with having bought no weapon at all. Deliberately bad. | salvage cutter *(the code's old name)*, fists, melee, starter weapon |
@@ -170,7 +170,7 @@ Written in caps in player-facing text, matching what the player reads on the con
 | Term | Owns | Never called |
 |---|---|---|
 | **ARMORY** | The weapon in your hands. | weapons bay, shop, Armory *(caps, always)* |
-| **CREW QUARTERS** | The Boarder's protocol — doctrine, Crew and Personal abilities, Passive pick. | barracks, skills, attributes |
+| **CREW QUARTERS** | The Boarder's protocol — doctrine, Crew and Personal abilities. Default is a claim; other protocols Coming Soon. | barracks, skills, attributes |
 | **FABRICATION** | The Ship's gear and the Hatch. | workshop |
 | **NAV MAP** | Where you go, and going there. | map, bridge, terminal |
 | **Compendium** | The Boarder's working knowledge of the game: volumes of related entries (situation, Run, Bastion, garrison, arms, hull), not a glossary of terms. Markdown lives in `Docs/Play/` (M28 language lint). In-game reader shipped (`M62`, Esc → Compendium). | Codex, encyclopedia, wiki, lore bible, Hyrule Compendium, Persona Compendium |

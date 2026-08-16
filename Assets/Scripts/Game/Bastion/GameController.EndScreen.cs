@@ -29,6 +29,10 @@ namespace GatekeeperBastion.Game
         bool _leavingScene;
         float _loseScreenAge; // seconds spent on a terminal end screen (lose OR success) with no input
         bool _watchdogFired;
+        // Guest ReturnToShip does not set _leavingScene (scene change destroys this component).
+        // Cooldown only — avoids RPC spam if LoadPartyShip fails and the guest stays on the end screen.
+        const float GuestReturnCooldownSeconds = 2f;
+        float _guestReturnNextAllowed;
 
         /// <summary>Terminal = the run is over and the only way on is RETURN TO SHIP. Lost
         /// (died) and Escaped (all waves cleared) are treated identically by every exit path.</summary>
@@ -142,7 +146,10 @@ namespace GatekeeperBastion.Game
                     var lobby = _net.Lobby;
                     if (lobby != null)
                     {
-                        _leavingScene = true;
+                        // Do not arm _leavingScene — if host LoadPartyShip fails the guest
+                        // must keep RETURN TO SHIP. Cooldown stops Confirm from flooding the RPC.
+                        if (Time.unscaledTime < _guestReturnNextAllowed) return;
+                        _guestReturnNextAllowed = Time.unscaledTime + GuestReturnCooldownSeconds;
                         Log.Event("Ship", "guest requesting party return to Ship");
                         lobby.RequestPartyReturnToShip();
                         return;

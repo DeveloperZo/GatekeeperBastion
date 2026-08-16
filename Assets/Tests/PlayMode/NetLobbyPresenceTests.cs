@@ -25,7 +25,6 @@ namespace GatekeeperBastion.PlayTests
         GameObject _avatarPrefab;
         GameObject _mirrorPrefab;
         GameObject _fpcGo;
-        GameObject _sessionShell;
 
         [UnityTearDown]
         public IEnumerator DestroyLocals()
@@ -34,11 +33,6 @@ namespace GatekeeperBastion.PlayTests
             {
                 UnityEngine.Object.Destroy(_fpcGo);
                 _fpcGo = null;
-            }
-            if (_sessionShell != null)
-            {
-                UnityEngine.Object.Destroy(_sessionShell);
-                _sessionShell = null;
             }
             yield return null;
         }
@@ -95,22 +89,15 @@ namespace GatekeeperBastion.PlayTests
                 "owner avatar must follow FPC within 0.5 m after LateUpdate rebind");
         }
 
-        /// <summary>Bug 2: SpawnMirror must Spawn before any parent; never parent under
-        /// NetSession (no NetworkObject). destroyWithScene false.</summary>
+        /// <summary>Bug 2: production NetSession.SpawnUnparentedMirror — Spawn before any
+        /// parent; never parent under NetSession. destroyWithScene false; client has object.</summary>
         [UnityTest]
         public IEnumerator SpawnMirror_SpawnsUnparented_DestroyWithSceneFalse()
         {
-            _sessionShell = new GameObject("NetSessionShell");
-            // NetSession has no NetworkObject — parenting a NetworkObject under it before
-            // Spawn is the dual-box re-parent error. Correct path: Spawn first, no parent.
-            var go = UnityEngine.Object.Instantiate(_mirrorPrefab);
-            Assert.IsNull(go.transform.parent);
-            var net = go.GetComponent<NetworkObject>();
-            Assert.IsNotNull(net);
-            net.Spawn(destroyWithScene: false);
-
+            var net = NetSession.SpawnUnparentedMirror(_mirrorPrefab);
+            Assert.IsNotNull(net, "SpawnUnparentedMirror must return a NetworkObject");
             Assert.IsTrue(net.IsSpawned, "mirror must spawn without a NetSession parent");
-            Assert.IsNull(go.transform.parent, "mirror must stay unparented after Spawn");
+            Assert.IsNull(net.transform.parent, "mirror must stay unparented after Spawn");
             Assert.IsFalse(net.DestroyWithScene, "lobby mirror must survive scene loads");
 
             yield return WaitForSpawnedOnAllOrTimeOut(net);

@@ -58,6 +58,5 @@ is gated behind a lost Run, and what is worth buying.
 
 ## Appendix
 
-[Field Manual](Field-Manual.md) — every key, weapon, Gatekeeper, Wave, cost and track,
-generated from the code the game runs. If this folder and the build disagree, the build
-is right and the manual was not regenerated.
+[Field Manual](Field-Manual.md) is generated from the build for this folder. Pause does
+not open it — the reader has no table layout, and the page does not fit the panel.

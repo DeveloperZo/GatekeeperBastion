@@ -6,7 +6,10 @@
 
 Between Runs you stand on the Ship. Solo: your own hub. Friends session: the shared Ship — party lead owns NAV EMBARK; each seat shops their own loadout. This is the only place Salvage gets spent, and the only way back to the Bastion. Four consoles, each owning one subject: **ARMORY**, **CREW QUARTERS**, **FABRICATION**, **NAV MAP**.
 
-Buy the free sidearm first. Then CREW QUARTERS — weapon upgrades and the equipment slot wait until you have been Lost once. The NAV MAP warns if you own no weapon and lets you go anyway. Numbers and bindings: [Field Manual](Field-Manual.md).
+Buy the free sidearm first. Then CREW QUARTERS — claim the Default Protocol (it costs
+nothing; that is how you learn the console). Weapon upgrades and the equipment slot
+wait until you have been Lost once. The NAV MAP warns if you own no weapon or no
+protocol and lets you go anyway. Numbers and bindings: [Field Manual](Field-Manual.md).
 
 ## Reference
 
@@ -24,7 +27,10 @@ Each console owns exactly one subject. Nothing is sold in two places.
 
 **ARMORY — the weapon in your hands.** Weapons, and the upgrade wheel for a weapon you already own. This is also the only place you decide which owned weapon fills your Primary slot and which fills your Secondary; in the Bastion the weapon keys only swap between the slots you are already carrying, never between things you own. Buying a weapon equips it into its own slot straight away. Upgrades are bought per weapon, so Salvage poured into one gun stays in that gun — buy a different Primary and its upgrade wheel starts at nothing.
 
-**CREW QUARTERS — you.** The protocol you embark wearing: how hardware deploys, a field you plant for the crew, one hit you chose to eat, and the rule that says how Gatekeepers read you. You own it from the first session. Repairing the Hatch is not here; that is the Repair Rig at FABRICATION.
+**CREW QUARTERS — you.** The protocol you embark wearing: how hardware deploys, a
+Barrage you plant so the crew dumps fire, a Rush that speeds only your gun. Claim
+Default here at cost 0; VEIL, AEGIS and LEDGER read Coming Soon. Repairing the Hatch
+is not here; that is the Repair Rig at FABRICATION.
 
 **FABRICATION — the Hatch.** How much the door can take before it falls, plus the equipment slot, the Repair Rig, and the Decoy that fills the Drone bay. What it buys applies from your next embark onward, not retroactively.
 
@@ -36,13 +42,15 @@ The NAV MAP will let you begin partway in. It does not skip anything — startin
 
 ### Embarking with nothing
 
-The NAV MAP will warn you loudly if you own no weapon and then let you go anyway. You are not blocked. You will be carrying an improvised cutter and you will not enjoy it. The game is willing to let you make a bad bet; that is consistent with everything else in it.
+The NAV MAP will warn you loudly if you own no weapon or no protocol and then let you go anyway. You are not blocked. No weapon means the improvised cutter. No protocol means `G` and `H` refuse. The game is willing to let you make a bad bet; that is consistent with everything else in it.
 
 ### What to buy first
 
 **The free sidearm at the ARMORY, before anything.** It costs nothing, and the only reason it is sold rather than given is so that the first thing you learn is that weapons come from that console.
 
-**Then CREW QUARTERS.** Weapon upgrades and the equipment slot are locked until you have lost a Run — the protocol is not. You already wear it; on the Ship you pick how Gatekeepers read you. Hatch Armor at FABRICATION is also open from the first minute.
+**Then CREW QUARTERS.** Claim Default — it costs nothing, same reason the sidearm is
+sold rather than given. Weapon upgrades and the equipment slot are locked until you
+have lost a Run. Hatch Armor at FABRICATION is also open from the first minute.
 
 **Then whatever killed you.** If the Hatch fell while you were still standing, that is FABRICATION and not you at all.
 

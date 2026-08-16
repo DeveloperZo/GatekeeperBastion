@@ -1,12 +1,11 @@
 using GatekeeperBastion.Sim;
 using GatekeeperBastion.Util;
 using Unity.Netcode;
-using UnityEngine;
 
 namespace GatekeeperBastion.Game
 {
-    /// <summary>LOCAL-OWNER (partial of NetPlayerAvatar): protocol/passive equip push and
-    /// owner-rig bind. Split so the avatar file stays under cap.</summary>
+    /// <summary>LOCAL-OWNER (partial of NetPlayerAvatar): protocol/passive equip push.
+    /// Split so the avatar file stays under cap.</summary>
     public sealed partial class NetPlayerAvatar
     {
         public override void OnGainedOwnership()
@@ -15,19 +14,6 @@ namespace GatekeeperBastion.Game
             if (!IsSpawned || !IsOwner) return;
             BindOwnerRig();
             ReportOwnerMeta();
-        }
-
-        void BindOwnerRig()
-        {
-            var found = FindAnyObjectByType<FirstPersonController>();
-            if (found != null && found == _rig) return;
-            if (found == null && _rig == null) return;
-            _spawnOffsetApplied = false;
-            _rig = found;
-            _rigHealth = _rig != null ? _rig.GetComponent<PlayerHealth>() : null;
-            OffsetOwnerRig();
-            if (_rig != null)
-                Log.Event(Tag, "owner rig bound clientId=" + OwnerClientId);
         }
 
         void ReportOwnerMeta()

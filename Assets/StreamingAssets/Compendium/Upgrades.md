@@ -2,9 +2,9 @@
 
 ## Game
 
-Permanent, campaign-wide. CREW QUARTERS equips the **Boarder Protocol** you wear — how hardware deploys, a field you plant for the crew, one hit you chose to eat, and the rule that says how Gatekeepers read you. You own it from the first session. FABRICATION changes the Hatch — how much it can absorb, the Repair Rig without which you cannot repair at all, and the Decoy that fills the Drone bay.
+Permanent, campaign-wide. CREW QUARTERS sells the **Boarder Protocol** you wear — how hardware deploys, a Barrage dump, a Rush on your gun. Default is a 0-salvage claim. FABRICATION changes the Hatch — how much it can absorb, the Repair Rig without which you cannot repair at all, and the Decoy that fills the Drone bay.
 
-Weapon Tiers and the equipment slot stay locked until you have been Lost once. The protocol and Hatch Armor do not. Costs and curves: [Field Manual](Field-Manual.md).
+Weapon Tiers and the equipment slot stay locked until you have been Lost once. Claiming Default and Hatch Armor do not. Costs and curves: [Field Manual](Field-Manual.md).
 
 ## Reference
 
@@ -16,17 +16,15 @@ The one remaining **track** works the same way it always did: each level costs m
 
 There are no attribute tracks. Vitality, Stamina, Scavenging and Luck were refunded and deleted. Health, sprint, Salvage per kill and crit chance do not move from this console.
 
-You wear the **Default Protocol** from the first session. On the Ship you pick how Gatekeepers read you. Bindings for the bursts: [Field Manual](Field-Manual.md).
+You claim the **Default Protocol** at this console (cost 0). Bindings for the bursts: [Field Manual](Field-Manual.md).
 
 **STOCK** is the doctrine: decoys place as sold. Not a flavour label — it is written when you place, not when you repair.
 
-**Anchor** is the Crew ability: a field you plant. Gatekeepers inside it slow. The crew shares the field.
+**Barrage** is the Crew ability: you plant, you cannot walk, your gun and nearby Boarders dump fire.
 
-**Bulkhead** is the Personal ability: one hit you chose to eat. It is for the presser, not the room.
+**Rush** is the Personal ability: your gun only, and you can still move.
 
-**Ghost** and **Foresight** are the Passive pick. Ghost makes Gatekeepers notice you from closer in. Foresight names the next Wave's mix on the trigger before you start it. Re-pick only on the Ship.
-
-Specialist sheets are not in the shop. The Default is the whole of CREW today.
+There is no Passive pick on Default. VEIL, AEGIS and LEDGER sit on the panel as Coming Soon.
 
 ### FABRICATION — the tracks that change the door
 
