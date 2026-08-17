@@ -62794,7 +62794,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: GATEKEEPER BASTION
+  m_text: "GATEKEEPER'S PROTOCOL"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -68252,7 +68252,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9041080689527b340a14381acacc03d2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.OptionsView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.OptionsView
   _panels: {fileID: 172717248}
   _settingsPanel: Settings
   _homePanel: Home
@@ -68322,7 +68322,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e99527cfae62cc34a96a8bceaf1b6297, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.MainMenuView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.MainMenuView
   _panels: {fileID: 172717248}
   _mainPanelsRoot: {fileID: 1995884276}
   _continueButton: {fileID: 607610355}
@@ -68364,7 +68364,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f0ca6133ab70e574282b30bdedabca58, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.MainMenuController
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.MainMenuController
   _view: {fileID: 2029026620}
   _backgroundMusic: {fileID: 1094927080}
 --- !u!4 &2029026622

@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.Rendering;
-using GatekeeperBastion.Sim;
-using SegmentEdge = GatekeeperBastion.Game.BastionSegment.SegmentEdge;
+using GatekeepersProtocol.Sim;
+using SegmentEdge = GatekeepersProtocol.Game.BastionSegment.SegmentEdge;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Visual layer for a bastion segment: pack prefab instances, colliders stripped,
     /// tiled over the footprint whose physics the segment's collision boxes own. Separate type

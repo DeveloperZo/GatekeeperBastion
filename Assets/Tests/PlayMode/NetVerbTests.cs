@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Text.RegularExpressions;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>In-process host + one client. Client verb RPCs apply once on the host sim:
     /// repair spends host banked, decoy spawns on both, pin/concussive hit the host body.</summary>

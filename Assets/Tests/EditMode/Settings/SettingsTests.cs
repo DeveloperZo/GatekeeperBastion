@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M24: declaration-driven settings store — defaults, round-trip, restore, unique ids.
     /// In-memory <see cref="ISettingsStore"/> only; never touches real PlayerPrefs.</summary>

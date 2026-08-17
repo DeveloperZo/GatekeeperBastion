@@ -30,7 +30,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 725c0d91d1deedf4a8d371132db4e72b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.NetSession
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.NetSession
   _game: {fileID: 0}
   _mirrorPrefab: {fileID: 3390667021495299181, guid: 95647e64bb5f81842a6adf4812453abe, type: 3}
   _avatarPrefab: {fileID: 7578676510071751952, guid: 04306d209da1b6b47b532700e87a4453, type: 3}

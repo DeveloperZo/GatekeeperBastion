@@ -1,9 +1,9 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY: placed decoy prop. Stats pushed at spawn — never serialized.
     /// Player fire cannot damage it: there is no <see cref="Damageable"/>; Gatekeepers call

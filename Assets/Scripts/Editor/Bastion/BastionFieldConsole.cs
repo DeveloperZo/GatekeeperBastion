@@ -1,9 +1,9 @@
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using UnityEditor;
 using UnityEngine;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Ship station graybox (Desk / Screen / Label) attached to a field
     /// <see cref="BastionTerminal"/>. Presentation only — no Ship panels.

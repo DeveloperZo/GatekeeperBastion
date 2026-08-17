@@ -1,11 +1,11 @@
 using System.Collections;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>M30 PlayMode: decoy has no Damageable (player fire cannot reduce HP).</summary>
     public class DecoyPlayModeTests

@@ -1,9 +1,9 @@
 using System.Text;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>REPLICATED-STATE: hold-E at the Hatch — repair when damaged (rig required),
     /// withdraw when sealed in Prep with Unbanked 0 (no rig). Hatch-bank is Prep E then T.

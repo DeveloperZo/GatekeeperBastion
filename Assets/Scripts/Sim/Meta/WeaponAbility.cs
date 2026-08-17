@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Activated weapon ability identity. Values reach save-adjacent logs — never
     /// renumber, never reuse a retired id. <see cref="None"/> is the empty descriptor.</summary>

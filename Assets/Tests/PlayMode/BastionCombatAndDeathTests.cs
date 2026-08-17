@@ -2,14 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>
     /// BASTION RUN CONTRACT — the tests that would have caught "the player could not fire,
@@ -72,8 +72,8 @@ namespace GatekeeperBastion.PlayTests
                 Assert.IsNotNull(player, "No player registered in the Bastion scene (PlayerRegistry.Local).");
 
                 // The gun type is reached by name: another agent is actively reshaping it.
-                Type gunType = PlayTestUtil.FindType("GatekeeperBastion.Game.PlayerGun");
-                Assert.IsNotNull(gunType, "Type GatekeeperBastion.Game.PlayerGun does not exist.");
+                Type gunType = PlayTestUtil.FindType("GatekeepersProtocol.Game.PlayerGun");
+                Assert.IsNotNull(gunType, "Type GatekeepersProtocol.Game.PlayerGun does not exist.");
                 Component gun = player.GetComponentInChildren(gunType);
                 if (gun == null)
                 {
@@ -244,7 +244,7 @@ namespace GatekeeperBastion.PlayTests
                 $"DEAD END: scene '{SceneFlow.Ship}' is not in Build Settings (registered: " +
                 $"{PlayTestUtil.RegisteredScenes()}), but GameController.ReturnToShip() -> SceneFlow.LoadShip() " +
                 "is the lose screen's only exit. Pressing RETURN TO SHIP would throw and strand the player. " +
-                "Register all four flow scenes (GatekeeperBastion/Build/All Scenes).");
+                "Register all four flow scenes (GatekeepersProtocol/Build/All Scenes).");
 
             using (var logs = new PlayTestUtil.ErrorLogCapture())
             {

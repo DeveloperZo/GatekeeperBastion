@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: the gun mesh on the Boarder's right hand, fire/reload one-shots,
     /// and animator triggers. The sim ray still comes from the camera; this does not aim.</summary>

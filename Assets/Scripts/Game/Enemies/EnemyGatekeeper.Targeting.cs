@@ -1,9 +1,9 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (see EnemyGatekeeper.cs for the ownership contract): the targeting rule —
     /// who a gatekeeper is willing to go after, what provokes it, and where it stands to swing.
@@ -149,7 +149,7 @@ namespace GatekeeperBastion.Game
             if (bay != null && bay.State.IsLive && bay.Live != null && bay.Live.IsAlive)
             {
                 float dist = Vector3.Distance(transform.position, bay.Live.transform.position);
-                if (GatekeeperBastion.Sim.DecoyState.ShouldPull(Kind, _committedToHatch, true, dist, bay.State.PullRadius))
+                if (GatekeepersProtocol.Sim.DecoyState.ShouldPull(Kind, _committedToHatch, true, dist, bay.State.PullRadius))
                 {
                     _decoyTarget = bay.Live;
                     _chasingDecoy = true;

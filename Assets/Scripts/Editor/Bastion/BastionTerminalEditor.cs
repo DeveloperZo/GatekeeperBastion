@@ -1,8 +1,8 @@
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using UnityEditor;
 using UnityEngine;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     [CustomEditor(typeof(BastionTerminal))]
     public sealed class BastionTerminalEditor : Editor

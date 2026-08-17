@@ -4,7 +4,7 @@
 
 | Item | Status | Evidence |
 |---|---|---|
-| GatekeeperBastion.dll compile | **PASS** | `Library/ScriptAssemblies/GatekeeperBastion.dll` write 10:20:06 local; last `Csc …GatekeeperBastion.dll` in Editor.log had no `error CS`. Stale log lines for `ShipHudView.SetShortcutRows` / `SetHudRelevant` predate the current API (`IReadOnlyList` + both methods present in `ShipHudView.cs`). |
+| GatekeepersProtocol.dll compile | **PASS** | `Library/ScriptAssemblies/GatekeepersProtocol.dll` write 10:20:06 local; last `Csc …GatekeepersProtocol.dll` in Editor.log had no `error CS`. Stale log lines for `ShipHudView.SetShortcutRows` / `SetHudRelevant` predate the current API (`IReadOnlyList` + both methods present in `ShipHudView.cs`). |
 | Crit 5 author scripts gone | **PASS** | `M35Wp3Author.cs`, `M35Wp3ForceRefresh.cs`, and the transient `M35Wp3BindingsOnce.cs` deleted. `Get-ChildItem -Recurse *M35Wp3*` = empty. `[InitializeOnLoad` under `Assets/Scripts/Editor` = `AutoVerify.cs` + `SceneBuilder.cs` only. |
 | Settings / QUIT (WP-2 handoff) | **PASS** | Ship `OptionsView` on station Canvas: 4 tabs, 6 row bindings (DisplayMode/Master/Music/Sfx/MouseSensitivity/DiscardReloadOnSwap), `_controlsRowsRoot` + template. QUIT TO MENU → `ShipController.QuitToMenu` → `SceneFlow.LoadMainMenu()`. |
 | BindingValidator Ship | **PASS** | `gkb_bindings_report.json` `2026-08-10T15:20:11Z` — `missingCount: 0` (all build scenes). |

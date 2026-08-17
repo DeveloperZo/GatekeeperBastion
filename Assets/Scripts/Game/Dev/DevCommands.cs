@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: the Dev mode binding table — one row per action. Adding a command
     /// is one entry here plus a call on <see cref="GameController"/>. The F1 overlay lists these

@@ -432,7 +432,8 @@ mapping throws at emit time — a loud fail, never a primitive.
 
 ## Wave-report dashboard (M38)
 
-`Docs/dashboard.html` Session tab parses `GatekeeperBastion_*.log` in the browser after you
+`Docs/dashboard.html` Session tab parses `GatekeepersProtocol_*.log` (current;
+`GatekeeperBastion_*.log` still parse) in the browser after you
 choose the Logs folder (or drop the files). Focus / Project tabs read
 `Docs/dashboard-data.js` from `Tools/dashboard-data/run.ps1` (milestones, commits, questions,
 rule-based next focus). Sample filters and era cutoffs. Until the corpus is large, Session **labels** PlayMode,

@@ -1,9 +1,9 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using Michsky.UI.Shift;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: console Interact opens one Main Panels child and holds it until
     /// Esc/Close via <see cref="ShipController"/>. Esc is never polled here.</summary>

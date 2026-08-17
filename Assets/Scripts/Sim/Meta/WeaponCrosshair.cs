@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Crosshair shape drawn by the Bastion HUD for a weapon. Identity cue, not
     /// accuracy — spread lives on <see cref="WeaponDef.spreadDegrees"/>.</summary>

@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: binds the authored Shift menu in <c>MainMenu.unity</c>. All wiring is by
     /// serialized reference — a null reference logs one error naming the

@@ -1,8 +1,8 @@
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>REPLICATED-STATE: shared-Ship ready gate and party EMBARK countdown.
     /// Host-spawned with the session. Distinct from <see cref="NetPlayerAvatar.RequestEmbark"/>

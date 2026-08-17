@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>
     /// The two-runs-in-one-process gate. Two independent Sim runs — each a RunContext with its
@@ -227,16 +227,16 @@ namespace GatekeeperBastion.Tests
         [Test]
         public void SimAssembly_HoldsNoStaticMutableState()
         {
-            Assert.AreEqual("GatekeeperBastion.Sim", typeof(RunSim).Assembly.GetName().Name,
+            Assert.AreEqual("GatekeepersProtocol.Sim", typeof(RunSim).Assembly.GetName().Name,
                 "RunSim must live in its own Sim assembly — the asmdef is the fence");
 
             var violations = new List<string>();
             foreach (Type type in typeof(RunSim).Assembly.GetTypes())
             {
                 // Everything of ours in the Sim assembly, whatever its namespace (Log rides
-                // along under GatekeeperBastion.Util). The prefix filter drops the harness's
+                // along under GatekeepersProtocol.Util). The prefix filter drops the harness's
                 // UnityEngine / NUnit stub types, which only exist in the offline build.
-                if (type.Namespace == null || !type.Namespace.StartsWith("GatekeeperBastion"))
+                if (type.Namespace == null || !type.Namespace.StartsWith("GatekeepersProtocol"))
                     continue;
                 if (type.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     continue; // compiler lambda caches are not designer state

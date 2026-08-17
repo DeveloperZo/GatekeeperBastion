@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Catalog identity for a drone-bay payload. Values are written into save files —
     /// never renumbered, never reused. <see cref="None"/> is the empty-bay sentinel.</summary>

@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M59 chrome: station Settings leftovers inactive, scrim α, pause binding,
     /// end-screen scrim α, station header gutters.</summary>

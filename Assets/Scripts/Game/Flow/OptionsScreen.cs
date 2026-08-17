@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: one options screen for the main menu, Ship and Bastion, presented
     /// through the scene's registered <see cref="OptionsView"/>. Opening

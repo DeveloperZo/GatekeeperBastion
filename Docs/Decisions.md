@@ -177,6 +177,14 @@ Esc or Close returns to walk. Body rows clone from each panel's inactive
 Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW: Default claim + Coming Soon stubs;
 FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
 
+## Locked — title (Zo, 2026-08-16)
+
+Player-facing title is **Gatekeeper's Protocol**. Identifier, namespace, asmdef, menu
+root and new log prefix are `GatekeepersProtocol`. Unity `cloudProjectId`
+`3b96df23-b5f0-499c-998f-86d5643d6d88` is kept. `gkb_` sentinels and tool prefixes stay.
+GitHub repo name is unchanged in this pass. Bastion is the place, Gatekeeper is the
+enemy, Boarder Protocol is the CREW sheet.
+
 ## Shipped
 
 - **Deliver-loot-before-the-run-ends.** The *spirit* of Gears of War's active

@@ -1,6 +1,6 @@
 using System.Collections;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -8,7 +8,7 @@ using Unity.Netcode.TestHelpers.Runtime;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>In-process host + one client. Client lethal HP waits on the Ship flag;
     /// Hatch-bank Prep embark restores HP; Assault and Terminal-Prep refuse; host death

@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Hatch-bank convert into per-slot piles. Cap is cumulative across the window
     /// so drip ticks cannot each credit up to BankCap.</summary>

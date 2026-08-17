@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Parses bastion sketch v1 lines into <see cref="BastionSketch"/>.</summary>
     public static class BastionSketchParser

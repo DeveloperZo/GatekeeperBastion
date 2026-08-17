@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gatekeeper Bastion — architecture rules enforcement (M41).
+# Gatekeeper's Protocol — architecture rules enforcement (M41).
 #
 # Reads every rule value from the ```arch-lint fences in the document that states the
 # rule: folder line caps and the over-cap baseline from Docs/Architecture.md, the

@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>First-person view mapping: FOV, footstep clock, mesh prefab paths, and SFX
     /// resource names. Numbers live here so EditMode can assert them without MonoBehaviours.

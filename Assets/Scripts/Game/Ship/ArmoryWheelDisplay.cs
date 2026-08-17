@@ -1,7 +1,7 @@
 using System;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Precomputed wheel state built by <see cref="ArmoryStation"/> — no sim reads in views.</summary>
     public struct ArmoryWheelDisplay

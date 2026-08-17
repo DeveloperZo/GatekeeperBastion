@@ -147,7 +147,7 @@ procedure and it has run; the durable record is `.gitattributes`, `.gitignore` a
 `Decisions.md` entries.
 
 Rejected: `git lfs migrate import`. Correct for a repository with history worth preserving.
-Here history is one commit named `Initial commit: Gatekeeper Bastion Unity project.` — the
+Here history is one commit named `Initial commit: Gatekeeper's Protocol Unity project.` — the
 migrate path does more work and has more failure modes to reach the same place.
 
 Rejected: `core.autocrlf=true` instead of `.gitattributes`. One machine, does not travel with

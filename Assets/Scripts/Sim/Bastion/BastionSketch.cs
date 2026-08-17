@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Structured bastion layout from a line-oriented sketch file.</summary>
     public sealed class BastionSketch

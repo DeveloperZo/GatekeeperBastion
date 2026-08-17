@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Master Control win sequence. #12 — 5 terminal then 5 Hatch-bank.
     /// Live phase and remaining counts sit on <see cref="RunSim"/>.</summary>

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: sets UI Audio pitch to ±5% before Shift <c>UIElementSound</c> plays.</summary>
     public sealed class UiPitchRandomizer : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler

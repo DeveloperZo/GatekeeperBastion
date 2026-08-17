@@ -2,12 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>
     /// SHIP SCENE CONTRACT — the tests that would have caught "entering the Ship left the
@@ -18,7 +18,7 @@ namespace GatekeeperBastion.PlayTests
     /// assert the four things the player needs in order to DO anything aboard:
     ///   1. a player rig (FirstPersonController + PlayerHealth + a camera-child Interactor),
     ///   2. something that RENDERS the interaction prompt (the Bastion-only HudController is
-    ///      absent here — the Ship needs its own; GatekeeperBastion.Game.ShipHud),
+    ///      absent here — the Ship needs its own; GatekeepersProtocol.Game.ShipHud),
     ///   3. three station consoles that are IInteractable, collide, and can actually be hit by
     ///      the Interactor's ray from standing height in front of them,
     ///   4. a cursor that is LOCKED in walk mode (Interactor.Update early-returns unless
@@ -74,7 +74,7 @@ namespace GatekeeperBastion.PlayTests
             Assert.IsNotNull(promptHud,
                 "NOTHING in the Ship scene renders the interaction prompt, so the player sees no UI " +
                 "and never learns that E opens a station. Expected a component of type " +
-                "'GatekeeperBastion.Game.ShipHud' (a Ship-scene HUD that draws Interactor.CurrentPrompt) — " +
+                "'GatekeepersProtocol.Game.ShipHud' (a Ship-scene HUD that draws Interactor.CurrentPrompt) — " +
                 "HudController is Bastion-only and is not in this scene. " +
                 "Accepted alternatives: any MonoBehaviour in the Ship scene with an OnGUI pass that " +
                 "holds an Interactor reference. Searched types in scene: " + hudDetail);

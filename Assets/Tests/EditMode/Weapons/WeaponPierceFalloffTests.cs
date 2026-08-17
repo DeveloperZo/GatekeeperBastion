@@ -1,8 +1,8 @@
 using System;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M31 — pierceDamageMul, falloff table, T0 / FocusAtMax HP gates, pin-on-first-body
     /// call pattern. MR-35 mul is 0.26 (Zo, 2026-08-09) against FocusAtMax=50.</summary>

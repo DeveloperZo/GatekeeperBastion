@@ -1,8 +1,8 @@
 {
-    "name": "GatekeeperBastion.PlayTests",
+    "name": "GatekeepersProtocol.PlayTests",
     "references": [
-        "GatekeeperBastion.Sim",
-        "GatekeeperBastion",
+        "GatekeepersProtocol.Sim",
+        "GatekeepersProtocol",
         "Unity.Netcode.Runtime",
         "Unity.Netcode.Runtime.Tests",
         "Unity.Networking.Transport",

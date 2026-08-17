@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER (partial of NetPlayerAvatar): seat tint and marker.
     /// Split so the avatar file stays under cap.</summary>

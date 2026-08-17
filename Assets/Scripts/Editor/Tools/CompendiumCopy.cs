@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Copies Docs/Play/*.md into Assets/StreamingAssets/Compendium for player builds.
     /// Strips HTML comments and ## Gaps; keeps Game + Reference + See also so the reader
@@ -20,7 +20,7 @@ namespace GatekeeperBastion.EditorTools
         static readonly Regex H2Heading = new Regex(
             @"^##\s+", RegexOptions.Multiline | RegexOptions.Compiled);
 
-        [MenuItem("GatekeeperBastion/Build/Copy Compendium Pages", false, 64)]
+        [MenuItem("GatekeepersProtocol/Build/Copy Compendium Pages", false, 64)]
         public static void CopyFromMenu()
         {
             int n = CopyPages(log: true);

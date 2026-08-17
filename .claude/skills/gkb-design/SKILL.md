@@ -1,8 +1,8 @@
 ---
 name: gkb-design
-description: Game design method for Gatekeeper Bastion — classifying an idea as a loop or an arc, writing kill criteria before building, when to measure versus when to play, and what graybox evidence cannot tell you. Use this skill whenever a mechanic, weapon, enemy, economy or progression change is being evaluated, scoped, argued about or tuned, and before a milestone is written for one — including when someone proposes adding something new to the game and the question is whether it belongs. Use it even when the idea seems obviously good, because the point is to find the cheapest thing that could kill it. For capturing or parking an idea into a brainstorm document without judging it, invoke gkb-brainstorm instead.
+description: Game design method for Gatekeeper's Protocol — classifying an idea as a loop or an arc, writing kill criteria before building, when to measure versus when to play, and what graybox evidence cannot tell you. Use this skill whenever a mechanic, weapon, enemy, economy or progression change is being evaluated, scoped, argued about or tuned, and before a milestone is written for one — including when someone proposes adding something new to the game and the question is whether it belongs. Use it even when the idea seems obviously good, because the point is to find the cheapest thing that could kill it. For capturing or parking an idea into a brainstorm document without judging it, invoke gkb-brainstorm instead.
 metadata:
-  project: gatekeeper-bastion
+  project: gatekeepers-protocol
   update-trigger: when a design rule is added or a tuning approach is proven wrong in play
 ---
 

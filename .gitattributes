@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Gatekeeper Bastion — line endings and binary handling.
+# Gatekeeper's Protocol — line endings and binary handling.
 #
 # Two jobs. First, end the 141 phantom "modified" files: everything textual is
 # normalised to LF in the repository and checked out native, so a clean tree

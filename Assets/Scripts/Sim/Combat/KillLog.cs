@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Pure kill-line formatter. WaveSpawner owns when to emit; this owns the words
     /// so share-of-kills per slot is grepable and Path 1 can pin the shape.</summary>

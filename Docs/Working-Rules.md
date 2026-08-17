@@ -158,7 +158,7 @@ directly**, and:
   defect with a button on it;
 - not put in the Editor console what belongs in a file.
 
-**One root, five folders.** `GatekeeperBastion/{Record,Logs,Build,Bake,Validate}`.
+**One root, five folders.** `GatekeepersProtocol/{Record,Logs,Build,Bake,Validate}`.
 Unity draws a separator when priority differs by 11 or more; bands below are that
 structure. The fence in `Architecture/README.md` is what lint-arch checks — this table
 is why each row exists. If they disagree, the fence wins.
@@ -199,11 +199,11 @@ not a temporary compromise.
 |---|---|---|
 | Kit prefabs | agent | `gkb_bastion_kit_request.txt` |
 | Segment layout + H/S/T/D + unlock graph | agent | sketch under `Tools/bastion-sketch/`, then `gkb_bastion_sketch_request.txt` (path in file, or empty for default). Emits into `Bastion.unity` under `Environment`. |
-| Obstacle seed | agent | `GatekeeperBastion/Build/Place Bastion Obstacles` (or `gkb_bastion_obstacles_request.txt`). Names encode intent (`LongLane_*`, `Corner_*`, `Choke_*`, `Mask_*`). Skips hatch bay `02` when already authored. |
+| Obstacle seed | agent | `GatekeepersProtocol/Build/Place Bastion Obstacles` (or `gkb_bastion_obstacles_request.txt`). Names encode intent (`LongLane_*`, `Corner_*`, `Choke_*`, `Mask_*`). Skips hatch bay `02` when already authored. |
 | Field consoles | agent | `gkb_bastion_terminals_request.txt` — Ship Desk/Screen/Label on each `BastionTerminal`; ensures GateSlab on existing `BastionDoor` markers only (does not move gates or change Door/None sides); ensures `BastionLayout` on Environment. |
 | Passages vs gates | author | Segment **Door** with no `D` = passage (always walk). **`D` / `BastionDoor`** = progression gate (starts locked). Soft-lock parked. |
 | Hand finish | Zo | Move segments, sides, props, spawns in the Scene view. |
-| NavMesh | either | `GatekeeperBastion/Bake/Bastion NavMesh` after geometry moves. |
+| NavMesh | either | `GatekeepersProtocol/Bake/Bastion NavMesh` after geometry moves. |
 
 **Do not** run **Build/All Scenes** against a kit bastion or a dressed Ship to “refresh”
 floors — when `BastionSegment`s or a `ShipDress` root are present, geometry wipe is skipped,
@@ -300,7 +300,7 @@ including this file's own numbers if they disagree with the code.
 **Read the log yourself.** Never ask the developer to relay an exception or
 paste a stack trace.
 
-- Editor: `<projectRoot>/Logs/GatekeeperBastion_yyyy-MM-dd_HH-mm-ss_p{pid}.log`
+- Editor: `<projectRoot>/Logs/GatekeepersProtocol_yyyy-MM-dd_HH-mm-ss_p{pid}.log`
   (gitignored). Player build: `Application.persistentDataPath/Logs/`. MPPM writes one
   file per process; the pid suffix stops two Play instances sharing a path. Header
   `Process:` matches the suffix.
@@ -311,7 +311,7 @@ paste a stack trace.
   `Log.Warn` / `Log.Error` / `Log.Info` (that last needs the `GKB_VERBOSE`
   define), plus Unity's own chatter. No filtering, no dedup, **no aggregation
   layer** — plain flow lines only. Do not build counters.
-- Menu `GatekeeperBastion/Logs/`: Open Logs Folder, Copy Latest Log Path.
+- Menu `GatekeepersProtocol/Logs/`: Open Logs Folder, Copy Latest Log Path.
 
 Theorising about a runtime bug before reading the log is how a session gets
 spent on the wrong cause.
@@ -338,7 +338,7 @@ Three paths, in increasing cost:
    with the editor open, `Editor/Tools/IntegrationCheck.cs` runs the full EditMode then
    PlayMode suites and writes `<projectRoot>/gkb_verify_report.json` with
    per-test results. Survives the domain reloads PlayMode causes. Also available
-   as menu `GatekeeperBastion/Validate/Integration Check`. This is the only way to run
+   as menu `GatekeepersProtocol/Validate/Integration Check`. This is the only way to run
    the PlayMode suite, and the only authority on anything touching a MonoBehaviour,
    a scene or the save file — path 1 cannot see those.
 4. **Compile errors** land in `Library/Bee/CachedNodeOutput` — read them there

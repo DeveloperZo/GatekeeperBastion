@@ -1,5 +1,5 @@
 @echo off
-REM Gatekeeper Bastion — interactive same-machine dual-box.
+REM Gatekeeper's Protocol — interactive same-machine dual-box.
 REM Requires Unity Editor open on this project for -Build.
 REM Builds (optional), launches two windowed players side by side, NO auto-quit.
 REM Close both windows yourself when done. Development Console should stay closed

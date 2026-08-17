@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Gatekeeper Bastion — dashboard</title>
+<title>Gatekeeper's Protocol — dashboard</title>
 <style>
 :root {
   --ink: #1c1b19;
@@ -719,7 +719,7 @@ body.drag {
 </head>
 <body>
 <header>
-  <h1>Gatekeeper Bastion — dashboard</h1>
+  <h1>Gatekeeper's Protocol — dashboard</h1>
   <p class="lede">Focus is the judgment call for this hour — synthesis from Design, Roadmap,
   lane caps, and play debt. Project is inventory. Session is log evidence.
   Regen Focus/Project with <code>Tools/dashboard-data/run.ps1</code>.</p>
@@ -792,7 +792,8 @@ body.drag {
   </div>
   <div id="panel-session" class="tab-panel">
   <div id="empty">Choose <code>Logs</code> (and optionally <code>Docs/_meta/Logs</code>)
-  containing <code>GatekeeperBastion_*.log</code>.</div>
+  containing <code>GatekeepersProtocol_*.log</code> (current).
+  <code>GatekeeperBastion_*.log</code> still parses.</div>
   <div id="app">
     <div class="sample-strip" id="sampleStrip"></div>
 
@@ -1003,7 +1004,7 @@ body.drag {
   var KILL_ANY = /^killed\s+a\s+(\w+)\b/i;
   var KIND = /(\d+)\s+(Gatekeepers?|Hunters?|Rams?|Thieves?|Thief|boarders?|gatekeepers?)\b/gi;
   var TRACK = /\btrack=(weapon|crew|fabrication|equipment)\b/i;
-  var LOG_DATE = /GatekeeperBastion_(\d{4}-\d{2}-\d{2})_/i;
+  var LOG_DATE = /(?:GatekeepersProtocol|GatekeeperBastion)_(\d{4}-\d{2}-\d{2})_/i;
   var END_GROSS = /gross\s+(\d+)\s*,\s*repair\s+(\d+)\s*,\s*net\s+(\d+)\s*,\s*banked now\s+(\d+)/i;
   var END_EARNED = /earned\s+(\d+)\s*,\s*banked now\s+(\d+)/i;
   var END_BANKED = /banked now\s+(\d+)/i;
@@ -1047,7 +1048,7 @@ body.drag {
   }
 
   function shortFile(f) {
-    return String(f || '').replace(/^GatekeeperBastion_/, '').replace(/\.log$/i, '');
+    return String(f || '').replace(/^(?:GatekeepersProtocol_|GatekeeperBastion_)/i, '').replace(/\.log$/i, '');
   }
 
   function eraId(name) {
@@ -2360,7 +2361,7 @@ body.drag {
   function isSessionLog(file) {
     var n = file.name || '';
     if (!/\.log$/i.test(n)) return false;
-    if (/GatekeeperBastion_/i.test(n)) return true;
+    if (/(?:GatekeepersProtocol|GatekeeperBastion)_/i.test(n)) return true;
     return false;
   }
 
@@ -2369,7 +2370,7 @@ body.drag {
     var status = document.getElementById('status');
     if (!files.length) {
       status.className = 'error';
-      status.textContent = 'No GatekeeperBastion_*.log in that selection.';
+      status.textContent = 'No GatekeepersProtocol_*.log (current) or GatekeeperBastion_*.log in that selection.';
       return;
     }
     status.className = '';

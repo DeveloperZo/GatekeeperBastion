@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: sequenced end-of-run panel: verdict → headline →
     /// staggered stats → salvage count-up → actions. Any input fast-forwards; a second input

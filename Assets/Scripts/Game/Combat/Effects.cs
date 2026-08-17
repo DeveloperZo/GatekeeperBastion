@@ -1,8 +1,8 @@
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: code-built particle effects for the gray-box — no assets, URP-safe
     /// materials. Everything is a one-shot burst ParticleSystem that destroys itself.</summary>

@@ -5,7 +5,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>Fight and Ship HUD hosts: pairwise AABB ≥24 canvas units at 1920×1080 and
     /// 1280×720, overflow TMP not truncated, Profile Exp inactive.</summary>

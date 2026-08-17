@@ -173,7 +173,7 @@ argument a recompile.
 ## Implementation
 
 **Create** `Assets/Scripts/Sim/Meta/UpgradeTrack.cs` — moves `enum UpgradeTrack` out of
-`Game/Ship/ShipCommands.cs` into `GatekeeperBastion.Sim`, plus
+`Game/Ship/ShipCommands.cs` into `GatekeepersProtocol.Sim`, plus
 `public static class UpgradeTracks` with `All` (the enum values in declaration order),
 `Label(UpgradeTrack)`, `Station(UpgradeTrack)` returning the caps station name, and
 `ValueAt(UpgradeTrack, int level)` returning `(float value, string unit)` by dispatching to the

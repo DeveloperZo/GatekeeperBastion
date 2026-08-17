@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Options tab grouping for <see cref="SettingDecl"/> rows.</summary>
     public enum SettingCategory

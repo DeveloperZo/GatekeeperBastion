@@ -1,13 +1,13 @@
 using System.Collections;
 using System.Reflection;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>M20 Path 2 — shove/pin edge cases and HOST-ONLY dispatch on a live gatekeeper.</summary>
     public class WeaponAbilityPlayModeTests

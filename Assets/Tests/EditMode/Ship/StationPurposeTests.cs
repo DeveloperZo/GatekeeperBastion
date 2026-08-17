@@ -1,8 +1,8 @@
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>Station purpose and deal copy match the language table and The-Ship Gaps this
     /// slice closed. Empty purpose fails.</summary>

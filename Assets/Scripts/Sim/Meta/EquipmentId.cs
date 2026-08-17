@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Catalog identity for a piece of equipment. Values are written into save files —
     /// never renumber, never reuse a retired id. <see cref="None"/> is the empty-slot sentinel.</summary>

@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>One options row spec pushed by <see cref="OptionsScreen"/> — no Sim types.</summary>
     public struct OptionsRowSpec

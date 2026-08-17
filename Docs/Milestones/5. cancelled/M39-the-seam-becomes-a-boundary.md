@@ -28,7 +28,7 @@ No `UnityEditor`. No `Mathf`, `Vector3`, `Quaternion`, `MonoBehaviour`, `Scripta
 `SerializeField`, `Time`, `Application`, `PlayerPrefs`, `JsonUtility`, `GameObject`,
 `Transform`, `Physics`. The five `[Serializable]` attributes are `System.Serializable`.
 Every `using` in the folder is `System.*`, `System.Collections.Generic`, or
-`GatekeeperBastion.Util`.
+`GatekeepersProtocol.Util`.
 
 **One file blocks the split, and it turns out to be nearly empty.** `Sim/` calls `Util.Log`
 from **two files, fourteen sites**. Thirteen are `Log.Info` in `RunSim.cs`, and `Log.Info` is
@@ -52,17 +52,17 @@ either holds the seam or does not, and after this one the compiler decides.
 
 ## Acceptance criteria
 
-1. **`Assets/Scripts/Sim/GatekeeperBastion.Sim.asmdef` exists with
+1. **`Assets/Scripts/Sim/GatekeepersProtocol.Sim.asmdef` exists with
    `"noEngineReferences": true`** and no references.
 2. **All four consuming assemblies reference it.** asmdef references are not transitive and
    three of these are easy to miss:
 
    | Assembly | Why it needs the reference |
    |---|---|
-   | `Assets/Scripts/GatekeeperBastion.asmdef` | the Game layer |
-   | `Assets/Scripts/Editor/GatekeeperBastion.Editor.asmdef` | `SceneBuilder.cs:2` and `SceneBuilder.Enemies.cs:2` both `using GatekeeperBastion.Sim` |
-   | `Assets/Tests/EditMode/GatekeeperBastion.Tests.asmdef` | 24 files use the Sim namespace, and it sets `"overrideReferences": true` |
-   | `Assets/Tests/PlayMode/GatekeeperBastion.PlayTests.asmdef` | 6 files, same shape |
+   | `Assets/Scripts/GatekeepersProtocol.asmdef` | the Game layer |
+   | `Assets/Scripts/Editor/GatekeepersProtocol.Editor.asmdef` | `SceneBuilder.cs:2` and `SceneBuilder.Enemies.cs:2` both `using GatekeepersProtocol.Sim` |
+   | `Assets/Tests/EditMode/GatekeepersProtocol.Tests.asmdef` | 24 files use the Sim namespace, and it sets `"overrideReferences": true` |
+   | `Assets/Tests/PlayMode/GatekeepersProtocol.PlayTests.asmdef` | 6 files, same shape |
 
    **The project compiles in Unity before criterion 6 is attempted.** Miss one of these and
    nothing builds, which reads as the split having failed rather than as a missing line.
@@ -102,7 +102,7 @@ either holds the seam or does not, and after this one the compiler decides.
 
 ## Implementation
 
-**Create** `Assets/Scripts/Sim/GatekeeperBastion.Sim.asmdef`.
+**Create** `Assets/Scripts/Sim/GatekeepersProtocol.Sim.asmdef`.
 **Change** the four asmdefs in criterion 2.
 
 **Create** the sink interface in `Sim/`, next to `Sim/Settings/ISettingsStore.cs` or in

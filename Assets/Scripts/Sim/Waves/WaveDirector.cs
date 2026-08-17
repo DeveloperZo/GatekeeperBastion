@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// Deterministic wave scaling. Pure functions of (waveIndex, siphonLevel, playerCount) —

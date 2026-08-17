@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Firing modes (pellets / pierce / falloff) and tracer/spark FX — partial of
     /// <see cref="PlayerGun"/>. One method branches on def fields; never a subclass per weapon.</summary>

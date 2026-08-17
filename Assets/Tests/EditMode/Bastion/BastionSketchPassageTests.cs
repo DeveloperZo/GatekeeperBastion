@@ -1,8 +1,8 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using System.Collections.Generic;
 
-namespace GatekeeperBastion.Tests.EditMode.Bastion
+namespace GatekeepersProtocol.Tests.EditMode.Bastion
 {
     /// <summary>Passage pairing: paired Door sides become one auto door, apertures claimed by
     /// a sketch door do not, and alignment via along= is what makes a pair a pair. Unit cases

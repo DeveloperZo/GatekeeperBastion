@@ -1,4 +1,4 @@
-// Gatekeeper Bastion — doc generator.
+// Gatekeeper's Protocol — doc generator.
 //
 // Writes Docs/Play/Field-Manual.md (whole file) and splices countable blocks into
 // Docs/Design/4-Data.md. Every number comes from a Sim/ call; prose outside GKB markers
@@ -11,8 +11,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 
 public static class Docgen
 {
@@ -689,7 +689,7 @@ public static class Docgen
         sb.AppendLine("live right now, so this table is a reference, not something you have to memorise.");
         sb.AppendLine();
 
-        var rows = GatekeeperBastion.Game.Controls.All;
+        var rows = GatekeepersProtocol.Game.Controls.All;
         foreach (var section in rows.Select(r => r.Section).Distinct())
         {
             sb.AppendLine("**" + section + "**");

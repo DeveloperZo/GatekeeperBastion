@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -9,7 +9,7 @@ using Unity.Netcode.TestHelpers.Runtime;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>In-process host + one client. Locks the 2026-08-16 dual-box presence bugs:
     /// owner puppet tracks FPC after late bind; mirror Spawn is unparented; both seat

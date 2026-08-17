@@ -1,17 +1,17 @@
 using System;
 using System.IO;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Emits the five bastion kit prefabs under Assets/Prefabs/Bastion/Kit/. Trigger via
     /// gkb_bastion_kit_request.txt at the project root or
-    /// -executeMethod GatekeeperBastion.EditorTools.BastionKitEmitter.BuildFromBatch.
+    /// -executeMethod GatekeepersProtocol.EditorTools.BastionKitEmitter.BuildFromBatch.
     /// Also sweeps orphan Gen_* litter left by earlier emits (gkb_bastion_kit_cleanup_request.txt).</summary>
     [InitializeOnLoad]
     public static class BastionKitEmitter

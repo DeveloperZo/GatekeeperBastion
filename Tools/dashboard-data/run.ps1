@@ -1,4 +1,4 @@
-# Gatekeeper Bastion - regenerate Docs/dashboard-data.js for the project dashboard.
+# Gatekeeper's Protocol - regenerate Docs/dashboard-data.js for the project dashboard.
 # Session logs stay picker-only in Docs/dashboard.html; this feed is milestones,
 # commits, questions, and a rule-based next-focus card (no LLM, no dates-as-ETA).
 #

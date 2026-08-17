@@ -12,6 +12,6 @@ If antivirus deletes or quarantines the exe, whitelist the extract folder (or re
 
 If something breaks, send a short note of what you did and attach:
 
-`%USERPROFILE%\AppData\LocalLow\Gatekeeper\Gatekeeper Bastion\Player.log`
+`%USERPROFILE%\AppData\LocalLow\Gatekeeper\Gatekeeper's Protocol\Player.log`
 
 Stuck on a black screen or wrong monitor: run `run-windowed.bat` in the same folder as the exe.

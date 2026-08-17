@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Where a carried item sits on the player. Fight-time keys switch slots; the
     /// ARMORY fills Primary/Secondary with weapons, FABRICATION fills Drone with a payload.</summary>

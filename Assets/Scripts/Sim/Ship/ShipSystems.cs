@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// The defended objective. v0 has exactly one: the HATCH — the tunnel/umbilical junction

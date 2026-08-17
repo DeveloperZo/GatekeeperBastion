@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY: trivial marker for an enemy breach/spawn location; enabled instances
     /// self-register in a static list consumed by WaveSpawner.</summary>

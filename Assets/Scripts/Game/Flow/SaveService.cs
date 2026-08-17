@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Static load/save of MetaState JSON at Application.persistentDataPath/gatekeeper_meta.json,
     /// falling back to a fresh MetaState (with a warning) on missing or corrupt files.

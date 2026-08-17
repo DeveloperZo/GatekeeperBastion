@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Weapon upgrade purchase cost curves. Attribute multipliers live in
     /// <see cref="WeaponWheel"/> — Tier is derived as total wheel points / 11.</summary>

@@ -1,11 +1,11 @@
 using System;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Regroups already-emitted rooms in the open scene: each segment's flat Gen_*
     /// pieces move under Walls/Floors/Ceiling without a rebuild, so hand edits survive.
@@ -13,7 +13,7 @@ namespace GatekeeperBastion.EditorTools
     /// landed. Idempotent; world transforms untouched (groups sit at local zero).</summary>
     public static class BastionGeomGroupTool
     {
-        [MenuItem("GatekeeperBastion/Build/Group Bastion Geom In Open Scene", false, 62)]
+        [MenuItem("GatekeepersProtocol/Build/Group Bastion Geom In Open Scene", false, 62)]
         public static void GroupOpenScene()
         {
             BastionSegment[] segments = UnityEngine.Object.FindObjectsByType<BastionSegment>(
@@ -47,7 +47,7 @@ namespace GatekeeperBastion.EditorTools
         /// <summary>Recovery: unpacks leftover pack instances under every segment's _geom.
         /// Emit and Rebuild already unpack Completely; this is for scenes that still have
         /// nested links. One-way: pack updates stop propagating — that is the point.</summary>
-        [MenuItem("GatekeeperBastion/Build/Unpack Bastion Geom In Open Scene", false, 63)]
+        [MenuItem("GatekeepersProtocol/Build/Unpack Bastion Geom In Open Scene", false, 63)]
         public static void UnpackOpenScene()
         {
             BastionSegment[] segments = UnityEngine.Object.FindObjectsByType<BastionSegment>(

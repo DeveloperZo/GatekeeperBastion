@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>REPLICATED-STATE: static registry of live PlayerHealth instances (self-registered
     /// in OnEnable/OnDisable). The ONLY sanctioned way to find "the player" in new code —

@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M27 — player-facing premise strings stay non-empty, under the word cap, and
     /// free of the retired "dormant Gate" framing. Exact wording is not pinned.</summary>

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Anything the player can use with the E key: a HUD prompt plus a per-frame
     /// Interact(dt) called while the key is held and the object is in view.</summary>

@@ -1,10 +1,10 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (see WaveSpawner.cs for the ownership contract): how a wave becomes
     /// actors — the shuffled per-kind roster, and the tick-driven group delivery that puts
@@ -311,7 +311,7 @@ namespace GatekeeperBastion.Game
             {
                 _warnedPrefab = true;
                 Log.Warn(Tag, $"No {KindName(kind)} prefab wired; using the default prefab " +
-                              "(behaviour is correct, colour is not). Re-run GatekeeperBastion/Build/All Scenes.");
+                              "(behaviour is correct, colour is not). Re-run GatekeepersProtocol/Build/All Scenes.");
             }
             return enemyPrefab;
         }

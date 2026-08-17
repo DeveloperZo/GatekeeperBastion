@@ -1,4 +1,4 @@
-# Gatekeeper Bastion
+# Gatekeeper's Protocol
 
 <!--
 Purpose: the game explained to someone who has never seen it — what it is, what a Run

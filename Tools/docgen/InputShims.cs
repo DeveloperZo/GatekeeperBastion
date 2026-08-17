@@ -1,4 +1,4 @@
-// Gatekeeper Bastion — docgen input shims.
+// Gatekeeper's Protocol — docgen input shims.
 //
 // Controls.cs is a Game-layer file: it names KeyCodes and polls UnityEngine.Input. The
 // generator only reads the binding LIST, never polls, so Input is stubbed to "nothing is

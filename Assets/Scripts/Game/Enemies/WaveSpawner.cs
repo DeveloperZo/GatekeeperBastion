@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY: listens to RunSim.WaveStarted (fired by TriggerDraw and deep-start
     /// chain follow-ups) and spawns each wave's gatekeepers in GROUPS at registered spawn points.

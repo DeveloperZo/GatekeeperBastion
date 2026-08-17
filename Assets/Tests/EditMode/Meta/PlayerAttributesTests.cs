@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>Hatch Armor still ramps; Boarder HP / stamina / kill-value / crit are frozen
     /// constants. Crew tracks themselves are gone — see BoarderProtocolTests.</summary>

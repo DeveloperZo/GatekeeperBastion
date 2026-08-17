@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Footprint multiples for bastion segment prefabs. Scaler retunes the whole kit.
     /// Pure floats — no UnityEngine (Sim seam + offline harness).

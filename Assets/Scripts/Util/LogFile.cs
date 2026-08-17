@@ -3,14 +3,14 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.Util
+namespace GatekeepersProtocol.Util
 {
     /// <summary>
     /// Passthrough file sink. Everything the process sends to Debug.* — ours, Unity's, any
     /// package's — is written to one file per session:
     ///
-    ///     Editor : &lt;projectRoot&gt;/Logs/GatekeeperBastion_yyyy-MM-dd_HH-mm-ss_p{pid}.log
-    ///     Player : Application.persistentDataPath/Logs/GatekeeperBastion_yyyy-MM-dd_HH-mm-ss_p{pid}.log
+    ///     Editor : &lt;projectRoot&gt;/Logs/GatekeepersProtocol_yyyy-MM-dd_HH-mm-ss_p{pid}.log
+    ///     Player : Application.persistentDataPath/Logs/GatekeepersProtocol_yyyy-MM-dd_HH-mm-ss_p{pid}.log
     ///
     /// The pid suffix is load-bearing for MPPM: two processes that enter Play in the same
     /// second would otherwise FileMode.Create the same path and wipe the first file.
@@ -23,7 +23,7 @@ namespace GatekeeperBastion.Util
     /// </summary>
     public static class LogFile
     {
-        public const string Product = "GatekeeperBastion";
+        public const string Product = "GatekeepersProtocol";
 
         /// <summary>Session files retained; older ones are deleted when a new session opens.
         /// MPPM writes one file per process, so this is roughly half as many Play sessions.</summary>
@@ -73,7 +73,7 @@ namespace GatekeeperBastion.Util
                     CurrentPath = path;
 
                     _writer.WriteLine("=====================================");
-                    _writer.WriteLine("Gatekeeper Bastion Log File");
+                    _writer.WriteLine("Gatekeeper's Protocol Log File");
                     _writer.WriteLine("Started: " + now.ToString("yyyy-MM-dd HH:mm:ss"));
                     _writer.WriteLine("Process: " + pid);
                     _writer.WriteLine("Unity Version: " + Application.unityVersion);

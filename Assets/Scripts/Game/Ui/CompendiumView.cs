@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: pause Compendium reader. Left: one scroll of volume
     /// headers with every entry under them (organized + exhaustive). Right: Game body.</summary>

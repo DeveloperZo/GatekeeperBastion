@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Pure run-time state for the decoy payload: charges, one live prop, and the
     /// gatekeeper-seconds tally. No UnityEngine — multiplayer seam.</summary>

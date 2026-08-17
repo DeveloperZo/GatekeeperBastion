@@ -1,7 +1,7 @@
 # Language
 
 <!--
-Purpose: the ubiquitous language of Gatekeeper Bastion. One name per thing, used in code,
+Purpose: the ubiquitous language of Gatekeeper's Protocol. One name per thing, used in code,
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired, or when player-facing voice rules change.
@@ -19,8 +19,8 @@ every file above.
 
 ## Who is who
 
-The title names both sides. **Gatekeepers** hold a **Bastion**. The player is the
-**Boarder** who cuts into it, holds the Hatch behind them, and strips it.
+The title is **Gatekeeper's Protocol**. In fiction **Gatekeepers** hold a **Bastion**.
+The player is the **Boarder** who cuts into it, holds the Hatch behind them, and strips it.
 
 This inverts the reading the code grew up with, where "boarder" meant the thing attacking
 you. It does not any more. The player boards; the Gatekeepers repel. Any sentence written
@@ -259,11 +259,10 @@ name survived being wrong through three separate renames.
 measure melee range, meaning how close a Gatekeeper must be to strike. That is builder
 vocabulary about geometry, not a slot name, and it stays.
 
-**4. Gatekeeper and Bastion collide with the project name.** The namespace, the asmdef and
-every editor menu path contain `GatekeeperBastion`, so `grep Gatekeeper` matches ~71 files
-that have nothing to do with enemies. This was accepted deliberately on 2026-08-08: the
-title naming both sides is worth the noisier search. Grep for `GatekeeperKind`,
-`EnemyGatekeeper` or `Gatekeepers` instead of the bare word.
+**4. `grep Gatekeeper` still hits the project identifier (2026-08-16).** The title is
+Gatekeeper's Protocol; the identifier is `GatekeepersProtocol`. `grep Gatekeeper` matches
+the namespace, asmdef, menu root and log prefix plus enemy types. `grep Bastion` no longer
+hits the project identifier. For enemies, grep `GatekeeperKind` or `EnemyGatekeeper`.
 
 **5. "Boarder" reversed meaning on 2026-08-08.** It used to mean the enemy. It now means the
 player. Anything predating that date reads plausibly and means the opposite — this is the

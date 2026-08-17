@@ -1,9 +1,9 @@
 {
-    "name": "GatekeeperBastion.Tests",
+    "name": "GatekeepersProtocol.Tests",
     "references": [
-        "GatekeeperBastion.Sim",
-        "GatekeeperBastion",
-        "GatekeeperBastion.Editor",
+        "GatekeepersProtocol.Sim",
+        "GatekeepersProtocol",
+        "GatekeepersProtocol.Editor",
         "Michsky.UI.Shift",
         "Unity.TextMeshPro",
         "UnityEngine.UI",

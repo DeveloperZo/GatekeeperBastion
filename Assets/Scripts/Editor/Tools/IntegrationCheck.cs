@@ -1,13 +1,13 @@
 using System;
 using System.IO;
 using System.Text;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.TestTools.TestRunner.Api;
 using UnityEngine;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>
     /// The integration check (formerly AutoVerify; renamed 2026-08-12, sentinel filenames kept
@@ -41,7 +41,7 @@ namespace GatekeeperBastion.EditorTools
         static string PlayerBuildRequestPath => Path.Combine(Root, "gkb_player_build_request.txt");
         static string PlayerBuildReportPath => Path.Combine(Root, "gkb_player_build_report.json");
         static string PlayerBuildOutDir => Path.Combine(Root, "Logs", "Builds");
-        static string PlayerBuildExe => Path.Combine(PlayerBuildOutDir, "GatekeeperBastion.exe");
+        static string PlayerBuildExe => Path.Combine(PlayerBuildOutDir, "GatekeepersProtocol.exe");
 
         static double _nextSentinelPoll;
 
@@ -283,7 +283,7 @@ namespace GatekeeperBastion.EditorTools
             return true;
         }
 
-        [MenuItem("GatekeeperBastion/Validate/Integration Check", false, 100)]
+        [MenuItem("GatekeepersProtocol/Validate/Integration Check", false, 100)]
         public static void RunFromMenu() => BeginVerification("menu");
 
         // No Reset command: a stuck StageKey is already cleared by TryConsumeSentinel, which
@@ -344,7 +344,7 @@ namespace GatekeeperBastion.EditorTools
         /// flag: an assembly that failed to build is simply absent.</summary>
         static string MissingTestAssembly()
         {
-            foreach (string name in new[] { "GatekeeperBastion.Tests", "GatekeeperBastion.PlayTests" })
+            foreach (string name in new[] { "GatekeepersProtocol.Tests", "GatekeepersProtocol.PlayTests" })
             {
                 bool loaded = false;
                 foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
@@ -373,8 +373,8 @@ namespace GatekeeperBastion.EditorTools
             // Pin the assembly so a stale EditMode RunFinished cannot be mistaken for PlayMode
             // (and so PlayMode cannot accidentally pull the editor-only suite).
             string assembly = mode == TestMode.PlayMode
-                ? "GatekeeperBastion.PlayTests"
-                : "GatekeeperBastion.Tests";
+                ? "GatekeepersProtocol.PlayTests"
+                : "GatekeepersProtocol.Tests";
             Debug.Log("[IntegrationCheck] TestRunner.Execute " + mode + " assembly=" + assembly);
             _api.Execute(new ExecutionSettings(new Filter
             {
@@ -463,7 +463,7 @@ namespace GatekeeperBastion.EditorTools
                 // Only clear the PlayMode kick when PlayTests actually starts. A duplicate EditMode
                 // RunStarted after we've moved to stage=playmode used to zero PlayKickKey and
                 // kill the retry loop, leaving the stuck-idle timer to fire with no suite run.
-                if (stage == "playmode" && AdaptorContains(testsToRun, "GatekeeperBastion.PlayTests"))
+                if (stage == "playmode" && AdaptorContains(testsToRun, "GatekeepersProtocol.PlayTests"))
                     SessionState.SetInt(PlayKickKey, 0);
                 Debug.Log("[IntegrationCheck] RunStarted stage=" + stage);
             }
@@ -532,8 +532,8 @@ namespace GatekeeperBastion.EditorTools
 
             // Duplicate EditMode RunFinished after we've already moved on would otherwise
             // write the editor suite into playMode and drop the real PlayTests run.
-            bool playLeaves = ResultContains(result, "GatekeeperBastion.PlayTests");
-            bool editLeaves = ResultContains(result, "GatekeeperBastion.Tests.");
+            bool playLeaves = ResultContains(result, "GatekeepersProtocol.PlayTests");
+            bool editLeaves = ResultContains(result, "GatekeepersProtocol.Tests.");
             if (stage == "editmode" && playLeaves && !editLeaves)
             {
                 Debug.LogWarning("[IntegrationCheck] Ignoring PlayMode result while still in editmode stage.");

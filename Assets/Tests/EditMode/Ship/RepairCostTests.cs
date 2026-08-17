@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M19 — hatch repair costs salvage. Clamp order, bank floor, and the cost table
     /// in Docs/Milestones/.../M19-repair-costs-salvage.md.</summary>

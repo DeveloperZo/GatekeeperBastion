@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY: scene root — builds the unlock graph from child doors and terminals.</summary>
     public sealed class BastionLayout : MonoBehaviour

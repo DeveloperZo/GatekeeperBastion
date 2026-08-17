@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Hatch-bank convert rules. RunSim owns the live pile and calls these.
     /// Numbers are #12 constants — retune here and the 4-Data GEN block together.

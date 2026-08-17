@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Static pure catalog of drone-bay payloads. One row today (the decoy). Holds no
     /// state. A payload is not a gun — no damage, clip, or reload fields belong here.</summary>

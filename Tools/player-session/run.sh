@@ -1,14 +1,14 @@
-# Gatekeeper Bastion — same-machine two-player session check (M58 dual-box).
+# Gatekeeper's Protocol — same-machine two-player session check (M58 dual-box).
 #
 # Launches two Windows player builds: host (-gkb-host) then client (-gkb-join 127.0.0.1).
 # Passes when the host log shows "host started" and the client log shows "role=client".
 #
 #   Tools/player-session/run.sh
-#   Tools/player-session/run.sh --exe /path/to/GatekeeperBastion.exe
+#   Tools/player-session/run.sh --exe /path/to/GatekeepersProtocol.exe
 #   Tools/player-session/run.sh --build   # write gkb_player_build_request.txt and wait
 #
 # Requires a Development player with PlayerLaunch (-gkb-host / -gkb-join). Default exe:
-#   Logs/Builds/GatekeeperBastion.exe  or  $GKB_PLAYER_EXE
+#   Logs/Builds/GatekeepersProtocol.exe  or  $GKB_PLAYER_EXE
 #
 # Exit: 0 pass, 1 connect failed, 2 could not run.
 
@@ -52,12 +52,16 @@ if [[ "$DO_BUILD" -eq 1 ]]; then
     cat "$REPORT" >&2
     exit 2
   fi
-  EXE="$ROOT/Logs/Builds/GatekeeperBastion.exe"
+  EXE="$ROOT/Logs/Builds/GatekeepersProtocol.exe"
 fi
 
 if [[ -z "$EXE" ]]; then
-  if [[ -f "$ROOT/Logs/Builds/GatekeeperBastion.exe" ]]; then
-    EXE="$ROOT/Logs/Builds/GatekeeperBastion.exe"
+  if [[ -f "$ROOT/Logs/Builds/GatekeepersProtocol.exe" ]]; then
+    EXE="$ROOT/Logs/Builds/GatekeepersProtocol.exe"
+  elif [[ -f "$ROOT/Logs/build/Gatekeeper's Protocol.exe" ]]; then
+    EXE="$ROOT/Logs/build/Gatekeeper's Protocol.exe"
+  elif [[ -f "$ROOT/Logs/Builds/Gatekeeper Bastion.exe" ]]; then
+    EXE="$ROOT/Logs/Builds/Gatekeeper Bastion.exe"
   elif [[ -f "$ROOT/Logs/build/Gatekeeper Bastion.exe" ]]; then
     EXE="$ROOT/Logs/build/Gatekeeper Bastion.exe"
   fi
@@ -68,16 +72,23 @@ if [[ -z "$EXE" || ! -f "$EXE" ]]; then
   exit 2
 fi
 
-# Player logs live under persistentDataPath on Windows.
-PERSIST="${LOCALAPPDATA:-}/../LocalLow/DefaultCompany/Gatekeeper Bastion/Logs"
-PERSIST="$(cd "$(dirname "$PERSIST")" 2>/dev/null && pwd)/$(basename "$PERSIST")" || true
-if [[ ! -d "$PERSIST" ]]; then
-  # Git Bash on Windows: expand via cmd
-  PERSIST="$(cmd.exe /c "echo %USERPROFILE%\\AppData\\LocalLow\\DefaultCompany\\Gatekeeper Bastion\\Logs" 2>/dev/null | tr -d '\r')"
+# Player logs: companyName Gatekeeper, productName Gatekeeper's Protocol.
+# Try current then legacy product, each under Gatekeeper then DefaultCompany.
+LL=""
+if [[ -n "${LOCALAPPDATA:-}" ]]; then
+  LL="$(cd "${LOCALAPPDATA}/../LocalLow" 2>/dev/null && pwd)" || true
 fi
-if [[ ! -d "$PERSIST" ]]; then
-  echo "player-session: player log dir not found: $PERSIST" >&2
-  exit 2
+if [[ -z "$LL" ]]; then
+  LL="$(cmd.exe /c "echo %USERPROFILE%\\AppData\\LocalLow" 2>/dev/null | tr -d '\r')"
+fi
+PERSIST_CANDIDATES=()
+if [[ -n "$LL" ]]; then
+  PERSIST_CANDIDATES=(
+    "$LL/Gatekeeper/Gatekeeper's Protocol/Logs"
+    "$LL/Gatekeeper/Gatekeeper Bastion/Logs"
+    "$LL/DefaultCompany/Gatekeeper's Protocol/Logs"
+    "$LL/DefaultCompany/Gatekeeper Bastion/Logs"
+  )
 fi
 
 MARKER="$ROOT/Logs/player-session-marker.txt"
@@ -104,13 +115,42 @@ kill "$HOST_PID" "$CLIENT_PID" 2>/dev/null || true
 wait "$HOST_PID" 2>/dev/null || true
 wait "$CLIENT_PID" 2>/dev/null || true
 
-# Newest two session logs after BEFORE.
-mapfile -t NEW_LOGS < <(find "$PERSIST" -name 'GatekeeperBastion_*.log' -type f -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -6 | awk '{print $2}')
+# Newest session logs after launch (both current and legacy prefixes).
+PERSIST=""
+for cand in "${PERSIST_CANDIDATES[@]}"; do
+  if [[ -d "$cand" ]]; then
+    PERSIST="$cand"
+    break
+  fi
+done
+mapfile -t NEW_LOGS < <(
+  {
+    for cand in "${PERSIST_CANDIDATES[@]}"; do
+      [[ -d "$cand" ]] || continue
+      find "$cand" \( -name 'GatekeepersProtocol_*.log' -o -name 'GatekeeperBastion_*.log' \) -type f -printf '%T@ %p\n' 2>/dev/null
+    done
+  } | sort -nr | head -6 | awk '{print $2}'
+)
 if [[ ${#NEW_LOGS[@]} -eq 0 ]]; then
   # Windows find may lack -printf — fall back to ls by mtime via powershell
-  mapfile -t NEW_LOGS < <(powershell.exe -NoProfile -Command \
-    "Get-ChildItem -LiteralPath '$PERSIST' -Filter 'GatekeeperBastion_*.log' | Sort-Object LastWriteTime -Descending | Select-Object -First 6 -ExpandProperty FullName" \
-    | tr -d '\r')
+  mapfile -t NEW_LOGS < <(powershell.exe -NoProfile -Command "
+    \$cands = @(
+      (Join-Path \$env:USERPROFILE 'AppData\LocalLow\Gatekeeper\Gatekeeper''s Protocol\Logs'),
+      (Join-Path \$env:USERPROFILE 'AppData\LocalLow\Gatekeeper\Gatekeeper Bastion\Logs'),
+      (Join-Path \$env:USERPROFILE 'AppData\LocalLow\DefaultCompany\Gatekeeper''s Protocol\Logs'),
+      (Join-Path \$env:USERPROFILE 'AppData\LocalLow\DefaultCompany\Gatekeeper Bastion\Logs')
+    )
+    \$logs = foreach (\$dir in \$cands) {
+      if (-not (Test-Path -LiteralPath \$dir)) { continue }
+      Get-ChildItem -LiteralPath \$dir -Filter 'GatekeepersProtocol_*.log' -ErrorAction SilentlyContinue
+      Get-ChildItem -LiteralPath \$dir -Filter 'GatekeeperBastion_*.log' -ErrorAction SilentlyContinue
+    }
+    @(\$logs) | Sort-Object LastWriteTime -Descending | Select-Object -First 6 -ExpandProperty FullName
+  " | tr -d '\r')
+fi
+if [[ ${#NEW_LOGS[@]} -eq 0 && ( -z "$PERSIST" || ! -d "$PERSIST" ) ]]; then
+  echo "player-session: player log dir not found (tried Gatekeeper/DefaultCompany × Gatekeeper's Protocol/Gatekeeper Bastion)" >&2
+  exit 2
 fi
 
 HOST_HIT=""

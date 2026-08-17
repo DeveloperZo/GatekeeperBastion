@@ -145,7 +145,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 53aca5830ee95e541b40206733b3789e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.PlayerHealth
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.PlayerHealth
   maxHp: 100
   spawnPoint: {fileID: 0}
   contributeToRegistry: 0
@@ -161,7 +161,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 71b35c3b33e22614a912cbfe5c92f855, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.NetPlayerAvatar
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.NetPlayerAvatar
   ShowTopMostFoldoutHeaderGroup: 1
   Hp:
     UpdateTraits:
@@ -214,7 +214,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b7e4c2a91f6d48b3a0c5e8d1f3a24670, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.NetVerbs
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.NetVerbs
   ShowTopMostFoldoutHeaderGroup: 1
 --- !u!114 &6193847561029384751
 MonoBehaviour:
@@ -227,7 +227,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c8f5d3b0a1e24f6d9c7b8a5e4d3c2b1a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.NetPrep
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.NetPrep
   ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1001 &8924296803945874247
 PrefabInstance:

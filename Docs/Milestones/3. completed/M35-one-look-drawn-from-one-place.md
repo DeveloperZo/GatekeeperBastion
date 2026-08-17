@@ -8,7 +8,7 @@ Last updated: 2026-08-11
 
 **Four authored scenes, one theme, no UI generators.** Boot order is Splash → MainMenu →
 Ship → Bastion. Splash is a standard splash: brief, branded, auto-advancing. MainMenu is
-the customized Shift campaign menu — Gatekeeper Bastion's, not Shift's demo. Ship's four
+the customized Shift campaign menu — Gatekeeper's Protocol's, not Shift's demo. Ship's four
 station terminals each open a working, data-bound panel. The HUD is Shift's shell driven
 by our values, split for performance, and the menu is reachable back from play. Every
 element in every canvas earns its place or is deleted. The scene files are the source of
@@ -41,7 +41,7 @@ EMBARK) are in. Evidence at close: `gkb_bindings_report.json`
 
 As the player, I want the game to boot like a finished game — splash, menu, ship,
 fight, and a way back to the menu — with every screen working and nothing left over
-from someone else's demo, so that what I see is Gatekeeper Bastion and everything I
+from someone else's demo, so that what I see is Gatekeeper's Protocol and everything I
 can click does something.
 
 ## Why it matters
@@ -60,7 +60,7 @@ The 2026-08-10 audit found the front end non-functional, not merely unpolished:
   the Bastion**.
 - The Shift demo's Quick Match tile, Friends tab, Party bar, Play Story tile, server
   browser modal and placeholder soldier profile are all still **active** in the menu
-  scene. The title "Gatekeeper Bastion" appears nowhere in the front end.
+  scene. The title "Gatekeeper's Protocol" appears nowhere in the front end.
 - `gkb_verify_report.json` (2026-08-10T04:04Z) is `status: "error", stage: "stuck"`
   ("TestRunner never finished stage 'editmode'") — nothing above was ever verified,
   and the verify loop itself is broken.
@@ -203,7 +203,7 @@ wheel spokes), `Modal Window/Exit` (confirm modals), `Scrollbar` (armory catalog
    end from prefabs" and names `Theme.cs`, which no longer exists — both corrected
    to this scope).
 
-### C — the menu is Gatekeeper Bastion's
+### C — the menu is Gatekeeper's Protocol's
 
 9. The Home panel offers exactly four actions, as Shift `Main Button` instances
    under `Home/Content` (a vertical layout group, so hiding CONTINUE reflows the
@@ -537,7 +537,7 @@ Owns: `Assets/Scenes/Splash.unity` (new), the rename of `Splash.unity` →
 `SplashController.cs`, `SplashView.cs`, `MenuArenaBackdrop.cs`; the three mutators;
 `UiBind.cs`, `ValueAnimator.cs`, `ShortcutPanel.cs`, `ShortcutPanelView.cs`;
 `Editor/Tools/BindingValidator.cs` (new), `AutoVerify.cs` and the test assemblies
-(`GatekeeperBastion.Tests`, `GatekeeperBastion.PlayTests`).
+(`GatekeepersProtocol.Tests`, `GatekeepersProtocol.PlayTests`).
 
 - **Delete** `ShiftFrontEndMutate.cs`, `ShiftShipUiImport.cs`,
   `ShiftBastionUiImport.cs` (+ `.meta`). Deleted rather than fenced: their

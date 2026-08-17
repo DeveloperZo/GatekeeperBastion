@@ -38,7 +38,7 @@ has to run is a rule that documents a violation rather than preventing one.** Th
 same shape as this project's Sim seam (`1-Boundaries.md` §1), enforced today by
 `Tools/verify/run.sh` and by nothing else, and it is why that file argues for the asmdef.
 
-For calibration: Gatekeeper Bastion's caps are currently exceeded by **71 lines**
+For calibration: Gatekeeper's Protocol's caps are currently exceeded by **71 lines**
 (`PlayerGun.cs`) and **11** (`DevConsole.cs`). Not the same problem. Yet.
 
 ## Adopted from InfinityQube

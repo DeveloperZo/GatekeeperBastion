@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Engine-free preferences store: declarations, defaults, current values and
     /// restore-defaults. Persistence goes through <see cref="ISettingsStore"/> — never

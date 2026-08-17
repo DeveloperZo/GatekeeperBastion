@@ -1,9 +1,9 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: editor/dev-build console. F1 toggles an absolute-GUI overlay of every
     /// binding (top-right — clear of the top-left run HUD); each action calls a

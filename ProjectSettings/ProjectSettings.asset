@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: Gatekeeper
-  productName: Gatekeeper Bastion
+  productName: Gatekeeper's Protocol
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.12156863, g: 0.12156863, b: 0.1254902, a: 1}
@@ -814,14 +814,14 @@ PlayerSettings:
   editorAssembliesCompatibilityLevel: 1
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: Gatekeeper Bastion
+  metroPackageName: Gatekeeper's Protocol
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: Gatekeeper Bastion
+  metroApplicationDescription: Gatekeeper's Protocol
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -895,7 +895,7 @@ PlayerSettings:
   cloudProjectId: 3b96df23-b5f0-499c-998f-86d5643d6d88
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Gatekeeper Bastion (1)
+  projectName: Gatekeeper's Protocol
   organizationId: alonzo-williams
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

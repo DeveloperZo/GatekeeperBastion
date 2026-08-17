@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Persistence backend for <see cref="Settings"/>. Pure C# so EditMode tests can
     /// bind an in-memory store; the Unity adapter lives under <c>Game/Flow/</c>.</summary>

@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Unity adapter for <see cref="Settings"/> — the only code that touches
     /// <c>PlayerPrefs</c> for preferences. Bound at boot; never writes the campaign save.</summary>

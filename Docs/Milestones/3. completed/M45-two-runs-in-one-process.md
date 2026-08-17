@@ -99,7 +99,7 @@ not fire. Failure of a later co-op slice is that slice's kill, not this one's.
 
 ### A — the seam is restated with the reason it actually has
 
-1. **`Assets/Scripts/Sim/GatekeeperBastion.Sim.asmdef` exists with
+1. **`Assets/Scripts/Sim/GatekeepersProtocol.Sim.asmdef` exists with
    `"noEngineReferences": false`** and an empty `references` list (no project assembly
    upstream of it). **Corrected 2026-08-12:** the original wording "references only
    `UnityEngine.CoreModule`" is not expressible in asmdef JSON — engine modules are not
@@ -107,8 +107,8 @@ not fire. Failure of a later co-op slice is that slice's kill, not this one's.
    CoreModule-only surface is enforced where it can be: `Tools/verify/run.sh` stage 1
    compiles `Sim/` alone against CoreModule-shaped shims (no MonoBehaviour / scene / `Time` /
    ambient `Random`), and criterion 12b's reflection tooth asserts the assembly identity.
-   `GatekeeperBastion`, `GatekeeperBastion.Editor`, `GatekeeperBastion.Tests` and
-   `GatekeeperBastion.PlayTests` all reference it. **The two test assemblies set
+   `GatekeepersProtocol`, `GatekeepersProtocol.Editor`, `GatekeepersProtocol.Tests` and
+   `GatekeepersProtocol.PlayTests` all reference it. **The two test assemblies set
    `"overrideReferences": true`** and inherit nothing, so a missing line there fails every test
    rather than one.
 2. **The rule in `../../Architecture/1-Boundaries.md` reads: no `MonoBehaviour`, no
@@ -287,7 +287,7 @@ not fire. Failure of a later co-op slice is that slice's kill, not this one's.
     third tooth, and it is the one that was red at HEAD:
 
     - **The Sim assembly holds no static mutable state, asserted by reflection** over
-      `typeof(RunSim).Assembly` (plus: the assembly must BE `GatekeeperBastion.Sim`, so the
+      `typeof(RunSim).Assembly` (plus: the assembly must BE `GatekeepersProtocol.Sim`, so the
       asmdef's existence is itself asserted). Red at HEAD on exactly `Settings`' four statics;
       green once criterion 2b moved them out. This is the standing guard against the next
       Settings-shaped leak, and `RunContext` additionally asserts zero static members so an
@@ -300,7 +300,7 @@ not fire. Failure of a later co-op slice is that slice's kill, not this one's.
 
 ## Implementation
 
-**Create** `Assets/Scripts/Sim/GatekeeperBastion.Sim.asmdef` — `"noEngineReferences": false`,
+**Create** `Assets/Scripts/Sim/GatekeepersProtocol.Sim.asmdef` — `"noEngineReferences": false`,
 reference `UnityEngine.CoreModule` only.
 
 **Create** `Assets/Scripts/Sim/Run/RunContext.cs` (or equivalent name under `Sim/Run/`):
@@ -323,7 +323,7 @@ sealed class RunContext
 distinct metas and seeds, divergent commands, assert independence; poison cases: shared meta,
 and a static on the context.
 
-**Change** `GatekeeperBastion.asmdef` and the Editor / Tests / PlayTests asmdefs to reference
+**Change** `GatekeepersProtocol.asmdef` and the Editor / Tests / PlayTests asmdefs to reference
 Sim; update `Tools/verify/run.sh` for CoreModule.
 
 **Change** `../../Architecture/1-Boundaries.md`, Architecture README fences,

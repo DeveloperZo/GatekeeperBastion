@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gatekeeper Bastion — language table enforcement (M28).
+# Gatekeeper's Protocol — language table enforcement (M28).
 #
 # Fails when a retired term reappears, when builder vocabulary leaks into Docs/Play/,
 # or when a station name loses its caps in a player-facing string. The lists live in

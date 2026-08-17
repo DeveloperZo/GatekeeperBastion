@@ -10,9 +10,9 @@ Last updated: 2026-08-13
 
 ## 1. The Sim boundary: one-directional dependency, enforced by an assembly
 
-`Assets/Scripts/Sim/GatekeeperBastion.Sim.asmdef` exists with `"noEngineReferences": false`
-and no assembly references. `GatekeeperBastion`, `GatekeeperBastion.Editor`,
-`GatekeeperBastion.Tests` and `GatekeeperBastion.PlayTests` all reference it; nothing it
+`Assets/Scripts/Sim/GatekeepersProtocol.Sim.asmdef` exists with `"noEngineReferences": false`
+and no assembly references. `GatekeepersProtocol`, `GatekeepersProtocol.Editor`,
+`GatekeepersProtocol.Tests` and `GatekeepersProtocol.PlayTests` all reference it; nothing it
 depends on can ever reference back, because Unity prohibits cyclic assembly references and
 surfaces violations as compile errors
 ([Referencing assemblies](https://docs.unity3d.com/6000.3/Documentation/Manual/assembly-definitions-referencing.html)).
@@ -60,7 +60,7 @@ per code folder — Editor, Runtime, Tests — "typically suffices"
 ([Create or edit assembly definitions](https://docs.unity3d.com/6000.4/Documentation/Manual/cus-asmdef.html)).
 Core/Gameplay/UI splits are community practice, not Unity guidance, and the usual outcome is
 a "Shared" assembly that everything references, which is the god-module you were avoiding.
-`GatekeeperBastion.Sim`, `GatekeeperBastion`, `GatekeeperBastion.Editor` and the two test
+`GatekeepersProtocol.Sim`, `GatekeepersProtocol`, `GatekeepersProtocol.Editor` and the two test
 assemblies is the complete set.
 
 ## 2. Wiring: a composition root, not a container

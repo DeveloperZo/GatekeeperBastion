@@ -95,7 +95,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d7b21c0df5457644abdedce096fd76f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.Damageable
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.Damageable
   maxHp: 20
   hitFlashColor: {r: 1, g: 0.15, b: 0.1, a: 1}
   hitFlashSeconds: 0.09
@@ -113,7 +113,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03bd7a36ee7261348b8199820660ae6a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.HunterGatekeeper
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.HunterGatekeeper
   attackRange: 2.4
   hatchAttackRange: 3.5
   attackInterval: 0.7
@@ -209,7 +209,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 25e0027de5df8c948af95e5a487f84c0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.NetEnemy
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.NetEnemy
   ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1001 &5073873276995641091
 PrefabInstance:

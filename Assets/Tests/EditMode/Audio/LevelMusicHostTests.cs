@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>Whispers of the Void hosts on Ship and Bastion, plus SFX start-click
     /// fades — YAML / PCM on disk, no scene load.</summary>

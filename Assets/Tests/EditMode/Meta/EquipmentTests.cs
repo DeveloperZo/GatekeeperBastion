@@ -1,9 +1,9 @@
 using System;
 using System.Reflection;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M23: equipment slot + repair rig; deleted RepairRig/Engineering tracks.</summary>
     public class EquipmentTests

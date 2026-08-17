@@ -8,7 +8,7 @@ Closed on: 2026-08-15. Gate: `CompendiumFormTests` 6/0 (Game + See also on every
 hand-written page, no Page|Answers table, Game dimension has no milestone IDs,
 StreamingAssets stem set matches Docs/Play, ExtractGameView omits Reference/Gaps,
 catalog volumes cover every Play page except README). Menu
-`GatekeeperBastion/Build/Copy Compendium Pages`; player-build hooks the copy.
+`GatekeepersProtocol/Build/Copy Compendium Pages`; player-build hooks the copy.
 Pause Esc → Compendium on Bastion and Ship; scroll nav of all volumes/entries;
 Game body + See also; HUD hidden while open. Zo close — criteria 2–6 playthrough
 is confirmation (same as M57/M59).
@@ -108,7 +108,7 @@ both sessions, that is a kill — Shown failed.
    fails until it is gone.
 2. **Create** `Assets/Scripts/Editor/Tools/CompendiumCopy.cs` — copies `Docs/Play/*.md`
    → `Assets/StreamingAssets/Compendium/`. Runs from the player-build pipeline and from
-   a menu `GatekeeperBastion/Build/Copy Compendium Pages`. `Field-Manual.md` included. No
+   a menu `GatekeepersProtocol/Build/Copy Compendium Pages`. `Field-Manual.md` included. No
    transform of the prose except stripping HTML comments and `## Gaps` sections (and the
    rest of that heading's body until the next `##`). Prefer keeping comments out of the
    rendered body by stripping at copy, not by deleting them from `Docs/Play/`. Runtime

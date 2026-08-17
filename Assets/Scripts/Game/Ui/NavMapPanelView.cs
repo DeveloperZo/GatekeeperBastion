@@ -1,10 +1,10 @@
 using System;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: authored NAV MAP body: nav panel (node grid), map panel (destination, premise,
     /// start-wave picker, loadout warnings and the embark action). Exactly one panel shows at a

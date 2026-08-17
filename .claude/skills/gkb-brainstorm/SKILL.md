@@ -1,8 +1,8 @@
 ---
 name: gkb-brainstorm
-description: Move an idea from interesting to cuttable in Gatekeeper Bastion — the entry contract for a brainstorm document, the graduation test that turns an entry into a milestone, and the checks that stop settled ground being re-proposed. Use this skill only when the work is the brainstorm document itself: capturing, parking, revisiting, or asking whether an entry is ready to graduate — including phrasings like "capture this", "add this to the brainstorm", "is X ready yet", "park this", or "I have a half-formed idea", and whenever a file under Docs/Brainstorms/ is being read or written. It does not cover evaluating, scoping, arguing or killing a proposed mechanic, resource, enemy or economy change; that is gkb-design from the first proposal, even when the idea is new and unwritten. For writing the milestone once an entry graduates, use gkb-strategy.
+description: Move an idea from interesting to cuttable in Gatekeeper's Protocol — the entry contract for a brainstorm document, the graduation test that turns an entry into a milestone, and the checks that stop settled ground being re-proposed. Use this skill only when the work is the brainstorm document itself: capturing, parking, revisiting, or asking whether an entry is ready to graduate — including phrasings like "capture this", "add this to the brainstorm", "is X ready yet", "park this", or "I have a half-formed idea", and whenever a file under Docs/Brainstorms/ is being read or written. It does not cover evaluating, scoping, arguing or killing a proposed mechanic, resource, enemy or economy change; that is gkb-design from the first proposal, even when the idea is new and unwritten. For writing the milestone once an entry graduates, use gkb-strategy.
 metadata:
-  project: gatekeeper-bastion
+  project: gatekeepers-protocol
   update-trigger: when the brainstorm contract or the graduation test changes
 ---
 

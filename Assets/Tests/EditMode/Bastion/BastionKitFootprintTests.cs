@@ -1,8 +1,8 @@
 using System;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>Bastion kit table — footprint multiples and enum coverage, no scene.</summary>
     public class BastionKitFootprintTests

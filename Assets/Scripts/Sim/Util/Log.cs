@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Util
+namespace GatekeepersProtocol.Util
 {
     /// <summary>
     /// Gameplay logging front end. Every call goes straight to UnityEngine.Debug as

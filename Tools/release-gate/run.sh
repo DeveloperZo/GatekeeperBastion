@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gatekeeper Bastion — Friends Alpha release-gate machine checks (M64).
+# Gatekeeper's Protocol — Friends Alpha release-gate machine checks (M64).
 #
 # Reads PlayerSettings, the Windows build profile, FrameBudget / DevCommands source,
 # and ProjectVersion.txt. Fails (exit 1) on any automatable red item.

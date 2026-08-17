@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY planted slow zone. Static live list; EnemyGatekeeper.RecomputeSpeed
     /// reads <see cref="SlowMulAt"/>.</summary>

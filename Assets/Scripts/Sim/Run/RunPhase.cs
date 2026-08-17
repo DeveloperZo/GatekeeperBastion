@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// Lifecycle phases of a single run. v0 uses Docked → Tethered → Lost (lost) or

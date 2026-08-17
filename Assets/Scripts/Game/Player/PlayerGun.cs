@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: hitscan weapon on the player camera with per-slot clip/reload,
     /// hold left-click to fire, R to reload. Slots switch via 1/2/3, mouse wheel, and Q —

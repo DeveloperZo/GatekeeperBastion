@@ -1,6 +1,6 @@
 using Unity.Netcode;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>How the host run ended. Byte on the wire; names the three end screens.</summary>
     public enum RunEndKind : byte

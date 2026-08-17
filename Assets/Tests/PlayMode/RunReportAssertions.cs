@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>
     /// TEST-OWNED helper for the one sim member both end-screen tests have to read:

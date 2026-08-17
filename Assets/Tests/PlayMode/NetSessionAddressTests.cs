@@ -1,12 +1,12 @@
 using System.Collections;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>Proves StartHost / StartClient push bind and join addresses onto UnityTransport.
     /// Does not connect to 10.0.0.1 — Shutdown runs before the timeout.</summary>
@@ -48,7 +48,7 @@ namespace GatekeeperBastion.PlayTests
         public void PlayerLaunch_TryParse_HostAndJoin()
         {
             Assert.IsTrue(PlayerLaunch.TryParse(
-                new[] { "GatekeeperBastion.exe", PlayerLaunch.HostArg, PlayerLaunch.QuitAfterArg, "12" },
+                new[] { "GatekeepersProtocol.exe", PlayerLaunch.HostArg, PlayerLaunch.QuitAfterArg, "12" },
                 out var host));
             Assert.AreEqual(NetJoinIntent.Kind.Host, host.Kind);
             Assert.AreEqual(12f, host.QuitAfterSeconds, 0.01f);

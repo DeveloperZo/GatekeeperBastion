@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>EditMode tests for the Subsystem primitive, the Hatch aggregate, and the per-run
     /// salvage tally. The ledger has no banking API: currency is credited to MetaState per kill

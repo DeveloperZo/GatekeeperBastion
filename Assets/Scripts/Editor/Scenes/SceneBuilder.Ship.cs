@@ -1,10 +1,10 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Ship hull on the Synty 5 m occupancy grid. Visual kit lives in
     /// ShipDress. When that root is present, RebuildShipGeometry does not wipe

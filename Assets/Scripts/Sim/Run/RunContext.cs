@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// Everything one Run owns, in one bag: the campaign meta it reads and writes, the run state

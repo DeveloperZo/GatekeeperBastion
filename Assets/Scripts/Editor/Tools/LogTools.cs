@@ -1,13 +1,13 @@
 using System;
 using System.IO;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using UnityEditor;
 using UnityEngine;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>
-    /// Editor conveniences for the log file (GatekeeperBastion/Logs menu). Domain-reload close
+    /// Editor conveniences for the log file (GatekeepersProtocol/Logs menu). Domain-reload close
     /// of the sink lives in IntegrationCheck's static constructor so criterion 5's grep stays clean.
     /// </summary>
     public static class LogTools
@@ -33,7 +33,7 @@ namespace GatekeeperBastion.EditorTools
             }
         }
 
-        [MenuItem("GatekeeperBastion/Logs/Open Logs Folder", false, 40)]
+        [MenuItem("GatekeepersProtocol/Logs/Open Logs Folder", false, 40)]
         public static void OpenLogsFolder()
         {
             try
@@ -54,7 +54,7 @@ namespace GatekeeperBastion.EditorTools
         // worse at reading files, and the agent reads the log itself (Docs/Working-Rules.md,
         // "Runtime bugs"). Open the folder, or copy the path and hand it over.
 
-        [MenuItem("GatekeeperBastion/Logs/Copy Latest Log Path", false, 41)]
+        [MenuItem("GatekeepersProtocol/Logs/Copy Latest Log Path", false, 41)]
         public static void CopyLatestLogPath()
         {
             try

@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: lerps a numeric TMP display and/or Image fill toward a target; punch-scales
     /// (~1.15 → 1 over 150ms) on change. Unscaled time — safe behind non-blocking pause.</summary>

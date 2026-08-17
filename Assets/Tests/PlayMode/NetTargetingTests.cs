@@ -1,5 +1,5 @@
 using System.Collections;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -7,7 +7,7 @@ using Unity.Netcode.TestHelpers.Runtime;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>In-process host + one client. Proves the remote avatar is huntable: the server
     /// registers it, NearestAlive prefers it when nearer, TakeDamage replicates to the owner,

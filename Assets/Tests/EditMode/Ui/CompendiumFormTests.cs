@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M62: Compendium form — Game dimension, See also, StreamingAssets stem set.</summary>
     public class CompendiumFormTests
@@ -129,7 +129,7 @@ namespace GatekeeperBastion.Tests
             string play = ProjectPlayFolder();
             string stream = ProjectStreamingFolder();
             Assert.IsTrue(Directory.Exists(stream),
-                "StreamingAssets/Compendium missing — run GatekeeperBastion/Build/Copy Compendium Pages");
+                "StreamingAssets/Compendium missing — run GatekeepersProtocol/Build/Copy Compendium Pages");
 
             var playStems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (string path in Directory.GetFiles(play, "*.md"))

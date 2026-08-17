@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY command layer for ship-hub purchases: the ONLY path by which station UI
     /// mutates MetaState. Each command applies MetaUpgrades / WeaponWheel / EquipmentCatalog

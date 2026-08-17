@@ -1,8 +1,8 @@
-﻿using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: Armory console — catalog first; selecting an owned weapon opens the
     /// upgrade wheel; Back / Esc returns to the catalog.</summary>

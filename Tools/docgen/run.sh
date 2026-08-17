@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gatekeeper Bastion — doc generator.
+# Gatekeeper's Protocol — doc generator.
 #
 # Regenerates Docs/Play/Field-Manual.md (whole file) and splices countable blocks into
 # Docs/Design/4-Data.md from the live Sim/ code.

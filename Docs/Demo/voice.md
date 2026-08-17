@@ -38,7 +38,7 @@ Import **2.2.73.2** (or the store current at import time) into
 **Do not import Storyteller.** Same library folder; it is not this pipe.
 
 After import: `read_console` for compile; add an asmdef reference from
-`GatekeeperBastion` (Game) only. `GatekeeperBastion.Sim` must not reference
+`GatekeepersProtocol` (Game) only. `GatekeepersProtocol.Sim` must not reference
 Pixel Crushers (`Architecture.md` one-way rule).
 
 ## Create

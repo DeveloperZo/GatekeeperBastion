@@ -4024,7 +4024,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b7b0ac40aca4d574ca7bb8e7f115c876, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.DevConsole
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.DevConsole
 --- !u!114 &326159808
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4036,7 +4036,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2741ca3ce19c1d04fbcd0347960ce161, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.ShipHud
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.ShipHud
   _view: {fileID: 702860948}
   _ship: {fileID: 326159809}
   _labelsRoot: {fileID: 263276863}
@@ -4051,7 +4051,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6ac44920f8394a34cb22fa0b2a5f4344, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.ShipController
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.ShipController
   _stationCanvas: {fileID: 962616300}
   _panels: {fileID: 1527338686}
   _exitModal: {fileID: 1005833076}
@@ -7214,7 +7214,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f355750a003e274eacb48c831311436, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.ShipHudView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.ShipHudView
   _root: {fileID: 702860947}
   _profileRoot: {fileID: 2080962548}
   _profileLevel: {fileID: 2011307820}
@@ -8056,7 +8056,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 53aca5830ee95e541b40206733b3789e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.PlayerHealth
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.PlayerHealth
   maxHp: 100
   spawnPoint: {fileID: 0}
   contributeToRegistry: 1
@@ -8072,7 +8072,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d02ccee5f3446ff4f9768602dbc28890, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.FirstPersonController
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.FirstPersonController
   moveSpeed: 5
   sprintSpeed: 7.5
   gravity: -20
@@ -8189,7 +8189,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2942d6db00e3eda46995eb4cbf134755, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.BoarderPresentation
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.BoarderPresentation
   _localCamera: {fileID: 0}
   _bodyRenderers: []
 --- !u!114 &781964336
@@ -8203,7 +8203,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b1863fc853591ee4f9fe03709ff665ae, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.WeaponViewModel
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.WeaponViewModel
   _rightHand: {fileID: 0}
   _animator: {fileID: 0}
   _mk1: {fileID: 0}
@@ -10393,7 +10393,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: baf14ad80e49cca4c96bfd0cde53e341, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.ArmoryStation
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.ArmoryStation
   _view: {fileID: 4453152723249199611}
   _canvasRoot: {fileID: 962616300}
   _panels: {fileID: 1527338686}
@@ -10625,7 +10625,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48dcd478b1cf4874ebef9231508053f3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.CrewQuartersStation
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.CrewQuartersStation
   _view: {fileID: 8758674150595181392}
   _canvasRoot: {fileID: 962616300}
   _panels: {fileID: 1527338686}
@@ -10720,7 +10720,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a120468d4f3bda642a6a75c7d768691a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.Interactor
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.Interactor
   range: 3.2
 --- !u!81 &1069401163
 AudioListener:
@@ -12686,7 +12686,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2fc70004ce4e8d8419e2c8884ead3e9e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.EngineeringStation
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.EngineeringStation
   _view: {fileID: 4249596811929827104}
   _canvasRoot: {fileID: 962616300}
   _panels: {fileID: 1527338686}
@@ -16131,7 +16131,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4cc296c2a6d2b1544a2b929ed0f5b0d8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.ArmoryWheelView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.ArmoryWheelView
   _spokes:
   - {fileID: 2014342963}
   - {fileID: 1265088693}
@@ -19529,7 +19529,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3168dac81cf569448ce53cf24338c09, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.MapStation
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.MapStation
   _view: {fileID: 2325897005825744970}
   _canvasRoot: {fileID: 962616300}
   _panels: {fileID: 1527338686}
@@ -24868,7 +24868,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d6a2dd9abfcd9504fb9c4406822ea81a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationPanelView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationPanelView
   _root: {fileID: 1004751251140577464}
   _title: {fileID: 1795890412}
   _purpose: {fileID: 0}
@@ -27414,7 +27414,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d6a2dd9abfcd9504fb9c4406822ea81a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationPanelView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationPanelView
   _root: {fileID: 1679615305003556846}
   _title: {fileID: 1394173475}
   _purpose: {fileID: 0}
@@ -27625,7 +27625,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d6a2dd9abfcd9504fb9c4406822ea81a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationPanelView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationPanelView
   _root: {fileID: 1187382667091022091}
   _title: {fileID: 1212041210}
   _purpose: {fileID: 0}
@@ -37528,7 +37528,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d6a2dd9abfcd9504fb9c4406822ea81a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationPanelView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationPanelView
   _root: {fileID: 6069628869720232894}
   _title: {fileID: 790420092}
   _purpose: {fileID: 0}
@@ -40003,7 +40003,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: GATEKEEPER BASTION
+  m_text: "GATEKEEPER'S PROTOCOL"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -61984,7 +61984,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9041080689527b340a14381acacc03d2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.OptionsView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.OptionsView
   _panels: {fileID: 9000000000000001091}
   _settingsPanel: Settings
   _homePanel: Pause Menu
@@ -104022,7 +104022,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000048}
   _cost: {fileID: 9200000000000000079}
   _level: {fileID: 9200000000000000053}
@@ -105179,7 +105179,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000083}
   _cost: {fileID: 9200000000000000114}
   _level: {fileID: 9200000000000000088}
@@ -106336,7 +106336,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000118}
   _cost: {fileID: 9200000000000000149}
   _level: {fileID: 9200000000000000123}
@@ -107245,7 +107245,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000169}
   _cost: {fileID: 9200000000000000186}
   _level: {fileID: 9200000000000000164}
@@ -108375,7 +108375,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000212}
   _cost: {fileID: 9200000000000000229}
   _level: {fileID: 9200000000000000207}
@@ -109349,7 +109349,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000247}
   _cost: {fileID: 9200000000000000264}
   _level: {fileID: 9200000000000000242}
@@ -110479,7 +110479,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000290}
   _cost: {fileID: 9200000000000000307}
   _level: {fileID: 9200000000000000285}
@@ -113965,7 +113965,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000409}
   _cost: {fileID: 9200000000000000404}
   _level: {fileID: 9200000000000000419}
@@ -115010,7 +115010,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000444}
   _cost: {fileID: 9200000000000000439}
   _level: {fileID: 9200000000000000454}
@@ -116055,7 +116055,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000479}
   _cost: {fileID: 9200000000000000474}
   _level: {fileID: 9200000000000000489}
@@ -117100,7 +117100,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8f07a335d2a7df42b314275497c2d8c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.StationRowView
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.StationRowView
   _name: {fileID: 9200000000000000514}
   _cost: {fileID: 9200000000000000509}
   _level: {fileID: 9200000000000000524}

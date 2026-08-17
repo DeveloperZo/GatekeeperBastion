@@ -1,8 +1,8 @@
 using System;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY composition root: the one place that owns the loaded MetaState and all
     /// SaveService IO for the whole app (allowed exception to the no-new-statics rule).</summary>
