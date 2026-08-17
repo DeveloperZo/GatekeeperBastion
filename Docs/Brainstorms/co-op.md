@@ -28,8 +28,9 @@ downable; down does not end the host Run. M50 shipped (2026-08-13, fixture close
 and endings on the client. M51 shipped (2026-08-13, fixture close): client repair,
 decoy and world-acting abilities apply once, server-side. M57 shipped 2026-08-15
 (get-up: Ship wait, Hatch-bank Prep embark). M58 shipped 2026-08-15 (player build).
-M60 shipped 2026-08-15 (Relay join; Zo eyes-on). Remaining co-op surface is M72 (shared
-Ship lobby). The epic's testability story is the `NetcodeIntegrationTest` fixture —
+M60 shipped 2026-08-15 (Relay join; Zo eyes-on). M72 shipped 2026-08-17 (shared Ship
+lobby; host close log `13-24-37` / Relay `KPRMPR`). Remaining co-op surface is polish
+in this file. The epic's testability story is the `NetcodeIntegrationTest` fixture —
 every slice writes its gate against it and closes headless in the integration check —
 the single-developer constraint (Zo, 2026-08-12) makes that non-negotiable, so **a slice
 whose gate cannot be phrased against the fixture is not ready to graduate.**
@@ -44,6 +45,7 @@ Link, never restate.
 | In-run client verbs (repair, decoy, abilities) | `[M51](../Milestones/3.%20completed/M51-the-clients-hands.md)`                   |
 | Client down wait / get-up                      | `[M57](../Milestones/3.%20completed/M57-the-downed-player-waits-on-the-ship.md)` |
 | A join surface a friend can use (Unity Relay)  | `[M60](../Milestones/3.%20completed/M60-a-join-a-friend-can-use.md)`               |
+| Shared Ship / party EMBARK                     | `[M72](../Milestones/3.%20completed/M72-the-party-shares-a-ship.md)`               |
 
 
 
@@ -83,5 +85,6 @@ Keep everything else fixture-first or the single-dev constraint bites back.
 - **Shared Ship lobby is M72.** M64's own-Ship-before-Bastion failed the friends path in
 play (2026-08-15 Relay dual-box: no co-presence, host EMBARK moved one seat). M57's
 additive Ship remains the *downed client* wait only. Party lobby + party-wide scene
-loads: `[M72](../Milestones/2.%20active/M72-the-party-shares-a-ship.md)`.
+loads: `[M72](../Milestones/3.%20completed/M72-the-party-shares-a-ship.md)` (closed
+2026-08-17).
 

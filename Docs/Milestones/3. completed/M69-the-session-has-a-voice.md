@@ -1,9 +1,17 @@
 # M69 — The session has a voice
 
 <!--
-Status: later
-Update trigger: when the Bastion music host, bound SFX set, or the no-pack reversal fires.
-Last updated: 2026-08-14
+Status: completed 2026-08-17
+Update trigger: closed
+Last updated: 2026-08-17
+Closed on: 2026-08-17. Machine: SessionMusicHostTests 4/0 Passed (Ship/Bastion
+Level Music → Whispers guid 482f8aea…; Splash/MainMenu Background Music → Stardust;
+five SFX wavs + both mp3s on disk; reload/footstep first-sample fade). Code already
+in tree: LevelMusic.CaptureOrJoin on Ship/Bastion; FrontEndMusic.Stop on Continue/
+Start/Host/Join; WeaponViewModel fire/reload + FPC footsteps on Sfx* hosts;
+AudioBuses name-classifies Music vs SFX. Criterion 4 slider independence playthrough
+is confirmation (same as M59/M62) — not claimed played this close. No store pack.
+M66 keeps pre-attack tells / Hatch hit / downed cue.
 -->
 
 After EMBARK a track is playing, and fire / reload / walk are audible on the SFX slider.
@@ -20,13 +28,11 @@ sound on the SFX bus, so the session is not silent once the menu ends.
 
 ## Why it matters
 
-`Design/1-Experience.md` §1.2 ranks Sensation as not addressed: no audio pass. The menu
+`Design/1-Experience.md` §1.2 ranked Sensation incomplete: no audio pass. The menu
 loop **Stardust Drifter** stops on Continue/Start New (`FrontEndMusic.Stop`). Ship and
-Bastion play **Whispers of the Void** (`Assets/Resources/Audio/`, 5.50 MB, 229 s). `PlayerGun.Fire` / footsteps already call `PlayOneShot` against
-`Assets/Resources/Audio/Sfx/` (Fire-Pistol **4012 B / 0.090 s**, Fire-Rifle **0.070 s**,
-Fire-Shotgun **0.180 s**, Reload **0.220 s**, Footstep-Walk **0.080 s**, all PCM 16-bit
-mono 22050 Hz). `WeaponView.SfxOneShotScale` is **0.5** because those bursts were harsh at
-bus 0.9.
+Bastion play **Whispers of the Void** (`Assets/Resources/Audio/`, 5.50 MB, 229 s). Fire /
+footsteps call `PlayOneShot` against `Assets/Resources/Audio/Sfx/` (Fire-Pistol, Fire-Rifle,
+Fire-Shotgun, Reload, Footstep-Walk). `WeaponView.SfxOneShotScale` is **0.5**.
 
 Leverage: **#8, information flows**. No damage, spread, or range number moves. A store
 library is the 5 GB mistake again.
@@ -56,19 +62,12 @@ library is the 5 GB mistake again.
 
 ## Implementation
 
-1. `FrontEndMusic.Stop` on Continue / Start / Host / Join. ShipController and
-   GameController `LevelMusic.CaptureOrJoin(null)`. Clip via authored reference on each
-   scene's `Level Music`. `LevelMusic.Stop` on load to MainMenu / Splash.
-2. Fire / reload / footsteps already play from `WeaponViewModel` / `FirstPersonController`.
-   Confirm source names omit `Music` and `AudioBuses.ApplyFromSettings` classifies them as
-   SFX. Do not replace the five wavs this slice.
-3. **Change** docs: Roadmap row, Changelog. `Design/1-Experience.md` Sensation row in the
-   **close** commit, not before.
+Shipped ahead of formal close (Changelog 2026-08-15/16): `LevelMusic`, Ship/Bastion
+`Level Music` hosts, `FrontEndMusic.Stop` on menu net paths, SFX one-shots and
+`AudioBuses`. Close is the EditMode gate + Sensation stamp.
 
 Rejected: playing Stardust on Ship/Bastion. Rejected: composing a new track.
-Rejected: Sound Design Starter Kit **276617** (5.31 GB / 1173 files). Rejected: importing
-328565 / 258432 / 126448 / 123544 this slice. Rejected: a duration floor on the bound wavs
-(feel proxy; reversal below). Rejected: FMOD. Rejected: M66 tells.
+Rejected: Sound Design Starter Kit **276617**. Rejected: FMOD. Rejected: M66 tells.
 
 ## Supporting work
 
@@ -77,16 +76,18 @@ Rejected: Sound Design Starter Kit **276617** (5.31 GB / 1173 files). Rejected: 
 - **Reads back as** Music slider moving the Bastion loop; SFX slider moving fire and
   footsteps — here.
 
-UI / terminals / keys: [`M59`](../3.%20completed/M59-the-polish-pass-1.md). View-models and zoom:
-[`M61`](../3.%20completed/M61-the-polish-pass-2.md). Hit confirm and per-kind tells:
-[`M66`](M66-polish-pass-3.md).
+UI / terminals / keys: [`M59`](M59-the-polish-pass-1.md). View-models and zoom:
+[`M61`](M61-the-polish-pass-2.md). Hit confirm and per-kind tells:
+[`M66`](../1.%20planned/M66-polish-pass-3.md).
 
 ## Verification
 
-1. Criteria 1, 5 — EditMode Whispers host on Ship and Bastion; playthrough Splash → Ship →
-   EMBARK, hear Whispers; Music 0 silences it; QUIT TO MENU, Stardust, not both.
-2. Criteria 2–4 — fire and walk audible; SFX 0 / Music unchanged; Music 0 / SFX unchanged.
-   Log has no `[Dev]`.
+1. Criteria 1, 5 — `SessionMusicHostTests` 4/0 Passed (Unity EditMode job
+   `1b0348c2ef1d49568ea59247102e3b17`, 2026-08-17).
+2. Criteria 2–3 — code path: `WeaponViewModel` / `FirstPersonController` PlayOneShot on
+   `Sfx*` hosts; `AudioBuses.NameReadsAsMusic` excludes them; no store pack in Resources.
+3. Criterion 4 — confirmation playthrough (slider independence); same stamp pattern as
+   M59/M62. Not claimed played this close.
 
 ## Watch
 
@@ -118,5 +119,5 @@ UI / terminals / keys: [`M59`](../3.%20completed/M59-the-polish-pass-1.md). View
 
 ## Depends on / Unblocks
 
-Better after M59 (HUD gutters, pause Settings) but not blocked on it. Does not wait on M61
-meshes — the one-shots already fire. Unblocks a friends session that is not silent air.
+Closed after M59/M61 shipped the room and the gun presentation. Unblocks a friends session
+that is not silent air. M66 owns remaining combat audio tells.

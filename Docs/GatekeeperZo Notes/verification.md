@@ -63,12 +63,9 @@ and that is worth knowing now that M32 has added a third Primary to it.
 
 ## Two machines — M72 criterion 9
 
-Does not close from a solo Run. Two player builds, two networks (LAN same-build does not
-close). Host shows join code → guest joins → both on the shared Ship and see each other →
-each completes one local ARMORY or CREW change → all Ready → lead EMBARK → countdown →
-both in Bastion → one networked kill on both screens.
-
-Kill clock 2026-08-28. Kernel is in tree; polish and this eyes-on still open.
+**Closed 2026-08-17.** Host log `GatekeepersProtocol_2026-08-17_13-24-37_p49280` /
+`Player.log`: Relay `KPRMPR`, `clientId=1`, Ready gate, countdown, Bastion
+`playerCount=2`, kills, party return Ship, no `[Dev]`.
 
 ---
 
@@ -84,6 +81,7 @@ Real, lower leverage. None of these blocks anything.
 | PRI-C owns the far wall | M32 | Buy PRI-C, embark Wave 3, stand at the Hatch and fire up the bore; expect far kills. Swap to MR-35 at the same Tier; expect those kills not to land. Then `F` for Railshot into a line — expect `railshot armed` / `railshot fired` Ability lines |
 | Options reach the fight | M24 | Menu OPTIONS, set sensitivity, embark, press `O` mid-Assault, confirm Gatekeepers keep moving and the change applies in the same Run. One `[Settings]` line per commit |
 | Reload discard warning | M25 | Mid-reload, read `SWAP DISCARDS THIS RELOAD`, swap, confirm the discard line. Then turn it off in options and confirm `reload paused` |
+| Groups walk out of the closet | M73 | EMBARK, `E` then `T`. Slab rises for the group, not the Boarder. Log `breached at S_S` and no `[Dev]`. Control Room: same from `S_ControlW` / `S_ControlE` after Master Control |
 | Juice unused on ten Runs | M55 | Kill criterion: if every post-close start-Wave line is `intensity=0`, stop. Readable off `intensity=` |
 | MK-1 Regen Surge mag after wheel points | M71 | Criterion 7: with ability points bought, the Regen Surge line's dial value changes (4 s at 0, 10 s at focus-max 50) |
 | First Run with no rig | M23 | The Hatch budget numbers assume the rig. Play one Run without buying it and see whether the door survives Wave 2 |
@@ -113,6 +111,7 @@ Real, lower leverage. None of these blocks anything.
 
 | Item | Milestone | Closed by |
 |---|---|---|
+| Shared Ship / party EMBARK | M72 | 2026-08-17 close. Host `13-24-37` Relay `KPRMPR`, `clientId=1`, Ready gate, countdown, `playerCount=2`, party return, no `[Dev]`. Guest log not on this machine |
 | Default Protocol in a Run | M70 | 2026-08-17 close. `09-43-30` Barrage/Rush sat-ready + window ended, no `[Dev]`; `00-44-24` claimed Default; `08-37-17` `self refused 21s left`. Unequipped `refused — no protocol` not in a log |
 | MK-1 wheel ring | M21 | 2026-08-14, M71: ring D–A–R–C–F authored, strength Reload / weakness Damage; `RingsAreUniqueAcrossShopWeapons` and `WeaknessNeverAdjacentToStrength` cover it, harness green |
 | SEC-D wheel ring | M21 | 2026-08-15, M71: ring F–A–R–C–D authored, strength FireRate / weakness Reload; Ability spoke not purchasable |

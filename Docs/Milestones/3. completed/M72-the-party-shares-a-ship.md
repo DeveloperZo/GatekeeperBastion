@@ -1,15 +1,20 @@
 # M72 — The party shares a Ship
 
 <!--
-Status: next (current)
-Update trigger: when party-lead rules, ready-vs-timer, or NetworkSceneManager choice changes
-Last updated: 2026-08-16
-Recut: 2026-08-15 grill — false greens cut; DDOL/Ready/ESM/M57 locked; Release-Gate #19 moved with code
-Post-grill fixes: Spawn(destroyWithScene:false); SceneEvent lobby log; guest Return RPC; pause Ready
-Dual-box gaps: seat marker; premise countdown; LastError on Relay fail; Join refuses second session
-Criterion 9 eyes-on open. 2026-08-16 dual-box: host saw guest, guest did not see host
-(host puppet unbound at MainMenu spawn); remote Boarder static. Fixes: SpawnMirror order,
-owner-rig rebind, Speed animator drive, PlayerRegistry.Local prefers FPC.
+Status: completed 2026-08-17
+Update trigger: closed
+Last updated: 2026-08-17
+Closed on: 2026-08-17. Play (c9): Logs/GatekeepersProtocol_2026-08-17_13-24-37_p49280.log
+WindowsPlayer, Relay joinCode=KPRMPR, lobby ship clientId=0, connected clientId=1,
+embark refused guests not Ready, host ARMORY bought MK-1, ready=True clientId=1,
+party embark countdown 5.0s, party load Bastion playerCount=2, Combat killed +
+Net hit, party return requested clientId=1, party return Ship, no [Dev]. Guest
+log not on this machine. Guest ARMORY/CREW not in host log. Presence: two
+PlayerHealth tracks at 13:28:22. Machine: NetLobbySessionTests 3/0
+TestResults.xml 2026-08-17 18:31:43Z; NetLobbyPresenceTests 4/0
+gkb_verify_report.json 2026-08-16T16:01:57Z (not re-run this close). Kill
+clock 2026-08-28 did not fire. Five-wave friends-alpha is the Roadmap sentence,
+not this file.
 -->
 
 **Co-op polish / beta lobby.** Ship is the shared session lobby. Party lead (host) owns
@@ -125,24 +130,18 @@ Overloading M57 `RequestEmbark`.
 
 ## Verification
 
-1. Criteria 1–4, 6 (party load) — named PlayMode lobby fixture Passed in
-   `gkb_verify_report.json`; assert ESM true on session managers; guest local Bastion
-   refuse logged. Fixtures: `NetLobbySessionTests.NetSession_StartHost_EnablesSceneManagement`,
-   `NetLobbySessionTests.Host_LocalBastionLoad_RefusedWhileSessionActive`,
-   `NetLobbySessionTests.SceneFlow_LoadBastion_RefuseLines_PresentInSource`.
-2. Criteria 5, 7, 8 — Ready/cancel and party return covered in fixture where possible;
-   Relay lifetime eyes-on.
-3. Criterion 9 — eyes-on two player builds, two networks, Relay code.
-4. M57 coexistence — one MPPM or dual-box: mid-Assault client down → additive wait while
-   host stays in Bastion; Hatch-bank EMBARK still works. Not a substitute for criterion 9.
-5. Regression (non-gating): after party EMBARK, one NetPrep Wave-start + one M51 client
-   verb still apply once server-side.
-6. **2026-08-16 dual-box presence** — PlayMode `NetLobbyPresenceTests` Passed
-   (`gkb_verify_report.json` 2026-08-16T16:01:57Z): late FPC track; production
-   `SpawnUnparentedMirror`; both seats' avatars; remote Animator Speed. Multiagent review
-   (same day) hardened false-green SpawnMirror test and Bastion client StartRun boot.
-7. **Not dual-box until** loopback NetLobby* green on current dll (above). Criterion 9
-   (Relay, two networks) remains eyes-on only — do not treat presence fixtures as AC9.
+1. Criteria 1–4, 6 — `NetLobbySessionTests` 3/0 Passed (Unity PlayMode job
+   `619ff82acec641e9a19305dbae60fe42`, 2026-08-17; also cited in file header
+   TestResults.xml 2026-08-17 18:31:43Z).
+2. Presence machine — `NetLobbyPresenceTests` 4/0 Passed
+   (`gkb_verify_report.json` 2026-08-16T16:01:57Z); not re-run this close.
+3. Criteria 5, 7, 8, 9 — host player-build Relay log
+   `GatekeepersProtocol_2026-08-17_13-24-37_p49280`: joinCode `KPRMPR`,
+   `connected clientId=1`, Ready refuse then `ready=True clientId=1`, countdown,
+   Bastion `playerCount=2`, Combat kills, `party return Ship`, no `[Dev]`. Guest
+   log not on this machine; guest Ready + return RPC appear on the host log.
+4. M57 coexistence — still open as non-gating (additive wait while host in Bastion).
+5. Regression (non-gating): NetPrep / M51 verbs after party EMBARK.
 
 ## Do not build
 

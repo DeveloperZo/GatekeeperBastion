@@ -365,9 +365,9 @@ if ($questions.Count -gt 15) {
 }
 
 Add-Insight "healthy" `
-    "Goals are Fellowship, Expression, Fantasy. Challenge is the vehicle. M72 is Fellowship's remaining session gate." `
+    "Goals are Fellowship, Expression, Fantasy. Challenge is the vehicle. M72 closed the shared Ship; five-Wave dry-run remains the friends-alpha sentence." `
     "Ordering work against the top three stops treating Wave TTK as the aesthetic." `
-    "Finish M72 (Fellowship). Specialist Protocols next for Expression. Thicken Fantasy via kinds/destinations, not Default HP." `
+    "Ship M66 polish. Specialist Protocols for Expression. Thicken Fantasy via kinds/destinations, not Default HP." `
     @("Docs/Design/1-Experience.md 1.2", "Docs/Roadmap.md Strategy")
 
 # Executive synthesis (templated from the same facts)
@@ -382,7 +382,7 @@ if ($headStillOpen) {
     }
 }
 else {
-    $synthesis = ("Friends-alpha head is clear. Planned {0}/{1}; active {2}/{3}. Next work follows Roadmap recommended order, then play debt." -f $planned.Count, $plannedMax, $active.Count, $activeMax)
+    $synthesis = ("M72 shared-Ship kernel closed. Planned {0}/{1}; active {2}/{3}. Five-wave friends run is still the Roadmap alpha sentence. Next work follows recommended order, then play debt." -f $planned.Count, $plannedMax, $active.Count, $activeMax)
 }
 
 $queue = [System.Collections.Generic.List[object]]::new()

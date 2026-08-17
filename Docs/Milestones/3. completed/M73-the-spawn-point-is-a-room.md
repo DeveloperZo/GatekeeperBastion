@@ -1,9 +1,15 @@
 # M73 — The spawn point is a room
 
 <!--
-Status: later
-Update trigger: when the closet prefab, enemy-only door rule, or the six hung edges change.
-Last updated: 2026-08-16
+Status: completed 2026-08-17
+Update trigger: closed
+Last updated: 2026-08-17
+Closed on: 2026-08-17. Machine: Tools/verify/run.sh --filter Sketch 18/0;
+BastionKitScene 1/0 (eight SpawnRoom names in Bastion.unity). Live scene: eight
+SpawnPoints under SpawnRooms; T_Master UnlockedSpawns S_ControlW/S_ControlE
+inactive; D2 sealedSpawns length 4; WaveSpawner.spawnPoints empty. NavMesh
+rebaked 2026-08-17 11:10:11 (Bastion-NavMesh.asset 62152 bytes). Criterion 6
+playthrough is confirmation — Zo close, verify later.
 -->
 
 Gatekeepers instantiate inside a hung closet and walk onto the fight floor through a
@@ -62,6 +68,8 @@ registry. Stuck-behind-a-shut-slab is a defect, not a feel call.
    | S4 | R8 | E |
    | S5 | R13 | N |
    | S6 | R14 | N |
+   | ControlW | R15 | W |
+   | ControlE | R15 | E |
 
    That edge becomes a kit **Door** side (the aperture). It is not a passage (no
    partner) and not a progression `door` line. Validate rejects a spawn edge that
@@ -70,10 +78,11 @@ registry. Stuck-behind-a-shut-slab is a defect, not a feel call.
    a centre `S_*` marker. Name the `SpawnPoint` child `S_<id>` so `breached at S_S1`
    stays. Parent under the room, not the `SpawnPoints` root (Build All deletes that
    root).
-5. **`Bastion.unity` has exactly six `SpawnPoint`s**, each a child of a `SpawnRoom`,
+5. **`Bastion.unity` has exactly eight `SpawnPoint`s**, each a child of a `SpawnRoom`,
    none at a room origin. The six centre markers `S_S1`…`S_S6` are gone. D2
-   `sealedSpawns` still names S3–S6 (the children). `WaveSpawner.spawnPoints` stays
-   empty (registry). Build All leaves the six instances in place.
+   `sealedSpawns` still names S3–S6 (the children). `T_Master` `UnlockedSpawns` is
+   `S_ControlW` and `S_ControlE`, inactive until Master Control starts. `WaveSpawner.spawnPoints`
+   stays empty (registry). Build All leaves the eight instances in place.
 6. **The player action:** EMBARK, `E` then `T` at a live field terminal. A group
    raises the closet slab and walks out; walking up to a shut closet slab does not
    open it. Log: `group N: … breached at S_S*` with no `[Dev]`. Solo unchanged.
@@ -96,7 +105,8 @@ public sealed class SpawnRoom : MonoBehaviour
 ```
 
 `AttachTo` parents to the segment, sets the segment side to Door, `BastionDoor.Configure`
-unlocked + Enemies, `SnapToAperture`. `OnValidate` / `Awake` re-asserts Enemies and
+unlocked + Enemies, `SnapToAperture`. Authored rooms `PunchDoorEdge` on that side
+(full `Rebuild` is refused). `OnValidate` / `Awake` re-asserts Enemies and
 unlocked so a prefab override cannot freeze Anyone (`Architecture.md` gotcha 1).
 
 **Change** `Game/Bastion/BastionDoor.cs` — `enum BastionDoorOpensFor : byte { Anyone, Enemies }`
@@ -121,10 +131,10 @@ table above.
 Delete the empty-marker path for spawn. Passage emit is unchanged: unpaired Door
 sides are already not passages (`BastionSketchPassages`, `partnered`).
 
-**Change** `Assets/Scenes/Bastion.unity` — six instances on R4/R5/R7/R8/R13/R14 at
-the table edges; delete centre markers; retarget D2 `sealedSpawns` to the new
-children; set those six Half sides to Door. Rebake NavMesh (`gkb_bastion_navmesh_request.txt`).
-Bake already hides GateSlab (`SceneBuilder.BakeNavMesh`).
+**Change** `Assets/Scenes/Bastion.unity` — eight instances on R4/R5/R7/R8/R13/R14/R15
+at the table edges; delete centre markers; retarget D2 `sealedSpawns` to S3–S6;
+retarget `T_Master` `UnlockedSpawns` to ControlW/ControlE (inactive). Rebake NavMesh
+(`gkb_bastion_navmesh_request.txt`). Bake already hides GateSlab (`SceneBuilder.BakeNavMesh`).
 
 **Change** `Docs/Play/Waves.md` and `A-Run.md` on **close** — groups walk out of the
 spawn point; drop the ring-on-the-floor sentence. Do not call a spawn point a door
@@ -151,8 +161,9 @@ walkable staging). Rejected: known/suspected/hidden spawn visibility
    `CountsAsOpener(Enemies, CharacterController)` false; `Anyone` still true for both.
    Seed the opposite and watch it catch.
 3. Criteria 1, 4, 5 — EditMode prefab load: interior 4×5, SpawnPoint z ≤ −2.5, door
-   Enemies and unlocked. Scene: exactly six `SpawnPoint`, each under `SpawnRoom`, D2
-   sealed list length 4. Grep `m_Name: S_S` under a room origin at `(0,0,0)` is zero.
+   Enemies and unlocked. Scene: exactly eight `SpawnPoint`, each under `SpawnRoom`, D2
+   sealed list length 4, Master UnlockedSpawns length 2. Grep `m_Name: S_S` under a
+   room origin at `(0,0,0)` is zero.
 4. Criterion 6 — playthrough: Splash → Ship → EMBARK → `E` then `T` on a live
    terminal. Slab rises for the group, not for the Boarder. Close log has
    `breached at S_S` and no `[Dev]`. `gkb_verify_request.txt` after the
@@ -165,8 +176,8 @@ walkable staging). Rejected: known/suspected/hidden spawn visibility
   if camping is observed; no second collider this slice.
 - `MuteSpawns` / D2 `sealedSpawns` must disable the `SpawnPoint` child, not the
   closet root, or the aperture vanishes from nav.
-- Master Control `UnlockedSpawns` is already empty in `Bastion.unity`; this slice
-  does not add `S_Control`.
+- Master Control `UnlockedSpawns` is `S_ControlW` and `S_ControlE` on R15 west/east.
+  Inactive until the room fight; muted again when the Hatch half starts.
 - Player-facing copy: spawn point, never door (`language.md`).
 
 ## Do not build

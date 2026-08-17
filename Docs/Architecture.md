@@ -180,11 +180,11 @@ holding destroyed font references).
 
 **4. Bastion geometry is kit-authored; a dressed Ship is too.**
 Kit prefabs stamp rooms quickly; `BastionSketchEmitter` unpacks `Completely` and
-`SpawnPiece` unpacks on editor Rebuild. Emit `RebuildAllSegments` skips `Authored/`,
-so a re-emit cannot replace unique rooms with a fresh pack stamp (2026-08-16).
-`Bastion.unity` owns unique scene geometry under `Authored/` (M47). Pack updates do
-not propagate. Build All never regenerates authored rooms; it refreshes enemy prefabs
-and rebakes NavMesh when kit is present.
+`SpawnPiece` unpacks on editor Rebuild. `Rebuild` and `OnValidate` refuse rooms under
+`Authored/`. Orphan kit cleanup only destroys `Gen_*` litter — room roots carry
+`BastionGeneratedGeom`, and a missing script during compile used to delete the whole
+room. A YAML test (`BastionKitSceneTests`) fails the run if `Bastion.unity` drops below
+15 named `BastionSegment` rooms or packs kit pieces back in.
 `Ship.unity` with a `ShipDress` root is the same: Build All registers scenes and skips the
 Environment wipe. Without `ShipDress`, it still rebuilds collider graybox + light. It does
 **not** touch stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem`,
@@ -198,7 +198,7 @@ screen — `SceneFlow` guards this and logs an error telling you to rebuild.
 Menu Host/Join loads that prefab DDOL (`destroyWithScene: false`) before Ship.
 `EnableSceneManagement` is on for party scene loads. Solo Continue / Start New never
 creates a session. Additive Ship-wait for a downed client (`M57`) stays off
-`NetworkSceneManager`. `M72` two-machine close is still open.
+`NetworkSceneManager`. `M72` closed 2026-08-17 (Relay host log `13-24-37`).
 
 Do not re-invent the deleted mutators: `ShiftFrontEndMutate`, `ShiftShipUiImport`,
 `ShiftBastionUiImport`.

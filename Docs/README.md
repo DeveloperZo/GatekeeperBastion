@@ -4,9 +4,9 @@ Sci-fi wave-defense FPS. Unity 6, PC/Steam, first-person. The Boarder is the IQ 
 with Synty guns; Ship desks and the Bastion kit are dressed (M61-2 closed 2026-08-14:
 scaler-2 station rooms, sliding doors, bulkhead Hatch). Solo playable;
 host-client co-op exists over UnityTransport (Main Menu Host / Join by Relay code or
-typed IPv4; F10/F11 stay the editor fallback). A friends session (install a build, join
-without the developer, five-Wave run, end screen) is the alpha gate and is not shipped —
-shared Ship and party EMBARK are in tree (`M72`) and still need two-machine verification.
+typed IPv4; F10/F11 stay the editor fallback). Shared Ship and party EMBARK closed
+with `M72` (2026-08-17, Relay `KPRMPR`). A five-Wave friends evening is still the
+Roadmap alpha sentence and is not that file.
 
 Your ship cuts into a **Bastion** — a garrisoned alien vessel — and siphons it for Salvage.
 You are the **Boarder**. You fight inside it, holding the **Hatch**, the umbilical back to
@@ -30,6 +30,9 @@ CREW QUARTERS equips a Boarder Protocol, not buyable attributes.
 **Death is the only thing that ends a Run early.** There is no bail-out and no respawn
 for the Boarder who owns the Run (solo or host), and losing takes nothing back. A second
 Boarder going down waits on the Ship (`M57`) and does not end the host's Run (`M49`).
+
+The session is for **Fellowship, Expression, and Fantasy** (`Design/1-Experience.md` §1.2).
+The pillars above are the Boarder's contract; restamp this line when the rank table moves.
 
 ## The loop
 
@@ -65,7 +68,8 @@ the two nearly cancel.
 that exist are an economy one — no Wave should cost more than three failed Runs' earnings to
 buy past — and a curve target on Hatch remaining. The second does not work: Hatch remaining
 measures leakage, not effort, and reads 100% for a skilled player whether the Wave was
-trivial or desperate. `Design/1-Experience.md`, section 1.3.
+trivial or desperate. `Design/1-Experience.md`, section 1.3. Mean live grades Challenge;
+Fellowship and Fantasy stay play-reported.
 
 ## What it refuses to be
 
@@ -101,6 +105,7 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `Milestones/` | One file per milestone, filed in a folder named for its status. |
 | `Brainstorms/` | Ideas before they graduate. |
 | `Demo/` | First Bastion demo (through Master Control, with multiplayer). Implementable beat specs 0–7 plus voice pipe. Cut milestones from these files when asked; do not duplicate them into `Brainstorms/first-session.md`. |
+| `Marketing/` | Research, strategy, and claim-accurate copy. Pitch lives here, not in `Design/` or `Play/`. Honesty gaps: [`Marketing/gaps.md`](Marketing/gaps.md). |
 | `_meta/_definitions/` | `milestone.md`, `brainstorm.md`, and `language.md` — the ubiquitous language every doc, log line and player-facing string uses. |
 | `Play/` | The **Compendium** — volumes of related entries. Each hand-written page holds `## Game` (what pause shows) and `## Reference` (fuller brief). Folder path is `Play/` (language lint); player-facing name is Compendium. In-game reader shipped (M62, Esc → Compendium). |
 

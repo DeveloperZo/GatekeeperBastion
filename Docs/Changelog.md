@@ -7,6 +7,18 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-17
 -->
 
+- 2026-08-17: **M72 closed.** Relay dual-box host log
+  `GatekeepersProtocol_2026-08-17_13-24-37_p49280` — joinCode `KPRMPR`,
+  `clientId=1`, Ready gate, countdown, Bastion `playerCount=2`, kills,
+  party return Ship, no `[Dev]`. `NetLobbySessionTests` 3/0 Passed
+  (`TestResults.xml` 2026-08-17 18:31:43Z). Presence suite green
+  `gkb_verify_report.json` 2026-08-16T16:01:57Z. Active 0/3.
+  [`Milestones/3. completed/M72-the-party-shares-a-ship.md`](Milestones/3.%20completed/M72-the-party-shares-a-ship.md).
+- 2026-08-17: **M73 closed.** Eight hung closets (S1–S6 + ControlW/E);
+  Enemies GateSlab; `T_Master` UnlockedSpawns inactive until Master Control.
+  Sketch 18/0; BastionKitScene 1/0. NavMesh rebaked 11:10:11 (62152 bytes).
+  Criterion 6 playthrough confirmation.
+  [`Milestones/3. completed/M73-the-spawn-point-is-a-room.md`](Milestones/3.%20completed/M73-the-spawn-point-is-a-room.md).
 - 2026-08-17: **M70 closed.** CREW Default claim, Barrage `G` / Rush `H`, NAV
   warn, Protocol Line + Protocol Bar. BoarderProtocolTests 14/0;
   M59PolishChrome Protocol pins 10/0. Play

@@ -29,7 +29,7 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-Active **M72** and **M73**.
+Active **none**. **M72** and **M73** completed 2026-08-17.
 **M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** and **M61-2**
 completed 2026-08-14. **M55, M57, M58, M59, M60, M62, M63-2, M64, M65, M71** completed
 2026-08-15. **M69** and **M70** completed 2026-08-17.
@@ -37,22 +37,22 @@ completed 2026-08-14. **M55, M57, M58, M59, M60, M62, M63-2, M64, M65, M71** com
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
 developer touching a keyboard, play a full five-wave run with both participating, and the
 run ends with a screen that tells them what happened. Queue is ordered against that
-sentence.
+sentence. Shared Ship + party EMBARK closed with **M72** (2026-08-17); remaining friends
+work is polish and dry-run length, not lobby topology.
 
 **Recommended next**, in this order.
 
-1. **Finish M72** — shared Ship + party EMBARK (eyes-on criterion 9).
-2. **M66** after a two-player session exists. **M65** closed 2026-08-15 (three players,
-   wave scale, split wallets). **M73** is in tree (closet spawn) and does not close
-   until the playthrough. **M72** stays active.
-3. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
+1. **M66** — hit confirm, per-kind tells, distinct players at lane range (session room
+   exists).
+2. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14 (eyes lines, Stats
    after-numbers, solo completion), M55 juice unused on ten Runs, M71 Regen Surge mag,
-   M64 criteria 13–25 dry-run, M69 criterion 4 slider independence. Next-Run play list is
+   M64 criteria 13–25 dry-run, M69 criterion 4 slider independence, M73 criterion 6
+   closet walk-out. Next-Run play list is
    `GatekeeperZo Notes/verification.md` (M31 pin, M30 decoy, M26 fight-feel, M21 opposite
    focuses). Not a reason to jump the queue.
 
-Planned count is **2** (cap 10). Active **2** (cap 3).
+Planned count is **2** (cap 10). Active **0** (cap 3).
 
 ## Order
 
@@ -113,7 +113,7 @@ this table — see the change log.
 | M51 | The client's hands | completed, Aug 2026 | Client repair, decoy and world-acting abilities apply once, server-side; all five `NetVerbTests` Passed (`gkb_verify_report.json` 2026-08-13T18:09:48Z, PlayMode 31/0). Criterion 6 confirmation not the gate; hatch-under-attack waits on M53 | [`3. completed/M51`](Milestones/3.%20completed/M51-the-clients-hands.md) |
 | M58 | A build two machines can run | completed, Aug 2026 | Windows player build; Main Menu Host `0.0.0.0:7777`; Join typed IPv4; dual-box connect + local Player; refusal reads back — player-build kill eyes-on deferred to M64 | [`3. completed/M58`](Milestones/3.%20completed/M58-a-build-two-machines-can-run.md) |
 | M64 | A build you can hand to a friend | completed, Aug 2026 | Machine send gate; Host/Join → LoadShip + NetPrep. Solo-Ship human loop superseded by M72 after 2026-08-15 friends-path failure | [`3. completed/M64`](Milestones/3.%20completed/M64-a-build-you-can-hand-to-a-friend.md) |
-| M72 | The party shares a Ship | active | Shared Ship; party lead NAV; Ready+5s; personal resources; party Ship↔Bastion; two-machine criterion 9 open; kill 2026-08-28 | [`2. active/M72`](Milestones/2.%20active/M72-the-party-shares-a-ship.md) |
+| M72 | The party shares a Ship | completed, Aug 2026 | Shared Ship; party lead NAV; Ready+5s; party Bastion↔Ship. Gate: NetLobbySession 3/0 + eyes-on Relay `KPRMPR` log `13-24-37` | [`3. completed/M72`](Milestones/3.%20completed/M72-the-party-shares-a-ship.md) |
 | M59 | Polish Pass 1 | completed, Aug 2026 | Field Scale 1; fight HUD ≥24; overflow; no EXP; station chrome+copy; player-build keys; pause shortcuts; end scrim α≥0.65. EditMode HudSeparation + M59PolishChrome + StationPurpose green (`gkb_verify_report.json` 2026-08-15T18:03:48Z) | [`3. completed/M59`](Milestones/3.%20completed/M59-the-polish-pass-1.md) |
 | M61 | Polish Pass 2 | completed, Aug 2026 | IQ astronaut + Synty Space guns/desks (SKU 138857); Mixamo fire/reload stand-ins; stroke crosshair; RMB zoom | [`3. completed/M61`](Milestones/3.%20completed/M61-the-polish-pass-2.md) |
 | M61-2 | Polish Pass 2, the Bastion | completed, Aug 2026 | Kit blocks are POLYGON Sci-Fi Space meshes; re-framed mid-pass to scaler-2 station rooms with functional sliding doors and a bulkhead Hatch; Generated/Authored split; suite 2026-08-15T00:09Z adds no reds of its own; eyes/Stats/solo-run rows open in verification.md | [`3. completed/M61-2`](Milestones/3.%20completed/M61-2-polish-pass-2-the-bastion.md) |
@@ -124,7 +124,7 @@ this table — see the change log.
 | M60 | A join a friend can use | completed, Aug 2026 | Unity Relay join code from Main Menu; join-in-Tethered; clean disconnect; host-quit message; LAN IP fallback. Gate: NetSessionAddressTests + Zo eyes-on criterion 4 | [`3. completed/M60`](Milestones/3.%20completed/M60-a-join-a-friend-can-use.md) |
 | M65 | Three players, and a fight that counts them | completed, Aug 2026 | Three supported, six cheap; waves scale by player count; salvage split to own wallets. Gate: `PlayerWalletTests`, `WavePlayerCountTests`, `NetThreePlayerTests` (cumulative BankCap; `RunSim.Wallets.cs`). Full suite still has unrelated reds | [`3. completed/M65`](Milestones/3.%20completed/M65-three-players-and-a-fight-that-counts-them.md) |
 | M66 | Polish Pass 3 | later | Hit confirm, per-kind pre-attack audio, players distinct at lane range | [`1. planned/M66`](Milestones/1.%20planned/M66-polish-pass-3.md) |
-| M73 | The spawn point is a room | active | Closet prefab; enemy-only GateSlab; six hung on R4/R5/R7/R8/R13/R14; centre markers gone; playthrough open | [`2. active/M73`](Milestones/2.%20active/M73-the-spawn-point-is-a-room.md) |
+| M73 | The spawn point is a room | completed, Aug 2026 | Eight hung closets; Enemies GateSlab; ControlW/E on Master. Sketch 18/0; BastionKitScene 1/0. Criterion 6 playthrough confirmation | [`3. completed/M73`](Milestones/3.%20completed/M73-the-spawn-point-is-a-room.md) |
 | M52 | Waves start at a terminal | completed, Aug 2026 | Interact starts T1's five Boarder-hunt Waves; Hatch invulnerable; D1 on Nth clear; Wave 5 `Escaped`. Close log `14-46-59` (no `[Dev]`). AwardKill-to-bank is M53 | [`3. completed/M52`](Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | M53 | Salvage leaves through the Hatch | completed, Aug 2026 | Kills fill Unbanked; Hatch-bank 45 s drip/attrit/dump, 3 slots, fat pile ×1.25/×1.50. Close log `18-23-55` (Run clean). Stay-Prep after dump is EditMode. Harness 316/0 | [`3. completed/M53`](Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | M54 | Master Control is the win | completed, Aug 2026 | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`3. completed/M54`](Milestones/3.%20completed/M54-master-control-is-the-win.md) |
@@ -149,6 +149,9 @@ operate (terminals, HUD, station chrome and copy, keys, pause list, end scrim).
 criterion 4 slider confirmation still open.
 **M70** closed 2026-08-17: CREW Default claim, Barrage `G` / Rush `H`, Protocol Line +
 Protocol Bar. Kill criteria wait 10 Runs or 2026-09-30.
+**M72** closed 2026-08-17: shared Ship over Relay (`13-24-37`, joinCode KPRMPR,
+playerCount=2, Ready gate, 5 s countdown, party return). Five-wave friends-alpha
+is still the sentence above; this file closed the lobby kernel.
 **M61** closed 2026-08-14: gun, sight, zoom, Ship desks. **M63-2** closed 2026-08-15:
 the three in-build Gatekeeper bodies from that same pack. **M63** is the roster record,
 Ram→Thief in code, and door-time. **M62** closed 2026-08-15: Compendium from pause.
