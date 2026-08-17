@@ -66,7 +66,8 @@ Park until a dedicated telegraph milestone.
 
 ### Spawn visibility
 `SpawnPoint` already enables/disables. Visibility is a lever — known, suspected, or hidden
-— rather than a binary. Not specified.
+— rather than a binary. Not specified. Walking out of a hung closet (enemy-only GateSlab)
+is [`M73`](../Milestones/1.%20planned/M73-the-spawn-point-is-a-room.md), not this lever.
 
 ### Soft-lock doors (parked)
 Locked doors that open without a Wave — explore switch / key, or salvage-paid repair. **Passage**

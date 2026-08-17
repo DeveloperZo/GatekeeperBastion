@@ -100,6 +100,7 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `Changelog.md` | The roadmap's audit trail: milestone state transitions and structural edits, most recent first. |
 | `Milestones/` | One file per milestone, filed in a folder named for its status. |
 | `Brainstorms/` | Ideas before they graduate. |
+| `Demo/` | First Bastion demo (through Master Control, with multiplayer). Implementable beat specs 0–7 plus voice pipe. Cut milestones from these files when asked; do not duplicate them into `Brainstorms/first-session.md`. |
 | `_meta/_definitions/` | `milestone.md`, `brainstorm.md`, and `language.md` — the ubiquitous language every doc, log line and player-facing string uses. |
 | `Play/` | The **Compendium** — volumes of related entries. Each hand-written page holds `## Game` (what pause shows) and `## Reference` (fuller brief). Folder path is `Play/` (language lint); player-facing name is Compendium. In-game reader shipped (M62, Esc → Compendium). |
 

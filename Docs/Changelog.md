@@ -7,10 +7,20 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-16
 -->
 
-- 2026-08-16: **First-session brainstorm recut to the first-Bastion demo.**
-  Wake, repair NAV, grant weapon, one terminal, designed Hatch-bank loss, ARMORY
-  cap 2, start Wave 2. Extra sequences: second terminal, Default Protocol.
-  Not FAB / juice / Thieves / Master Control.
+- 2026-08-16: **M73 planned** — spawn point is a hung closet prefab; Gatekeepers
+  walk out through an enemy-only GateSlab; six edges locked on the current dest.
+  Does not jump M72. Planned 5/10.
+  [`Milestones/1. planned/M73-the-spawn-point-is-a-room.md`](Milestones/1.%20planned/M73-the-spawn-point-is-a-room.md).
+- 2026-08-16: **First Bastion demo specs in `Docs/Demo/`.** Voice pipe plus
+  beats 0–7 (dead Ship through Hatch finale), each implementable: in-tree facts,
+  Create/Change/Delete, multiplayer, logs, traps, Verification. Treat-as-spec
+  table (convert-then-fight once, NAV skip, MK-1 grant, three kit doors, Protocol
+  after Wave 2). [`Demo/README.md`](Demo/README.md). Brainstorm is a pointer
+  ([`Brainstorms/first-session.md`](Brainstorms/first-session.md)). Milestones
+  not cut yet.
+- 2026-08-16: **First-session brainstorm is the demo path plus gaps.** Voice pipe
+  (Dialogue System owned, not in tree, SKU 11672), dead Ship, first cycle,
+  checkpoint, repeat to Master Control. Pause still does not stop the sim.
   [`Brainstorms/first-session.md`](Brainstorms/first-session.md).
 - 2026-08-16: **Pause Compendium drops Field Manual.** The generated tables have no
   TMP layout and the body scroll does not move, so the appendix stays in `Docs/Play/`

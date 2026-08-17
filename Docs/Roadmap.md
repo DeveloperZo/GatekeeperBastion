@@ -46,14 +46,14 @@ sentence.
    Coming Soon stubs; Fight/Pause shortcut cooldown fill. Frame in tree; shop +
    fire-rate sheet + HUD are the remaining build.
 3. **M66** after a two-player session exists. **M65** closed 2026-08-15 (three players,
-   wave scale, split wallets).
+   wave scale, split wallets). **M73** after M66 (closet spawn; does not jump M72).
 4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14 (eyes lines, Stats
    after-numbers, solo completion), M55 juice unused on ten Runs, M71 Regen Surge mag,
    M64 criteria 13–25 dry-run. Next-Run play list is `GatekeeperZo Notes/verification.md`
    (M31 pin, M30 decoy, M26 fight-feel, M21 opposite focuses). Not a reason to jump the queue.
 
-Planned count is **4** (cap 10). Active **1** (cap 3).
+Planned count is **5** (cap 10). Active **1** (cap 3).
 
 ## Order
 
@@ -125,6 +125,7 @@ this table — see the change log.
 | M60 | A join a friend can use | completed, Aug 2026 | Unity Relay join code from Main Menu; join-in-Tethered; clean disconnect; host-quit message; LAN IP fallback. Gate: NetSessionAddressTests + Zo eyes-on criterion 4 | [`3. completed/M60`](Milestones/3.%20completed/M60-a-join-a-friend-can-use.md) |
 | M65 | Three players, and a fight that counts them | completed, Aug 2026 | Three supported, six cheap; waves scale by player count; salvage split to own wallets. Gate: `PlayerWalletTests`, `WavePlayerCountTests`, `NetThreePlayerTests` (cumulative BankCap; `RunSim.Wallets.cs`). Full suite still has unrelated reds | [`3. completed/M65`](Milestones/3.%20completed/M65-three-players-and-a-fight-that-counts-them.md) |
 | M66 | Polish Pass 3 | later | Hit confirm, per-kind pre-attack audio, players distinct at lane range | [`1. planned/M66`](Milestones/1.%20planned/M66-polish-pass-3.md) |
+| M73 | The spawn point is a room | later | Closet prefab; enemy-only GateSlab; six hung on R4/R5/R7/R8/R13/R14; centre markers gone | [`1. planned/M73`](Milestones/1.%20planned/M73-the-spawn-point-is-a-room.md) |
 | M52 | Waves start at a terminal | completed, Aug 2026 | Interact starts T1's five Boarder-hunt Waves; Hatch invulnerable; D1 on Nth clear; Wave 5 `Escaped`. Close log `14-46-59` (no `[Dev]`). AwardKill-to-bank is M53 | [`3. completed/M52`](Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | M53 | Salvage leaves through the Hatch | completed, Aug 2026 | Kills fill Unbanked; Hatch-bank 45 s drip/attrit/dump, 3 slots, fat pile ×1.25/×1.50. Close log `18-23-55` (Run clean). Stay-Prep after dump is EditMode. Harness 316/0 | [`3. completed/M53`](Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | M54 | Master Control is the win | completed, Aug 2026 | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`3. completed/M54`](Milestones/3.%20completed/M54-master-control-is-the-win.md) |
@@ -238,7 +239,7 @@ Moved out of this file. Mechanic areas that are wanted but not yet cuttable live
 | Gatekeeper kinds and Wave composition | [`Brainstorms/gatekeepers-and-waves`](Brainstorms/gatekeepers-and-waves.md) |
 | Co-op beyond the filed slices | [`Brainstorms/co-op`](Brainstorms/co-op.md) |
 | Boarder Protocols beyond Default | [`Brainstorms/boarder-protocols`](Brainstorms/boarder-protocols.md) |
-| First Bastion demo onboarding | [`Brainstorms/first-session`](Brainstorms/first-session.md) |
+| First Bastion demo onboarding | [`Demo/`](Demo/README.md) (beats 0–7 + voice). Pointer: [`Brainstorms/first-session`](Brainstorms/first-session.md) |
 
 Closed — Open table empty, kept as record (`Brainstorms/closed/`):
 
