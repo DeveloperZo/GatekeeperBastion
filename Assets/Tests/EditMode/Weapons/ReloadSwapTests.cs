@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M25 Path 1 — swap/reload arbitration. Asserts on progress fraction, not
     /// absolute seconds, so M21's reload spoke cannot break these.</summary>

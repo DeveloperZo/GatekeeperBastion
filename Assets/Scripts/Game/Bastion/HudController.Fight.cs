@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER (partial of HudController): the per-frame fight readout — score and
     /// wave strip, hatch and player vitals, stamina, interact prompt and damage vignette. Every

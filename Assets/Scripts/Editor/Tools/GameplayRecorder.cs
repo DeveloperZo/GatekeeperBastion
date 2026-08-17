@@ -6,7 +6,7 @@ using UnityEditor.Media;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>
     /// Records the game view while you play, and stops on F9. Editor-only: the capture component
@@ -47,27 +47,27 @@ namespace GatekeeperBastion.EditorTools
 
         /// <summary>Starts recording in the current Play session, or enters Play on a chosen
         /// scene when the editor is stopped.</summary>
-        [MenuItem("GatekeeperBastion/Record/Gameplay/This scene (F9 to stop)", false, 10)]
+        [MenuItem("GatekeepersProtocol/Record/Gameplay/This scene (F9 to stop)", false, 10)]
         public static void RecordThisScene()
         {
             Record(scenePath: null);
         }
 
-        [MenuItem("GatekeeperBastion/Record/Gameplay/Ship", false, 11)]
+        [MenuItem("GatekeepersProtocol/Record/Gameplay/Ship", false, 11)]
         public static void RecordShip()
         {
             Record(ShipScene);
         }
 
-        [MenuItem("GatekeeperBastion/Record/Gameplay/Bastion", false, 12)]
+        [MenuItem("GatekeepersProtocol/Record/Gameplay/Bastion", false, 12)]
         public static void RecordBastion()
         {
             Record(BastionScene);
         }
 
-        [MenuItem("GatekeeperBastion/Record/Gameplay/This scene (F9 to stop)", true)]
-        [MenuItem("GatekeeperBastion/Record/Gameplay/Ship", true)]
-        [MenuItem("GatekeeperBastion/Record/Gameplay/Bastion", true)]
+        [MenuItem("GatekeepersProtocol/Record/Gameplay/This scene (F9 to stop)", true)]
+        [MenuItem("GatekeepersProtocol/Record/Gameplay/Ship", true)]
+        [MenuItem("GatekeepersProtocol/Record/Gameplay/Bastion", true)]
         static bool RecordValidate()
         {
             return GameplayRecorderDriver.Active == null;

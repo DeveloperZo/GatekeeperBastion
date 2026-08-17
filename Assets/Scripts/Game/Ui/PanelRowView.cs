@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: one station priced row: name, cost, level, effect, action. Authored in the scene; view binds only.</summary>
     public sealed class PanelRowView : MonoBehaviour

@@ -2,8 +2,8 @@
 
 ## The one structural rule
 
-`Assets/Scripts/Sim/` (namespace `GatekeeperBastion.Sim`) is its own assembly,
-`GatekeeperBastion.Sim.asmdef`, with no assembly references. Inside it: no
+`Assets/Scripts/Sim/` (namespace `GatekeepersProtocol.Sim`) is its own assembly,
+`GatekeepersProtocol.Sim.asmdef`, with no assembly references. Inside it: no
 `MonoBehaviour`, no `GameObject`, no scene lookup, no `Time`, no ambient
 `Random`, no `SerializeField`, no `UnityEditor`, no static mutable state.
 CoreModule value types (`Vector3`, `Quaternion`, `Mathf`) are permitted.
@@ -22,12 +22,12 @@ draw/spawn/move. They do not own rules.
 ## Code map
 
 Folders group by subject. **Namespaces do not follow folders** — everything under
-`Scripts/Sim/**` is `GatekeeperBastion.Sim`, everything under `Scripts/Game/**` is
-`GatekeeperBastion.Game`. Adding a folder never means adding a namespace.
+`Scripts/Sim/**` is `GatekeepersProtocol.Sim`, everything under `Scripts/Game/**` is
+`GatekeepersProtocol.Game`. Adding a folder never means adding a namespace.
 
 ```
 Assets/Scripts/
-  Sim/                       own assembly (GatekeeperBastion.Sim), no scene deps
+  Sim/                       own assembly (GatekeepersProtocol.Sim), no scene deps
     Run/     RunSim(+.Wallets)  RunContext  RunPhase  AssaultState  SalvageLedger
              EscapeSpool  IntensityJuice  HatchBank  DecoyState  MasterControl
              PlayerWallets  WaveMode  WeaponView

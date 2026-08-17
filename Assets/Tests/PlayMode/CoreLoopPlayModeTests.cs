@@ -1,11 +1,11 @@
 using System.Collections;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>
     /// In-editor Play-mode proof of the scene-flow loop against the REAL MonoBehaviour layer:

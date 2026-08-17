@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Working contract for any agent on Gatekeeper Bastion. Applies to Claude Code, Cursor,
+Working contract for any agent on Gatekeeper's Protocol. Applies to Claude Code, Cursor,
 and anything else. Read this first, then `Docs/README.md`.
 
 Wiring: this file is the source. `CLAUDE.md` and `.cursor/rules/project.mdc` are

@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>One spoke on the upgrade wheel. Order is the enum ordinal used in save arrays —
     /// never renumber.</summary>

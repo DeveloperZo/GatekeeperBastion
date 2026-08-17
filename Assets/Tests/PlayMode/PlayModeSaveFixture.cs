@@ -4,7 +4,7 @@ using NUnit.Framework;
 using UnityEngine;
 
 // DELIBERATELY OUTSIDE ANY NAMESPACE. An NUnit [SetUpFixture] applies to the namespace it sits
-// in; at global scope it wraps EVERY test in the GatekeeperBastion.PlayTests assembly. That is
+// in; at global scope it wraps EVERY test in the GatekeepersProtocol.PlayTests assembly. That is
 // the whole point: PlayTestUtil.SaveFileGuard already existed and correctly backed up the
 // developer's campaign, and not one test ever constructed it — so every Play-mode run wrote
 // straight into gatekeeper_meta.json. Opt-in isolation is isolation that gets forgotten.
@@ -28,8 +28,8 @@ public sealed class PlayModeSaveFixture
     public void BackUpTheRealSave()
     {
         RecoverOrphanedBackup();
-        string path = GatekeeperBastion.PlayTests.PlayTestUtil.ResolveSavePathForFixture();
-        _guard = new GatekeeperBastion.PlayTests.PlayTestUtil.SaveFileGuard();
+        string path = GatekeepersProtocol.PlayTests.PlayTestUtil.ResolveSavePathForFixture();
+        _guard = new GatekeepersProtocol.PlayTests.PlayTestUtil.SaveFileGuard();
         if (!string.IsNullOrEmpty(path))
             Debug.Log($"{Tag} guarding campaign save for PlayMode suite.");
         else
@@ -51,9 +51,9 @@ public sealed class PlayModeSaveFixture
 
     static void RecoverOrphanedBackup()
     {
-        string path = GatekeeperBastion.PlayTests.PlayTestUtil.ResolveSavePathForFixture();
+        string path = GatekeepersProtocol.PlayTests.PlayTestUtil.ResolveSavePathForFixture();
         if (string.IsNullOrEmpty(path)) return;
-        string backup = path + GatekeeperBastion.PlayTests.PlayTestUtil.SaveFileGuard.BackupSuffix;
+        string backup = path + GatekeepersProtocol.PlayTests.PlayTestUtil.SaveFileGuard.BackupSuffix;
         if (!File.Exists(backup)) return;
         try
         {

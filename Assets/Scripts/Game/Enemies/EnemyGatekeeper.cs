@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY: NavMesh gatekeeper — paths to the Hatch (HatchStation.Instance) and
     /// attacks it on an interval; harasses the NEAREST LIVE player (PlayerRegistry, re-picked

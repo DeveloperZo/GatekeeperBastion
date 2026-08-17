@@ -31,7 +31,7 @@ does not taint (`23-44-23` marks `dev` mid-Run; Aug-8 post-Run Dev does not).
 |---|---|---|
 | Criterion 2 pin file | **blocked** | Restore `Logs/GatekeeperBastion_2026-08-07_16-34-30.log` (absent on this machine; cited everywhere). Re-run reader; expect `2.84 / 5.97 / 9.52 / 11.26` and Run 1 `5.47 / 11.04`. |
 | Criterion 6 lost pin | **blocked** | Restore `Logs/GatekeeperBastion_2026-08-03_19-18-22.log`; expect lost w2 at `13.13` and `11.40`. |
-| Criterion 8 suite | **open** | AutoVerify EditMode twice hit `stuck` at 180s idle while tests were still running (`gkb_verify_report.json` 2026-08-09T20:07:13Z). Re-run via menu `GatekeeperBastion > Run Verification Now` once the editor is quiet; expect green EditMode (format-string-only change). |
+| Criterion 8 suite | **open** | AutoVerify EditMode twice hit `stuck` at 180s idle while tests were still running (`gkb_verify_report.json` 2026-08-09T20:07:13Z). Re-run via menu `GatekeepersProtocol > Run Verification Now` once the editor is quiet; expect green EditMode (format-string-only change). |
 | Playthrough (Verification §7) | **open** | Embark Wave 1 → clear one Wave → quit; confirm `— N live` on group lines and segment lands on zero live. |
 | `run.sh` on this host | **env** | Needs `mcs`+`mono` on PATH (same as verify/docgen). Verified here via `dotnet` compile of the same `Program.cs`. |
 

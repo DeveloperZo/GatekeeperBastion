@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M35 criterion 27 at the UiBind choke point: equal values touch nothing —
     /// no text write, no slider write, no CanvasGroup write — so a steady HUD value cannot

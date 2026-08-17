@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>
     /// Shared plumbing for the Play-mode contract tests: build-settings guards (so a fresh
@@ -62,13 +62,13 @@ namespace GatekeeperBastion.PlayTests
 
         /// <summary>Skip (INCONCLUSIVE, never a hard failure) when the scene has not been
         /// generated/registered yet — the fresh-clone case, since scenes are built by the
-        /// GatekeeperBastion/Build/All Scenes editor tool and are not committed.</summary>
+        /// GatekeepersProtocol/Build/All Scenes editor tool and are not committed.</summary>
         public static void RequireSceneInBuild(string sceneName)
         {
             if (IsSceneInBuild(sceneName)) return;
             Assert.Inconclusive(
                 $"SKIPPED: scene '{sceneName}' is not in Build Settings (registered: {RegisteredScenes()}). " +
-                "Run menu GatekeeperBastion/Build/All Scenes, then re-run this test.");
+                "Run menu GatekeepersProtocol/Build/All Scenes, then re-run this test.");
         }
 
         // ------------------------------------------------------------------ scene loading
@@ -92,10 +92,10 @@ namespace GatekeeperBastion.PlayTests
         {
             Scene active = SceneManager.GetActiveScene();
             bool isGameScene = active.IsValid() &&
-                               (active.name == GatekeeperBastion.Game.SceneFlow.Ship ||
-                                active.name == GatekeeperBastion.Game.SceneFlow.Bastion ||
-                                active.name == GatekeeperBastion.Game.SceneFlow.MainMenu ||
-                                active.name == GatekeeperBastion.Game.SceneFlow.Splash);
+                               (active.name == GatekeepersProtocol.Game.SceneFlow.Ship ||
+                                active.name == GatekeepersProtocol.Game.SceneFlow.Bastion ||
+                                active.name == GatekeepersProtocol.Game.SceneFlow.MainMenu ||
+                                active.name == GatekeepersProtocol.Game.SceneFlow.Splash);
             if (!isGameScene)
             {
                 yield return null;
@@ -414,7 +414,7 @@ namespace GatekeeperBastion.PlayTests
 
             static void ReloadSession()
             {
-                Type session = FindType("GatekeeperBastion.Game.GameSession");
+                Type session = FindType("GatekeepersProtocol.Game.GameSession");
                 if (session == null) return;
                 MethodInfo reload = session.GetMethod("ContinueGame", BindingFlags.Static | BindingFlags.Public);
                 if (reload == null || reload.GetParameters().Length != 0) return;
@@ -424,7 +424,7 @@ namespace GatekeeperBastion.PlayTests
 
             internal static string ResolveSavePath()
             {
-                Type saveService = FindType("GatekeeperBastion.Game.SaveService");
+                Type saveService = FindType("GatekeepersProtocol.Game.SaveService");
                 if (saveService == null) return null;
                 PropertyInfo prop = saveService.GetProperty("SavePath",
                     BindingFlags.Static | BindingFlags.Public);

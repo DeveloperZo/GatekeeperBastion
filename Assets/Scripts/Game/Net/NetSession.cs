@@ -1,9 +1,9 @@
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST / CLIENT: DDOL session. Main Menu Host/Join starts this before Ship.
     /// <see cref="NetworkConfig.EnableSceneManagement"/> is true for friends sessions;

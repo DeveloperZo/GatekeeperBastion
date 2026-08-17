@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// The risk/reward siphon dial. Level 0..5; the reward multiplier is a HAND-AUTHORED

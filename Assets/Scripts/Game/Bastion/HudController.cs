@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using Michsky.UI.Shift;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: Bastion-scene HUD controller. Reads sim state and pushes values
     /// into <see cref="BastionHudView"/>. Owns the Bastion Esc dispatcher (the Escape contract)

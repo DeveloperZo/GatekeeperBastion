@@ -1,6 +1,6 @@
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Paid intensity steps. Cost is Unbanked; lowering does not refund.</summary>
     public static class IntensityJuice

@@ -1,9 +1,9 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using Michsky.UI.Shift;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Bastion Esc dispatcher and pause overlay (the Escape contract).
     /// Does not touch Time.timeScale and does not disable the fight canvas.</summary>

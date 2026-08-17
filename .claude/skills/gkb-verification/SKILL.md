@@ -1,9 +1,9 @@
 ---
 name: gkb-verification
-description: How Gatekeeper Bastion proves a change works — the verification paths and what each can see, what may close a gate, the bar for adding a test, script or menu row, where generated output goes, and testing determinism. Use this skill whenever a change is about to be called done, verified, working or fixed, whenever the question is whether the current build behaves as it should (a fix holds, a wave is beatable, something broke), and whenever a test, check, tool or menu item is being added. Use it before writing "this works" in any form. It does not cover executing or implementing a milestone's acceptance criteria — that is gkb-development. For whether a change should exist or how to redesign it, use gkb-design. For diagnosing why something is broken, or writing the fix, use gkb-development instead.
+description: How Gatekeeper's Protocol proves a change works — the verification paths and what each can see, what may close a gate, the bar for adding a test, script or menu row, where generated output goes, and testing determinism. Use this skill whenever a change is about to be called done, verified, working or fixed, whenever the question is whether the current build behaves as it should (a fix holds, a wave is beatable, something broke), and whenever a test, check, tool or menu item is being added. Use it before writing "this works" in any form. It does not cover executing or implementing a milestone's acceptance criteria — that is gkb-development. For whether a change should exist or how to redesign it, use gkb-design. For diagnosing why something is broken, or writing the fix, use gkb-development instead.
 paths: Assets/Scripts/**/*.cs, Assets/Tests/**/*.cs, Tools/**, Assets/Scripts/Editor/**
 metadata:
-  project: gatekeeper-bastion
+  project: gatekeepers-protocol
   update-trigger: when a verification path is added or retired, or when a check moves into the verify run
 ---
 
@@ -26,7 +26,7 @@ metadata:
 - **Add a verification path without naming the one it replaces.**
 - **Add a menu row without asking first.** Naming the row it replaces is the argument you bring
   to the ask, not a substitute for it. A menu entry outlives the reason it was added.
-- **Add a second menu root.** There is one, `GatekeeperBastion/`, with five folders
+- **Add a second menu root.** There is one, `GatekeepersProtocol/`, with five folders
   (Record, Logs, Build, Bake, Validate). Members are named in
   `Docs/Architecture/README.md` `menu_rows` and `Tools/lint-arch/run.sh` checks both
   directions. `Gatekeeper/HUD/` appeared from two one-shot migration tools

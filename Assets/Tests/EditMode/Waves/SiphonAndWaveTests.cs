@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>EditMode tests for the siphon dial and the retuned deterministic wave scaling
     /// (draw model, exactly FIVE waves; M16 HP slope; M10 group gap; M14 composition).

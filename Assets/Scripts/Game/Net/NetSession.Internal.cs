@@ -1,9 +1,9 @@
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST / CLIENT (partial of NetSession): start/join wiring, prefab register,
     /// connection hooks. Split so NetSession.cs stays under cap.</summary>

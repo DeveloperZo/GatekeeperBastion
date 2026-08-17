@@ -1,5 +1,5 @@
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +11,7 @@ using UnityEngine.AI;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Gray-box geometry rebuilds. "Build All Scenes" rebuilds the
     /// owned set — the <c>Environment</c> root, the <c>SpawnPoints</c> root, the
@@ -113,7 +113,7 @@ namespace GatekeeperBastion.EditorTools
 
         // ---------- menu items ----------
 
-        [MenuItem("GatekeeperBastion/Build/All Scenes", false, 60)]
+        [MenuItem("GatekeepersProtocol/Build/All Scenes", false, 60)]
         public static void BuildAll()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -122,7 +122,7 @@ namespace GatekeeperBastion.EditorTools
 
         /// <summary>Rebakes Bastion-NavMesh.asset from current Environment children without
         /// wiping kit / authored geometry. Prefer this after moving halves or floors.</summary>
-        [MenuItem("GatekeeperBastion/Bake/Bastion NavMesh", false, 80)]
+        [MenuItem("GatekeepersProtocol/Bake/Bastion NavMesh", false, 80)]
         public static void BakeBastionNavMeshMenu()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -131,7 +131,7 @@ namespace GatekeeperBastion.EditorTools
 
         /// <summary>Idempotent graybox obstacles on kit segments (skips hatch bay 02 which is
         /// already authored). Names encode LongLane / Corner / Choke / Mask for the height-and-angles criteria.</summary>
-        [MenuItem("GatekeeperBastion/Build/Place Bastion Obstacles", false, 61)]
+        [MenuItem("GatekeepersProtocol/Build/Place Bastion Obstacles", false, 61)]
         public static void PlaceBastionObstaclesMenu()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

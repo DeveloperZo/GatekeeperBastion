@@ -88,7 +88,7 @@ before every gate.
    | `FindObjectOfType` / `FindObjectsOfType` | deprecated in Unity 6 | **0** — enforced |
    | An empty `Update` / `Start` / `LateUpdate` / `FixedUpdate` / `OnGUI` body | `3-Unity-Runtime.md` | **0** — enforced |
    | A `static` MonoBehaviour singleton not on M40's named list | `Architecture/README.md` | **1** — `DecoyBay.Instance` |
-   | A file, type, namespace, menu path or define containing a milestone ID (`M<digits>`) | `Architecture/2-Naming.md` | **enforced at 0.** `Editor/Tools/M35Wp4OptionsPatch.cs` is the type, the file and the menu row `GatekeeperBastion/M35/…` |
+   | A file, type, namespace, menu path or define containing a milestone ID (`M<digits>`) | `Architecture/2-Naming.md` | **enforced at 0.** `Editor/Tools/M35Wp4OptionsPatch.cs` is the type, the file and the menu row `GatekeepersProtocol/M35/…` |
    | `[InitializeOnLoad]` outside a named allowlist in the fence | `Working-Rules.md` | **enforced at 0.** A tool that runs because the editor loaded cannot be un-run — this is the `VerifyKickOnce.cs` incident |
    | `AssetDatabase.DeleteAsset` naming the calling file | `Working-Rules.md` | **enforced at 0.** Self-deleting scripts make the tree state depend on whether a run succeeded |
    | A non-source, non-`.meta` file under `Assets/Scripts/` | `Architecture/7-File-Layout.md` | **1** — `Editor/Tools/_wake2.txt` |

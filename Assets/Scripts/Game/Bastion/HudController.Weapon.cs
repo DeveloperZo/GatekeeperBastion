@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Text;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER (partial of HudController): the weapon readout — the weapon card,
     /// slot strip, clip/reload row, ability and decoy lines, and the crosshair shape.</summary>

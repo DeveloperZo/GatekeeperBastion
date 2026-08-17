@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Pack prefab names for the bastion kit: one structural set for every block
     /// kind — per-kind variety is an authoring-pass decision. POLYGON Sci-Fi Space

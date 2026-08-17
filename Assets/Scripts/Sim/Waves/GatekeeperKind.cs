@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// The three kinds of gatekeeper. EACH KIND IS DEFINED BY WHAT IT REFUSES TO DO — the refusal is

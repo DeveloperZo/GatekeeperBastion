@@ -1,8 +1,8 @@
 using System.IO;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>M22 criterion 8: the Dev-taint banner's condition is live after a Dev command
     /// and absent on a clean session. Reads <see cref="DevTaintBanner.IsVisible"/> — the same

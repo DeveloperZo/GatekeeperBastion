@@ -1,7 +1,7 @@
 using System;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// How the run ended, and what it was worth. Gross is Salvage converted this run (Hatch-bank

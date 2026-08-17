@@ -1,7 +1,7 @@
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>REPLICATED-STATE: player hit points. On the local rig, death is a RUN ENDER:
     /// the body locks and GameController.PlayerDied() ends the run. A networked puppet sets

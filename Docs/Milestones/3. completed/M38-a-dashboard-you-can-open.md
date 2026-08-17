@@ -129,7 +129,7 @@ Depends on M29, shipped. Independent of M37 — either can go first.
 ## What shipped (2026-08-09)
 
 **Re-cut same day:** `Docs/dashboard.html` — open the file, choose the Logs folder (or drop
-`GatekeeperBastion_*.log`); JavaScript parses the logs. No regenerate script. Root
+`GatekeepersProtocol_*.log`); JavaScript parses the logs. No regenerate script. Root
 `Dashboard/` + `--dashboard` snapshot removed (`file://` cannot enumerate `Logs/` alone).
 
 Filters kept: PlayMode via `stage=playmode`, short Runs under **5 s**, name-mapped spend

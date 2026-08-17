@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gatekeeper Bastion — mean live Gatekeepers per Wave, offline from session logs.
+# Gatekeeper's Protocol — mean live Gatekeepers per Wave, offline from session logs.
 #
 #   Tools/wave-report/run.sh <log>...
 #   Tools/wave-report/run.sh --summary <log>...

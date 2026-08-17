@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.AI;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     // Collision layer — the exact box math the primitive kit shipped, renderers removed.
     // Player physics and shot blocking are unchanged; the NavMesh ignores these (the bake

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Static pure catalog of every weapon. Shape matches
     /// <see cref="WaveDirector.StatsFor"/> — holds no state, so it does not violate the

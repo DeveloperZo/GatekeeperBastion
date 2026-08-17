@@ -1,10 +1,10 @@
 using System;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: authored ARMORY body: slot toggles, equipped block, wheel captions, catalog
     /// rows. A dumb binder — every element exists in Ship.unity; code writes text, toggles

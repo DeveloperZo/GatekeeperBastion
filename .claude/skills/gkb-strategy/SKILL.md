@@ -1,8 +1,8 @@
 ---
 name: gkb-strategy
-description: Decide what Gatekeeper Bastion works on next and in what order — lane balance and queue caps, the leverage ladder that gates tuning, the milestone authoring contract, and how to report a recommendation. Use this skill whenever the user asks what to work on, what is next, what the priority is, whether something is worth doing now, how to sequence work, or asks to reorder the roadmap or to write, scope or re-cut a milestone — and whenever planning looks like it is running ahead of building. Use it even when the question sounds casual, such as "what should I do next", because ordering here is governed by lane balance and a leverage ladder rather than by preference. For judging whether a mechanic is a good idea, use gkb-design; for capturing an idea, use gkb-brainstorm.
+description: Decide what Gatekeeper's Protocol works on next and in what order — lane balance and queue caps, the leverage ladder that gates tuning, the milestone authoring contract, and how to report a recommendation. Use this skill whenever the user asks what to work on, what is next, what the priority is, whether something is worth doing now, how to sequence work, or asks to reorder the roadmap or to write, scope or re-cut a milestone — and whenever planning looks like it is running ahead of building. Use it even when the question sounds casual, such as "what should I do next", because ordering here is governed by lane balance and a leverage ladder rather than by preference. For judging whether a mechanic is a good idea, use gkb-design; for capturing an idea, use gkb-brainstorm.
 metadata:
-  project: gatekeeper-bastion
+  project: gatekeepers-protocol
   update-trigger: when a lane rule, queue cap or the milestone contract changes
 ---
 

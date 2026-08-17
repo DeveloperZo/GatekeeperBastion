@@ -50,7 +50,7 @@ only what is visible without a keypress.
 6. **`../../Decisions.md` Bastion fight HUD table has a `Hud Hatch` row** (top centre, size,
    contents). Four corner hosts stay.
 7. **`gkb_bindings_report.json` reports 0 missing bindings** on Bastion after the wire
-   (`GatekeeperBastion/Validate Scene Bindings` or `gkb_bindings_request.txt`).
+   (`GatekeepersProtocol/Validate Scene Bindings` or `gkb_bindings_request.txt`).
 
 ### Zo-closable (Game view — agent must not mark these done)
 

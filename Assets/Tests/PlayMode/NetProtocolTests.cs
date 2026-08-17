@@ -1,6 +1,6 @@
 using System.Collections;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using Unity.Netcode;
 using Unity.Netcode.Components;
@@ -9,7 +9,7 @@ using UnityEngine.AI;
 using UnityEngine.TestTools;
 using Unity.Netcode.TestHelpers.Runtime;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>In-process host + one client. Protocol verbs apply once on the host:
     /// Anchor slows host bodies, Bulkhead negates host damage, Ghost bias is a set

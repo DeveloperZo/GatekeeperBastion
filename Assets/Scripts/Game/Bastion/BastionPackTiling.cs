@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Measures pack piece prefabs and computes snap-grid tile runs for the bastion
     /// kit. The pack is authored on a 5 m grid with a 2.5 m small grid and pieces measure

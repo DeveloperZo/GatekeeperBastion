@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gatekeeper Bastion — skill evals.
+# Gatekeeper's Protocol — skill evals.
 #
 #   run.sh trigger   would each prompt pick the right skill? one batched call per skill
 #   run.sh quality   does the skill body improve the answer? two arms per skill, then grading
@@ -141,7 +141,7 @@ quality() {
     tasks=$(jq -r --arg s "$skill" '.[$s].cases | to_entries | map("TASK \(.key+1)\nContext: \(.value.state)\nRequest: \(.value.prompt)") | join("\n\n")' "$cases")
     [[ -n "$tasks" ]] || die "quality: no cases for skill '$skill'"
 
-    with=$(say "You are working on the Gatekeeper Bastion Unity project. Follow this guidance.
+    with=$(say "You are working on the Gatekeeper's Protocol Unity project. Follow this guidance.
 
 <guidance>
 $body
@@ -151,7 +151,7 @@ Answer each task below. Number your answers to match. Be concise.
 
 $tasks")
 
-    without=$(say "You are working on the Gatekeeper Bastion Unity project.
+    without=$(say "You are working on the Gatekeeper's Protocol Unity project.
 
 Answer each task below. Number your answers to match. Be concise.
 

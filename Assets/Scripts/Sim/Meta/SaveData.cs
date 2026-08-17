@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// Flat serializable DTO for meta-progression persistence. Public fields only, no dictionaries —

@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M35 criterion 35: the structured shortcut row API. Data side —
     /// <see cref="ShortcutPanel.FillRows"/> emits one row per binding label with grouped

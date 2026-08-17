@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Terminal completion opens doors (AND on required terminals). Control gate last.</summary>
     public sealed class BastionUnlockGraph

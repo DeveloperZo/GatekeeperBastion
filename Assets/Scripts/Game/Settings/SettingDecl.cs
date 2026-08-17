@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>One preferences row. The options screen draws exactly these — adding a
     /// setting is a row here, not layout code.</summary>

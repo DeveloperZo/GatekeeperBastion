@@ -83,7 +83,7 @@ on any type not named in it fails the run. The owed list has been empty since
 ```arch-lint
 singleton_allow=HatchStation
 singleton_owed=
-menu_root=GatekeeperBastion
+menu_root=GatekeepersProtocol
 menu_rows=Record/Gameplay/This scene (F9 to stop),Record/Gameplay/Ship,Record/Gameplay/Bastion,Record/Ship Flythrough,Logs/Open Logs Folder,Logs/Copy Latest Log Path,Build/All Scenes,Build/Place Bastion Obstacles,Build/Group Bastion Geom In Open Scene,Build/Unpack Bastion Geom In Open Scene,Build/Copy Compendium Pages,Bake/Bastion NavMesh,Validate/Integration Check,Validate/Scene Bindings
 ```
 
@@ -167,7 +167,7 @@ Audited 2026-08-09 across `Assets/Scripts` (68 files). Detail in `5-Audit`.
 | | Finding |
 |---|---|
 | **Already right** | No LINQ in runtime code. No empty `Update`/`Start` bodies. No `FindObjectOfType` — already on the Unity 6 forms. No `Manager`/`Helper`/`Utils` class anywhere. No fake-null bypass on any `UnityEngine.Object`. `Log.Info` already `[Conditional]`. Allocation rules cover every `Update()`, `OnGUI`, and the firing path. |
-| **The structural gap** | Was: `Sim/` pure by convention, unenforced, sharing an assembly with `Game/`. **Resolved 2026-08-12 (M45):** `GatekeeperBastion.Sim.asmdef` plus `TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState` enforce it at compile and test time. `1-Boundaries.md` §1. |
+| **The structural gap** | Was: `Sim/` pure by convention, unenforced, sharing an assembly with `Game/`. **Resolved 2026-08-12 (M45):** `GatekeepersProtocol.Sim.asmdef` plus `TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState` enforce it at compile and test time. `1-Boundaries.md` §1. |
 | **The measured cost** | `Log.Event` and `Log.Metric` are not `[Conditional]` and ship in release; 61 of 147 call sites interpolate, which under C# 9 allocates and boxes whether or not anything reads the log. 47 more interpolations sit inside `OnGUI`. `3-Unity-Runtime.md` §6. |
 | **The name that started this** | `RegisterPinHitIfNeeded` is the **only** `*IfNeeded` in the codebase — and it is the one place an audit found a shipped bug. The name predicted the defect. `2-Naming.md` §2. |
 | **Convention, no check** | InfinityQube's region order is adopted (`7-File-Layout.md`) and governs new files. **M34 cancelled** — no tree-wide sweep, no `Tools/lint-layout` in verify. |

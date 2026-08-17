@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
@@ -9,7 +9,7 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: Unity Relay allocate / join. No NetworkManager — allocation
     /// happens on Main Menu, then <see cref="Apply"/> pushes the payload onto Bastion's

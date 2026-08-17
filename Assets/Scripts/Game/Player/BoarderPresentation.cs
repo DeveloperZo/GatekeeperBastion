@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: hide the Boarder's skinned mesh from the local camera (layer
     /// LocalHead on the SkinnedMeshRenderer, not the head bone), and hide all body

@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine.AI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY: the gatekeeper that NEVER targets the hatch. It beelines the nearest live
     /// player from the breach and keeps doing so for life — there is no hatch in its world, so no

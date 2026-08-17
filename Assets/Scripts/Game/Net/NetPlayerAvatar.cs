@@ -1,10 +1,10 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER (puppet): a visible Boarder for everyone except its owner.
     /// Owner-authoritative NetworkTransform. Capsule collider + PlayerHealth so the host

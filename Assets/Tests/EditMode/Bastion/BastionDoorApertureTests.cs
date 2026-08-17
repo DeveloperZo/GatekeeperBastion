@@ -1,9 +1,9 @@
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     public class BastionDoorApertureTests
     {

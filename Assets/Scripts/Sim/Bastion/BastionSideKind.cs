@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     public enum BastionSideKind : byte
     {

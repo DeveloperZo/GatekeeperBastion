@@ -71,7 +71,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dcbfb71baee0f06479efaf0d363e82e4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.NetRunMirror
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.NetRunMirror
   ShowTopMostFoldoutHeaderGroup: 1
   Phase:
     UpdateTraits:
@@ -134,7 +134,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7281b13e8e20a8b439ceac8deedf6d34, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.NetPartyLobby
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.NetPartyLobby
   ShowTopMostFoldoutHeaderGroup: 1
   CountingDown:
     UpdateTraits:

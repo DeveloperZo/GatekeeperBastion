@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M14 deep start: DeepestWaveReached clamp, clear-only rise, chained delivery
     /// order and InterWaveGap, and per-kill salvage unchanged by start wave.</summary>

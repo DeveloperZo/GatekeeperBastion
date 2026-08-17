@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>EditMode tests for the ship-shop: the exact doubling cost curve, purchase
     /// rules, the pinned attribute/fab effect formulas, and persistence of upgrade levels.</summary>

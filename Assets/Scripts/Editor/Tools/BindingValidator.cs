@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>
     /// Headless binding validation: a reflection-based walk over the four
@@ -33,7 +33,7 @@ namespace GatekeeperBastion.EditorTools
             public string Field;
         }
 
-        [MenuItem("GatekeeperBastion/Validate/Scene Bindings", false, 101)]
+        [MenuItem("GatekeepersProtocol/Validate/Scene Bindings", false, 101)]
         public static void RunFromMenu()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -41,7 +41,7 @@ namespace GatekeeperBastion.EditorTools
             Debug.Log($"[BindingValidator] {missing} missing binding(s). Report: {ReportPath}");
         }
 
-        /// <summary>Batch entry: -executeMethod GatekeeperBastion.EditorTools.BindingValidator.RunFromBatch.
+        /// <summary>Batch entry: -executeMethod GatekeepersProtocol.EditorTools.BindingValidator.RunFromBatch.
         /// Exit code 0 always — the report carries the verdict; a red report is data, not a crash.</summary>
         public static void RunFromBatch()
         {
@@ -99,7 +99,7 @@ namespace GatekeeperBastion.EditorTools
         /// <summary>Non-vendor = the game's own runtime assembly. Shift, TMP, MCP and package
         /// code ship null serialized fields by design and are not ours to wire.</summary>
         static bool IsOurs(Type type) =>
-            type.Assembly.GetName().Name == "GatekeeperBastion";
+            type.Assembly.GetName().Name == "GatekeepersProtocol";
 
         static void ValidateComponent(Scene scene, MonoBehaviour mb, List<MissingBinding> missing)
         {

@@ -42,18 +42,18 @@ C:\Program Files\Unity\Hub\Editor\6000.3.21f1\Editor\Unity.exe
 -batchmode
 -nographics
 -projectPath
-f:\Programming\Gatekeeper Bastion
+f:\Programming\Gatekeeper's Protocol
 -runTests
 -testPlatform
 EditMode
 -assemblyNames
-GatekeeperBastion.Tests
+GatekeepersProtocol.Tests
 -testFilter
-GatekeeperBastion.Tests.ShortcutRowApiTests
+GatekeepersProtocol.Tests.ShortcutRowApiTests
 -testResults
-f:\Programming\Gatekeeper Bastion\gkb_shortcut_row_test_results.xml
+f:\Programming\Gatekeeper's Protocol\gkb_shortcut_row_test_results.xml
 -logFile
-f:\Programming\Gatekeeper Bastion\gkb_shortcut_row_test_log.txt
-Successfully changed project path to: f:\Programming\Gatekeeper Bastion
-F:/Programming/Gatekeeper Bastion
+f:\Programming\Gatekeeper's Protocol\gkb_shortcut_row_test_log.txt
+Successfully changed project path to: f:\Programming\Gatekeeper's Protocol
+F:/Programming/Gatekeeper's Protocol
 Exiting without the bug reporter. Application will terminate with return code 1

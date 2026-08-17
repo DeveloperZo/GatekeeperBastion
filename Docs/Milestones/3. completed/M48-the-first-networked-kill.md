@@ -91,7 +91,7 @@ route around it silently.
 
 ## Implementation
 
-All new code under `Assets/Scripts/Game/Net/`, namespace `GatekeeperBastion.Game`. `Sim/`
+All new code under `Assets/Scripts/Game/Net/`, namespace `GatekeepersProtocol.Game`. `Sim/`
 is untouched. In order:
 
 1. **Change** `Packages/manifest.json` — add the two packages (criterion 1). Record the
@@ -148,8 +148,8 @@ is untouched. In order:
 11. **Change** `Packages/manifest.json` again — add `com.unity.netcode.gameobjects` to
     `"testables"` (how NGO exposes `NetcodeIntegrationTest` to a project's own tests). This
     also surfaces NGO's package tests in the Test Runner window; the integration check is
-    unaffected because it pins `assemblyNames` to `GatekeeperBastion.PlayTests`.
-12. **Change** `Assets/Tests/PlayMode/GatekeeperBastion.PlayTests.asmdef` — add references
+    unaffected because it pins `assemblyNames` to `GatekeepersProtocol.PlayTests`.
+12. **Change** `Assets/Tests/PlayMode/GatekeepersProtocol.PlayTests.asmdef` — add references
     to `Unity.Netcode.Runtime` and `Unity.Netcode.Runtime.Tests` (the 2.13.1 assembly that
     contains `NetcodeIntegrationTest`).
 13. **Create** `Assets/Tests/PlayMode/NetKillTests.cs` — fixture derives

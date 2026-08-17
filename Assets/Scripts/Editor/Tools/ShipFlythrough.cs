@@ -2,13 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using UnityEditor;
 using UnityEditor.Media;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>
     /// One-click walkthrough video of the Ship scene, recorded from the player rig in Play mode.
@@ -83,7 +83,7 @@ namespace GatekeeperBastion.EditorTools
             return new Vector3((cell.x + 0.5f) * Grid, y, (cell.y + 0.5f) * Grid);
         }
 
-        [MenuItem("GatekeeperBastion/Record/Ship Flythrough", false, 22)]
+        [MenuItem("GatekeepersProtocol/Record/Ship Flythrough", false, 22)]
         public static void Record()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)

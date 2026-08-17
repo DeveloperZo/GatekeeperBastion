@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>AwardKill floors once into Unbanked; ship bank does not move.</summary>
     public class SalvageDriftTests

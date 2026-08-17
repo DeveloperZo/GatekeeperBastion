@@ -1,7 +1,7 @@
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: authored CREW QUARTERS body. Serialized names stay so Ship.unity
     /// bindings survive: vitality→protocol, stamina→Ghost, scavenging→Foresight, luck hidden.</summary>

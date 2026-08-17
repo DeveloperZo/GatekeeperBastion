@@ -1,4 +1,4 @@
-# Gatekeeper Bastion — the game on one page
+# Gatekeeper's Protocol — the game on one page
 
 Sci-fi wave-defense FPS. Unity 6, PC/Steam, first-person. The Boarder is the IQ astronaut
 with Synty guns; Ship desks and the Bastion kit are dressed (M61-2 closed 2026-08-14:
@@ -111,7 +111,8 @@ and `Roadmap.md` before starting work. **If you have never played it**, start in
 **Dashboard:** open [`dashboard.html`](dashboard.html). **Focus** / **Project** read
 [`dashboard-data.js`](dashboard-data.js) (regen with `Tools/dashboard-data/run.ps1`) —
 lane caps, milestones, commits, outstanding questions, rule-based next focus.
-**Session** chooses the `Logs` folder (or drop `GatekeeperBastion_*.log`) and parses in
+**Session** chooses the `Logs` folder (or drop `GatekeepersProtocol_*.log`;
+`GatekeeperBastion_*.log` still parse) and parses in
 the browser: mean live by era (hatch-bank loop ≥ 2026-08-13), kills, spend/SKU, hatch
 pressure, intensity, Hatch-bank starts, ability credit. PlayMode / short / Dev are
 **labeled**, not dropped, until the corpus is large. Far-wall / `hatchDist` is on the

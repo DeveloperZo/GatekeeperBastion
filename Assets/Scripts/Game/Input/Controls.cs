@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Ids for every player-facing binding. Input sites call
     /// <see cref="Controls.Down"/> / <see cref="Controls.Held"/>; the shortcut panel

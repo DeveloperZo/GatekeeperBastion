@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Master / Music / SFX volume apply without FMOD. Master drives
     /// <see cref="AudioListener.volume"/>; Music/SFX scale matching <see cref="AudioSource"/>s

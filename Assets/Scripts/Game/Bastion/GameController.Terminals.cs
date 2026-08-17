@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): field-terminal Wave start and clear.
     /// Split when the command surface landed and GameController.cs passed the 400-line cap —

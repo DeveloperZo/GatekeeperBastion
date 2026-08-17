@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M20 Path 1 — catalog, dial curves, and pin-build rules that do not need a
     /// scene. Behaviour that needs MonoBehaviours is Path 2 (PlayMode).</summary>

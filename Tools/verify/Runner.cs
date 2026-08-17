@@ -1,4 +1,4 @@
-// Gatekeeper Bastion — EditMode harness runner.
+// Gatekeeper's Protocol — EditMode harness runner.
 //
 // Reflects over the compiled assembly, runs every [Test] method with its [SetUp] and
 // [TearDown], and prints one line per failure plus a total. Exit code 0 = all passed,

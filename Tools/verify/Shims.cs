@@ -1,4 +1,4 @@
-// Gatekeeper Bastion — EditMode harness shims.
+// Gatekeeper's Protocol — EditMode harness shims.
 //
 // The sim compiles and runs outside Unity. Two things it touches do not exist out here:
 // UnityEngine.Debug (reached only through Util/Log.cs) and NUnit.Framework (the test

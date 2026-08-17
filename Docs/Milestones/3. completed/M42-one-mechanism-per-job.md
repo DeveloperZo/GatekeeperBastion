@@ -92,10 +92,10 @@ save-schema version, the owed weapon row, and every transcript-based economy aud
     REPLICATED-STATE.** Remasured 2026-08-12: **43 of 43** (BastionDoor / Layout / Segment /
     Terminal / GeneratedGeom and extra Ui views landed after the audit's 36).
 16. **One namespace under `Game/`.** `Game.Ui` and `Game.Combat` fold to
-    `GatekeeperBastion.Game`; scene `m_EditorClassIdentifier` strings updated with them.
+    `GatekeepersProtocol.Game`; scene `m_EditorClassIdentifier` strings updated with them.
 17. **Station name lists cannot drift.** EditMode test asserts `StationSceneGate.Stations`
     (public) equals `StationName` of every concrete `StationTerminal` subclass. Excluded
-    from the mcs harness (Editor assembly); Tests asmdef references `GatekeeperBastion.Editor`.
+    from the mcs harness (Editor assembly); Tests asmdef references `GatekeepersProtocol.Editor`.
 18. **Docs match the code** for EquippedMelee (key changed, shim banned), WaveSpawner R1
     exception, ShipController loadout belt, and structural Update/OnGUI/firing wording.
 

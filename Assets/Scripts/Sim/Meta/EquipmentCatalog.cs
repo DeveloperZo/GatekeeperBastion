@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Static pure catalog of equipment. One row today (the repair rig); upgrade shape
     /// lands here when designed. Holds no state.</summary>

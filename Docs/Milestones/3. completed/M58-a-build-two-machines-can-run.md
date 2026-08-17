@@ -127,7 +127,7 @@ IPv4 dotted quad only (four octets 0–255). No hostnames.
    counts plus `NetSessionAddressTests`; `NetKillTests` still green; harness and lint-arch
    green. Solo player-build log: no `[Net]`.
 2. Criterion 1 — write `gkb_player_build_request.txt` (or File → Build Profiles → Windows);
-   launch `Logs/Builds/GatekeeperBastion.exe`; Splash → MainMenu; a file under
+   launch `Logs/Builds/GatekeepersProtocol.exe`; Splash → MainMenu; a file under
    `persistentDataPath/Logs/`.
 3. Criteria 2–5 — playthrough path: two machines (or two LAN addresses), **or** same-machine
    dual-box via `Tools/player-session/run.ps1` (host `-gkb-host`, join `-gkb-join 127.0.0.1`;

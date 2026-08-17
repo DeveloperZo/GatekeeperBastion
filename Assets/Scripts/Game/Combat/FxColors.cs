@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>World/VFX colour literals. UI colours live only in Shift UI Manager.</summary>
     public static class FxColors

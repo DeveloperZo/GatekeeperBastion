@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>In-build Gatekeeper wrappers are three distinct pack refs; enemy prefab
     /// NavMeshAgent radius/height stay the pre-mesh-slice values.</summary>

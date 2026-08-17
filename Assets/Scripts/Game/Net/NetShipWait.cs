@@ -1,9 +1,9 @@
 using System.Collections;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: client-only additive Ship load while a downed Boarder waits.
     /// Bastion stays loaded and active so NGO objects stay put. Fixture tests no-op because

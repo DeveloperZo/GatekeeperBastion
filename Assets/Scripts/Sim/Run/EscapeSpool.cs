@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// DORMANT in v0: the tether cannot be cut at will, so nothing starts this spool.

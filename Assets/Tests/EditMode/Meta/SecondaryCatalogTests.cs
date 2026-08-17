@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M26 Path 1 — SEC-D catalog presence, identity, power band, and kill-line shape.</summary>
     public class SecondaryCatalogTests

@@ -200,4 +200,4 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 98d8c79f6d6e5774186fc526205c7985, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.DecoyObject
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.DecoyObject

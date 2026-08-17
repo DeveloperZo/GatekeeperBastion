@@ -1,10 +1,10 @@
 using System;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: one authored station panel's chrome: header, close button and the ARMORY
     /// wheel host. The body is authored per station and bound by that station's panel view

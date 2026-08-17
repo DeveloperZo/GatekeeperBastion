@@ -1,13 +1,13 @@
 using System.Collections;
 using System.IO;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>Friends-session lobby kernel: ESM true on NetSession; host local Bastion
     /// load refused. Full host NetworkSceneManager party-load of Ship/Bastion across two

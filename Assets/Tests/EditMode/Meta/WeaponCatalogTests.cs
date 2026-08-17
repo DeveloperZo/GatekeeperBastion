@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M11 catalog + cost curve + migration, updated for M21's wheel-point shape.
     /// T0 (zero points) keeps the printed band; higher "tiers" use the flat-tier migration

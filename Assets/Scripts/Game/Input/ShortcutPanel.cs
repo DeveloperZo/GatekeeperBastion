@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>One shortcut-strip row: keycap label(s), what they do, and the section they
     /// belong to. <see cref="Dev"/> rows exist only in dev builds and render visually

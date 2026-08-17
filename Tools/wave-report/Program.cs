@@ -1,4 +1,4 @@
-﻿// Gatekeeper Bastion - wave-report: mean live Gatekeepers per Wave, offline from session logs.
+// Gatekeeper's Protocol - wave-report: mean live Gatekeepers per Wave, offline from session logs.
 //
 // Reconstructs live(t) from group/breach and kill lines (criterion 1-6). Mean live is the
 // time-weighted integral; mean lifetime is Little's Law. Assets/ gains no counter - the log
@@ -83,7 +83,7 @@ public static class WaveReport
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     static readonly Regex LogDateRe = new Regex(
-        @"GatekeeperBastion_(\d{4})-(\d{2})-(\d{2})_",
+        @"(?:GatekeepersProtocol|GatekeeperBastion)_(\d{4})-(\d{2})-(\d{2})_",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     enum Mode { Table, Summary, Csv, Html }
@@ -815,7 +815,7 @@ public static class WaveReport
         var sb = new StringBuilder();
         sb.AppendLine("<!DOCTYPE html>");
         sb.AppendLine("<html lang=\"en\"><head><meta charset=\"utf-8\">");
-        sb.AppendLine("<title>Gatekeeper Bastion - wave report</title>");
+        sb.AppendLine("<title>Gatekeeper's Protocol - wave report</title>");
         sb.AppendLine("<style>");
         sb.AppendLine("body{font:14px/1.45 system-ui,Segoe UI,sans-serif;margin:24px;color:#1a1a1a;background:#f7f7f5}");
         sb.AppendLine("h1{font-size:22px;margin:0 0 8px} h2{font-size:16px;margin:28px 0 8px}");

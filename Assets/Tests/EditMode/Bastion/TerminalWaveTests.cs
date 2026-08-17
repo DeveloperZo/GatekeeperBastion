@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     public class TerminalWaveTests
     {

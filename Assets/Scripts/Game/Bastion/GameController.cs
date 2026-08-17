@@ -1,9 +1,9 @@
 using System;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST + CLIENT presentation: Bastion-scene bootstrap that owns the RunContext,
     /// ticks its RunSim every frame on host, and exposes the command methods all sim mutation

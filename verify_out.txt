@@ -1,15 +1,15 @@
-﻿note: boarder-for-enemy is collocational; false negatives expected
+note: boarder-for-enemy is collocational; false negatives expected
 lint-language: clean
 lint-arch: clean
 skipped  Bastion/BastionDoorApertureTests.cs ΓÇö needs BastionSegment MonoBehaviour, GameObject, and UnityEngine
-skipped  Bastion/BastionSegmentDoorAlongTests.cs ΓÇö needs GatekeeperBastion.Game (BastionSegment.TryDoorPillars)
-skipped  ControlsTests.cs ΓÇö needs GatekeeperBastion.Game (Controls) and UnityEngine.Input/KeyCode
-skipped  Dev/DevSessionTests.cs ΓÇö needs GatekeeperBastion.Game (SaveService) and a real filesystem save
-skipped  Ship/PremiseCopyTests.cs ΓÇö needs GatekeeperBastion.Game (PremiseCopy) and scene strings
-skipped  Ship/StationPanelDriftTests.cs ΓÇö needs GatekeeperBastion.Editor StationSceneGate assembly
-skipped  Ship/StationPurposeTests.cs ΓÇö needs GatekeeperBastion.Game (station Purpose constants)
+skipped  Bastion/BastionSegmentDoorAlongTests.cs ΓÇö needs GatekeepersProtocol.Game (BastionSegment.TryDoorPillars)
+skipped  ControlsTests.cs ΓÇö needs GatekeepersProtocol.Game (Controls) and UnityEngine.Input/KeyCode
+skipped  Dev/DevSessionTests.cs ΓÇö needs GatekeepersProtocol.Game (SaveService) and a real filesystem save
+skipped  Ship/PremiseCopyTests.cs ΓÇö needs GatekeepersProtocol.Game (PremiseCopy) and scene strings
+skipped  Ship/StationPanelDriftTests.cs ΓÇö needs GatekeepersProtocol.Editor StationSceneGate assembly
+skipped  Ship/StationPurposeTests.cs ΓÇö needs GatekeepersProtocol.Game (station Purpose constants)
 skipped  Ui/ShortcutRowApiTests.cs ΓÇö needs ShortcutRow MonoBehaviour, TMPro, and UnityEditor
-skipped  Ui/UiBindGatingTests.cs ΓÇö needs GatekeeperBastion.Game, TMPro, and UnityEngine.UI
+skipped  Ui/UiBindGatingTests.cs ΓÇö needs GatekeepersProtocol.Game, TMPro, and UnityEngine.UI
 skipped  Weapons/ReloadSwapTests.cs ΓÇö needs PlayerGun MonoBehaviour, GameObject, and UnityEngine.TestTools.LogAssert
 
 FAILURES

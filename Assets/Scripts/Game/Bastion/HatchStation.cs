@@ -1,9 +1,9 @@
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 // Alias avoids CS0104: UnityEngine also declares a 'Subsystem' type.
-using Subsystem = GatekeeperBastion.Sim.Subsystem;
+using Subsystem = GatekeepersProtocol.Sim.Subsystem;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>REPLICATED-STATE: scene-side proxy for the sim Hatch — the defended umbilical
     /// junction back to your ship at one end of the bastion. Routes enemy damage and player

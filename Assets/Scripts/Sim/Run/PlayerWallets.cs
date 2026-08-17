@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Per-player unbanked piles for one Run. Capacity is
     /// <see cref="WaveDirector.PlayerCapacity"/> so six stays a number, not a rewrite.

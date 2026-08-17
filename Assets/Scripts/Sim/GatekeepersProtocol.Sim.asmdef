@@ -1,6 +1,6 @@
 {
-    "name": "GatekeeperBastion.Sim",
-    "rootNamespace": "GatekeeperBastion.Sim",
+    "name": "GatekeepersProtocol.Sim",
+    "rootNamespace": "GatekeepersProtocol.Sim",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

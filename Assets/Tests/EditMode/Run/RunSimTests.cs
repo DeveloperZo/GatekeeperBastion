@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>EditMode tests for the RunSim state machine (Docked → Tethered → Lost),
     /// the Prep/Assault draw model, kill-banked salvage, death as pure bookkeeping, and

@@ -1,4 +1,4 @@
-# Gatekeeper Bastion — same-machine two-player session (Windows).
+# Gatekeeper's Protocol — same-machine two-player session (Windows).
 #
 #   Tools/player-session/one-click.cmd          # build + interactive windowed dual-box
 #   Tools/player-session/run.ps1 -Build -Interactive
@@ -22,8 +22,13 @@ $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $Report = Join-Path $Root "gkb_player_build_report.json"
 $Req = Join-Path $Root "gkb_player_build_request.txt"
-$DefaultExe = Join-Path $Root "Logs\Builds\GatekeeperBastion.exe"
-$Persist = Join-Path $env:USERPROFILE "AppData\LocalLow\DefaultCompany\Gatekeeper Bastion\Logs"
+$DefaultExe = Join-Path $Root "Logs\Builds\GatekeepersProtocol.exe"
+$PersistCandidates = @(
+    (Join-Path $env:USERPROFILE "AppData\LocalLow\Gatekeeper\Gatekeeper's Protocol\Logs"),
+    (Join-Path $env:USERPROFILE "AppData\LocalLow\Gatekeeper\Gatekeeper Bastion\Logs"),
+    (Join-Path $env:USERPROFILE "AppData\LocalLow\DefaultCompany\Gatekeeper's Protocol\Logs"),
+    (Join-Path $env:USERPROFILE "AppData\LocalLow\DefaultCompany\Gatekeeper Bastion\Logs")
+)
 $OutDir = Join-Path $Root "Logs"
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
@@ -49,19 +54,20 @@ if ($Build) {
 }
 
 if ([string]::IsNullOrWhiteSpace($Exe)) {
-    if (Test-Path $DefaultExe) { $Exe = $DefaultExe }
-    elseif (Test-Path (Join-Path $Root "Logs\build\Gatekeeper Bastion.exe")) {
-        $Exe = Join-Path $Root "Logs\build\Gatekeeper Bastion.exe"
+    $exeFallbacks = @(
+        $DefaultExe,
+        (Join-Path $Root "Logs\build\Gatekeeper's Protocol.exe"),
+        (Join-Path $Root "Logs\Builds\Gatekeeper Bastion.exe"),
+        (Join-Path $Root "Logs\build\Gatekeeper Bastion.exe")
+    )
+    foreach ($cand in $exeFallbacks) {
+        if (Test-Path -LiteralPath $cand) { $Exe = $cand; break }
     }
 }
 
 if ([string]::IsNullOrWhiteSpace($Exe) -or -not (Test-Path $Exe)) {
     Write-Error "player-session: no player exe. Pass -Exe, set GKB_PLAYER_EXE, or use -Build."
     exit 2
-}
-
-if (-not (Test-Path $Persist)) {
-    New-Item -ItemType Directory -Force -Path $Persist | Out-Null
 }
 
 function New-PlayerArgs {
@@ -106,8 +112,14 @@ if ($Interactive) {
     if (-not $clientProc.HasExited) { Stop-Process -Id $clientProc.Id -Force -ErrorAction SilentlyContinue }
 }
 
-$logs = Get-ChildItem -LiteralPath $Persist -Filter "GatekeeperBastion_*.log" -ErrorAction SilentlyContinue |
-    Where-Object { $_.LastWriteTime -ge $cutoff.AddSeconds(-2) } |
+# Player logs: companyName Gatekeeper, productName Gatekeeper's Protocol.
+# Try current then legacy product, each under Gatekeeper then DefaultCompany.
+$logs = foreach ($dir in $PersistCandidates) {
+    if (-not (Test-Path -LiteralPath $dir)) { continue }
+    Get-ChildItem -LiteralPath $dir -Filter "GatekeepersProtocol_*.log" -ErrorAction SilentlyContinue
+    Get-ChildItem -LiteralPath $dir -Filter "GatekeeperBastion_*.log" -ErrorAction SilentlyContinue
+}
+$logs = @($logs) | Where-Object { $_ -and $_.LastWriteTime -ge $cutoff.AddSeconds(-2) } |
     Sort-Object LastWriteTime -Descending
 
 $serverLog = $null

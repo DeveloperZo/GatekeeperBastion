@@ -1,10 +1,10 @@
 using System.Collections;
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>REPLICATED-STATE: generic hit-point pool for scene actors (enemies in v0) —
     /// TakeDamage drains Hp, flashes the renderer so hits are visibly registered, and fires

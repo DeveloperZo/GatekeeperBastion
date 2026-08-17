@@ -23,7 +23,7 @@ Daniel Cook's skill atom: the player holds a **mental model**, takes an **action
 system responds with **feedback**, and the model updates. A mechanic the player cannot see
 the result of is not in their loop at all — it is a number in a file.
 
-Gatekeeper Bastion's atom, one Wave at a time:
+Gatekeeper's Protocol's atom, one Wave at a time:
 
 ```
 model    "I can hold the door if I thin the group before it lands"

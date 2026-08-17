@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>
     /// Rescues a Canvas that would render nothing, and changes nothing else.

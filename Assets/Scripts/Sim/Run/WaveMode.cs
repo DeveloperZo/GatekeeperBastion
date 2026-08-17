@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Who a Wave is for. Terminal = Boarder hunt (field terminal). HatchBank = Hatch
     /// extract.</summary>

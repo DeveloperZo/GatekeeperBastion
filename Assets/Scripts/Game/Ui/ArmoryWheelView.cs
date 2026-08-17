@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: binds the authored ARMORY upgrade wheel — five spokes placed around a hub in the
     /// scene, not by this class. <see cref="Configure"/> writes labels, marks the centre spoke and

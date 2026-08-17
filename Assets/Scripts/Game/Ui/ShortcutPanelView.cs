@@ -4,7 +4,7 @@ using Michsky.UI.Shift;
 using TMPro;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>One pooled keycap row of the shortcut strip: keycap label + description.
     /// The row object is an authored clone of a serialized template (Shift's

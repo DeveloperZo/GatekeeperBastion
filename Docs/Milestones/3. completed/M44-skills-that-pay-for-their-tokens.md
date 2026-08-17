@@ -224,7 +224,7 @@ been thought about (`../../Architecture/README.md`).
     - **Nothing in the codebase is named after a work item.** No type, file, namespace, menu
       path or define contains a milestone ID. `Assets/Scripts/Editor/Tools/M35Wp4OptionsPatch.cs`
       is the live example: a class, a file and a menu row
-      (`GatekeeperBastion/M35/WP-4 Patch Bastion Options`) all named after a milestone and a
+      (`GatekeepersProtocol/M35/WP-4 Patch Bastion Options`) all named after a milestone and a
       work package. **A type is named for the responsibility it holds**
       (`../../Architecture/2-Naming.md`), and a milestone ID is not a responsibility — it is a
       date stamp that stops meaning anything the moment the milestone ships.

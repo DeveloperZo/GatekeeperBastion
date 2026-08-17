@@ -1,8 +1,8 @@
 using System;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: player-build command line for same-machine host/join.
     /// Splash consumes this and loads Bastion with a <see cref="NetJoinIntent"/>.

@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// Value describing one gatekeeper wave: how many enemies OF EACH KIND, how tough, how big a

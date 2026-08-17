@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>One looping Stardust Drifter host across Splash → MainMenu. Scene
     /// <c>Background Music</c> sources join or yield to the live host. Continue /

@@ -1,10 +1,10 @@
 using System.IO;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M13 Watch + criterion 5/6: Dev actions latch DevTainted and Save becomes a
     /// no-op so a real campaign file cannot be overwritten by a scratch loadout/grant.</summary>

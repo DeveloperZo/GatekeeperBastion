@@ -1,8 +1,8 @@
 using System.Text;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: the Ship hub's HUD — uGUI via <see cref="ShipHudView"/>.
     /// Bastion corner cards (Profile / Score / Weapon; no Vitals), crosshair, and interact

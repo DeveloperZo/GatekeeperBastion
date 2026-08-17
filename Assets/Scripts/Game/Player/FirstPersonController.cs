@@ -1,8 +1,8 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: minimal first-person controller — CharacterController WASD movement
     /// plus mouse look with cursor lock (Escape releases, left-click re-locks), and a

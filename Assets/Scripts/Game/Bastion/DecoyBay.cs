@@ -1,8 +1,8 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY: entry for the drone bay's decoy: owns <see cref="DecoyState"/>,
     /// spawns the live prop, and emits the per-Wave <c>Decoy</c> gatekeeper-seconds line.

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: Main Menu host/join intent for CLI / Splash smoke, plus
     /// LastError for the Join panel. Friends Host/Join starts the DDOL

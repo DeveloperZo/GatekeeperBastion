@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using UnityEditor;
@@ -9,7 +9,7 @@ using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>SceneBuilder, enemy assets: the three gatekeeper prefabs and the materials that make
     /// them tellable apart. Same idempotent contract as the rest of the builder — each prefab is

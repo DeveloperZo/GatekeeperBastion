@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: volumes and entry stems for the pause Compendium reader.
     /// Runtime loads pages from StreamingAssets; EditMode tests read Docs/Play directly.</summary>

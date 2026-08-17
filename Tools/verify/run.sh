@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gatekeeper Bastion — EditMode test harness.
+# Gatekeeper's Protocol — EditMode test harness.
 #
 # Compiles Sim/, Util/Log.cs and the EditMode tests outside Unity with mcs, runs them
 # with mono, and reports pass/fail in seconds. This is verification path 1 in
@@ -58,17 +58,17 @@ fi
 # EditMode tests that cannot compile outside Unity. Each needs a reason; a file added
 # here without one is coverage quietly dropped.
 declare -A EXCLUDED=(
-  ["Dev/DevSessionTests.cs"]="needs GatekeeperBastion.Game (SaveService) and a real filesystem save"
+  ["Dev/DevSessionTests.cs"]="needs GatekeepersProtocol.Game (SaveService) and a real filesystem save"
   ["Weapons/ReloadSwapTests.cs"]="needs PlayerGun MonoBehaviour, GameObject, and UnityEngine.TestTools.LogAssert"
-  ["ControlsTests.cs"]="needs GatekeeperBastion.Game (Controls) and UnityEngine.Input/KeyCode"
-  ["Ship/PremiseCopyTests.cs"]="needs GatekeeperBastion.Game (PremiseCopy) and scene strings"
-  ["Ship/StationPurposeTests.cs"]="needs GatekeeperBastion.Game (station Purpose constants)"
-  ["Ship/StationPanelDriftTests.cs"]="needs GatekeeperBastion.Editor StationSceneGate assembly"
+  ["ControlsTests.cs"]="needs GatekeepersProtocol.Game (Controls) and UnityEngine.Input/KeyCode"
+  ["Ship/PremiseCopyTests.cs"]="needs GatekeepersProtocol.Game (PremiseCopy) and scene strings"
+  ["Ship/StationPurposeTests.cs"]="needs GatekeepersProtocol.Game (station Purpose constants)"
+  ["Ship/StationPanelDriftTests.cs"]="needs GatekeepersProtocol.Editor StationSceneGate assembly"
   ["Ui/ShortcutRowApiTests.cs"]="needs ShortcutRow MonoBehaviour, TMPro, and UnityEditor"
-  ["Ui/UiBindGatingTests.cs"]="needs GatekeeperBastion.Game, TMPro, and UnityEngine.UI"
-  ["Ui/CompendiumFormTests.cs"]="needs GatekeeperBastion.Game (CompendiumCatalog) and UnityEngine.Application"
+  ["Ui/UiBindGatingTests.cs"]="needs GatekeepersProtocol.Game, TMPro, and UnityEngine.UI"
+  ["Ui/CompendiumFormTests.cs"]="needs GatekeepersProtocol.Game (CompendiumCatalog) and UnityEngine.Application"
   ["Bastion/BastionDoorApertureTests.cs"]="needs BastionSegment MonoBehaviour, GameObject, and UnityEngine"
-  ["Bastion/BastionSegmentDoorAlongTests.cs"]="needs GatekeeperBastion.Game (BastionSegment.TryDoorPillars)"
+  ["Bastion/BastionSegmentDoorAlongTests.cs"]="needs GatekeepersProtocol.Game (BastionSegment.TryDoorPillars)"
 )
 
 if ! command -v mcs >/dev/null 2>&1 || ! command -v mono >/dev/null 2>&1; then
@@ -92,7 +92,7 @@ done
 
 mkdir -p "$OUT"
 
-# Stage 1 — Sim/ compiles ALONE into GatekeeperBastion.Sim.dll against the Shims stubs.
+# Stage 1 — Sim/ compiles ALONE into GatekeepersProtocol.Sim.dll against the Shims stubs.
 # This is the offline enforcement of the Sim boundary: the stubs define the entire allowed
 # engine surface (CoreModule value types + Debug), so a MonoBehaviour, scene, Time or ambient
 # Random reference inside Sim/ fails HERE, not in a review. Sim/Util/Log.cs ships inside the
@@ -100,7 +100,7 @@ mkdir -p "$OUT"
 mapfile -t SIM_SOURCES < <(find "$SIM_DIR" -name '*.cs' | sort)
 SIM_SOURCES+=("$HERE/Shims.cs")
 
-SIM_DLL="$OUT/GatekeeperBastion.Sim.dll"
+SIM_DLL="$OUT/GatekeepersProtocol.Sim.dll"
 if ! mcs -nologo -langversion:latest -warn:0 -target:library -out:"$SIM_DLL" "${SIM_SOURCES[@]}" 2> "$OUT/compile-sim.log"; then
   echo "SIM COMPILE FAILED — Sim/ referenced something outside its allowed surface" >&2
   grep -E 'error CS' "$OUT/compile-sim.log" | head -40 >&2

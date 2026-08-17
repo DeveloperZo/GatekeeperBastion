@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>Every UpgradeTrack value has a label, a language.md station, and finite
     /// level-0 / MaxLevel values — the table the docgen tracks emitter reads.</summary>

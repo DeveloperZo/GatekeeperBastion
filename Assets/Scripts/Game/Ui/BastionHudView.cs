@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: binds the authored Bastion fight HUD: four corner cards, top-centre Hatch host,
     /// left/right edge drawers, and the MsgGeneral / MsgPlayer lanes. Controllers push strings

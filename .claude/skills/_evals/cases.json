@@ -41,7 +41,7 @@
     "cases": [
       {
         "id": "design-classify",
-        "state": "Gatekeeper Bastion is a solo-developed wave-defense FPS with five waves.",
+        "state": "Gatekeeper's Protocol is a solo-developed wave-defense FPS with five waves.",
         "prompt": "I want to add a boss that appears on wave 5 with a scripted intro. Is that a good idea?",
         "assertions": [
           "The response explicitly classifies the boss as an arc rather than a loop",

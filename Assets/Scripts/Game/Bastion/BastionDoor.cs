@@ -1,8 +1,8 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Which segment edge a door seals.</summary>
     public enum BastionDoorEdge : byte

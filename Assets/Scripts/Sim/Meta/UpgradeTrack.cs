@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Meta-upgrade tracks purchasable at ship stations. Weapons go through BuyWeapon /
     /// BuyWheelUpgrade / EquipWeapon. The repair rig is equipment (BuyEquipmentSlot / BuyEquipment).

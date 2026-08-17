@@ -1,11 +1,11 @@
 using System.Text;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using Michsky.UI.Shift;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.EditorTools
+namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Hard postconditions for Ship station UI. A tool that mutates station panels
     /// may not write <c>OK</c> unless every check here passes. WARN lines in a log also

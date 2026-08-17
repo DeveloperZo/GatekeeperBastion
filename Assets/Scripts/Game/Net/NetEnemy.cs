@@ -1,10 +1,10 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>REPLICATED-STATE: server-spawned gatekeeper. Client clones disable AI and
     /// NavMeshAgent and never write Damageable — hits go through SubmitHitServerRpc so

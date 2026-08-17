@@ -1,9 +1,9 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: two-press placement ghost for the decoy. First fire enters aiming;
     /// second fire confirms on a valid NavMesh sample within place range. Alt-fire (RMB) or

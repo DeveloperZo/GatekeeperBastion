@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>What Interact does at this console. Field terminals also author
     /// <see cref="BastionTerminal.UnlocksDoor"/> and <see cref="BastionTerminal.UnlockedSpawns"/>.</summary>

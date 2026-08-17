@@ -1,8 +1,8 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>CLIENT-LOCAL / HOST-ONLY (partial of GameController): the client tick path
     /// and the net repair command. Split so GameController.cs does not grow past cap —

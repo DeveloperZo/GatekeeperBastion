@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: persistent on-screen warning while <see cref="GameSession.DevTainted"/>
     /// is true. Drawn by absolute GUI rects so both the Bastion HUD (no GUILayout) and ship

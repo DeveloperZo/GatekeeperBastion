@@ -1,8 +1,8 @@
 ---
 name: gkb-development
-description: Unity 6 and C# implementation practice for the Gatekeeper Bastion codebase — the Sim/ boundary, fake-null lifetime checks, per-frame allocation, pooling, serialized-vs-code defaults, one-shot editor work, and repair discipline when fixing something that already works. Use this skill whenever a milestone is being built, implemented, executed or completed — including working through its acceptance criteria — because building a milestone is development work almost every time, and whenever writing or changing C# in this repository, or repairing a defect. Load it before reading the milestone's criteria, not after opening the first file, because it governs the approach and not just the typing. Use it even for a one-line change, because the rules most often broken here are scoped ones that look like they do not apply. For proving the work is done, or adding a test, script or menu row, use gkb-verification instead.
+description: Unity 6 and C# implementation practice for the Gatekeeper's Protocol codebase — the Sim/ boundary, fake-null lifetime checks, per-frame allocation, pooling, serialized-vs-code defaults, one-shot editor work, and repair discipline when fixing something that already works. Use this skill whenever a milestone is being built, implemented, executed or completed — including working through its acceptance criteria — because building a milestone is development work almost every time, and whenever writing or changing C# in this repository, or repairing a defect. Load it before reading the milestone's criteria, not after opening the first file, because it governs the approach and not just the typing. Use it even for a one-line change, because the rules most often broken here are scoped ones that look like they do not apply. For proving the work is done, or adding a test, script or menu row, use gkb-verification instead.
 metadata:
-  project: gatekeeper-bastion
+  project: gatekeepers-protocol
   update-trigger: when a rule in Docs/Architecture/ changes, or when a repair goes wrong in a new way
 ---
 
@@ -20,7 +20,7 @@ metadata:
   script delete itself.
 - **Add a `[MenuItem]` without asking first.** Menu entries are a shared, permanent surface and
   they are added far more easily than they are removed. Ask, and name the row you propose to
-  replace. **There is one menu root, `GatekeeperBastion/`, with five folders: Record, Logs,
+  replace. **There is one menu root, `GatekeepersProtocol/`, with five folders: Record, Logs,
   Build, Bake, Validate.** A second root is never the answer. A new row updates `menu_rows`
   in `Docs/Architecture/README.md` in the same change.
 - **Put `MonoBehaviour`, `GameObject`, a scene lookup, `Time` or `UnityEngine.Random` in

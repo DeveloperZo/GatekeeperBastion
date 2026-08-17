@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>One looping Whispers of the Void host across Ship → Bastion. Scene
     /// <c>Level Music</c> sources join or yield to the live host. Name is not

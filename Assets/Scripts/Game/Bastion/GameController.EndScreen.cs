@@ -1,8 +1,8 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): everything that happens once a run is
     /// over. Split out of GameController.cs when the success path landed and the file passed the
@@ -193,7 +193,7 @@ namespace GatekeeperBastion.Game
             _loseScreenAge = 0f;
             _watchdogFired = false;
             Log.Error(Tag, "RETURN TO SHIP failed to load the Ship scene; staying on the end screen. " +
-                           "Rebuild scenes from the GatekeeperBastion menu.");
+                           "Rebuild scenes from the GatekeepersProtocol menu.");
         }
 
         /// <summary>Cursor free + visible. Idempotent and cheap; safe to call every frame.</summary>

@@ -1,7 +1,7 @@
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using UnityEngine.AI;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY: the gatekeeper that walks to the Hatch — except on field-terminal
     /// Waves, where it hunts the Boarder (dated break, 2026-08-13). Shooting still does not provoke it.</summary>

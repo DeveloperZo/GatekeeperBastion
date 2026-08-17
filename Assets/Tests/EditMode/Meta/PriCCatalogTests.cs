@@ -1,8 +1,8 @@
 using System;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M32 — PRI-C catalog presence, full-room damage, sustained band vs MR-35,
     /// Wave-5 fire-time floor, Railshot dial, and ring row.</summary>

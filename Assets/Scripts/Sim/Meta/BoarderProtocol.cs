@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Save-adjacent protocol identity. Never renumber, never reuse a retired id.</summary>
     public enum BoarderProtocolId

@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// A damageable ship subsystem with clamped HP. Fires Destroyed once each time HP crosses to 0

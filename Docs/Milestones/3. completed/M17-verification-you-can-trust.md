@@ -103,7 +103,7 @@ proving it works. The criteria below are unmet until someone runs them.**
 
 **Create** `Assets/Tests/PlayMode/PlayModeSaveFixture.cs` — an NUnit `[SetUpFixture]`
 **deliberately outside any namespace**, so it wraps every test in the
-`GatekeeperBastion.PlayTests` assembly rather than one namespace. `[OneTimeSetUp]`
+`GatekeepersProtocol.PlayTests` assembly rather than one namespace. `[OneTimeSetUp]`
 constructs `PlayTestUtil.SaveFileGuard`; `[OneTimeTearDown]` disposes it.
 
 Assembly-level rather than per-test on purpose: **opt-in isolation is isolation that gets

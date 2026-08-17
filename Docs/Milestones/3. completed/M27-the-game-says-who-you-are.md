@@ -33,7 +33,7 @@ EditMode **265 / 0**, PlayMode **16 / 1** (`ShoveDoesNotUncommit`, M20 — not t
 - `Gate` removed: NAV MAP + `Play/Upgrades.md` lock wording; `language.md` trap 6 records why.
 - Play: `The-Game.md`, `Gatekeepers.md`, `A-Run.md`, `Getting-Started.md`.
 - `PremiseCopyTests` — non-empty, ≤40 words, retired fragments and builder vocab absent.
-- Incidental compile fix: `EnemyGatekeeper.Targeting.cs` missing `using GatekeeperBastion.Sim`
+- Incidental compile fix: `EnemyGatekeeper.Targeting.cs` missing `using GatekeepersProtocol.Sim`
   (M30 `DecoyState` call) — blocked AutoVerify until fixed.
 
 ## Story

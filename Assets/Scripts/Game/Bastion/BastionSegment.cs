@@ -1,9 +1,9 @@
 using System;
 using UnityEngine;
 using UnityEngine.AI;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Sim;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY: rebuilds collision boxes and pack-mesh visuals for floor, ceiling and
     /// four sides from block kind and per-edge side state. North = +Z, South = -Z, East = +X,

@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>One frame of player input, produced once per frame by
     /// <see cref="Controls.Sample"/> — the single place UnityEngine.Input is read.

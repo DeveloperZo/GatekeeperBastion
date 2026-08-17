@@ -1,14 +1,14 @@
 using System.Collections;
 using System.Text.RegularExpressions;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using Unity.Netcode;
 using Unity.Netcode.TestHelpers.Runtime;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>Client Prep RPCs apply once on the host: juice raises siphon; Field start
     /// enters Assault; empty-range start refuses without starting.</summary>

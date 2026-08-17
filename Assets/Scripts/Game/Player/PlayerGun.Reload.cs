@@ -1,8 +1,8 @@
-using GatekeeperBastion.Sim;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 using UnityEngine;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>Per-slot reload timers, swap discard/preserve, and the interrupt path — partial
     /// of <see cref="PlayerGun"/>. Stowed slots never tick.</summary>

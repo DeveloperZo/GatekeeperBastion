@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     /// <summary>M15: the binding list is the single source — no live overlap on a KeyCode,
     /// every id resolves, and a throwaway row appears on the panel with no UI edit.

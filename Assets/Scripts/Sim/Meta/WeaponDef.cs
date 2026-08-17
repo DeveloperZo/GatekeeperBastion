@@ -1,6 +1,6 @@
 using System;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>Immutable combat profile of one <see cref="WeaponId"/>, produced by
     /// <see cref="WeaponCatalog.Def"/>. Mirrors <see cref="GatekeeperStats"/>: if a firing mode

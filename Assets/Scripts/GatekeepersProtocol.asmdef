@@ -1,21 +1,19 @@
 {
-    "name": "GatekeeperBastion.Editor",
-    "rootNamespace": "GatekeeperBastion.EditorTools",
+    "name": "GatekeepersProtocol",
+    "rootNamespace": "GatekeepersProtocol",
     "references": [
-        "GatekeeperBastion.Sim",
-        "GatekeeperBastion",
+        "GatekeepersProtocol.Sim",
         "Michsky.UI.Shift",
         "Unity.AI.Navigation",
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
-        "UnityEditor.TestRunner",
-        "UnityEngine.TestRunner",
-        "UnityEngine.UI",
-        "Unity.TextMeshPro"
+        "Unity.Services.Authentication",
+        "Unity.Services.Core",
+        "Unity.Services.Relay",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

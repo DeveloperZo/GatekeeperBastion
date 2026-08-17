@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>An open passage between two abutting rooms: both faces carry a Door side and
     /// no sketch door claims the shared aperture. The emitter mounts one auto door here.</summary>

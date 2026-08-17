@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using GatekeeperBastion.EditorTools;
-using GatekeeperBastion.Game;
+using GatekeepersProtocol.EditorTools;
+using GatekeepersProtocol.Game;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace GatekeeperBastion.Tests
+namespace GatekeepersProtocol.Tests
 {
     public class StationPanelDriftTests
     {

@@ -2,9 +2,9 @@ using System;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// Roguelite meta-progression that persists across runs: banked salvage, attributes,

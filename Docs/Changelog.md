@@ -7,6 +7,9 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-16
 -->
 
+- 2026-08-16: **Title rename to Gatekeeper's Protocol.** Identifier
+  `GatekeepersProtocol`. Unity cloud project id kept. Historical
+  `GatekeeperBastion_*.log` citations unchanged.
 - 2026-08-16: **First-session brainstorm recut to the first-Bastion demo.**
   Wake, repair NAV, grant weapon, one terminal, designed Hatch-bank loss, ARMORY
   cap 2, start Wave 2. Extra sequences: second terminal, Default Protocol.
@@ -92,7 +95,7 @@ Last updated: 2026-08-16
 - 2026-08-15: **M62 completed** — Compendium from pause (Bastion + Ship). Hand-written
   Play pages hold `## Game` / `## Reference` / `## See also`; reader shows Game +
   See also in a scrollable volume tree; StreamingAssets copy via
-  `GatekeeperBastion/Build/Copy Compendium Pages` (also player-build); HUD/pause chrome
+  `GatekeepersProtocol/Build/Copy Compendium Pages` (also player-build); HUD/pause chrome
   hidden while open. Gate: `CompendiumFormTests`. Zo close; playthrough confirmation.
 - 2026-08-15: **M64 recut — both seats play the loop.** Definition of done is host and
   client each shop on their own Ship, EMBARK, start Waves, fight with muzzle/SFX, repair
@@ -109,7 +112,7 @@ Last updated: 2026-08-16
 - 2026-08-15: **M62 in progress — Game dimension.** Each hand-written `Docs/Play/` page
   holds `## Game` (pause reader) + `## Reference` (fuller brief) + `## See also` +
   `## Gaps`. Reader and StreamingAssets copy show Game + See also only. Pause command
-  on Bastion and Ship; menu `GatekeeperBastion/Build/Copy Compendium Pages`.
+  on Bastion and Ship; menu `GatekeepersProtocol/Build/Copy Compendium Pages`.
 - 2026-08-15: **M55 and M71 completed.** Intensity juice (`+/-` Unbanked, `E` then `T`,
   HUD Intensity); MK-1 ring D–A–R–C–F and SEC-D F–A–R–C–D with Secondary cost
   150+150×t. Zo close; M55 kill criterion and M71 Regen Surge mag sit on
@@ -243,7 +246,7 @@ Last updated: 2026-08-16
   the geometry inputs (block kind, side kinds, alongs) gates OnValidate — reloads with
   unchanged settings never touch `_geom`, inspector changes still rebuild. Pre-stamp
   instances with built geometry adopt the hash without rebuilding. The unpacked state
-  was restored via `GatekeeperBastion/Unpack Bastion Geom In Open Scene` (0 packed
+  was restored via `GatekeepersProtocol/Unpack Bastion Geom In Open Scene` (0 packed
   `Gen_` pieces, 2854 plain, stamps persisted); piece-level hand tweaks from that
   window, if any, are lost. Same window, second defect: a play-mode rebuild parented
   its fresh geometry into groups that deferred `Destroy` was about to kill, so every
@@ -256,7 +259,7 @@ Last updated: 2026-08-16
   `Floors`, `Ceiling` (tiles and lights) — and rebuilds emit grouped natively
   (`EnsureGeomGroup`; groups carry the generated marker so a rebuild clears them
   wholesale). The open scene was regrouped in place via
-  `GatekeeperBastion/Group Bastion Geom In Open Scene` — reparent only, no rebuild, so
+  `GatekeepersProtocol/Group Bastion Geom In Open Scene` — reparent only, no rebuild, so
   Zo's hand edits survive and world transforms are untouched.
 - 2026-08-14: **Unowned Ship hands are empty.** Boarder prefab left Mk1 active; Ship has
   no PlayerGun so WeaponViewModel never hid it. `WeaponView.TryShownWeapon`: empty
@@ -864,7 +867,7 @@ This file is history. **`Roadmap.md` is what is next**: order, status, strategy 
   build, and every measurement it has ever made comes from an Editor session log.
   Revisit when a non-development build is actually produced.
 - 2026-08-09: **M38 dashboard re-cut to in-browser parse** — `Docs/dashboard.html` reads
-  `GatekeeperBastion_*.log` via folder/file picker (JS). Root `Dashboard/` + `--dashboard`
+  `GatekeepersProtocol_*.log` via folder/file picker (JS). Root `Dashboard/` + `--dashboard`
   snapshot removed; `file://` cannot scan `Logs/` alone, which is why the picker exists.
 - 2026-08-09: **M38 completed** — first cut used generated `data.js`; superseded same day by
   the in-browser page above. Criterion filters (PlayMode / short / eras / spend) kept.

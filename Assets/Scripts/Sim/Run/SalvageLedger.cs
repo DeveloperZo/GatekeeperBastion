@@ -1,4 +1,4 @@
-namespace GatekeeperBastion.Sim
+namespace GatekeepersProtocol.Sim
 {
     /// <summary>
     /// Per-run converted tally. Hatch-bank drip and dump call Earn; kill awards do not.

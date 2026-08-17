@@ -2,14 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using GatekeeperBastion.Game;
-using GatekeeperBastion.Sim;
+using GatekeepersProtocol.Game;
+using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.TestTools;
 
-namespace GatekeeperBastion.PlayTests
+namespace GatekeepersProtocol.PlayTests
 {
     /// <summary>
     /// Two cheap, fast contracts that sit underneath the scene tests:
@@ -44,7 +44,7 @@ namespace GatekeeperBastion.PlayTests
             {
                 Assert.Inconclusive(
                     "SKIPPED: no flow scene is in Build Settings at all — this is a fresh clone with no " +
-                    "generated scenes. Run menu GatekeeperBastion/Build/All Scenes.");
+                    "generated scenes. Run menu GatekeepersProtocol/Build/All Scenes.");
             }
 
             Assert.IsEmpty(missing,
@@ -169,8 +169,8 @@ namespace GatekeeperBastion.PlayTests
         [Test]
         public void BuyingTheFreeMk1_PersistsAcrossASaveReload()
         {
-            Type sessionType = PlayTestUtil.FindType("GatekeeperBastion.Game.GameSession");
-            Assert.IsNotNull(sessionType, "Type GatekeeperBastion.Game.GameSession does not exist.");
+            Type sessionType = PlayTestUtil.FindType("GatekeepersProtocol.Game.GameSession");
+            Assert.IsNotNull(sessionType, "Type GatekeepersProtocol.Game.GameSession does not exist.");
 
             MethodInfo startNew = StaticNoArgMethod(sessionType, "StartNew");
             MethodInfo continueGame = StaticNoArgMethod(sessionType, "ContinueGame");
@@ -190,7 +190,7 @@ namespace GatekeeperBastion.PlayTests
 
             long bankedBefore = fresh.BankedSalvage;
 
-            Type shipCommands = PlayTestUtil.FindType("GatekeeperBastion.Game.ShipCommands");
+            Type shipCommands = PlayTestUtil.FindType("GatekeepersProtocol.Game.ShipCommands");
             MethodInfo buyCommand = null;
             if (shipCommands != null)
             {

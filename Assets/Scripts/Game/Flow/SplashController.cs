@@ -1,9 +1,9 @@
-using GatekeeperBastion.Util;
+using GatekeepersProtocol.Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GatekeeperBastion.Game
+namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: boot splash. Fades the authored canvas, CaptureOrJoin
     /// music, waits for any key/click, loads MainMenu. No auto-advance.
