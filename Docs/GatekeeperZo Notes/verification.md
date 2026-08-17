@@ -4,7 +4,7 @@
 Purpose: The single list of what is shipped but unproven, ordered so Zo can spend a playthrough on the items that matter and skip the ones that do not. Milestones own their own criteria; this is the condensed view across all of them.
 Status: working — regenerated as milestones ship and items close
 Update trigger: when a milestone ships with open rows, or when an item is verified
-Last updated: 2026-08-16
+Last updated: 2026-08-17
 -->
 
 ## How this works
@@ -85,7 +85,6 @@ Real, lower leverage. None of these blocks anything.
 | Options reach the fight | M24 | Menu OPTIONS, set sensitivity, embark, press `O` mid-Assault, confirm Gatekeepers keep moving and the change applies in the same Run. One `[Settings]` line per commit |
 | Reload discard warning | M25 | Mid-reload, read `SWAP DISCARDS THIS RELOAD`, swap, confirm the discard line. Then turn it off in options and confirm `reload paused` |
 | Juice unused on ten Runs | M55 | Kill criterion: if every post-close start-Wave line is `intensity=0`, stop. Readable off `intensity=` |
-| Default Protocol in a Run | M70 | In tree, milestone not closed. Embark wearing Ghost, then Foresight; plant Anchor; eat Bulkhead. Expect `[Protocol]` lines. HUD G/H named. |
 | MK-1 Regen Surge mag after wheel points | M71 | Criterion 7: with ability points bought, the Regen Surge line's dial value changes (4 s at 0, 10 s at focus-max 50) |
 | First Run with no rig | M23 | The Hatch budget numbers assume the rig. Play one Run without buying it and see whether the door survives Wave 2 |
 | Rig prices 300 + 300 | M23 | Marked *tunable, needs play data*. Only worth an opinion after the item above |
@@ -114,6 +113,7 @@ Real, lower leverage. None of these blocks anything.
 
 | Item | Milestone | Closed by |
 |---|---|---|
+| Default Protocol in a Run | M70 | 2026-08-17 close. `09-43-30` Barrage/Rush sat-ready + window ended, no `[Dev]`; `00-44-24` claimed Default; `08-37-17` `self refused 21s left`. Unequipped `refused — no protocol` not in a log |
 | MK-1 wheel ring | M21 | 2026-08-14, M71: ring D–A–R–C–F authored, strength Reload / weakness Damage; `RingsAreUniqueAcrossShopWeapons` and `WeaknessNeverAdjacentToStrength` cover it, harness green |
 | SEC-D wheel ring | M21 | 2026-08-15, M71: ring F–A–R–C–D authored, strength FireRate / weakness Reload; Ability spoke not purchasable |
 | `— N live` on group lines, segment lands on zero | M29 | 2026-08-09 session `15-21-59`: group lines read `— 3 live`, `— 6 live`, `— 5 live`; the reader parses it and the Wave-3 segment resolves |

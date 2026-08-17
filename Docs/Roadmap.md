@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-16
+Last updated: 2026-08-17
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -29,10 +29,10 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-Active **M72**.
+Active **M72** and **M73**.
 **M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** and **M61-2**
 completed 2026-08-14. **M55, M57, M58, M59, M60, M62, M63-2, M64, M65, M71** completed
-2026-08-15.
+2026-08-15. **M69** and **M70** completed 2026-08-17.
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
 developer touching a keyboard, play a full five-wave run with both participating, and the
@@ -41,19 +41,18 @@ sentence.
 
 **Recommended next**, in this order.
 
-1. **Finish M72** — shared Ship + party EMBARK (eyes-on criterion 9). Then **M69**.
-2. **Close M70** — recut 2026-08-16: Default CREW claim; Barrage `G` / Rush `H`;
-   Coming Soon stubs; Fight/Pause shortcut cooldown fill. Frame in tree; shop +
-   fire-rate sheet + HUD are the remaining build.
-3. **M66** after a two-player session exists. **M65** closed 2026-08-15 (three players,
-   wave scale, split wallets). **M73** after M66 (closet spawn; does not jump M72).
-4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
+1. **Finish M72** — shared Ship + party EMBARK (eyes-on criterion 9).
+2. **M66** after a two-player session exists. **M65** closed 2026-08-15 (three players,
+   wave scale, split wallets). **M73** is in tree (closet spawn) and does not close
+   until the playthrough. **M72** stays active.
+3. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14 (eyes lines, Stats
    after-numbers, solo completion), M55 juice unused on ten Runs, M71 Regen Surge mag,
-   M64 criteria 13–25 dry-run. Next-Run play list is `GatekeeperZo Notes/verification.md`
-   (M31 pin, M30 decoy, M26 fight-feel, M21 opposite focuses). Not a reason to jump the queue.
+   M64 criteria 13–25 dry-run, M69 criterion 4 slider independence. Next-Run play list is
+   `GatekeeperZo Notes/verification.md` (M31 pin, M30 decoy, M26 fight-feel, M21 opposite
+   focuses). Not a reason to jump the queue.
 
-Planned count is **5** (cap 10). Active **1** (cap 3).
+Planned count is **2** (cap 10). Active **2** (cap 3).
 
 ## Order
 
@@ -118,19 +117,19 @@ this table — see the change log.
 | M59 | Polish Pass 1 | completed, Aug 2026 | Field Scale 1; fight HUD ≥24; overflow; no EXP; station chrome+copy; player-build keys; pause shortcuts; end scrim α≥0.65. EditMode HudSeparation + M59PolishChrome + StationPurpose green (`gkb_verify_report.json` 2026-08-15T18:03:48Z) | [`3. completed/M59`](Milestones/3.%20completed/M59-the-polish-pass-1.md) |
 | M61 | Polish Pass 2 | completed, Aug 2026 | IQ astronaut + Synty Space guns/desks (SKU 138857); Mixamo fire/reload stand-ins; stroke crosshair; RMB zoom | [`3. completed/M61`](Milestones/3.%20completed/M61-the-polish-pass-2.md) |
 | M61-2 | Polish Pass 2, the Bastion | completed, Aug 2026 | Kit blocks are POLYGON Sci-Fi Space meshes; re-framed mid-pass to scaler-2 station rooms with functional sliding doors and a bulkhead Hatch; Generated/Authored split; suite 2026-08-15T00:09Z adds no reds of its own; eyes/Stats/solo-run rows open in verification.md | [`3. completed/M61-2`](Milestones/3.%20completed/M61-2-polish-pass-2-the-bastion.md) |
-| M69 | The session has a voice | later | Bastion Whispers loop; fire/reload/footsteps on SFX bus; no store pack | [`1. planned/M69`](Milestones/1.%20planned/M69-the-session-has-a-voice.md) |
+| M69 | The session has a voice | completed, Aug 2026 | Whispers on Ship/Bastion; fire/reload/footsteps on SFX; no store pack. Gate: `SessionMusicHostTests` 4/0. Criterion 4 slider playthrough open | [`3. completed/M69`](Milestones/3.%20completed/M69-the-session-has-a-voice.md) |
 | M63 | The garrison is a roster | later | Twelve-kind roster + properties + draw rule recorded; Ram→Thief in code; `in_build` filter; door-time logged | [`1. planned/M63`](Milestones/1.%20planned/M63-the-garrison-a-roster-with-bodies.md) |
 | M63-2 | The three that walk | completed, Aug 2026 | Default/Hunter/Thief (Ram) Synty meshes + Mixamo melee walk; player capsule mesh removed; Play pages Thief-named. Gate: GatekeeperPresentationTests; silhouette Zo-closed | [`3. completed/M63-2`](Milestones/3.%20completed/M63-2-the-three-that-walk.md) |
 | M62 | The Compendium you can open | completed, Aug 2026 | Esc → Compendium; Game dimension + scroll nav; StreamingAssets copy; HUD hidden while open; `CompendiumFormTests` | [`3. completed/M62`](Milestones/3.%20completed/M62-the-compendium-you-can-open.md) |
 | M60 | A join a friend can use | completed, Aug 2026 | Unity Relay join code from Main Menu; join-in-Tethered; clean disconnect; host-quit message; LAN IP fallback. Gate: NetSessionAddressTests + Zo eyes-on criterion 4 | [`3. completed/M60`](Milestones/3.%20completed/M60-a-join-a-friend-can-use.md) |
 | M65 | Three players, and a fight that counts them | completed, Aug 2026 | Three supported, six cheap; waves scale by player count; salvage split to own wallets. Gate: `PlayerWalletTests`, `WavePlayerCountTests`, `NetThreePlayerTests` (cumulative BankCap; `RunSim.Wallets.cs`). Full suite still has unrelated reds | [`3. completed/M65`](Milestones/3.%20completed/M65-three-players-and-a-fight-that-counts-them.md) |
 | M66 | Polish Pass 3 | later | Hit confirm, per-kind pre-attack audio, players distinct at lane range | [`1. planned/M66`](Milestones/1.%20planned/M66-polish-pass-3.md) |
-| M73 | The spawn point is a room | later | Closet prefab; enemy-only GateSlab; six hung on R4/R5/R7/R8/R13/R14; centre markers gone | [`1. planned/M73`](Milestones/1.%20planned/M73-the-spawn-point-is-a-room.md) |
+| M73 | The spawn point is a room | active | Closet prefab; enemy-only GateSlab; six hung on R4/R5/R7/R8/R13/R14; centre markers gone; playthrough open | [`2. active/M73`](Milestones/2.%20active/M73-the-spawn-point-is-a-room.md) |
 | M52 | Waves start at a terminal | completed, Aug 2026 | Interact starts T1's five Boarder-hunt Waves; Hatch invulnerable; D1 on Nth clear; Wave 5 `Escaped`. Close log `14-46-59` (no `[Dev]`). AwardKill-to-bank is M53 | [`3. completed/M52`](Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | M53 | Salvage leaves through the Hatch | completed, Aug 2026 | Kills fill Unbanked; Hatch-bank 45 s drip/attrit/dump, 3 slots, fat pile ×1.25/×1.50. Close log `18-23-55` (Run clean). Stay-Prep after dump is EditMode. Harness 316/0 | [`3. completed/M53`](Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | M54 | Master Control is the win | completed, Aug 2026 | Wave 5 no longer ends the Run; Master Control is 5 terminal then 5 Hatch-bank; leftover converts; finale spends no slot | [`3. completed/M54`](Milestones/3.%20completed/M54-master-control-is-the-win.md) |
 | M55 | Pay for intensity | completed, Aug 2026 | `+/-` spend 100 unbanked per step; `E` select, `T` start; HUD says Intensity; siphon dial retired; same `TetherSiphon` curve | [`3. completed/M55`](Milestones/3.%20completed/M55-pay-for-intensity.md) |
-| M70 | The Default Protocol | later | CREW sells Default as a 0-salvage claim (Barrage `G`, Rush `H`); VEIL/AEGIS/LEDGER Coming Soon; Fight shortcut names keys + cooldown; frame (v8 refund, STOCK, net ids) already in tree | [`1. planned/M70`](Milestones/1.%20planned/M70-the-default-protocol.md) |
+| M70 | The Default Protocol | completed, Aug 2026 | CREW sells Default as a 0-salvage claim (Barrage `G`, Rush `H`); Coming Soon stubs; Protocol Line + Protocol Bar. Gate: BoarderProtocolTests 14/0; play log `09-43-30` Barrage/Rush, no `[Dev]` | [`3. completed/M70`](Milestones/3.%20completed/M70-the-default-protocol.md) |
 | M67 | Playable from zero | **cancelled, Aug 2026** | Premise gone — M53 carry convert after Wave 1; M52+M53 compound gate no longer exists | [`5. cancelled/M67`](Milestones/5.%20cancelled/M67-playable-from-zero.md) |
 | M71 | The sidearm joins the wheel | completed, Aug 2026 | MK-1 ring D–A–R–C–F (Reload / Damage); SEC-D ring F–A–R–C–D (FireRate / Reload), Ability spoke not purchasable; Secondary-slot cost 150 + 150×t; focused never-rival holds | [`3. completed/M71`](Milestones/3.%20completed/M71-the-sidearm-joins-the-wheel.md) |
 
@@ -146,7 +145,10 @@ connect with local Player. **M64** closed 2026-08-15: send gate machine checks +
 prep path (own Ship → Bastion, `NetPrep`, mirrored Intensity); criteria 13–25 playthrough
 confirmation. **M59** closed 2026-08-15: Bastion as a room and Ship as something a stranger can
 operate (terminals, HUD, station chrome and copy, keys, pause list, end scrim).
-**M69** is the Bastion loop and fire/footstep audio; no store pack.
+**M69** closed 2026-08-17: Bastion Whispers loop and fire/footstep audio; no store pack;
+criterion 4 slider confirmation still open.
+**M70** closed 2026-08-17: CREW Default claim, Barrage `G` / Rush `H`, Protocol Line +
+Protocol Bar. Kill criteria wait 10 Runs or 2026-09-30.
 **M61** closed 2026-08-14: gun, sight, zoom, Ship desks. **M63-2** closed 2026-08-15:
 the three in-build Gatekeeper bodies from that same pack. **M63** is the roster record,
 Ram→Thief in code, and door-time. **M62** closed 2026-08-15: Compendium from pause.
@@ -210,7 +212,7 @@ selector are one milestone rather than two.
 **A Steam page, and replacing Bastion kit meshes, remain a phase, not a milestone.**
 They previously sat in this table as "M9 — off gray-box". **M61 shipped that exception**
 (Zo, 2026-08-13 / closed 2026-08-14): view models, sight, zoom, Ship consoles. Fire and
-footsteps are M69. Kit footprints stay locked. Nothing above depends on a Steam page.
+footsteps closed with M69. Kit footprints stay locked. Nothing above depends on a Steam page.
 
 **M20 before M21, and the reason is arithmetic.** The wheel's expressive surface is the
 ring: five attributes give 12 distinct arrangements and exclude two per focus, four give

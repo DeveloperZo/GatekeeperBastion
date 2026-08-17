@@ -4,9 +4,124 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
-Last updated: 2026-08-16
+Last updated: 2026-08-17
 -->
 
+- 2026-08-17: **M70 closed.** CREW Default claim, Barrage `G` / Rush `H`, NAV
+  warn, Protocol Line + Protocol Bar. BoarderProtocolTests 14/0;
+  M59PolishChrome Protocol pins 10/0. Play
+  `Logs/GatekeepersProtocol_2026-08-17_09-43-30_p39804.log` Barrage/Rush
+  sat-ready + window ended, wave 1 cleared, no `[Dev]`; `00-44-24` claimed
+  Default; `08-37-17` cooldown refuse. Kill criteria wait 10 Runs or
+  2026-09-30.
+  [`Milestones/3. completed/M70-the-default-protocol.md`](Milestones/3.%20completed/M70-the-default-protocol.md).
+- 2026-08-17: **M70 Protocol Bar.** Top-left `Protocol Line` is the name only.
+  Bottom-centre bar is Passive / Personal (`H`) / Crew ult (`G`). Radial fill
+  uses Shift circle sprite (null sprite cannot paint Filled); overlay 0 when
+  READY; name hides under countdown. Frames sliced; keycaps 24×20; fill GOs
+  authored empty. M70 stays planned.
+  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+- 2026-08-17: **M70 Fight HUD authored.** `Protocol Line` bound under Hud
+  Profile; Fight and Pause row templates each have a Filled Radial360
+  `CooldownFill`. Harness 394/0; `NetProtocolTests` 4/0 Passed. Playthrough
+  still owns close. M70 stays planned.
+  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+- 2026-08-17: **M69 closed.** SessionMusicHostTests 4/0 Passed (Whispers Level
+  Music on Ship/Bastion; Stardust menu; SFX Resources + fade). Criterion 4
+  slider playthrough confirmation open. Sensation row: session voice in play;
+  M66 keeps combat tells. Planned 3/10.
+  [`Milestones/3. completed/M69-the-session-has-a-voice.md`](Milestones/3.%20completed/M69-the-session-has-a-voice.md).
+- 2026-08-17: **Beat 0 play-through stamped.** Fade from black, stir line
+  before the unlock prompt, hold-E on the lid, then every Game line / prompt /
+  standing string through EMBARK. Working assumptions A1–A14 (poses, timings,
+  first-person, no VO). New ids `demo.wake_stir`, flag `DemoCapsuleOpened`.
+  [`Demo/0-wake-on-a-dead-ship.md`](Demo/0-wake-on-a-dead-ship.md).
+- 2026-08-17: **Beat 0 recut; multiplayer gated on first purchase.** Ship
+  terminal (E/T) powers ARMORY and spawns 2 weak Gatekeepers; paused Lock for
+  the MK-1 pickup off the bare rack (the one sanctioned `timeScale = 0`, Ship
+  only); HP floor 1; CREW heals on interact, menu waits for beat 4. Multiplayer
+  locked until that save's first wheel buy — beats 0–3 solo by construction;
+  beat 3 loses its ARMORY repair and gains `demo.mp_unlocked`.
+  [`Demo/0-wake-on-a-dead-ship.md`](Demo/0-wake-on-a-dead-ship.md),
+  [`Demo/README.md`](Demo/README.md).
+- 2026-08-17: **Demo beats 1–7 storyboarded.** Same shape as beat 0; copy for
+  all ids stamped in the beat files; `voice.md` is the id registry only. Code
+  facts folded: drip 8/s and MK-1 30 shipped; deepest is 3 after the first loss
+  (skip still needed); CREW claim path in tree; `demo.door_d3` merged into
+  `demo.control_room`; sketch never wires Master fight spawns (resolve before
+  cutting 6+7). [`Demo/README.md`](Demo/README.md).
+- 2026-08-17: **Demo 0 storyboard.** Player steps, stamped Game copy, Have vs
+  Build. Capsule is `SM_Prop_CryoBed_01` (pack in tree, not in scene). Open-on-Down
+  blocks the NAV hold. [`Demo/0-wake-on-a-dead-ship.md`](Demo/0-wake-on-a-dead-ship.md).
+- 2026-08-17: **Demo dialogue is mission text, not VO.** Player does not
+  reply. Speakers: the game, at most a few guides. No Pixel Crushers.
+  [`Demo/voice.md`](Demo/voice.md).
+- 2026-08-17: **M70 Protocol Sheet headings.** Template labels Protocol Title /
+  Protocol Description / Crew Ability / Personal Ability / Passive Ability;
+  injected values only. M70 stays planned.
+  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+- 2026-08-17: **Protocols sentence = diluted pool, not deeds.** Gatekeepers
+  wear the same modifiers, watered down; Albion deeds unlock the next sheet.
+  Fight copy: Terminal hunts you, Hatch-bank hunts the Hatch (`WaveMode`).
+  [`Marketing/pitch.md`](Marketing/pitch.md), [`Marketing/gaps.md`](Marketing/gaps.md).
+- 2026-08-17: **Marketing grill vs code.** Pitch May-print no longer lists
+  all four sentences; Default claim is in tree (`M70` remaining HUD/play);
+  M64 did not play-close Gate 13–25; body counts are solo; KR refuse is
+  Alliance not Hades hammers. Gaps and focus: [`Marketing/gaps.md`](Marketing/gaps.md).
+- 2026-08-17: **M70 CREW catalog opens a Protocol Sheet template.** SELECT
+  hides the list; BACK / Esc return. Same template, injected `SheetOf` values.
+  M70 stays planned.
+  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+- 2026-08-17: **M70 CREW is select-then-sheet.** Catalog rows SELECT; the
+  Protocol Sheet is Crew / Personal / Passive + BUY (ARMORY catalog→detail,
+  no wheel). Circular HUD ability icons wait. M70 stays planned.
+  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+- 2026-08-17: **`Docs/Marketing/` kit.** Strategy, product analysis, competitive
+  landscape, friends-alpha GTM, locked pitch. `position.md` replaced by
+  `landscape.md`. [`Marketing/README.md`](Marketing/README.md).
+- 2026-08-17: **Pitch copy pulled out of `1-Experience.md` §1.2.** Rank table
+  unchanged. Marketing is the home.
+- 2026-08-17: **Ancestor recorded: Guns 'n Goblins.** Bell = you start the
+  action; death grows you = progress through failure. Bastion inverted
+  (theirs; you board). Idle / incremental / build-your-fortress refused.
+  [`Design/1-Experience.md`](Design/1-Experience.md) §1.1.
+- 2026-08-16: **First-session wave retune + M73 active.** T1 is 3 Waves
+  (`FirstTerminal`). Hatch-bank and other Field ids wait on it. MK-1 T0
+  damage 30; Hatch drip 8/s; carry-3 Hatch-bank +1 Thief. Spawn points
+  are hung closets (`SpawnRoom`) with enemy-only GateSlab. Planned 4/10,
+  active 2/3. M73 not closed (playthrough criterion 6).
+  [`Milestones/2. active/M73-the-spawn-point-is-a-room.md`](Milestones/2.%20active/M73-the-spawn-point-is-a-room.md).
+- 2026-08-16: **Paradigm and mechanics mapped to §1.2.** Beliefs stay Zo's four;
+  Protects columns on rules and levers restamp when ranks move. Fellowship and
+  Fantasy are not named by any belief (session layer / frame). Mean live grades
+  Challenge only. [`Design/1-Experience.md`](Design/1-Experience.md) §1.1 / §1.4,
+  [`Design/3-Mechanics.md`](Design/3-Mechanics.md) §3.1–3.2,
+  [`Working-Rules.md`](Working-Rules.md).
+- 2026-08-16: **Authored Bastion rooms are not rebuild or cleanup targets.** Working
+  copy dropped 6 of 15 rooms (108k YAML lines) the same way as 2026-08-16 morning:
+  `CleanupOrphanGeneratedGeom` treated `BastionGeneratedGeom` on a room root as
+  litter when `BastionSegment` was missing. Cleanup now only destroys `Gen_*`.
+  `Rebuild`/`OnValidate` refuse `Authored/`. `BastionKitSceneTests` gates 15 named
+  rooms and a packed-instance ceiling.
+- 2026-08-16: **Aesthetic goals: Fellowship, Expression, Fantasy.** Ranks 4–8
+  from the build and brainstorms (Challenge vehicle, Sensation, Discovery
+  heading, Narrative light, Submission refused). Same-day Challenge-first
+  mechanics rank superseded. 2026-08-08 Expression-first order superseded.
+  [`Design/1-Experience.md`](Design/1-Experience.md) §1.2.
+- 2026-08-16: **M70 Barrage/Rush in tree.** CREW claims Default (0 salvage);
+  Coming Soon stubs; NAV no-protocol warn; Fight/Pause shortcut G/H + CooldownFill.
+  Playthrough still owed — not closed.
+- 2026-08-16: **Eight kinds of fun + chance fairness.** `1-Experience.md` cites
+  Riot [URF Academy — Game Feeling](https://www.riotgames.com/en/urf-academy/fun-and-feeling)
+  (same Hunicke eight; rank unchanged). `3-Mechanics.md` §3.1: pity timer,
+  escalating weights, pre-determination; independent-roll rewards refused
+  (`Decisions.md`). Builder-only terms; Play ban in `language.md`.
+- 2026-08-16: **Demo first cycle recut from play.** File 1 is three Waves, juice
+  teach, then Hatch-bank. Convert-then-fight and juice-withhold overturned.
+  Overrun wipes leftover Unbanked; drip 20→8 and MK-1 14→30 are #12 levers
+  (separate commits). Play entry
+  [`GatekeeperZo Notes/playthrough.md`](GatekeeperZo%20Notes/playthrough.md)
+  2026-08-16 `[unconfirmed]`. [`Demo/README.md`](Demo/README.md).
 - 2026-08-16: **Title rename to Gatekeeper's Protocol.** Identifier
   `GatekeepersProtocol`. Unity cloud project id kept. Historical
   `GatekeeperBastion_*.log` citations unchanged.

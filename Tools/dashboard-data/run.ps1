@@ -365,20 +365,20 @@ if ($questions.Count -gt 15) {
 }
 
 Add-Insight "healthy" `
-    "Expression is largely served by the upgrade wheel and rings; Fellowship's done-state is an installable session, not more net verbs." `
-    "Ordering work against aesthetics stops polishing intensity while the second player still needs Zo's machine." `
-    "Treat M72 two-machine close as Fellowship completion. Treat wheel feel-checks and M70 as Expression residue after the session exists." `
-    @("Docs/Design/1-Experience.md (Expression / Fellowship)", "Docs/Roadmap.md Strategy")
+    "Goals are Fellowship, Expression, Fantasy. Challenge is the vehicle. M72 is Fellowship's remaining session gate." `
+    "Ordering work against the top three stops treating Wave TTK as the aesthetic." `
+    "Finish M72 (Fellowship). Specialist Protocols next for Expression. Thicken Fantasy via kinds/destinations, not Default HP." `
+    @("Docs/Design/1-Experience.md 1.2", "Docs/Roadmap.md Strategy")
 
 # Executive synthesis (templated from the same facts)
 $activeTitles = (@($active | ForEach-Object { "{0}" -f $_.id }) -join "/")
 $activeIdsForSynth = @($active | ForEach-Object { $_.id })
 if ($headStillOpen) {
     if ($activeIdsForSynth -contains $friendsHead) {
-        $synthesis = ("Fellowship still fails the install-and-join sentence until {0} two-machine close. Planned {1}/{2}; {0} is the active head. Expression is largely served; {3} Next Run claims still lack a clean play log." -f $friendsHead, $planned.Count, $plannedMax, $blockingQs.Count)
+        $synthesis = ("Fellowship is the top aesthetic; the install-and-join sentence still fails until {0} two-machine close. Planned {1}/{2}; {0} is the active head. {3} Next Run claims still lack a clean play log." -f $friendsHead, $planned.Count, $plannedMax, $blockingQs.Count)
     }
     else {
-        $synthesis = ("Fellowship is the open aesthetic that gates the product: co-op already runs over loopback, but friends-alpha still fails until {0} ships a stranger-installable join. Planned sits at {1}/{2} while actives {3} sit off that path. Expression is largely served; what remains is play proof of {4} Next Run claims and whether protocols earn another planning slot after the cap clears." -f $friendsHead, $planned.Count, $plannedMax, $(if ($activeTitles) { $activeTitles } else { "(none)" }), $blockingQs.Count)
+        $synthesis = ("Fellowship is the top aesthetic. Co-op already runs over loopback; friends-alpha still fails until {0} ships a stranger-installable join. Planned sits at {1}/{2} while actives {3} sit off that path. What remains is play proof of {4} Next Run claims and whether protocols earn another planning slot after the cap clears." -f $friendsHead, $planned.Count, $plannedMax, $(if ($activeTitles) { $activeTitles } else { "(none)" }), $blockingQs.Count)
     }
 }
 else {

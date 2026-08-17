@@ -1,11 +1,19 @@
 # M70 — The Default Protocol
 
 <!--
-Status: later
-Update trigger: when the Default sheet's G/H rows are renamed or cut, when a
-window or fire-rate mul moves off its starting value, or when a specialist
-protocol ships and this slice's Coming Soon stub is replaced by a catalog id.
-Last updated: 2026-08-16
+Status: completed 2026-08-17
+Update trigger: closed
+Last updated: 2026-08-17
+Closed on: 2026-08-17. Machine: BoarderProtocolTests 14/0 (None-until-claim,
+v7 refund, v8 Default+Ghost→Default+None, STOCK TryPlace, OverlayFill, Coming
+Soon not ids); M59PolishChrome Protocol Line/Bar/CooldownFill 10/0. PlayMode
+NetProtocolTests 4/0 same-day (Changelog; editor runner stuck unfocused this
+close). Play: Logs/GatekeepersProtocol_2026-08-17_00-44-24 claimed Default;
+09-43-30 Barrage sat-ready=3.52 / window ended, Rush sat-ready=26.51 / window
+ended, wave 1 cleared, no [Dev]; 08-37-17 self refused 21s left. Save
+EquippedProtocol=1 EquippedPassive=0. Unequipped G/H `refused — no protocol`
+not in a log this close (embark none is). Kill criteria wait 10 Runs or
+2026-09-30.
 -->
 
 CREW QUARTERS sells **Boarder Protocols**. This slice is the shop, one buyable
@@ -110,20 +118,21 @@ Implementer does not choose these.
 | F vs G/H | No exclusion. Weapon ability and protocol may fire the same frame. |
 | Guest CREW | Local meta, same as `BuyWeapon`. Party EMBARK does not require every seat equipped. |
 | Logs (`Tag` `Protocol`) | Activate: `crew Barrage sat-ready=` / `self Rush sat-ready=` plus the number. Early `G`: `crew Barrage unplant sat-ready=` only. Natural end: `crew Barrage window ended` or `self Rush window ended` only — never both for one close. Cooldown: `crew refused — {n}s left` / `self refused — {n}s left`. Open Rush: `self refused — window open`. Unequipped: `crew refused — no protocol` / `self refused — no protocol`. |
-| CREW copy | Default name `Default Protocol`; effect `STOCK — hardware as sold  G Barrage  H Rush`; unowned action `BUY` enabled; owned level `EQUIPPED`, action disabled. Stubs named `VEIL`, `AEGIS`, `LEDGER`; action label `Coming Soon`; action disabled; cost empty. |
+| CREW copy | Catalog is SELECT only. SELECT opens `ProtocolSheetView`: authored headings Protocol Title / Protocol Description / Crew Ability / Personal Ability / Passive Ability; injected `SheetOf` values; claim; BACK. Esc / chrome BACK / template BACK return to catalog. Default claim `BUY` unowned, `EQUIPPED` owned. Stubs inject name + `Coming Soon — no sheet yet` on the three ability bodies; claim `Coming Soon` disabled. |
 | NAV | `ShowWarnings(noWeapon, noRig, noProtocol)`. PromptHint includes `no protocol` the same way as no-weapon / no-rig. EMBARK ANYWAY if any of the three. Author `_noProtocolWarning` on `NavMapPanelView` in `Ship.unity` (same recipe as no-weapon). |
-| HUD | After `FillRows`, rewrite rows whose Key equals `Controls.DisplayOf(CrewAbility)` / `PersonalAbility`: description is `Barrage READY` / `Rush 3.2` (one decimal) / `Barrage` while windowed with remaining seconds. Do not change `Controls` labels. Fight and Pause strips both rewrite. |
-| Keycap fill | Author a child Image named `CooldownFill` on the Fight **and** Pause shortcut row templates in `Bastion.unity` (`m_Type` Filled, Radial360, `fillAmount` 1). `ShortcutRowBinding` OptionalBinding; resolve by child name if unset. fill: READY = 1; window = remaining/window; cooldown = 1 − remaining/cooldown. Log once if missing; text still writes. |
+| HUD | Always-on `Protocol Line` under `Hud Profile` (under BOARDER): unequipped `NO PROTOCOL`; equipped the protocol name only (`Default Protocol`). Cooldown and keys live on authored `Protocol Bar` at bottom centre — Passive, Personal (`H`, Q/E analogue), Crew (`G`, ult, larger). Each slot: name, keycap, Filled Radial360 `CooldownFill`, countdown while windowed/cooling. Overlay: READY = 0; window = remaining/window; cooldown = remaining/cooldown. Do not change `Controls` labels. Do not write READY/countdown onto `Protocol Line`. Shortcut strip stays Controls labels. |
+| Keycap fill | Author `CooldownFill` on each Protocol Bar slot in `Bastion.unity` (`m_Type` Filled, Radial360, a real sprite — not `{fileID: 0}`). Overlay: READY = 0; window = remaining/window; cooldown = remaining/cooldown. Fight/Pause shortcut templates keep their fills (unused by this readout). |
 | Hear | Gun cadence is the audio. No new clip, no activate SFX. |
 | World | Barrage plant: 0.2 m unlit disc at the caster's feet (Unlit/Color, destroyed on unplant). No radius ring, no screen FX, no ally buff VFX. |
 | Docgen | Change `Tools/docgen/Program.cs` CREW line: Default claim, Barrage/Rush, no Passive, not "from the first session". Regen Field Manual in this change. |
 
 ## Acceptance criteria
 
-1. **CREW is a shop.** Panel matches the CREW copy lock. No Ghost, Foresight, or
-   attribute row. Purpose stays "you". Authored heading PROTOCOL. Serialized
-   field names stay (`_vitalityRow` Default; stamina / scavenging / luck the
-   three stubs; luck shown).
+1. **CREW is a shop.** Catalog rows SELECT. SELECT opens the Protocol Sheet
+   template (Crew / Personal / Passive + claim + BACK). BACK / Esc return to
+   catalog. Default and stubs inject into the same template. Purpose stays
+   "you". Authored heading PROTOCOL. Serialized field names stay (`_vitalityRow`
+   Default; stamina / scavenging / luck the three stubs; luck shown).
 2. **Default is a claim.** Fresh `CreateNew`: `EquippedProtocol` `None`,
    `EquippedPassive` `None`. `BuyProtocol(Default)` owns and equips. Mid-Run
    buy is a logged refusal (`PayloadLoadoutLocked`, not renamed). v&lt;8 refunds
@@ -141,12 +150,11 @@ Implementer does not choose these.
    protocol mul; drone slot does not.
 6. **Cooldown reads back.** Log strings match the log lock (seconds left,
    sat-ready, one close line).
-7. **Fight HUD names the keys and the cooldown.** Fight and Pause shortcut `G`/`H`
-   rows match the HUD lock (name + READY/countdown + `CooldownFill`). Hud Vitals
-   stays **400 × 150**. Do not re-author a Vitals protocol TMP. If the shortcut
-   **host** grew, M59 ≥24 AABB at 1920×1080 and 1280×720 is this criterion's
-   last step. Do not grow Hud Vitals. EditMode pins the Filled `CooldownFill`
-   child on both templates.
+7. **Fight HUD names the protocol; the bar names the keys.** `Hud Profile` `Protocol Line` is
+   bound and always on (`NO PROTOCOL` or the protocol name). Bottom-centre `Protocol Bar`
+   shows Passive / Personal / Crew with `G`/`H` keycaps, READY/countdown, and `CooldownFill`.
+   Hud Vitals stays **400 × 150**. Do not grow Hud Vitals. EditMode pins the bar and Filled
+   `CooldownFill` on all three slots.
 8. **STOCK still writes at decoy place.** Existing EditMode pin stays. Repair
    is not a place.
 9. **Net.** Barrage caster mul and 8 m ally mul apply per the stacking lock,
@@ -174,8 +182,9 @@ Do not recreate the frame. Delta only. Every "or" is already locked above.
    (ints 0). Drop Ghost default.
 3. **Change** `Game/Ship/ShipCommands.cs` — `BuyProtocol` per the claim lock.
    `PickPassive` stays a logged refusal (no panel caller).
-4. **Change** `Game/Ship/CrewQuartersStation.cs` + `CrewQuartersPanelView.cs` —
-   CREW copy lock; show `_luckRow`.
+4. **Change** `Game/Ship/CrewQuartersStation.cs` + `CrewQuartersPanelView.cs`
+   + `ProtocolSheetView.cs` + `Ship.unity` — catalog/detail swap; one template;
+   inject `SheetOf` / stub copy.
 5. **Change** `Game/Ship/MapStation.cs` + `Game/Ui/NavMapPanelView.cs` +
    `Assets/Scenes/Ship.unity` — NAV lock (`ShowWarnings` third flag + authored
    warning).
@@ -192,15 +201,14 @@ Do not recreate the frame. Delta only. Every "or" is already locked above.
 7. **Change** `Game/Net/NetVerbs.cs` + `NetPlayerAvatar.Protocol.cs` — RPC
    apply + Default+None accept; plant ClientRpc. Clamp to catalog.
 8. **Change** `HudController.Fight.cs` / `HudController.Panels.cs` /
-   `ShortcutPanelView.cs` / `Bastion.unity` — HUD + fill locks. Fight and
-   Pause templates. Stop gating on `_protocolLine`; leave `SetProtocolLine`
-   harmless. **Do not grow Hud Vitals.** Do not grow the shortcut host.
+   `ProtocolAbilityBarView.cs` / `Bastion.unity` — HUD locks. Protocol Line is
+   the name. Protocol Bar is Passive / Personal / Crew. **Do not grow Hud Vitals.**
 9. **Change** tests — `BoarderProtocolTests`: claim, None default, Coming Soon
    not in `ShopProtocols`, Barrage/Rush pins, `IsLegalPair(Default, Ghost)`
    false, v&lt;8 refund + None, v8 Default+Ghost → Default+None, stacking
    arithmetic 2 / 1.5 / 3. `NetProtocolTests`: SET once per source, product
    3.0, overlapping Barrage 2.0, Default acquisition mul 1.0. EditMode: CREW
-   Coming Soon labels; both shortcut templates have Filled `CooldownFill`.
+   Coming Soon labels; Protocol Bar three Filled `CooldownFill` slots.
 10. **Change** `Tools/docgen/Program.cs` — CREW emitter per the docgen lock;
     `Tools/docgen/run.sh` then `--check`. Docs already recut
     (`language.md`, `Decisions.md`, brainstorm DEFAULT, `Play/The-Ship.md`,
@@ -217,11 +225,12 @@ Rooted**. **Adding `ControlId` to `ShortcutRow`** — match keycap `G`/`H`.
 ## Supporting work
 
 - **Driven by** CREW BUY, then `G`/`H` — here.
-- **Shown by** the PROTOCOLS shop row + Coming Soon stubs, NAV no-protocol
-  warn, Fight/Pause shortcut `G`/`H` rows (name + READY/countdown + fill),
-  Barrage disc — here.
+- **Shown by** CREW catalog SELECT → Protocol Sheet template (Crew / Personal /
+  Passive + BUY + BACK), Coming Soon stubs, NAV no-protocol warn, Fight
+  `Protocol Line` (name) + bottom `Protocol Bar` (Passive / Personal / Crew
+  fills), Barrage disc — here. Art on the squares is later.
 - **Reads back as** faster shot clock, `Rooted` on Barrage, disc while
-  planted, shortcut fill, `Protocol` log lines — here. Audio is the gun's
+  planted, Protocol Bar fill, `Protocol` log lines — here. Audio is the gun's
   existing cadence, not a new clip.
 
 ## Verification
@@ -235,15 +244,18 @@ Rooted**. **Adding `ControlId` to `ShortcutRow`** — match keycap `G`/`H`.
    (the 2026-08-16T14:01Z report asserted Anchor/Bulkhead/Ghost and does not
    close this cut).
 3. Criterion 8 — existing STOCK EditMode pin still passes.
-4. Criterion 7 — EditMode: both templates have Filled `CooldownFill`.
-   Playthrough Game view: shortcut `G`/`H` show Barrage/Rush and READY; after
-   `G`, fill and countdown move. AABB only if the shortcut host grew. Hud
-   Vitals still 400 × 150 in `Bastion.unity`.
-5. Playthrough — new save → ARMORY free sidearm → CREW: Default BUY, three
-   Coming Soon not clickable → NAV EMBARK (no-protocol warn gone after BUY) →
+4. Criterion 1 — EditMode: `ProtocolSheetView` bound on CREW Protocol Sheet;
+   `_sheet` bound on `CrewQuartersPanelView`.
+   Criterion 7 — `Protocol Line` and `Protocol Bar` bound; three Filled
+   `CooldownFill` slots. Playthrough Game view: top-left shows `Default Protocol`
+   after claim; bottom bar countdown moves on `G`. Hud Vitals still 400 × 150.
+5. Playthrough — new save → ARMORY free sidearm → CREW catalog (no sheet
+   yet) → SELECT Default: template shows Crew / Personal / Passive; BUY on
+   the sheet; BACK returns to catalog; SELECT VEIL shows Coming Soon, claim
+   disabled → NAV EMBARK (no-protocol warn gone after BUY) →
    Wave → `G` roots, disc at feet, gun dumps; `H` rushes without root; both
-   keys on cooldown refuse with seconds left; shortcut rows match. Close log:
-   one `Protocol` line per activation/close, no `[Dev]`.
+   keys on cooldown refuse with seconds left; Protocol Bar fill matches.
+   Close log: one `Protocol` line per activation/close, no `[Dev]`.
 6. Unequipped path — new save, skip CREW, NAV EMBARK ANYWAY: warn shows
    protocol; `G`/`H` log `refused — no protocol`.
 
@@ -261,7 +273,7 @@ Rooted**. **Adding `ControlId` to `ShortcutRow`** — match keycap `G`/`H`.
 | Activate SFX, radius ring, screen FX, ally VFX | Cadence + Rooted + disc + fill are the readout |
 | A heal, a crit source, XP | Cut list unchanged |
 | `BoarderProtocolId` for VEIL/AEGIS/LEDGER/FORGE | Copy, not saves |
-| Hud Vitals growth or a new Vitals TMP gate | Shortcut strip is the readout |
+| Hud Vitals growth | Host stays 400 × 150; protocol lives on Hud Profile |
 | New menu row | Ask first |
 
 ## Watch
@@ -271,8 +283,8 @@ Rooted**. **Adding `ControlId` to `ShortcutRow`** — match keycap `G`/`H`.
 - Prefabs freeze `[SerializeField]`; push muls at spawn.
 - No `GUILayout` in the Bastion HUD.
 - FORGE has no fifth CREW row; it is not a Coming Soon stub until a row exists.
-- Pause shortcut template is a second authored fill (`197274592` path) — both
-  or criterion 7 fails in pause.
+- Protocol Bar is three authored slots (Passive / Personal / Crew). Missing
+  `_protocolBar` is a silent no-cooldown path.
 - `NavMapPanelView.ShowWarnings` today is two bools; a missing third warning
   GO is a silent no-protocol path.
 
