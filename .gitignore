@@ -133,5 +133,16 @@ Docs/_meta/*.env
 !/Assets/FaxLab3D/SciFiRobotCharactersPack/Textures/*.meta
 /Assets/Packs/shooterweaponspackassets/
 /Assets/Packs/shooterweaponspackassets.meta
-/Assets/Packs/weapon_source/
-/Assets/Packs/weapon_source.meta
+# weapon_source narrowed 2026-08-19, same exception as FaxLab3D above: the
+# Packs/Weapons wrapper prefabs now reference these GUIDs, so the .meta files
+# (GUIDs, externalObjects material remaps, globalScale=100), the hand-made
+# materials in mat/ and the README ARE tracked. The binary fbx/png payload
+# stays out — restore it from Downloads/shooterweaponspackassets.zip per the
+# folder README.
+/Assets/Packs/weapon_source/*
+!/Assets/Packs/weapon_source/*.meta
+!/Assets/Packs/weapon_source/README.md
+!/Assets/Packs/weapon_source/mat/
+!/Assets/Packs/weapon_source/tex/
+/Assets/Packs/weapon_source/tex/*
+!/Assets/Packs/weapon_source/tex/*.meta

@@ -77,8 +77,14 @@ re-litigating a cut costs more than the cut saved.
   `Assets/Packs/` stays tracked. Shift, Odin (`Assets/Plugins/Sirenix/`), and MCPForUnity
   stay tracked — the HUD and editor are built in those trees, not wrapped off them
   (Zo, 2026-08-14). Vendor dumps that are not yet wrapped are also ignored:
-  `Assets/Packs/shooterweaponspackassets/`, `Assets/Packs/weapon_source/`
+  `Assets/Packs/shooterweaponspackassets/`
   (2026-08-18). Keep `Assets/FaxLab3D.meta` tracked like `Assets/Synty.meta`.
+  **`Assets/Packs/weapon_source/` narrowed 2026-08-19** when the five gun
+  wrappers in `Packs/Weapons` were repointed at it (Synty stays only on the
+  Cutter sword): its `.meta` files, `mat/`, `tex/*.meta` and README are
+  tracked — they carry the GUIDs, externalObjects material remaps and
+  globalScale=100 the wrappers depend on — while the binary fbx/png payload
+  restores from `Downloads/shooterweaponspackassets.zip` per that README.
   **`Assets/FaxLab3D/` narrowed 2026-08-19**: its `Materials/` and `Textures/*.meta`
   are tracked (102 files, 316KB) because they carry hand edits the game depends on;
   the 534MB of textures, models and scenes stays out. See the block below.
