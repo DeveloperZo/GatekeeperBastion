@@ -8,6 +8,14 @@ namespace GatekeepersProtocol.Game
     /// push is change-gated on cached values so LateUpdate stays allocation-free.</summary>
     public sealed partial class HudController
     {
+        // Stamina is a continuous float that moves EVERY frame while sprinting and through the
+        // regen tail, so the ungated push below wrote the Slider every one of those frames and
+        // dirtied the HUD canvas for the whole sprint — the one per-frame HUD cost gated on
+        // running (2026-08-18 defect). Quantised to whole points: 100 steps is finer than the
+        // bar can show.
+        long _cacheStamina = long.MinValue;
+        int _cacheSprinting = -1;
+
         long _cacheElapsed = long.MinValue;
         long _cacheWave = long.MinValue;
         long _cacheSiphon = long.MinValue;
@@ -163,13 +171,22 @@ namespace GatekeepersProtocol.Game
                 if (_fpc == null)
                 {
                     _view.SetStaminaBlockVisible(false);
+                    _cacheStamina = long.MinValue; // re-arm: the next live frame must repaint
+                    _cacheSprinting = -1;
                     return;
                 }
             }
 
             // Always shown — Zo's bottom vitals band; hiding a full bar made the corner look empty.
             _view.SetStaminaBlockVisible(true);
-            _view.SetStaminaLabel(_fpc.IsSprinting ? "<b>SPRINT</b>" : "STAMINA");
+
+            long points = (long)_fpc.Stamina;
+            int sprinting = _fpc.IsSprinting ? 1 : 0;
+            if (points == _cacheStamina && sprinting == _cacheSprinting) return;
+            _cacheStamina = points;
+            _cacheSprinting = sprinting;
+
+            _view.SetStaminaLabel(sprinting == 1 ? "<b>SPRINT</b>" : "STAMINA");
             _view.SetStaminaBar(_fpc.Stamina, _fpc.StaminaMax);
         }
 

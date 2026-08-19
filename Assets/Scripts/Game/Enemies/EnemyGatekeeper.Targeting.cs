@@ -159,19 +159,33 @@ namespace GatekeepersProtocol.Game
             }
         }
 
+        // Resolved ONCE per gatekeeper, from wherever it first wanted the hatch.
+        Vector3 _hatchStand;
+        bool _hasHatchStand;
+
         /// <summary>A navmesh point just off the hatch's face. Pathing at the hatch's transform
         /// aims INSIDE its collider, where no navmesh exists: the agent gets a partial path, stalls
-        /// at the edge and never registers as "arrived". This gives it somewhere it can stand.</summary>
+        /// at the edge and never registers as "arrived". This gives it somewhere it can stand.
+        /// <para>RESOLVED ONCE, deliberately. It used to be recomputed from
+        /// <c>transform.position</c> on every retarget (0.75s), which meant crowd avoidance moved
+        /// the body, the body moved its own destination, and the re-path guard fired again — a
+        /// scrum of twenty at one hatch had no fixed point to settle on and visibly oscillated
+        /// (2026-08-18 defect). A frozen point ends the feedback; the hatch does not move, so
+        /// there is nothing for it to go stale against.</para></summary>
         Vector3 HatchStandPoint(HatchStation hatch)
         {
+            if (_hasHatchStand) return _hatchStand;
+
             Vector3 surface = hatch.ClosestSurfacePoint(transform.position);
             Vector3 out2 = transform.position - surface;
             out2.y = 0f;
             if (out2.sqrMagnitude < 0.01f) out2 = Vector3.forward;
             Vector3 want = surface + out2.normalized * 0.9f;
-            return NavMesh.SamplePosition(want, out NavMeshHit hit, 2.5f, NavMesh.AllAreas)
+            _hatchStand = NavMesh.SamplePosition(want, out NavMeshHit hit, 2.5f, NavMesh.AllAreas)
                 ? hit.position
                 : want;
+            _hasHatchStand = true;
+            return _hatchStand;
         }
 
         bool TryGetGoal(out Vector3 goal)

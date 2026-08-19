@@ -115,7 +115,22 @@ Docs/_meta/*.env
 /Assets/Synty/
 # FaxLab3D Sci-Fi robots + Shooter Weapons (candidates; not yet wrapped).
 # Keep Assets/FaxLab3D.meta tracked for a stable folder GUID on clone.
-/Assets/FaxLab3D/
+#
+# Exception to the vendor-dump rule, added 2026-08-19: the pack's 24 materials and
+# its texture .meta files ARE tracked. They carry hand edits this project depends on
+# — every material moved off the pack's URP-only ShaderGraph onto Built-In Standard,
+# and the four *_Emissive.png import as colour rather than Single Channel so the
+# gatekeeper materials in Packs/ get their glow. Both are invisible to git while the
+# dump is ignored, and a re-import silently reverts them. Tracking the text makes a
+# re-import show up as a diff instead of as a bug. The 534MB of textures, models,
+# scenes and the nested .unitypackage stay out. See M88.
+/Assets/FaxLab3D/*
+!/Assets/FaxLab3D/SciFiRobotCharactersPack/
+/Assets/FaxLab3D/SciFiRobotCharactersPack/*
+!/Assets/FaxLab3D/SciFiRobotCharactersPack/Materials/
+!/Assets/FaxLab3D/SciFiRobotCharactersPack/Textures/
+/Assets/FaxLab3D/SciFiRobotCharactersPack/Textures/*
+!/Assets/FaxLab3D/SciFiRobotCharactersPack/Textures/*.meta
 /Assets/Packs/shooterweaponspackassets/
 /Assets/Packs/shooterweaponspackassets.meta
 /Assets/Packs/weapon_source/

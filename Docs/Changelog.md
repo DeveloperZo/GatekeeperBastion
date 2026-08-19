@@ -7,6 +7,75 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-19
 -->
 
+- 2026-08-19: **The robot pack's Shader Graph had been stripped of its Built-In
+  target, and a day went into the wrong fix.** Every FaxLab3D robot rendered magenta
+  after the full pack import. `SG_SciFiRobotMat.shadergraph` on disk declared
+  `UniversalTarget` alone, and this project is Built-In with no URP in
+  `manifest.json` on any commit — so the cause read as "the pack ships a URP-only
+  build" and all 24 vendor materials were rebuilt onto Built-In `Standard`, which is
+  M87's own documented fallback. It was unnecessary. The graph **in the package**
+  carries `BuiltInTarget`, `HDTarget` and `UniversalTarget`, exactly as M87 recorded
+  on 2026-08-18 and as the graduation test confirmed by looking; the copy that
+  reached `Assets/` was 122,228 bytes against the package's 129,174. How it lost two
+  targets is unknown. The conversion is reverted and the Shader Graph, all 25 vendor
+  materials and the four `*_Emissive.png` import settings restored byte-for-byte from
+  the `.unitypackage`, guids unchanged. `Packs/Gatekeepers/{Default,Hunter,Thief}.mat`
+  are copies of the vendor three carrying the kind palette tint in both
+  `_EmissionColor` and `_EmissiveColor`. **New gate:** `Tools/lint-vendor/run.sh`
+  reads a `vendor-lint` fence in `Decisions.md` and fails `verify` if that graph loses
+  its Built-In target or goes missing — proven against a seeded strip, a deleted
+  graph and a deleted fence. `Assets/FaxLab3D/` is narrowed out of `.gitignore` for
+  its `Materials/` and `Textures/*.meta` (102 files, 316KB) so the next silent
+  overwrite shows as a diff. `GatekeeperPresentationTests` now matches all three
+  emission spellings the kind materials have worn rather than one shader's literal.
+  Cleanup alongside: the pack's nested 261MB `.unitypackage` moved out of `Assets/`,
+  ten tracked throwaway logs and scripts removed, and the `[InitializeOnLoad]`
+  allowlist trimmed of two entries naming files deleted long ago.
+- 2026-08-19: **M81 and M87 closed (Zo).** M81: Attack clip fitted and wired;
+  play criteria stamped by the close request; free-retarget kill criterion
+  accepted (not rejected). M87: Utility Bot graduation already passed
+  2026-08-18 in `Brainstorms/bodies-and-art-direction.md`; close stamps the
+  milestone; criterion 6 elapsed time left unrecorded. Active remains **M88**.
+  [`Milestones/3. completed/M81-the-gatekeepers-swing.md`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md),
+  [`Milestones/3. completed/M87-a-bought-body-in-an-hour.md`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md).
+- 2026-08-19: **M77 closed on two of eight criteria, and six defects repaired from a
+  play report.** Zo played capsule to first door and approved, which observes criterion 2
+  (a survived bank window opens that zone's door) and criterion 3 (a completed terminal
+  opens nothing). Criteria 1, 4, 5, 6, 7 and 8 stop past the dock and were not seen; they
+  are filed as `TH-9` to `TH-14` rather than counted. Separately, the same play report
+  ("running is jittery, enemies rubber band") produced six repairs, none of them guesses:
+  `Damageable` guarded its tint read with `HasProperty`, which answers for a property of
+  ANY type, so a bought pack's Shader Graph exposing `_BaseColor` as a **texture** passed
+  the guard and threw once per spawn — 32 errors with stack traces in one session — and the
+  hit flash then wrote a property the shader ignores, so those bodies never flashed when
+  shot; now `HasColor`, with the flash skipped entirely when a material carries no colour.
+  `FrameBudget` set a 60 fps cap and `vSyncCount = 1` from a `RuntimeInitializeOnLoadMethod`,
+  which fires once per process, so both leaked into the fight the class's own comment said
+  was exempt; it re-applies per scene load now and no longer clobbers the authored vSync,
+  which was making the frame cap a no-op anyway. `HudController.PushStamina` wrote the
+  stamina Slider every frame while sprinting and through the regen tail, dirtying the HUD
+  canvas for the whole sprint — the one per-frame HUD cost gated on running, and a straight
+  contradiction of its own file header; now quantised to whole points. `HatchStandPoint`
+  recomputed the destination from the agent's own position every 0.75 s, so crowd avoidance
+  moved the body, the body moved its own goal, and the re-path fired again: twenty
+  gatekeepers at one hatch had no fixed point to settle on. Resolved once per gatekeeper now.
+  Enemies were instantiated at navmesh height while their agents carry a `baseOffset` of 1.0
+  to 1.4, so every spawn popped up a metre on frame one; they spawn at the height the agent
+  holds. And `Shove`'s off-mesh fallback wrote a foot-height sample onto a body with no agent
+  to correct it, burying it for the rest of the run. **Not touched, at Zo's call:** the
+  Bastion's `sprintSpeed: 10` (the Ship and the code default are 7.5, and the class doc says
+  the five numbers move together or not at all), `m_SkinWidth: 0.08` on a 0.35 radius, and
+  `m_MinMoveDistance: 0.001`. Harness 459 passed / 11 failed, failing set byte-identical
+  before and after. **Whether any of this made the game feel smoother is unproven; only
+  playing it can say.**
+- 2026-08-18: **M76 closed — juice teach skipped.** Zo ruling: criterion 2
+  (juice teach + Event spend log) is not a close gate. Zone-1
+  `FirstTerminal` rules + EditMode tests stand; playthrough minus juice
+  stamped by the close request. Residue to Tech-Hygiene: juice teach (TH-9),
+  `SetZoneDeepest` on field clear (TH-10), `first-hatch survived` log (TH-11),
+  `demo.first_hatch_down` / remaining beat voice logs (TH-12). Survive path
+  remains M77. Active M81 + M87.
+  [`Milestones/3. completed/M76-the-first-cycle-ends-in-a-loss.md`](Milestones/3.%20completed/M76-the-first-cycle-ends-in-a-loss.md).
 - 2026-08-19: **M77 built, unverified — the Run can end Docked.** Doors stopped
   keying on terminal completion and now key on a *survived* Hatch-bank window;
   a player inside that window may hold Interact at the Hatch to end the Run

@@ -47,11 +47,18 @@ namespace GatekeepersProtocol.Tests
             Assert.AreNotEqual(h, t, "Hunter and Thief share an emission tint");
         }
 
+        // The rule gated here has not moved: emission on, per kind, distinct, and worn by the
+        // wrapper. Only the spelling has, three times, which is why this matches a set rather
+        // than one literal — Synty's graph exposes _Enable_Emission and _Emission_Color, Built-In
+        // Standard uses the _EMISSION keyword with _EmissionColor, and the robot pack's graph
+        // uses _EmissiveStrength with _EmissiveColor. Matching all three keeps the gate honest
+        // through a shader swap instead of failing on the day the material changes family.
         static readonly Regex EmissionColorLine = new Regex(
-            @"_Emission_Color:\s*\{r:\s*([-\d.]+),\s*g:\s*([-\d.]+),\s*b:\s*([-\d.]+)",
+            @"_Emissi(?:on|ve)_?Color:\s*\{r:\s*([-\d.]+),\s*g:\s*([-\d.]+),\s*b:\s*([-\d.]+)",
             RegexOptions.Compiled);
         static readonly Regex EmissionEnabledLine = new Regex(
-            @"_Enable_Emission:\s*1\b", RegexOptions.Compiled);
+            @"_Enable_Emission:\s*1\b|^\s*-\s*_EMISSION\s*$|_EmissiveStrength:\s*(?!0+(?:\.0+)?\s*$)[\d.]+",
+            RegexOptions.Multiline | RegexOptions.Compiled);
 
         /// <summary>Asserts the kind material exists with emission on and that the kind's wrapper
         /// prefab references it; returns the emission colour triple for the distinctness check.</summary>
@@ -62,7 +69,7 @@ namespace GatekeepersProtocol.Tests
             string yaml = File.ReadAllText(Path.GetFullPath(matPath));
             Assert.IsTrue(EmissionEnabledLine.IsMatch(yaml), matPath + " emission not enabled");
             var m = EmissionColorLine.Match(yaml);
-            Assert.IsTrue(m.Success, matPath + " has no _Emission_Color");
+            Assert.IsTrue(m.Success, matPath + " has no emission colour");
 
             string guid = GuidOf(matPath);
             string prefab = File.ReadAllText(

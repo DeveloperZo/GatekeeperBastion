@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-17
+Last updated: 2026-08-19
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -29,13 +29,15 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-Active **M76** (started 2026-08-18). **M75** closed 2026-08-18 on Zo's beat 0
-playthrough through to the Bastion; criteria 2 to 7 were not separately observed
-and are owed as `Tech-Hygiene.md` rows TH-1 to TH-6.
-Ruled at M76's start: the survive path in beat 2's Build table (door unlock on
-bank success, Ship return) stays with M77.
-**M74** closed 2026-08-17 (demo voice pipe — runner, registry, net RPC, authored
-`DemoVoiceView` on Ship and Bastion). **M72** and **M73** completed 2026-08-17.
+Active **M88**. **M81** and **M87** completed 2026-08-19 (Zo close). **M76**
+completed 2026-08-18 (Zo close; juice teach deferred — TH-9; zone-deepest /
+survive-log / Docked voice residue TH-10–TH-12).
+**M75** closed 2026-08-18 on Zo's beat 0 playthrough through to the Bastion;
+criteria 2 to 7 were not separately observed and are owed as `Tech-Hygiene.md`
+rows TH-1 to TH-6. Survive path (door unlock on bank success, Ship return) is
+**M77** (built; criteria 2 and 3 stamped, TH-9–TH-14 for the rest).
+**M74** closed 2026-08-17 (demo voice pipe). **M72** and **M73** completed
+2026-08-17.
 **M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** and **M61-2**
 completed 2026-08-14. **M55, M57, M58, M59, M60, M62, M63-2, M64, M65, M71** completed
 2026-08-15. **M69** and **M70** completed 2026-08-17.
@@ -46,26 +48,23 @@ run ends with a screen that tells them what happened. Queue is ordered against t
 sentence. Shared Ship + party EMBARK closed with **M72** (2026-08-17); remaining friends
 work is polish and dry-run length, not lobby topology.
 
-**Demo family cut 2026-08-17**: M74–M80 in `1. planned/`, from `Demo/`'s beat specs,
-in the README's suggested order with two cut-time rulings (Zo): Ship return split out
-as its own milestone (**M77**), and the composite retrigger reads per-zone
-`DemoZoneDeepestWave` (beat 4's stamp confirmed; README rows corrected). **M80** is
+**Demo family cut 2026-08-17**: M74–M80 from `Demo/`'s beat specs. **M80** is
 cut but not started-able until Zo stamps the boss/elite composition and the
 finale-access ruling — the file names both.
 
 **Recommended next**, in this order.
 
-1. **M66** — hit confirm, per-kind tells, distinct players at lane range (session room
-   exists).
-2. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
-   playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14 (eyes lines, Stats
-   after-numbers, solo completion), M55 juice unused on ten Runs, M71 Regen Surge mag,
-   M64 criteria 13–25 dry-run, M69 criterion 4 slider independence, M73 criterion 6
-   closet walk-out. Next-Run play list is
-   `GatekeeperZo Notes/verification.md` (M31 pin, M30 decoy, M26 fight-feel, M21 opposite
-   focuses). Not a reason to jump the queue.
+1. **M88** — three robot bodies on the Gatekeeper kinds (pack de-magentaed;
+   scene build still owed).
+2. **M77 play stamp** — Docked return is built; criteria 1/4/5/6/7/8 need Play
+   (TH-9–TH-14).
+3. **M66** — hit confirm, per-kind tells, distinct players at lane range.
+4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
+   playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14, M55 juice unused,
+   M71 Regen Surge mag, M64 criteria 13–25 dry-run, M69 criterion 4, M73 criterion 6,
+   M76 TH-9–TH-12. Next-Run list: `GatekeeperZo Notes/verification.md`.
 
-Planned count is **7** (cap 10). Active **1** (cap 3).
+Planned count is **11** (cap 10 — one over; stop generating). Active **1** (cap 3).
 
 ## Order
 
@@ -147,18 +146,19 @@ this table — see the change log.
 | M71 | The sidearm joins the wheel | completed, Aug 2026 | MK-1 ring D–A–R–C–F (Reload / Damage); SEC-D ring F–A–R–C–D (FireRate / Reload), Ability spoke not purchasable; Secondary-slot cost 150 + 150×t; focused never-rival holds | [`3. completed/M71`](Milestones/3.%20completed/M71-the-sidearm-joins-the-wheel.md) |
 | M74 | The demo speaks | completed, Aug 2026 | `DemoVoice` Lock/Subtitle runner + id registry + party RPC; `DemoVoiceView` on Ship and Bastion; sim never pauses; every line logs | [`3. completed/M74`](Milestones/3.%20completed/M74-the-demo-speaks.md) |
 | M75 | Wake on a dead Ship | completed, Aug 2026 | Beat 0 end-to-end (capsule → NAV → ship terminal → MK-1 → fight → heal → EMBARK) + SaveVersion 9 flags and migration | [`3. completed/M75`](Milestones/3.%20completed/M75-wake-on-a-dead-ship.md) |
-| M76 | The first cycle ends in a loss | next | Zone 1 = 2×1-Wave terminals + juice teach; first Hatch-bank is authored loss 1; `DemoZoneDeepestWave` writes on field-Wave clear | [`2. active/M76`](Milestones/2.%20active/M76-the-first-cycle-ends-in-a-loss.md) |
-| M77 | The run can end Docked | later | Doors key on bank-window survival (failed bank never unlocks); held interact at the Hatch → `EndRun("docked")`; snapshot persists banked + doors. Kill criteria on the dock/push-on decision | [`1. planned/M77`](Milestones/1.%20planned/M77-the-run-can-end-docked.md) |
+| M76 | The first cycle ends in a loss | completed, Aug 2026 | Zone 1 = 2×1-Wave terminals; first Hatch-bank loss 1. Juice teach deferred (Zo). Gate: FirstTerminalTests + Zo close; TH-9–TH-12 residue | [`3. completed/M76`](Milestones/3.%20completed/M76-the-first-cycle-ends-in-a-loss.md) |
+| M77 | The run can end Docked | completed, Aug 2026 (criteria 2 and 3 only; 1, 4, 5, 6, 7, 8 owed as TH-9 to TH-14) | Doors key on bank-window survival (failed bank never unlocks); held interact at the Hatch → `EndRun("docked")`; snapshot persists banked + doors. Kill criteria on the dock/push-on decision | [`3. completed/M77`](Milestones/3.%20completed/M77-the-run-can-end-docked.md) |
 | M78 | After the first loss | later | ARMORY ladder rung 1 + MP unlock on first buy + state-keyed exit standing + CREW claim (re-keyed unlock) + plain EMBARK + composite retrigger with partial election | [`1. planned/M78`](Milestones/1.%20planned/M78-after-the-first-loss.md) |
 | M79 | The second loss opens the ladder | later | Zone 2 = 1 terminal × 3 consecutive Waves + heavier bank (authored loss 2 by ordering); ladder rung 2 (Primary + 2); buy-back at live windows; D2 on survival; slots retired | [`1. planned/M79`](Milestones/1.%20planned/M79-the-second-loss-opens-the-ladder.md) |
 | M80 | One final window | later | Control Room copy + `M73` spawn wiring; `HatchWaves` 5 → 1 with the first boss/elite; `EndDemo` on Escaped only. Blocked on two owner-Zo inputs (boss composition; finale access) | [`1. planned/M80`](Milestones/1.%20planned/M80-one-final-window.md) |
-| M81 | The Gatekeeper's swing | active | One retargeted attack clip into the shared Gatekeeper controller — the Attack state stops playing PlayerIdle for all three kinds and ship intruders. Doubles as the free-retarget probe, with a sourcing kill criterion (2026-09-15) | [`2. active/M81`](Milestones/2.%20active/M81-the-gatekeepers-swing.md) |
+| M81 | The Gatekeeper's swing | completed, Aug 2026 | One retargeted attack clip into the shared Gatekeeper controller — Attack stops playing PlayerIdle for all three kinds and ship intruders. Free-retarget probe accepted (Zo close 2026-08-19) | [`3. completed/M81`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md) |
 | M82 | The weapon in your hands | later | Shared viewmodel controller + four hand-keyed clips (idle/move/fire/reload) for all six weapons; reload speed-scales to each weapon's duration; resolves the two controller-less Animators in Bastion.unity | [`1. planned/M82`](Milestones/1.%20planned/M82-the-weapon-in-your-hands.md) |
 | M83 | Crewmates fire on camera | later | Replicate fire/reload to non-owner avatars via the existing ClientRpc pattern — drives Boarder.controller's wired-but-unreachable Fire/Reload states; code only, clips already exist | [`1. planned/M83`](Milestones/1.%20planned/M83-crewmates-fire-on-camera.md) |
 | M84 | Gatekeepers flinch when shot | later | One flinch clip on a masked upper-body layer of the shared controller, triggered from the existing `Damaged` event; movement and attacks uninterrupted; ShipIntruder gains the same subscription | [`1. planned/M84`](Milestones/1.%20planned/M84-gatekeepers-flinch-when-shot.md) |
 | M85 | The collapse under the burst | later | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail, so a corpse never delays a wave clear; co-op carrier named as the open question | [`1. planned/M85`](Milestones/1.%20planned/M85-the-collapse-under-the-burst.md) |
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
-| M87 | A bought body in an hour | active | One bought character on Built-in Standard materials standing in the Bastion, via a one-shot URP-to-Standard shader swap; carries the bet that no channel repack is needed, and exists to make the body question cheap enough to answer by looking | [`2. active/M87`](Milestones/2.%20active/M87-a-bought-body-in-an-hour.md) |
+| M87 | A bought body in an hour | completed, Aug 2026 | Utility Bot on the pack's Built-In Shader Graph in the Ship; graduation test passed 2026-08-18; Zo close 2026-08-19 (criterion 6 elapsed time unrecorded) | [`3. completed/M87`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md) |
+| M88 | The Gatekeepers are machines | active | One FaxLab3D robot per Gatekeeper kind — silhouette tells the kind, on the pack's own Built-In Shader Graph (no conversion, per M87). Kind materials copy the vendor three and carry the palette tint; scene build still owed to re-dress Hunter and Ram | [`2. active/M88`](Milestones/2.%20active/M88-the-gatekeepers-are-machines.md) |
 
 ## Strategy
 

@@ -24,9 +24,9 @@ namespace GatekeepersProtocol.EditorTools
     /// Ram's violet is deliberately brighter and more saturated than the bastion's own walls
     /// (0.22, 0.17, 0.30) — a genuinely dark violet body against a dark violet hull is invisible,
     /// which is the opposite of the point. Its size does the rest of the work.
-    /// Silhouette is now the Synty mesh (Default robot, Hunter helmet-armor, Thief war-robot);
-    /// colour returns as a per-kind emission tint on the mesh's authored glow regions (eyes,
-    /// panels — the pack's _Emission_Map), same palette the capsules wore.
+    /// Silhouette is one FaxLab3D robot per kind (Default UtilityBot, Hunter Hunter, Ram
+    /// Exterminator), which is what separates them on sight. The per-kind emission tint still
+    /// rides on top, on each robot's authored glow regions, written by EnsureWrapperEmission.
     ///
     /// NUMBERS DO NOT LIVE HERE. Everything baked below (hp, agent speed) is read from
     /// WaveDirector.StatsFor so the saved asset matches the sim, and every one of them is pushed
@@ -42,19 +42,19 @@ namespace GatekeepersProtocol.EditorTools
         const string DefaultWrapperPath = GatekeeperPackDir + "/Default.prefab";
         const string HunterWrapperPath = GatekeeperPackDir + "/Hunter.prefab";
         const string ThiefWrapperPath = GatekeeperPackDir + "/Thief.prefab";
-        const string CharactersFbx = "Assets/Synty/PolygonSciFiSpace/Models/Characters.fbx";
-        const string BrCharactersFbx = "Assets/Synty/PolygonSciFiSpace/Models/BR_Characters.fbx";
-        const string PackDefault =
-            "Assets/Synty/PolygonSciFiSpace/Prefabs/Characters/SM_Chr_RobotFemale_01.prefab";
-        const string PackHunter =
-            "Assets/Synty/PolygonSciFiSpace/Prefabs/Characters/SM_Chr_SpaceSoldier_HelmetArmor_Male_01.prefab";
-        const string PackThief =
-            "Assets/Synty/PolygonSciFiSpace/Prefabs/Characters/SM_Chr_BR_War_Robot_01.prefab";
+        // One robot model per kind. Silhouette is what tells the kinds apart now; before this
+        // they were three Synty humanoids separated by an emission tint, which asked the player to
+        // read a colour on a body they had already learned.
+        const string RobotDir = "Assets/FaxLab3D/SciFiRobotCharactersPack/";
+        const string DefaultFbx = RobotDir + "Models/SK_UtilityBot.fbx";
+        const string HunterFbx = RobotDir + "Models/SK_Hunter.fbx";
+        const string RamFbx = RobotDir + "Models/SK_Exterminator.fbx";
+        const string PackDefault = RobotDir + "Prefabs/UtilityBot_Base.prefab";
+        const string PackHunter = RobotDir + "Prefabs/Hunter_Base.prefab";
+        const string PackThief = RobotDir + "Prefabs/Exterminator_Base.prefab";
         const string ClipIdle = "Assets/Packs/Boarder/Anim_PlayerIdle.fbx";
         const string ClipWalk = "Assets/Packs/Boarder/Anim_Walking.fbx";
         const string ClipRun = "Assets/Packs/Boarder/Anim_PlayerRun.fbx";
-        const string PackCharacterMat =
-            "Assets/Synty/PolygonSciFiSpace/Materials/PolygonScifiSpace_01_A.mat";
 
         /// <summary>The three gatekeeper prefabs, wired into the WaveSpawner as a set.</summary>
         sealed class EnemyPrefabs
@@ -64,11 +64,11 @@ namespace GatekeepersProtocol.EditorTools
 
         static EnemyPrefabs CreateEnemyPrefabs(Palette pal)
         {
-            bool dress = MixamoRetargetsOntoSynty(out string reason);
+            bool dress = GatekeeperModelsRetarget(out string reason);
             if (!dress)
             {
                 Debug.LogError(
-                    "[SceneBuilder] Mixamo will not retarget onto Synty Humanoid avatars (" +
+                    "[SceneBuilder] clips will not retarget onto the gatekeeper models (" +
                     reason + ") — keeping capsules.");
             }
             else
@@ -219,6 +219,13 @@ namespace GatekeepersProtocol.EditorTools
             return PackDefault;
         }
 
+        static string PackModelPath(GatekeeperKind kind)
+        {
+            if (kind == GatekeeperKind.Hunter) return HunterFbx;
+            if (kind == GatekeeperKind.Ram) return RamFbx;
+            return DefaultFbx;
+        }
+
         static string VisualChildName(GatekeeperKind kind)
         {
             if (kind == GatekeeperKind.Hunter) return "Hunter";
@@ -226,10 +233,14 @@ namespace GatekeepersProtocol.EditorTools
             return "Default";
         }
 
-        static bool MixamoRetargetsOntoSynty(out string reason)
+        static bool GatekeeperModelsRetarget(out string reason)
         {
-            if (!FbxIsHuman(CharactersFbx, out reason)) return false;
-            if (!FbxIsHuman(BrCharactersFbx, out reason)) return false;
+            // Gate on the models the kinds are actually dressed from. Checking a fixed pair of
+            // Synty FBXs kept passing after the kinds moved off them, which is a guard that reports
+            // green about files nothing renders.
+            if (!FbxIsHuman(DefaultFbx, out reason)) return false;
+            if (!FbxIsHuman(HunterFbx, out reason)) return false;
+            if (!FbxIsHuman(RamFbx, out reason)) return false;
             AnimationClip walk = LoadHumanClip(ClipWalk);
             if (walk == null)
             {
@@ -242,8 +253,7 @@ namespace GatekeepersProtocol.EditorTools
                 return false;
             }
             reason = null;
-            Debug.Log(
-                "[SceneBuilder] Synty Humanoid + Mixamo clips retarget: Characters and BR_Characters avatars are Humanoid.");
+            Debug.Log("[SceneBuilder] gatekeeper models retarget: all three avatars are Humanoid.");
             return true;
         }
 
@@ -303,31 +313,31 @@ namespace GatekeepersProtocol.EditorTools
             EnsureWrapperEmission(GatekeeperKind.Ram, pal.Ram.color);
         }
 
-        /// <summary>One material per kind, copied from the Synty character material (atlas and
-        /// alpha-clip carry over) with _Emission_Color tinted to the kind's palette colour. The
-        /// pack's _Emission_Map limits the glow to authored regions — eyes and panels, not the
-        /// whole body. Assigned to every renderer slot in the wrapper; all slots share the one
-        /// Synty base today.</summary>
+        /// <summary>Assigns the kind's authored material to every renderer slot in its wrapper and
+        /// writes the palette tint into whichever emission colour the material's shader exposes.
+        /// The material is a committed asset per kind, not built here.</summary>
         static void EnsureWrapperEmission(GatekeeperKind kind, Color tint)
         {
-            var baseMat = AssetDatabase.LoadAssetAtPath<Material>(PackCharacterMat);
-            if (baseMat == null)
-            {
-                Debug.LogError("[SceneBuilder] pack material missing: " + PackCharacterMat);
-                return;
-            }
-
             string matPath = GatekeeperPackDir + "/" + VisualChildName(kind) + ".mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
             if (mat == null)
             {
-                mat = new Material(baseMat);
-                AssetDatabase.CreateAsset(mat, matPath);
+                // Deliberately an error rather than a rebuild. Synthesising one from a pack material
+                // is how a kind quietly ends up wearing another pack's atlas.
+                Debug.LogError("[SceneBuilder] gatekeeper material missing: " + matPath);
+                return;
             }
+
             mat.SetFloat("_Enable_Emission", 1f);
-            // The Synty graph exposes both spellings; set both so whichever it samples agrees.
+            // Three spellings across the shaders this has worn: the Synty graph exposes the first
+            // two, the robot graph the third. Setting all three keeps the tint working through a
+            // shader change instead of failing silently on one name.
+            // Live on the Built-In Standard materials: each carries its robot's emissive map, so
+            // this tints the authored glow regions and leaves the body alone. The material ships
+            // with white here, which shows the map's own colour if a build never runs.
             mat.SetColor("_Emission_Color", tint);
             mat.SetColor("_EmissionColor", tint);
+            mat.SetColor("_EmissiveColor", tint);
             EditorUtility.SetDirty(mat);
 
             string wrapperPath = WrapperPath(kind);
@@ -369,7 +379,6 @@ namespace GatekeepersProtocol.EditorTools
                 instance, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
             instance.name = VisualChildName(kind);
 
-            if (kind == GatekeeperKind.Hunter) ApplyHunterHelmet(instance);
             StripInactivePackMeshes(instance);
             BindAnimator(instance, controller, kind);
 
@@ -377,40 +386,21 @@ namespace GatekeepersProtocol.EditorTools
             UnityEngine.Object.DestroyImmediate(instance);
         }
 
+        /// <summary>Dressed means dressed from the kind's CURRENT model. The old test asked only
+        /// whether a skinned mesh existed, so a wrapper built from a source that has since changed
+        /// reported dressed forever and the swap never took.</summary>
         static bool WrapperLooksDressed(GameObject wrapper, GatekeeperKind kind)
         {
             SkinnedMeshRenderer[] skins = wrapper.GetComponentsInChildren<SkinnedMeshRenderer>(true);
             if (skins.Length == 0) return false;
-            if (kind != GatekeeperKind.Hunter) return true;
-            bool helmet = false, body = false;
-            Transform[] all = wrapper.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < all.Length; i++)
+            string model = PackModelPath(kind);
+            for (int i = 0; i < skins.Length; i++)
             {
-                string n = all[i].name;
-                if (n.IndexOf("Helmet", StringComparison.Ordinal) >= 0 &&
-                    n.IndexOf("Male", StringComparison.Ordinal) >= 0)
-                    helmet = true;
-                if (n == "SM_Chr_SpaceSoldier_Male_01" ||
-                    n.IndexOf("HelmetArmor", StringComparison.Ordinal) >= 0)
-                    body = true;
+                Mesh mesh = skins[i].sharedMesh;
+                if (mesh == null) return false;
+                if (AssetDatabase.GetAssetPath(mesh) != model) return false;
             }
-            return helmet && body;
-        }
-
-        static void ApplyHunterHelmet(GameObject root)
-        {
-            Transform[] all = root.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < all.Length; i++)
-            {
-                string n = all[i].name;
-                if (n.IndexOf("Helmet", StringComparison.Ordinal) >= 0 &&
-                    n.IndexOf("Male", StringComparison.Ordinal) >= 0)
-                    all[i].gameObject.SetActive(true);
-                if (n.IndexOf("Hair", StringComparison.Ordinal) >= 0 ||
-                    n.IndexOf("Head_Male", StringComparison.Ordinal) >= 0 ||
-                    n.IndexOf("Head_Female", StringComparison.Ordinal) >= 0)
-                    all[i].gameObject.SetActive(false);
-            }
+            return true;
         }
 
         static void StripInactivePackMeshes(GameObject root)
@@ -453,8 +443,7 @@ namespace GatekeepersProtocol.EditorTools
             }
 
             if (keep == null) keep = root.AddComponent<Animator>();
-            Avatar packAvatar = LoadAvatar(
-                kind == GatekeeperKind.Ram ? BrCharactersFbx : CharactersFbx);
+            Avatar packAvatar = LoadAvatar(PackModelPath(kind));
             if (keep.avatar == null || !keep.avatar.isHuman)
                 keep.avatar = packAvatar;
             keep.runtimeAnimatorController = controller;

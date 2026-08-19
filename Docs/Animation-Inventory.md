@@ -4,7 +4,7 @@
 Status: living tracker
 Update trigger: when a clip lands, a controller changes, or a ruling below is
 made; re-verify Status lines against Packs/ and the controllers, not this file
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 -->
 
 Every character and viewmodel clip the game needs, against what exists.
@@ -19,7 +19,11 @@ first; listed so the want is tracked, not lost), **blocked** (waiting on a
 named ruling).
 
 Ruled 2026-08-18 (Zo): Synty humanoids stay for the three Gatekeeper kinds;
-the viewmodel takes the shared path. Milestones M81 (attack), M82 (viewmodel
+superseded 2026-08-19 (Zo): each kind takes a FaxLab3D robot instead (M88), which
+suits the clips — every Gatekeeper clip was downloaded on the SK_UtilityBot rig.
+The viewmodel ruling below is untouched;
+the viewmodel takes the shared path. Milestone M81 (attack) closed 2026-08-19;
+M82 (viewmodel
 set), M83 (remote fire/reload) cover every **missing** and **unreachable**
 line; M84 (flinch), M85 (death collapse), M86 (downed avatar) cover the
 hookable **no code hook** lines, cap waived by Zo. Fileless on purpose:
@@ -43,9 +47,9 @@ boss (blocked on M80's inputs).
 
 | Clip | Status | Notes |
 |---|---|---|
-| Idle / walk | have, borrowed | Reuses the player's idle and walk clips. Whether kinds get distinct locomotion is Zo's call; today kinds differ by material tint only. |
+| Idle / walk | have, borrowed | Reuses the player's idle and walk clips. Whether kinds get distinct locomotion is Zo's call; from M88 the kinds differ by robot model rather than by material tint. |
 | Run | have | `Running.fbx` (2026-08-18): downloaded on the uploaded SK_UtilityBot character with its ARP rig intact, zero retarget; wired at the blend tree's 1.0 threshold. `Running_not_in_place` kept as the unwired root-motion twin. Not yet seen in play. |
-| Attack | wired, unplayed | `Anim_attack_melee` set on the Attack state 2026-08-18 (exit time raised 0.2 -> 0.9); not yet seen in play, and the clip is not yet fitted to the 0.7s swing clock. Code fires the Attack trigger (EnemyGatekeeper, ShipIntruder); the state plays Anim_PlayerIdle. The single worst gap in the game. Milestone: M81 (one shared clip, all three kinds; per-kind variants deferred until a kind gains distinct behavior). |
+| Attack | have | `Anim_attack_melee` on the Attack state (exit 0.9); fitted 2026-08-19 to the second slash of the 3.5s download (0.53s, done ~0.56s inside the 0.7s interval). M81 closed 2026-08-19 (Zo). Code fires Attack (EnemyGatekeeper, ShipIntruder). Per-kind variants deferred until a kind gains distinct attack behavior. |
 | Hit reaction | planned | Milestone: M84 — masked upper-body flinch layer; the hook rides the existing `Damaged` aggro subscription (ShipIntruder gains one). |
 | Death | planned | Milestone: M85 — collapse under the unchanged kill-confirm burst; only the despawn's destroy tail defers, wave-clear timing untouched. |
 | Spawn / entry | no code hook | Waves spawn with no entry moment. No milestone on purpose: an entry motion either delays first pressure (a wave-pacing ruling, Zo's) or plays under movement and telegraphs nothing. Ruling needed before a gate can be written. |
@@ -77,7 +81,7 @@ for it.
 ## Count that matters
 
 Code-driven and demo-visible today: **1 enemy attack clip + the viewmodel set
-(4 clips shared)** — M81 and M82 close that, and M83 adds the missing code
+(4 clips shared)** — M81 closed that half; M82 closes the rest, and M83 adds the missing code
 drives for clips that already exist. M84 to M86 (flinch, death collapse,
 downed avatar) add three more clips plus their hooks, covering everything on
 this page that can currently carry a gate. Total new clips across the family:

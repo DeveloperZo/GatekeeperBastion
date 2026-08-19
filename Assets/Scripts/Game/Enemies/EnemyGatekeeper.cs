@@ -370,7 +370,11 @@ namespace GatekeepersProtocol.Game
             }
             else
             {
-                transform.position = hit.position;
+                // SamplePosition returns a point ON the navmesh, i.e. at foot height, but an agent
+                // holds its body baseOffset above that. With no agent to correct it, writing the
+                // raw sample buries this body to the waist for the rest of the run. Lift it here.
+                float lift = _agent != null ? _agent.baseOffset : 0f;
+                transform.position = hit.position + Vector3.up * lift;
             }
 
             // Walk-back time at patrol speed — the currency criterion 5 reads.

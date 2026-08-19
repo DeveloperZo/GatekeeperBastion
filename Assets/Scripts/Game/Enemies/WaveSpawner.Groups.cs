@@ -226,7 +226,12 @@ namespace GatekeepersProtocol.Game
             GatekeeperStats stats = WaveDirector.StatsFor(kind);
 
             Vector3 at = GroupSlot(point.position, index, groupCount);
-            GameObject enemy = Instantiate(prefab, at, point.rotation);
+            // The agent's baseOffset lifts the transform on its FIRST update, so instantiating at
+            // navmesh height buries the body and pops it up a metre on frame one (1.0 Default,
+            // 0.85 Hunter, 1.4 Ram — same class as the Ship's bed pose, 2026-08-18 defect).
+            // Spawn at the height the agent is going to hold anyway.
+            Vector3 spawnAt = at + Vector3.up * PrefabBaseOffset(prefab);
+            GameObject enemy = Instantiate(prefab, spawnAt, point.rotation);
             var damageable = enemy.GetComponent<Damageable>();
             if (damageable != null)
             {
@@ -245,7 +250,7 @@ namespace GatekeepersProtocol.Game
                 // spawner, the one owner of the actor's destroy (Despawn).
                 gatekeeper.Configure(stats, _game, this);
                 gatekeeper.SpawnId = _game.Run.TakeSpawnId();
-                gatekeeper.SpawnedAt = at;
+                gatekeeper.SpawnedAt = spawnAt;
                 _live.Add(gatekeeper); // spawn ledger: removed by Despawn; swept on teardown
             }
 
@@ -279,6 +284,15 @@ namespace GatekeepersProtocol.Game
         /// <summary>Where slot <paramref name="index"/> of a group stands. Slot 0 takes the breach
         /// point itself; the rest ring it, snapped back onto the navmesh so nobody is born inside
         /// a wall (a spawn point sits at the far end of a chamber, not always in open floor).</summary>
+        /// <summary>The vertical lift the prefab's agent will apply on its first update. Read from
+        /// the PREFAB, not the instance: it has to be known before Instantiate.</summary>
+        static float PrefabBaseOffset(GameObject prefab)
+        {
+            if (prefab == null) return 0f;
+            var agent = prefab.GetComponent<NavMeshAgent>();
+            return agent != null ? agent.baseOffset : 0f;
+        }
+
         static Vector3 GroupSlot(Vector3 origin, int index, int groupCount)
         {
             if (index <= 0 || groupCount <= 1) return origin;

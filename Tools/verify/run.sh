@@ -42,6 +42,19 @@ if ! bash "$LINT_ARCH"; then
   exit 1
 fi
 
+# Imported vendor packs keep the repairs made inside them. A dump is gitignored and
+# re-importable, so an overwrite there is invisible to git; this turns a silent revert
+# into a failing gate. Fail before compile, like the other lints.
+LINT_VENDOR="$ROOT/Tools/lint-vendor/run.sh"
+if [[ ! -f "$LINT_VENDOR" ]]; then
+  echo "verify: expected $LINT_VENDOR" >&2
+  exit 2
+fi
+if ! bash "$LINT_VENDOR"; then
+  echo "verify: vendor pack check failed (Tools/lint-vendor/run.sh)" >&2
+  exit 1
+fi
+
 # M41 — one-shot editor work runs from Assets/_Scratch/ and is removed before this
 # gate; cleanup is not the scratch script's job. Unity's generated .meta files are
 # tolerated so an empty folder does not cry wolf forever.

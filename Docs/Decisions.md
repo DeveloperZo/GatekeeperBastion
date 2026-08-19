@@ -77,8 +77,28 @@ re-litigating a cut costs more than the cut saved.
   `Assets/Packs/` stays tracked. Shift, Odin (`Assets/Plugins/Sirenix/`), and MCPForUnity
   stay tracked — the HUD and editor are built in those trees, not wrapped off them
   (Zo, 2026-08-14). Vendor dumps that are not yet wrapped are also ignored:
-  `Assets/FaxLab3D/`, `Assets/Packs/shooterweaponspackassets/`, `Assets/Packs/weapon_source/`
+  `Assets/Packs/shooterweaponspackassets/`, `Assets/Packs/weapon_source/`
   (2026-08-18). Keep `Assets/FaxLab3D.meta` tracked like `Assets/Synty.meta`.
+  **`Assets/FaxLab3D/` narrowed 2026-08-19**: its `Materials/` and `Textures/*.meta`
+  are tracked (102 files, 316KB) because they carry hand edits the game depends on;
+  the 534MB of textures, models and scenes stays out. See the block below.
+
+  **The FaxLab3D pack's Shader Graph must keep its Built-In target.**
+  `SG_SciFiRobotMat.shadergraph` ships three targets — `BuiltInTarget`, `HDTarget`
+  and `UniversalTarget` — so it compiles here as authored and no conversion is
+  needed (M87 read this from the package 2026-08-18). **The copy that reached the
+  project had been stripped to `UniversalTarget` alone**, which is why every robot
+  rendered magenta, and why an afternoon went into converting 24 materials onto
+  Built-In `Standard` before the cause was found. Restored from the package
+  2026-08-19. `Tools/lint-vendor/run.sh` reads the values below and fails the gate
+  if the Built-In target goes missing again; changing a value here changes the
+  check with no script edit.
+
+```vendor-lint
+pack=Assets/FaxLab3D/SciFiRobotCharactersPack
+shader=Materials/SG_SciFiRobotMat.shadergraph
+required_target=UnityEditor.Rendering.BuiltIn.ShaderGraph.BuiltInTarget
+```
   **NavMesh `.asset` files are binary** and ride LFS (`*NavMesh*.asset` in `.gitattributes`);
   treating them as Force Text YAML produced phantom rebake diffs (2026-08-18).
 - **`core.autocrlf` as the line-ending fix.** Rejected in favour of `.gitattributes`. The

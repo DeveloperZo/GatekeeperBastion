@@ -49,6 +49,10 @@ namespace GatekeepersProtocol.Game
         MaterialPropertyBlock _mpb;
         Color _baseColor;
         bool _hasBaseColor;
+        // False when the material exposes no colour at all (a bought pack's Shader Graph is the
+        // case that found this). Flashing such a renderer writes a property the shader ignores,
+        // so the hit reads as no feedback at all rather than as a red flash.
+        bool _hasTint;
         Coroutine _flash;
 
         void Awake()
@@ -60,8 +64,21 @@ namespace GatekeepersProtocol.Game
             {
                 _mpb = new MaterialPropertyBlock();
                 var mat = _renderer.sharedMaterial;
-                if (mat != null && mat.HasProperty("_BaseColor")) { _baseColor = mat.GetColor("_BaseColor"); _hasBaseColor = true; }
-                else if (mat != null && mat.HasProperty("_Color")) { _baseColor = mat.GetColor("_Color"); }
+                // HasProperty answers for a property of ANY type, so a shader that exposes
+                // _BaseColor as a TEXTURE passed the guard and GetColor then threw once per
+                // spawn (SG_SciFiRobotMat, 32 errors in one session, 2026-08-18). HasColor is
+                // the type-checked question and the only one worth asking.
+                if (mat != null && mat.HasColor("_BaseColor"))
+                {
+                    _baseColor = mat.GetColor("_BaseColor");
+                    _hasBaseColor = true;
+                    _hasTint = true;
+                }
+                else if (mat != null && mat.HasColor("_Color"))
+                {
+                    _baseColor = mat.GetColor("_Color");
+                    _hasTint = true;
+                }
             }
         }
 
@@ -147,6 +164,7 @@ namespace GatekeepersProtocol.Game
         void FlashHit()
         {
             if (_renderer == null || _mpb == null || !isActiveAndEnabled) return;
+            if (!_hasTint) return; // no colour to drive; a write here would be silently discarded
             if (_flash != null) StopCoroutine(_flash);
             _flash = StartCoroutine(FlashRoutine());
         }

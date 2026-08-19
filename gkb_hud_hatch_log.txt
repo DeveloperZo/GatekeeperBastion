@@ -1,8 +1,0 @@
-HudHatchAuthor: sentinel consumed 2026-08-12T15:31:56.3694919Z
-opened Assets/Scenes/Bastion.unity
-cloned Score/Shadow
-authored Value TMP from Text clone
-wired BastionHudView hatchRoot=Hud Hatch label=True value=True bar=True group=True
-deactivated drawer Armor at Canvas - In Game/Canvas - Dynamic/Hud Drawer Left/Panel/Armor
-OK: Hud Hatch authored + saved
-label=True value=True slider=True

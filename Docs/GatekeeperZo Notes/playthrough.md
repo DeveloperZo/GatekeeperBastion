@@ -4,6 +4,8 @@ The upgrades a player can make need to be aligned with getting them to progress 
 
 Observation: Right now there's no incentive to move away from the Hatch
 
+Playing after dying does not return the state and wave counters correctly. Restarts should land with the appropriate state.
+
 ---
 
 # Sessions
