@@ -15,14 +15,33 @@ namespace GatekeepersProtocol.Game
             ref var s = ref _slots[(int)_activeSlot];
             WeaponDef def = s.configured ? s.def : DefaultDefFromSerialized();
             int pellets = Mathf.Max(1, def.pellets);
-            Vector3 origin = transform.position + transform.forward * 0.3f;
+
+            // First-person aim is the camera forward; iso aim is unit-level off the cursor
+            // ray with the muzzle at the player body. aimDir == transform.forward keeps the
+            // first-person math identical to before the iso path existed.
+            Vector3 aimDir;
+            Vector3 spreadRight;
+            if (IsoAimActive)
+            {
+                aimDir = ResolveIsoAimDirection(def.range > 0.01f ? def.range : range);
+                spreadRight = Vector3.Cross(Vector3.up, aimDir);
+                spreadRight = spreadRight.sqrMagnitude > 0.0001f
+                    ? spreadRight.normalized
+                    : transform.right; // aiming straight up/down: any horizontal axis serves
+            }
+            else
+            {
+                aimDir = transform.forward;
+                spreadRight = transform.right;
+            }
+            Vector3 origin = transform.position + aimDir * 0.3f;
 
             bool railshot = TryConsumeRailshot(out int railshotPierce);
             int pierceOverride = railshot ? railshotPierce : -1;
             float pierceMulOverride = railshot ? 1f : -1f;
 
             bool anyCrit = false;
-            Vector3 lastEnd = origin + transform.forward * def.range;
+            Vector3 lastEnd = origin + aimDir * def.range;
             int bodiesDamaged = 0;
 
             for (int p = 0; p < pellets; p++)
@@ -30,7 +49,7 @@ namespace GatekeepersProtocol.Game
                 bool crit = RollCrit();
                 if (crit) anyCrit = true;
                 float baseDmg = crit ? EffectiveDamage * CritDamageMultiplier : EffectiveDamage;
-                Vector3 dir = PelletDirection(def, p, pellets);
+                Vector3 dir = PelletDirection(def, p, pellets, aimDir, spreadRight);
                 lastEnd = FireRay(origin, dir, def, baseDmg, crit, pierceOverride, pierceMulOverride,
                     out int rayBodies);
                 bodiesDamaged += rayBodies;
@@ -40,13 +59,56 @@ namespace GatekeepersProtocol.Game
                 _ability.NotifyRailshotFired(bodiesDamaged, railshotPierce);
 
             LastShotWasCrit = anyCrit;
-            Effects.MuzzleFlash(origin + transform.forward * 0.45f + Vector3.down * 0.08f);
+            Effects.MuzzleFlash(origin + aimDir * 0.45f + Vector3.down * 0.08f);
             if (_view != null) _view.NotifyFired();
             if (pellets == 1)
-                SpawnTracer(origin + transform.forward * 0.4f, lastEnd, anyCrit, def);
+                SpawnTracer(origin + aimDir * 0.4f, lastEnd, anyCrit, def);
             else
-                SpawnTracer(origin + transform.forward * 0.4f,
-                    origin + transform.forward * Mathf.Min(def.range, 20f), anyCrit, def);
+                SpawnTracer(origin + aimDir * 0.4f,
+                    origin + aimDir * Mathf.Min(def.range, 20f), anyCrit, def);
+        }
+
+        // Cached so the aim resolve adds no per-shot allocation.
+        static readonly IComparer<RaycastHit> HitByDistance =
+            Comparer<RaycastHit>.Create((a, b) => a.distance.CompareTo(b.distance));
+
+        /// <summary>Unit-level cursor aim: the first live Damageable along the cursor ray wins
+        /// and the shot is aimed at its collider bounds centre; bare geometry aims at the
+        /// cursor's surface point; open space aims down the ray at max cast range. Bodies are
+        /// resolved the way FireRay resolves them (own colliders and corpses skipped). The
+        /// muzzle is the player body (transform.position), never the camera forward.</summary>
+        Vector3 ResolveIsoAimDirection(float maxRange)
+        {
+            // Pointer comes from the input producer's frame, never an ambient engine poll.
+            var frame = Controls.Sample();
+            Ray ray = _isoRig.ScreenRay(new Vector3(frame.pointerX, frame.pointerY, 0f));
+            // The cursor ray starts at the iso camera, FollowDistance back from the ship.
+            float castRange = ShipCamera.FollowDistance + maxRange;
+            Vector3 aimPoint = ray.origin + ray.direction * castRange;
+
+            int hitCount = Physics.RaycastNonAlloc(ray.origin, ray.direction, _pierceHits,
+                castRange, ~0, QueryTriggerInteraction.Ignore);
+            if (hitCount > 0)
+            {
+                System.Array.Sort(_pierceHits, 0, hitCount, HitByDistance);
+                for (int i = 0; i < hitCount; i++)
+                {
+                    var hit = _pierceHits[i];
+                    if (hit.collider == null) continue;
+                    if (IsOwnCollider(hit.collider)) continue;
+                    var damageable = hit.collider.GetComponentInParent<Damageable>();
+                    if (damageable != null && _owner != null &&
+                        damageable.transform.IsChildOf(_owner.transform))
+                        continue;
+                    if (damageable != null && damageable.IsDead)
+                        continue; // same as FireRay: a corpse never stops body resolution
+                    aimPoint = damageable != null ? hit.collider.bounds.center : hit.point;
+                    break;
+                }
+            }
+
+            Vector3 dir = aimPoint - transform.position;
+            return dir.sqrMagnitude > 0.0001f ? dir.normalized : ray.direction;
         }
 
         WeaponDef DefaultDefFromSerialized()
@@ -67,17 +129,18 @@ namespace GatekeepersProtocol.Game
             };
         }
 
-        Vector3 PelletDirection(WeaponDef def, int index, int pellets)
+        Vector3 PelletDirection(WeaponDef def, int index, int pellets,
+            Vector3 forward, Vector3 right)
         {
             if (pellets <= 1 || def.spreadDegrees <= 0.01f)
-                return transform.forward;
+                return forward;
 
             float half = def.spreadDegrees;
             float angle = (360f / pellets) * index + Random.Range(-8f, 8f);
             float radius = Random.Range(0.15f, 1f) * half;
-            Quaternion yaw = Quaternion.AngleAxis(angle, transform.forward);
-            Quaternion pitch = Quaternion.AngleAxis(radius, transform.right);
-            return (yaw * pitch * transform.forward).normalized;
+            Quaternion yaw = Quaternion.AngleAxis(angle, forward);
+            Quaternion pitch = Quaternion.AngleAxis(radius, right);
+            return (yaw * pitch * forward).normalized;
         }
 
         Vector3 FireRay(Vector3 origin, Vector3 dir, WeaponDef def, float baseDamage, bool crit,

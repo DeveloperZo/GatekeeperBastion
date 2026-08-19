@@ -22,6 +22,7 @@ namespace GatekeepersProtocol.Sim
             AppendField(sb, "TotalRuns", d.TotalRuns.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "CleanExits", d.CleanExits.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "PodEjections", d.PodEjections.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "HatchConversions", d.HatchConversions.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "DeepestWaveReached",
                 d.DeepestWaveReached.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "HatchArmorLevel", d.HatchArmorLevel.ToString(CultureInfo.InvariantCulture), true);
@@ -66,6 +67,7 @@ namespace GatekeepersProtocol.Sim
             d.TotalRuns = (int)ExtractLong(json, "TotalRuns", 0);
             d.CleanExits = (int)ExtractLong(json, "CleanExits", 0);
             d.PodEjections = (int)ExtractLong(json, "PodEjections", 0);
+            d.HatchConversions = (int)ExtractLong(json, "HatchConversions", 0);
             int deepest = (int)ExtractLong(json, "DeepestWaveReached", 1);
             d.DeepestWaveReached = deepest < 1 ? 1 : deepest;
             d.HatchArmorLevel = (int)ExtractLong(json, "HatchArmorLevel", 0);

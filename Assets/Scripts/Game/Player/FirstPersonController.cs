@@ -34,6 +34,13 @@ namespace GatekeepersProtocol.Game
         /// <summary>Seconds after sprinting stops before stamina starts coming back.</summary>
         public const float StaminaRegenDelaySeconds = 1f;
 
+        /// <summary>Movement basis under the locked isometric camera: W is screen-up (the
+        /// camera's ground-plane forward), A/D screen left/right. The camera yaw is a
+        /// compile-time constant (rotation locked), so this is built once — no per-frame
+        /// camera read. The root's frozen authored yaw must never steer iso movement.</summary>
+        static readonly Quaternion IsoMoveBasis =
+            Quaternion.Euler(0f, ShipCamera.YawDegrees, 0f);
+
         [SerializeField] float moveSpeed = 5f;
         [SerializeField] float sprintSpeed = 7.5f;
         [SerializeField] float gravity = -20f;
@@ -43,8 +50,16 @@ namespace GatekeepersProtocol.Game
                  "with MetaUpgrades.StaminaMax(meta.StaminaLevel).")]
         [SerializeField] float staminaMax = 100f;
 
-        [Tooltip("Camera child used for pitch. Wired by SceneBuilder; look is disabled when missing.")]
+        [Tooltip("Camera child used for pitch. Wired by SceneBuilder; look is disabled when missing. " +
+                 "Optional only because isometric scenes author it null on purpose.")]
+        [OptionalBinding]
         public Transform cameraTransform;
+
+        [Tooltip("Isometric rig (Ship probe). While wired and enabled, walking leaves the cursor " +
+                 "free and movement no longer requires cursor lock; null or disabled means " +
+                 "first-person behavior, unchanged.")]
+        [SerializeField, OptionalBinding]
+        IsometricCameraRig _isoRig;
 
         CharacterController _cc;
         Camera _cam;
@@ -117,10 +132,11 @@ namespace GatekeepersProtocol.Game
         void Awake()
         {
             _cc = GetComponent<CharacterController>();
-            if (cameraTransform == null)
+            if (cameraTransform == null && _isoRig == null)
             {
-                // Authoring-error-only path: the binding validator makes a missing wire a
-                // build failure, so there is no runtime fallback — look stays disabled.
+                // Authoring-error-only path: an isometric scene authors no camera wire on
+                // purpose (cursor-driven aim, no mouse look); anywhere else a missing wire
+                // is a defect — look stays disabled.
                 Log.Error("FirstPersonController",
                     "cameraTransform is not wired — mouse look is disabled (author the binding).");
             }
@@ -175,18 +191,22 @@ namespace GatekeepersProtocol.Game
             // Defensive sample: free when the scene's tick owner already sampled this frame.
             var frame = Controls.Sample();
 
+            // Iso mode aims with the OS cursor: never re-lock it, and movement must not
+            // require the lock (canLook stays false there — no camera wire, no mouse look).
+            bool isoDriven = _isoRig != null && _isoRig.isActiveAndEnabled;
+
             if (Controls.Down(ControlId.FreeCursor)) SetCursorLocked(false);
             // A live Lock line uses the same move lock as an open station, and clicking its
             // Continue control must not re-lock the cursor mid-line.
             bool voiceLocked = DemoVoice.LocksInput;
             // Click-to-relock only during the fight; menu clicks must stay free for IMGUI buttons.
-            if (!MovementLocked && !voiceLocked && frame.click0Down
+            if (!MovementLocked && !voiceLocked && !isoDriven && frame.click0Down
                 && Cursor.lockState != CursorLockMode.Locked)
                 SetCursorLocked(true);
 
             bool canLook = Cursor.lockState == CursorLockMode.Locked && !MovementLocked
                 && !voiceLocked;
-            bool canMove = canLook && !Rooted;
+            bool canMove = (canLook || (isoDriven && !MovementLocked && !voiceLocked)) && !Rooted;
             TickZoom();
             // Look requires the authored camera wire: yaw without pitch is a half-broken camera,
             // so a missing cameraTransform (already Log.Error'd in Awake) disables look entirely.
@@ -206,7 +226,13 @@ namespace GatekeepersProtocol.Game
                 var input = Vector3.ClampMagnitude(
                     new Vector3(frame.moveX, 0f, frame.moveY), 1f);
                 IsMoving = input.sqrMagnitude > 0.01f;
-                planar = transform.TransformDirection(input) * TickSprint(IsMoving, dt);
+                // Iso: camera-relative movement (IsoMoveBasis), because the root's yaw is
+                // frozen and meaningless to the player there. First person: the transform
+                // basis, exactly as before the iso path existed.
+                Vector3 world = isoDriven
+                    ? IsoMoveBasis * input
+                    : transform.TransformDirection(input);
+                planar = world * TickSprint(IsMoving, dt);
             }
             else
             {

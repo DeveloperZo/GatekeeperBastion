@@ -830,8 +830,9 @@ namespace GatekeepersProtocol.Sim
         }
 
         /// <summary>
-        /// BOOKKEEPING ONLY — leftover Unbanked is wiped, not converted. Already-converted
-        /// ship bank is kept.
+        /// BOOKKEEPING ONLY — leftover Unbanked is wiped, not converted, with one stated
+        /// exception: a Returned end first keeps HatchBank.ReturnedKeepShare of each slot's
+        /// pile (KeepReturnedShare). Already-converted ship bank is kept on every cause.
         /// </summary>
         private void EndRun(string cause)
         {
@@ -839,6 +840,7 @@ namespace GatekeepersProtocol.Sim
             ClearChainState();
             CancelSequentialDraws();
             CancelMasterSequence();
+            if (docked) KeepReturnedShare();
             WipeUnbanked();
             ClearDockOffer();
             RunReport report = BuildRunReport(cause);

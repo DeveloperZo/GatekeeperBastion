@@ -215,6 +215,11 @@ namespace GatekeepersProtocol.Game
             f.lookX = Input.GetAxis("Mouse X");
             f.lookY = Input.GetAxis("Mouse Y");
             f.scroll = Input.mouseScrollDelta.y;
+            // var, not Vector3: the docgen shim types mousePosition as Vector2 and both
+            // carry .x/.y, so this line compiles in the engine and the offline harness.
+            var pointer = Input.mousePosition;
+            f.pointerX = pointer.x;
+            f.pointerY = pointer.y;
 
             f.click0Down = Input.GetMouseButtonDown(0);
             f.click1Down = Input.GetMouseButtonDown(1);

@@ -64,7 +64,8 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>ARMORY: hidden — the MK-1 comes from the ship terminal's start
-        /// (2026-08-18 revision, no rack walk) — until the wheel unlocks on first loss.</summary>
+        /// (2026-08-18 revision, no rack walk) — until the wheel unlocks on the first bank
+        /// (UpgradesUnlocked re-key; Docs/Decisions.md).</summary>
         public static DemoStationVerdict ArmoryVerdict(MetaState m)
         {
             if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
@@ -73,8 +74,8 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>CREW: hidden until the ship fight is done (its first function is the
-        /// post-fight heal); heal-on-tap until its menu unlocks (first Docked after
-        /// first loss — a later cut writes that flag).</summary>
+        /// post-fight heal); heal-on-tap until its menu unlocks (first Docked after the
+        /// first bank — DemoShipDirector writes that flag).</summary>
         public static DemoStationVerdict CrewVerdict(MetaState m)
         {
             if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
@@ -88,6 +89,32 @@ namespace GatekeepersProtocol.Game
         {
             if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
             return DemoStationVerdict.Hidden;
+        }
+
+        /// <summary>Beat 3's exit-standing state key: true when no wheel upgrade can be
+        /// bought right now — buys-left 0, or banked below the cheapest next wheel cost
+        /// across owned weapons. An un-owned weapon row never counts, even at cost 0:
+        /// SEC-D must not hold the exit standing open (beat 3, Traps). Evaluated on Docked
+        /// and after every buy / refuse / spend; DemoShipStanding owns the flip.</summary>
+        public static bool NoBuyableUpgradeRemains(MetaState m)
+        {
+            if (m == null) return true;
+            if (!MetaUpgrades.UpgradesUnlocked(m)) return true;
+            if (m.DemoActive && m.DemoWheelBuysLeft <= 0) return true;
+
+            long cheapest = long.MaxValue;
+            for (int i = 0; i < WeaponCatalog.ArraySize; i++)
+            {
+                var id = (WeaponId)i;
+                if (!m.Owns(id) || !WeaponCatalog.IsAvailable(id)) continue;
+                if (WeaponWheel.RingOf(id) == null) continue;
+                int tier = m.TierOf(id);
+                if (tier >= WeaponTier.MaxTier) continue;
+                long cost = WeaponTier.Cost(WeaponCatalog.Def(id).slot, tier);
+                if (cost < cheapest) cheapest = cost;
+            }
+            if (cheapest == long.MaxValue) return true;
+            return m.BankedSalvage < cheapest;
         }
     }
 }

@@ -1,9 +1,9 @@
 # 4 — Data
 
 <!-- GENERATED BLOCKS — DO NOT EDIT INSIDE GKB:GEN … GKB:END MARKERS.
-     Tools/docgen/run.sh splices these fifteen blocks from Sim/: mk1-base, wheel, rings,
+     Tools/docgen/run.sh splices these sixteen blocks from Sim/: mk1-base, wheel, rings,
      tier-cost, abilities, gatekeepers, waves, dial, player-count, intensity-juice, hatch, hatch-bank,
-     master-control, tracks, bastion-mesh. Prose outside the
+     master-control, tracks, bastion-mesh, ship-camera. Prose outside the
      markers is hand-written and preserved byte-for-byte on regenerate. Run
      Tools/docgen/run.sh after any Sim/ change that owns a block; --check fails on drift. -->
 
@@ -196,8 +196,9 @@ create; the share-of-gross table and three-death pacing interaction live in
 `../Milestones/3. completed/M19-repair-costs-salvage.md`. Whether 2/HP is the right rate is
 *unknown, needs play data*.
 
-**Repair requires the Repair Rig (M23).** The equipment slot unlocks at the first lost Run
-(`PodEjections >= 1`) and costs Salvage once; the rig is bought on top and equipping it is
+**Repair requires the Repair Rig (M23).** The equipment slot unlocks when salvage first
+converts through the Hatch (`HatchConversions >= 1` — re-keyed with the wheel, `M78`) and
+costs Salvage once; the rig is bought on top and equipping it is
 automatic (one piece). Without the rig equipped, repair is refused and the Hatch prompt
 names the next missing step. FABRICATION's old `RepairRigLevel` track and CREW QUARTERS'
 `EngineeringLevel` are deleted; saves that owned either load with the slot and rig granted
@@ -209,7 +210,7 @@ free.
 | Hatch HP (Armor 0) | 300 |
 | Hatch HP (Armor 5) | 375 |
 | per HP healed | 2 Salvage (`ShipSystems.RepairSalvagePerHp`) |
-| equipment slot | **300** Salvage, once, after first loss |
+| equipment slot | **300** Salvage, once, after the first bank |
 | repair rig | **300** Salvage, flat 8 HP/s |
 <!-- GKB:END hatch -->
 
@@ -227,6 +228,7 @@ dumps when the timer ends.
 | drip | 8 unbanked/s |
 | duration | 45 s |
 | withdraw | 16 salvage/s |
+| returned keeps | 10% of leftover unbanked (Lost wipes it all) |
 
 | Waves carried | convert | Hatch Wave | bodies at intensity 0 |
 |---|---|---|---|
@@ -429,6 +431,26 @@ mapping throws at emit time — a loud fail, never a primitive.
 | Wall corner | `SM_Bld_Wall_Corner_Pillar_01` |
 | Ceiling fixture | `SM_Prop_Light_Panel_01` |
 <!-- GKB:END bastion-mesh -->
+
+## Ship camera — isometric probe
+
+`Sim/Ship/ShipCamera.cs`, applied by `Game/Ship/IsometricCameraRig.cs`. Ship scene only —
+the Bastion stays first person while the probe runs. Rotation is locked, so at 45° yaw the
+ship's south and west walls are the camera-facing sides forever: wall render state is a bake
+decision, and wanting rotation later means emitting all four wall sides plus a runtime
+toggle. The camera holds still while the player stays inside the dead zone, then follows
+with exponential smoothing at the stated rate.
+
+<!-- GKB:GEN ship-camera — ShipCamera constants -->
+| Rig | Value |
+|---|---|
+| yaw (locked) | 45° |
+| pitch | 50° |
+| field of view | 30° |
+| follow distance | 38 m |
+| dead zone half X / half Z | 1.5 / 1.5 m |
+| follow lerp | 6/s |
+<!-- GKB:END ship-camera -->
 
 ## Wave-report dashboard (M38)
 

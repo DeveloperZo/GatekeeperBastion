@@ -19,6 +19,14 @@ namespace GatekeepersProtocol.Sim
         /// ramCount; the first Hatch-bank after three field Waves is the designed overrun
         /// for an unupgraded MK-1. [unconfirmed: 2026-08-16]</summary>
         public const int Carry3ExtraRam = 1;
+        /// <summary>Share of each slot's leftover Unbanked a Returned run keeps; Lost still
+        /// wipes it all. Deliberately slight: greed must stay carrying a bigger pile into
+        /// fewer extracts, and a large survival rebate turns the dock into the optimal line
+        /// (Docs/Decisions.md, the wheel opens on the first bank). Door-state persistence
+        /// already rides the successful-bank snapshot and is not part of this number.
+        /// Tunable after a logged Run.</summary>
+        public const float ReturnedKeepShare = 0.10f;
+
         public const float MultLow = 1.00f;
         public const float Mult2 = 1.10f;
         public const float MultMid = 1.25f;
@@ -77,6 +85,13 @@ namespace GatekeepersProtocol.Sim
             spec.ramCount += extra;
             spec.enemyCount += extra;
             return spec;
+        }
+
+        /// <summary>Salvage a Returned run keeps from one slot's leftover Unbanked.</summary>
+        public static long ReturnedKeep(long unbanked)
+        {
+            if (unbanked <= 0L) return 0L;
+            return (long)Math.Floor(unbanked * (double)ReturnedKeepShare);
         }
 
         public static long BankedFrom(long unbankedTaken, float multiplier)

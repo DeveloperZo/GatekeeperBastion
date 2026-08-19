@@ -99,8 +99,14 @@ namespace GatekeepersProtocol.PlayTests
                 Assert.IsInstanceOf<IInteractable>(station,
                     $"{station.GetType().Name} does not implement IInteractable, so the Interactor can never target it.");
                 stationInteractables++;
-                Assert.IsFalse(string.IsNullOrEmpty(((IInteractable)station).Prompt),
-                    $"{station.GetType().Name}.Prompt is empty — the HUD would render a blank prompt.");
+                string prompt = ((IInteractable)station).Prompt;
+                if (StationIsDemoHidden(station))
+                    Assert.AreEqual(string.Empty, prompt,
+                        $"{station.GetType().Name} is demo-hidden (Docs/Demo/0-wake-on-a-dead-ship.md A13) — " +
+                        "its Prompt must be exactly \"\" so the HUD draws nothing, not a live station string.");
+                else
+                    Assert.IsFalse(string.IsNullOrEmpty(prompt),
+                        $"{station.GetType().Name}.Prompt is empty — the HUD would render a blank prompt.");
             }
             Assert.AreEqual(3, stationInteractables,
                 "Exactly 3 station objects (Armory/Engineering/Map) must implement IInteractable.");
@@ -367,6 +373,21 @@ namespace GatekeepersProtocol.PlayTests
         // =====================================================================
         // helpers
         // =====================================================================
+
+        /// <summary>Whether the demo gates hide this station for the CURRENT save
+        /// (Docs/Demo/0-wake-on-a-dead-ship.md A13, 2026-08-18 revision): a hidden station
+        /// shows no name and no prompt until it has a function. Asks the pure DemoProgress
+        /// rules directly — not DemoStationGate.PromptOverride — so the test still catches
+        /// the Unity wiring disagreeing with the rules. With no save or the demo off, every
+        /// verdict is Open and the live non-empty-prompt contract applies unchanged.</summary>
+        static bool StationIsDemoHidden(MonoBehaviour station)
+        {
+            var m = GameSession.Meta;
+            if (station is ArmoryStation) return DemoProgress.ArmoryVerdict(m) == DemoStationVerdict.Hidden;
+            if (station is EngineeringStation) return DemoProgress.FabricationVerdict(m) == DemoStationVerdict.Hidden;
+            if (station is MapStation) return DemoProgress.NavVerdict(m) == DemoStationVerdict.Hidden;
+            return false;
+        }
 
         /// <summary>Eye position the labels/consoles should read from: the live main camera when
         /// there is one, else the player's head, else the middle of the common room.</summary>

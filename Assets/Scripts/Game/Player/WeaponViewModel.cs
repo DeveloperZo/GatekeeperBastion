@@ -21,6 +21,11 @@ namespace GatekeepersProtocol.Game
         [SerializeField] GameObject _cutter;
         [SerializeField] Transform _grip;
 
+        [SerializeField, OptionalBinding, Tooltip("Isometric rig (Ship probe). While wired and " +
+            "enabled, IsometricBodyPresentation owns the animator Speed parameter — two " +
+            "writers would fight. Null or disabled means first-person behavior, unchanged.")]
+        IsometricCameraRig _isoRig;
+
         PlayerGun _gun;
         FirstPersonController _fpc;
         AudioSource _sfx;
@@ -68,7 +73,9 @@ namespace GatekeepersProtocol.Game
 
         void LateUpdate()
         {
-            if (_animator != null && _fpc != null)
+            // Speed has one writer: IsometricBodyPresentation owns it while the iso rig runs.
+            if (_animator != null && _fpc != null
+                && !(_isoRig != null && _isoRig.isActiveAndEnabled))
             {
                 float speed = 0f;
                 if (_fpc.IsMoving)

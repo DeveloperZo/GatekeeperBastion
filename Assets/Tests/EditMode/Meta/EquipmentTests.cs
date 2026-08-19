@@ -9,14 +9,17 @@ namespace GatekeepersProtocol.Tests
     public class EquipmentTests
     {
         [Test]
-        public void SlotLockedBeforeFirstLoss()
+        public void SlotLockedBeforeFirstBank()
         {
             var m = MetaState.CreateNew();
             m.BankedSalvage = 10_000L;
-            Assert.AreEqual(0, m.PodEjections);
+            Assert.AreEqual(0, m.HatchConversions);
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m),
-                "slot purchase refused at PodEjections == 0");
+                "slot purchase refused at HatchConversions == 0");
             m.PodEjections = 1;
+            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m),
+                "a loss alone no longer unlocks — the gate re-keyed to the first bank");
+            m.HatchConversions = 1;
             Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m));
         }
 
@@ -25,7 +28,7 @@ namespace GatekeepersProtocol.Tests
         {
             var m = MetaState.CreateNew();
             m.BankedSalvage = EquipmentCatalog.SlotPrice - 1;
-            m.PodEjections = 1;
+            m.HatchConversions = 1;
             Assert.IsFalse(TryBuySlot(m), "short of slot price");
             Assert.IsFalse(m.EquipmentSlotPurchased);
             Assert.AreEqual(EquipmentCatalog.SlotPrice - 1, m.BankedSalvage);
@@ -43,7 +46,7 @@ namespace GatekeepersProtocol.Tests
         public void RigRequiresSlot()
         {
             var m = MetaState.CreateNew();
-            m.PodEjections = 1;
+            m.HatchConversions = 1;
             m.BankedSalvage = 10_000L;
             Assert.IsFalse(TryBuyEquipment(m, EquipmentId.RepairRig), "no slot yet");
             Assert.IsFalse(m.OwnsEquipment(EquipmentId.RepairRig));
@@ -129,8 +132,9 @@ namespace GatekeepersProtocol.Tests
         public void RepairMissingStep_NamesNextGap()
         {
             var m = MetaState.CreateNew();
-            Assert.AreEqual("equipment slot locked until first lost Run", m.RepairMissingStep());
-            m.PodEjections = 1;
+            Assert.AreEqual("equipment slot locked until salvage banks through the Hatch",
+                m.RepairMissingStep());
+            m.HatchConversions = 1;
             Assert.AreEqual("equipment slot not purchased — buy it at FABRICATION",
                 m.RepairMissingStep());
             m.EquipmentSlotPurchased = true;

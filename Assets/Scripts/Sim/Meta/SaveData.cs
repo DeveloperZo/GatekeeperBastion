@@ -28,6 +28,10 @@ namespace GatekeepersProtocol.Sim
     ///       being derivable from CompletedTerminalIds and became its own saved fact. Pre-v10
     ///       saves load with no open doors and no shim: their doors were opened by the retired
     ///       terminal rule, so re-deriving them would re-assert a rule that no longer exists.
+    ///  11 — HatchConversions: bank windows in which salvage converted through the Hatch.
+    ///       UpgradesUnlocked re-keys to it (was PodEjections >= 1 — a loss gate that never
+    ///       fired for a player who banks and docks). Pre-v11 saves with PodEjections >= 1 or
+    ///       CleanExits >= 1 migrate to 1 so the re-key cannot re-lock an open wheel.
     /// Migration from earlier versions lives in <see cref="MetaState.FromJson"/> /
     /// <see cref="MetaState.FromSaveData"/>.
     /// </remarks>
@@ -35,7 +39,7 @@ namespace GatekeepersProtocol.Sim
     public class SaveData
     {
         /// <summary>Schema version written by the current build.</summary>
-        public const int CurrentVersion = 10;
+        public const int CurrentVersion = 11;
 
         public int SaveVersion = CurrentVersion;
         public long BankedSalvage;
@@ -46,6 +50,10 @@ namespace GatekeepersProtocol.Sim
         public int TotalRuns;
         public int CleanExits;
         public int PodEjections;
+
+        /// <summary>v11: bank windows in which salvage converted through the Hatch.
+        /// The wheel / equipment-slot unlock reads this, never PodEjections.</summary>
+        public int HatchConversions;
 
         /// <summary>Highest 1-based wave cleared this campaign. Absent/0 in old saves → 1.</summary>
         public int DeepestWaveReached = 1;

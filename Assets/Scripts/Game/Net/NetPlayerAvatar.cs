@@ -458,8 +458,15 @@ namespace GatekeepersProtocol.Game
         void CreditBankedClientRpc(long credited)
         {
             if (credited <= 0L) return;
-            if (GameSession.Meta != null)
-                GameSession.Meta.EarnSalvage(credited);
+            var meta = GameSession.Meta;
+            if (meta == null) return;
+            meta.EarnSalvage(credited);
+            // Salvage came through the Hatch for THIS seat: the guest's own wheel /
+            // equipment-slot unlock (MetaUpgrades.UpgradesUnlocked). Drip credits arrive
+            // per tick, so this floors at 1 rather than counting windows — the gate only
+            // ever reads >= 1.
+            if (meta.HatchConversions < 1)
+                meta.HatchConversions = 1;
         }
 
         [Rpc(SendTo.Owner)]

@@ -1,3 +1,4 @@
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 
 namespace GatekeepersProtocol.Game
@@ -17,7 +18,16 @@ namespace GatekeepersProtocol.Game
     /// forwards E-key hold time into Interact(dt). Lives on the player camera.</summary>
     public sealed class Interactor : MonoBehaviour
     {
+        // The cursor ray starts at the iso camera (FollowDistance back from the ship), so the
+        // cast must reach well past the focus; the player-proximity contract still uses range.
+        const float IsoCastDistance = ShipCamera.FollowDistance * 2f;
+
         [SerializeField] float range = 3.2f;
+
+        [SerializeField, OptionalBinding, Tooltip("Isometric rig (Ship probe). While wired and " +
+            "enabled, the target ray comes from the cursor and no cursor lock is required; " +
+            "null or disabled means first-person behavior, unchanged.")]
+        IsometricCameraRig _isoRig;
 
         /// <summary>Prompt of the currently targeted interactable, or null. Read by the HUD.</summary>
         public string CurrentPrompt { get; private set; }
@@ -46,9 +56,28 @@ namespace GatekeepersProtocol.Game
             _current = null;
             CurrentPrompt = null;
 
-            if (Cursor.lockState != CursorLockMode.Locked) return;
+            bool iso = _isoRig != null && _isoRig.isActiveAndEnabled;
+            if (!iso && Cursor.lockState != CursorLockMode.Locked) return;
 
-            if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, range))
+            bool hitSomething;
+            RaycastHit hit;
+            if (iso)
+            {
+                // Cursor-driven: target what the cursor touches, but keep the proximity
+                // contract — the player (this transform's rig) must still be within range.
+                // Pointer comes from the input producer's frame, never an ambient engine poll.
+                var frame = Controls.Sample();
+                Ray ray = _isoRig.ScreenRay(new Vector3(frame.pointerX, frame.pointerY, 0f));
+                hitSomething = Physics.Raycast(ray, out hit, IsoCastDistance)
+                    && (hit.point - transform.position).sqrMagnitude <= range * range;
+            }
+            else
+            {
+                hitSomething = Physics.Raycast(
+                    transform.position, transform.forward, out hit, range);
+            }
+
+            if (hitSomething)
                 _current = hit.collider.GetComponentInParent<IInteractable>();
 
             if (_current == null) return;

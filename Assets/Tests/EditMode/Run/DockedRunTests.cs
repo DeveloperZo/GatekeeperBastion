@@ -106,6 +106,8 @@ namespace GatekeepersProtocol.Tests
 
             long banked = meta.BankedSalvage;
             Assert.Greater(banked, 0L, "the window converted something worth going home with");
+            Assert.AreEqual(0L, sim.Unbanked,
+                "dump-on-survive already banked the pile — the plain dock has no leftover");
             int pods = meta.PodEjections;
 
             Assert.IsTrue(sim.DockRun());
@@ -114,7 +116,100 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0, meta.CleanExits, "nor is it the Master Control win");
             Assert.AreEqual(banked, meta.BankedSalvage, "banked Salvage survives the dock");
             Assert.AreEqual(RunSim.DockedCause, sim.LastRunReport.cause);
-            Assert.AreEqual(0L, sim.Unbanked, "leftover Unbanked is wiped, same as any run end");
+            Assert.AreEqual(0L, sim.Unbanked);
+        }
+
+        [Test]
+        public void DockRun_KeepsTheStatedShare_OfUnbankedHeldAtTheEnd()
+        {
+            // Dump-on-survive banks everything the window moved, so Unbanked at a Returned
+            // end is post-window money only — today that is a withdraw. The share is the
+            // guard on that pile: Returned keeps HatchBank.ReturnedKeepShare of it; Lost
+            // wipes it all (criterion 0b).
+            MetaState meta;
+            var sim = Tethered(out meta);
+            SurviveABankWindow(sim);
+            long bankedAfterWindow = meta.BankedSalvage;
+
+            long withdrawn = sim.Withdraw(5f); // full hatch, Prep, unbanked 0 — legal
+            Assert.Greater(withdrawn, 0L, "the withdraw is what puts Unbanked back in play");
+            Assert.IsTrue(sim.DockOffered, "withdrawing does not answer the dock offer");
+
+            long share = HatchBank.ReturnedKeep(withdrawn);
+            Assert.Greater(share, 0L);
+            Assert.Less(share, withdrawn, "surviving pays a little, and only a little");
+
+            Assert.IsTrue(sim.DockRun());
+            Assert.AreEqual(RunPhase.Returned, sim.Phase);
+            Assert.AreEqual(bankedAfterWindow - withdrawn + share, meta.BankedSalvage,
+                "the Returned end keeps exactly the stated share of the pile it held");
+            Assert.AreEqual(0L, sim.Unbanked);
+        }
+
+        [Test]
+        public void LostRun_KeepsNoShare()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            SurviveABankWindow(sim);
+            long bankedAfterWindow = meta.BankedSalvage;
+            long withdrawn = sim.Withdraw(5f);
+            Assert.Greater(withdrawn, 0L);
+
+            sim.NotifyPlayerDown();
+
+            Assert.AreEqual(RunPhase.Lost, sim.Phase);
+            Assert.AreEqual(bankedAfterWindow - withdrawn, meta.BankedSalvage,
+                "Lost still wipes every leftover unit — the rebate is Returned's alone");
+        }
+
+        [Test]
+        public void SurvivedWindow_CountsTheFirstHatchConversion()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            Assert.AreEqual(0, meta.HatchConversions);
+            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(meta));
+
+            SurviveABankWindow(sim);
+
+            Assert.AreEqual(1, meta.HatchConversions,
+                "salvage came through the Hatch — the wheel key, whether this Run then "
+                + "ends Lost or Returned");
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta));
+        }
+
+        [Test]
+        public void BreachedWindow_ThatConverted_StillCounts_ButPaysNoShare()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            sim.TriggerDraw();
+            Kill(sim, 24);
+            sim.NotifyAssaultCleared();
+            sim.TriggerDraw(WaveMode.HatchBank);
+            sim.Tick(5f); // ~40 units dripped home before the breach
+            long banked = meta.BankedSalvage;
+            Assert.Greater(banked, 0L);
+
+            sim.DamageHatch(99999f);
+
+            Assert.AreEqual(RunPhase.Lost, sim.Phase);
+            Assert.AreEqual(1, meta.HatchConversions,
+                "what dripped through before the fall still came through the Hatch");
+            Assert.AreEqual(banked, meta.BankedSalvage, "a Lost end adds nothing");
+        }
+
+        [Test]
+        public void RunWithNoBank_CountsNothing()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            sim.TriggerDraw();
+            Kill(sim, 4);
+            sim.NotifyPlayerDown();
+            Assert.AreEqual(0, meta.HatchConversions,
+                "a player who banked nothing has nothing to spend — and no wheel");
         }
 
         [Test]

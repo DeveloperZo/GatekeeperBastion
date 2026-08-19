@@ -259,7 +259,34 @@ bank window down and breach remain the only enders.
   with host-death-ends-the-run (`M49`), which is architecture-driven.
 - **Demo consistency:** the demo's two authored losses are unclearable windows, so
   return-to-Ship cannot skip the unlock deaths; the wheel unlock key — the first pod
-  ejection — still holds.
+  ejection — still holds. *(Superseded 2026-08-18 — see* Locked — the wheel opens on
+  the first bank *below: the key is the first Hatch conversion, which those unclearable
+  windows still author.)*
+
+## Locked — the wheel opens on the first bank, not the first loss (Zo, 2026-08-18)
+
+`MetaUpgrades.UpgradesUnlocked` was `PodEjections >= 1`, and `RunSim.EndRun` only
+increments `PodEjections` when the Run did not dock — so once *return to Ship at a
+surviving bank* (above) shipped in `M77`, a player who kept surviving their bank
+windows and docking could never unlock Tiers or the equipment slot. Skill locked the
+deepest progression track, which is belief 2's opposite; belief 1 says a lost Run
+still moves you forward, not that you must lose to move forward
+(`Design/1-Experience.md`, belief-1 row rewritten in the same change).
+
+**The wheel spends salvage that came through the Hatch, so it opens when salvage first
+comes through the Hatch**: `MetaState.HatchConversions >= 1` (save v11), written on the
+first credit of a bank window — the same event, stated honestly, firing for the player
+who banks and docks as well as the one who banks and dies. A player who banked nothing
+has nothing to spend. `PodEjections` keeps its own jobs (endings, `demo.second_loss`)
+and is no longer a progression gate; nothing else in the demo family may key a
+progression gate to it (`M78`, Traps).
+
+**Surviving pays a little, and only a little:** a Returned ending keeps
+`HatchBank.ReturnedKeepShare` of leftover Unbanked instead of wiping all of it; Lost
+still wipes. One number, generated into `Design/4-Data.md`, initial value small and
+tunable after a logged Run — greed must stay carrying a bigger pile into fewer
+extracts. Door-state persistence already rides the successful-bank snapshot and is not
+double-counted. `M78`.
 
 ## Shipped
 

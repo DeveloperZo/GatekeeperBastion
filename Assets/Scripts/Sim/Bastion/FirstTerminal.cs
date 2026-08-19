@@ -21,6 +21,24 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Zone 1's terminal count, for the (k/2) prompt.</summary>
         public const int ZoneTerminalCount = 2;
 
+        /// <summary>Zone 1's number, for per-zone logs and DemoZoneDeepestWave.</summary>
+        public const int ZoneOneNumber = 1;
+
+        /// <summary>Zone 1's first field Wave (1-based).</summary>
+        public const int ZoneOneFirstWave = 1;
+
+        /// <summary>Zone 1's last field Wave (1-based): two terminals, one Wave each.
+        /// The composite retrigger re-runs ZoneOneFirstWave..this.</summary>
+        public const int ZoneOneEndWave = ZoneTerminalCount * Waves;
+
+        /// <summary>Zone a 1-based field Wave belongs to. Only zone 1 is authored while the
+        /// demo's later zones are other beats'; deeper Waves report zone 2 as a floor so a
+        /// log never claims zone 1 for a Wave past its end.</summary>
+        public static int ZoneOfWave(int wave)
+        {
+            return wave <= ZoneOneEndWave ? ZoneOneNumber : ZoneOneNumber + 1;
+        }
+
         /// <summary>True for a zone-1 Field id. Other ids belong to later zones, whose
         /// consecutive-Wave triggers are other beats' spec.</summary>
         public static bool IsZoneOne(string terminalId)

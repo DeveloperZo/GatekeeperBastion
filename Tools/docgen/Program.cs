@@ -22,7 +22,7 @@ public static class Docgen
     {
         "mk1-base", "wheel", "rings", "tier-cost", "abilities",
         "gatekeepers", "waves", "dial", "player-count", "intensity-juice", "hatch", "hatch-bank", "master-control", "tracks",
-        "bastion-mesh"
+        "bastion-mesh", "ship-camera"
     };
 
     public static int Main(string[] args)
@@ -333,6 +333,7 @@ public static class Docgen
         d["master-control"] = EmitMasterControl();
         d["tracks"] = EmitTracks();
         d["bastion-mesh"] = EmitBastionMesh();
+        d["ship-camera"] = EmitShipCamera();
         return d;
     }
 
@@ -552,7 +553,7 @@ public static class Docgen
         sb.AppendLine("| per HP healed | " + N(ShipSystems.RepairSalvagePerHp) +
                       " Salvage (`ShipSystems.RepairSalvagePerHp`) |");
         sb.AppendLine("| equipment slot | **" + EquipmentCatalog.SlotPrice.ToString("N0", Inv) +
-                      "** Salvage, once, after first loss |");
+                      "** Salvage, once, after the first bank |");
         sb.AppendLine("| repair rig | **" + rig.cost.ToString("N0", Inv) +
                       "** Salvage, flat " + N(rig.repairPerSecond) + " HP/s |");
         return sb.ToString().TrimEnd('\r', '\n');
@@ -568,6 +569,8 @@ public static class Docgen
         sb.AppendLine("| drip | " + N(HatchBank.DripPerSecond) + " unbanked/s |");
         sb.AppendLine("| duration | " + N(HatchBank.DurationSeconds) + " s |");
         sb.AppendLine("| withdraw | " + N(HatchBank.WithdrawPerSecond) + " salvage/s |");
+        sb.AppendLine("| returned keeps | " + N(HatchBank.ReturnedKeepShare * 100f) +
+                      "% of leftover unbanked (Lost wipes it all) |");
         sb.AppendLine();
         sb.AppendLine("| Waves carried | convert | Hatch Wave | bodies at intensity 0 |");
         sb.AppendLine("|---|---|---|---|");
@@ -645,6 +648,21 @@ public static class Docgen
         }
         sb.AppendLine("| Wall corner | `" + BastionMeshMap.CornerPillar + "` |");
         sb.AppendLine("| Ceiling fixture | `" + BastionMeshMap.CeilingLight + "` |");
+        return sb.ToString().TrimEnd('\r', '\n');
+    }
+
+    static string EmitShipCamera()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("| Rig | Value |");
+        sb.AppendLine("|---|---|");
+        sb.AppendLine("| yaw (locked) | " + N(ShipCamera.YawDegrees) + "° |");
+        sb.AppendLine("| pitch | " + N(ShipCamera.PitchDegrees) + "° |");
+        sb.AppendLine("| field of view | " + N(ShipCamera.FovDegrees) + "° |");
+        sb.AppendLine("| follow distance | " + N(ShipCamera.FollowDistance) + " m |");
+        sb.AppendLine("| dead zone half X / half Z | " + N(ShipCamera.DeadZoneHalfX) + " / " +
+                      N(ShipCamera.DeadZoneHalfZ) + " m |");
+        sb.AppendLine("| follow lerp | " + N(ShipCamera.FollowLerpPerSecond) + "/s |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
 

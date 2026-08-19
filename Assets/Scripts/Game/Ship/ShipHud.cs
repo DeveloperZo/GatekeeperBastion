@@ -21,6 +21,12 @@ namespace GatekeepersProtocol.Game
         [SerializeField, Tooltip("Root under which the billboarded TextMesh station labels live. Authored in the scene.")]
         Transform _labelsRoot;
 
+        [SerializeField, OptionalBinding, Tooltip("Isometric rig (Ship probe). While wired and " +
+            "enabled, the OS cursor is the aim point: crosshair hidden, cursor-free warn " +
+            "suppressed, interact prompt kept. Null or disabled means first-person behavior, " +
+            "unchanged.")]
+        IsometricCameraRig _isoRig;
+
         Interactor _interactor;
         FirstPersonController _fpc;
         Transform _camera;
@@ -128,7 +134,10 @@ namespace GatekeepersProtocol.Game
             }
 
             // A Lock line frees the cursor on purpose — the recapture warn would lie there.
-            bool cursorFree = Cursor.lockState != CursorLockMode.Locked
+            // Iso mode never locks the cursor, so "free" is its working state: no warn, and
+            // the prompt path below must stay live.
+            bool iso = _isoRig != null && _isoRig.isActiveAndEnabled;
+            bool cursorFree = !iso && Cursor.lockState != CursorLockMode.Locked
                 && !DemoVoice.LocksInput;
             if (cursorFree != _cachedCursorFree)
             {
@@ -137,7 +146,7 @@ namespace GatekeepersProtocol.Game
                 if (cursorFree) _cachedPrompt = "\0";
             }
 
-            bool crosshairOn = !DemoShipFight.WakeHidesCrosshair;
+            bool crosshairOn = !iso && !DemoShipFight.WakeHidesCrosshair;
             if (crosshairOn != _cachedCrosshairOn)
             {
                 _cachedCrosshairOn = crosshairOn;
@@ -220,8 +229,12 @@ namespace GatekeepersProtocol.Game
 
         void BillboardLabels()
         {
-            if (_labels == null || _camera == null) return;
-            Vector3 eye = _camera.position;
+            // Iso scenes have no first-person camera wire; labels face the iso camera instead.
+            Transform eyeTransform = _camera;
+            if (eyeTransform == null && _isoRig != null && _isoRig.isActiveAndEnabled)
+                eyeTransform = _isoRig.transform;
+            if (_labels == null || eyeTransform == null) return;
+            Vector3 eye = eyeTransform.position;
             for (int i = 0; i < _labels.Length; i++)
             {
                 var label = _labels[i];

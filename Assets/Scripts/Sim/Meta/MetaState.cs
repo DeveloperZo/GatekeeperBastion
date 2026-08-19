@@ -18,7 +18,15 @@ namespace GatekeepersProtocol.Sim
         public int TotalRuns;
         public int CleanExits;
         // Save/API trap: PodEjections means lost Runs; keep this field and its JSON key unchanged.
+        // Endings and demo.second_loss read it. It is NOT a progression gate (re-key 2026-08-18).
         public int PodEjections;
+
+        /// <summary>Bank windows in which salvage converted through the Hatch for this seat
+        /// (v11). The wheel and the equipment slot key on <c>&gt;= 1</c>: the wheel spends
+        /// salvage that came through the Hatch, so it opens when salvage first comes through
+        /// the Hatch — for the player who banks and docks as well as the one who banks and
+        /// dies (re-key 2026-08-18 Zo; Docs/Decisions.md).</summary>
+        public int HatchConversions;
 
         /// <summary>Highest 1-based wave the player has cleared this campaign. Starts at 1,
         /// rises only on clear (never on reach), never lowers. Caps the MAP start-wave selector.</summary>
@@ -223,8 +231,8 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Null when repair is available; otherwise the next missing step for prompts.</summary>
         public string RepairMissingStep()
         {
-            if (PodEjections < 1)
-                return "equipment slot locked until first lost Run";
+            if (HatchConversions < 1)
+                return "equipment slot locked until salvage banks through the Hatch";
             if (!EquipmentSlotPurchased)
                 return "equipment slot not purchased — buy it at FABRICATION";
             if (!OwnsEquipment(EquipmentId.RepairRig))
@@ -433,6 +441,7 @@ namespace GatekeepersProtocol.Sim
             d.TotalRuns = TotalRuns;
             d.CleanExits = CleanExits;
             d.PodEjections = PodEjections;
+            d.HatchConversions = HatchConversions;
             d.DeepestWaveReached = DeepestWaveReached < 1 ? 1 : DeepestWaveReached;
             d.HatchArmorLevel = HatchArmorLevel;
             d.EquippedProtocol = (int)EquippedProtocol;
@@ -474,6 +483,14 @@ namespace GatekeepersProtocol.Sim
             m.TotalRuns = d.TotalRuns;
             m.CleanExits = d.CleanExits;
             m.PodEjections = d.PodEjections;
+            // v11: HatchConversions is its own saved fact. Pre-v11 saves ran under the
+            // loss key (UpgradesUnlocked == PodEjections >= 1): a save that has lost a
+            // Run — or Escaped, whose final bank converted — had the wheel open, and
+            // the re-key must not re-lock it.
+            if (d.SaveVersion >= 11)
+                m.HatchConversions = d.HatchConversions;
+            else if (d.PodEjections >= 1 || d.CleanExits >= 1)
+                m.HatchConversions = 1;
             m.DeepestWaveReached = d.DeepestWaveReached < 1 ? 1 : d.DeepestWaveReached;
             m.HatchArmorLevel = d.HatchArmorLevel;
             m.EnsureArrays();

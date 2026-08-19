@@ -43,7 +43,7 @@ namespace GatekeepersProtocol.Game
                 return HatchBankRefuse("select intensity first");
             if (HatchBankStartBlocked)
             {
-                Log.Event("Demo", "hatch-bank refused — finish the terminal");
+                Log.Event("Demo", "bank refused — zone incomplete");
                 return false;
             }
 
@@ -110,6 +110,8 @@ namespace GatekeepersProtocol.Game
         /// dock offer queued behind it. A breached window ends the Run before this fires.</summary>
         void OnBankWindowSurvived()
         {
+            Log.Event("Demo", "bank window survived zone="
+                + FirstTerminal.ZoneOfWave(Sim != null ? Sim.CurrentWaveIndex : 1));
             BastionLayout layout = _layout;
             if (layout == null && _masterTerminal != null)
                 layout = _masterTerminal.Layout;

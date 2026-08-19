@@ -5,193 +5,17 @@ namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY command layer for ship-hub purchases: the ONLY path by which station UI
     /// mutates MetaState. Each command applies MetaUpgrades / WeaponWheel / EquipmentCatalog
-    /// arithmetic then persists via GameSession.</summary>
+    /// arithmetic then persists via GameSession. Split: the weapon commands (buy / wheel /
+    /// equip) live in ShipCommands.Weapons.cs — one catalog per file, same command surface.</summary>
     /// <remarks>Every refusal is logged with its reason — "I clicked BUY and nothing happened"
     /// has to be answerable from the log alone. Bastion code must never call EquipWeapon
     /// (criterion 4: Primary is fixed for the run).</remarks>
-    public static class ShipCommands
+    public static partial class ShipCommands
     {
         const string Tag = "ShipCommands";
 
-        /// <summary>Buy a catalog weapon for its def.cost. Cost 0 (MK-1) is a free purchase —
-        /// must not be treated as already-owned or not-for-sale. Auto-equips into the def's slot.</summary>
-        public static bool BuyWeapon(WeaponId id)
-        {
-            var m = GameSession.Meta;
-            if (m == null)
-            {
-                Log.Warn(Tag, $"BuyWeapon({id}) refused: no session loaded.");
-                return false;
-            }
-            if (id == WeaponId.None)
-            {
-                Log.Warn(Tag, "BuyWeapon(None) refused.");
-                return false;
-            }
-            if (!WeaponCatalog.IsAvailable(id))
-            {
-                Log.Event("Ship", $"tried to buy {WeaponCatalog.Def(id).displayName} — not available");
-                return false;
-            }
-            if (m.Owns(id))
-            {
-                Log.Event("Ship", $"tried to buy {WeaponCatalog.Def(id).displayName} — already owned");
-                return false;
-            }
-
-            var def = WeaponCatalog.Def(id);
-            long cost = def.cost;
-            // Cost 0 is affordable at BankedSalvage 0 — do NOT require SpendSalvage (it rejects <=0).
-            if (cost > 0)
-            {
-                if (m.BankedSalvage < cost)
-                {
-                    Log.Event("Ship",
-                        $"tried to buy {def.displayName} ({cost}) — {cost - m.BankedSalvage} salvage short");
-                    return false;
-                }
-                if (!m.SpendSalvage(cost))
-                {
-                    Log.Warn(Tag, $"BuyWeapon({id}) SpendSalvage failed despite precondition check.");
-                    return false;
-                }
-            }
-
-            m.SetOwned(id, true);
-            m.SetEquipped(id);
-            GameSession.Save();
-            Log.Event("Ship",
-                $"bought {def.displayName} for {cost} — equipped {def.slot}, banked {m.BankedSalvage} left track=weapon");
-            return true;
-        }
-
-        /// <summary>Buy one wheel purchase centred on <paramref name="centre"/> for an owned
-        /// weapon. Gated on UpgradesUnlocked. No unfocused purchase exists.</summary>
-        public static bool BuyWheelUpgrade(WeaponId id, WheelAttr centre)
-        {
-            var m = GameSession.Meta;
-            if (m == null)
-            {
-                Log.Warn(Tag, $"BuyWheelUpgrade({id},{centre}) refused: no session loaded.");
-                return false;
-            }
-            if (id == WeaponId.None || !m.Owns(id))
-            {
-                Log.Event("Ship", $"tried to wheel-up {id} — not owned");
-                return false;
-            }
-            if (!WeaponCatalog.IsAvailable(id))
-            {
-                Log.Event("Ship",
-                    $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — not available");
-                return false;
-            }
-            var ring = WeaponWheel.RingOf(id);
-            if (ring == null)
-            {
-                Log.Event("Ship",
-                    $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — no ring authored");
-                return false;
-            }
-            bool onRing = false;
-            for (int i = 0; i < ring.Length; i++)
-                if (ring[i] == centre) { onRing = true; break; }
-            if (!onRing)
-            {
-                Log.Event("Ship",
-                    $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — {centre} not on ring");
-                return false;
-            }
-            if (!WeaponWheel.SpokePurchasable(id, centre))
-            {
-                Log.Event("Ship",
-                    $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — " +
-                    $"{WeaponWheel.AttrLabel(centre)} is not purchasable on this weapon");
-                return false;
-            }
-            if (!MetaUpgrades.UpgradesUnlocked(m))
-            {
-                Log.Event("Ship",
-                    $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — locked until first death");
-                return false;
-            }
-
-            int tier = m.TierOf(id);
-            if (tier >= WeaponTier.MaxTier)
-            {
-                Log.Event("Ship",
-                    $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — already T{tier}");
-                return false;
-            }
-
-            long price = WeaponTier.Cost(WeaponCatalog.Def(id).slot, tier);
-            if (m.BankedSalvage < price)
-            {
-                Log.Event("Ship",
-                    $"tried to buy {WeaponCatalog.Def(id).displayName} {WeaponWheel.AttrLabel(centre)} " +
-                    $"({price}) — {price - m.BankedSalvage} salvage short");
-                return false;
-            }
-            if (!m.SpendSalvage(price))
-            {
-                Log.Warn(Tag, $"BuyWheelUpgrade({id}) SpendSalvage failed despite precondition check.");
-                return false;
-            }
-
-            m.AwardWheel(id, centre);
-            GameSession.Save();
-
-            // Neighbours that came along — ring distance 1 from centre.
-            int centreIndex = 0;
-            for (int i = 0; i < ring.Length; i++)
-                if (ring[i] == centre) { centreIndex = i; break; }
-            WheelAttr n0 = default, n1 = default;
-            int got = 0;
-            for (int i = 0; i < ring.Length; i++)
-            {
-                if (WeaponWheel.RingDistance(centreIndex, i, ring.Length) != 1) continue;
-                if (got == 0) n0 = ring[i];
-                else n1 = ring[i];
-                got++;
-            }
-
-            Log.Event("Ship",
-                $"bought {WeaponCatalog.Def(id).displayName} focus {WeaponWheel.AttrLabel(centre)} " +
-                $"(+{WeaponWheel.AttrLabel(n0)}, +{WeaponWheel.AttrLabel(n1)}) for {price} — " +
-                $"T{m.TierOf(id)}, banked {m.BankedSalvage} left track=weapon");
-            return true;
-        }
-
-        /// <summary>Equip an owned weapon into its own def.slot. Impossible into the wrong slot.
-        /// Ship / ARMORY only — never call from Bastion.</summary>
-        public static bool EquipWeapon(WeaponId id)
-        {
-            var m = GameSession.Meta;
-            if (m == null)
-            {
-                Log.Warn(Tag, $"EquipWeapon({id}) refused: no session loaded.");
-                return false;
-            }
-            if (id == WeaponId.None || !m.Owns(id))
-            {
-                Log.Event("Ship", $"tried to equip {id} — not owned");
-                return false;
-            }
-            if (!WeaponCatalog.IsAvailable(id))
-            {
-                Log.Event("Ship", $"tried to equip {WeaponCatalog.Def(id).displayName} — not available");
-                return false;
-            }
-
-            m.SetEquipped(id);
-            GameSession.Save();
-            var def = WeaponCatalog.Def(id);
-            Log.Event("Ship", $"equipped {def.displayName} in {def.slot}");
-            return true;
-        }
-
-        /// <summary>Buy the equipment slot once. Locked until first lost Run; costs
-        /// <see cref="EquipmentCatalog.SlotPrice"/>.</summary>
+        /// <summary>Buy the equipment slot once. Locked until salvage first banks through
+        /// the Hatch (UpgradesUnlocked); costs <see cref="EquipmentCatalog.SlotPrice"/>.</summary>
         public static bool BuyEquipmentSlot()
         {
             var m = GameSession.Meta;
@@ -207,7 +31,8 @@ namespace GatekeepersProtocol.Game
             }
             if (!MetaUpgrades.UpgradesUnlocked(m))
             {
-                Log.Event("Ship", "tried to buy equipment slot — locked until first lost Run");
+                Log.Event("Ship",
+                    "tried to buy equipment slot — locked until salvage banks through the Hatch");
                 return false;
             }
 
@@ -228,6 +53,7 @@ namespace GatekeepersProtocol.Game
             GameSession.Save();
             Log.Event("Ship",
                 $"equipment slot unlocked — purchased for {price}, banked {m.BankedSalvage} left");
+            DemoShipStanding.Reevaluate();
             return true;
         }
 
@@ -279,6 +105,7 @@ namespace GatekeepersProtocol.Game
             GameSession.Save();
             Log.Event("Ship",
                 $"bought {def.displayName} for {cost} — equipped, banked {m.BankedSalvage} left track=equipment");
+            DemoShipStanding.Reevaluate();
             return true;
         }
 
@@ -331,6 +158,7 @@ namespace GatekeepersProtocol.Game
             GameSession.Save();
             Log.Event("Ship",
                 $"bought {def.displayName} for {cost} — equipped in bay, banked {m.BankedSalvage} left track=equipment");
+            DemoShipStanding.Reevaluate();
             return true;
         }
 
@@ -371,6 +199,7 @@ namespace GatekeepersProtocol.Game
                 return false;
             GameSession.Save();
             Log.Event("Ship", "claimed " + BoarderProtocol.ProtocolName(id) + " track=crew");
+            DemoShipStanding.Reevaluate();
             return true;
         }
 
@@ -414,6 +243,7 @@ namespace GatekeepersProtocol.Game
                 GameSession.Save();
                 Log.Event("Ship",
                     $"bought {Label(track)} L{LevelOf(track)} for {price} — banked {m.BankedSalvage} left {TrackToken(track)}");
+                DemoShipStanding.Reevaluate();
             }
             else if (levelBefore >= MetaUpgrades.MaxLevel)
             {

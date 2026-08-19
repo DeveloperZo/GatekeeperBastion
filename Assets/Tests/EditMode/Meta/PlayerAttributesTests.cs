@@ -27,13 +27,19 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void WeaponTracks_StillGatedBehindFirstDeath()
+        public void WeaponTracks_GatedBehindFirstBank_NotBehindLoss()
         {
             var meta = new MetaState();
-            Assert.AreEqual(0, meta.PodEjections);
+            Assert.AreEqual(0, meta.HatchConversions);
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(meta));
             meta.PodEjections = 1;
-            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta));
+            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(meta),
+                "a loss is no longer a progression gate (re-key 2026-08-18): a player who "
+                + "banks and docks never ejects, and the wheel must open for them too");
+            meta.HatchConversions = 1;
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta),
+                "the wheel spends salvage that came through the Hatch, so it opens when "
+                + "salvage first comes through the Hatch");
         }
 
         [Test]

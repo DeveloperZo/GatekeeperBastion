@@ -209,29 +209,43 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0L, m.BankedSalvage);
         }
 
-        // ---- Upgrade gate: locked until the first death ----
+        // ---- Upgrade gate: locked until salvage first converts through the Hatch ----
+        // Re-keyed 2026-08-18 (Zo): the loss gate never fired for a player who banks and
+        // docks. Losing still opens the shop in practice, because the authored losses drip
+        // salvage home first — the DEATH is no longer the key, the CONVERT is.
 
         [Test]
-        public void UpgradesUnlocked_FalseAtZeroLostRuns_TrueFromFirstLostRun()
+        public void UpgradesUnlocked_FalseAtZeroConversions_TrueFromTheFirstBank()
         {
             var m = new MetaState();
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m), "fresh save: gate closed");
-            m.PodEjections = 1;
-            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m), "first death opens the shop");
             m.PodEjections = 7;
+            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m),
+                "losses alone open nothing — a player who banked nothing has nothing to spend");
+            m.HatchConversions = 1;
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m), "the first bank opens the shop");
+            m.HatchConversions = 7;
             Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m), "stays open");
         }
 
         [Test]
-        public void UpgradesUnlocked_OpensViaPlayerDownPath()
+        public void UpgradesUnlocked_OpensViaTheConvertPath_NotThePlayerDownPath()
         {
             var meta = MetaState.CreateNew();
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(meta));
             var sim = new RunSim(meta, 7);
             sim.StartRun();
             sim.EngageTether();
+            sim.TriggerDraw();
+            for (int i = 0; i < 24; i++) sim.AwardKill();
+            sim.NotifyAssaultCleared();
+            sim.TriggerDraw(WaveMode.HatchBank);
+            sim.Tick(2f); // a few drip units convert
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta),
+                "salvage through the Hatch is the unlock");
             sim.NotifyPlayerDown();
-            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta));
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta),
+                "the loss that follows changes nothing about it");
         }
 
         // ---- Persistence ----

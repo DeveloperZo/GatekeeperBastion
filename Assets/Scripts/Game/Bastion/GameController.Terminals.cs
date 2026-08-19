@@ -5,7 +5,7 @@ namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): field-terminal Wave start and clear.
     /// Split when the command surface landed and GameController.cs passed the 400-line cap —
-    /// same class, same state, one concern per file (EndScreen, DevCommands).</summary>
+    /// same class, same state, one concern per file (EndScreen, DevCommands, Retrigger).</summary>
     public sealed partial class GameController
     {
         /// <summary>Field terminal id waiting on the live Wave clear. Null when none pending.</summary>
@@ -50,12 +50,18 @@ namespace GatekeepersProtocol.Game
             var lookingTerminal = looking as BastionTerminal;
             var lookingHatch = looking as RepairInteractable;
             if (lookingTerminal == null || lookingTerminal.TerminalId != _armedTerminalId)
+            {
                 _armedTerminalId = null;
+                _armedRetrigger = false;
+                _retriggerPartial = false;
+            }
             if (lookingHatch == null)
                 _armedHatch = false;
 
             bool hatchStartable = lookingHatch != null && lookingHatch.OffersHatchBank;
-            bool terminalStartable = lookingTerminal != null && CanSelectTerminal(lookingTerminal);
+            var retriggerOffer = RetriggerOfferFor(lookingTerminal);
+            bool terminalStartable = !retriggerOffer.Available
+                && lookingTerminal != null && CanSelectTerminal(lookingTerminal);
 
             if (Controls.Down(ControlId.PullDraw))
             {
@@ -67,6 +73,17 @@ namespace GatekeepersProtocol.Game
                         return;
                     }
                     StartHatchBankWave();
+                    return;
+                }
+                if (retriggerOffer.Available)
+                {
+                    if (!_armedRetrigger || _armedTerminalId != lookingTerminal.TerminalId)
+                    {
+                        Log.Event("Terminal", lookingTerminal.TerminalId
+                            + " refused — select the retrigger first");
+                        return;
+                    }
+                    StartZoneRetrigger(lookingTerminal);
                     return;
                 }
                 if (terminalStartable)
@@ -92,6 +109,11 @@ namespace GatekeepersProtocol.Game
 
             if (Controls.Down(ControlId.Interact))
             {
+                if (retriggerOffer.Available)
+                {
+                    ToggleRetriggerSelect(lookingTerminal, retriggerOffer);
+                    return;
+                }
                 if (terminalStartable)
                 {
                     ToggleTerminalSelect(lookingTerminal);
@@ -108,6 +130,15 @@ namespace GatekeepersProtocol.Game
             if (Controls.Down(ControlId.DialUp)) delta = 1;
             else if (Controls.Down(ControlId.DialDown)) delta = -1;
             if (delta == 0) return;
+
+            if (_armedRetrigger && retriggerOffer.Available
+                && lookingTerminal != null && lookingTerminal.TerminalId == _armedTerminalId)
+            {
+                // While the retrigger is armed, +/- elects the start — juice has no seat
+                // in this Prep (intensity is selected with the arm, level as it stands).
+                ToggleRetriggerElection(lookingTerminal, retriggerOffer);
+                return;
+            }
 
             if (_armedHatch || !string.IsNullOrEmpty(_armedTerminalId))
             {
@@ -307,8 +338,20 @@ namespace GatekeepersProtocol.Game
             }
 
             Log.Event("Terminal", id + " wave " + k + "/" + n + " cleared");
+            // Per-zone deepest writes on field-Wave CLEAR, never on bank start (ruled at
+            // cut, Zo 2026-08-17). The composite retrigger's partial election and guest
+            // BankCap read it.
+            MetaState meta = Meta;
+            if (meta != null && meta.DemoActive && FirstTerminal.IsZoneOne(id))
+                meta.SetZoneDeepest(FirstTerminal.ZoneOneNumber, Sim.CurrentWaveIndex);
             if (layout.IsTerminalDone(id))
+            {
                 Log.Event("Terminal", id + " complete — wave cleared");
+                if (meta != null && meta.DemoActive && FirstTerminal.IsZoneOne(id)
+                    && layout.IsTerminalDone(FirstTerminal.Id)
+                    && layout.IsTerminalDone(FirstTerminal.SecondId))
+                    Log.Event("Demo", "zone terminals complete zone=" + FirstTerminal.ZoneOneNumber);
+            }
             ClearPendingTerminal();
         }
     }

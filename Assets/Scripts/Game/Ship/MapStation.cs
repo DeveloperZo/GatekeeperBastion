@@ -49,6 +49,24 @@ namespace GatekeepersProtocol.Game
         bool _refusedWeapon;
         bool _refusedIntruders;
 
+        // demo.embark_wave2 (id stale — Zo's rename call): first powered-NAV open while
+        // Docked after the first bank. No v9 flag carries it, so the latch is per session.
+        static bool s_returnLinePlayed;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
+        {
+            s_returnLinePlayed = false;
+        }
+
+        protected override void OnStationOpened(MetaState m)
+        {
+            if (m == null || !m.DemoActive) return;
+            if (m.HatchConversions < 1 || s_returnLinePlayed) return;
+            s_returnLinePlayed = true;
+            DemoVoice.PlayLocalAndBroadcast(DemoConversationIds.EmbarkWave2, DemoVoiceMode.Lock);
+        }
+
         protected override void Awake()
         {
             base.Awake();
@@ -105,12 +123,22 @@ namespace GatekeepersProtocol.Game
             }
 
             _body.BindPartyLobby(false, null, false, null, null);
-            _body.ShowStartWavePicker(true);
-            _body.SetStartWaveLine(StartWaveLine(_startWave, deepest));
-            _body.BindWaveControls(
-                $"  {_startWave}  ",
-                () => _startWave--, _startWave > 1,
-                () => _startWave++, _startWave < deepest);
+            if (m.DemoActive)
+            {
+                // Plain EMBARK while the demo runs: no picker, no stepper, no wave number —
+                // refight-avoidance lives at the terminal's retrigger, not at NAV (beat 4).
+                _startWave = 1;
+                _body.ShowStartWavePicker(false);
+            }
+            else
+            {
+                _body.ShowStartWavePicker(true);
+                _body.SetStartWaveLine(StartWaveLine(_startWave, deepest));
+                _body.BindWaveControls(
+                    $"  {_startWave}  ",
+                    () => _startWave--, _startWave > 1,
+                    () => _startWave++, _startWave < deepest);
+            }
 
             if (m.DemoActive && m.DemoShipFightDone)
             {
@@ -138,7 +166,10 @@ namespace GatekeepersProtocol.Game
             var avatar = NetPlayerAvatar.LocalOwner;
             bool ready = avatar != null && avatar.LobbyReady.Value;
 
-            if (lead && !counting)
+            if (m.DemoActive)
+                _startWave = 1; // plain EMBARK — the lead commits no wave choice (beat 4)
+
+            if (lead && !counting && !m.DemoActive)
             {
                 _body.ShowStartWavePicker(true);
                 _body.SetStartWaveLine(StartWaveLine(_startWave, deepest));
@@ -160,11 +191,16 @@ namespace GatekeepersProtocol.Game
             {
                 countdown = "EMBARK in " + lobby.CountdownRemaining.Value.ToString("0.0") + "s";
                 // Premise carries countdown so guests see it without an authored _countdownLine.
-                _body.SetPremise("Start wave " + leadWave + " — " + countdown);
+                // While the demo runs no wave number renders anywhere on this panel.
+                _body.SetPremise(m.DemoActive
+                    ? countdown
+                    : "Start wave " + leadWave + " — " + countdown);
             }
             else if (!lead)
             {
-                _body.SetPremise("Party lead embarks — start wave " + leadWave + ".");
+                _body.SetPremise(m.DemoActive
+                    ? "Party lead embarks."
+                    : "Party lead embarks — start wave " + leadWave + ".");
             }
 
             _body.ShowWarnings(!m.OwnsAnyWeapon, !m.HasRepairRigEquipped,

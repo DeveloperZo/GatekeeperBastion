@@ -130,6 +130,15 @@ namespace GatekeepersProtocol.Game
                     return "Terminal " + terminalId + " — wave live";
                 if (gc != null && gc.Sim != null && gc.Sim.SequentialPending)
                     return "Terminal " + terminalId + " — next Wave incoming";
+                if (gc != null)
+                {
+                    // The zone's deepest terminal remembers the zone: composite by default,
+                    // partial start electable (beat 4). Checked before the block reason —
+                    // the T1-first rule is exactly what the retrigger supersedes post-loss.
+                    DemoRetriggerOffer offer = gc.RetriggerOfferFor(this);
+                    if (offer.Available)
+                        return RetriggerPrompt(gc, offer, key, startKey, plus, minus);
+                }
                 string blocked = gc != null ? gc.FieldStartBlockReason(terminalId) : null;
                 if (blocked != null)
                     return "Terminal " + terminalId + " — " + blocked;
@@ -150,6 +159,43 @@ namespace GatekeepersProtocol.Game
                 s_prompt.Append("  [").Append(key).Append(armed ? "] edit" : "] select");
                 return s_prompt.ToString();
             }
+        }
+
+        /// <summary>Retrigger offer rows (copy draft — Zo, beat 4): the elected row leads
+        /// with the start key; +/- swaps the election; E selects or edits.</summary>
+        string RetriggerPrompt(GameController gc, DemoRetriggerOffer offer,
+            string key, string startKey, string plus, string minus)
+        {
+            bool armed = gc.IsWaveStartArmed(terminalId);
+            bool partial = gc.RetriggerPartialElected;
+            s_prompt.Clear();
+            if (!armed)
+            {
+                s_prompt.Append('[').Append(key).Append("] Terminal ").Append(terminalId)
+                    .Append(" — RESTART ZONE (").Append(offer.WavesFrom(offer.CompositeStart))
+                    .Append(" waves) — select");
+                return s_prompt.ToString();
+            }
+
+            int start = partial ? offer.PartialStart : offer.CompositeStart;
+            s_prompt.Append('[').Append(startKey).Append("] ");
+            if (partial)
+                s_prompt.Append("START AT WAVE ").Append(start)
+                    .Append(" — ").Append(offer.WavesFrom(start))
+                    .Append(offer.WavesFrom(start) == 1 ? " wave" : " waves");
+            else
+                s_prompt.Append("RESTART ZONE — ").Append(offer.WavesFrom(start))
+                    .Append(" waves");
+            if (offer.PartialAvailable)
+            {
+                s_prompt.Append("  [").Append(plus).Append('/').Append(minus).Append("] ");
+                s_prompt.Append(partial
+                    ? "RESTART ZONE"
+                    : "START AT WAVE ");
+                if (!partial) s_prompt.Append(offer.PartialStart);
+            }
+            s_prompt.Append("  [").Append(key).Append("] edit");
+            return s_prompt.ToString();
         }
 
         static void AppendStake(StringBuilder sb, GameController gc)

@@ -1,9 +1,11 @@
 # M88 — The Gatekeepers are machines
 
 <!--
-Status: pack de-magentaed and configuration landed; needs a scene build to take effect
-Update trigger: when the robot ShaderGraph gains a Built-In target, when a scene
-build re-dresses the wrappers, or when a kind's model changes
+Status: completed
+Closed on: 2026-08-19 (Zo). Play criteria 3–5 stamped by the close request;
+criteria 1, 2 and 6 are the prefab re-dress and scene-build log — treated as
+landed with the close (wrappers name robot mesh guids; build log not attached).
+Update trigger: never — shipped milestones are a record. Corrections only.
 Last updated: 2026-08-19
 -->
 
@@ -113,9 +115,10 @@ copies of the three vendor materials carrying the kind palette tint in both
 `_EmissionColor` and `_EmissiveColor`, so the tint survives whichever spelling a
 future shader uses — the same reason `EnsureWrapperEmission` writes all three.
 
-**Still not landed. Until step 1 runs, Hunter and Ram are mid-swap: their
-wrappers still hold Synty meshes and now wear the robot materials, so they will
-look wrong. Run the build before judging them.**
+**Still not landed at write time; closed as done on Zo's 2026-08-19 request.**
+Until a scene build ran, Hunter and Ram were mid-swap. Criterion 1 on disk after
+close names robot mesh guids on the three wrappers; the scene-build console line
+(criterion 6) was not attached to this file.
 
 1. Run a scene build. `EnsureWrapper` re-dresses Hunter and Ram from the robot
    prefabs — this is the step that actually swaps the two meshes, and nothing

@@ -47,7 +47,8 @@ boss (blocked on M80's inputs).
 
 | Clip | Status | Notes |
 |---|---|---|
-| Idle / walk | have, borrowed | Reuses the player's idle and walk clips. Whether kinds get distinct locomotion is Zo's call; from M88 the kinds differ by robot model rather than by material tint. |
+| Idle | have, borrowed | Reuses the player's idle clip (the wired 0-threshold motion is `Anim_FiringRifle`, byte-identical to it). Whether kinds get a distinct idle is Zo's call; from M88 the kinds differ by robot model rather than by material tint. |
+| Walk | have | `Anim_walking_slow_big` wired at the blend tree's 0.5 threshold 2026-08-19, replacing the borrowed player walk (`Anim_Walking`, byte-identical to the run clip, so walk read as a jog). Same SK_UtilityBot download route as Running. Shared controller: changes every Gatekeeper and ship-intruder walk, plus the probe's player body. Not yet seen in play. |
 | Run | have | `Running.fbx` (2026-08-18): downloaded on the uploaded SK_UtilityBot character with its ARP rig intact, zero retarget; wired at the blend tree's 1.0 threshold. `Running_not_in_place` kept as the unwired root-motion twin. Not yet seen in play. |
 | Attack | have | `Anim_attack_melee` on the Attack state (exit 0.9); fitted 2026-08-19 to the second slash of the 3.5s download (0.53s, done ~0.56s inside the 0.7s interval). M81 closed 2026-08-19 (Zo). Code fires Attack (EnemyGatekeeper, ShipIntruder). Per-kind variants deferred until a kind gains distinct attack behavior. |
 | Hit reaction | planned | Milestone: M84 — masked upper-body flinch layer; the hook rides the existing `Damaged` aggro subscription (ShipIntruder gains one). |

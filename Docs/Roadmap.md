@@ -29,9 +29,10 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-Active **M88**. **M81** and **M87** completed 2026-08-19 (Zo close). **M76**
-completed 2026-08-18 (Zo close; juice teach deferred — TH-9; zone-deepest /
-survive-log / Docked voice residue TH-10–TH-12).
+Active **none**. **M88** completed 2026-08-19 (Zo close). **M81** and **M87**
+completed 2026-08-19 (Zo close). **M76** completed 2026-08-18 (Zo close; juice
+teach deferred — TH-9; zone-deepest / survive-log / Docked voice residue
+TH-10–TH-12).
 **M75** closed 2026-08-18 on Zo's beat 0 playthrough through to the Bastion;
 criteria 2 to 7 were not separately observed and are owed as `Tech-Hygiene.md`
 rows TH-1 to TH-6. Survive path (door unlock on bank success, Ship return) is
@@ -54,17 +55,15 @@ finale-access ruling — the file names both.
 
 **Recommended next**, in this order.
 
-1. **M88** — three robot bodies on the Gatekeeper kinds (pack de-magentaed;
-   scene build still owed).
-2. **M77 play stamp** — Docked return is built; criteria 1/4/5/6/7/8 need Play
+1. **M77 play stamp** — Docked return is built; criteria 1/4/5/6/7/8 need Play
    (TH-9–TH-14).
-3. **M66** — hit confirm, per-kind tells, distinct players at lane range.
-4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
+2. **M66** — hit confirm, per-kind tells, distinct players at lane range.
+3. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14, M55 juice unused,
    M71 Regen Surge mag, M64 criteria 13–25 dry-run, M69 criterion 4, M73 criterion 6,
    M76 TH-9–TH-12. Next-Run list: `GatekeeperZo Notes/verification.md`.
 
-Planned count is **11** (cap 10 — one over; stop generating). Active **1** (cap 3).
+Planned count is **11** (cap 10 — one over; stop generating). Active **0** (cap 3).
 
 ## Order
 
@@ -158,7 +157,7 @@ this table — see the change log.
 | M85 | The collapse under the burst | later | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail, so a corpse never delays a wave clear; co-op carrier named as the open question | [`1. planned/M85`](Milestones/1.%20planned/M85-the-collapse-under-the-burst.md) |
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
 | M87 | A bought body in an hour | completed, Aug 2026 | Utility Bot on the pack's Built-In Shader Graph in the Ship; graduation test passed 2026-08-18; Zo close 2026-08-19 (criterion 6 elapsed time unrecorded) | [`3. completed/M87`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md) |
-| M88 | The Gatekeepers are machines | active | One FaxLab3D robot per Gatekeeper kind — silhouette tells the kind, on the pack's own Built-In Shader Graph (no conversion, per M87). Kind materials copy the vendor three and carry the palette tint; scene build still owed to re-dress Hunter and Ram | [`2. active/M88`](Milestones/2.%20active/M88-the-gatekeepers-are-machines.md) |
+| M88 | The Gatekeepers are machines | completed, Aug 2026 | One FaxLab3D robot per Gatekeeper kind — silhouette tells the kind, on the pack's Built-In Shader Graph. Zo close 2026-08-19 | [`3. completed/M88`](Milestones/3.%20completed/M88-the-gatekeepers-are-machines.md) |
 
 ## Strategy
 

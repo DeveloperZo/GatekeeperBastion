@@ -44,6 +44,8 @@ namespace UnityEngine
         public static bool GetMouseButton(int button) => false;
         public static bool anyKeyDown => false;
         public static Vector2 mouseScrollDelta => new Vector2(0f, 0f);
+        // Vector2 where the engine has Vector3: Controls.Sample reads only .x/.y via var.
+        public static Vector2 mousePosition => new Vector2(0f, 0f);
     }
 
     /// <summary>Frozen clock for the same reason: the generator never advances a frame.</summary>

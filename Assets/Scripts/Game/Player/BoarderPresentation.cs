@@ -11,6 +11,11 @@ namespace GatekeepersProtocol.Game
         [SerializeField] Camera _localCamera;
         [SerializeField] Renderer[] _bodyRenderers;
 
+        [SerializeField, OptionalBinding, Tooltip("Isometric rig (Ship probe). When wired, the " +
+            "body must stay visible to that camera: the skins keep their authored layer and no " +
+            "camera mask is edited. Null means first-person behavior, unchanged.")]
+        IsometricCameraRig _isoRig;
+
         FirstPersonController _fpc;
         int _headLayer = -1;
         bool _hiddenForPanel;
@@ -21,10 +26,14 @@ namespace GatekeepersProtocol.Game
             if (_localCamera == null && _fpc != null && _fpc.cameraTransform != null)
                 _localCamera = _fpc.cameraTransform.GetComponent<Camera>();
             _headLayer = LayerMask.NameToLayer(WeaponView.LocalHeadLayer);
+            // Iso scenes SHOW the local body: skins keep their authored layer and no camera
+            // mask is touched (presence of the rig reference is the gate — enabled state can
+            // settle after this Awake, and the layer move is a one-shot either way).
+            bool isoBody = _isoRig != null;
             // Unity culls by the renderer's GameObject layer, not bone layers. This
             // astronaut is one SkinnedMeshRenderer (Mesh1); putting mixamorig:Head on
             // LocalHead left the helmet in the local camera.
-            if (_headLayer >= 0)
+            if (_headLayer >= 0 && !isoBody)
             {
                 SkinnedMeshRenderer[] skins = GetComponentsInChildren<SkinnedMeshRenderer>(true);
                 for (int i = 0; i < skins.Length; i++)
@@ -33,7 +42,7 @@ namespace GatekeepersProtocol.Game
                     skins[i].gameObject.layer = _headLayer;
                 }
             }
-            if (_localCamera != null && _headLayer >= 0)
+            if (_localCamera != null && _headLayer >= 0 && !isoBody)
                 _localCamera.cullingMask &= ~(1 << _headLayer);
             if (_bodyRenderers == null || _bodyRenderers.Length == 0)
                 _bodyRenderers = CollectBodyRenderers();

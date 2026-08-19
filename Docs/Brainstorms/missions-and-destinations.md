@@ -54,6 +54,48 @@ The console restructure, opt-in loot delivery, “a reason the bastion is a plac
 
 ## Ideas
 
+### The bank window happens on your ship (Zo, 2026-08-18)
+
+**The Hatch is a placeholder for where the defense happens.** Today a Hatch-bank
+Wave is defended at the Hatch, inside the bastion. The idea is that it eventually
+happens **aboard the player's own ship**: you deliver, and what comes for the
+salvage boards you.
+
+Why it is worth taking seriously. The Hatch is only the umbilical; the thing
+actually being defended is the ship the salvage is going to, so defending the
+door is one indirection away from defending the thing. It also inverts the
+premise cleanly — you board a held vessel, and delivering is what invites them
+aboard yours. And it gives the Ship a reason to be a place. Right now it is four
+stations and a walk; if it can be attacked, where those stations sit becomes level
+design, and anything the player builds there is worth building because it persists
+across Runs rather than being abandoned with the bastion.
+
+That last part is the strongest pull: it is the first home base in the design.
+`M56`'s turret and the decoys are currently spent on a space you leave. On the
+ship they would accumulate, which is much closer to the emplacement fantasy than
+placing a turret in someone else's corridor.
+
+**Open, and each one is real work rather than a detail:**
+
+- The Ship is host-local in co-op (`M51`). A defended ship has to be shared, and
+  that is a session-layer change, not a scene change.
+- Scale. The Ship is a small plus; a wave arriving there is a different fight
+  from a wave crossing a bastion, and it may want its own composition rather than
+  the bastion's.
+- What losing it costs. Losing the bank, losing the Run, or damaging something
+  that persists are three different games.
+- Whether it replaces the Hatch-bank window or sits after it. Replacing keeps one
+  defended moment per delivery; adding makes every delivery two fights.
+
+**Graduation test:** the Hatch-bank window has been played enough to say what it
+is for. If the answer is "a fight you have while a number goes up", moving it to
+the ship changes only the backdrop and is not worth the session-layer cost. If the
+answer is "the moment the Run's stake is decided", it belongs where the stake
+lives.
+
+**Kill it if** a played session shows the Ship works better as the one place
+nothing can reach you. Somewhere safe is a design position, not an absence of one.
+
 ### Destinations that differ
 More than one bastion, differing in something other than difficulty — layout, hazard,
 composition, what Master Control pays. Needs M54; two identical rooms is not a choice.

@@ -36,6 +36,11 @@ namespace GatekeepersProtocol.Game
         [SerializeField] float range = 45f;
         [SerializeField] float tracerWidth = 0.030f;
 
+        [SerializeField, OptionalBinding, Tooltip("Isometric rig (Ship probe). While wired and " +
+            "enabled, aim is unit-level off the cursor ray and fire does not require cursor " +
+            "lock; null or disabled means first-person behavior, unchanged.")]
+        IsometricCameraRig _isoRig;
+
         struct SlotState
         {
             public bool configured;
@@ -98,6 +103,9 @@ namespace GatekeepersProtocol.Game
                 return s.wheelPoints[(int)WheelAttr.Ability];
             }
         }
+
+        /// <summary>True while the isometric rig owns aim: cursor-ray targeting, no cursor lock.</summary>
+        bool IsoAimActive => _isoRig != null && _isoRig.isActiveAndEnabled;
 
         /// <summary>True while Railshot is armed and has not lapsed.</summary>
         public bool RailshotArmed =>
@@ -408,7 +416,8 @@ namespace GatekeepersProtocol.Game
             if (_owner != null && _owner.IsDead)
                 return Refuse("the player is down", false);
 
-            if (Cursor.lockState != CursorLockMode.Locked)
+            // Iso aim is cursor-driven, so a free cursor is the working state there.
+            if (Cursor.lockState != CursorLockMode.Locked && !IsoAimActive)
                 return Refuse("the cursor is not captured — left-click once to recapture it", true);
 
             _lastRefusal = null;

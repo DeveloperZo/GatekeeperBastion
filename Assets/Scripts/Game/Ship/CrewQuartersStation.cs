@@ -20,6 +20,9 @@ namespace GatekeepersProtocol.Game
 
         bool _showingSheet;
         int _selected;
+        // demo.crew_claim plays on the first panel open of a visit while the Default is
+        // unclaimed (instance lifetime is the visit; the claim itself retires the line).
+        bool _claimLinePlayed;
 
         public override string StationName => "CREW QUARTERS";
         public const string PurposeLine = "you";
@@ -38,6 +41,15 @@ namespace GatekeepersProtocol.Game
         {
             _showingSheet = false;
             _selected = 0;
+            if (meta == null || !meta.DemoActive) return;
+            // The menu unlocking folds the beat 0 heal in — CREW keeps restoring health
+            // on a visit for the rest of the demo (beat 4, Traps).
+            DemoStationGate.HealOnVisit(meta);
+            if (!_claimLinePlayed && meta.EquippedProtocol == BoarderProtocolId.None)
+            {
+                _claimLinePlayed = true;
+                DemoVoice.Play(DemoConversationIds.CrewClaim, DemoVoiceMode.Lock);
+            }
         }
 
         public override bool TryBack()

@@ -8,10 +8,12 @@ namespace GatekeepersProtocol.Game
     /// <summary>LOCAL-OWNER: Ship-hub scene controller — guarantees a loaded GameSession
     /// (direct-play fallback), owns cursor/movement while station panels are open, and is the
     /// sole Esc dispatcher for the Ship (Escape contract).</summary>
-    /// <remarks>Cursor lock is load-bearing: Interactor refuses to raycast unless
-    /// Cursor.lockState == Locked, so a missed lock means nothing in the ship is usable.
-    /// SetWalkMode therefore always sets the cursor itself (even with no player rig found)
-    /// and re-asserts once if the rig registers after Start.</remarks>
+    /// <remarks>Cursor lock is load-bearing in first person: Interactor refuses to raycast
+    /// unless Cursor.lockState == Locked, so a missed lock means nothing in the ship is
+    /// usable. SetWalkMode therefore always sets the cursor itself (even with no player rig
+    /// found) and re-asserts once if the rig registers after Start. With the isometric rig
+    /// active the invariant flips: walking must leave the cursor FREE (cursor-driven aim),
+    /// and Interactor accepts the free cursor there.</remarks>
     public sealed class ShipController : MonoBehaviour
     {
         const string Tag = "ShipController";
@@ -26,6 +28,12 @@ namespace GatekeepersProtocol.Game
         [SerializeField, OptionalBinding] GameObject _embarkPauseButton;
         [SerializeField, OptionalBinding, Tooltip("Authored CompendiumView on the Ship pause shell.")]
         CompendiumView _compendium;
+
+        [SerializeField, OptionalBinding, Tooltip("Isometric rig (Ship probe). While wired and " +
+            "enabled, walk mode leaves the cursor free (aim and interact are cursor-driven) and " +
+            "station targeting uses the cursor ray; null or disabled means first-person " +
+            "behavior, unchanged.")]
+        IsometricCameraRig _isoRig;
 
         /// <summary>The station panel currently open, or null while walking.</summary>
         public StationTerminal OpenStation { get; private set; }
@@ -151,9 +159,28 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Camera-forward ray, same range as <see cref="Interactor"/> — self-contained
         /// so open does not depend on Interactor script order. The ray comes from the local
-        /// rig's authored camera wire, never a scene-wide camera lookup.</summary>
-        static StationTerminal ResolveTargetedStation()
+        /// rig's authored camera wire, never a scene-wide camera lookup. Iso mode targets the
+        /// console under the cursor instead, still requiring the player within InteractRange.</summary>
+        StationTerminal ResolveTargetedStation()
         {
+            if (_isoRig != null && _isoRig.isActiveAndEnabled)
+            {
+                var local = PlayerRegistry.Local;
+                if (local == null) return null;
+                // Pointer comes from the input producer's frame, never an ambient engine poll.
+                var frame = Controls.Sample();
+                Ray ray = _isoRig.ScreenRay(new Vector3(frame.pointerX, frame.pointerY, 0f));
+                // Cursor ray starts at the camera, FollowDistance back — cast long, then
+                // keep the walk-up contract by distance from the player, not the camera.
+                if (!Physics.Raycast(ray, out RaycastHit cursorHit,
+                        ShipCamera.FollowDistance * 2f))
+                    return null;
+                if ((cursorHit.point - local.transform.position).sqrMagnitude
+                        > InteractRange * InteractRange)
+                    return null;
+                return cursorHit.collider.GetComponentInParent<StationTerminal>();
+            }
+
             var fpc = FindLocalController();
             var cam = fpc != null ? fpc.cameraTransform : null;
             if (cam == null) return null;
@@ -324,14 +351,16 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Push the current mode onto the rig. The cursor is set unconditionally —
-        /// the FirstPersonController path is an optimisation, not a prerequisite.</summary>
+        /// the FirstPersonController path is an optimisation, not a prerequisite. Iso mode
+        /// never locks: the OS cursor is the aim point, walking or not.</summary>
         void ApplyWalkMode()
         {
             if (_fpc == null) _fpc = FindLocalController();
+            bool lockCursor = _walking && !(_isoRig != null && _isoRig.isActiveAndEnabled);
             if (_fpc != null)
             {
                 _fpc.MovementLocked = !_walking;
-                _fpc.SetCursorLock(_walking);
+                _fpc.SetCursorLock(lockCursor);
                 return;
             }
             if (!_warnedNoRig)
@@ -339,8 +368,8 @@ namespace GatekeepersProtocol.Game
                 _warnedNoRig = true;
                 Log.Warn(Tag, "No FirstPersonController found; locking the cursor directly.");
             }
-            Cursor.lockState = _walking ? CursorLockMode.Locked : CursorLockMode.None;
-            Cursor.visible = !_walking;
+            Cursor.lockState = lockCursor ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !lockCursor;
         }
 
         /// <summary>Registry only (the sanctioned lookup); the bind window in Update retries

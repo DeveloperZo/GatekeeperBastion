@@ -26,6 +26,11 @@ namespace GatekeepersProtocol.Game
         public const string PurposeLine = "the weapon in your hands";
         public override string Purpose => PurposeLine;
         public const string TransferLine = "Upgrades stay on this weapon.";
+        /// <summary>Deal-line suffix at the demo cap (beat 3, step 3 panel copy).</summary>
+        public const string DemoCapLine = "two purchases this demo — NAV is ready";
+
+        // demo.wheel_cap plays once per Ship visit (instance lifetime is the visit).
+        bool _capLinePlayed;
 
         protected override string PromptHint =>
             GameSession.Meta != null && !GameSession.Meta.OwnsAnyWeapon
@@ -78,6 +83,7 @@ namespace GatekeepersProtocol.Game
                 h = h * 397 ^ (int)eq;
                 if (eq != WeaponId.None) h = h * 397 ^ _centreIndexByWeapon[(int)eq];
                 h = h * 397 ^ (m.OwnsAnyWeapon ? 1 : 0);
+                h = h * 397 ^ m.DemoWheelBuysLeft;
                 return h;
             }
         }
@@ -87,7 +93,7 @@ namespace GatekeepersProtocol.Game
             _wheelDirty = false;
             if (_body == null) return;
 
-            view.SetDeal(TransferLine);
+            view.SetDeal(m.DemoActive ? TransferLine + "  ·  " + DemoDealSuffix(m) : TransferLine);
 
             _body.BindSlotButtons(
                 _viewSlot == WeaponSlot.Primary ? "[ PRIMARY ]" : "  Primary  ",
@@ -146,7 +152,9 @@ namespace GatekeepersProtocol.Game
                 _wheelDirty = true;
             });
 
-            string locked = MetaUpgrades.UpgradesUnlocked(m) ? null : "LOCKED — survive a death first";
+            string locked = MetaUpgrades.UpgradesUnlocked(m)
+                ? null
+                : "LOCKED — bank salvage through the Hatch first";
             BuildWheel(view, m, equipped, locked);
         }
 
@@ -200,7 +208,23 @@ namespace GatekeepersProtocol.Game
             wheel.Configure(
                 display,
                 idx => _centreIndexByWeapon[wi] = idx,
-                () => ShipCommands.BuyWheelUpgrade(display.Weapon, display.BuyAttr));
+                () => TryBuyFromWheel(display.Weapon, display.BuyAttr));
+        }
+
+        /// <summary>Wheel BUY click. A click at the demo cap is the beat's third-buy
+        /// attempt: ShipCommands logs the named refuse; the line plays once per visit and
+        /// no longer produces the standing — that key is state (DemoShipStanding).</summary>
+        void TryBuyFromWheel(WeaponId id, WheelAttr centre)
+        {
+            var m = GameSession.Meta;
+            bool atCap = m != null && m.DemoActive && m.DemoWheelBuysLeft <= 0;
+            bool bought = ShipCommands.BuyWheelUpgrade(id, centre);
+            if (!bought && atCap && !_capLinePlayed)
+            {
+                _capLinePlayed = true;
+                DemoVoice.Play(DemoConversationIds.WheelCap, DemoVoiceMode.Lock);
+            }
+            _wheelDirty = true;
         }
 
         void BindCatalog(MetaState m, WeaponId equippedInSlot)
@@ -322,6 +346,14 @@ namespace GatekeepersProtocol.Game
             }
 
             return d;
+        }
+
+        /// <summary>Remaining demo buys on the deal line (beat 3: wheel rows show them).</summary>
+        static string DemoDealSuffix(MetaState m)
+        {
+            int left = m.DemoWheelBuysLeft;
+            if (left <= 0) return DemoCapLine;
+            return left == 1 ? "1 demo purchase left" : left + " demo purchases left";
         }
 
         static string ShortLabel(WheelAttr a)

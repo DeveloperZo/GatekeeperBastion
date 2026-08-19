@@ -100,7 +100,7 @@ namespace GatekeepersProtocol.Game
                     if (prep && unbanked > 0L && (slots < 0 || slots > 0))
                     {
                         if (gc.HatchBankStartBlocked)
-                            return "Hatch-bank — finish the terminal";
+                            return "Hatch-bank — finish the zone";
                         string e = Controls.DisplayOf(ControlId.Interact);
                         bool armed = gc != null && gc.IsHatchBankArmed;
                         s_prompt.Clear();

@@ -143,6 +143,14 @@ namespace GatekeepersProtocol.Game
             DemoShipFight.SetStanding("Start the ship terminal");
         }
 
+        /// <summary>CREW restores health on a visit for the rest of the demo — the panel
+        /// unlocking folds the heal in, never drops it (beat 4). CrewQuartersStation calls
+        /// this on open once the menu is live; the heal-only tap above calls it too.</summary>
+        public static void HealOnVisit(MetaState m)
+        {
+            Heal(m);
+        }
+
         static void Heal(MetaState m)
         {
             var player = PlayerRegistry.Local;
@@ -152,7 +160,9 @@ namespace GatekeepersProtocol.Game
             player.HealToFull();
             Log.Event(Tag, "CREW heal hp=" + before.ToString("0") + "→"
                 + player.MaxHp.ToString("0"));
-            if (m.DemoShipFightDone)
+            // Post-first-bank the standing is state-keyed (DemoShipStanding); only the
+            // beat 0 visit answers a heal with the EMBARK standing directly.
+            if (m.DemoShipFightDone && m.HatchConversions < 1)
                 DemoShipFight.SetStanding("EMBARK from the NAV MAP");
         }
     }

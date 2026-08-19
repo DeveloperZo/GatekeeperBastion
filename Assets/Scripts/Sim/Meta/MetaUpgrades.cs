@@ -57,12 +57,15 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>
         /// True once weapon Tier purchases and the equipment slot are unlocked — gated until
-        /// the first death. Buying a weapon itself is NOT gated.
+        /// salvage first converts through the Hatch. The wheel spends salvage that came
+        /// through the Hatch, so it opens on that event, whether the Run then ended Lost or
+        /// Returned (re-key 2026-08-18 Zo — was PodEjections >= 1, which never fired for a
+        /// player who banks and docks; Docs/Decisions.md). Buying a weapon itself is NOT gated.
         /// </summary>
         public static bool UpgradesUnlocked(MetaState m)
         {
             if (m == null) throw new ArgumentNullException("m");
-            return m.PodEjections >= 1;
+            return m.HatchConversions >= 1;
         }
 
         // ---- FABRICATION ----

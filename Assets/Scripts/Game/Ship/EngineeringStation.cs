@@ -64,7 +64,7 @@ namespace GatekeepersProtocol.Game
             {
                 // No BUY control — putting the lock line on the Shift button overlapped
                 // "Equipment Slot" / "locked slot" in the row.
-                row.Bind("Equipment Slot", "", "locked", "unlocks after first lost Run",
+                row.Bind("Equipment Slot", "", "locked", "unlocks after the first bank",
                     null, null, false);
                 return;
             }

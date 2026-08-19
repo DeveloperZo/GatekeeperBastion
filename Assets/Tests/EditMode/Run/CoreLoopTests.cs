@@ -101,7 +101,9 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0L, sim.Unbanked);
             Assert.AreEqual(1, meta.PodEjections);
             Assert.AreEqual(0, meta.CleanExits, "a death is not a clean exit");
-            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta), "the first death opens the shop");
+            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(meta),
+                "nothing converted this run — the shop keys on the first bank, not the death "
+                + "(re-key 2026-08-18)");
 
             // --- persistence: exactly the JSON SaveService round-trips ---
             MetaState loaded = MetaState.FromJson(meta.ToJson());

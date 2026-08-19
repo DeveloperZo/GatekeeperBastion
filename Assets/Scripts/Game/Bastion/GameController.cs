@@ -206,6 +206,9 @@ namespace GatekeepersProtocol.Game
                 $"{LoadoutSummary(Meta)}, " +
                 $"{Meta.BankedSalvage} banked, hatch {Sim.Ship.Hatch.MaxHp:0}hp " +
                 $"{RunBeginsFields(Meta, Sim.StartWave)}; seed {Run.Sim.Seed}");
+            // NAV offered no wave choice: refight-avoidance is the terminal's retrigger.
+            if (Meta.DemoActive)
+                Log.Event("Demo", "embark plain");
         }
 
         /// <summary>
@@ -506,6 +509,7 @@ namespace GatekeepersProtocol.Game
             if (IsTerminal(phase))
             {
                 ClearPendingTerminal();
+                ClearPendingRetrigger();
                 EnterTerminalPhase(phase); // GameController.EndScreen.cs
             }
         }
@@ -527,6 +531,7 @@ namespace GatekeepersProtocol.Game
             if (Sim.Mode == WaveMode.HatchBank && _spawner != null)
                 _spawner.DespawnAllLive();
             RecordPendingTerminalClear();
+            RecordRetriggerClear();
             if (Sim.MasterPhase == MasterControlPhase.Hatch && Sim.Phase == RunPhase.Tethered)
             {
                 if (_hatchBankLayout != null)

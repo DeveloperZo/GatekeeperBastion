@@ -1,3 +1,5 @@
+using GatekeepersProtocol.Util;
+
 namespace GatekeepersProtocol.Sim
 {
     /// <summary>Hatch-bank convert into per-slot piles. Cap is cumulative across the window
@@ -34,6 +36,36 @@ namespace GatekeepersProtocol.Sim
             _withdrawAcc = 0f;
         }
 
+        /// <summary>Returned only: each slot keeps <see cref="HatchBank.ReturnedKeepShare"/>
+        /// of its leftover Unbanked before the wipe — surviving pays a little, and only a
+        /// little (Docs/Decisions.md); Lost still wipes it all. Runs before WipeUnbanked so
+        /// the share reads the pile the player carried home; no bank cap and no carry
+        /// multiplier — this is a rebate, not a conversion, and it does not count toward
+        /// HatchConversions (the survived window already did).</summary>
+        void KeepReturnedShare()
+        {
+            int n = PlayerCount;
+            long kept = 0L;
+            for (int i = 0; i < n; i++)
+            {
+                long share = HatchBank.ReturnedKeep(_wallets.Of(i));
+                if (share <= 0L) continue;
+                kept += share;
+                Salvage.Earn(share);
+                if (i == 0)
+                {
+                    _meta.EarnSalvage(share);
+                    continue;
+                }
+                var handler = GuestConverted;
+                if (handler != null) handler(i, share);
+            }
+            if (kept > 0L)
+                Log.Info(Tag, "returned — kept " + kept + " of unbanked ("
+                    + HatchBank.ReturnedKeepShare.ToString("0.00",
+                        System.Globalization.CultureInfo.InvariantCulture) + " share)");
+        }
+
         void CreditTaken(long[] taken)
         {
             if (taken == null) return;
@@ -57,6 +89,11 @@ namespace GatekeepersProtocol.Sim
                 if (credited > room) credited = room;
             }
             if (credited <= 0L) return;
+            // Salvage is coming through the Hatch: the first credit of a window counts it.
+            // This is the wheel / equipment-slot unlock event (MetaUpgrades.UpgradesUnlocked).
+            // Guests count their own on the seat that applies CreditBanked (NetPlayerAvatar).
+            if (slot == 0 && _convertedThisBank[0] == 0L)
+                _meta.HatchConversions++;
             _convertedThisBank[slot] += credited;
             Salvage.Earn(credited);
             if (slot == 0)

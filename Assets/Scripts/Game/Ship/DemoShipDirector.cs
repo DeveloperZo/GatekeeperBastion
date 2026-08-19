@@ -123,7 +123,31 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
+            if (m.HatchConversions >= 1)
+            {
+                ResolveFirstReturn(m);
+                return;
+            }
+
             DemoShipFight.SetStanding("EMBARK from the NAV MAP");
+        }
+
+        /// <summary>Docked with salvage banked (whether that Run ended Lost or Returned).
+        /// The first such Docked plays the first-loss line, queues the CREW line behind it
+        /// (DemoVoice's stated same-frame order), and writes the CREW menu unlock — the
+        /// flag write is what makes both once-per-save. The standing is state-keyed from
+        /// here on (DemoShipStanding).</summary>
+        void ResolveFirstReturn(MetaState m)
+        {
+            if (!m.DemoCrewMenuUnlocked)
+            {
+                DemoVoice.Play(DemoConversationIds.FirstHatchDown, DemoVoiceMode.Lock);
+                DemoVoice.Play(DemoConversationIds.CrewReady, DemoVoiceMode.Lock);
+                m.DemoCrewMenuUnlocked = true;
+                GameSession.Save();
+                Log.Event(Tag, "CREW menu unlocked");
+            }
+            DemoShipStanding.Reevaluate();
         }
 
         static void PlaceAt(PlayerHealth player, Transform pose)

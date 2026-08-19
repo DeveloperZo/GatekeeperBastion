@@ -15,6 +15,12 @@ namespace GatekeepersProtocol.Game
         public float lookY;
         public float scroll;
 
+        // OS cursor position in screen pixels (the engine mouse position, sampled by the
+        // producer), for cursor-driven aim/interact under the isometric camera. Floats,
+        // not a vector type, so the frame stays plain data for the offline harness.
+        public float pointerX;
+        public float pointerY;
+
         // Per-ControlId bits, computed from the Controls binding table (Key/AltKey,
         // DisplayOnly rows skipped, DevConsole suppression applied in dev builds).
         // Held/Down variants exist only for the ids gameplay actually asks for.

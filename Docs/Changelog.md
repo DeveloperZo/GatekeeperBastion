@@ -7,6 +7,11 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-19
 -->
 
+- 2026-08-19: **M88 closed (Zo).** Three FaxLab3D robots on Default / Hunter /
+  Ram (Thief wrapper), pack Shader Graph Built-In target restored, vendor lint
+  gate in place. Play criteria stamped by the close request. Active queue empty;
+  recommended next is M77 play stamp then M66.
+  [`Milestones/3. completed/M88-the-gatekeepers-are-machines.md`](Milestones/3.%20completed/M88-the-gatekeepers-are-machines.md).
 - 2026-08-19: **The robot pack's Shader Graph had been stripped of its Built-In
   target, and a day went into the wrong fix.** Every FaxLab3D robot rendered magenta
   after the full pack import. `SG_SciFiRobotMat.shadergraph` on disk declared

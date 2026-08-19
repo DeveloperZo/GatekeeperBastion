@@ -38,7 +38,7 @@ namespace GatekeepersProtocol.Tests
             m.SetZoneDeepest(2, 3);
 
             string json = m.ToJson();
-            Assert.IsTrue(json.Contains("\"SaveVersion\":10"), "v10 is the written schema");
+            Assert.IsTrue(json.Contains("\"SaveVersion\":11"), "v11 is the written schema");
 
             var back = MetaState.FromJson(json);
             Assert.IsTrue(back.DemoActive);
@@ -119,6 +119,34 @@ namespace GatekeepersProtocol.Tests
             m.DemoActive = false;
             var back = MetaState.FromJson(m.ToJson());
             Assert.IsFalse(back.DemoActive);
+        }
+
+        [Test]
+        public void HatchConversions_RoundTrips()
+        {
+            var m = MetaState.CreateNew();
+            Assert.AreEqual(0, m.HatchConversions, "a fresh campaign has banked nothing");
+            m.HatchConversions = 3;
+            var back = MetaState.FromJson(m.ToJson());
+            Assert.AreEqual(3, back.HatchConversions);
+        }
+
+        [Test]
+        public void PreV11_LossOrExit_MigratesTheWheelOpen()
+        {
+            // Pre-v11 saves ran under the loss key: PodEjections >= 1 had the wheel open,
+            // and CleanExits >= 1 means the final bank converted. The re-key must not
+            // re-lock either. An unplayed save stays locked.
+            var lost = MetaState.FromJson("{\"SaveVersion\":10,\"PodEjections\":2}");
+            Assert.AreEqual(1, lost.HatchConversions);
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(lost));
+
+            var escaped = MetaState.FromJson("{\"SaveVersion\":10,\"CleanExits\":1}");
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(escaped));
+
+            var fresh = MetaState.FromJson("{\"SaveVersion\":10}");
+            Assert.AreEqual(0, fresh.HatchConversions);
+            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(fresh));
         }
     }
 }
