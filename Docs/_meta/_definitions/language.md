@@ -41,9 +41,13 @@ that compresses it. If a term genuinely earns its keep, it earns a row here firs
 `gatekeeper-seconds`, `arrivals x dwell`, `mean live` and `mean lifetime` are defined in
 `../../Design/3-Mechanics.md` (and mean live also in `../../Design/1-Experience.md`,
 section 1.3); `realization` is used in `../../Design/2-Dynamics.md`; `hatchDist` and
-`spawnDist` are kill-line metres read by `Tools/wave-report`. A player has no way
+`spawnDist` are kill-line metres read by `Tools/wave-report`. **Pity timer**,
+**escalating weights**, and **pre-determination** are chance-fairness patterns in
+`../../Design/3-Mechanics.md` section 3.1. A player has no way
 to look any of them up, so a page in `Docs/Play/` that uses one has failed. Checked
-2026-08-08: none leak; re-check when M28 runs.
+2026-08-08: none leak; re-check when M28 runs. Pity / weights / pre-determination added
+to the Play ban 2026-08-16. Store sentences in `../../Marketing/` follow the same ban;
+Hunicke names and milestone IDs stay in builder notes, never in the copy block.
 
 **4. Code casing follows the code's own conventions; the *word* stays the same.**
 `GatekeeperKind`, `RunPhase.Tethered`, `MetaState.BankedSalvage` — the identifier can be
@@ -227,7 +231,7 @@ a term retired without a row here is a term the check does not know about (M28).
 ```language-lint
 # Comma-separated lists. Keys are fixed; the script parses this fence only.
 retired=derelict,Podded,podded,breach point,muster point
-builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization,hatchDist,spawnDist,Wave-defense,encyclopedia,lore bible,Codex,siphon dial,lobby
+builder_play_ban=gatekeeper-seconds,arrivals x dwell,realization,hatchDist,spawnDist,Wave-defense,encyclopedia,lore bible,Codex,siphon dial,lobby,pity timer,escalating weights,pre-determination
 stations_title=Armory,Crew Quarters,Fabrication,Nav Map
 boarder_enemy=boarders expected,the boarders,boarder kind,boarder-seconds
 ```

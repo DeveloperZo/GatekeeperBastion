@@ -21,8 +21,8 @@ namespace GatekeepersProtocol.Game
             int deepest = GameSession.Meta != null ? GameSession.Meta.DeepestWaveReached : 1;
             ReportDeepestServerRpc(deepest);
             var meta = GameSession.Meta;
-            int proto = meta != null ? (int)meta.EquippedProtocol : (int)BoarderProtocolId.Default;
-            int passive = meta != null ? (int)meta.EquippedPassive : (int)BoarderAbilityId.Ghost;
+            int proto = meta != null ? (int)meta.EquippedProtocol : (int)BoarderProtocolId.None;
+            int passive = meta != null ? (int)meta.EquippedPassive : (int)BoarderAbilityId.None;
             ReportProtocolServerRpc(proto, passive);
         }
 
@@ -32,19 +32,20 @@ namespace GatekeepersProtocol.Game
             if (!IsServer) return;
             var p = (BoarderProtocolId)protocol;
             var a = (BoarderAbilityId)passive;
-            if (!BoarderProtocol.IsLegalPair(p, a))
+            if (p == BoarderProtocolId.None)
+                a = BoarderAbilityId.None;
+            else if (p == BoarderProtocolId.Default
+                && (a == BoarderAbilityId.Ghost || a == BoarderAbilityId.Foresight))
+                a = BoarderAbilityId.None;
+            if (p != BoarderProtocolId.None && !BoarderProtocol.IsLegalPair(p, a))
             {
-                p = BoarderProtocolId.Default;
-                a = BoarderAbilityId.Ghost;
+                p = BoarderProtocolId.None;
+                a = BoarderAbilityId.None;
             }
             ProtocolId.Value = (int)p;
             PassiveId.Value = (int)a;
             if (_health != null)
-            {
-                float mul = a == BoarderAbilityId.Ghost
-                    ? BoarderProtocol.Magnitude(BoarderAbilityId.Ghost) : 1f;
-                _health.ConfigureAcquisition(mul);
-            }
+                _health.ConfigureAcquisition(1f);
         }
     }
 }

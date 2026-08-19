@@ -71,8 +71,8 @@ wheel purchases and the equipment slot, and is the only one-time event in the ga
 NAV MAP's second destination, which does not exist yet.
 
 *Whether a Run needs an arc is unknown and needs play data.* It is the kind of question
-that should be asked after Fellowship or Expression is answered in `1-Experience.md`, not
-before.
+that should be asked after Fellowship is a session a friend can use (`1-Experience.md`
+§1.2 ranks 1–3), not before.
 
 ---
 
@@ -365,6 +365,12 @@ of delivery, every one a win.
 the player still alive. **Two sessions are not evidence at all**: `20-40-29` and `21-06-48`
 log `[Player] took 4 damage`, the prefab-drift build where gatekeepers hit at 22% of design —
 the untouched-Hatch triple clear came from there.
+
+**Amended (Zo, 2026-08-17): breach and death are no longer the only enders.** A player who
+survives a hatch-bank window may return to the Ship — held interact at the Hatch, available
+until the next Wave is triggered — and the Run ends **Docked**, not Lost; banked Salvage and
+door state persist via the successful-bank snapshot (`../Decisions.md`,
+*Locked — return to Ship at a surviving bank*). Every loss on record above predates that rule.
 
 ---
 

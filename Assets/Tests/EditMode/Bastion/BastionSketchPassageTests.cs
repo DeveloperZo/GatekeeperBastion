@@ -107,18 +107,18 @@ namespace GatekeepersProtocol.Tests.EditMode.Bastion
                 "room R1 OpenArea 0 -40 H\n" +
                 "room R2 Full -34 -40 T:T1\n" +
                 "room R3 Full 34 -40 T:T2\n" +
-                "room R4 Half -34 -19 S:S1\n" +
-                "room R5 Half 34 -19 S:S2\n" +
+                "room R4 Half -34 -19 S:S1:W\n" +
+                "room R5 Half 34 -19 S:S2:E\n" +
                 "room R6 OpenArea 0 2\n" +
-                "room R7 Half -29 2 S:S3\n" +
-                "room R8 Half 29 2 S:S4\n" +
+                "room R7 Half -29 2 S:S3:W\n" +
+                "room R8 Half 29 2 S:S4:E\n" +
                 "room R9 Full 0 36 T:T3\n" +
                 "room R10 OpenArea 0 70\n" +
                 "room R11 Full -34 62 T:T4\n" +
                 "room R12 Full 34 62 T:T5\n" +
-                "room R13 Half -29 83 S:S5\n" +
-                "room R14 Half 29 83 S:S6\n" +
-                "room R15 ControlRoom 0 129 M\n" +
+                "room R13 Half -29 83 S:S5:N\n" +
+                "room R14 Half 29 83 S:S6:N\n" +
+                "room R15 ControlRoom 0 129 M S:ControlW:W S:ControlE:E\n" +
                 "side R2 E Door\nside R1 W Door\n" +
                 "side R3 W Door\nside R1 E Door\n" +
                 "side R4 S Door\nside R2 N Door\n" +

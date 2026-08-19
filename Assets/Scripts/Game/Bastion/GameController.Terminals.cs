@@ -32,7 +32,8 @@ namespace GatekeepersProtocol.Game
             int carry = sim.Mode == WaveMode.HatchBank && sim.Assault == AssaultState.Assault
                 ? sim.HatchCarry
                 : sim.WavesSinceBank;
-            return s_preview.NextWave(HatchBank.CarryWaveIndex(carry), sim.Siphon.Level, sim.PlayerCount).enemyCount;
+            WaveSpec raw = s_preview.NextWave(HatchBank.CarryWaveIndex(carry), sim.Siphon.Level, sim.PlayerCount);
+            return HatchBank.ApplyHatchComposition(raw, carry).enemyCount;
         }
 
         int FieldPreviewBodies()
@@ -127,13 +128,34 @@ namespace GatekeepersProtocol.Game
             if (terminal.Kind == BastionTerminalKind.Master) return true;
             if (terminal.Kind != BastionTerminalKind.Field) return false;
             BastionLayout layout = terminal.Layout;
-            return layout == null || !layout.IsTerminalDone(terminal.TerminalId);
+            if (layout != null && layout.IsTerminalDone(terminal.TerminalId))
+                return false;
+            return FieldStartBlockReason(terminal.TerminalId) == null;
+        }
+
+        /// <summary>Null when this Field id may start. Else the refuse suffix after
+        /// <c>start refused — </c>.</summary>
+        public string FieldStartBlockReason(string terminalId)
+        {
+            if (string.IsNullOrEmpty(terminalId) || _layout == null)
+                return null;
+            MetaState meta = Meta;
+            bool t1Exists = _layout.FindTerminal(FirstTerminal.Id) != null;
+            bool t1Done = _layout.IsTerminalDone(FirstTerminal.Id);
+            if (!FirstTerminal.OtherFieldBlocked(
+                    terminalId, meta != null && meta.DemoActive, t1Exists, t1Done))
+                return null;
+            // Only one reason survives the zone re-spec: the old "Hatch-bank first" case
+            // needed the bank-started clause, and zone 1's bank comes after both terminals.
+            return "finish this terminal";
         }
 
         void ToggleTerminalSelect(BastionTerminal terminal)
         {
             bool on = _armedTerminalId != terminal.TerminalId;
             _armedTerminalId = on ? terminal.TerminalId : null;
+            if (on && terminal.TerminalId == FirstTerminal.Id)
+                Log.Event("Demo", "first field id=" + FirstTerminal.Id + " waves=" + FirstTerminal.Waves);
             Log.Event("Terminal", terminal.TerminalId + (on
                 ? " prep intensity=" + Sim.Siphon.Level + " juice=" + Sim.JuiceSpentThisPull
                     + " bodies=" + FieldPreviewBodies() + " — selected"
@@ -160,7 +182,7 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Field terminal T after E-select: start one Wave. Completes the terminal on the
-        /// Nth clear. Prep after the clear is untimed — Hatch-bank is legal there.</summary>
+        /// Nth clear. Prep after the clear is untimed.</summary>
         public bool StartTerminalWave(BastionTerminal terminal)
         {
             if (terminal == null)
@@ -228,6 +250,13 @@ namespace GatekeepersProtocol.Game
                 return false;
             }
 
+            string block = FieldStartBlockReason(terminal.TerminalId);
+            if (block != null)
+            {
+                Log.Event("Demo", "start refused — " + block);
+                return false;
+            }
+
             _armedTerminalId = null;
             int intensity = Sim.Siphon.Level;
             long juiced = Sim.JuiceSpentThisPull;
@@ -281,176 +310,6 @@ namespace GatekeepersProtocol.Game
             if (layout.IsTerminalDone(id))
                 Log.Event("Terminal", id + " complete — wave cleared");
             ClearPendingTerminal();
-        }
-
-        bool HatchBankRefuse(string reason)
-        {
-            Log.Event("Hatch", "hatch-bank refused — " + reason);
-            return false;
-        }
-
-        /// <summary>Prep T at the Hatch after E-select: start a Hatch-bank Wave.</summary>
-        public bool StartHatchBankWave()
-        {
-            if (_net != null && _net.IsClientOnly)
-                return HatchBankRefuse("client cannot start a Wave");
-            if (Sim == null || RunIsOver)
-                return HatchBankRefuse("run not live");
-            if (Sim.Phase != RunPhase.Tethered || Sim.Assault != AssaultState.Prep)
-                return HatchBankRefuse("not in Prep");
-            if (!_armedHatch)
-                return HatchBankRefuse("select intensity first");
-            _armedHatch = false;
-            if (Sim.TotalUnbanked <= 0L)
-                return HatchBankRefuse("unbanked=0");
-            if (Sim.HatchBankSlotsLeft <= 0)
-                return HatchBankRefuse("no slots");
-            if (Sim.AllWavesCleared)
-                return HatchBankRefuse("all waves cleared");
-            if (Sim.MasterSequenceLive)
-                return HatchBankRefuse("Master Control sequence live");
-
-            // Hatch is a scene root, so parent walk misses BastionLayout; use the authored ref.
-            ClearPendingTerminal();
-            BastionLayout layout = _layout;
-            if (layout == null && _repair != null)
-                layout = _repair.GetComponentInParent<BastionLayout>();
-            if (layout != null)
-                layout.ActivateHatchBankSpawns();
-            else
-                Log.Warn(Tag, "hatch-bank — no BastionLayout; spawn registry unchanged");
-            _hatchBankLayout = layout;
-
-            int intensity = Sim.Siphon.Level;
-            long juiced = Sim.JuiceSpentThisPull;
-            Sim.TriggerDraw(WaveMode.HatchBank);
-            if (Sim.Assault != AssaultState.Assault)
-            {
-                RestoreHatchBankSpawns();
-                return HatchBankRefuse("draw did not start");
-            }
-
-            Log.Event("Hatch", "hatch-bank started wave " + Sim.CurrentWaveIndex
-                + " carry=" + Sim.HatchCarry
-                + " convert=" + Sim.HatchConvertMultiplier.ToString("0.00")
-                + " unbanked=" + Sim.TotalUnbanked
-                + " slots=" + Sim.HatchBankSlotsLeft
-                + " intensity=" + intensity
-                + " juiced=" + juiced);
-            return true;
-        }
-
-        /// <summary>Prep T at Master Control after E-select: start the two-phase win sequence.</summary>
-        public bool StartMasterControl(BastionTerminal terminal)
-        {
-            if (terminal == null)
-            {
-                Log.Warn(Tag, "StartMasterControl refused — no terminal");
-                return false;
-            }
-
-            if (_net != null && _net.IsClientOnly)
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — client cannot start Master Control");
-                return false;
-            }
-
-            if (terminal.Kind != BastionTerminalKind.Master)
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — kind=" + terminal.Kind);
-                return false;
-            }
-
-            if (Sim == null || RunIsOver)
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — run not live");
-                return false;
-            }
-
-            if (Sim.Phase != RunPhase.Tethered || Sim.Assault != AssaultState.Prep)
-            {
-                Log.Event("Terminal", terminal.TerminalId + " refused — not in Prep");
-                return false;
-            }
-
-            if (Sim.MasterSequenceLive)
-            {
-                Log.Event("Terminal", "master-control refused — sequence already live");
-                return false;
-            }
-
-            if (!string.IsNullOrEmpty(_pendingTerminalId) || Sim.SequentialPending)
-            {
-                Log.Event("Terminal", "master-control refused — sequence already pending");
-                return false;
-            }
-
-            if (_armedTerminalId != terminal.TerminalId)
-            {
-                Log.Event("Terminal", "master-control refused — select intensity first");
-                return false;
-            }
-
-            ClearPendingTerminal();
-            _armedTerminalId = null;
-            _armedHatch = false;
-            _masterTerminal = terminal;
-            BastionLayout layout = terminal.Layout;
-            if (layout == null)
-                layout = _layout;
-            if (layout != null)
-                layout.SetControlRoomSealed(true);
-            terminal.SetUnlockedSpawnsActive(true);
-
-            int intensity = Sim.Siphon.Level;
-            long juiced = Sim.JuiceSpentThisPull;
-            if (!Sim.StartMasterControl())
-            {
-                if (layout != null)
-                    layout.SetControlRoomSealed(false);
-                terminal.SetUnlockedSpawnsActive(false);
-                _masterTerminal = null;
-                Log.Event("Terminal", "master-control refused — draw did not start");
-                return false;
-            }
-
-            Log.Event("Terminal", "master-control started terminalWaves=" + MasterControl.TerminalWaves
-                + " hatchWaves=" + MasterControl.HatchWaves
-                + " intensity=" + intensity
-                + " juiced=" + juiced);
-            return true;
-        }
-
-        void OnMasterHatchHalfStarted()
-        {
-            BastionLayout layout = _layout;
-            if (layout == null && _masterTerminal != null)
-                layout = _masterTerminal.Layout;
-            if (layout != null)
-            {
-                layout.SetControlRoomSealed(false);
-                layout.ActivateHatchBankSpawns();
-                _hatchBankLayout = layout;
-            }
-            else
-                Log.Warn(Tag, "master-control hatch half — no BastionLayout");
-        }
-
-        void SnapshotHatchBankGraph()
-        {
-            if (Meta == null) return;
-            BastionLayout layout = _layout;
-            if (layout == null && _masterTerminal != null)
-                layout = _masterTerminal.Layout;
-            if (layout == null) return;
-            Meta.SetCompletedTerminalIds(layout.CopyCompletedTerminalIds());
-        }
-
-        void RestoreHatchBankSpawns()
-        {
-            if (_hatchBankLayout == null) return;
-            _hatchBankLayout.RestoreFieldSpawns();
-            _hatchBankLayout = null;
         }
     }
 }

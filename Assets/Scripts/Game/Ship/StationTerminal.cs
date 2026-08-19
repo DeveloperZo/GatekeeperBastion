@@ -36,13 +36,22 @@ namespace GatekeepersProtocol.Game
 
         public bool IsOpen => _ship != null && _ship.OpenStation == this;
 
-        public string Prompt =>
-            "[" + Controls.DisplayOf(ControlId.Interact) + "] " + StationName + " — " + PromptHint;
+        public string Prompt
+        {
+            get
+            {
+                // Demo gates own the string while a station is dark / grant-only / heal-only.
+                string demo = DemoStationGate.PromptOverride(this);
+                if (demo != null) return demo;
+                return "[" + Controls.DisplayOf(ControlId.Interact) + "] " + StationName
+                    + " — " + PromptHint;
+            }
+        }
 
         /// <summary>Stations open via <see cref="ShipController.TryOpenStationFromInteract"/> on
-        /// Interact Down — same path as the working Armory open. Kept for IInteractable prompts
-        /// and hold-based interactables (repair); do not open here.</summary>
-        public void Interact(float dt) { }
+        /// Interact Down — same path as the working Armory open. The held path forwards to the
+        /// demo gate (the dark NAV hold-repair); it no-ops everywhere else.</summary>
+        public void Interact(float dt) => DemoStationGate.TickHold(this, dt);
 
         ShipController Ship => _ship;
 

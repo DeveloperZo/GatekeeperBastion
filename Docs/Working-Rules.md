@@ -77,9 +77,10 @@ improvement. Say it, don't do it.
 ## Design rules are boundaries, not laws
 
 Every design rule in this project — class power bands, "a Secondary must not rival a Primary",
-"all five spokes meaningful", "one thing, one name" — exists to protect **fun and player
-expression**. That is the purpose; the rule is a means. **A rule can be broken deliberately if
-what replaces it is more fun or gives the player more to express** (Zo, 2026-08-07).
+"all five spokes meaningful", "one thing, one name" — exists to protect the ranked aesthetics
+in `Design/1-Experience.md` §1.2 (stamp 2026-08-16: Fellowship, Expression, Fantasy). Restamp
+that sentence when the rank table moves. **A rule can be broken deliberately if what replaces
+it serves that list better** (Zo, 2026-08-07: more fun, or more for the player to express).
 
 What is not allowed is breaking one by accident, or breaking one and calling it a judgement
 call afterwards. The discipline that separates the two:

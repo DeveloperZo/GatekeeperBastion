@@ -16,6 +16,7 @@ Recordings/
 .consulo/
 *.csproj
 *.sln
+*.slnx
 *.unityproj
 *.suo
 *.user
@@ -70,6 +71,7 @@ Thumbs.db
 # and removed by hand.
 /_backup/
 /_to_delete/
+/Docs/_to_delete/
 
 # One-shot editor scripts run from Assets/_Scratch/ and are removed before the next
 # verify gate (Tools/verify/run.sh fails while the folder holds anything but
@@ -111,3 +113,10 @@ Docs/_meta/*.env
 # store package must match the wrappers. Commit Assets/Synty.meta so the
 # folder GUID is stable on a clone before the pack is imported.
 /Assets/Synty/
+# FaxLab3D Sci-Fi robots + Shooter Weapons (candidates; not yet wrapped).
+# Keep Assets/FaxLab3D.meta tracked for a stable folder GUID on clone.
+/Assets/FaxLab3D/
+/Assets/Packs/shooterweaponspackassets/
+/Assets/Packs/shooterweaponspackassets.meta
+/Assets/Packs/weapon_source/
+/Assets/Packs/weapon_source.meta

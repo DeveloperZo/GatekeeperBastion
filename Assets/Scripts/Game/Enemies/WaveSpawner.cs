@@ -189,10 +189,11 @@ namespace GatekeepersProtocol.Game
         void OnPhaseChanged(RunPhase phase)
         {
             if (phase == RunPhase.Tethered) return;
-            if (phase != RunPhase.Lost && phase != RunPhase.Escaped) return;
+            if (phase != RunPhase.Lost && phase != RunPhase.Escaped
+                && phase != RunPhase.Returned) return;
 
-            // Clean stop on loss: no stragglers spawn into the lose screen, and no gatekeeper is
-            // left running its AI over a scene that is about to unload.
+            // Clean stop on any run end: no stragglers spawn into the end screen, and no gatekeeper
+            // is left running its AI over a scene that is about to unload.
             _teardown = true;
             int despawned = DestroyTrackedGatekeepers();
             AliveCount = 0;

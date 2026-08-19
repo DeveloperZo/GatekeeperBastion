@@ -1,67 +1,75 @@
 # Voice pipe
 
 <!--
-Purpose: Shared Dialogue System import, runner, net RPC, and conversation ids every
-demo beat starts. Implement this before beat 0’s lines, or the repair has no speaker.
+Purpose: Demo mission dialogue — on-screen lines the game (and at most a few
+guides) speak. No VO. No player replies. Runner, net RPC, and line ids every
+beat starts.
 Status: demo spec
 Authority: implementable
-Update trigger: when the pack version changes, when a conversation id is added, when
+Update trigger: when a speaker is named, when a line id is added, when
 input-lock rules change
-Last updated: 2026-08-16
+Last updated: 2026-08-17
 -->
 
-There is no narration system in the tree. Pause exists and does not stop the sim
-(`Time.timeScale` is off the table: `Decisions.md`, `HudController.Pause`). Compendium
-is a pause encyclopedia (`M62`), not a director. Interact prompts are mechanical. The
-mission drawer is fight chrome.
+There is no VO in the tree and none is required for this demo. Pause does not
+stop the sim (`Time.timeScale` is off the table on the Bastion: `Decisions.md`,
+`HudController.Pause`). The 2026-08-17 `demo.intruders` `timeScale = 0`
+exception is **withdrawn** (Zo, 2026-08-17): no line pauses. Beat 0's pause is
+**gated execution** — the caller holds the gated step (the intruder release)
+until the line's Continue; the sim keeps ticking, sim-safe. Compendium is a
+pause encyclopedia (`M62`), not a director. Interact prompts stay mechanical. The Bastion mission drawer (Tab) is
+fight chrome and may show the **standing objective**; it is not a conversation
+UI.
 
 ## Player-visible change
 
-On the dead Ship, repairing NAV plays a Ship-PA line in a Shift-skinned subtitle
-panel, movement locks, cursor frees, sim may tick. In Bastion Prep, a terminal or
-Hatch line can do the same. During Assault, a line can appear as subtitles only —
-look, move, and fire stay live.
+The game tells the Boarder what the current job is, as text. Repairing NAV,
+looking at a terminal, starting a Hatch-bank — each fires a **line id**. Ship
+and Bastion Prep may lock move/look so they can read (same lock as an open
+station). Assault shows the line as a subtitle only — look, move, and fire stay
+live.
 
-No companion. No named character. Speakers are furniture: Ship PA, Hatch, terminal.
+**The player never talks back.** Continue (Lock) and auto-advance (Subtitle)
+dismiss or step the line. There are no reply choices.
+
+**Speakers this iteration:** the **game** (default — mission / system text) and
+**at most a few named guides**. A guide is a speaker label on a line, not a companion
+who follows or a station you converse with. A fourth named guide replaces one
+of the existing three; do not grow the cast. Names are stamped here when chosen.
+Until then every id is speaker **Game**.
+
+No VO clips. Missing copy does not block mechanical gates (repair still works).
 
 ## Asset
 
-Zo owns [Dialogue System for Unity](https://assetstore.unity.com/packages/tools/behavior-ai/dialogue-system-for-unity-11672)
-(Pixel Crushers, SKU **11672**). Library copy shows **1.1.4** (not imported). Store
-current is **2.2.73.2**, Unity 6 listed compatible. **Zero** `PixelCrushers` /
-`DialogueSystem` references under `Assets/` today.
+Do **not** buy or import Pixel Crushers Dialogue System (SKU 11672, $95). Do
+**not** import HeneGames Dialogue System 1.1.4 (SKU 248969). Do **not** import
+Storyteller.
 
-Import **2.2.73.2** (or the store current at import time) into
-`Assets/Plugins/Pixel Crushers/Dialogue System/`, same treatment as Odin
-(`Assets/Plugins/Sirenix/`). Tracked plugin, not a Synty dump. Pack size ~33 MB.
-
-**Do not import Storyteller.** Same library folder; it is not this pipe.
-
-After import: `read_console` for compile; add an asmdef reference from
-`GatekeepersProtocol` (Game) only. `GatekeepersProtocol.Sim` must not reference
-Pixel Crushers (`Architecture.md` one-way rule).
+Shift is the HUD family. Ship uses the existing prompt / a Shift box. Bastion
+uses `MsgPlayer` / `MsgGeneral` and may push the standing objective into the
+mission drawer. No second HUD family. No `GUILayout` in the Bastion HUD
+(`Architecture.md`).
 
 ## Create
 
 | Path | Role |
 |---|---|
-| `Assets/Plugins/Pixel Crushers/Dialogue System/` | Vendor pack |
-| `Assets/Dialogue/Demo Database.asset` | Dialogue System database. Conversations named exactly as the id table below |
-| `Assets/Scripts/Game/Demo/DemoVoice.cs` | LOCAL-OWNER runner. Wraps `DialogueManager.StartConversation`. Owns input-lock policy |
-| `Assets/Scripts/Game/Demo/DemoConversationIds.cs` | `const string` ids. Game + EditMode tests. No Pixel Crushers types |
-| `Assets/Scripts/Game/Net/NetSession` (partial or existing) | Server RPC `StartDemoConversation(string id)` → ClientRpc all seats |
+| `Assets/Scripts/Game/Demo/DemoLines.cs` | ScriptableObject or static table: id → speaker, mode, text. Placeholder `TODO: demo.wake` legal |
+| `Assets/Scripts/Game/Demo/DemoVoice.cs` | LOCAL-OWNER runner. `Play(id, mode)`. Owns input-lock policy. No vendor types |
+| `Assets/Scripts/Game/Demo/DemoConversationIds.cs` | `const string` ids. Game + EditMode tests |
+| `Assets/Scripts/Game/Net/NetSession` (partial or existing) | Server RPC `StartDemoLine(string id)` → ClientRpc all seats |
 
-Optional: `Assets/Scripts/Game/Demo/DemoVoice.asmdef` only if the vendor asmdef
-forces a split. Prefer Game assembly + vendor asmdef reference.
+`GatekeepersProtocol.Sim` must not reference UI or line assets (`Architecture.md`).
 
 ## Change
 
 | File | Change |
 |---|---|
-| `HudController.Pause` | A live conversation is not pause. Esc during a **locking** conversation ends the conversation (same as closing a station), it does not open Compendium over it. Esc during an **Assault** subtitle dismisses the subtitle only |
+| `HudController.Pause` | A live **Lock** line is not pause. Esc ends the line (same as closing a station). Esc during an **Assault** subtitle dismisses the subtitle only |
 | `ShipController` | While `DemoVoice.LocksInput`, do not open stations; cursor already free |
 | `FirstPersonController` | `DemoVoice.LocksInput` uses the same move lock as an open `StationTerminal` |
-| `.gitignore` | Do not ignore the Dialogue System folder |
+| Bastion mission drawer | Optional: standing objective string for the live id while `DemoActive`. Tab still toggles. Not a reply surface |
 
 ## Delete
 
@@ -73,30 +81,37 @@ Nothing. Do not delete Compendium, mission drawer, or interact prompts.
 
 | Mode | When | Input | Cursor | Sim | UI |
 |---|---|---|---|---|---|
-| `Lock` | Docked (Ship). Bastion **Prep** | Move/look/fire/interact eaten. Conversation UI owns clicks | Unlocked | Ticks | Subtitle + response if the database node has one. Prefer **no** player response nodes for demo lines (advance on timer or Continue) |
-| `Subtitle` | Bastion **Assault** | All fight input live | Locked | Ticks | Subtitle only. No Continue that requires a click. Auto-advance from the node’s Sequence time, fallback **4 s** if unset |
+| `Lock` | Docked (Ship). Bastion **Prep** | Move/look/fire/interact eaten. Continue advances | Unlocked | Ticks | Shift box. **No reply row** |
+| `Subtitle` | Bastion **Assault**; the beat-0 Ship fight | All fight input live | Locked | Ticks | Subtitle / `MsgPlayer` only. Auto-advance **4 s** if the line has no duration |
 
-`Play` no-ops and logs `[Demo] voice skipped — unknown id=<id>` if the database has
-no conversation with that title. Missing database at runtime: log once
-`[Demo] voice pipe missing database` and continue the beat’s mechanical gates
-(repair still works). The demo may be mute; it may not be stuck.
+`demo.intruders` is a plain Lock (Zo, 2026-08-17 — the paused variant is
+withdrawn): beat 0 gates the intruder **release** on that line's Continue
+(gated execution, not pause). The sim ticks throughout.
 
-`Play` while another conversation is live: stop the old one, start the new, log
-`[Demo] voice preempted from=<old> to=<new>`.
+`Play` no-ops and logs `[Demo] line skipped — unknown id=<id>` if the table has
+no row. Missing table at runtime: log once `[Demo] line table missing` and
+continue. The demo may be mute; it may not be stuck.
 
-`PauseGame` / Dialogue System `Time.timeScale` hooks: **off**. If the pack defaults
-them on, the runner clears them on `Awake`. A conversation that requires
-`timeScale = 0` is refused (`Decisions.md`).
+`Play` while another line is live: stop the old one, start the new, log
+`[Demo] line preempted from=<old> to=<new>`.
 
-Skin: Dialogue System subtitle panel, or a Shift box already in the HUD family.
-Do not add a second HUD family. No `GUILayout` in the Bastion HUD
-(`Architecture.md`).
+Same-frame Docked collision (Zo, 2026-08-17): if `demo.first_hatch_down` and
+any other Lock line start on the same Docked frame, `demo.first_hatch_down`
+plays first and the other line is **queued** to start on its Continue — not
+preempted. This is the only queue; every other collision preempts as above.
+
+A line that requires `timeScale = 0` is refused (`Decisions.md`) — no
+exceptions. The 2026-08-17 `demo.intruders` exception is withdrawn (Zo,
+2026-08-17); its caller gates execution instead.
 
 ## Multiplayer
 
-Host is the only seat that **decides** a conversation starts (repair completed,
-Wave cleared, door opened, Hatch-bank started). Host calls
-`NetSession.StartDemoConversationServerRpc` is wrong from a client — host-side
+Multiplayer is locked until a save's first wheel purchase (beat 3,
+[`README.md`](README.md)), so every line in beats 0–2 plays on a solo seat —
+`Party` scope only matters from `demo.mp_unlocked` on.
+
+Host is the only seat that **decides** a line starts (repair completed, Wave
+cleared, door opened, Hatch-bank started). Host-side
 `DemoVoice.PlayLocalAndBroadcast(id, mode)`.
 
 | Seat | What happens |
@@ -107,53 +122,61 @@ Wave cleared, door opened, Hatch-bank started). Host calls
 | Guest join mid-line | No catch-up. Next id plays normally |
 | Guest on additive Ship wait (`M57`) | ClientRpc still plays locally on that wait scene |
 
-Do **not** enable Dialogue System’s built-in networking. Conversation state is an
-id + mode, not a synced node pointer.
+Conversation state is an id + mode, not a synced node pointer. No vendor net.
 
-Personal beats (weapon grant, ARMORY repair) play **local only** — other seats do
-not hear “you picked up a sidearm” for someone else’s grant. Ship-wide beats (NAV
-repair, Hatch-bank convert, door open, Master Control, Hatch finale) broadcast.
+Personal beats (weapon grant, wheel cap, protocol claim) play **local only**.
+Ship-wide beats from beat 4 on (retrigger embark, door open, finale battle,
+final bank) broadcast.
 
-`voice.md` ids mark `Local` vs `Party` in the table.
+Ids mark `Local` vs `Party` in the table below.
 
-## Conversation ids
+## Line ids
 
-Titles in the database **are** these strings. `DemoConversationIds` mirrors them.
+`DemoConversationIds` mirrors these strings. Text lives in `DemoLines`, not in
+this file.
 
-| Id | Mode | Scope | Beat | Intent (write the actual lines in the database, not here) |
+| Id | Mode | Scope | Beat | Intent |
 |---|---|---|---|---|
-| `demo.wake` | Lock | Local | 0 | You are on a dead Ship. Move, look, find NAV |
-| `demo.nav_repair` | Lock | Party | 0 | NAV is live. Take a weapon. EMBARK is the Hatch |
-| `demo.weapon_grant` | Lock | Local | 0 | MK-1 is in hand. ARMORY is still dark |
-| `demo.embark_blocked` | Lock | Local | 0 | Named refuse: NAV dark / no weapon |
-| `demo.embark_first` | Lock | Party | 0→1 | Quiet Hatch. Find a terminal. Wake the place |
-| `demo.explore` | Subtitle | Party | 1 | Optional, Prep, once, if they have not looked at a Field terminal in 45 s |
-| `demo.terminal_look` | Lock | Party | 1 | This is a field terminal. `E` select, `T` start. No juice mention |
-| `demo.after_wave1` | Lock | Party | 1 | Another terminal opens the next doors. Hatch-bank first |
-| `demo.hatch_convert` | Lock | Party | 2 | Convert now, then hold. Prep |
-| `demo.hatch_fight` | Subtitle | Party | 2 | Assault start of first Hatch-bank |
-| `demo.first_hatch_down` | Lock | Party | 2 | After return to Ship: the bank is already aboard |
-| `demo.armory_repair` | Lock | Local | 3 | ARMORY live. Two purchases on this gun |
-| `demo.wheel_cap` | Lock | Local | 3 | Third buy refused (also a prompt string) |
-| `demo.crew_ready` | Lock | Local | 4 | CREW can be repaired (Wave 2 has started) |
-| `demo.crew_repair` | Lock | Local | 4 | Claim Default. `G` Barrage, `H` Rush |
-| `demo.embark_wave2` | Lock | Party | 4 | NAV skip to Wave 2. Lead still commits |
-| `demo.repeat_unit` | Lock | Party | 5 | Same verbs. Next terminal, then Hatch-bank |
-| `demo.door_d1` / `demo.door_d2` / `demo.door_d3` | Subtitle or Lock in Prep | Party | 5 | That door is open |
+| `demo.wake_stir` | Lock | Local | 0 | Fade finished, still sealed. Text before the unlock prompt |
+| `demo.wake` | Lock | Local | 0 | Lid open. Dead Ship. Find NAV, hold Interact to repair |
+| `demo.nav_repair` | Lock | Local | 0 | NAV live. Route power from the ship terminal — select, then start |
+| `demo.intruders` | Lock | Local | 0 | Two Gatekeepers aboard (release gated on Continue). Take the MK-1 from the ARMORY rack |
+| `demo.weapon_grant` | Subtitle | Local | 0 | Loaded. Put them down |
+| `demo.ship_clear` | Lock | Local | 0 | Clear. CREW heals; then NAV, EMBARK |
+| `demo.embark_blocked` | Lock | Local | 0 | Named refuse: terminal not started / no weapon / intruders alive |
+| `demo.embark_first` | Lock | Local | 0→1 | Quiet Hatch. Find a terminal. Wake the place |
+| `demo.explore` | Subtitle | Local | 1 | Optional, Prep, once, if they have not looked at a Field terminal in 45 s |
+| `demo.terminal_look` | Lock | Local | 1 | Field terminal. `E` select, `T` start. `+/-` is the multiplier |
+| `demo.juice_teach` | Lock | Local | 1 | Once Unbanked > 0 (second terminal look): juice spends Unbanked; more bodies, more Salvage |
+| `demo.after_terminal` | Lock | Local | 1 | Zone terminals done. Hatch-bank next. Pile transfers while you hold |
+| `demo.hatch_bank_teach` | Lock | Local | 2 | Drip; if the Hatch falls, what has not moved is gone |
+| `demo.hatch_fight` | Subtitle | Local | 2 | Assault start of first Hatch-bank |
+| `demo.first_hatch_down` | Lock | Local | 2 | First loss's Docked (any cause — copy is cause-agnostic): what dripped is aboard. Spend it at the ARMORY |
+| `demo.mp_unlocked` | Lock | Local | 3 | First wheel purchase made. Friends can join now |
+| `demo.wheel_cap` | Lock | Local | 3 | Cap refuse on a third-buy attempt (also a prompt string). Exit standing is state-keyed (no buyable upgrades remain), not this line |
+| `demo.crew_ready` | Lock | Local | 4 | CREW menu is open now (unlocked since first Docked after first loss — re-keyed 2026-08-17). Protocol waits |
+| `demo.crew_claim` | Lock | Local | 4 | Claim Default. `G` Barrage, `H` Rush |
+| `demo.embark_wave2` | Lock | Party | 4 | Post-loss EMBARK: no wave skip — the zone's deepest terminal retriggers the composite (partial start electable). Lead still commits |
+| `demo.repeat_unit` | Lock | Party | 5 | Same verbs. Next zone's terminals, then its bank |
+| `demo.door_d1` / `demo.door_d2` | Lock in Prep | Party | 5 | That door is open. One string serves both |
+| `demo.door_d3` | — | — | 5 | Never plays: D3 open fires `demo.control_room` instead (beat 6 merge) |
 | `demo.control_room` | Lock | Party | 6 | This room seals. The fight is inside. Not extract |
 | `demo.master_control` | Lock | Party | 6 | Prep, on Master look-at / first pull |
 | `demo.hatch_finale` | Subtitle | Party | 7 | Door open: get the pile to the Hatch |
 | `demo.escaped` | Lock | Party | 7 | Docked after Escaped. DemoActive ends |
 
-Lines are Zo’s to author in the database. The runner must work with placeholder
-one-liners (`TODO: demo.wake`) so mechanics can ship before copy pass.
+Copy for every beat is stamped in that beat's file (0–7); this table is the id
+registry, not the copy source. `DemoLines` is the runtime table. Beats 6–7 rows
+above are cross-references only — those files are another editor's and carry
+their own re-ruled shape.
 
 ## Driven / Shown / Reads-back
 
 - **Driven by** host (or local-only) `DemoVoice.Play`, never by pause, never by
   Compendium open.
-- **Shown** Shift-skinned subtitle (and Continue in Lock mode).
-- **Reads-back** log `[Demo] voice id=<id> mode=<Lock|Subtitle> scope=<Local|Party>`.
+- **Shown** Shift box (Lock) or subtitle / `MsgPlayer` (Subtitle). Continue is
+  advance, not a reply.
+- **Reads-back** log `[Demo] line id=<id> mode=<Lock|Subtitle> scope=<Local|Party> speaker=<Game|guide>`.
   A line that played with no log is a defect.
 
 ## Logs
@@ -162,43 +185,52 @@ Tag `[Demo]`. Never `[Dev]` on a close path.
 
 | Event | Line |
 |---|---|
-| Start | `voice id=demo.wake mode=Lock scope=Local` |
-| End | `voice ended id=demo.wake` |
-| Preempt | `voice preempted from=demo.wake to=demo.nav_repair` |
-| Missing db | `voice pipe missing database` (once per session) |
-| Unknown id | `voice skipped — unknown id=demo.wake` |
-| Broadcast | `voice rpc id=demo.nav_repair clientId=<n>` |
+| Start | `line id=demo.wake mode=Lock scope=Local speaker=Game` |
+| End | `line ended id=demo.wake` |
+| Preempt | `line preempted from=demo.wake to=demo.nav_repair` |
+| Queue (Docked collision) | `line queued id=<id> behind=demo.first_hatch_down` |
+| Missing table | `line table missing` (once per session) |
+| Unknown id | `line skipped — unknown id=demo.wake` |
+| Broadcast | `line rpc id=demo.nav_repair clientId=<n>` |
 
 ## Traps
 
-- Dialogue System `PauseGame` defaults will set `timeScale = 0`. Clear on `Awake`.
-- `GUILayout` in a custom DS UI on the Bastion HUD corrupts IMGUI for the session.
-- Importing Storyteller.
-- Using DS networking and our RPC together — pick ours.
-- Locking input during Assault. Wave 1 will kill a reader; that is intended, so do
-  not “fix” it by pausing.
-- Starting `demo.wake` on a save with `DemoActive == false`.
+- Importing a dialogue framework for ~25 one-way lines.
+- Player reply UI “so they feel involved.”
+- A companion who walks with them (`M62`).
+- `timeScale = 0` anywhere — the 2026-08-17 `demo.intruders` exception is
+  withdrawn; beat 0 gates the intruder release on Continue instead.
+- Preempting `demo.first_hatch_down` with another Docked line — it wins the
+  same-frame collision; the other line queues.
+- `GUILayout` on the Bastion HUD.
+- Locking input during Assault.
+- Starting `demo.wake_stir` / `demo.wake` on a save with `DemoActive == false`.
+- Unlock prompt on black, or `demo.wake` before the lid opens.
 
 ## Depends / Unblocks
 
-Depends on: owned SKU 11672 available to import. Unblocks: every beat’s lines.
-Mechanical gates in beats 0–7 must still function if the database is empty.
+Depends on: Shift HUD already in tree. Unblocks: every beat’s lines.
+Mechanical gates in beats 0–7 must still function if copy is `TODO`.
 
 ## Verification (for the milestone)
 
 1. EditMode: `DemoConversationIds` uniqueness; every beat doc’s id is in the const
-   class.
+   class; no line asset field named a player reply.
 2. PlayMode (solo, Ship): `DemoVoice.Play("demo.wake", Lock)` logs start+end;
-   `Time.timeScale == 1` for the duration; move input ignored; Esc ends the
-   conversation.
-3. PlayMode (Bastion Prep fixture): Lock conversation; sim `Tick` still advances
+   `Time.timeScale == 1`; move input ignored; Esc ends the line; no reply control.
+3. PlayMode (Bastion Prep fixture): Lock line; sim `Tick` still advances
    `RunElapsed`.
-4. PlayMode (Bastion Assault fixture): Subtitle conversation; fire still shoots;
+4. PlayMode (Bastion Assault fixture): Subtitle line; fire still shoots;
    `timeScale == 1`.
-5. Loopback party: host `Play` Party id → guest log `voice rpc` and local start.
-6. No `[Dev]` in those logs.
+5. Loopback party: host `Play` Party id → guest log `line rpc` and local start.
+6. Same-frame Docked collision fixture: `demo.first_hatch_down` + another Lock
+   start on one frame → loss line plays first, `line queued` logged, queued
+   line starts on Continue.
+7. No `[Dev]` in those logs.
 
 ## Rejected
 
-Atreus-style companion (`M62`). Storyteller. `timeScale = 0`. A second pause-as-story
-layer. Auto-playing Compendium pages as narration.
+Player reply / branching. VO for this demo. Pixel Crushers 11672. HeneGames
+248969. Storyteller. Atreus-style companion (`M62`). `timeScale = 0` (the
+2026-08-17 `demo.intruders` exception is withdrawn). A second
+pause-as-story layer. Auto-playing Compendium pages as narration.

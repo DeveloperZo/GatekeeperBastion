@@ -20,47 +20,79 @@ The highest-leverage work in this project has been rule work. `provoke-on-damage
 (`EnemyGatekeeper.OnDamaged`) is roughly 15 lines and is the largest behaviour change the game
 has had; no tuning pass has come close.
 
-| Rule | Where |
-|---|---|
-| Death is the only thing that ends a Run early. | The Run ends early on host down or Hatch destroyed: `NotifyPlayerDown` / `ShipSystems.HatchDestroyed` both funnel through one `EndRun` → `Lost`, `PodEjections++`. A client Boarder at 0 HP does not call that path (`endsTheRunOnDeath` false on the avatar, `M49`). Solo is unchanged. |
-| Clearing the last Wave is not the win. Master Control's Hatch-bank is. | Wave 5 terminal clear does not `CompleteRun`. `Escaped` / `CleanExits++` only after the Master Control Hatch half (`AdvanceMasterControl`). Both endings exit by one door: RETURN TO SHIP. |
-| Shooting a Default makes it come for you. | `EnemyGatekeeper.OnDamaged`. |
-| A Hunter can never hurt the door, at any tuning. | `hatchDamage = 0`, `ignoresHatch`. |
-| A Thief hunts the Boarder on a field-terminal Wave; shooting it still will not shout. | `RamGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`; `CanBeProvoked` stays false. Player-facing name Thief; code id `Ram` until M63. |
-| All three kinds share one swing clock. | `GatekeeperAttackInterval`. A kind differs by what it hits and how hard, never by cadence. |
-| Gatekeepers arrive in groups with a gap, not as a stream. | `WaveSpawner(+.Groups)`. |
-| Kills pay, and only in `Tethered + Assault`. | `RunSim.AwardKill` → Unbanked. Prep pays nothing. |
-| Unbanked converts only through a Hatch-bank. | `TriggerDraw(WaveMode.HatchBank)`; drip/dump → `BankedSalvage`. Down/breach wipes leftover. |
-| Repair spends banked Salvage as healing is applied. | `RunSim.RepairHatch`. Already spent if you die afterward. |
-| A Run is `WaveDirector.MaxWaves` Waves and `TriggerDraw` refuses one more. | `Sim/Waves/WaveDirector.cs`. |
-| Crit has exactly one source. | `MetaUpgrades.CritChance` × `PlayerGun.CritDamageMultiplier`. A second source would multiply against the first and the dps curve would stop being readable from the Armory panel. |
-| Two effects never multiply the same currency. | The power-budget rule behind the 5-skill design, section 3.2. |
+| Rule | Protects | Where |
+|---|---|---|
+| A Run ends early on death, breach, or a Docked return at a surviving bank window — nothing else. | Challenge (fail state); Fellowship (guest exception) | The Run ends early on host down or Hatch destroyed: `NotifyPlayerDown` / `ShipSystems.HatchDestroyed` both funnel through one `EndRun` → `Lost`, `PodEjections++`. A client Boarder at 0 HP does not call that path (`endsTheRunOnDeath` false on the avatar, `M49`). Solo is unchanged. Amended 2026-08-17 (Zo), superseding "death is the only thing that ends a Run early": a player who survives a hatch-bank window may return to the Ship — held interact at the Hatch, until the next Wave is triggered — ending the Run **Docked**, not Lost; banked Salvage and door state persist via the successful-bank snapshot (`../Decisions.md`, *Locked — return to Ship at a surviving bank*). |
+| Clearing the last Wave is not the win. Master Control's Hatch-bank is. | Fantasy (boarding objective); Challenge | Wave 5 terminal clear does not `CompleteRun`. `Escaped` / `CleanExits++` only after the Master Control Hatch half (`AdvanceMasterControl`). Both endings exit by one door: RETURN TO SHIP. |
+| Shooting a Default makes it come for you. | Challenge; Expression (you choose to pull) | `EnemyGatekeeper.OnDamaged`. |
+| A Hunter can never hurt the door, at any tuning. | Fantasy (kind identity); Challenge | `hatchDamage = 0`, `ignoresHatch`. |
+| A Thief hunts the Boarder on a field-terminal Wave; shooting it still will not shout. | Fantasy (kind identity); Challenge | `RamGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`; `CanBeProvoked` stays false. Player-facing name Thief; code id `Ram` until M63. |
+| All three kinds share one swing clock. | Challenge (readable kinds) | `GatekeeperAttackInterval`. A kind differs by what it hits and how hard, never by cadence. |
+| Gatekeepers arrive in groups with a gap, not as a stream. | Challenge | `WaveSpawner(+.Groups)`. |
+| Kills pay, and only in `Tethered + Assault`. | Challenge; Submission refused | `RunSim.AwardKill` → Unbanked. Prep pays nothing. |
+| Unbanked converts only through a Hatch-bank. | Expression (the stake); Fantasy (extract through the Hatch); Challenge | `TriggerDraw(WaveMode.HatchBank)`; drip/dump → `BankedSalvage`. Down/breach wipes leftover. |
+| Repair spends banked Salvage as healing is applied. | Expression (you bought the rig) | `RunSim.RepairHatch`. Already spent if you die afterward. |
+| One terminal trigger launches up to `WaveDirector.MaxWaves` consecutive Waves, and `TriggerDraw` refuses one more on that trigger. | Challenge | `Sim/Waves/WaveDirector.cs`. A per-trigger cap, not a per-Run Wave budget — restated 2026-08-17 (Zo); the row previously read "a Run is MaxWaves Waves". |
+| Crit has exactly one source. | Expression (ARMORY stays readable) | `MetaUpgrades.CritChance` × `PlayerGun.CritDamageMultiplier`. A second source would multiply against the first and the dps curve would stop being readable from the Armory panel. |
+| Two effects never multiply the same currency. | Expression | The power-budget rule behind the 5-skill design, section 3.2. |
+| Equal Salvage split; each player banks to their own meta. | Fellowship; Expression (own loadout) | `M65`. Co-op gets you further, not richer (`../Brainstorms/co-op.md`). |
 
-**These are boundaries, not laws.** Every one exists to protect fun and player expression;
-breaking one deliberately is allowed and breaking one by accident is not. The discipline
+**These are boundaries, not laws.** Every one exists to protect the ranked aesthetics in
+`1-Experience.md` §1.2 (stamp 2026-08-16: Fellowship, Expression, Fantasy; Challenge is
+the vehicle). Restamp the Protects column when that table moves; the rules do not.
+Breaking one deliberately is allowed and breaking one by accident is not. The discipline
 that separates the two is `../Working-Rules.md`, *Design rules are boundaries, not laws*.
+
+### Chance the player can model
+
+Independent rolls that can starve a reward, a win, or a proc — or dump three in a row —
+are refused (Expression: a reward the player can model). When a random event is added, it
+uses one of these three (builder names;
+never player-facing: `../_meta/_definitions/language.md`):
+
+| Pattern | Means | Reset |
+|---|---|---|
+| **Pity timer** | After a stated count of failures, the event is guaranteed (e.g. a legendary after 50 empty pulls). | On the grant |
+| **Escalating weights** | Chance rises a little on each failure. | On the trigger |
+| **Pre-determination** | The sequence is locked before play — shuffle a deck at match start — so the session averages instead of clumping. | New sequence next Run / next shuffle |
+
+**In tree today:** Wave composition is already a table (`WaveDirector.NextWave`), not a
+roll. Spawn placement draws from seeded `RunSim.Rng` (`Architecture/4-Testing-and-Determinism.md`).
+Crit chance is frozen at 0; iid burst is how a dps curve stops being readable from the
+ARMORY (`MetaUpgrades.CritChance`). The three-failed-Runs buy-past in `2-Dynamics.md`
+section 2.5 is an **economy** guarantee, not a drop pity — do not add a second pity on
+Salvage.
+
+A proposal that adds a random drop, win, or proc names which of the three it is, in the
+milestone, before the table of percentages. Observation that would kill a pick: a logged
+session where the event never fired inside its pity / deck / weight cap, or where it
+clumped inside one Wave after a shuffle that forbade that.
+
+This is not a gacha shop. The gacha wording is the definition only.
 
 ---
 
 ## 3.2 Who may change the rules (#4)
 
 The player's authority over their own Run. This is the surface the design expands when it
-wants to give the player more to express, and it is the tier to reach for before reaching
-for a number.
+wants Expression (loadout, juice), Fantasy (named protocol), or Fellowship (party lead,
+Ready / EMBARK). Reach here before reaching for a number.
 
-| Lever | Window | Why that window |
-|---|---|---|
-| Intensity juice | Prep only, looking at a trigger. `IntensityJuice.Try` spends Unbanked to raise; lower is free, no refund. `SetSiphonLevel` remains for tests. `E` selects; `T` starts. Locked in Assault. | The draw size is a pre-commitment. Choosing the stake after seeing the Wave is not a choice. |
-| The weapon and where its wheel points | Ship only. `ShipCommands.BuyWheelUpgrade`; Bastion code never calls `EquipWeapon`. | The weapon is the build; a Run is played with the one you brought. |
-| Boarder Protocol / Passive | Ship only. `CrewQuartersStation` / `ShipCommands.PickPassive`. Default sheet owned from first session. | A Run is played with the sheet you brought. G/H fire in Assault (`PlayerProtocolAbilities`). |
-| Hatch-bank | Prep, looking at the Hatch, Unbanked and a slot left. `GameController.StartHatchBankWave`. | Convert is a fight, not a shop action. Slot count: `4-Data.md` Hatch-bank GEN. |
-| Party Ready / EMBARK | Ship, friends session. Host is party lead (`NetPartyLobby`). | In tree (`M72`); two-machine close still open. Solo Continue never starts a session. |
-| The equipment slot | Ship only. `ShipCommands.BuyEquipmentSlot()` unlocks the slot for `EquipmentCatalog.SlotPrice = 300`, then `ShipCommands.BuyEquipment(EquipmentId)` fills it. | Repairing needs the rig owned *and* carried (`GameController.ApplyMetaEffects` configures `RepairInteractable` to 0 HP/s when it is not), so how much door the Boarder can buy back is settled before embarking. Purchasable in-Run it would turn a failing Hatch into a wallet check. |
-| Start Wave | NAV MAP, before embarking. Party lead's pick in a friends session. | A start of N delivers Waves 1..N back to back. |
+| Lever | Window | Protects | Why that window |
+|---|---|---|---|
+| Intensity juice | Prep only, looking at a trigger. `IntensityJuice.Try` spends Unbanked to raise; lower is free, no refund. `SetSiphonLevel` remains for tests. `E` selects; `T` starts. Locked in Assault. | Expression; Challenge | The draw size is a pre-commitment. Choosing the stake after seeing the Wave is not a choice. |
+| The weapon and where its wheel points | Ship only. `ShipCommands.BuyWheelUpgrade`; Bastion code never calls `EquipWeapon`. | Expression | The weapon is the build; a Run is played with the one you brought. |
+| Boarder Protocol / Passive | Ship only. `CrewQuartersStation` / `ShipCommands.PickPassive`. Default sheet owned from first session. | Expression; Fantasy (named identity) | A Run is played with the sheet you brought. G/H fire in Assault (`PlayerProtocolAbilities`). |
+| Hatch-bank | Prep, looking at the Hatch, Unbanked and a slot left; locked until the zone's terminals are complete (Zo, 2026-08-17). `GameController.StartHatchBankWave`. | Expression; Fantasy (extract); Challenge | Convert is a fight, not a shop action. Callable anytime, unbanked accumulates unknowingly with no reward — hence the terminal gate. Slot count: `4-Data.md` Hatch-bank GEN. |
+| Return to Ship | After surviving a Hatch-bank window, until the next Wave is triggered; held interact at the Hatch. Ends the Run **Docked**, not Lost (Zo, 2026-08-17). | Challenge (risk is mitigated at a window, not at will); Expression (banked stays) | Banked Salvage and door state persist via the successful-bank snapshot. One window, not a bail-out lever. Parked intent, not spec: when the juice/multiplier mechanic lands, leaving early loses or reduces the salvage multiplier. |
+| Party Ready / EMBARK | Ship, friends session. Host is party lead (`NetPartyLobby`). | Fellowship | Closed (`M72`, 2026-08-17). Solo Continue never starts a session. |
+| The equipment slot | Ship only. `ShipCommands.BuyEquipmentSlot()` unlocks the slot for `EquipmentCatalog.SlotPrice = 300`, then `ShipCommands.BuyEquipment(EquipmentId)` fills it. | Expression | Repairing needs the rig owned *and* carried (`GameController.ApplyMetaEffects` configures `RepairInteractable` to 0 HP/s when it is not), so how much door the Boarder can buy back is settled before embarking. Purchasable in-Run it would turn a failing Hatch into a wallet check. |
+| Start Wave | NAV MAP, before embarking. Party lead's pick in a friends session. | Fellowship; Challenge | A start of N delivers Waves 1..N back to back. |
 
-**What the player may never change:** whether the Run can be left, when a Wave arrives, or
-what a Gatekeeper kind refuses to do. Those are section 3.1 and they are not negotiable from inside a
-Run.
+**What the player may never change:** when a Wave arrives, or what a Gatekeeper kind
+refuses to do. Those are section 3.1 (Challenge fail state, Fantasy kind identity) and they
+are not negotiable from inside a Run. Whether the Run can be left moved off this list on
+2026-08-17 (Zo) — at exactly the one window above; there is still no leave-anytime lever.
 
 **Intensity is the oldest instance.** The body-count table is still
 (`Sim/Meta/TetherSiphon.cs`), not a formula — do not simplify it into one. The player
@@ -103,8 +135,8 @@ station UI mutates `MetaState`; `GameController` command methods are the only pa
 
 Dated 2026-08-15: Boarder Protocols occupy CREW QUARTERS; this 5-skill design stays parked in `../Brainstorms/crew-skills-and-perks.md` and is not what CREW sells.
 
-The remaining expansion of this tier, and the last unbuilt surface for player expression,
-which is the top-ranked aesthetic (`1-Experience.md`). No milestone owns it; this section is
+The remaining expansion of this tier, and a parked surface for player expression
+(rank 2, `1-Experience.md` §1.2). No milestone owns it; this section is
 the record until one does. It moved here from `../Decisions.md` on 2026-08-08 — it is a design,
 not a decision.
 
@@ -153,7 +185,8 @@ dressed Bastion is **unknown — needs measurement**.
 
 Gatekeeper stats barely register against that. This is the clearest case in the project of
 structure beating constants, and it is the first thing to check when a Wave feels wrong: a
-change to where bodies enter moves more than a change to what they are.
+change to where bodies enter moves more than a change to what they are. Dressed kit rooms
+are also the Fantasy surface of the fight (`M61-2`).
 
 **Still in no model:** travel time across the Bastion for the *player*, aiming accuracy,
 and repair downtime.
@@ -222,13 +255,14 @@ it, collider graybox is still generated. Kit geometry persists.
 - **Ship** — walkable hub, four station consoles, one per alcove. No Run sim here. ARMORY
   west, FABRICATION east, CREW QUARTERS south, NAV MAP north
   (`Editor/Scenes/SceneBuilder.Ship.cs`). Friends session: shared Ship, party lead owns
-  EMBARK (`M72` in tree). `MapStation.StationName` is `NAV MAP`, and the
+  EMBARK (`M72` closed 2026-08-17). `MapStation.StationName` is `NAV MAP`, and the
   floating console label the builder writes is `NAV MAP` too
   (`Editor/Scenes/SceneBuilder.Ship.cs`, the `pal.ConsoleMap` console). The class name is
   still a known debt (`../_meta/_definitions/language.md`, trap 2).
 - **Bastion** — the fight, in-fiction `ALPHA-7`. `GameController.Start()` calls `StartRun()`
   then `EngageTether()`, so you are fighting on arrival. `Docked` is a transient boot phase,
-  not a screen.
+  not a screen. Groups instantiate inside a hung spawn closet and walk onto the fight floor;
+  the origin is not on the playable floor.
 
 While `Phase == Tethered` the sim alternates two sub-states (`Sim/Run/AssaultState.cs`):
 **Prep**, quiet, no Gatekeepers and no income, the only window intensity juice moves in; and **Assault**,

@@ -45,7 +45,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1, meta.HatchArmorLevel);
             var loaded = MetaState.FromJson(meta.ToJson());
             Assert.AreEqual(1, loaded.HatchArmorLevel);
-            Assert.AreEqual(BoarderProtocolId.Default, loaded.EquippedProtocol);
+            Assert.AreEqual(BoarderProtocolId.None, loaded.EquippedProtocol);
         }
     }
 }

@@ -186,7 +186,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void RestoreCompletedTerminals_ReopensDoors()
+        public void RestoreCompletedTerminals_KeepsProgress_AndOpenDoorsRestoreSeparately()
         {
             var graph = BastionUnlockGraph.Build(
                 new[]
@@ -236,6 +236,11 @@ namespace GatekeepersProtocol.Tests
                 });
             restored.RestoreCompletedTerminals(ids);
             Assert.IsTrue(restored.IsTerminalDone("T1"));
+            Assert.IsFalse(restored.IsDoorOpen("D1"),
+                "terminal progress no longer implies an open door");
+
+            graph.RecordBankSurvived(out _);
+            restored.RestoreOpenDoors(graph.CopyOpenDoorIds());
             Assert.IsTrue(restored.IsDoorOpen("D1"));
             Assert.IsFalse(restored.IsDoorOpen("D_control"));
         }

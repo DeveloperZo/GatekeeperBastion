@@ -50,5 +50,29 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(BastionHudView.ProfileRank, ShipHudView.ProfileRank);
             Assert.AreNotEqual("LV 1", BastionHudView.ProfileRank);
         }
+
+        [Test]
+        public void CrewQuarters_ComingSoonCopy_IsNotACatalogId()
+        {
+            Assert.AreEqual("VEIL", CrewQuartersStation.StubVeil);
+            Assert.AreEqual("AEGIS", CrewQuartersStation.StubAegis);
+            Assert.AreEqual("LEDGER", CrewQuartersStation.StubLedger);
+            Assert.AreEqual("Coming Soon", CrewQuartersStation.ComingSoon);
+            Assert.AreEqual("Coming Soon — no sheet yet", CrewQuartersStation.StubSheet);
+            Assert.AreEqual("SELECT", CrewQuartersStation.SelectLabel);
+            Assert.AreEqual("BACK", ProtocolSheetView.BackLabel);
+            Assert.AreEqual("Protocol Title", ProtocolSheetView.TitleHeading);
+            Assert.AreEqual("Protocol Description", ProtocolSheetView.DescriptionHeading);
+            Assert.AreEqual("Crew Ability", ProtocolSheetView.CrewHeading);
+            Assert.AreEqual("Personal Ability", ProtocolSheetView.PersonalHeading);
+            Assert.AreEqual("Passive Ability", ProtocolSheetView.PassiveHeading);
+            Assert.AreEqual(BoarderProtocol.CrewSheetDefault, BoarderProtocol.CrewSheet(BoarderProtocolId.Default));
+            Assert.AreEqual(BoarderProtocol.PersonalSheetDefault, BoarderProtocol.PersonalSheet(BoarderProtocolId.Default));
+            Assert.AreEqual(BoarderProtocol.PassiveSheetDefault, BoarderProtocol.PassiveSheet(BoarderProtocolId.Default));
+            BoarderProtocolId veil;
+            Assert.IsFalse(System.Enum.TryParse("VEIL", true, out veil));
+            Assert.AreEqual(BoarderProtocolId.Default, BoarderProtocol.ShopProtocols()[0]);
+            Assert.AreEqual(1, BoarderProtocol.ShopProtocols().Length);
+        }
     }
 }

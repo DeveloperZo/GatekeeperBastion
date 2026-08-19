@@ -3,7 +3,10 @@ using System.Collections.Generic;
 
 namespace GatekeepersProtocol.Sim
 {
-    /// <summary>Terminal completion opens doors (AND on required terminals). Control gate last.</summary>
+    /// <summary>Doors open on a SURVIVED Hatch-bank window, not on terminal completion.
+    /// Completing the required terminals (AND) only makes a door eligible; RecordBankSurvived
+    /// is what turns eligibility into an open door, so a failed bank never unlocks anything.
+    /// Control gate last.</summary>
     public sealed class BastionUnlockGraph
     {
         public struct DoorSpec
@@ -145,7 +148,27 @@ namespace GatekeepersProtocol.Sim
             }
 
             _completedTerminals.Add(terminalId);
+            return true;
+        }
+
+        /// <summary>A Hatch-bank window was survived: every eligible door opens. Returns true when
+        /// at least one door opened, and hands back the ids that opened on THIS call so the caller
+        /// can log and voice them. A failed bank never reaches here, so it never unlocks.</summary>
+        public bool RecordBankSurvived(out string[] openedDoorIds)
+        {
+            int before = _openDoors.Count;
             TryOpenDoors();
+            int opened = _openDoors.Count - before;
+            if (opened <= 0)
+            {
+                openedDoorIds = Array.Empty<string>();
+                return false;
+            }
+            var ids = new string[opened];
+            for (int i = 0; i < opened; i++)
+                ids[i] = _openDoors[before + i];
+            Array.Sort(ids, StringComparer.Ordinal);
+            openedDoorIds = ids;
             return true;
         }
 
@@ -210,7 +233,39 @@ namespace GatekeepersProtocol.Sim
             return ids;
         }
 
-        /// <summary>Mark saved ids complete and open the doors they unlock. Unknown ids skipped.</summary>
+        /// <summary>Sorted open door ids for save / return-to-Ship restore. Door state is its own
+        /// saved fact now: terminal completions no longer imply it, so it cannot be re-derived.</summary>
+        public string[] CopyOpenDoorIds()
+        {
+            if (_openDoors.Count == 0)
+                return Array.Empty<string>();
+            var ids = _openDoors.ToArray();
+            Array.Sort(ids, StringComparer.Ordinal);
+            return ids;
+        }
+
+        /// <summary>Re-open saved doors on a later embark. Unknown ids skipped; already-open ids
+        /// are a no-op, so this is safe to call twice.</summary>
+        public void RestoreOpenDoors(string[] ids)
+        {
+            if (ids == null)
+                return;
+            for (int i = 0; i < ids.Length; i++)
+            {
+                string id = ids[i];
+                if (string.IsNullOrEmpty(id))
+                    continue;
+                if (!_doors.ContainsKey(id))
+                    continue;
+                if (_openDoorSet.Contains(id))
+                    continue;
+                _openDoorSet.Add(id);
+                _openDoors.Add(id);
+            }
+        }
+
+        /// <summary>Mark saved ids complete. Does NOT open doors — RestoreOpenDoors does that,
+        /// because a completed terminal is no longer an unlock. Unknown ids skipped.</summary>
         public void RestoreCompletedTerminals(string[] ids)
         {
             if (ids == null)

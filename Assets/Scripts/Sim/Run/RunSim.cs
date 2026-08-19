@@ -149,6 +149,7 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Hatch-bank starts remaining this Run. Starts at <see cref="HatchBank.SlotsPerRun"/>.</summary>
         public int HatchBankSlotsLeft { get; private set; }
 
+
         /// <summary>Field Waves cleared since the last Hatch-bank. 0 until the first Terminal draw.</summary>
         public int WavesSinceBank { get; private set; }
 
@@ -662,6 +663,8 @@ namespace GatekeepersProtocol.Sim
             var handler = AssaultEnded;
             if (handler != null) handler();
 
+            OfferDockIfBankSurvived(hatchBank);
+
             if (Phase == RunPhase.Tethered && _masterPhase != MasterControlPhase.None)
             {
                 AdvanceMasterControl(hatchBank);
@@ -776,12 +779,15 @@ namespace GatekeepersProtocol.Sim
 
         private void LaunchWave()
         {
+            ClearDockOffer();
             int idx = Mode == WaveMode.HatchBank
                 ? HatchBank.CarryWaveIndex(_hatchCarry)
                 : CurrentWaveIndex >= WaveDirector.MaxWaves
                     ? WaveDirector.MaxWaves - 1
                     : CurrentWaveIndex;
             WaveSpec spec = _director.NextWave(idx, Siphon.Level, PlayerCount);
+            if (Mode == WaveMode.HatchBank)
+                spec = HatchBank.ApplyHatchComposition(spec, _hatchCarry);
             if (Mode != WaveMode.HatchBank)
             {
                 CurrentWaveIndex++;
@@ -829,14 +835,16 @@ namespace GatekeepersProtocol.Sim
         /// </summary>
         private void EndRun(string cause)
         {
+            bool docked = cause == DockedCause;
             ClearChainState();
             CancelSequentialDraws();
             CancelMasterSequence();
             WipeUnbanked();
+            ClearDockOffer();
             RunReport report = BuildRunReport(cause);
-            _meta.PodEjections++;
+            if (!docked) _meta.PodEjections++;
             LastRunReport = report;
-            SetPhase(RunPhase.Lost);
+            SetPhase(docked ? RunPhase.Returned : RunPhase.Lost);
             long net = report.grossEarned - report.repairSpent;
             Log.Info(Tag, "Run ended (" + cause + "). Gross " + report.grossEarned +
                           ", repair spent " + report.repairSpent + ", net " + net +

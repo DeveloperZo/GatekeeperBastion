@@ -73,15 +73,28 @@ namespace GatekeepersProtocol.PlayTests
             float clientHp = clientBody.Hp;
             const float Hit = 5f;
 
-            clientEnemy.GetComponent<NetEnemy>().SubmitHitServerRpc(Hit, (byte)WeaponSlot.Primary);
-            yield return WaitForTicks(m_ServerNetworkManager, 4);
+            var clientNetEnemy = clientEnemy.GetComponent<NetEnemy>();
+            clientNetEnemy.SubmitHitServerRpc(Hit, (byte)WeaponSlot.Primary);
+            yield return WaitForConditionOrTimeOut(() =>
+                Mathf.Abs(hostBody.Hp - (hostHp - Hit)) < 0.01f
+                && Mathf.Abs(clientNetEnemy.Hp.Value - (hostHp - Hit)) < 0.05f);
+            AssertOnTimeout("host HP or replicated clone Hp did not drop");
 
             Assert.AreEqual(hostHp - Hit, hostBody.Hp, 0.01f, "host Damageable dropped by the sent amount");
             Assert.AreEqual(clientHp, clientBody.Hp, 0.01f, "client clone Damageable was not written");
+            Assert.IsFalse(clientBody.IsDead, "client clone IsDead stays false after a non-lethal hit");
+            Assert.AreEqual(hostBody.Hp, clientNetEnemy.Hp.Value, 0.05f,
+                "replicated Hp matches host after hit");
 
             float remain = hostBody.Hp;
-            clientEnemy.GetComponent<NetEnemy>().SubmitHitServerRpc(remain + 1f, (byte)WeaponSlot.Primary);
+            clientNetEnemy.SubmitHitServerRpc(remain + 1f, (byte)WeaponSlot.Primary);
             ulong deadId = serverNet.NetworkObjectId;
+            yield return WaitForTicks(m_ServerNetworkManager, 2);
+            if (m_ClientNetworkManagers[0].SpawnManager.SpawnedObjects.ContainsKey(deadId))
+            {
+                Assert.IsFalse(clientBody.IsDead, "client clone IsDead stays false until despawn");
+                Assert.AreEqual(clientHp, clientBody.Hp, 0.01f, "lethal RPC must not TakeDamage the clone");
+            }
             yield return WaitForConditionOrTimeOut(() =>
                 !m_ClientNetworkManagers[0].SpawnManager.SpawnedObjects.ContainsKey(deadId));
             AssertOnTimeout("lethal hit did not despawn the clone on the client");

@@ -1,0 +1,93 @@
+using GatekeepersProtocol.Sim;
+
+namespace GatekeepersProtocol.Game
+{
+    /// <summary>Why an EMBARK is refused while the demo's beat 0 is incomplete. Ordered:
+    /// the first unmet gate is the one named (Docs/Demo/0-wake-on-a-dead-ship.md).</summary>
+    public enum DemoEmbarkRefusal
+    {
+        None,
+        ShipTerminal,
+        NoWeapon,
+        Intruders,
+    }
+
+    /// <summary>What a Ship station may do right now under the demo gates.</summary>
+    public enum DemoStationVerdict
+    {
+        /// <summary>No demo gate applies — live behaviour.</summary>
+        Open,
+        /// <summary>Dark NAV: named prompt, the hold-repair target, no panel.</summary>
+        Dark,
+        /// <summary>No name, no prompt, no interaction — the station does not surface
+        /// until it has a live function (2026-08-18 revision: only NAV shows before
+        /// its function exists).</summary>
+        Hidden,
+        /// <summary>CREW before its menu unlocks: restore health on a tap, never a panel.</summary>
+        HealOnly,
+        /// <summary>Powered NAV before the ship fight is done: prompts, no picker.</summary>
+        NoPanelYet,
+    }
+
+    /// <summary>The demo's pure gate rules over <see cref="MetaState"/>'s v9 flags — engine-free
+    /// on purpose so the offline harness pins every matrix. Unity routing (which interact does
+    /// what) lives in DemoStationGate; this class only answers what is allowed.</summary>
+    public static class DemoProgress
+    {
+        /// <summary>Friends unlock on the first wheel purchase (buys-left drops below 2),
+        /// or the moment the demo ends. A null meta never blocks a session.</summary>
+        public static bool MultiplayerUnlocked(MetaState m)
+        {
+            if (m == null) return true;
+            if (!m.DemoActive) return true;
+            return m.DemoWheelBuysLeft < 2;
+        }
+
+        /// <summary>First unmet beat 0 gate, in the refuse table's order. None when the
+        /// demo is off or beat 0 is complete.</summary>
+        public static DemoEmbarkRefusal EmbarkRefusal(MetaState m)
+        {
+            if (m == null || !m.DemoActive) return DemoEmbarkRefusal.None;
+            if (!m.DemoArmoryPowered) return DemoEmbarkRefusal.ShipTerminal;
+            if (!m.DemoWeaponGranted) return DemoEmbarkRefusal.NoWeapon;
+            if (!m.DemoShipFightDone) return DemoEmbarkRefusal.Intruders;
+            return DemoEmbarkRefusal.None;
+        }
+
+        /// <summary>NAV: dark until the hold-repair, then no panel until the ship is clear.</summary>
+        public static DemoStationVerdict NavVerdict(MetaState m)
+        {
+            if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
+            if (!m.DemoNavPowered) return DemoStationVerdict.Dark;
+            if (!m.DemoShipFightDone) return DemoStationVerdict.NoPanelYet;
+            return DemoStationVerdict.Open;
+        }
+
+        /// <summary>ARMORY: hidden — the MK-1 comes from the ship terminal's start
+        /// (2026-08-18 revision, no rack walk) — until the wheel unlocks on first loss.</summary>
+        public static DemoStationVerdict ArmoryVerdict(MetaState m)
+        {
+            if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
+            if (!MetaUpgrades.UpgradesUnlocked(m)) return DemoStationVerdict.Hidden;
+            return DemoStationVerdict.Open;
+        }
+
+        /// <summary>CREW: hidden until the ship fight is done (its first function is the
+        /// post-fight heal); heal-on-tap until its menu unlocks (first Docked after
+        /// first loss — a later cut writes that flag).</summary>
+        public static DemoStationVerdict CrewVerdict(MetaState m)
+        {
+            if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
+            if (!m.DemoShipFightDone) return DemoStationVerdict.Hidden;
+            if (!m.DemoCrewMenuUnlocked) return DemoStationVerdict.HealOnly;
+            return DemoStationVerdict.Open;
+        }
+
+        /// <summary>FABRICATION stays hidden for the whole demo.</summary>
+        public static DemoStationVerdict FabricationVerdict(MetaState m)
+        {
+            if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
+            return DemoStationVerdict.Hidden;
+        }
+    }
+}

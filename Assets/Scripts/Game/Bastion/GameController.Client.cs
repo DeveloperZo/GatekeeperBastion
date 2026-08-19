@@ -45,8 +45,9 @@ namespace GatekeepersProtocol.Game
             proto.Bind(this, Meta.EquippedProtocol, Meta.EquippedPassive);
             proto.SetHosted(true);
             _protocol = proto;
-            Log.Event("Protocol", "embark " + BoarderProtocol.ProtocolName(Meta.EquippedProtocol)
-                + " " + BoarderProtocol.DisplayName(Meta.EquippedPassive));
+            string protoName = BoarderProtocol.ProtocolName(Meta.EquippedProtocol);
+            if (protoName.Length == 0) protoName = "none";
+            Log.Event("Protocol", "embark " + protoName);
         }
 
         static void PushSlot(PlayerGun gun, MetaState meta, WeaponSlot slot, WeaponId id)
@@ -101,9 +102,11 @@ namespace GatekeepersProtocol.Game
         #endregion
 
         #region Private
-        /// <summary>Move, fire, abilities, decoy ghost, interact, Prep RPCs — no Sim.Tick.</summary>
+        /// <summary>Move, fire, abilities, decoy ghost, interact, Prep RPCs — no Sim.Tick.
+        /// Additive Ship wait keeps Bastion loaded; do not tick the hidden Bastion rig.</summary>
         void TickClientLocal(float dt)
         {
+            if (NetShipWait.IsActive) return;
             if (_fpc != null) _fpc.Tick(dt);
             if (_gun != null) _gun.Tick(dt);
             if (_ability != null) _ability.Tick(dt);

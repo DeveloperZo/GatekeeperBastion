@@ -4,7 +4,7 @@
 Purpose: The gatekeeper roster and the Wave composition curve — what kinds exist, what each one refuses, and how Waves escalate across the five.
 Status: brainstorm
 Update trigger: when a gatekeeper kind is added or its refusal changes, or when the Wave composition tables move.
-Last updated: 2026-08-15
+Last updated: 2026-08-17
 -->
 
 ## What this covers
@@ -16,14 +16,16 @@ refuses to do, and how Waves 1–5 escalate. Not the tuning of any single number
 
 ## Where it stands
 
-Three kinds in `Sim/Waves/GatekeeperKind.cs`. Default walks to the Hatch and provokes.
-Hunter refuses the Hatch. Ram refuses the player (`playerDamage` 0, never provoked);
-`M52`/`M53` retarget it onto the Boarder on field-terminal Waves and back onto the Hatch
-on Hatch-bank. `WaveDirector`'s `HunterPerWave` / `RamPerWave` tables fix the counts;
-`defaultCount` absorbs the remainder; intensity surplus is entirely Default.
+Three kinds in `Sim/Waves/GatekeeperKind.cs`. Two Wave modes ship (`WaveMode`):
+**Terminal** hunts the Boarder (Hatch cannot be hurt); **HatchBank** hunts the Hatch
+and converts Unbanked (Hunters still hunt you). Default / Thief retarget with the
+mode (`M52`/`M53`); Hunter refuses the Hatch on both. `WaveDirector`'s
+`HunterPerWave` / `RamPerWave` tables fix the counts; `defaultCount` absorbs the
+remainder; intensity surplus is entirely Default.
 
-All three resolve at the door in the shipped fight. The bastion now has levels, lanes,
-terminals, two Wave modes and a second player; none of the three uses that.
+The two jobs are the shipped loop. What the three kinds still do not use: levels,
+lanes, a second player as a targeting fact. Named roster rows after `M63` are
+that thickening, not a replacement for Terminal vs Hatch-bank.
 
 A **refusal** governs the **target** a kind will and will not go after, and that stays
 enforced in code (`1-Experience.md` §1.4). Damage amounts, fallback attacks and what a

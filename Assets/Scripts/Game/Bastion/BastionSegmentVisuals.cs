@@ -9,7 +9,7 @@ namespace GatekeepersProtocol.Game
     /// tiled over the footprint whose physics the segment's collision boxes own. Separate type
     /// because dressing shares nothing with the box math beyond the segment's serialized fields.
     /// Load-time code — allocation is acceptable, there is no per-frame path.</summary>
-    internal static class BastionSegmentVisuals
+    internal static partial class BastionSegmentVisuals
     {
         internal static void Build(
             BastionSegment segment,

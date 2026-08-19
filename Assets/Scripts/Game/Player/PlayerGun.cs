@@ -393,8 +393,10 @@ namespace GatekeepersProtocol.Game
         bool CanFire()
         {
             var gc = _game;
-            if (!SceneFlow.InCombatScene && gc == null)
-                return Refuse($"not a combat scene (active '{SceneFlow.ActiveSceneName}') and no GameController present", true);
+            // The Ship is weapons-holstered except the demo's wake fight, and only once the
+            // MK-1 is in hand — unarmed is unarmed, the improvised cutter included.
+            if (!SceneFlow.InCombatScene && gc == null && !DemoShipFight.CanFireOnShip)
+                return Refuse($"not a combat scene (active '{SceneFlow.ActiveSceneName}') and no GameController present", false);
 
             if (gc != null && gc.RunIsOver)
                 return Refuse("the run is over (terminal phase)", false);

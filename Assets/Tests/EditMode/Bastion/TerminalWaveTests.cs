@@ -84,6 +84,8 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(graph.RecordWaveCleared("T1", 1, out string r2));
             Assert.IsNull(r2);
             Assert.IsTrue(graph.IsTerminalDone("T1"));
+            Assert.IsFalse(graph.IsDoorOpen("D1"), "completion is eligibility, not an unlock");
+            graph.RecordBankSurvived(out _);
             Assert.IsTrue(graph.IsDoorOpen("D1"));
             Assert.AreEqual(2, graph.ClearedWaves("T1"));
         }
@@ -94,6 +96,8 @@ namespace GatekeepersProtocol.Tests
             var graph = FieldGraph(1);
             Assert.IsTrue(graph.RecordWaveCleared("T1", 1, out _));
             Assert.IsTrue(graph.IsTerminalDone("T1"));
+            Assert.IsFalse(graph.IsDoorOpen("D1"), "completion is eligibility, not an unlock");
+            graph.RecordBankSurvived(out _);
             Assert.IsTrue(graph.IsDoorOpen("D1"));
         }
 
@@ -109,6 +113,8 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(graph.RecordWaveCleared("T1", 2, out _));
             Assert.AreEqual(5, graph.ClearedWaves("T1"));
             Assert.IsTrue(graph.IsTerminalDone("T1"));
+            Assert.IsFalse(graph.IsDoorOpen("D1"), "completion is eligibility, not an unlock");
+            graph.RecordBankSurvived(out _);
             Assert.IsTrue(graph.IsDoorOpen("D1"));
         }
 
@@ -196,7 +202,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void UnlockGraph_CompletesOnlyAfterTerminalMarked()
+        public void UnlockGraph_OpensOnlyAfterTerminalMarkedAndBankSurvived()
         {
             var doors = new[]
             {
@@ -214,6 +220,11 @@ namespace GatekeepersProtocol.Tests
             var graph = BastionUnlockGraph.Build(doors, terminals);
             Assert.IsFalse(graph.IsDoorOpen("D1"));
             Assert.IsTrue(graph.TryCompleteTerminal("T1", out _));
+            Assert.IsFalse(graph.IsDoorOpen("D1"));
+
+            // The failed-bank case is this same assertion: a breached window ends the Run
+            // before RecordBankSurvived is ever reached, so the door is still shut here.
+            Assert.IsTrue(graph.RecordBankSurvived(out _));
             Assert.IsTrue(graph.IsDoorOpen("D1"));
         }
     }

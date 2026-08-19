@@ -5,8 +5,8 @@ using UnityEngine;
 namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: Default Protocol actives on G/H. Ids pushed at Bind — never
-    /// serialized (gotcha 1). Cooldowns run here; world effects go server-side via NetVerbs
-    /// when hosted as a client.</summary>
+    /// serialized (gotcha 1). Cooldowns run here; Barrage plants go server-side via NetVerbs
+    /// when a session is listening.</summary>
     public sealed class PlayerProtocolAbilities : MonoBehaviour
     {
         const string Tag = "Protocol";
@@ -14,17 +14,23 @@ namespace GatekeepersProtocol.Game
         GameController _game;
         FirstPersonController _fpc;
         PlayerHealth _health;
-        BoarderProtocolId _protocol = BoarderProtocolId.Default;
-        BoarderAbilityId _passive = BoarderAbilityId.Ghost;
+        BoarderProtocolId _protocol = BoarderProtocolId.None;
+        BoarderAbilityId _passive = BoarderAbilityId.None;
         BoarderAbilityState _crew;
         BoarderAbilityState _personal;
-        AnchorField _planted;
+        BarrageField _planted;
         bool _hosted;
         bool _loggedCrewExpiry;
         bool _loggedPersonalExpiry;
 
-        public string CrewName => BoarderProtocol.DisplayName(BoarderProtocol.CrewAbilityOf(_protocol));
-        public string PersonalName => BoarderProtocol.DisplayName(BoarderProtocol.PersonalAbilityOf(_protocol));
+        public bool HasProtocol => _protocol != BoarderProtocolId.None;
+        public string ProtocolName => BoarderProtocol.ProtocolName(_protocol);
+        public bool BarrageWindowOpen => _crew.WindowOpen;
+        public bool RushOpen => _personal.WindowOpen;
+        public BoarderAbilityId CrewAbility => BoarderProtocol.CrewAbilityOf(_protocol);
+        public BoarderAbilityId PersonalAbility => BoarderProtocol.PersonalAbilityOf(_protocol);
+        public string CrewName => BoarderProtocol.DisplayName(CrewAbility);
+        public string PersonalName => BoarderProtocol.DisplayName(PersonalAbility);
         public string PassiveName => BoarderProtocol.DisplayName(_passive);
         public float CrewWindow => _crew.WindowRemaining;
         public float CrewCooldown => _crew.CooldownRemaining;
@@ -36,13 +42,11 @@ namespace GatekeepersProtocol.Game
         public void Bind(GameController game, BoarderProtocolId protocol, BoarderAbilityId passive)
         {
             _game = game;
-            _protocol = protocol == BoarderProtocolId.None ? BoarderProtocolId.Default : protocol;
-            _passive = BoarderProtocol.OwnsPassive(_protocol, passive) ? passive : BoarderAbilityId.Ghost;
+            _protocol = protocol;
+            _passive = BoarderProtocol.OwnsPassive(_protocol, passive) ? passive : BoarderAbilityId.None;
             if (_fpc == null) _fpc = GetComponent<FirstPersonController>();
             if (_health == null) _health = GetComponent<PlayerHealth>();
-            float ghost = _passive == BoarderAbilityId.Ghost
-                ? BoarderProtocol.Magnitude(BoarderAbilityId.Ghost) : 1f;
-            if (_health != null) _health.ConfigureAcquisition(ghost);
+            if (_health != null) _health.ConfigureAcquisition(1f);
         }
 
         public void SetHosted(bool hosted) { _hosted = hosted; }
@@ -62,14 +66,14 @@ namespace GatekeepersProtocol.Game
             if (crewWasOpen && !_crew.WindowOpen)
             {
                 Unplant();
-                if (!_loggedCrewExpiry)
-                    Log.Event(Tag, "Anchor window ended");
+                if (_loggedCrewExpiry)
+                    Log.Event(Tag, "crew Barrage window ended");
                 _loggedCrewExpiry = false;
             }
             if (personalWasOpen && !_personal.WindowOpen)
             {
                 if (_loggedPersonalExpiry)
-                    Log.Event(Tag, "Bulkhead expired un-triggered");
+                    Log.Event(Tag, "self Rush window ended");
                 _loggedPersonalExpiry = false;
             }
 
@@ -78,16 +82,48 @@ namespace GatekeepersProtocol.Game
             if (Controls.Down(ControlId.PersonalAbility)) OnPersonal();
         }
 
+        public void NotifyDeath()
+        {
+            if (_crew.WindowOpen)
+            {
+                _loggedCrewExpiry = false;
+                _crew.EndWindowEarly();
+                Unplant();
+                Log.Event(Tag, "crew Barrage window ended");
+            }
+            else
+            {
+                Unplant();
+            }
+            if (_personal.WindowOpen)
+            {
+                _loggedPersonalExpiry = false;
+                _personal.EndWindowEarly();
+                Log.Event(Tag, "self Rush window ended");
+            }
+        }
+
+        public void NotifyBulkheadConsumed()
+        {
+            _loggedPersonalExpiry = false;
+            _personal.EndWindowEarly();
+        }
+
         void OnCrew()
         {
+            if (!HasProtocol)
+            {
+                Log.Event(Tag, "crew refused — no protocol");
+                return;
+            }
             var id = BoarderProtocol.CrewAbilityOf(_protocol);
             if (_crew.WindowOpen)
             {
-                float sat = 0f;
+                float sat = _crew.SecondsSatReady;
+                _loggedCrewExpiry = false;
                 _crew.EndWindowEarly();
                 Unplant();
-                Log.Event(Tag, "crew Anchor unplant sat-ready=" + sat.ToString("0.##"));
-                SendAnchor(false);
+                Log.Event(Tag, "crew Barrage unplant sat-ready=" + sat.ToString("0.##"));
                 return;
             }
             if (!_crew.IsReady)
@@ -100,12 +136,16 @@ namespace GatekeepersProtocol.Game
                 return;
             _loggedCrewExpiry = true;
             Plant();
-            Log.Event(Tag, "crew Anchor sat-ready=" + ready.ToString("0.##"));
-            SendAnchor(true);
+            Log.Event(Tag, "crew Barrage sat-ready=" + ready.ToString("0.##"));
         }
 
         void OnPersonal()
         {
+            if (!HasProtocol)
+            {
+                Log.Event(Tag, "self refused — no protocol");
+                return;
+            }
             var id = BoarderProtocol.PersonalAbilityOf(_protocol);
             if (_personal.WindowOpen)
             {
@@ -121,52 +161,34 @@ namespace GatekeepersProtocol.Game
             if (!_personal.TryActivate(BoarderProtocol.Window(id), BoarderProtocol.Cooldown(id)))
                 return;
             _loggedPersonalExpiry = true;
-            if (_health != null) _health.ArmBulkhead();
-            Log.Event(Tag, "self Bulkhead sat-ready=" + ready.ToString("0.##"));
-            SendBulkhead();
+            Log.Event(Tag, "self Rush sat-ready=" + ready.ToString("0.##"));
+            var verbs = LocalVerbs();
+            if (verbs != null) verbs.RequestBulkhead();
         }
 
         void Plant()
         {
             Unplant();
             if (_fpc != null) _fpc.Rooted = true;
-            if (!ClientOnly())
-                _planted = AnchorField.Plant(transform.position);
+            var verbs = LocalVerbs();
+            if (verbs != null)
+                verbs.RequestAnchor(transform.position, true);
+            else
+                _planted = BarrageField.Plant(transform.position);
         }
 
         void Unplant()
         {
             if (_fpc != null) _fpc.Rooted = false;
+            var verbs = LocalVerbs();
+            if (verbs != null)
+            {
+                verbs.RequestAnchor(transform.position, false);
+                return;
+            }
             if (_planted == null) return;
-            AnchorField.Uproot(_planted);
+            BarrageField.Uproot(_planted);
             _planted = null;
-        }
-
-        public void NotifyBulkheadConsumed()
-        {
-            _loggedPersonalExpiry = false;
-            _personal.EndWindowEarly();
-        }
-
-        void SendAnchor(bool planting)
-        {
-            if (!ClientOnly()) return;
-            var verbs = LocalVerbs();
-            if (verbs == null) return;
-            verbs.RequestAnchor(transform.position, planting);
-        }
-
-        void SendBulkhead()
-        {
-            if (!ClientOnly()) return;
-            var verbs = LocalVerbs();
-            if (verbs != null) verbs.RequestBulkhead();
-        }
-
-        bool ClientOnly()
-        {
-            var net = _game != null ? _game.Net : null;
-            return net != null && net.IsClientOnly;
         }
 
         NetVerbs LocalVerbs()

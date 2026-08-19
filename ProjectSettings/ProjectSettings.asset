@@ -147,7 +147,7 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
-  bundleVersion: 1.0
+  bundleVersion: 0.34
   preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
@@ -892,7 +892,7 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: 3b96df23-b5f0-499c-998f-86d5643d6d88
+  cloudProjectId: 1ea94ee9-95ab-4072-8d1f-2be0db9055ce
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
   projectName: Gatekeeper's Protocol

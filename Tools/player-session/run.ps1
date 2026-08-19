@@ -22,7 +22,15 @@ $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $Report = Join-Path $Root "gkb_player_build_report.json"
 $Req = Join-Path $Root "gkb_player_build_request.txt"
-$DefaultExe = Join-Path $Root "Logs\Builds\GatekeepersProtocol.exe"
+function Get-ProductVersionDisplay {
+    $cs = Join-Path $Root "Assets\Scripts\Sim\Meta\ProductVersion.cs"
+    $text = Get-Content -LiteralPath $cs -Raw
+    $rel = [regex]::Match($text, 'Release\s*=\s*"([^"]+)"').Groups[1].Value
+    $build = [regex]::Match($text, 'Build\s*=\s*(\d+)').Groups[1].Value
+    if (-not $rel -or -not $build) { return "0.34.1" }
+    return "$rel.$build"
+}
+$DefaultExe = Join-Path $Root ("Logs\Builds\{0}\GatekeepersProtocol.exe" -f (Get-ProductVersionDisplay))
 $PersistCandidates = @(
     (Join-Path $env:USERPROFILE "AppData\LocalLow\Gatekeeper\Gatekeeper's Protocol\Logs"),
     (Join-Path $env:USERPROFILE "AppData\LocalLow\Gatekeeper\Gatekeeper Bastion\Logs"),
@@ -56,10 +64,15 @@ if ($Build) {
 if ([string]::IsNullOrWhiteSpace($Exe)) {
     $exeFallbacks = @(
         $DefaultExe,
+        (Join-Path $Root "Logs\Builds\GatekeepersProtocol.exe"),
         (Join-Path $Root "Logs\build\Gatekeeper's Protocol.exe"),
         (Join-Path $Root "Logs\Builds\Gatekeeper Bastion.exe"),
         (Join-Path $Root "Logs\build\Gatekeeper Bastion.exe")
     )
+    $versioned = Get-ChildItem -Path (Join-Path $Root "Logs\Builds") -Filter "GatekeepersProtocol.exe" -Recurse -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+    if ($versioned) { $exeFallbacks = @($versioned.FullName) + $exeFallbacks }
     foreach ($cand in $exeFallbacks) {
         if (Test-Path -LiteralPath $cand) { $Exe = $cand; break }
     }

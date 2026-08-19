@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Michsky.UI.Shift;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GatekeepersProtocol.Game
 {
@@ -20,6 +21,8 @@ namespace GatekeepersProtocol.Game
         /// <see cref="ShortcutButton.keyText"/> / <see cref="ShortcutButton.buttonText"/>
         /// must be updated or <c>OnEnable</c> restores the prefab defaults (ESC/EXIT).</summary>
         public ShortcutButton shortcut;
+        public Image cooldownFill;
+        public string boundKey;
     }
 
     /// <summary>LOCAL-OWNER: binds Shift's <c>Shortcut Keys</c> strip. New path: pooled keycap rows fed by
@@ -46,6 +49,7 @@ namespace GatekeepersProtocol.Game
         readonly List<ShortcutRowBinding> _rowPool = new List<ShortcutRowBinding>(16);
         readonly List<TextMeshProUGUI> _sectionPool = new List<TextMeshProUGUI>(8);
         bool _resolved;
+        bool _loggedMissingFill;
 
         /// <summary>Resolves the authored strip; the pool is whatever labels it already holds.</summary>
         public void EnsureBuilt()
@@ -180,6 +184,16 @@ namespace GatekeepersProtocol.Game
                 }
             }
 
+            var images = clone.GetComponentsInChildren<Image>(true);
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].name == "CooldownFill")
+                {
+                    binding.cooldownFill = images[i];
+                    break;
+                }
+            }
+
             return binding;
         }
 
@@ -204,6 +218,30 @@ namespace GatekeepersProtocol.Game
             }
 
             UiBind.SetText(slot.description, description);
+            slot.boundKey = key;
+        }
+
+        public void ApplyProtocolFills(string crewKey, float crewFill, string personalKey, float personalFill)
+        {
+            bool missing = false;
+            bool saw = false;
+            for (int i = 0; i < _rowPool.Count; i++)
+            {
+                var slot = _rowPool[i];
+                if (slot.root == null || !slot.root.activeSelf) continue;
+                bool crew = slot.boundKey == crewKey;
+                bool personal = slot.boundKey == personalKey;
+                if (!crew && !personal) continue;
+                saw = true;
+                if (slot.cooldownFill == null) { missing = true; continue; }
+                slot.cooldownFill.fillAmount = crew ? crewFill : personalFill;
+            }
+            if (saw && missing && !_loggedMissingFill)
+            {
+                _loggedMissingFill = true;
+                Debug.LogError(
+                    "[ShortcutPanelView] '" + name + "' G/H row has no CooldownFill child.", this);
+            }
         }
 
         static void HideKeycapActionLabels(ShortcutButton shortcut)

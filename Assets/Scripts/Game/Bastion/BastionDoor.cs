@@ -13,11 +13,18 @@ namespace GatekeepersProtocol.Game
         West = 3,
     }
 
+    /// <summary>Who a proximity slab will rise for.</summary>
+    public enum BastionDoorOpensFor : byte
+    {
+        Anyone = 0,
+        Enemies = 1,
+    }
+
     /// <summary>HOST-ONLY: a sliding door leaf in a doorway. Locked doors (progression gates)
     /// stay shut until the unlock graph opens them; unlocked doors slide open for anyone
     /// within range and shut behind them. NavMesh carving only while locked — unlocked
     /// doorways stay pathable and the leaf outruns an approaching agent.</summary>
-    public sealed class BastionDoor : MonoBehaviour
+    public sealed partial class BastionDoor : MonoBehaviour
     {
         public const string SlabName = "GateSlab";
 
@@ -32,10 +39,9 @@ namespace GatekeepersProtocol.Game
         [SerializeField] bool startsLocked = true;
         [SerializeField] bool opensControlRoom;
         [SerializeField] BastionDoorEdge apertureEdge = BastionDoorEdge.North;
+        [SerializeField] BastionDoorOpensFor opensFor = BastionDoorOpensFor.Anyone;
         [SerializeField] SpawnPoint[] sealedSpawns;
         [SerializeField] Material gateMat;
-
-        static readonly Collider[] ProximityHits = new Collider[16];
 
         BoxCollider _blockCollider;
         NavMeshObstacle _obstacle;
@@ -52,6 +58,7 @@ namespace GatekeepersProtocol.Game
         public bool StartsLocked => startsLocked;
         public bool OpensControlRoom => opensControlRoom;
         public BastionDoorEdge ApertureEdge => apertureEdge;
+        public BastionDoorOpensFor OpensFor => opensFor;
         public SpawnPoint[] SealedSpawns => sealedSpawns;
         public bool IsOpen => _unlocked;
 
@@ -61,7 +68,9 @@ namespace GatekeepersProtocol.Game
             string[] requiredTerminals,
             bool controlGate,
             BastionDoorEdge edge,
-            bool locked = true)
+            bool locked = true,
+            BastionDoorOpensFor forWhom = BastionDoorOpensFor.Anyone,
+            bool snap = true)
         {
             doorId = id;
             requiredTerminalIds = requiredTerminals != null
@@ -70,9 +79,16 @@ namespace GatekeepersProtocol.Game
             opensControlRoom = controlGate;
             apertureEdge = edge;
             startsLocked = locked;
-            SnapToAperture();
+            opensFor = forWhom;
+            if (snap)
+                SnapToAperture();
             EnsureGatePresentation();
             SetOpen(!locked);
+        }
+
+        public void SetOpensFor(BastionDoorOpensFor forWhom)
+        {
+            opensFor = forWhom;
         }
 
         public void SetSealedSpawns(SpawnPoint[] spawns)
@@ -89,6 +105,11 @@ namespace GatekeepersProtocol.Game
         void Awake()
         {
             EnsureGatePresentation();
+            if (opensFor == BastionDoorOpensFor.Enemies)
+            {
+                startsLocked = false;
+                SetOpen(true);
+            }
         }
 
         /// <summary>Size blockers and ensure GateSlab. Does not move the transform —
@@ -315,24 +336,6 @@ namespace GatekeepersProtocol.Game
             // Physical block only while the leaf actually fills the doorway.
             if (_blockCollider != null)
                 _blockCollider.enabled = pos.y < LeafTargetY(false) + 0.3f;
-        }
-
-        bool AnyoneNear()
-        {
-            Vector3 center = transform.TransformPoint(0f, _apertureSize.y * 0.5f, 0f);
-            var half = new Vector3(_apertureSize.x * 0.5f + 1f, _apertureSize.y * 0.5f, ProximityRange);
-            int count = Physics.OverlapBoxNonAlloc(center, half, ProximityHits, transform.rotation);
-            for (int i = 0; i < count; i++)
-            {
-                Collider hit = ProximityHits[i];
-                if (hit == null || hit == _blockCollider)
-                    continue;
-                if (hit.GetComponentInParent<CharacterController>() != null
-                    || hit.GetComponentInParent<NavMeshAgent>() != null
-                    || hit.GetComponentInParent<BoarderPresentation>() != null)
-                    return true;
-            }
-            return false;
         }
     }
 }

@@ -11,7 +11,8 @@ using UnityEngine.SceneManagement;
 namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Emits kit segment instances from a bastion sketch file. Trigger via
-    /// gkb_bastion_sketch_request.txt at the project root (path to sketch, or empty for default).</summary>
+    /// gkb_bastion_sketch_request.txt at the project root (path to sketch, or empty for default).
+    /// Closets only: gkb_bastion_spawn_rooms_request.txt — no room emit.</summary>
     [InitializeOnLoad]
     public static class BastionSketchEmitter
     {
@@ -33,6 +34,8 @@ namespace GatekeepersProtocol.EditorTools
         static double _nextSentinelPoll;
         static string Root => Directory.GetParent(Application.dataPath).FullName;
         static string SentinelPath => Path.Combine(Root, "gkb_bastion_sketch_request.txt");
+        static string SpawnRoomsSentinelPath => Path.Combine(Root, "gkb_bastion_spawn_rooms_request.txt");
+        static string SpawnRoomsReportPath => Path.Combine(Root, "gkb_bastion_spawn_rooms_report.json");
         static string DefaultSketchPath => Path.Combine(Root, DefaultSketchRelative);
 
         static BastionSketchEmitter()
@@ -46,6 +49,19 @@ namespace GatekeepersProtocol.EditorTools
             _nextSentinelPoll = EditorApplication.timeSinceStartup + 1.0;
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
                 return;
+
+            if (File.Exists(SpawnRoomsSentinelPath))
+            {
+                try { File.Delete(SpawnRoomsSentinelPath); }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[BastionSketchEmitter] spawn-rooms sentinel: " + e.Message);
+                    return;
+                }
+
+                PlaceAuthoredSpawnRoomsFromDisk();
+                return;
+            }
 
             if (!File.Exists(SentinelPath)) return;
 
@@ -68,6 +84,35 @@ namespace GatekeepersProtocol.EditorTools
             EmitFromSketchFile(sketchPath);
         }
 
+        /// <summary>Opens Bastion from disk, places missing closets, saves. Does not emit
+        /// rooms. Report is <c>gkb_bastion_spawn_rooms_report.json</c>.</summary>
+        static void PlaceAuthoredSpawnRoomsFromDisk()
+        {
+            const string bastionScenePath = "Assets/Scenes/Bastion.unity";
+            try
+            {
+                Scene bastion = EditorSceneManager.OpenScene(bastionScenePath, OpenSceneMode.Single);
+                int placed = EnsureAuthoredSpawnRooms();
+                EditorSceneManager.MarkSceneDirty(bastion);
+                EditorSceneManager.SaveScene(bastion);
+                File.WriteAllText(SpawnRoomsReportPath, "{\"placed\":" + placed + "}\n");
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    File.WriteAllText(SpawnRoomsReportPath,
+                        "{\"error\":\"" + e.GetType().Name + "\"}\n");
+                }
+                catch
+                {
+                    // report is best-effort
+                }
+
+                Debug.LogError("[BastionSketchEmitter] PlaceAuthoredSpawnRoomsFromDisk: " + e);
+            }
+        }
+
         public static void EmitFromSketchFile(string sketchPath)
         {
             if (!File.Exists(sketchPath))
@@ -88,6 +133,115 @@ namespace GatekeepersProtocol.EditorTools
             }
 
             EmitSketch(parsed.Sketch, sketchPath, bastion);
+        }
+
+        /// <summary>Places missing sketch spawn closets on the open Bastion scene without
+        /// emitting rooms or rebuilding Authored geometry. Idempotent by <c>Spawn_*</c> name.
+        /// Removes leftover centre <c>S_S*</c> markers that are not under a SpawnRoom.</summary>
+        public static int EnsureAuthoredSpawnRooms()
+        {
+            Scene scene = SceneManager.GetActiveScene();
+            if (scene.path != "Assets/Scenes/Bastion.unity")
+            {
+                Debug.LogError("[BastionSketchEmitter] EnsureAuthoredSpawnRooms needs Bastion.unity open.");
+                return 0;
+            }
+
+            if (!File.Exists(DefaultSketchPath))
+            {
+                Debug.LogError("[BastionSketchEmitter] Sketch not found: " + DefaultSketchPath);
+                return 0;
+            }
+
+            BastionSketchParseResult parsed = BastionSketchParser.Parse(File.ReadAllText(DefaultSketchPath));
+            if (!parsed.Success)
+            {
+                Debug.LogError("[BastionSketchEmitter] Parse failed: " + parsed.Error);
+                return 0;
+            }
+
+            BastionSegment[] segments = UnityEngine.Object.FindObjectsByType<BastionSegment>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var spawnByName = new Dictionary<string, SpawnPoint>();
+            int placed = 0;
+            var game = UnityEngine.Object.FindAnyObjectByType<GameController>(
+                FindObjectsInactive.Include);
+            var terminals = new Dictionary<string, BastionTerminal>();
+
+            BastionSegment.SuppressValidateRebuild = true;
+            try
+            {
+                for (int i = 0; i < parsed.Sketch.Rooms.Count; i++)
+                {
+                    BastionSketchRoom room = parsed.Sketch.Rooms[i];
+                    BastionSegment segment = FindSegmentNamed(segments, room.Id);
+                    if (segment == null)
+                        continue;
+
+                    for (int m = 0; m < room.Marks.Count; m++)
+                    {
+                        BastionSketchMark mark = room.Marks[m];
+                        if (mark.Kind != BastionSketchMarkKind.Spawn)
+                            continue;
+
+                        Transform existing = segment.transform.Find("Spawn_" + mark.RefId);
+                        if (existing != null)
+                        {
+                            var closet = existing.GetComponent<SpawnRoom>();
+                            if (closet != null && closet.Spawn != null)
+                                spawnByName[mark.RefId] = closet.Spawn;
+                            continue;
+                        }
+
+                        if (CreateMark(segment.transform, mark, spawnByName, terminals, game))
+                            placed++;
+                    }
+                }
+
+                if (spawnByName.Count == 0)
+                {
+                    Debug.LogError("[BastionSketchEmitter] EnsureAuthoredSpawnRooms found no closets.");
+                }
+                else
+                {
+                    RemoveCentreSpawnMarkers();
+                    WireSealedSpawns(spawnByName);
+                    WireControlSpawns(spawnByName);
+                }
+            }
+            finally
+            {
+                BastionSegment.SuppressValidateRebuild = false;
+            }
+
+            Debug.Log("[BastionSketchEmitter] EnsureAuthoredSpawnRooms placed=" + placed
+                + " tracked=" + spawnByName.Count);
+            return placed;
+        }
+
+        static BastionSegment FindSegmentNamed(BastionSegment[] segments, string id)
+        {
+            for (int i = 0; i < segments.Length; i++)
+            {
+                if (segments[i] != null && segments[i].gameObject.name == id)
+                    return segments[i];
+            }
+            return null;
+        }
+
+        static void RemoveCentreSpawnMarkers()
+        {
+            SpawnPoint[] points = UnityEngine.Object.FindObjectsByType<SpawnPoint>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < points.Length; i++)
+            {
+                SpawnPoint sp = points[i];
+                if (sp == null)
+                    continue;
+                if (sp.GetComponentInParent<SpawnRoom>() != null)
+                    continue;
+                UnityEngine.Object.DestroyImmediate(sp.gameObject);
+            }
         }
 
         static void EmitSketch(BastionSketch sketch, string sketchPath, Scene bastionScene)
@@ -116,6 +270,8 @@ namespace GatekeepersProtocol.EditorTools
 
                 var spawnByName = new Dictionary<string, SpawnPoint>();
                 var terminalById = new Dictionary<string, BastionTerminal>();
+
+                ApplySpawnSides(sketch, effectiveSides);
 
                 for (int i = 0; i < sketch.Rooms.Count; i++)
                 {
@@ -190,6 +346,7 @@ namespace GatekeepersProtocol.EditorTools
                 }
 
                 WireSealedSpawns(spawnByName);
+                WireControlSpawns(spawnByName);
 
                 if (bastionScene.IsValid())
                     EditorSceneManager.MarkSceneDirty(bastionScene);
@@ -318,6 +475,27 @@ namespace GatekeepersProtocol.EditorTools
             }
         }
 
+        static void ApplySpawnSides(BastionSketch sketch, Dictionary<string, SideSet> map)
+        {
+            for (int i = 0; i < sketch.Rooms.Count; i++)
+            {
+                BastionSketchRoom room = sketch.Rooms[i];
+                for (int m = 0; m < room.Marks.Count; m++)
+                {
+                    BastionSketchMark mark = room.Marks[m];
+                    if (mark.Kind != BastionSketchMarkKind.Spawn || !mark.HasDirection)
+                        continue;
+                    if (!map.TryGetValue(room.Id, out SideSet set))
+                    {
+                        set = new SideSet();
+                        map[room.Id] = set;
+                    }
+
+                    set.Set(mark.Direction, BastionSideKind.Door, 0f);
+                }
+            }
+        }
+
         static void ClearChildren(GameObject root)
         {
             for (int i = root.transform.childCount - 1; i >= 0; i--)
@@ -422,8 +600,27 @@ namespace GatekeepersProtocol.EditorTools
                     return true;
                 case BastionSketchMarkKind.Spawn:
                 {
-                    GameObject go = CreateNamedMarker(room, "S_" + mark.RefId, typeof(SpawnPoint));
-                    var sp = go.GetComponent<SpawnPoint>();
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(SpawnRoom.PrefabPath);
+                    if (prefab == null)
+                    {
+                        Debug.LogError("[BastionSketchEmitter] Missing " + SpawnRoom.PrefabPath);
+                        return false;
+                    }
+
+                    var instance = PrefabUtility.InstantiatePrefab(prefab, room) as GameObject;
+                    if (instance == null)
+                        return false;
+
+                    instance.name = "Spawn_" + mark.RefId;
+                    var closet = instance.GetComponent<SpawnRoom>();
+                    if (closet == null)
+                        closet = instance.AddComponent<SpawnRoom>();
+
+                    var segment = room.GetComponent<BastionSegment>();
+                    closet.AttachTo(segment, ToDoorEdge(mark.Direction));
+                    closet.NameSpawn(mark.RefId);
+
+                    var sp = closet.Spawn;
                     if (sp != null)
                         spawnByName[mark.RefId] = sp;
                     return true;
@@ -448,7 +645,7 @@ namespace GatekeepersProtocol.EditorTools
             var terminal = go.GetComponent<BastionTerminal>();
             if (terminal != null)
             {
-                terminal.Configure(id, kind);
+                terminal.Configure(id, kind, waves: FirstTerminal.WavesFor(id));
                 terminal.SetGameController(game);
                 terminalById[id] = terminal;
                 BastionFieldConsole.AttachIfMissing(terminal);
@@ -498,6 +695,8 @@ namespace GatekeepersProtocol.EditorTools
             {
                 if (pair.Key == "S1" || pair.Key == "S2")
                     continue;
+                if (IsControlRoomSpawn(pair.Value))
+                    continue;
                 if (pair.Value != null)
                     lockedWingSpawns.Add(pair.Value);
             }
@@ -508,7 +707,9 @@ namespace GatekeepersProtocol.EditorTools
             for (int i = 0; i < doors.Length; i++)
             {
                 BastionDoor d = doors[i];
-                if (d == null || d.DoorId == "D1")
+                if (d == null || string.IsNullOrEmpty(d.DoorId) || d.DoorId == "D1")
+                    continue;
+                if (d.OpensFor == BastionDoorOpensFor.Enemies)
                     continue;
                 if (owner == null || string.CompareOrdinal(d.DoorId, owner.DoorId) < 0)
                     owner = d;
@@ -523,6 +724,52 @@ namespace GatekeepersProtocol.EditorTools
                 if (lockedWingSpawns[s] != null)
                     lockedWingSpawns[s].gameObject.SetActive(false);
             }
+        }
+
+        /// <summary>Control Room closets wait on Master Control. Inactive until the room
+        /// fight starts; D2 must not own them.</summary>
+        static void WireControlSpawns(Dictionary<string, SpawnPoint> spawnByName)
+        {
+            var control = new List<SpawnPoint>();
+            foreach (KeyValuePair<string, SpawnPoint> pair in spawnByName)
+            {
+                if (!IsControlRoomSpawn(pair.Value))
+                    continue;
+                control.Add(pair.Value);
+                pair.Value.gameObject.SetActive(false);
+            }
+
+            if (control.Count == 0)
+                return;
+
+            BastionTerminal[] terminals = UnityEngine.Object.FindObjectsByType<BastionTerminal>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            BastionTerminal master = null;
+            for (int i = 0; i < terminals.Length; i++)
+            {
+                BastionTerminal t = terminals[i];
+                if (t != null && t.Kind == BastionTerminalKind.Master)
+                {
+                    master = t;
+                    break;
+                }
+            }
+
+            if (master == null)
+            {
+                Debug.LogError("[BastionSketchEmitter] Control Room spawns but no Master terminal");
+                return;
+            }
+
+            master.SetUnlockedSpawns(control.ToArray());
+        }
+
+        static bool IsControlRoomSpawn(SpawnPoint spawn)
+        {
+            if (spawn == null)
+                return false;
+            BastionSegment segment = spawn.GetComponentInParent<BastionSegment>();
+            return segment != null && segment.BlockKind == BastionBlockKind.ControlRoom;
         }
 
         static GameObject CreateNamedMarker(Transform parent, string name, Type componentType)

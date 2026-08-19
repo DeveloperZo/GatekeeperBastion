@@ -14,6 +14,10 @@ namespace GatekeepersProtocol.Game
             // Defensive sample: free when the Bastion tick already sampled this frame.
             if (!Controls.Sample().escapeDown) return;
 
+            // A live demo line is topmost: a Lock line ends (same as Continue, not pause);
+            // an Assault subtitle dismisses. Either way Esc is consumed this frame.
+            if (DemoVoice.TryHandleEscape()) return;
+
             // Priority: open modal -> Settings -> pause -> end Confirm -> open pause.
             var modal = FindOpenModal();
             if (modal != null)
@@ -44,7 +48,8 @@ namespace GatekeepersProtocol.Game
             var gc = _game;
             if (gc != null && (_endPresented
                 || (gc.Sim != null
-                    && (gc.Sim.Phase == Sim.RunPhase.Lost || gc.Sim.Phase == Sim.RunPhase.Escaped))))
+                    && (gc.Sim.Phase == Sim.RunPhase.Lost || gc.Sim.Phase == Sim.RunPhase.Escaped
+                        || gc.Sim.Phase == Sim.RunPhase.Returned))))
             {
                 gc.ReturnToShip();
                 return;
@@ -121,7 +126,7 @@ namespace GatekeepersProtocol.Game
             if (sim != null)
             {
                 var ctx = FightShortcutContext(sim);
-                int dialLevel = sim.Assault == AssaultState.Prep ? sim.Siphon.Level : -1;
+                int dialLevel = ViewAssault(sim) == AssaultState.Prep ? sim.Siphon.Level : -1;
                 FillPauseShortcuts(sim, ctx, dialLevel);
             }
             // Criterion 31: never touch timeScale; fight canvas stays enabled.
@@ -151,6 +156,8 @@ namespace GatekeepersProtocol.Game
             IsPauseOpen = false;
 
             var sim = _game != null ? _game.Sim : null;
+            if (sim != null && sim.Phase == RunPhase.Tethered)
+                ShowFightHud(ViewAssault(sim) == AssaultState.Prep);
             if (sim != null && sim.Phase == RunPhase.Tethered && _fpc != null
                 && !_pauseCapturedLock)
             {
@@ -179,9 +186,9 @@ namespace GatekeepersProtocol.Game
             if (_view == null || !IsPauseOpen) return;
             var sim = _game != null ? _game.Sim : null;
             if (sim == null || sim.Phase != RunPhase.Tethered) return;
-            _view.ShowFight(sim.Assault == AssaultState.Prep);
+            ShowFightHud(ViewAssault(sim) == AssaultState.Prep);
             var ctx = FightShortcutContext(sim);
-            int dialLevel = sim.Assault == AssaultState.Prep ? sim.Siphon.Level : -1;
+            int dialLevel = ViewAssault(sim) == AssaultState.Prep ? sim.Siphon.Level : -1;
             FillPauseShortcuts(sim, ctx, dialLevel);
         }
     }

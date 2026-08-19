@@ -78,9 +78,15 @@ namespace GatekeepersProtocol.Game
                 HandleEscape();
 
             // Same open path as Armory-from-anywhere: Interact Down → OpenStationPanel.
-            // Target is the console under the camera ray, not a hard-coded Armory.
-            if (Controls.Down(ControlId.Interact))
-                TryOpenStationFromInteract(ResolveTargetedStation());
+            // Target is the console under the camera ray, not a hard-coded Armory. The demo
+            // gate goes first: dark refuses, the rack grant and the tap-heal all consume the
+            // Down before any panel; with the demo off it always falls through.
+            if (Controls.Down(ControlId.Interact) && !DemoVoice.LocksInput)
+            {
+                var target = ResolveTargetedStation();
+                if (!DemoStationGate.TryHandleInteractDown(target))
+                    TryOpenStationFromInteract(target);
+            }
 
             if (_fpc != null || _bindWindow <= 0f) return;
             _bindWindow -= Time.deltaTime;
@@ -94,6 +100,9 @@ namespace GatekeepersProtocol.Game
         /// up or <paramref name="station"/> is null. Call site for Interact Down on Ship.</summary>
         public bool TryOpenStationFromInteract(StationTerminal station)
         {
+            // A live Lock line owns the screen: no station opens under it. The cursor is
+            // already free (DemoVoiceView), so the prompt is hidden anyway — silent refuse.
+            if (DemoVoice.LocksInput) return false;
             if (station == null || OpenStation != null || IsSettingsOpen || OptionsScreen.IsOpen)
                 return false;
             if (NetShipWait.IsActive && !(station is MapStation))
@@ -159,7 +168,8 @@ namespace GatekeepersProtocol.Game
             // Esc is FreeCursor on Ship; FirstPersonController also unlocks on that binding.
             // After the Escape contract, walking means locked — re-assert once per frame so FPC
             // cannot leave the hub cursor-free after Esc opened/closed Settings or a station.
-            if (_walking && OpenStation == null && !IsSettingsOpen && !OptionsScreen.IsOpen)
+            if (_walking && OpenStation == null && !IsSettingsOpen && !OptionsScreen.IsOpen
+                && !DemoVoice.LocksInput)
                 ApplyWalkMode();
         }
 
@@ -168,6 +178,10 @@ namespace GatekeepersProtocol.Game
         /// contract).</summary>
         void HandleEscape()
         {
+            // A live demo line is topmost: Esc ends a Lock line (same as Continue) or
+            // dismisses a Subtitle, and is consumed — it must not also open Settings.
+            if (DemoVoice.TryHandleEscape()) return;
+
             if (_exitModal != null && _exitModal.gameObject.activeInHierarchy)
             {
                 _exitModal.ModalWindowOut();

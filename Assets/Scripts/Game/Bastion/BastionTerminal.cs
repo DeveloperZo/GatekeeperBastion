@@ -59,6 +59,13 @@ namespace GatekeepersProtocol.Game
             unlocksDoor = door;
         }
 
+        /// <summary>Editor/sketch emit — Master UnlockedSpawns are Control Room closets,
+        /// wired after spawn marks exist.</summary>
+        public void SetUnlockedSpawns(SpawnPoint[] spawns)
+        {
+            unlockedSpawns = spawns != null ? spawns : System.Array.Empty<SpawnPoint>();
+        }
+
         void Reset()
         {
             kind = BastionTerminalKind.Field;
@@ -114,8 +121,8 @@ namespace GatekeepersProtocol.Game
 
                 if (_layout != null && _layout.IsTerminalDone(terminalId))
                 {
-                    if (unlocksDoor != null && !unlocksDoor.IsOpen)
-                        return "[" + key + "] Open door";
+                    // No "[E] Open door" branch: a completed terminal no longer opens anything.
+                    // Doors open on a survived Hatch-bank window (BastionUnlockGraph).
                     return "Terminal " + terminalId + " — complete";
                 }
                 var gc = _game;
@@ -123,6 +130,9 @@ namespace GatekeepersProtocol.Game
                     return "Terminal " + terminalId + " — wave live";
                 if (gc != null && gc.Sim != null && gc.Sim.SequentialPending)
                     return "Terminal " + terminalId + " — next Wave incoming";
+                string blocked = gc != null ? gc.FieldStartBlockReason(terminalId) : null;
+                if (blocked != null)
+                    return "Terminal " + terminalId + " — " + blocked;
                 int k = 0;
                 int n = WavesToComplete;
                 if (_layout != null)
@@ -171,30 +181,17 @@ namespace GatekeepersProtocol.Game
 
         static int _foresightLoggedWave = int.MinValue;
 
-        /// <summary>Held Interact. Wave start is Prep T after E-select. Completed Field
-        /// with a shut door opens it.</summary>
+        /// <summary>Held Interact. Wave start is Prep T after E-select, handled by
+        /// GameController.TickPrepCommands — a terminal has nothing of its own to do on E.
+        /// The completed-Field door-open branch was retired: doors key on a survived
+        /// Hatch-bank window now, so opening a door here would re-assert a rule the graph no
+        /// longer has and the next RefreshDoorStates would shut it again.</summary>
         public void Interact(float dt)
         {
-            if (!Controls.Down(ControlId.Interact))
-                return;
-            if (_game == null)
-            {
-                Log.Warn("Terminal", terminalId + " has no GameController");
-                return;
-            }
-
-            if (kind == BastionTerminalKind.Field
-                && _layout != null
-                && _layout.IsTerminalDone(terminalId)
-                && unlocksDoor != null
-                && !unlocksDoor.IsOpen)
-            {
-                unlocksDoor.SetOpen(true);
-                Log.Event("Terminal", terminalId + " opened " + unlocksDoor.DoorId);
-            }
         }
 
-        /// <summary>Field only — spawn points that wait on this terminal's clear.</summary>
+        /// <summary>Enable or mute this terminal's UnlockedSpawns (Field Wave Spawns or
+        /// Master Control Room closets).</summary>
         public void SetUnlockedSpawnsActive(bool active)
         {
             if (unlockedSpawns == null)

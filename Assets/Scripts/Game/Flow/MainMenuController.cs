@@ -71,7 +71,7 @@ namespace GatekeepersProtocol.Game
             int banked = meta != null ? (int)meta.BankedSalvage : 0;
             int runs = meta != null ? meta.TotalRuns : 0;
             int deepest = meta != null ? meta.DeepestWaveReached : 0;
-            _view.SetCampaignStrip(banked, runs, deepest, Application.version);
+            _view.SetCampaignStrip(banked, runs, deepest, ProductVersion.Display);
             if (!string.IsNullOrEmpty(NetJoinIntent.LastError))
             {
                 _view.ShowJoin();
@@ -177,6 +177,14 @@ namespace GatekeepersProtocol.Game
 
             _loading = true;
             LoadCampaignForNet();
+            if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
+            {
+                _loading = false;
+                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                if (_view != null)
+                    _view.SetHostStatus("Multiplayer unlocks after your first upgrade — play the opening solo.");
+                return;
+            }
             NetJoinIntent.LastError = null;
             NetJoinIntent.Clear();
             FrontEndMusic.Stop();
@@ -227,6 +235,13 @@ namespace GatekeepersProtocol.Game
                     _view.SetJoinRefusal("Enter a six-character join code.");
                     return;
                 }
+                if (string.Equals(code, _pendingJoinCode, System.StringComparison.OrdinalIgnoreCase)
+                    && RelayJoin.HasPayload(_pendingRelay))
+                {
+                    Log.Event(Tag, "join is this host's code — starting host");
+                    EnterSessionHost(relay: true);
+                    return;
+                }
                 _busy = true;
                 _view.SetJoinRefusal("Joining…");
                 RelayJoin.Result result = await RelayJoin.TryJoin(code);
@@ -274,6 +289,14 @@ namespace GatekeepersProtocol.Game
             _loading = true;
             NetJoinIntent.LastError = null;
             LoadCampaignForNet();
+            if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
+            {
+                _loading = false;
+                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                if (_view != null)
+                    _view.SetJoinRefusal("Multiplayer unlocks after your first upgrade — play the opening solo.");
+                return;
+            }
             NetJoinIntent.Clear();
             FrontEndMusic.Stop();
 
@@ -304,6 +327,14 @@ namespace GatekeepersProtocol.Game
             _loading = true;
             NetJoinIntent.LastError = null;
             LoadCampaignForNet();
+            if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
+            {
+                _loading = false;
+                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                if (_view != null)
+                    _view.SetJoinRefusal("Multiplayer unlocks after your first upgrade — play the opening solo.");
+                return;
+            }
             NetJoinIntent.Clear();
             FrontEndMusic.Stop();
 

@@ -195,11 +195,44 @@ namespace GatekeepersProtocol.Game
             }
         }
 
+        /// <summary>A Hatch-bank window was survived: open every eligible door and hand back the
+        /// ids that opened on this call. This is the ONLY runtime path that opens a locked door —
+        /// completing a terminal no longer does.</summary>
+        public bool RecordBankSurvived(out string[] openedDoorIds)
+        {
+            openedDoorIds = System.Array.Empty<string>();
+            if (_graph == null)
+                return false;
+            if (!_graph.RecordBankSurvived(out openedDoorIds))
+                return false;
+            RefreshDoorStates();
+            RefreshTerminalStates();
+            return true;
+        }
+
         public string[] CopyCompletedTerminalIds()
         {
             if (_graph == null)
                 return System.Array.Empty<string>();
             return _graph.CopyCompletedTerminalIds();
+        }
+
+        public string[] CopyOpenDoorIds()
+        {
+            if (_graph == null)
+                return System.Array.Empty<string>();
+            return _graph.CopyOpenDoorIds();
+        }
+
+        /// <summary>Re-open saved doors on embark. Called on every start, not only a deep one:
+        /// a Docked return re-embarks at Wave 1 and must still find its door open.</summary>
+        public void RestoreOpenDoors(string[] ids)
+        {
+            if (_graph == null || ids == null || ids.Length == 0)
+                return;
+            _graph.RestoreOpenDoors(ids);
+            RefreshDoorStates();
+            RefreshTerminalStates();
         }
 
         public void RestoreCompletedTerminals(string[] ids)

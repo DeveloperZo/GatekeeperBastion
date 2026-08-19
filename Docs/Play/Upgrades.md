@@ -1,4 +1,4 @@
-<!-- Purpose: the permanent upgrade tracks — what each changes about play, what is gated, and what is worth buying. / Status: working / Update trigger: when a track is added, removed, regated, or changes what it affects. / Last updated: 2026-08-16 -->
+<!-- Purpose: the permanent upgrade tracks — what each changes about play, what is gated, and what is worth buying. / Status: working / Update trigger: when a track is added, removed, regated, or changes what it affects. / Last updated: 2026-08-17 -->
 
 # Upgrades
 
@@ -69,6 +69,6 @@ The lock is the Run-loss counter, and **losing the Hatch trips it exactly as bei
 - There is no respec and no refund. Nothing warns you.
 - Hatch Armor takes effect on the next embark, and there is no way to confirm it landed short of starting a Run and reading the door.
 - The Hatch Armor panel shows current and next effect, but never the whole ladder.
-- Protocol bursts exist; CREW names Barrage and Rush. The Fight shortcut cooldown readout is M70 remaining work.
+- Protocol bursts exist; CREW names Barrage and Rush. Fight HUD: protocol name top-left; Passive / Personal / Crew bar bottom-centre with `G`/`H` fills.
 
 *Costs, levels, effects and the exact curve: [Field Manual](Field-Manual.md).*

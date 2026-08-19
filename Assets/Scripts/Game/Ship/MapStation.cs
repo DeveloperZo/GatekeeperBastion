@@ -25,10 +25,16 @@ namespace GatekeepersProtocol.Game
                 if (m == null) return "embark on the run";
                 bool noWeapon = !m.OwnsAnyWeapon;
                 bool noRig = !m.HasRepairRigEquipped;
-                if (noWeapon && noRig) return "EMBARK — no weapon, no repair rig";
-                if (noWeapon) return "EMBARK — but you have NO WEAPON yet";
-                if (noRig) return "EMBARK — no repair rig";
-                return "embark on the run";
+                bool noProtocol = m.EquippedProtocol == BoarderProtocolId.None;
+                if (!noWeapon && !noRig && !noProtocol) return "embark on the run";
+                if (noWeapon && !noRig && !noProtocol) return "EMBARK — but you have NO WEAPON yet";
+                if (!noWeapon && noRig && !noProtocol) return "EMBARK — no repair rig";
+                if (!noWeapon && !noRig && noProtocol) return "EMBARK — no protocol";
+                string parts = "";
+                if (noWeapon) parts = "no weapon";
+                if (noRig) parts = parts.Length == 0 ? "no repair rig" : parts + ", no repair rig";
+                if (noProtocol) parts = parts.Length == 0 ? "no protocol" : parts + ", no protocol";
+                return "EMBARK — " + parts;
             }
         }
 
@@ -36,6 +42,12 @@ namespace GatekeepersProtocol.Game
         bool _loadFailed;
         bool _mapOpen;
         int _startWave = 1;
+
+        // Demo embark-refuse lines: first play per reason per Ship visit (instance lifetime
+        // is the visit — beat 0 refuse table).
+        bool _refusedTerminal;
+        bool _refusedWeapon;
+        bool _refusedIntruders;
 
         protected override void Awake()
         {
@@ -78,7 +90,7 @@ namespace GatekeepersProtocol.Game
             if (NetShipWait.IsActive)
             {
                 _body.ShowStartWavePicker(false);
-                _body.ShowWarnings(false, false);
+                _body.ShowWarnings(false, false, false);
                 _body.BindPartyLobby(false, null, false, null, null);
                 _body.BindEmbark("EMBARK", () => TryEmbark(m));
                 _body.ShowLoadFailed(false);
@@ -100,10 +112,20 @@ namespace GatekeepersProtocol.Game
                 () => _startWave--, _startWave > 1,
                 () => _startWave++, _startWave < deepest);
 
-            _body.ShowWarnings(!m.OwnsAnyWeapon, !m.HasRepairRigEquipped);
+            if (m.DemoActive && m.DemoShipFightDone)
+            {
+                _body.ShowWarnings(false, false, false);
+                _body.BindEmbark("EMBARK", () => TryEmbark(m));
+            }
+            else
+            {
+                _body.ShowWarnings(!m.OwnsAnyWeapon, !m.HasRepairRigEquipped,
+                    m.EquippedProtocol == BoarderProtocolId.None);
 
-            bool warned = !m.OwnsAnyWeapon || !m.HasRepairRigEquipped;
-            _body.BindEmbark(warned ? "EMBARK ANYWAY" : "EMBARK", () => TryEmbark(m));
+                bool warned = !m.OwnsAnyWeapon || !m.HasRepairRigEquipped
+                    || m.EquippedProtocol == BoarderProtocolId.None;
+                _body.BindEmbark(warned ? "EMBARK ANYWAY" : "EMBARK", () => TryEmbark(m));
+            }
 
             _body.ShowLoadFailed(_loadFailed);
         }
@@ -145,7 +167,8 @@ namespace GatekeepersProtocol.Game
                 _body.SetPremise("Party lead embarks — start wave " + leadWave + ".");
             }
 
-            _body.ShowWarnings(!m.OwnsAnyWeapon, !m.HasRepairRigEquipped);
+            _body.ShowWarnings(!m.OwnsAnyWeapon, !m.HasRepairRigEquipped,
+                m.EquippedProtocol == BoarderProtocolId.None);
 
             _body.BindPartyLobby(
                 showReady: !counting,
@@ -163,7 +186,8 @@ namespace GatekeepersProtocol.Game
 
             if (lead)
             {
-                bool warned = !m.OwnsAnyWeapon || !m.HasRepairRigEquipped;
+                bool warned = !m.OwnsAnyWeapon || !m.HasRepairRigEquipped
+                    || m.EquippedProtocol == BoarderProtocolId.None;
                 _body.BindEmbark(warned ? "EMBARK ANYWAY" : "EMBARK", () => TryPartyEmbark(m, session));
             }
             else
@@ -250,6 +274,9 @@ namespace GatekeepersProtocol.Game
             }
 
             if (_embarking) return;
+            if (RefuseDemoEmbark(m)) return;
+            if (m.DemoActive && m.TotalRuns == 0)
+                Log.Event("Demo", "first embark");
             GameSession.PendingStartWave = _startWave;
             Log.Event("Ship",
                 $"embarked for bastion {SceneFlow.BastionName} starting at wave {_startWave} — " +
@@ -260,6 +287,46 @@ namespace GatekeepersProtocol.Game
             _loadFailed = !_embarking;
             if (_loadFailed)
                 Log.Error("Ship", "embark refused — Bastion is not in Build Settings / not loadable");
+        }
+
+        /// <summary>Beat 0's named EMBARK refuses. One id, three reason strings — copy rides
+        /// the Play override; each reason's line plays once per Ship visit, the log always.</summary>
+        bool RefuseDemoEmbark(MetaState m)
+        {
+            switch (DemoProgress.EmbarkRefusal(m))
+            {
+                case DemoEmbarkRefusal.ShipTerminal:
+                    Log.Event("Demo", "embark refused — ship terminal");
+                    if (!_refusedTerminal)
+                    {
+                        _refusedTerminal = true;
+                        DemoVoice.Play(DemoConversationIds.EmbarkBlocked, DemoVoiceMode.Lock,
+                            "You are not ready. Start the ship terminal first.");
+                    }
+                    return true;
+                case DemoEmbarkRefusal.NoWeapon:
+                    // Unreachable on a post-revision save (the terminal's start grants
+                    // the MK-1 with the same write) — kept for pre-revision saves.
+                    Log.Event("Demo", "embark refused — no weapon");
+                    if (!_refusedWeapon)
+                    {
+                        _refusedWeapon = true;
+                        DemoVoice.Play(DemoConversationIds.EmbarkBlocked, DemoVoiceMode.Lock,
+                            "You are unarmed. Start the ship terminal.");
+                    }
+                    return true;
+                case DemoEmbarkRefusal.Intruders:
+                    Log.Event("Demo", "embark refused — intruders aboard");
+                    if (!_refusedIntruders)
+                    {
+                        _refusedIntruders = true;
+                        DemoVoice.Play(DemoConversationIds.EmbarkBlocked, DemoVoiceMode.Lock,
+                            "Gatekeepers are still aboard. Clear the ship first.");
+                    }
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         public static string StartWaveLine(int start, int deepest) =>

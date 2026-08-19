@@ -35,7 +35,7 @@ the catalog ability is still `AbilityId.None`.
 <!-- GKB:GEN mk1-base — WeaponCatalog.Def(Mk1Sidearm) -->
 | | base | | base |
 |---|---|---|---|
-| damage/shot | 14 | reload | 1.4s |
+| damage/shot | 30 | reload | 1.4s |
 | shots/second | 3 | range | 45 m |
 | clip | 8 | | |
 <!-- GKB:END mk1-base -->
@@ -44,22 +44,22 @@ the catalog ability is still `AbilityId.None`.
 
 ```
 dps = (clip * damage) / (clip/rate + reload)
-base: (8 * 14) / (8/3 + 1.4) = 112 / 4.07 = 27.5 dps
+base: (8 * 30) / (8/3 + 1.4) = 240 / 4.07 = 59.0 dps
 ```
 
 Reload is an upgrade spoke (`ReloadPerPoint = 0.98035f`) for every shop weapon, so the
-duty cycle is not fixed across a campaign. The MK-1's damage-centred build stays under
-every primary's damage-centred build at equal purchases
-(`Mk1DamageFocus_NeverRivalsFocusedPrimaries`). The SEC-D's fire-rate-centred build does
-the same (`SecDFireRateFocus_NeverRivalsFocusedPrimaries`). Secondaries price on their
-own curve — the tier-cost block below — and the first two MK-1 purchases (150 + 300) equal
-the 450 a wave-1 Hatch-bank can convert at kill-value 25 and intensity 0
+duty cycle is not fixed across a campaign. MK-1 T0 damage 30 one-shots a Wave-1 Default
+(`Mk1_T0_OneShotsWave1Default`). That puts T0 duty-cycle dps above the Secondary band;
+first-session fodder TTK is the demand (2026-08-16). The SEC-D's fire-rate-centred build
+stays under focused Primaries (`SecDFireRateFocus_NeverRivalsFocusedPrimaries`). Secondaries
+price on their own curve — the tier-cost block below — and the first two MK-1 purchases
+(150 + 300) equal the 450 a wave-1 Hatch-bank can convert at kill-value 25 and intensity 0
 (`FirstWheelPurchase_AffordableOffOneWaveOneClear`).
 
 **Crit** (`PlayerGun.RollCrit`, `CritDamageMultiplier = 2`): `MetaUpgrades.CritChance()` is
 frozen at 0. Average multiplier is therefore 1. There is no Luck shop.
-**No MK-1 → improvised cutter**: 40% damage, 50% rate → 5.6 dmg at 1.5/s,
-clip 8 → `44.8 / 6.73 = 6.7 dps`. A hard Run, not a dead end.
+**No MK-1 → improvised cutter**: 40% damage, 50% rate → 12 dmg at 1.5/s,
+clip 8 → `96 / 6.73 = 14.3 dps`. A hard Run, not a dead end.
 
 ## Player
 
@@ -91,15 +91,15 @@ old 6 x 90) — a redistribution, not an inflation.
 GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game override
 (`RamGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`). Player-facing name is Thief.
 
-- **Default** 30 HP = **3 shots** (14/28/42) = `30/27.5 = 1.09s`. 6 dmg/0.7s = 8.6 dps
+- **Default** 30 HP = **1 shot** at MK-1 T0. 6 dmg/0.7s = 8.6 dps
   each: three on you kill a 100 HP player in **3.9s**, five in **2.3s** (at the old
   18 dmg, five were 128.6 dps and **0.8s** — why damage fell as bodies tripled).
   Hatch 4/0.7s = 5.7 dps: one leaker needs 52s, so leaks are a crowd problem now.
-- **Hunter** 20 HP = **2 shots** = `20/27.5 = 0.73s`. 6.5 m/s beats the 5 m/s walk and loses to the
+- **Hunter** 20 HP = **1 shot**. 6.5 m/s beats the 5 m/s walk and loses to the
   7.5 m/s sprint — the first Gatekeeper that makes **sprint** load-bearing. Zero Hatch
   damage: it cannot be answered by standing on the Hatch.
-- **Ram** 120 HP = **9 shots** = `120/27.5 = 4.36s` of focused fire while dealing
-  `20/0.7 = 28.6` dps → `28.6 x 3.75 = 107` HP, a third of the 300 HP door, per Ram that
+- **Ram** 120 HP = **4 shots** = `120/59 = 2.03s` of focused fire while dealing
+  `20/0.7 = 28.6` dps → `28.6 x 2.03 = 58` HP of the 300 HP door, per Ram that
   got home *while being shot*. Intercepting it turns "shoot the closest" into "shoot the
   right thing"; it cannot hurt you, so it costs only the time the Hunters are using.
 - Melee reach 2.4 m (player) / 3.5 m (Hatch), +1.2 m hysteresis. Aggro: shot at,
@@ -224,7 +224,7 @@ dumps when the timer ends.
 | | |
 |---|---|
 | slots / Run | 3 |
-| drip | 20 unbanked/s |
+| drip | 8 unbanked/s |
 | duration | 45 s |
 | withdraw | 16 salvage/s |
 
@@ -232,7 +232,7 @@ dumps when the timer ends.
 |---|---|---|---|
 | 1 | ×1.00 | 1 | 18 |
 | 2 | ×1.10 | 2 | 30 |
-| 3 | ×1.25 | 3 | 42 |
+| 3 | ×1.25 | 3 | 43 |
 | 4 | ×1.35 | 4 | 54 |
 | 5 | ×1.50 | 5 | 66 |
 <!-- GKB:END hatch-bank -->
@@ -365,7 +365,7 @@ array (`WeaponWheel.EffectiveDps`) and cannot be tabulated against derived Tier.
 
 | weapon | dmg/shot | pellets | shots/s | clip | reload | range | pierce | base dps |
 |---|---|---|---|---|---|---|---|---|
-| MK-1 Sidearm | 14 | 1 | 3.0 | 8 | 1.4s | 45 m, falloff from 12 m | — | 27.5 |
+| MK-1 Sidearm | 30 | 1 | 3.0 | 8 | 1.4s | 45 m, falloff from 12 m | — | 59.0 |
 | SEC-D | 18 | 1 | 6.0 | 4 | 2.2s | 8 m, falloff from 3 m | — | 25.1 |
 | VK-7 Rifle *(disabled)* | 10 | 1 | 5.5 | 25 | 2.1s | 60 m | — | 37.6 |
 | BR-12 Shotgun | 6 | 7 | 1.2 | 6 | 2.6s | 14 m, falloff from 8 m | — | 33.2 |

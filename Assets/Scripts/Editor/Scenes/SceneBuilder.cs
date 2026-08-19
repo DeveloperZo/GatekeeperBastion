@@ -190,11 +190,19 @@ namespace GatekeepersProtocol.EditorTools
             {
                 foreach (string owned in OwnedRootNames)
                 {
-                    if (root != null && root.name == owned)
+                    if (root == null || root.name != owned)
+                        continue;
+                    // Spawn closets parented here by mistake — Build All used to delete them
+                    // with the SpawnPoints root.
+                    if (root.GetComponentInChildren<SpawnRoom>(true) != null)
                     {
-                        UnityEngine.Object.DestroyImmediate(root);
+                        Debug.LogWarning(
+                            "[SceneBuilder] Skipping wipe of " + owned
+                            + " — it holds SpawnRoom instances.");
                         break;
                     }
+                    UnityEngine.Object.DestroyImmediate(root);
+                    break;
                 }
             }
         }

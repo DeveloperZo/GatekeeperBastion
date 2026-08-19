@@ -1,4 +1,5 @@
 using System;
+using GatekeepersProtocol.Util;
 
 namespace GatekeepersProtocol.Sim
 {
@@ -23,12 +24,18 @@ namespace GatekeepersProtocol.Sim
         Bulkhead = 2,
         Ghost = 3,
         Foresight = 4,
+        Barrage = 5,
+        Rush = 6,
     }
 
     /// <summary>Catalog: protocol → doctrine / abilities, and every number as a function of
     /// ability id. Verbs and server clamps read only these.</summary>
     public static class BoarderProtocol
     {
+        public const float BarrageFireMul = 2f;
+        public const float RushFireMul = 1.5f;
+        const float BarrageMulCap = 2f;
+
         public static BoarderProtocolId[] ShopProtocols()
         {
             return new[] { BoarderProtocolId.Default };
@@ -41,24 +48,21 @@ namespace GatekeepersProtocol.Sim
 
         public static BoarderAbilityId CrewAbilityOf(BoarderProtocolId id)
         {
-            return id == BoarderProtocolId.Default ? BoarderAbilityId.Anchor : BoarderAbilityId.None;
+            return id == BoarderProtocolId.Default ? BoarderAbilityId.Barrage : BoarderAbilityId.None;
         }
 
         public static BoarderAbilityId PersonalAbilityOf(BoarderProtocolId id)
         {
-            return id == BoarderProtocolId.Default ? BoarderAbilityId.Bulkhead : BoarderAbilityId.None;
+            return id == BoarderProtocolId.Default ? BoarderAbilityId.Rush : BoarderAbilityId.None;
         }
 
         public static int PassiveCount(BoarderProtocolId id)
         {
-            return id == BoarderProtocolId.Default ? 2 : 0;
+            return 0;
         }
 
         public static BoarderAbilityId PassiveAt(BoarderProtocolId id, int index)
         {
-            if (id != BoarderProtocolId.Default) return BoarderAbilityId.None;
-            if (index == 0) return BoarderAbilityId.Ghost;
-            if (index == 1) return BoarderAbilityId.Foresight;
             return BoarderAbilityId.None;
         }
 
@@ -72,23 +76,31 @@ namespace GatekeepersProtocol.Sim
 
         public static bool IsLegalPair(BoarderProtocolId protocol, BoarderAbilityId passive)
         {
-            return protocol == BoarderProtocolId.Default && OwnsPassive(protocol, passive);
+            return protocol == BoarderProtocolId.Default && passive == BoarderAbilityId.None;
         }
 
-        /// <summary>v8 equip fields, or Default/Ghost on older saves. Returns the crew-track refund.</summary>
+        /// <summary>v8 equip fields, or None/None on older saves. Returns the crew-track refund.</summary>
         public static long ApplySaveEquip(MetaState m, SaveData d)
         {
             if (d.SaveVersion >= 8)
             {
                 m.EquippedProtocol = (BoarderProtocolId)d.EquippedProtocol;
                 m.EquippedPassive = (BoarderAbilityId)d.EquippedPassive;
-                if (IsLegalPair(m.EquippedProtocol, m.EquippedPassive)) return 0;
-                m.EquippedProtocol = BoarderProtocolId.Default;
-                m.EquippedPassive = BoarderAbilityId.Ghost;
+                if (m.EquippedProtocol == BoarderProtocolId.Default)
+                {
+                    if (!IsLegalPair(m.EquippedProtocol, m.EquippedPassive))
+                        m.EquippedPassive = BoarderAbilityId.None;
+                    return 0;
+                }
+                if (!IsLegalPair(m.EquippedProtocol, m.EquippedPassive))
+                {
+                    m.EquippedProtocol = BoarderProtocolId.None;
+                    m.EquippedPassive = BoarderAbilityId.None;
+                }
                 return 0;
             }
-            m.EquippedProtocol = BoarderProtocolId.Default;
-            m.EquippedPassive = BoarderAbilityId.Ghost;
+            m.EquippedProtocol = BoarderProtocolId.None;
+            m.EquippedPassive = BoarderAbilityId.None;
             return MetaState.SpentOnTrack(d.VitalityLevel)
                 + MetaState.SpentOnTrack(d.StaminaLevel)
                 + MetaState.SpentOnTrack(d.ScavengingLevel)
@@ -99,8 +111,10 @@ namespace GatekeepersProtocol.Sim
         {
             switch (id)
             {
-                case BoarderAbilityId.Anchor: return 8f;
-                case BoarderAbilityId.Bulkhead: return 6f;
+                case BoarderAbilityId.Anchor:
+                case BoarderAbilityId.Barrage: return 8f;
+                case BoarderAbilityId.Bulkhead:
+                case BoarderAbilityId.Rush: return 6f;
                 default: return 0f;
             }
         }
@@ -109,10 +123,29 @@ namespace GatekeepersProtocol.Sim
         {
             switch (id)
             {
-                case BoarderAbilityId.Anchor: return 30f;
-                case BoarderAbilityId.Bulkhead: return 40f;
+                case BoarderAbilityId.Anchor:
+                case BoarderAbilityId.Barrage: return 30f;
+                case BoarderAbilityId.Bulkhead:
+                case BoarderAbilityId.Rush: return 40f;
                 default: return 0f;
             }
+        }
+
+        /// <summary>LoL overlay: 0 when ready, remaining/window while open, remaining/cooldown
+        /// while cooling. HUD fillAmount.</summary>
+        public static float OverlayFill(float window, float cooldown, float windowDur, float cdDur)
+        {
+            const float eps = 0.05f;
+            if (window > eps && windowDur > 0f) return Clamp01(window / windowDur);
+            if (cooldown > eps && cdDur > 0f) return Clamp01(cooldown / cdDur);
+            return 0f;
+        }
+
+        static float Clamp01(float v)
+        {
+            if (v < 0f) return 0f;
+            if (v > 1f) return 1f;
+            return v;
         }
 
         /// <summary>Anchor: slow multiplier (0.5). Ghost: acquisition range multiplier (0.70).</summary>
@@ -126,9 +159,32 @@ namespace GatekeepersProtocol.Sim
             }
         }
 
+        public static float FireMul(BoarderAbilityId id)
+        {
+            switch (id)
+            {
+                case BoarderAbilityId.Barrage: return BarrageFireMul;
+                case BoarderAbilityId.Rush: return RushFireMul;
+                default: return 1f;
+            }
+        }
+
+        /// <summary>Rush is protocolMul. Barrage window and live fields SET (cap 2), then
+        /// multiply. Caster in both = 3.0; overlapping plants stay 2.0.</summary>
+        public static float ComposeFireMul(bool rushOpen, bool barrageWindow, float fieldMul)
+        {
+            float protocolMul = rushOpen ? RushFireMul : 1f;
+            float barrageMul = barrageWindow ? BarrageFireMul : 1f;
+            if (fieldMul > barrageMul) barrageMul = fieldMul;
+            if (barrageMul > BarrageMulCap) barrageMul = BarrageMulCap;
+            if (barrageMul < 1f) barrageMul = 1f;
+            return protocolMul * barrageMul;
+        }
+
         public static float Radius(BoarderAbilityId id)
         {
-            return id == BoarderAbilityId.Anchor ? 8f : 0f;
+            if (id == BoarderAbilityId.Anchor || id == BoarderAbilityId.Barrage) return 8f;
+            return 0f;
         }
 
         public static string DisplayName(BoarderAbilityId id)
@@ -139,6 +195,8 @@ namespace GatekeepersProtocol.Sim
                 case BoarderAbilityId.Bulkhead: return "Bulkhead";
                 case BoarderAbilityId.Ghost: return "Ghost";
                 case BoarderAbilityId.Foresight: return "Foresight";
+                case BoarderAbilityId.Barrage: return "Barrage";
+                case BoarderAbilityId.Rush: return "Rush";
                 default: return "";
             }
         }
@@ -151,6 +209,90 @@ namespace GatekeepersProtocol.Sim
         public static string DoctrineText(BoarderProtocolId id)
         {
             return "STOCK — hardware as sold";
+        }
+
+        public const string CrewSheetDefault =
+            "G Barrage — Rooted. Fire ×2.0 for 8s. Other Boarders within 8 m ×2.0, not rooted. G again or window end unplants. Cooldown 30s.";
+        public const string PersonalSheetDefault =
+            "H Rush — You move. Fire ×1.5 for 6s. Cooldown 40s.";
+        public const string PassiveSheetDefault = "None.";
+
+        public static string CrewSheet(BoarderProtocolId id)
+        {
+            return id == BoarderProtocolId.Default ? CrewSheetDefault : "";
+        }
+
+        public static string PersonalSheet(BoarderProtocolId id)
+        {
+            return id == BoarderProtocolId.Default ? PersonalSheetDefault : "";
+        }
+
+        public static string PassiveSheet(BoarderProtocolId id)
+        {
+            return id == BoarderProtocolId.Default ? PassiveSheetDefault : "";
+        }
+
+        /// <summary>One template's fields. Same keys for every protocol; values change.</summary>
+        public readonly struct Sheet
+        {
+            public readonly string Name;
+            public readonly string Doctrine;
+            public readonly string Crew;
+            public readonly string Personal;
+            public readonly string Passive;
+
+            public Sheet(string name, string doctrine, string crew, string personal, string passive)
+            {
+                Name = name != null ? name : "";
+                Doctrine = doctrine != null ? doctrine : "";
+                Crew = crew != null ? crew : "";
+                Personal = personal != null ? personal : "";
+                Passive = passive != null ? passive : "";
+            }
+        }
+
+        public static Sheet SheetOf(BoarderProtocolId id)
+        {
+            return new Sheet(
+                ProtocolName(id),
+                DoctrineText(id),
+                CrewSheet(id),
+                PersonalSheet(id),
+                PassiveSheet(id));
+        }
+
+        /// <summary>Own and equip a shop protocol. Cost is 0. Sim has no shop UI.</summary>
+        public static bool TryClaim(MetaState m, BoarderProtocolId id)
+        {
+            if (m.PayloadLoadoutLocked)
+            {
+                Log.Event("Ship", "BuyProtocol refused — run in progress track=crew");
+                return false;
+            }
+            if (id == BoarderProtocolId.None)
+            {
+                Log.Event("Ship", "BuyProtocol refused — None");
+                return false;
+            }
+            if (m.EquippedProtocol == id)
+            {
+                Log.Event("Ship", "BuyProtocol refused — already owned");
+                return false;
+            }
+            var shop = ShopProtocols();
+            bool listed = false;
+            for (int i = 0; i < shop.Length; i++)
+            {
+                if (shop[i] == id) { listed = true; break; }
+            }
+            if (!listed)
+            {
+                Log.Event("Ship", "BuyProtocol refused — not in shop");
+                return false;
+            }
+            m.EquippedProtocol = id;
+            m.EquippedPassive = BoarderAbilityId.None;
+            return true;
         }
     }
 

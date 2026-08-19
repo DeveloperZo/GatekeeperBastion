@@ -5,8 +5,13 @@ using UnityEngine;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>REPLICATED-STATE: hold-E at the Hatch — repair when damaged (rig required),
-    /// withdraw when sealed in Prep with Unbanked 0 (no rig). Hatch-bank is Prep E then T.
+    /// <summary>REPLICATED-STATE: hold-E at the Hatch — Dock home while a survived bank window is
+    /// open, else repair when damaged (rig required), else withdraw when sealed in Prep with
+    /// Unbanked 0 (no rig). Hatch-bank is Prep E then T.
+    /// <para>The dock offer takes E ahead of repair and withdraw for as long as it is live, because
+    /// it is the only one of the three that expires. That means the Hatch cannot be repaired
+    /// between a survived window and the next Wave trigger — a real cost, recorded as an open
+    /// item on the milestone rather than papered over here.</para>
     /// <remarks>Every access to the station is Unity-null-safe: the hatch object can be destroyed
     /// (scene teardown once the run ends) while the Interactor still holds this interactable from
     /// its last raycast. Prefab serializes repairPerSecond = 8; GameController always pushes
@@ -21,8 +26,13 @@ namespace GatekeepersProtocol.Game
 
         [SerializeField] float repairPerSecond = 8f;
 
+        /// <summary>Hold to end the Run Docked. Longer than the capsule's 1.0 s: this one ends
+        /// the Run, so a brush past the key may not.</summary>
+        const float DockHoldSeconds = 1.5f;
+
         bool _equipped;
         bool _holding;
+        float _dockHold;
         bool _withdrawHold;
         bool _loggedRefusal;
         bool _repairRpcOpen;
@@ -62,6 +72,7 @@ namespace GatekeepersProtocol.Game
                 _sessionHp = 0f;
                 _loggedRefusal = false;
                 _withdrawHold = false;
+                _dockHold = 0f; // release resets the dock hold, same as every other hold
             }
             _holding = false;
         }
@@ -75,6 +86,12 @@ namespace GatekeepersProtocol.Game
                 var gc = _game;
                 if (gc == null || gc.RunIsOver) return null; // no repair prompt once the run is over
 
+                if (DockOffered(gc))
+                    return _dockHold > 0f
+                        ? "[hold " + Controls.DisplayOf(ControlId.Interact) + "] Docking..."
+                        : "[hold " + Controls.DisplayOf(ControlId.Interact)
+                          + "] Dock — return to Ship";
+
                 ReadRepairView(gc, out float hp, out float maxHp, out long bank, out bool destroyed,
                     out long unbanked, out int slots, out bool prep);
                 if (destroyed) return "Hatch: DESTROYED";
@@ -82,6 +99,8 @@ namespace GatekeepersProtocol.Game
                 {
                     if (prep && unbanked > 0L && (slots < 0 || slots > 0))
                     {
+                        if (gc.HatchBankStartBlocked)
+                            return "Hatch-bank — finish the terminal";
                         string e = Controls.DisplayOf(ControlId.Interact);
                         bool armed = gc != null && gc.IsHatchBankArmed;
                         s_prompt.Clear();
@@ -138,7 +157,8 @@ namespace GatekeepersProtocol.Game
                 ReadRepairView(gc, out float hp, out float maxHp, out _, out bool destroyed,
                     out long unbanked, out int slots, out bool prep);
                 return !destroyed && hp >= maxHp - 0.01f && prep && unbanked > 0L
-                    && (slots < 0 || slots > 0);
+                    && (slots < 0 || slots > 0)
+                    && !gc.HatchBankStartBlocked;
             }
         }
 
@@ -151,6 +171,12 @@ namespace GatekeepersProtocol.Game
             if (gc == null || gc.RunIsOver) return;
 
             _holding = true;
+
+            if (DockOffered(gc))
+            {
+                TickDock(gc, dt);
+                return;
+            }
 
             ReadRepairView(gc, out float hp, out float maxHp, out long bank, out bool destroyed,
                 out long unbanked, out _, out bool prep);
@@ -195,6 +221,26 @@ namespace GatekeepersProtocol.Game
             float applied = gc.RepairHatch(repairPerSecond * dt);
             _sessionSpent += gc.Sim.RepairSalvageSpent - before;
             _sessionHp += applied;
+        }
+
+        /// <summary>True while a survived Hatch-bank window has not yet been answered by triggering
+        /// the next Wave. Solo only: the co-op dock seat (who ends the party's Run) is unruled, so a
+        /// client seat is refused rather than guessed at.</summary>
+        static bool DockOffered(GameController gc)
+        {
+            if (gc == null || gc.Sim == null || !gc.Sim.DockOffered) return false;
+            if (IsClientOnly(gc)) return false;
+            // Arming a Hatch-bank is the push-on answer: yield E back so the intensity
+            // select and its prompt are reachable without first walking away.
+            return !gc.IsHatchBankArmed;
+        }
+
+        void TickDock(GameController gc, float dt)
+        {
+            _dockHold += dt;
+            if (_dockHold < DockHoldSeconds) return;
+            _dockHold = 0f;
+            gc.Sim.DockRun();
         }
 
         void HoldWithdraw(GameController gc, float dt)
@@ -271,7 +317,8 @@ namespace GatekeepersProtocol.Game
                     ? sim.HatchCarry
                     : HatchBank.ClampCarry(sim.WavesSinceBank);
                 int idx = HatchBank.CarryWaveIndex(carry);
-                bodies = s_preview.NextWave(idx, level, sim.PlayerCount).enemyCount;
+                bodies = HatchBank.ApplyHatchComposition(
+                    s_preview.NextWave(idx, level, sim.PlayerCount), carry).enemyCount;
                 sb.Append("  Intensity ").Append(level)
                     .Append("  juice ").Append(IntensityJuice.CostPerStep)
                     .Append("  unbanked ").Append(unbanked)

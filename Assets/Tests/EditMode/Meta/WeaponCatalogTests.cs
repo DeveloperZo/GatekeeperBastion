@@ -26,7 +26,7 @@ namespace GatekeepersProtocol.Tests
         {
             // Zero points = old T0. Higher flat tiers diverge from the old dual-curve table by
             // design (M21); only the zero-investment band is pinned here.
-            Assert.AreEqual(28f, Dps(WeaponId.Mk1Sidearm, 0), Tol);
+            Assert.AreEqual(59f, Dps(WeaponId.Mk1Sidearm, 0), Tol);
             Assert.AreEqual(38f, Dps(WeaponId.Vk7Rifle, 0), Tol);
             Assert.AreEqual(33f, Dps(WeaponId.Br12Shotgun, 0), Tol);
             Assert.AreEqual(37f, Dps(WeaponId.Mr35Rifle, 0), Tol);

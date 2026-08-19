@@ -2,12 +2,14 @@ using Unity.Netcode;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>How the host run ended. Byte on the wire; names the three end screens.</summary>
+    /// <summary>How the host run ended. Byte on the wire; names the four end screens.
+    /// Append only — the value is serialized into an RPC.</summary>
     public enum RunEndKind : byte
     {
         Cleared = 0,
         Hatch = 1,
-        Player = 2
+        Player = 2,
+        Docked = 3
     }
 
     /// <summary>One-shot payload for the client's end screen. Host numbers only — not a guest purse.</summary>

@@ -92,6 +92,13 @@ namespace GatekeepersProtocol.Game
         /// listens so that being shot makes a gatekeeper turn on whoever shot it.</summary>
         public event System.Action<Transform> Damaged;
 
+        /// <summary>Visual hit only. Does not change Hp, IsDead, or fire onDeath — client
+        /// clones flash from replicated HP without applying local damage.</summary>
+        public void NotifyHitFlash()
+        {
+            FlashHit();
+        }
+
         /// <summary>Applies damage; flashes the hit, reports the attacker, fires onDeath when this
         /// kills the owner. <paramref name="source"/> is who dealt it — pass the shooter.</summary>
         public void TakeDamage(float amount, Transform source = null)

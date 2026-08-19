@@ -1,5 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
 using GatekeepersProtocol.Util;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -25,6 +27,8 @@ namespace GatekeepersProtocol.Game
         static GameObject _rig;
         static HudController _hud;
         static readonly GameObject[] HiddenCanvases = new GameObject[3];
+        static readonly List<Behaviour> HiddenBehaviours = new List<Behaviour>(64);
+        static readonly List<Renderer> HiddenRenderers = new List<Renderer>(256);
         static Host _host;
         #endregion
 
@@ -34,7 +38,8 @@ namespace GatekeepersProtocol.Game
         #endregion
 
         #region Public API
-        /// <summary>Hide the Bastion rig and HUD, then load Ship additively. No-op outside
+        /// <summary>Hide the Bastion view (cameras, listeners, lights, renderers) and the local
+        /// rig, then load Ship additively. Does not SetActive NetworkObjects. No-op outside
         /// Bastion so PlayMode fixtures never pull the hub scene.</summary>
         public static void Enter()
         {
@@ -43,13 +48,9 @@ namespace GatekeepersProtocol.Game
 
             _active = true;
             CaptureAndHideCombatUi();
-
-            var local = PlayerRegistry.Local;
-            if (local != null)
-            {
-                _rig = local.gameObject;
-                _rig.SetActive(false);
-            }
+            HideBastionView();
+            HideLocalRig();
+            Log.Event(Tag, "ship wait — Bastion view hidden");
 
             if (!SceneFlow.CanLoad(SceneFlow.Ship))
             {
@@ -110,6 +111,78 @@ namespace GatekeepersProtocol.Game
             }
         }
 
+        /// <summary>Disable Bastion-scene cameras, listeners, lights, and renderers.
+        /// Component disable only — SetActive on a spawned NetworkObject despawns it.</summary>
+        static void HideBastionView()
+        {
+            var scene = SceneManager.GetSceneByName(SceneFlow.Bastion);
+            if (!scene.IsValid() || !scene.isLoaded) return;
+
+            var roots = scene.GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                GameObject root = roots[i];
+                if (root == null) continue;
+                HideBehaviours(root.GetComponentsInChildren<Camera>(true));
+                HideBehaviours(root.GetComponentsInChildren<AudioListener>(true));
+                HideBehaviours(root.GetComponentsInChildren<Light>(true));
+                var renderers = root.GetComponentsInChildren<Renderer>(true);
+                for (int r = 0; r < renderers.Length; r++)
+                    HideRenderer(renderers[r]);
+            }
+        }
+
+        static void HideLocalRig()
+        {
+            var local = PlayerRegistry.Local;
+            if (local == null) return;
+
+            _rig = local.gameObject;
+            HideBehaviour(local.GetComponent<FirstPersonController>());
+            // CharacterController is a Collider, not a Behaviour — TickClientLocal and
+            // FirstPersonController.Tick already refuse Move when the wait is active.
+
+            if (!_rig.TryGetComponent<NetworkObject>(out _))
+                _rig.SetActive(false);
+        }
+
+        static void HideBehaviours(Behaviour[] items)
+        {
+            for (int i = 0; i < items.Length; i++)
+                HideBehaviour(items[i]);
+        }
+
+        static void HideBehaviour(Behaviour b)
+        {
+            if (b == null || !b.enabled) return;
+            HiddenBehaviours.Add(b);
+            b.enabled = false;
+        }
+
+        static void HideRenderer(Renderer r)
+        {
+            if (r == null || !r.enabled) return;
+            HiddenRenderers.Add(r);
+            r.enabled = false;
+        }
+
+        static void RestoreBastionView()
+        {
+            for (int i = 0; i < HiddenBehaviours.Count; i++)
+            {
+                Behaviour b = HiddenBehaviours[i];
+                if (b != null) b.enabled = true;
+            }
+            HiddenBehaviours.Clear();
+
+            for (int i = 0; i < HiddenRenderers.Count; i++)
+            {
+                Renderer r = HiddenRenderers[i];
+                if (r != null) r.enabled = true;
+            }
+            HiddenRenderers.Clear();
+        }
+
         static Host EnsureHost()
         {
             if (_host != null) return _host;
@@ -121,6 +194,7 @@ namespace GatekeepersProtocol.Game
 
         static void EnableRig()
         {
+            RestoreBastionView();
             if (_rig == null) return;
             _rig.SetActive(true);
             _rig = null;

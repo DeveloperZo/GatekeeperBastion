@@ -11,20 +11,77 @@ namespace GatekeepersProtocol.Tests
         public void Catalog_DefaultSheet_Pins()
         {
             Assert.AreEqual(BoarderProtocolId.Default, BoarderProtocol.ShopProtocols()[0]);
+            Assert.AreEqual(1, BoarderProtocol.ShopProtocols().Length);
             Assert.AreEqual(DoctrineMode.Stock, BoarderProtocol.DoctrineOf(BoarderProtocolId.Default));
             Assert.AreEqual(0, (int)DoctrineMode.Stock);
-            Assert.AreEqual(BoarderAbilityId.Anchor, BoarderProtocol.CrewAbilityOf(BoarderProtocolId.Default));
-            Assert.AreEqual(BoarderAbilityId.Bulkhead, BoarderProtocol.PersonalAbilityOf(BoarderProtocolId.Default));
-            Assert.AreEqual(2, BoarderProtocol.PassiveCount(BoarderProtocolId.Default));
-            Assert.AreEqual(BoarderAbilityId.Ghost, BoarderProtocol.PassiveAt(BoarderProtocolId.Default, 0));
-            Assert.AreEqual(BoarderAbilityId.Foresight, BoarderProtocol.PassiveAt(BoarderProtocolId.Default, 1));
-            Assert.AreEqual(8f, BoarderProtocol.Window(BoarderAbilityId.Anchor), 1e-5f);
-            Assert.AreEqual(30f, BoarderProtocol.Cooldown(BoarderAbilityId.Anchor), 1e-5f);
+            Assert.AreEqual(BoarderAbilityId.Barrage, BoarderProtocol.CrewAbilityOf(BoarderProtocolId.Default));
+            Assert.AreEqual(BoarderAbilityId.Rush, BoarderProtocol.PersonalAbilityOf(BoarderProtocolId.Default));
+            Assert.AreEqual(0, BoarderProtocol.PassiveCount(BoarderProtocolId.Default));
+            Assert.AreEqual(BoarderAbilityId.None, BoarderProtocol.PassiveAt(BoarderProtocolId.Default, 0));
+            Assert.AreEqual(5, (int)BoarderAbilityId.Barrage);
+            Assert.AreEqual(6, (int)BoarderAbilityId.Rush);
+            Assert.AreEqual(8f, BoarderProtocol.Window(BoarderAbilityId.Barrage), 1e-5f);
+            Assert.AreEqual(30f, BoarderProtocol.Cooldown(BoarderAbilityId.Barrage), 1e-5f);
+            Assert.AreEqual(2f, BoarderProtocol.FireMul(BoarderAbilityId.Barrage), 1e-5f);
+            Assert.AreEqual(8f, BoarderProtocol.Radius(BoarderAbilityId.Barrage), 1e-5f);
+            Assert.AreEqual(6f, BoarderProtocol.Window(BoarderAbilityId.Rush), 1e-5f);
+            Assert.AreEqual(40f, BoarderProtocol.Cooldown(BoarderAbilityId.Rush), 1e-5f);
+            Assert.AreEqual(1.5f, BoarderProtocol.FireMul(BoarderAbilityId.Rush), 1e-5f);
             Assert.AreEqual(0.5f, BoarderProtocol.Magnitude(BoarderAbilityId.Anchor), 1e-5f);
-            Assert.AreEqual(8f, BoarderProtocol.Radius(BoarderAbilityId.Anchor), 1e-5f);
-            Assert.AreEqual(6f, BoarderProtocol.Window(BoarderAbilityId.Bulkhead), 1e-5f);
-            Assert.AreEqual(40f, BoarderProtocol.Cooldown(BoarderAbilityId.Bulkhead), 1e-5f);
             Assert.AreEqual(0.70f, BoarderProtocol.Magnitude(BoarderAbilityId.Ghost), 1e-5f);
+            Assert.IsTrue(BoarderProtocol.IsLegalPair(BoarderProtocolId.Default, BoarderAbilityId.None));
+            Assert.IsFalse(BoarderProtocol.IsLegalPair(BoarderProtocolId.Default, BoarderAbilityId.Ghost));
+            Assert.IsFalse(BoarderProtocol.IsLegalPair(BoarderProtocolId.None, BoarderAbilityId.None));
+            Assert.AreEqual(BoarderProtocol.CrewSheetDefault, BoarderProtocol.CrewSheet(BoarderProtocolId.Default));
+            Assert.AreEqual(BoarderProtocol.PersonalSheetDefault, BoarderProtocol.PersonalSheet(BoarderProtocolId.Default));
+            Assert.AreEqual(BoarderProtocol.PassiveSheetDefault, BoarderProtocol.PassiveSheet(BoarderProtocolId.Default));
+            Assert.AreEqual("", BoarderProtocol.CrewSheet(BoarderProtocolId.None));
+            var sheet = BoarderProtocol.SheetOf(BoarderProtocolId.Default);
+            Assert.AreEqual(BoarderProtocol.ProtocolName(BoarderProtocolId.Default), sheet.Name);
+            Assert.AreEqual(BoarderProtocol.DoctrineText(BoarderProtocolId.Default), sheet.Doctrine);
+            Assert.AreEqual(BoarderProtocol.CrewSheetDefault, sheet.Crew);
+            Assert.AreEqual(BoarderProtocol.PersonalSheetDefault, sheet.Personal);
+            Assert.AreEqual(BoarderProtocol.PassiveSheetDefault, sheet.Passive);
+        }
+
+        [Test]
+        public void OverlayFill_ReadyIsZero_WindowAndCooldownAreFractions()
+        {
+            Assert.AreEqual(0f, BoarderProtocol.OverlayFill(0f, 0f, 6f, 40f), 1e-5f);
+            Assert.AreEqual(0f, BoarderProtocol.OverlayFill(0.04f, 0.04f, 6f, 40f), 1e-5f);
+            Assert.AreEqual(0.5f, BoarderProtocol.OverlayFill(3f, 0f, 6f, 40f), 1e-5f);
+            Assert.AreEqual(0.5f, BoarderProtocol.OverlayFill(0f, 20f, 6f, 40f), 1e-5f);
+            Assert.AreEqual(1f, BoarderProtocol.OverlayFill(8f, 0f, 8f, 30f), 1e-5f);
+            Assert.AreEqual(0.5f, BoarderProtocol.OverlayFill(4f, 15f, 8f, 30f), 1e-5f);
+        }
+
+        [Test]
+        public void ComingSoonNames_AreNotCatalogIds()
+        {
+            BoarderProtocolId veil, aegis, ledger;
+            Assert.IsFalse(Enum.TryParse("VEIL", true, out veil));
+            Assert.IsFalse(Enum.TryParse("AEGIS", true, out aegis));
+            Assert.IsFalse(Enum.TryParse("LEDGER", true, out ledger));
+            var shop = BoarderProtocol.ShopProtocols();
+            for (int i = 0; i < shop.Length; i++)
+            {
+                string name = BoarderProtocol.ProtocolName(shop[i]);
+                Assert.AreNotEqual("VEIL", name);
+                Assert.AreNotEqual("AEGIS", name);
+                Assert.AreNotEqual("LEDGER", name);
+            }
+        }
+
+        [Test]
+        public void ComposeFireMul_SetThenProduct()
+        {
+            Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(false, true, 1f), 1e-5f);
+            Assert.AreEqual(1.5f, BoarderProtocol.ComposeFireMul(true, false, 1f), 1e-5f);
+            Assert.AreEqual(3f, BoarderProtocol.ComposeFireMul(true, true, 2f), 1e-5f);
+            Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(false, false, 2f), 1e-5f);
+            Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(false, true, 2f), 1e-5f);
+            Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(false, false, 4f), 1e-5f);
+            Assert.AreEqual(1f, BoarderProtocol.ComposeFireMul(false, false, 1f), 1e-5f);
         }
 
         [Test]
@@ -58,30 +115,37 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void FreshSave_DefaultGhost_NoPurchase()
+        public void FreshSave_NoneUntilClaim()
         {
             var m = MetaState.CreateNew();
+            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
+            // v9 landed with the demo flags; the pin follows the schema, not a literal.
+            Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion);
+            Assert.IsTrue(BoarderProtocol.TryClaim(m, BoarderProtocolId.Default));
             Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
-            Assert.AreEqual(BoarderAbilityId.Ghost, m.EquippedPassive);
-            Assert.AreEqual(8, m.SaveVersion);
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
+            Assert.IsFalse(BoarderProtocol.TryClaim(m, BoarderProtocolId.Default));
+            Assert.IsFalse(BoarderProtocol.TryClaim(m, BoarderProtocolId.None));
+            m.PayloadLoadoutLocked = true;
+            var locked = MetaState.CreateNew();
+            locked.PayloadLoadoutLocked = true;
+            Assert.IsFalse(BoarderProtocol.TryClaim(locked, BoarderProtocolId.Default));
         }
 
         [Test]
-        public void PickPassive_LockAndLegal()
+        public void PickPassive_Refuses_NoDefaultPassives()
         {
             var m = MetaState.CreateNew();
-            Assert.IsTrue(m.SetEquippedPassive(BoarderAbilityId.Foresight));
-            Assert.AreEqual(BoarderAbilityId.Foresight, m.EquippedPassive);
-            m.PayloadLoadoutLocked = true;
             Assert.IsFalse(m.SetEquippedPassive(BoarderAbilityId.Ghost));
-            Assert.AreEqual(BoarderAbilityId.Foresight, m.EquippedPassive);
-            m.PayloadLoadoutLocked = false;
-            Assert.IsFalse(m.SetEquippedPassive(BoarderAbilityId.Anchor));
-            Assert.AreEqual(BoarderAbilityId.Foresight, m.EquippedPassive);
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
+            BoarderProtocol.TryClaim(m, BoarderProtocolId.Default);
+            Assert.IsFalse(m.SetEquippedPassive(BoarderAbilityId.Foresight));
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
         }
 
         [Test]
-        public void V7Save_RefundsTracks_DefaultEquipped_LedgerHolds()
+        public void V7Save_RefundsTracks_NoneEquipped_LedgerHolds()
         {
             // 4 maxed tracks = 4 × 200 × (32-1) = 24,800
             const string json =
@@ -94,9 +158,31 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0L, m.LifetimeSalvageSpent);
             Assert.AreEqual(24900L, m.LifetimeSalvageEarned);
             Assert.IsTrue(m.SalvageLedgerBalances);
-            Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
-            Assert.AreEqual(BoarderAbilityId.Ghost, m.EquippedPassive);
+            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
             Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion);
+        }
+
+        [Test]
+        public void V8Save_DefaultGhost_CoercesToDefaultNone()
+        {
+            const string json =
+                "{\"SaveVersion\":8,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
+                "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":1,\"EquippedPassive\":3}";
+            var m = MetaState.FromJson(json);
+            Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
+        }
+
+        [Test]
+        public void V8Save_IllegalPair_BecomesNone()
+        {
+            const string json =
+                "{\"SaveVersion\":8,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
+                "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":99,\"EquippedPassive\":1}";
+            var m = MetaState.FromJson(json);
+            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
         }
 
         [Test]

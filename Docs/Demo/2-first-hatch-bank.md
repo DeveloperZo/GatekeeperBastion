@@ -1,258 +1,249 @@
-# 2 — First Hatch-bank (designed loss)
+# 2 — First Hatch-bank (authored loss 1, lose some Salvage)
 
 <!--
-Purpose: Convert Unbanked to the Ship, then fight a Hatch-bank that a 0-upgrade
-MK-1 is not expected to survive. Loss keeps the converted bank.
+Purpose: First Hatch-bank — zone 1's bank after its two 1-Wave terminals.
+Authored loss 1: overwhelm vs the no-upgrade kit ceiling. Live drip. Overrun
+wipes remaining Unbanked; dripped stays. Survived banks (later zones) unlock
+the zone's door and allow Ship return. No convert-then-fight.
 Status: demo spec
 Authority: implementable
-Update trigger: when first-hatch hunter add is retuned (one lever), when
-convert-then-fight scope is overridden
-Last updated: 2026-08-16
+Update trigger: when DripPerSecond changes, when the loss-1 overwhelm aims
+move, when the ship-return / buy-back rules change
+Last updated: 2026-08-17 (numbers re-read against code 2026-08-18)
 Depends: voice.md, 1-first-terminal.md
+Play: GatekeeperZo Notes/playthrough.md 2026-08-16 starting-weapon entry
 -->
-
-## What the player sees
-
-After Wave 1 they are sent to the Hatch. Look, `E` select, `T` start. Salvage
-converts **then** the defense starts. At 0 upgrades this fight is not survivable.
-They go down. Banked Wave-1 Salvage is already on the Ship.
-
-Party: the first down of **any** seat during this one window ends the Run for
-everyone.
 
 ## Why this beat exists
 
-Live Hatch-bank **drips** 20 Salvage/s during the 45 s window and **dumps** the
-leftover on survive (`HatchBank.DripPerSecond`, `RunSim.DripTick`, `DumpUnbanked`).
-Down during the window **wipes remaining Unbanked** (`EndRun` → `WipeUnbanked`).
-Already-dripped credits stay. A designed loss that dies in the first seconds
-returns ~0 banked. The ARMORY beat needs Wave 1’s 450 on the Ship.
+Play 2026-08-16: handle multiple Waves, then overrun defending the Hatch, lose
+**some** Salvage. Convert-then-fight dumped the pile before the fight, so a loss
+lost nothing. Drip at 20/s emptied a pile too fast for the wipe to read.
 
-`WeaponTier` already sizes the first two Secondary purchases (150+300) to one
-Wave-1 clear at Scavenging 0. Convert-then-fight makes that arithmetic true on a
-loss.
+Ruled (Zo, 2026-08-17): this window is **authored loss 1** — an overwhelm the
+no-upgrade kit cannot clear. Aim: **~2k** Unbanked at start, **~500** banked
+when the Hatch falls (both tunable). Surviving a bank's timer window unlocks
+the zone's door (D1 here); a failed bank never unlocks. The loss funds and
+unlocks the wheel (beat 3). Loss 2 is zone 2's banked Wave (another editor's
+files).
 
-## In tree today
+The base mechanics are in tree: drip is **8/s** (`HatchBank.DripPerSecond` —
+lever 2 shipped), no dump on start, survive dumps, `EndRun` wipes the remainder
+and keeps what dripped. The in-tree carry pieces (`Carry3ExtraRam`,
+`CarryConvert(3)` ×1.25) were keyed to the old 3-Wave shape — zone 1 now
+carries **2** field Waves (`CarryConvert(2)` = **x1.10**). What this beat
+builds is voice, the re-keyed checkpoint, the authored-overwhelm tune, the
+survive path (door unlock + Ship return), and two logs.
 
-| Piece | Fact |
+## Functional storyboard
+
+Continues from beat 1 step 6: `demo.after_terminal` played on Hatch look-at.
+Standing arrives as **Hatch-bank at the Hatch**.
+
+### 0 — Arm the Hatch (Prep)
+
+| | |
 |---|---|
-| Start | Hatch `E` then `T` → `TriggerDraw(WaveMode.HatchBank)` (`M53`) |
-| Refuse | Unbanked 0, or `HatchBankSlotsLeft == 0` (starts at 3) |
-| Carry | `WavesSinceBank` clamped 1..5. After one field Wave, carry 1 → composition `NextWave(0)` = Wave 1, convert ×1.00 |
-| Drip | 20/s while Unbanked > 0 and timer > 0 |
-| Dump | On survive (`NotifyAssaultCleared` while Hatch-bank and timer elapsed) |
-| Wipe | On `EndRun` (down or Hatch 0). Dripped stays on Meta |
-| Timer | 45 s. Enemy wipe and Unbanked 0 do **not** end it |
-| Hatch HP | 300 at Hatch Armor 0 (`MetaUpgrades.HatchHp(0)`) |
-| Hatch damage | Field-terminal Waves do not apply; Hatch-bank does (`RunSim.DamageHatch`) |
-| Defaults on Hatch-bank | March Hatch unless provoked |
-| Hunters | Hunt Boarder, 0 Hatch damage, 6.5 m/s, 20 HP, 6 player damage |
-| Swing | 0.7 s, first swing on contact |
-| Player | 100 HP (`MetaUpgrades.PlayerMaxHp`) |
-| MK-1 | 0-cost Secondary, 0 wheel points |
-| Down | Host/solo: `PlayerHealth.endsTheRunOnDeath` → `Lost`. Guest: `M57` wait on Ship, host continues (`M49`) |
-| Checkpoint | `DeepestWaveReached` rises on **clear**, including a survived Hatch-bank. A loss does **not** raise it |
-| Slots | This window spends 1 of 3 |
+| **Goal** | Know the transfer and the stake before starting it. |
+| **Player** | At the Hatch: `E` arms. `demo.hatch_bank_teach` Lock, Continue. `T` starts. (`E` again = edit.) |
+| **Game** | `demo.hatch_bank_teach` · Lock · Local · Game. **Hold the Hatch and the pile transfers home while you defend. If the Hatch falls, whatever has not moved is gone. T when ready.** |
+| **Standing** | Start the Hatch-bank |
+| **Prompt** | Unarmed: `[+/-] Hatch-bank` + stake (Intensity / juice / unbanked / carry / × / bodies) + ` [E] select`. Armed: `[T] Hatch-bank` + stake + ` [E] edit`. Before 2/2 it read `Hatch-bank — finish the terminals`. |
+| **Log** | existing `[Hatch] hatch-bank started wave … carry=<k> convert=<x> unbanked=<n> slots=2` (in-tree line; carry/convert values follow the zone re-spec — the shipped `carry=3 convert=1.25` was the old shape) |
+| **Have** | Start gate: host, Tethered+Prep, armed, Unbanked > 0, slots > 0, zone terminals complete (`GameController.HatchBank` — condition re-keyed in beat 1). `TriggerDraw(HatchBank)`: slot−−, snapshot carry, timer 45 s, **no dump**. Prompts in `RepairInteractable`. |
+| **Build** | Teach line. Checkpoint superseded at cut (Zo, 2026-08-17): the composite retrigger reads per-zone `DemoZoneDeepestWave`, written on each field-Wave **clear** (beat 1's clears; beat 4's stamp) — **nothing is written on this start**, and `DemoNavUnlockWave` / `DemoBankCapWave` are never added. Guests, when co-op exists from beat 4 on, `SetDeepest` from the same rule. Do **not** write `DeepestWaveReached` here. |
 
-Wave 1 Hatch-bank (carry 1), solo: 18 Defaults at the Hatch. Hatch dps if all
-arrive: 18 × 4 / 0.7 ≈ 102.9 → 300 HP lasts ~2.9 s. A Boarder who holds the
-door with MK-1 (18 × 30 HP = 540, MK-1 working range 12 m) can still clear
-bodies and live 45 s. That is why this beat **adds Hunters**, not a scripted
-`Die()`.
+### 1 — The window (Assault, 45 s)
+
+| | |
+|---|---|
+| **Goal** | Hold. Unbanked drips into banked at 8/s × convert while they defend. This window is authored so the no-upgrade kit **cannot** hold it to the end. |
+| **Player** | Fight at the door. Defaults and Thieves walk to the Hatch; Hunters still hunt the Boarder. |
+| **Game** | `demo.hatch_fight` · Subtitle · Local · Game. **The Wave wants the Hatch now. Hold it — the pile is moving.** Auto-advance 4 s. Fight input stays live. |
+| **Standing** | Hold the Hatch |
+| **Prompt / HUD** | `MsgPlayer` `HATCH UNDER ATTACK` on any Hatch HP drop (live). Unbanked falls, banked rises on Score. |
+| **Log** | drip credits per wallet (live); `[Gatekeepers] gatekeeper reached the hatch — attacking home` |
+| **Have** | Window rules: timer end = clear; enemy wipe and Unbanked 0 do **not** end the window early. Hatch damage also **attrits Unbanked 1:1** (floored) on top of HP loss. Hatch 300 HP at Armor 0; Defaults 4 / Thieves 20 per 0.7 s swing; Hunters 0. Kill award is **0** in Hatch-bank mode. In-tree composition (carry-3 → 43 bodies, 6 Hunters, 3 Thieves, ×1.25) is the **old shape**. |
+| **Build** | The **authored overwhelm** (Zo, 2026-08-17): composition tuned so a 0-upgrade MK-1 seat cannot clear the window and the Hatch falls with ~500 banked from the ~2k pile (aims tunable). Numbers are restamped here when tuned — not invented now. |
+
+Survive path (the timer ends with Hatch > 0 — later banks; a defect on this
+one): the bank dumps, the zone's **door unlocks**, and the **successful-bank
+snapshot** persists banked + door state. **Ship return** (Zo, 2026-08-17):
+after a survived window, held interact at the Hatch — available until the next
+Wave is triggered — ends the Run **Docked**, not Lost. This spec lands with the
+bank system and first matters from zone 2 on (another editor's beats); on
+**this** window a survive is a tuning defect (`[Demo] first-hatch survived`
+flags it). Because both authored losses are unclearable windows, Ship return
+never skips the unlock deaths — the demo's first ship return is necessarily
+loss 1, so the wheel key stays `PodEjections >= 1`.
+
+### 2 — Overrun (authored, not scripted)
+
+| | |
+|---|---|
+| **Goal** | Lose **some**: leftover Unbanked wipes, dripped Salvage is already aboard. |
+| **Player** | The Hatch falls — or the seat does (`M49`); either ends the Run Lost. Hatch cause: lose screen cause **HATCH DESTROYED**, framing *thrown off the Bastion*, converted / repair spent / net / banked total / DEEPEST WAVE lines. `ENTER` returns. |
+| **Game** | — (end screen is the reader) |
+| **Standing** | — |
+| **Log** | `[Hatch] HATCH BREACHED — the run is over` then always-on `[Run] RUN OVER after …s … banked now …`. (`[RunSim] Run ended (hatch\|player)` is verbose-only — do not gate verification on it. Cause tokens are `hatch` / `player`, not `down`.) |
+| **Have** | `EndRun("hatch")` → wipe remaining Unbanked, keep credited banked, `PodEjections++`, phase Lost. `DeepestWaveReached` is **2** (rose on the field clears; a Hatch-bank loss does not reset it). |
+| **Build** | Nothing mechanical. Do not call `Die()`. The overwhelm tune (step 1) owns hitting the ~500-banked aim. |
+
+### 3 — Docked after the loss
+
+| | |
+|---|---|
+| **Goal** | The loss reads as “some came home.” Hand off to beat 3. |
+| **Player** | Dismiss end screen; Ship loads. |
+| **Game** | `demo.first_hatch_down` · Lock · Local · Game. **The Run ended. What dripped home is banked aboard. The rest is gone. Spend it at the ARMORY.** (Copy re-stamped cause-agnostic, Zo 2026-08-17 — the trigger also fires on a host-down loss, so the copy no longer claims the Hatch fell.) |
+| **Standing** | Spend Salvage at the ARMORY |
+| **Log** | existing `[Ship] aboard the ship — <n> banked, 1 run(s) lost, 0 cleared` |
+| **Have** | End-screen persist + `GameSession.Save()`; return log `returning to the ship — <n> banked`. |
+| **Build** | The line. Trigger: first Docked after this save's first Lost Run (any cause). Same-frame rule: if any other Lock line lands on this Docked frame, `demo.first_hatch_down` plays first and the other queues on its Continue (one ordering rule, `voice.md`, Zo 2026-08-17). Second-and-later losses (Zo, 2026-08-17): no line, but **set a standing objective on Docked** — same state key as beat 3's exit standing: **Spend Salvage at the ARMORY** while buyable upgrades remain, else **EMBARK from the NAV MAP**. This Docked also writes `DemoCrewMenuUnlocked` (re-key, README / beat 3). |
+
+## Have vs build (inventory)
+
+| Piece | Exists? | Where | Beat 2 |
+|---|---|---|---|
+| Drip 8/s | **yes — lever 2 shipped** | `HatchBank.DripPerSecond` | Have |
+| No dump on start / dump on survive / wipe on EndRun | yes | `RunSim` draw, clear, `EndRun` | Have |
+| Slots 3 per Run, spent on start | yes | `HatchBank.SlotsPerRun`, `RunSim` | Have |
+| Carry pieces (`Carry3ExtraRam`, `CarryConvert`) | yes — old shape | `HatchBank` | Re-key to carry 2 (`CarryConvert(2)` = **x1.10**); the loss-1 composition is the authored overwhelm, restamped when tuned |
+| Authored overwhelm composition | **no** | — | Build (tunable; aims ~2k start / ~500 banked at fall) |
+| Targeting split (Hatch vs Hunter) | yes | Sim targeting, `WaveMode.HatchBank` only | Have |
+| Attrition on Hatch damage | yes | Unbanked −1 per damage point | Have |
+| Start log with carry/convert/unbanked | yes | `[Hatch] hatch-bank started …` | Have — spec's `[Demo] hatch-bank start` is redundant, dropped |
+| Re-keyed checkpoint fields | no | v9 (`README.md` Shared flags) | Closed at cut (Zo, 2026-08-17): per-zone `DemoZoneDeepestWave`, written on field-Wave clear (beat 1), not here |
+| Door unlock on bank success (D1) | no | — | Build with the bank system (beat 5 consumes) |
+| Ship return after a survived bank | no | — | Build with the bank system (held interact at the Hatch until the next Wave trigger → Docked, not Lost; snapshot persists). Never fires on this authored window |
+| Co-op buy-back during a live window | no | — | Build from beat 4 on (solo here); rule recorded in Multiplayer below |
+| Voice ids | no | [`voice.md`](voice.md) | Build |
+| Designed-overrun scripting | — | — | None. Composition is the design |
 
 ## The change
 
-Three host-only rules, first Hatch-bank of a `DemoActive` save only
-(`!DemoFirstHatchConvertDone` / `!DemoFirstHatchSpecUsed`). Later Hatch-banks
-in this demo use live drip+dump (README).
-
-### 1. Convert then fight
-
-In `TriggerDraw(WaveMode.HatchBank)` after `SnapshotHatchCarry` and slot spend,
-if `DemoActive && !DemoFirstHatchConvertDone`:
-
-1. `DumpUnbanked()` immediately (same `CreditSlot` / `BankedFrom` / `BankCap` as
-   a survive dump).
-2. Set `DemoFirstHatchConvertDone = true` on host Meta; copy guest converted via
-   existing `GuestConverted`.
-3. Skip `DripTick` for the rest of this window (`TotalUnbanked` is 0).
-4. Log `[Demo] convert-then-fight dumped=<total> mul=<m>`.
-5. Do **not** persist Meta yet if the Run still can fail other writes — follow
-   existing Hatch-bank persist points; banked Salvage must survive `EndRun`.
-   `EndRun` must not reverse `EarnSalvage` already applied.
-
-`DemoFirstHatchConvertDone` is consumed even if they cancel… they cannot cancel
-a live Assault. If `TriggerDraw` refused (unbanked 0), do not set the flag.
-
-### 2. Unwinnable spec (one lever)
-
-On `LaunchWave` for that same first Hatch-bank, after `NextWave(carryIndex, …)`:
-
-- Keep `defaultCount` / `ramCount` from Wave 1 (18 Defaults, 0 Thieves, ×
-  `playerCount`).
-- Set `hunterCount = 4` (the Wave-2 Hunter row, `HunterPerWave[1]`).
-- `enemyCount = defaultCount + hunterCount + ramCount`.
-
-Log `[Demo] first-hatch spec H=4 D=<n> R=0 playerCount=<n>`.
-Set `DemoFirstHatchSpecUsed = true`.
-
-Kill observation (retune **only** `hunterCount`, not duration, not Default
-count, not MK-1 dps): a 0-upgrade MK-1 **solo** log where this window reaches
-`NotifyAssaultCleared` with the Boarder alive. If that exists, add **2** Hunters
-(4→6) in a later change that says so.
-
-Do not call `PlayerHealth.Die()` from demo code.
-
-### 3. Checkpoint on start
-
-On this `TriggerDraw(HatchBank)` (and every later non-Master Hatch-bank while
-`DemoActive`):
-
-- `DemoBankCapWave = max(DemoBankCapWave, CurrentWaveIndex)`  
-  After Wave 1, `CurrentWaveIndex` is 1 (terminal launch incremented it).
-- `DemoNavUnlockWave = max(DemoNavUnlockWave, CurrentWaveIndex + 1)` → 2.
-- Guest wallet `SetDeepest(slot, DemoBankCapWave)` so `BankCap` does not use
-  the skip wave.
-
-Do **not** write `DeepestWaveReached` here. Cleared-wave tracking stays on
-`NotifyAssaultCleared`.
-
-Persist Meta on Run end so a crash mid-Hatch-bank is the only loss of the
-checkpoint; prefer writing NavUnlock at Hatch-bank start and `GameSession.Save`
-on host (guests save their own deepest on the converted RPC path).
-
-### 4. Any-seat down ends this window
-
-While this first Hatch-bank Assault is live, a guest down calls the host
-`EndRun("down")` instead of `NetShipWait.Enter`. Log
-`[Demo] first-hatch down ends run seat=<n>`. After `DemoFirstHatchSpecUsed`
-and this Run has ended, restore `M49`/`M57` for all later Runs.
-
-Host/solo down already ends the Run.
-
-Hatch HP 0 still `EndRun("hatch")`. Converted bank stays.
-
-## Create
-
-| Path | Role |
-|---|---|
-| `DemoProgress` helpers | `IsFirstHatchBank(meta)`, `ApplyHatchStartCheckpoint(meta, currentWaveIndex)` |
-| Tests | `DemoHatchBankTests`: dump-before-fight; loss keeps banked; hunter count 4; NavUnlock 2 on start |
-
-## Change
-
-| File | Change |
-|---|---|
-| `RunSim.TriggerDraw(HatchBank)` | Convert-then-fight branch; checkpoint fields. Demo flags live on Meta already passed into `RunSim` — add the v9 fields to the Meta the sim holds. Sim **may** read `MetaState` demo fields (they are Sim types). Do not reference Game/DemoVoice |
-| `RunSim.LaunchWave` | First-hatch Hunter add |
-| `RunSim.Tick` Hatch-bank | Skip drip when Unbanked already dumped for this flag |
-| `GameController` / `PlayerHealth` / net down | First-hatch any-seat down → `EndRun` |
-| `RunSim.Wallets.CreditSlot` | Unchanged formula. After dump, `BankCap` uses `DemoBankCapWave` when `DemoActive` (slot 0: that field; guests: wallet deepest set on start) |
-
-`HatchBank.BankCap(int deepestWave)`: while demo, pass `DemoBankCapWave` (1 after
-this start), not `DemoNavUnlockWave` (2). Solo `PlayerCount==1` still skips
-BankCap (byte-identical path).
+1. **Voice**: three lines above (`demo.first_hatch_down` copy cause-agnostic).
+2. **Checkpoint** — closed at cut (Zo, 2026-08-17): per-zone
+   `DemoZoneDeepestWave` writes on field-Wave clear (beat 1), nothing on bank
+   start. Beat 4 consumes it.
+3. **Authored overwhelm** tune to the ~2k / ~500 aims (tunable; restamp here).
+4. **Survive path**: door unlock on bank success + successful-bank snapshot +
+   Ship return (held interact until the next Wave trigger → Docked, not Lost).
+5. **Later-loss standing** on Docked (state-keyed with beat 3's exit standing).
+6. Drip, wipe, slots stay as shipped.
 
 ## Delete
 
-Nothing. Do not remove drip for later Hatch-banks.
+`DemoFirstHatchConvertDone`, `DemoFirstHatchSpecUsed` (never added, do not add).
+Any-seat-down override (not in tree; stays out).
 
 ## Numbers
 
 | Name | Value | Source |
 |---|---|---|
-| Convert mul carry 1 | ×1.00 | `HatchBank.MultLow` |
-| Dump if 18 kills | 450 | 18×25 |
-| Two Secondary buys | 150+300=450 | `WeaponTier.Cost(Secondary, 0..1)` comment |
+| Drip | **8**/s | `HatchBank.DripPerSecond` (in tree) |
 | Window | 45 s | `HatchBank.DurationSeconds` |
-| Hunters added | 4 | `HunterPerWave[1]`; retune +2 if survived |
-| Hunter TTK on 100 HP if 4 connect | 100 / (4×6/0.7) ≈ **2.9 s** | arithmetic; disproved if they kite all 4 |
-| Hatch TTK if 18 Defaults connect | 300 / (18×4/0.7) ≈ **2.9 s** | arithmetic |
-| Slots after this window | 2 left if it started | spent even on loss |
+| Carry | 2 | zone 1's two field Waves (was 3 — old shape) |
+| Convert mul | **x1.10** | `HatchBank.CarryConvert(2)` = `Mult2`, read 2026-08-18; the shipped ×1.25 was `CarryConvert(3)` |
+| Window composition | authored overwhelm — unstamped, tunable | Zo, 2026-08-17; restamp when tuned |
+| Extra Thieves at carry 2 | **0** | `HatchBank.ExtraRam` fires only at carry 3, so the zone re-spec drops the extra body the old shape had; the authored overwhelm has to put it back on purpose |
+| Unbanked at start (aim) | **~2k**, tunable | Zo, 2026-08-17. In-tree zone Waves give 1200 (beat 1 Gaps) |
+| Banked when the Hatch falls (aim) | **~500**, tunable | Zo, 2026-08-17 |
+| Full ~2k pile at 8/s | ~250 s >> 45 s window | arithmetic on the aim |
+| **Ceiling on banked from this window** | **396** | 8/s x 45 s = 360 taken, x1.10 convert — and that is the survive-the-whole-window ceiling, which this authored loss never reaches. The ~500 aim is unreachable without moving drip, the window, or the convert table; beat 3 already degrades to one buy at 300 |
+| Hatch HP | 300 at Armor 0; dps vs Hatch is the overwhelm tune `[unconfirmed]` | this spec |
+| Two Secondary buys | 150+300 = 450 — the ~500 aim funds both (tunable) | Zo, 2026-08-17; beat 3 |
+| Buy-back cost | tunable — unstamped | Zo, 2026-08-17 |
+| Slots after start | 2 | spent on start even on loss |
 
 ## Multiplayer
 
-| Event | Authority |
-|---|---|
-| Convert dump | Host sim, split wallets, each `CreditSlot` |
-| BankCap | `DemoBankCapWave=1` → 18×25=450 per guest cap (solo expected table at dial 0). Two players: 36 kills ×25 = 900 Unbanked split ≈ 450 each before cap |
-| Hunter add | Spec counts are after `NextWave(..., playerCount)`, then set hunters to **4×playerCount** so two Boarders are not sharing four Hunters. Default row already ×n. **Spec: `hunterCount = 4 * playerCount`.** Log it. Solo 4, duo 8 |
-| Down | Any seat → EndRun this window only |
-| Voice `demo.hatch_convert` | Party Lock **Prep**, on Hatch `E` select (armed) before `T`, once |
-| Voice `demo.hatch_fight` | Party Subtitle on Assault start |
-| Voice `demo.first_hatch_down` | Party Lock on Ship after this Lost |
-| Join | Already in Bastion; no join mid-Run (`M72` join is Ship). Mid-countdown N/A |
-
-If the host never dies because guests soak Hunters: any-seat-down still ends it
-when the first body drops. If nobody dies and they survive: kill observation
-(raise hunters). ARMORY wheel stays locked until `PodEjections >= 1`
-(`MetaUpgrades.UpgradesUnlocked`). Survive branch: skip “you died” line; play a
-one-line Local `demo.first_hatch_down` variant only if we add
-`demo.first_hatch_survived` — **add that id** if the kill observation fires;
-do not write it until then.
+None — this beat is solo by construction (multiplayer locked until the first
+wheel purchase, [`README.md`](README.md)). Recorded here for beat 4+ (Zo,
+2026-08-17): a dead player may buy back in **only while a bank window is
+live**, rejoining at the Hatch, paying from their **own** banked salvage (cost
+tunable). Open — record, do not resolve: dead-**host** rejoin vs the `M49`
+host-death-ends-run rule. The re-keyed checkpoint still tracks per-zone deepest
+so a later co-op Run caps guests correctly. Voice scopes are Local.
 
 ## Voice
 
-`demo.hatch_convert` Prep Lock Party (convert is about to happen on `T`).
-`demo.hatch_fight` Assault Subtitle Party.
-`demo.first_hatch_down` Docked Lock Party after Lost from this window.
+| Id | Mode | Scope | Trigger | Standing after |
+|---|---|---|---|---|
+| `demo.hatch_bank_teach` | Lock | Local | Hatch `E` (armed) before first `T` | Start the Hatch-bank |
+| `demo.hatch_fight` | Subtitle | Local | window start | Hold the Hatch |
+| `demo.first_hatch_down` | Lock | Local | first Docked after this save's first Lost (any cause); wins the same-frame Docked collision (`voice.md`) | Spend Salvage at the ARMORY |
 
-Do not explain drip. Do not mention intensity.
+Do not say convert-then-fight. No siphon. Copy must not name a cause the
+trigger cannot guarantee.
 
 ## Driven / Shown / Reads-back
 
 - **Driven by** Hatch `E` then `T`.
-- **Shown** Unbanked drops to 0 at Assault start (HUD Unbanked / banked). Hunters
-  on the Boarder; Defaults on the Hatch.
-- **Reads-back** convert dump log; first-hatch spec log; `NAV unlock=2` log;
-  `Run ended (down\|hatch)` with banked unchanged from dump.
+- **Shown** Unbanked falling during the window; Hatch HP; banked rising; lose
+  screen with converted / net / banked total.
+- **Reads-back** `[Hatch] hatch-bank started …` (in tree), re-keyed checkpoint
+  log (build), `[Run] RUN OVER …` (in tree, always-on), aboard-ship line.
 
 ## Logs
 
-| Event | Line |
-|---|---|
-| Convert | `[Demo] convert-then-fight dumped=450 mul=1` |
-| Spec | `[Demo] first-hatch spec H=4 D=18 R=0 playerCount=1` |
-| Checkpoint | `[Demo] hatch-bank started fieldWave=1 navUnlock=2 bankCapWave=1` |
-| Down | `[Demo] first-hatch down ends run seat=0` |
-| Survive (kill) | `[Demo] first-hatch survived` |
+| Event | Line | Status |
+|---|---|---|
+| Start | `[Hatch] hatch-bank started wave … carry=<k> convert=<x> unbanked=<n> slots=2` | in tree (values follow the re-spec) |
+| Checkpoint | — dropped at cut (Zo, 2026-08-17): `DemoZoneDeepestWave` writes on field-Wave clear (beat 1), not on bank start | closed |
+| Breach | `[Hatch] HATCH BREACHED — the run is over` | in tree |
+| End | `[Run] RUN OVER after …s … banked now …` | in tree (always-on) |
+| Survive | `[Demo] first-hatch survived hatchHp=<n>` | build — on this window it flags a **tuning defect** |
+| Ship return | `[Demo] ship return — run ends docked` | build (later banks) |
 
 ## Traps
 
-- Drip after dump is harmless at Unbanked 0; still skip so logs stay clean.
-- `EndRun` wiping **banked** — it must not. Only Unbanked.
-- Raising `DeepestWaveReached` to 2 on start → `BankCap` includes Wave 2 (30×25)
-  and guests can bank more than they earned. Use `DemoBankCapWave`.
-- Spending a Hatch-bank slot then dying: slot is gone. Correct.
-- Guest wait on Ship would skip the designed party loss. Override this window only.
-- Prefab Hunter counts on spawners — composition comes from `WaveSpec`, not
-  serialized spawners.
-- Scripted `Die()` at t=45. Forbidden.
-- Convert-then-fight on Master Control Hatch half. Flag is first mid-Run
-  Hatch-bank only; Master is beats 6–7.
+- Dump-on-start sneaking back “so both buys always land.” The ~500 aim is drip
+  through the window (tunable). Do not gift Salvage.
+- Gating a test on `Run ended (hatch|down)`: the live line is verbose-only and
+  the token is `player`, not `down`. Assert on `RUN OVER` or sim state.
+- Raising `DeepestWaveReached` on this start. It is already **2** from the
+  field clears; leave it.
+- Tuning the overwhelm so the seat dies before any drip lands — the loss must
+  read “some came home” (~500 aim).
+- `DurationSeconds` cut instead of composition/drip (wrong lever unless a log
+  shows they always last 45 s at Hatch 300).
+- Scripted `Die()`.
+- Forgetting attrition: Hatch damage burns Unbanked 1:1 on top of the drip, so
+  a mauled Hatch shrinks the pile even before the wipe.
+- Unlocking D1 on a failed bank. Failed banks never unlock.
+- Letting Ship return skip loss 1 — this window is authored unclearable; if a
+  0-upgrade clear shows up in a log, retune the overwhelm, do not move the
+  wheel key off `PodEjections >= 1`.
+- First-loss copy that names the Hatch on a cause-agnostic trigger (fixed
+  2026-08-17 — keep it cause-agnostic).
 
 ## Depends / Unblocks
 
-Depends: beat 1 Unbanked > 0. Unblocks: beat 3 ARMORY (needs `PodEjections >= 1`
-and banked 450). Unblocks beat 4 NAV Wave 2 (`DemoNavUnlockWave=2` even on loss).
+Depends: beat 1 zone pile; v9 re-keyed fields (or the terminal derivation).
+Unblocks: beat 3 with **some** banked (~500 aim, `PodEjections >= 1`); beat 4's
+composite retrigger reads the per-zone deepest.
 
 ## Verification
 
-1. EditMode: TriggerDraw HatchBank with Unbanked 450, demo first → Banked +=450,
-   Unbanked 0, then `EndRun("down")` → Banked still +450, Unbanked 0.
-2. EditMode: same without demo flag → Unbanked not dumped at start.
-3. EditMode: LaunchWave first-hatch spec H=4×n.
-4. EditMode: hatch start sets navUnlock 2, bankCapWave 1, `DeepestWaveReached`
-   unchanged if it was 1.
-5. PlayMode: 0-upgrade MK-1, this window; log either `Run ended` or
-   `first-hatch survived` (the latter fails the designed-loss claim and needs
-   the hunter lever).
-6. Loopback: guest down during this window ends host Run; both return to Ship
-   with converted bank.
-7. No `[Dev]`.
+1. EditMode: Hatch-bank start with the zone pile, no dump; after 10 s of ticks
+   Unbanked −80, banked +floor(80 × `CarryConvert(2)`) (`needs-check`);
+   `EndRun` wipes remainder, keeps banked.
+2. EditMode: the bank start writes no checkpoint; `DemoZoneDeepestWave[1]`
+   already reads 2 from the field clears (beat 1's write);
+   `DeepestWaveReached` unchanged at 2.
+3. PlayMode: 0-upgrade MK-1 after the zone's two field Waves: the window ends
+   in loss — `RUN OVER` present. A `first-hatch survived` log is a tuning
+   defect, not a pass.
+4. PlayMode (later banks, once the survive path is built): survived window →
+   held interact at the Hatch before the next Wave trigger ends the Run
+   **Docked**; banked + door state persist via the snapshot. Not closable on
+   this authored window.
+5. No `[Dev]`.
 
 ## Rejected
 
-Siphon during the window. Keeping drip so “some” salvage survives a fast death.
-Scripted kill. Making Hatch invulnerable. Skipping the fight and auto-Losing.
-Convert-then-fight on every Hatch-bank this demo.
+Convert-then-fight (overturned 2026-08-16). Hunter-add spec (player-kill as
+the loss driver). Any-seat-down override. Gifting Salvage so two wheel buys
+always land. Scripted kill. A `[Demo]` start log duplicating the live
+`[Hatch]` line. NAV wave-skip checkpoint (`navUnlock=4` — dead 2026-08-17).

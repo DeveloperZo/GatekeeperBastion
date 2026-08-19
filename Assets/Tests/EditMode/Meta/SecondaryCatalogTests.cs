@@ -74,6 +74,9 @@ namespace GatekeepersProtocol.Tests
                     // EffectiveDps does not see range. Contact identity is gated by
                     // SecDAndMk1AreDifferentWeapons; upgraded rivalry by
                     // SecDFireRateFocus_NeverRivalsFocusedPrimaries.
+                    // 2026-08-16: MK-1 T0 damage 30 so a Wave-1 Default is one shot. Duty-cycle
+                    // dps then exceeds the Secondary band; first-session TTK is the demand.
+                    if (id == WeaponId.Mk1Sidearm) continue;
                     if (id == WeaponId.SecD && t > 0) continue;
                     float dps = WeaponWheel.EffectiveDps(WeaponCatalog.Def(id), pts);
                     Assert.Less(dps, primaryFloor,
@@ -83,26 +86,12 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Mk1DamageFocus_NeverRivalsFocusedPrimaries()
+        public void Mk1_T0_OneShotsWave1Default_TwoShotsWave2()
         {
-            // The MK-1's meanest build (damage-centred) stays under every primary's own
-            // damage-centred build at equal purchases. Cross-centre comparisons — a
-            // damage-focused MK-1 against a reload-focused primary — are build
-            // expression, deliberately unasserted.
-            for (int n = 1; n <= WeaponWheel.MaxPurchases; n++)
-            {
-                float mk1 = WeaponWheel.EffectiveDps(
-                    WeaponCatalog.Def(WeaponId.Mk1Sidearm),
-                    WeaponWheel.FocusHistory(WeaponId.Mk1Sidearm, WheelAttr.Damage, n));
-                foreach (WeaponId id in WeaponCatalog.ForSlot(WeaponSlot.Primary))
-                {
-                    float primary = WeaponWheel.EffectiveDps(
-                        WeaponCatalog.Def(id),
-                        WeaponWheel.FocusHistory(id, WheelAttr.Damage, n));
-                    Assert.Less(mk1, primary,
-                        $"MK-1 damage focus x{n} dps {mk1:0.##} must stay below {id}'s {primary:0.##}");
-                }
-            }
+            float dmg = WeaponCatalog.Def(WeaponId.Mk1Sidearm).damage;
+            Assert.GreaterOrEqual(dmg, WaveDirector.BaseEnemyHp);
+            float wave2Hp = WaveDirector.BaseEnemyHp * (1f + WaveDirector.EnemyHealthPerWave);
+            Assert.AreEqual(2, (int)System.Math.Ceiling(wave2Hp / dmg));
         }
 
         [Test]

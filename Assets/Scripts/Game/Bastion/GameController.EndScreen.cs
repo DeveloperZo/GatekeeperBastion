@@ -35,8 +35,10 @@ namespace GatekeepersProtocol.Game
         float _guestReturnNextAllowed;
 
         /// <summary>Terminal = the run is over and the only way on is RETURN TO SHIP. Lost
-        /// (died) and Escaped (all waves cleared) are treated identically by every exit path.</summary>
-        static bool IsTerminal(RunPhase phase) => phase == RunPhase.Lost || phase == RunPhase.Escaped;
+        /// (died), Escaped (all waves cleared) and Returned (Docked home at the Hatch) are
+        /// treated identically by every exit path.</summary>
+        static bool IsTerminal(RunPhase phase) =>
+            phase == RunPhase.Lost || phase == RunPhase.Escaped || phase == RunPhase.Returned;
 
         /// <summary>Called from OnPhaseChanged the moment either terminal phase lands: free the
         /// cursor, arm the watchdog, write the run summary, persist.</summary>
@@ -61,6 +63,11 @@ namespace GatekeepersProtocol.Game
                 Log.Event("Run", $"BASTION STRIPPED — Master Control Hatch-bank survived, " +
                     $"gross {r.grossEarned}, repair {r.repairSpent}, net {net}, banked now {Meta.BankedSalvage}");
             }
+            else if (phase == RunPhase.Returned)
+            {
+                Log.Event("Run", $"DOCKED after {Sim.RunElapsed:0}s on wave {Sim.CurrentWaveIndex} — " +
+                    $"gross {r.grossEarned}, repair {r.repairSpent}, net {net}, banked now {Meta.BankedSalvage}");
+            }
             else
             {
                 Log.Event("Run", $"RUN OVER after {Sim.RunElapsed:0}s on wave {Sim.CurrentWaveIndex} — " +
@@ -76,6 +83,7 @@ namespace GatekeepersProtocol.Game
         {
             RunEndKind kind = RunEndKind.Player;
             if (phase == RunPhase.Escaped) kind = RunEndKind.Cleared;
+            else if (phase == RunPhase.Returned) kind = RunEndKind.Docked;
             else if (r.cause == "hatch") kind = RunEndKind.Hatch;
 
             int deepest = 1;

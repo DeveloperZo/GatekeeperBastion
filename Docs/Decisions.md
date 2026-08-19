@@ -5,6 +5,10 @@ re-litigating a cut costs more than the cut saved.
 
 ## Cut — do not rebuild
 
+- **Independent-roll rewards.** A drop, win, or proc that can starve N attempts or
+  clump three in a Wave. When chance is added, it is a pity timer, escalating
+  weights, or pre-determination (`Design/3-Mechanics.md` §3.1). Not a gacha shop.
+  Wave composition is already a table; crit stays frozen at 0. Stamped 2026-08-16.
 - **Loss-stake "musical chairs" rotor.** A rotator cycled named stakes (Salvage
   Hold 50%, Weapon Rig 25%, Core Cache 0%, Lucky Break 75%), advancing once per
   Wave, and whichever was current when you lost was forfeited. Built, then cut.
@@ -49,6 +53,9 @@ re-litigating a cut costs more than the cut saved.
   overlay is non-blocking from the start: duck audio, blur the frame, keep the sim ticking
   behind a semi-transparent panel. Building it blocking now is the retrofit the Sim seam
   exists to avoid (`Architecture.md`). Enforced as M35 criterion 31.
+  **Beat-0 demo pause, 2026-08-17 (Zo):** the demo's Beat-0 pause is gated execution after
+  dialog/interaction, not `Time.timeScale = 0`. The cut stands; the demo's earlier claimed
+  timeScale exception is withdrawn.
 - **SceneBuilder owning UI or gameplay hosts.** Rejected (M35). `SceneBuilder` owns
   Environment, SpawnPoints, Directional Light and NavMesh only. Stations, the player rig,
   `ShipController`, `GameSystems`, EventSystem and every UI canvas are authored scene
@@ -69,11 +76,18 @@ re-litigating a cut costs more than the cut saved.
   SKU **138857**, **v1.14.0**, to `Assets/Synty/PolygonSciFiSpace/` so those GUIDs resolve.
   `Assets/Packs/` stays tracked. Shift, Odin (`Assets/Plugins/Sirenix/`), and MCPForUnity
   stay tracked — the HUD and editor are built in those trees, not wrapped off them
-  (Zo, 2026-08-14).
+  (Zo, 2026-08-14). Vendor dumps that are not yet wrapped are also ignored:
+  `Assets/FaxLab3D/`, `Assets/Packs/shooterweaponspackassets/`, `Assets/Packs/weapon_source/`
+  (2026-08-18). Keep `Assets/FaxLab3D.meta` tracked like `Assets/Synty.meta`.
+  **NavMesh `.asset` files are binary** and ride LFS (`*NavMesh*.asset` in `.gitattributes`);
+  treating them as Force Text YAML produced phantom rebake diffs (2026-08-18).
 - **`core.autocrlf` as the line-ending fix.** Rejected in favour of `.gitattributes`. The
   config setting lives on one machine and does not travel with the repository, so the
   141-phantom-modification problem returns on the next clone or on CI. The repository is the
-  only place the rule can live (2026-08-10).
+  only place the rule can live (2026-08-10). This machine's Git for Windows still ships
+  `core.autocrlf=true` in the system config — override with **local**
+  `git config core.autocrlf false` (and `git lfs install --local`) so it cannot fight
+  `.gitattributes` (2026-08-18).
 - **The VK-7 Assault Rifle** (2026-08-06). Shipped disabled in M11 and kept "until a weapon
   polish pass"; the pass arrived and it is not wanted. `WeaponId.Vk7Rifle` **keeps its value
   so old saves deserialize, and the id is never reused**; the row leaves `ShopWeapons()`,
@@ -118,6 +132,10 @@ A client Boarder at 0 HP does not end the host's Run (`M49`, `endsTheRunOnDeath`
 on the avatar). Get-up is a wait on the Ship, then embark on the next hatch-defense Wave
 via NAV MAP or pause (`Milestones/3. completed/M57-the-downed-player-waits-on-the-ship.md`);
 built 2026-08-15. Solo and host: no in-Run respawn.
+**Amended 2026-08-17 (Zo):** a dead player may buy back into the Run while a bank window is
+live — see *Locked — return to Ship at a surviving bank* below. Wait-then-embark stays;
+buy-back is the new option. Solo and host: still no in-Run respawn (host is the open
+question recorded there).
 
 ## Locked — Bastion kit geometry (Zo, 2026-08-13)
 
@@ -135,10 +153,10 @@ not replace them with homemade bars or ghost Shadow chrome. Shift package rows (
 
 | Host | Corner | Size (canvas) | Contents |
 |---|---|---|---|
-| `Hud Profile` | TL `(64, −24)` | 320 × 64 | Shadow, **Profile Icon** (sprite), Profile Level, Profile Exp |
+| `Hud Profile` | TL `(64, −24)` | 320 × 64 | Shadow, **Profile Icon** (sprite), Profile Level, Protocol Line (`G`/`H` READY/countdown), Profile Exp |
 | `Hud Score` | TR `(−24, −24)` | 320 × 72 | Shadow, Score Salvage, Wave Counter (VLG) |
 | `Hud Hatch` | Top centre `(0, −24)`, anchors `(0.5, 1)` | 360 × 72 | Shadow, Shift **Hatch** row (Icon Border / Slider / Text) + value `hp/max` |
-| `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows, VLG. Protocol G/H readout is the Fight shortcut strip (M70 recut 2026-08-16), not a Vitals TMP |
+| `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows, VLG. Protocol G/H readout is Hud Profile `Protocol Line` (always on) plus the Fight shortcut strip when the left drawer is open |
 | `Hud Weapon` | BR `(−24, 24)` | 400 × 150 | Shadow, Weapon Name, Weapon Ammo, Shift **Reload** row (same bar recipe as vitals), VLG |
 
 `BastionHudView` wires those hosts. EXP-as-slider and further polish are manual on top
@@ -184,6 +202,44 @@ root and new log prefix are `GatekeepersProtocol`. Unity `cloudProjectId`
 `3b96df23-b5f0-499c-998f-86d5643d6d88` is kept. `gkb_` sentinels and tool prefixes stay.
 GitHub repo name is unchanged in this pass. Bastion is the place, Gatekeeper is the
 enemy, Boarder Protocol is the CREW sheet.
+
+## Locked — the demo loop (Zo, 2026-08-17)
+
+Recorded here because the demo folder previously carried sanctions this file did not.
+
+- **`WaveDirector.MaxWaves` is a cap per terminal interaction:** one terminal trigger
+  launches up to MaxWaves consecutive Waves. It is **not** a per-Run Wave budget. The
+  rule row in `Design/3-Mechanics.md` §3.1 is restated to match.
+- **The loop unit is a zone:** the zone's terminal Waves, then the hatch-bank Wave.
+  Surviving the bank's timer window unlocks the zone's door; a failed bank never
+  unlocks. The bank is locked until the zone's terminals are complete — callable
+  anytime, unbanked accumulates unknowingly with no reward.
+- **Post-loss:** the deepest terminal of a zone retriggers the zone's composite — all
+  its Waves consecutively — by default. The player may elect a partial start (e.g.
+  Wave 3 of 5), clear the remainder independently, then bank.
+
+Wave counts are tunable, not fixed by this entry.
+
+## Locked — return to Ship at a surviving bank (Zo, 2026-08-17)
+
+**Death is no longer the only thing that ends a Run early.** A player who survives a
+hatch-bank window may return to the Ship: held interact at the Hatch, available until
+the next Wave is triggered. The Run ends **Docked**, not Lost; banked Salvage and door
+state persist via the existing successful-bank snapshot. This is one window, not a
+bail-out lever — the leave-anytime tether cut above stands, and outside a surviving
+bank window down and breach remain the only enders.
+
+- **Parked intent, not spec:** when the juice/multiplier mechanic lands, returning to
+  Ship early loses or reduces the salvage multiplier — mitigating risk has a price.
+- **Co-op buy-back:** a dead player may buy back into the Run only while a bank window
+  is live, rejoining at the Hatch, paying from their own banked Salvage; cost tunable.
+  Respawns re-enter at the critical moment, when Salvage is being banked. Amends the
+  co-op down section above.
+- **Open — needs Zo's call, recorded not resolved:** a dead HOST rejoining collides
+  with host-death-ends-the-run (`M49`), which is architecture-driven.
+- **Demo consistency:** the demo's two authored losses are unclearable windows, so
+  return-to-Ship cannot skip the unlock deaths; the wheel unlock key — the first pod
+  ejection — still holds.
 
 ## Shipped
 

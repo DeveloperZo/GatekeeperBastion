@@ -82,7 +82,7 @@ owned weapons. Each slot keeps its own clip, so switching is not a free reload.
 
 | Weapon | Slot | Cost | Damage | Shots/s | Clip | Reload | Range | Notes |
 |---|---|---|---|---|---|---|---|---|
-| **MK-1 Sidearm** | Secondary | 0 | 14 | 3 | 8 | 1.4 s | 45 m | falls off past 12 m; free — always affordable |
+| **MK-1 Sidearm** | Secondary | 0 | 30 | 3 | 8 | 1.4 s | 45 m | falls off past 12 m; free — always affordable |
 | **SEC-D** | Secondary | 0 | 18 | 6 | 4 | 2.2 s | 8 m | falls off past 3 m; free — always affordable |
 | **BR-12 Shotgun** | Primary | 900 | 6 ×7 | 1.2 | 6 | 2.6 s | 14 m | 7 pellets, 7° spread; falls off past 8 m |
 | **MR-35 Rifle** | Primary | 1,200 | 32 | 1.6 | 10 | 2.4 s | 60 m | pierces 2; falls off past 25 m |
@@ -160,7 +160,7 @@ drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A
 converts at a higher multiplier. Dying keeps what already made it through the Hatch.
 
 A kill pays `25`, then multiplied by intensity.
-Nothing pays per second except Hatch-bank drip (`20` unbanked/s), and the quiet between waves earns nothing at all.
+Nothing pays per second except Hatch-bank drip (`8` unbanked/s), and the quiet between waves earns nothing at all.
 
 The hatch is what you are defending: **300 HP** at Hatch Armor 0, up to **375**. Hold `E` near it to repair.
 If it falls, the run ends. If you fall, the run ends. There is no other way out —
@@ -173,7 +173,7 @@ Between runs you walk your own ship. Four consoles, each owning one subject.
 | Console | Owns | Sells |
 |---|---|---|
 | **ARMORY** | the weapon in your hands | weapons, and wheel purchases for whichever you carry |
-| **CREW QUARTERS** | you | Default Protocol (STOCK — hardware as sold; Crew Anchor; Personal Bulkhead; Passive Ghost or Foresight) |
+| **CREW QUARTERS** | you | Default Protocol (STOCK — hardware as sold; G Barrage; H Rush; claim at CREW, no Passive) |
 | **FABRICATION** | the ship | Hatch Armor, Equipment slot, Repair Rig, Decoy |
 | **NAV MAP** | where you go | the destination, and embarking |
 
@@ -186,8 +186,8 @@ Hatch Armor runs 0–5 at +5% a level, costing 200 × 2^level — 200 / 400 / 80
 | Repair Rig — flat repair rate | 8 HP/s | 300 salvage |
 | Decoy — Drone payload | 3 charges | 250 salvage |
 
-Crit chance is frozen at 0. There is no Luck shop. The Default Protocol is owned
-from the first session; CREW QUARTERS equips it rather than selling levels.
+Crit chance is frozen at 0. There is no Luck shop. The Default Protocol is a
+0-salvage CREW claim (Barrage G, Rush H). Other protocol names on the panel are Coming Soon.
 
 Weapon wheel purchases and the equipment slot unlock after your first death.
 

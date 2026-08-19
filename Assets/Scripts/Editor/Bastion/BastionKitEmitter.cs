@@ -154,8 +154,10 @@ namespace GatekeepersProtocol.EditorTools
             return missing == null ? path : missing + ", " + path;
         }
 
-        /// <summary>Removes Gen_* / BastionGeneratedGeom objects that are not under a BastionSegment
-        /// (litter from OnValidate + CreatePrimitive during prefab emit).</summary>
+        /// <summary>Removes Gen_* litter that is not under a BastionSegment (OnValidate
+        /// + CreatePrimitive during prefab emit). Never touches Authored rooms — those
+        /// carry BastionGeneratedGeom on the room root, and a missing script during
+        /// compile would otherwise destroy the whole room.</summary>
         public static void CleanupOrphanGeneratedGeom()
         {
             int removed = 0;
@@ -166,6 +168,10 @@ namespace GatekeepersProtocol.EditorTools
             {
                 BastionGeneratedGeom marker = markers[i];
                 if (marker == null)
+                    continue;
+                if (IsUnderAuthored(marker.transform))
+                    continue;
+                if (!marker.gameObject.name.StartsWith(BastionSegment.GenPrefix, StringComparison.Ordinal))
                     continue;
 
                 BastionSegment owner = marker.GetComponentInParent<BastionSegment>();
@@ -202,6 +208,17 @@ namespace GatekeepersProtocol.EditorTools
             }
             else
                 Debug.Log("[BastionKitEmitter] No orphan kit meshes found.");
+        }
+
+        static bool IsUnderAuthored(Transform t)
+        {
+            while (t != null)
+            {
+                if (t.name == BastionSegment.AuthoredParentName)
+                    return true;
+                t = t.parent;
+            }
+            return false;
         }
 
         /// <summary>Batchmode entry: emit kit prefabs then exit the editor with code 0.</summary>

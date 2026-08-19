@@ -101,6 +101,19 @@ namespace GatekeepersProtocol.Game
             SetCursorLocked(locked);
         }
 
+        /// <summary>Set the look pitch through the controller's own pipeline. THE ONLY legal
+        /// way to point the camera up/down from outside: pitch lives in _pitch and is
+        /// re-applied to the camera every look tick, so writing camera.localRotation
+        /// directly is stomped a frame later, and putting pitch on the BODY transform
+        /// tilts the yaw axis and skews every subsequent mouse look (the capsule wake
+        /// orientation defect, 2026-08-18). Positive looks down.</summary>
+        public void SetLookPitch(float degrees)
+        {
+            _pitch = Mathf.Clamp(degrees, -pitchLimit, pitchLimit);
+            if (cameraTransform != null)
+                cameraTransform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
+
         void Awake()
         {
             _cc = GetComponent<CharacterController>();
@@ -156,15 +169,23 @@ namespace GatekeepersProtocol.Game
         /// <summary>Locomotion: cursor lock, look, sprint and the CharacterController move.</summary>
         public void Tick(float dt)
         {
+            if (!isActiveAndEnabled) return;
+            if (_cc == null || !_cc.enabled) return;
+
             // Defensive sample: free when the scene's tick owner already sampled this frame.
             var frame = Controls.Sample();
 
             if (Controls.Down(ControlId.FreeCursor)) SetCursorLocked(false);
+            // A live Lock line uses the same move lock as an open station, and clicking its
+            // Continue control must not re-lock the cursor mid-line.
+            bool voiceLocked = DemoVoice.LocksInput;
             // Click-to-relock only during the fight; menu clicks must stay free for IMGUI buttons.
-            if (!MovementLocked && frame.click0Down && Cursor.lockState != CursorLockMode.Locked)
+            if (!MovementLocked && !voiceLocked && frame.click0Down
+                && Cursor.lockState != CursorLockMode.Locked)
                 SetCursorLocked(true);
 
-            bool canLook = Cursor.lockState == CursorLockMode.Locked && !MovementLocked;
+            bool canLook = Cursor.lockState == CursorLockMode.Locked && !MovementLocked
+                && !voiceLocked;
             bool canMove = canLook && !Rooted;
             TickZoom();
             // Look requires the authored camera wire: yaw without pitch is a half-broken camera,
@@ -193,6 +214,19 @@ namespace GatekeepersProtocol.Game
                 TickSprint(false, dt); // locked out (panel/menu/down): no sprint, but stamina still returns
             }
 
+            // Rooted and a live Lock line must not tick gravity or CharacterController.Move.
+            // Move(0) still depenetrates, and gravity while the wake capsule's boxes are
+            // triggers drops the rig through the mattress onto the deck (Ship.unity: Bed
+            // occupies y 0–0.7, Floor_-1_1 top is y 0, CC bottom is pivot−0.9). The wake
+            // Lock after the lid would sink the same way if gravity ran under the box.
+            // Look stays live above (sealed, Rooted, no Lock) or is already eaten by Lock.
+            if (Rooted || voiceLocked)
+            {
+                _verticalVelocity = 0f;
+                TickFootsteps(dt);
+                return;
+            }
+
             _verticalVelocity = _cc.isGrounded ? -1f : _verticalVelocity + gravity * dt;
             _cc.Move((planar + Vector3.up * _verticalVelocity) * dt);
             TickFootsteps(dt);
@@ -203,7 +237,8 @@ namespace GatekeepersProtocol.Game
         {
             if (_cam == null) return;
             bool decoyAiming = _decoy != null && _decoy.IsAiming;
-            bool zoom = !MovementLocked && !decoyAiming && Controls.Held(ControlId.AltFire);
+            bool zoom = !MovementLocked && !DemoVoice.LocksInput && !decoyAiming
+                && Controls.Held(ControlId.AltFire);
             float want = zoom ? WeaponView.ZoomFov : WeaponView.HipFov;
             if (Mathf.Abs(_cam.fieldOfView - want) > 0.01f)
                 _cam.fieldOfView = want;

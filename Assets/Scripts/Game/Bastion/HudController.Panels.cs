@@ -17,10 +17,10 @@ namespace GatekeepersProtocol.Game
             PushShortcutPanel(sim, ControlContext.EndScreen);
         }
 
-        static ControlContext FightShortcutContext(RunSim sim)
+        ControlContext FightShortcutContext(RunSim sim)
         {
             var ctx = Controls.FightAlways;
-            ctx |= sim.Assault == AssaultState.Prep ? ControlContext.Prep : ControlContext.Assault;
+            ctx |= ViewAssault(sim) == AssaultState.Prep ? ControlContext.Prep : ControlContext.Assault;
             return ctx;
         }
 
@@ -31,7 +31,7 @@ namespace GatekeepersProtocol.Game
                 && !string.IsNullOrEmpty(_interactor.CurrentPrompt))
                 ctx |= ControlContext.NearInteract;
 
-            int dialLevel = sim.Assault == AssaultState.Prep ? sim.Siphon.Level : -1;
+            int dialLevel = ViewAssault(sim) == AssaultState.Prep ? sim.Siphon.Level : -1;
             if (IsPauseOpen) FillPauseShortcuts(sim, ctx, dialLevel);
 
             // Left drawer open ⇒ Collapsed false; fill full keycaps (no tip-only mode).
@@ -129,7 +129,8 @@ namespace GatekeepersProtocol.Game
             }
             _view.SetPrepLine(2, _lineBuf.ToString());
 
-            if (unbanked > 0L && sim.HatchBankSlotsLeft > 0)
+            if (unbanked > 0L && sim.HatchBankSlotsLeft > 0
+                && (_game == null || !_game.HatchBankStartBlocked))
             {
                 _lineBuf.Clear();
                 _lineBuf.Append("<b>Hatch-bank — T at the Hatch</b>  (")

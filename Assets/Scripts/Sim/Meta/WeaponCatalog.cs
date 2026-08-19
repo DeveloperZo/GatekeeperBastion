@@ -41,7 +41,7 @@ namespace GatekeepersProtocol.Sim
             {
                 case WeaponId.Mk1Sidearm:
                     return Make(WeaponSlot.Secondary, "MK-1 Sidearm", cost: 0L,
-                        damage: 14f, shotsPerSecond: 3.0f, clipSize: 8f, reloadSeconds: 1.4f, range: 45f,
+                        damage: 30f, shotsPerSecond: 3.0f, clipSize: 8f, reloadSeconds: 1.4f, range: 45f,
                         pellets: 1, spreadDegrees: 0f, pierceCount: 0, pierceDamageMul: 1f, falloffStart: 12f,
                         AmberR, AmberG, AmberB, tracerWidth: 0.030f, WeaponCrosshair.Cross,
                         AbilityId.Mk1RegenSurge);

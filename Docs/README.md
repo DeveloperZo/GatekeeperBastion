@@ -100,6 +100,7 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `Working-Rules.md` | How to work here: lanes, scope, the leverage gate, evidence, logs, verification. |
 | [`.claude/skills/`](../.claude/skills/) | How to do a kind of work — development, design, verification, brainstorm, strategy. Loaded by the agent when the work matches, not read by hand. Read by both Claude Code and Cursor. |
 | `Decisions.md` | What was decided, cut, deferred, or designed-but-not-built, and why. |
+| `Tech-Hygiene.md` | Standing ledger of small owed items: unobserved criteria from a closed milestone, one-shot leftovers, cleanups only Zo can do. Nothing with a real gate. |
 | `Roadmap.md` | Order, status, strategy and risks. The summary layer over `Milestones/`. |
 | `Changelog.md` | The roadmap's audit trail: milestone state transitions and structural edits, most recent first. |
 | `Milestones/` | One file per milestone, filed in a folder named for its status. |

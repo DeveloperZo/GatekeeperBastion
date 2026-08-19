@@ -7,18 +7,19 @@
 # The diagram's "T3 unlocks D2" put T3 behind D2, a deadlock — here the hub-to-R9
 # passage is open and D2 sits north of R9 so T3 is reachable before its gate.
 # Spawn closets: S1/S2 live from the start; S3-S6 unseal when D2 opens.
+# Control Room: ControlW/ControlE wait on Master Control (T_Master UnlockedSpawns).
 
 # --- South block (pre-D1) ---------------------------------------------------
 room R1 OpenArea 0 -40 H
 room R2 Full -34 -40 T:T1
 room R3 Full 34 -40 T:T2
-room R4 Half -34 -19 S:S1
-room R5 Half 34 -19 S:S2
+room R4 Half -34 -19 S:S1:W
+room R5 Half 34 -19 S:S2:E
 
 # --- Central hub (behind D1) ------------------------------------------------
 room R6 OpenArea 0 2
-room R7 Half -29 2 S:S3
-room R8 Half 29 2 S:S4
+room R7 Half -29 2 S:S3:W
+room R8 Half 29 2 S:S4:E
 
 # --- Spine (open passage from hub; T3 gates D2) -------------------------------
 room R9 Full 0 36 T:T3
@@ -27,11 +28,11 @@ room R9 Full 0 36 T:T3
 room R10 OpenArea 0 70
 room R11 Full -34 62 T:T4
 room R12 Full 34 62 T:T5
-room R13 Half -29 83 S:S5
-room R14 Half 29 83 S:S6
+room R13 Half -29 83 S:S5:N
+room R14 Half 29 83 S:S6:N
 
 # --- Final control room (behind the control door) -----------------------------
-room R15 ControlRoom 0 129 M
+room R15 ControlRoom 0 129 M S:ControlW:W S:ControlE:E
 
 # --- Open passages: both faces carry a Door side; along= aligns the shared
 # aperture when room centres differ on that axis.

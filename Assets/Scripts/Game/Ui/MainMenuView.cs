@@ -1,4 +1,5 @@
 using System;
+using GatekeepersProtocol.Util;
 using Michsky.UI.Shift;
 using TMPro;
 using UnityEngine;
@@ -285,7 +286,11 @@ namespace GatekeepersProtocol.Game
 
         void ShowModal(ModalWindowManager modal, Button focus)
         {
-            if (modal == null) return;
+            if (modal == null)
+            {
+                Log.Error("MainMenuView", "ShowModal — modal missing.");
+                return;
+            }
             modal.ModalWindowIn();
             if (_modalBlur != null) _modalBlur.BlurInAnim();
 

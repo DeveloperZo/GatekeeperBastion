@@ -10,7 +10,7 @@ Difficulty is overlap: how much of the Wave is in the room at once. Starting dee
 
 ## Reference
 
-A Run is a fixed number of Waves, started from field terminals or as a Hatch-bank, each one bigger than the last. The first terminal on the kit bastion is the Run's full five; each start after a select delivers one, and the door opens on the fifth clear. The counts, the composition table and the exact scaling are in the [Field Manual](Field-Manual.md); this page is what the escalation *does*.
+A Run is a fixed number of Waves, started from field terminals or as a Hatch-bank, each one bigger than the last. The first terminal on the kit bastion is three Waves; each start after a select delivers one. Hatch-bank waits until those three are done. Counts and composition: [Field Manual](Field-Manual.md).
 
 ### Four things escalate, and they escalate together
 

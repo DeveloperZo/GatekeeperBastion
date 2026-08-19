@@ -358,6 +358,22 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
+        /// <summary>0-salvage CREW claim. Owns and equips. Sim has no shop.</summary>
+        public static bool BuyProtocol(BoarderProtocolId id)
+        {
+            var m = GameSession.Meta;
+            if (m == null)
+            {
+                Log.Warn(Tag, "BuyProtocol refused: no session loaded.");
+                return false;
+            }
+            if (!BoarderProtocol.TryClaim(m, id))
+                return false;
+            GameSession.Save();
+            Log.Event("Ship", "claimed " + BoarderProtocol.ProtocolName(id) + " track=crew");
+            return true;
+        }
+
         /// <summary>Ship-only passive re-pick. Refusals logged with track=crew.</summary>
         public static bool PickPassive(BoarderAbilityId id)
         {

@@ -18,13 +18,22 @@ namespace GatekeepersProtocol.Game
         long _cacheHatchHp = long.MinValue;
         long _cacheHatchMax = long.MinValue;
         long _cachePlayerHp = long.MinValue;
-        long _cacheCrewWindow = long.MinValue;
-        long _cacheCrewCd = long.MinValue;
-        long _cachePersonalWindow = long.MinValue;
-        long _cachePersonalCd = long.MinValue;
-        string _cachePassive = "\0";
+        float _cacheCrewFill = -1f;
+        float _cachePersonalFill = -1f;
+        string _cacheCrewCdLabel;
+        string _cachePersonalCdLabel;
+        int _cacheHasProtocol = -1;
         bool _cacheAlarm;
         bool _cachePlayerDead;
+
+        void ShowFightHud(bool prep)
+        {
+            ResolveRefs();
+            _cacheHasProtocol = -1;
+            if (_view == null) return;
+            _view.ShowFight(prep);
+            PushProtocolChrome(_protocol != null && _protocol.HasProtocol);
+        }
 
         void PushFightValues(GameController gc, RunSim sim)
         {
@@ -134,7 +143,7 @@ namespace GatekeepersProtocol.Game
             }
 
             PushWeaponReadout(gc);
-            if (leftOpen) PushShortcutPanel(sim);
+            if (leftOpen || IsPauseOpen) PushShortcutPanel(sim);
 
             if (assault == AssaultState.Prep)
                 PushPrepPanel(sim, wave, hatchHp, hatchMax, sim.TotalUnbanked);
@@ -171,50 +180,89 @@ namespace GatekeepersProtocol.Game
                 ResolveRefs();
                 if (_protocol == null)
                 {
-                    if (_cachePassive != null)
+                    if (_cacheHasProtocol != 0)
                     {
-                        _cachePassive = null;
-                        _view.SetProtocolLine(null);
+                        _cacheHasProtocol = 0;
+                        PushProtocolChrome(false);
                     }
                     return;
                 }
             }
 
-            long crewW = (long)(_protocol.CrewWindow * 10f);
-            long crewC = (long)(_protocol.CrewCooldown * 10f);
-            long persW = (long)(_protocol.PersonalWindow * 10f);
-            long persC = (long)(_protocol.PersonalCooldown * 10f);
-            string passive = _protocol.PassiveName;
-            if (crewW == _cacheCrewWindow && crewC == _cacheCrewCd
-                && persW == _cachePersonalWindow && persC == _cachePersonalCd
-                && passive == _cachePassive)
+            int has = _protocol.HasProtocol ? 1 : 0;
+            float crewFill = BoarderProtocol.OverlayFill(_protocol.CrewWindow, _protocol.CrewCooldown,
+                BoarderProtocol.Window(_protocol.CrewAbility),
+                BoarderProtocol.Cooldown(_protocol.CrewAbility));
+            float persFill = BoarderProtocol.OverlayFill(_protocol.PersonalWindow, _protocol.PersonalCooldown,
+                BoarderProtocol.Window(_protocol.PersonalAbility),
+                BoarderProtocol.Cooldown(_protocol.PersonalAbility));
+            string crewCd = CdLabel(_protocol.CrewWindow, _protocol.CrewCooldown);
+            string persCd = CdLabel(_protocol.PersonalWindow, _protocol.PersonalCooldown);
+            if (has == _cacheHasProtocol && crewFill == _cacheCrewFill && persFill == _cachePersonalFill
+                && crewCd == _cacheCrewCdLabel && persCd == _cachePersonalCdLabel)
                 return;
-            _cacheCrewWindow = crewW;
-            _cacheCrewCd = crewC;
-            _cachePersonalWindow = persW;
-            _cachePersonalCd = persC;
-            _cachePassive = passive;
-
-            _lineBuf.Clear();
-            AppendAbilitySlot(_lineBuf, ControlId.CrewAbility, _protocol.CrewName,
-                _protocol.CrewWindow, _protocol.CrewCooldown);
-            _lineBuf.Append('\n');
-            AppendAbilitySlot(_lineBuf, ControlId.PersonalAbility, _protocol.PersonalName,
-                _protocol.PersonalWindow, _protocol.PersonalCooldown);
-            _lineBuf.Append('\n').Append(passive);
-            _view.SetProtocolLine(_lineBuf.ToString());
+            _cacheHasProtocol = has;
+            _cacheCrewFill = crewFill;
+            _cachePersonalFill = persFill;
+            _cacheCrewCdLabel = crewCd;
+            _cachePersonalCdLabel = persCd;
+            PushProtocolChrome(has != 0);
         }
 
-        static void AppendAbilitySlot(System.Text.StringBuilder buf, ControlId key, string name,
-            float window, float cooldown)
+        void PushProtocolChrome(bool equipped)
         {
-            buf.Append(Controls.DisplayOf(key)).Append(' ').Append(name).Append("  ");
-            if (window > 0.05f)
-                buf.Append(window.ToString("0.0")).Append('s');
-            else if (cooldown > 0.05f)
-                buf.Append(cooldown.ToString("0.0")).Append('s');
-            else
-                buf.Append("READY");
+            if (!equipped)
+            {
+                _view.SetProtocolLine("NO PROTOCOL");
+                _view.SetProtocolAbilities(
+                    "—", 0f, "",
+                    Controls.DisplayOf(ControlId.PersonalAbility), "—", 0f, "",
+                    Controls.DisplayOf(ControlId.CrewAbility), "—", 0f, "");
+                return;
+            }
+
+            string proto = _protocol.ProtocolName;
+            _view.SetProtocolLine(string.IsNullOrEmpty(proto) ? "NO PROTOCOL" : proto);
+            string passive = _protocol.PassiveName;
+            _view.SetProtocolAbilities(
+                string.IsNullOrEmpty(passive) ? "—" : passive, 0f, "",
+                Controls.DisplayOf(ControlId.PersonalAbility),
+                _protocol.PersonalName,
+                BoarderProtocol.OverlayFill(_protocol.PersonalWindow, _protocol.PersonalCooldown,
+                    BoarderProtocol.Window(_protocol.PersonalAbility),
+                    BoarderProtocol.Cooldown(_protocol.PersonalAbility)),
+                CdLabel(_protocol.PersonalWindow, _protocol.PersonalCooldown),
+                Controls.DisplayOf(ControlId.CrewAbility),
+                _protocol.CrewName,
+                BoarderProtocol.OverlayFill(_protocol.CrewWindow, _protocol.CrewCooldown,
+                    BoarderProtocol.Window(_protocol.CrewAbility),
+                    BoarderProtocol.Cooldown(_protocol.CrewAbility)),
+                CdLabel(_protocol.CrewWindow, _protocol.CrewCooldown));
+        }
+
+        static readonly string[] SecLabel = BuildSecLabel();
+
+        static string[] BuildSecLabel()
+        {
+            var a = new string[61];
+            for (int i = 0; i < a.Length; i++) a[i] = i.ToString();
+            return a;
+        }
+
+        static string CdLabel(float window, float cooldown)
+        {
+            const float eps = 0.05f;
+            if (window > eps) return SecAt(window);
+            if (cooldown > eps) return SecAt(cooldown);
+            return "";
+        }
+
+        static string SecAt(float seconds)
+        {
+            int n = (int)Mathf.Ceil(seconds);
+            if (n < 0) n = 0;
+            if (n < SecLabel.Length) return SecLabel[n];
+            return n.ToString();
         }
 
         void PushPrompt()

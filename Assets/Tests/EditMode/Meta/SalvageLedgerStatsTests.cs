@@ -115,8 +115,8 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1739L + expectedSpent + crewRefund, m.LifetimeSalvageEarned);
             Assert.IsTrue(m.SalvageStatsWereRepaired);
             Assert.IsTrue(m.SalvageLedgerBalances);
-            Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
-            Assert.AreEqual(BoarderAbilityId.Ghost, m.EquippedPassive);
+            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
             Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion, "loading migrates the save forward");
         }
 

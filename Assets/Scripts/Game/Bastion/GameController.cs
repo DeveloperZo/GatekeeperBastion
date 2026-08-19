@@ -184,6 +184,15 @@ namespace GatekeepersProtocol.Game
             Sim.EngageTether(); // → Tethered (Prep)
             if (Sim.StartWave > 1 && _layout != null && Meta != null)
                 _layout.RestoreCompletedTerminals(Meta.CompletedTerminalIds);
+            // Door state restores on EVERY embark, not only a deep one: a Docked return
+            // re-embarks at Wave 1 and must still find the door it paid for standing open.
+            if (_layout != null && Meta != null)
+            {
+                string[] doors = Meta.OpenDoorIds;
+                _layout.RestoreOpenDoors(doors);
+                if (doors.Length > 0)
+                    Log.Event("Demo", "snapshot restored doors=" + string.Join(",", doors));
+            }
             // The spawner's per-frame delivery advance belongs to this controller's
             // written order from here on; its own Update yields.
             if (_spawner != null) _spawner.SetHosted(true);
@@ -576,6 +585,7 @@ namespace GatekeepersProtocol.Game
             Sim.WaveStarted += OnWaveStarted;
             Sim.AssaultEnded += OnAssaultEnded;
             Sim.MasterHatchHalfStarted += OnMasterHatchHalfStarted;
+            Sim.BankWindowSurvived += OnBankWindowSurvived;
             Sim.GuestConverted += OnGuestConverted;
         }
 
@@ -586,6 +596,7 @@ namespace GatekeepersProtocol.Game
             Sim.WaveStarted -= OnWaveStarted;
             Sim.AssaultEnded -= OnAssaultEnded;
             Sim.MasterHatchHalfStarted -= OnMasterHatchHalfStarted;
+            Sim.BankWindowSurvived -= OnBankWindowSurvived;
             Sim.GuestConverted -= OnGuestConverted;
         }
     }

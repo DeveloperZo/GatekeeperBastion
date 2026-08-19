@@ -32,6 +32,9 @@ namespace GatekeepersProtocol.Sim
         public BastionSketchMarkKind Kind;
         /// <summary>Spawn or terminal id from S:id / T:id. Empty for hatch and master.</summary>
         public string RefId;
+        /// <summary>Spawn marks require an edge (S:S1:W). Unused for other kinds.</summary>
+        public BastionSketchDirection Direction;
+        public bool HasDirection;
     }
 
     public enum BastionSketchDirection : byte

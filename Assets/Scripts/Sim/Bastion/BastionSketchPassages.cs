@@ -83,6 +83,71 @@ namespace GatekeepersProtocol.Sim
             return passages;
         }
 
+        /// <summary>True when this room edge already pairs as an open passage.</summary>
+        public static bool EdgeIsPaired(
+            BastionSketch sketch,
+            string roomId,
+            BastionSketchDirection direction)
+        {
+            if (sketch == null || string.IsNullOrEmpty(roomId))
+                return false;
+
+            BastionSketchRoom room = null;
+            for (int i = 0; i < sketch.Rooms.Count; i++)
+            {
+                if (sketch.Rooms[i].Id == roomId)
+                {
+                    room = sketch.Rooms[i];
+                    break;
+                }
+            }
+            if (room == null)
+                return false;
+
+            float along = 0f;
+            for (int i = 0; i < sketch.Sides.Count; i++)
+            {
+                BastionSketchSideOverride side = sketch.Sides[i];
+                if (side.RoomId == roomId && side.Direction == direction)
+                    along = side.Along;
+            }
+
+            long want = MakeSide(room, direction, along, sketch).Key;
+
+            var roomById = new Dictionary<string, BastionSketchRoom>();
+            for (int i = 0; i < sketch.Rooms.Count; i++)
+                roomById[sketch.Rooms[i].Id] = sketch.Rooms[i];
+
+            var doorSides = new List<DoorSide>();
+            for (int i = 0; i < sketch.Sides.Count; i++)
+            {
+                BastionSketchSideOverride side = sketch.Sides[i];
+                if (side.Kind != BastionSideKind.Door)
+                    continue;
+                if (roomById.TryGetValue(side.RoomId, out BastionSketchRoom r))
+                    doorSides.Add(MakeSide(r, side.Direction, side.Along, sketch));
+            }
+            for (int i = 0; i < sketch.Doors.Count; i++)
+            {
+                BastionSketchDoor door = sketch.Doors[i];
+                if (roomById.TryGetValue(door.RoomId, out BastionSketchRoom r))
+                    doorSides.Add(MakeSide(r, door.Direction, door.Along, sketch));
+            }
+
+            var seen = new HashSet<long>();
+            var partnered = new HashSet<long>();
+            for (int i = 0; i < doorSides.Count; i++)
+            {
+                long key = doorSides[i].Key;
+                if (seen.Contains(key))
+                    partnered.Add(key);
+                else
+                    seen.Add(key);
+            }
+
+            return partnered.Contains(want);
+        }
+
         struct DoorSide
         {
             public string RoomId;

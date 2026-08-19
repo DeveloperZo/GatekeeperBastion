@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GatekeepersProtocol.Sim;
 using GatekeepersProtocol.Util;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace GatekeepersProtocol.Game
@@ -131,8 +132,11 @@ namespace GatekeepersProtocol.Game
                 if (dmg > 0f)
                 {
                     var netEnemy = damageable.GetComponent<NetEnemy>();
-                    if (netEnemy != null && _game != null && _game.Net != null && _game.Net.IsClientOnly)
+                    if (netEnemy != null && IsClientOnlyNetworkPeer())
+                    {
                         netEnemy.SubmitHitServerRpc(dmg, (byte)_activeSlot);
+                        Log.Event("Net", "hit rpc dmg=" + dmg + " slot=" + (byte)_activeSlot);
+                    }
                     else
                         damageable.TakeDamage(dmg, _owner != null ? _owner.transform : transform, _activeSlot);
                     bodiesDamaged++;
@@ -156,6 +160,14 @@ namespace GatekeepersProtocol.Game
                 Log.Warn(Tag, $"FireRay hit buffer full ({_pierceHits.Length}); far bodies may be dropped.");
 
             return end;
+        }
+
+        /// <summary>NGO client that is not the server. Uses NetworkManager.Singleton so a
+        /// missing GameController.Net cannot fall through to local TakeDamage on a clone.</summary>
+        static bool IsClientOnlyNetworkPeer()
+        {
+            var nm = NetworkManager.Singleton;
+            return nm != null && nm.IsClient && !nm.IsServer;
         }
 
         bool IsOwnCollider(Collider col)

@@ -25,6 +25,7 @@ namespace GatekeepersProtocol.Game
         [SerializeField] Button _waveNext;
         [SerializeField] TextMeshProUGUI _noWeaponWarning;
         [SerializeField] TextMeshProUGUI _noRigWarning;
+        [SerializeField] TextMeshProUGUI _noProtocolWarning;
         [SerializeField] Button _embarkButton;
         [SerializeField] TextMeshProUGUI _loadFailed;
         [SerializeField, OptionalBinding] Button _readyButton;
@@ -51,6 +52,7 @@ namespace GatekeepersProtocol.Game
             Require(nameof(_waveNext), _waveNext);
             Require(nameof(_noWeaponWarning), _noWeaponWarning);
             Require(nameof(_noRigWarning), _noRigWarning);
+            Require(nameof(_noProtocolWarning), _noProtocolWarning);
             Require(nameof(_embarkButton), _embarkButton);
             Require(nameof(_loadFailed), _loadFailed);
         }
@@ -98,10 +100,11 @@ namespace GatekeepersProtocol.Game
             WireButton(_waveNext, onNext, nextEnabled);
         }
 
-        public void ShowWarnings(bool noWeapon, bool noRig)
+        public void ShowWarnings(bool noWeapon, bool noRig, bool noProtocol)
         {
             UiBind.Show(_noWeaponWarning, noWeapon);
             UiBind.Show(_noRigWarning, noRig);
+            UiBind.Show(_noProtocolWarning, noProtocol);
         }
 
         public void BindEmbark(string label, Action onEmbark)

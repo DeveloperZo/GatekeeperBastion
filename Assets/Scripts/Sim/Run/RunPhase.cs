@@ -1,9 +1,10 @@
 namespace GatekeepersProtocol.Sim
 {
     /// <summary>
-    /// Lifecycle phases of a single run. v0 uses Docked → Tethered → Lost (lost) or
-    /// Escaped (Master Control Hatch-bank survived). Spooling is reserved for the future escape-window
-    /// design and is UNUSED in v0 (kept so serialized values stay enum-stable when it lands).
+    /// Lifecycle phases of a single run. v0 uses Docked → Tethered → Lost (lost),
+    /// Escaped (Master Control Hatch-bank survived) or Returned (walked home at the Hatch).
+    /// Spooling is reserved for the future escape-window design and is UNUSED in v0 (kept so
+    /// serialized values stay enum-stable when it lands). Append only.
     /// </summary>
     public enum RunPhase
     {
@@ -21,6 +22,12 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>Terminal ("Lost"): Hatch destroyed or player down. Costs nothing but the run —
         /// salvage was banked per kill and is kept in full.</summary>
-        Lost
+        Lost,
+
+        /// <summary>Terminal ("Docked"): the player held Interact at the Hatch after surviving a
+        /// bank window and went home by choice. Not a loss — PodEjections does not move. Named
+        /// Returned because Docked (0) already means aboard-the-ship-before-boarding; the
+        /// player-facing word for this phase is still Docked.</summary>
+        Returned
     }
 }

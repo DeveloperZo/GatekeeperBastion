@@ -202,27 +202,37 @@ namespace GatekeepersProtocol.Game
                 "pin held " + seconds.ToString("0.##") + "s on " + gk.Kind);
         }
 
-        AnchorField _anchor;
+        BarrageField _barrage;
 
         [Rpc(SendTo.Server)]
         void RequestAnchorServerRpc(Vector3 position, bool planting)
         {
             if (!IsServer) return;
-            if (_anchor != null)
+            ApplyBarragePlant(position, planting);
+            ApplyBarrageClientRpc(position, planting);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        void ApplyBarrageClientRpc(Vector3 position, bool planting)
+        {
+            ApplyBarragePlant(position, planting);
+        }
+
+        void ApplyBarragePlant(Vector3 position, bool planting)
+        {
+            if (_barrage != null)
             {
-                AnchorField.Uproot(_anchor);
-                _anchor = null;
+                BarrageField.Uproot(_barrage);
+                _barrage = null;
             }
             if (!planting) return;
-            _anchor = AnchorField.Plant(position);
+            _barrage = BarrageField.Plant(position);
         }
 
         [Rpc(SendTo.Server)]
         void RequestBulkheadServerRpc()
         {
             if (!IsServer) return;
-            var health = GetComponent<PlayerHealth>();
-            if (health != null) health.ArmBulkhead();
         }
         #endregion
     }

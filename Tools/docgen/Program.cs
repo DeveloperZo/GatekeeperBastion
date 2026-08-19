@@ -574,7 +574,7 @@ public static class Docgen
         for (int w = 1; w <= WaveDirector.MaxWaves; w++)
         {
             int idx = HatchBank.CarryWaveIndex(w);
-            var spec = wd.NextWave(idx, 0);
+            var spec = HatchBank.ApplyHatchComposition(wd.NextWave(idx, 0), w);
             sb.AppendLine("| " + w + " | ×" +
                           HatchBank.CarryConvert(w).ToString("0.00", Inv) +
                           " | " + (idx + 1) + " | " + spec.enemyCount + " |");
@@ -921,10 +921,9 @@ public static class Docgen
 
         string crew = BoarderProtocol.ProtocolName(BoarderProtocolId.Default)
             + " (" + BoarderProtocol.DoctrineText(BoarderProtocolId.Default)
-            + "; Crew " + BoarderProtocol.DisplayName(BoarderAbilityId.Anchor)
-            + "; Personal " + BoarderProtocol.DisplayName(BoarderAbilityId.Bulkhead)
-            + "; Passive " + BoarderProtocol.DisplayName(BoarderAbilityId.Ghost)
-            + " or " + BoarderProtocol.DisplayName(BoarderAbilityId.Foresight) + ")";
+            + "; G " + BoarderProtocol.DisplayName(BoarderAbilityId.Barrage)
+            + "; H " + BoarderProtocol.DisplayName(BoarderAbilityId.Rush)
+            + "; claim at CREW, no Passive)";
         string fabTracks = byStation.ContainsKey("FABRICATION")
             ? string.Join(", ", byStation["FABRICATION"]) : "";
         string fabSells = fabTracks;
@@ -963,8 +962,8 @@ public static class Docgen
         sb.AppendLine("| Decoy — Drone payload | " + decoy.charges + " charges | " +
                       decoy.cost.ToString("N0", Inv) + " salvage |");
         sb.AppendLine();
-        sb.AppendLine("Crit chance is frozen at 0. There is no Luck shop. The Default Protocol is owned");
-        sb.AppendLine("from the first session; CREW QUARTERS equips it rather than selling levels.");
+        sb.AppendLine("Crit chance is frozen at 0. There is no Luck shop. The Default Protocol is a");
+        sb.AppendLine("0-salvage CREW claim (Barrage G, Rush H). Other protocol names on the panel are Coming Soon.");
         sb.AppendLine();
         sb.AppendLine("Weapon wheel purchases and the equipment slot unlock after your first death.");
         sb.AppendLine();

@@ -19,9 +19,8 @@ Countable facts are not restated here (`../README.md`, *Generated, or written*).
 
 ## 1.1 The paradigm — what the game believes (#1)
 
-**Stated by Zo, 2026-08-08.** These four are the authority. The table under them records
-how far the shipped build actually carries each one, and a gap between the two is a design
-task, not a documentation error.
+**Stated by Zo, 2026-08-08.** These four are the Boarder's contract with the Bastion.
+They do not move when §1.2 ranks move. The mapping under the table is what gets restamped.
 
 1. **Progress through failure.** A lost Run still moves you forward.
 2. **Reward success rather than punish failure.** Winning pays; losing does not take.
@@ -36,12 +35,33 @@ task, not a documentation error.
 | Progress through failure                  | **The whole purchasable surface.** Hatch-bank drip/dump credits `MetaState.BankedSalvage`; leftover Unbanked is wiped on a lost Run, so shop money is what made it through the Hatch. Tiers additionally unlock only after a first loss (`MetaUpgrades.UpgradesUnlocked == PodEjections >= 1`), so failing once is the thing that opens the deepest progression track. The loss screen says `converted this run: N`, then the banked total.                                                                                                                      | None identified.                                                                                                                              |
 | Reward success rather than punish failure | No ending moves **banked** Salvage. Unbanked since the last Hatch-bank is lost on a down or Hatch breach (`../Decisions.md` expiry). Dying and clearing differ in which counter ticks, the deepest Wave shown, and what the screen says. The loss-stake "musical chairs" rotor was built and cut. Repair is an **exchange**, Salvage for Hatch HP, priced at `ShipSystems.RepairSalvagePerHp`; it is a purchase like any other and not a forfeit.                                                                                                                | None identified.                                                                                                                              |
 | Skills and loadout amplify expression     | The weapon is the build, per-weapon rather than a global stat sheet, and each purchase is now a choice: `ShipCommands.BuyWheelUpgrade` centres one upgrade spoke and `WeaponWheel` awards 5 + 3 + 3 = 11 points across three of the five, nothing to the two at distance 2. BR-12, MR-35, PRI-C, MK-1 and SEC-D order their rings differently (`WeaponWheel.RingOf`), so the same focus buys a different gun. Intensity juice is a stake the player authors at a look-at trigger. CREW QUARTERS equips a named Boarder Protocol (`Sim/Meta/BoarderProtocol.cs`). | SEC-D's Ability spoke cannot be bought (`AbilityId.None`). Specialist protocols wait on their slices (`../Brainstorms/boarder-protocols.md`). |
-| You start the action                      | No Wave timer until juice is selected and `T` starts. Look at a field terminal, Master Control, or the Hatch; `+/-` juices Unbanked; `E` selects; `T` starts. T1 still needs 5 clears to open its door. Untimed Prep after each clear. Intensity locked in Assault.                                                                                                                                                                                                                                                                                              | None. This is the belief the build carries most completely.                                                                                   |
+| You start the action                      | No Wave timer until juice is selected and `T` starts. Look at a field terminal, Master Control, or the Hatch; `+/-` juices Unbanked; `E` selects; `T` starts. T1 still needs 5 clears to open its door. Untimed Prep after each clear. Intensity locked in Assault. In a friends session the party lead is who calls it (`M72`). | None on the solo contract. Party lead is the co-op reading of "you". |
 
 
 Together: **the player sets both the pace and the stake, and the game supplies neither.**
 Pressure here is authored by the person under it. Juice, `E`, then `T` at a field terminal,
 Master Control, or the Hatch is what starts a clock.
+
+**How the four serve §1.2** (stamp 2026-08-16; restamp when the rank table moves):
+
+| Belief | Serves |
+|---|---|
+| Progress through failure | Expression (shop money is what survived a Run); Challenge (the vehicle) |
+| Reward success rather than punish failure | Expression (banked stays); Fellowship (guest down does not take the host's Run, `M49`) |
+| Skills and loadout amplify expression | Expression (rank 2) — the only belief that names an aesthetic |
+| You start the action | Challenge (the vehicle); Fellowship (party lead starts juice / `T` / EMBARK) |
+
+**Not named by any belief:** Fellowship as the reason a friend embarks — session layer
+(Host/Join, `M65` wallets, `M72`). Fantasy as boarding a held vessel — kind refusals, the
+kit, destinations still heading. Those are §1.2 goals. A fifth belief is a Zo restatement,
+not a mapping edit.
+
+**Ancestor** (Zo, 2026-08-17): [Guns 'n Goblins](https://store.steampowered.com/app/881940/Guns_n_Goblins/)
+([IGN](https://www.ign.com/games/guns-n-goblins)). You ring a bell to call the swarm;
+death still grows you. Beliefs 1 and 4 are those two. This game inverts the Bastion
+(theirs; you board) and refuses the rest of that Steam page: idler, incremental
+character sheet, build-your-fortress, thousands-strong spectacle, single-player as
+the session.
 
 **What the game refuses to be** (confirmed by Zo, 2026-08-08), each refusal paid for by a
 cut already made:
@@ -53,6 +73,13 @@ for the host. `EscapeSpool` and `RunPhase.Spooling` are dormant, kept only so th
 stays serialization-stable. Exception (Zo, 2026-08-13): co-op client get-up is
 `../Milestones/3. completed/M57-the-downed-player-waits-on-the-ship.md`
 (Ship wait, then embark on the next hatch-defense Wave). Shipped 2026-08-15.
+Amended (Zo, 2026-08-17): **death is no longer the only Run ender.** A player who
+survives a hatch-bank window may return to the Ship — held interact at the Hatch,
+available until the next Wave is triggered — and the Run ends **Docked**, not Lost;
+banked Salvage and door state persist via the successful-bank snapshot. The refusal
+narrows rather than falls: still no bail-out lever, and outside a surviving bank
+window down and breach remain the only enders (`../Decisions.md`,
+*Locked — return to Ship at a surviving bank*).
 - **It does not rush you.** The one thing it will never do is start without you.
 
 ---
@@ -61,37 +88,35 @@ stays serialization-stable. Exception (Zo, 2026-08-13): co-op client get-up is
 
 ## 1.2 Which kinds of fun (#2, aesthetics)
 
-**Stated by Zo, 2026-08-08, in priority order: Expression, then Fellowship, then
-Challenge.** Those three must be present. The rest are left to be settled by what gets
-built, and should get more intentional over time rather than being decided now.
+The aesthetics are Hunicke, LeBlanc & Zubek’s eight, the same eight Riot teaches in
+[URF Academy — Game Feeling](https://www.riotgames.com/en/urf-academy/fun-and-feeling):
+Sensation, Fellowship, Challenge, Fantasy, Narrative, Discovery, Expression, Submission.
+Competition is not in that set and is not an aesthetic here.
 
-MDA's eight aesthetics, plus competition, read against what the build currently serves.
-This is a claim about the shipped game, not a wish list; each row cites what makes it true.
+**Ranks 1–3 are goals** (Zo, 2026-08-16): **Fellowship, Expression, Fantasy.** A proposal
+that does not serve one of those three has to say why it is still on the ladder. Paradigm
+mapping is §1.1; mechanics Protects column is `3-Mechanics.md`. The 2026-08-08 order
+(Expression, then Fellowship, then Challenge) is superseded.
 
+**Ranks 4–8 follow the build and the brainstorms** — what the mechanics do today, and
+where `../Brainstorms/` is aimed. Challenge is the vehicle: you fight so Fellowship,
+Expression, and Fantasy have something to happen in.
 
-| Aesthetic      | Rank  | Status              | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------------- | ----- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Expression** | **1** | served              | The upgrade wheel ships (`Sim/Meta/WeaponWheel.cs`, bought from the ARMORY via `ShipCommands.BuyWheelUpgrade`). One purchase centres a spoke and spends 5 + 3 + 3 = 11 points across three adjacent spokes of five, so the focus is a decision with a cost: the two spokes at distance 2 get nothing. Rings are per weapon, so the same focus builds a different gun on BR-12 than on MR-35, PRI-C, MK-1 or SEC-D. Default Protocol is in tree (`Sim/Meta/BoarderProtocol.cs`); M70 is not closed. Still missing: SEC-D has no ability (`SpokePurchasable` refuses Ability), specialist protocols, and the five-skill system is unbuilt.                                                                                                           |
-| **Fellowship** | **2** | in play, incomplete | Kill loop (`../Milestones/3. completed/M48-the-first-networked-kill.md`), huntable/downable second Boarder (`../Milestones/3. completed/M49-the-gatekeepers-see-the-second-player.md`), client readout/endings (`../Milestones/3. completed/M50-the-client-lives-the-run.md`), in-run verbs (`../Milestones/3. completed/M51-the-clients-hands.md`), get-up (`../Milestones/3. completed/M57-the-downed-player-waits-on-the-ship.md`), LAN Host/Join (`../Milestones/3. completed/M58-a-build-two-machines-can-run.md`), Relay join (`../Milestones/3. completed/M60-a-join-a-friend-can-use.md`), three players (`../Milestones/3. completed/M65-three-players-and-a-fight-that-counts-them.md`). Gap: shared Ship / party EMBARK (`../Milestones/2. active/M72-the-party-shares-a-ship.md`) — kernel in tree, two-machine criterion 9 open. |
-| **Challenge**  | **3** | served              | The Run is an obstacle course with one fail state. Death is the only early ender; there is no difficulty option that is not intensity juice.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Sensation      | —     | in play, incomplete | Boarder is the IQ astronaut with Synty guns, stroke crosshair, RMB zoom 60/40, Ship desks `SM_Prop_ControlPanel_02` (`M61`, closed 2026-08-14). Bastion kit dressed — scaler-2 station rooms, sliding doors, bulkhead Hatch (`M61-2`, closed 2026-08-14). Audio is `M69`.                                                                                                                                                                                                                                                                                                                                                                    |
-| Discovery      | —     | declined for now    | One destination, one Bastion, generated scenes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Narrative      | —     | declined            | No story beats. The fiction is a frame (`ALPHA-7`, Salvage, the umbilical) and carries no progression.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Fantasy        | —     | frame only          | Same as above.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Submission     | —     | actively declined   | The clock pays nothing. There is no version of this game you leave running.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Competition    | —     | absent              | No score against anyone else. `CleanExits` and `PodEjections` are counters, not a ladder.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Aesthetic | Rank | Status | Evidence |
+|---|---|---|---|
+| **Fellowship** | **1** | goal; in play | Friends alpha (`Roadmap.md`): install, join, share a Ship. In tree: Host/Join, wallets (`M65`), shared Ship + party EMBARK (`M72` closed 2026-08-17), guest wait (`M57`). Heading: `../Brainstorms/co-op.md` polish (nameplates, voice). Solo is still a complete Run; the goal is that a friend is the reason you embark. |
+| **Expression** | **2** | goal; served | The weapon is the build (`WeaponWheel` 5+3+3, per-weapon rings). Juice is a stake you author. CREW sells a named Protocol (`M70` closed; `../Brainstorms/boarder-protocols.md` — specialists, twists). FAB payloads (`../Brainstorms/fabrication.md`). ARMORY closed brainstorm is the gun shelf. Gap: SEC-D Ability spoke; specialist sheets. |
+| **Fantasy** | **3** | goal; frame only | Boarder, Bastion, Gatekeepers, Hatch, Salvage — always on, no fantasy *progression*. Heading: twelve-kind garrison (`../Brainstorms/gatekeepers-and-waves.md`); a second destination that differs in layout, hazard, or composition (`../Brainstorms/missions-and-destinations.md`); named Protocols as identities; dead-Ship demo (`../Brainstorms/first-session.md`, `../Demo/`). The goal is boarding a held vessel. |
+| **Challenge** | **4** | served | The Run’s fail state, juice, Hatch-bank fight, kind refusals. Demo first cycle and Wave roster live here. Play reports name this (`playthrough.md`). This is how Fellowship, Expression, and Fantasy are tested. |
+| **Sensation** | **5** | in play | Dressed kit, guns, HUD (`M61`, `M61-2`); session voice (`M69` — Whispers + fire/foot SFX). Heading: combat tells (`M66`). |
+| **Discovery** | **6** | declined for now; heading | One Bastion today. Heading: second destination (`missions-and-destinations.md` graduation test — layout, hazard, or composition, not difficulty alone); kit rooms and the twelve-kind roster as things to learn. |
+| **Narrative** | **7** | declined; heading light | No plot. Heading: demo PA / Dialogue System (`../Demo/voice.md`) as furniture with a line (`M62` companion cut). |
+| **Submission** | **8** | refused | Clock pays nothing. No brainstorm revives idle. |
 
-
-Challenge, ranked third, is served. Expression, ranked first, has a mechanism as of M21:
-the upgrade wheel is buyable and its point spread makes which spoke you centre a real trade.
-Fellowship, ranked second, has gameplay over loopback and a join a friend can type (`M48`–`M51`,
-`M57`, `M58`, `M60`, `M65`); the remaining gap is a shared Ship the party embarks from together
-(`M72`, criterion 9 open).
-
-**What that implies for ordering work:** the leverage tier that serves Expression is #4,
-who may change the rules (`3-Mechanics.md`), because expression is the player authoring
-their own Run. The MK-1 ring and the Decoy payload shipped; Default Protocol is in tree
-and M70 is not closed. Fellowship's remaining work is `M72`.
+**What that implies for ordering work:** Fellowship's session lobby closed with `M72`.
+Expression's remaining gate is specialist Protocols after Default (`M70`). Fantasy
+thickens when a second destination or a kind that uses the kit's lanes ships. Default HP
+is the wrong lever. Challenge work (first-session TTK, drip) is in service of those three.
 
 ---
 
@@ -135,7 +160,7 @@ moves a Wave parameter. Do not set a band from the table above; that is how M16'
 was written.
 
 **The player's report still outranks the instrumentation** (`../GatekeeperZo Notes/playthrough.md`).
-Mean live grades effort; it does not decide whether a Run was good.
+Mean live grades Challenge (the vehicle, rank 4). It does not grade Fellowship or Fantasy.
 
 ---
 
@@ -156,15 +181,23 @@ twelve lives in `../Brainstorms/gatekeepers-and-waves.md`.
 | Thief   | the Hatch on a Hatch-bank Wave; the Boarder on a field-terminal Wave | being turned around by being shot; `playerDamage` stays 0. Code id `Ram` until M63. |
 
 
+**Boarders, in a friends session** (Fellowship, rank 1):
+
+| Actor | Wants | Rule |
+|---|---|---|
+| Host | the Run to continue | down ends it (`EndRun`) |
+| Guest | the same Wave on their own loadout | down waits (`M49` / `M57`), or buys back at a live bank window from their own banked Salvage, cost tunable (Zo, 2026-08-17); Salvage split equal (`M65`) |
+| Party lead | NAV pick and EMBARK | `NetPartyLobby` (`M72` closed 2026-08-17) |
+
 The player's incentive is split across four stations, and the split is the design:
 
 
-| Station       | What it is for                                                                                                  | Gated                                                      |
-| ------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| ARMORY        | the weapon in your hands, and what that weapon becomes                                                          | Tiers locked until the first death; buying a weapon is not |
-| CREW QUARTERS | the Boarder's protocol — doctrine, Crew and Personal abilities; Default is a 0-salvage claim | never: Coming Soon stubs are not a death gate |
-| FABRICATION   | the Ship's gear and the Hatch — the Hatch Armor track, the Decoy payload, plus the equipment slot and the Equipment bought into it | Hatch Armor and Decoy never; equipment slot locked until the first death |
-| NAV MAP       | where you go and how deep you start                                                                             | never                                                      |
+| Station       | What it is for                                                                                                  | Serves | Gated                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| ARMORY        | the weapon in your hands, and what that weapon becomes                                                          | Expression | Tiers locked until the first death; buying a weapon is not |
+| CREW QUARTERS | the Boarder's protocol — doctrine, Crew and Personal abilities; Default is a 0-salvage claim | Expression, Fantasy (named identity) | never: Coming Soon stubs are not a death gate |
+| FABRICATION   | the Ship's gear and the Hatch — the Hatch Armor track, the Decoy payload, plus the equipment slot and the Equipment bought into it | Expression, Fantasy (Ship gear on a held vessel) | Hatch Armor and Decoy never; equipment slot locked until the first death |
+| NAV MAP       | where you go and how deep you start                                                                             | Fellowship (party lead); Discovery (heading) | never                                                      |
 
 
 What each station sells, and for how much, is in `../Play/Field-Manual.md`, generated from

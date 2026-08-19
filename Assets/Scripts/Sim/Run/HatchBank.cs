@@ -10,11 +10,15 @@ namespace GatekeepersProtocol.Sim
     public static class HatchBank
     {
         public const int SlotsPerRun = 3;
-        public const float DripPerSecond = 20f;
+        public const float DripPerSecond = 8f;
         /// <summary>Hatch-bank convert window. #12 — Wave 6 delivery is ~35 s; 45 s covers
-        /// spawn plus a short fight so Unbanked visibly falls (20/s × 45 = 900) before dump.
+        /// spawn plus a short fight so Unbanked visibly falls (8/s × 45 = 360) before dump.
         /// Enemy wipe and Unbanked hitting 0 do not end it.</summary>
         public const float DurationSeconds = 45f;
+        /// <summary>Extra Thieves on a 3-Wave Hatch-bank. Field Wave 3 stays at table
+        /// ramCount; the first Hatch-bank after three field Waves is the designed overrun
+        /// for an unupgraded MK-1. [unconfirmed: 2026-08-16]</summary>
+        public const int Carry3ExtraRam = 1;
         public const float MultLow = 1.00f;
         public const float Mult2 = 1.10f;
         public const float MultMid = 1.25f;
@@ -54,6 +58,25 @@ namespace GatekeepersProtocol.Sim
         public static int CarryWaveIndex(int waves)
         {
             return ClampCarry(waves) - 1;
+        }
+
+        /// <summary>Thieves added on top of <see cref="WaveDirector.NextWave"/> for a
+        /// Hatch-bank of this carry. Extra bodies, not converted Defaults.</summary>
+        public static int ExtraRam(int carry)
+        {
+            return ClampCarry(carry) == 3 ? Carry3ExtraRam : 0;
+        }
+
+        /// <summary>Hatch-bank spec: same curve as the matching field Wave, plus
+        /// <see cref="ExtraRam"/> on carry 3. Counts still sum to enemyCount.</summary>
+        public static WaveSpec ApplyHatchComposition(WaveSpec spec, int carry)
+        {
+            int extra = ExtraRam(carry);
+            if (extra <= 0)
+                return spec;
+            spec.ramCount += extra;
+            spec.enemyCount += extra;
+            return spec;
         }
 
         public static long BankedFrom(long unbankedTaken, float multiplier)

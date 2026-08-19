@@ -216,11 +216,21 @@ namespace GatekeepersProtocol.Game
                     break;
 
                 case DevCommands.Kind.StartCoopHost:
+                    if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
+                    {
+                        Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                        break;
+                    }
                     if (gc != null) gc.StartCoopHost();
                     else Log.Warn(Tag, "StartCoopHost refused — no GameController.");
                     break;
 
                 case DevCommands.Kind.StartCoopClient:
+                    if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
+                    {
+                        Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                        break;
+                    }
                     if (gc != null) gc.StartCoopClient();
                     else Log.Warn(Tag, "StartCoopClient refused — no GameController.");
                     break;

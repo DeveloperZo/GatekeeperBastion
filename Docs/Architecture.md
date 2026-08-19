@@ -184,7 +184,10 @@ Kit prefabs stamp rooms quickly; `BastionSketchEmitter` unpacks `Completely` and
 `Authored/`. Orphan kit cleanup only destroys `Gen_*` litter — room roots carry
 `BastionGeneratedGeom`, and a missing script during compile used to delete the whole
 room. A YAML test (`BastionKitSceneTests`) fails the run if `Bastion.unity` drops below
-15 named `BastionSegment` rooms or packs kit pieces back in.
+15 named `BastionSegment` rooms, loses the eight `Spawn_*` closets, or packs kit pieces
+back in. `EnsureAuthoredSpawnRooms` re-places closets without emitting rooms
+(`gkb_bastion_spawn_rooms_request.txt`). Build All
+does not wipe a `SpawnPoints` root that still holds `SpawnRoom` instances.
 `Ship.unity` with a `ShipDress` root is the same: Build All registers scenes and skips the
 Environment wipe. Without `ShipDress`, it still rebuilds collider graybox + light. It does
 **not** touch stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem`,

@@ -124,7 +124,28 @@ namespace GatekeepersProtocol.Sim
 
             if (string.Equals(prefix, "S", StringComparison.OrdinalIgnoreCase))
             {
-                room.Marks.Add(new BastionSketchMark { Kind = BastionSketchMarkKind.Spawn, RefId = refId });
+                int edgeColon = refId.IndexOf(':');
+                if (edgeColon <= 0 || edgeColon >= refId.Length - 1)
+                {
+                    return BastionSketchParseResult.Fail(
+                        "line " + lineNumber + ": spawn mark '" + token + "' requires an edge (S:S1:W)");
+                }
+
+                string spawnId = refId.Substring(0, edgeColon);
+                string edgeToken = refId.Substring(edgeColon + 1);
+                if (!TryParseDirection(edgeToken, out BastionSketchDirection edge))
+                {
+                    return BastionSketchParseResult.Fail(
+                        "line " + lineNumber + ": invalid spawn edge '" + edgeToken + "'");
+                }
+
+                room.Marks.Add(new BastionSketchMark
+                {
+                    Kind = BastionSketchMarkKind.Spawn,
+                    RefId = spawnId,
+                    Direction = edge,
+                    HasDirection = true,
+                });
                 return BastionSketchParseResult.Ok(null);
             }
 
@@ -333,6 +354,49 @@ namespace GatekeepersProtocol.Sim
             {
                 return BastionSketchParseResult.Fail(
                     "sketch must have exactly one door with control flag (found " + controlDoorCount + ")");
+            }
+
+            BastionSketchParseResult spawnEdge = ValidateSpawnEdges(sketch);
+            if (!spawnEdge.Success)
+                return spawnEdge;
+
+            return BastionSketchParseResult.Ok(sketch);
+        }
+
+        static BastionSketchParseResult ValidateSpawnEdges(BastionSketch sketch)
+        {
+            for (int i = 0; i < sketch.Rooms.Count; i++)
+            {
+                BastionSketchRoom room = sketch.Rooms[i];
+                for (int m = 0; m < room.Marks.Count; m++)
+                {
+                    BastionSketchMark mark = room.Marks[m];
+                    if (mark.Kind != BastionSketchMarkKind.Spawn)
+                        continue;
+                    if (!mark.HasDirection)
+                    {
+                        return BastionSketchParseResult.Fail(
+                            "spawn '" + mark.RefId + "' on " + room.Id + " is missing an edge");
+                    }
+
+                    for (int d = 0; d < sketch.Doors.Count; d++)
+                    {
+                        BastionSketchDoor door = sketch.Doors[d];
+                        if (door.RoomId == room.Id && door.Direction == mark.Direction)
+                        {
+                            return BastionSketchParseResult.Fail(
+                                "spawn '" + mark.RefId + "' on " + room.Id + " "
+                                + mark.Direction + " is a progression door");
+                        }
+                    }
+
+                    if (BastionSketchPassages.EdgeIsPaired(sketch, room.Id, mark.Direction))
+                    {
+                        return BastionSketchParseResult.Fail(
+                            "spawn '" + mark.RefId + "' on " + room.Id + " "
+                            + mark.Direction + " is a passage");
+                    }
+                }
             }
 
             return BastionSketchParseResult.Ok(sketch);

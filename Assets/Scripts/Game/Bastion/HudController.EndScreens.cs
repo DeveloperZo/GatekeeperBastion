@@ -9,6 +9,9 @@ namespace GatekeepersProtocol.Game
     {
         public const string LoseFraming = "thrown off the Bastion";
         public const string ClearFraming = "out through the Hatch";
+        /// <summary>A Docked end is a choice, not a failure. Its framing may never borrow
+        /// LoseFraming — kill criterion 2 of this rule is "it reads as a loss".</summary>
+        public const string DockedFraming = "home through the Hatch, with what you banked";
 
         void PushLose(GameController gc, RunSim sim)
         {
@@ -21,6 +24,23 @@ namespace GatekeepersProtocol.Game
             _view.SetEndScreen(
                 cause,
                 LoseFraming,
+                "converted this run: " + report.grossEarned,
+                "repair spent: " + report.repairSpent,
+                "net: " + net,
+                "banked total: " + (gc.Meta != null ? gc.Meta.BankedSalvage : 0),
+                "DEEPEST WAVE " + DeepestShown(gc));
+
+            PushEndScreenShortcut();
+        }
+
+        void PushDocked(GameController gc, RunSim sim)
+        {
+            var report = sim.LastRunReport;
+            long net = report.grossEarned - report.repairSpent;
+
+            _view.SetEndScreen(
+                "DOCKED",
+                DockedFraming,
                 "converted this run: " + report.grossEarned,
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
@@ -67,6 +87,11 @@ namespace GatekeepersProtocol.Game
                     "BASTION STRIPPED",
                     ClearFraming + " — Master Control Hatch-bank survived",
                     earned, repair, net, banked, deepest);
+            }
+            else if (s.Kind == RunEndKind.Docked)
+            {
+                _view.SetEndScreen(
+                    "DOCKED", DockedFraming, earned, repair, net, banked, deepest);
             }
             else
             {

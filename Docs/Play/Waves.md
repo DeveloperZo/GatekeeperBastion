@@ -12,7 +12,7 @@ Difficulty is overlap: how much of the Wave is in the room at once. Starting dee
 
 ## Reference
 
-A Run is a fixed number of Waves, started from field terminals or as a Hatch-bank, each one bigger than the last. The first terminal on the kit bastion is the Run's full five; each start after a select delivers one, and the door opens on the fifth clear. The counts, the composition table and the exact scaling are in the [Field Manual](Field-Manual.md); this page is what the escalation *does*.
+A Run is a fixed number of Waves, started from field terminals or as a Hatch-bank, each one bigger than the last. The first terminal on the kit bastion is three Waves; each start after a select delivers one. Hatch-bank waits until those three are done. Counts and composition: [Field Manual](Field-Manual.md).
 
 ### Four things escalate, and they escalate together
 
@@ -65,6 +65,6 @@ This is also exactly what the NAV MAP's deep start does deliberately: it deliver
 - Nothing tells you that group width and the gap between groups change per Wave. These are the two numbers you feel most and the two you are never shown.
 - Nothing says that Hunter and Thief counts are fixed per Wave and immune to intensity. Players reasonably assume raising intensity multiplies everything.
 - Groups arrive at spawn points in a fixed rotation, one point per group. You can learn the rotation by watching, but nothing marks the points and nothing indicates where the next group is coming from.
-- The members of a group spawn in a ring around their spawn point, which is why a wide group appears to arrive slightly spread out rather than in single file.
+- The members of a group spawn inside the spawn point and walk out through its slab.
 - Every kind swings on the same clock — kinds differ in what they hit and how hard, never in how often. Nothing communicates this, so Hunters read as faster attackers than they are.
 - The composition of the Wave you are about to draw is never previewed by kind. The Prep panel gives you a total body count and nothing else.

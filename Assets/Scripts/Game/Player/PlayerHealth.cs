@@ -107,6 +107,14 @@ namespace GatekeepersProtocol.Game
             bool fatal = Hp <= 0f;
             if (fatal) Hp = 0f;
 
+            // Demo floor: on the Ship while the demo is active, no damage source may kill —
+            // the wake fight teaches getting hit, not dying. Covers melee, falls, self.
+            if (fatal && DemoShipFight.FloorsPlayerHp)
+            {
+                Hp = 1f;
+                fatal = false;
+            }
+
             // One line per damaging hit, recorded before Die() so the killing blow precedes death.
             Log.Event("Player", $"took {taken:0} damage — HP {Hp:0}/{maxHp:0}");
             if (fatal) Die();
@@ -139,14 +147,21 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Owner-side view of replicated HP. Does not write back, does not log a hit.
-        /// Lethal still runs Die(); a restore from 0 clears IsDead without moving the body.</summary>
+        /// Lethal still runs Die(); a restore from 0 clears IsDead without moving the body.
+        /// Replicated death has no attacker, so the death line says gatekeeper and reads
+        /// live count from NetRunMirror when this peer is client-only.</summary>
         public void ApplyReplicatedHp(float hp)
         {
             hp = Mathf.Clamp(hp, 0f, maxHp);
             if (hp <= 0f)
             {
+                if (DemoShipFight.FloorsPlayerHp)
+                {
+                    Hp = 1f;
+                    return;
+                }
                 Hp = 0f;
-                if (!IsDead) Die();
+                if (!IsDead) Die(replicatedHp: true);
                 return;
             }
 
@@ -201,10 +216,13 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Death is the run ender: lock the body and report up. The HUD draws the
         /// DOWN overlay; GameController routes the command into the sim (NotifyPlayerDown).</summary>
-        void Die()
+        void Die(bool replicatedHp = false)
         {
             if (IsDead) return; // guard: re-entrancy (a second killing hit inside the same frame)
             IsDead = true;
+
+            var proto = GetComponent<PlayerProtocolAbilities>();
+            if (proto != null) proto.NotifyDeath();
 
             if (_fpc == null) _fpc = GetComponent<FirstPersonController>(); // re-resolve if fake-null
             if (_fpc != null) _fpc.MovementLocked = true;
@@ -218,10 +236,12 @@ namespace GatekeepersProtocol.Game
             string killer = "unknown";
             if (_lastAttacker != null && Time.time - _lastAttackerTime < 5f)
                 killer = $"gatekeeper at {Vector3.Distance(transform.position, _lastAttacker.position):0.0}m";
+            else if (replicatedHp)
+                killer = "gatekeeper";
 
             var gc = _game;
             // Logged before the sim is told: PlayerDied ends the run synchronously.
-            Log.Event("Player", $"YOU DIED — killed by {killer}, {(gc != null ? gc.EnemiesAlive : 0)} gatekeepers still alive");
+            Log.Event("Player", $"YOU DIED — killed by {killer}, {AliveForDeathLine()} gatekeepers still alive");
 
             if (gc != null)
             {
@@ -242,6 +262,20 @@ namespace GatekeepersProtocol.Game
                            "screen will appear. Freeing the cursor as a last resort.");
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+        }
+
+        int AliveForDeathLine()
+        {
+            var gc = _game;
+            if (gc == null) return 0;
+            var net = gc.Net;
+            if (net != null && net.IsClientOnly)
+            {
+                var mirror = net.Mirror;
+                if (mirror != null) return mirror.Alive.Value;
+                return 0;
+            }
+            return gc.EnemiesAlive;
         }
     }
 }

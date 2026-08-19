@@ -69,6 +69,8 @@ declare -A EXCLUDED=(
   ["Ui/CompendiumFormTests.cs"]="needs GatekeepersProtocol.Game (CompendiumCatalog) and UnityEngine.Application"
   ["Bastion/BastionDoorApertureTests.cs"]="needs BastionSegment MonoBehaviour, GameObject, and UnityEngine"
   ["Bastion/BastionSegmentDoorAlongTests.cs"]="needs GatekeepersProtocol.Game (BastionSegment.TryDoorPillars)"
+  ["Bastion/BastionDoorOpensForTests.cs"]="needs EnemyGatekeeper, CharacterController, and UnityEngine"
+  ["Bastion/SpawnRoomPrefabTests.cs"]="needs SpawnRoom prefab load and UnityEngine"
 )
 
 if ! command -v mcs >/dev/null 2>&1 || ! command -v mono >/dev/null 2>&1; then
@@ -82,8 +84,12 @@ TEST_DIR="$ROOT/Assets/Tests/EditMode"
 # Engine-free settings live in Game/ (they are per-player preferences, not Run state) but are
 # plain C#, so their tests keep offline coverage by compiling alongside the tests below.
 SETTINGS_DIR="$ROOT/Assets/Scripts/Game/Settings"
+# Same deal for the demo line runner: Game/Demo/ is engine-free by construction (the view,
+# in Game/Ui/, owns every UnityEngine touch), so the runner's queue/preempt/mode rules keep
+# offline coverage here.
+DEMO_DIR="$ROOT/Assets/Scripts/Game/Demo"
 
-for p in "$SIM_DIR" "$TEST_DIR" "$SETTINGS_DIR"; do
+for p in "$SIM_DIR" "$TEST_DIR" "$SETTINGS_DIR" "$DEMO_DIR"; do
   if [[ ! -e "$p" ]]; then
     echo "harness: expected $p — is the repo laid out as this script assumes?" >&2
     exit 2
@@ -108,9 +114,10 @@ if ! mcs -nologo -langversion:latest -warn:0 -target:library -out:"$SIM_DLL" "${
   exit 2
 fi
 
-# Stage 2 — tests (plus the engine-free settings sources) compile against the Sim dll, the
-# same dependency direction the Unity asmdefs enforce. Test code cannot donate helpers to Sim.
-mapfile -t SOURCES < <(find "$SETTINGS_DIR" -name '*.cs' | sort)
+# Stage 2 — tests (plus the engine-free settings and demo-line sources) compile against the
+# Sim dll, the same dependency direction the Unity asmdefs enforce. Test code cannot donate
+# helpers to Sim.
+mapfile -t SOURCES < <(find "$SETTINGS_DIR" "$DEMO_DIR" -name '*.cs' | sort)
 
 SKIPPED=()
 while IFS= read -r f; do

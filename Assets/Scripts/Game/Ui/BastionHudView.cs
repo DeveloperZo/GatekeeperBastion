@@ -45,6 +45,7 @@ namespace GatekeepersProtocol.Game
         [SerializeField] TMP_Text _staminaLabel;
         [SerializeField] Slider _staminaBar;
         [SerializeField, OptionalBinding] TMP_Text _protocolLine;
+        [SerializeField, OptionalBinding] ProtocolAbilityBarView _protocolBar;
         [SerializeField] GameObject _weaponCardRoot;
         [SerializeField] TMP_Text _weaponName;
         [SerializeField] TMP_Text _weaponAmmo;
@@ -173,6 +174,7 @@ namespace GatekeepersProtocol.Game
             HideChrome();
             // Seed before the first PushFightValues so the card never flashes WEAPON/0/0.
             SetWeapon("—", "—");
+            SetProtocolLine("NO PROTOCOL");
             SetProfile(ProfileRank, null);
             SetReloadLabel("CLIP");
             SetReloadBar(0f);
@@ -226,6 +228,7 @@ namespace GatekeepersProtocol.Game
             UiBind.Show(_vitalsRoot, visible);
             UiBind.Show(_weaponCardRoot, visible);
             UiBind.Show(_hatchRoot, visible);
+            if (_protocolBar != null) _protocolBar.SetVisible(visible);
         }
 
         public void SetCrosshairVisible(bool visible) => UiBind.Show(_crosshairRoot, visible);
@@ -381,7 +384,23 @@ namespace GatekeepersProtocol.Game
 
         public void SetStaminaBar(float value, float max) => UiBind.SetBar(_staminaBar, value, max);
 
-        public void SetProtocolLine(string text) => UiBind.SetTextOrHide(_protocolLine, text);
+        public void SetProtocolLine(string text)
+        {
+            UiBind.SetText(_protocolLine, text);
+            UiBind.Show(_protocolLine, true);
+        }
+
+        public void SetProtocolAbilities(
+            string passiveName, float passiveFill, string passiveCd,
+            string personalKey, string personalName, float personalFill, string personalCd,
+            string crewKey, string crewName, float crewFill, string crewCd)
+        {
+            if (_protocolBar == null) return;
+            _protocolBar.Bind(
+                passiveName, passiveFill, passiveCd,
+                personalKey, personalName, personalFill, personalCd,
+                crewKey, crewName, crewFill, crewCd);
+        }
 
         public void SetReloadBlockVisible(bool visible) =>
             UiBind.SetRelevant(_reloadBlock, _reloadGroup, visible, IrrelevantAlpha);

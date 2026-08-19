@@ -20,6 +20,7 @@ namespace GatekeepersProtocol.Game
 
         const string GeomRootName = "_geom";
         public const string GenPrefix = "Gen_";
+        public const string AuthoredParentName = "Authored";
         const float DoorOpeningWidth = 3f;
         const float DoorOpeningHeight = 3.5f;
         const float WindowSillHeight = 1.1f;
@@ -216,6 +217,8 @@ namespace GatekeepersProtocol.Game
             EnsureGeomRoot();
             if (_geomRoot != null && _geomRoot.childCount > 0)
                 return;
+            if (IsAuthored())
+                return;
 
             Rebuild();
         }
@@ -226,6 +229,12 @@ namespace GatekeepersProtocol.Game
                 return;
             if (!CanMutateHierarchy())
                 return;
+            if (IsAuthored())
+            {
+                if (rebuildStamp == 0)
+                    rebuildStamp = SettingsHash();
+                return;
+            }
 
             // Rebuild only when the geometry inputs changed. Reloads re-fire OnValidate
             // with identical settings — those must never touch _geom.
@@ -266,9 +275,26 @@ namespace GatekeepersProtocol.Game
                 return;
             if (!CanMutateHierarchy())
                 return;
+            if (IsAuthored())
+                return;
             Rebuild();
         }
 #endif
+
+        /// <summary>True when this instance sits under <c>Authored/</c> — unique scene
+        /// geometry. Rebuild from kit prefabs is refused so a stamp mismatch or orphan
+        /// sweep cannot replace hand edits.</summary>
+        public bool IsAuthored()
+        {
+            Transform t = transform;
+            while (t != null)
+            {
+                if (t.name == AuthoredParentName)
+                    return true;
+                t = t.parent;
+            }
+            return false;
+        }
 
         /// <summary>True when parenting new meshes under this object is allowed (scene instance or
         /// prefab stage). False for the Prefab Asset on disk — SetParent there orphans Gen_* into
@@ -366,6 +392,8 @@ namespace GatekeepersProtocol.Game
             if (this == null)
                 return;
             if (!CanMutateHierarchy())
+                return;
+            if (IsAuthored())
                 return;
 
             EnsureGeomRoot();

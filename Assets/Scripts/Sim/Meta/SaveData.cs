@@ -21,6 +21,13 @@ namespace GatekeepersProtocol.Sim
     ///   7 — CompletedTerminalIds: last successful Hatch-bank unlock graph (deep start).
     ///   8 — Boarder Protocol + Passive; Vitality/Stamina/Scavenging/Luck levels become
     ///       parse-only and refund 200×(2^level−1) into banked.
+    ///   9 — first-Bastion demo flags (DemoActive and the beat gates) plus per-zone
+    ///       DemoZoneDeepestWave. Pre-v9 saves migrate demo-off when they have already
+    ///       played (CleanExits >= 1 or DeepestWaveReached > 1), demo-on otherwise.
+    ///  10 — OpenDoorIds: doors open on a SURVIVED Hatch-bank window, so door state stopped
+    ///       being derivable from CompletedTerminalIds and became its own saved fact. Pre-v10
+    ///       saves load with no open doors and no shim: their doors were opened by the retired
+    ///       terminal rule, so re-deriving them would re-assert a rule that no longer exists.
     /// Migration from earlier versions lives in <see cref="MetaState.FromJson"/> /
     /// <see cref="MetaState.FromSaveData"/>.
     /// </remarks>
@@ -28,7 +35,7 @@ namespace GatekeepersProtocol.Sim
     public class SaveData
     {
         /// <summary>Schema version written by the current build.</summary>
-        public const int CurrentVersion = 8;
+        public const int CurrentVersion = 10;
 
         public int SaveVersion = CurrentVersion;
         public long BankedSalvage;
@@ -46,8 +53,8 @@ namespace GatekeepersProtocol.Sim
         public int HatchArmorLevel;
 
         /// <summary>v8: BoarderProtocolId / BoarderAbilityId as ints.</summary>
-        public int EquippedProtocol = (int)BoarderProtocolId.Default;
-        public int EquippedPassive = (int)BoarderAbilityId.Ghost;
+        public int EquippedProtocol = (int)BoarderProtocolId.None;
+        public int EquippedPassive = (int)BoarderAbilityId.None;
 
         // ---- Equipment (v4) ----
         public bool EquipmentSlotPurchased;
@@ -66,6 +73,24 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>v7: Field terminal ids complete at the last successful Hatch-bank.</summary>
         public string[] CompletedTerminalIds;
+
+        /// <summary>v10: door ids standing open. Written on a survived bank window; restored on
+        /// every embark so a Docked return finds the door as it was left.</summary>
+        public string[] OpenDoorIds;
+
+        // ---- First-Bastion demo (v9) — see Docs/Demo/README.md, Shared flags ----
+        public bool DemoActive;
+        public bool DemoCapsuleOpened;
+        public bool DemoNavPowered;
+        public bool DemoArmoryPowered;
+        public bool DemoWeaponGranted;
+        public bool DemoShipFightDone;
+        public bool DemoCrewMenuUnlocked;
+        public bool DemoFabPowered;
+        public int DemoWheelBuysLeft;
+        /// <summary>Deepest cleared field Wave per zone, index = zone number. Written on
+        /// field-Wave clear; read by the composite retrigger and guest BankCap.</summary>
+        public int[] DemoZoneDeepestWave;
 
         /// <summary>v4: weapon-major flat ArraySize×5 — index = weaponId * AttrCount + WheelAttr.</summary>
         public int[] WeaponWheelPoints;

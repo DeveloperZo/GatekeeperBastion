@@ -1,208 +1,457 @@
 # 0 — Wake on a dead Ship
 
 <!--
-Purpose: Capsule wake, repair NAV, grant MK-1, keep ARMORY / CREW / FAB dark.
+Purpose: Capsule wake (starboard crew bunk) → repair NAV → ship terminal start
+routes power, hands the MK-1 over, and spawns two weak Gatekeepers → gated
+Lock (intruder release on Continue) → kill them → CREW heal (no menu) →
+EMBARK. Only NAV shows a name or interaction before it has a function
+(2026-08-18 revision — Zo): ARMORY / CREW / FABRICATION are hidden until they
+gain one. Solo by construction: multiplayer stays locked until that save's
+first wheel purchase (beat 3).
 Status: demo spec
 Authority: implementable
-Update trigger: when spawn furniture changes, when grant target changes, when
-DemoNavPowered replication changes
-Last updated: 2026-08-16
+Update trigger: when spawn furniture changes, when the ship-fight spec changes,
+when stamped line copy changes, when the multiplayer gate moves
+Last updated: 2026-08-18
 Depends: voice.md
 -->
 
-## What the player sees
-
-They wake in a **capsule** (furniture, not a lose word). The Ship is barely powered.
-Walk, look, and hold interact are taught by **repairing NAV MAP**. NAV is dark until
-that repair; without it there is no Bastion to select. A second interact **grants**
-the MK-1. ARMORY, CREW QUARTERS, and FABRICATION stay dark.
-
-Party: everyone stands on the same hull. The first seat to finish the NAV hold
-powers NAV for the Ship. Each seat grants their own MK-1.
-
 ## Why this beat exists
 
-The live game opens with four live consoles, a 0-salvage ARMORY buy, and NAV that
-warns “no weapon” then EMBARKs anyway (`MapStation.PromptHint`, `TryEmbark`). That
-teaches shopping before the Hatch. This demo teaches move / look / interact on a
-dead hull, then puts a gun in the hand without a shop row.
+The live game opens with four live consoles, a 0-salvage ARMORY buy, and NAV
+that warns "no weapon" then EMBARKs anyway. This beat teaches every verb the
+Bastion will ask for, at home, in order: hold-repair (NAV), the terminal
+contract — select, start, enemies come, and the start arms you (ship
+terminal), fight, and heal (CREW). By EMBARK nothing on the Bastion is a new
+verb except the stakes. Stations that have no function yet do not exist to
+the player: no world label, no prompt, no interaction (2026-08-18 revision) —
+each surfaces the moment it gains one (CREW after the fight, ARMORY at the
+wheel unlock, FABRICATION when the demo ends).
 
-## In tree today
+Solo: multiplayer is locked until this save's first wheel purchase
+([`README.md`](README.md)). Speaker is **Game**. The player does not reply
+([`voice.md`](voice.md)).
 
-| Piece | Fact |
-|---|---|
-| Walk / look | `FirstPersonController` on authored Ship spawn |
-| Hold-E | `Interactor` (range 3.2 m) + `ShipController.TryOpenStationFromInteract` on Interact **Down** — stations open on press, not hold |
-| Stations | `MapStation`, `ArmoryStation`, `CrewQuartersStation`, `EngineeringStation` (FABRICATION). All four live on a fresh save |
-| Weapon | `ShipCommands.BuyWeapon(WeaponId.Mk1Sidearm)` cost 0. Same for `SecD`. Both are ARMORY rows, not world grants |
-| NAV EMBARK | Warns if `!OwnsAnyWeapon` or `!HasRepairRigEquipped`; still commits. Party: lead only (`M72` c4), Ready + 5 s (`NetPartyLobby`) |
-| Save | `SaveData.CurrentVersion = 8`. No demo flags |
-| Protocol | `EquippedProtocol` defaults to Default in data; `M70` recut makes Default a 0-salvage CREW **claim**. NAV still lets you go with no protocol |
-| Spawn | FPC is authored in `Assets/Scenes/Ship.unity`. No capsule spawn, no `Spawn_Nav` |
+## How to read this
 
-## The change
+This is the play-through. Every player-facing string is in **bold**. A dash
+means the game says nothing that beat. **Assumption** marks a working
+structure that is not in the tree yet — change it in this file, then implement
+from the new stamp. Do not leave a beat as "Read" or "walk there."
 
-1. Fresh save, `DemoActive`: spawn at `Spawn_Capsule`. Play `demo.wake` (Lock, Local)
-   once per seat the first time that seat’s Ship loads with `!DemoWeaponGranted`.
-2. NAV, ARMORY, CREW, FAB do not open. Prompt on a dark console:
-   `[E] repair NAV MAP` (NAV) or `[E] NAV MAP — unpowered` (other dark stations
-   name themselves: `ARMORY — unpowered`).
-3. Hold Interact on NAV for `DemoRepair.HoldSeconds = 1.5` s (constant, Sim or
-   Game const — not serialized on the prefab). Fill is prompt text only
-   (`[E] repairing NAV MAP`), no new HUD widget. On complete: host sets
-   `DemoNavPowered = true`, `GameSession.Save()`, lobby `NetworkVariable` mirrors
-   it, play `demo.nav_repair` (Lock, Party).
-4. After NAV is powered, NAV opens as today (panel + EMBARK). EMBARK still
-   refuses until **that seat** owns a weapon (see refuse table).
-5. `WeaponGrant` interactable (rack or NAV desk child). Prompt
-   `[E] take MK-1 Sidearm`. Hold **0.5** s. Calls `ShipCommands.BuyWeapon(Mk1Sidearm)`
-   (already owned → log and skip). Sets `DemoWeaponGranted`, equips Secondary,
-   plays `demo.weapon_grant` (Lock, Local). Destroy or disable the grant collider
-   for that seat (local disable is enough; other seats still need it).
-6. ARMORY / CREW / FAB remain dark until later beats. `TryOpenStationFromInteract`
-   returns false and logs `[Demo] station dark ARMORY`.
+Lock lines use the Shift box: speaker label **GAME**, body copy, one
+**Continue** control (click the box, or Space). Esc dismisses the same as
+Continue. No reply row. Subtitle lines sit at the bottom of the screen and
+auto-advance in **4 s**. The interact prompt is the existing Ship prompt
+(`ShipHudView.SetPrompt`). When nothing is targeted and a standing objective
+is set, that string is the idle prompt.
 
-### EMBARK refuses (named, logged, voiced once)
+## Working assumptions (change here, then build)
 
-| Condition | Log | Voice |
+| # | Assumption | Why it is stamped |
 |---|---|---|
-| `!DemoNavPowered` | `[Demo] embark refused — NAV unpowered` | `demo.embark_blocked` |
-| Local `!OwnsAnyWeapon` | `[Demo] embark refused — no weapon` | `demo.embark_blocked` |
-| Party: any connected seat `!OwnsAnyWeapon` | `[Demo] embark refused — seat clientId=<n> has no weapon` | lead hears `demo.embark_blocked` |
-| Party: not lead | existing `[Net] embark refused — not party lead` | none |
-| Party: guests not Ready | existing `[Net] embark refused — guests not Ready` | none |
+| A1 | First-person the whole beat. No third-person wake cut, no companion, no VO. | Matches live Ship / Bastion. |
+| A2 | Fresh Start New: screen is **black** for **0.4 s**, then fades up over **1.5 s** into the closed capsule. | No fade exists in tree. Full-screen black Image, lerp alpha. |
+| A3 | Player starts **inside** a closed capsule. Camera at eye height in the bed, looking at the lid. Move locked (Rooted), look **free** until the lid opens — the small-cone clamp was dropped at build (2026-08-17): the rig has no cone mechanism and full look inside a sealed lid reads fine; revisit only on play data. `SM_Prop_CryoBed_01` is not in this tree, so the capsule is graybox primitives until an art pass. | "Interact with the capsule to open it." A standing start on the deck skips the unlock. |
+| A4 | Stir text plays **after** the fade, **before** the unlock prompt. One Lock line, then the prompt. | Text-then-verb. Not a prompt on black. |
+| A5 | Capsule unlock is hold Interact **1.0 s**. Lid lifts over **0.8 s**. Then they can stand and walk. | Same hold family as NAV (1.5 s). Shorter because it is the first hold. |
+| A6 | Dead hull: Directional Light intensity **0.15** (live is 0.8). Ceiling panel emissives stay; they read as cold glow, not working lights. No new light API. | One Directional exists. |
+| A7 | Capsule sits at the **starboard crew bunk** — it replaces that bed (`ShipDress/CrewStarboard/Bed` inactive), world **(7.5, 0, 6.2)**, facing the corridor side (2026-08-18 revision — Zo; was the port alcove at (-3, 1, 8)). Deck exit `Spawn_Capsule` at **(7.5, 1.1, 7.6)**. | They wake in a crew bunk like the rest of the crew would. Exact pose is art. |
+| A8 | Ship terminal is a new console mid-deck between NAV and ARMORY, working pose **(6.0, 0, 22.0)**. Visible from NAV after the repair line points at it. | Object does not exist. Not a `BastionTerminal` component. |
+| A9 | Intruders spawn at `Spawn_Intruder_1` **(2.5, 0, -8)** (FAB side of the corridor) and `Spawn_Intruder_2` **(2.5, 0, 0)** (mid-corridor), and walk toward the player / ARMORY. | Two bodies, in sight of the ARMORY rack. |
+| A10 | Ship fight uses the live first-person gun and `PlayerHealth`. Ship HUD has **no vitals today** — the demo shows a minimal HP readout while the fight is live or the player is hurt. Scene check restamped (2026-08-17 review): the live Ship YAML has **no PlayerGun** and **no NavMesh** (`NavMeshSettings.m_NavMeshData` fileID 0). Scratch authors the gun on the rig camera. Intruders straight-walk when off-mesh (`ShipIntruder`). | Resolved — was `unknown — needs scene check`. |
+| A11 | `demo.intruders` never writes `timeScale`. The pause is **gated execution**: `T` fires the line and arms the intruder **release**; the release executes on the line's Continue — and on unload/reload, so the gate cannot stick. Sim-safe. | Zo 2026-08-17 — the earlier `timeScale = 0` exception is withdrawn. |
+| A12 | No music stinger. Existing Ship bed / silence. No new audio pack this beat. | Keep the grain on verbs and copy. |
+| A13 | First menu of the demo is the NAV picker at EMBARK. ARMORY / CREW / FABRICATION are **hidden** this beat — no label, no prompt, no interaction (CREW surfaces after the fight for the tap-heal). | Beat 3 / 4 own those menus. |
+| A14 | Continue / new save from the main menu loads Ship with `DemoActive`. Main-menu chrome is unchanged. | Beat 0 starts on the first Ship frame, not on the menu. |
 
-Repair rig is **not** required for this demo’s first EMBARK. Drop the
-`no repair rig` warning from the commit gate while `DemoActive`; keep it as
-panel copy if it already sits on the map body. FAB is dark, so they cannot buy
-the rig yet.
+Hold Interact already reaches `IInteractable.Interact(dt)` (`Interactor.Tick`,
+range **3.2 m**). Stations open on Interact **Down** — that path must be gated
+**before** `OpenStationPanel` or it skips every hold and pops menus this beat
+forbids.
 
-On successful first EMBARK: `demo.embark_first` (Lock, Party) before the load, or
-on Bastion Prep first tick if a Ship lock would eat the countdown. Prefer **after**
-countdown 0, first Bastion Prep frame, so Ready/Cancel stays usable.
+## Play-through
+
+### 0 — Load (black)
+
+The main menu Start New (or Continue on a fresh demo save) loads `Ship.unity`.
+The first Ship frame is **black**. No prompt. No standing objective. Move and
+look locked. Camera is already inside the closed capsule (A3).
+
+| | |
+|---|---|
+| **See** | Full-screen black. No HUD. |
+| **Game** | — |
+| **Prompt** | — |
+| **Standing** | — |
+| **Player** | Nothing. 0.4 s hold on black (A2). |
+| **Log** | existing `[Ship] aboard the ship — …` then `[Demo] spawn capsule` |
+
+### 1 — Fade up, still sealed
+
+Black overlay fades to 0 over **1.5 s**. First-person: dark capsule interior,
+lid in front of the camera, cold ceiling-panel glow through the glass (A6).
+Hull beyond is barely readable. Look is free inside a small cone; WASD does
+nothing. Crosshair off while sealed.
+
+| | |
+|---|---|
+| **See** | Closed cryo lid. Dark ship beyond. No station labels lit. |
+| **Game** | — (fade is silent) |
+| **Prompt** | — |
+| **Standing** | — |
+| **Player** | May look. Cannot walk. Cannot interact yet. |
+
+### 2 — Stir (text before the unlock)
+
+When the fade finishes, the Shift box opens. Move still locked.
+
+| | |
+|---|---|
+| **See** | Same sealed view. Shift box over it. Speaker **GAME**. |
+| **Game** | `demo.wake_stir` · Lock · Game. **You wake in a sealed capsule. The ship is dark. Nothing answers.** |
+| **Continue** | **Continue** (click / Space). Esc same. |
+| **Prompt** | Hidden while the Lock is up. |
+| **Standing** | — (not yet; they have not been given a job) |
+| **Player** | Read. Dismiss. |
+| **Log** | `[Demo] line id=demo.wake_stir mode=Lock scope=Local speaker=Game` then `line ended` |
+
+### 3 — Unlock the capsule
+
+Lock dismisses. Still inside. Prompt appears on the lid (they are looking at
+it). This is the first interact of the game.
+
+| | |
+|---|---|
+| **See** | Sealed lid. Prompt. |
+| **Game** | — |
+| **Prompt** | **[E] unlock capsule** |
+| **Standing** | Unlock the capsule (idle prompt is the same string if they look away from the lid — they cannot walk, so this is insurance) |
+| **Player** | Hold Interact **1.0 s**. Release before 1.0 s resets. During hold the prompt reads **[E] unlocking capsule**. |
+| **Then** | Lid lifts **0.8 s**. Camera is free. They may stand out onto the deck at `Spawn_Capsule`. Crosshair on. |
+| **Log** | `[Demo] capsule unlocked` |
+
+If they never hold: they stay in the bed. No other interactable is in range.
+No skip. No auto-open.
+
+### 4 — On the deck (job named)
+
+The moment both feet are on the deck (or the lid-open animation ends —
+**assumption**: fire on lid-open complete, do not wait for a stand animation),
+the Shift box opens again.
+
+| | |
+|---|---|
+| **See** | Dead midships from the starboard crew room (A7). NAV MAP is forward along the hull `(2.5, 0, 28.2)`. Ship terminal is not obvious yet (mid-deck, A8). The only station world-label visible is **MAP** — ARMORY / CREW QUARTERS / FABRICATION are hidden until they have a function (A13). |
+| **Game** | `demo.wake` · Lock · Game. **Capsule open. Ship power is dead. Find the NAV MAP — hold Interact to repair it.** |
+| **Continue** | **Continue** |
+| **Prompt** | Hidden during Lock. |
+| **Standing** (after dismiss) | **Repair the NAV MAP** |
+| **Idle prompt** | **Repair the NAV MAP** |
+| **Player** | Dismiss. WASD + mouse. |
+| **Log** | `[Demo] line id=demo.wake …` |
+
+### 5 — Walk to NAV (hidden consoles)
+
+They walk the corridor toward NAV. A hidden station shows **nothing** —
+looking at it keeps the idle prompt, Interact Down is consumed silently
+(log only), and its world label is off.
+
+| Target | Prompt | On E | Log |
+|---|---|---|---|
+| Nothing | **Repair the NAV MAP** | — | — |
+| NAV MAP (dark) | **[E] repair NAV MAP** | starts the hold (step 6) | — |
+| ARMORY | — (hidden) | nothing, no panel | `[Demo] station hidden ARMORY` |
+| CREW QUARTERS | — (hidden) | nothing | `[Demo] station hidden CREW QUARTERS` |
+| FABRICATION | — (hidden) | nothing | `[Demo] station hidden FABRICATION` |
+| Ship terminal (unpowered — NAV not repaired) | **[E] Ship terminal — NAV first** | refuse | `[Demo] station dark Ship terminal` |
+
+No line for a hidden bump. Walking the wrong way is allowed; the dead
+consoles read as furniture until they matter.
+
+### 6 — Repair NAV MAP
+
+At NAV. Hold Interact **1.5 s**. Release resets. No bar — text only.
+
+| | |
+|---|---|
+| **See** | Dark NAV console. During hold the prompt changes. On complete: NAV world-label / console reads live (existing powered look — **assumption**: whatever the live powered station already does; do not author a new VFX pack). |
+| **Prompt during hold** | **[E] repairing NAV MAP** |
+| **Game** (on complete) | `demo.nav_repair` · Lock · Game. **NAV MAP is live. Now the ship terminal — select it, then start it. That is how every terminal works.** |
+| **Continue** | **Continue** |
+| **Standing** (after dismiss) | **Start the ship terminal** |
+| **Idle prompt** | **Start the ship terminal** |
+| **NAV prompt after power, fight not done** | **[E] NAV MAP — clear the ship first** (Down opens nothing until the fight is done — or opens the picker and EMBARK refuses; **assumption**: no panel until `DemoShipFightDone`. Named refuse if they somehow commit.) |
+| **Log** | `[Demo] NAV powered` then `line id=demo.nav_repair …` |
+
+### 7 — Ship terminal: look, select, start
+
+They walk from NAV toward mid-deck. The ship terminal sits there (A8).
+No extra line on look-at — `demo.nav_repair` already taught select-then-start.
+
+| | |
+|---|---|
+| **See** | A console that is not one of the four shops. Unlit until they arm it (**assumption**: armed state uses the same selected look as a Bastion Field terminal). |
+| **Prompt unarmed** | **[E] Ship terminal — route power** |
+| **On E** | Arms. No panel. |
+| **Prompt armed** | **[T] Ship terminal — start** |
+| **On T** | One-shot. Sets `DemoArmoryPowered` and **grants the MK-1** in the same save (`DemoWeaponGranted`, Secondary slot, in the hands — 2026-08-18 revision: the terminal arms you, there is no rack walk). Fires `demo.intruders`; the two Gatekeepers **release on its Continue** (A9, A11). Immediate step 8. |
+| **Game** | — (no line on arm; the gated line is the next beat) |
+| **Standing** | **Start the ship terminal** until T |
+| **Log** | `[Demo] ship terminal started` then `[Demo] granted MK-1` then existing `[Ship] bought MK-1 Sidearm for 0 — equipped Secondary…` |
+
+After the fight this console's prompt is **[E] Ship terminal — power routed**
+(no-op). No juice / Intensity row — there is no Unbanked on the Ship.
+
+### 8 — Intruders. Gated Lock. Instruction.
+
+`T` fires `demo.intruders` in the same frame and **arms** the intruder
+release. `timeScale` stays **1** (A11) — the release executes on the line's
+Continue (and on unload/reload, so the gate cannot stick). Nothing hunts them
+while the box is up.
+
+| | |
+|---|---|
+| **See** | Shift box. The corridor is still clear — the intruders release on Continue. The MK-1 is already in the hands behind the box. |
+| **Game** | `demo.intruders` · Lock · Game. **Gatekeepers aboard. The terminal armed you — MK-1 Sidearm, loaded. Put them down.** |
+| **Continue** | **Continue** — releases the intruders (gated execution, A11). No `timeScale` write. |
+| **Standing** (after dismiss) | **Kill the Gatekeepers** |
+| **Idle prompt** | **Kill the Gatekeepers** |
+| **Player** | Dismiss. The two bodies spawn and walk toward them (A9). They are **armed** — the fight starts the moment they Continue. HP floor is 1 — they can be hit, they cannot die. |
+| **Log** | `line id=demo.intruders mode=Lock scope=Local speaker=Game` then, on Continue, `[Demo] intruders spawned n=2` |
+
+Reload mid-fight: both bodies respawn, no line replay, immediate release;
+standing is **Kill the Gatekeepers**. (A pre-revision save that powered the
+ARMORY without the grant gets the grant on load and hears the line it never
+heard.)
+
+### 9 — Armed at the start (no rack walk)
+
+Retired step (2026-08-18 revision): the MK-1 grant rides the terminal's T —
+there is no ARMORY visit this beat. ARMORY stays **hidden** until the wheel
+unlocks (beat 3). `demo.weapon_grant` is retired with it — the intruders line
+carries the armed copy. HP bar comes visible with the fight (A10).
+
+### 10 — The fight
+
+| | |
+|---|---|
+| **See** | Two weak Defaults (lowest HP / damage tier in tree). First-person MK-1. HP can drop; it stops at **1**. |
+| **Game** | — during the fight. |
+| **Prompt** | Interact prompts as in the tables; idle **Kill the Gatekeepers**. |
+| **Player** | Shoot both. Getting hit is intended. |
+| **On first kill** | No line. Log `[Demo] intruder down 1/2`. |
+| **On last kill** | `demo.ship_clear` · Lock · Game. **Clear. You took hits — CREW QUARTERS patches you up. Then the NAV MAP: EMBARK when you are ready.** |
+| **Continue** | **Continue** |
+| **Standing** (after dismiss) | **Restore health at CREW QUARTERS** if HP < max; else **EMBARK from the NAV MAP** |
+| **Idle prompt** | the standing string |
+| **Log** | `[Demo] intruder down 2/2` then `[Demo] ship clear` (`DemoShipFightDone`, Save) |
+
+Bodies despawn or stay as corpses — **assumption**: despawn on death, same as
+Bastion fodder. Do not leave two obstacles in the corridor.
+
+### 11 — CREW heal (no menu)
+
+CREW **surfaces here** — its label and prompt appear the moment the fight is
+done (its first live function, 2026-08-18 revision). Optional. EMBARK is not
+gated on full HP.
+
+| | |
+|---|---|
+| **See** | CREW QUARTERS label now visible; console prompt live. HP bar still up until they leave the Ship or it is full. |
+| **Game** | — (`demo.ship_clear` already sold it) |
+| **Prompt** | **[E] CREW QUARTERS — restore health** |
+| **On E** | HP to max in one tap. No panel. No hold. |
+| **Prompt at full** | **[E] CREW QUARTERS — crew is rested** (no-op) |
+| **Standing** | **EMBARK from the NAV MAP** (flips on heal, or already flipped if they dismissed `demo.ship_clear` at full HP) |
+| **Idle prompt** | **EMBARK from the NAV MAP** |
+| **Log** | `[Demo] CREW heal hp=<n>→<max>` |
+
+FAB is still hidden.
+
+### 12 — EMBARK (first menu)
+
+NAV, fight done. Interact **Down** opens the picker — the demo's first menu.
+**Assumption**: the live NAV panel, start wave **1**, no chain, no repair-rig
+commit gate. Solo: one EMBARK control, no Ready, no countdown.
+
+| | |
+|---|---|
+| **See** | NAV MAP panel. Start wave 1. EMBARK. |
+| **Prompt on the console** | live embark copy without forcing a rig — **assumption**: **[E] NAV MAP — EMBARK** |
+| **Game on Ship** | — |
+| **Player** | Click EMBARK. Ship unloads. Bastion loads. |
+| **On first Bastion Prep frame** | `demo.embark_first` · Lock · Game. **Quiet Hatch. Find a field terminal. Select it, then start — wake the place.** |
+| **Continue** | **Continue** |
+| **Standing** | **Find a field terminal** (beat 1) |
+| **Log** | existing `[Ship] embarked…` plus `[Demo] first embark` once |
+
+Early EMBARK (if the panel is reachable before the fight is done) uses
+`demo.embark_blocked` — one id, three strings, first play **per reason** per
+Ship visit:
+
+| Condition | Game says | Log |
+|---|---|---|
+| Terminal not started | **You are not ready. Start the ship terminal first.** | `[Demo] embark refused — ship terminal` |
+| No weapon (pre-revision saves only — the start grants) | **You are unarmed. Start the ship terminal.** | `[Demo] embark refused — no weapon` |
+| Intruders alive | **Gatekeepers are still aboard. Clear the ship first.** | `[Demo] embark refused — intruders aboard` |
+
+### Reload / later loads (same hull)
+
+| Condition | Spawn | What they see / hear |
+|---|---|---|
+| Capsule still sealed (`!DemoCapsuleOpened`) | inside capsule, black → fade | `demo.wake_stir` then unlock then `demo.wake` |
+| Capsule opened, NAV dark | `Spawn_Capsule` (deck beside the starboard bunk) | lid open, no reseal, no stir; standing **Repair the NAV MAP** |
+| NAV powered, terminal not started | `Spawn_Nav` (deck at `(2.5, 1.1, 12.5)` until art moves it) | no stir; standing **Start the ship terminal** |
+| Terminal started, fight not done | `Spawn_Nav` | both intruders release immediately, no line replay; standing **Kill the Gatekeepers** (a pre-revision save without the grant gets it on load, and hears `demo.intruders` gated on its Continue) |
+| `DemoShipFightDone` | `Spawn_Nav` | beat 0 over; standing **EMBARK from the NAV MAP** |
+| `DemoActive` false | live Ship pose | this beat is a no-op |
+
+Quit mid-fade or mid-stir: next load restarts from black. Do not serialize
+intruder instances — respawn from flags.
+
+## Voice — every spoken line in this beat
+
+| # | Id | When | Mode | Exact copy |
+|---|---|---|---|---|
+| 1 | `demo.wake_stir` | fade finished, still sealed | Lock | You wake in a sealed capsule. The ship is dark. Nothing answers. |
+| 2 | `demo.wake` | lid open complete | Lock | Capsule open. Ship power is dead. Find the NAV MAP — hold Interact to repair it. |
+| 3 | `demo.nav_repair` | NAV hold complete | Lock | NAV MAP is live. Now the ship terminal — select it, then start it. That is how every terminal works. |
+| 4 | `demo.intruders` | T on ship terminal (grant already landed) | Lock (release gated on Continue) | Gatekeepers aboard. The terminal armed you — MK-1 Sidearm, loaded. Put them down. |
+| 5 | `demo.weapon_grant` | retired (2026-08-18 — the terminal grants; row kept in the registry, no caller) | Subtitle | Loaded. Put them down. |
+| 6 | `demo.ship_clear` | last intruder down | Lock | Clear. You took hits — CREW QUARTERS patches you up. Then the NAV MAP: EMBARK when you are ready. |
+| 7 | `demo.embark_blocked` | early EMBARK | Lock | (three strings in the refuse table) |
+| 8 | `demo.embark_first` | first Bastion Prep | Lock | Quiet Hatch. Find a field terminal. Select it, then start — wake the place. |
+
+Everything else the player reads is a **prompt** or a **standing / idle**
+string, listed in the play-through. Those are not voice ids.
+
+## Have vs build (inventory)
+
+| Object | Exists? | Where | Beat 0 |
+|---|---|---|---|
+| `Player` + FPC + `PlayerHealth` | yes | `Ship.unity` `(2.5, 1.1, 12.5)` | Have. `spawnPoint` unset |
+| Fade-from-black overlay | yes | `Demo Fade` on Ship HUD | Authored 2026-08-17 |
+| Closed capsule + lid + in-bed camera | yes | `Demo Capsule` graybox at A7 | Authored 2026-08-17 |
+| `PlayerGun` / Ship NavMesh / damage | gun yes, NavMesh no | PlayerGun on Ship camera; no `Ship-NavMesh` asset | A10. Intruders straight-walk |
+| `Spawn_Capsule` / `Spawn_Nav` / `Spawn_Intruder_1/2` | yes | empty transforms | Authored 2026-08-17 |
+| Ship terminal | yes | `Ship Terminal` at A8 | Authored 2026-08-17 |
+| Four stations | yes | poses in play-through | Have; dark / grant / heal gates live |
+| Ship HUD vitals | yes | `Demo Vitals` | Authored 2026-08-17 |
+| Weakest Gatekeeper spec | yes | fodder Default | Have; count 2 |
+| HP floor | yes | `PlayerHealth` + `ApplyReplicatedHp` | Clamp 1 on Ship while `DemoActive` |
+| MK-1 buy | yes | `BuyWeapon`, cost 0, owned→false | Have; grant treats owned as success |
+| Open-on-Down | yes | `ShipController` via `DemoStationGate` | Gated before `OpenStationPanel` |
+| Multiplayer gate | yes | F10/F11 + lobby | Refuse while `DemoWheelBuysLeft == 2` |
+| Demo flags | yes | v9 + `DemoCapsuleOpened` | Fresh campaign demo-on; pre-v9 played → demo-off |
 
 ## Create
 
 | Path | Role |
 |---|---|
-| `Assets/Scripts/Sim/Meta/DemoProgress.cs` | Pure helpers: `CanOpenStation`, `CanEmbark`, `HoldSeconds`, `GrantHoldSeconds`. No UnityEngine |
-| `SaveData` / `MetaState` | Fields in [`README.md`](README.md) Shared flags. `CurrentVersion = 9` |
-| `Assets/Scripts/Game/Demo/DemoStationGate.cs` | Called from `ShipController.TryOpenStationFromInteract` and station `PromptHint` |
-| `Assets/Scripts/Game/Demo/WeaponGrant.cs` | `IInteractable`. Hold 0.5 s → `BuyWeapon(Mk1)` |
-| `Assets/Scripts/Game/Demo/ShipSpawn.cs` | On Ship load: capsule vs NAV spawn from Meta + lobby NAV flag |
-| Scene `Ship.unity` | Empty `Spawn_Capsule`, `Spawn_Nav` (at current FPC pose). Capsule mesh if Synty has a cryo/sleep pod; else a marked alcove. Child `WeaponGrant` on NAV desk |
-| `NetPartyLobby` | `NetworkVariable<bool> DemoNavPowered` |
+| `DemoProgress.cs` | `CanOpenStation`, `CanEmbark`, `MultiplayerUnlocked`. No UnityEngine |
+| `SaveData` / `MetaState` | v9 fields + `DemoCapsuleOpened` |
+| `DemoStationGate.cs` | Dark / hold / grant / heal routing before `OpenStationPanel` |
+| `ShipTerminal.cs` | E arm / T start → route power, grant the MK-1, arm the gated spawn |
+| `ShipCapsule.cs` | In-bed camera, lid hold, fade hook |
+| `ShipSpawn.cs` | Capsule vs NAV vs mid-fight respawn |
+| Scene | Cryo bed, spawns, ship terminal, NavMesh if missing, fade overlay on Ship HUD |
 
 ## Change
 
 | File | Change |
 |---|---|
-| `ShipController.TryOpenStationFromInteract` | If `DemoStationGate.IsDark(station, meta)`: start/continue hold on NAV only; refuse others. Do not `OpenStationPanel` |
-| `MapStation.PromptHint` | Dark: repair copy. Powered, `DemoActive`, no weapon: `EMBARK — take the MK-1 first`. Powered + weapon: existing embark copy without forcing a rig |
-| `MapStation.TryEmbark` / `TryPartyEmbark` | Apply refuse table before `RequestPartyEmbark` / `LoadBastion` |
-| `ArmoryStation` / `CrewQuartersStation` / `EngineeringStation` `PromptHint` | Unpowered string while their flag is false |
-| `MetaState.ToSaveData` / `FromSaveData` / JSON | v9 fields |
-| `GameSession` remark | Stale “future co-op lives on the host” — guests have own Meta (`M65`). Do not move guest demo flags onto host Meta |
-| `NetPartyLobby` | Host writes `DemoNavPowered` when repair completes. Guests read for prompts and spawn |
-| `PlayerHealth.spawnPoint` / Ship FPC | `ShipSpawn` sets pose on load |
+| `ShipController` | Gate Down through `DemoStationGate` |
+| `MapStation` | Prompts + refuse table; no panel until fight done |
+| Station `PromptHint`s | Strings in the play-through |
+| `PlayerHealth` | Floor 1 on Ship while `DemoActive` |
+| `ShipHud` / `ShipHudView` | Idle standing prompt; HP during the fight |
+| F10/F11 | Multiplayer lock log |
+| `MetaState` / JSON | v9 |
 
 ## Delete
 
-Nothing. Do not remove ARMORY buy rows; they stay behind the dark gate.
+Nothing. ARMORY catalog rows stay behind the gate (panel unlocks in beat 3).
 
 ## Numbers
 
 | Name | Value | Source |
 |---|---|---|
-| NAV repair hold | 1.5 s | this spec (`DemoRepair.HoldSeconds`) |
-| Weapon grant hold | 0.5 s | this spec |
-| Interact range | 3.2 m | `Interactor.range`, `ShipController.InteractRange` |
-| MK-1 cost | 0 | `WeaponCatalog` `Mk1Sidearm` |
-| Capsule | furniture | language: not Podded, not ejection |
+| Black hold | 0.4 s | A2 |
+| Fade up | 1.5 s | A2 |
+| Capsule unlock hold | 1.0 s | A5 |
+| Lid lift | 0.8 s | A5 |
+| NAV repair hold | 1.5 s | this spec |
+| Subtitle dwell | 4 s | `voice.md` |
+| Intruders | 2, weakest fodder | this spec |
+| HP floor | 1 | this spec |
+| Interact range | 3.2 m | `Interactor.range` |
+| MK-1 cost | 0 | `WeaponCatalog` |
+| Fodder damage vs player | **4** per **0.7 s** swing; body 30 HP, walk 3.2 m/s | starting values at the build (2026-08-17), from the Bastion fodder-vs-Hatch figures; tunable, needs play data |
 
 ## Multiplayer
 
-| Event | Authority |
-|---|---|
-| NAV hold complete | First seat to finish. Host applies `DemoNavPowered` even if a guest held (guest ServerRpc `RequestNavRepair`). Duplicate complete: log `[Demo] NAV already powered` |
-| Weapon grant | Local Meta only. Each seat must grant |
-| Spawn | If lobby `DemoNavPowered` and this seat `DemoWeaponGranted`: `Spawn_Nav`. If NAV powered but this seat has no gun: `Spawn_Nav` still (they are not in the capsule), grant still available. If NAV dark: `Spawn_Capsule` |
-| Guest join during repair hold | No partial hold sync. They start a new hold |
-| Guest join after NAV powered | Skip `demo.wake`. Play nothing, or a one-line local `demo.nav_repair` if they have never heard it (`DemoWeaponGranted` false is the cue they are new) |
-| Seat already Escaped (`DemoActive` false) | Live Ship: all consoles up, no capsule, no grant |
-| Join during countdown | Existing refuse (`M72` c5) |
-| Host disconnect | Session ends (`M72` c4). No migration |
-
-`NetShipWait` (`M57`): additive Ship during a live Run. Beat 0 does not apply there
-(NAV already powered for a mid-run wait). Gate: `NetShipWait.IsActive` → existing
-NAV-only station rule, ignore demo capsule.
-
-## Voice
-
-`demo.wake` Local Lock after capsule spawn.
-`demo.nav_repair` Party Lock on NAV power.
-`demo.weapon_grant` Local Lock on grant.
-`demo.embark_blocked` Local Lock on first refuse per reason per Ship visit.
-`demo.embark_first` Party, first Prep on Bastion (see above).
+None this beat. Gate: `DemoActive && DemoWheelBuysLeft == 2`. F10/F11 log
+`[Demo] multiplayer locked — buy an upgrade first`.
 
 ## Driven / Shown / Reads-back
 
-- **Driven by** hold-E on NAV, hold-E on grant, lead EMBARK.
-- **Shown** dark prompts; NAV panel only when powered; MK-1 in Secondary slot
-  (weapon drawer / hands on next Bastion).
-- **Reads-back** `[Demo] NAV powered`, `[Demo] granted MK-1`, embark refuse lines,
-  `[Ship] bought MK-1 Sidearm for 0` (existing `ShipCommands` line).
-
-## Logs
-
-| Event | Line |
-|---|---|
-| Capsule spawn | `[Demo] spawn capsule clientId=<n>` |
-| NAV hold tick complete | `[Demo] NAV powered` |
-| Grant | `[Demo] granted MK-1` then existing `[Ship] bought MK-1 Sidearm for 0 — equipped Secondary…` |
-| Dark station | `[Demo] station dark FABRICATION` (name the station) |
-| EMBARK ok | existing `[Ship] embarked…` plus `[Demo] first embark` once |
+- **Driven by** fade, hold-E capsule, hold-E NAV, E/T ship terminal, E grant,
+  kills, E heal, EMBARK.
+- **Shown** black → sealed lid → dead hull (only MAP labelled) → NAV live →
+  gated Lock with the gun already in hand → two bodies walking → HP drop →
+  CREW surfaces and heals → NAV picker.
+- **Reads-back** `[Demo] spawn capsule`, `capsule unlocked`, `NAV powered`,
+  `ship terminal started`, `granted MK-1`, `intruders spawned n=2`,
+  `intruder down k/2`, `ship clear`, `CREW heal`, `first embark`,
+  `station hidden <name>` on hidden bumps, refuse lines, every `line id=…`.
 
 ## Traps
 
-- Opening the station on Interact Down will skip the hold. Gate **before**
-  `OpenStationPanel`.
-- `BuyWeapon` already-owned returns false and logs “already owned” — grant must
-  treat owned as success for `DemoWeaponGranted`.
-- Prefab-serialized hold duration will freeze (`Architecture.md`). Constants in
-  code, pushed at spawn if a view needs them.
-- Host Meta vs guest Meta: powering NAV from a guest must ServerRpc; writing only
-  the guest save leaves the host’s NAV dark.
-- `OwnsAnyWeapon` true from an old save: skip grant, skip capsule if NAV already
-  powered (migration rule in README).
-- Party EMBARK while a guest is still in `demo.weapon_grant` lock: refuse until
-  that seat owns a weapon (table), not until the conversation ends.
-- `GUILayout` in a custom repair bar.
+- Skipping the lid and spawning them on the deck. The unlock is the first
+  hold.
+- Putting `demo.wake` on black, or the unlock prompt on black. Stir text is
+  after the fade, prompt is after stir dismiss.
+- Open-on-Down at ARMORY/CREW. Gate before `OpenStationPanel`.
+- `BuyWeapon` already-owned returns false — grant treats owned as success.
+- A stuck intruder gate if the line is skipped by a scene change — release on
+  Continue **and** on unload/reload. No `timeScale` write anywhere (the
+  2026-08-17 exception is withdrawn — Zo, 2026-08-17).
+- HP floor that misses fall / self damage.
+- Serializing live intruders.
+- Dragging `BastionTerminal` onto the Ship.
+- Teaching juice here.
+- A companion who opens the lid.
 
 ## Depends / Unblocks
 
-Depends: `voice.md` runner (mechanics work mute). Unblocks: beat 1 EMBARK.
+Depends: `voice.md` runner; fade overlay; ship-fight scene check. Unblocks:
+beat 1 EMBARK. Beat 3 reads `DemoArmoryPowered` already true.
 
 ## Verification
 
-1. EditMode: v9 round-trip JSON; pre-v9 with `CleanExits >= 1` → `DemoActive false`;
-   fresh → `DemoActive true`, NAV false.
-2. EditMode: `DemoProgress.CanEmbark` matrix (NAV, weapon, party seats).
-3. PlayMode Ship: fresh save spawns at capsule; ARMORY Down does not open; 1.5 s
-   NAV hold logs `NAV powered`; grant logs `granted MK-1`; EMBARK before grant
-   refuses; after grant, solo EMBARK loads Bastion.
-4. Loopback: guest hold powers NAV on host; host grant does not grant the guest a
-   gun; party EMBARK refuses until both own MK-1; Ready + 5 s still works.
-5. `Time.timeScale == 1` through wake conversation.
-6. No `[Dev]`.
-
-## Survive / skip branches
-
-If `DemoActive` and NAV already powered (rejoin): no capsule. If they already own
-MK-1: grant collider local-off. If `DemoActive` false: this beat is a no-op.
+1. EditMode: v9 round-trip; `DemoCapsuleOpened` false on fresh; pre-v9 with
+   `CleanExits >= 1` → `DemoActive false`.
+2. EditMode: `CanEmbark` matrix; `MultiplayerUnlocked` false at buys-left 2.
+3. PlayMode, watch the tape: black 0.4 s → fade 1.5 s → `wake_stir` copy →
+   Continue → **[E] unlock capsule** → hold 1.0 s → lid → `wake` copy → walk →
+   hidden ARMORY shows nothing (no label, no prompt, E consumed) → NAV hold →
+   `nav_repair` copy → E/T terminal → `granted MK-1` in the log, gun in hand →
+   `intruders` copy, corridor clear, `timeScale == 1` → Continue → intruders
+   release and walk → both die → `ship_clear` copy → CREW label appears →
+   CREW E heals, no panel → NAV panel → EMBARK → Bastion `embark_first` copy.
+4. HP floor: overdamage leaves 1, no `Die()`.
+5. F10 refuses with the lock log.
+6. Quit after unlock, before NAV: reload on deck, no reseal.
+7. Quit after T, before both kills: reload releases both intruders
+   immediately, no line replay, gun still in hand.
+8. No `[Dev]`.
 
 ## Rejected
 
-Granting SEC-D at the rack. Auto-own Default Protocol in the capsule (`M70` recut).
-Lighting FAB so they can buy a Repair Rig before the first Run. Teaching juice on
-the Ship. A companion who wakes you.
+Granting via an ARMORY panel. The ARMORY rack walk (revised out 2026-08-18 —
+the terminal's start arms you). Named "unpowered" prompts on stations with no
+function (hidden instead, same revision). Auto-open lid. Auto-own Default.
+Lighting FAB. A third Gatekeeper. Invulnerability instead of the 1-HP floor.
+VO. A wake companion. Third-person cryo cut. A `timeScale = 0` pause
+(exception withdrawn 2026-08-17).

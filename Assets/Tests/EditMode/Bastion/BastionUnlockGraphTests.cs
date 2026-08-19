@@ -31,7 +31,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void CompletingT1AndT2_OpensD1()
+        public void CompletingT1AndT2_MakesD1Eligible_ButOnlyASurvivedBankOpensIt()
         {
             var graph = SampleGraph();
 
@@ -41,7 +41,72 @@ namespace GatekeepersProtocol.Tests
 
             Assert.IsTrue(graph.TryCompleteTerminal("T2", out string reason2));
             Assert.IsNull(reason2);
+            Assert.IsFalse(graph.IsDoorOpen("D1"),
+                "both terminals done is eligibility, not an unlock");
+
+            Assert.IsTrue(graph.RecordBankSurvived(out string[] opened));
             Assert.IsTrue(graph.IsDoorOpen("D1"));
+            Assert.AreEqual(1, opened.Length);
+            Assert.AreEqual("D1", opened[0]);
+        }
+
+        [Test]
+        public void BankSurvived_WithNoTerminalsDone_OpensNothing()
+        {
+            var graph = SampleGraph();
+
+            Assert.IsFalse(graph.RecordBankSurvived(out string[] opened),
+                "a bank survived before any terminal is done unlocks nothing");
+            Assert.AreEqual(0, opened.Length);
+            Assert.IsFalse(graph.IsDoorOpen("D1"));
+        }
+
+        [Test]
+        public void BankSurvived_Twice_ReportsEachDoorOnce()
+        {
+            var graph = SampleGraph();
+            graph.TryCompleteTerminal("T1", out _);
+            graph.TryCompleteTerminal("T2", out _);
+
+            Assert.IsTrue(graph.RecordBankSurvived(out string[] first));
+            Assert.AreEqual(1, first.Length);
+
+            Assert.IsFalse(graph.RecordBankSurvived(out string[] second),
+                "an already-open door is not re-reported, so the door line plays once");
+            Assert.AreEqual(0, second.Length);
+            Assert.IsTrue(graph.IsDoorOpen("D1"));
+        }
+
+        [Test]
+        public void OpenDoors_RoundTripThroughRestore()
+        {
+            var graph = SampleGraph();
+            graph.TryCompleteTerminal("T1", out _);
+            graph.TryCompleteTerminal("T2", out _);
+            graph.RecordBankSurvived(out _);
+
+            string[] ids = graph.CopyOpenDoorIds();
+            Assert.AreEqual(1, ids.Length);
+            Assert.AreEqual("D1", ids[0]);
+
+            var restored = SampleGraph();
+            Assert.IsFalse(restored.IsDoorOpen("D1"));
+            restored.RestoreOpenDoors(ids);
+            Assert.IsTrue(restored.IsDoorOpen("D1"),
+                "a Docked return finds the door it paid for standing open");
+            Assert.IsFalse(restored.IsTerminalDone("T1"),
+                "door state restores on its own; it does not fake terminal progress");
+
+            restored.RestoreOpenDoors(ids);
+            Assert.AreEqual(1, restored.CopyOpenDoorIds().Length, "restore is idempotent");
+        }
+
+        [Test]
+        public void RestoreOpenDoors_SkipsUnknownIds()
+        {
+            var graph = SampleGraph();
+            graph.RestoreOpenDoors(new[] { "D_gone", "", null });
+            Assert.AreEqual(0, graph.CopyOpenDoorIds().Length);
         }
 
         [Test]
@@ -50,12 +115,16 @@ namespace GatekeepersProtocol.Tests
             var graph = SampleGraph();
             graph.TryCompleteTerminal("T1", out _);
             graph.TryCompleteTerminal("T2", out _);
+            graph.RecordBankSurvived(out _);
 
             Assert.IsTrue(graph.IsDoorOpen("D1"));
             Assert.IsFalse(graph.IsDoorOpen("D_control"));
             Assert.IsFalse(graph.ControlRoomReachable);
 
             Assert.IsTrue(graph.TryCompleteTerminal("T_control", out _));
+            Assert.IsFalse(graph.IsDoorOpen("D_control"),
+                "the control gate is survival-keyed too — completing it is not enough");
+            graph.RecordBankSurvived(out _);
             Assert.IsTrue(graph.IsDoorOpen("D_control"));
             Assert.IsTrue(graph.ControlRoomReachable);
             Assert.IsTrue(graph.IsFullyUnlocked);

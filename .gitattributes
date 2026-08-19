@@ -45,6 +45,13 @@
 *.mixer        text merge=unityyamlmerge eol=lf
 *.shadervariants     text merge=unityyamlmerge eol=lf
 
+# NavMesh (and similar) stay binary even when EditorSettings Force Text YAML is on.
+# Matching these after *.asset is required — last pattern wins — or git treats the
+# blob as text/LF and every rebake looks like a phantom rewrite.
+*NavMesh*.asset          filter=lfs diff=lfs merge=lfs -text -merge !eol
+*OcclusionCullingData*   filter=lfs diff=lfs merge=lfs -text -merge !eol
+LightingData.asset       filter=lfs diff=lfs merge=lfs -text -merge !eol
+
 # ---------------------------------------------------------------------------
 # Source and docs — text, LF in the repo.
 # ---------------------------------------------------------------------------

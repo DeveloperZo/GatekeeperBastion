@@ -44,6 +44,12 @@ namespace GatekeepersProtocol.Game
             }
             if (!CanSelectTerminal(terminal))
             {
+                string block = FieldStartBlockReason(terminal.TerminalId);
+                if (block != null)
+                {
+                    Log.Event("Demo", "start refused — " + block);
+                    return false;
+                }
                 Log.Event("Terminal", terminal.TerminalId + " refused — not selectable");
                 return false;
             }

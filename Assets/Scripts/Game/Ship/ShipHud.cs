@@ -34,6 +34,10 @@ namespace GatekeepersProtocol.Game
         int _cachedDeepest = int.MinValue;
         string _cachedPrompt = "\0";
         bool _cachedCursorFree;
+        bool _cachedCrosshairOn = true;
+        bool _labelArmoryOn = true;
+        bool _labelCrewOn = true;
+        bool _labelFabOn = true;
 
         readonly StringBuilder _lineBuf = new StringBuilder(160);
 
@@ -72,6 +76,7 @@ namespace GatekeepersProtocol.Game
                 Bind();
             }
             OptionsScreen.TickDisplayRevert();
+            ApplyLabelVisibility(GameSession.Meta);
             BillboardLabels();
             PushHud();
         }
@@ -122,7 +127,9 @@ namespace GatekeepersProtocol.Game
                 AppendLoadout(_view, m);
             }
 
-            bool cursorFree = Cursor.lockState != CursorLockMode.Locked;
+            // A Lock line frees the cursor on purpose — the recapture warn would lie there.
+            bool cursorFree = Cursor.lockState != CursorLockMode.Locked
+                && !DemoVoice.LocksInput;
             if (cursorFree != _cachedCursorFree)
             {
                 _cachedCursorFree = cursorFree;
@@ -130,11 +137,24 @@ namespace GatekeepersProtocol.Game
                 if (cursorFree) _cachedPrompt = "\0";
             }
 
-            if (!cursorFree)
+            bool crosshairOn = !DemoShipFight.WakeHidesCrosshair;
+            if (crosshairOn != _cachedCrosshairOn)
+            {
+                _cachedCrosshairOn = crosshairOn;
+                _view.SetCrosshairVisible(crosshairOn);
+            }
+
+            if (!cursorFree && !DemoVoice.LocksInput)
             {
                 string prompt = _interactor != null && !string.IsNullOrEmpty(_interactor.CurrentPrompt)
                     ? _interactor.CurrentPrompt
                     : "";
+                // Demo idle prompt: with nothing targeted, the standing objective is the line.
+                if (prompt.Length == 0)
+                {
+                    string standing = DemoShipFight.StandingObjective;
+                    if (standing != null) prompt = standing;
+                }
                 if (prompt != _cachedPrompt)
                 {
                     _cachedPrompt = prompt;
@@ -167,6 +187,35 @@ namespace GatekeepersProtocol.Game
             _labels = _labelsRoot != null
                 ? _labelsRoot.GetComponentsInChildren<TextMesh>(true)
                 : null;
+        }
+
+        /// <summary>Hidden stations show no name (2026-08-18 revision): the world label
+        /// stays off until the station has a live function. NAV ("MAP") is always
+        /// visible; demo-off verdicts are all Open, so authored labels never change.
+        /// State-change only — the caches start true to match the authored scene.</summary>
+        void ApplyLabelVisibility(MetaState m)
+        {
+            if (_labels == null) return;
+            bool armory = DemoProgress.ArmoryVerdict(m) != DemoStationVerdict.Hidden;
+            bool crew = DemoProgress.CrewVerdict(m) != DemoStationVerdict.Hidden;
+            bool fab = DemoProgress.FabricationVerdict(m) != DemoStationVerdict.Hidden;
+            if (armory == _labelArmoryOn && crew == _labelCrewOn && fab == _labelFabOn)
+                return;
+            _labelArmoryOn = armory;
+            _labelCrewOn = crew;
+            _labelFabOn = fab;
+            for (int i = 0; i < _labels.Length; i++)
+            {
+                var label = _labels[i];
+                if (label == null) continue;
+                bool on;
+                if (label.text == "ARMORY") on = armory;
+                else if (label.text == "CREW QUARTERS") on = crew;
+                else if (label.text == "FABRICATION") on = fab;
+                else continue; // MAP and anything unnamed stay authored
+                if (label.gameObject.activeSelf != on)
+                    label.gameObject.SetActive(on);
+            }
         }
 
         void BillboardLabels()

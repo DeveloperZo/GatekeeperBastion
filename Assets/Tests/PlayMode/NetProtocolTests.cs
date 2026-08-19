@@ -11,9 +11,9 @@ using Unity.Netcode.TestHelpers.Runtime;
 
 namespace GatekeepersProtocol.PlayTests
 {
-    /// <summary>In-process host + one client. Protocol verbs apply once on the host:
-    /// Anchor slows host bodies, Bulkhead negates host damage, Ghost bias is a set
-    /// from equipped ids (0.70, never multiplied twice).</summary>
+    /// <summary>In-process host + one client. Barrage plants once on the host list;
+    /// overlapping plants SET 2.0; Rush is a personal window (no Bulkhead absorb);
+    /// Default+None acquisition stays 1.0.</summary>
     public class NetProtocolTests : NetcodeIntegrationTest
     {
         protected override int NumberOfClients => 1;
@@ -23,6 +23,7 @@ namespace GatekeepersProtocol.PlayTests
         GameObject _avatarPrefab;
         GameController _gc;
         NetVerbs _clientVerbs;
+        NetVerbs _clientVerbs2;
         PlayerHealth _serverHealth;
 
         [UnityTearDown]
@@ -34,6 +35,7 @@ namespace GatekeepersProtocol.PlayTests
                 _gc = null;
             }
             _clientVerbs = null;
+            _clientVerbs2 = null;
             yield return null;
         }
 
@@ -72,31 +74,42 @@ namespace GatekeepersProtocol.PlayTests
         }
 
         [UnityTest]
-        public IEnumerator Anchor_ClientRpc_SlowsHostOnce()
+        public IEnumerator Barrage_ClientRpc_SetsHostFireMulOnce()
         {
             yield return BootHostRun();
-            var serverEnemy = SpawnObject(_enemyPrefab, m_ServerNetworkManager);
-            serverEnemy.transform.position = Vector3.zero;
-            var serverNet = serverEnemy.GetComponent<NetworkObject>();
-            yield return WaitForSpawnedOnAllOrTimeOut(serverNet);
-            AssertOnTimeout("enemy did not spawn on client");
-
             yield return SpawnClientVerbs();
-            Assert.AreEqual(1f, AnchorField.SlowMulAt(Vector3.zero), 0.01f);
+            Assert.AreEqual(1f, BarrageField.FireMulAt(Vector3.zero), 0.01f);
 
             _clientVerbs.RequestAnchor(Vector3.zero, true);
             yield return WaitForTicks(m_ServerNetworkManager, 4);
 
-            Assert.AreEqual(BoarderProtocol.Magnitude(BoarderAbilityId.Anchor),
-                AnchorField.SlowMulAt(Vector3.zero), 0.01f, "host field applies once");
+            Assert.AreEqual(BoarderProtocol.BarrageFireMul,
+                BarrageField.FireMulAt(Vector3.zero), 0.01f, "host field applies once");
+            Assert.AreEqual(2f, BarrageField.FireMulAt(Vector3.zero), 0.01f);
 
             _clientVerbs.RequestAnchor(Vector3.zero, false);
             yield return WaitForTicks(m_ServerNetworkManager, 4);
-            Assert.AreEqual(1f, AnchorField.SlowMulAt(Vector3.zero), 0.01f);
+            Assert.AreEqual(1f, BarrageField.FireMulAt(Vector3.zero), 0.01f);
         }
 
         [UnityTest]
-        public IEnumerator Bulkhead_ClientRpc_NegatesHostHitOnce()
+        public IEnumerator Barrage_OverlappingPlants_StayTwo()
+        {
+            yield return BootHostRun();
+            yield return SpawnClientVerbs();
+            yield return SpawnSecondClientVerbs();
+
+            _clientVerbs.RequestAnchor(Vector3.zero, true);
+            _clientVerbs2.RequestAnchor(Vector3.zero, true);
+            yield return WaitForTicks(m_ServerNetworkManager, 4);
+
+            Assert.AreEqual(BoarderProtocol.BarrageFireMul,
+                BarrageField.FireMulAt(Vector3.zero), 0.01f, "SET max 2, never 2x2");
+            Assert.AreEqual(3f, BoarderProtocol.ComposeFireMul(true, true, 2f), 1e-5f);
+        }
+
+        [UnityTest]
+        public IEnumerator Rush_RequestBulkhead_DoesNotAbsorb()
         {
             yield return BootHostRun();
             var serverEnemy = SpawnObject(_enemyPrefab, m_ServerNetworkManager);
@@ -112,20 +125,17 @@ namespace GatekeepersProtocol.PlayTests
             yield return WaitForTicks(m_ServerNetworkManager, 4);
 
             _serverHealth.TakeDamage(10f, serverEnemy.transform);
-            Assert.AreEqual(before, _serverHealth.Hp, 0.01f, "first Gatekeeper hit negated");
-
-            _serverHealth.TakeDamage(10f, serverEnemy.transform);
-            Assert.AreEqual(before - 10f, _serverHealth.Hp, 0.01f, "second hit lands");
+            Assert.AreEqual(before - 10f, _serverHealth.Hp, 0.01f, "Rush is not Bulkhead");
         }
 
         [UnityTest]
-        public IEnumerator Ghost_SpawnIds_SetAcquisitionOnce()
+        public IEnumerator DefaultNone_SpawnIds_AcquisitionStaysOne()
         {
             yield return BootHostRun();
             GameSession.EnsureLoaded();
             Assert.IsNotNull(GameSession.Meta);
             GameSession.Meta.EquippedProtocol = BoarderProtocolId.Default;
-            GameSession.Meta.EquippedPassive = BoarderAbilityId.Ghost;
+            GameSession.Meta.EquippedPassive = BoarderAbilityId.None;
 
             var serverGo = SpawnObject(_avatarPrefab, m_ServerNetworkManager);
             var serverNet = serverGo.GetComponent<NetworkObject>();
@@ -133,20 +143,19 @@ namespace GatekeepersProtocol.PlayTests
             AssertOnTimeout("avatar did not spawn on client");
 
             serverNet.ChangeOwnership(m_ClientNetworkManagers[0].LocalClientId);
-            float expected = BoarderProtocol.Magnitude(BoarderAbilityId.Ghost);
             yield return WaitForConditionOrTimeOut(() =>
             {
                 var health = serverGo.GetComponent<PlayerHealth>();
                 var avatar = serverGo.GetComponent<NetPlayerAvatar>();
                 return health != null && avatar != null
-                    && Mathf.Abs(health.AcquisitionMul - expected) < 0.01f
-                    && avatar.PassiveId.Value == (int)BoarderAbilityId.Ghost;
+                    && Mathf.Abs(health.AcquisitionMul - 1f) < 0.01f
+                    && avatar.ProtocolId.Value == (int)BoarderProtocolId.Default
+                    && avatar.PassiveId.Value == (int)BoarderAbilityId.None;
             });
-            AssertOnTimeout("server did not set Ghost from equipped ids");
+            AssertOnTimeout("server did not accept Default+None");
 
             var serverHealth = serverGo.GetComponent<PlayerHealth>();
-            Assert.AreEqual(expected, serverHealth.AcquisitionMul, 0.01f);
-            Assert.AreNotEqual(expected * expected, serverHealth.AcquisitionMul);
+            Assert.AreEqual(1f, serverHealth.AcquisitionMul, 0.01f);
         }
 
         IEnumerator BootHostRun()
@@ -172,6 +181,21 @@ namespace GatekeepersProtocol.PlayTests
                 "client has the verbs clone");
             _clientVerbs = clientNet.GetComponent<NetVerbs>();
             Assert.IsNotNull(_clientVerbs);
+        }
+
+        IEnumerator SpawnSecondClientVerbs()
+        {
+            var serverGo = SpawnObject(_verbsPrefab, m_ServerNetworkManager);
+            var serverNet = serverGo.GetComponent<NetworkObject>();
+            serverGo.GetComponent<NetVerbs>().Bind(_gc);
+            yield return WaitForSpawnedOnAllOrTimeOut(serverNet);
+            AssertOnTimeout("second verbs object did not spawn on client");
+            Assert.IsTrue(
+                m_ClientNetworkManagers[0].SpawnManager.SpawnedObjects.TryGetValue(
+                    serverNet.NetworkObjectId, out var clientNet),
+                "client has the second verbs clone");
+            _clientVerbs2 = clientNet.GetComponent<NetVerbs>();
+            Assert.IsNotNull(_clientVerbs2);
         }
     }
 }

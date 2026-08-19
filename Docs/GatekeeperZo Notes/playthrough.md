@@ -244,3 +244,17 @@ Log: `Logs/GatekeeperBastion_2026-08-13_18-23-55_p92464.log`. Run clean (`[Dev]`
 
 **Verdict:** Zo 2026-08-13 — hatch wave worked pretty well; the run ending after it was the remaining miss (fixed in sim, not replayed). Entry closed.
 
+## 2026-08-16 — starting weapon / first session `[unconfirmed]`
+
+Played: solo, starting loadout (no session log attached). Comparative read: other wave-defense FPS starting weapons one-shot fodder for the first few Waves.
+
+**Zo's verdict** (this session, no log): the game is tuned too hard as single player. The first session should let the Boarder handle **multiple Waves**, then get **overrun defending the Hatch** and lose **some** Salvage. Demo file 1 should teach that: multiple Waves, the intensity multiplier (risk/reward), and Hatch-bank. Slow the Hatch-bank transfer rate.
+
+**Entry closed** on verdict. Claims 1–2 remain `[unconfirmed]` until a starting-MK-1 log exists; they are specced as levers in `Docs/Demo/README.md`. Claim 3 is the beat-1 recut.
+
+1. **MK-1 does not one-shot a Wave-1 Default.** *(#12, `WeaponCatalog` MK-1 damage 14 vs `BaseEnemyHp` 30 — three taps at mul 1.0.)* Comparative one-shot is the demand. Do not lower Default HP (kinds stay distinct; Thief 120 unchanged).
+2. **Drip 20/s empties a small pile before overrun reads.** *(#12, `HatchBank.DripPerSecond`.)* 20×45=900; Wave-1 solo pile is 450, gone in 22.5 s. Slowing the rate leaves Unbanked to wipe/attrit when the Hatch falls.
+3. **First demo cycle was one Wave, juice withheld, convert-then-fight.** *(#6/#5, demo sequencer.)* That cannot teach multiplier or “lose some Salvage.” Overturned in `Docs/Demo/` (2026-08-16).
+
+A stacked-Primary session on 2026-08-09 (MR-35 T9, Wave 3 “easy”, Hatch 300/300) does not contradict this. That was not the starting weapon.
+

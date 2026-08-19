@@ -72,6 +72,7 @@ namespace GatekeepersProtocol.Game
         long _cacheHatchBankSec = long.MinValue;
         long _cacheMasterLeft = long.MinValue;
         bool _missionDrawerAutoOpened;
+        bool _demoEmbarkLinePlayed;
 
         PlayerHealth Player => PlayerRegistry.Local;
 
@@ -180,7 +181,7 @@ namespace GatekeepersProtocol.Game
             if (_shownAssault != AssaultState.Assault)
             {
                 _shownAssault = AssaultState.Assault;
-                if (_view != null) _view.ShowFight(prep: false);
+                ShowFightHud(prep: false);
             }
         }
 
@@ -191,7 +192,7 @@ namespace GatekeepersProtocol.Game
             if (_shownAssault != AssaultState.Prep)
             {
                 _shownAssault = AssaultState.Prep;
-                if (_view != null) _view.ShowFight(prep: true);
+                ShowFightHud(prep: true);
             }
         }
 
@@ -276,7 +277,8 @@ namespace GatekeepersProtocol.Game
             {
                 // Terminal phases still hide fight chrome. Do not advance _shownPhase for
                 // Tethered here — that skipped the once-per-Run mission-drawer latch forever.
-                if (sim.Phase == RunPhase.Escaped || sim.Phase == RunPhase.Lost)
+                if (sim.Phase == RunPhase.Escaped || sim.Phase == RunPhase.Lost
+                    || sim.Phase == RunPhase.Returned)
                 {
                     _shownPhase = sim.Phase;
                     _view.ShowEnd();
@@ -310,10 +312,12 @@ namespace GatekeepersProtocol.Game
                         _missionDrawerAutoOpened = true;
                         Controls.SetMissionDrawerOpen(true);
                     }
-                    _view.ShowFight(assault == AssaultState.Prep);
+                    TickDemoEmbarkLine(assault);
+                    ShowFightHud(assault == AssaultState.Prep);
                     break;
                 case RunPhase.Escaped:
                 case RunPhase.Lost:
+                case RunPhase.Returned:
                     _view.ShowEnd();
                     break;
                 default:
@@ -358,6 +362,14 @@ namespace GatekeepersProtocol.Game
                         }
                         PushEndScreenShortcut();
                         break;
+                    case RunPhase.Returned:
+                        if (!_endPresented)
+                        {
+                            _endPresented = true;
+                            PushDocked(gc, sim);
+                        }
+                        PushEndScreenShortcut();
+                        break;
                     case RunPhase.Docked:
                         break;
                     default:
@@ -391,5 +403,21 @@ namespace GatekeepersProtocol.Game
         }
 
         static void ForceClearPauseFlag() => IsPauseOpen = false;
+
+        /// <summary>Demo: the save's first embark lands on its first Bastion Prep frame with
+        /// the find-a-terminal line (beat 0 hand-off). Once per scene load. Gated on beat 0
+        /// actually being complete (DemoShipFightDone): a real first embark passed the ship
+        /// fight, while PlayMode fixtures load Bastion on fresh demo-active saves that never
+        /// did — without this gate the line frees the cursor there and the gun refuses to
+        /// fire (the Firing/SlotClip regression this guard exists for).</summary>
+        void TickDemoEmbarkLine(AssaultState assault)
+        {
+            if (_demoEmbarkLinePlayed || assault != AssaultState.Prep) return;
+            _demoEmbarkLinePlayed = true;
+            var meta = GameSession.Meta;
+            if (meta == null || !meta.DemoActive || !meta.DemoShipFightDone) return;
+            if (meta.TotalRuns > 1 || meta.PodEjections > 0) return;
+            DemoVoice.Play(DemoConversationIds.EmbarkFirst, DemoVoiceMode.Lock);
+        }
     }
 }

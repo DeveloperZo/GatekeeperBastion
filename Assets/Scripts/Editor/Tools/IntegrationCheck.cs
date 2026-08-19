@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using GatekeepersProtocol.Sim;
 using GatekeepersProtocol.Util;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -40,7 +41,7 @@ namespace GatekeepersProtocol.EditorTools
         static string BindingsRequestPath => Path.Combine(Root, "gkb_bindings_request.txt");
         static string PlayerBuildRequestPath => Path.Combine(Root, "gkb_player_build_request.txt");
         static string PlayerBuildReportPath => Path.Combine(Root, "gkb_player_build_report.json");
-        static string PlayerBuildOutDir => Path.Combine(Root, "Logs", "Builds");
+        static string PlayerBuildOutDir => Path.Combine(Root, "Logs", "Builds", ProductVersion.Display);
         static string PlayerBuildExe => Path.Combine(PlayerBuildOutDir, "GatekeepersProtocol.exe");
 
         static double _nextSentinelPoll;
@@ -93,7 +94,7 @@ namespace GatekeepersProtocol.EditorTools
             if (EditorApplication.isCompiling) return;
             // BindingValidator writes its own report; don't block IntegrationCheck.
             TryConsumeBindingsRequest();
-            // Windows player into Logs/Builds — never runs SceneBuilder / Build All.
+            // Windows player into Logs/Builds/{version}/ — never runs SceneBuilder / Build All.
             TryConsumePlayerBuildRequest();
             // Sentinel always wins — same rule as OnEditorReady. A stuck StageKey from a
             // mid-run domain reload must not permanently ignore agent requests.
@@ -162,7 +163,7 @@ namespace GatekeepersProtocol.EditorTools
 
         /// <summary>File bridge for a Windows Development player. Agents write
         /// <c>gkb_player_build_request.txt</c>; report is <c>gkb_player_build_report.json</c>;
-        /// exe under <c>Logs/Builds/</c>. Does not call SceneBuilder or Build All.</summary>
+        /// exe under <c>Logs/Builds/{ProductVersion.Display}/</c>. Does not call SceneBuilder or Build All.</summary>
         static void TryConsumePlayerBuildRequest()
         {
             if (!File.Exists(PlayerBuildRequestPath)) return;

@@ -40,13 +40,13 @@ A Wave starts when you look at a field terminal in Prep. Juice if you want, then
 
 Juice while looking at the Hatch; select, then start a Hatch-bank. Start without a select does not start a Wave.
 
-A field terminal takes a fixed number of Waves to complete — the first one on the kit bastion takes the Run's full five. Each start after a select delivers one. After it clears, Prep lasts as long as you want: Hatch-bank, or walk back to the terminal and pull the next. When the last of those clears, the terminal is done and its door opens.
+A field terminal takes a fixed number of Waves to complete — the first one on the kit bastion takes **three**. Each start after a select delivers one. After it clears, Prep lasts as long as you want: Hatch-bank is refused until those three are done; then Hatch-bank, or the next Field after that Hatch-bank has started. When the last of those clears, the terminal is done.
 
 See the [Field Manual](Field-Manual.md) for how many Waves a Run holds.
 
 ### Clearing a Wave
 
-Gatekeepers arrive in groups rather than a stream. Each group comes through one spawn point together; the next group uses the next point in the rotation, so pressure moves around the room rather than pouring from one door.
+Gatekeepers arrive in groups rather than a stream. Each group walks out of a spawn point — a room the Boarder cannot open — together; the next group uses the next point in the rotation, so pressure moves around the room rather than pouring from one opening.
 
 The Wave is clear when the last Gatekeeper of it is dead **and** the Bastion has finished sending them. Not when the last group spawns — when the last body drops. A single Gatekeeper still alive somewhere keeps you in Assault, and nothing despawns on its own mid-run.
 

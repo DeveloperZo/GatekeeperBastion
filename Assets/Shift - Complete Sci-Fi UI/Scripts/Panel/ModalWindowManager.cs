@@ -22,15 +22,20 @@ namespace Michsky.UI.Shift
 
         void Start()
         {
-            mWindowAnimator = gameObject.GetComponent<Animator>();
+            EnsureWindowAnimator();
 
             if (useCustomTexts == false)
             {
-                windowTitle.text = titleText;
-                windowDescription.text = descriptionText;
+                if (windowTitle != null)
+                    windowTitle.text = titleText;
+                if (windowDescription != null)
+                    windowDescription.text = descriptionText;
             }
 
-            gameObject.SetActive(false);
+            // Hide at boot. Skip when ModalWindowIn already opened us — inactive-at-load
+            // means Start runs after In, and SetActive(false) would close the window.
+            if (!isOn)
+                gameObject.SetActive(false);
         }
 
         public void ModalWindowIn()
@@ -40,10 +45,14 @@ namespace Michsky.UI.Shift
 
             if (isOn == false)
             {
-                if (sharpAnimations == false)
-                    mWindowAnimator.CrossFade("Window In", 0.1f);
-                else
-                    mWindowAnimator.Play("Window In");
+                EnsureWindowAnimator();
+                if (mWindowAnimator != null)
+                {
+                    if (sharpAnimations == false)
+                        mWindowAnimator.CrossFade("Window In", 0.1f);
+                    else
+                        mWindowAnimator.Play("Window In");
+                }
 
                 isOn = true;
             }
@@ -53,15 +62,25 @@ namespace Michsky.UI.Shift
         {
             if (isOn == true)
             {
-                if (sharpAnimations == false)
-                    mWindowAnimator.CrossFade("Window Out", 0.1f);
-                else
-                    mWindowAnimator.Play("Window Out");
+                EnsureWindowAnimator();
+                if (mWindowAnimator != null)
+                {
+                    if (sharpAnimations == false)
+                        mWindowAnimator.CrossFade("Window Out", 0.1f);
+                    else
+                        mWindowAnimator.Play("Window Out");
+                }
 
                 isOn = false;
             }
 
             StartCoroutine("DisableWindow");
+        }
+
+        void EnsureWindowAnimator()
+        {
+            if (mWindowAnimator == null)
+                mWindowAnimator = gameObject.GetComponent<Animator>();
         }
 
         IEnumerator DisableWindow()

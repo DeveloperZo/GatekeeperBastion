@@ -4,9 +4,225 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
-Last updated: 2026-08-17
+Last updated: 2026-08-19
 -->
 
+- 2026-08-19: **M77 built, unverified — the Run can end Docked.** Doors stopped
+  keying on terminal completion and now key on a *survived* Hatch-bank window;
+  a player inside that window may hold Interact at the Hatch to end the Run
+  **Docked** rather than Lost, keeping banked Salvage and leaving the door open
+  behind them. Six things were ruled while building, none of them in the cut
+  spec, all recorded in the milestone: `RunPhase.Returned` was appended rather
+  than reusing `RunPhase.Docked` (value 0 already means pre-boarding, and
+  reusing it would have ended the Run without ending it); the terminal-AND list
+  survives as *eligibility* while the bank survival is the *trigger*, which
+  incidentally settles M76's open contradiction between the bastion sketch's
+  `unlock=T1,T2` and beat 2's door-on-bank-success; save schema bumped to v10
+  with `OpenDoorIds` and no shim, because pre-v10 doors were opened by the rule
+  this deletes; open-door restore is ungated by start wave so a Wave-1
+  re-embark still finds the door; `DemoVoice`'s one queue slot now takes a
+  same-frame Subtitle behind a live Lock so `demo.door_d1` is not swallowed by
+  `demo.dock_option`; and `RunEndKind.Docked = 3` was appended so a guest does
+  not read DOCKED as YOU DIED. Offline harness 460 passed / 10 failed with the
+  failing set byte-identical to the recorded baseline, 23 net new tests, six
+  existing tests rewritten because they pinned the retired rule. **Criteria 2,
+  4, 5, 6 and 8 are editor-only and nobody has pressed Play.** One design cost
+  found in code and left open for Zo: the dock offer takes `E` at the Hatch
+  ahead of repair and withdraw, so the Hatch cannot be repaired between a
+  survived window and the next Wave trigger.
+- 2026-08-18: **Bodies graduation test PASSED (Zo).** The Utility Bot imported
+  and placed in the Ship scene: "looks amazing as a gatekeeper." The pack's Shader
+  Graph carries a `BuiltInTarget` and compiled on this project's Built-in pipeline
+  with no conversion, no repack and no script — M87's bet paid and its `/tmp`
+  converter will never be written. The feared fidelity clash against flat-shaded
+  Synty did not materialise, which retires the sharpest objection in
+  `Brainstorms/bodies-and-art-direction.md`. Recorded in the android entry; M87
+  moved to `2. active/` with its remaining criteria (rig Humanoid + avatar
+  configure, `Anim_attack_melee` playing on it, removing the four redundant pose
+  FBXs, elapsed time) still open. One question rides out of the test and is NOT
+  part of it: the body reads a little dark under scene lighting. Filed to the
+  brainstorm's new Open table with a discriminator rather than an opinion — stand
+  a Synty Gatekeeper in the same spot; both dark means the scene, only the robot
+  dark means the pack's albedo range. Tuning-class until a swap is real.
+- 2026-08-18: **M87 rewritten after the package was actually read.** The
+  `.unitypackage` was extracted and inspected rather than inferred from the store
+  page, and both of M87's founding assumptions were wrong. The materials use no
+  URP Lit and no HDRP Lit — they use one custom Shader Graph
+  (`SG_SciFiRobotMat`), so the property-rename swap the milestone was built on had
+  nothing to swap. But that graph ships **three** targets, `UniversalTarget`,
+  `HDTarget` and **`BuiltInTarget`/`BuiltInLitSubTarget`**, and
+  `com.unity.shadergraph` 17.3.0 is already in this project's manifest, so the
+  pack is authored to compile on Built-in with no conversion at all. The new bet
+  is that it does. The fallback also got cheaper: the pack ships `_Metallic`,
+  `_Rough`, `_AO` and `_NormalGL` as separate maps alongside the packed
+  `_RoughMetAO`, so a hand-built Standard material needs one known compositing
+  step (metallic -> R, `1 - rough` -> alpha) rather than a channel-layout guess,
+  at the cost of the paint/wear/camo graph features and the six colourways. The
+  earlier advice to take the fbx `source.zip` is reversed — the `.unitypackage` is
+  the correct download because the graph and the material assignments are the
+  valuable part. Scope unchanged at one character (Utility Bot), and the `/tmp`
+  converter the milestone originally specified is now expected never to be
+  written.
+- 2026-08-18: **M87 written — a bought body in an hour.** The Built-in Render
+  Pipeline constraint makes every bought character pack cost an afternoon of
+  hand-rebuilt materials, which is why the android entry in
+  `Brainstorms/bodies-and-art-direction.md` has never been tested. M87 carries
+  the bet that URP Lit and Built-in Standard share the same metallic-gloss
+  packing (metallic R, smoothness in `_MetallicGlossMap` alpha), so the bought
+  pack's URP variant converts by shader swap and property rename with no channel
+  repack. Step 1 reads the shipped `.mat` files to settle URP versus HDRP before
+  anything is written; `_MaskMap` means the kill criterion is live on arrival.
+  Scoped to ONE character (Utility Bot, ~12k tris) because the graduation test
+  needs one body in the scene, and to a `/tmp` one-shot rather than a committed
+  tool, per the tooling gate — promotion waits for a second pack and evidence.
+  `1. planned/` now holds 12 files.
+- 2026-08-18: **M81 started, and the clip-sidecar convention added.** Five
+  Mixamo clips landed in `Packs/Gatekeepers/Animations/` under a new lowercase
+  descriptive naming (ruled by Zo), each paired with a `.md` recording the
+  Mixamo settings the FBX export destroys. Contract written as
+  `_meta/_definitions/animation-sidecar.md` — the second recurring file class
+  after the milestone; it records what is lost at export and explicitly not
+  Unity import settings, which are live truth in the `.fbx.meta`. Eleven
+  sidecars written including backfills for the six pre-convention Boarder
+  clips, whose notes record what no meta shows: `Anim_PlayerRun` and
+  `Anim_Walking` are byte-identical, and `RifleIdle`/`FiringRifle`/`Reloading`
+  are byte-identical copies of `PlayerIdle`. M81's controller edits applied
+  with Unity closed: Attack `m_Motion` -> `Anim_attack_melee`, exit time
+  0.2 -> 0.9. **Criterion 3 only**; the clip fileID was inferred from the
+  Boarder six and nothing has been run, so criteria 1, 2, 4 and 5 are
+  unproven and the 0.7s swing-clock fit (step 5) is untouched. M85 records
+  Zo's ruling that one of three imported death clips is wired and the other
+  two stay as deliberate spares. M81 moved to `2. active/`; `1. planned/` now
+  holds 12 files.
+- 2026-08-18: **New brainstorm area: bodies and art direction.** Zo's interest
+  in bought android bodies, a bought creature as the M80 boss, and distinct
+  weapon silhouettes, grilled and filed as
+  `Brainstorms/bodies-and-art-direction.md`. Corrected on the way in: the
+  three Gatekeeper kinds already carry three distinct Synty bodies
+  (`SM_Chr_RobotFemale_01`, `SM_Chr_SpaceSoldier_HelmetArmor_Male_01`,
+  `SM_Chr_BR_War_Robot_01`, hard-coded in `SceneBuilder.Enemies.cs`); the
+  audit's "stats and tint variants" line is about behavior, not mesh, and had
+  been read the wrong way. Graduation test is whether a non-Synty body reads
+  as deliberate in the Bastion. Constraints recorded: the Boarder skeleton
+  cannot change (guns hang off `mixamorig:RightHand`), body paths are code,
+  and the project is Built-in Render Pipeline so URP/HDRP packages import
+  shaderless.
+- 2026-08-18: **M75 closed (Zo).** Beat 0 played end to end through to the
+  Bastion, which is criterion 1. Criteria 2 to 7 were not separately observed at
+  close and are owed as rows TH-1 to TH-6 in the new `Tech-Hygiene.md` ledger
+  (HP floor, the three EMBARK refusals, the multiplayer lock, v9 round-trip and
+  downgrade, the reload matrix, the reads-back log audit). The one-shot
+  `RelocateDemoCapsule.cs` was moved to `_to_delete/m75_scratch/` so
+  `Assets/_Scratch/` is empty for the verify gate; the delete itself is TH-7.
+- 2026-08-18: **M76 started.** Zo played beat 0 through to the Bastion, so
+  M75's EMBARK + v9 dependency is exercised and M76 moved to `2. active/`
+  (M75 stays active — its close still needs the scratch-scene delete, the
+  editor suites, and criteria 2-7). Ruled at start: beat 2's survive path
+  (door unlock on bank success, successful-bank snapshot, Ship return) stays
+  with **M77**, matching the roadmap row — this window is authored unclearable
+  so M76 cannot exercise it. Numbers re-read against code and restamped in
+  beat 2: `CarryConvert(2)` = x1.10 (`HatchBank.Mult2`), `ExtraRam` fires only
+  at carry 3 so the re-spec drops the old extra Thief, and the ~500-banked aim
+  is above this window's 396 ceiling (8/s x 45 s x 1.10, survive-all).
+  `1. planned/` now holds 12 files.
+- 2026-08-18: **Animation family extended (Zo): M84–M86 added, planned cap
+  waived.** Zo ruled the remaining tracker gaps in and waived the 10-file cap
+  for this cut: M84 = flinch on a masked upper-body layer (hook rides the
+  existing `Damaged` aggro subscription; ShipIntruder gains one); M85 = death
+  collapse under the unchanged burst (`Despawn` ledger removal stays
+  immediate, only the destroy tail defers; co-op carrier is the named open
+  question); M86 = `Dead` bool on the Boarder avatar from replicated Hp,
+  reversible on restore. `1. planned/` now holds 13 files. Still fileless on
+  purpose, per "a file exists only when its gate can be written": spawn/entry
+  motion (any version needs a wave-pacing ruling — delay pressure or play
+  under movement), dock animation (parked until M77 ships), boss clips
+  (blocked on M80's absent composition input).
+- 2026-08-18: **Animation family cut (Zo): M81–M83 into `1. planned/`, from the
+  asset audit.** Rulings at the cut: Synty humanoids stay for the three
+  Gatekeeper kinds; the viewmodel takes the shared path (one controller, four
+  clips, reload speed-scaled). M81 = one shared attack clip, doubling as the
+  free-retarget probe with a sourcing kill criterion (2026-09-15); M82 = the
+  hand-keyed viewmodel set; M83 = replicate fire/reload to remote avatars
+  (code only). Rows appended after M80; ordering against the demo family is
+  Zo's call. `1. planned/` now holds 10 files, at its cap. Hit-react, death
+  motion, spawn entry, player downed and boss clips stay tracked in
+  `Animation-Inventory.md` with no files, gated on rulings.
+- 2026-08-18: **Beat 0 revision (Zo): starboard-bunk wake, terminal grants the MK-1,
+  hidden stations.** The wake capsule moves to the CrewStarboard bunk and replaces
+  that bed (scratch: `RelocateDemoCapsule`, run once then delete). The ship
+  terminal's T now routes power AND grants the MK-1 in the same save
+  (`DemoShipFight.GrantWeapon`; the ARMORY rack walk and `demo.weapon_grant` cue are
+  retired; the intruders line restamped — the fight starts armed). Stations with no
+  live function are hidden — no world label, no prompt, no interaction: new `Hidden`
+  verdict in `DemoProgress` (ARMORY until the wheel unlock, CREW until the fight is
+  done, FAB for the whole demo; NAV unchanged), silent interact consume in
+  `DemoStationGate`, label visibility in `ShipHud`. Reload matrix simplified (a
+  resumed fight is always armed; pre-revision saves get the grant on load).
+  `DemoProgressTests` matrices updated; beat 0 doc restamped (A7, A13, steps 5-11,
+  refuse/reload/voice tables). Editor + playtest confirmation pending.
+- 2026-08-18: **M75 repairs after the failed playtest.** Two defects owned and fixed
+  on top of the other agents' scene/behaviour repairs: `DemoVoice`'s no-view drop
+  downgraded Error → Warn (an Error fails every Unity test that plays a line in a
+  fixture scene with no authored view — the `DemoVoiceTests` EditMode red), and
+  `HudController`'s first-embark line now also gates on `DemoShipFightDone` (fresh
+  fixture saves are demo-active, so the line fired on Bastion PlayMode fixtures,
+  `DemoVoiceView` freed the cursor each frame and the gun refused — the
+  `Firing_DamagesAnEnemy` / `SlotClip` reds). Offline harness on the current tree:
+  all Demo suites green including the review-added scene/doc audits; 12 remaining
+  reds are the pre-existing Bastion scene/chrome/prefab rows, none in demo files.
+  Editor confirmation pending — `gkb_verify_request.txt` re-armed.
+- 2026-08-17: **M75 active — implementation landed.** Beat 0 + SaveVersion 9:
+  `SaveData`/`MetaState` v9 fields, migration (played pre-v9 saves land demo-off),
+  `MetaState.Json` partial split for the Sim line cap; engine-free `DemoProgress`
+  matrices (Game/Demo/); `DemoStationGate` (dark refuses, NAV hold-repair, MK-1
+  grant, CREW tap-heal) in front of every station open; `ShipTerminal`,
+  `ShipCapsule` (black → fade → stir → hold-unlock → lid), `DemoShipDirector`
+  (reload matrix), `ShipIntruder` (drives the disabled-brain gatekeeper body),
+  `DemoShipVitals`; HP floor in `PlayerHealth`; Ship-fight fire gate in
+  `PlayerGun.CanFire`; demo EMBARK refuses in `MapStation`; MP lock on menu
+  Host/Join and dev F10/F11; the save's first embark line from `HudController`.
+  Offline harness: 12/12 new (`DemoSaveFlagsTests`, `DemoProgressTests`) green;
+  `BoarderProtocolTests` SaveVersion pin moved to `SaveData.CurrentVersion` (v9);
+  full suite adds no reds vs baseline. Scene pieces wait in
+  `Assets/_Scratch/AuthorDemoWakeShip.cs` (run once, then delete). Beat 0 restamped:
+  A3 free-look, A10 scene check resolved (no PlayerGun on Ship, NavMesh present),
+  fodder melee starting values, CREW-power note.
+  [`2. active/M75`](Milestones/2.%20active/M75-wake-on-a-dead-ship.md).
+- 2026-08-17: **M74 closed.** Demo voice pipe: `DemoVoice` runner, `DemoLines` table,
+  `DemoConversationIds`, `DemoVoiceView` authored on Ship and Bastion canvases,
+  party ClientRpc on `NetRunMirror`, Lock gates in Ship/Bastion input paths. EditMode
+  23/0 `DemoVoiceTests`; PlayMode `DemoVoicePlayModeTests` written. Beat triggers
+  (criterion 8 playthrough) land in M75. Active 0/3.
+  [`3. completed/M74`](Milestones/3.%20completed/M74-the-demo-speaks.md).
+- 2026-08-17: **M74 closed.** Demo voice pipe shipped; beat triggers land in M75.
+  [`3. completed/M74`](Milestones/3.%20completed/M74-the-demo-speaks.md). Active 0/3.
+- 2026-08-17: **M74 active — implementation landed.** Voice pipe built: engine-free
+  `DemoVoice` runner + `DemoLines` table + `DemoConversationIds` (Game/Demo/, compiled
+  by the offline harness like Game/Settings/), `DemoVoiceView` (Game/Ui/), demo-line
+  ClientRpc on `NetRunMirror`, Lock-line gates in `ShipController` /
+  `FirstPersonController` / `HudController.Pause`. Offline harness: 20/20 new
+  `DemoVoiceTests` green; full suite adds no reds vs baseline (container snapshot;
+  12 pre-existing environment misses identical on both runs). PlayMode
+  `DemoVoicePlayModeTests` written, not yet run — editor suites armed via
+  `gkb_verify_request.txt`. Scratch box authoring waits in
+  `Assets/_Scratch/AuthorDemoVoiceBox.cs` (run once, then delete).
+  [`2. active/M74`](Milestones/2.%20active/M74-the-demo-speaks.md).
+- 2026-08-17: **Demo family cut.** M74–M80 created in `1. planned/` from
+  `Demo/`'s beat specs (M74 voice pipe; M75 beat 0 + v9; M76 beats 1+2; M77
+  Ship return / bank-keyed doors / Docked run end; M78 beats 3+4; M79 beat 5;
+  M80 beats 6+7). Cut-time rulings (Zo): composite retrigger reads per-zone
+  `DemoZoneDeepestWave` (beat 4's stamp confirmed; README Shared flags + Gaps
+  and beat 2's checkpoint rows corrected); Ship return split into its own
+  milestone M77; finale cut with boss/elite composition and finale access as
+  named owner-Zo inputs on M80. `Brainstorms/first-session.md` graduated —
+  moved to `_to_delete/`. Planned 9/10.
+  [`1. planned/M74`](Milestones/1.%20planned/M74-the-demo-speaks.md) …
+  [`1. planned/M80`](Milestones/1.%20planned/M80-one-final-window.md).
+- 2026-08-17: **0.34** build **1**. Friends-session repairs from CHILL-PC `BP8HPF`:
+  guest hit RPC never `TakeDamage`s clones (flash from replicated HP); death line
+  is `killed by gatekeeper` + `NetRunMirror.Alive`; additive Ship wait hides the
+  Bastion view; Start New modal is null-safe; Join of this machine's host code
+  starts host. Menu `v0.34.1`; player `Logs/Builds/0.34.1/`.
 - 2026-08-17: **M72 closed.** Relay dual-box host log
   `GatekeepersProtocol_2026-08-17_13-24-37_p49280` — joinCode `KPRMPR`,
   `clientId=1`, Ready gate, countdown, Bastion `playerCount=2`, kills,

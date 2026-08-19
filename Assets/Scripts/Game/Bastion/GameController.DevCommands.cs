@@ -134,6 +134,11 @@ namespace GatekeepersProtocol.Game
         /// skip the shared Ship lobby. Session start, not a Dev mutation — does not taint.</summary>
         public void StartCoopHost()
         {
+            if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
+            {
+                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                return;
+            }
             EnsureNetForDevSmoke();
             if (_net == null)
             {
@@ -147,6 +152,11 @@ namespace GatekeepersProtocol.Game
         /// Session start, not a Dev mutation — does not taint.</summary>
         public void StartCoopClient()
         {
+            if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
+            {
+                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                return;
+            }
             EnsureNetForDevSmoke();
             if (_net == null)
             {

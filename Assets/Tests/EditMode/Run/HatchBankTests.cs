@@ -43,6 +43,9 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1.50f, HatchBank.CarryConvert(99), 1e-5f);
             Assert.AreEqual(0, HatchBank.CarryWaveIndex(1));
             Assert.AreEqual(4, HatchBank.CarryWaveIndex(5));
+            Assert.AreEqual(1, HatchBank.ExtraRam(3));
+            Assert.AreEqual(0, HatchBank.ExtraRam(1));
+            Assert.AreEqual(0, HatchBank.ExtraRam(5));
         }
 
         [Test]
@@ -120,9 +123,9 @@ namespace GatekeepersProtocol.Tests
             TerminalKillsThenPrep(sim, 8);
             TerminalKillsThenPrep(sim, 8);
             sim.TriggerDraw(WaveMode.HatchBank);
-            sim.Tick(10f); // 200 dripped ×1.25 = 250 ship, 400 left
-            Assert.AreEqual(400L, sim.Unbanked);
-            Assert.AreEqual(250L, meta.BankedSalvage);
+            sim.Tick(10f); // 80 dripped ×1.25 = 100 ship, 520 left
+            Assert.AreEqual(520L, sim.Unbanked);
+            Assert.AreEqual(100L, meta.BankedSalvage);
             sim.NotifyAssaultCleared();
             Assert.AreEqual(AssaultState.Assault, sim.Assault, "timer, not enemy wipe");
             sim.Tick(HatchBank.DurationSeconds - 10f);
@@ -205,13 +208,13 @@ namespace GatekeepersProtocol.Tests
             var sim = Tethered(out meta);
             TerminalKillsThenPrep(sim, 24);
             sim.TriggerDraw(WaveMode.HatchBank);
-            sim.Tick(5f); // 100 dripped ×1.00 (carry 1)
-            Assert.AreEqual(100L, meta.BankedSalvage);
+            sim.Tick(5f); // 40 dripped ×1.00 (carry 1)
+            Assert.AreEqual(40L, meta.BankedSalvage);
             sim.DamageHatch(99999f);
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual(0L, sim.Unbanked);
-            Assert.AreEqual(100L, meta.BankedSalvage);
-            Assert.AreEqual(100L, sim.LastRunReport.grossEarned);
+            Assert.AreEqual(40L, meta.BankedSalvage);
+            Assert.AreEqual(40L, sim.LastRunReport.grossEarned);
         }
 
         [Test]
@@ -314,6 +317,24 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void HatchBank_ThreeWaves_AddsExtraRam()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            var director = new WaveDirector();
+            WaveSpec hatch = default;
+            sim.WaveStarted += s => hatch = s;
+            for (int i = 0; i < 3; i++)
+                TerminalKillsThenPrep(sim, 8);
+            sim.TriggerDraw(WaveMode.HatchBank);
+            Assert.AreEqual(3, sim.HatchCarry);
+            WaveSpec field = director.NextWave(2, 0);
+            Assert.AreEqual(field.enemyCount + HatchBank.Carry3ExtraRam, hatch.enemyCount);
+            Assert.AreEqual(field.ramCount + HatchBank.Carry3ExtraRam, hatch.ramCount);
+            Assert.AreEqual(field.defaultCount, hatch.defaultCount);
+        }
+
+        [Test]
         public void HatchBank_FiveWaves_MatchesWave5()
         {
             MetaState meta;
@@ -358,8 +379,8 @@ namespace GatekeepersProtocol.Tests
             sim.TriggerDraw(WaveMode.HatchBank);
             long unbanked = sim.Unbanked;
             sim.Tick(1f);
-            Assert.AreEqual(unbanked - 20L, sim.Unbanked);
-            Assert.AreEqual(HatchBank.BankedFrom(20L, HatchBank.CarryConvert(1)), meta.BankedSalvage);
+            Assert.AreEqual(unbanked - 8L, sim.Unbanked);
+            Assert.AreEqual(HatchBank.BankedFrom(8L, HatchBank.CarryConvert(1)), meta.BankedSalvage);
         }
 
         [Test]

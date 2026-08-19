@@ -295,5 +295,17 @@ namespace GatekeepersProtocol.Game
             go.AddComponent<BastionGeneratedGeom>();
             RebuildObjectsMarked++;
         }
+
+        /// <summary>Hung spawn closets need a Door aperture on this edge.</summary>
+        public void SetSideDoor(BastionDoorEdge edge)
+        {
+            switch (edge)
+            {
+                case BastionDoorEdge.North: north = BastionSideKind.Door; break;
+                case BastionDoorEdge.South: south = BastionSideKind.Door; break;
+                case BastionDoorEdge.East: east = BastionSideKind.Door; break;
+                case BastionDoorEdge.West: west = BastionSideKind.Door; break;
+            }
+        }
     }
 }

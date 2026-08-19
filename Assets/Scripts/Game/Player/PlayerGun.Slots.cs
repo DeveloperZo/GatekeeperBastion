@@ -8,6 +8,8 @@ namespace GatekeepersProtocol.Game
     /// Fire on the drone slot is placement, not a shot.</summary>
     public sealed partial class PlayerGun
     {
+        PlayerProtocolAbilities _protocolAbilities;
+
         #region Public API
         /// <summary>Mark the drone slot selectable when the bay has a payload. No WeaponDef.</summary>
         public void ConfigureDrone(bool hasPayload)
@@ -28,6 +30,15 @@ namespace GatekeepersProtocol.Game
                     ? WeaponWheel.EffectiveFireRate(s.def, Point(s, WheelAttr.FireRate))
                     : shotsPerSecond;
                 rate = UsingSalvageCutter ? rate * CutterRateFactor : rate;
+                if (_activeSlot != WeaponSlot.Drone)
+                {
+                    if (_protocolAbilities == null)
+                        _protocolAbilities = GetComponentInParent<PlayerProtocolAbilities>();
+                    bool rush = _protocolAbilities != null && _protocolAbilities.RushOpen;
+                    bool barrage = _protocolAbilities != null && _protocolAbilities.BarrageWindowOpen;
+                    float field = BarrageField.FireMulAt(transform.position);
+                    rate *= BoarderProtocol.ComposeFireMul(rush, barrage, field);
+                }
                 return Mathf.Max(0.01f, rate);
             }
         }

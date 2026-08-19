@@ -63,12 +63,19 @@ namespace GatekeepersProtocol.Game
             if (session != null)
                 session.RegisterMirror(this);
             Wave.OnValueChanged += OnWaveChanged;
+            // The mirror is the session's one replicated object that survives scene loads,
+            // so it also carries the demo line broadcast. Host only: guests play from the
+            // RPC and never re-broadcast.
+            if (IsServer)
+                DemoVoice.SetBroadcaster(ServerBroadcastDemoLine);
             Log.Event(Tag, "mirror spawned role=" + (IsServer ? "host" : "client"));
         }
 
         public override void OnNetworkDespawn()
         {
             Wave.OnValueChanged -= OnWaveChanged;
+            if (IsServer)
+                DemoVoice.ClearBroadcaster(ServerBroadcastDemoLine);
             _hasEnd = false;
             base.OnNetworkDespawn();
         }
@@ -122,12 +129,32 @@ namespace GatekeepersProtocol.Game
             if (!IsServer || !IsSpawned) return;
             ShowEndScreenClientRpc(summary);
         }
+
+        /// <summary>Server: start a Party-scope demo line on every connected seat. The host
+        /// seat already played it locally (DemoVoice.PlayLocalAndBroadcast), so the RPC
+        /// handler skips on the server. Registered with DemoVoice on host spawn.</summary>
+        public void ServerBroadcastDemoLine(string id, DemoVoiceMode mode)
+        {
+            if (!IsServer || !IsSpawned) return;
+            // Plain string param: NGO serializes it, ids are short, and lines fire per
+            // beat, not per frame. Unity.Collections is not referenced by this assembly.
+            DemoLineClientRpc(id, (byte)mode);
+        }
         #endregion
 
         #region Events
         void OnWaveChanged(int previous, int next)
         {
             Log.Event(Tag, "mirror wave=" + next);
+        }
+
+        [ClientRpc]
+        void DemoLineClientRpc(string id, byte mode)
+        {
+            if (IsServer) return; // the host seat played locally before broadcasting
+            Log.Event("Demo", "line rpc id=" + id
+                + " clientId=" + NetworkManager.LocalClientId);
+            DemoVoice.Play(id, (DemoVoiceMode)mode);
         }
 
         [ClientRpc]

@@ -16,7 +16,7 @@ Criterion 13 playthrough is confirmation, not the gate (same as M57).
 
 Friends QoL: the Bastion as a room a person stands in, and the Ship as something a stranger
 can operate. Field terminals, fight HUD, station chrome and copy, player-build keys. Music
-and gun/foot SFX are [`M69`](../1.%20planned/M69-the-session-has-a-voice.md). Guns, zoom, ship-console art
+and gun/foot SFX are [`M69`](M69-the-session-has-a-voice.md). Guns, zoom, ship-console art
 are `M61`. Compendium is `M62`.
 
 ## Story
@@ -175,7 +175,7 @@ Rejected: Input System rebinding. Rejected: a duration floor on the bound wavs.
   strings — here. Music slider is `M69`.
 
 Guns, zoom, ship desks as art: [`M61`](M61-the-polish-pass-2.md). Music and gun/foot SFX:
-[`M69`](../1.%20planned/M69-the-session-has-a-voice.md). Compendium: [`M62`](M62-the-compendium-you-can-open.md).
+[`M69`](M69-the-session-has-a-voice.md). Compendium: [`M62`](M62-the-compendium-you-can-open.md).
 
 ## Verification
 

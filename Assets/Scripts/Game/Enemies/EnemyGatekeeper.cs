@@ -478,9 +478,13 @@ namespace GatekeepersProtocol.Game
         void SpawnDeathBurst()
         {
             var myRenderer = GetComponentInChildren<Renderer>();
-            Color tint = myRenderer != null && myRenderer.sharedMaterial != null
-                ? myRenderer.sharedMaterial.color
-                : FxColors.EnemyAlert;
+            Color tint = FxColors.EnemyAlert;
+            var mat = myRenderer != null ? myRenderer.sharedMaterial : null;
+            if (mat != null)
+            {
+                if (mat.HasProperty("_Color")) tint = mat.color;
+                else if (mat.HasProperty("_BaseColor")) tint = mat.GetColor("_BaseColor");
+            }
             Effects.DeathExplosion(transform.position, tint);
         }
     }

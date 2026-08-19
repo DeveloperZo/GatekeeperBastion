@@ -1,7 +1,4 @@
 using System;
-using System.Globalization;
-using System.Text;
-using System.Text.RegularExpressions;
 using GatekeepersProtocol.Util;
 
 namespace GatekeepersProtocol.Sim
@@ -12,7 +9,7 @@ namespace GatekeepersProtocol.Sim
     /// JSON by hand (field-for-field identical to JsonUtility on SaveData; no Newtonsoft).
     /// The game layer owns file paths and IO.
     /// </summary>
-    public sealed class MetaState
+    public sealed partial class MetaState
     {
         public long BankedSalvage;
         public long LifetimeSalvageEarned;
@@ -44,12 +41,74 @@ namespace GatekeepersProtocol.Sim
                 : (string[])ids.Clone();
         }
 
+        /// <summary>Door ids standing open, saved on a survived Hatch-bank window. Not derivable
+        /// from CompletedTerminalIds: a completed terminal only makes a door eligible.</summary>
+        string[] _openDoorIds = Array.Empty<string>();
+
+        public string[] OpenDoorIds =>
+            _openDoorIds ?? (_openDoorIds = Array.Empty<string>());
+
+        /// <summary>Replace the open-door snapshot. Null or empty clears it.</summary>
+        public void SetOpenDoorIds(string[] ids)
+        {
+            _openDoorIds = ids == null || ids.Length == 0
+                ? Array.Empty<string>()
+                : (string[])ids.Clone();
+        }
+
         public int HatchArmorLevel;
 
-        /// <summary>Equipped protocol. Defaults to Default; owned from the first session.</summary>
-        public BoarderProtocolId EquippedProtocol = BoarderProtocolId.Default;
-        /// <summary>Equipped passive. Ghost is the granted first Passive.</summary>
-        public BoarderAbilityId EquippedPassive = BoarderAbilityId.Ghost;
+        // ---- First-Bastion demo (v9) — Docs/Demo/README.md, Shared flags ----
+        /// <summary>Zones the per-zone deepest array covers (0 unused; 1, 2, finale).</summary>
+        public const int DemoZoneCount = 4;
+
+        /// <summary>True until this save's first Escaped. Fresh campaigns start on demo.</summary>
+        public bool DemoActive = true;
+        public bool DemoCapsuleOpened;
+        public bool DemoNavPowered;
+        public bool DemoArmoryPowered;
+        public bool DemoWeaponGranted;
+        public bool DemoShipFightDone;
+        public bool DemoCrewMenuUnlocked;
+        public bool DemoFabPowered;
+        /// <summary>Wheel ladder rung 1: Secondary buys remaining while DemoActive. The
+        /// multiplayer gate reads it — the first buy (2 → 1) unlocks friends.</summary>
+        public int DemoWheelBuysLeft = 2;
+
+        int[] _demoZoneDeepest = new int[DemoZoneCount];
+
+        /// <summary>Deepest cleared field Wave in <paramref name="zone"/> (0 = none yet).</summary>
+        public int ZoneDeepest(int zone)
+        {
+            EnsureDemoZones();
+            if (zone < 0 || zone >= DemoZoneCount) return 0;
+            return _demoZoneDeepest[zone];
+        }
+
+        /// <summary>Raise-only write on field-Wave clear. A lower wave never overwrites.</summary>
+        public void SetZoneDeepest(int zone, int wave)
+        {
+            EnsureDemoZones();
+            if (zone < 0 || zone >= DemoZoneCount) return;
+            if (wave > _demoZoneDeepest[zone]) _demoZoneDeepest[zone] = wave;
+        }
+
+        void EnsureDemoZones()
+        {
+            if (_demoZoneDeepest == null || _demoZoneDeepest.Length != DemoZoneCount)
+            {
+                var next = new int[DemoZoneCount];
+                if (_demoZoneDeepest != null)
+                    Array.Copy(_demoZoneDeepest, next,
+                        Math.Min(_demoZoneDeepest.Length, next.Length));
+                _demoZoneDeepest = next;
+            }
+        }
+
+        /// <summary>Equipped protocol. Fresh saves are None until CREW claims Default.</summary>
+        public BoarderProtocolId EquippedProtocol = BoarderProtocolId.None;
+        /// <summary>Equipped passive. Default has none; specialists may add one later.</summary>
+        public BoarderAbilityId EquippedPassive = BoarderAbilityId.None;
 
         // ---- Equipment ----
         public bool EquipmentSlotPurchased;
@@ -391,6 +450,18 @@ namespace GatekeepersProtocol.Sim
             d.EquippedDrone = (int)EquippedDrone;
             d.OwnedPayloadMask = OwnedPayloadMask;
             d.CompletedTerminalIds = (string[])CompletedTerminalIds.Clone();
+            d.OpenDoorIds = (string[])OpenDoorIds.Clone();
+            EnsureDemoZones();
+            d.DemoActive = DemoActive;
+            d.DemoCapsuleOpened = DemoCapsuleOpened;
+            d.DemoNavPowered = DemoNavPowered;
+            d.DemoArmoryPowered = DemoArmoryPowered;
+            d.DemoWeaponGranted = DemoWeaponGranted;
+            d.DemoShipFightDone = DemoShipFightDone;
+            d.DemoCrewMenuUnlocked = DemoCrewMenuUnlocked;
+            d.DemoFabPowered = DemoFabPowered;
+            d.DemoWheelBuysLeft = DemoWheelBuysLeft;
+            d.DemoZoneDeepestWave = (int[])_demoZoneDeepest.Clone();
             return d;
         }
 
@@ -446,10 +517,50 @@ namespace GatekeepersProtocol.Sim
             if (d.SaveVersion >= 7 && d.CompletedTerminalIds != null)
                 m.SetCompletedTerminalIds(d.CompletedTerminalIds);
 
+            if (d.SaveVersion >= 10 && d.OpenDoorIds != null)
+                m.SetOpenDoorIds(d.OpenDoorIds);
+
+            ApplyDemoFlags(m, d);
+
             long refund = BoarderProtocol.ApplySaveEquip(m, d);
             m.RestoreSalvageLedger(d.LifetimeSalvageEarned, d.LifetimeSalvageSpent, refund);
             m.SaveVersion = SaveData.CurrentVersion;
             return m;
+        }
+
+        /// <summary>v9 reads the stored flags. Pre-v9 migrates: demo-off when the save has
+        /// already played (CleanExits >= 1 or DeepestWaveReached > 1 — do not trap them in
+        /// the capsule), demo-on with fresh gates otherwise (Docs/Demo/README.md).</summary>
+        static void ApplyDemoFlags(MetaState m, SaveData d)
+        {
+            m.EnsureDemoZones();
+            if (d.SaveVersion >= 9)
+            {
+                m.DemoActive = d.DemoActive;
+                m.DemoCapsuleOpened = d.DemoCapsuleOpened;
+                m.DemoNavPowered = d.DemoNavPowered;
+                m.DemoArmoryPowered = d.DemoArmoryPowered;
+                m.DemoWeaponGranted = d.DemoWeaponGranted;
+                m.DemoShipFightDone = d.DemoShipFightDone;
+                m.DemoCrewMenuUnlocked = d.DemoCrewMenuUnlocked;
+                m.DemoFabPowered = d.DemoFabPowered;
+                m.DemoWheelBuysLeft = d.DemoWheelBuysLeft;
+                if (d.DemoZoneDeepestWave != null)
+                    Array.Copy(d.DemoZoneDeepestWave, m._demoZoneDeepest,
+                        Math.Min(d.DemoZoneDeepestWave.Length, DemoZoneCount));
+                return;
+            }
+
+            bool played = d.CleanExits >= 1 || d.DeepestWaveReached > 1;
+            m.DemoActive = !played;
+            m.DemoCapsuleOpened = played;
+            m.DemoNavPowered = played;
+            m.DemoArmoryPowered = played;
+            m.DemoWeaponGranted = played;
+            m.DemoShipFightDone = played;
+            m.DemoCrewMenuUnlocked = played;
+            m.DemoFabPowered = played;
+            m.DemoWheelBuysLeft = played ? 0 : 2;
         }
 
         static void MigrateFlatTiersArray(MetaState m, int[] tiers)
@@ -495,209 +606,6 @@ namespace GatekeepersProtocol.Sim
             if (tier < 0) tier = 0;
             m.ReplacePointsFromFlatTier(WeaponId.Mk1Sidearm, tier);
             m.EquippedSecondary = WeaponId.Mk1Sidearm;
-        }
-
-        public string ToJson()
-        {
-            SaveData d = ToSaveData();
-            var sb = new StringBuilder(256);
-            sb.Append('{');
-            AppendField(sb, "SaveVersion", d.SaveVersion.ToString(CultureInfo.InvariantCulture), false);
-            AppendField(sb, "BankedSalvage", d.BankedSalvage.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "LifetimeSalvageEarned", d.LifetimeSalvageEarned.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "LifetimeSalvageSpent", d.LifetimeSalvageSpent.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "TotalRuns", d.TotalRuns.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "CleanExits", d.CleanExits.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "PodEjections", d.PodEjections.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "DeepestWaveReached",
-                d.DeepestWaveReached.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "HatchArmorLevel", d.HatchArmorLevel.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquippedProtocol", d.EquippedProtocol.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquippedPassive", d.EquippedPassive.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquipmentSlotPurchased", d.EquipmentSlotPurchased ? "true" : "false", true);
-            AppendField(sb, "OwnedEquipmentMask", d.OwnedEquipmentMask.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquippedEquipment", d.EquippedEquipment.ToString(CultureInfo.InvariantCulture), true);
-            AppendBoolArray(sb, "WeaponsOwned", d.WeaponsOwned);
-            AppendIntArray(sb, "WeaponWheelPoints", d.WeaponWheelPoints);
-            AppendField(sb, "EquippedPrimary", d.EquippedPrimary.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquippedSecondary", d.EquippedSecondary.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "EquippedDrone", d.EquippedDrone.ToString(CultureInfo.InvariantCulture), true);
-            AppendField(sb, "OwnedPayloadMask", d.OwnedPayloadMask.ToString(CultureInfo.InvariantCulture), true);
-            AppendStringArray(sb, "CompletedTerminalIds", d.CompletedTerminalIds);
-            sb.Append('}');
-            return sb.ToString();
-        }
-
-        /// <summary>Parse keys into <see cref="SaveData"/> then migrate via
-        /// <see cref="FromSaveData"/>. Version gates live only in FromSaveData.</summary>
-        public static MetaState FromJson(string json)
-        {
-            if (string.IsNullOrEmpty(json)) throw new ArgumentException("json is null or empty", "json");
-            var d = new SaveData();
-            d.SaveVersion = (int)ExtractLong(json, "SaveVersion", SaveData.CurrentVersion);
-            d.BankedSalvage = ExtractLong(json, "BankedSalvage", 0);
-            d.TotalRuns = (int)ExtractLong(json, "TotalRuns", 0);
-            d.CleanExits = (int)ExtractLong(json, "CleanExits", 0);
-            d.PodEjections = (int)ExtractLong(json, "PodEjections", 0);
-            int deepest = (int)ExtractLong(json, "DeepestWaveReached", 1);
-            d.DeepestWaveReached = deepest < 1 ? 1 : deepest;
-            d.HatchArmorLevel = (int)ExtractLong(json, "HatchArmorLevel", 0);
-            d.EquippedProtocol = (int)ExtractLong(json, "EquippedProtocol", (int)BoarderProtocolId.Default);
-            d.EquippedPassive = (int)ExtractLong(json, "EquippedPassive", (int)BoarderAbilityId.Ghost);
-            d.VitalityLevel = (int)ExtractLong(json, "VitalityLevel", 0);
-            d.StaminaLevel = (int)ExtractLong(json, "StaminaLevel", 0);
-            d.ScavengingLevel = (int)ExtractLong(json, "ScavengingLevel", 0);
-            d.LuckLevel = (int)ExtractLong(json, "LuckLevel", 0);
-
-            // Missing ledger keys → -1 at any version (JSON contract; FromSaveData must not gate).
-            d.LifetimeSalvageEarned = ExtractLong(json, "LifetimeSalvageEarned", -1L);
-            d.LifetimeSalvageSpent = ExtractLong(json, "LifetimeSalvageSpent", -1L);
-
-            d.RepairRigLevel = (int)ExtractLong(json, "RepairRigLevel", 0);
-            d.EngineeringLevel = (int)ExtractLong(json, "EngineeringLevel", 0);
-
-            d.EquipmentSlotPurchased = ExtractBool(json, "EquipmentSlotPurchased", false);
-            d.OwnedEquipmentMask = (int)ExtractLong(json, "OwnedEquipmentMask", 0);
-            d.EquippedEquipment = (int)ExtractLong(json, "EquippedEquipment", (int)EquipmentId.None);
-            d.OwnedPayloadMask = (int)ExtractLong(json, "OwnedPayloadMask", 0);
-            d.CompletedTerminalIds = ExtractStringArray(json, "CompletedTerminalIds");
-
-            bool hasV3Weapons = json.IndexOf("\"WeaponsOwned\"", StringComparison.Ordinal) >= 0;
-            if (hasV3Weapons)
-            {
-                d.WeaponsOwned = new bool[WeaponCatalog.ArraySize];
-                ExtractBoolArray(json, "WeaponsOwned", d.WeaponsOwned);
-                d.EquippedPrimary = (int)ExtractLong(json, "EquippedPrimary", (int)WeaponId.None);
-                d.EquippedSecondary = (int)ExtractLong(json, "EquippedSecondary", (int)WeaponId.None);
-                d.EquippedDrone = (int)ExtractLong(json, "EquippedDrone", (int)PayloadId.None);
-
-                bool hasWheel = json.IndexOf("\"WeaponWheelPoints\"", StringComparison.Ordinal) >= 0;
-                if (hasWheel)
-                {
-                    d.WeaponWheelPoints = new int[WeaponCatalog.ArraySize * WeaponWheel.AttrCount];
-                    ExtractIntArray(json, "WeaponWheelPoints", d.WeaponWheelPoints);
-                }
-                else
-                {
-                    d.WeaponTiers = new int[WeaponCatalog.ArraySize];
-                    ExtractIntArray(json, "WeaponTiers", d.WeaponTiers);
-                }
-            }
-            else
-            {
-                d.WeaponOwned = ExtractBool(json, "WeaponOwned", false);
-                d.GunDamageLevel = (int)ExtractLong(json, "GunDamageLevel", 0);
-                d.FireRateLevel = (int)ExtractLong(json, "FireRateLevel", 0);
-                d.ClipSizeLevel = (int)ExtractLong(json, "ClipSizeLevel", 0);
-            }
-
-            return FromSaveData(d);
-        }
-
-        static void AppendField(StringBuilder sb, string name, string value, bool leadingComma)
-        {
-            if (leadingComma) sb.Append(',');
-            sb.Append('"').Append(name).Append("\":").Append(value);
-        }
-
-        static void AppendStringArray(StringBuilder sb, string name, string[] values)
-        {
-            sb.Append(",\"").Append(name).Append("\":[");
-            if (values != null)
-            {
-                for (int i = 0; i < values.Length; i++)
-                {
-                    if (i > 0) sb.Append(',');
-                    sb.Append('"').Append(values[i] ?? "").Append('"');
-                }
-            }
-            sb.Append(']');
-        }
-
-        static string[] ExtractStringArray(string json, string key)
-        {
-            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*\\[([^\\]]*)\\]");
-            if (!match.Success) return Array.Empty<string>();
-            string inner = match.Groups[1].Value.Trim();
-            if (inner.Length == 0) return Array.Empty<string>();
-            string[] parts = inner.Split(',');
-            int n = 0;
-            for (int i = 0; i < parts.Length; i++)
-            {
-                string p = parts[i].Trim();
-                if (p.Length >= 2 && p[0] == '"' && p[p.Length - 1] == '"')
-                    p = p.Substring(1, p.Length - 2);
-                if (p.Length == 0) continue;
-                parts[n++] = p;
-            }
-            if (n == parts.Length) return parts;
-            var trimmed = new string[n];
-            Array.Copy(parts, trimmed, n);
-            return trimmed;
-        }
-
-        static void AppendBoolArray(StringBuilder sb, string name, bool[] values)
-        {
-            sb.Append(",\"").Append(name).Append("\":[");
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (i > 0) sb.Append(',');
-                sb.Append(values[i] ? "true" : "false");
-            }
-            sb.Append(']');
-        }
-
-        static void AppendIntArray(StringBuilder sb, string name, int[] values)
-        {
-            sb.Append(",\"").Append(name).Append("\":[");
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (i > 0) sb.Append(',');
-                sb.Append(values[i].ToString(CultureInfo.InvariantCulture));
-            }
-            sb.Append(']');
-        }
-
-        static void ExtractBoolArray(string json, string key, bool[] dest)
-        {
-            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*\\[([^\\]]*)\\]");
-            if (!match.Success) return;
-            string[] parts = match.Groups[1].Value.Split(',');
-            for (int i = 0; i < dest.Length && i < parts.Length; i++)
-            {
-                string p = parts[i].Trim();
-                dest[i] = p == "true" || p == "1";
-            }
-        }
-
-        static void ExtractIntArray(string json, string key, int[] dest)
-        {
-            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*\\[([^\\]]*)\\]");
-            if (!match.Success) return;
-            string[] parts = match.Groups[1].Value.Split(',');
-            for (int i = 0; i < dest.Length && i < parts.Length; i++)
-            {
-                string p = parts[i].Trim();
-                if (p.Length == 0) continue;
-                long v;
-                if (long.TryParse(p, NumberStyles.Integer, CultureInfo.InvariantCulture, out v))
-                    dest[i] = (int)v;
-            }
-        }
-
-        static bool ExtractBool(string json, string key, bool fallback)
-        {
-            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*(true|false|1|0)");
-            if (!match.Success) return fallback;
-            return match.Groups[1].Value == "true" || match.Groups[1].Value == "1";
-        }
-
-        static long ExtractLong(string json, string key, long fallback)
-        {
-            var match = Regex.Match(json, "\"" + key + "\"\\s*:\\s*(-?\\d+)");
-            return match.Success
-                ? long.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture)
-                : fallback;
         }
     }
 }
