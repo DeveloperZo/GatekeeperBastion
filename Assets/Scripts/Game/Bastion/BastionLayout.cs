@@ -210,6 +210,14 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
+        /// <summary>Dev reset: rebuild the graph from the authored children — every terminal
+        /// incomplete, every StartsLocked door shut — so a loop replays without a fresh Run.
+        /// Meta snapshots are the caller's to clear; this touches scene state only.</summary>
+        public void ResetProgress()
+        {
+            RebuildGraph();
+        }
+
         public string[] CopyCompletedTerminalIds()
         {
             if (_graph == null)

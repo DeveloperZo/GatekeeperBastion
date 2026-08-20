@@ -45,6 +45,20 @@ namespace GatekeepersProtocol.Game
             Log.Event("Dev", "session tainted — GameSession.Save suppressed for this play session");
         }
 
+        /// <summary>Dev checkpoints only: replace the live Meta with a constructed state for
+        /// this play session. Taints FIRST, so the constructed state can never reach the real
+        /// campaign save — quitting or reloading from disk returns the untouched campaign.</summary>
+        public static void AdoptDevState(MetaState state)
+        {
+            if (state == null)
+            {
+                Log.Warn(Tag, "AdoptDevState ignored — null state.");
+                return;
+            }
+            NotifyDevAction();
+            Meta = state;
+        }
+
         /// <summary>True when a save file exists on disk.</summary>
         public static bool HasSave
         {

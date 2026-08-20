@@ -4,7 +4,7 @@
 Purpose: The NAV MAP console, run structure inside a bastion, and having more than one place to go.
 Status: brainstorm
 Update trigger: when a remaining entry graduates, or when a second destination exists.
-Last updated: 2026-08-16
+Last updated: 2026-08-19
 -->
 
 ## What this covers

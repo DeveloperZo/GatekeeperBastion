@@ -1,7 +1,8 @@
 # Gatekeeper's Protocol — the game on one page
 
 Sci-fi wave-defense FPS. Unity 6, PC/Steam, first-person. The Boarder is the IQ astronaut
-with Synty guns; Ship desks and the Bastion kit are dressed (M61-2 closed 2026-08-14:
+with FaxLab3D shooter-pack guns (the Cutter sword is still Synty, 2026-08-19); Ship desks
+and the Bastion kit are dressed (M61-2 closed 2026-08-14:
 scaler-2 station rooms, sliding doors, bulkhead Hatch). Solo playable;
 host-client co-op exists over UnityTransport (Main Menu Host / Join by Relay code or
 typed IPv4; F10/F11 stay the editor fallback). Shared Ship and party EMBARK closed
@@ -100,14 +101,14 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `Working-Rules.md` | How to work here: lanes, scope, the leverage gate, evidence, logs, verification. |
 | [`.claude/skills/`](../.claude/skills/) | How to do a kind of work — development, design, verification, brainstorm, strategy. Loaded by the agent when the work matches, not read by hand. Read by both Claude Code and Cursor. |
 | `Decisions.md` | What was decided, cut, deferred, or designed-but-not-built, and why. |
-| `Tech-Hygiene.md` | Standing ledger of small owed items: unobserved criteria from a closed milestone, one-shot leftovers, cleanups only Zo can do. Nothing with a real gate. |
+| `Hygiene/` | Owed items grouped into **hygiene passes** — one file per sitting, folder as status. Unobserved criteria from a closed milestone, one-shot leftovers, cleanups only Zo can do. Nothing with a real gate. Contract: [`_meta/_definitions/hygiene.md`](_meta/_definitions/hygiene.md). `Tech-Hygiene.md` is the superseded pointer it replaced. |
 | `Roadmap.md` | Order, status, strategy and risks. The summary layer over `Milestones/`. |
 | `Changelog.md` | The roadmap's audit trail: milestone state transitions and structural edits, most recent first. |
 | `Milestones/` | One file per milestone, filed in a folder named for its status. |
 | `Brainstorms/` | Ideas before they graduate. |
-| `Demo/` | First Bastion demo (through Master Control, with multiplayer). Implementable beat specs 0–7 plus voice pipe. Cut milestones from these files when asked; do not duplicate them into `Brainstorms/first-session.md`. |
+| `Demo/` | First Bastion demo (through Master Control, with multiplayer). Implementable beat specs 0–7 plus voice pipe. Cut milestones from these files when asked; do not duplicate them into a brainstorm. |
 | `Marketing/` | Research, strategy, and claim-accurate copy. Pitch lives here, not in `Design/` or `Play/`. Honesty gaps: [`Marketing/gaps.md`](Marketing/gaps.md). |
-| `_meta/_definitions/` | `milestone.md`, `brainstorm.md`, and `language.md` — the ubiquitous language every doc, log line and player-facing string uses. |
+| `_meta/_definitions/` | `milestone.md`, `brainstorm.md`, `hygiene.md`, `animation-sidecar.md`, and `language.md` — the ubiquitous language every doc, log line and player-facing string uses. |
 | `Play/` | The **Compendium** — volumes of related entries. Each hand-written page holds `## Game` (what pause shows) and `## Reference` (fuller brief). Folder path is `Play/` (language lint); player-facing name is Compendium. In-game reader shipped (M62, Esc → Compendium). |
 
 **Cold start:** this page, then `Design/` 1 → 4, then `Architecture.md` and
@@ -144,8 +145,9 @@ rule that prevents a specific failure. `Milestones/` is the one exception to the
 has its own rule instead: a milestone file exists only for a milestone in the table, it links
 rather than copies, and it dies with the milestone.
 
-**Only recurring document classes get an authoring contract.** `milestone.md` and
-`brainstorm.md` qualify, because new instances get written from memory and drift.
+**Only recurring document classes get an authoring contract.** `milestone.md`,
+`brainstorm.md`, `hygiene.md` and `animation-sidecar.md` qualify, because new instances
+get written from memory and drift.
 `language.md` is in `_definitions/` under a different rationale and is the only one: it is a
 standing rule applying to every file, every log line and every string a player reads, and it
 would otherwise be duplicated into six files and drift in four.

@@ -7,6 +7,40 @@ Update trigger: when a milestone changes status, when a gate is rewritten, or wh
 Last updated: 2026-08-19
 -->
 
+- 2026-08-19: **Tech-Hygiene ledger superseded by hygiene passes.** Owed items now
+  live in `Hygiene/` as passes, one file per sitting, folder as status, under the new
+  contract [`_meta/_definitions/hygiene.md`](_meta/_definitions/hygiene.md). Twenty rows
+  collapsed into three passes by grouping on the observation that settles them rather
+  than the milestone that owed them. **M77's `TH-9`–`TH-12` were reissued as
+  `TH-17`–`TH-20`** — the old ledger had issued that block twice, so citations to
+  "M77's TH-9 to TH-14" elsewhere pointed at M76's set; Roadmap and the M75/M77 files
+  were repointed in this edit. Two rows evicted rather than migrated, both unbuilt code
+  rather than unobserved criteria: M76's juice teach (old `TH-9`) and the
+  `first-hatch survived` log (old `TH-11`). High-water marks after this edit: **TH-20**
+  and **HP-3**. `Tech-Hygiene.md` remains as a superseded pointer holding the id
+  register and the eviction record.
+
+- 2026-08-19: **M78 built and moved to active — the first return.** ARMORY ladder rung 1,
+  MP unlock on first buy, state-keyed exit standing, CREW menu unlock + Default claim,
+  plain EMBARK while `DemoActive`, and the zone composite retrigger with partial election.
+  Save v11 `HatchConversions` re-keys the wheel to the first bank; a `Returned` end keeps
+  `HatchBank.ReturnedKeepShare`. Settles the code halves of M76's `TH-10` and `TH-12`.
+  **Criterion 9's double playthrough (once `Lost`, once `Returned`) is Zo's and remains
+  the close gate**, so this is active, not completed — correcting the M88 entry below,
+  which recorded the active queue as empty.
+  [`Milestones/2. active/M78-after-the-first-loss.md`](Milestones/2.%20active/M78-after-the-first-loss.md).
+
+- 2026-08-19: **Shooter weapon pack wired into the `Packs/Weapons` wrappers** (commit
+  `0ddc531`, a chore with no milestone). The five gun wrappers (Mk1, SecD, Br12, Mr35,
+  PriC) nest FaxLab3D shooter-pack fbx from `Assets/Packs/weapon_source/`; Cutter keeps
+  the Synty sword, the pack having no melee. Wrapper root fileIDs preserved, so Boarder's
+  overrides and `WeaponViewModel`'s name lookup still bind. `.gitignore` narrowed on the
+  same pattern as the FaxLab3D robot pack: metas, hand-made materials and the README are
+  tracked, the binary payload is not. Logged here for symmetry with that entry rather
+  than by the stated trigger — no milestone changed status. **M82** gained a `Watch` note:
+  the corrective rotation lives on the nested fbx child, so its clips must key the wrapper
+  root, not the child.
+
 - 2026-08-19: **M88 closed (Zo).** Three FaxLab3D robots on Default / Hunter /
   Ram (Thief wrapper), pack Shader Graph Built-In target restored, vendor lint
   gate in place. Play criteria stamped by the close request. Active queue empty;

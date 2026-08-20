@@ -21,6 +21,7 @@ namespace GatekeepersProtocol.Game
             ToggleGatekeeperReadout,
             StartCoopHost,
             StartCoopClient,
+            ArmDemoCheckpoint,
         }
 
         public readonly struct Binding
@@ -54,6 +55,7 @@ namespace GatekeepersProtocol.Game
             new Binding(KeyCode.F10, "host co-op session", Kind.StartCoopHost),
             new Binding(KeyCode.F11, "join 127.0.0.1", Kind.StartCoopClient),
 #endif
+            new Binding(KeyCode.F12, "demo checkpoint (then digit)", Kind.ArmDemoCheckpoint),
         };
 
         /// <summary>Compact panel token for the shortcut strip (e.g. "F2 replay"). Kept here so
@@ -80,6 +82,7 @@ namespace GatekeepersProtocol.Game
                 case Kind.ToggleGatekeeperReadout: return "readout";
                 case Kind.StartCoopHost: return "host";
                 case Kind.StartCoopClient: return "join";
+                case Kind.ArmDemoCheckpoint: return "demo";
                 default: return "";
             }
         }

@@ -72,6 +72,7 @@ fi
 # here without one is coverage quietly dropped.
 declare -A EXCLUDED=(
   ["Dev/DevSessionTests.cs"]="needs GatekeepersProtocol.Game (SaveService) and a real filesystem save"
+  ["Dev/DevCheckpointTests.cs"]="needs GameController (MonoBehaviour) for BuildDemoCheckpoint"
   ["Weapons/ReloadSwapTests.cs"]="needs PlayerGun MonoBehaviour, GameObject, and UnityEngine.TestTools.LogAssert"
   ["ControlsTests.cs"]="needs GatekeepersProtocol.Game (Controls) and UnityEngine.Input/KeyCode"
   ["Ship/PremiseCopyTests.cs"]="needs GatekeepersProtocol.Game (PremiseCopy) and scene strings"

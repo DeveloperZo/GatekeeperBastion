@@ -3,7 +3,7 @@
 <!--
 Status: completed 2026-08-14
 Update trigger: closed
-Last updated: 2026-08-14
+Last updated: 2026-08-19
 Closed on: Zo 2026-08-14. Playthrough Zo (editor was in Play when close was requested;
 no `Logs/` session file on disk). Gate: Unity EditMode `WeaponViewTests`+`ControlsTests`
 15/15; PlayMode `ShipSceneContractTests` 5/5. Offline harness skipped (mcs/mono not on
@@ -176,7 +176,7 @@ gameplay script.
 Bastion Scale 1 / fight HUD / station chrome / player-build keys:
 [`M59`](M59-the-polish-pass-1.md). Music and gun/foot SFX: [`M69`](M69-the-session-has-a-voice.md).
 Hit confirm, name labels, and player colour:
-[`M66`](M66-polish-pass-3.md) — the body is here; who-is-who is there.
+[`M66`](../1.%20planned/M66-polish-pass-3.md) — the body is here; who-is-who is there.
 
 ## Verification
 

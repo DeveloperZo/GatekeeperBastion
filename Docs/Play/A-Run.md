@@ -1,4 +1,4 @@
-<!-- Purpose: the shape of one Run end to end — embarking, Prep and Assault, starting a Wave at a field terminal, Master Control, and the two ways it can finish. / Status: working / Update trigger: when the Run's phases, the draw model, the deep-start option, or the Run-enders change. / Last updated: 2026-08-16 -->
+<!-- Purpose: the shape of one Run end to end — embarking, Prep and Assault, starting a Wave at a field terminal, Master Control, and the two ways it can finish. / Status: working / Update trigger: when the Run's phases, the draw model, the deep-start option, or the Run-enders change. / Last updated: 2026-08-18 -->
 
 # A Run
 

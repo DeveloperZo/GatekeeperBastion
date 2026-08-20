@@ -4,7 +4,7 @@
 Purpose: Authoring contract and scaffold for milestone files under Docs/Milestones/. The prose is the rules; the code block near the bottom is what you copy to make a new one.
 Status: working
 Update trigger: when the milestone shape, the status folders, or the lifecycle changes.
-Last updated: 2026-08-04
+Last updated: 2026-08-19
 -->
 
 A **milestone is an implementable unit of work** — the equivalent of a user story.
@@ -15,8 +15,8 @@ one up and execute it without designing anything.
 It is not a design doc, not a task list, and not a place for numbers that live
 somewhere else.
 
-Milestones are the only recurring document class in `Docs/` — everything else is
-single-instance and gets no definition file. See `../../README.md` for that rule.
+Milestones were the first recurring document class in `Docs/`. See `../../README.md`
+for the rule that governs which classes earn a contract.
 
 ## The bar
 
@@ -96,7 +96,7 @@ capability ships dormant on purpose (M13's `F7` does, and says so) or it does no
 
 ## Where they live
 
-`Docs/Milestones/<status>/M#-slug.md`. **The folder is the status.** There are four:
+`Docs/Milestones/<status>/M#-slug.md`. **The folder is the status.** There are five:
 
 | Folder | Status | Means |
 |---|---|---|
@@ -104,6 +104,7 @@ capability ships dormant on purpose (M13's `F7` does, and says so) or it does no
 | `2. active/` | next | Being worked. **At most 3 files** (`../../Working-Rules.md`). |
 | `3. completed/` | completed | Every criterion met. Stamped with the month. |
 | `4. deferred/` | deferred | Wanted, but there is no honest next step. Names its trigger. |
+| `5. cancelled/` | cancelled | Dropped with the reason logged in `../../Changelog.md`. |
 
 The numeric prefixes sort the folders in the order work moves through them.
 
@@ -187,7 +188,7 @@ data* — never a guess in confident prose), *Watch* / *Trap*, *Do not build*, *
   retro-editing a gate to match what happened.
 - **A milestone dies with its milestone.** If the work is dropped, delete the file
   and log it in the roadmap's change log. Do not leave a tombstone.
-- **No new status folders.** Four is the set.
+- **No new status folders.** Five is the set.
 
 ## Starting structure (copy this)
 

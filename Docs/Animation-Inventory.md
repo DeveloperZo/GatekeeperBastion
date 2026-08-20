@@ -65,7 +65,8 @@ boss (blocked on M80's inputs).
 
 Code contract (WeaponViewModel): Fire trigger, Reload trigger, Speed float
 (0.5 walk, 1.0 sprint). Six weapons (Br12, Cutter, Mk1, Mr35, PriC, SecD) on
-four Synty meshes (rifle, sword, pistol, shotgun).
+six meshes — five FaxLab3D shooter-pack fbx sources under `Packs/weapon_source/`,
+plus the Synty sword on Cutter (2026-08-19).
 
 | Clip | Status | Notes |
 |---|---|---|

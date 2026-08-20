@@ -7,7 +7,7 @@ the implementable specs — plus voice.md. Milestones cut 2026-08-17: M74–M80.
 Status: demo spec
 Authority: implementable — table “Treat as spec” is locked until Zo overrides a row
 Update trigger: when a stamp is overridden, when a beat ships, when M72 closes
-Last updated: 2026-08-17
+Last updated: 2026-08-19
 -->
 
 The player is walked from a dead Ship to **Escaped** on the first Bastion. The

@@ -3,7 +3,7 @@
 <!--
 Status: completed 2026-08-13
 Update trigger: closed
-Last updated: 2026-08-13
+Last updated: 2026-08-19
 Closed on: Zo 2026-08-13. Gate is criterion 7 — all five `NetVerbTests` Passed in
 `gkb_verify_report.json` 2026-08-13T18:09:48Z (PlayMode 31/0). Criterion 6 playthrough
 is confirmation, not the gate: Terminal Waves leave the hatch invulnerable, so
@@ -138,5 +138,5 @@ per-player wallets; folding M57 or M52 into this slice; `GetInstanceID` over the
 ## Depends on / Unblocks
 
 Depends on M50 (the client can see salvage and hatch). Completes the loopback epic
-for in-run verbs. Relay join is still [`M60`](../2.%20active/M60-a-join-a-friend-can-use.md).
+for in-run verbs. Relay join is still [`M60`](../3.%20completed/M60-a-join-a-friend-can-use.md).
 Get-up is [`M57`](../3.%20completed/M57-the-downed-player-waits-on-the-ship.md).

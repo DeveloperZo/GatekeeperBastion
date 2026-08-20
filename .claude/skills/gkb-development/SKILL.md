@@ -57,8 +57,7 @@ layer for every replicated field.
 What the boundary buys: EditMode tests that need no scene and no domain reload, and logic that
 cannot silently depend on frame order.
 
-**`Docs/AGENTS.md` may still state the stricter no-`UnityEngine` form. This skill is the current
-rule**; the older statement is being cut.
+
 
 ## Fake null is a presentation-layer rule
 

@@ -5,7 +5,7 @@ Purpose: the ubiquitous language of Gatekeeper's Protocol. One name per thing, u
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired, or when player-facing voice rules change.
-Last updated: 2026-08-16
+Last updated: 2026-08-18
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in

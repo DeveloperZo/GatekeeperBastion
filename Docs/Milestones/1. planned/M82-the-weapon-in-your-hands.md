@@ -4,7 +4,7 @@
 Status: later
 Update trigger: when the viewmodel controller or clips land, or when a weapon
 gains a bespoke clip that overrides the shared set
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 -->
 
 One shared viewmodel animator — idle, move, fire, reload — hand-keyed in
@@ -106,6 +106,12 @@ Editor and clip work plus one small code change; Zo executes, in order:
 
 `WeaponViewModel` guards every animator call with null checks today; keep
 them (the Ship scene may run without a viewmodel).
+
+Since 2026-08-19 each gun wrapper nests its fbx on a child that carries a corrective
+rotation (barrel +Z, top +Y — see `Assets/Packs/weapon_source/README.md`). **Key the
+clips on the wrapper root and the viewmodel root only.** The wrapper roots are identity
+and were kept at their original fileIDs so Boarder's overrides still bind; animating the
+fbx child instead overwrites the correction and lays the gun on its side.
 
 ## Depends on / Unblocks
 

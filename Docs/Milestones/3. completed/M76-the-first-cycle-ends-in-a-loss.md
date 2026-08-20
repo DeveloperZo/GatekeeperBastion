@@ -1,10 +1,12 @@
 # M76 — The first cycle ends in a loss
 
 <!--
-Status: next (started 2026-08-18)
+Status: completed, Aug 2026
+Closed on: 2026-08-18 (Zo). Criterion 2 (juice teach + Event spend log) ruled not
+a close gate; playthrough minus juice stamped by the close request.
 Update trigger: when the zone-1 shape, the loss-1 aims, or the checkpoint
 ruling in Demo beats 1–2 move
-Last updated: 2026-08-17 (audited against code 2026-08-18)
+Last updated: 2026-08-19
 -->
 
 Beats 1 + 2: zone 1 as two 1-Wave terminals with the juice teach between them,

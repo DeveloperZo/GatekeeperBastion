@@ -2,7 +2,7 @@
 
 <!--
 Status: completed, Aug 2026 — closed on criteria 2 and 3 only
-Update trigger: when TH-9 to TH-14 close, or when the dock commit seat or the
+Update trigger: when HP-2 settles (TH-13, TH-14, TH-17–TH-20), or when the dock commit seat or the
 Hatch E-collision is ruled
 Last updated: 2026-08-19
 -->
@@ -114,7 +114,8 @@ door could only have come from the bank). Both are the heart of the change and
 both are now observed on screen.
 
 It stops before the dock. **Criteria 1, 4, 5, 6, 7 and 8 were NOT observed** and
-are owed, not verified — filed as `TH-9` to `TH-14` in `../../Tech-Hygiene.md`.
+are owed, not verified — filed as `TH-13`, `TH-14` and `TH-17`–`TH-20` in
+`../../Hygiene/1. open/HP-2-the-dock-round-trip.md`.
 The offline harness is green against a recorded baseline (459 passed, 11 failed,
 failing set byte-identical before and after), but offline-green is not playable
 and does not close any of the six.

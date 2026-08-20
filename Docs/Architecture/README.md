@@ -5,7 +5,7 @@ Purpose: Governs how code in this project is structured, named and written. Rule
 Status: working
 Authority: MASTER REFERENCE for how code is written. Docs/Architecture.md remains the reference for what this codebase is.
 Update trigger: when a rule is added, changed or retired, or when a new audit finds a rule nobody follows.
-Last updated: 2026-08-15
+Last updated: 2026-08-19
 -->
 
 ## Never do
@@ -109,6 +109,7 @@ deleted**, which is why this list is checked rather than trusted.
 | `3-Unity-Runtime.md` | **CRITICAL** | Measured Unity 6 idioms — fake null, allocation, lookup, update loops, physics, logging |
 | `4-Testing-and-Determinism.md` | MANDATORY | EditMode/PlayMode split, the offline harness, determinism, what not to test |
 | `5-Audit-2026-08-09.md` | record | What this codebase does against the rules above, with `file:line` |
+| `5-Audit-2026-08-10.md` | record | Supersedes the 08-09 pass: six lenses, re-derived, 28 surviving findings |
 | `6-InfinityQube-Precedence.md` | record | What was taken from InfinityQube, what was rejected, and on what evidence |
 | `7-File-Layout.md` | MANDATORY | The region order every file follows, and why the check matters more than the convention |
 | `8-Scene-Authoring.md` | MANDATORY | Scene roots, what an agent may edit, and what a scene edit must assert |

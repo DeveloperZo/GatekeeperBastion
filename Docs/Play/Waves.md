@@ -1,4 +1,4 @@
-<!-- Purpose: how Waves escalate across a Run and what is different about the last one compared to the first. / Status: working / Update trigger: when the Wave curve, composition table, group delivery, health scaling, or how a Wave starts changes. / Last updated: 2026-08-15 -->
+<!-- Purpose: how Waves escalate across a Run and what is different about the last one compared to the first. / Status: working / Update trigger: when the Wave curve, composition table, group delivery, health scaling, or how a Wave starts changes. / Last updated: 2026-08-18 -->
 
 # Waves
 

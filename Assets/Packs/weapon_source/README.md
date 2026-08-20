@@ -11,7 +11,7 @@ mapping, recovered by byte-size match against the store zip 2026-08-19:
 | MR-35 | Rifle_Semi    | mat/M_RifleSemi |
 | SEC-D | SMG           | mat/M_SMG |
 
-Cutter keeps the Synty sword (pack has no melee). Unused meshes (SMG twin,
+Cutter keeps the Synty sword (pack has no melee). Unused meshes (Pistol, Rifle_Auto,
 Minigun, Launcher, grenades, scopes) stay here as future roster material.
 
 Wired into the game 2026-08-19: each `Packs/Weapons` wrapper prefab nests its

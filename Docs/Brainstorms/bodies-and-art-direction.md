@@ -6,7 +6,7 @@ sources can sit in a Synty scene without reading as an accident.
 Status: brainstorm
 Update trigger: when a body or weapon source is bought, rejected, or swapped in, or when
 the in-scene coherence question is answered.
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 -->
 
 ## What this covers
@@ -29,8 +29,9 @@ way at least once.
 
 The Boarder is not Synty. It is the Mixamo astronaut carried over from Infinity Qube,
 with a `mixamorig` skeleton, and the guns are meshes hand-parented to
-`mixamorig:RightHand` (`M61`). Six weapons (Br12, Cutter, Mk1, Mr35, PriC, SecD) sit on
-four Synty meshes, so two of the six share a silhouette with another.
+`mixamorig:RightHand` (`M61`). Six weapons (Br12, Cutter, Mk1, Mr35, PriC, SecD) sat on
+four Synty meshes until 2026-08-19; the five guns now carry their own FaxLab3D
+shooter-pack mesh and only Cutter is still Synty, so no two share a silhouette.
 
 Of 3,395 Synty assets on disk, 33 are referenced anywhere. The Bastion environment is
 Synty and stays Synty under every idea below.
@@ -104,4 +105,8 @@ mesh, so Cutter still needs the Synty sword and the mix persists; its grenades a
 fill nothing, since neither mechanic exists; and at 5k–50k tris LOD0 it puts the highest-
 fidelity object in the game directly in front of the camera, where the coherence question
 is least forgiving. `M82` hand-keys the viewmodel clips against whatever mesh is there,
-so the two are independent.
+so the two are independent. **Built 2026-08-19** (commit `0ddc531`, no milestone —
+"wire the prefabs" is a chore per `../_meta/_definitions/milestone.md`): the five guns
+nest their fbx from `Assets/Packs/weapon_source/`, Cutter keeps the Synty sword, and the
+grenades/scopes sit unused in the folder. The LOD0 coherence caveat is now answerable in
+play and has not been answered.

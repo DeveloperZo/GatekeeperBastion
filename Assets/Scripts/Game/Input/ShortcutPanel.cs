@@ -55,7 +55,7 @@ namespace GatekeepersProtocol.Game
         static readonly HashSet<string> SeenLabels = new HashSet<string>();
         static readonly StringBuilder LineBuf = new StringBuilder(128);
 
-        /// <summary>Editor Play Mode lists F1–F11. Player builds pass
+        /// <summary>Editor Play Mode lists F1–F12. Player builds pass
         /// <see cref="DevSurface.None"/> — Main Menu owns host/join.</summary>
         public static DevSurface DefaultDevSurface()
         {
@@ -66,9 +66,10 @@ namespace GatekeepersProtocol.Game
 #endif
         }
 
-        /// <summary>F1–F9 are editor-only. Player builds must neither list nor bind them.</summary>
+        /// <summary>F1–F9 and F12 are editor-only cheats. Player builds must neither list nor
+        /// bind them; F10/F11 stay for the dev-build net smoke.</summary>
         public static bool IsEditorOnlyDevKey(KeyCode key) =>
-            key >= KeyCode.F1 && key <= KeyCode.F9;
+            (key >= KeyCode.F1 && key <= KeyCode.F9) || key == KeyCode.F12;
 
         /// <summary>Fills <paramref name="rows"/> with one structured row per distinct binding
         /// label, in <see cref="Controls"/> order: grouped labels ("weapons", "juice",

@@ -13,7 +13,7 @@ namespace GatekeepersProtocol.Game
     /// No GUILayout: same Bastion HUD gotcha — a layout-stack fault during a fight would hide the
     /// only exit. Styles are per-instance. F7's loadout picker applies via GameController.SetLoadout.
     /// </remarks>
-    public sealed class DevConsole : MonoBehaviour
+    public sealed partial class DevConsole : MonoBehaviour
     {
         const string Tag = "Dev";
         const float VirtualHeight = 900f;
@@ -29,7 +29,7 @@ namespace GatekeepersProtocol.Game
         static bool _suppressFightKeys;
         static CaptureKind _capture;
 
-        enum CaptureKind : byte { None, JumpDigit, LoadoutPicker }
+        enum CaptureKind : byte { None, JumpDigit, LoadoutPicker, CheckpointDigit }
 
         /// <summary>Whether Dev is currently eating a fight binding so PlayerGun / Interact
         /// do not double-fire on the same keypress.</summary>
@@ -39,6 +39,7 @@ namespace GatekeepersProtocol.Game
             switch (_capture)
             {
                 case CaptureKind.JumpDigit:
+                case CaptureKind.CheckpointDigit:
                     return id == ControlId.SlotPrimary
                         || id == ControlId.SlotSecondary
                         || id == ControlId.SlotDrone;
@@ -59,6 +60,7 @@ namespace GatekeepersProtocol.Game
         bool _overlay;
         GameController _gameCached;
         bool _awaitingWaveDigit;
+        bool _awaitingCheckpointDigit;
         bool _gatekeeperReadout;
         bool _loadoutPicker;
         bool _guiFaulted;
@@ -101,6 +103,11 @@ namespace GatekeepersProtocol.Game
                 _capture = CaptureKind.JumpDigit;
                 _suppressFightKeys = true;
             }
+            else if (_awaitingCheckpointDigit)
+            {
+                _capture = CaptureKind.CheckpointDigit;
+                _suppressFightKeys = true;
+            }
             else if (_loadoutPicker)
             {
                 _capture = CaptureKind.LoadoutPicker;
@@ -124,7 +131,7 @@ namespace GatekeepersProtocol.Game
                     Log.Event(Tag, "jump cancelled");
                     return;
                 }
-                if (TryReadWaveDigit(out int wave))
+                if (TryReadDigit(WaveDirector.MaxWaves, out int wave))
                 {
                     // Keep suppress through the rest of this frame so PlayerGun does not also
                     // treat the digit as a weapon-slot switch.
@@ -137,6 +144,9 @@ namespace GatekeepersProtocol.Game
                     return;
                 }
             }
+
+            if (_awaitingCheckpointDigit && TickCheckpointDigit())
+                return;
 
             RefreshCapture();
 
@@ -159,6 +169,8 @@ namespace GatekeepersProtocol.Game
         {
             if (action != DevCommands.Kind.ArmJumpToWave)
                 _awaitingWaveDigit = false;
+            if (action != DevCommands.Kind.ArmDemoCheckpoint)
+                _awaitingCheckpointDigit = false;
 
             var gc = Game;
 
@@ -234,6 +246,13 @@ namespace GatekeepersProtocol.Game
                     if (gc != null) gc.StartCoopClient();
                     else Log.Warn(Tag, "StartCoopClient refused — no GameController.");
                     break;
+
+                case DevCommands.Kind.ArmDemoCheckpoint:
+                    _awaitingCheckpointDigit = true;
+                    _overlay = true; // discovery: the overlay lists the checkpoint digits
+                    Log.Event(Tag, "checkpoint armed — press 1.."
+                        + GameController.DemoCheckpointLabels.Length + " (Esc cancel)");
+                    break;
             }
         }
 
@@ -286,14 +305,14 @@ namespace GatekeepersProtocol.Game
             return list.ToArray();
         }
 
-        static bool TryReadWaveDigit(out int wave)
+        static bool TryReadDigit(int max, out int digit)
         {
-            wave = 0;
-            for (int d = 1; d <= WaveDirector.MaxWaves; d++)
+            digit = 0;
+            for (int d = 1; d <= max && d <= 9; d++)
             {
                 if (Input.GetKeyDown(KeyCode.Alpha0 + d) || Input.GetKeyDown(KeyCode.Keypad0 + d))
                 {
-                    wave = d;
+                    digit = d;
                     return true;
                 }
             }
@@ -338,9 +357,12 @@ namespace GatekeepersProtocol.Game
             float x = vw - w - 16f;
             float y = OverlayTop;
 
-            GUI.Label(new Rect(x, y, w, 22f), _awaitingWaveDigit
-                ? $"DEV — press 1..{WaveDirector.MaxWaves} for jump (Esc cancel)"
-                : "DEV MODE", _title);
+            string title = "DEV MODE";
+            if (_awaitingWaveDigit)
+                title = $"DEV — press 1..{WaveDirector.MaxWaves} for jump (Esc cancel)";
+            else if (_awaitingCheckpointDigit)
+                title = "DEV — press a checkpoint digit (Esc cancel)";
+            GUI.Label(new Rect(x, y, w, 22f), title, _title);
             y += 26f;
 
             for (int i = 0; i < DevCommands.All.Length; i++)
@@ -349,6 +371,9 @@ namespace GatekeepersProtocol.Game
                 GUI.Label(new Rect(x, y, w, 18f), $"{b.Key}  {b.Label}", _label);
                 y += 18f;
             }
+
+            if (_awaitingCheckpointDigit)
+                DrawCheckpointRows(x, y + 8f, w);
         }
 
         void DrawLoadoutPicker(float vw)

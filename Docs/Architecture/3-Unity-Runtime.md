@@ -5,7 +5,7 @@ Purpose: The measured, Unity-6-current rules for code that runs in the engine. S
 Status: working
 Authority: CRITICAL — correctness against the engine, and measured cost.
 Update trigger: when Unity's guidance changes, when a rule here is measured against this project, or when a "stale" entry turns out to still bite.
-Last updated: 2026-08-11
+Last updated: 2026-08-19
 -->
 
 Everything here is `[documented]` or `[measured]` and is **not** outrankable by convention.
@@ -303,7 +303,7 @@ initializeonload_allow=Editor/Scenes/SceneBuilder.cs,Editor/Tools/IntegrationChe
 scenelookup_pattern=\bFind(FirstObjectByType|AnyObjectByType|ObjectsByType|Objects?OfType)\b|\bGameObject\.Find\b|\bCamera\.main\b
 scenelookup_allow=Game/Flow/SceneFlow.cs,Game/Flow/FrontEndMusic.cs,Game/Flow/LevelMusic.cs,Game/Ui/AudioBuses.cs,Game/Ui/UiBind.cs,Game/Dev/DevConsole.cs,Game/Bastion/GameController.DevCommands.cs,Game/Net/NetRunMirror.cs,Game/Net/NetPlayerAvatar.cs
 ambientinput_pattern=(^|[^A-Za-z0-9_.])Input\.
-ambientinput_allow=Game/Input/Controls.cs,Game/Dev/DevConsole.cs
+ambientinput_allow=Game/Input/Controls.cs,Game/Dev/DevConsole.cs,Game/Dev/DevConsole.Checkpoints.cs
 ambientrandom_pattern=\bUnityEngine\.Random\b|(^|[^A-Za-z0-9_.])Random\.(Range|value|insideUnitSphere|onUnitSphere|rotation)\b
 ambientrandom_allow=Game/Player/PlayerGun.Firing.cs,Game/Ui/UiPitchRandomizer.cs
 selfdelete_pattern=AssetDatabase\.DeleteAsset[^\r\n]*\.cs

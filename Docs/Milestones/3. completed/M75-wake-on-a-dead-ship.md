@@ -3,7 +3,7 @@
 <!--
 Status: completed, Aug 2026
 Update trigger: when Demo/0-wake-on-a-dead-ship.md re-stamps an assumption
-Last updated: 2026-08-18
+Last updated: 2026-08-19
 -->
 
 Beat 0 plus the SaveVersion 9 demo flags: capsule wake, NAV repair, the ship
@@ -80,7 +80,8 @@ run (`RelocateDemoCapsule.cs` moved out of `Assets/_Scratch/` at close, awaiting
 deletion).
 
 Criteria 2 to 7 were not separately observed at close. They are owed, not
-verified, and each carries a row in `../../Tech-Hygiene.md` (TH-1 to TH-6): the
+verified, and each carries an item in
+`../../Hygiene/1. open/HP-1-beat-zero-observed.md` (TH-1 to TH-6): the
 HP floor, the three EMBARK refusals, the multiplayer lock, the v9 round-trip and
 downgrade, the reload matrix, and the reads-back log audit. Anything on that
 list touching a MonoBehaviour, a scene or the save file settles through the
