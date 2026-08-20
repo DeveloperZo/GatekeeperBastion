@@ -101,10 +101,15 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `Working-Rules.md` | How to work here: lanes, scope, the leverage gate, evidence, logs, verification. |
 | [`.claude/skills/`](../.claude/skills/) | How to do a kind of work — development, design, verification, brainstorm, strategy. Loaded by the agent when the work matches, not read by hand. Read by both Claude Code and Cursor. |
 | `Decisions.md` | What was decided, cut, deferred, or designed-but-not-built, and why. |
-| `Hygiene/` | Owed items grouped into **hygiene passes** — one file per sitting, folder as status. Unobserved criteria from a closed milestone, one-shot leftovers, cleanups only Zo can do. Nothing with a real gate. Contract: [`_meta/_definitions/hygiene.md`](_meta/_definitions/hygiene.md). `Tech-Hygiene.md` is the superseded pointer it replaced. |
+| `Hygiene/` | Owed items grouped into **hygiene passes** — one file per sitting, folder as status. Unobserved criteria from a closed milestone, one-shot leftovers, cleanups only Zo can do. Nothing with a real gate. Index and id register: [`Hygiene/README.md`](Hygiene/README.md). Contract: [`_meta/_definitions/hygiene.md`](_meta/_definitions/hygiene.md). |
 | `Roadmap.md` | Order, status, strategy and risks. The summary layer over `Milestones/`. |
 | `Changelog.md` | The roadmap's audit trail: milestone state transitions and structural edits, most recent first. |
 | `Milestones/` | One file per milestone, filed in a folder named for its status. |
+| `Architecture/` | The rules subtree behind `Architecture.md` — boundaries, naming, Unity runtime, testing, and the dated audits. [`Architecture/README.md`](Architecture/README.md) declares itself the master reference for how code is written. |
+| `Animation-Inventory.md` | Clip tracker: what is on disk, what code fires that has no clip, and the rulings behind each. |
+| `Release-Gate.md` | The pre-send checklist, and [`Release-Send.md`](Release-Send.md) the copy that goes with a build. |
+| `GatekeeperZo Notes/` | Zo's own files — `verification.md` is the Next-Run list the dashboard reads; `playthrough.md` is raw session notes. |
+| `asset-audit-2026-08-18.md` | Dated snapshot of what art is on disk against what is referenced. Figures drift after its stamp, by its own declaration. |
 | `Brainstorms/` | Ideas before they graduate. |
 | `Demo/` | First Bastion demo (through Master Control, with multiplayer). Implementable beat specs 0–7 plus voice pipe. Cut milestones from these files when asked; do not duplicate them into a brainstorm. |
 | `Marketing/` | Research, strategy, and claim-accurate copy. Pitch lives here, not in `Design/` or `Play/`. Honesty gaps: [`Marketing/gaps.md`](Marketing/gaps.md). |
@@ -118,7 +123,8 @@ and `Roadmap.md` before starting work. **If you have never played it**, start in
 
 **Dashboard:** open [`dashboard.html`](dashboard.html). **Focus** / **Project** read
 [`dashboard-data.js`](dashboard-data.js) (regen with `Tools/dashboard-data/run.ps1`) —
-lane caps, milestones, commits, outstanding questions, rule-based next focus.
+lane caps, milestones, hygiene passes, commits, outstanding questions, rule-based next
+focus. Both panels warn when the committed data file is older than HEAD or 36 hours.
 **Session** chooses the `Logs` folder (or drop `GatekeepersProtocol_*.log`;
 `GatekeeperBastion_*.log` still parse) and parses in
 the browser: mean live by era (hatch-bank loop ≥ 2026-08-13), kills, spend/SKU, hatch

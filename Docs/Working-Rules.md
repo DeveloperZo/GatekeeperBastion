@@ -144,6 +144,7 @@ tool nobody else can run is a script with documentation.
 | `Tools/lint-language/run.sh` | Language table. |
 | `Tools/lint-vendor/run.sh` | A bought pack's Shader Graph keeps the Built-In target this project renders with — the loss of one turned every robot magenta and was invisible in a gitignored dump. Reads the `vendor-lint` fence in `Decisions.md`. |
 | `Tools/docgen/run.sh` | Field Manual + `4-Data.md` countable blocks. |
+| `Tools/release-gate/run.sh` | The machine-red half of `../Docs/Release-Gate.md` (also from `Tools/verify/run.sh`). |
 | `Tools/wave-report/run.sh` | Session-log reader (path 2). |
 | `Tools/dashboard-data/run.ps1` | Regen `Docs/dashboard-data.js`. |
 | `Tools/player-session/` | Dual-box player harness (`run.ps1`, `one-click.cmd`). |

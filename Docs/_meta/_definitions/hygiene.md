@@ -51,6 +51,11 @@ reference at new work.
 
 **Pass ids are `HP-n`**, same rule.
 
+**The register is [`../../Hygiene/README.md`](../../Hygiene/README.md)**, which is to
+`Hygiene/` what `Roadmap.md` is to `Milestones/`: the pass table, every id ever issued with
+where it went, and the eviction record. It is the only place the high-water mark is kept, so
+it outlives any pass and is updated in the same edit that issues an id.
+
 The ledger this replaces issued `TH-9` through `TH-12` twice, once on 2026-08-18 and again
 on 2026-08-19, which is what a shared table with no issuing rule produces.
 

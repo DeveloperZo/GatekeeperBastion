@@ -1,3 +1,5 @@
+<!-- Purpose: the Gatekeeper roster as a player meets it — what each kind is, and the one thing each refuses to do. / Status: working / Update trigger: when a kind is added, renamed, or its refusal changes. / Last updated: 2026-08-19 -->
+
 # Gatekeepers
 
 ## Game

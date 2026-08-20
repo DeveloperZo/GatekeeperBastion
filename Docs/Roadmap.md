@@ -39,9 +39,9 @@ zone-deepest TH-10 and Docked voice TH-12 in
 **M75** closed 2026-08-18 on Zo's beat 0 playthrough through to the Bastion;
 criteria 2 to 7 were not separately observed and are owed as TH-1 to TH-6 in
 [`HP-1`](Hygiene/1.%20open/HP-1-beat-zero-observed.md). Survive path (door unlock
-on bank success, Ship return) is **M77** (built; criteria 2 and 3 stamped, TH-13,
-TH-14 and TH-17–TH-20 in [`HP-2`](Hygiene/1.%20open/HP-2-the-dock-round-trip.md)
-for the rest).
+on bank success, Ship return) is **M77** (built; criteria 2 and 3 stamped; TH-14 and
+TH-17–TH-20 in [`HP-2`](Hygiene/1.%20open/HP-2-the-dock-round-trip.md), TH-13 in
+[`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), for the rest).
 **M74** closed 2026-08-17 (demo voice pipe). **M72** and **M73** completed
 2026-08-17.
 **M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** and **M61-2**
@@ -64,7 +64,8 @@ finale-access ruling — the file names both.
    once ending `Lost` and once `Returned`. The `Returned` half is the same run that
    settles [`HP-2`](Hygiene/1.%20open/HP-2-the-dock-round-trip.md).
 2. **M77 play stamp** — Docked return is built; criteria 1/4/5/6/7/8 need Play
-   ([`HP-2`](Hygiene/1.%20open/HP-2-the-dock-round-trip.md) — TH-13, TH-14, TH-17–TH-20).
+   ([`HP-2`](Hygiene/1.%20open/HP-2-the-dock-round-trip.md) — TH-14, TH-17–TH-20; TH-13 is
+   [`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), a separate sitting).
 3. **M66** — hit confirm, per-kind tells, distinct players at lane range.
 4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14, M55 juice unused,
@@ -155,7 +156,7 @@ this table — see the change log.
 | M74 | The demo speaks | completed, Aug 2026 | `DemoVoice` Lock/Subtitle runner + id registry + party RPC; `DemoVoiceView` on Ship and Bastion; sim never pauses; every line logs | [`3. completed/M74`](Milestones/3.%20completed/M74-the-demo-speaks.md) |
 | M75 | Wake on a dead Ship | completed, Aug 2026 | Beat 0 end-to-end (capsule → NAV → ship terminal → MK-1 → fight → heal → EMBARK) + SaveVersion 9 flags and migration | [`3. completed/M75`](Milestones/3.%20completed/M75-wake-on-a-dead-ship.md) |
 | M76 | The first cycle ends in a loss | completed, Aug 2026 | Zone 1 = 2×1-Wave terminals; first Hatch-bank loss 1. Juice teach deferred (Zo). Gate: FirstTerminalTests + Zo close; TH-10 / TH-12 residue in HP-2, TH-9 / TH-11 evicted | [`3. completed/M76`](Milestones/3.%20completed/M76-the-first-cycle-ends-in-a-loss.md) |
-| M77 | The run can end Docked | completed, Aug 2026 (criteria 2 and 3 only; 1, 4, 5, 6, 7, 8 owed as TH-13, TH-14 and TH-17–TH-20 in HP-2) | Doors key on bank-window survival (failed bank never unlocks); held interact at the Hatch → `EndRun("docked")`; snapshot persists banked + doors. Kill criteria on the dock/push-on decision | [`3. completed/M77`](Milestones/3.%20completed/M77-the-run-can-end-docked.md) |
+| M77 | The run can end Docked | completed, Aug 2026 (criteria 2 and 3 only; 1, 4, 5, 6, 8 owed as TH-14 and TH-17–TH-20 in HP-2; 7 as TH-13 in HP-4) | Doors key on bank-window survival (failed bank never unlocks); held interact at the Hatch → `EndRun("docked")`; snapshot persists banked + doors. Kill criteria on the dock/push-on decision | [`3. completed/M77`](Milestones/3.%20completed/M77-the-run-can-end-docked.md) |
 | M78 | The first return | active | ARMORY ladder rung 1 + MP unlock on first buy + state-keyed exit standing + CREW claim (re-keyed unlock) + plain EMBARK + composite retrigger with partial election. Built 2026-08-19; criterion 9 (Zo, `Lost` + `Returned` playthroughs) is the close gate | [`2. active/M78`](Milestones/2.%20active/M78-after-the-first-loss.md) |
 | M79 | The second loss opens the ladder | later | Zone 2 = 1 terminal × 3 consecutive Waves + heavier bank (authored loss 2 by ordering); ladder rung 2 (Primary + 2); buy-back at live windows; D2 on survival; slots retired | [`1. planned/M79`](Milestones/1.%20planned/M79-the-second-loss-opens-the-ladder.md) |
 | M80 | One final window | later | Control Room copy + `M73` spawn wiring; `HatchWaves` 5 → 1 with the first boss/elite; `EndDemo` on Escaped only. Blocked on two owner-Zo inputs (boss composition; finale access) | [`1. planned/M80`](Milestones/1.%20planned/M80-one-final-window.md) |
@@ -167,6 +168,7 @@ this table — see the change log.
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
 | M87 | A bought body in an hour | completed, Aug 2026 | Utility Bot on the pack's Built-In Shader Graph in the Ship; graduation test passed 2026-08-18; Zo close 2026-08-19 (criterion 6 elapsed time unrecorded) | [`3. completed/M87`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md) |
 | M88 | The Gatekeepers are machines | completed, Aug 2026 | One FaxLab3D robot per Gatekeeper kind — silhouette tells the kind, on the pack's Built-In Shader Graph. Zo close 2026-08-19 | [`3. completed/M88`](Milestones/3.%20completed/M88-the-gatekeepers-are-machines.md) |
+| M89 | The Ship, from above | later | Isometric camera + unit targeting, **Ship only** — a reversible probe on a paradigm (#1 leverage), with a stamped kill criterion. Filed as M87 in error 2026-08-19 and renumbered; part of the rig already landed with `ce7d2ba` (`Ship_Isometric.unity`, `IsometricCameraRig`, `WallRenderState`, `IsometricBodyPresentation`) ahead of the milestone | [`1. planned/M89`](Milestones/1.%20planned/M89-the-ship-from-above.md) |
 
 ## Strategy
 
@@ -281,8 +283,8 @@ Moved out of this file. Mechanic areas that are wanted but not yet cuttable live
 | Boarder Protocols beyond Default | [`Brainstorms/boarder-protocols`](Brainstorms/boarder-protocols.md) |
 
 The First Bastion demo graduated 2026-08-17: beats 0–7 + voice cut as **M74–M80**
-(`Demo/` stays as the implementable spec; `Brainstorms/first-session.md` retired to
-`_to_delete/`).
+(`Demo/` stays as the implementable spec; the first-session brainstorm was retired
+2026-08-19, its scope fence carried into `Demo/README.md`).
 
 Closed — Open table empty, kept as record (`Brainstorms/closed/`):
 

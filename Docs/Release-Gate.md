@@ -1,8 +1,10 @@
 # Release Gate
 
 <!--
+Purpose: The Friends Alpha send checklist. Which failures block a send, which are recorded and sent anyway, and which eyes or machine answer each.
+Status: working
 Update trigger: when an M64 gate item is added or retired, or when a friends session finds a failure the gate did not catch
-Last updated: 2026-08-16
+Last updated: 2026-08-19
 -->
 
 Friends Alpha send checklist. Red blocks the send. Amber is recorded and sent anyway.

@@ -21,7 +21,7 @@ taught on the first terminal cycle (once Unbanked > 0) and stays live.
 **Multiplayer is locked until that save's first wheel purchase (beat 3)** —
 every seat solos beats 0–3 by construction.
 
-This folder is what an implementer reads. `Brainstorms/first-session.md` points here.
+This folder is what an implementer reads. The first-session brainstorm that pointed here was retired 2026-08-19; these beats are the record.
 
 ## Treat as spec until overridden
 
@@ -199,6 +199,15 @@ death (`Decisions.md`). Pause that sets `Time.timeScale = 0`. Storyteller asset.
 Pixel Crushers / any store dialogue pack for this demo. Player reply trees.
 A third win condition besides `M54`’s Hatch-bank half. Unity Lobby service.
 NAV wave-skip (`DemoNavUnlockWave` picker skip — dead 2026-08-17).
+
+**Scope fence**, carried over 2026-08-19 from the retired first-session brainstorm, which
+was the only place it was written whole: the demo is the **first** Bastion through Master
+Control — **no second destination**, and **no new resource**. The capsule is furniture and
+the retired ejection verb stays retired.
+
+**Kill observation for "overrun"** (same source): a 0-upgrade MK-1 (damage 30 after lever 1)
+solo log of the first Hatch-bank window reaching `NotifyAssaultCleared` with Hatch > 0 kills
+it. Next lever after that is +1 Thief on that carry (`2-first-hatch-bank.md`).
 
 ## In-tree facts the beats assume
 

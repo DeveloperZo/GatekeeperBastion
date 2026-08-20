@@ -189,6 +189,10 @@ data* — never a guess in confident prose), *Watch* / *Trap*, *Do not build*, *
 - **A milestone dies with its milestone.** If the work is dropped, delete the file
   and log it in the roadmap's change log. Do not leave a tombstone.
 - **No new status folders.** Five is the set.
+- **The changelog cites bare ids, not paths.** A status change moves the file, so any link
+  written into `../../Changelog.md` dies at the next move — 12 had rotted by 2026-08-19.
+  Write `` `M78` ``; `../../Roadmap.md` is the index that resolves it. The Roadmap's own
+  `File` link is the exception, and it is updated in the same commit as the move.
 
 ## Starting structure (copy this)
 

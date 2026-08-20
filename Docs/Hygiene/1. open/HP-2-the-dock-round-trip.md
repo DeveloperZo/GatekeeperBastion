@@ -31,15 +31,12 @@ everything below sits past the point that run reached.
 4. **TH-20** — M77 criterion 6: `demo.door_d1` then `demo.dock_option` play in that order on
    the survival frame. Pinned offline in `DemoVoiceTests`; never heard live. Settles on one
    survived window with the sound on. *(Was TH-12.)*
-5. **TH-13** — M77 criterion 7: solo down and Hatch breach still end the run Lost exactly as
-   before, and the rule holds with `DemoActive false`. Settles on one death and one breach on
-   screen, plus one run with the demo off.
-6. **TH-14** — M77 criterion 8: the full playthrough, survive, dock, spend, re-embark. This
-   is the item the other five fall out of.
-7. **TH-10** — M76 criterion 3: `DemoZoneDeepestWave[1]` written on each field-Wave clear,
+5. **TH-14** — M77 criterion 8: the full playthrough, survive, dock, spend, re-embark. This
+   is the item the other six fall out of.
+6. **TH-10** — M76 criterion 3: `DemoZoneDeepestWave[1]` written on each field-Wave clear,
    and the bank does not write it. Code landed with M78; the write has not been seen in a
    play log. Settles on the same log read.
-8. **TH-12** — M76 criteria 6–7: first Docked plays `demo.first_hatch_down`, plus the
+7. **TH-12** — M76 criteria 6–7: first Docked plays `demo.first_hatch_down`, plus the
    remaining beat 1–2 voice and `zone terminals complete zone=1`. Code landed with M78;
    never heard live. Settles on the same log read against beat 1–2's Driven/Shown/Reads-back.
 
@@ -47,4 +44,8 @@ everything below sits past the point that run reached.
 
 - M78's own criteria 0–9 — those are M78's close gate, not owed items, and the same run
   observes them.
-- The juice teach and the `first-hatch survived` line — evicted, see `Tech-Hygiene.md`.
+- The two Lost endings and the demo-off run (TH-13) — split to
+  [`HP-4`](HP-4-the-lost-endings-hold.md) on 2026-08-19. A death and a Hatch breach both end
+  the run `Lost`, so neither can be observed in the `Returned` run this pass rides.
+- The juice teach and the `first-hatch survived` line — evicted, see
+  [the register](../README.md#evicted-with-the-reason).

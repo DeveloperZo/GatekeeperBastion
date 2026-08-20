@@ -4,8 +4,50 @@
 Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and structural edits to the roadmap, most recent first. Split out of Roadmap.md on 2026-08-08, entries unchanged.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
+Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
 Last updated: 2026-08-19
 -->
+
+- 2026-08-19: **Dashboard de-hardcoded, taught hygiene passes, and given a staleness check.**
+  `Tools/dashboard-data/run.ps1` carried five milestone ids as literals, so a re-run could not
+  fix them. The worst was `$friendsHead = "M72"`: M72 completed 2026-08-17, so the head branch
+  had been dead code and the gate line named a closed milestone permanently. The head is now
+  derived from the Roadmap's Recommended-next order filtered to open files, the "still in an
+  active slot" insight is derived from a `Closed on:` stamp rather than an id list, and the
+  synthesis and healthy-insight prose no longer name a milestone. `recommendedNext` is filtered
+  to files that are actually open — it had been publishing eleven completed ids.
+  `Docs/Hygiene/` is now read the same way `Docs/Milestones/` is (folder is status), emitting a
+  `hygiene` section rendered on the Project panel. `generatedAtCommit` records the HEAD the file
+  was generated at, and both panels warn when it no longer matches or the data is over 36 hours
+  old. Regenerated: planned 10/10, active 1/3, hygiene 4 open passes / 15 open items.
+
+- 2026-08-19: **Doc sweep — id register, pass split, renumber, and a citation policy.**
+  Five structural edits, all following the hygiene migration earlier the same day.
+  **(1)** `Hygiene/README.md` created as the summary layer and **permanent id register**
+  over `Hygiene/`, standing to it as `Roadmap.md` stands to `Milestones/`: the pass table,
+  every `TH`/`HP` id ever issued with where it went, the double-issued block, and the
+  eviction record. `Tech-Hygiene.md` deleted — its content lives there now, and the register
+  no longer retires with the pointer. Next free ids: **TH-21 / HP-5**.
+  **(2)** `HP-4 — The lost endings hold` split out of `HP-2`. `TH-13` needs a death, a Hatch
+  breach and a demo-off run; both Lost endings are unreachable in the `Returned` run `HP-2`
+  rides, so it was never one sitting. `HP-2`'s claim that M78 criterion 9 settles it is now
+  true.
+  **(3)** The planned `M87 — The Ship, from above` **renumbered to `M89`**. It was filed
+  2026-08-19 into an id already held by the completed `M87 — A bought body in an hour`, with
+  no Roadmap row and no changelog entry. `M89` gains both. Part of its rig had already
+  landed with `ce7d2ba` (`Ship_Isometric.unity`, `IsometricCameraRig`, `WallRenderState`,
+  `IsometricBodyPresentation`) ahead of the milestone; the row says so.
+  **(4) Policy: the changelog cites milestones by bare id, never by link.** The folder is the
+  status, so every path written here dies at the next status change — 12 had rotted. All 22
+  milestone links converted to bare ids; `Roadmap.md` is the index that resolves them. Rule
+  recorded in this file's header and in `_meta/_definitions/milestone.md`.
+  **(5)** Stale files retired: `git-normalize-runbook.md` (asserted a one-commit history
+  against 59, and its premise died with M43's cancellation) and `_to_delete/`, whose
+  `first-session.md` stub was the only whole copy of the demo scope fence — that fence and
+  its "overrun" kill observation were carried into `Demo/README.md` before deletion. Five
+  live pointers to it scrubbed. `Docs/README.md`'s index gained the six entries it never
+  listed, `_meta/_definitions/milestone.md` gained the fifth status folder it denied, and
+  `Hygiene/2. settled/` was created so a pass has somewhere to move to.
 
 - 2026-08-19: **Tech-Hygiene ledger superseded by hygiene passes.** Owed items now
   live in `Hygiene/` as passes, one file per sitting, folder as status, under the new
@@ -17,8 +59,8 @@ Last updated: 2026-08-19
   were repointed in this edit. Two rows evicted rather than migrated, both unbuilt code
   rather than unobserved criteria: M76's juice teach (old `TH-9`) and the
   `first-hatch survived` log (old `TH-11`). High-water marks after this edit: **TH-20**
-  and **HP-3**. `Tech-Hygiene.md` remains as a superseded pointer holding the id
-  register and the eviction record.
+  and **HP-3**. The register and the eviction record moved to `Hygiene/README.md`
+  later the same day and `Tech-Hygiene.md` was deleted — see the entry above.
 
 - 2026-08-19: **M78 built and moved to active — the first return.** ARMORY ladder rung 1,
   MP unlock on first buy, state-keyed exit standing, CREW menu unlock + Default claim,
@@ -28,7 +70,7 @@ Last updated: 2026-08-19
   **Criterion 9's double playthrough (once `Lost`, once `Returned`) is Zo's and remains
   the close gate**, so this is active, not completed — correcting the M88 entry below,
   which recorded the active queue as empty.
-  [`Milestones/2. active/M78-after-the-first-loss.md`](Milestones/2.%20active/M78-after-the-first-loss.md).
+  `M78`.
 
 - 2026-08-19: **Shooter weapon pack wired into the `Packs/Weapons` wrappers** (commit
   `0ddc531`, a chore with no milestone). The five gun wrappers (Mk1, SecD, Br12, Mr35,
@@ -45,7 +87,7 @@ Last updated: 2026-08-19
   Ram (Thief wrapper), pack Shader Graph Built-In target restored, vendor lint
   gate in place. Play criteria stamped by the close request. Active queue empty;
   recommended next is M77 play stamp then M66.
-  [`Milestones/3. completed/M88-the-gatekeepers-are-machines.md`](Milestones/3.%20completed/M88-the-gatekeepers-are-machines.md).
+  `M88`.
 - 2026-08-19: **The robot pack's Shader Graph had been stripped of its Built-In
   target, and a day went into the wrong fix.** Every FaxLab3D robot rendered magenta
   after the full pack import. `SG_SciFiRobotMat.shadergraph` on disk declared
@@ -75,8 +117,8 @@ Last updated: 2026-08-19
   accepted (not rejected). M87: Utility Bot graduation already passed
   2026-08-18 in `Brainstorms/bodies-and-art-direction.md`; close stamps the
   milestone; criterion 6 elapsed time left unrecorded. Active remains **M88**.
-  [`Milestones/3. completed/M81-the-gatekeepers-swing.md`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md),
-  [`Milestones/3. completed/M87-a-bought-body-in-an-hour.md`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md).
+  `M81`,
+  `M87`.
 - 2026-08-19: **M77 closed on two of eight criteria, and six defects repaired from a
   play report.** Zo played capsule to first door and approved, which observes criterion 2
   (a survived bank window opens that zone's door) and criterion 3 (a completed terminal
@@ -114,7 +156,7 @@ Last updated: 2026-08-19
   `SetZoneDeepest` on field clear (TH-10), `first-hatch survived` log (TH-11),
   `demo.first_hatch_down` / remaining beat voice logs (TH-12). Survive path
   remains M77. Active M81 + M87.
-  [`Milestones/3. completed/M76-the-first-cycle-ends-in-a-loss.md`](Milestones/3.%20completed/M76-the-first-cycle-ends-in-a-loss.md).
+  `M76`.
 - 2026-08-19: **M77 built, unverified — the Run can end Docked.** Doors stopped
   keying on terminal completion and now key on a *survived* Hatch-bank window;
   a player inside that window may hold Interact at the Hatch to end the Run
@@ -295,15 +337,15 @@ Last updated: 2026-08-19
   `Assets/_Scratch/AuthorDemoWakeShip.cs` (run once, then delete). Beat 0 restamped:
   A3 free-look, A10 scene check resolved (no PlayerGun on Ship, NavMesh present),
   fodder melee starting values, CREW-power note.
-  [`2. active/M75`](Milestones/2.%20active/M75-wake-on-a-dead-ship.md).
+  `M75`.
 - 2026-08-17: **M74 closed.** Demo voice pipe: `DemoVoice` runner, `DemoLines` table,
   `DemoConversationIds`, `DemoVoiceView` authored on Ship and Bastion canvases,
   party ClientRpc on `NetRunMirror`, Lock gates in Ship/Bastion input paths. EditMode
   23/0 `DemoVoiceTests`; PlayMode `DemoVoicePlayModeTests` written. Beat triggers
   (criterion 8 playthrough) land in M75. Active 0/3.
-  [`3. completed/M74`](Milestones/3.%20completed/M74-the-demo-speaks.md).
+  `M74`.
 - 2026-08-17: **M74 closed.** Demo voice pipe shipped; beat triggers land in M75.
-  [`3. completed/M74`](Milestones/3.%20completed/M74-the-demo-speaks.md). Active 0/3.
+  `M74`. Active 0/3.
 - 2026-08-17: **M74 active — implementation landed.** Voice pipe built: engine-free
   `DemoVoice` runner + `DemoLines` table + `DemoConversationIds` (Game/Demo/, compiled
   by the offline harness like Game/Settings/), `DemoVoiceView` (Game/Ui/), demo-line
@@ -314,7 +356,7 @@ Last updated: 2026-08-19
   `DemoVoicePlayModeTests` written, not yet run — editor suites armed via
   `gkb_verify_request.txt`. Scratch box authoring waits in
   `Assets/_Scratch/AuthorDemoVoiceBox.cs` (run once, then delete).
-  [`2. active/M74`](Milestones/2.%20active/M74-the-demo-speaks.md).
+  `M74`.
 - 2026-08-17: **Demo family cut.** M74–M80 created in `1. planned/` from
   `Demo/`'s beat specs (M74 voice pipe; M75 beat 0 + v9; M76 beats 1+2; M77
   Ship return / bank-keyed doors / Docked run end; M78 beats 3+4; M79 beat 5;
@@ -324,8 +366,8 @@ Last updated: 2026-08-19
   milestone M77; finale cut with boss/elite composition and finale access as
   named owner-Zo inputs on M80. `Brainstorms/first-session.md` graduated —
   moved to `_to_delete/`. Planned 9/10.
-  [`1. planned/M74`](Milestones/1.%20planned/M74-the-demo-speaks.md) …
-  [`1. planned/M80`](Milestones/1.%20planned/M80-one-final-window.md).
+  `M74` …
+  `M80`.
 - 2026-08-17: **0.34** build **1**. Friends-session repairs from CHILL-PC `BP8HPF`:
   guest hit RPC never `TakeDamage`s clones (flash from replicated HP); death line
   is `killed by gatekeeper` + `NetRunMirror.Alive`; additive Ship wait hides the
@@ -337,12 +379,12 @@ Last updated: 2026-08-19
   party return Ship, no `[Dev]`. `NetLobbySessionTests` 3/0 Passed
   (`TestResults.xml` 2026-08-17 18:31:43Z). Presence suite green
   `gkb_verify_report.json` 2026-08-16T16:01:57Z. Active 0/3.
-  [`Milestones/3. completed/M72-the-party-shares-a-ship.md`](Milestones/3.%20completed/M72-the-party-shares-a-ship.md).
+  `M72`.
 - 2026-08-17: **M73 closed.** Eight hung closets (S1–S6 + ControlW/E);
   Enemies GateSlab; `T_Master` UnlockedSpawns inactive until Master Control.
   Sketch 18/0; BastionKitScene 1/0. NavMesh rebaked 11:10:11 (62152 bytes).
   Criterion 6 playthrough confirmation.
-  [`Milestones/3. completed/M73-the-spawn-point-is-a-room.md`](Milestones/3.%20completed/M73-the-spawn-point-is-a-room.md).
+  `M73`.
 - 2026-08-17: **M70 closed.** CREW Default claim, Barrage `G` / Rush `H`, NAV
   warn, Protocol Line + Protocol Bar. BoarderProtocolTests 14/0;
   M59PolishChrome Protocol pins 10/0. Play
@@ -350,23 +392,23 @@ Last updated: 2026-08-19
   sat-ready + window ended, wave 1 cleared, no `[Dev]`; `00-44-24` claimed
   Default; `08-37-17` cooldown refuse. Kill criteria wait 10 Runs or
   2026-09-30.
-  [`Milestones/3. completed/M70-the-default-protocol.md`](Milestones/3.%20completed/M70-the-default-protocol.md).
+  `M70`.
 - 2026-08-17: **M70 Protocol Bar.** Top-left `Protocol Line` is the name only.
   Bottom-centre bar is Passive / Personal (`H`) / Crew ult (`G`). Radial fill
   uses Shift circle sprite (null sprite cannot paint Filled); overlay 0 when
   READY; name hides under countdown. Frames sliced; keycaps 24×20; fill GOs
   authored empty. M70 stays planned.
-  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+  `M70`.
 - 2026-08-17: **M70 Fight HUD authored.** `Protocol Line` bound under Hud
   Profile; Fight and Pause row templates each have a Filled Radial360
   `CooldownFill`. Harness 394/0; `NetProtocolTests` 4/0 Passed. Playthrough
   still owns close. M70 stays planned.
-  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+  `M70`.
 - 2026-08-17: **M69 closed.** SessionMusicHostTests 4/0 Passed (Whispers Level
   Music on Ship/Bastion; Stardust menu; SFX Resources + fade). Criterion 4
   slider playthrough confirmation open. Sensation row: session voice in play;
   M66 keeps combat tells. Planned 3/10.
-  [`Milestones/3. completed/M69-the-session-has-a-voice.md`](Milestones/3.%20completed/M69-the-session-has-a-voice.md).
+  `M69`.
 - 2026-08-17: **Beat 0 play-through stamped.** Fade from black, stir line
   before the unlock prompt, hold-E on the lid, then every Game line / prompt /
   standing string through EMBARK. Working assumptions A1–A14 (poses, timings,
@@ -395,7 +437,7 @@ Last updated: 2026-08-19
 - 2026-08-17: **M70 Protocol Sheet headings.** Template labels Protocol Title /
   Protocol Description / Crew Ability / Personal Ability / Passive Ability;
   injected values only. M70 stays planned.
-  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+  `M70`.
 - 2026-08-17: **Protocols sentence = diluted pool, not deeds.** Gatekeepers
   wear the same modifiers, watered down; Albion deeds unlock the next sheet.
   Fight copy: Terminal hunts you, Hatch-bank hunts the Hatch (`WaveMode`).
@@ -407,11 +449,11 @@ Last updated: 2026-08-19
 - 2026-08-17: **M70 CREW catalog opens a Protocol Sheet template.** SELECT
   hides the list; BACK / Esc return. Same template, injected `SheetOf` values.
   M70 stays planned.
-  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+  `M70`.
 - 2026-08-17: **M70 CREW is select-then-sheet.** Catalog rows SELECT; the
   Protocol Sheet is Crew / Personal / Passive + BUY (ARMORY catalog→detail,
   no wheel). Circular HUD ability icons wait. M70 stays planned.
-  [`Milestones/1. planned/M70-the-default-protocol.md`](Milestones/1.%20planned/M70-the-default-protocol.md).
+  `M70`.
 - 2026-08-17: **`Docs/Marketing/` kit.** Strategy, product analysis, competitive
   landscape, friends-alpha GTM, locked pitch. `position.md` replaced by
   `landscape.md`. [`Marketing/README.md`](Marketing/README.md).
@@ -426,7 +468,7 @@ Last updated: 2026-08-19
   damage 30; Hatch drip 8/s; carry-3 Hatch-bank +1 Thief. Spawn points
   are hung closets (`SpawnRoom`) with enemy-only GateSlab. Planned 4/10,
   active 2/3. M73 not closed (playthrough criterion 6).
-  [`Milestones/2. active/M73-the-spawn-point-is-a-room.md`](Milestones/2.%20active/M73-the-spawn-point-is-a-room.md).
+  `M73`.
 - 2026-08-16: **Paradigm and mechanics mapped to §1.2.** Beliefs stay Zo's four;
   Protects columns on rules and levers restamp when ranks move. Fellowship and
   Fantasy are not named by any belief (session layer / frame). Mean live grades
@@ -464,18 +506,18 @@ Last updated: 2026-08-19
 - 2026-08-16: **M73 planned** — spawn point is a hung closet prefab; Gatekeepers
   walk out through an enemy-only GateSlab; six edges locked on the current dest.
   Does not jump M72. Planned 5/10.
-  [`Milestones/1. planned/M73-the-spawn-point-is-a-room.md`](Milestones/1.%20planned/M73-the-spawn-point-is-a-room.md).
+  `M73`.
 - 2026-08-16: **First Bastion demo specs in `Docs/Demo/`.** Voice pipe plus
   beats 0–7 (dead Ship through Hatch finale), each implementable: in-tree facts,
   Create/Change/Delete, multiplayer, logs, traps, Verification. Treat-as-spec
   table (convert-then-fight once, NAV skip, MK-1 grant, three kit doors, Protocol
   after Wave 2). [`Demo/README.md`](Demo/README.md). Brainstorm is a pointer
-  ([`Brainstorms/first-session.md`](Brainstorms/first-session.md)). Milestones
+  (the first-session brainstorm, since retired). Milestones
   not cut yet.
 - 2026-08-16: **First-session brainstorm is the demo path plus gaps.** Voice pipe
   (Dialogue System owned, not in tree, SKU 11672), dead Ship, first cycle,
   checkpoint, repeat to Master Control. Pause still does not stop the sim.
-  [`Brainstorms/first-session.md`](Brainstorms/first-session.md).
+  the first-session brainstorm, since retired.
 - 2026-08-16: **Pause Compendium drops Field Manual.** The generated tables have no
   TMP layout and the body scroll does not move, so the appendix stays in `Docs/Play/`
   only. Field Manual links in Game copy render as labels, not entries.

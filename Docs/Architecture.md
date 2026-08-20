@@ -1,5 +1,12 @@
 # 03 — Architecture
 
+<!--
+Purpose: Where code lives, the conventions that govern it, and the gotchas that cost real time. The rules subtree behind it is Architecture/, which is the master reference for how code is written.
+Status: working
+Update trigger: when an assembly, folder or convention changes, or when a gotcha is found that would otherwise be rediscovered.
+Last updated: 2026-08-19
+-->
+
 ## The one structural rule
 
 `Assets/Scripts/Sim/` (namespace `GatekeepersProtocol.Sim`) is its own assembly,

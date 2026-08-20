@@ -6,6 +6,13 @@ and anything else. Read this first, then `Docs/README.md`.
 Wiring: this file is the source. `CLAUDE.md` and `.cursor/rules/project.mdc` are
 one-line pointers to it. Do not duplicate content into them.
 
+**Skills outrank this file.** `.claude/skills/` holds `gkb-design`, `gkb-development`,
+`gkb-verification`, `gkb-brainstorm` and `gkb-strategy` — the current rules for each kind of
+work, loaded when the work matches. Sections 4 and 5 below are the short form kept here so an
+agent that loads no skills is not stranded; **where a skill and this file disagree, the skill
+is current and this file is stale.** Load the matching skill before writing C#, before calling
+anything verified, and before evaluating a mechanic.
+
 ---
 
 ## 1. Output
@@ -155,7 +162,8 @@ UI canvases and gameplay hosts are authored scene content and survive Build All.
   and nothing ran.
 - **`Tools/verify/run.sh`** compiles `Assets/Scripts/Sim/` plus `Assets/Tests/EditMode/`
   outside Unity with mcs + mono and runs the tests, language lint, arch lint and docgen
-  checks in seconds. Fastest signal for sim-only changes.
+  checks in seconds. Fastest signal for sim-only changes. It cannot see MonoBehaviours,
+  scenes or the save file — those need the AutoVerify bridge above.
 - A log containing `[Dev]` is tainted and cannot close a gate. F10/F11 host/join log
   `[Net]` and do not taint — they start a session, they do not mutate one.
 

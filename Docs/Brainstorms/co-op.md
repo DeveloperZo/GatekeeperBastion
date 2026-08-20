@@ -1,5 +1,12 @@
 # Co-op
 
+<!--
+Purpose: Everything co-op that is not yet a milestone — the open questions and the filed slices, with the decided ground left in Decisions.md rather than re-argued.
+Status: brainstorm
+Update trigger: when a co-op slice ships or is filed, or when a decided point is reopened.
+Last updated: 2026-08-19
+-->
+
 ## What this covers
 
 Everything co-op that is not yet a milestone. The decided ground lives in

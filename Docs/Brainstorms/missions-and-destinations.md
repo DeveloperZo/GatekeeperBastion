@@ -4,7 +4,7 @@
 Purpose: The NAV MAP console, run structure inside a bastion, and having more than one place to go.
 Status: brainstorm
 Update trigger: when a remaining entry graduates, or when a second destination exists.
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 -->
 
 ## What this covers
@@ -18,7 +18,8 @@ has graduated (table below).
 **M47 completed 2026-08-13** (kit bastion, unlock graph). Field loop shipped: **M52** terminal
 Waves, **M53** Hatch-bank, **M54** Master Control, **M55** intensity juice. One destination.
 Cold-start recut of T1's door and the Hatch-bank checkpoint for the **first
-Bastion demo** lives in [`first-session.md`](first-session.md); do not restamp
+Bastion demo** lives in `../Demo/` (the first-session brainstorm was retired
+2026-08-19); do not restamp
 those here as campaign rules.
 
 ### Terminal roles (Zo, 2026-08-13)
@@ -54,47 +55,64 @@ The console restructure, opt-in loot delivery, “a reason the bastion is a plac
 
 ## Ideas
 
-### The bank window happens on your ship (Zo, 2026-08-18)
+### The Hatch is a hole in your own hull (Zo, 2026-08-18, redesigned 2026-08-20)
 
-**The Hatch is a placeholder for where the defense happens.** Today a Hatch-bank
-Wave is defended at the Hatch, inside the bastion. The idea is that it eventually
-happens **aboard the player's own ship**: you deliver, and what comes for the
-salvage boards you.
+**The Hatch is not a door in the bastion you defend. It is the hole you open in your
+own ship**, and opening it is what invites them aboard. Terminal Waves are where
+salvage is collected. The survival window is where it is moved, and that window
+happens on the Ship.
 
-Why it is worth taking seriously. The Hatch is only the umbilical; the thing
-actually being defended is the ship the salvage is going to, so defending the
-door is one indirection away from defending the thing. It also inverts the
-premise cleanly — you board a held vessel, and delivering is what invites them
-aboard yours. And it gives the Ship a reason to be a place. Right now it is four
-stations and a walk; if it can be attacked, where those stations sit becomes level
-design, and anything the player builds there is worth building because it persists
-across Runs rather than being abandoned with the bastion.
+**The shape.** Terminal Waves in the bastion fill the pile. You open the Hatch when
+you choose, and nothing comes before that — belief 4 applied to the defense and not
+only to the Wave. Then two objectives with different verbs: **ferrying**, which is
+spatial and easy, where some salvage credits as value and some are carried objects in
+the manner of Depth's treasure, worth more or carrying an effect; and **upload**,
+which is a timer you hold. Enemies enter through **one point to start**. Later Waves
+find other angles; the single point is the first shape rather than the final one (Zo,
+2026-08-20). Wiping costs the loot and **damages the ship's functionality**, degrading
+bonuses rather than ending you.
 
-That last part is the strongest pull: it is the first home base in the design.
-`M56`'s turret and the decoys are currently spent on a space you leave. On the
-ship they would accumulate, which is much closer to the emplacement fantasy than
-placing a turret in someone else's corridor.
+**Why it holds together.** The chokepoint is known in advance and can be prepared,
+which is the emplacement fantasy delivered rather than gestured at. The Hatch stops
+being an abstraction with HP and becomes a decision with a reason attached to it.
+Failure keeps the Run alive and makes the next one poorer, which is belief 1 as a
+scene rather than a counter ticking. And the Ship stays the exhale, because it is only
+dangerous while you have chosen to open it.
 
-**Open, and each one is real work rather than a detail:**
+**Settled.**
 
-- The Ship is host-local in co-op (`M51`). A defended ship has to be shared, and
-  that is a session-layer change, not a scene change.
-- Scale. The Ship is a small plus; a wave arriving there is a different fight
-  from a wave crossing a bastion, and it may want its own composition rather than
-  the bastion's.
-- What losing it costs. Losing the bank, losing the Run, or damaging something
-  that persists are three different games.
-- Whether it replaces the Hatch-bank window or sits after it. Replacing keeps one
-  defended moment per delivery; adding makes every delivery two fights.
+- Ferrying interrupted is recoverable: a carried crate can be taken and chased down,
+  which is what the Thief was designed to do. Upload interrupted is not recoverable,
+  or the two objectives are the same failure twice with different art.
+- Degradation is repairable and repair is paid, scaled to run count or to salvage.
+  Permanent degradation breaks belief 2 on one bad night; free repair is not a cost.
+  This is `M19`'s shape reused rather than a new economy.
+- `ShipSystems` — Reactor, TetherCore, Engines, LifeSupport — is what degrades.
+  `../Decisions.md` already defers those while keeping the aggregate "so the wiring
+  keeps its shape", which is exactly this.
+- `M72` closed the objection that the Ship was host-local. It is a shared live session
+  with party-wide scene changes, so a defended Ship is a scene and encounter change
+  rather than a session-layer one.
 
-**Graduation test:** the Hatch-bank window has been played enough to say what it
-is for. If the answer is "a fight you have while a number goes up", moving it to
-the ship changes only the backdrop and is not worth the session-layer cost. If the
-answer is "the moment the Run's stake is decided", it belongs where the stake
+**Open.**
+
+- **The carry has to cost something.** In Depth, carrying treasure makes you slow and
+  visible, and that is the entire tension. If carrying a crate here costs nothing,
+  ferrying is walking. Occupying your hands is the cost already in this game's
+  vocabulary, and it composes with a Thief that goes for whoever is richest: one player
+  carries, the others cover.
+- **How many special-item effects, and what they modify.** Effects that change the
+  *window* — speed the upload, seal a breach, worth triple but louder — stay inside the
+  encounter. Effects that change the Run become a second item system.
+- Whether the bastion Hatch-bank survives alongside this or is replaced by it.
+
+**Graduation test:** one played Hatch-bank window that answers what the window is for.
+If it is a fight you have while a number goes up, moving it to the Ship changes the
+backdrop. If it is the moment the Run's stake is decided, it belongs where the stake
 lives.
 
-**Kill it if** a played session shows the Ship works better as the one place
-nothing can reach you. Somewhere safe is a design position, not an absence of one.
+**Kill it if** the carry cost cannot be made to matter, because then ferrying is a
+walk and only the upload is a fight, which the Hatch already is.
 
 ### Destinations that differ
 More than one bastion, differing in something other than difficulty — layout, hazard,

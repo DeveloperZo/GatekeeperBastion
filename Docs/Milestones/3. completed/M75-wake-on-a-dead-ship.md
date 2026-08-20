@@ -81,7 +81,8 @@ deletion).
 
 Criteria 2 to 7 were not separately observed at close. They are owed, not
 verified, and each carries an item in
-`../../Hygiene/1. open/HP-1-beat-zero-observed.md` (TH-1 to TH-6): the
+`../../Hygiene/1. open/HP-1-beat-zero-observed.md` (TH-1 to TH-6; register
+`../../Hygiene/README.md`): the
 HP floor, the three EMBARK refusals, the multiplayer lock, the v9 round-trip and
 downgrade, the reload matrix, and the reads-back log audit. Anything on that
 list touching a MonoBehaviour, a scene or the save file settles through the

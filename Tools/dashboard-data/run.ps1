@@ -13,6 +13,7 @@ $RoadmapPath = Join-Path $Root "Docs\Roadmap.md"
 $VerificationPath = Join-Path $Root "Docs\GatekeeperZo Notes\verification.md"
 $DecisionsPath = Join-Path $Root "Docs\Decisions.md"
 $BrainstormsRoot = Join-Path $Root "Docs\Brainstorms"
+$HygieneRoot = Join-Path $Root "Docs\Hygiene"
 
 function Rel-Path([string]$abs) {
     $rel = $abs.Substring($Root.Length).TrimStart('\', '/')
@@ -77,6 +78,63 @@ Get-ChildItem -LiteralPath $MilestonesRoot -Directory | ForEach-Object {
         }
     }
 }
+
+function Parse-HygieneFile([System.IO.FileInfo]$file, [string]$folderStatus) {
+    $text = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8
+    $id = $null
+    if ($file.BaseName -match '^(HP-\d+)') { $id = $Matches[1] }
+    $title = $file.BaseName
+    if ($text -match '(?m)^#\s+(HP-\d+)\s+(.+)$') {
+        $title = ($Matches[2] -replace '^[\p{Pd}\-\s]+', '').Trim()
+    }
+    $closableBy = ""
+    if ($text -match '(?sm)^Closable by:\s*(.+?)(?=\r?\n[A-Za-z][A-Za-z ]*:|\r?\n-->)') {
+        $closableBy = (($Matches[1] -replace '\s+', ' ').Trim())
+    }
+    $lastUpdated = $null
+    if ($text -match '(?m)^Last updated:\s*(\d{4}-\d{2}-\d{2})') {
+        $lastUpdated = $Matches[1]
+    }
+    $itemCount = 0
+    if ($text -match '(?sm)^##\s+Items\s*\r?\n(.*?)(?=\r?\n##\s|\z)') {
+        $itemCount = ([regex]::Matches($Matches[1], '(?m)^\s*\d+\.\s+\*\*(TH-\d+)\*\*')).Count
+    }
+    return [pscustomobject]@{
+        id          = $id
+        title       = $title
+        status      = $folderStatus
+        closableBy  = $closableBy
+        itemCount   = $itemCount
+        path        = (Rel-Path $file.FullName)
+        lastUpdated = $lastUpdated
+    }
+}
+
+# Docs/Hygiene: folder is status, exactly like Docs/Milestones (_definitions/hygiene.md).
+$hygieneFolderMap = @{
+    "1. open"    = "open"
+    "2. settled" = "settled"
+}
+$hygieneOpen = @()
+$hygieneSettled = @()
+if (Test-Path -LiteralPath $HygieneRoot) {
+    Get-ChildItem -LiteralPath $HygieneRoot -Directory | ForEach-Object {
+        $hStatus = $hygieneFolderMap[$_.Name]
+        if (-not $hStatus) { return }
+        Get-ChildItem -LiteralPath $_.FullName -Filter "HP-*.md" -File | ForEach-Object {
+            $h = Parse-HygieneFile $_ $hStatus
+            if (-not $h.id) { return }
+            if ($hStatus -eq "open") { $hygieneOpen += $h } else { $hygieneSettled += $h }
+        }
+    }
+}
+function Sort-Hygiene($items) {
+    return , @($items | Sort-Object @{ Expression = { [int](($_.id -replace '\D', '')) } })
+}
+$hygieneOpen = Sort-Hygiene $hygieneOpen
+$hygieneSettled = Sort-Hygiene $hygieneSettled
+$hygieneOpenItems = 0
+foreach ($h in $hygieneOpen) { $hygieneOpenItems += $h.itemCount }
 
 $roadmapText = Get-Content -LiteralPath $RoadmapPath -Raw -Encoding UTF8
 $roadmapOrder = [System.Collections.Generic.List[string]]::new()
@@ -220,14 +278,25 @@ function Add-Insight([string]$sev, [string]$headline, [string]$why, [string]$act
         })
 }
 
-$friendsHead = "M72"
+# Head of the queue = the first Recommended next id that is still open, else the first
+# active file, else the first planned one. Ordering comes from Roadmap.md; never a literal.
+$friendsHead = ""
+foreach ($id in $recommendedNext) {
+    if ($byId.ContainsKey($id) -and ($byId[$id].statusFolder -eq "active" -or $byId[$id].statusFolder -eq "planned")) {
+        $friendsHead = $id
+        break
+    }
+}
+if (-not $friendsHead -and $active.Count -gt 0) { $friendsHead = $active[0].id }
+if (-not $friendsHead -and $planned.Count -gt 0) { $friendsHead = $planned[0].id }
 $headStillOpen = ($byId.ContainsKey($friendsHead) -and
     ($byId[$friendsHead].statusFolder -eq "planned" -or $byId[$friendsHead].statusFolder -eq "active"))
 $headTitle = if ($headStillOpen) { $byId[$friendsHead].title } else { $null }
 $headGate = if ($headStillOpen -and $byId[$friendsHead].gateOneLiner) { $byId[$friendsHead].gateOneLiner } else { "" }
 
 # Friends-alpha filter beats "whatever is in active/" when the head is still open.
-# Roadmap Strategy: M55 stays queued after the session is possible.
+# Everything below is derived from the folder listing, Roadmap.md and the milestone files.
+# Do not name a milestone id in this section - a literal here is a claim that cannot expire.
 $primary = $null
 $reasonCodes = [System.Collections.Generic.List[string]]::new()
 $evidence = [System.Collections.Generic.List[string]]::new()
@@ -239,7 +308,7 @@ if ($headStillOpen) {
     [void]$evidence.Add("Docs/Roadmap.md Friends alpha gate")
     [void]$evidence.Add("Docs/Roadmap.md ## Current Recommended next")
     [void]$evidence.Add($primary.path)
-    $doNowAction = ("Ship {0} ({1}): {2}" -f $primary.id, $primary.title, $(if ($headGate) { $headGate } else { "two-machine shared Ship and party EMBARK" }))
+    $doNowAction = ("Ship {0} ({1}): {2}" -f $primary.id, $primary.title, $(if ($headGate) { $headGate } else { "close its acceptance criteria" }))
 }
 elseif ($active.Count -gt 0) {
     $primary = $active[0]
@@ -299,8 +368,8 @@ if ($headStillOpen) {
     }
     else {
         Add-Insight "critical" `
-            ("Friends-alpha head is {0}: {1}." -f $friendsHead, $headTitle) `
-            "Co-op verbs already run over loopback; the product still fails the install-and-join sentence." `
+            ("Queue head is {0}: {1}." -f $friendsHead, $headTitle) `
+            "Everything else is ordered behind the Roadmap's friends-alpha sentence; the head is what moves it." `
             $doNowAction `
             @("Docs/Roadmap.md Friends alpha gate", $primary.path)
     }
@@ -345,13 +414,17 @@ if ($graduating.Count -gt 0 -and $planned.Count -ge $plannedMax) {
         $gFiles
 }
 
-$m71 = if ($byId.ContainsKey("M71")) { $byId["M71"] } else { $null }
-if ($m71 -and $m71.statusFolder -eq "active") {
+# A file that already carries a "Closed on:" stamp but still sits in 2. active/ is holding
+# a slot the lane cap counts. Derived from the folder plus the file, never from an id list.
+$stampedActive = @($active | Where-Object { $_.closedOn })
+if ($stampedActive.Count -gt 0) {
+    $stampedNames = (@($stampedActive | ForEach-Object { "{0} ({1})" -f $_.id, $_.title }) -join ", ")
+    $stampedEvidence = @($stampedActive | ForEach-Object { $_.path }) + @("Docs/Changelog.md", "Docs/GatekeeperZo Notes/verification.md ## Closed")
     Add-Insight "attention" `
-        "M71 still occupies an active slot after the sidearm rings landed in changelog and verification Closed." `
-        "Active capacity looking open while the friends head stays planned is how a milestone list lies about progress." `
-        "Move M71 to completed (or leave only true remaining criteria), then put M58 in active or hold a single field-loop active on purpose." `
-        @("Docs/Milestones/2. active/M71-the-sidearm-joins-the-wheel.md", "Docs/Changelog.md", "Docs/GatekeeperZo Notes/verification.md ## Closed")
+        ("{0} still occupies an active slot after carrying a Closed on stamp." -f $stampedNames) `
+        "Active capacity looking open while a stamped file sits in the lane is how a milestone list lies about progress." `
+        ("Move {0} to 3. completed, or strip the stamp and leave only the criteria that are still open, then fill the slot on purpose." -f $stampedNames) `
+        $stampedEvidence
 }
 
 $playQs = @($questions | Where-Object { $_.priority -eq "play" }).Count
@@ -365,9 +438,9 @@ if ($questions.Count -gt 15) {
 }
 
 Add-Insight "healthy" `
-    "Goals are Fellowship, Expression, Fantasy. Challenge is the vehicle. M72 closed the shared Ship; five-Wave dry-run remains the friends-alpha sentence." `
+    "Goals are Fellowship, Expression, Fantasy. Challenge is the vehicle. The five-Wave friends run is still the alpha sentence." `
     "Ordering work against the top three stops treating Wave TTK as the aesthetic." `
-    "Ship M66 polish. Specialist Protocols for Expression. Thicken Fantasy via kinds/destinations, not Default HP." `
+    "Take Recommended next in order. Specialist Protocols for Expression. Thicken Fantasy via kinds/destinations, not Default HP." `
     @("Docs/Design/1-Experience.md 1.2", "Docs/Roadmap.md Strategy")
 
 # Executive synthesis (templated from the same facts)
@@ -375,14 +448,15 @@ $activeTitles = (@($active | ForEach-Object { "{0}" -f $_.id }) -join "/")
 $activeIdsForSynth = @($active | ForEach-Object { $_.id })
 if ($headStillOpen) {
     if ($activeIdsForSynth -contains $friendsHead) {
-        $synthesis = ("Fellowship is the top aesthetic; the install-and-join sentence still fails until {0} two-machine close. Planned {1}/{2}; {0} is the active head. {3} Next Run claims still lack a clean play log." -f $friendsHead, $planned.Count, $plannedMax, $blockingQs.Count)
+        $synthesis = ("Fellowship is the top aesthetic and the install-and-join sentence still fails. {0} is the active head. Planned {1}/{2}. {3} Next Run claims still lack a clean play log." -f $friendsHead, $planned.Count, $plannedMax, $blockingQs.Count)
     }
     else {
-        $synthesis = ("Fellowship is the top aesthetic. Co-op already runs over loopback; friends-alpha still fails until {0} ships a stranger-installable join. Planned sits at {1}/{2} while actives {3} sit off that path. What remains is play proof of {4} Next Run claims and whether protocols earn another planning slot after the cap clears." -f $friendsHead, $planned.Count, $plannedMax, $(if ($activeTitles) { $activeTitles } else { "(none)" }), $blockingQs.Count)
+        $synthesis = ("Fellowship is the top aesthetic. Friends-alpha still fails; {0} heads the queue against that sentence. Planned sits at {1}/{2} while actives {3} sit off that path. What remains is play proof of {4} Next Run claims and whether protocols earn another planning slot after the cap clears." -f $friendsHead, $planned.Count, $plannedMax, $(if ($activeTitles) { $activeTitles } else { "(none)" }), $blockingQs.Count)
     }
 }
 else {
-    $synthesis = ("M72 shared-Ship kernel closed. Planned {0}/{1}; active {2}/{3}. Five-wave friends run is still the Roadmap alpha sentence. Next work follows recommended order, then play debt." -f $planned.Count, $plannedMax, $active.Count, $activeMax)
+    $activeClause = if ($activeTitles) { ("Active is {0}." -f $activeTitles) } else { "Nothing is active." }
+    $synthesis = ("{0} Planned {1}/{2}; active {3}/{4}. The Roadmap friends-alpha sentence is still the gate. Next work follows recommended order, then play debt; {5} Next Run claims still lack a clean play log." -f $activeClause, $planned.Count, $plannedMax, $active.Count, $activeMax, $blockingQs.Count)
 }
 
 $queue = [System.Collections.Generic.List[object]]::new()
@@ -422,6 +496,29 @@ foreach ($m in $planned) {
 }
 
 $generatedAt = [DateTime]::UtcNow.ToString("o")
+$generatedAtCommit = ""
+Push-Location $Root
+try {
+    $headSha = & git rev-parse --short HEAD 2>$null
+    if (-not [string]::IsNullOrWhiteSpace($headSha)) { $generatedAtCommit = ([string]$headSha).Trim() }
+}
+finally { Pop-Location }
+
+function Hygiene-Rows($items, [string]$folder) {
+    $rows = [System.Collections.Generic.List[object]]::new()
+    foreach ($h in $items) {
+        [void]$rows.Add([ordered]@{
+                id           = $h.id
+                title        = $h.title
+                statusFolder = $folder
+                closableBy   = $h.closableBy
+                itemCount    = $h.itemCount
+                path         = $h.path
+                lastUpdated  = $h.lastUpdated
+            })
+    }
+    return , $rows.ToArray()
+}
 
 function Lane-Rows($items, [string]$folder) {
     $rows = [System.Collections.Generic.List[object]]::new()
@@ -453,10 +550,11 @@ if ($primary) {
 
 $payload = [ordered]@{
     generatedAt     = $generatedAt
+    generatedAtCommit = $generatedAtCommit
     caps            = [ordered]@{ plannedMax = $plannedMax; activeMax = $activeMax }
     friendsGate     = [ordered]@{ headId = $friendsHead; summary = $friendsSummary }
     roadmapOrder    = @($roadmapOrder)
-    recommendedNext = @($recommendedNext)
+    recommendedNext = @($recommendedNext | Where-Object { $byId.ContainsKey($_) -and ($byId[$_].statusFolder -eq "planned" -or $byId[$_].statusFolder -eq "active") })
     synthesis       = $synthesis
     insights        = @($insights | ForEach-Object {
             [ordered]@{
@@ -473,6 +571,13 @@ $payload = [ordered]@{
         completedCount = $completedCount
         cancelledCount = $cancelledCount
         deferredCount  = $deferredCount
+    }
+    hygiene     = [ordered]@{
+        open          = (Hygiene-Rows $hygieneOpen "open")
+        settled       = (Hygiene-Rows $hygieneSettled "settled")
+        openCount     = $hygieneOpen.Count
+        settledCount  = $hygieneSettled.Count
+        openItemCount = $hygieneOpenItems
     }
     commits     = @($commits | ForEach-Object {
             [ordered]@{ hash = $_.hash; short = $_.short; authoredAt = $_.authoredAt; subject = $_.subject }
@@ -506,6 +611,7 @@ $js = @"
 /* Generated by Tools/dashboard-data/run.ps1 - do not hand-edit.
  * Regenerate: Tools/dashboard-data/run.ps1
  * generatedAt: $generatedAt
+ * generatedAtCommit: $generatedAtCommit
  */
 window.GKB_PROJECT = $json;
 "@
@@ -513,6 +619,7 @@ window.GKB_PROJECT = $json;
 Set-Content -LiteralPath $OutJs -Value $js -Encoding UTF8
 Write-Host ("dashboard-data: wrote {0}" -f $OutJs)
 Write-Host ("  planned={0}/{1} active={2}/{3} questions={4} commits={5} insights={6}" -f $planned.Count, $plannedMax, $active.Count, $activeMax, $questions.Count, $commits.Count, $insights.Count)
+Write-Host ("  hygiene: open={0} settled={1} openItems={2}" -f $hygieneOpen.Count, $hygieneSettled.Count, $hygieneOpenItems)
 if ($primary) {
     Write-Host ("  do-now={0}: {1}" -f $primary.id, $doNowAction)
 }

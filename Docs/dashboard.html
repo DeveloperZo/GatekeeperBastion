@@ -614,6 +614,8 @@ body.drag {
 .status-chip.active { color: var(--ok); border-color: var(--ok); }
 .status-chip.planned { color: var(--warn); border-color: var(--warn); }
 .foot-meta { margin-top: 24px; color: var(--muted); font-size: 12px; }
+.stale-warn { margin: 0 0 12px; padding: 8px 10px; border: 1px solid var(--warn); border-radius: 6px; color: var(--warn); font-size: 13px; }
+.stale-warn code { font-size: 12px; }
 
 /* Project inventory (demoted) */
 .mile-list {
@@ -2503,6 +2505,33 @@ body.drag {
     return [];
   }
 
+  // A file:// page cannot read git. HEAD arrives from window.GKB_HEAD (optional
+  // dashboard-head.js written by a post-commit hook) or from ?head=<sha> on the URL.
+  function currentHead() {
+    if (typeof window.GKB_HEAD === 'string' && window.GKB_HEAD) return window.GKB_HEAD.trim();
+    var m = /[?&]head=([0-9a-fA-F]{4,40})/.exec(window.location.search || '');
+    return m ? m[1] : '';
+  }
+
+  function stalenessHtml(P) {
+    var gen = P.generatedAtCommit || '';
+    var head = currentHead();
+    var out = '';
+    if (gen && head && head.indexOf(gen) !== 0 && gen.indexOf(head) !== 0) {
+      out += '<p class="stale-warn"><strong>Stale data.</strong> <code>dashboard-data.js</code> was generated at commit <code>' +
+        esc(gen) + '</code>; HEAD is <code>' + esc(head) +
+        '</code>. Regenerate with <code>Tools/dashboard-data/run.ps1</code>.</p>';
+    }
+    var t = Date.parse(P.generatedAt || '');
+    if (!isNaN(t) && (Date.now() - t) > 36 * 3600 * 1000) {
+      out += '<p class="stale-warn"><strong>Old data.</strong> Generated ' +
+        Math.round((Date.now() - t) / 3600000) + 'h ago' +
+        (gen ? ' at <code>' + esc(gen) + '</code>' : '') +
+        '. Regenerate with <code>Tools/dashboard-data/run.ps1</code>.</p>';
+    }
+    return out;
+  }
+
   function renderFocus(P) {
     var root = document.getElementById('focusRoot');
     if (!root) return;
@@ -2512,7 +2541,7 @@ body.drag {
     }
     var focus = P.focus || {};
     var primary = focus.primary;
-    var html = '';
+    var html = stalenessHtml(P);
 
     if (P.synthesis) {
       html += '<p class="synth">' + esc(P.synthesis) + '</p>';
@@ -2600,6 +2629,18 @@ body.drag {
     root.innerHTML = html;
   }
 
+  function hygieneListHtml(items) {
+    if (!items || !items.length) return '<p class="empty">None.</p>';
+    return '<ul class="mile-list">' + items.map(function (h) {
+      var n = h.itemCount || 0;
+      var sub = n + ' item' + (n === 1 ? '' : 's') +
+        (h.closableBy ? ' \u00b7 closable by ' + h.closableBy : '');
+      return '<li><span class="mid">' + esc(h.id) + '</span>' + esc(h.title) +
+        '<span class="gate">' + esc(sub) + '</span>' +
+        '</li>';
+    }).join('') + '</ul>';
+  }
+
   function mileListHtml(items) {
     if (!items || !items.length) return '<p class="empty">None.</p>';
     return '<ul class="mile-list">' + items.map(function (m) {
@@ -2619,7 +2660,7 @@ body.drag {
     var lanes = P.lanes || {};
     var active = asList(lanes.active);
     var planned = asList(lanes.planned);
-    var html = '<p class="hint">Inventory only. Judgment lives on Focus.</p>';
+    var html = stalenessHtml(P) + '<p class="hint">Inventory only. Judgment lives on Focus.</p>';
 
     html += '<section><h2>Active <span class="chip muted"><span class="v">' +
       active.length + '</span></span></h2>' + mileListHtml(active) + '</section>';
@@ -2633,6 +2674,18 @@ body.drag {
       (lanes.cancelledCount || 0) + '</span></span>' +
       '<span class="chip"><span class="k">deferred</span><span class="v">' +
       (lanes.deferredCount || 0) + '</span></span>' +
+      '</div></section>';
+
+    var hyg = P.hygiene || {};
+    var hygOpen = asList(hyg.open);
+    var hygSettled = asList(hyg.settled);
+    html += '<section><h2>Hygiene passes <span class="chip muted"><span class="v">' +
+      hygOpen.length + '</span></span></h2>' + hygieneListHtml(hygOpen);
+    html += '<div class="count-row">' +
+      '<span class="chip"><span class="k">open items</span><span class="v">' +
+      (hyg.openItemCount || 0) + '</span></span>' +
+      '<span class="chip"><span class="k">settled passes</span><span class="v">' +
+      (hyg.settledCount || 0) + '</span></span>' +
       '</div></section>';
 
     var commits = asList(P.commits).slice(0, 12);
@@ -2683,7 +2736,8 @@ body.drag {
       html += '</div></section>';
     }
 
-    html += '<p class="foot-meta">Generated ' + esc(P.generatedAt || '') + '</p>';
+    html += '<p class="foot-meta">Generated ' + esc(P.generatedAt || '') +
+      (P.generatedAtCommit ? ' at ' + esc(P.generatedAtCommit) : '') + '</p>';
     root.innerHTML = html;
   }
 
