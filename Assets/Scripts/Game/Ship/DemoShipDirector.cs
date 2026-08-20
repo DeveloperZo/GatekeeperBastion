@@ -14,8 +14,8 @@ namespace GatekeepersProtocol.Game
         const string Tag = "Demo";
         const float BindRetrySeconds = 0.25f;
 
-        [SerializeField, Tooltip("Wake capsule in the crew alcove. Authored by the scratch scene pass.")]
-        ShipCapsule _capsule;
+        [SerializeField, Tooltip("Wake teleporter in the crew alcove. Authored by the scratch scene pass.")]
+        ShipTeleporter _teleporter;
 
         [SerializeField, Tooltip("Bastion gatekeeper prefab — body only; ShipIntruder drives it here.")]
         GameObject _intruderPrefab;
@@ -29,10 +29,10 @@ namespace GatekeepersProtocol.Game
         [SerializeField, Tooltip("Ship Directional Light. Demo dims to 0.15 (A6); demo-off restores the authored intensity.")]
         Light _hull;
 
-        [SerializeField, Tooltip("Deck pose at the capsule exit — quit-after-unlock, no reseal.")]
-        Transform _spawnCapsule;
+        [SerializeField, Tooltip("Deck pose at the teleporter exit — quit-after-release, no reseal.")]
+        Transform _spawnTeleporter;
 
-        [SerializeField, Tooltip("Deck pose near NAV for post-capsule reloads (beat 0 reload matrix).")]
+        [SerializeField, Tooltip("Deck pose near NAV for post-teleporter reloads (beat 0 reload matrix).")]
         Transform _spawnNav;
 
         bool _placed;
@@ -73,7 +73,7 @@ namespace GatekeepersProtocol.Game
             {
                 _placed = true;
                 ApplyHullLight(dead: false);
-                if (_capsule != null) _capsule.BeginDormant();
+                if (_teleporter != null) _teleporter.BeginDormant();
                 return;
             }
 
@@ -86,18 +86,18 @@ namespace GatekeepersProtocol.Game
 
             if (!m.DemoCapsuleOpened)
             {
-                if (_capsule != null) _capsule.BeginSealed(fpc);
-                else Log.Error(Tag, "no capsule wired — author the Ship scene pieces "
+                if (_teleporter != null) _teleporter.BeginSealed(fpc);
+                else Log.Error(Tag, "no teleporter wired — author the Ship scene pieces "
                     + "(scratch: Author Demo Wake Ship).");
                 return;
             }
 
-            if (_capsule != null) _capsule.BeginOpen();
+            if (_teleporter != null) _teleporter.BeginOpen();
 
             if (!m.DemoNavPowered)
             {
-                // Quit after unlock, before NAV: on deck at the capsule, no reseal.
-                PlaceAt(player, _spawnCapsule);
+                // Quit after release, before NAV: on deck at the teleporter, no reseal.
+                PlaceAt(player, _spawnTeleporter);
                 DemoShipFight.SetStanding("Repair the NAV MAP");
                 return;
             }
@@ -126,6 +126,7 @@ namespace GatekeepersProtocol.Game
             if (m.HatchConversions >= 1)
             {
                 ResolveFirstReturn(m);
+                ResolveRungTwo(m);
                 return;
             }
 
@@ -147,6 +148,32 @@ namespace GatekeepersProtocol.Game
                 GameSession.Save();
                 Log.Event(Tag, "CREW menu unlocked");
             }
+            DemoShipStanding.Reevaluate();
+        }
+
+        /// <summary>Docked after zone 2's bank fell: the ladder's second rung opens — the
+        /// PRIMARY rows go on sale and two more wheel buys land on their own counter, outside
+        /// the rung-1 cap. Keyed on the bank loss the player just played, never on a count of
+        /// endings, so a save that docked through zone 1 is offered the rack on its first
+        /// ejection (Docs/Demo - Single/5-repeat-to-control-room.md). DemoRungTwoOpened is the
+        /// once-per-save latch, and the flag write is what makes the line once-per-save too.
+        ///
+        /// Ordering — deliberately AFTER ResolveFirstReturn. Both can resolve on one Ship load:
+        /// bank in zone 1 (D1 opens), push through without docking, lose zone 2's bank. That is
+        /// three Lock lines against DemoVoice's one live slot and one queue slot, so one is
+        /// displaced whichever order they arrive in. demo.first_hatch_down wins the frame by a
+        /// hardcoded rule in DemoVoice, and the queue is latest-wins, so playing this line last
+        /// puts it in the queue and displaces demo.crew_ready — the recoverable loss: the CREW
+        /// menu still unlocks and CREW QUARTERS speaks on the walk, while nothing else would
+        /// tell the player the rack changed. The displacement is logged by DemoVoice.</summary>
+        void ResolveRungTwo(MetaState m)
+        {
+            if (!m.DemoZone2BankLost || m.DemoRungTwoOpened) return;
+            DemoVoice.Play(DemoConversationIds.SecondLoss, DemoVoiceMode.Lock);
+            Log.Event(Tag, "ladder rung=2 opened — primary + 2 buys");
+            m.DemoRungTwoBuysLeft = 2;
+            m.DemoRungTwoOpened = true;
+            GameSession.Save();
             DemoShipStanding.Reevaluate();
         }
 

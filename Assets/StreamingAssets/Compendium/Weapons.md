@@ -45,7 +45,7 @@ furthest away. Award, steps and prices: [Field Manual](Field-Manual.md).
 A purchase never changes range, falloff, pellet count, spread, pierce, slot, or any other
 weapon you own. **Upgrade wheels are per weapon and never transfer.**
 
-Weapon upgrades are **locked until you have been Lost at least once**. Buying the weapons
+Weapon upgrades are **locked until Salvage first converts through the Hatch**. Buying the weapons
 themselves is not. If the buttons read locked, a death is the key. SEC-D's Ability spoke
 cannot be bought; rotate off it.
 

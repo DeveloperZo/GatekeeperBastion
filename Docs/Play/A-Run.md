@@ -1,4 +1,4 @@
-<!-- Purpose: the shape of one Run end to end — embarking, Prep and Assault, starting a Wave at a field terminal, Master Control, and the two ways it can finish. / Status: working / Update trigger: when the Run's phases, the draw model, the deep-start option, or the Run-enders change. / Last updated: 2026-08-18 -->
+<!-- Purpose: the shape of one Run end to end — embarking, Prep and Assault, starting a Wave at a field terminal, Master Control, Docked return, and the ways it can finish. / Status: working / Update trigger: when the Run's phases, the draw model, the deep-start option, or the Run-enders change. / Last updated: 2026-08-20 -->
 
 # A Run
 
@@ -8,11 +8,11 @@ A Run is one trip out to the Bastion and back. You embark already tethered near 
 
 Prep is quiet and untimed. Assault lasts until every Gatekeeper that Wave sent is dead. A field-terminal Wave hunts you; a Hatch-bank hunts the Hatch and converts Unbanked.
 
-Three endings: you die, the Hatch falls, or you survive Master Control. Converted Salvage stays either way. Unbanked is wiped on Lost. How many Waves: [Field Manual](Field-Manual.md).
+Four endings: you die, the Hatch falls, you dock after a survived Hatch-bank, or you survive Master Control. Converted Salvage stays either way. Unbanked is wiped on Lost. How many Waves: [Field Manual](Field-Manual.md).
 
 ## Reference
 
-A Run is one trip out to the Bastion and back. It starts on your Ship, it ends with you Lost or with Master Control's Hatch-bank survived, and either way only Salvage that made it through a Hatch-bank is yours.
+A Run is one trip out to the Bastion and back. It starts on your Ship, it ends Lost, Docked, or Escaped, and either way only Salvage that made it through a Hatch-bank is yours.
 
 ### Before you leave: the Ship
 
@@ -60,7 +60,7 @@ A Hatch-bank Wave hunts the Hatch. It is one step heavier than the last field Wa
 
 ### What ends a Run
 
-Exactly three things end a Run, and only three.
+Four things end a Run.
 
 **You die.** Your health does not come back during a Run — there is no healing, no regeneration, no pickup, no respawn. What you take, you keep until the Run ends. When it runs out you go down, and the Run is over — for solo, and for the host. If a second Boarder is in the Bastion, their down does not end the Run; they wait on the Ship and can embark again while the host is in Hatch-bank Prep.
 
@@ -68,11 +68,13 @@ Exactly three things end a Run, and only three.
 
 Both of those are **Lost**. The screen names which one happened, and that the Boarder was thrown off the Bastion.
 
+**You dock.** Survive a Hatch-bank and, until you start the next Wave, hold interact at the Hatch to return to the Ship. The Run ends **Docked**, not Lost — banked Salvage stays, and the door that window opened stays open when you come back. Fail the bank and that prompt never appears. Trigger the next Wave and it is gone.
+
 **You survive Master Control.** Juice once at the console — it covers the sequence — then select and start. The door seals; five Boarder-hunt Waves hit that room. The door opens; five Hatch-bank windows start. Leftover converts. That is **Escaped** — the screen reads BASTION STRIPPED. Clearing Wave 5 does not. Hatch-bank after the field is stripped converts and leaves you in Prep; the door is already open.
 
 ### What the endings actually mean
 
-Less than you would expect. Converted Salvage stays on the ship. Unbanked is wiped if you go down or the Hatch falls. Wave 5 does not wipe it. Master Control's Hatch-bank converts leftover, then the win. Clearing adds no bonus. The two endings differ in three things:
+Less than you would expect. Converted Salvage stays on the ship. Unbanked is wiped if you go down or the Hatch falls. Wave 5 does not wipe it. Docked keeps what you banked and does not tick a loss. Master Control's Hatch-bank converts leftover, then the win. Clearing adds no bonus. Lost and Escaped differ in three things:
 
 - what the screen says;
 - which lifetime counter ticks — runs lost, or runs cleared;
@@ -80,7 +82,7 @@ Less than you would expect. Converted Salvage stays on the ship. Unbanked is wip
 
 That last one is the only mechanical consequence of failing, and it only matters because of the option below.
 
-Both end screens are identical in shape: converted this Run, repair spent, net, what you have banked now, your deepest Wave, and one button back to the Ship. There is no other way off either screen.
+Lost, Docked, and Escaped end screens are the same shape: converted this Run, repair spent, net, what you have banked now, your deepest Wave, and one button back to the Ship. There is no other way off either screen.
 
 ### Starting deeper: the NAV MAP start-Wave selector
 
@@ -106,7 +108,7 @@ A condensed run, then. Same Waves, same total bodies, much less room.
 - **Your health never returns during a Run.** Nothing in the game says this. There is no heal, no regen, no item, and the only refill happens at run start.
 - **Repairing the Hatch spends banked Salvage** — the same purse you shop with at the consoles. The prompt quotes the rate, but nothing tells you that the money is coming out of your upgrade budget, or that with an empty bank you cannot repair at all.
 - **Repairing needs the Repair Rig equipped.** Without it the key does nothing however much you have banked, and nothing in the Run says why.
-- Nothing states that there is **no way to leave a Run early**. Players look for a bail-out; there isn't one, and no screen says so.
+- Nothing states that there is **no leave-anytime bail-out**. Outside a survived Hatch-bank window, down and breach remain the only early enders; the dock prompt is that window only.
 - Nothing states that intensity is **locked** during an Assault. The panel simply stops listing it.
 - The start-Wave ceiling is your deepest **cleared** Wave, not deepest reached. The NAV MAP shows the number without saying which of those it is.
 - During a deep-start chain the game holds spawns back when too many Gatekeepers are alive at once. You never see this; a chain can feel like it stalled when it is actually throttling itself.

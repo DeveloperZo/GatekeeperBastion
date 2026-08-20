@@ -129,13 +129,11 @@ namespace GatekeepersProtocol.Game
             }
             _view.SetPrepLine(2, _lineBuf.ToString());
 
-            if (unbanked > 0L && sim.HatchBankSlotsLeft > 0
-                && (_game == null || !_game.HatchBankStartBlocked))
+            if (unbanked > 0L && (_game == null || !_game.HatchBankStartBlocked))
             {
                 _lineBuf.Clear();
                 _lineBuf.Append("<b>Hatch-bank — T at the Hatch</b>  (")
-                    .Append(unbanked).Append(" unbanked, ")
-                    .Append(sim.HatchBankSlotsLeft).Append(" slots)");
+                    .Append(unbanked).Append(" unbanked)");
                 _view.SetPrepLine(3, _lineBuf.ToString());
             }
             else

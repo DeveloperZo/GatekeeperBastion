@@ -8,7 +8,7 @@ Status: demo spec
 Authority: implementable
 Update trigger: when a speaker is named, when a line id is added, when
 input-lock rules change
-Last updated: 2026-08-17
+Last updated: 2026-08-20
 -->
 
 There is no VO in the tree and none is required for this demo. Pause does not
@@ -158,6 +158,7 @@ this file.
 | `demo.crew_claim` | Lock | Local | 4 | Claim Default. `G` Barrage, `H` Rush |
 | `demo.embark_wave2` | Lock | Party | 4 | Post-loss EMBARK: no wave skip — the zone's deepest terminal retriggers the composite (partial start electable). Lead still commits |
 | `demo.repeat_unit` | Lock | Party | 5 | Same verbs. Next zone's terminals, then its bank |
+| `demo.second_loss` | Lock | Local | 5 | Docked after zone 2's bank fell: what transferred is aboard, and the rack has heavier hardware now. **Trigger is that bank falling, never `PodEjections >= 2`** (recut 2026-08-19). Copy restamp owed — the shipped line opens "Thrown off again", which asserts a second ejection the recut forbids |
 | `demo.door_d1` / `demo.door_d2` | Lock in Prep | Party | 5 | That door is open. One string serves both |
 | `demo.door_d3` | — | — | 5 | Never plays: D3 open fires `demo.control_room` instead (beat 6 merge) |
 | `demo.control_room` | Lock | Party | 6 | This room seals. The fight is inside. Not extract |

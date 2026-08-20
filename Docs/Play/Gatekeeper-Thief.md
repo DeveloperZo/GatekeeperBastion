@@ -1,10 +1,10 @@
-<!-- Purpose: the Thief — slow, hunts you on a field-terminal Wave and the Hatch on a Hatch-bank, and the one kind that will not shout. Code identifier remains Ram until M63. / Status: working / Update trigger: when the Thief's immunity to provocation, its crowd priority, or who it hunts changes. / Last updated: 2026-08-16 -->
+<!-- Purpose: the Thief — slow, hunts you on a field-terminal Wave and the Hatch on a Hatch-bank, and the one kind that will not shout. Code identifier remains Ram until M63. / Status: working / Update trigger: when the Thief's immunity to provocation, its crowd priority, or who it hunts changes. / Last updated: 2026-08-20 -->
 
 # Thief
 
 ## Game
 
-The Thief is walking to the Hatch — on a Hatch-bank. On a Wave started at a field terminal it walks at you instead. Shooting it does not provoke it. It does not shout, does not speed up, and the Defaults standing beside it stay on their own hunt.
+The Thief is the heavy frame — slow, unmistakable in a group. It is walking to the Hatch on a Hatch-bank. On a Wave started at a field terminal it walks at you instead. Shooting it does not provoke it. It does not shout, does not speed up, and the Defaults standing beside it stay on their own hunt.
 
 It never hurts you. On a Hatch-bank it bites the Hatch. It is the safe thing to fire into in a crowd, and the thing to start on early. Its slowness is a budget, not a reprieve — backing away buys seconds, not a solution.
 

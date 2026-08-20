@@ -7,20 +7,52 @@ namespace GatekeepersProtocol.Game
     /// Split so Terminals.cs stays under the Game line cap.</summary>
     public sealed partial class GameController
     {
-        /// <summary>True while either zone-1 terminal exists and has not completed this
-        /// Run. Off entirely once the demo is off (Docs/Demo/1-first-terminal.md).</summary>
+        /// <summary>The zone the Run is working right now: the first authored zone whose
+        /// door is still shut. Zone N sits behind zone N-1's door, so an open door means
+        /// that zone is behind the party. Derived rather than stored — door state already
+        /// persists across Runs through the successful-bank snapshot, and a second copy of
+        /// the same fact would be one more thing to keep true. Past the last authored zone
+        /// this answers one above it, which the table reads as "no terminal gate": the
+        /// finale is its own beat (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        int CurrentDemoZone
+        {
+            get
+            {
+                if (_layout == null) return 1;
+                int zone = 1;
+                while (zone <= DemoZones.ZoneCount && _layout.IsDoorOpen(DemoZones.DoorId(zone)))
+                    zone++;
+                return zone;
+            }
+        }
+
+        /// <summary>True while the CURRENT zone still has a terminal in the layout that has
+        /// not completed this Run — the bank waits on the zone in front of the player, not on
+        /// zone 1 forever. Off entirely once the demo is off
+        /// (Docs/Demo - Single/1-first-terminal.md, Docs/Demo - Single/5-repeat-to-control-room.md).
+        /// Counted rather than collected: this getter is read from the Hatch prompt and the
+        /// prep panel every frame and must not allocate.</summary>
         public bool HatchBankStartBlocked
         {
             get
             {
                 if (_layout == null) return false;
                 MetaState meta = Meta;
-                return FirstTerminal.HatchBankBlocked(
-                    meta != null && meta.DemoActive,
-                    _layout.FindTerminal(FirstTerminal.Id) != null,
-                    _layout.IsTerminalDone(FirstTerminal.Id),
-                    _layout.FindTerminal(FirstTerminal.SecondId) != null,
-                    _layout.IsTerminalDone(FirstTerminal.SecondId));
+                int zone = CurrentDemoZone;
+                int present = 0;
+                int done = 0;
+                int count = DemoZones.TerminalCount(zone);
+                for (int i = 0; i < count; i++)
+                {
+                    string id = DemoZones.TerminalIdAt(zone, i);
+                    if (string.IsNullOrEmpty(id)) continue;
+                    // Unity fake-null: a destroyed terminal must read as absent, so ==, not is.
+                    if (_layout.FindTerminal(id) == null) continue;
+                    present++;
+                    if (_layout.IsTerminalDone(id)) done++;
+                }
+                return DemoZones.HatchBankBlocked(
+                    meta != null && meta.DemoActive, zone, present, done);
             }
         }
 
@@ -50,8 +82,6 @@ namespace GatekeepersProtocol.Game
             _armedHatch = false;
             if (Sim.TotalUnbanked <= 0L)
                 return HatchBankRefuse("unbanked=0");
-            if (Sim.HatchBankSlotsLeft <= 0)
-                return HatchBankRefuse("no slots");
             if (Sim.AllWavesCleared)
                 return HatchBankRefuse("all waves cleared");
             if (Sim.MasterSequenceLive)
@@ -81,7 +111,6 @@ namespace GatekeepersProtocol.Game
                 + " carry=" + Sim.HatchCarry
                 + " convert=" + Sim.HatchConvertMultiplier.ToString("0.00")
                 + " unbanked=" + Sim.TotalUnbanked
-                + " slots=" + Sim.HatchBankSlotsLeft
                 + " intensity=" + intensity
                 + " juiced=" + juiced);
             return true;

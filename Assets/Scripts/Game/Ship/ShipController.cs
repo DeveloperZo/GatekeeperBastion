@@ -78,6 +78,7 @@ namespace GatekeepersProtocol.Game
             Log.Event("Ship", "aboard the ship — " + GameSession.Meta.BankedSalvage + " banked, " +
                                         GameSession.Meta.PodEjections + " run(s) lost, " +
                                         GameSession.Meta.CleanExits + " cleared");
+            ShipHatchAssignment.Recompute("ship loaded");
         }
 
         void Update()

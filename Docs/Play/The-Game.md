@@ -6,12 +6,12 @@ is, and why the three kinds exist. Hand-written prose; no tables of numbers.
 Every number, key, weapon and Wave lives in Field-Manual.md, which is generated.
 Status: working
 Update trigger: when the loop, the wager, or the Run-ender changes.
-Last updated: 2026-08-16
+Last updated: 2026-08-20
 -->
 
 ## Game
 
-You are the **Boarder**. Your Ship cuts into a garrisoned **Bastion** and siphons it for Salvage. **Gatekeepers** already hold it. The umbilical back to your Ship ends in the **Hatch** — your way home, and the thing you must hold. Lose the Hatch, or go down yourself, and the Run is over.
+You are the **Boarder**. Your Ship cuts into a garrisoned **Bastion** and siphons it for Salvage. **Gatekeepers** already hold it — three machines, told apart by silhouette. The umbilical back to your Ship ends in the **Hatch** — your way home, and the thing you must hold. Lose the Hatch, or go down yourself, and the Run is Lost. Survive a Hatch-bank and you may dock home by choice.
 
 Nothing arrives until you call it. Prep is yours. Intensity is a wager before each Wave — more Salvage, more Defaults, nothing else. Converted Salvage stays banked; Unbanked is gone if you go down or the Hatch falls.
 
@@ -49,14 +49,14 @@ They are not tiers of the same Gatekeeper. Each one is defined by something it
 
 A **Default** marches on the Hatch and ignores you — until you hurt it, and then it comes
 for you instead. It is the only kind you can pull off the Hatch, and pulling it is a
-choice with a cost.
+choice with a cost. It is the plain machine the other two are measured against.
 
 A **Hunter** will never touch the Hatch. It wants you, it is faster than your walk and
-slower than your sprint, and it dies quickly. It is the reason you cannot park in front
+slower than your sprint, and it dies quickly. Lean frame — pick it by silhouette. It is the reason you cannot park in front
 of the Hatch and hold the trigger.
 
 A **Thief** hunts you on a field-terminal Wave; shooting it will not shout. On a Hatch-bank it
-walks to the Hatch and never turns. It takes a serious bite if it arrives. It is
+walks to the Hatch and never turns. Heavy frame. It takes a serious bite if it arrives. It is
 slow. That slowness is the offer: you have time to deal with it, if you spend that time
 on it.
 
@@ -64,15 +64,11 @@ The room asks three questions at once, and the answer to each makes the other tw
 
 ### Losing, and what losing costs
 
-There are exactly two ways a Run ends badly: **you die, or the Hatch dies.** There is no
-bail-out, no escape lever, no cutting the tether early, no respawn for the Boarder who
-owns the Run (solo or host). A second Boarder going down does not end the Run — they wait
-on the Ship and can embark again while the host is in Hatch-bank Prep.
+There are exactly two ways a Run ends badly: **you die, or the Hatch dies.** There is no leave-anytime lever and no respawn for the Boarder who owns the Run (solo or host). A second Boarder going down does not end the Run — they wait on the Ship and can embark again while the host is in Hatch-bank Prep.
 
-Losing is cheap for what already made it through the Hatch. **Converted Salvage stays
-banked.** Unbanked is wiped if you go down or the Hatch falls. Clearing takes nothing
-extra — the two endings differ in what the screen says, which
-counter ticks, and whether your deepest Wave rises (it rises only on a clear).
+Survive a Hatch-bank and you get a third path that is neither Lost nor Escaped: hold interact at the Hatch to **dock** — return to the Ship with what you banked. Fail that bank and the prompt never appears. Start the next Wave and it is gone.
+
+Losing is cheap for what already made it through the Hatch. **Converted Salvage stays banked.** Unbanked is wiped if you go down or the Hatch falls. Clearing takes nothing extra — Lost and Escaped differ in what the screen says, which counter ticks, and whether your deepest Wave rises (it rises only on a clear). Docked keeps the bank and does not tick a loss.
 
 The Runs are dangerous. The failure is not.
 

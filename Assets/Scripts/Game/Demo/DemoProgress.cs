@@ -3,7 +3,7 @@ using GatekeepersProtocol.Sim;
 namespace GatekeepersProtocol.Game
 {
     /// <summary>Why an EMBARK is refused while the demo's beat 0 is incomplete. Ordered:
-    /// the first unmet gate is the one named (Docs/Demo/0-wake-on-a-dead-ship.md).</summary>
+    /// the first unmet gate is the one named (Docs/Demo - Single/0-wake-on-a-dead-ship.md).</summary>
     public enum DemoEmbarkRefusal
     {
         None,
@@ -41,6 +41,19 @@ namespace GatekeepersProtocol.Game
             if (m == null) return true;
             if (!m.DemoActive) return true;
             return m.DemoWheelBuysLeft < 2;
+        }
+
+        /// <summary>Primary-slot rows are for sale only once zone 2's bank has fallen — that
+        /// loss is what puts heavier hardware on the rack, and it is the event the player just
+        /// played. Never re-key this to a count of endings: a save that docked through zone 1
+        /// arrives on its first ejection and must still be offered the rack
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md). A null meta or a demo-off session never
+        /// closes the rack — outside the demo the whole catalog is open.</summary>
+        public static bool PrimaryRowsOpen(MetaState m)
+        {
+            if (m == null) return true;
+            if (!m.DemoActive) return true;
+            return m.DemoZone2BankLost;
         }
 
         /// <summary>First unmet beat 0 gate, in the refuse table's order. None when the
@@ -100,7 +113,10 @@ namespace GatekeepersProtocol.Game
         {
             if (m == null) return true;
             if (!MetaUpgrades.UpgradesUnlocked(m)) return true;
-            if (m.DemoActive && m.DemoWheelBuysLeft <= 0) return true;
+            // Both ladder rungs, summed: rung 2 hands out buys on its own counter, and reading
+            // rung 1 alone would flip the exit standing to EMBARK while those are still
+            // affordable (Docs/Demo - Single/5-repeat-to-control-room.md).
+            if (m.DemoActive && m.DemoWheelBuysLeft + m.DemoRungTwoBuysLeft <= 0) return true;
 
             long cheapest = long.MaxValue;
             for (int i = 0; i < WeaponCatalog.ArraySize; i++)

@@ -1,4 +1,4 @@
-<!-- Purpose: the defended objective — what threatens it, how repair works, and what repair costs. / Status: working / Update trigger: when the damage sources, the repair charge, or the loss condition change. / Last updated: 2026-08-16 -->
+<!-- Purpose: the defended objective — what threatens it, how repair works, dock after a survived bank, and what repair costs. / Status: working / Update trigger: when the damage sources, the repair charge, the dock window, or the loss condition change. / Last updated: 2026-08-20 -->
 
 # The Hatch
 
@@ -6,7 +6,7 @@
 
 The Hatch is the umbilical junction back to your Ship. If it reaches zero the Run ends immediately — the same ending as your own death.
 
-Field-terminal Waves leave it invulnerable. A Hatch-bank is when it can be hurt, and when Unbanked converts to the ship. Defaults and Thieves hit it on that Wave; Hunters never do.
+Field-terminal Waves leave it invulnerable. A Hatch-bank is when it can be hurt, and when Unbanked converts to the ship. Defaults and Thieves hit it on that Wave; Hunters never do. Survive that bank and, until you start the next Wave, hold interact here to dock home.
 
 Repair needs the Repair Rig equipped and spends banked Salvage per point healed. Letting a Thief reach the door costs more than killing it. Health, rate and price: [Field Manual](Field-Manual.md).
 
@@ -37,6 +37,8 @@ So the shape of the threat to the door depends entirely on what the Wave brought
 Stand at the Hatch and hold interact. It heals continuously while you hold, at a flat rate, but **only if you have the Repair Rig equipped** — without it, holding repair does nothing to a damaged Hatch. Let go and it stops. The rate is in the [Field Manual](Field-Manual.md). Binding: [Field Manual](Field-Manual.md).
 
 Prep select then start while looking at the Hatch, with Unbanked and a slot left, starts a Hatch-bank. That is not repair. A Run has a limited number of Hatch-banks; when they are gone the Hatch refuses. How many: [Field Manual](Field-Manual.md).
+
+Survive that window and the Hatch offers a different hold: **dock — return to the Ship**. It is live until you start the next Wave. Fail the bank and it never appears. Binding: [Field Manual](Field-Manual.md).
 
 If the Hatch is full, Prep, and Unbanked is 0, hold Interact to **withdraw** banked Salvage back into Unbanked. Withdraw does not need the Repair Rig.
 

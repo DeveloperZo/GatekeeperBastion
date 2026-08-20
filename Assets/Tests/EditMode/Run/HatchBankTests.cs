@@ -94,7 +94,6 @@ namespace GatekeepersProtocol.Tests
                 if (i < 2) sim.SeekWave(1);
             }
             Assert.AreEqual(600L, meta.BankedSalvage);
-            Assert.AreEqual(0, sim.HatchBankSlotsLeft);
         }
 
         [Test]
@@ -133,8 +132,11 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(750L, meta.BankedSalvage);
         }
 
+        /// <summary>Banking is uncapped per Run: the 4th window converts like the first three.
+        /// This is what the old slots-per-Run refuse used to forbid
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md, Delete).</summary>
         [Test]
-        public void FourthHatchBank_Refused()
+        public void FourthHatchBank_StillConverts()
         {
             MetaState meta;
             var sim = Tethered(out meta);
@@ -147,10 +149,12 @@ namespace GatekeepersProtocol.Tests
             }
             sim.SeekWave(1);
             TerminalKillsThenPrep(sim, 8);
-            Assert.AreEqual(0, sim.HatchBankSlotsLeft);
-            sim.TriggerDraw(WaveMode.HatchBank);
-            Assert.AreEqual(AssaultState.Prep, sim.Assault);
             Assert.AreEqual(200L, sim.Unbanked);
+            sim.TriggerDraw(WaveMode.HatchBank);
+            Assert.AreEqual(AssaultState.Assault, sim.Assault);
+            RunHatchBankWindow(sim);
+            Assert.AreEqual(0L, sim.Unbanked);
+            Assert.AreEqual(800L, meta.BankedSalvage);
         }
 
         [Test]

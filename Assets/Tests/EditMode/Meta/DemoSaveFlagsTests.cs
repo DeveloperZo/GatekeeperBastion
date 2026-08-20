@@ -5,7 +5,9 @@ namespace GatekeepersProtocol.Tests
 {
     /// <summary>SaveVersion 9: the demo flags round-trip, fresh campaigns start on demo,
     /// and pre-v9 saves migrate demo-off exactly when they have already played
-    /// (Docs/Demo/README.md, Shared flags).</summary>
+    /// (Docs/Demo - Single/README.md, Shared flags). The rung-2 flags were added to the v9 block
+    /// without a version bump, so a v9-era file missing their keys is pinned here too
+    /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
     public class DemoSaveFlagsTests
     {
         [Test]
@@ -21,6 +23,9 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(m.DemoShipFightDone);
             Assert.IsFalse(m.DemoCrewMenuUnlocked);
             Assert.IsFalse(m.DemoFabPowered);
+            Assert.IsFalse(m.DemoZone2BankLost);
+            Assert.IsFalse(m.DemoRungTwoOpened);
+            Assert.AreEqual(0, m.DemoRungTwoBuysLeft, "rung 2 has no buys until it opens");
             Assert.AreEqual(0, m.ZoneDeepest(1));
         }
 
@@ -34,6 +39,9 @@ namespace GatekeepersProtocol.Tests
             m.DemoWeaponGranted = true;
             m.DemoShipFightDone = true;
             m.DemoWheelBuysLeft = 1;
+            m.DemoZone2BankLost = true;
+            m.DemoRungTwoOpened = true;
+            m.DemoRungTwoBuysLeft = 2;
             m.SetZoneDeepest(1, 2);
             m.SetZoneDeepest(2, 3);
 
@@ -50,6 +58,10 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(back.DemoCrewMenuUnlocked);
             Assert.IsFalse(back.DemoFabPowered);
             Assert.AreEqual(1, back.DemoWheelBuysLeft);
+            Assert.IsTrue(back.DemoZone2BankLost);
+            Assert.IsTrue(back.DemoRungTwoOpened);
+            Assert.AreEqual(2, back.DemoRungTwoBuysLeft,
+                "rung 2's counter is its own — the rung-1 counter above stays at 1");
             Assert.AreEqual(2, back.ZoneDeepest(1));
             Assert.AreEqual(3, back.ZoneDeepest(2));
             Assert.AreEqual(0, back.ZoneDeepest(3));
@@ -69,6 +81,30 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(m.DemoCrewMenuUnlocked);
             Assert.IsTrue(m.DemoFabPowered);
             Assert.AreEqual(0, m.DemoWheelBuysLeft);
+            // The three rung-2 flags are the exception to the played-migrates-everything
+            // rule: a pre-v9 save never played zone 2's bank, so they load at their
+            // defaults, not at played.
+            Assert.IsFalse(m.DemoZone2BankLost, "a pre-v9 save never reached zone 2's bank");
+            Assert.IsFalse(m.DemoRungTwoOpened);
+            Assert.AreEqual(0, m.DemoRungTwoBuysLeft);
+        }
+
+        [Test]
+        public void V9Era_MissingTheRungTwoKeys_LoadsThemAtDefaults()
+        {
+            // The rung-2 flags were added to the v9 demo block with no version bump. Every
+            // file written before them is a v9-or-later save with those three keys absent;
+            // the extractors' fallbacks are what makes that load correct, so pin it.
+            var m = MetaState.FromJson(
+                "{\"SaveVersion\":11,\"BankedSalvage\":400,\"CleanExits\":0,"
+                + "\"DemoActive\":true,\"DemoCapsuleOpened\":true,\"DemoNavPowered\":true,"
+                + "\"DemoWheelBuysLeft\":2}");
+            Assert.IsFalse(m.DemoZone2BankLost);
+            Assert.IsFalse(m.DemoRungTwoOpened);
+            Assert.AreEqual(0, m.DemoRungTwoBuysLeft, "a missing int key defaults to 0");
+            Assert.IsTrue(m.DemoActive, "the rest of the v9 block still reads as written");
+            Assert.IsTrue(m.DemoCapsuleOpened);
+            Assert.AreEqual(2, m.DemoWheelBuysLeft, "rung 1's counter is untouched");
         }
 
         [Test]

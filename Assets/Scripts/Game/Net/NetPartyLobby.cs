@@ -207,6 +207,9 @@ namespace GatekeepersProtocol.Game
             PendingStartWave.Value = startWave;
             CountdownRemaining.Value = CountdownSeconds;
             CountingDown.Value = true;
+            // Joins are refused while the countdown runs, so the seat count the party
+            // embarks with is the one assigned here.
+            ShipHatchAssignment.Recompute("embark countdown");
             Log.Event(Tag, "party embark countdown " + CountdownSeconds.ToString("0.0")
                 + "s startWave=" + startWave);
         }

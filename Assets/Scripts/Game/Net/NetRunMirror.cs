@@ -51,6 +51,13 @@ namespace GatekeepersProtocol.Game
         public NetworkVariable<int> Intensity = new NetworkVariable<int>(
             0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>Packed hatch assignment (ShipHatches wire form). Written by
+        /// <see cref="ServerSetHatchAssign"/> on party change and embark — never from
+        /// LateUpdate, which is gated on the Bastion GameController and no-ops on Ship,
+        /// where the doors actually stand. 0 until the host first assigns.</summary>
+        public NetworkVariable<int> HatchAssign = new NetworkVariable<int>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         public bool HasEnd => _hasEnd;
         public EndSummary LastEnd => _lastEnd;
         #endregion
@@ -128,6 +135,13 @@ namespace GatekeepersProtocol.Game
         {
             if (!IsServer || !IsSpawned) return;
             ShowEndScreenClientRpc(summary);
+        }
+
+        /// <summary>Server: adopt a packed hatch assignment so every seat's doors read it.</summary>
+        public void ServerSetHatchAssign(int packed)
+        {
+            if (!IsServer || !IsSpawned) return;
+            if (HatchAssign.Value != packed) HatchAssign.Value = packed;
         }
 
         /// <summary>Server: start a Party-scope demo line on every connected seat. The host

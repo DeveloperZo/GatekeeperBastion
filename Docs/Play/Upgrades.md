@@ -1,4 +1,4 @@
-<!-- Purpose: the permanent upgrade tracks — what each changes about play, what is gated, and what is worth buying. / Status: working / Update trigger: when a track is added, removed, regated, or changes what it affects. / Last updated: 2026-08-17 -->
+<!-- Purpose: the permanent upgrade tracks — what each changes about play, what is gated, and what is worth buying. / Status: working / Update trigger: when a track is added, removed, regated, or changes what it affects. / Last updated: 2026-08-20 -->
 
 # Upgrades
 
@@ -6,7 +6,7 @@
 
 Permanent, campaign-wide. CREW QUARTERS sells the **Boarder Protocol** you wear — how hardware deploys, a Barrage dump, a Rush on your gun. Default is a 0-salvage claim. FABRICATION changes the Hatch — how much it can absorb, the Repair Rig without which you cannot repair at all, and the Decoy that fills the Drone bay.
 
-Weapon Tiers and the equipment slot stay locked until you have been Lost once. Claiming Default and Hatch Armor do not. Costs and curves: [Field Manual](Field-Manual.md).
+Weapon Tiers and the equipment slot stay locked until Salvage first converts through the Hatch. Claiming Default and Hatch Armor do not. Costs and curves: [Field Manual](Field-Manual.md).
 
 ## Reference
 
@@ -36,13 +36,11 @@ There is no Passive pick on Default. VEIL, AEGIS and LEDGER sit on the panel as 
 
 **The Decoy** fills the Drone bay. It is a payload, not a gun, and it is sold here — not at the ARMORY. Ownership and charges: [Field Manual](Field-Manual.md).
 
-### What is gated behind losing, and what is not
+### What is gated behind a Hatch conversion, and what is not
 
-**Weapon Tiers at the ARMORY and the equipment slot at FABRICATION are both locked until you have lost a Run.** Everything else is buyable from the first minute.
+**Weapon Tiers at the ARMORY and the equipment slot at FABRICATION are both locked until Salvage first converts through the Hatch** — a Hatch-bank drip or dump that credits the bank. Docked or Lost after that does not matter; the conversion is the key. Everything else is buyable from the first minute.
 
-The protocol at CREW QUARTERS, Hatch Armor at FABRICATION, the Decoy, and buying the weapons themselves are all available from the first minute of a fresh campaign. Gear that waits until you have been Lost once is the wheel and the Rig's slot — until then you do not yet know what you need.
-
-The lock is the Run-loss counter, and **losing the Hatch trips it exactly as being Lost does.** The locked row says "survive a death first"; a door that fell while you were still standing counts.
+The protocol at CREW QUARTERS, Hatch Armor at FABRICATION, the Decoy, and buying the weapons themselves are all available from the first minute of a fresh campaign. Gear that waits until you have banked once is the wheel and the Rig's slot — until then you do not yet know what you need.
 
 ### What is actually worth buying
 
@@ -63,7 +61,7 @@ The lock is the Run-loss counter, and **losing the Hatch trips it exactly as bei
 ## Gaps
 
 - Nothing in the game lays out the gated/ungated split in one place. You infer it from a locked row at the ARMORY and a reassuring line on the other two panels.
-- The lock reads "survive a death first", but the counter it checks also ticks when the Hatch falls. Losing the door unlocks Tiers. Nothing says that.
+- The lock opens on the first Hatch conversion, not on a Lost Run — docking after a bank still unlocks the wheel. Nothing on the Ship says that.
 - Nothing reduces the Salvage cost of repairing. The Repair Rig is what lets you repair at all, at a fixed rate, and no panel says that owning it changes nothing about the price.
 - Tiers being per weapon and non-transferable is stated nowhere before you buy.
 - There is no respec and no refund. Nothing warns you.

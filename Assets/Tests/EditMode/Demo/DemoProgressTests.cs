@@ -127,6 +127,64 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void PrimaryRows_StayShutUntilZoneTwosBankFalls()
+        {
+            var m = FirstReturnMeta(10_000);
+            Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m),
+                "a fat bank does not buy a Primary — the loss does");
+            m.DemoZone2BankLost = true;
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m), "the bank fell; the rack answers");
+        }
+
+        [Test]
+        public void PrimaryRows_AreNotKeyedOnEndings()
+        {
+            var m = FirstReturnMeta(10_000);
+            m.PodEjections = 5;
+            Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m),
+                "counting ejections must never open the rack — a docked zone 1 arrives here at 1");
+            m.PodEjections = 0;
+            m.DemoZone2BankLost = true;
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),
+                "and the gate holds at zero ejections, which is the recut's whole point");
+        }
+
+        [Test]
+        public void PrimaryRows_AreOpenOffTheDemo()
+        {
+            var m = FirstReturnMeta(10_000);
+            m.DemoActive = false;
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m), "a campaign save has the whole catalog");
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(null), "no meta never closes the rack");
+        }
+
+        [Test]
+        public void ExitStanding_HoldsOpenForRungTwoBuys_AfterRungOneIsSpent()
+        {
+            var m = FirstReturnMeta(10_000);
+            m.DemoWheelBuysLeft = 0;
+            m.DemoRungTwoBuysLeft = 2;
+            Assert.IsFalse(DemoProgress.NoBuyableUpgradeRemains(m),
+                "rung 1 spent but rung 2 open and affordable — the standing must not flip to EMBARK");
+            m.DemoRungTwoBuysLeft = 0;
+            Assert.IsTrue(DemoProgress.NoBuyableUpgradeRemains(m),
+                "both rungs spent is the flip");
+        }
+
+        [Test]
+        public void RungTwo_DoesNotDisturbTheMultiplayerKey()
+        {
+            var m = FirstReturnMeta(10_000);
+            m.DemoWheelBuysLeft = 0;
+            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "rung 1 spent, friends unlocked");
+            m.DemoRungTwoBuysLeft = 2;
+            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m),
+                "opening rung 2 must not re-lock multiplayer — that is why it is a second counter");
+            m.DemoRungTwoBuysLeft = 0;
+            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "and spending it does not either");
+        }
+
+        [Test]
         public void ExitStanding_FlipsAtBuysLeftZero_NoThirdClickNeeded()
         {
             var m = FirstReturnMeta(10_000);
@@ -202,11 +260,11 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void UnlockReload_PlacesAtCapsuleSpawn()
+        public void ReleaseReload_PlacesAtTeleporterSpawn()
         {
             string src = File.ReadAllText(Path.GetFullPath(
                 "Assets/Scripts/Game/Ship/DemoShipDirector.cs"));
-            StringAssert.Contains("PlaceAt(player, _spawnCapsule)", src);
+            StringAssert.Contains("PlaceAt(player, _spawnTeleporter)", src);
         }
 
         [Test]

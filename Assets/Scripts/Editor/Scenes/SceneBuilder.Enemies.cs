@@ -55,6 +55,7 @@ namespace GatekeepersProtocol.EditorTools
         const string ClipIdle = "Assets/Packs/Boarder/Anim_PlayerIdle.fbx";
         const string ClipWalk = "Assets/Packs/Boarder/Anim_Walking.fbx";
         const string ClipRun = "Assets/Packs/Boarder/Anim_PlayerRun.fbx";
+        const string ClipAttack = GatekeeperPackDir + "/Animations/Anim_attack_melee.fbx";
 
         /// <summary>The three gatekeeper prefabs, wired into the WaveSpawner as a set.</summary>
         sealed class EnemyPrefabs
@@ -496,10 +497,18 @@ namespace GatekeepersProtocol.EditorTools
             move.motion = tree;
             sm.defaultState = move;
 
-            // No Mixamo melee take in the Boarder clips — Idle stand-in, short so the
-            // GatekeeperAttackInterval swing clock is not locked behind an 8s idle loop.
+            // The melee take is trimmed to a single 0.53s slash, so the exit time sits past its
+            // contact frame and the state is back in Locomotion inside the
+            // GatekeeperAttackInterval swing clock. Falling back to Idle here would rebuild the
+            // stand-in pose the clip replaced, so say so rather than doing it silently.
+            AnimationClip attackClip = LoadHumanClip(ClipAttack);
+            if (attackClip == null)
+            {
+                Debug.LogError("[SceneBuilder] " + ClipAttack + " missing clip — Attack falls back to Idle.");
+                attackClip = idle;
+            }
             AnimatorState attack = sm.AddState("Attack");
-            attack.motion = idle;
+            attack.motion = attackClip;
             AnimatorStateTransition toAttack = sm.AddAnyStateTransition(attack);
             toAttack.AddCondition(AnimatorConditionMode.If, 0f, "Attack");
             toAttack.hasExitTime = false;
@@ -508,7 +517,7 @@ namespace GatekeepersProtocol.EditorTools
             AnimatorStateTransition back = attack.AddTransition(move);
             back.hasExitTime = true;
             back.hasFixedDuration = true;
-            back.exitTime = 0.2f;
+            back.exitTime = 0.9f;
             back.duration = 0.08f;
 
             EditorUtility.SetDirty(controller);

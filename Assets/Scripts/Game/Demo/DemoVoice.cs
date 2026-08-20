@@ -9,7 +9,7 @@ namespace GatekeepersProtocol.Game
     /// Tick; the Ship/Bastion Esc dispatchers own Esc; the net mirror owns the party RPC and
     /// registers <see cref="SetBroadcaster"/> on the host.
     ///
-    /// Contract (Docs/Demo/voice.md): Lock eats move/look/fire/interact until Continue —
+    /// Contract (Docs/Demo - Single/voice.md): Lock eats move/look/fire/interact until Continue —
     /// the input eating rides <see cref="LocksInput"/> plus the freed cursor (gun and
     /// Interactor both refuse while the cursor is unlocked). Subtitle leaves fight input
     /// live and auto-advances in <see cref="SubtitleSeconds"/>. A new Play preempts a live

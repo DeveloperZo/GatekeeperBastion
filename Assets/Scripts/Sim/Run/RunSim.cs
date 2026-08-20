@@ -57,6 +57,9 @@ namespace GatekeepersProtocol.Sim
         {
         private const string Tag = "RunSim";
 
+        /// <summary>The demo zone whose lost bank window is the authored Primary gate.</summary>
+        private const int Zone2 = 2;
+
         private readonly MetaState _meta;
         private readonly WaveDirector _director = new WaveDirector();
         private readonly PlayerWallets _wallets = new PlayerWallets();
@@ -145,10 +148,6 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>Guest down: wipe that slot's unbanked. Host down still ends the Run.</summary>
         public void WipeUnbankedSlot(int slot) => _wallets.Wipe(slot);
-
-        /// <summary>Hatch-bank starts remaining this Run. Starts at <see cref="HatchBank.SlotsPerRun"/>.</summary>
-        public int HatchBankSlotsLeft { get; private set; }
-
 
         /// <summary>Field Waves cleared since the last Hatch-bank. 0 until the first Terminal draw.</summary>
         public int WavesSinceBank { get; private set; }
@@ -240,6 +239,17 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Raised on every phase transition (also once for Docked on StartRun).</summary>
         public event Action<RunPhase> PhaseChanged;
 
+        /// <summary>Raised once per FIELD Wave cleared, with that Wave's 1-based number
+        /// (clamped to <see cref="WaveDirector.MaxWaves"/>, the same clamp
+        /// <see cref="MetaState.DeepestWaveReached"/> uses). Two call sites raise it and no
+        /// others: <see cref="Tick"/> when a chained composite advances off a Wave, and
+        /// <see cref="NotifyAssaultCleared"/> for the Wave that ends the assault — which is
+        /// the last Wave of a chain, or the only Wave of a single draw. A Hatch-bank window
+        /// is not a field Wave and never raises it. Per-Wave granularity is what lets a
+        /// composite that dies mid-chain record the Waves it did clear
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md, the zone retrigger).</summary>
+        public event Action<int> FieldWaveCleared;
+
         public RunSim(MetaState meta, int seed)
         {
             if (meta == null) throw new ArgumentNullException("meta");
@@ -249,7 +259,6 @@ namespace GatekeepersProtocol.Sim
             Siphon = new TetherSiphon();
             Ship = new ShipSystems(MetaUpgrades.HatchHp(meta.HatchArmorLevel));
             Salvage = new SalvageLedger();
-            HatchBankSlotsLeft = HatchBank.SlotsPerRun;
             Phase = RunPhase.Docked;
             Assault = AssaultState.Prep;
             Mode = WaveMode.Terminal;
@@ -311,7 +320,8 @@ namespace GatekeepersProtocol.Sim
         /// <summary>
         /// Pull a Wave in the given mode. Only valid in Tethered+Prep. Terminal may continue
         /// past MaxWaves (composition clamps). HatchBank does not consume a field Wave,
-        /// refuses if Unbanked is 0 or no slots remain, and never deep-start chains.
+        /// refuses only if Unbanked is 0, and never deep-start chains. There is no per-Run
+        /// cap on Hatch-banks (Docs/Demo - Single/5-repeat-to-control-room.md, Delete).
         /// </summary>
         public void TriggerDraw(WaveMode mode)
         {
@@ -330,12 +340,6 @@ namespace GatekeepersProtocol.Sim
                         Log.Info(Tag, "hatch-bank refused — unbanked=0");
                         return;
                     }
-                    if (HatchBankSlotsLeft <= 0)
-                    {
-                        Log.Info(Tag, "hatch-bank refused — no slots");
-                        return;
-                    }
-                    HatchBankSlotsLeft--;
                     SnapshotHatchCarry();
                 }
                 else if (!_masterHatchMulLocked)
@@ -658,6 +662,12 @@ namespace GatekeepersProtocol.Sim
             for (int i = 0; i < PlayerCount; i++)
                 _wallets.SetDeepest(i, deepest);
 
+            // Raise site 2 of 2. ChainPending above already refused every earlier Wave of a
+            // chain, so this is the LAST Wave of a chain (or the only Wave of a single draw)
+            // and cannot double-fire with the advance in Tick. Mode is still the window's, so
+            // the helper's own Hatch-bank guard is what drops a bank window here.
+            RaiseFieldWaveCleared(deepest);
+
             ClearChainState();
             Assault = AssaultState.Prep;
             var handler = AssaultEnded;
@@ -772,6 +782,10 @@ namespace GatekeepersProtocol.Sim
             if (CurrentWaveIndex > _chainUntil) return;
             if (CurrentWaveIndex >= WaveDirector.MaxWaves) return;
 
+            // Raise site 1 of 2. CurrentWaveIndex is still the outgoing Wave's 1-based number
+            // here — LaunchWave increments it. Raised only past both guards: when either
+            // returns, the chain is over and NotifyAssaultCleared raises for this Wave instead.
+            RaiseFieldWaveCleared(CurrentWaveIndex);
             LaunchWave();
             if (CurrentWaveIndex <= _chainUntil)
                 _awaitingDelivery = true;
@@ -795,6 +809,18 @@ namespace GatekeepersProtocol.Sim
             }
             var handler = WaveStarted;
             if (handler != null) handler(spec);
+        }
+
+        /// <summary>Fire <see cref="FieldWaveCleared"/> for a 1-based field Wave. The single
+        /// place the "not a Hatch-bank window" rule lives, so a future raise site cannot
+        /// forget it. Clamped the same way DeepestWaveReached is, so a draw past the field
+        /// cannot claim a Wave the director does not author. Allocation-free: Tick calls it.</summary>
+        void RaiseFieldWaveCleared(int wave)
+        {
+            if (Mode == WaveMode.HatchBank || wave < 1) return;
+            if (wave > WaveDirector.MaxWaves) wave = WaveDirector.MaxWaves;
+            var handler = FieldWaveCleared;
+            if (handler != null) handler(wave);
         }
 
         void SnapshotHatchCarry()
@@ -845,6 +871,21 @@ namespace GatekeepersProtocol.Sim
             ClearDockOffer();
             RunReport report = BuildRunReport(cause);
             if (!docked) _meta.PodEjections++;
+            // Zone 2's bank falling is the authored loss that puts a Primary on the rack
+            // (Docs/Demo - Single/5-repeat-to-control-room.md). Nothing above this line resets Mode or
+            // Assault, so they still hold the values the window ended with — a live bank is
+            // HatchBank+Assault, and a Lost during the zone's FIELD Waves is Terminal and does
+            // not qualify. CurrentWaveIndex is the 1-based number of the last field Wave
+            // launched (a Hatch-bank does not advance it), which is what ZoneOfWave takes.
+            // PodEjections is untouched: both loss kinds still move it.
+            // WaveIsIn, not ZoneOfWave: the latter FLOORS a Wave past the last authored zone
+            // onto that zone, and both the Master Control terminal half and the terminals
+            // past the table's end draw past it — so a floored read credited the finale's
+            // lost window to zone 2's bank.
+            if (!docked && _meta != null && _meta.DemoActive
+                && Mode == WaveMode.HatchBank && Assault == AssaultState.Assault
+                && DemoZones.WaveIsIn(Zone2, CurrentWaveIndex))
+                _meta.DemoZone2BankLost = true;
             LastRunReport = report;
             SetPhase(docked ? RunPhase.Returned : RunPhase.Lost);
             long net = report.grossEarned - report.repairSpent;

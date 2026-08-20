@@ -6,7 +6,7 @@ Between Runs you stand on the Ship. Solo: your own hub. Friends session: the sha
 
 Buy the free sidearm first. Then CREW QUARTERS — claim the Default Protocol (it costs
 nothing; that is how you learn the console). Weapon upgrades and the equipment slot
-wait until you have been Lost once. The NAV MAP warns if you own no weapon or no
+wait until Salvage first converts through the Hatch. The NAV MAP warns if you own no weapon or no
 protocol and lets you go anyway. Numbers and bindings: [Field Manual](Field-Manual.md).
 
 ## Reference
@@ -47,8 +47,8 @@ The NAV MAP will warn you loudly if you own no weapon or no protocol and then le
 **The free sidearm at the ARMORY, before anything.** It costs nothing, and the only reason it is sold rather than given is so that the first thing you learn is that weapons come from that console.
 
 **Then CREW QUARTERS.** Claim Default — it costs nothing, same reason the sidearm is
-sold rather than given. Weapon upgrades and the equipment slot are locked until you
-have lost a Run. Hatch Armor at FABRICATION is also open from the first minute.
+sold rather than given. Weapon upgrades and the equipment slot are locked until Salvage
+first converts through the Hatch. Hatch Armor at FABRICATION is also open from the first minute.
 
 **Then whatever killed you.** If the Hatch fell while you were still standing, that is FABRICATION and not you at all.
 

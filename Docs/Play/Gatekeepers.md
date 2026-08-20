@@ -1,4 +1,4 @@
-<!-- Purpose: the Gatekeeper roster as a player meets it — what each kind is, and the one thing each refuses to do. / Status: working / Update trigger: when a kind is added, renamed, or its refusal changes. / Last updated: 2026-08-19 -->
+<!-- Purpose: the Gatekeeper roster as a player meets it — what each kind is, and the one thing each refuses to do. / Status: working / Update trigger: when a kind is added, renamed, or its refusal changes. / Last updated: 2026-08-20 -->
 
 # Gatekeepers
 
@@ -6,13 +6,13 @@
 
 Gatekeepers hold the Bastion. You are the Boarder who cut in; they are already home. They arrive from garrison to repel an intrusion — reclaim the room, cut the umbilical, throw you off.
 
-Three kinds, separated only by what each refuses. A Default can be pulled off the Hatch at a cost. A Hunter is already on you and never touches the door. A Thief hunts you on a field-terminal Wave and the Hatch on a Hatch-bank, and shooting it never shouts.
+Three machines, told apart by silhouette before they arrive. Separated only by what each refuses. A Default can be pulled off the Hatch at a cost. A Hunter is already on you and never touches the door. A Thief hunts you on a field-terminal Wave and the Hatch on a Hatch-bank, and shooting it never shouts. They all swing on the same clock.
 
 They arrive in groups from rotating entry points. Kill them during a live Wave and Salvage sits Unbanked until a Hatch-bank. Numbers: [Field Manual](Field-Manual.md).
 
 ## Reference
 
-Everything that comes at you on the Bastion is a Gatekeeper. There are three kinds and no others. They all swing on the same clock — none of them attacks faster than another — and they all die the same way, to bullets, with no weak point and no resistances. What separates them is entirely **what each one refuses to do**.
+Everything that comes at you on the Bastion is a Gatekeeper. There are three kinds and no others. They are machines — three different frames, not three paints on one body — so you can sort a group by shape at engagement distance. They all swing on the same clock — none of them attacks faster than another — and they all die the same way, to bullets, with no weak point and no resistances. What separates them in play is entirely **what each one refuses to do**.
 
 For every number on this page — health, damage, speed, how many of each kind a Wave contains — see the [Field Manual](Field-Manual.md).
 
@@ -86,7 +86,7 @@ Being Lost ends the Run, and so does losing the Hatch. Both keep everything alre
 - Nothing on screen ever breaks the remaining count down by kind. The Assault panel gives you one total, so "eleven left" could be eleven Defaults or eight Defaults and three Thieves, and you cannot check.
 - Nothing tells you a Wave's composition *before* you start it. Prep tells you how many bodies are coming, not how many of them are Hunters or Thieves.
 - The shout is invisible and silent. Nothing indicates that shooting one Gatekeeper just flipped four others onto you.
-- Being seen at range provokes a Default permanently, and there is no cue for it at all. A Gatekeeper that noticed you across a room looks exactly like one that did not until it arrives.
+- Being seen at range provokes a Default permanently, and there is no cue for it at all. A Gatekeeper that noticed you across a room looks exactly like one that did not until it arrives — same frame, same walk; only the path changes.
 - That Gatekeepers near the Hatch can never be pulled off it is never stated. It reads as the AI ignoring you.
 - Entry points rotate per group, and the game never shows you where they are or which one is next.
 - Your health does not regenerate at any point in a Run, and nothing on the Bastion restores it. Damage taken in the first Wave is still missing in the last one.

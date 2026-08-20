@@ -8,6 +8,174 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-20
 -->
 
+- 2026-08-20: **`M91` started and its code half landed — the wake bed becomes a
+  teleporter.** `ShipCapsule.cs` is now `ShipTeleporter.cs` (`git mv`, `.meta`
+  moved with it so the component guid survives); the phase machine
+  `Dormant → Black → Fade → Stir → Sealed → Opening → Done` is unchanged. The
+  session-long `SetCapsuleTrigger(true)` that was never restored is **deleted**,
+  not managed — a pad and an overhead emitter share no footprint with a standing
+  rig, so nothing needs to go trigger. Both forced-pitch writes are gone: the
+  sealed pose now starts level, so there is nothing to correct at release and
+  nothing to yank the view of a player who looked around during the stir. The
+  glass retracts **down** into the pad. `DemoCapsuleOpened` keeps its name — it is
+  a serialized save field and renaming it buys a version bump for nothing.
+  Two things the milestone's change list missed, both caught by compiling:
+  `DemoProgressTests` pinned the director's **source text** on `_spawnCapsule` and
+  would have failed, and the beat-0 spec `Docs/Demo - Single/0-wake-on-a-dead-ship.md`
+  pins the prompts, objective, log lines and lid mechanics — its own update trigger
+  is "when spawn furniture changes", so it was restamped.
+  Verified: all five Unity-generated assemblies build offline with `dotnet build`
+  (`GatekeepersProtocol`, `.Sim`, `.Editor`, `.Tests`, `.PlayTests`) — this reaches
+  `Game/` and `Editor/`, which `Tools/verify/run.sh` does not compile, and it is
+  what caught a missed `_capsule` on the demo-off dormant path. `lint-arch` clean;
+  criterion 7's `SetCapsuleTrigger` grep returns nothing.
+  **The scene subtree landed too**, after the rename was found to have orphaned all
+  four bindings — beat 0 logged `no teleporter wired` and was dead in play, which is
+  how the gap surfaced. `Demo Capsule` becomes `Demo Teleporter`; `Pad`, `Glass`
+  (+ a mirrored `Glass Inner` for the inside face, since Built-in `Standard` exposes
+  no `_Cull`), `Emitter` and `Console` are graybox primitives; `Bed` and `Lid` are
+  deactivated, not deleted. Geometry is read off the rig rather than assumed — the
+  `CharacterController` is height 1.8 at y 1.1, so the deck is 0.2 and the eye 1.75,
+  and a first pass sat 0.1-0.15 low. Two corrections the primitives forced: a Unity
+  cylinder ships a `CapsuleCollider` that cannot squash below twice its radius and so
+  bulges into the standing rig — `Pad` and `Emitter` carry boxes instead — and
+  `GlassRetractMetres` moved 1.1 to 2.5, because a 2.4 m tube dropped 1.1 m is still
+  chest-high. Criterion 1's collider clause is measured against the real capsule
+  (r 0.35 + 0.08 skin, y 0.2-2.0), not asserted: `Pad` meets the feet at 0.20 without
+  crossing, `Emitter` clears the head by 0.60 m, `Console` by 0.92 m horizontally,
+  `Glass` has no collider.
+  Criteria 8 and 9 still need a playthrough on a fresh save, and the stamped
+  `demo.wake` line still opens "Capsule open."
+
+- 2026-08-20: **`M81`'s one flagged loose end closed — the scene generator no
+  longer reverts the swing.** `M81` shipped the attack clip as a hand edit to
+  `Packs/Gatekeepers/Gatekeeper.controller` and recorded, in its own doc, that
+  `SceneBuilder.Enemies.EnsureGatekeeperController()` still authored the Idle
+  stand-in and a `0.2` exit time — the one way the milestone could silently
+  revert, if the `.controller` were ever deleted and rebuilt. The generator now
+  loads `Anim_attack_melee.fbx` through the same `LoadHumanClip` as the
+  locomotion clips and sets the exit time to `0.9`; a missing clip logs the path
+  and falls back to Idle rather than rebuilding the stand-in in silence. No
+  status change — `M81` stays closed and this is a correction to a shipped
+  record, not a reopening.
+  Verified: `lint-arch` clean; the full Unity suites through the file bridge,
+  whose precheck compiles `Editor/` (the offline harness does not), EditMode
+  582/9 and PlayMode 54/3 — the same pre-existing failing set, none of it near
+  this. Criterion 3 re-checked from the two files: the Attack state names guid
+  `03ede1e3f3df7b14fbb44ae773ed0c02` with fileID `-203655887218126122`, which
+  equals the `internalID` in the clip's `.meta`, and `Anim_PlayerIdle`'s guid
+  appears only in the blend tree. Not observed: an actual regeneration — that
+  needs the committed `.controller` and its guid-bearing `.meta` deleted, which
+  three pack prefabs reference.
+
+- 2026-08-20: **`M79` closed — this loss opens the Primary.** Criterion 10 closed
+  under the **dev-tainted allowance ruled the same day** (`Decisions.md`) — the
+  first application of it. No on-screen playthrough was observed by the
+  implementer; what closes it is `ZoneTwoLoopPlayModeTests`, which drives the real
+  `Bastion.unity` through the real `GameController` and proves the bank refuses
+  while the zone is incomplete, that one trigger runs one composite without
+  returning to Prep, that the zone's completion unblocks the bank, that a breach
+  inside the window writes the gate and leaves D2 shut, and that surviving opens
+  D2. **Criterion 9 stays open**: those tests do not fight, so they prove the
+  loop's shape and not its difficulty — whether a rung-1 kit holds three Waves and
+  whether the bank sits above that ceiling is the composition bet and needs a
+  logged Run.
+  Two defects were found and fixed during the close. A Lost on the Master Control
+  Hatch half was writing `DemoZone2BankLost`, because that half draws past
+  `MaxWaves` and `ZoneOfWave` **floors** a deeper Wave onto the last authored zone;
+  the gate now asks the new non-flooring `DemoZones.WaveIsIn`, and the floor stays
+  the right read for naming a zone in a log. And the PlayMode fixture's first draft
+  called `GameSession.EnsureLoaded()`, which pulled the developer's campaign into
+  the test session and left it there — every later Ship fixture then loaded a
+  demo-active Ship and ten unrelated tests failed. A fixture may not decide what
+  the session is for the fixtures after it.
+  Closing numbers: lints clean, offline harness 522/8, EditMode 594/9, PlayMode
+  49/11. The 11 PlayMode failures were **attributed by experiment** — the new test
+  file was removed and the suite re-run, and the same 11 failed without it. They
+  belong to `M91`, in progress in the same working tree: it renames the wake
+  capsule to a teleporter, and until the Ship scene is re-authored
+  `DemoShipDirector` logs `[Demo] no teleporter wired` as an ERROR, which fails
+  every fixture that loads the Ship.
+  Also this session: `DemoVoiceTests` stopped hardcoding `Docs/Demo` and now finds
+  the beat specs by structure — the one folder under `Docs/` holding `voice.md` —
+  failing loudly rather than defaulting when it is missing or ambiguous; the 46
+  stale `Docs/Demo/` citations across 21 code and test files were repointed at
+  `Docs/Demo - Single/`.
+
+- 2026-08-20: **`M80`'s two blocking owner inputs stamped; it is startable.**
+  **(1)** The finale's first authored body is **one high-HP elite, no escorts** —
+  one lever, so a failed ordering bet is attributable. **(2)** Finale access:
+  **D3 stays exactly as authored, zero code.** That input had been recorded as
+  blocking on the belief the ruled shape orphaned the Control Room; the tree says
+  otherwise. M77 already re-keyed **every** door onto bank survival, D3 included,
+  so its `T4,T5` requirement is an eligibility predicate and not a trigger — the
+  same shape D1 and D2 have — and T4/T5 sit behind D2, reachable and completable
+  today. Rejected: moving Control Room access to D2, because the seal follows the
+  `OpensControlRoom` flag and would seal the staging hall as well as the room.
+  A code-state audit also found much of `M80` already built: the `demo.door_d3`
+  merge rule, the ControlW/E spawn wiring, and every "wheel uncapped / FAB
+  powered" gate, which are all already `DemoActive`-guarded and no-op the moment
+  the flag flips. `DemoFabPowered` has zero readers. What is actually owed is
+  `EndDemo` (two field writes), a carrier so `demo.escaped` can play once the flag
+  is off, three unplayed voice lines on hooks that exist, and a decision about
+  whether `MasterControl.HatchWaves` stays `const` — at 1 it retires the
+  intermediate-window machinery from test coverage that the milestone says must
+  survive.
+
+- 2026-08-20: **`M79` built — zone 2, the bank that sells the Primary, and the
+  ladder's second rung.** `DemoZones` is a new per-zone table (terminal ids, Waves
+  per trigger, Wave span, door); `FirstTerminal` forwards its zone-1 constants there
+  so there is one source of truth. T3 now launches its three Waves as one composite
+  with no Prep between them, on the same completion path the post-loss retrigger
+  uses. `RunSim` gained `FieldWaveCleared`, raised once per field Wave, so a
+  composite that dies mid-chain still records what it cleared — without it the
+  partial election had nothing to read. A Lost inside zone 2's bank window writes
+  `DemoZone2BankLost`; that flag, never `PodEjections`, opens rung 2 (the PRIMARY
+  rows plus two buys on their own counter) and fires `demo.second_loss`, whose copy
+  was restamped off "Thrown off again" because this may be the save's first
+  ejection. **The Primary rows had to be closed before they could be opened** — they
+  were on sale from the first ARMORY visit. Bank-slot bookkeeping retired across 16
+  sites, docgen and its `4-Data` block. `MaxWaves` was NOT re-keyed: it is an
+  absolute end-Wave ceiling and zone 2's Waves 3..5 fit under it.
+  Verified: lints clean; offline harness 520/9 (all 9 pre-existing); the full Unity
+  suites twice with an identical failing set (EditMode 581/10, PlayMode 54/3), every
+  failure shown to be outside this milestone. The first bridge run caught a real
+  compile error in `Game/Bastion` that no offline check can see — that folder is not
+  in the offline harness's compile set. Two new behaviour suites were each proved
+  green and against a seeded violation. Criterion 10, Zo's playthrough, is the close
+  gate and is open.
+  Two unrelated reds surfaced and are filed, not fixed here: the `Docs/Demo` →
+  `Docs/Demo - Single` rename breaks `DemoVoiceTests.BeatDocs_CitedIdsAreInTheRegistry`
+  (it hardcodes the path) and stales a dozen code citations; and
+  `CoreLoopPlayModeTests` still asserts "first death unlocks the Armory upgrade rows",
+  which `M78`'s re-key to `HatchConversions >= 1` made false.
+
+- 2026-08-20: **`M79` started, realigned against the tree, and `M90` cut out of it.**
+  The recut of 2026-08-19 was sound as design and wrong about the code in four
+  places, all found by reading the tree before building. **(1)** The Primary rows
+  are **not** locked today — BR-12, MR-35 and PRI-C are all in `ShopWeapons()` and
+  `ShipCommands.BuyWeapon` carries no demo check, so `M79` **adds** the gate rather
+  than opening one; until it lands, a large zone-1 bank buys PRI-C in beat 3 and
+  pre-empts the whole arc. **(2)** There is no `PodEjections >= 2` reader to delete
+  — the only thing encoding "loss 2 → Primary" is dev checkpoint 4's *writer* and
+  its test. **(3)** Rung 2 must not extend `DemoWheelBuysLeft`: that counter's
+  absolute value is the multiplayer key (`< 2`) and the once-per-save MP line's
+  guard (`== 1`), so raising it would re-lock multiplayer mid-demo and replay
+  `demo.mp_unlocked`. Rung 2 gets its own counter. **(4)** Zone 2 does not exist in
+  code at all — no terminal→zone table, `WavesFor("T3") == 1`, the bank gate and
+  retrigger offer both hardcoded to T1/T2. Three premises resolved the other way
+  and are owed nothing: the done-terminal `[E] Open door` branch is already gone,
+  doors are already keyed to bank survival, and there is no `FirstTerminal` 3-Wave
+  cycle to retire. The terminal-AND graph is **not** deletable — D2 reads T3
+  through it and `BastionUnlockGraph.Validate` requires exactly one control gate.
+  **`M90` — Buy back at a live window** carries the co-op buy-back criterion out of
+  `M79`: banked Salvage is per-machine, not per-seat (a guest's `Banked` is written
+  only for slot 0 from the host's own save and never reported back), the mirror
+  carries no `WaveMode`, and doors are HOST-ONLY — three new systems and a
+  client-authority hole, blocked on Zo's wallet ruling and on what "live window"
+  means against the existing free embark. `demo.second_loss` gained its registry
+  row in `voice.md`, which the recut had missed.
+
 - 2026-08-20: **`M78` closed — the first return.** Criterion 9's double
   playthrough (`Lost` and `Returned`) stamped by Zo. Criteria 0–8 were in
   tree from the 2026-08-19 build; 1–7 confirmed on screen by criterion 9's

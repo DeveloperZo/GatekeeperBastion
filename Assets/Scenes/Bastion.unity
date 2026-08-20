@@ -121612,7 +121612,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.BastionTerminal
   terminalId: T3
   kind: 0
-  wavesToComplete: 1
+  wavesToComplete: 3
   unlocksDoor: {fileID: 1562285484}
   unlockedSpawns: []
   _game: {fileID: 597519392}

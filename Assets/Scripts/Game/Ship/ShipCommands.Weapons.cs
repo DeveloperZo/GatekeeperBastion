@@ -36,6 +36,17 @@ namespace GatekeepersProtocol.Game
             }
 
             var def = WeaponCatalog.Def(id);
+            // Ladder rung 2 sells the Primaries. Placed after "not available" and "already
+            // owned" — those are facts about the weapon, and an owned Primary has nothing to
+            // refuse — and BEFORE any price check or SpendSalvage, so a player who is also
+            // short hears the lock, which is the reason still true after they bank more
+            // (Docs/Demo - Single/5-repeat-to-control-room.md).
+            if (def.slot == WeaponSlot.Primary && !DemoProgress.PrimaryRowsOpen(m))
+            {
+                Log.Event("Demo", "weapon refused — primary locked");
+                return false;
+            }
+
             long cost = def.cost;
             // Cost 0 is affordable at BankedSalvage 0 — do NOT require SpendSalvage (it rejects <=0).
             if (cost > 0)
@@ -112,11 +123,17 @@ namespace GatekeepersProtocol.Game
                     $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — locked until salvage banks through the Hatch");
                 return false;
             }
-            // Wheel ladder rung 1: at most two purchases while the demo runs. Named refuse
-            // BEFORE any SpendSalvage; the count never resets per visit (beat 3, Traps).
-            if (m.DemoActive && m.DemoWheelBuysLeft <= 0)
+            // Wheel ladder, two rungs on two counters: rung 1's two demo purchases are spent
+            // first, then rung 2's own counter, opened by zone 2's bank falling. Named refuse
+            // BEFORE any SpendSalvage, and which name depends on how far the ladder got —
+            // "demo cap" while rung 2 has not opened, "ladder rung spent" once it has and its
+            // buys are gone. Neither count resets per visit (beat 3, Traps;
+            // Docs/Demo - Single/5-repeat-to-control-room.md).
+            if (m.DemoActive && m.DemoWheelBuysLeft <= 0 && m.DemoRungTwoBuysLeft <= 0)
             {
-                Log.Event("Demo", "wheel refused — demo cap");
+                Log.Event("Demo", m.DemoRungTwoOpened
+                    ? "wheel refused — ladder rung spent"
+                    : "wheel refused — demo cap");
                 DemoShipStanding.Reevaluate();
                 return false;
             }
@@ -148,10 +165,21 @@ namespace GatekeepersProtocol.Game
             bool firstDemoBuy = false;
             if (m.DemoActive)
             {
-                m.DemoWheelBuysLeft--;
-                // 2 → 1 is that save's first wheel purchase: the multiplayer key
-                // (DemoProgress.MultiplayerUnlocked), once per save by construction.
-                firstDemoBuy = m.DemoWheelBuysLeft == 1;
+                // Rung 1 first, rung 2 only once rung 1 is exhausted. The two counters stay
+                // separate: rung 1's absolute value is the multiplayer key, so a rung-2 buy
+                // must never write it (Docs/Demo - Single/5-repeat-to-control-room.md).
+                if (m.DemoWheelBuysLeft > 0)
+                {
+                    m.DemoWheelBuysLeft--;
+                    // 2 → 1 is that save's first wheel purchase: the multiplayer key
+                    // (DemoProgress.MultiplayerUnlocked), once per save by construction.
+                    // Rung 2 cannot re-fire it — it never touches this counter.
+                    firstDemoBuy = m.DemoWheelBuysLeft == 1;
+                }
+                else if (m.DemoRungTwoBuysLeft > 0)
+                {
+                    m.DemoRungTwoBuysLeft--;
+                }
             }
             GameSession.Save();
 
@@ -169,7 +197,9 @@ namespace GatekeepersProtocol.Game
                 got++;
             }
 
-            string demoSuffix = m.DemoActive ? $" demoBuysLeft={m.DemoWheelBuysLeft}" : "";
+            string demoSuffix = m.DemoActive
+                ? $" demoBuysLeft={m.DemoWheelBuysLeft} rungTwoBuysLeft={m.DemoRungTwoBuysLeft}"
+                : "";
             Log.Event("Ship",
                 $"bought {WeaponCatalog.Def(id).displayName} focus {WeaponWheel.AttrLabel(centre)} " +
                 $"(+{WeaponWheel.AttrLabel(n0)}, +{WeaponWheel.AttrLabel(n1)}) for {price} — " +

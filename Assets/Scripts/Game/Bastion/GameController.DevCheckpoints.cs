@@ -95,32 +95,50 @@ namespace GatekeepersProtocol.Game
             m.SetOpenDoorIds(new[] { "D1" });
             if (digit == 3) return m;
 
-            // Zone 2 taken (ahead of that beat's build): loss 2's granted Primary kit, D2
-            // open — the Control Room approach is the next section. The kit is paid for
-            // through the ledger, not granted: an unpaid weapon trips the load-time
-            // spend-floor repair and the state stops resembling a played save.
+            // Zone 2 taken: its bank fell — which is what put a Primary on the rack — then
+            // the retrigger cleared the zone and D2 opened. The Control Room approach is the
+            // next section. The kit is bought, not granted: an unpaid weapon trips the
+            // load-time spend-floor repair and the state stops resembling a played save.
+            // PodEjections is bookkeeping here, NOT the gate: DemoZone2BankLost is what sells
+            // the rack, and it is set below so this checkpoint exercises the real key rather
+            // than a count that no longer opens anything
+            // (Docs/Demo - Single/5-repeat-to-control-room.md).
             m.TotalRuns = 3;
             m.PodEjections = 2;
             m.HatchConversions = 3;
             m.DeepestWaveReached = WaveDirector.MaxWaves;
-            m.SetZoneDeepest(FirstTerminal.ZoneOneNumber + 1, WaveDirector.MaxWaves);
+            int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
+            m.SetZoneDeepest(zoneTwo, WaveDirector.MaxWaves);
+            // The bank that fell, and the rung it opened. DemoRungTwoOpened is the resolve's
+            // once-per-save latch, so setting it here keeps demo.second_loss from replaying
+            // on the Ship load this checkpoint drops the player into — the rack is already
+            // open at this point in the beat, and the line has already been heard.
+            m.DemoZone2BankLost = true;
+            m.DemoRungTwoOpened = true;
             long kitCost = WeaponCatalog.Def(WeaponId.PriC).cost + WeaponTier.SpentToReach(2);
             m.EarnSalvage(kitCost);
             m.SpendSalvage(kitCost);
             m.SetOwned(WeaponId.PriC, true);
             m.ReplacePointsFromFlatTier(WeaponId.PriC, 2);
             m.SetEquipped(WeaponId.PriC);
+            // One rung-2 buy spent on the kit's tiers above, one left to walk to the ARMORY
+            // and spend, so the checkpoint lands mid-rung rather than on a spent ladder.
+            m.DemoRungTwoBuysLeft = 1;
             m.EarnSalvage(400);
-            m.SetCompletedTerminalIds(new[] { FirstTerminal.Id, FirstTerminal.SecondId, "T3" });
-            m.SetOpenDoorIds(new[] { "D1", "D2" });
+            m.SetCompletedTerminalIds(new[]
+            {
+                FirstTerminal.Id, FirstTerminal.SecondId, DemoZones.TerminalIdAt(zoneTwo, 0),
+            });
+            m.SetOpenDoorIds(new[] { DemoZones.DoorId(FirstTerminal.ZoneOneNumber), DemoZones.DoorId(zoneTwo) });
             return m;
         }
 
         /// <summary>Digit 5: replay the zone loop in place — every terminal incomplete, every
         /// locked door shut, snapshots cleared, the next draw pointed back at wave 1. The
         /// saved DemoZoneDeepestWave is deliberately kept, so the retrigger offer re-appears
-        /// at the deepest terminal exactly as after a real loss. Bank slots are per-Run and
-        /// cannot be restored; the log names what is left.</summary>
+        /// at the deepest terminal exactly as after a real loss. Nothing about the Hatch-bank
+        /// needs restoring — banking carries no per-Run budget
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md, Delete).</summary>
         public void ResetZoneProgress()
         {
             GameSession.NotifyDevAction();
@@ -152,7 +170,7 @@ namespace GatekeepersProtocol.Game
             }
             Sim.SeekWave(1);
             Log.Event("Dev", "zone progress reset — terminals re-armed, doors re-locked, "
-                + "next draw is wave 1; bank slots left " + Sim.HatchBankSlotsLeft);
+                + "next draw is wave 1");
         }
     }
 }

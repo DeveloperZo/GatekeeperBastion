@@ -24,8 +24,8 @@ Ruled (Zo, 2026-08-17): this window is **authored loss 1** — an overwhelm the
 no-upgrade kit cannot clear. Aim: **~2k** Unbanked at start, **~500** banked
 when the Hatch falls (both tunable). Surviving a bank's timer window unlocks
 the zone's door (D1 here); a failed bank never unlocks. The loss funds and
-unlocks the wheel (beat 3). Loss 2 is zone 2's banked Wave (another editor's
-files).
+unlocks the wheel (beat 3). Zone 2's banked Wave is the loss that sells the
+Primary (`M79`; may be this save's first or second ejection).
 
 The base mechanics are in tree: drip is **8/s** (`HatchBank.DripPerSecond` —
 lever 2 shipped), no dump on start, survive dumps, `EndRun` wipes the remainder

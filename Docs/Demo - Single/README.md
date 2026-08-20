@@ -35,14 +35,14 @@ This folder is what an implementer reads. The first-session brainstorm that poin
 | NAV after that Hatch-bank | **Dead** (Zo, 2026-08-17). No NAV skip; refight-avoidance lives at the terminal: post-loss the zone's **deepest terminal retriggers the composite** by default, partial start electable | Beat 4. v9 skip fields re-key or die (Shared flags) |
 | Starting weapon | **MK-1** off the bare ARMORY rack, mid beat-0 fight, no panel. SEC-D stays a 0-salvage buy when the panel unlocks | Beats 0 and 3 |
 | Beat 0 fight | Ship terminal (E/T, Bastion pattern) powers ARMORY + spawns **2** weak Gatekeepers; gated Lock for the pickup (intruder release gated on the line's Continue — **no** `timeScale = 0`; Zo, 2026-08-17); HP floor **1**; CREW heals on interact, **no menu** | Beat 0. First menu of the demo is NAV's picker |
-| Two authored losses | The unlock spine (Zo, 2026-08-17). Loss 1 = zone 1's first bank: authored overwhelm vs the no-upgrade kit ceiling (aim ~2k Unbanked at start, ~500 banked when the Hatch falls; tunable) → wheel + Secondary buys + multiplayer on first purchase. Loss 2 = zone 2's banked Wave (another editor's files) → Primary + 2 upgrades granted outside the count. Both windows are **unclearable** by design | Beats 2–3 + loss 2's beat |
-| Ship return after a survived bank | Held interact at the Hatch, available until the next Wave is triggered; ends the Run **Docked**, not Lost; banked + door state persist via the successful-bank snapshot (Zo, 2026-08-17). Never skips the unlock deaths — both authored losses are unclearable windows | Beats 2, 5+. Wheel key re-keyed to the first bank — `HatchConversions >= 1` (Zo, 2026-08-18; `Decisions.md`, *the wheel opens on the first bank*) |
+| Two authored losses | The unlock spine (Zo, 2026-08-17; **zone-2 recut 2026-08-19**). Loss 1 = zone 1's first bank: authored overwhelm vs the no-upgrade kit ceiling (aim ~2k Unbanked at start, ~500 banked when the Hatch falls; tunable) → wheel + Secondary buys + multiplayer on first purchase. Zone 2's **field Waves are survivable** on the secondary kit; zone 2's **bank** is the authored loss that **sells** the Primary + 2 upgrades outside the count — that ejection may be the save's first or its second. `PodEjections` is not the Primary gate. Zone 2's bank remains **unclearable** on the secondary kit | Beats 2–3 + beat 5 |
+| Ship return after a survived bank | Held interact at the Hatch, available until the next Wave is triggered; ends the Run **Docked**, not Lost; banked + door state persist via the successful-bank snapshot (Zo, 2026-08-17). Zone 2's bank remains an unclearable window on the secondary kit, so return-to-Ship cannot skip the Primary gate. Wheel key is the first bank — `HatchConversions >= 1` (Zo, 2026-08-18; `Decisions.md`, *the wheel opens on the first bank*). Primary key is zone 2's bank falling (Zo, 2026-08-19; `M79`) | Beats 2, 5+. |
 | Co-op buy-back | A dead player may buy back in **only while a bank window is live**, rejoining at the Hatch, paying from their **own** banked salvage (cost tunable) (Zo, 2026-08-17) | Beats 4+. Open: dead-host vs `M49` (Gaps) |
 | Doors | Unlock on **zone bank success** (Zo, 2026-08-17): D1 = zone 1's bank, D2 = zone 2's, then the finale's single final bank | Beats 2, 5–7 |
 | Default Protocol | CREW **menu** unlocks on **first Docked after first loss** (re-keyed off Wave-2-seen; Zo, 2026-08-17); CREW heals on interact from beat 0 | Beats 3–4. `M70` is the claim |
 | Multiplayer gate | **Locked until that save's first wheel purchase** (`DemoWheelBuysLeft < 2 \|\| !DemoActive`). F10/F11 and lobby entry refuse with a named log. Beats 0–3 are solo for every save | Every beat. Kills guest capsule-skip rules |
 | Voice audience | Host starts a **line id**; every seat plays it locally. No player replies. Assault: subtitles, no input lock | `voice.md` |
-| Wheel during demo | A **ladder** (Zo, 2026-08-17): at most **2** Secondary purchases while `DemoActive` after loss 1; at loss 2 a **Primary + 2 upgrades are granted outside that count**. The loss-1 aim (~500 banked, tunable) funds both buys | Beat 3 + loss 2's beat. Do not gift Salvage |
+| Wheel during demo | A **ladder** (Zo, 2026-08-17; Primary gate recut 2026-08-19): at most **2** Secondary purchases while `DemoActive` after the first bank; when zone 2's bank falls a **Primary + 2 upgrades are sold outside that count** (not granted; not keyed on a second ejection). The loss-1 aim (~500 banked, tunable) funds both secondary buys | Beat 3 + beat 5. Do not gift Salvage |
 | Beat 3 exit standing | Fires when **no buyable upgrades remain** (state-keyed; replaces the third-refuse trigger) (Zo, 2026-08-17) | Beat 3 |
 | Juice | **Taught** after first Wave 1. Live after that, including the finale | Beat 1. Withhold stamp overturned |
 | FABRICATION | Dark while `DemoActive` | Beats 0, 3, 5 |
@@ -53,12 +53,12 @@ This folder is what an implementer reads. The first-session brainstorm that poin
 | File | Player-visible change |
 |---|---|
 | [`voice.md`](voice.md) | Mission dialogue, no VO, no player replies; Shift runner; Ship/Prep can lock input; Assault cannot; no line pauses (`timeScale` exception withdrawn 2026-08-17) |
-| [`0-wake-on-a-dead-ship.md`](0-wake-on-a-dead-ship.md) | Play-through: fade, stir, unlock capsule, NAV, ship terminal, 2 Gatekeepers (release gated on the line's Continue), MK-1, CREW heal, EMBARK |
+| [`0-wake-on-a-dead-ship.md`](0-wake-on-a-dead-ship.md) | Play-through: fade, stir, release teleporter, NAV, ship terminal, 2 Gatekeepers (release gated on the line's Continue), MK-1, CREW heal, EMBARK |
 | [`1-first-terminal.md`](1-first-terminal.md) | Explore → zone 1's two field terminals, one Wave each; teach juice; Hatch-bank next |
 | [`2-first-hatch-bank.md`](2-first-hatch-bank.md) | Authored loss 1: live drip (slowed); overwhelm at the Hatch; leftover Unbanked wiped. Survived banks (later zones) unlock doors and allow Ship return |
 | [`3-ship-after-first-loss.md`](3-ship-after-first-loss.md) | ARMORY panel + two Secondary buys (ladder rung 1); first buy unlocks multiplayer; state-keyed exit standing; CREW menu unlock lands on this Docked; FAB dark |
 | [`4-embark-at-wave-2.md`](4-embark-at-wave-2.md) | Post-loss EMBARK; the zone's deepest terminal retriggers the composite (partial start electable) — no NAV skip |
-| [`5-repeat-to-control-room.md`](5-repeat-to-control-room.md) | Zone 2: one terminal, 3 consecutive Waves, heavier bank → D2 (loss 2 — that editor's spec); later banks may be survived |
+| [`5-repeat-to-control-room.md`](5-repeat-to-control-room.md) | Zone 2: one terminal, 3 consecutive Waves (survivable), heavier bank falls → Primary for sale → D2 on a later survival |
 | [`6-master-control.md`](6-master-control.md) | Finale terminal battle — 5 consecutive Waves (re-ruled 2026-08-17; that editor's file) |
 | [`7-hatch-finale.md`](7-hatch-finale.md) | **One** final bank window with the first boss/elite; survive → Escaped (that editor's file) |
 
@@ -135,7 +135,7 @@ or `DeepestWaveReached > 1` (they have already played; do not trap them in the c
 | `DemoCrewMenuUnlocked` | `false` | First Docked after the first bank (`HatchConversions >= 1`) — re-keyed again with the wheel key (Zo, 2026-08-18; was first-loss, was Wave-2-seen) | CREW panel vs heal-only. Heal-on-interact is live from beat 0 regardless |
 | `DemoFabPowered` | `false` | Stays false while `DemoActive`. Set true with `DemoActive` false | FAB open vs dark |
 | `DemoZoneDeepestWave` (per zone) | `0` | Deepest **cleared** field Wave in that zone, written on each field-Wave clear (ruling confirmed at cut, Zo 2026-08-17 — replaces `DemoNavUnlockWave` / `DemoBankCapWave`, which are never added) | Composite retrigger default / partial-start bounds (beat 4); guest `BankCap` while `DemoActive` and `PlayerCount > 1` |
-| `DemoWheelBuysLeft` | `2` | Decrement on `BuyWheelUpgrade` while `DemoActive` | ARMORY refuse at 0; **multiplayer gate** (`< 2` unlocks). Loss-2 grants land outside this count |
+| `DemoWheelBuysLeft` | `2` | Decrement on `BuyWheelUpgrade` while `DemoActive` | ARMORY refuse at 0; **multiplayer gate** (`< 2` unlocks). Zone-2-bank Primary + 2 land outside this count |
 
 `DemoWave2Seen` is **deleted** (Zo, 2026-08-17) — the CREW unlock re-keyed to
 first Docked after first loss. `DeepestWaveReached` stays “highest field Wave

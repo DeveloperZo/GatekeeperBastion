@@ -81,8 +81,13 @@ namespace GatekeepersProtocol.Tests
             var m = GameController.BuildDemoCheckpoint(4);
             Assert.IsTrue(m.OpenDoorIds.Contains("D1"));
             Assert.IsTrue(m.OpenDoorIds.Contains("D2"));
-            Assert.AreEqual(2, m.PodEjections, "loss 2 is behind this point");
-            Assert.IsTrue(m.Owns(WeaponId.PriC), "loss 2's granted Primary");
+            Assert.IsTrue(m.DemoZone2BankLost,
+                "the bank that fell is the gate — this is what sells the rack");
+            Assert.IsTrue(m.DemoRungTwoOpened,
+                "the rung already opened here, so the line does not replay on this load");
+            Assert.AreEqual(2, m.PodEjections,
+                "bookkeeping only — endings are counted, they do not open the rack");
+            Assert.IsTrue(m.Owns(WeaponId.PriC), "the Primary this checkpoint bought");
             Assert.AreEqual(WeaponId.PriC, m.EquippedPrimary);
             Assert.IsTrue(m.DemoActive, "the demo does not end until Escaped");
             Assert.IsTrue(m.SalvageLedgerBalances);

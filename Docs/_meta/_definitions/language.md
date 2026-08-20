@@ -95,7 +95,7 @@ are named here.
 
 | Term | Means | Never called |
 |---|---|---|
-| **Docked** | Aboard the Ship. Not yet boarded. Solo hub, or a friends session's shared Ship. | menu, lobby, idle |
+| **Docked** | Aboard the Ship — the hub between Runs, and the end-cause when you hold interact at the Hatch after a *survived* Hatch-bank and go home by choice (not Lost; banked Salvage stays). | menu, lobby, idle, bail-out *(outside a survived bank, leave-anytime is cut)* |
 | **Tethered** | Aboard the Bastion with the tether live. The whole fight happens here. | in-run, active, boarded |
 | **Spooling** | Reserved, unused in v0 — the escape window after the tether is cut. | *(do not use it for anything else)* |
 | **Escaped** | Terminal, good: Master Control's Hatch-bank half survived. Wave 5 does not Escaped. | won, victory |

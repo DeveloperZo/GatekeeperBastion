@@ -28,6 +28,11 @@ namespace GatekeepersProtocol.Game
         public const string TransferLine = "Upgrades stay on this weapon.";
         /// <summary>Deal-line suffix at the demo cap (beat 3, step 3 panel copy).</summary>
         public const string DemoCapLine = "two purchases this demo — NAV is ready";
+        /// <summary>Why the PRIMARY tab has nothing to buy before the rack opens. The tab stays
+        /// reachable and says this rather than reading as dead
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        public const string PrimarySealedLine =
+            "Heavier hardware racks here — the Bastion has to take a Run off you first.";
 
         // demo.wheel_cap plays once per Ship visit (instance lifetime is the visit).
         bool _capLinePlayed;
@@ -84,6 +89,8 @@ namespace GatekeepersProtocol.Game
                 if (eq != WeaponId.None) h = h * 397 ^ _centreIndexByWeapon[(int)eq];
                 h = h * 397 ^ (m.OwnsAnyWeapon ? 1 : 0);
                 h = h * 397 ^ m.DemoWheelBuysLeft;
+                h = h * 397 ^ m.DemoRungTwoBuysLeft;
+                h = h * 397 ^ (m.DemoZone2BankLost ? 1 : 0);
                 return h;
             }
         }
@@ -105,7 +112,11 @@ namespace GatekeepersProtocol.Game
             if (equipped == WeaponId.None)
             {
                 _showingWheel = false;
-                _body.BindEquipped($"{_viewSlot}: empty — buy below", null);
+                if (SealedRack(m))
+                    _body.BindEquipped($"{_viewSlot}: empty — nothing on the rack yet",
+                        PrimarySealedLine);
+                else
+                    _body.BindEquipped($"{_viewSlot}: empty — buy below", null);
             }
             else
             {
@@ -217,7 +228,8 @@ namespace GatekeepersProtocol.Game
         void TryBuyFromWheel(WeaponId id, WheelAttr centre)
         {
             var m = GameSession.Meta;
-            bool atCap = m != null && m.DemoActive && m.DemoWheelBuysLeft <= 0;
+            bool atCap = m != null && m.DemoActive
+                && m.DemoWheelBuysLeft + m.DemoRungTwoBuysLeft <= 0;
             bool bought = ShipCommands.BuyWheelUpgrade(id, centre);
             if (!bought && atCap && !_capLinePlayed)
             {
@@ -227,12 +239,22 @@ namespace GatekeepersProtocol.Game
             _wheelDirty = true;
         }
 
+        /// <summary>True while the tab in view is PRIMARY and its rows are not for sale yet.
+        /// The tab stays reachable; what it loses is the BUY rows
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        bool SealedRack(MetaState m)
+            => _viewSlot == WeaponSlot.Primary && !DemoProgress.PrimaryRowsOpen(m);
+
         void BindCatalog(MetaState m, WeaponId equippedInSlot)
         {
             int i = 0;
             string missing = null;
+            // A sealed rack binds no BUY row for an unowned Primary — an owned one still binds,
+            // so a Primary already in hand stays selectable and upgradeable.
+            bool noBuyRows = SealedRack(m);
             foreach (var id in WeaponCatalog.ForSlot(_viewSlot))
             {
+                if (noBuyRows && !m.Owns(id)) continue;
                 if (i < _body.CatalogRowCount)
                 {
                     var row = _body.CatalogRow(i);
@@ -348,10 +370,12 @@ namespace GatekeepersProtocol.Game
             return d;
         }
 
-        /// <summary>Remaining demo buys on the deal line (beat 3: wheel rows show them).</summary>
+        /// <summary>Remaining demo buys on the deal line (beat 3: wheel rows show them) — both
+        /// ladder rungs summed, so rung 2's buys are visible as purchases and not hidden behind
+        /// the rung-1 cap line (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
         static string DemoDealSuffix(MetaState m)
         {
-            int left = m.DemoWheelBuysLeft;
+            int left = m.DemoWheelBuysLeft + m.DemoRungTwoBuysLeft;
             if (left <= 0) return DemoCapLine;
             return left == 1 ? "1 demo purchase left" : left + " demo purchases left";
         }

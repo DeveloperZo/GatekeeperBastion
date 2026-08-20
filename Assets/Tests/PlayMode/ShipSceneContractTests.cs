@@ -102,7 +102,7 @@ namespace GatekeepersProtocol.PlayTests
                 string prompt = ((IInteractable)station).Prompt;
                 if (StationIsDemoHidden(station))
                     Assert.AreEqual(string.Empty, prompt,
-                        $"{station.GetType().Name} is demo-hidden (Docs/Demo/0-wake-on-a-dead-ship.md A13) — " +
+                        $"{station.GetType().Name} is demo-hidden (Docs/Demo - Single/0-wake-on-a-dead-ship.md A13) — " +
                         "its Prompt must be exactly \"\" so the HUD draws nothing, not a live station string.");
                 else
                     Assert.IsFalse(string.IsNullOrEmpty(prompt),
@@ -375,7 +375,7 @@ namespace GatekeepersProtocol.PlayTests
         // =====================================================================
 
         /// <summary>Whether the demo gates hide this station for the CURRENT save
-        /// (Docs/Demo/0-wake-on-a-dead-ship.md A13, 2026-08-18 revision): a hidden station
+        /// (Docs/Demo - Single/0-wake-on-a-dead-ship.md A13, 2026-08-18 revision): a hidden station
         /// shows no name and no prompt until it has a function. Asks the pure DemoProgress
         /// rules directly — not DemoStationGate.PromptOverride — so the test still catches
         /// the Unity wiring disagreeing with the rules. With no save or the demo off, every

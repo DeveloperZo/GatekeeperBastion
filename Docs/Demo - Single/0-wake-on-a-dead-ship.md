@@ -1,7 +1,7 @@
 # 0 — Wake on a dead Ship
 
 <!--
-Purpose: Capsule wake (starboard crew bunk) → repair NAV → ship terminal start
+Purpose: Teleporter wake (starboard crew alcove) → repair NAV → ship terminal start
 routes power, hands the MK-1 over, and spawns two weak Gatekeepers → gated
 Lock (intruder release on Continue) → kill them → CREW heal (no menu) →
 EMBARK. Only NAV shows a name or interaction before it has a function
@@ -12,7 +12,7 @@ Status: demo spec
 Authority: implementable
 Update trigger: when spawn furniture changes, when the ship-fight spec changes,
 when stamped line copy changes, when the multiplayer gate moves
-Last updated: 2026-08-18
+Last updated: 2026-08-20
 Depends: voice.md
 -->
 
@@ -76,7 +76,7 @@ forbids.
 
 The main menu Start New (or Continue on a fresh demo save) loads `Ship.unity`.
 The first Ship frame is **black**. No prompt. No standing objective. Move and
-look locked. Camera is already inside the closed capsule (A3).
+look locked. Camera is already inside the closed glass (A3).
 
 | | |
 |---|---|
@@ -85,18 +85,19 @@ look locked. Camera is already inside the closed capsule (A3).
 | **Prompt** | — |
 | **Standing** | — |
 | **Player** | Nothing. 0.4 s hold on black (A2). |
-| **Log** | existing `[Ship] aboard the ship — …` then `[Demo] spawn capsule` |
+| **Log** | existing `[Ship] aboard the ship — …` then `[Demo] spawn teleporter` |
 
 ### 1 — Fade up, still sealed
 
-Black overlay fades to 0 over **1.5 s**. First-person: dark capsule interior,
-lid in front of the camera, cold ceiling-panel glow through the glass (A6).
-Hull beyond is barely readable. Look is free inside a small cone; WASD does
-nothing. Crosshair off while sealed.
+Black overlay fades to 0 over **1.5 s**. First-person: standing on the pad,
+the glass cylinder wrapped around the camera, cold emitter glow from overhead
+through it (A6). Hull beyond is barely readable. The view starts **level** —
+no forced pitch, because there is no lid to look down at. Look is free inside a
+small cone; WASD does nothing. Crosshair off while sealed.
 
 | | |
 |---|---|
-| **See** | Closed cryo lid. Dark ship beyond. No station labels lit. |
+| **See** | Closed glass cylinder. Dark ship beyond. No station labels lit. |
 | **Game** | — (fade is silent) |
 | **Prompt** | — |
 | **Standing** | — |
@@ -108,7 +109,7 @@ When the fade finishes, the Shift box opens. Move still locked.
 
 | | |
 |---|---|
-| **See** | Same sealed view. Shift box over it. Speaker **GAME**. |
+| **See** | Same sealed view, standing. Shift box over it. Speaker **GAME**. |
 | **Game** | `demo.wake_stir` · Lock · Game. **You wake in a sealed capsule. The ship is dark. Nothing answers.** |
 | **Continue** | **Continue** (click / Space). Esc same. |
 | **Prompt** | Hidden while the Lock is up. |
@@ -116,29 +117,30 @@ When the fade finishes, the Shift box opens. Move still locked.
 | **Player** | Read. Dismiss. |
 | **Log** | `[Demo] line id=demo.wake_stir mode=Lock scope=Local speaker=Game` then `line ended` |
 
-### 3 — Unlock the capsule
+### 3 — Release the teleporter
 
-Lock dismisses. Still inside. Prompt appears on the lid (they are looking at
-it). This is the first interact of the game.
+Lock dismisses. Still inside. The prompt sits on the console ring at the pad's
+edge — **eye level, a horizontal raycast**, not overhead and not underfoot.
+This is the first interact of the game.
 
 | | |
 |---|---|
-| **See** | Sealed lid. Prompt. |
+| **See** | Closed glass. Prompt on the console ring. |
 | **Game** | — |
-| **Prompt** | **[E] unlock capsule** |
-| **Standing** | Unlock the capsule (idle prompt is the same string if they look away from the lid — they cannot walk, so this is insurance) |
-| **Player** | Hold Interact **1.0 s**. Release before 1.0 s resets. During hold the prompt reads **[E] unlocking capsule**. |
-| **Then** | Lid lifts **0.8 s**. Camera is free. They may stand out onto the deck at `Spawn_Capsule`. Crosshair on. |
-| **Log** | `[Demo] capsule unlocked` |
+| **Prompt** | **[E] release** |
+| **Standing** | Release the teleporter (idle prompt is the same string if they look away from the console — they cannot walk, so this is insurance) |
+| **Player** | Hold Interact **1.0 s**. Release before 1.0 s resets. During hold the prompt reads **[E] releasing**. |
+| **Then** | Glass retracts **down into the pad** over **0.8 s**. Movement unroots; **the view is left exactly where they were looking** — no pitch snap. They may walk out onto the deck at `Spawn_Teleporter`. Crosshair on. |
+| **Log** | `[Demo] teleporter released` |
 
-If they never hold: they stay in the bed. No other interactable is in range.
+If they never hold: they stay on the pad. No other interactable is in range.
 No skip. No auto-open.
 
 ### 4 — On the deck (job named)
 
-The moment both feet are on the deck (or the lid-open animation ends —
-**assumption**: fire on lid-open complete, do not wait for a stand animation),
-the Shift box opens again.
+The moment both feet are on the deck (or the glass finishes retracting —
+**assumption**: fire on glass-down complete; there is no stand animation to
+wait for now that the wake is already upright), the Shift box opens again.
 
 | | |
 |---|---|
@@ -396,12 +398,12 @@ None this beat. Gate: `DemoActive && DemoWheelBuysLeft == 2`. F10/F11 log
 
 ## Driven / Shown / Reads-back
 
-- **Driven by** fade, hold-E capsule, hold-E NAV, E/T ship terminal, E grant,
+- **Driven by** fade, hold-E teleporter, hold-E NAV, E/T ship terminal, E grant,
   kills, E heal, EMBARK.
-- **Shown** black → sealed lid → dead hull (only MAP labelled) → NAV live →
+- **Shown** black → sealed glass → dead hull (only MAP labelled) → NAV live →
   gated Lock with the gun already in hand → two bodies walking → HP drop →
   CREW surfaces and heals → NAV picker.
-- **Reads-back** `[Demo] spawn capsule`, `capsule unlocked`, `NAV powered`,
+- **Reads-back** `[Demo] spawn teleporter`, `teleporter released`, `NAV powered`,
   `ship terminal started`, `granted MK-1`, `intruders spawned n=2`,
   `intruder down k/2`, `ship clear`, `CREW heal`, `first embark`,
   `station hidden <name>` on hidden bumps, refuse lines, every `line id=…`.
@@ -434,7 +436,7 @@ beat 1 EMBARK. Beat 3 reads `DemoArmoryPowered` already true.
    `CleanExits >= 1` → `DemoActive false`.
 2. EditMode: `CanEmbark` matrix; `MultiplayerUnlocked` false at buys-left 2.
 3. PlayMode, watch the tape: black 0.4 s → fade 1.5 s → `wake_stir` copy →
-   Continue → **[E] unlock capsule** → hold 1.0 s → lid → `wake` copy → walk →
+   Continue → **[E] release** → hold 1.0 s → glass down → `wake` copy → walk →
    hidden ARMORY shows nothing (no label, no prompt, E consumed) → NAV hold →
    `nav_repair` copy → E/T terminal → `granted MK-1` in the log, gun in hand →
    `intruders` copy, corridor clear, `timeScale == 1` → Continue → intruders

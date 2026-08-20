@@ -66,12 +66,15 @@ namespace GatekeepersProtocol.Sim
 
         public int HatchArmorLevel;
 
-        // ---- First-Bastion demo (v9) — Docs/Demo/README.md, Shared flags ----
+        // ---- First-Bastion demo (v9) — Docs/Demo - Single/README.md, Shared flags ----
         /// <summary>Zones the per-zone deepest array covers (0 unused; 1, 2, finale).</summary>
         public const int DemoZoneCount = 4;
 
         /// <summary>True until this save's first Escaped. Fresh campaigns start on demo.</summary>
         public bool DemoActive = true;
+        // "Capsule" predates the teleporter that replaced the wake bed. It is a
+        // serialized save field: renaming it costs a SaveData version bump and a migration
+        // for no player-visible gain, so the name stays.
         public bool DemoCapsuleOpened;
         public bool DemoNavPowered;
         public bool DemoArmoryPowered;
@@ -82,6 +85,28 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Wheel ladder rung 1: Secondary buys remaining while DemoActive. The
         /// multiplayer gate reads it — the first buy (2 → 1) unlocks friends.</summary>
         public int DemoWheelBuysLeft = 2;
+
+        /// <summary>A Run ended Lost inside zone 2's Hatch-bank window. This is the gate that
+        /// sells the Primary — the event the player just played. It is NOT derived from
+        /// PodEjections and must never be re-keyed to it: a save that docked through zone 1
+        /// arrives here on its first ejection and must still be offered the rack
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        public bool DemoZone2BankLost;
+
+        /// <summary>Once-per-save latch for the rung-2 Docked resolve: the demo.second_loss
+        /// line and the ladder log fire exactly once, however many times the player docks
+        /// afterwards (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        public bool DemoRungTwoOpened;
+
+        /// <summary>Wheel ladder rung 2: buys remaining, set to 2 when rung 2 opens and
+        /// counted SEPARATELY from <see cref="DemoWheelBuysLeft"/>. It is a second counter
+        /// rather than a raise of the first because the first one's absolute value is
+        /// load-bearing for another feature: DemoProgress.MultiplayerUnlocked is
+        /// <c>DemoWheelBuysLeft &lt; 2</c>, and the once-per-save multiplayer line keys on
+        /// that counter passing exactly 1. Raising it for rung 2 would re-lock multiplayer
+        /// mid-demo and replay the line. Do not merge the two counters
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        public int DemoRungTwoBuysLeft;
 
         int[] _demoZoneDeepest = new int[DemoZoneCount];
 
@@ -470,6 +495,9 @@ namespace GatekeepersProtocol.Sim
             d.DemoCrewMenuUnlocked = DemoCrewMenuUnlocked;
             d.DemoFabPowered = DemoFabPowered;
             d.DemoWheelBuysLeft = DemoWheelBuysLeft;
+            d.DemoZone2BankLost = DemoZone2BankLost;
+            d.DemoRungTwoOpened = DemoRungTwoOpened;
+            d.DemoRungTwoBuysLeft = DemoRungTwoBuysLeft;
             d.DemoZoneDeepestWave = (int[])_demoZoneDeepest.Clone();
             return d;
         }
@@ -547,7 +575,7 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>v9 reads the stored flags. Pre-v9 migrates: demo-off when the save has
         /// already played (CleanExits >= 1 or DeepestWaveReached > 1 — do not trap them in
-        /// the capsule), demo-on with fresh gates otherwise (Docs/Demo/README.md).</summary>
+        /// the capsule), demo-on with fresh gates otherwise (Docs/Demo - Single/README.md).</summary>
         static void ApplyDemoFlags(MetaState m, SaveData d)
         {
             m.EnsureDemoZones();
@@ -562,6 +590,9 @@ namespace GatekeepersProtocol.Sim
                 m.DemoCrewMenuUnlocked = d.DemoCrewMenuUnlocked;
                 m.DemoFabPowered = d.DemoFabPowered;
                 m.DemoWheelBuysLeft = d.DemoWheelBuysLeft;
+                m.DemoZone2BankLost = d.DemoZone2BankLost;
+                m.DemoRungTwoOpened = d.DemoRungTwoOpened;
+                m.DemoRungTwoBuysLeft = d.DemoRungTwoBuysLeft;
                 if (d.DemoZoneDeepestWave != null)
                     Array.Copy(d.DemoZoneDeepestWave, m._demoZoneDeepest,
                         Math.Min(d.DemoZoneDeepestWave.Length, DemoZoneCount));
@@ -578,6 +609,13 @@ namespace GatekeepersProtocol.Sim
             m.DemoCrewMenuUnlocked = played;
             m.DemoFabPowered = played;
             m.DemoWheelBuysLeft = played ? 0 : 2;
+            // Deliberately NOT keyed to played, unlike every flag above. This is not an
+            // oversight and must not be "fixed": a pre-v9 save never played zone 2's bank,
+            // so its ladder rung 2 is unearned whatever else the save has done. Defaults
+            // both ways (Docs/Demo - Single/5-repeat-to-control-room.md).
+            m.DemoZone2BankLost = false;
+            m.DemoRungTwoOpened = false;
+            m.DemoRungTwoBuysLeft = 0;
         }
 
         static void MigrateFlatTiersArray(MetaState m, int[] tiers)

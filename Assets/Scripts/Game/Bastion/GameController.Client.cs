@@ -163,7 +163,7 @@ namespace GatekeepersProtocol.Game
                         prep.RequestStartTerminal(lookingTerminal.TerminalId);
                     return;
                 }
-                if (Sim.TotalUnbanked > 0L && Sim.HatchBankSlotsLeft > 0)
+                if (Sim.TotalUnbanked > 0L)
                     Log.Event("Hatch", "hatch-bank refused — look at the Hatch");
                 else
                     Log.Event("Run", "draw refused — Waves start at a terminal");

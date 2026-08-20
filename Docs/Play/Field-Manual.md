@@ -92,7 +92,7 @@ owned weapons. Each slot keeps its own clip, so switching is not a free reload.
 
 Upgrades are **per weapon**, not global. One purchase awards **5 / 3 / 3 / 0 / 0** by ring distance (11 points). Tier is derived as total / 11. Cadence still reads as the
 weapon: fire-rate points exist, but a purchase chooses a spoke. Purchases unlock
-after your first death. Full focus on one spoke is **50** points; each neighbour reaches **30**.
+after Salvage first converts through the Hatch. Full focus on one spoke is **50** points; each neighbour reaches **30**.
 
 | attribute | per point | at full focus (50) | at neighbour (30) |
 |---|---|---|---|
@@ -182,14 +182,14 @@ Hatch Armor runs 0–5 at +5% a level, costing 200 × 2^level — 200 / 400 / 80
 | Track | Level 0 | Level 5 |
 |---|---|---|
 | Hatch Armor — hatch HP | 300 HP | 375 HP |
-| Equipment slot (once, after first loss) | — | 300 salvage |
+| Equipment slot (once, after first Hatch conversion) | — | 300 salvage |
 | Repair Rig — flat repair rate | 8 HP/s | 300 salvage |
 | Decoy — Drone payload | 3 charges | 250 salvage |
 
 Crit chance is frozen at 0. There is no Luck shop. The Default Protocol is a
 0-salvage CREW claim (Barrage G, Rush H). Other protocol names on the panel are Coming Soon.
 
-Weapon wheel purchases and the equipment slot unlock after your first death.
+Weapon wheel purchases and the equipment slot unlock after Salvage first converts through the Hatch.
 
 ---
 

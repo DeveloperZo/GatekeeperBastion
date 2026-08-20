@@ -531,7 +531,7 @@ namespace GatekeepersProtocol.Game
             if (Sim.Mode == WaveMode.HatchBank && _spawner != null)
                 _spawner.DespawnAllLive();
             RecordPendingTerminalClear();
-            RecordRetriggerClear();
+            RecordCompositeClear();
             if (Sim.MasterPhase == MasterControlPhase.Hatch && Sim.Phase == RunPhase.Tethered)
             {
                 if (_hatchBankLayout != null)
@@ -591,6 +591,7 @@ namespace GatekeepersProtocol.Game
             Sim.AssaultEnded += OnAssaultEnded;
             Sim.MasterHatchHalfStarted += OnMasterHatchHalfStarted;
             Sim.BankWindowSurvived += OnBankWindowSurvived;
+            Sim.FieldWaveCleared += OnFieldWaveCleared;
             Sim.GuestConverted += OnGuestConverted;
         }
 
@@ -602,6 +603,7 @@ namespace GatekeepersProtocol.Game
             Sim.AssaultEnded -= OnAssaultEnded;
             Sim.MasterHatchHalfStarted -= OnMasterHatchHalfStarted;
             Sim.BankWindowSurvived -= OnBankWindowSurvived;
+            Sim.FieldWaveCleared -= OnFieldWaveCleared;
             Sim.GuestConverted -= OnGuestConverted;
         }
     }

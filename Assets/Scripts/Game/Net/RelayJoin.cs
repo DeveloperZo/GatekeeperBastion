@@ -18,7 +18,9 @@ namespace GatekeepersProtocol.Game
     {
         #region Constants
         const string Tag = "Net";
-        public const int MaxGuestConnections = 3;
+        // Host plus guests may not outnumber the Ship's hatch doors: three seats, three
+        // hatches (Docs/Demo - Coop/README.md, party size).
+        public const int MaxGuestConnections = 2;
         #endregion
 
         #region Nested Types

@@ -44,6 +44,102 @@ namespace GatekeepersProtocol.Tests
                 "nor from the other command surface");
         }
 
+        /// <summary>Rung 2 rides its own counter, refuses under its own name, and refuses
+        /// before any spend (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        [Test]
+        public void RungTwo_RefusesBeforeSpendSalvage_OnItsOwnCounter()
+        {
+            string src = Read("Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs");
+            int buyStart = src.IndexOf("public static bool BuyWheelUpgrade", System.StringComparison.Ordinal);
+            Assert.Greater(buyStart, -1, "the wheel command lives in the Weapons partial");
+            int rung = src.IndexOf("wheel refused — ladder rung spent", buyStart,
+                System.StringComparison.Ordinal);
+            int spend = src.IndexOf("m.SpendSalvage(price)", buyStart, System.StringComparison.Ordinal);
+            Assert.Greater(rung, buyStart, "the rung-2 refuse lives inside BuyWheelUpgrade");
+            Assert.Less(rung, spend, "named rung refuse BEFORE any SpendSalvage");
+            StringAssert.Contains("m.DemoRungTwoBuysLeft--", src, "rung 2 spends its own counter");
+            StringAssert.Contains("m.DemoRungTwoOpened", src, "which name the refuse takes");
+        }
+
+        /// <summary>The Primary rows are a gate this milestone ADDS: refused named, before the
+        /// price check and before any spend (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        [Test]
+        public void PrimaryBuy_RefusesBeforeSpendSalvage_UntilTheBankFalls()
+        {
+            string src = Read("Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs");
+            int buyStart = src.IndexOf("public static bool BuyWeapon", System.StringComparison.Ordinal);
+            Assert.Greater(buyStart, -1, "the catalog buy lives in the Weapons partial");
+            int refuse = src.IndexOf("weapon refused — primary locked", buyStart,
+                System.StringComparison.Ordinal);
+            int afford = src.IndexOf("m.BankedSalvage < cost", buyStart, System.StringComparison.Ordinal);
+            int spend = src.IndexOf("m.SpendSalvage(cost)", buyStart, System.StringComparison.Ordinal);
+            Assert.Greater(refuse, buyStart, "the primary gate lives inside BuyWeapon");
+            Assert.Less(refuse, afford, "the lock is named before the price is");
+            Assert.Less(refuse, spend, "named refuse BEFORE any SpendSalvage");
+            StringAssert.Contains("DemoProgress.PrimaryRowsOpen", src);
+            StringAssert.Contains("WeaponSlot.Primary", src);
+        }
+
+        /// <summary>The rack gate is a pure rule keyed on the bank loss, and the exit standing
+        /// reads BOTH ladder counters — rung 1 alone would flip it to EMBARK while rung-2 buys
+        /// are still affordable.</summary>
+        [Test]
+        public void PrimaryGate_IsPure_AndTheStandingKeyReadsBothRungs()
+        {
+            string src = Read("Assets/Scripts/Game/Demo/DemoProgress.cs");
+            StringAssert.Contains("public static bool PrimaryRowsOpen", src);
+            StringAssert.Contains("m.DemoZone2BankLost", src);
+            Assert.IsFalse(src.Contains("PodEjections"),
+                "the rack is keyed on the bank the player just lost, never on an ending count");
+            Assert.IsFalse(src.Contains("UnityEngine"), "DemoProgress stays engine-free");
+            StringAssert.Contains("m.DemoWheelBuysLeft + m.DemoRungTwoBuysLeft <= 0", src);
+        }
+
+        /// <summary>The rung-2 Docked resolve: line, log, counter, latch — and it runs after
+        /// ResolveFirstReturn, which is the stated same-load order.</summary>
+        [Test]
+        public void RungTwoDocked_PlaysTheLine_LogsTheRung_AndLatchesOncePerSave()
+        {
+            string src = Read("Assets/Scripts/Game/Ship/DemoShipDirector.cs");
+            int first = src.IndexOf("ResolveFirstReturn(m);", System.StringComparison.Ordinal);
+            int rung = src.IndexOf("ResolveRungTwo(m);", System.StringComparison.Ordinal);
+            Assert.Greater(first, -1);
+            Assert.Greater(rung, first, "first-return resolves first on a same-load collision");
+            StringAssert.Contains("DemoConversationIds.SecondLoss", src);
+            StringAssert.Contains("\"ladder rung=2 opened — primary + 2 buys\"", src);
+            StringAssert.Contains("m.DemoRungTwoBuysLeft = 2", src);
+            StringAssert.Contains("m.DemoRungTwoOpened = true", src);
+            Assert.IsFalse(src.Contains("PodEjections"),
+                "the resolve is keyed on DemoZone2BankLost, never on an ejection count");
+        }
+
+        /// <summary>The restamped line must not assert a second ejection — this may be the
+        /// save's first (Docs/Demo - Single/5-repeat-to-control-room.md, Open).</summary>
+        [Test]
+        public void SecondLossCopy_IsCauseAgnostic()
+        {
+            string src = Read("Assets/Scripts/Game/Demo/DemoLines.cs");
+            StringAssert.Contains("DemoConversationIds.SecondLoss", src, "the id is kept");
+            Assert.IsFalse(src.Contains("Thrown off again"),
+                "the shipped line asserted a second ejection the recut forbids");
+        }
+
+        /// <summary>The PRIMARY tab stays reachable and says why it is empty; its BUY rows do
+        /// not bind while the rack is sealed.</summary>
+        [Test]
+        public void ArmoryPrimaryTab_BindsNoBuyRows_ButStillSpeaks()
+        {
+            string src = Read("Assets/Scripts/Game/Ship/ArmoryStation.cs");
+            StringAssert.Contains("DemoProgress.PrimaryRowsOpen", src);
+            StringAssert.Contains("PrimarySealedLine", src);
+            StringAssert.Contains("noBuyRows && !m.Owns(id)", src,
+                "an owned Primary still binds — only the BUY rows are held back");
+            StringAssert.Contains("_viewSlot = WeaponSlot.Primary", src,
+                "the PRIMARY tab button stays bound");
+            StringAssert.Contains("m.DemoRungTwoBuysLeft", src,
+                "the panel rebinds when rung 2 hands out its buys");
+        }
+
         [Test]
         public void ExitStanding_IsStateKeyed_AndReevaluatedOnEveryMoneyPath()
         {
@@ -100,7 +196,7 @@ namespace GatekeepersProtocol.Tests
         {
             string src = Read("Assets/Scripts/Game/Bastion/GameController.cs");
             StringAssert.Contains("\"embark plain\"", src);
-            StringAssert.Contains("RecordRetriggerClear()", src);
+            StringAssert.Contains("RecordCompositeClear()", src);
             StringAssert.Contains("ClearPendingRetrigger()", src);
         }
 
@@ -111,7 +207,7 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("\"zone retrigger zone=\"", src);
             StringAssert.Contains("mode=", src);
             StringAssert.Contains("TriggerCompositeDraw", src);
-            StringAssert.Contains("\"zone terminals complete zone=\"", src);
+            StringAssert.Contains("\"zone complete zone=\"", src);
             StringAssert.Contains("DemoConversationIds.ZoneRetrigger", src);
             StringAssert.Contains("SetZoneDeepest", src);
         }

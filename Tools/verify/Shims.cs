@@ -200,6 +200,27 @@ namespace NUnit.Framework
 
     public static class CollectionAssert
     {
+        public static void AreEqual(IEnumerable expected, IEnumerable actual, string message = null)
+        {
+            var exp = new List<object>();
+            var act = new List<object>();
+            if (expected != null) foreach (var x in expected) exp.Add(x);
+            if (actual != null) foreach (var x in actual) act.Add(x);
+            if (exp.Count != act.Count)
+                throw new AssertionException(
+                    (string.IsNullOrEmpty(message) ? "" : message + "\n  ") +
+                    "Expected count " + exp.Count + " but was " + act.Count);
+            for (int i = 0; i < exp.Count; i++)
+            {
+                bool same = (exp[i] == null && act[i] == null)
+                    || (exp[i] != null && exp[i].Equals(act[i]));
+                if (!same)
+                    throw new AssertionException(
+                        (string.IsNullOrEmpty(message) ? "" : message + "\n  ") +
+                        "Differs at index " + i + ": expected " + exp[i] + " but was " + act[i]);
+            }
+        }
+
         public static void AreEquivalent(IEnumerable expected, IEnumerable actual, string message = null)
         {
             var exp = new List<object>();

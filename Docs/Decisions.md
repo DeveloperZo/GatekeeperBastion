@@ -260,7 +260,15 @@ bank window down and breach remain the only enders.
 - **Co-op buy-back:** a dead player may buy back into the Run only while a bank window
   is live, rejoining at the Hatch, paying from their own banked Salvage; cost tunable.
   Respawns re-enter at the critical moment, when Salvage is being banked. Amends the
-  co-op down section above.
+  co-op down section above. **Owned by `M90`** (split out of `M79`, 2026-08-20) and
+  **not startable as ruled**: banked Salvage is a per-machine `MetaState` field, not
+  per-seat — a guest's `Banked` is written only for slot 0 from the host's own save
+  and is never reported to the host — so "their own banked Salvage" has nothing to
+  read. Two open rulings, both Zo's: whether the guest wallet is reported-and-asked
+  (client-authoritative) or moved into the sim per slot (a save-format change), and
+  what **live window** means — against the *survived* window, buy-back is strictly
+  dominated by waiting a moment and embarking for free, which would kill the feature
+  as specified.
 - **Open — needs Zo's call, recorded not resolved:** a dead HOST rejoining collides
   with host-death-ends-the-run (`M49`), which is architecture-driven.
 - **Demo consistency:** the demo's two authored losses are unclearable windows, so
@@ -283,9 +291,11 @@ still moves you forward, not that you must lose to move forward
 comes through the Hatch**: `MetaState.HatchConversions >= 1` (save v11), written on the
 first credit of a bank window — the same event, stated honestly, firing for the player
 who banks and docks as well as the one who banks and dies. A player who banked nothing
-has nothing to spend. `PodEjections` keeps its own jobs (endings, `demo.second_loss`)
-and is no longer a progression gate; nothing else in the demo family may key a
-progression gate to it (`M78`, Traps).
+has nothing to spend. `PodEjections` keeps its own job (endings) and is no
+longer a progression gate; nothing else in the demo family may key a
+progression gate to it (`M78`, Traps). `demo.second_loss` keeps its id;
+its trigger is zone 2's bank falling (`M79`, recut 2026-08-19), not
+`PodEjections >= 2`.
 
 **Surviving pays a little, and only a little:** a Returned ending keeps
 `HatchBank.ReturnedKeepShare` of leftover Unbanked instead of wiping all of it; Lost
@@ -293,6 +303,37 @@ still wipes. One number, generated into `Design/4-Data.md`, initial value small 
 tunable after a logged Run — greed must stay carrying a bigger pile into fewer
 extracts. Door-state persistence already rides the successful-bank snapshot and is not
 double-counted. `M78`.
+
+## Locked — the Primary opens when zone 2's bank falls, not on the second ejection (Zo, 2026-08-19)
+
+Zone 2's three field Waves are survivable on the secondary kit. That zone's
+bank is authored above that ceiling and below Primary + 1. The bank falling
+is the loss that **sells** the Primary (rung 2: Primary row + 2 buys outside
+the secondary cap), whether that ejection is the save's first (zone 1 was
+docked) or its second. `PodEjections` counts endings. It does not open the
+row. A Lost during zone 2's field Waves is a loss and is not this gate.
+
+`demo.second_loss` keeps its id; the trigger is Docked after this bank fell.
+Copy is draft-Zo and must not require a prior ejection. M76's record that
+zone 1's first bank is authored-unclearable is not rewritten here. `M79`.
+
+## Locked — a dev-tainted session may close a milestone gate (Zo, 2026-08-20)
+
+A `[Dev]`-tainted Run can close a milestone's playthrough criterion. The previous
+rule — never close a gate with a tainted log — held the demo family's gates
+hostage to a clean run of a beat whose whole point is that it takes several Runs
+to reach, and the dev checkpoints exist precisely so that beat can be reached in
+seconds. Blocking closure on an untainted run bought confidence nobody was
+short of and cost milestones that were built and sitting.
+
+**What this does not change.** Taint still gets **stated**: a close that rode a
+checkpoint says which checkpoint and that the Run was tainted, so the evidence can
+be re-read later for what it is. And taint still disqualifies a Run from being a
+**play-data** entry in `GatekeeperZo Notes/playthrough.md` — tuning readings,
+balance verdicts and "is this fun" still need a clean Run. The relaxation is about
+*proving a mechanism works*, not about *judging how it feels*.
+
+First applied closing `M79`.
 
 ## Shipped
 

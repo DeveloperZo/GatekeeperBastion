@@ -2,7 +2,7 @@
 
 ## Game
 
-The Hunter comes for you and nothing else. It will not hit the Hatch, cannot hit the Hatch, and will not be distracted from you by anything in the Bastion.
+The Hunter comes for you and nothing else. Its frame is the lean one — you can pick it in a group by silhouette before it closes. It will not hit the Hatch, cannot hit the Hatch, and will not be distracted from you by anything in the Bastion.
 
 It picks you the moment it arrives and walks straight at you for life. It closes and swings: melee contact. It is fast, fragile, and already hunting — shooting it still shouts, so Defaults near it join the hunt. Deal with it first; there is no positioning answer, and standing on the Hatch just brings it to the worst place for a fight.
 

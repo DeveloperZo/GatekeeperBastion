@@ -20,11 +20,12 @@ ARMORY was powered in beat 0 (ship terminal) and has already handed over the
 MK-1 — but its panel has never opened. The wheel unlocks on first loss
 (`UpgradesUnlocked = PodEjections >= 1`) with ten tiers and no cap. This beat
 opens the shop, caps it at two purchases — rung 1 of the wheel ladder (Zo,
-2026-08-17): **2 Secondary buys after loss 1; at loss 2 a Primary + 2 upgrades
-are granted outside that count** (loss 2 is zone 2's bank, another editor's
-beat; [`README.md`](README.md) states the ladder) — and unlocks multiplayer on
-the first one. The demo's rule is you play the loop once solo before friends
-join ([`README.md`](README.md)).
+2026-08-17): **2 Secondary buys after the first bank.** Zone 2's bank falling
+**sells** a Primary + 2 upgrades outside that count (`M79`, recut 2026-08-19
+— not granted, not keyed on a second ejection; [`README.md`](README.md)
+states the ladder) — and unlocks multiplayer on the first one. The demo's
+rule is you play the loop once solo before friends join
+([`README.md`](README.md)).
 
 ## Functional storyboard
 
@@ -124,8 +125,8 @@ chain. This file specifies ARMORY only.
 
 1. ARMORY panel replaces the beat-0 grant path once `UpgradesUnlocked`.
 2. Wheel cap = ladder rung 1 (Zo, 2026-08-17): `DemoWheelBuysLeft` 2 → 0,
-   named refuse at 0. Not reset per visit. Loss 2's granted Primary + 2
-   upgrades land **outside** this count (another editor's beat). Do not change
+   named refuse at 0. Not reset per visit. Zone 2's bank falling **sells**
+   Primary + 2 upgrades **outside** this count (`M79`). Do not change
    `WeaponTier.Cost`.
 3. Multiplayer unlock on the first successful buy: the F10/F11 / lobby refuse
    (built with beat 0) starts passing; `demo.mp_unlocked` names it.
@@ -216,7 +217,7 @@ No party PA "everyone shop."
 - Unlocking multiplayer on panel **open** instead of purchase.
 - Keying the exit standing to the third refuse — a seat that can afford only
   one buy would never see it. The key is state: no buyable upgrades remain.
-- Counting loss 2's granted Primary + 2 upgrades against the 2-buy cap —
+- Counting zone 2's sold Primary + 2 upgrades against the 2-buy cap —
   ladder rung 2 is outside the count.
 - Re-locking the CREW menu until beat 4 — the unlock re-keyed to this Docked
   (Zo, 2026-08-17); the claim flow and lines are still beat 4's spec.

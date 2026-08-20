@@ -4,18 +4,21 @@ using UnityEngine;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>HOST-ONLY (partial of GameController): the zone composite retrigger at the
-    /// zone's deepest terminal — post-loss refight-avoidance (beat 4; NAV offers no wave
-    /// choice). E arms it, +/- elects composite vs partial start, T launches the elected
-    /// Waves consecutively via <see cref="RunSim.TriggerCompositeDraw"/>; the chain's clear
-    /// completes every zone terminal so the bank re-arms. Pure offer rules live in
-    /// <see cref="DemoRun"/>.</summary>
+    /// <summary>HOST-ONLY (partial of GameController): composite Wave chains over a zone —
+    /// consecutive Waves with no Prep between them, launched via
+    /// <see cref="RunSim.TriggerCompositeDraw"/> and completing the whole zone on the chain's
+    /// single clear. Two callers reach it: a multi-Wave zone's FIRST terminal trigger
+    /// (GameController.Terminals.cs) and the post-loss retrigger offered at the zone's deepest
+    /// terminal (beat 4; NAV offers no wave choice) — E arms it, +/- elects composite vs
+    /// partial start, T launches. Pure offer rules live in <see cref="DemoRun"/>.</summary>
     public sealed partial class GameController
     {
         bool _armedRetrigger;
         bool _retriggerPartial;
-        int _pendingRetriggerZone = -1;
-        int _pendingRetriggerEnd;
+        // Composite bookkeeping, shared by the first trigger and the retrigger: they complete
+        // identically, so there is one completion path, not two.
+        int _pendingCompositeZone = -1;
+        int _pendingCompositeEnd;
 
         // demo.zone_retrigger plays on the first offer opened per zone. No v9 flag carries
         // it, so the latch is per session (statics reset on subsystem registration).
@@ -47,17 +50,24 @@ namespace GatekeepersProtocol.Game
             bool doorOpen = terminal.UnlocksDoor != null
                 && _layout.IsDoorOpen(terminal.UnlocksDoor.DoorId);
             return DemoRun.RetriggerOffer(
-                Meta, terminal.TerminalId, ZoneOneWavesClearedThisRun(), doorOpen);
+                Meta, terminal.TerminalId,
+                ZoneWavesClearedThisRun(DemoZones.ZoneOf(terminal.TerminalId)), doorOpen);
         }
 
-        /// <summary>Zone-1 field Waves cleared this Run: each of its terminals is one Wave.</summary>
-        int ZoneOneWavesClearedThisRun()
+        /// <summary>Field Waves this Run has cleared in the zone: every completed terminal of
+        /// the zone is that zone's Waves-per-trigger. A zone the table does not author has no
+        /// terminals, so it answers 0.</summary>
+        int ZoneWavesClearedThisRun(int zone)
         {
+            if (_layout == null) return 0;
             int cleared = 0;
-            if (_layout != null)
+            int perTrigger = DemoZones.WavesPerTrigger(zone);
+            int count = DemoZones.TerminalCount(zone);
+            for (int i = 0; i < count; i++)
             {
-                if (_layout.IsTerminalDone(FirstTerminal.Id)) cleared += FirstTerminal.Waves;
-                if (_layout.IsTerminalDone(FirstTerminal.SecondId)) cleared += FirstTerminal.Waves;
+                string id = DemoZones.TerminalIdAt(zone, i);
+                if (!string.IsNullOrEmpty(id) && _layout.IsTerminalDone(id))
+                    cleared += perTrigger;
             }
             return cleared;
         }
@@ -97,7 +107,7 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>T on the armed retrigger: launch the elected Waves consecutively. The
-        /// whole zone's spawns feed the chain — a composite crosses both terminals' rooms.</summary>
+        /// whole zone's spawns feed the chain — a composite crosses every room the zone owns.</summary>
         bool StartZoneRetrigger(BastionTerminal terminal)
         {
             if (_net != null && _net.IsClientOnly)
@@ -127,7 +137,7 @@ namespace GatekeepersProtocol.Game
             _armedTerminalId = null;
             _armedRetrigger = false;
             ClearPendingTerminal();
-            ActivateZoneOneSpawns();
+            ActivateZoneSpawns(offer.Zone);
 
             if (!Sim.TriggerCompositeDraw(start, offer.EndWave))
             {
@@ -136,47 +146,57 @@ namespace GatekeepersProtocol.Game
                 return false;
             }
 
-            _pendingRetriggerZone = offer.Zone;
-            _pendingRetriggerEnd = offer.EndWave;
+            _pendingCompositeZone = offer.Zone;
+            _pendingCompositeEnd = offer.EndWave;
             Log.Event("Demo", "zone retrigger zone=" + offer.Zone + " start=" + start
                 + " waves=" + offer.WavesFrom(start) + " mode=" + mode);
             return true;
         }
 
-        void ActivateZoneOneSpawns()
+        /// <summary>Enable every spawn the zone's terminals own: a composite crosses each of
+        /// the zone's rooms, so one terminal's spawns cannot feed the whole chain.</summary>
+        void ActivateZoneSpawns(int zone)
         {
             if (_layout == null) return;
-            BastionTerminal first = _layout.FindTerminal(FirstTerminal.Id);
-            if (first != null) first.SetUnlockedSpawnsActive(true);
-            BastionTerminal second = _layout.FindTerminal(FirstTerminal.SecondId);
-            if (second != null) second.SetUnlockedSpawnsActive(true);
+            int count = DemoZones.TerminalCount(zone);
+            for (int i = 0; i < count; i++)
+            {
+                string id = DemoZones.TerminalIdAt(zone, i);
+                if (string.IsNullOrEmpty(id)) continue;
+                BastionTerminal t = _layout.FindTerminal(id);
+                if (t != null) t.SetUnlockedSpawnsActive(true);
+            }
         }
 
-        /// <summary>The retrigger chain cleared (AssaultEnded fires once, after the last
-        /// elected Wave): every zone terminal completes — the skipped Waves were cleared
-        /// before the loss, which is the refight-avoidance — and the bank re-arms.</summary>
-        void RecordRetriggerClear()
+        /// <summary>A composite chain cleared (AssaultEnded fires once, after the last elected
+        /// Wave): every terminal of the zone completes — on a retrigger the skipped Waves were
+        /// cleared before the loss, which is the refight-avoidance; on a first trigger the
+        /// chain just ran all of them — and the bank re-arms.</summary>
+        void RecordCompositeClear()
         {
-            if (_pendingRetriggerZone < 0) return;
-            int zone = _pendingRetriggerZone;
-            int end = _pendingRetriggerEnd;
-            _pendingRetriggerZone = -1;
+            if (_pendingCompositeZone < 0) return;
+            int zone = _pendingCompositeZone;
+            int end = _pendingCompositeEnd;
+            _pendingCompositeZone = -1;
             if (_layout == null) return;
 
             if (Meta != null && Meta.DemoActive)
                 Meta.SetZoneDeepest(zone, end);
-            string refuse;
-            if (!_layout.IsTerminalDone(FirstTerminal.Id))
-                _layout.TryCompleteTerminal(FirstTerminal.Id, out refuse);
-            if (!_layout.IsTerminalDone(FirstTerminal.SecondId))
-                _layout.TryCompleteTerminal(FirstTerminal.SecondId, out refuse);
-            Log.Event("Demo", "zone terminals complete zone=" + zone);
+            int count = DemoZones.TerminalCount(zone);
+            for (int i = 0; i < count; i++)
+            {
+                string id = DemoZones.TerminalIdAt(zone, i);
+                if (string.IsNullOrEmpty(id) || _layout.IsTerminalDone(id)) continue;
+                if (!_layout.TryCompleteTerminal(id, out string refuse))
+                    Log.Event("Terminal", id + " complete refused — " + refuse);
+            }
+            Log.Event("Demo", "zone complete zone=" + zone);
         }
 
-        /// <summary>A terminal phase drops any half-run retrigger — the next Run re-offers.</summary>
+        /// <summary>A terminal phase drops any half-run composite — the next Run re-offers.</summary>
         void ClearPendingRetrigger()
         {
-            _pendingRetriggerZone = -1;
+            _pendingCompositeZone = -1;
             _armedRetrigger = false;
             _retriggerPartial = false;
         }

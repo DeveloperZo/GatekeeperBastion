@@ -86,7 +86,7 @@ namespace GatekeepersProtocol.Sim
         /// every embark so a Docked return finds the door as it was left.</summary>
         public string[] OpenDoorIds;
 
-        // ---- First-Bastion demo (v9) — see Docs/Demo/README.md, Shared flags ----
+        // ---- First-Bastion demo (v9) — see Docs/Demo - Single/README.md, Shared flags ----
         public bool DemoActive;
         public bool DemoCapsuleOpened;
         public bool DemoNavPowered;
@@ -96,6 +96,17 @@ namespace GatekeepersProtocol.Sim
         public bool DemoCrewMenuUnlocked;
         public bool DemoFabPowered;
         public int DemoWheelBuysLeft;
+        /// <summary>A Run ended Lost inside zone 2's Hatch-bank window — the Primary gate,
+        /// not a PodEjections count. Rides the v9 demo block with no version bump: a missing
+        /// key loads false, which is the correct state for every save written before the flag
+        /// existed (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        public bool DemoZone2BankLost;
+        /// <summary>Once-per-save latch for the rung-2 Docked resolve.</summary>
+        public bool DemoRungTwoOpened;
+        /// <summary>Rung-2 wheel buys remaining, counted separately from DemoWheelBuysLeft —
+        /// see MetaState.DemoRungTwoBuysLeft for why the two must not be merged. A missing
+        /// key loads 0.</summary>
+        public int DemoRungTwoBuysLeft;
         /// <summary>Deepest cleared field Wave per zone, index = zone number. Written on
         /// field-Wave clear; read by the composite retrigger and guest BankCap.</summary>
         public int[] DemoZoneDeepestWave;

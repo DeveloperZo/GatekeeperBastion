@@ -4,7 +4,7 @@
 Purpose: how weapons work as a system — slots, buying, equipping, Tiers, reloading,
 switching, and how to choose. / Status: working / Update trigger: when a weapon is
 added to or removed from the shop, when Tiers change what they scale, or when
-slot/reload behaviour changes. / Last updated: 2026-08-16
+slot/reload behaviour changes. / Last updated: 2026-08-20
 -->
 
 ## Game
@@ -50,7 +50,7 @@ furthest away. Award, steps and prices: [Field Manual](Field-Manual.md).
 A purchase never changes range, falloff, pellet count, spread, pierce, slot, or any other
 weapon you own. **Upgrade wheels are per weapon and never transfer.**
 
-Weapon upgrades are **locked until you have been Lost at least once**. Buying the weapons
+Weapon upgrades are **locked until Salvage first converts through the Hatch**. Buying the weapons
 themselves is not. If the buttons read locked, a death is the key. SEC-D's Ability spoke
 cannot be bought; rotate off it.
 
@@ -119,7 +119,7 @@ be per pellet.
 
 - Ammunition is infinite. The game shows a clip counter but never states that there is no reserve pool.
 - Tiers are per weapon and do not transfer. The ARMORY never warns you that buying a second Primary restarts the investment.
-- Weapon Tiers are locked until your first death. The panel says "locked" but the fact that the only unlock is being Lost is not explained.
+- Weapon Tiers are locked until the first Hatch conversion. The panel says "locked" but what unlocks it is not explained.
 - An upgrade purchase moves several spokes at once. Nothing explains the ring, and nothing tells you that range, spread, pellet count, pierce and falloff are frozen at purchase.
 - FABRICATION sells the Decoy into the Drone bay. Selecting an empty bay still looks identical to an input that failed to register.
 - The improvised cutter is never named; if you skip the free sidearm, you are just holding a weak gun.

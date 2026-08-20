@@ -13,7 +13,7 @@ namespace GatekeepersProtocol.Game
     {
         const string Tag = "Demo";
 
-        // Beat 0 starting values (Docs/Demo/0-wake-on-a-dead-ship.md, Numbers — stamped at
+        // Beat 0 starting values (Docs/Demo - Single/0-wake-on-a-dead-ship.md, Numbers — stamped at
         // this cut): weakest fodder body, Hatch-fodder swing against the player.
         public const int IntruderCount = 2;
         public const float IntruderHp = 30f;

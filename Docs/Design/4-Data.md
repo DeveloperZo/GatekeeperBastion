@@ -221,10 +221,9 @@ composition both read field Waves cleared since the last Hatch-bank (snapshotted
 start). The window is `DurationSeconds`; Unbanked hitting 0 does not end it. Leftover
 dumps when the timer ends.
 
-<!-- GKB:GEN hatch-bank — HatchBank.SlotsPerRun, DripPerSecond, DurationSeconds, CarryConvert, CarryWaveIndex, WithdrawPerSecond -->
+<!-- GKB:GEN hatch-bank — HatchBank.DripPerSecond, DurationSeconds, CarryConvert, CarryWaveIndex, WithdrawPerSecond -->
 | | |
 |---|---|
-| slots / Run | 3 |
 | drip | 8 unbanked/s |
 | duration | 45 s |
 | withdraw | 16 salvage/s |

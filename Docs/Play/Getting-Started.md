@@ -1,4 +1,4 @@
-<!-- Purpose: first-run walkthrough for a new player, in order, plus the mistakes that cost first Runs. / Status: working / Update trigger: when the ship consoles, embark flow, unlock gating, or the first-Wave experience changes. / Last updated: 2026-08-16 -->
+<!-- Purpose: first-run walkthrough for a new player, in order, plus the mistakes that cost first Runs. / Status: working / Update trigger: when the ship consoles, embark flow, unlock gating, or the first-Wave experience changes. / Last updated: 2026-08-20 -->
 
 # Getting Started
 
@@ -6,7 +6,7 @@
 
 You have just cut in. Walk the four Ship consoles before you leave — each owns one subject — then embark from the NAV MAP. You arrive already tethered near the Hatch. Nothing comes until you start a Wave at a field terminal.
 
-The first Wave is Defaults only, hunting you. Fight, then Prep: Hatch-bank if you want Salvage on the ship, or pull the next. Your health does not return during a Run. The Hatch does not heal itself. Weapon Tiers wait until you have been Lost once; the protocol and Hatch Armor do not.
+The first Wave is Defaults only, hunting you. Fight, then Prep: Hatch-bank if you want Salvage on the ship, or pull the next. Survive a bank and you may dock home from the Hatch. Your health does not return during a Run. The Hatch does not heal itself. Weapon Tiers wait until Salvage first converts through the Hatch; the protocol and Hatch Armor do not.
 
 Bindings and every number: [Field Manual](Field-Manual.md). Pause lists whatever is live right now. The rest of the Compendium starts at [The Game](The-Game.md).
 
@@ -49,11 +49,11 @@ Look at the terminal. Juice if you want. Select — including intensity 0 — th
 
 ### 5. Fight, then choose
 
-Kill the Wave. Prep. Hatch-bank if you want the Salvage on the ship, or walk back to the terminal and pull the next. The door stays shut until that terminal's count is done. A Run has a limited number of Hatch-banks; when they are gone the Hatch refuses. How many: [Field Manual](Field-Manual.md).
+Kill the Wave. Prep. Hatch-bank if you want the Salvage on the ship, or walk back to the terminal and pull the next. Survive a Hatch-bank and, until you start the next Wave, hold interact at the Hatch to dock home. The door for that zone opens on a survived bank, not on finishing the terminal. A Run has a limited number of Hatch-banks; when they are gone the Hatch refuses. How many: [Field Manual](Field-Manual.md).
 
 ### 6. Strip the field, then Hatch-bank
 
-Clear Wave 5 and the door opens. You can Hatch-bank after any Wave, not only then. Unbanked stays until you do. Survive a Hatch-bank and leftover converts. You are still aboard. Walk through to **Master Control** in the Control Room. Juice once at the console — it covers the sequence — then select and start. The door seals for five Boarder-hunt Waves, then opens for five Hatch-bank windows. Survive that and the Run is **Escaped**. Go down instead and leftover is gone.
+Clear the field Waves for that door and walk through when it opens. You can Hatch-bank after any Wave, not only then. Unbanked stays until you do. Survive a Hatch-bank and leftover converts. You are still aboard — or you dock. Walk through to **Master Control** in the Control Room. Juice once at the console — it covers the sequence — then select and start. The door seals for five Boarder-hunt Waves, then opens for five Hatch-bank windows. Survive that and the Run is **Escaped**. Go down instead and leftover is gone.
 
 Then spend it. That's the loop.
 
@@ -96,11 +96,12 @@ So on a fresh save, banking a pile of Salvage and going to the ARMORY to make yo
 ## Gaps
 
 - That health never returns during a Run is stated nowhere in the game.
-- That weapon Tiers are gated behind your first death is shown only as a "LOCKED" label on the ARMORY row, with no explanation of what unlocks it.
+- That weapon Tiers open on the first Hatch conversion is shown only as a "LOCKED" label on the ARMORY row, with no explanation of what unlocks it.
 - That repairing the Hatch spends the same banked Salvage you shop with — and can empty the bank — is quoted as a rate but never framed as a trade-off.
-- On a fresh save the Hatch cannot be repaired at all, because the equipment slot and the Repair Rig are both behind your first loss. Nothing on the Ship or at the door says the Rig is the prerequisite.
+- On a fresh save the Hatch cannot be repaired at all, because the equipment slot and the Repair Rig are both behind that first conversion. Nothing on the Ship or at the door says the Rig is the prerequisite.
 - On a fresh save the Hatch is also unrepairable while the bank is empty. The prompt says "no Salvage to repair" without saying that killing Gatekeepers is what fixes that.
 - Nothing explains that the first Wave is deliberately a single kind and that later Waves introduce new ones. New players read the first Wave as representative and it isn't.
 - The improvised cutter's penalty is shown as a damage number on the HUD, but nothing says the fire rate is cut as well.
 - Nothing tells you the cursor must be captured to fire; the refusal is silent on screen and only appears in the log.
 - Nothing tells you ammo is unlimited. Players ration a resource that does not exist.
+- Survive a Hatch-bank and the Hatch offers dock; nothing teaches that before the prompt appears.

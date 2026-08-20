@@ -128,9 +128,13 @@ namespace GatekeepersProtocol.Game
                 "That door is open. The next terminals are behind it."),
             new DemoLine(DemoConversationIds.DoorD2, Game, DemoVoiceMode.Lock, DemoVoiceScope.Party,
                 "That door is open. The next terminals are behind it."),
+            // Restamped 2026-08-20 (draft — Zo): the id is kept, the trigger is now zone 2's
+            // bank falling, and that may be this save's FIRST ejection. The shipped line opened
+            // by asserting a second one, which the recut forbids. Cause-agnostic from here: a
+            // loss that put heavier hardware on the rack, with no count of losses in it.
             new DemoLine(DemoConversationIds.SecondLoss, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "Thrown off again. What transferred is aboard — and the rack has heavier " +
-                "hardware now."),
+                "That one took the Run off you. What transferred is aboard — and the rack " +
+                "answers with heavier hardware. The PRIMARY slot is open at the ARMORY."),
 
             // Beats 6-7 — Control Room and finale.
             new DemoLine(DemoConversationIds.ControlRoom, Game, DemoVoiceMode.Lock, DemoVoiceScope.Party,

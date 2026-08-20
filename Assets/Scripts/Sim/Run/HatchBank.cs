@@ -9,7 +9,6 @@ namespace GatekeepersProtocol.Sim
     /// attributed.</summary>
     public static class HatchBank
     {
-        public const int SlotsPerRun = 3;
         public const float DripPerSecond = 8f;
         /// <summary>Hatch-bank convert window. #12 — Wave 6 delivery is ~35 s; 45 s covers
         /// spawn plus a short fight so Unbanked visibly falls (8/s × 45 = 360) before dump.

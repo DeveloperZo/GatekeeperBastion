@@ -1,10 +1,10 @@
-<!-- Purpose: the Hunter — the Gatekeeper that only ever wants the player, and why the Hatch is not cover from it. / Status: working / Update trigger: when the Hunter's refusal to target the Hatch changes, or when shouting/provocation on Hunters changes. / Last updated: 2026-08-15 -->
+<!-- Purpose: the Hunter — the Gatekeeper that only ever wants the player, and why the Hatch is not cover from it. / Status: working / Update trigger: when the Hunter's refusal to target the Hatch changes, or when shouting/provocation on Hunters changes. / Last updated: 2026-08-20 -->
 
 # Hunter
 
 ## Game
 
-The Hunter comes for you and nothing else. It will not hit the Hatch, cannot hit the Hatch, and will not be distracted from you by anything in the Bastion.
+The Hunter comes for you and nothing else. Its frame is the lean one — you can pick it in a group by silhouette before it closes. It will not hit the Hatch, cannot hit the Hatch, and will not be distracted from you by anything in the Bastion.
 
 It picks you the moment it arrives and walks straight at you for life. It closes and swings: melee contact. It is fast, fragile, and already hunting — shooting it still shouts, so Defaults near it join the hunt. Deal with it first; there is no positioning answer, and standing on the Hatch just brings it to the worst place for a fight.
 
@@ -44,9 +44,8 @@ Intensity never adds Hunters. If a Wave feels like it is drowning you in Hunters
 
 ## Gaps
 
-- Nothing on screen distinguishes a Hunter from a Default until it changes direction or outruns everything else in the group.
 - Its hits and a Default's hits feel identical, so when your health drops you cannot tell which kind is on you without turning around.
 - The remaining-Gatekeepers count on the HUD does not separate Hunters out, so you can never confirm you have cleared them.
 - That a Hunter cannot damage the Hatch even standing on it is never stated. Players defend the Hatch against them for no reason.
 - That shooting a Hunter alerts nearby Defaults is invisible, and it is the most common way to accidentally triple the size of a fight.
-- The Hatch alarm is silent on Hunters — no Hatch damage means no alert, so a Hunter arriving is the one threat with no on-screen tell at all.
+- The Hatch alarm is silent on Hunters — no Hatch damage means no alert, so a Hunter arriving is the one threat with no on-screen tell at all beyond its silhouette.

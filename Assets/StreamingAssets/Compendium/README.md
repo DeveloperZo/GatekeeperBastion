@@ -20,7 +20,7 @@ hours in order.
 ## II. A Run
 
 One trip out and back. [A Run](A-Run.md) is embark, Prep, intensity, Assault, Hatch-bank,
-and Master Control for **Escaped**. [Waves](Waves.md) is how the room gets worse. [Intensity](Intensity.md)
+dock after a survived bank, and Master Control for **Escaped**. [Waves](Waves.md) is how the room gets worse. [Intensity](Intensity.md)
 is the only wager, and it is honest: more of the same, not a different fight.
 [Salvage](Salvage.md) is the only currency. Kills fill Unbanked; a Hatch-bank converts it to the ship.
 [Staying Alive](Staying-Alive.md) is tactics traced to the rule that makes each one work.
@@ -28,11 +28,11 @@ is the only wager, and it is honest: more of the same, not a different fight.
 ## III. The Bastion
 
 The place you hold. [The Hatch](The-Hatch.md) is the umbilical — the only defended object
-in the Run, and the bill you did not plan for.
+in the Run, the bill you did not plan for, and the place you dock home from after a survived bank.
 
 ## IV. The Garrison
 
-Gatekeepers live here. They are not tiers of one kind. Each kind is defined by what it
+Gatekeepers live here. They are machines — three frames, not three paints. Each kind is defined by what it
 **refuses**. [Gatekeepers](Gatekeepers.md) is the garrison as a whole: how they arrive,
 what puts one on you, how Waves mix them.
 

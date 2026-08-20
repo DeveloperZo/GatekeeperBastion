@@ -35,6 +35,7 @@ has had; no tuning pass has come close.
 | One terminal trigger launches up to `WaveDirector.MaxWaves` consecutive Waves, and `TriggerDraw` refuses one more on that trigger. | Challenge | `Sim/Waves/WaveDirector.cs`. A per-trigger cap, not a per-Run Wave budget — restated 2026-08-17 (Zo); the row previously read "a Run is MaxWaves Waves". |
 | Crit has exactly one source. | Expression (ARMORY stays readable) | `MetaUpgrades.CritChance` × `PlayerGun.CritDamageMultiplier`. A second source would multiply against the first and the dps curve would stop being readable from the Armory panel. |
 | Two effects never multiply the same currency. | Expression | The power-budget rule behind the 5-skill design, section 3.2. |
+| Every stake raises danger and reward from one source. | Expression (the stake stays honest); Challenge | Section 3.1, *Stake — the authored risk*. `NextWave`: one table for money and bodies alike. |
 | Equal Salvage split; each player banks to their own meta. | Fellowship; Expression (own loadout) | `M65`. Co-op gets you further, not richer (`../Brainstorms/co-op.md`). |
 
 **These are boundaries, not laws.** Every one exists to protect the ranked aesthetics in
@@ -69,6 +70,40 @@ session where the event never fired inside its pity / deck / weight cap, or wher
 clumped inside one Wave after a shuffle that forbade that.
 
 This is not a gacha shop. The gacha wording is the definition only.
+
+### Stake — the authored risk
+
+The game already calls this a stake in four places (`1-Experience.md` §1.1, §1.2 and the
+Protects column above) without ever naming it as one category. **A stake is any mechanism
+where the player pays to raise the danger and the payout together.** It is the formal name
+for what gets called juicing, and it is the meta-rule the economy hangs off — the economy
+is which currency each stake is paid in and what it buys.
+
+| Stake | Paid in | Raises | Where |
+|---|---|---|---|
+| Intensity juice | Unbanked Salvage, at a look-at trigger | bodies and per-kill value | `IntensityJuice`, `TetherSiphon`, `WaveDirector.NextWave` |
+| Carry depth | risk, by declining to bank | convert multiplier and what a wipe costs | `HatchBank.CarryConvert` |
+| Run multipliers | *proposed* | wave attributes and yield on that axis | `../Brainstorms/economy.md` |
+| Roster authorship | *proposed* | which kinds exist, and what each is worth | `../Brainstorms/economy.md` |
+
+**The rule: a stake raises danger and reward from one source.** `NextWave` enforces this
+locally today — *"ONE table for money and bodies alike: TetherSiphon owns the curve, this
+reads it"* — and the generalisation is that no stake may have a payout side authored apart
+from its danger side. A stake with two tables can be tuned into pure upside by accident,
+which is the one failure this category cannot survive.
+
+Packing reward onto the Gatekeeper rather than onto the Wave satisfies this by
+construction: a Wave's payout is whatever is standing in it, so there is no second table to
+drift. That is the preferred form for any new stake.
+
+**Stakes may stack** (Zo, 2026-08-20). Salvage is already multiplied by the dial and by
+carry depth, and a third is accepted. This relaxes *Two effects never multiply the same
+currency* for the stake category specifically: the rule stays a boundary — it means the
+stack is watched and tuned, not that a stack is a defect. Every stake added to the table
+above is a factor someone has to hold in their head.
+
+**Not a stake:** pay-to-skip. Buying past a fight rather than into a harder one is cut
+(`../Decisions.md`, *pay-to-juice … not pay-to-skip*).
 
 ---
 

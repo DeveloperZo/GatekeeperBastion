@@ -6,7 +6,8 @@ Closed on: 2026-08-19 (Zo). Criteria 1, 2, 4, 5 stamped by the close request;
 criterion 3 already clean on disk. Kill criterion: free path accepted (not
 rejected).
 Update trigger: never — shipped milestones are a record. Corrections only.
-Last updated: 2026-08-19
+Last updated: 2026-08-20 (correction: the flagged generator drift is closed;
+see the end of "What has landed")
 -->
 
 One retargeted attack clip into the shared Gatekeeper controller, so the Attack
@@ -157,10 +158,26 @@ place and unproven — they need the playthrough below. Nothing was run.
 The controller asset is authored by `SceneBuilder.Enemies.EnsureGatekeeperController()`,
 which returns early when the file already exists, so the hand edit survives
 normal builds. It would be lost only if the `.controller` were deleted and
-regenerated, and the generator would rebuild the idle stand-in. Updating that
-method to match is code and a separate call — still not made, and still the one
-way this milestone silently reverts. Flagged, not fixed: this milestone is asset
-work.
+regenerated, and the generator would rebuild the idle stand-in.
+
+**Correction, 2026-08-20 (agent).** The sentence above used to end "still not
+made, and still the one way this milestone silently reverts." That is no longer
+true: the generator now authors what the shipped asset holds. It loads
+`Packs/Gatekeepers/Animations/Anim_attack_melee.fbx` through the same
+`LoadHumanClip` the locomotion clips use and sets the Attack -> Locomotion exit
+time to `0.9`, so a regenerated controller matches the hand edit instead of
+reverting it. A missing clip logs an error naming the path and falls back to
+Idle, rather than rebuilding the stand-in pose silently.
+
+Not observed: the generator actually regenerating. Proving it means deleting the
+committed `.controller` — and its `.meta`, whose guid three pack prefabs
+reference — which is not worth the risk to a live pack for a dormant path. What
+was checked instead: the Editor assembly compiles in Unity (the bridge's
+precheck passed), `lint-arch` is clean, the full suites moved no test, and the
+clip resolution is deterministic because `Anim_attack_melee.fbx.meta` defines
+exactly one clip, `attack_melee`. Its import block is byte-identical to
+`Running.fbx.meta` outside guid, clip name, trim and `loopTime`, and `Running`
+is a working clip in this controller's blend tree.
 
 ## Verification
 

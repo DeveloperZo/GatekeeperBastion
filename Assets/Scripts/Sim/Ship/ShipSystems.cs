@@ -21,6 +21,12 @@ namespace GatekeepersProtocol.Sim
         /// <summary>The umbilical junction back to the ship. Destruction ends the run (Lost).</summary>
         public Subsystem Hatch { get; private set; }
 
+        /// <summary>The three hatch doors and their open flags. The single
+        /// <see cref="Hatch"/> subsystem stays the one damage target — per-hatch HP and
+        /// the split pool are the co-op demo's work (Docs/Demo - Coop/README.md), not
+        /// this aggregate's.</summary>
+        public ShipHatches Hatches { get; private set; }
+
         /// <summary>Raised when the Hatch's HP first reaches 0.</summary>
         public event Action HatchDestroyed;
 
@@ -40,6 +46,7 @@ namespace GatekeepersProtocol.Sim
         {
             Hatch = new Subsystem("Hatch", hatchMaxHp);
             Hatch.Destroyed += OnHatchDestroyed;
+            Hatches = new ShipHatches();
         }
 
         private void OnHatchDestroyed(Subsystem s)

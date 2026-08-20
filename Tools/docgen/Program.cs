@@ -565,7 +565,6 @@ public static class Docgen
         var sb = new StringBuilder();
         sb.AppendLine("| | |");
         sb.AppendLine("|---|---|");
-        sb.AppendLine("| slots / Run | " + HatchBank.SlotsPerRun + " |");
         sb.AppendLine("| drip | " + N(HatchBank.DripPerSecond) + " unbanked/s |");
         sb.AppendLine("| duration | " + N(HatchBank.DurationSeconds) + " s |");
         sb.AppendLine("| withdraw | " + N(HatchBank.WithdrawPerSecond) + " salvage/s |");
@@ -776,7 +775,7 @@ public static class Docgen
                       WeaponWheel.PointsPerPurchase + " points). Tier is derived as" +
                       " total / " + WeaponWheel.PointsPerPurchase + ". Cadence still reads as the");
         sb.AppendLine("weapon: fire-rate points exist, but a purchase chooses a spoke. Purchases unlock");
-        sb.AppendLine("after your first death. Full focus on one spoke is **" +
+        sb.AppendLine("after Salvage first converts through the Hatch. Full focus on one spoke is **" +
                       WeaponWheel.FocusAtMax + "** points; each neighbour reaches **" +
                       WeaponWheel.NeighbourAtMax + "**.");
         sb.AppendLine();
@@ -971,7 +970,7 @@ public static class Docgen
                           FormatTrackValue(track, aM) + " |");
         }
         var rig = EquipmentCatalog.Def(EquipmentId.RepairRig);
-        sb.AppendLine("| Equipment slot (once, after first loss) | — | " +
+        sb.AppendLine("| Equipment slot (once, after first Hatch conversion) | — | " +
                       EquipmentCatalog.SlotPrice.ToString("N0", Inv) + " salvage |");
         sb.AppendLine("| Repair Rig — flat repair rate | " +
                       N(rig.repairPerSecond) + " HP/s | " +
@@ -983,7 +982,7 @@ public static class Docgen
         sb.AppendLine("Crit chance is frozen at 0. There is no Luck shop. The Default Protocol is a");
         sb.AppendLine("0-salvage CREW claim (Barrage G, Rush H). Other protocol names on the panel are Coming Soon.");
         sb.AppendLine();
-        sb.AppendLine("Weapon wheel purchases and the equipment slot unlock after your first death.");
+        sb.AppendLine("Weapon wheel purchases and the equipment slot unlock after Salvage first converts through the Hatch.");
         sb.AppendLine();
     }
 

@@ -93,11 +93,11 @@ namespace GatekeepersProtocol.Game
                           + "] Dock — return to Ship";
 
                 ReadRepairView(gc, out float hp, out float maxHp, out long bank, out bool destroyed,
-                    out long unbanked, out int slots, out bool prep);
+                    out long unbanked, out bool prep);
                 if (destroyed) return "Hatch: DESTROYED";
                 if (hp >= maxHp)
                 {
-                    if (prep && unbanked > 0L && (slots < 0 || slots > 0))
+                    if (prep && unbanked > 0L)
                     {
                         if (gc.HatchBankStartBlocked)
                             return "Hatch-bank — finish the zone";
@@ -147,7 +147,7 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        /// <summary>Prep, sealed, Unbanked waiting, a slot left — E can select, T can start.</summary>
+        /// <summary>Prep, sealed, Unbanked waiting — E can select, T can start.</summary>
         public bool OffersHatchBank
         {
             get
@@ -155,9 +155,8 @@ namespace GatekeepersProtocol.Game
                 var gc = _game;
                 if (gc == null || gc.RunIsOver) return false;
                 ReadRepairView(gc, out float hp, out float maxHp, out _, out bool destroyed,
-                    out long unbanked, out int slots, out bool prep);
+                    out long unbanked, out bool prep);
                 return !destroyed && hp >= maxHp - 0.01f && prep && unbanked > 0L
-                    && (slots < 0 || slots > 0)
                     && !gc.HatchBankStartBlocked;
             }
         }
@@ -179,7 +178,7 @@ namespace GatekeepersProtocol.Game
             }
 
             ReadRepairView(gc, out float hp, out float maxHp, out long bank, out bool destroyed,
-                out long unbanked, out _, out bool prep);
+                out long unbanked, out bool prep);
             if (destroyed) return;
             if (hp >= maxHp - 0.01f)
             {
@@ -280,7 +279,7 @@ namespace GatekeepersProtocol.Game
         }
 
         void ReadRepairView(GameController gc, out float hp, out float maxHp, out long bank,
-            out bool destroyed, out long unbanked, out int slots, out bool prep)
+            out bool destroyed, out long unbanked, out bool prep)
         {
             var net = gc.Net;
             var mirror = net != null && net.IsClientOnly ? net.Mirror : null;
@@ -291,7 +290,6 @@ namespace GatekeepersProtocol.Game
                 bank = mirror.Banked.Value;
                 destroyed = hp <= 0f;
                 unbanked = mirror.Unbanked.Value;
-                slots = -1;
                 prep = (AssaultState)mirror.Phase.Value == AssaultState.Prep;
                 return;
             }
@@ -301,7 +299,6 @@ namespace GatekeepersProtocol.Game
             bank = gc.Meta != null ? gc.Meta.BankedSalvage : 0L;
             destroyed = station.IsDestroyed;
             unbanked = gc.Sim != null ? gc.Sim.TotalUnbanked : 0L;
-            slots = gc.Sim != null ? gc.Sim.HatchBankSlotsLeft : 0;
             prep = gc.Sim != null && gc.Sim.Assault == AssaultState.Prep;
         }
 

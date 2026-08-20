@@ -234,6 +234,7 @@ namespace GatekeepersProtocol.Game
                 LogSessionSnapshot("connected clientId=" + clientId
                     + " localId=" + _nm.LocalClientId
                     + " role=host");
+                ShipHatchAssignment.Recompute("guest joined");
                 return;
             }
             Log.Event(Tag, "connected clientId=" + clientId
@@ -257,6 +258,9 @@ namespace GatekeepersProtocol.Game
             {
                 if (_lobby != null)
                     _lobby.ServerNotifyGuestLeft(clientId);
+                // The leaver can still sit in the connected list inside this callback,
+                // so it is excluded by id rather than trusted to be gone.
+                ShipHatchAssignment.Recompute("guest left", clientId);
                 return;
             }
             if (_nm == null || _nm.IsServer) return;

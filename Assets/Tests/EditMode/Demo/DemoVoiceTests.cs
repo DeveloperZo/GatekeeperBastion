@@ -272,13 +272,36 @@ namespace GatekeepersProtocol.Tests
                 "a reply field would be a player-talks-back surface");
         }
 
+        /// <summary>The demo's beat-spec folder, found by STRUCTURE rather than by name: it
+        /// is the one directory under Docs/ that holds voice.md, the line registry. The
+        /// folder has been renamed once already and a hardcoded name turned that rename into
+        /// a red test that said nothing about the code. Fails loudly when the folder is
+        /// missing or ambiguous rather than falling back to a default — a default would turn
+        /// a deleted spec into a passing run.</summary>
+        static string BeatDocsFolder()
+        {
+            string docsRoot = Path.GetFullPath("Docs");
+            Assert.IsTrue(Directory.Exists(docsRoot), "missing " + docsRoot);
+            string found = null;
+            foreach (string dir in Directory.GetDirectories(docsRoot))
+            {
+                if (!File.Exists(Path.Combine(dir, "voice.md"))) continue;
+                Assert.IsNull(found,
+                    "two folders under Docs/ hold voice.md (" + found + ", " + dir
+                    + ") — the beat specs must have one home");
+                found = dir;
+            }
+            Assert.IsNotNull(found,
+                "no folder under Docs/ holds voice.md — the demo beat specs moved or were deleted");
+            return found;
+        }
+
         [Test]
         public void BeatDocs_CitedIdsAreInTheRegistry()
         {
             var registry = new HashSet<string>(DemoConversationIds.All);
             var dead = new HashSet<string> { "demo.door_d3" };
-            string docs = Path.GetFullPath("Docs/Demo");
-            Assert.IsTrue(Directory.Exists(docs), "missing " + docs);
+            string docs = BeatDocsFolder();
             foreach (string file in Directory.GetFiles(docs, "*.md"))
             {
                 string text = File.ReadAllText(file);

@@ -5,7 +5,7 @@ namespace GatekeepersProtocol.Game
     /// <summary>One zone's composite-retrigger offer, resolved for a terminal the player is
     /// looking at. Default is the whole zone again; the partial election starts at the
     /// zone's deepest cleared field Wave, so at least one Wave refights before the bank
-    /// re-arms (Docs/Demo/4-embark-at-wave-2.md, Gaps — the whole-zone-cleared floor).</summary>
+    /// re-arms (Docs/Demo - Single/4-embark-at-wave-2.md, Gaps — the whole-zone-cleared floor).</summary>
     public readonly struct DemoRetriggerOffer
     {
         public readonly bool Available;
@@ -39,10 +39,16 @@ namespace GatekeepersProtocol.Game
     /// launch) lives in GameController; this class only answers what is offered.</summary>
     public static class DemoRun
     {
-        /// <summary>The offer at zone 1's deepest terminal. Offered only when the zone has
-        /// cleared Waves from a PREVIOUS Run (saved deepest ahead of this Run's zone
-        /// progress), the zone is incomplete this Run, and no surviving bank holds its door
-        /// open — a survived bank made the retrigger moot. Never offered outside the demo.</summary>
+        /// <summary>The offer at the zone's deepest terminal, for whichever zone the id
+        /// belongs to. Offered only when the zone has cleared Waves from a PREVIOUS Run (saved
+        /// deepest ahead of this Run's zone progress), the zone is incomplete this Run, and no
+        /// surviving bank holds its door open — a survived bank made the retrigger moot. An id
+        /// the zone table does not author is never offered, and neither is anything outside
+        /// the demo.
+        /// <paramref name="zoneWavesClearedThisRun"/> is a COUNT of the zone's field Waves
+        /// cleared this Run; the saved deepest is an ABSOLUTE Wave number, so the count is
+        /// lifted onto the zone's Wave span before the two are compared. In zone 1 the two
+        /// scales coincide (its span starts at Wave 1); in a later zone they do not.</summary>
         public static DemoRetriggerOffer RetriggerOffer(
             MetaState m,
             string terminalId,
@@ -50,20 +56,25 @@ namespace GatekeepersProtocol.Game
             bool doorOpen)
         {
             if (m == null || !m.DemoActive) return DemoRetriggerOffer.None;
-            if (terminalId != FirstTerminal.SecondId) return DemoRetriggerOffer.None;
+            int zone = DemoZones.ZoneOf(terminalId);
+            if (zone == 0) return DemoRetriggerOffer.None;
+            if (terminalId != DemoZones.DeepestTerminalId(zone)) return DemoRetriggerOffer.None;
             if (doorOpen) return DemoRetriggerOffer.None;
 
-            int deepest = m.ZoneDeepest(FirstTerminal.ZoneOneNumber);
+            int deepest = m.ZoneDeepest(zone);
             if (deepest <= 0) return DemoRetriggerOffer.None;
-            if (zoneWavesClearedThisRun >= FirstTerminal.ZoneOneEndWave)
+            int first = DemoZones.FirstWave(zone);
+            int end = DemoZones.EndWave(zone);
+            if (zoneWavesClearedThisRun >= end - first + 1)
                 return DemoRetriggerOffer.None; // zone complete this Run — the bank is next
-            if (deepest <= zoneWavesClearedThisRun)
+            int deepestThisRun = zoneWavesClearedThisRun <= 0
+                ? 0
+                : first - 1 + zoneWavesClearedThisRun;
+            if (deepest <= deepestThisRun)
                 return DemoRetriggerOffer.None; // first attempt in progress, nothing to resume
 
-            int end = FirstTerminal.ZoneOneEndWave;
             int partial = deepest < end ? deepest : end;
-            return new DemoRetriggerOffer(
-                FirstTerminal.ZoneOneNumber, FirstTerminal.ZoneOneFirstWave, end, partial);
+            return new DemoRetriggerOffer(zone, first, end, partial);
         }
     }
 }

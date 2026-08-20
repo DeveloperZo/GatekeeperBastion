@@ -2,7 +2,7 @@
 
 ## Game
 
-The plain one, and the one every other rule is stated against. On a Wave started at a field terminal it walks at you. On a Hatch-bank it walks to the Hatch and will pass you to get there — until something flips it onto you for the rest of its life. It closes and swings: melee contact.
+The plain machine, and the one every other rule is stated against. On a Wave started at a field terminal it walks at you. On a Hatch-bank it walks to the Hatch and will pass you to get there — until something flips it onto you for the rest of its life. It closes and swings: melee contact.
 
 Shooting it, being seen at range, or standing near it puts it on you. The first two are permanent; nearness is temporary. Once it flips it shouts, and the whole group joins. Once it reaches the Hatch it stops negotiating — kill it there, or the door takes the hits.
 

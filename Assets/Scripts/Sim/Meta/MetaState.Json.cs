@@ -49,6 +49,10 @@ namespace GatekeepersProtocol.Sim
             AppendField(sb, "DemoFabPowered", d.DemoFabPowered ? "true" : "false", true);
             AppendField(sb, "DemoWheelBuysLeft",
                 d.DemoWheelBuysLeft.ToString(CultureInfo.InvariantCulture), true);
+            AppendField(sb, "DemoZone2BankLost", d.DemoZone2BankLost ? "true" : "false", true);
+            AppendField(sb, "DemoRungTwoOpened", d.DemoRungTwoOpened ? "true" : "false", true);
+            AppendField(sb, "DemoRungTwoBuysLeft",
+                d.DemoRungTwoBuysLeft.ToString(CultureInfo.InvariantCulture), true);
             AppendIntArray(sb, "DemoZoneDeepestWave", d.DemoZoneDeepestWave);
             sb.Append('}');
             return sb.ToString();
@@ -103,6 +107,11 @@ namespace GatekeepersProtocol.Sim
             d.DemoCrewMenuUnlocked = ExtractBool(json, "DemoCrewMenuUnlocked", false);
             d.DemoFabPowered = ExtractBool(json, "DemoFabPowered", false);
             d.DemoWheelBuysLeft = (int)ExtractLong(json, "DemoWheelBuysLeft", 0);
+            // Added to the v9 block without a version bump: a v9-era file that predates
+            // these keys is missing them, and the fallbacks below are the correct load.
+            d.DemoZone2BankLost = ExtractBool(json, "DemoZone2BankLost", false);
+            d.DemoRungTwoOpened = ExtractBool(json, "DemoRungTwoOpened", false);
+            d.DemoRungTwoBuysLeft = (int)ExtractLong(json, "DemoRungTwoBuysLeft", 0);
             d.DemoZoneDeepestWave = new int[DemoZoneCount];
             ExtractIntArray(json, "DemoZoneDeepestWave", d.DemoZoneDeepestWave);
 

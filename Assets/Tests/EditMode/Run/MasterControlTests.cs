@@ -66,7 +66,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Sequence_FiveTerminalThenFiveHatch_EscapesWithoutSpendingSlot()
+        public void Sequence_FiveTerminalThenFiveHatch_Escapes()
         {
             MetaState meta;
             var sim = Tethered(out meta);
@@ -74,7 +74,6 @@ namespace GatekeepersProtocol.Tests
             for (int i = 0; i < 8; i++) sim.AwardKill();
             sim.NotifyAssaultCleared();
             Assert.AreEqual(200L, sim.Unbanked);
-            int slots = sim.HatchBankSlotsLeft;
             long bankBefore = meta.BankedSalvage;
 
             bool hatchHalf = false;
@@ -86,7 +85,6 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(sim.AllWavesCleared);
             Assert.AreEqual(0L, sim.Unbanked);
             Assert.Greater(meta.BankedSalvage, bankBefore);
-            Assert.AreEqual(slots, sim.HatchBankSlotsLeft);
             Assert.AreEqual(1, meta.CleanExits);
             Assert.AreEqual("cleared", sim.LastRunReport.cause);
             Assert.AreEqual(MasterControlPhase.None, sim.MasterPhase);
