@@ -4,16 +4,16 @@
 Status: open
 Closable by: Zo at the keyboard, two runs plus one demo-off run
 Update trigger: when an item is added, settled or evicted
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 -->
 
 Prove the two Lost endings still end the run Lost, and that the rule holds with the demo off.
 
-Split out of `HP-2` on 2026-08-19. `HP-2` is settled by the `Returned` round trip that M78's
-criterion 9 already schedules; this item cannot ride that run. A death and a Hatch breach each
-end the run **Lost**, so neither can happen in a run that ends `Returned`, and a `DemoActive
-false` run is a third configuration again. Three runs, not one — which is a second sitting, and
-the grain rule says that is a second pass.
+Split out of `HP-2` on 2026-08-19. `HP-2` settled 2026-08-20 with M78's `Returned`
+close. This item cannot ride that run. A death and a Hatch breach each end the
+run **Lost**, so neither can happen in a run that ends `Returned`, and a
+`DemoActive false` run is a third configuration again. Three runs, not one —
+which is a second sitting, and the grain rule says that is a second pass.
 
 ## Items
 
@@ -25,6 +25,6 @@ the grain rule says that is a second pass.
 
 ## Not this pass
 
-- The `Returned` half of M78's criterion 9 and everything that falls out of it — that is
-  [`HP-2`](HP-2-the-dock-round-trip.md).
-- M78's own criteria 0–9 — those are M78's close gate, not owed items.
+- The `Returned` dock round trip — [`HP-2`](../2.%20settled/HP-2-the-dock-round-trip.md),
+  settled 2026-08-20 with M78.
+- M78's own criteria — closed 2026-08-20.

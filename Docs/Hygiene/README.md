@@ -5,7 +5,7 @@ Purpose: Summary and id register over Docs/Hygiene/. Which passes exist, what ea
 Status: living index
 Authority: none over design or code. A pass records a debt and the observation that settles it; it does not gate anything.
 Update trigger: when a pass is created, moves folder, or when an id is issued, settled or evicted.
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 -->
 
 Owed items live here as **hygiene passes** — one file per sitting, folder as status. The
@@ -29,7 +29,7 @@ those, so a green harness run does not settle those items
 | id | Pass | Status | Closable by | Items |
 |---|---|---|---|---|
 | HP-1 | [Beat zero, observed](1.%20open/HP-1-beat-zero-observed.md) | open | AutoVerify (pre-v9 save staged), plus one play pass for the refuse strings and three quit-and-reload cycles | TH-1 … TH-6 |
-| HP-2 | [The dock round trip](1.%20open/HP-2-the-dock-round-trip.md) | open | Zo at the keyboard, one run — the `Returned` half of M78 criterion 9 | TH-10, TH-12, TH-14, TH-17 … TH-20 |
+| HP-2 | [The dock round trip](2.%20settled/HP-2-the-dock-round-trip.md) | settled, 2026-08-20 (Zo; M78 `Returned`) | — | TH-10, TH-12, TH-14, TH-17 … TH-20 |
 | HP-3 | [Hands only Zo has](1.%20open/HP-3-hands-only-zo-has.md) | open | Zo, at the filesystem | TH-7 |
 | HP-4 | [The lost endings hold](1.%20open/HP-4-the-lost-endings-hold.md) | open | Zo, two runs plus one demo-off run | TH-13 |
 
@@ -49,17 +49,17 @@ the changelog cite item ids, so a reused id silently re-points an old reference 
 | TH-7 | Delete `_to_delete/m75_scratch/` | `HP-3`, open |
 | TH-8 | Delete `Assets/_Scratch/Editor/` | **Settled** 2026-08-19 — Zo deleted it; the verify gate compiles again |
 | TH-9 | M76 juice teach — `demo.juice_teach`, `+` spends 100, next Wave `intensity=1` with an Event line | **Evicted** 2026-08-19 — see below |
-| TH-10 | M76 criterion 3: `DemoZoneDeepestWave[1]` on each field-Wave clear | `HP-2`, open |
+| TH-10 | M76 criterion 3: `DemoZoneDeepestWave[1]` on each field-Wave clear | **Settled** 2026-08-20 — `HP-2`, with M78 |
 | TH-11 | M76 criterion 5: `[Demo] first-hatch survived` on surviving the loss-1 window | **Evicted** 2026-08-19 — see below |
-| TH-12 | M76 criteria 6–7: first Docked plays `demo.first_hatch_down`, plus beat 1–2 voice and `zone terminals complete zone=1` | `HP-2`, open |
+| TH-12 | M76 criteria 6–7: first Docked plays `demo.first_hatch_down`, plus beat 1–2 voice and `zone terminals complete zone=1` | **Settled** 2026-08-20 — `HP-2`, with M78 |
 | TH-13 | M77 criterion 7: down and breach still end Lost, and with `DemoActive false` | `HP-4`, open |
-| TH-14 | M77 criterion 8: the full survive → dock → spend → re-embark playthrough | `HP-2`, open |
+| TH-14 | M77 criterion 8: the full survive → dock → spend → re-embark playthrough | **Settled** 2026-08-20 — `HP-2`, with M78 |
 | TH-15 | `Packs/Gatekeepers/Default.mat` approximated the UtilityBot | **Settled** 2026-08-19 — moot; the Shader Graph was restored from the package. See `M88` |
 | TH-16 | Every FaxLab3D robot magenta, pack gitignored so nothing survived re-import | **Settled** 2026-08-19 — Shader Graph restored, `lint-vendor` now gates it, materials tracked. See `M88` |
-| TH-17 | M77 criterion 1: `EndRun("docked")` lands `Returned`, no `PodEjections++`, end screen names the cause | `HP-2`, open — **was TH-9** |
-| TH-18 | M77 criterion 4: `[hold E] Dock` live at the Hatch after a survived window, gone once the next Wave triggers | `HP-2`, open — **was TH-10** |
-| TH-19 | M77 criterion 5: bank snapshot persists banked + door state, restores on re-embark | `HP-2`, open — **was TH-11** |
-| TH-20 | M77 criterion 6: `demo.door_d1` then `demo.dock_option`, in that order, on the survival frame | `HP-2`, open — **was TH-12** |
+| TH-17 | M77 criterion 1: `EndRun("docked")` lands `Returned`, no `PodEjections++`, end screen names the cause | **Settled** 2026-08-20 — `HP-2`, with M78 — **was TH-9** |
+| TH-18 | M77 criterion 4: `[hold E] Dock` live at the Hatch after a survived window, gone once the next Wave triggers | **Settled** 2026-08-20 — `HP-2`, with M78 — **was TH-10** |
+| TH-19 | M77 criterion 5: bank snapshot persists banked + door state, restores on re-embark | **Settled** 2026-08-20 — `HP-2`, with M78 — **was TH-11** |
+| TH-20 | M77 criterion 6: `demo.door_d1` then `demo.dock_option`, in that order, on the survival frame | **Settled** 2026-08-20 — `HP-2`, with M78 — **was TH-12** |
 
 ### The double-issued block
 

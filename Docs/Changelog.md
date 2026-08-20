@@ -5,8 +5,21 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 -->
+
+- 2026-08-20: **`M78` closed — the first return.** Criterion 9's double
+  playthrough (`Lost` and `Returned`) stamped by Zo. Criteria 0–8 were in
+  tree from the 2026-08-19 build; 1–7 confirmed on screen by criterion 9's
+  construction. `HP-2` settled with the `Returned` half (TH-10, TH-12, TH-14,
+  TH-17–TH-20). M77's remaining play stamp is TH-13 in `HP-4`. Active 0.
+
+- 2026-08-19: **`M79` recut — this loss opens the Primary.** Zone 2's three
+  field Waves are survivable on the secondary kit; that zone's bank is the
+  authored loss, and it sells the Primary whether the ejection is the save's
+  first or its second. The row is no longer keyed on `PodEjections >= 2`.
+  File renamed `M79-the-loss-that-opens-the-primary.md`. Beat 5 and the
+  Demo README treat-as-spec rows restamped. M76's zone-1 record is untouched.
 
 - 2026-08-19: **Dashboard de-hardcoded, taught hygiene passes, and given a staleness check.**
   `Tools/dashboard-data/run.ps1` carried five milestone ids as literals, so a re-run could not

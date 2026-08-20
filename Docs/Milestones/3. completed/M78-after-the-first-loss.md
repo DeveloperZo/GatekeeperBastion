@@ -1,12 +1,13 @@
 # M78 — The first return
 
 <!--
-Status: active — built 2026-08-19; offline harness + AutoVerify green with only
-the pre-existing failing set; criterion 9's double playthrough (Lost and
-Returned) is Zo's to run and is the close gate
-Update trigger: when the ladder, MP gate, exit-standing key, CREW re-key, the
-unlock gate, the survival bonus, or the retrigger spec in Demo beats 3–4 moves
-Last updated: 2026-08-19
+Status: completed, Aug 2026
+Closed on: 2026-08-20 (Zo). Criterion 9's double playthrough (`Lost` and
+`Returned`) stamped by the close request. Criteria 0–8 were in tree from the
+2026-08-19 build; 1–7 are confirmed on screen by criterion 9's construction.
+HP-2 (TH-10, TH-12, TH-14, TH-17–TH-20) settles with the `Returned` half.
+Update trigger: never — shipped milestones are a record. Corrections only.
+Last updated: 2026-08-20
 -->
 
 Beats 3 + 4 (minus the run-structure piece, which is M77): the first ARMORY
@@ -127,10 +128,11 @@ draft and is restamped in the beat when Zo edits it.
 
 ## Traps
 
-**Added 2026-08-18:** keying anything else in the demo family to `PodEjections`
-as a progression gate. `M79` is safe because zone 2's bank is built so the
-secondary kit cannot survive the window, so its loss is forced by composition
-rather than by script. Nothing else may assume a loss happened.
+**Added 2026-08-18; restamped 2026-08-19:** keying anything else in the demo
+family to `PodEjections` as a progression gate. `M79` keys the Primary on
+zone 2's bank falling (`DemoZone2BankLost`), not on a second ejection. The
+bank is still composition-forced on the secondary kit. Nothing else may
+assume a loss happened.
 
 Beat 3 + beat 4 Traps apply verbatim. Highest-cost three: keying the exit
 standing to the third refuse (a one-buy seat never sees it), resetting
@@ -233,6 +235,12 @@ field-clear path (TH-10) and the first-Docked voice on the Ship (TH-12).
 double playthrough. The state-keyed standing, the cap line, the retrigger
 prompts and the CREW flow have never been seen in play. Nobody has pressed
 Play on this build.
+
+## Closed 2026-08-20
+
+Zo close. Criterion 9's `Lost` and `Returned` playthroughs are the stamp.
+Criteria 1–7 are confirmed on screen by that construction. `HP-2` settled
+with the `Returned` half.
 
 ## Deltas from the beat text, recorded
 

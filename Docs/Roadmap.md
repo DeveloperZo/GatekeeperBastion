@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -29,19 +29,19 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-Active **M78** — built 2026-08-19; criterion 9, Zo's double playthrough ending
-once `Lost` and once `Returned`, is the close gate and the only thing open.
-**M88** completed 2026-08-19 (Zo close). **M81** and **M87**
+Active **none**. **M78** completed 2026-08-20 (Zo close; criterion 9 `Lost` +
+`Returned` playthroughs). **M88** completed 2026-08-19 (Zo close). **M81** and **M87**
 completed 2026-08-19 (Zo close). **M76** completed 2026-08-18 (Zo close; juice
 teach deferred — TH-9, evicted 2026-08-19; survive-log TH-11 evicted;
-zone-deepest TH-10 and Docked voice TH-12 in
-[`HP-2`](Hygiene/1.%20open/HP-2-the-dock-round-trip.md)).
+zone-deepest TH-10 and Docked voice TH-12 settled 2026-08-20 in
+[`HP-2`](Hygiene/2.%20settled/HP-2-the-dock-round-trip.md)).
 **M75** closed 2026-08-18 on Zo's beat 0 playthrough through to the Bastion;
 criteria 2 to 7 were not separately observed and are owed as TH-1 to TH-6 in
 [`HP-1`](Hygiene/1.%20open/HP-1-beat-zero-observed.md). Survive path (door unlock
-on bank success, Ship return) is **M77** (built; criteria 2 and 3 stamped; TH-14 and
-TH-17–TH-20 in [`HP-2`](Hygiene/1.%20open/HP-2-the-dock-round-trip.md), TH-13 in
-[`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), for the rest).
+on bank success, Ship return) is **M77** (built; criteria 2 and 3 stamped at
+close; TH-14 and TH-17–TH-20 settled 2026-08-20 in
+[`HP-2`](Hygiene/2.%20settled/HP-2-the-dock-round-trip.md); TH-13 remains in
+[`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md)).
 **M74** closed 2026-08-17 (demo voice pipe). **M72** and **M73** completed
 2026-08-17.
 **M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** and **M61-2**
@@ -60,20 +60,15 @@ finale-access ruling — the file names both.
 
 **Recommended next**, in this order.
 
-1. **M78 close gate** — built 2026-08-19; criterion 9 is Zo's double playthrough,
-   once ending `Lost` and once `Returned`. The `Returned` half is the same run that
-   settles [`HP-2`](Hygiene/1.%20open/HP-2-the-dock-round-trip.md).
-2. **M77 play stamp** — Docked return is built; criteria 1/4/5/6/7/8 need Play
-   ([`HP-2`](Hygiene/1.%20open/HP-2-the-dock-round-trip.md) — TH-14, TH-17–TH-20; TH-13 is
-   [`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), a separate sitting).
-3. **M66** — hit confirm, per-kind tells, distinct players at lane range.
-4. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
+1. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
+   ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13). M77's remaining play stamp.
+2. **M66** — hit confirm, per-kind tells, distinct players at lane range.
+3. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14, M55 juice unused,
-   M71 Regen Surge mag, M64 criteria 13–25 dry-run, M69 criterion 4, M73 criterion 6,
-   M76 TH-10 and TH-12 (`HP-2`; TH-9 and TH-11 evicted 2026-08-19). Next-Run
-   list: `GatekeeperZo Notes/verification.md`.
+   M71 Regen Surge mag, M64 criteria 13–25 dry-run, M69 criterion 4, M73 criterion 6.
+   Next-Run list: `GatekeeperZo Notes/verification.md`.
 
-Planned count is **10** (at cap 10). Active **1** (cap 3).
+Planned count is **10** (at cap 10). Active **0** (cap 3).
 
 ## Order
 
@@ -155,10 +150,10 @@ this table — see the change log.
 | M71 | The sidearm joins the wheel | completed, Aug 2026 | MK-1 ring D–A–R–C–F (Reload / Damage); SEC-D ring F–A–R–C–D (FireRate / Reload), Ability spoke not purchasable; Secondary-slot cost 150 + 150×t; focused never-rival holds | [`3. completed/M71`](Milestones/3.%20completed/M71-the-sidearm-joins-the-wheel.md) |
 | M74 | The demo speaks | completed, Aug 2026 | `DemoVoice` Lock/Subtitle runner + id registry + party RPC; `DemoVoiceView` on Ship and Bastion; sim never pauses; every line logs | [`3. completed/M74`](Milestones/3.%20completed/M74-the-demo-speaks.md) |
 | M75 | Wake on a dead Ship | completed, Aug 2026 | Beat 0 end-to-end (capsule → NAV → ship terminal → MK-1 → fight → heal → EMBARK) + SaveVersion 9 flags and migration | [`3. completed/M75`](Milestones/3.%20completed/M75-wake-on-a-dead-ship.md) |
-| M76 | The first cycle ends in a loss | completed, Aug 2026 | Zone 1 = 2×1-Wave terminals; first Hatch-bank loss 1. Juice teach deferred (Zo). Gate: FirstTerminalTests + Zo close; TH-10 / TH-12 residue in HP-2, TH-9 / TH-11 evicted | [`3. completed/M76`](Milestones/3.%20completed/M76-the-first-cycle-ends-in-a-loss.md) |
-| M77 | The run can end Docked | completed, Aug 2026 (criteria 2 and 3 only; 1, 4, 5, 6, 8 owed as TH-14 and TH-17–TH-20 in HP-2; 7 as TH-13 in HP-4) | Doors key on bank-window survival (failed bank never unlocks); held interact at the Hatch → `EndRun("docked")`; snapshot persists banked + doors. Kill criteria on the dock/push-on decision | [`3. completed/M77`](Milestones/3.%20completed/M77-the-run-can-end-docked.md) |
-| M78 | The first return | active | ARMORY ladder rung 1 + MP unlock on first buy + state-keyed exit standing + CREW claim (re-keyed unlock) + plain EMBARK + composite retrigger with partial election. Built 2026-08-19; criterion 9 (Zo, `Lost` + `Returned` playthroughs) is the close gate | [`2. active/M78`](Milestones/2.%20active/M78-after-the-first-loss.md) |
-| M79 | The second loss opens the ladder | later | Zone 2 = 1 terminal × 3 consecutive Waves + heavier bank (authored loss 2 by ordering); ladder rung 2 (Primary + 2); buy-back at live windows; D2 on survival; slots retired | [`1. planned/M79`](Milestones/1.%20planned/M79-the-second-loss-opens-the-ladder.md) |
+| M76 | The first cycle ends in a loss | completed, Aug 2026 | Zone 1 = 2×1-Wave terminals; first Hatch-bank loss 1. Juice teach deferred (Zo). Gate: FirstTerminalTests + Zo close; TH-10 / TH-12 settled 2026-08-20 in HP-2, TH-9 / TH-11 evicted | [`3. completed/M76`](Milestones/3.%20completed/M76-the-first-cycle-ends-in-a-loss.md) |
+| M77 | The run can end Docked | completed, Aug 2026 (criteria 2 and 3 at close; 1, 4, 5, 6, 8 settled 2026-08-20 in HP-2; 7 as TH-13 in HP-4) | Doors key on bank-window survival (failed bank never unlocks); held interact at the Hatch → `EndRun("docked")`; snapshot persists banked + doors. Kill criteria on the dock/push-on decision | [`3. completed/M77`](Milestones/3.%20completed/M77-the-run-can-end-docked.md) |
+| M78 | The first return | completed, Aug 2026 | ARMORY ladder rung 1 + MP unlock on first buy + state-keyed exit standing + CREW claim (re-keyed unlock) + plain EMBARK + composite retrigger with partial election. Closed 2026-08-20 (Zo; `Lost` + `Returned` playthroughs). HP-2 settled with the `Returned` half | [`3. completed/M78`](Milestones/3.%20completed/M78-after-the-first-loss.md) |
+| M79 | This loss opens the Primary | later | Zone 2 = 1 terminal × 3 consecutive Waves (survivable) + heavier bank (authored loss, first or second ejection); that bank falling sells Primary + 2; buy-back at live windows; D2 on survival; slots retired | [`1. planned/M79`](Milestones/1.%20planned/M79-the-loss-that-opens-the-primary.md) |
 | M80 | One final window | later | Control Room copy + `M73` spawn wiring; `HatchWaves` 5 → 1 with the first boss/elite; `EndDemo` on Escaped only. Blocked on two owner-Zo inputs (boss composition; finale access) | [`1. planned/M80`](Milestones/1.%20planned/M80-one-final-window.md) |
 | M81 | The Gatekeeper's swing | completed, Aug 2026 | One retargeted attack clip into the shared Gatekeeper controller — Attack stops playing PlayerIdle for all three kinds and ship intruders. Free-retarget probe accepted (Zo close 2026-08-19) | [`3. completed/M81`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md) |
 | M82 | The weapon in your hands | later | Shared viewmodel controller + four hand-keyed clips (idle/move/fire/reload) for all six weapons; reload speed-scales to each weapon's duration; resolves the two controller-less Animators in Bastion.unity | [`1. planned/M82`](Milestones/1.%20planned/M82-the-weapon-in-your-hands.md) |

@@ -1,15 +1,15 @@
 # HP-2 — The dock round trip
 
 <!--
-Status: open
-Closable by: Zo at the keyboard, one run
-Update trigger: when an item is added, settled or evicted
-Last updated: 2026-08-19
+Status: settled, 2026-08-20 (Zo)
+Closed on: 2026-08-20 with M78. The `Returned` half of M78 criterion 9 was
+this sitting; Zo's close request is the observation.
+Update trigger: never — settled passes are a record. Corrections only.
+Last updated: 2026-08-20
 -->
 
 Survive a bank window, dock, spend, re-embark through the open door, and read the log.
-**M78's criterion 9 already schedules this run**, so this pass is settled by a playthrough
-that has to happen anyway rather than by a separate sitting.
+Settled 2026-08-20: this sitting was the `Returned` half of M78 criterion 9.
 
 M77 closed on a capsule-to-first-door playthrough that stopped before the dock, so
 everything below sits past the point that run reached.
@@ -42,10 +42,9 @@ everything below sits past the point that run reached.
 
 ## Not this pass
 
-- M78's own criteria 0–9 — those are M78's close gate, not owed items, and the same run
-  observes them.
+- M78's own criteria — closed 2026-08-20 with this sitting.
 - The two Lost endings and the demo-off run (TH-13) — split to
-  [`HP-4`](HP-4-the-lost-endings-hold.md) on 2026-08-19. A death and a Hatch breach both end
-  the run `Lost`, so neither can be observed in the `Returned` run this pass rides.
+  [`HP-4`](../1.%20open/HP-4-the-lost-endings-hold.md) on 2026-08-19. A death and a Hatch breach both end
+  the run `Lost`, so neither can be observed in the `Returned` run this pass rode.
 - The juice teach and the `first-hatch survived` line — evicted, see
   [the register](../README.md#evicted-with-the-reason).

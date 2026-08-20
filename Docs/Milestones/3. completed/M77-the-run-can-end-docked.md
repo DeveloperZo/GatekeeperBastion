@@ -1,10 +1,11 @@
 # M77 — The run can end Docked
 
 <!--
-Status: completed, Aug 2026 — closed on criteria 2 and 3 only
-Update trigger: when HP-2 (TH-14, TH-17–TH-20) or HP-4 (TH-13) settles, or when the dock commit seat or the
+Status: completed, Aug 2026 — criteria 2 and 3 at close; 1, 4, 5, 6, 8
+settled 2026-08-20 with HP-2; 7 remains HP-4 (TH-13)
+Update trigger: when HP-4 (TH-13) settles, or when the dock commit seat or the
 Hatch E-collision is ruled
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 -->
 
 The run-structure change, on its own: doors open on bank-window survival
