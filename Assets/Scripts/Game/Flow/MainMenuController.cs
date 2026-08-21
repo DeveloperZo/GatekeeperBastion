@@ -91,24 +91,26 @@ namespace GatekeepersProtocol.Game
                 _loading = false;
         }
 
+        /// <summary>Opens the realm chooser rather than starting a campaign on the spot.
+        /// Starting fresh used to mean overwriting the one save on disk, which is why this
+        /// asked to confirm; a realm is its own document, so making one destroys nothing and
+        /// there is nothing left to confirm (Docs/Milestones — the realm and the Boarder).</summary>
         void OnStartNew()
-        {
-            if (GameSession.HasSave)
-            {
-                _view.ShowOverwriteModal();
-                return;
-            }
-            StartNewAndGoToShip();
-        }
-
-        void StartNewAndGoToShip()
         {
             if (_loading) return;
             _loading = true;
-            GameSession.StartNew();
             FrontEndMusic.Stop();
-            if (!SceneFlow.LoadShip())
+            if (!SceneFlow.LoadRealmSelect())
                 _loading = false;
+        }
+
+        /// <summary>Kept for the authored overwrite modal's confirm button, which is wired in
+        /// the menu scene and cannot be unwired from here. Nothing opens that modal any more,
+        /// so this is only reachable if someone presses confirm on a dialog that no longer
+        /// appears; sending them to the chooser is the honest answer.</summary>
+        void StartNewAndGoToShip()
+        {
+            OnStartNew();
         }
 
         /// <summary>Home HOST — allocate a Relay join code on the menu, then confirm.

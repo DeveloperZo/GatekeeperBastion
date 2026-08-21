@@ -28,6 +28,11 @@ namespace GatekeepersProtocol.Game
         /// <see cref="NetSession"/>. Bastion is EMBARK from the nav map.</summary>
         public const string MainMenu = "MainMenu";
 
+        /// <summary>Realm chooser. Stands between the menu and a ship hub: a session is a
+        /// Boarder paired with a realm, and this is where that pair is chosen
+        /// (Docs/Milestones — the realm and the Boarder).</summary>
+        public const string RealmSelect = "RealmSelect";
+
         /// <summary>Solo / demo ship-hub scene name
         /// (<c>Assets/Scenes/Ship - Demo.unity</c>).</summary>
         public const string Ship = "Ship - Demo";
@@ -88,6 +93,8 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Load the solo / demo ship hub. Returns false (and logs an error) if it cannot load.</summary>
+        public static bool LoadRealmSelect() => Load(RealmSelect);
+
         public static bool LoadShip() => Load(Ship);
 
         /// <summary>Load the party ship hub. Returns false (and logs an error) if it cannot load.</summary>

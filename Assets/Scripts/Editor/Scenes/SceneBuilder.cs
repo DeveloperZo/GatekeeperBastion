@@ -36,6 +36,7 @@ namespace GatekeepersProtocol.EditorTools
         const string MainMenuScenePath = "Assets/Scenes/MainMenu.unity";
         const string ShipScenePath = "Assets/Scenes/Ship - Demo.unity";
         const string ShipCoopScenePath = "Assets/Scenes/Ship - CoOp.unity";
+        const string RealmSelectScenePath = "Assets/Scenes/RealmSelect.unity";
         const string NavMeshDataPath = "Assets/Scenes/Bastion-NavMesh.asset";
         const string PrefabDir = "Assets/Prefabs";
         const string MaterialDir = "Assets/Materials";
@@ -208,9 +209,12 @@ namespace GatekeepersProtocol.EditorTools
             public SceneEntry(string path, bool enabled) { Path = path; Enabled = enabled; }
         }
 
-        /// <summary>Boot order. These four lead the build list and are always enabled.</summary>
+        /// <summary>Boot order. These lead the build list and are always enabled.</summary>
         public static readonly string[] BootScenes =
-            { SplashScenePath, MainMenuScenePath, ShipScenePath, ShipCoopScenePath, ScenePath };
+        {
+            SplashScenePath, MainMenuScenePath, RealmSelectScenePath,
+            ShipScenePath, ShipCoopScenePath, ScenePath
+        };
 
         /// <summary>Pins <paramref name="bootOrder"/> at the head of the build list and KEEPS
         /// every other registered scene after it, enabled flag intact.

@@ -29,11 +29,13 @@ namespace GatekeepersProtocol.PlayTests
         [Test]
         public void EveryFlowScene_IsRegisteredInBuildSettings()
         {
-            // Boot path is Splash → MainMenu → Ship → Bastion (M35 criterion 3).
+            // Boot path is Splash → MainMenu → RealmSelect → Ship → Bastion. The chooser sits
+            // between the menu and a ship hub because a session is a Boarder paired with a
+            // realm, and that pair is picked there (Docs/Milestones — the realm and the Boarder).
             string[] flow =
             {
-                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.Ship, SceneFlow.ShipCoop,
-                SceneFlow.Bastion
+                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.RealmSelect, SceneFlow.Ship,
+                SceneFlow.ShipCoop, SceneFlow.Bastion
             };
 
             var missing = new List<string>();
@@ -54,18 +56,18 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsEmpty(missing,
                 $"Scene(s) [{string.Join(", ", missing)}] are missing from Build Settings while " +
                 $"[{string.Join(", ", present)}] are registered. SceneFlow needs Splash, MainMenu, " +
-                "Ship - Demo, Ship - CoOp, Bastion.");
+                "RealmSelect, Ship - Demo, Ship - CoOp, Bastion.");
         }
 
         /// <summary>The build-order smoke assertion that lived in the deleted
         /// ShiftFrontEndMutate.Smoke, updated for the dual ship hub (2026-08-21).</summary>
         [Test]
-        public void BuildSettings_OrderIs_Splash_MainMenu_ShipDemo_ShipCoop_Bastion()
+        public void BuildSettings_OrderIs_Splash_MainMenu_RealmSelect_ShipDemo_ShipCoop_Bastion()
         {
             string[] expected =
             {
-                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.Ship, SceneFlow.ShipCoop,
-                SceneFlow.Bastion
+                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.RealmSelect, SceneFlow.Ship,
+                SceneFlow.ShipCoop, SceneFlow.Bastion
             };
 
             // The PlayMode harness injects its own InitTestScene into the build list for the
@@ -86,7 +88,7 @@ namespace GatekeepersProtocol.PlayTests
             {
                 Assert.AreEqual(expected[i], names[i],
                     $"Build slot {i} is '{names[i]}'; expected '{expected[i]}'. " +
-                    "Order must be Splash, MainMenu, Ship - Demo, Ship - CoOp, Bastion.");
+                    "Order must be Splash, MainMenu, RealmSelect, Ship - Demo, Ship - CoOp, Bastion.");
             }
         }
 
