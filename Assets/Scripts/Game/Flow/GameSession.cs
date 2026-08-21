@@ -135,6 +135,28 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
+        /// <summary>Swap which Boarder is playing, leaving the realm exactly as it is. The
+        /// chooser uses it to change who goes in without reopening the world, and it is the
+        /// seam that lets a co-op test hold two Boarders at once: in-process, host and guest
+        /// share this one static, so without a way to put a second Boarder in place there is
+        /// nothing for "the host's Boarder was not written" to be measured against.</summary>
+        public static bool UseBoarder(BoarderState boarder)
+        {
+            if (boarder == null)
+            {
+                Log.Warn(Tag, "UseBoarder ignored — no Boarder given.");
+                return false;
+            }
+            if (Meta == null)
+            {
+                Log.Warn(Tag, "UseBoarder ignored — no realm is open to take it into.");
+                return false;
+            }
+            Adopt(boarder, Meta.Realm);
+            Log.Event("Ship", "Boarder swapped in — \"" + boarder.Name + "\"");
+            return true;
+        }
+
         /// <summary>Compose the pair into the live session and remember it as the one to
         /// continue into next time.</summary>
         static void Adopt(BoarderState boarder, RealmState realm)
