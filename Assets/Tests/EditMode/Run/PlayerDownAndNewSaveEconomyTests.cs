@@ -268,14 +268,6 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Json_OldSaveWithoutWeaponFields_OwnsNothing()
-        {
-            var loaded = MetaState.FromSnapshotJson("{\"SaveVersion\":1,\"BankedSalvage\":5000,\"TotalRuns\":9}");
-            Assert.IsFalse(loaded.OwnsAnyWeapon);
-            Assert.AreEqual(5000L, loaded.BankedSalvage);
-        }
-
-        [Test]
         public void SaveData_RoundTrip_PreservesWeapons()
         {
             var m = MetaState.CreateNew();

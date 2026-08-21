@@ -153,30 +153,6 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void V1Save_MigratesWeaponOwned_ToMk1SecondaryWithTier()
-        {
-            string v1 =
-                "{\"SaveVersion\":1,\"BankedSalvage\":500,\"TotalRuns\":4,\"PodEjections\":1," +
-                "\"GunDamageLevel\":2,\"FireRateLevel\":1,\"ClipSizeLevel\":3,\"WeaponOwned\":true}";
-            var m = MetaState.FromSnapshotJson(v1);
-            Assert.IsTrue(m.Owns(WeaponId.Mk1Sidearm));
-            Assert.AreEqual(WeaponId.Mk1Sidearm, m.EquippedSecondary);
-            Assert.AreEqual(3, m.TierOf(WeaponId.Mk1Sidearm));
-            Assert.AreEqual(18, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
-            Assert.AreEqual(15, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Clip));
-            Assert.AreEqual(0, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Reload));
-            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
-        }
-
-        [Test]
-        public void V1Save_WithoutWeapon_OwnsNothing()
-        {
-            string v1 = "{\"SaveVersion\":1,\"BankedSalvage\":50,\"WeaponOwned\":false}";
-            var m = MetaState.FromSnapshotJson(v1);
-            Assert.IsFalse(m.OwnsAnyWeapon);
-        }
-
-        [Test]
         public void Json_RoundTrip_PreservesWeapons()
         {
             var m = MetaState.CreateNew();

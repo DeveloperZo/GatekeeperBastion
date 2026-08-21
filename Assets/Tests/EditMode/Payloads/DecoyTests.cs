@@ -115,19 +115,6 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(PayloadId.Decoy, m.EquippedDrone);
         }
 
-        [Test]
-        public void PreV6EquippedDroneSentinelBecomesNone()
-        {
-            const string json =
-                "{\"SaveVersion\":5,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
-                "\"LifetimeSalvageSpent\":0,\"WeaponsOwned\":[false,false,false,false,false]," +
-                "\"EquippedPrimary\":-1,\"EquippedSecondary\":0,\"EquippedDrone\":-1}";
-            var m = MetaState.FromSnapshotJson(json);
-            Assert.AreEqual(PayloadId.None, m.EquippedDrone);
-            Assert.AreEqual(0, m.OwnedPayloadMask);
-            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
-        }
-
         static DecoyState NewDecoyState()
         {
             var s = new DecoyState();

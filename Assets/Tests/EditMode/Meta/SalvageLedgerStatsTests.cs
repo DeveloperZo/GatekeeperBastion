@@ -91,47 +91,18 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void PreV2Save_RebuildsSpentFromLevelsAndMigratesWeapon()
-        {
-            // A version-1 save: banked and levels only, no lifetime fields at all.
-            // Gun/Fire/Clip migrate to MK-1 Tier = min(7, max(3,3,2)) = 3 → SpentToReach = 400+600+800 = 1800.
-            // Tracks: HatchArmor3=1400. Crew tracks refund: Vitality2=600, Stamina1=200, Luck1=200.
-            // RepairRig2 is a deleted track: ReconstructSpentFromLevels does not count it, but
-            // criterion 8 grants slot + rig free from the legacy level.
-            const string v1 =
-                "{\"SaveVersion\":1,\"BankedSalvage\":1739,\"TotalRuns\":16,\"CleanExits\":3," +
-                "\"PodEjections\":8,\"GunDamageLevel\":3,\"FireRateLevel\":3,\"HatchArmorLevel\":3," +
-                "\"RepairRigLevel\":2,\"WeaponOwned\":true,\"ClipSizeLevel\":2,\"VitalityLevel\":2," +
-                "\"StaminaLevel\":1,\"EngineeringLevel\":0,\"ScavengingLevel\":0,\"LuckLevel\":1}";
-            var m = MetaState.FromSnapshotJson(v1);
-
-            Assert.IsTrue(m.Owns(WeaponId.Mk1Sidearm));
-            Assert.AreEqual(3, m.TierOf(WeaponId.Mk1Sidearm));
-            Assert.IsTrue(m.HasRepairRigEquipped, "legacy RepairRigLevel grants the equipment");
-            long crewRefund = 600L + 200L + 200L;
-            long expectedSpent = 1800L + 1400L; // weapon + hatch; crew refunded
-            Assert.AreEqual(expectedSpent, m.LifetimeSalvageSpent);
-            Assert.AreEqual(1739L + crewRefund, m.BankedSalvage);
-            Assert.AreEqual(1739L + expectedSpent + crewRefund, m.LifetimeSalvageEarned);
-            Assert.IsTrue(m.SalvageStatsWereRepaired);
-            Assert.IsTrue(m.SalvageLedgerBalances);
-            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
-            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
-            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion, "loading migrates the save forward");
-        }
-
-        [Test]
         public void HandEditedSave_WithABrokenLedger_IsRepaired()
         {
-            // WeaponOwned migrates to free MK-1 at T0 → reconstruct floor is 0.
+            // Nothing bought on this realm's own track, so its spend floor is 0 — and a
+            // ledger claiming 5 earned against 1000 banked cannot be true whatever the floor.
             const string tampered =
-                "{\"SaveVersion\":2,\"BankedSalvage\":1000,\"LifetimeSalvageEarned\":5," +
-                "\"LifetimeSalvageSpent\":0,\"WeaponOwned\":true}";
-            var m = MetaState.FromSnapshotJson(tampered);
-            Assert.IsTrue(m.Owns(WeaponId.Mk1Sidearm));
+                "{\"SaveVersion\":13,\"BankedSalvage\":1000,\"LifetimeSalvageEarned\":5," +
+                "\"LifetimeSalvageSpent\":0}";
+            var m = RealmState.FromJson(tampered);
+            Assert.IsNotNull(m, "a current-version realm document loads");
             Assert.IsTrue(m.SalvageStatsWereRepaired);
             Assert.AreEqual(1000L, m.LifetimeSalvageEarned);
-            Assert.AreEqual(0L, m.LifetimeSalvageSpent, "free MK-1 contributes 0 to the floor");
+            Assert.AreEqual(0L, m.LifetimeSalvageSpent, "nothing on this realm's track to owe for");
             Assert.IsTrue(m.SalvageLedgerBalances);
         }
 

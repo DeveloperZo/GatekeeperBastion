@@ -35,12 +35,16 @@ namespace GatekeepersProtocol.Tests
             var loaded = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(3, loaded.DeepestWaveReached);
 
-            // Absent field → 1 (old save).
-            var old = MetaState.FromSnapshotJson("{\"SaveVersion\":3,\"BankedSalvage\":0,\"TotalRuns\":0}");
-            Assert.AreEqual(1, old.DeepestWaveReached);
+            // Absent field → 1. Depth lives on the realm, so these are realm documents.
+            var absent = RealmState.FromJson(
+                "{\"SaveVersion\":13,\"BankedSalvage\":0,\"TotalRuns\":0}");
+            Assert.IsNotNull(absent);
+            Assert.AreEqual(1, absent.DeepestWaveReached);
 
             // Written 0 → 1.
-            var zero = MetaState.FromSnapshotJson("{\"DeepestWaveReached\":0}");
+            var zero = RealmState.FromJson(
+                "{\"SaveVersion\":13,\"DeepestWaveReached\":0}");
+            Assert.IsNotNull(zero);
             Assert.AreEqual(1, zero.DeepestWaveReached);
         }
 

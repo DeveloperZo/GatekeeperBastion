@@ -554,20 +554,11 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void MetaState_FromJson_ReadsSaveVersion()
+        public void RealmDocument_MissingFieldsFallBackToDefaults()
         {
-            // FromJson always migrates forward to CurrentVersion (gotcha: raw JSON version
-            // is not preserved after load).
-            var loaded = MetaState.FromSnapshotJson("{\"SaveVersion\":8,\"BankedSalvage\":5}");
-            Assert.AreEqual(SaveFormat.CurrentVersion, loaded.SaveVersion);
-            Assert.AreEqual(5L, loaded.BankedSalvage);
-        }
-
-        [Test]
-        public void MetaState_FromJson_MissingFieldsFallBackToDefaults()
-        {
-            var loaded = MetaState.FromSnapshotJson("{\"BankedSalvage\":100}");
-            Assert.AreEqual(SaveFormat.CurrentVersion, loaded.SaveVersion);
+            var loaded = RealmState.FromJson(
+                "{\"SaveVersion\":13,\"BankedSalvage\":100}");
+            Assert.IsNotNull(loaded, "a current-version realm document loads");
             Assert.AreEqual(100L, loaded.BankedSalvage);
             Assert.AreEqual(0, loaded.TotalRuns);
         }

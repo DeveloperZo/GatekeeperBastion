@@ -3,10 +3,11 @@ using NUnit.Framework;
 
 namespace GatekeepersProtocol.Tests
 {
-    /// <summary>SaveVersion 9: the demo flags round-trip, fresh campaigns start on demo,
-    /// and pre-v9 saves migrate demo-off exactly when they have already played
-    /// (Docs/Demo - Single/README.md, Shared flags). The rung-2 flags were added to the v9 block
-    /// without a version bump, so a v9-era file missing their keys is pinned here too
+    /// <summary>The demo flags round-trip and a fresh campaign starts on demo
+    /// (Docs/Demo - Single/README.md, Shared flags). The flags ride the REALM: the demo is the
+    /// first Bastion, and a Bastion is a world. A key may still be added to that document
+    /// without a version bump when its absent value is also its correct value, which is why a
+    /// realm missing the rung-2 keys is pinned here
     /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
     public class DemoSaveFlagsTests
     {
@@ -46,7 +47,9 @@ namespace GatekeepersProtocol.Tests
             m.SetZoneDeepest(2, 3);
 
             string json = m.ToSnapshotJson();
-            Assert.IsTrue(json.Contains("\"SaveVersion\":11"), "v11 is the written schema");
+            Assert.IsTrue(
+                json.Contains("\"SaveVersion\":" + SaveFormat.CurrentVersion),
+                "the snapshot carries the schema this build writes");
 
             var back = MetaState.FromSnapshotJson(json);
             Assert.IsTrue(back.DemoActive);
@@ -68,62 +71,23 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void PreV9_WithACleanExit_MigratesDemoOff()
+        public void RealmMissingTheRungTwoKeys_LoadsThemAtDefaults()
         {
-            var m = MetaState.FromSnapshotJson(
-                "{\"SaveVersion\":8,\"BankedSalvage\":500,\"CleanExits\":1,\"PodEjections\":2}");
-            Assert.IsFalse(m.DemoActive, "an Escaped save must never re-run the capsule");
-            Assert.IsTrue(m.DemoCapsuleOpened);
-            Assert.IsTrue(m.DemoNavPowered);
-            Assert.IsTrue(m.DemoArmoryPowered);
-            Assert.IsTrue(m.DemoWeaponGranted);
-            Assert.IsTrue(m.DemoShipFightDone);
-            Assert.IsTrue(m.DemoCrewMenuUnlocked);
-            Assert.IsTrue(m.DemoFabPowered);
-            Assert.AreEqual(0, m.DemoWheelBuysLeft);
-            // The three rung-2 flags are the exception to the played-migrates-everything
-            // rule: a pre-v9 save never played zone 2's bank, so they load at their
-            // defaults, not at played.
-            Assert.IsFalse(m.DemoZone2BankLost, "a pre-v9 save never reached zone 2's bank");
-            Assert.IsFalse(m.DemoRungTwoOpened);
-            Assert.AreEqual(0, m.DemoRungTwoBuysLeft);
-        }
-
-        [Test]
-        public void V9Era_MissingTheRungTwoKeys_LoadsThemAtDefaults()
-        {
-            // The rung-2 flags were added to the v9 demo block with no version bump. Every
-            // file written before them is a v9-or-later save with those three keys absent;
-            // the extractors' fallbacks are what makes that load correct, so pin it.
-            var m = MetaState.FromSnapshotJson(
-                "{\"SaveVersion\":11,\"BankedSalvage\":400,\"CleanExits\":0,"
+            // A key may be added to the realm document without a version bump WHEN its absent
+            // value is also its correct value. That is the whole licence for doing so, and the
+            // extractors' fallbacks are what make it true, so pin it against a current document
+            // rather than against a version nothing loads any more.
+            var m = RealmState.FromJson(
+                "{\"SaveVersion\":13,\"BankedSalvage\":400,\"CleanExits\":0,"
                 + "\"DemoActive\":true,\"DemoCapsuleOpened\":true,\"DemoNavPowered\":true,"
                 + "\"DemoWheelBuysLeft\":2}");
+            Assert.IsNotNull(m, "a current-version realm document loads");
             Assert.IsFalse(m.DemoZone2BankLost);
             Assert.IsFalse(m.DemoRungTwoOpened);
             Assert.AreEqual(0, m.DemoRungTwoBuysLeft, "a missing int key defaults to 0");
             Assert.IsTrue(m.DemoActive, "the rest of the v9 block still reads as written");
             Assert.IsTrue(m.DemoCapsuleOpened);
             Assert.AreEqual(2, m.DemoWheelBuysLeft, "rung 1's counter is untouched");
-        }
-
-        [Test]
-        public void PreV9_DeepButNoExit_MigratesDemoOff()
-        {
-            var m = MetaState.FromSnapshotJson(
-                "{\"SaveVersion\":8,\"CleanExits\":0,\"DeepestWaveReached\":3}");
-            Assert.IsFalse(m.DemoActive, "DeepestWaveReached > 1 means they have played");
-        }
-
-        [Test]
-        public void PreV9_Unplayed_MigratesDemoOn()
-        {
-            var m = MetaState.FromSnapshotJson(
-                "{\"SaveVersion\":8,\"CleanExits\":0,\"DeepestWaveReached\":1}");
-            Assert.IsTrue(m.DemoActive);
-            Assert.AreEqual(2, m.DemoWheelBuysLeft);
-            Assert.IsFalse(m.DemoCapsuleOpened);
-            Assert.IsFalse(m.DemoShipFightDone);
         }
 
         [Test]
@@ -137,15 +101,6 @@ namespace GatekeepersProtocol.Tests
             m.SetZoneDeepest(MetaState.DemoZoneCount, 5);
             Assert.AreEqual(0, m.ZoneDeepest(-1));
             Assert.AreEqual(0, m.ZoneDeepest(MetaState.DemoZoneCount));
-        }
-
-        [Test]
-        public void VersionlessJson_Unplayed_MigratesDemoOn()
-        {
-            var m = MetaState.FromSnapshotJson("{\"BankedSalvage\":100}");
-            Assert.IsTrue(m.DemoActive, "missing SaveVersion is pre-v9, not a silent v9 demo-off");
-            Assert.AreEqual(2, m.DemoWheelBuysLeft);
-            Assert.IsFalse(m.DemoCapsuleOpened);
         }
 
         [Test]
@@ -167,22 +122,5 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(3, back.HatchConversions);
         }
 
-        [Test]
-        public void PreV11_LossOrExit_MigratesTheWheelOpen()
-        {
-            // Pre-v11 saves ran under the loss key: PodEjections >= 1 had the wheel open,
-            // and CleanExits >= 1 means the final bank converted. The re-key must not
-            // re-lock either. An unplayed save stays locked.
-            var lost = MetaState.FromSnapshotJson("{\"SaveVersion\":10,\"PodEjections\":2}");
-            Assert.AreEqual(1, lost.HatchConversions);
-            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(lost));
-
-            var escaped = MetaState.FromSnapshotJson("{\"SaveVersion\":10,\"CleanExits\":1}");
-            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(escaped));
-
-            var fresh = MetaState.FromSnapshotJson("{\"SaveVersion\":10}");
-            Assert.AreEqual(0, fresh.HatchConversions);
-            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(fresh));
-        }
     }
 }

@@ -267,7 +267,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void OpenDoorIds_RoundTripJson_AndPreV10IsEmpty()
+        public void OpenDoorIds_RoundTripJson_AndAbsentIsEmpty()
         {
             var meta = MetaState.CreateNew();
             meta.SetOpenDoorIds(new[] { "D1", "D2" });
@@ -277,10 +277,11 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual("D1", back.OpenDoorIds[0]);
             Assert.AreEqual("D2", back.OpenDoorIds[1]);
 
-            var old = MetaState.FromSnapshotJson(
-                "{\"SaveVersion\":9,\"OpenDoorIds\":[\"D1\"],\"CleanExits\":1}");
-            Assert.AreEqual(0, old.OpenDoorIds.Length,
-                "a pre-v10 save opened its doors under the retired terminal rule; it gets none");
+            var absent = RealmState.FromJson(
+                "{\"SaveVersion\":13,\"CleanExits\":1}");
+            Assert.IsNotNull(absent);
+            Assert.AreEqual(0, absent.OpenDoorIds.Length,
+                "a realm with no doors key stands with no doors open");
         }
 
         [Test]

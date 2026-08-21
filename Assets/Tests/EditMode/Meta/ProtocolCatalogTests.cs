@@ -154,19 +154,19 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void UnknownProtocolId_LoadsAsNone()
         {
+            // The equipped pair rides the Boarder, so this is a Boarder document.
             const string json =
-                "{\"SaveVersion\":11,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
-                "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":42,\"EquippedPassive\":0}";
-            var m = MetaState.FromSnapshotJson(json);
+                "{\"SaveVersion\":13,\"EquippedProtocol\":42,\"EquippedPassive\":0}";
+            var m = BoarderState.FromJson(json);
+            Assert.IsNotNull(m, "a current-version Boarder document loads");
             Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
 
             // A sold protocol wearing a passive it does not own keeps the protocol and
             // loses the passive — the protocol itself is still legitimate.
             const string mismatched =
-                "{\"SaveVersion\":11,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
-                "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":2,\"EquippedPassive\":11}";
-            var n = MetaState.FromSnapshotJson(mismatched);
+                "{\"SaveVersion\":13,\"EquippedProtocol\":2,\"EquippedPassive\":11}";
+            var n = BoarderState.FromJson(mismatched);
             Assert.AreEqual(BoarderProtocolId.Veil, n.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, n.EquippedPassive);
         }

@@ -148,15 +148,14 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void MigrationFromFlatTiers()
+        public void FlatTierDistribution_FillsDamageThenClip()
         {
-            // MK-1 cost 0 + SpentToReach(3)=1800 → reconstruct floor 1800 matches lifetime spent.
-            const string json =
-                "{\"SaveVersion\":3,\"BankedSalvage\":1000,\"LifetimeSalvageEarned\":2800," +
-                "\"LifetimeSalvageSpent\":1800,\"WeaponsOwned\":[true,false,false,false,false]," +
-                "\"WeaponTiers\":[3,0,0,0,0]," +
-                "\"EquippedPrimary\":-1,\"EquippedSecondary\":0,\"EquippedDrone\":-1}";
-            var m = MetaState.FromSnapshotJson(json);
+            // The distribution itself outlived the migration that used to be its only caller:
+            // ReplacePointsFromFlatTier is still how a flat Tier becomes ring points, so the
+            // shape it produces is pinned here directly rather than through a loaded save.
+            var m = MetaState.CreateNew();
+            m.SetOwned(WeaponId.Mk1Sidearm, true);
+            m.ReplacePointsFromFlatTier(WeaponId.Mk1Sidearm, 3);
             Assert.AreEqual(3, m.TierOf(WeaponId.Mk1Sidearm));
             Assert.AreEqual(18, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
             Assert.AreEqual(15, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Clip));
@@ -164,18 +163,18 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.FireRate));
             Assert.AreEqual(0, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Ability));
             Assert.AreEqual(33, WeaponWheel.TotalPoints(m.PointsOf(WeaponId.Mk1Sidearm)));
-            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
         }
 
         [Test]
         public void SalvageLedgerStillBalances()
         {
+            // A ledger that already adds up is left exactly as written — the repair only
+            // fires when the numbers cannot be true.
             const string json =
-                "{\"SaveVersion\":3,\"BankedSalvage\":1000,\"LifetimeSalvageEarned\":2800," +
-                "\"LifetimeSalvageSpent\":1800,\"WeaponsOwned\":[true,false,false,false,false]," +
-                "\"WeaponTiers\":[3,0,0,0,0]," +
-                "\"EquippedPrimary\":-1,\"EquippedSecondary\":0,\"EquippedDrone\":-1}";
-            var m = MetaState.FromSnapshotJson(json);
+                "{\"SaveVersion\":13,\"BankedSalvage\":1000," +
+                "\"LifetimeSalvageEarned\":2800,\"LifetimeSalvageSpent\":1800}";
+            var m = RealmState.FromJson(json);
+            Assert.IsNotNull(m, "a current-version realm document loads");
             Assert.IsTrue(m.SalvageLedgerBalances);
             Assert.IsFalse(m.SalvageStatsWereRepaired);
             Assert.AreEqual(m.LifetimeSalvageEarned, m.BankedSalvage + m.LifetimeSalvageSpent);

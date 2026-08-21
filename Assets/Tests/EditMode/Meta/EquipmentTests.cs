@@ -60,34 +60,6 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void MigrationGrantsSlotAndRigAndBalances()
-        {
-            // Balanced v3 save that owned RepairRig L2. Criterion 8 grants slot + rig free;
-            // spend on the deleted track is not refunded; ledger stays balanced.
-            const string json =
-                "{\"SaveVersion\":3,\"BankedSalvage\":1000,\"LifetimeSalvageEarned\":1600," +
-                "\"LifetimeSalvageSpent\":600,\"TotalRuns\":2,\"CleanExits\":0,\"PodEjections\":1," +
-                "\"DeepestWaveReached\":2,\"HatchArmorLevel\":0,\"RepairRigLevel\":2," +
-                "\"VitalityLevel\":0,\"StaminaLevel\":0,\"EngineeringLevel\":0," +
-                "\"ScavengingLevel\":0,\"LuckLevel\":0," +
-                "\"WeaponsOwned\":[true,false,false,false,false]," +
-                "\"WeaponTiers\":[0,0,0,0,0]," +
-                "\"EquippedPrimary\":-1,\"EquippedSecondary\":0,\"EquippedDrone\":-1}";
-
-            var m = MetaState.FromSnapshotJson(json);
-            Assert.IsTrue(m.EquipmentSlotPurchased);
-            Assert.IsTrue(m.OwnsEquipment(EquipmentId.RepairRig));
-            Assert.AreEqual(EquipmentId.RepairRig, m.EquippedEquipment);
-            Assert.AreEqual(1000L, m.BankedSalvage);
-            Assert.AreEqual(1600L, m.LifetimeSalvageEarned);
-            Assert.AreEqual(600L, m.LifetimeSalvageSpent);
-            Assert.IsTrue(m.SalvageLedgerBalances);
-            Assert.IsFalse(m.SalvageStatsWereRepaired,
-                "a balanced save with lifetime fields needs no repair");
-            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
-        }
-
-        [Test]
         public void GrantsNotCountedInSpendFloor()
         {
             var m = MetaState.CreateNew();
@@ -113,19 +85,6 @@ namespace GatekeepersProtocol.Tests
 
             Assert.IsFalse(Enum.IsDefined(typeof(UpgradeTrack), "RepairRig"));
             Assert.IsFalse(Enum.IsDefined(typeof(UpgradeTrack), "Engineering"));
-        }
-
-        [Test]
-        public void EngineeringLevelAlone_AlsoGrants()
-        {
-            const string json =
-                "{\"SaveVersion\":3,\"BankedSalvage\":500,\"LifetimeSalvageEarned\":700," +
-                "\"LifetimeSalvageSpent\":200,\"PodEjections\":1,\"EngineeringLevel\":1," +
-                "\"WeaponsOwned\":[false,false,false,false,false]," +
-                "\"WeaponTiers\":[0,0,0,0,0]}";
-            var m = MetaState.FromSnapshotJson(json);
-            Assert.IsTrue(m.EquipmentSlotPurchased);
-            Assert.IsTrue(m.HasRepairRigEquipped);
         }
 
         [Test]

@@ -176,7 +176,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void CompletedTerminalIds_RoundTripJson_AndPreV7IsEmpty()
+        public void CompletedTerminalIds_RoundTripJson_AndAbsentIsEmpty()
         {
             var meta = MetaState.CreateNew();
             meta.SetCompletedTerminalIds(new[] { "T2", "T1" });
@@ -186,9 +186,10 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual("T2", loaded.CompletedTerminalIds[0]);
             Assert.AreEqual("T1", loaded.CompletedTerminalIds[1]);
 
-            var old = MetaState.FromSnapshotJson("{\"SaveVersion\":6,\"BankedSalvage\":0}");
-            Assert.AreEqual(SaveFormat.CurrentVersion, old.SaveVersion);
-            Assert.AreEqual(0, old.CompletedTerminalIds.Length);
+            var absent = RealmState.FromJson(
+                "{\"SaveVersion\":13,\"BankedSalvage\":0}");
+            Assert.IsNotNull(absent);
+            Assert.AreEqual(0, absent.CompletedTerminalIds.Length);
         }
 
         [Test]

@@ -116,16 +116,6 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Json_OldSaveWithoutUpgradeFields_DefaultsToZero()
-        {
-            var loaded = MetaState.FromSnapshotJson("{\"SaveVersion\":1,\"BankedSalvage\":5000,\"TotalRuns\":9}");
-            Assert.AreEqual(5000L, loaded.BankedSalvage);
-            Assert.AreEqual(0, loaded.HatchArmorLevel);
-            Assert.IsFalse(loaded.EquipmentSlotPurchased);
-            Assert.IsFalse(loaded.OwnsEquipment(EquipmentId.RepairRig));
-        }
-
-        [Test]
         public void SaveData_RoundTrip_PreservesUpgradeLevels()
         {
             var meta = MetaState.CreateNew();

@@ -146,42 +146,24 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void V7Save_RefundsTracks_NoneEquipped_LedgerHolds()
+        public void LoadedDefaultWearingGhost_KeepsDefault_DropsThePassive()
         {
-            // 4 maxed tracks = 4 × 200 × (32-1) = 24,800
+            // The equipped pair rides the Boarder, so this is a Boarder document.
             const string json =
-                "{\"SaveVersion\":7,\"BankedSalvage\":100,\"LifetimeSalvageEarned\":24900," +
-                "\"LifetimeSalvageSpent\":24800,\"HatchArmorLevel\":0," +
-                "\"VitalityLevel\":5,\"StaminaLevel\":5,\"ScavengingLevel\":5,\"LuckLevel\":5}";
-            var m = MetaState.FromSnapshotJson(json);
-            Assert.AreEqual(24800L, MetaState.SpentOnTrack(5) * 4L);
-            Assert.AreEqual(24900L, m.BankedSalvage);
-            Assert.AreEqual(0L, m.LifetimeSalvageSpent);
-            Assert.AreEqual(24900L, m.LifetimeSalvageEarned);
-            Assert.IsTrue(m.SalvageLedgerBalances);
-            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
-            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
-            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
-        }
-
-        [Test]
-        public void V8Save_DefaultGhost_CoercesToDefaultNone()
-        {
-            const string json =
-                "{\"SaveVersion\":8,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
-                "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":1,\"EquippedPassive\":3}";
-            var m = MetaState.FromSnapshotJson(json);
+                "{\"SaveVersion\":13,\"EquippedProtocol\":1,\"EquippedPassive\":3}";
+            var m = BoarderState.FromJson(json);
+            Assert.IsNotNull(m, "a current-version Boarder document loads");
             Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
         }
 
         [Test]
-        public void V8Save_IllegalPair_BecomesNone()
+        public void LoadedUncataloguedProtocol_TakesThePassiveDownWithIt()
         {
             const string json =
-                "{\"SaveVersion\":8,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
-                "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":99,\"EquippedPassive\":1}";
-            var m = MetaState.FromSnapshotJson(json);
+                "{\"SaveVersion\":13,\"EquippedProtocol\":99,\"EquippedPassive\":1}";
+            var m = BoarderState.FromJson(json);
+            Assert.IsNotNull(m, "a current-version Boarder document loads");
             Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
         }
