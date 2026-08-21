@@ -8,6 +8,33 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-21
 -->
 
+- 2026-08-21: **`M96` built — the realm and the Boarder.** One progression document
+  becomes two. `BoarderState` travels with the player; `RealmState` stays with the world.
+  `MetaState` keeps every old member as forwarding, so roughly eight hundred call sites went
+  on compiling and the whole Game layer broke in four places.
+
+  Three groups the doc left unallocated were ruled and written into it. The salvage ledger
+  stays whole on the realm, because the old spend floor was rebuilt from weapons owned and
+  derived Tiers — split it and a well-equipped Boarder entering a fresh realm makes that
+  realm claim salvage it never earned. `HatchConversions` is the realm's, since it gates a
+  wheel that spends the realm's pot. The twelve demo flags are the realm's, because the demo
+  is the first Bastion and a Bastion is a world.
+
+  Save version is **13**, and it refuses anything older by name rather than migrating it,
+  leaving the pre-split campaign untouched on disk. That is new policy, argued and scoped in
+  `Decisions.md`: the rule the milestone cited was never written down, and practice through
+  v11 was the opposite. Version 12 is spoken for by separate in-flight wheel work.
+
+  The pot is the world's, so every seat banks into the realm and buy-back pays from it; the
+  guest-credit fan-out and its owner RPCs are deleted rather than guarded, which is what makes
+  the ownership rule structural. A new `RealmSelect` scene carries the chooser and
+  `MainMenu.unity` is not touched.
+
+  Fifteen migration tests retired, ten rewritten onto current documents, and new coverage added
+  for the split — including the ledger regression the whole thing exists to prevent.
+  Compiles and lints clean; **nothing has been run in the editor**, so the milestone stays in
+  `1. planned/` until a verification pass and a playthrough say otherwise.
+
 - 2026-08-21: **`M84` built — Gatekeepers flinch when shot.** Additive
   HitReact layer on the shared controller, 0.25s muscle clip
   (`Anim_flinch.anim` guid `0cd7751cb3144b74fb47045e6061905f`), upper-body
