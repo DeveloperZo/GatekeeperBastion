@@ -1,0 +1,373 @@
+using System;
+using System.Text;
+using GatekeepersProtocol.Util;
+
+namespace GatekeepersProtocol.Sim
+{
+    /// <summary>
+    /// The half of meta-progression that belongs to the player rather than to the world: identity,
+    /// weapons owned with their wheel points, and the equipped protocol / passive / equipment /
+    /// payload. A Boarder travels — the same document is carried into a host's realm as into the
+    /// player's own — so nothing world-shaped may live here. The salvage ledger, the run tallies,
+    /// the unlock graph and the demo flags are the realm's
+    /// (Docs/Milestones — the realm and the Boarder).
+    /// </summary>
+    /// <remarks>
+    /// Serializes by hand through <see cref="JsonText"/>, field-for-field compatible with what
+    /// JsonUtility would produce. The game layer owns file paths, IO and id generation; this type
+    /// touches none of them.
+    /// </remarks>
+    public sealed class BoarderState
+    {
+        /// <summary>Display name a Boarder is created with when the caller supplies none.</summary>
+        const string DefaultName = "BOARDER";
+
+        /// <summary>Stable identity, assigned by the game layer — Sim mints no ids. Never null
+        /// after a load: a document missing the key loads with an empty id, and the caller, which
+        /// knows the file it came from, fills it in.</summary>
+        public string Id = string.Empty;
+
+        /// <summary>Display name, shown wherever Boarders are listed and chosen between.</summary>
+        public string Name = DefaultName;
+
+        // ---- Weapons ----
+        bool[] _weaponsOwned;
+        /// <summary>Flat ArraySize×5: index = weaponId * AttrCount + (int)WheelAttr.</summary>
+        int[] _wheelPoints;
+        public WeaponId EquippedPrimary = WeaponId.None;
+        public WeaponId EquippedSecondary = WeaponId.None;
+
+        /// <summary>Equipped protocol. Fresh saves are None until CREW claims Default.</summary>
+        public BoarderProtocolId EquippedProtocol = BoarderProtocolId.None;
+        /// <summary>Equipped passive. Default has none; specialists may add one later.</summary>
+        public BoarderAbilityId EquippedPassive = BoarderAbilityId.None;
+
+        // ---- Equipment ----
+        public bool EquipmentSlotPurchased;
+        public int OwnedEquipmentMask;
+        public EquipmentId EquippedEquipment = EquipmentId.None;
+
+        // ---- Payloads — drone bay ----
+        public int OwnedPayloadMask;
+        /// <summary>Payload sitting in the drone bay. Field name is the bay; value is the payload.</summary>
+        public PayloadId EquippedDrone = PayloadId.None;
+
+        /// <summary>When true, <see cref="SetEquippedPayload"/> is a logged no-op (Run in progress).</summary>
+        [NonSerialized] public bool PayloadLoadoutLocked;
+
+        /// <summary>A Boarder with the given identity and empty kit. Ids come from the game
+        /// layer; an empty or null name falls back to the default rather than saving blank.</summary>
+        public static BoarderState CreateNew(string id, string name)
+        {
+            var b = new BoarderState();
+            b.Id = id ?? string.Empty;
+            b.Name = string.IsNullOrEmpty(name) ? DefaultName : name;
+            b.EnsureArrays();
+            return b;
+        }
+
+        public void EnsureArrays()
+        {
+            if (_weaponsOwned == null || _weaponsOwned.Length != WeaponCatalog.ArraySize)
+            {
+                var next = new bool[WeaponCatalog.ArraySize];
+                if (_weaponsOwned != null)
+                    Array.Copy(_weaponsOwned, next, Math.Min(_weaponsOwned.Length, next.Length));
+                _weaponsOwned = next;
+            }
+            int need = WeaponCatalog.ArraySize * WeaponWheel.AttrCount;
+            if (_wheelPoints == null || _wheelPoints.Length != need)
+            {
+                var next = new int[need];
+                if (_wheelPoints != null)
+                    Array.Copy(_wheelPoints, next, Math.Min(_wheelPoints.Length, next.Length));
+                _wheelPoints = next;
+            }
+        }
+
+        public bool OwnsAnyWeapon
+        {
+            get
+            {
+                EnsureArrays();
+                for (int i = 0; i < _weaponsOwned.Length; i++)
+                    if (_weaponsOwned[i]) return true;
+                return false;
+            }
+        }
+
+        public bool HasRepairRigEquipped =>
+            EquippedEquipment == EquipmentId.RepairRig && OwnsEquipment(EquipmentId.RepairRig);
+
+        public bool Owns(WeaponId id)
+        {
+            if (id == WeaponId.None) return false;
+            EnsureArrays();
+            int i = (int)id;
+            return i >= 0 && i < _weaponsOwned.Length && _weaponsOwned[i];
+        }
+
+        public void SetOwned(WeaponId id, bool owned)
+        {
+            if (id == WeaponId.None) return;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= _weaponsOwned.Length) return;
+            _weaponsOwned[i] = owned;
+        }
+
+        public void SetEquipped(WeaponId id)
+        {
+            if (id == WeaponId.None) return;
+            var def = WeaponCatalog.Def(id);
+            switch (def.slot)
+            {
+                case WeaponSlot.Primary: EquippedPrimary = id; break;
+                case WeaponSlot.Secondary: EquippedSecondary = id; break;
+                // Drone bay is payload-only — refuse weapon equip into it.
+            }
+        }
+
+        public WeaponId Equipped(WeaponSlot slot)
+        {
+            switch (slot)
+            {
+                case WeaponSlot.Primary: return EquippedPrimary;
+                case WeaponSlot.Secondary: return EquippedSecondary;
+                case WeaponSlot.Drone: return WeaponId.None; // bay holds a payload, not a weapon
+                default: return WeaponId.None;
+            }
+        }
+
+        public bool OwnsEquipment(EquipmentId id)
+        {
+            int bit = EquipmentCatalog.OwnershipBit(id);
+            return bit != 0 && (OwnedEquipmentMask & bit) != 0;
+        }
+
+        public void SetEquipmentOwned(EquipmentId id, bool owned)
+        {
+            int bit = EquipmentCatalog.OwnershipBit(id);
+            if (bit == 0) return;
+            if (owned) OwnedEquipmentMask |= bit;
+            else OwnedEquipmentMask &= ~bit;
+        }
+
+        public void SetEquippedEquipment(EquipmentId id)
+        {
+            if (id != EquipmentId.None && !OwnsEquipment(id)) return;
+            EquippedEquipment = id;
+        }
+
+        public bool OwnsPayload(PayloadId id)
+        {
+            int bit = PayloadCatalog.OwnershipBit(id);
+            return bit != 0 && (OwnedPayloadMask & bit) != 0;
+        }
+
+        public void SetPayloadOwned(PayloadId id, bool owned)
+        {
+            int bit = PayloadCatalog.OwnershipBit(id);
+            if (bit == 0) return;
+            if (owned) OwnedPayloadMask |= bit;
+            else OwnedPayloadMask &= ~bit;
+        }
+
+        /// <summary>Equip a payload into the drone bay. Logged no-op while a Run locks the loadout.</summary>
+        public bool SetEquippedPayload(PayloadId id)
+        {
+            if (PayloadLoadoutLocked)
+            {
+                Log.Event("Ship", "SetEquippedPayload refused — run in progress");
+                return false;
+            }
+            if (id != PayloadId.None && !OwnsPayload(id)) return false;
+            EquippedDrone = id;
+            return true;
+        }
+
+        public bool SetEquippedPassive(BoarderAbilityId id)
+        {
+            if (PayloadLoadoutLocked)
+            {
+                Log.Event("Ship", "PickPassive refused — run in progress track=crew");
+                return false;
+            }
+            if (!BoarderProtocol.OwnsPassive(EquippedProtocol, id))
+            {
+                Log.Event("Ship", "PickPassive refused — not on this protocol track=crew");
+                return false;
+            }
+            EquippedPassive = id;
+            return true;
+        }
+
+        /// <summary>Derived Tier: total wheel points / 11, clamped 0..MaxTier. Never stored.</summary>
+        public int TierOf(WeaponId id)
+        {
+            int t = WeaponWheel.DerivedTier(PointsOf(id));
+            if (t < 0) return 0;
+            if (t > WeaponTier.MaxTier) return WeaponTier.MaxTier;
+            return t;
+        }
+
+        public int[] PointsOf(WeaponId id)
+        {
+            var pts = new int[WeaponWheel.AttrCount];
+            CopyPointsInto(id, pts);
+            return pts;
+        }
+
+        public int PointOf(WeaponId id, WheelAttr attr)
+        {
+            if (id == WeaponId.None) return 0;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= WeaponCatalog.ArraySize) return 0;
+            return _wheelPoints[i * WeaponWheel.AttrCount + (int)attr];
+        }
+
+        public void CopyPointsInto(WeaponId id, int[] dest)
+        {
+            if (dest == null || dest.Length != WeaponWheel.AttrCount)
+                throw new ArgumentException("dest must be length " + WeaponWheel.AttrCount, "dest");
+            for (int a = 0; a < WeaponWheel.AttrCount; a++) dest[a] = 0;
+            if (id == WeaponId.None) return;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= WeaponCatalog.ArraySize) return;
+            int baseIdx = i * WeaponWheel.AttrCount;
+            for (int a = 0; a < WeaponWheel.AttrCount; a++)
+                dest[a] = _wheelPoints[baseIdx + a];
+        }
+
+        public void AwardWheel(WeaponId id, WheelAttr centre)
+        {
+            if (id == WeaponId.None) return;
+            var ring = WeaponWheel.RingOf(id);
+            if (ring == null)
+                throw new InvalidOperationException(id + " has no upgrade ring");
+            EnsureArrays();
+            var scratch = PointsOf(id);
+            WeaponWheel.Award(scratch, ring, centre);
+            WritePoints(id, scratch);
+        }
+
+        /// <summary>Dev / migration: replace counters with the flat-tier migration shape.
+        /// Tier remains derived — there is no Tier setter.</summary>
+        public void ReplacePointsFromFlatTier(WeaponId id, int tier)
+        {
+            if (id == WeaponId.None) return;
+            EnsureArrays();
+            var pts = new int[WeaponWheel.AttrCount];
+            WeaponWheel.DistributeFlatTier(pts, tier);
+            WritePoints(id, pts);
+        }
+
+        void WritePoints(WeaponId id, int[] pts)
+        {
+            EnsureArrays();
+            int i = (int)id;
+            int baseIdx = i * WeaponWheel.AttrCount;
+            for (int a = 0; a < WeaponWheel.AttrCount; a++)
+                _wheelPoints[baseIdx + a] = pts[a];
+        }
+
+        /// <summary>Salvage this Boarder's kit cost to assemble: every owned weapon's catalog
+        /// cost plus what its derived Tier took to reach, plus the Decoy when owned. Granted
+        /// equipment is deliberately not counted.</summary>
+        /// <remarks>
+        /// The realm's spend floor no longer includes this term. A floor has to be computable
+        /// from one document: a well-equipped Boarder walking into a fresh realm would otherwise
+        /// raise that realm's LifetimeSalvageSpent to cover kit the realm never paid for, and
+        /// inflate its ledger by the same amount. The value is still worth having — the ARMORY
+        /// and the run summary both want to say what a Boarder is carrying — so it lives here,
+        /// on the document that actually owns the kit.
+        /// </remarks>
+        public long ReconstructSpentOnKit()
+        {
+            EnsureArrays();
+            long spent = 0;
+            for (int i = 0; i < _weaponsOwned.Length; i++)
+            {
+                if (!_weaponsOwned[i]) continue;
+                var id = (WeaponId)i;
+                spent += WeaponCatalog.Def(id).cost;
+                spent += WeaponTier.SpentToReach(TierOf(id));
+            }
+
+            if (OwnsPayload(PayloadId.Decoy))
+                spent += PayloadCatalog.Def(PayloadId.Decoy).cost;
+
+            return spent;
+        }
+
+        /// <summary>The document as written to disk. Always stamped with the current version —
+        /// a live object is by definition current.</summary>
+        public string ToJson()
+        {
+            EnsureArrays();
+            var sb = new StringBuilder(256);
+            sb.Append('{');
+            JsonText.AppendLong(sb, "SaveVersion", SaveFormat.CurrentVersion, false);
+            JsonText.AppendString(sb, "Id", Id ?? string.Empty, true);
+            JsonText.AppendString(sb, "Name", string.IsNullOrEmpty(Name) ? DefaultName : Name, true);
+            JsonText.AppendLong(sb, "EquippedProtocol", (int)EquippedProtocol, true);
+            JsonText.AppendLong(sb, "EquippedPassive", (int)EquippedPassive, true);
+            JsonText.AppendBool(sb, "EquipmentSlotPurchased", EquipmentSlotPurchased, true);
+            JsonText.AppendLong(sb, "OwnedEquipmentMask", OwnedEquipmentMask, true);
+            JsonText.AppendLong(sb, "EquippedEquipment", (int)EquippedEquipment, true);
+            JsonText.AppendBoolArray(sb, "WeaponsOwned", _weaponsOwned);
+            JsonText.AppendIntArray(sb, "WeaponWheelPoints", _wheelPoints);
+            JsonText.AppendLong(sb, "EquippedPrimary", (int)EquippedPrimary, true);
+            JsonText.AppendLong(sb, "EquippedSecondary", (int)EquippedSecondary, true);
+            JsonText.AppendLong(sb, "EquippedDrone", (int)EquippedDrone, true);
+            JsonText.AppendLong(sb, "OwnedPayloadMask", OwnedPayloadMask, true);
+            sb.Append('}');
+            return sb.ToString();
+        }
+
+        /// <summary>Read a Boarder back. Returns <c>null</c> when the document's version is not
+        /// supported — there is no migration ladder any more, and the refusal belongs in the
+        /// caller's log where a player can see it (<see cref="SaveFormat.RefusalFor"/>). Null or
+        /// empty input is a programming error, not a bad save, and still throws.</summary>
+        public static BoarderState FromJson(string json)
+        {
+            if (string.IsNullOrEmpty(json)) throw new ArgumentException("json is null or empty", "json");
+
+            // A missing key reads as 0, which is unsupported — a document with no readable
+            // version must be refused rather than assumed current.
+            int version = JsonText.ExtractInt(json, "SaveVersion", 0);
+            if (!SaveFormat.IsSupported(version)) return null;
+
+            var b = new BoarderState();
+            b.Id = JsonText.ExtractString(json, "Id", string.Empty) ?? string.Empty;
+            string name = JsonText.ExtractString(json, "Name", DefaultName);
+            b.Name = string.IsNullOrEmpty(name) ? DefaultName : name;
+
+            b.EquippedProtocol =
+                (BoarderProtocolId)JsonText.ExtractInt(json, "EquippedProtocol", (int)BoarderProtocolId.None);
+            b.EquippedPassive =
+                (BoarderAbilityId)JsonText.ExtractInt(json, "EquippedPassive", (int)BoarderAbilityId.None);
+
+            b.EquipmentSlotPurchased = JsonText.ExtractBool(json, "EquipmentSlotPurchased", false);
+            b.OwnedEquipmentMask = JsonText.ExtractInt(json, "OwnedEquipmentMask", 0);
+            b.EquippedEquipment =
+                (EquipmentId)JsonText.ExtractInt(json, "EquippedEquipment", (int)EquipmentId.None);
+
+            b.EnsureArrays();
+            JsonText.ExtractBoolArray(json, "WeaponsOwned", b._weaponsOwned);
+            JsonText.ExtractIntArray(json, "WeaponWheelPoints", b._wheelPoints);
+            b.EquippedPrimary = (WeaponId)JsonText.ExtractInt(json, "EquippedPrimary", (int)WeaponId.None);
+            b.EquippedSecondary = (WeaponId)JsonText.ExtractInt(json, "EquippedSecondary", (int)WeaponId.None);
+
+            b.EquippedDrone = (PayloadId)JsonText.ExtractInt(json, "EquippedDrone", (int)PayloadId.None);
+            b.OwnedPayloadMask = JsonText.ExtractInt(json, "OwnedPayloadMask", 0);
+
+            // An id this build has no catalog row for — retired, or written by a build that sold
+            // more — has to resolve to None here rather than reach a switch with no arm for it.
+            BoarderProtocol.ValidateEquip(b);
+            return b;
+        }
+    }
+}

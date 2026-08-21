@@ -4,7 +4,7 @@
 Status: planned
 Update trigger: when an item moves between the character side and the realm side, when
 the save version changes, when the realm list gains a feature
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 -->
 
 One save becomes two. A **Boarder** is yours and travels: weapons, focus-ring upgrades,
@@ -43,12 +43,46 @@ dictate the specifics**. Items may move; the seam does not.
 | Boarder, travels | Realm, stays |
 |---|---|
 | Weapons owned | Salvage pot |
-| Focus-ring upgrades per weapon | Bastions cleared |
-| Equipped Primary and Secondary | Door and unlock state |
-| Protocols claimed | Ship and hatch upgrades |
-| Equipped protocol | Deepest wave reached |
-| Equipment and drone | Runs lost, clean exits |
+| Focus-ring upgrades per weapon | The whole salvage ledger |
+| Equipped Primary and Secondary | Bastions cleared |
+| Equipped protocol and passive | Door and unlock state |
+| Equipment slot, equipment, drone bay | Ship and hatch upgrades |
+| | Deepest wave reached |
+| | Runs lost, clean exits |
+| | Hatch conversions |
+| | The twelve first-Bastion demo flags |
 | | Realm name |
+
+**Three groups were unallocated when this was written and are now ruled** (Zo, 2026-08-21),
+because each one decides observable behaviour that the criteria below test:
+
+- **The whole salvage ledger** — `BankedSalvage`, `LifetimeSalvageEarned` and
+  `LifetimeSalvageSpent` — is realm-side together. Splitting the trio breaks the invariant
+  `Earned == Banked + Spent`: the spend floor in `ReconstructSpentFromLevels` is built from
+  weapons owned and derived Tiers, so a well-equipped Boarder entering a fresh realm would
+  make that realm claim thousands of salvage it never earned. The realm's floor therefore
+  keeps only its own hatch-armour term; the kit term moves to the Boarder as
+  `ReconstructSpentOnKit` and stops feeding any realm's ledger.
+- **`HatchConversions`** is realm-side. It gates the focus wheel and the equipment slot, and
+  the wheel spends the realm's pot, so the gate belongs to the pot. A veteran Boarder entering
+  a fresh realm has a locked wheel until that realm's first bank. That is coherent with the
+  accepted consequence above rather than a new one.
+- **All twelve demo flags** are realm-side. The demo *is* the first Bastion, which is a world.
+  A new realm therefore replays it. Stated consequence: `DemoWheelBuysLeft` doubles as the
+  multiplayer gate (`DemoProgress.MultiplayerUnlocked`), so entering a fresh realm re-locks
+  multiplayer until that realm's first wheel purchase.
+
+**"Protocols claimed" has no backing field.** `MetaState` carries only `EquippedProtocol` and
+`EquippedPassive`; no claimed-or-owned mask exists anywhere in `Sim/Meta/BoarderProtocol.cs`.
+The row is satisfied by carrying the two equipped ids. A claimed set, if one is ever wanted,
+is a later milestone's field and lands on the Boarder.
+
+**Whose pot does a guest bank into?** The host's. The pot is the world's salvage
+(*Do not build*, below, rejects only a pooled *player* wallet), so everyone playing in a realm
+draws on that realm's pot. A guest's credits and purchases hit the host's realm; the weapon
+bought lands on the guest's Boarder and travels home. Consequence, accepted: the pot becomes
+host-authoritative and replicated, and `M90`'s buy-back re-points from the guest's local
+wallet onto it.
 
 **Stated consequence, accepted rather than mitigated**: with weapons and upgrades on the
 Boarder, a fresh realm can be entered by an arbitrarily strong player. Realm difficulty
@@ -79,24 +113,56 @@ farm-valve read of it is recorded under *Watch* in the brainstorm.
 
 ## Implementation
 
-1. **Change** `Sim/Meta/SaveData.cs`. `CurrentVersion` 11 → 12, and split the payload
-   into two serialized documents rather than one. Per the standing rule
-   (`../../Decisions.md`): bump the schema, rename the keys, **never write a migration
-   shim**. Criterion 10 is that rule's visible face.
+1. **Replace** `Sim/Meta/SaveData.cs` with `Sim/Meta/SaveFormat.cs`: version 12, and two
+   serialized documents rather than one. **Premise corrected 2026-08-21** — the "never write
+   a migration shim" rule this step cited to `../../Decisions.md` is not there, and the
+   shipped practice through v11 was the opposite: `FromSaveData` carried gates for v3, v4,
+   v6, v7, v9, v10 and v11, and `Decisions.md` keeps `WeaponId.Vk7Rifle`'s value expressly
+   "so old saves deserialize". Refusing v11 is therefore **new policy, ruled here** (Zo,
+   2026-08-21) and not the application of an old one. It is worth the break: a Boarder
+   assembled out of a single-document save has to guess which half of that save was the
+   world's, and a wrong guess corrupts a campaign quietly. The v1–v11 ladder is deleted with
+   the tests that exercise it; the version history survives as documentation on `SaveFormat`.
 2. **Create** `Sim/Meta/BoarderState.cs` (pure Sim). Left-column fields, lifted out of
    `MetaState` rather than duplicated.
 3. **Create** `Sim/Meta/RealmState.cs` (pure Sim). Right-column fields, same lift.
 4. **Change** `Sim/Meta/MetaState.cs` to compose the two rather than own the fields.
-   Every existing read site keeps working through the composition; that is what makes
-   this a restructure rather than a rewrite.
+   Every existing read site keeps working through forwarding; that is what makes this a
+   restructure rather than a rewrite. **One exception, found 2026-08-21**: `MetaUpgrades.Buy`
+   takes a `ref` to the public field `HatchArmorLevel` (`Game/Ship/ShipCommands.cs` plus
+   eight test sites), and a property cannot be passed by `ref`. Those call sites become
+   `ref m.Realm.HatchArmorLevel`, which is legal because the field lives on a heap object.
+   No shadow field is added to `MetaState` to dodge it.
 5. **Change** `GameController` so the realm side is host-owned and mutated only through
    command methods (R1, R3). A guest's Boarder is written locally by that guest; the
    realm is written only by the host.
-6. **Create** a realm list on MainMenu: create, name, enter, and pick which Boarder
-   enters. No difficulty selection, which is the source model's and not a question this
-   project has.
+6. **Create** the realm list in a **new scene**, `Assets/Scenes/RealmSelect.unity`:
+   create, name, enter, and pick which Boarder enters. No difficulty selection, which is the
+   source model's and not a question this project has. **Scope corrected 2026-08-21** (Zo):
+   `MainMenu.unity` is not edited — it is 74,385 lines of authored Michsky Shift content
+   bound by serialized reference, and a new panel inside it is neither reviewable as a diff
+   nor safe to hand-author. The existing CONTINUE and START NEW buttons reach the new scene
+   through `MainMenuController`, which is code, so the menu scene stays untouched. The list
+   itself copies the template-clone idiom already used by `OptionsView.SetControlRows` and
+   `CompendiumView`.
 7. **Change** `SaveService` call sites so Boarder and realm write independently. A realm
-   write must not require a Boarder write or the guest case deadlocks.
+   write must not require a Boarder write or the guest case deadlocks. Two things found
+   2026-08-21 ride here:
+   - **The PlayMode save-guard resolves `SaveService.SavePath` by reflection**
+     (`Assets/Tests/PlayMode/PlayModeTestUtil.cs`) and backs up exactly one file. Split the
+     save without extending the guard and the suite silently stops guarding half the
+     developer's campaign — the failure mode `M17` was built to prevent. The guard is
+     extended in the same commit as the split, not after.
+   - **A guest's banked salvage is never persisted at end of run today.** It is credited in
+     memory on the owner RPC, but the guest branch of `ReturnToShip` returns before the
+     `GameSession.Save()` that follows it, so a guest who banks and quits without buying
+     loses it. Criterion 7 cannot pass over that defect, so closing it is this milestone's
+     work rather than a follow-up's.
+
+8. **Correct** `GameSession`'s class header. It states that this state lives on the host and
+   is never mutated by remote clients; four owner-targeted RPC handlers on `NetPlayerAvatar`
+   already disprove it, and the split makes the true rule statable — the Boarder is written
+   by its own client, the realm only by the host.
 
 Rejected: keeping one document with an owner field per record. It reads as cheaper and
 makes every future query ask "whose is this", which is exactly the confusion the split
@@ -108,9 +174,15 @@ exists to remove.
   each column lands in the right place and that a second realm's right column is
   independent. Then a playthrough: create realm A, buy a weapon, clear a bastion, quit,
   create realm B, confirm the weapon and not the clear.
-- Criteria 7, 8: PlayMode net test against `NetcodeIntegrationTest`. Host and guest, the
-  guest buys, the guest disconnects, assert the guest's Boarder holds the purchase and
-  the host's does not.
+- Criteria 7, 8: PlayMode net test against `NetcodeIntegrationTest`. **Method corrected
+  2026-08-21** — the test as originally written cannot be built. `NetcodeIntegrationTest`
+  runs host and guest in one process and `GameSession.Meta` is a single static, so there is
+  literally one Boarder object for both roles and "the host's does not" has nothing to
+  compare against. `NetDownWaitTests` already works around this by asserting that the *host
+  gate* does not debit and, separately, that the *owner RPC* does. Criterion 8 therefore
+  needs a per-role seam first: `GameSession` must be able to hold a Boarder per client id in
+  a test session. That seam is part of this milestone's step 5, and it was not costed in the
+  original plan.
 - Criterion 10: load a v11 save and read the refusal in `Logs/gkb_latest.log`.
 
 **Playthrough path**: MainMenu, create realm "A", enter with a Boarder, buy a Primary,

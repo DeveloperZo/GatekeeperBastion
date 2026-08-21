@@ -178,30 +178,21 @@ namespace GatekeepersProtocol.Sim
         }
 
         /// <summary>v8 equip fields, or None/None on older saves. Returns the crew-track refund.</summary>
-        public static long ApplySaveEquip(MetaState m, SaveData d)
+        /// <summary>Make a loaded Boarder's equipped pair legal before anything reads it.
+        /// An uncatalogued id — retired, or written by a build that sold more — resolves to
+        /// None here rather than reaching a switch that has no arm for it, and a passive that
+        /// does not belong to the surviving protocol is dropped with it.</summary>
+        public static void ValidateEquip(BoarderState b)
         {
-            if (d.SaveVersion >= 8)
+            if (b == null) return;
+            if (!IsCatalogued(b.EquippedProtocol))
             {
-                m.EquippedProtocol = (BoarderProtocolId)d.EquippedProtocol;
-                m.EquippedPassive = (BoarderAbilityId)d.EquippedPassive;
-                // An uncatalogued id — retired, or written by a build that sold more — resolves
-                // to None here rather than reaching a switch that has no arm for it.
-                if (!IsCatalogued(m.EquippedProtocol))
-                {
-                    m.EquippedProtocol = BoarderProtocolId.None;
-                    m.EquippedPassive = BoarderAbilityId.None;
-                    return 0;
-                }
-                if (!IsLegalPair(m.EquippedProtocol, m.EquippedPassive))
-                    m.EquippedPassive = BoarderAbilityId.None;
-                return 0;
+                b.EquippedProtocol = BoarderProtocolId.None;
+                b.EquippedPassive = BoarderAbilityId.None;
+                return;
             }
-            m.EquippedProtocol = BoarderProtocolId.None;
-            m.EquippedPassive = BoarderAbilityId.None;
-            return MetaState.SpentOnTrack(d.VitalityLevel)
-                + MetaState.SpentOnTrack(d.StaminaLevel)
-                + MetaState.SpentOnTrack(d.ScavengingLevel)
-                + MetaState.SpentOnTrack(d.LuckLevel);
+            if (!IsLegalPair(b.EquippedProtocol, b.EquippedPassive))
+                b.EquippedPassive = BoarderAbilityId.None;
         }
 
         public static float Window(BoarderAbilityId id)
