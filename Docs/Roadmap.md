@@ -60,6 +60,7 @@ run ends with a screen that tells them what happened. Queue is ordered against t
 sentence. Shared Ship + party EMBARK closed with **M72** (2026-08-17); remaining friends
 work is polish and dry-run length, not lobby topology.
 
+**M90** completed 2026-08-21 (Zo close; playthrough stamped).
 **M84** built 2026-08-21: additive HitReact layer + `Anim_flinch.anim`;
 criterion 5 on disk; playthrough 1–4 owed.
 
@@ -183,7 +184,7 @@ this table — see the change log.
 | M88 | The Gatekeepers are machines | completed, Aug 2026 | One FaxLab3D robot per Gatekeeper kind — silhouette tells the kind, on the pack's Built-In Shader Graph. Zo close 2026-08-19 | [`3. completed/M88`](Milestones/3.%20completed/M88-the-gatekeepers-are-machines.md) |
 | M89 | The Ship, from above | cancelled, Aug 2026 | Killed 2026-08-20 (Zo): first person is chosen, not inherited — the isometric probe never runs. Part of the rig had already landed with `ce7d2ba`; `Ship_Isometric.unity` and its PlayMode fixture were **deleted 2026-08-20 (Zo)** and the scene unregistered. `IsometricCameraRig`, `WallRenderState` and `IsometricBodyPresentation` remain in the tree, now unreachable — no scene instantiates a rig, so every `_isoRig` is null | [`5. cancelled/M89`](Milestones/5.%20cancelled/M89-the-ship-from-above.md) |
 | M91 | You wake standing | active (code landed, scene pending) | Beat 0's wake bed becomes a teleporter — upright materialise on a pad inside a glass cylinder that retracts on hold-E. Removes three dated defects, chiefly the session-long `SetCapsuleTrigger(true)` that was never restored. Code landed 2026-08-20; the `Demo Teleporter` subtree and its four bindings are Zo's scene pass | [`2. active/M91`](Milestones/2.%20active/M91-you-wake-standing.md) |
-| M90 | Buy back at a live window | later | A dead guest pays `HatchBank.BuyBackCost` from their own banked Salvage and rejoins at the Hatch during a Hatch-bank Assault. Report-and-ask wallet, doors deferred to `M95`. Built 2026-08-21; playthrough still owed | [`1. planned/M90`](Milestones/1.%20planned/M90-buy-back-at-a-live-window.md) |
+| M90 | Buy back at a live window | completed, Aug 2026 | A dead guest pays `HatchBank.BuyBackCost` from their own banked Salvage and rejoins at the Hatch during a Hatch-bank Assault. Report-and-ask wallet, doors deferred to `M95`. Zo close 2026-08-21 | [`3. completed/M90`](Milestones/3.%20completed/M90-buy-back-at-a-live-window.md) |
 | M92 | A bigger ship with three hatches | active | Ship hull grown on the SR-2 profile with a starboard hatch gallery; three hatch doors with stable ids, open state assigned by seat count (1 → middle, 2 → outer pair, 3 → all); look-at strings + `[Hatch] assigned` log; guest cap 3 → 2. The hull and the doors only — per-hatch HP and enemy routing are the co-op demo's. Started 2026-08-20 | [`2. active/M92`](Milestones/2.%20active/M92-a-bigger-ship-with-three-hatches.md) |
 | M93 | Three primaries that read as three guns | active | The three shop Primaries (BR-12, MR-35, PRI-C) already differ in the sim; this pass makes the difference legible — concussive metres in the log, Railshot ARMED on the HUD, a pairwise catalog test. Criterion 4 (viewmodel motion) unblocked by `M82` 2026-08-20; playthrough remains. Started 2026-08-20 | [`2. active/M93`](Milestones/2.%20active/M93-three-primaries-that-read-as-three-guns.md) |
 
@@ -193,7 +194,7 @@ this table — see the change log.
 
 1. **Finish and polish the solo demo.** `M82`, `M93`, `M84`, `M85`, `M66`, and the
    garrison content in `M63` / `M63-3`.
-2. **Build out the co-op demo.** `M83`, `M86`, `M90`, `M94`, `M95`, `M98`.
+2. **Build out the co-op demo.** `M83`, `M86`, `M94`, `M95`, `M98`.
 3. **Ship / Realm / Safehouse.** `M96`, `M97`, and the realm-lock entry still in
    `Brainstorms/realms.md`.
 

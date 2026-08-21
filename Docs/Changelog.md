@@ -8,6 +8,11 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-21
 -->
 
+- 2026-08-21: **`M90` closed — buy back at a live window.** Zo close.
+  Playthrough (criterion 6) stamped. Two-box host-save half of criterion 2
+  stays unprovable in-process (shared Meta); `TryNetBuyBack` does not spend.
+  Dead-host still refused named. Doors remain `M95`.
+
 - 2026-08-21: **`M84` built — Gatekeepers flinch when shot.** Additive
   HitReact layer on the shared controller, 0.25s muscle clip
   (`Anim_flinch.anim` guid `0cd7751cb3144b74fb47045e6061905f`), upper-body

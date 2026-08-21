@@ -1,8 +1,11 @@
 # M90 — Buy back at a live window
 
 <!--
-Status: later
-Update trigger: when HatchBank.BuyBackCost is retuned, or when the dead-host ruling lands
+Status: shipped, Aug 2026
+Closed on: 2026-08-21 (Zo). Playthrough (criterion 6) stamped by the close.
+  Two-box host-save half of criterion 2 stays unprovable in-process — host and
+  guest share Meta; `TryNetBuyBack` is the host-side proof it does not spend.
+Update trigger: never — shipped milestones are a record. Corrections only.
 Last updated: 2026-08-21
 -->
 
