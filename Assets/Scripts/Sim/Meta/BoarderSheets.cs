@@ -22,20 +22,20 @@ namespace GatekeepersProtocol.Sim
         public const string CrewVeil =
             "G Ping — Every Gatekeeper renders through walls, for every Boarder, for 8s. Every Default and Hunter targets you while it runs. The crew gets the map; you get the room. Cooldown 30s.";
         public const string CrewForge =
-            "G Field Rearm — Rooted beside a deployed machine within 4 m, yours or a teammate's. Pours 20 unbanked salvage per second into it as 30 HP per second, up to 8s. Ends early when you run dry. Cooldown 30s.";
+            "G Field Deploy — Stand a turret where you are looking. It acquires and fires on its own out to 18 m. While it stands, every Boarder within 8 m of it fires ×1.35. Deploying again replaces it. Cooldown 30s.";
 
         public const string PersonalDefault =
             "H Rush — You move. Fire ×1.5 for 6s. Cooldown 40s.";
         public const string PersonalVeil =
             "H Cloak — Off every targeting list for 6s. Gatekeepers already swinging finish the swing. Firing exits instantly. Cooldown 40s.";
         public const string PersonalForge =
-            "H Redeploy — Lift your placed hardware and carry it, disarmed, at ×0.6 speed. Press again to set it down anywhere legal. It keeps the life it had. Cooldown 40s.";
+            "H Overcharge — Redline your standing turret for 6s: it fires ×2.5 and your own gun fires ×1.4. The machine pays 18 life per second and can burn itself out. Refuses with no turret standing. Cooldown 40s.";
 
         public const string PassiveDefault = "None.";
         public const string PassiveVeil =
             "Ghost — Gatekeepers notice you at 0.70× their normal range. Standing still was never the requirement.";
         public const string PassiveForge =
-            "Magnet Hands — when a Gatekeeper's choice of target is ambiguous, it prefers your deployed hardware over you.";
+            "Magnet Hands — a Gatekeeper that would come for you comes for your turret instead, whenever both are in reach. The machine takes the swings, and the machine can be destroyed.";
 
         public static string Name(BoarderProtocolId id)
         {

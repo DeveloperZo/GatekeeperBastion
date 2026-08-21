@@ -86,10 +86,6 @@ namespace GatekeepersProtocol.Game
 
         public bool MovementLocked { get; set; }
 
-        /// <summary>Planar speed multiplier for a Boarder whose hands are full (REDEPLOY).
-        /// 1 = free hands. Pushed at run time, never serialized.</summary>
-        public float SpeedMul { get; set; } = 1f;
-
         /// <summary>Current sprint stamina, 0..StaminaMax. HUD reads this.</summary>
         public float Stamina => _stamina;
 
@@ -318,7 +314,7 @@ namespace GatekeepersProtocol.Game
                     IsSprinting = false; // this frame's move already spent the last of it
                 }
                 _regenDelay = StaminaRegenDelaySeconds;
-                return sprintSpeed * SpeedMul;
+                return sprintSpeed;
             }
 
             // Not sprinting: serve out the delay, then refill.
@@ -326,7 +322,7 @@ namespace GatekeepersProtocol.Game
             else if (_stamina < staminaMax)
                 _stamina = Mathf.Min(staminaMax, _stamina + StaminaRegenPerSecond * dt);
 
-            return moveSpeed * SpeedMul;
+            return moveSpeed;
         }
 
         static void SetCursorLocked(bool locked)

@@ -225,11 +225,13 @@ namespace GatekeepersProtocol.Game
             // comes from here, because a prefab's serialized fields are frozen at asset-creation
             // time and silently outrank any later code change (Docs/Architecture.md GOTCHA 1).
             GatekeeperStats stats = WaveDirector.StatsFor(kind);
-            if (kind == GatekeeperKind.Thief && emit.FinaleElitePending)
+            bool isElite = kind == GatekeeperKind.Thief && emit.FinaleElitePending;
+            if (isElite)
             {
                 emit.FinaleElitePending = false;
                 stats.maxHp = MasterControl.FinaleEliteHp;
-                Log.Event(Tag, "finale elite hp=" + stats.maxHp);
+                Log.Event(Tag, "finale elite hp=" + stats.maxHp
+                               + " bodyScale=" + MasterControl.FinaleEliteScale);
             }
 
             Vector3 at = GroupSlot(point.position, index, groupCount);
@@ -239,6 +241,7 @@ namespace GatekeepersProtocol.Game
             // Spawn at the height the agent is going to hold anyway.
             Vector3 spawnAt = at + Vector3.up * PrefabBaseOffset(prefab);
             GameObject enemy = Instantiate(prefab, spawnAt, point.rotation);
+            if (isElite) GrowEliteBody(enemy);
             var damageable = enemy.GetComponent<Damageable>();
             if (damageable != null)
             {
@@ -298,6 +301,29 @@ namespace GatekeepersProtocol.Game
             if (prefab == null) return 0f;
             var agent = prefab.GetComponent<NavMeshAgent>();
             return agent != null ? agent.baseOffset : 0f;
+        }
+
+        /// <summary>Grow the finale elite's BODY and nothing else — the visual child under the
+        /// enemy root, never the root, so the NavMeshAgent, the capsule and the spawn height all
+        /// stay exactly the Thief's (<see cref="MasterControl.FinaleEliteScale"/> says why).
+        /// The visual's pivot sits at the model's feet, so this grows upward off the floor
+        /// instead of sinking the body into it.
+        /// <para>Found by renderer rather than by name: the builder names that child per kind,
+        /// and a rename there should not quietly stop the boss looking like one.</para></summary>
+        static void GrowEliteBody(GameObject enemy)
+        {
+            if (enemy == null) return;
+            var skin = enemy.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (skin == null)
+            {
+                Log.Warn(Tag, "finale elite has no skinned body — size tell skipped.");
+                return;
+            }
+            Transform visual = skin.transform;
+            while (visual.parent != null && visual.parent != enemy.transform)
+                visual = visual.parent;
+            if (visual == enemy.transform) return; // body is on the root; growing it would move the agent
+            visual.localScale *= MasterControl.FinaleEliteScale;
         }
 
         static Vector3 GroupSlot(Vector3 origin, int index, int groupCount)

@@ -17,6 +17,7 @@ namespace GatekeepersProtocol.Game
 
         static readonly int AnimSpeed = Animator.StringToHash("Speed");
         static readonly int AnimAttack = Animator.StringToHash("Attack");
+        static readonly int AnimHitReact = Animator.StringToHash("HitReact");
 
         float _damage;
         float _swingSeconds;
@@ -43,6 +44,17 @@ namespace GatekeepersProtocol.Game
             _agent = GetComponent<NavMeshAgent>();
             _animator = GetComponentInChildren<Animator>();
             _damageable = GetComponent<Damageable>();
+            if (_damageable != null) _damageable.Damaged += OnDamaged;
+        }
+
+        void OnDestroy()
+        {
+            if (_damageable != null) _damageable.Damaged -= OnDamaged;
+        }
+
+        void OnDamaged(Transform source)
+        {
+            if (_animator != null) _animator.SetTrigger(AnimHitReact);
         }
 
         void Start()

@@ -5,8 +5,18 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 -->
+
+- 2026-08-21: **`M84` built — Gatekeepers flinch when shot.** Additive
+  HitReact layer on the shared controller, 0.25s muscle clip
+  (`Anim_flinch.anim` guid `0cd7751cb3144b74fb47045e6061905f`), upper-body
+  mask, `SetTrigger` from `EnemyGatekeeper.OnDamaged` and a new
+  `ShipIntruder` `Damaged` subscription. Override Empty was rejected (bind
+  pose on the torso). Criterion 5 closed on disk; playthrough 1–4 unstamped.
+  File stays in `1. planned/` until that Run. Mixamo Hit Reaction was
+  rejected for length; M81's free-path kill criterion does not cover this
+  clip.
 
 - 2026-08-20: **`M82` started — the weapon in your hands.** One
   `Packs/Weapons/ViewModel.controller` (Speed / Fire / Reload) and four clips
@@ -15,6 +25,38 @@ Last updated: 2026-08-20
   `clipLength / ActiveReloadSeconds`, restored when the timer ends. Four
   controller-less Animators on `Gen_*_WindowPiece` in `Bastion.unity` were
   removed. Criteria 1–3 are eyes-on in a Run.
+
+- 2026-08-20: **Enemy bodies actually scale now, and the finale elite towers.** Zo asked
+  for enemies 25% smaller and the elite 50% bigger, because the boss did not read as a
+  boss. The reason it did not is that **no kind's body has ever scaled**:
+  `SceneBuilder.DressVisual` set the visual child to `1/scale` under a root at `scale`, so
+  every gatekeeper rendered at exactly 1.0 world scale and only the NavMeshAgent and the
+  capsule differed. That inverse was correct once — Synty's `SM_Chr_BR_War_Robot_01`
+  carries its own 1.4 and would have stacked a second one — but the FaxLab wrappers are all
+  native scale 1, so since the robot swap it has cancelled the size channel that
+  `SceneBuilder.Enemies.cs` calls one of the only two tutorials this game has. The inverse
+  is gone; the body wears the root's scale.
+  On top of that: `BodyScale` 0.75 multiplies the authored spread, so Default / Hunter /
+  Thief are 0.75 / 0.6375 / 1.05, and `MasterControl.FinaleEliteScale` 1.5 grows the
+  elite's body to 1.575 — **2.1× a Default, where it was 1.0×**.
+  The elite's growth is **presentation only**: it scales the visual child, never the root,
+  so the agent, the capsule and the spawn height stay exactly the Thief's. Scaling its
+  footprint too would be a second mechanical lever, which `M80` explicitly ruled against
+  ("HP is the one lever"), and would put 0.63 m of agent radius on a navmesh baked at
+  `agentRadius 0.5` — a boss that wedges in the doorway it exists to reach.
+  `GatekeeperPresentationTests` moves with it rather than being discovered failing, and
+  gains `EnemyPrefabs_StayInsideTheBakedAgentRadius`, which states the rule the numbers
+  serve so a future rescale cannot slip past by moving all three literals together.
+  Body scale is presentation and is not in `Design/4-Data.md`; `docgen --check` clean.
+
+- 2026-08-20: **Where the finale elite spawns is by design, not a defect.** Zo read the
+  elite not appearing in the Control Room as a bug. `GameController.OnMasterHatchHalfStarted`
+  does three things when Master Control flips to its Hatch-bank half: mutes the Control
+  Room closets (`_masterTerminal.SetUnlockedSpawnsActive(false)`), unseals the Control Room
+  door, and calls `BastionLayout.ActivateHatchBankSpawns`, which lights the **Field**
+  terminals' spawn sets instead. The Control Room fight is the terminal half; the finale is
+  a Hatch-bank window and the bodies come at the door. Nothing changed — recorded because
+  it reads as a defect and is not one.
 
 - 2026-08-20: **The Gatekeeper wrappers actually wear their robots now — `M88`'s swap
   finally ran.** `Hunter.prefab` was still on Synty's `Characters.fbx` and `Thief.prefab`

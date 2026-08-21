@@ -257,18 +257,12 @@ bank window down and breach remain the only enders.
 
 - **Parked intent, not spec:** when the juice/multiplier mechanic lands, returning to
   Ship early loses or reduces the salvage multiplier — mitigating risk has a price.
-- **Co-op buy-back:** a dead player may buy back into the Run only while a bank window
-  is live, rejoining at the Hatch, paying from their own banked Salvage; cost tunable.
-  Respawns re-enter at the critical moment, when Salvage is being banked. Amends the
-  co-op down section above. **Owned by `M90`** (split out of `M79`, 2026-08-20) and
-  **not startable as ruled**: banked Salvage is a per-machine `MetaState` field, not
-  per-seat — a guest's `Banked` is written only for slot 0 from the host's own save
-  and is never reported to the host — so "their own banked Salvage" has nothing to
-  read. Two open rulings, both Zo's: whether the guest wallet is reported-and-asked
-  (client-authoritative) or moved into the sim per slot (a save-format change), and
-  what **live window** means — against the *survived* window, buy-back is strictly
-  dominated by waiting a moment and embarking for free, which would kill the feature
-  as specified.
+- **Co-op buy-back:** a dead **guest** may buy back into the Run only while a Hatch-bank
+  Assault is live (`WaveMode.HatchBank && AssaultState.Assault`), rejoining at the Hatch,
+  paying `HatchBank.BuyBackCost` from their own banked Salvage. Free wait-then-embark
+  stays on Hatch-bank Prep. Guest wallet is report-and-ask (client-authoritative):
+  friends-only (`../Marketing/gtm.md`). Banked Salvage does not move into the sim.
+  Door state stays HOST-ONLY; `M95` criterion 9 owns replicating it. **Owned by `M90`.**
 - **Open — needs Zo's call, recorded not resolved:** a dead HOST rejoining collides
   with host-death-ends-the-run (`M49`), which is architecture-driven.
 - **Demo consistency:** the demo's two authored losses are unclearable windows, so

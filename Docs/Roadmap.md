@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -59,6 +59,9 @@ developer touching a keyboard, play a full five-wave run with both participating
 run ends with a screen that tells them what happened. Queue is ordered against that
 sentence. Shared Ship + party EMBARK closed with **M72** (2026-08-17); remaining friends
 work is polish and dry-run length, not lobby topology.
+
+**M84** built 2026-08-21: additive HitReact layer + `Anim_flinch.anim`;
+criterion 5 on disk; playthrough 1–4 owed.
 
 **M82** started 2026-08-20: shared viewmodel controller + four clips; reload
 speed-scales to each weapon's duration. Criteria 1–3 are a playthrough.
@@ -173,14 +176,14 @@ this table — see the change log.
 | M81 | The Gatekeeper's swing | completed, Aug 2026 | One retargeted attack clip into the shared Gatekeeper controller — Attack stops playing PlayerIdle for all three kinds and ship intruders. Free-retarget probe accepted (Zo close 2026-08-19) | [`3. completed/M81`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md) |
 | M82 | The weapon in your hands | active | Shared viewmodel controller + four hand-keyed clips (idle/move/fire/reload) for all six weapons; reload speed-scales to each weapon's duration; four controller-less window Animators in Bastion.unity removed. Started 2026-08-20 | [`2. active/M82`](Milestones/2.%20active/M82-the-weapon-in-your-hands.md) |
 | M83 | Crewmates fire on camera | later | Replicate fire/reload to non-owner avatars via the existing ClientRpc pattern — drives Boarder.controller's wired-but-unreachable Fire/Reload states; code only, clips already exist | [`1. planned/M83`](Milestones/1.%20planned/M83-crewmates-fire-on-camera.md) |
-| M84 | Gatekeepers flinch when shot | later | One flinch clip on a masked upper-body layer of the shared controller, triggered from the existing `Damaged` event; movement and attacks uninterrupted; ShipIntruder gains the same subscription | [`1. planned/M84`](Milestones/1.%20planned/M84-gatekeepers-flinch-when-shot.md) |
+| M84 | Gatekeepers flinch when shot | later (built 2026-08-21) | One 0.25s muscle flinch on a masked additive HitReact layer from `Damaged`; criterion 5 on disk; playthrough 1–4 owed | [`1. planned/M84`](Milestones/1.%20planned/M84-gatekeepers-flinch-when-shot.md) |
 | M85 | The collapse under the burst | later | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail, so a corpse never delays a wave clear; co-op carrier named as the open question | [`1. planned/M85`](Milestones/1.%20planned/M85-the-collapse-under-the-burst.md) |
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
 | M87 | A bought body in an hour | completed, Aug 2026 | Utility Bot on the pack's Built-In Shader Graph in the Ship; graduation test passed 2026-08-18; Zo close 2026-08-19 (criterion 6 elapsed time unrecorded) | [`3. completed/M87`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md) |
 | M88 | The Gatekeepers are machines | completed, Aug 2026 | One FaxLab3D robot per Gatekeeper kind — silhouette tells the kind, on the pack's Built-In Shader Graph. Zo close 2026-08-19 | [`3. completed/M88`](Milestones/3.%20completed/M88-the-gatekeepers-are-machines.md) |
 | M89 | The Ship, from above | cancelled, Aug 2026 | Killed 2026-08-20 (Zo): first person is chosen, not inherited — the isometric probe never runs. Part of the rig had already landed with `ce7d2ba`; `Ship_Isometric.unity` and its PlayMode fixture were **deleted 2026-08-20 (Zo)** and the scene unregistered. `IsometricCameraRig`, `WallRenderState` and `IsometricBodyPresentation` remain in the tree, now unreachable — no scene instantiates a rig, so every `_isoRig` is null | [`5. cancelled/M89`](Milestones/5.%20cancelled/M89-the-ship-from-above.md) |
 | M91 | You wake standing | active (code landed, scene pending) | Beat 0's wake bed becomes a teleporter — upright materialise on a pad inside a glass cylinder that retracts on hold-E. Removes three dated defects, chiefly the session-long `SetCapsuleTrigger(true)` that was never restored. Code landed 2026-08-20; the `Demo Teleporter` subtree and its four bindings are Zo's scene pass | [`2. active/M91`](Milestones/2.%20active/M91-you-wake-standing.md) |
-| M90 | Buy back at a live window | later | A dead guest pays their own banked Salvage to re-enter while a bank window is live, rejoining at the Hatch. Split out of `M79` 2026-08-20. **Blocked on three owner-Zo rulings**: per-seat banked salvage does not exist (a guest's `Banked` is never reported to the host), what "live window" means against the existing free embark, and whether door state becomes networked | [`1. planned/M90`](Milestones/1.%20planned/M90-buy-back-at-a-live-window.md) |
+| M90 | Buy back at a live window | later | A dead guest pays `HatchBank.BuyBackCost` from their own banked Salvage and rejoins at the Hatch during a Hatch-bank Assault. Report-and-ask wallet, doors deferred to `M95`. Built 2026-08-21; playthrough still owed | [`1. planned/M90`](Milestones/1.%20planned/M90-buy-back-at-a-live-window.md) |
 | M92 | A bigger ship with three hatches | active | Ship hull grown on the SR-2 profile with a starboard hatch gallery; three hatch doors with stable ids, open state assigned by seat count (1 → middle, 2 → outer pair, 3 → all); look-at strings + `[Hatch] assigned` log; guest cap 3 → 2. The hull and the doors only — per-hatch HP and enemy routing are the co-op demo's. Started 2026-08-20 | [`2. active/M92`](Milestones/2.%20active/M92-a-bigger-ship-with-three-hatches.md) |
 | M93 | Three primaries that read as three guns | active | The three shop Primaries (BR-12, MR-35, PRI-C) already differ in the sim; this pass makes the difference legible — concussive metres in the log, Railshot ARMED on the HUD, a pairwise catalog test. Criterion 4 (viewmodel motion) unblocked by `M82` 2026-08-20; playthrough remains. Started 2026-08-20 | [`2. active/M93`](Milestones/2.%20active/M93-three-primaries-that-read-as-three-guns.md) |
 

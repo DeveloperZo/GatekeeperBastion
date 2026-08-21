@@ -23,6 +23,15 @@ namespace GatekeepersProtocol.Sim
         /// </summary>
         public const float FinaleEliteHp = 240f;
 
+        /// <summary>How much bigger the elite's BODY is than a Thief's. Presentation only — it
+        /// does not touch the NavMeshAgent, so the elite paths, avoids and shoves exactly like
+        /// the Thief it is, and HP stays the one mechanical lever named above.
+        /// Deliberately off the agent: the Bastion navmesh is baked at agentRadius 0.5 and a
+        /// Thief already carries 0.42, so scaling the footprint as well would put 0.63 m of
+        /// radius on a mesh carved for 0.5 and let the boss wedge in the doorway it exists to
+        /// reach.</summary>
+        public const float FinaleEliteScale = 1.5f;
+
         /// <summary>Replace a Hatch-bank spec with the finale elite: one Thief, counts sum to
         /// 1, <see cref="WaveSpec.finaleElite"/> set so the spawner applies
         /// <see cref="FinaleEliteHp"/>. Keeps the incoming health multiplier so spawned HP

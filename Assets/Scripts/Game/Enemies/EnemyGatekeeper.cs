@@ -85,6 +85,7 @@ namespace GatekeepersProtocol.Game
 
         static readonly int AnimSpeed = Animator.StringToHash("Speed");
         static readonly int AnimAttack = Animator.StringToHash("Attack");
+        static readonly int AnimHitReact = Animator.StringToHash("HitReact");
 
         NavMeshAgent _agent;
         Damageable _damageable;
@@ -98,8 +99,10 @@ namespace GatekeepersProtocol.Game
         PlayerHealth _player;
         HatchStation _hatchTarget;
         DecoyObject _decoyTarget;
+        TurretObject _turretTarget;
         bool _chasingPlayer;
         bool _chasingDecoy;
+        bool _chasingTurret;
         float _attackTimer;
         float _retargetTimer;
 
@@ -124,6 +127,7 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Dev F9 readout: who this gatekeeper is hunting right now.</summary>
         public string DevTargetLabel =>
+            _chasingTurret ? "turret" :
             _chasingDecoy ? "decoy" :
             _chasingPlayer ? "player" : (_committedToHatch ? "hatch" : (_hatchTarget != null ? "hatch?" : "idle"));
 
@@ -202,6 +206,8 @@ namespace GatekeepersProtocol.Game
                 _chasingPlayer = false;
                 _chasingDecoy = false;
                 _decoyTarget = null;
+                _chasingTurret = false;
+                _turretTarget = null;
             }
             Retarget();
         }
@@ -267,6 +273,8 @@ namespace GatekeepersProtocol.Game
 
             _retargetTimer -= dt;
             if (_chasingDecoy && (_decoyTarget == null || !_decoyTarget.IsAlive))
+                _retargetTimer = 0f;
+            if (_chasingTurret && (_turretTarget == null || !_turretTarget.IsAlive))
                 _retargetTimer = 0f;
             if (_retargetTimer <= 0f)
             {
@@ -445,6 +453,15 @@ namespace GatekeepersProtocol.Game
             if (_chasingPlayer && _player != null && !_player.IsDead)
             {
                 _player.TakeDamage(playerDamage, transform);
+                return;
+            }
+
+            // A machine standing in the way takes the swing the Boarder would have. Hardware
+            // uses the Hatch-damage figure because it is the same kind of blow: a gatekeeper
+            // hitting a structure, not a person.
+            if (_chasingTurret && _turretTarget != null && _turretTarget.IsAlive)
+            {
+                _turretTarget.ApplyDamage(hatchDamage);
                 return;
             }
 

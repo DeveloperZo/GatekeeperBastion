@@ -18,9 +18,11 @@ namespace GatekeepersProtocol.EditorTools
     /// COLOUR AND SIZE ARE THE ONLY TUTORIAL THIS GAME HAS. A player meets three kinds at once
     /// and has to triage them before knowing any of their names, so the read is built from two
     /// channels that survive a dark corridor and a glance:
-    ///   Default — the red they already know, unchanged, at 1.0 scale.
-    ///   Hunter  — bright amber, 0.85 scale. Small and loud: the fast fragile one coming for you.
-    ///   Thief     — saturated violet-steel, 1.4 scale. Twice the silhouette of a Hunter.
+    ///   Default — the red they already know, at 1.0 of the base spread.
+    ///   Hunter  — bright amber, 0.85. Small and loud: the fast fragile one coming for you.
+    ///   Thief   — saturated violet-steel, 1.4. Well over half again the silhouette of a Hunter.
+    /// Those are RELATIVE; BodyScale multiplies all three, and the finale elite multiplies again
+    /// on top of the Thief (MasterControl.FinaleEliteScale).
     /// Thief's violet is deliberately brighter and more saturated than the bastion's own walls
     /// (0.22, 0.17, 0.30) — a genuinely dark violet body against a dark violet hull is invisible,
     /// which is the opposite of the point. Its size does the rest of the work.
@@ -52,10 +54,20 @@ namespace GatekeepersProtocol.EditorTools
         const string PackDefault = RobotDir + "Prefabs/UtilityBot_Base.prefab";
         const string PackHunter = RobotDir + "Prefabs/Hunter_Base.prefab";
         const string PackThief = RobotDir + "Prefabs/Exterminator_Base.prefab";
+        // BODY SCALE PER KIND. The relative spread (1 : 0.85 : 1.4) is the authored read;
+        // BodyScale shrinks all three together so the finale elite towers over them
+        // (Zo, 2026-08-20 — the elite did not read as bigger, because until this change
+        // NO kind's body scaled at all: see EnsureVisualChild).
+        const float BodyScale = 0.75f;
+        const float DefaultScale = 1f * BodyScale;
+        const float HunterScale = 0.85f * BodyScale;
+        const float ThiefScale = 1.4f * BodyScale;
         const string ClipIdle = "Assets/Packs/Boarder/Anim_PlayerIdle.fbx";
         const string ClipWalk = "Assets/Packs/Boarder/Anim_Walking.fbx";
         const string ClipRun = "Assets/Packs/Boarder/Anim_PlayerRun.fbx";
         const string ClipAttack = GatekeeperPackDir + "/Animations/Anim_attack_melee.fbx";
+        const string ClipFlinch = GatekeeperPackDir + "/Animations/Anim_flinch.anim";
+        const string UpperBodyMaskPath = GatekeeperPackDir + "/UpperBody.mask";
 
         /// <summary>The three gatekeeper prefabs, wired into the WaveSpawner as a set.</summary>
         sealed class EnemyPrefabs
@@ -80,11 +92,11 @@ namespace GatekeepersProtocol.EditorTools
             return new EnemyPrefabs
             {
                 Default = CreateGatekeeperPrefab<EnemyGatekeeper>(
-                    "EnemyGatekeeper", EnemyPrefabPath, pal.Enemy, GatekeeperKind.Default, 1f, dress),
+                    "EnemyGatekeeper", EnemyPrefabPath, pal.Enemy, GatekeeperKind.Default, DefaultScale, dress),
                 Hunter = CreateGatekeeperPrefab<HunterGatekeeper>(
-                    "HunterGatekeeper", HunterPrefabPath, pal.Hunter, GatekeeperKind.Hunter, 0.85f, dress),
+                    "HunterGatekeeper", HunterPrefabPath, pal.Hunter, GatekeeperKind.Hunter, HunterScale, dress),
                 Thief = CreateGatekeeperPrefab<ThiefGatekeeper>(
-                    "ThiefGatekeeper", ThiefPrefabPath, pal.Thief, GatekeeperKind.Thief, 1.4f, dress),
+                    "ThiefGatekeeper", ThiefPrefabPath, pal.Thief, GatekeeperKind.Thief, ThiefScale, dress),
             };
         }
 
@@ -92,8 +104,8 @@ namespace GatekeepersProtocol.EditorTools
         /// EnemyGatekeeper subclass, and the net components (inert until a session Spawn()s).
         /// If the asset already exists, load and dress it — never CreatePrimitive-wipe.
         /// <paramref name="scale"/> scales the silhouette AND the agent footprint together,
-        /// so a Thief takes up the room it looks like it takes up. Visual child localScale is
-        /// 1/scale so War_Robot does not stack a second 1.4 on the root.</summary>
+        /// so a Thief takes up the room it looks like it takes up. The visual child rides the
+        /// root's scale unchanged — see DressVisual for the inverse that used to cancel it.</summary>
         static GameObject CreateGatekeeperPrefab<T>(string name, string path, Material material,
                                                  GatekeeperKind kind, float scale, bool dress)
             where T : EnemyGatekeeper
@@ -147,7 +159,7 @@ namespace GatekeepersProtocol.EditorTools
             if (canDress)
             {
                 DestroyCapsuleMesh(go);
-                DressVisual(go, kind, scale, wrapper);
+                DressVisual(go, kind, wrapper);
             }
             else if (!existed)
             {
@@ -185,7 +197,7 @@ namespace GatekeepersProtocol.EditorTools
             if (filter != null) UnityEngine.Object.DestroyImmediate(filter);
         }
 
-        static void DressVisual(GameObject root, GatekeeperKind kind, float scale, GameObject wrapper)
+        static void DressVisual(GameObject root, GatekeeperKind kind, GameObject wrapper)
         {
             string childName = VisualChildName(kind);
             Transform existing = root.transform.Find(childName);
@@ -202,8 +214,13 @@ namespace GatekeepersProtocol.EditorTools
 
             visual.transform.localPosition = new Vector3(0f, -1f, 0f);
             visual.transform.localRotation = Quaternion.identity;
-            float inv = 1f / Mathf.Max(0.01f, scale);
-            visual.transform.localScale = new Vector3(inv, inv, inv);
+            // NO COUNTER-SCALE. This used to be 1/scale, to stop Synty's SM_Chr_BR_War_Robot_01
+            // — which carries its own 1.4 — stacking a second 1.4 on the root. The robot pack's
+            // wrappers are all native scale 1, so that inverse had nothing left to cancel except
+            // the kind scale itself: every kind rendered at exactly 1.0 and the size channel the
+            // enemy tutorial claims to use did nothing (Zo, 2026-08-20). The body now wears the
+            // root's scale, which is what makes a Thief look like the room it takes up.
+            visual.transform.localScale = Vector3.one;
         }
 
         static string WrapperPath(GatekeeperKind kind)
@@ -465,7 +482,16 @@ namespace GatekeepersProtocol.EditorTools
         static AnimatorController EnsureGatekeeperController()
         {
             var existing = AssetDatabase.LoadAssetAtPath<AnimatorController>(GatekeeperControllerPath);
-            if (existing != null) return existing;
+            if (existing != null)
+            {
+                // Returning the existing asset used to skip the HitReact layer.
+                if (EnsureHitReactLayer(existing))
+                {
+                    EditorUtility.SetDirty(existing);
+                    AssetDatabase.SaveAssets();
+                }
+                return existing;
+            }
 
             AnimationClip idle = LoadHumanClip(ClipIdle);
             AnimationClip walk = LoadHumanClip(ClipWalk);
@@ -520,9 +546,150 @@ namespace GatekeepersProtocol.EditorTools
             back.exitTime = 0.9f;
             back.duration = 0.08f;
 
+            EnsureHitReactLayer(controller);
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             return controller;
+        }
+
+        /// <summary>Returns true when the controller, clip or mask was created or patched,
+        /// so the caller only SaveAssets on a real change — not on every Build All.</summary>
+        static bool EnsureHitReactLayer(AnimatorController controller)
+        {
+            if (controller == null) return false;
+
+            bool dirty = false;
+            AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(ClipFlinch);
+            if (clip == null)
+            {
+                clip = new AnimationClip { name = "flinch", frameRate = 30 };
+                clip.legacy = false;
+                AnimationUtility.SetEditorCurve(clip, new EditorCurveBinding
+                {
+                    path = "",
+                    type = typeof(Animator),
+                    propertyName = "Spine Front-Back"
+                }, FlinchMuscleCurve(-0.28f));
+                AnimationUtility.SetEditorCurve(clip, new EditorCurveBinding
+                {
+                    path = "",
+                    type = typeof(Animator),
+                    propertyName = "Chest Front-Back"
+                }, FlinchMuscleCurve(-0.40f));
+                AnimationUtility.SetEditorCurve(clip, new EditorCurveBinding
+                {
+                    path = "",
+                    type = typeof(Animator),
+                    propertyName = "Head Nod Down-Up"
+                }, FlinchMuscleCurve(0.18f));
+                AnimationUtility.SetEditorCurve(clip, new EditorCurveBinding
+                {
+                    path = "",
+                    type = typeof(Animator),
+                    propertyName = "Left Arm Down-Up"
+                }, FlinchMuscleCurve(0.22f));
+                AnimationUtility.SetEditorCurve(clip, new EditorCurveBinding
+                {
+                    path = "",
+                    type = typeof(Animator),
+                    propertyName = "Right Arm Down-Up"
+                }, FlinchMuscleCurve(0.22f));
+                AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(clip);
+                settings.loopTime = false;
+                AnimationUtility.SetAnimationClipSettings(clip, settings);
+                AssetDatabase.CreateAsset(clip, ClipFlinch);
+                dirty = true;
+            }
+
+            AvatarMask mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(UpperBodyMaskPath);
+            if (mask == null)
+            {
+                mask = new AvatarMask();
+                for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
+                {
+                    var part = (AvatarMaskBodyPart)i;
+                    bool on = part == AvatarMaskBodyPart.Body
+                        || part == AvatarMaskBodyPart.Head
+                        || part == AvatarMaskBodyPart.LeftArm
+                        || part == AvatarMaskBodyPart.RightArm
+                        || part == AvatarMaskBodyPart.LeftFingers
+                        || part == AvatarMaskBodyPart.RightFingers;
+                    mask.SetHumanoidBodyPartActive(part, on);
+                }
+                AssetDatabase.CreateAsset(mask, UpperBodyMaskPath);
+                dirty = true;
+            }
+
+            bool hasHitReact = false;
+            AnimatorControllerParameter[] parms = controller.parameters;
+            for (int i = 0; i < parms.Length; i++)
+            {
+                if (parms[i].name == "HitReact")
+                {
+                    hasHitReact = true;
+                    break;
+                }
+            }
+            if (!hasHitReact)
+            {
+                controller.AddParameter("HitReact", AnimatorControllerParameterType.Trigger);
+                dirty = true;
+            }
+
+            AnimatorControllerLayer[] layers = controller.layers;
+            for (int i = 0; i < layers.Length; i++)
+            {
+                if (layers[i].name == "HitReact") return dirty;
+            }
+
+            controller.AddLayer("HitReact");
+            // Unity copies the layers array; mutate the last element and assign it back.
+            layers = controller.layers;
+            int last = layers.Length - 1;
+            layers[last].defaultWeight = 1f;
+            // Override with an empty default writes the bind pose onto every masked bone
+            // for the rest of the run. Additive Empty is a no-op.
+            layers[last].blendingMode = AnimatorLayerBlendingMode.Additive;
+            layers[last].avatarMask = mask;
+            controller.layers = layers;
+
+            var sm = controller.layers[controller.layers.Length - 1].stateMachine;
+            AnimatorState empty = sm.AddState("Empty");
+            empty.writeDefaultValues = false;
+            sm.defaultState = empty;
+
+            AnimatorState flinch = sm.AddState("Flinch");
+            flinch.motion = AssetDatabase.LoadAssetAtPath<AnimationClip>(ClipFlinch);
+            flinch.writeDefaultValues = false;
+
+            AnimatorStateTransition toFlinch = sm.AddAnyStateTransition(flinch);
+            toFlinch.AddCondition(AnimatorConditionMode.If, 0f, "HitReact");
+            toFlinch.hasExitTime = false;
+            toFlinch.duration = 0.05f;
+            toFlinch.canTransitionToSelf = true;
+
+            AnimatorStateTransition back = flinch.AddTransition(empty);
+            back.hasExitTime = true;
+            back.hasFixedDuration = true;
+            back.exitTime = 0.85f;
+            back.duration = 0.08f;
+
+            EditorUtility.SetDirty(controller);
+            return true;
+        }
+
+        static AnimationCurve FlinchMuscleCurve(float peak)
+        {
+            var curve = new AnimationCurve(
+                new Keyframe(0f, 0f),
+                new Keyframe(0.06f, peak),
+                new Keyframe(0.25f, 0f));
+            for (int i = 0; i < curve.length; i++)
+            {
+                AnimationUtility.SetKeyLeftTangentMode(curve, i, AnimationUtility.TangentMode.Linear);
+                AnimationUtility.SetKeyRightTangentMode(curve, i, AnimationUtility.TangentMode.Linear);
+            }
+            return curve;
         }
 
         static AnimationClip LoadHumanClip(string fbxPath)

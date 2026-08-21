@@ -28,8 +28,8 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(6, (int)BoarderAbilityId.Rush);
             Assert.AreEqual(7, (int)BoarderAbilityId.Ping);
             Assert.AreEqual(8, (int)BoarderAbilityId.Cloak);
-            Assert.AreEqual(9, (int)BoarderAbilityId.FieldRearm);
-            Assert.AreEqual(10, (int)BoarderAbilityId.Redeploy);
+            Assert.AreEqual(9, (int)BoarderAbilityId.FieldDeploy);
+            Assert.AreEqual(10, (int)BoarderAbilityId.Overcharge);
             Assert.AreEqual(11, (int)BoarderAbilityId.MagnetHands);
         }
 
@@ -204,7 +204,11 @@ namespace GatekeepersProtocol.Tests
                     BoarderProtocol.PersonalAbilityOf(id),
                 })
                 {
-                    Assert.Greater(BoarderProtocol.Window(ability), 0f, "window of " + ability);
+                    if (ability == BoarderAbilityId.FieldDeploy)
+                        Assert.AreEqual(0f, BoarderProtocol.Window(ability), 1e-5f,
+                            "Field Deploy is instant and must not claim a window");
+                    else
+                        Assert.Greater(BoarderProtocol.Window(ability), 0f, "window of " + ability);
                     Assert.Greater(BoarderProtocol.Cooldown(ability), 0f, "cooldown of " + ability);
                     Assert.IsNotEmpty(BoarderProtocol.DisplayName(ability));
                 }
@@ -221,51 +225,100 @@ namespace GatekeepersProtocol.Tests
             foreach (var ability in new[]
             {
                 BoarderAbilityId.Ping, BoarderAbilityId.Cloak,
-                BoarderAbilityId.FieldRearm, BoarderAbilityId.Redeploy,
+                BoarderAbilityId.FieldDeploy, BoarderAbilityId.Overcharge,
             })
                 Assert.AreEqual(1f, BoarderProtocol.FireMul(ability), 1e-5f, "FireMul of " + ability);
         }
 
         [Test]
-        public void RearmArithmetic_SpendsTheClock_AndClampsToThePile()
+        public void TurretArithmetic_RateAndBurn()
         {
-            Assert.AreEqual(20f, BoarderProtocol.RearmSpendForSeconds(1f, 1000f), 1e-5f);
-            Assert.AreEqual(30f, BoarderProtocol.RearmHpForSeconds(1f), 1e-5f);
-            Assert.AreEqual(5f, BoarderProtocol.RearmSpendForSeconds(1f, 5f), 1e-5f);
-            Assert.AreEqual(0f, BoarderProtocol.RearmSpendForSeconds(1f, 0f), 1e-5f);
-            Assert.AreEqual(0f, BoarderProtocol.RearmHpForSeconds(0f), 1e-5f);
+            Assert.AreEqual(0.5f, BoarderProtocol.TurretShotInterval(1f), 1e-5f);
+            Assert.AreEqual(0.2f, BoarderProtocol.TurretShotInterval(
+                BoarderProtocol.OverchargeTurretRateMul), 1e-5f);
+            Assert.AreEqual(18f, BoarderProtocol.OverchargeBurnForSeconds(1f), 1e-5f);
+            Assert.AreEqual(0f, BoarderProtocol.OverchargeBurnForSeconds(0f), 1e-5f);
+
+            // A full window on a healthy turret must wound it without killing it, or the
+            // ability is either free or suicide. Both ends are the design.
+            float full = BoarderProtocol.OverchargeBurnForSeconds(
+                BoarderProtocol.Window(BoarderAbilityId.Overcharge));
+            Assert.Less(full, BoarderProtocol.TurretMaxHp, "a full overcharge must not kill a fresh turret");
+            Assert.Greater(full, BoarderProtocol.TurretMaxHp * 0.5f, "a full overcharge must cost real life");
         }
 
-        /// <summary>REDEPLOY moves a machine without spending a charge or restoring life;
-        /// FIELD REARM restores life and stops at full.</summary>
+        /// <summary>Zone sources set rather than stack; self sources multiply on top.</summary>
         [Test]
-        public void DecoyRelocateKeepsLife_AndRepairCapsAtFull()
+        public void ComposeFireMul_SelfTimesStrongestZone()
         {
-            var s = new DecoyState();
-            s.ResetForRun(PayloadId.Decoy);
-            Assert.IsTrue(s.TryPlace(1f, 0f, 2f, DoctrineMode.ParallelBays, out _));
-            int chargesAfterPlace = s.ChargesRemaining;
+            Assert.AreEqual(1f, BoarderProtocol.ComposeFireMul(1f, 1f), 1e-5f);
+            Assert.AreEqual(1.35f, BoarderProtocol.ComposeFireMul(1f, BoarderProtocol.TurretAuraFireMul), 1e-5f);
+            Assert.AreEqual(1.4f * 1.35f, BoarderProtocol.ComposeFireMul(
+                BoarderProtocol.OverchargeSelfFireMul, BoarderProtocol.TurretAuraFireMul), 1e-4f);
+            // Zone is capped, so a turret aura inside a Barrage cannot exceed the Barrage cap.
+            Assert.AreEqual(3f, BoarderProtocol.ComposeFireMul(1.5f, 9f), 1e-5f);
+            Assert.AreEqual(1f, BoarderProtocol.ComposeFireMul(0.2f, 0.2f), 1e-5f);
+        }
 
-            s.TakeDamage(s.MaxHp * 0.5f);
-            float wounded = s.Hp;
-            Assert.Less(wounded, s.MaxHp);
+        [Test]
+        public void Turret_PlacesWoundsBurnsAndDies()
+        {
+            var t = new TurretState();
+            t.ResetForRun();
+            Assert.IsFalse(t.IsLive);
+            Assert.IsTrue(t.TryPlace(1f, 0f, 2f, out _));
+            Assert.IsTrue(t.IsLive);
+            Assert.AreEqual(BoarderProtocol.TurretMaxHp, t.Hp, 1e-4f);
 
-            Assert.IsTrue(s.TryRelocate(9f, 0f, 9f, out _));
-            Assert.AreEqual(9f, s.PosX, 1e-5f);
-            Assert.AreEqual(9f, s.PosZ, 1e-5f);
-            Assert.AreEqual(wounded, s.Hp, 1e-5f, "relocate must not heal");
-            Assert.AreEqual(chargesAfterPlace, s.ChargesRemaining, "relocate must not spend a charge");
-            Assert.AreEqual(DoctrineMode.ParallelBays, s.Mode, "relocate must not rewrite doctrine");
+            // Overcharge does nothing until it is switched on.
+            float burned;
+            Assert.IsFalse(t.BurnOvercharge(1f, out burned));
+            Assert.AreEqual(0f, burned, 1e-5f);
 
-            float restored = s.Repair(s.MaxHp);
-            Assert.AreEqual(s.MaxHp - wounded, restored, 1e-4f);
-            Assert.AreEqual(s.MaxHp, s.Hp, 1e-4f);
-            Assert.AreEqual(0f, s.Repair(10f), 1e-5f, "a full machine takes no more");
+            t.SetOvercharged(true);
+            Assert.IsTrue(t.Overcharged);
+            Assert.AreEqual(0.2f, t.ShotInterval(), 1e-5f);
+            Assert.IsFalse(t.BurnOvercharge(1f, out burned));
+            Assert.AreEqual(BoarderProtocol.OverchargeHpPerSecond, burned, 1e-4f);
+            Assert.AreEqual(burned, t.LifeBurned, 1e-4f);
+            Assert.AreEqual(0f, t.DamageTaken, 1e-5f, "burn is not enemy damage");
 
-            var dead = new DecoyState();
-            dead.ResetForRun(PayloadId.Decoy);
-            Assert.IsFalse(dead.TryRelocate(1f, 0f, 1f, out _), "nothing live to carry");
-            Assert.AreEqual(0f, dead.Repair(10f), 1e-5f, "nothing live to feed");
+            // Enemy damage finishes what the burn started, and the two tallies stay apart.
+            float left = t.Hp;
+            Assert.AreEqual(BoarderProtocol.TurretMaxHp - burned, left, 1e-4f);
+            Assert.IsTrue(t.TakeDamage(left));
+            Assert.IsFalse(t.IsLive, "enemy damage took the last of it");
+            Assert.AreEqual(left, t.DamageTaken, 1e-4f);
+            Assert.AreEqual(burned, t.LifeBurned, 1e-4f);
+
+            var u = new TurretState();
+            u.ResetForRun();
+            u.TryPlace(0f, 0f, 0f, out _);
+            u.TakeDamage(BoarderProtocol.TurretMaxHp - 10f);
+            u.SetOvercharged(true);
+            Assert.IsTrue(u.BurnOvercharge(1f, out burned), "the burn should finish a wounded turret");
+            Assert.IsFalse(u.IsLive);
+            Assert.IsFalse(u.Overcharged, "a dead machine is not overcharged");
+            Assert.AreEqual(10f, burned, 1e-4f, "the burn cannot take more life than remains");
+        }
+
+        /// <summary>Field Deploy is one machine: standing a new one replaces the old, and
+        /// the fresh machine carries none of the previous one's wear.</summary>
+        [Test]
+        public void Turret_RedeployReplacesAndResetsWear()
+        {
+            var t = new TurretState();
+            t.ResetForRun();
+            t.TryPlace(1f, 0f, 1f, out _);
+            t.TakeDamage(40f);
+            Assert.AreEqual(40f, t.DamageTaken, 1e-4f);
+
+            Assert.IsTrue(t.TryPlace(5f, 0f, 5f, out _));
+            Assert.AreEqual(BoarderProtocol.TurretMaxHp, t.Hp, 1e-4f);
+            Assert.AreEqual(0f, t.DamageTaken, 1e-5f);
+            Assert.AreEqual(0f, t.LifeBurned, 1e-5f);
+            Assert.IsFalse(t.Overcharged);
+            Assert.AreEqual(5f, t.PosX, 1e-5f);
         }
     }
 }

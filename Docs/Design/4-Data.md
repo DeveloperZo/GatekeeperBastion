@@ -221,13 +221,14 @@ composition both read field Waves cleared since the last Hatch-bank (snapshotted
 start). The window is `DurationSeconds`; Unbanked hitting 0 does not end it. Leftover
 dumps when the timer ends.
 
-<!-- GKB:GEN hatch-bank — HatchBank.DripPerSecond, DurationSeconds, CarryConvert, CarryWaveIndex, WithdrawPerSecond -->
+<!-- GKB:GEN hatch-bank — HatchBank.DripPerSecond, DurationSeconds, CarryConvert, CarryWaveIndex, WithdrawPerSecond, BuyBackCost -->
 | | |
 |---|---|
 | drip | 8 unbanked/s |
 | duration | 45 s |
 | withdraw | 16 salvage/s |
 | returned keeps | 10% of leftover unbanked (Lost wipes it all) |
+| buy-back | 450 banked |
 
 | Waves carried | convert | Hatch Wave | bodies at intensity 0 |
 |---|---|---|---|
@@ -237,6 +238,10 @@ dumps when the timer ends.
 | 4 | ×1.35 | 4 | 54 |
 | 5 | ×1.50 | 5 | 66 |
 <!-- GKB:END hatch-bank -->
+
+Buy-back costs `HatchBank.BuyBackCost` = **450**, one Wave-1 Hatch-bank convert at dial 0
+(`18 × 25`). The rule — pay to re-enter a live Hatch-bank Assault; free embark stays on
+the survived Prep window — is leverage **#5**; this number is **#12**.
 
 Master Control is 5 terminal Waves then 1 Hatch-bank window. Gap is `WaveDirector.InterWaveGap`.
 The finale elite is one Thief, no escorts, at `MasterControl.FinaleEliteHp` (240 pre-multiplier;

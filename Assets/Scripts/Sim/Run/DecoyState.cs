@@ -91,35 +91,6 @@ namespace GatekeepersProtocol.Sim
             return true;
         }
 
-        /// <summary>REDEPLOY: move a live decoy without spending a charge and without
-        /// restoring HP. Placing again is not a new placement — the machine keeps the life it
-        /// had, which is the whole trade against simply placing a fresh one.</summary>
-        public bool TryRelocate(float x, float y, float z, out string reason)
-        {
-            if (!IsLive)
-            {
-                reason = "no live decoy to carry";
-                return false;
-            }
-            PosX = x;
-            PosY = y;
-            PosZ = z;
-            reason = null;
-            return true;
-        }
-
-        /// <summary>FIELD REARM: restore hardware life, capped at <see cref="MaxHp"/>. Returns
-        /// the HP actually restored, which is 0 on a dead or already-full machine.</summary>
-        public float Repair(float amount)
-        {
-            if (!IsLive || amount <= 0f) return 0f;
-            float room = MaxHp - Hp;
-            if (room <= 0f) return 0f;
-            float applied = amount > room ? room : amount;
-            Hp += applied;
-            return applied;
-        }
-
         public void ClearLive()
         {
             IsLive = false;

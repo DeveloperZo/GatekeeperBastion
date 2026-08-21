@@ -45,6 +45,7 @@ namespace GatekeepersProtocol.PlayTests
             serverMirror.ElapsedSeconds.Value = 75;
             serverMirror.Banked.Value = 900L;
             serverMirror.Unbanked.Value = 40L;
+            serverMirror.Mode.Value = (byte)WaveMode.HatchBank;
 
             yield return WaitForConditionOrTimeOut(() =>
             {
@@ -61,7 +62,8 @@ namespace GatekeepersProtocol.PlayTests
                     && Mathf.Abs(m.HatchMax.Value - 300f) < 0.01f
                     && m.ElapsedSeconds.Value == 75
                     && m.Banked.Value == 900L
-                    && m.Unbanked.Value == 40L;
+                    && m.Unbanked.Value == 40L
+                    && m.Mode.Value == (byte)WaveMode.HatchBank;
             });
             AssertOnTimeout("client mirror readout did not match the host");
 
@@ -78,6 +80,7 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreEqual(75, clientMirror.ElapsedSeconds.Value);
             Assert.AreEqual(900L, clientMirror.Banked.Value);
             Assert.AreEqual(40L, clientMirror.Unbanked.Value);
+            Assert.AreEqual((byte)WaveMode.HatchBank, clientMirror.Mode.Value);
 
             RunEndKind[] kinds = { RunEndKind.Cleared, RunEndKind.Hatch, RunEndKind.Player };
             for (int i = 0; i < kinds.Length; i++)

@@ -2,16 +2,14 @@
 
 <!--
 Status: later
-Update trigger: when the guest-wallet model is ruled, when the "live window"
-ambiguity is settled, or when door state becomes networked
-Last updated: 2026-08-20
+Update trigger: when HatchBank.BuyBackCost is retuned, or when the dead-host ruling lands
+Last updated: 2026-08-21
 -->
 
 A dead guest pays their own banked Salvage to re-enter the Run while a Hatch-bank
-window is live, and rejoins at the Hatch. Split out of `M79` on 2026-08-20: the
-rule is ruled (`../../Decisions.md`, *Co-op buy-back*), but the data model it
-needs does not exist, and building it inside `M79` would have tripled that
-milestone and put client-authoritative money on the critical path of a solo beat.
+Assault is live, and rejoins at the Hatch. Split out of `M79` on 2026-08-20.
+Rulings settled 2026-08-21: report-and-ask wallet, live window = Hatch-bank Assault,
+doors deferred to `M95`.
 
 ## Story
 
@@ -21,122 +19,92 @@ minute of the Run is one I can buy my way back into instead of watching.
 
 ## Why it matters
 
-`../../Decisions.md` rules it: *"a dead player may buy back into the Run only
-while a bank window is live, rejoining at the Hatch, paying from their own
-banked Salvage; cost tunable. Respawns re-enter at the critical moment, when
-Salvage is being banked."* Today a dead guest loads the Ship scene
-(`NetShipWait`) and waits with no agency; the only way back is the free embark
-once the window has already been survived — which is exactly the moment the
-stake is gone.
+`../../Decisions.md` *Co-op buy-back*: a dead guest pays `HatchBank.BuyBackCost`
+from their own banked Salvage and rejoins at the Hatch while a Hatch-bank
+Assault is running. Free wait-then-embark (`M57`) stays on Hatch-bank Prep.
+The two windows are disjoint.
 
 Leverage is **#5 rules**: what a death costs and what it can be undone for.
+The constant is **#12** (`../../Design/4-Data.md`, hatch-bank buy-back row).
 
-## Blocked on — read before starting
+## Kill criterion
 
-Three things must be true before this is startable. None is code.
-
-1. **The guest-wallet ruling.** Banked Salvage is a per-machine `MetaState`
-   field, not per-seat sim state. `NetPlayerAvatar.SyncWallet` writes the
-   `Banked` NetworkVariable **only for slot 0, from the host's own save**; a
-   guest's `Banked.Value` is `0` forever and no RPC reports it to the host.
-   So the host cannot read, verify or spend a guest's balance. Two shapes,
-   and Zo picks:
-   - **(a) Report-and-ask.** A guest→host `ReportBankedServerRpc`, a host
-     `SpendBankedClientRpc` with an ack. Cheap, but the guest's save stays
-     client-authoritative — a modified client can buy back for free. Acceptable
-     only if co-op is explicitly friends-only.
-   - **(b) Move banked into the sim** as a per-slot pile, host-authoritative,
-     reconciled to each save at Run end. Correct, and a save-format change
-     touching `MetaState.Json`, `SaveData` and every wallet reader.
-2. **What "live window" means.** `Decisions.md` says "while a bank window is
-   live". The existing free-embark path (`NetPlayerAvatar.TryAcceptEmbark`)
-   requires the *survived* window — `Prep && Mode == HatchBank`. If buy-back
-   means the assault is still running, the two are disjoint and both should
-   exist. If it means the survived window, **buy-back is strictly dominated by
-   waiting a moment and embarking for free**, and the feature is dead as
-   specified. Owner: Zo.
-3. **Dead host stays out of scope.** Open and recorded (Zo, 2026-08-17): a dead
-   host rejoining collides with host-death-ends-the-run (`M49`), which is
-   architecture-driven. Do not build the host branch until ruled.
-
-## What is already there
-
-- **Dead-seat detection** — `NetPlayerAvatar.TryMarkWaiting`, `WaitingOnShip`,
-  `NetShipWait`. Host-authoritative and working.
-- **A paid client→host interact pattern** to copy —
-  `NetVerbs.SetRepairingServerRpc` → `GameController.RepairHatchFromNet` →
-  `RunSim.RepairHatch`, which range-checks then spends.
-- **A rejoin mechanism** — `TryAcceptEmbark` heals to full, clears
-  `WaitingOnShip` and the owner resets to the authored Bastion spawn. It is
-  free and gated on the opposite window; the movement itself is right.
-
-## What is missing
-
-- **A replicated bank-window flag.** `NetRunMirror` carries `Phase`, `Wave`,
-  `Alive`, `Salvage`, `HatchHp`, `ElapsedSeconds`, `Banked`, `Unbanked`,
-  `Intensity` — **not `WaveMode`**. A client cannot tell a Hatch-bank assault
-  from a field-Terminal assault, so neither the prompt nor the `no live window`
-  refuse can be produced client-side.
-- **Networked door state.** `BastionDoor` is explicitly HOST-ONLY and each peer
-  restores doors from *its own save*. A guest's door state is whatever their
-  campaign unlocked, not the host's Run. Pre-existing co-op divergence — this
-  milestone is the first to make it a gate.
-- **The interact surface.** A dead guest has no Bastion prompts at all:
-  `GameController.TickClientLocal` returns early on `NetShipWait.IsActive`. The
-  press must originate on the Ship (`MapStation` / pause), the same place
-  `RequestEmbark` already lives. "Driven by `E`/`T` at the Hatch" — as `M79`
-  and beat 5 both said — is **not implementable**; "at the Hatch" describes the
-  destination, not the button.
+If the first friends dry-run has a guest down during a Hatch-bank Assault and the
+session log has neither `[Demo] buyback seat=` nor `[Demo] buyback refused —`,
+the offer failed Shown. Revisit the Ship-side surface before retuning the cost.
 
 ## Acceptance criteria
 
-Written against ruling **(a)**; if Zo picks **(b)**, criteria 2 and 5 are
-rewritten before starting.
-
-1. A dead guest, while a bank window is live (per the ruling in *Blocked on* 2),
-   sees a named buy-back offer on the Ship-side surface with its cost, and the
-   same surface refuses named with `no live window` at any other time.
+1. A dead guest, while `WaveMode.HatchBank && AssaultState.Assault`, sees a named
+   buy-back offer on NAV MAP and Ship pause with its cost, and the same surface
+   refuses named with `no live window` at any other time. Hatch-bank Prep still
+   offers free EMBARK.
 2. Accepting debits **that guest's own** banked Salvage on their own machine,
-   never the host's. A Run in which a guest buys back leaves the host's
-   `BankedSalvage` changed only by the host's own spends.
+   never the host's. `GameController.TryNetBuyBack` does not call `SpendSalvage`.
 3. The guest rejoins alive at the Bastion Hatch spawn with full health, inside
    the same window, and both seats see them.
 4. `[Demo] buyback seat=<n> cost=<c>` is logged host-side; a refused attempt
-   logs its reason.
-5. A guest who cannot afford it is refused named, and nothing is debited on
-   either machine.
+   logs `[Demo] buyback refused — <reason>`.
+5. A guest who cannot afford it is refused named (`cannot afford`), and nothing
+   is debited on either machine.
 6. The shared in-Run pile is untouched: every seat's `Unbanked` is unchanged by
-   a buy-back. Note that dying already wipes the seat's own `Unbanked`
-   (`NetPlayerAvatar.TryMarkWaiting`), so buy-back is pure cost — it does not
-   recover what the death lost. Confirm that is intended when tuning.
-7. The dead-host branch is not built, and the attempt is refused named.
+   a buy-back. Dying already wipes the seat's own `Unbanked`; buy-back is pure
+   cost.
+7. The dead-host branch is not built, and the attempt is refused named
+   (`host cannot buy back`).
 
 ## Implementation
 
-Not written until *Blocked on* clears. The shape under ruling (a) is: a
-`WaveMode` byte added to `NetRunMirror`; `ReportBankedServerRpc` /
-`SpendBankedClientRpc` on `NetPlayerAvatar`; a `TryNetBuyBack(from)` on
-`GameController` following the `TryNetJuice` pattern; the offer surfaced on
-`MapStation` beside the existing EMBARK row; and a decision on whether door
-state is replicated here or deferred again.
+**Change** `Assets/Scripts/Sim/Run/HatchBank.cs` — `BuyBackCost`, `IsBuyBackWindow`,
+`IsFreeEmbarkWindow`, `BuyBackRefuse`. The rule lives here so EditMode can see it.
+
+**Change** `Assets/Scripts/Game/Net/NetRunMirror.cs` — `NetworkVariable<byte> Mode`
+written from `sim.Mode`. Clients need it to tell Hatch-bank Assault from field
+Assault.
+
+**Create** `Assets/Scripts/Game/Bastion/GameController.BuyBack.cs` —
+`TryNetBuyBack(NetPlayerAvatar from, long reportedBanked)`. Range-free; does not
+spend. Split for the Game line cap.
+
+**Create** `Assets/Scripts/Game/Net/NetPlayerAvatar.BuyBack.cs` —
+`RequestBuyBack` reports this machine's `BankedSalvage`; server asks
+`TryNetBuyBack`, then `SpendBankedClientRpc` (owner Meta) and `ApplyRejoin`
+(same heal + Hatch spawn as free embark). Friends-only: a modified client can
+lie about the report.
+
+**Change** `Assets/Scripts/Game/Net/NetPlayerAvatar.cs` — `ApplyRejoin` shared by
+free embark and buy-back.
+
+**Change** `Assets/Scripts/Game/Ship/MapStation.cs` and `ShipController.cs` — wait
+surface: Hatch-bank Prep stays EMBARK; live Assault is BUY BACK (cost); else the
+press refuses `no live window`.
+
+Rejected: moving banked into the sim per slot. Save-format change, nothing else
+queued needs it, friends alpha is not the internet. Rejected: buy-back on the
+survived Prep window. Free embark already covers it. Rejected: replicating door
+state here. Guest spawns at the Hatch; `M95` criterion 9 owns guest door parity.
+
+## Supporting work
+
+- **Driven by** NAV MAP embark / pause embark while `NetShipWait.IsActive` — here.
+- **Shown by** `BUY BACK (<cost>)` on that button — here.
+- **Reads back as** the guest body at Hatch spawn, banked falling on their save,
+  `[Demo] buyback seat=<n> cost=<c>` — here.
 
 ## Verification
 
-PlayMode, two seats, via the AutoVerify bridge — this is entirely
-MonoBehaviour and network state, so the offline harness cannot see any of it.
-Named per criterion once the implementation is written.
+1. `HatchBankTests.BuyBackRefuse_LiveWindow_AllowsGuestWhoCanPay` — `Tools/verify/run.sh --filter BuyBackRefuse`. Expect the live-window allow and the four named refuses.
+2. `NetDownWaitTests.BuyBack_HatchBankAssaultRejoins_RefusesOtherwise` — IntegrationCheck. Terminal refuse + unaffordable refuse debit nothing; funded Assault rejoins; `TryNetBuyBack` leaves `GameSession.Meta.BankedSalvage` unchanged; Unbanked unchanged. In-process host and guest share Meta, so the owner spend then drops that same purse — criterion 2 on two boxes is host save unchanged after a guest buy-back.
+3. `NetDownWaitTests.BuyBack_HostAttempt_RefusedNamed` — host `RequestBuyBack` logs `host cannot buy back`; Run stays Tethered.
+4. `NetRunMirrorTests.Mirror_ReplicatesReadout_DeliversEndSummary` — client `Mode` matches host HatchBank.
+5. `DownWait_HatchBankPrepEmbarks_RefusesOtherwise` still green — free embark is not replaced.
+6. Playthrough path — two seats, guest down during a Hatch-bank Assault: NAV MAP shows `BUY BACK (450)`; accept → guest at Hatch, log `[Demo] buyback seat=1 cost=450`. After the window, the same button refuses `no live window`. Prep after survival still EMBARK.
 
-## Open
+## Watch
 
-All three items in *Blocked on*, all owner Zo. This file exists because the
-work is specifiable enough to name its blockers, not because it is startable.
+`CreditBankedClientRpc` already mutates owner Meta outside `ShipCommands`. Buy-back spend is the same shape. `NetRunMirror.Phase` is `AssaultState`, not `RunPhase`.
 
 ## Depends on / Unblocks
 
-Depends: `M79` (the zone-2 bank window this rides — **built and closed
-2026-08-20**, so the window exists), `M49`/`M57` (down-and-wait). Unblocks:
-nothing queued. `M80` explicitly does **not** depend on this — its finale
-criterion for buy-back was withdrawn 2026-08-20 so the finale is not held
-hostage to the wallet ruling; if this lands first the finale inherits it, since
-it is the same bank-window rule. `M86` names buy-back as the eventual reversible path
-for a downed body's look, and reads this milestone when it lands.
+Depends: `M79` (built), `M49`/`M57` (down-and-wait). Unblocks: nothing queued.
+`M80` does not depend on this. `M86` reads this when it lands. Door parity is `M95`.

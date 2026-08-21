@@ -32,8 +32,11 @@ namespace GatekeepersProtocol.Sim
         Rush = 6,
         Ping = 7,
         Cloak = 8,
-        FieldRearm = 9,
-        Redeploy = 10,
+        // 9 and 10 briefly named FieldRearm / Redeploy while FORGE was authored against
+        // decoys. Neither reached a save — only protocol and passive ids are persisted, and
+        // crew/personal ids are always derived — so the numbers are reused, not retired.
+        FieldDeploy = 9,
+        Overcharge = 10,
         MagnetHands = 11,
     }
 
@@ -50,12 +53,24 @@ namespace GatekeepersProtocol.Sim
         /// so has no multiplier to name.</summary>
         public const float GhostAcquisitionMul = 0.70f;
 
-        /// <summary>FORGE. The channel spends unbanked at a fixed clock and buys hardware HP;
-        /// carrying a machine costs pace.</summary>
-        public const float FieldRearmSalvagePerSecond = 20f;
-        public const float FieldRearmHpPerSalvage = 1.5f;
-        public const float FieldRearmReachMetres = 4f;
-        public const float RedeployCarrySpeedMul = 0.6f;
+        /// <summary>FORGE's turret. It is the only player-owned thing that deals damage, so its
+        /// output is stated here as damage per shot and shots per second rather than a DPS
+        /// figure — the two are tuned separately and a single number hides which one moved.</summary>
+        public const float TurretMaxHp = 150f;
+        public const float TurretRangeMetres = 18f;
+        public const float TurretDamagePerShot = 6f;
+        public const float TurretShotsPerSecond = 2f;
+
+        /// <summary>The aura belongs to the machine, not to a window on the caster: Boarders
+        /// near the turret fire faster for as long as it stands.</summary>
+        public const float TurretAuraRadius = 8f;
+        public const float TurretAuraFireMul = 1.35f;
+
+        /// <summary>OVERCHARGE redlines the machine. The burn is the whole cost — a full window
+        /// on a healthy turret leaves it wounded, and on a wounded one kills it.</summary>
+        public const float OverchargeTurretRateMul = 2.5f;
+        public const float OverchargeSelfFireMul = 1.4f;
+        public const float OverchargeHpPerSecond = 18f;
 
         /// <summary>PARALLEL BAYS lets a second bay stand live. STOCK and PHANTOM keep the
         /// payload's authored maxLive.</summary>
@@ -109,7 +124,7 @@ namespace GatekeepersProtocol.Sim
             {
                 case BoarderProtocolId.Default: return BoarderAbilityId.Barrage;
                 case BoarderProtocolId.Veil: return BoarderAbilityId.Ping;
-                case BoarderProtocolId.Forge: return BoarderAbilityId.FieldRearm;
+                case BoarderProtocolId.Forge: return BoarderAbilityId.FieldDeploy;
                 default: return BoarderAbilityId.None;
             }
         }
@@ -120,7 +135,7 @@ namespace GatekeepersProtocol.Sim
             {
                 case BoarderProtocolId.Default: return BoarderAbilityId.Rush;
                 case BoarderProtocolId.Veil: return BoarderAbilityId.Cloak;
-                case BoarderProtocolId.Forge: return BoarderAbilityId.Redeploy;
+                case BoarderProtocolId.Forge: return BoarderAbilityId.Overcharge;
                 default: return BoarderAbilityId.None;
             }
         }
@@ -195,12 +210,13 @@ namespace GatekeepersProtocol.Sim
             {
                 case BoarderAbilityId.Anchor:
                 case BoarderAbilityId.Barrage:
-                case BoarderAbilityId.Ping:
-                case BoarderAbilityId.FieldRearm: return 8f;
+                case BoarderAbilityId.Ping: return 8f;
                 case BoarderAbilityId.Bulkhead:
                 case BoarderAbilityId.Rush:
                 case BoarderAbilityId.Cloak:
-                case BoarderAbilityId.Redeploy: return 6f;
+                case BoarderAbilityId.Overcharge: return 6f;
+                // FIELD DEPLOY is instant: the turret's life is its uptime, not a window.
+                case BoarderAbilityId.FieldDeploy: return 0f;
                 default: return 0f;
             }
         }
@@ -212,11 +228,11 @@ namespace GatekeepersProtocol.Sim
                 case BoarderAbilityId.Anchor:
                 case BoarderAbilityId.Barrage:
                 case BoarderAbilityId.Ping:
-                case BoarderAbilityId.FieldRearm: return 30f;
+                case BoarderAbilityId.FieldDeploy: return 30f;
                 case BoarderAbilityId.Bulkhead:
                 case BoarderAbilityId.Rush:
                 case BoarderAbilityId.Cloak:
-                case BoarderAbilityId.Redeploy: return 40f;
+                case BoarderAbilityId.Overcharge: return 40f;
                 default: return 0f;
             }
         }
@@ -238,15 +254,13 @@ namespace GatekeepersProtocol.Sim
             return v;
         }
 
-        /// <summary>Anchor: slow multiplier (0.5). Ghost: acquisition range multiplier (0.70).
-        /// Redeploy: carry speed multiplier (0.6).</summary>
+        /// <summary>Anchor: slow multiplier (0.5). Ghost: acquisition range multiplier (0.70).</summary>
         public static float Magnitude(BoarderAbilityId id)
         {
             switch (id)
             {
                 case BoarderAbilityId.Anchor: return 0.5f;
                 case BoarderAbilityId.Ghost: return GhostAcquisitionMul;
-                case BoarderAbilityId.Redeploy: return RedeployCarrySpeedMul;
                 default: return 0f;
             }
         }
@@ -261,37 +275,47 @@ namespace GatekeepersProtocol.Sim
             }
         }
 
+        /// <summary>One self source times one zone source. Zone sources SET rather than stack
+        /// (the strongest wins) and are capped; self sources are per-Boarder and exclusive by
+        /// construction, since a Boarder has one protocol. Rush and Overcharge are self;
+        /// Barrage fields and turret auras are zone.</summary>
+        public static float ComposeFireMul(float selfMul, float zoneMul)
+        {
+            if (selfMul < 1f) selfMul = 1f;
+            if (zoneMul < 1f) zoneMul = 1f;
+            if (zoneMul > BarrageMulCap) zoneMul = BarrageMulCap;
+            return selfMul * zoneMul;
+        }
+
         /// <summary>Rush is protocolMul. Barrage window and live fields SET (cap 2), then
         /// multiply. Caster in both = 3.0; overlapping plants stay 2.0.</summary>
         public static float ComposeFireMul(bool rushOpen, bool barrageWindow, float fieldMul)
         {
-            float protocolMul = rushOpen ? RushFireMul : 1f;
-            float barrageMul = barrageWindow ? BarrageFireMul : 1f;
-            if (fieldMul > barrageMul) barrageMul = fieldMul;
-            if (barrageMul > BarrageMulCap) barrageMul = BarrageMulCap;
-            if (barrageMul < 1f) barrageMul = 1f;
-            return protocolMul * barrageMul;
+            float zone = barrageWindow ? BarrageFireMul : 1f;
+            if (fieldMul > zone) zone = fieldMul;
+            return ComposeFireMul(rushOpen ? RushFireMul : 1f, zone);
         }
 
         public static float Radius(BoarderAbilityId id)
         {
             if (id == BoarderAbilityId.Anchor || id == BoarderAbilityId.Barrage) return 8f;
+            if (id == BoarderAbilityId.FieldDeploy) return TurretAuraRadius;
             return 0f;
         }
 
-        /// <summary>Hardware HP a span of channel buys. Salvage spent is the clock.</summary>
-        public static float RearmHpForSeconds(float seconds)
+        /// <summary>Seconds between turret shots at the given rate multiplier. OVERCHARGE is
+        /// the only caller that passes anything but 1.</summary>
+        public static float TurretShotInterval(float rateMul)
         {
-            if (seconds <= 0f) return 0f;
-            return seconds * FieldRearmSalvagePerSecond * FieldRearmHpPerSalvage;
+            float rate = TurretShotsPerSecond * (rateMul > 0f ? rateMul : 1f);
+            return rate <= 0f ? 0f : 1f / rate;
         }
 
-        /// <summary>Unbanked the channel spends over a span, clamped to what is carried.</summary>
-        public static float RearmSpendForSeconds(float seconds, float unbanked)
+        /// <summary>Turret life OVERCHARGE burns over a span. The machine pays for the spike.</summary>
+        public static float OverchargeBurnForSeconds(float seconds)
         {
-            if (seconds <= 0f || unbanked <= 0f) return 0f;
-            float want = seconds * FieldRearmSalvagePerSecond;
-            return want > unbanked ? unbanked : want;
+            if (seconds <= 0f) return 0f;
+            return seconds * OverchargeHpPerSecond;
         }
 
         public static string DisplayName(BoarderAbilityId id)
@@ -306,8 +330,8 @@ namespace GatekeepersProtocol.Sim
                 case BoarderAbilityId.Rush: return "Rush";
                 case BoarderAbilityId.Ping: return "Ping";
                 case BoarderAbilityId.Cloak: return "Cloak";
-                case BoarderAbilityId.FieldRearm: return "Field Rearm";
-                case BoarderAbilityId.Redeploy: return "Redeploy";
+                case BoarderAbilityId.FieldDeploy: return "Field Deploy";
+                case BoarderAbilityId.Overcharge: return "Overcharge";
                 case BoarderAbilityId.MagnetHands: return "Magnet Hands";
                 default: return "";
             }
@@ -441,6 +465,19 @@ namespace GatekeepersProtocol.Sim
             if (window <= 0f) return false;
             WindowRemaining = window;
             _cooldownDuration = cooldown < 0f ? 0f : cooldown;
+            SecondsSatReady = 0f;
+            return true;
+        }
+
+        /// <summary>Spend the slot on an instant act — no window, straight to cooldown. FIELD
+        /// DEPLOY is the case: the turret's own life is its uptime, so a window would be a
+        /// second clock claiming to mean something it does not.</summary>
+        public bool TrySpendInstant(float cooldown)
+        {
+            if (!IsReady) return false;
+            WindowRemaining = 0f;
+            _cooldownDuration = cooldown < 0f ? 0f : cooldown;
+            CooldownRemaining = _cooldownDuration;
             SecondsSatReady = 0f;
             return true;
         }

@@ -47,7 +47,7 @@ cost decision between four authored candidates. The audit that decided it:
 | Sheet | Crew / Personal | Substrate that already exists | Genuinely new |
 |---|---|---|---|
 | **VEIL** | Ping / Cloak | `PlayerHealth.AcquisitionMul` (built, only ever set to `1f`), `PlayerRegistry.NearestAlive` as the targeting list, `EnemyGatekeeper.Provoke` for the pull | the through-walls render |
-| **FORGE** | Field Rearm / Redeploy | `DecoyBay`, `DecoyState`, unbanked wallets, `FirstPersonController` | channel + carry state |
+| **FORGE** | Field Deploy / Overcharge | `DecoyBay` as the shape to copy, `Damageable`, the spawner ledger, `WaveSpawner`'s death path for kill credit | the turret itself |
 | **AEGIS** | Anchor / Bulkhead | `AnchorField.cs` complete, `NotifyBulkheadConsumed`, `ArmBulkhead` | little — but see below |
 | **LEDGER** | Writ / Recall | unbanked wallets, the Hatch | world salvage piles, through-walls render, per-enemy mark, in-Bastion teleport |
 
@@ -58,10 +58,44 @@ for effects that are not the same effect with different numbers, and two planted
 rooted zones is the reskin that criterion exists to catch. **LEDGER is the most
 expensive**, needing four subsystems this milestone's *Do not build* list never
 budgeted for. VEIL and FORGE are the pair whose crew abilities are each a different
-*shape* — a windowed pulse and a rooted channel against Default's planted zone.
+*shape* — a windowed pulse and a placed machine against Default's planted zone.
 
 VEIL also carries the brainstorm's stated pacing: *"pacing starts at VEIL"*, and
 VEIL's deed is named there as the first to ship.
+
+### FORGE was recut on 2026-08-21, and why
+
+FORGE first shipped as **Field Rearm** (channel unbanked into a machine) and **Redeploy**
+(carry a machine and set it down). Zo rejected it, correctly: both abilities were the same
+shape — *make yourself weak while you fiddle with hardware* — and neither had a moment where
+the Boarder became stronger. That is the criterion 6 failure this milestone used to reject
+AEGIS, and the first audit missed it by checking FORGE against Default and never against
+itself.
+
+It was also the Engineer with no engine. The only deployable in the game was the decoy: a
+120 HP aggro sponge that does not shoot. The brainstorm had flagged this all along — Field
+Rearm is written *"wants UTL-H to fully matter"* and Redeploy *"wants UTL-H"* — and
+"works on decoys today" turned out to be true and thin.
+
+So the turret is built here rather than waited for, and FORGE becomes **Field Deploy** and
+**Overcharge**. Two refinements were forced by standing rules and are recorded so they are
+not re-litigated:
+
+- Zo's first wording gave allies in radius **increased damage**. Damage grants are on the
+  `M70` cut list, carried in the brainstorm. The damage is delivered instead by **the
+  turret's own gun** — the area does hit harder because a machine is shooting in it, and no
+  player weapon is granted damage.
+- Fire rate is Default's signature: Barrage already *is* "allies in radius fire faster" and
+  Rush already *is* "you fire faster". FORGE differs in **shape**, not in number. Barrage is
+  a window where the caster stands rooted and the aura is centred on *them*; Field Deploy is
+  a **destructible object** placed and walked away from, whose uptime the room decides and
+  which outlives the press. Overcharge is not a free self-buff: it refuses without a machine
+  standing, and it **costs that machine its life**.
+
+**Magnet Hands became load-bearing.** It was a sheet row with no behaviour when FORGE was
+Field Rearm / Redeploy. It is now the rule that makes the turret mortal: a Gatekeeper that
+would come for the Boarder comes for the machine instead when both are in reach. Without it
+nothing ever attacks a turret, so the passive is what buys FORGE its risk.
 
 **Deviation, recorded:** the brainstorm gives VEIL the **Sightline** passive with
 Ghost parked. This ships **Ghost** instead. Sightline renders acquisition radii
@@ -117,6 +151,10 @@ Read these before implementing; the earlier draft asserted each wrongly.
 1. **Change** `Sim/Meta/BoarderProtocol.cs`. Add `Veil = 2` and `Forge = 3` (never
    renumber, never reuse). Replace every ternary-on-Default lookup with a switch over
    all three. Append `Phantom` and `ParallelBays` to `DoctrineMode` after `Stock`.
+   Ability ids 9 and 10 briefly named `FieldRearm` / `Redeploy` during this milestone and
+   are **reused**, not retired, for `FieldDeploy` / `Overcharge`: only protocol and passive
+   ids are persisted and crew/personal ids are always derived, so neither number ever
+   reached a save.
 2. **Add** `Sim/Meta/BoarderSheets.cs` for the authored copy. The catalog is numbers
    and the sheets are prose; they change for different reasons, so they are separate
    types rather than one file split with `partial`.
@@ -129,10 +167,24 @@ Read these before implementing; the earlier draft asserted each wrongly.
    a log line per ability. Delete the unconditional `RequestBulkhead()` call. Gate
    `RushOpen` and `BarrageWindowOpen` on the **ability id**, not on the window — a
    Cloak or Redeploy window opens the same slot and must buy nothing at the gun.
-5. **Add** `Game/Player/PlayerHardwareHandling.cs` for FORGE's two verbs. Both act on
-   the same machine and hold state across frames, which is why they are one type and
-   not two, and why they are not in `PlayerProtocolAbilities` — that owns windows and
-   input, this owns the machine.
+5. **Add** `Sim/Run/TurretState.cs`, `Game/Bastion/TurretObject.cs` and
+   `Game/Player/PlayerTurretControl.cs`. The turret is spawned **by the ability**, not
+   bought: it is not a `PayloadId`, has no FABRICATION row, and does not touch the drone
+   bay or the purchase economy. Its numbers live beside the other ability constants. The
+   turret is the first player-owned thing that deals damage; it goes through
+   `Damageable.TakeDamage` with the placing Boarder as the source, so kill credit reaches
+   Unbanked through `WaveSpawner`'s existing death path and no wallet code is touched.
+   `PlayerTurretControl` is a separate type from `PlayerProtocolAbilities` because that one
+   owns windows, input and log lines while this owns a thing in the world with life of its
+   own — not to get a file under its cap.
+
+   **Field Deploy is instant**, not a window: the turret's own life is its uptime, and a
+   window would be a second clock claiming to mean something it does not. That is what
+   `BoarderAbilityState.TrySpendInstant` exists for.
+
+8. **Change** `Game/Enemies/EnemyGatekeeper.Targeting.cs` and its `Attack()` for MAGNET
+   HANDS: a Gatekeeper that would chase the Boarder chases their turret instead when both
+   are in reach, and a swing that lands on a machine spends the Hatch-damage figure.
 6. **Change** `Game/Ship/CrewQuartersStation` to fill its rows from `ShopProtocols()`
    and pad the remainder with Coming Soon copy, so a protocol leaves the stub list by
    entering the catalog rather than by being edited in two places.
@@ -157,6 +209,12 @@ Named so they read as decisions rather than omissions:
   `MaxLiveUnder` is in the catalog, tested, and unconsumed by `DecoyBay`.
 - **Twist slots and second passives.** Growth levers, one at a time, behind the
   pick-rate audit. Not this slice.
+- **The turret as bought hardware.** No `PayloadId`, no FABRICATION shelf row, no charges,
+  no UTL-H spec. Field Deploy's cooldown is what rations it. The brainstorm's Gunsmith
+  doctrine and its hand-fed magazine still wait on an ammo reserve that does not exist.
+- **A repair verb for the turret.** Field Rearm's channel was written and then cut with the
+  recut; a wounded machine currently has no way back. It is the obvious home for that
+  channel when a later slice wants it.
 - **Server paths for the new verbs.** Barrage still routes through `NetVerbs`; Ping,
   Cloak, Field Rearm and Redeploy run host-side only. Criterion 8 is what tests
   whether that is enough.
@@ -187,15 +245,16 @@ Named so they read as decisions rather than omissions:
 
 **Playthrough path**: Play, Continue, CREW, claim VEIL, embark, press `H` at a
 gatekeeper and watch it lose you; press `G` and watch the room turn. Repeat with
-FORGE: place a decoy, let it take damage, hold `G` beside it to pour unbanked into it,
-then `H` to pick it up and walk it somewhere better.
+FORGE: press `G` to stand a turret, stand inside its ring and feel the gun speed up, then
+press `H` and watch the turret redline — and watch its life fall while it does.
 
 ## Usable, or it did not ship
 
 **Driven**: claiming at CREW, and `G` / `H` in a Run. **Shown**: three rows at the
-CREW station and a sheet that changes with the claim. **Reads back**: the sheet text,
-the ability bar, and one log line per ability — Field Rearm's names the salvage spent
-and the HP bought; Redeploy's names the machine's life as it is lifted and set down.
+CREW station, a sheet that changes with the claim, and a turret standing in the room that
+tints hot while it is overcharged. **Reads back**: the sheet text, the ability bar, and one
+log line per ability — Field Deploy's names the machine's life and its aura; Overcharge's
+names both multipliers, and a separate line fires when the burn is what killed the turret.
 
 **Where it falls short**: Ping's *Shown* is the log line and nothing in the world
 until the render pass lands. Called out above rather than left silent.
@@ -208,4 +267,7 @@ until the render pass lands. Called out above rather than left silent.
 
 A fourth protocol. Protocol purchase costs. Passive swapping UI beyond what the sheet
 already does. The `Bulkhead` handler — neither chosen protocol takes it. Twists.
-Sightline's in-world radii. LEDGER's world piles.
+Sightline's in-world radii. LEDGER's world piles. A second turret. Turret upgrades.
+**Making the decoy destructible** — `DecoyObject.ApplyDamage` has no caller and decoys are
+currently invulnerable lures; that is a real pre-existing defect, it is filed separately,
+and it is deliberately not fixed inside this milestone.

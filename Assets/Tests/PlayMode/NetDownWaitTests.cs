@@ -180,7 +180,6 @@ namespace GatekeepersProtocol.PlayTests
             yield return WaitForConditionOrTimeOut(() =>
                 serverAvatar.WaitingOnShip.Value && serverHealth.IsDead);
             AssertOnTimeout("lethal damage did not set WaitingOnShip");
-            long unbankedAtDown = _gc.Sim.TotalUnbanked;
 
             LogAssert.Expect(LogType.Log, "[Demo] buyback refused — no live window");
             clientAvatar.RequestBuyBack();
@@ -188,9 +187,11 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(serverAvatar.WaitingOnShip.Value, "Terminal buy-back is refused");
             Assert.AreEqual(0L, GameSession.Meta.BankedSalvage, "refuse must not debit");
 
+            _gc.Sim.SeedBankPile(100L, 1);
             _gc.Sim.TriggerDraw(WaveMode.HatchBank);
             Assert.AreEqual(AssaultState.Assault, _gc.Sim.Assault);
             Assert.AreEqual(WaveMode.HatchBank, _gc.Sim.Mode);
+            long guestUnbanked = _gc.Sim.UnbankedOf(serverAvatar.Slot.Value);
 
             LogAssert.Expect(LogType.Log, "[Demo] buyback refused — cannot afford");
             clientAvatar.RequestBuyBack();
@@ -213,7 +214,7 @@ namespace GatekeepersProtocol.PlayTests
                 && !serverHealth.IsDead
                 && serverHealth.Hp >= serverHealth.MaxHp - 0.01f);
             AssertOnTimeout("Hatch-bank Assault buy-back did not restore HP");
-            Assert.AreEqual(unbankedAtDown, _gc.Sim.TotalUnbanked,
+            Assert.AreEqual(guestUnbanked, _gc.Sim.UnbankedOf(serverAvatar.Slot.Value),
                 "buy-back must not touch Unbanked");
             Assert.AreEqual(0L, GameSession.Meta.BankedSalvage,
                 "owner spend debit the reported purse");
@@ -225,6 +226,7 @@ namespace GatekeepersProtocol.PlayTests
         public IEnumerator BuyBack_HostAttempt_RefusedNamed()
         {
             yield return BootHostRun();
+            long bankSnap = GameSession.Meta != null ? GameSession.Meta.BankedSalvage : 0L;
             var serverGo = SpawnObject(_avatarPrefab, m_ServerNetworkManager);
             var serverNet = serverGo.GetComponent<NetworkObject>();
             yield return WaitForSpawnedOnAllOrTimeOut(serverNet);
@@ -241,6 +243,8 @@ namespace GatekeepersProtocol.PlayTests
             yield return WaitForTicks(m_ServerNetworkManager, 8);
             Assert.IsFalse(serverAvatar.WaitingOnShip.Value);
             Assert.AreEqual(RunPhase.Tethered, _gc.Sim.Phase);
+            if (GameSession.Meta != null)
+                GameSession.Meta.BankedSalvage = bankSnap;
         }
 
         [UnityTest]

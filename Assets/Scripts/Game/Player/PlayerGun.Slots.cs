@@ -34,10 +34,18 @@ namespace GatekeepersProtocol.Game
                 {
                     if (_protocolAbilities == null)
                         _protocolAbilities = GetComponentInParent<PlayerProtocolAbilities>();
-                    bool rush = _protocolAbilities != null && _protocolAbilities.RushOpen;
-                    bool barrage = _protocolAbilities != null && _protocolAbilities.BarrageWindowOpen;
-                    float field = BarrageField.FireMulAt(transform.position);
-                    rate *= BoarderProtocol.ComposeFireMul(rush, barrage, field);
+                    float self = _protocolAbilities != null
+                        ? _protocolAbilities.SelfFireMul
+                        : 1f;
+                    // Zone sources SET rather than stack: the strongest aura in reach wins,
+                    // so standing in two of them is worth no more than the better one.
+                    float zone = BarrageField.FireMulAt(transform.position);
+                    float turret = TurretObject.FireMulAt(transform.position);
+                    if (turret > zone) zone = turret;
+                    if (_protocolAbilities != null && _protocolAbilities.BarrageWindowOpen
+                        && BoarderProtocol.BarrageFireMul > zone)
+                        zone = BoarderProtocol.BarrageFireMul;
+                    rate *= BoarderProtocol.ComposeFireMul(self, zone);
                 }
                 return Mathf.Max(0.01f, rate);
             }

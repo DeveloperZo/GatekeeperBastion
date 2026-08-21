@@ -7,7 +7,7 @@ namespace GatekeepersProtocol.Game
     /// <summary>LOCAL-OWNER: the equipped protocol's actives on G/H. Ids pushed at Bind — never
     /// serialized (gotcha 1). This type owns the two windows, the input and the log lines;
     /// the effects that hold state of their own live in their own types
-    /// (<see cref="PlayerHardwareHandling"/> for FORGE). Cooldowns run here; Barrage plants go
+    /// (<see cref="TurretObject"/> for FORGE). Cooldowns run here; Barrage plants go
     /// server-side via NetVerbs when a session is listening.</summary>
     public sealed class PlayerProtocolAbilities : MonoBehaviour
     {
@@ -16,7 +16,7 @@ namespace GatekeepersProtocol.Game
         GameController _game;
         FirstPersonController _fpc;
         PlayerHealth _health;
-        PlayerHardwareHandling _hardware;
+        PlayerTurretControl _turretControl;
         BoarderProtocolId _protocol = BoarderProtocolId.None;
         BoarderAbilityId _passive = BoarderAbilityId.None;
         BoarderAbilityState _crew;
@@ -31,9 +31,9 @@ namespace GatekeepersProtocol.Game
         public BoarderAbilityId CrewAbility => BoarderProtocol.CrewAbilityOf(_protocol);
         public BoarderAbilityId PersonalAbility => BoarderProtocol.PersonalAbilityOf(_protocol);
 
-        /// <summary>Fire-rate windows belong to Default alone. Gated on the ability id, not on
-        /// the window: a VEIL Cloak and a FORGE Redeploy open the same slot and must not
-        /// multiply anyone's fire rate.</summary>
+        /// <summary>Barrage's zone belongs to Default alone. Gated on the ability id, not on
+        /// the window: Cloak and Overcharge open the same slots and must not hand anyone
+        /// Barrage's or Rush's multiplier.</summary>
         public bool BarrageWindowOpen =>
             CrewAbility == BoarderAbilityId.Barrage && _crew.WindowOpen;
 
@@ -47,9 +47,32 @@ namespace GatekeepersProtocol.Game
         public bool CloakOpen =>
             PersonalAbility == BoarderAbilityId.Cloak && _personal.WindowOpen;
 
+        public bool OverchargeOpen =>
+            PersonalAbility == BoarderAbilityId.Overcharge && _personal.WindowOpen;
+
+        /// <summary>This Boarder's own fire-rate multiplier. Exclusive by construction — one
+        /// protocol means one personal ability — so the gun asks for a number, not a set of
+        /// flags it has to combine correctly.</summary>
+        public float SelfFireMul
+        {
+            get
+            {
+                if (RushOpen) return BoarderProtocol.RushFireMul;
+                if (OverchargeOpen) return BoarderProtocol.OverchargeSelfFireMul;
+                return 1f;
+            }
+        }
+
+        /// <summary>FORGE's standing machine, or null. Target selection reads it for MAGNET
+        /// HANDS; the gun never does — the aura is positional, not owner-scoped.</summary>
+        public TurretObject Turret => _turretControl != null ? _turretControl.Live : null;
+
         public string CrewName => BoarderProtocol.DisplayName(CrewAbility);
         public string PersonalName => BoarderProtocol.DisplayName(PersonalAbility);
         public string PassiveName => BoarderProtocol.DisplayName(_passive);
+
+        /// <summary>The standing rule this Boarder wears. Target selection reads it.</summary>
+        public BoarderAbilityId Passive => _passive;
         public float CrewWindow => _crew.WindowRemaining;
         public float CrewCooldown => _crew.CooldownRemaining;
         public float PersonalWindow => _personal.WindowRemaining;
@@ -64,9 +87,9 @@ namespace GatekeepersProtocol.Game
             _passive = BoarderProtocol.OwnsPassive(_protocol, passive) ? passive : BoarderAbilityId.None;
             if (_fpc == null) _fpc = GetComponent<FirstPersonController>();
             if (_health == null) _health = GetComponent<PlayerHealth>();
-            if (_hardware == null) _hardware = GetComponent<PlayerHardwareHandling>();
-            if (_hardware == null) _hardware = gameObject.AddComponent<PlayerHardwareHandling>();
-            _hardware.Bind(game);
+            if (_turretControl == null) _turretControl = GetComponent<PlayerTurretControl>();
+            if (_turretControl == null) _turretControl = gameObject.AddComponent<PlayerTurretControl>();
+            _turretControl.Bind(game, _fpc);
             ApplyPassive();
         }
 
@@ -99,9 +122,13 @@ namespace GatekeepersProtocol.Game
             if (crewWasOpen && !_crew.WindowOpen) CloseCrewEffect(true);
             if (personalWasOpen && !_personal.WindowOpen) ClosePersonalEffect(true);
 
-            // The channel runs for as long as its window does, and can shut itself early.
-            if (_crew.WindowOpen && CrewAbility == BoarderAbilityId.FieldRearm && _hardware != null)
-                _hardware.TickRearm(dt);
+            // Overcharge burns the machine for as long as its window runs, and can kill it
+            // mid-window — the window then has nothing left to redline.
+            if (OverchargeOpen && _turretControl != null && _turretControl.TickOvercharge(dt))
+            {
+                _loggedPersonalExpiry = false;
+                _personal.EndWindowEarly();
+            }
 
             if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
             if (Controls.Down(ControlId.CrewAbility)) OnCrew();
@@ -162,11 +189,12 @@ namespace GatekeepersProtocol.Game
 
             if (_crew.WindowOpen)
             {
-                // Barrage and Field Rearm are rooted holds: pressing again is how you leave.
-                // Ping is a pulse already spent — there is nothing to stand down from.
-                if (id == BoarderAbilityId.Ping)
+                // Barrage is a rooted hold: pressing again is how you leave. Ping is a pulse
+                // already spent. Field Deploy never opens a window at all.
+                if (id != BoarderAbilityId.Barrage)
                 {
-                    Log.Event(Tag, "crew refused — Ping window already running");
+                    Log.Event(Tag, "crew refused — " + BoarderProtocol.DisplayName(id)
+                        + " window already running");
                     return;
                 }
                 float sat = _crew.SecondsSatReady;
@@ -182,20 +210,20 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
-            // Field Rearm can refuse on its own terms (nothing in reach, nothing to spend);
-            // ask before the window is spent, or the cooldown eats a press that did nothing.
-            if (id == BoarderAbilityId.FieldRearm)
-            {
-                if (_hardware == null || !_hardware.TryBeginRearm()) return;
-            }
-
             float ready = _crew.SecondsSatReady;
-            if (!_crew.TryActivate(BoarderProtocol.Window(id), BoarderProtocol.Cooldown(id)))
+
+            // Field Deploy is instant: the turret's life is its uptime, so the slot goes
+            // straight to cooldown rather than holding a window that means nothing.
+            if (id == BoarderAbilityId.FieldDeploy)
             {
-                if (id == BoarderAbilityId.FieldRearm && _hardware != null)
-                    _hardware.EndRearm("window refused");
+                if (_turretControl == null) return;
+                if (!_crew.TrySpendInstant(BoarderProtocol.Cooldown(id))) return;
+                _turretControl.Deploy(ready);
                 return;
             }
+
+            if (!_crew.TryActivate(BoarderProtocol.Window(id), BoarderProtocol.Cooldown(id)))
+                return;
             _loggedCrewExpiry = true;
 
             switch (id)
@@ -207,9 +235,6 @@ namespace GatekeepersProtocol.Game
                 case BoarderAbilityId.Ping:
                     PulsePing(ready);
                     break;
-                case BoarderAbilityId.FieldRearm:
-                    Log.Event(Tag, "crew Field Rearm sat-ready=" + ready.ToString("0.##"));
-                    break;
             }
         }
 
@@ -220,9 +245,6 @@ namespace GatekeepersProtocol.Game
             {
                 case BoarderAbilityId.Barrage:
                     Unplant();
-                    break;
-                case BoarderAbilityId.FieldRearm:
-                    if (_hardware != null) _hardware.EndRearm(expired ? "window end" : "stood down");
                     break;
             }
             if (expired && _loggedCrewExpiry)
@@ -268,14 +290,6 @@ namespace GatekeepersProtocol.Game
 
             if (_personal.WindowOpen)
             {
-                // Redeploy is a carry you end by putting the machine down; the others are
-                // windows that simply run out.
-                if (id == BoarderAbilityId.Redeploy)
-                {
-                    _personal.EndWindowEarly();
-                    ClosePersonalEffect(false);
-                    return;
-                }
                 Log.Event(Tag, "self refused — window open");
                 return;
             }
@@ -285,18 +299,17 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
-            if (id == BoarderAbilityId.Redeploy)
+            // Overcharge has a hard precondition: a machine must be standing to redline.
+            // Ask before the window is spent, or the cooldown eats a press that did nothing.
+            if (id == BoarderAbilityId.Overcharge && Turret == null)
             {
-                if (_hardware == null || !_hardware.TryLift()) return;
+                Log.Event(Tag, "self Overcharge refused — no turret standing");
+                return;
             }
 
             float ready = _personal.SecondsSatReady;
             if (!_personal.TryActivate(BoarderProtocol.Window(id), BoarderProtocol.Cooldown(id)))
-            {
-                if (id == BoarderAbilityId.Redeploy && _hardware != null)
-                    _hardware.ForceSetDown();
                 return;
-            }
             _loggedPersonalExpiry = true;
 
             switch (id)
@@ -309,8 +322,11 @@ namespace GatekeepersProtocol.Game
                     Log.Event(Tag, "self Cloak sat-ready=" + ready.ToString("0.##")
                         + " — off every targeting list");
                     break;
-                case BoarderAbilityId.Redeploy:
-                    Log.Event(Tag, "self Redeploy sat-ready=" + ready.ToString("0.##"));
+                case BoarderAbilityId.Overcharge:
+                    if (_turretControl != null) _turretControl.SetOvercharged(true);
+                    Log.Event(Tag, "self Overcharge sat-ready=" + ready.ToString("0.##")
+                        + " — turret x" + BoarderProtocol.OverchargeTurretRateMul.ToString("0.##")
+                        + ", gun x" + BoarderProtocol.OverchargeSelfFireMul.ToString("0.##"));
                     break;
             }
         }
@@ -323,8 +339,8 @@ namespace GatekeepersProtocol.Game
                 case BoarderAbilityId.Cloak:
                     if (_health != null) _health.SetCloaked(false);
                     break;
-                case BoarderAbilityId.Redeploy:
-                    if (_hardware != null) _hardware.ForceSetDown();
+                case BoarderAbilityId.Overcharge:
+                    if (_turretControl != null) _turretControl.SetOvercharged(false);
                     break;
             }
             if (expired && _loggedPersonalExpiry)

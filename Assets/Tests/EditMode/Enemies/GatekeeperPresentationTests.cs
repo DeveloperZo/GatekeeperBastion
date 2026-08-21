@@ -26,12 +26,29 @@ namespace GatekeepersProtocol.Tests
             Assert.AreNotEqual(h, t, "Hunter and Thief wrappers share a GUID");
         }
 
+        /// <summary>Footprints are the authored spread (1 : 0.85 : 1.4) times SceneBuilder's
+        /// BodyScale. The spread is the design and does not move; BodyScale is one number and
+        /// moved once, 1.0 → 0.75 (Zo, 2026-08-20), to give the finale elite room to tower.</summary>
         [Test]
-        public void EnemyPrefabs_KeepPreSliceAgentFootprint()
+        public void EnemyPrefabs_KeepTheAuthoredAgentFootprint()
         {
-            AssertAgent("Assets/Prefabs/EnemyGatekeeper.prefab", 0.4f, 2f);
-            AssertAgent("Assets/Prefabs/HunterGatekeeper.prefab", 0.4f * 0.85f, 2f * 0.85f);
-            AssertAgent("Assets/Prefabs/ThiefGatekeeper.prefab", 0.4f * 1.4f, 2f * 1.4f);
+            const float body = 0.75f;
+            AssertAgent("Assets/Prefabs/EnemyGatekeeper.prefab", 0.4f * body, 2f * body);
+            AssertAgent("Assets/Prefabs/HunterGatekeeper.prefab", 0.4f * 0.85f * body, 2f * 0.85f * body);
+            AssertAgent("Assets/Prefabs/ThiefGatekeeper.prefab", 0.4f * 1.4f * body, 2f * 1.4f * body);
+        }
+
+        /// <summary>The rule those numbers serve, stated once so a future rescale cannot slip
+        /// past by moving all three literals together: no kind is baked wider than the carve the
+        /// Bastion navmesh was built with, because a gatekeeper wider than the carve wedges in
+        /// the doorway it is walking at.</summary>
+        [Test]
+        public void EnemyPrefabs_StayInsideTheBakedAgentRadius()
+        {
+            const float bakedAgentRadius = 0.5f; // ProjectSettings/NavMeshAreas.asset
+            AssertAgentRadiusUnder("Assets/Prefabs/EnemyGatekeeper.prefab", bakedAgentRadius);
+            AssertAgentRadiusUnder("Assets/Prefabs/HunterGatekeeper.prefab", bakedAgentRadius);
+            AssertAgentRadiusUnder("Assets/Prefabs/ThiefGatekeeper.prefab", bakedAgentRadius);
         }
 
         // Colour is the tutorial: each kind glows its own palette tint. Exact colours live in
@@ -97,6 +114,17 @@ namespace GatekeepersProtocol.Tests
             float gotH = float.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
             Assert.AreEqual(radius, gotR, 1e-4f, prefabPath + " radius");
             Assert.AreEqual(height, gotH, 1e-4f, prefabPath + " height");
+        }
+
+        static void AssertAgentRadiusUnder(string prefabPath, float bakedAgentRadius)
+        {
+            string yaml = File.ReadAllText(Path.GetFullPath(prefabPath));
+            var m = AgentBlock.Match(yaml);
+            Assert.IsTrue(m.Success, "NavMeshAgent block missing in " + prefabPath);
+            float gotR = float.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
+            Assert.LessOrEqual(gotR, bakedAgentRadius,
+                prefabPath + " is baked wider than the navmesh carve (" + bakedAgentRadius +
+                "); it will wedge rather than path.");
         }
     }
 }

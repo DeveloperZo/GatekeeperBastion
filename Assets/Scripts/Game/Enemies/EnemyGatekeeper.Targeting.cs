@@ -31,6 +31,8 @@ namespace GatekeepersProtocol.Game
         /// <summary>Shot by someone: hunt them, and pull the neighbours in with us.</summary>
         void OnDamaged(Transform source)
         {
+            // Presentation: flinch even when Provoke refuses (a Thief still staggers).
+            if (_animator != null) _animator.SetTrigger(AnimHitReact);
             // A Thief absorbs this and does not change: not its target, not its speed, and it does
             // not shout. Provoke() is the single gate, so there is no second path to miss.
             Provoke(source, shout: true);
@@ -157,6 +159,33 @@ namespace GatekeepersProtocol.Game
                     _standPoint = null;
                 }
             }
+
+            // MAGNET HANDS: with the passive worn, a Boarder's own machine outranks the
+            // Boarder whenever both are in reach — which is what "ambiguous" means here. It
+            // is also the only way a turret is ever attacked, so the passive is what makes
+            // FORGE's hardware mortal rather than an invulnerable emplacement.
+            _turretTarget = null;
+            _chasingTurret = false;
+            if (_chasingPlayer && _player != null && PrefersHardware(_player))
+            {
+                var machine = TurretObject.NearestAlive(
+                    transform.position, GatekeepersProtocol.Sim.BoarderProtocol.TurretAuraRadius);
+                if (machine != null)
+                {
+                    _turretTarget = machine;
+                    _chasingTurret = true;
+                    _chasingPlayer = false;
+                    _standPoint = null;
+                }
+            }
+        }
+
+        /// <summary>Does this Boarder wear MAGNET HANDS? Read per retarget, not per frame.</summary>
+        static bool PrefersHardware(PlayerHealth player)
+        {
+            var abilities = player.GetComponent<PlayerProtocolAbilities>();
+            return abilities != null
+                && abilities.Passive == GatekeepersProtocol.Sim.BoarderAbilityId.MagnetHands;
         }
 
         // Resolved ONCE per gatekeeper, from wherever it first wanted the hatch.
@@ -191,6 +220,11 @@ namespace GatekeepersProtocol.Game
         bool TryGetGoal(out Vector3 goal)
         {
             // Unity-null-safe on every access: both targets can be destroyed between retargets.
+            if (_chasingTurret && _turretTarget != null && _turretTarget.IsAlive)
+            {
+                goal = _turretTarget.transform.position;
+                return true;
+            }
             if (_chasingDecoy && _decoyTarget != null && _decoyTarget.IsAlive)
             {
                 goal = _decoyTarget.transform.position;

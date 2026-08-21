@@ -398,15 +398,9 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
-        /// <summary>REDEPLOY: a Boarder carrying a machine has no hand for the gun. Pushed by
-        /// <see cref="PlayerHardwareHandling"/>, never serialized.</summary>
-        public bool HandsFull { get; set; }
-
         bool CanFire()
         {
             var gc = _game;
-            if (HandsFull)
-                return Refuse("carrying hardware — both hands are on the machine", false);
             // The Ship is weapons-holstered except the demo's wake fight, and only once the
             // MK-1 is in hand — unarmed is unarmed, the improvised cutter included.
             if (!SceneFlow.InCombatScene && gc == null && !DemoShipFight.CanFireOnShip)

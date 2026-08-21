@@ -570,6 +570,7 @@ public static class Docgen
         sb.AppendLine("| withdraw | " + N(HatchBank.WithdrawPerSecond) + " salvage/s |");
         sb.AppendLine("| returned keeps | " + N(HatchBank.ReturnedKeepShare * 100f) +
                       "% of leftover unbanked (Lost wipes it all) |");
+        sb.AppendLine("| buy-back | " + HatchBank.BuyBackCost + " banked |");
         sb.AppendLine();
         sb.AppendLine("| Waves carried | convert | Hatch Wave | bodies at intensity 0 |");
         sb.AppendLine("|---|---|---|---|");
