@@ -234,7 +234,7 @@ namespace GatekeepersProtocol.Game
             bool bought;
             switch (track)
             {
-                case UpgradeTrack.HatchArmor: bought = MetaUpgrades.Buy(m, ref m.HatchArmorLevel); break;
+                case UpgradeTrack.HatchArmor: bought = MetaUpgrades.Buy(m, ref m.Realm.HatchArmorLevel); break;
                 default: bought = false; break;
             }
 

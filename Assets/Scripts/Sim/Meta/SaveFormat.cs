@@ -5,7 +5,7 @@ namespace GatekeepersProtocol.Sim
     /// whether a document on disk may be loaded at all.
     /// </summary>
     /// <remarks>
-    /// Version 12 split one document into two: a Boarder that travels with the player and a
+    /// Version 13 split one document into two: a Boarder that travels with the player and a
     /// realm that stays with the world (Docs/Milestones — the realm and the Boarder). With the
     /// split came the end of migration: a document below <see cref="CurrentVersion"/> is
     /// REFUSED, plainly and by name, rather than reshaped into something the current build can
@@ -26,12 +26,15 @@ namespace GatekeepersProtocol.Sim
     ///   9  — first-Bastion demo flags plus per-zone DemoZoneDeepestWave
     ///  10  — OpenDoorIds: door state stopped being derivable and became its own saved fact
     ///  11  — HatchConversions: the wheel re-keyed off PodEjections onto Hatch conversions
-    ///  12  — the Boarder / realm split. Two documents, no migration.
+    ///  12  — WeaponWheelCentres: centred-purchase counts per weapon per spoke, so the cost
+    ///         of the next focus buy keys on the centred spoke rather than derived Tier.
+    ///         Claimed by separate work; this build does not read a v12 document.
+    ///  13  — the Boarder / realm split. Two documents, no migration.
     /// </remarks>
     public static class SaveFormat
     {
         /// <summary>Schema version written by the current build, shared by both documents.</summary>
-        public const int CurrentVersion = 12;
+        public const int CurrentVersion = 13;
 
         /// <summary>Only the current version loads. Older documents are refused, not migrated.</summary>
         public static bool IsSupported(int version)

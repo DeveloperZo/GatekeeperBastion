@@ -52,13 +52,10 @@ namespace GatekeepersProtocol.Sim
                 if (share <= 0L) continue;
                 kept += share;
                 Salvage.Earn(share);
-                if (i == 0)
-                {
-                    _meta.EarnSalvage(share);
-                    continue;
-                }
-                var handler = GuestConverted;
-                if (handler != null) handler(i, share);
+                // The pot belongs to the realm, and in co-op the realm is the host's, so
+                // every seat's rebate lands in the same place. The event still fires for a
+                // guest seat because that seat's readout needs to know what it brought in.
+                _meta.EarnSalvage(share);
             }
             if (kept > 0L)
                 Log.Info(Tag, "returned — kept " + kept + " of unbanked ("
@@ -72,6 +69,14 @@ namespace GatekeepersProtocol.Sim
             int n = PlayerCount;
             for (int i = 0; i < n; i++)
                 CreditSlot(i, taken[i]);
+        }
+
+        /// <summary>True until any seat has converted in the current bank window.</summary>
+        bool NothingConvertedThisBank()
+        {
+            for (int i = 0; i < _convertedThisBank.Length; i++)
+                if (_convertedThisBank[i] != 0L) return false;
+            return true;
         }
 
         void CreditSlot(int slot, long unbankedTaken)
@@ -91,18 +96,16 @@ namespace GatekeepersProtocol.Sim
             if (credited <= 0L) return;
             // Salvage is coming through the Hatch: the first credit of a window counts it.
             // This is the wheel / equipment-slot unlock event (MetaUpgrades.UpgradesUnlocked).
-            // Guests count their own on the seat that applies CreditBanked (NetPlayerAvatar).
-            if (slot == 0 && _convertedThisBank[0] == 0L)
+            // It counts the WINDOW, not the seat — the gate belongs to the realm, so a window
+            // that converted for anybody has converted, however many seats fed it.
+            if (NothingConvertedThisBank())
                 _meta.HatchConversions++;
             _convertedThisBank[slot] += credited;
             Salvage.Earn(credited);
-            if (slot == 0)
-            {
-                _meta.EarnSalvage(credited);
-                return;
-            }
-            var handler = GuestConverted;
-            if (handler != null) handler(slot, credited);
+            // Every seat banks into the realm's pot. A guest is playing in somebody else's
+            // world and that world's salvage is what fills; what the guest takes home is its
+            // Boarder (Docs/Milestones — the realm and the Boarder).
+            _meta.EarnSalvage(credited);
         }
     }
 }

@@ -594,7 +594,6 @@ namespace GatekeepersProtocol.Game
             Sim.MasterHatchHalfStarted += OnMasterHatchHalfStarted;
             Sim.BankWindowSurvived += OnBankWindowSurvived;
             Sim.FieldWaveCleared += OnFieldWaveCleared;
-            Sim.GuestConverted += OnGuestConverted;
         }
 
         void Unsubscribe()
@@ -606,7 +605,6 @@ namespace GatekeepersProtocol.Game
             Sim.MasterHatchHalfStarted -= OnMasterHatchHalfStarted;
             Sim.BankWindowSurvived -= OnBankWindowSurvived;
             Sim.FieldWaveCleared -= OnFieldWaveCleared;
-            Sim.GuestConverted -= OnGuestConverted;
         }
     }
 }

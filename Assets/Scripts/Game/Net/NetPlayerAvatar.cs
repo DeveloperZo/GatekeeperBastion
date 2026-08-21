@@ -214,20 +214,15 @@ namespace GatekeepersProtocol.Game
             _game = game;
         }
 
-        /// <summary>Server: credit this owner's local Meta. Host slot 0 already wrote host Meta.</summary>
-        public void CreditBanked(long credited)
-        {
-            if (!IsServer || credited <= 0L) return;
-            CreditBankedClientRpc(credited);
-        }
-
-        /// <summary>Server: raise this owner's DeepestWaveReached from a co-op clear.</summary>
+        /// <summary>Server: record this seat's depth for the per-seat bank cap. Nothing goes
+        /// back to the owner: how deep a world has been taken is that realm's fact, and in
+        /// co-op the realm is the host's, so a guest's own save must not learn it from here
+        /// (Docs/Milestones — the realm and the Boarder).</summary>
         public void PushProgress(int deepest)
         {
             if (!IsServer) return;
             if (_game != null && _game.Sim != null)
                 _game.Sim.SetSlotDeepest(Slot.Value, deepest);
-            PushProgressClientRpc(deepest);
         }
 
         /// <summary>Owner request: return from the Ship wait into the live Run (Hatch-bank).
@@ -461,29 +456,6 @@ namespace GatekeepersProtocol.Game
                 _game.Sim.SetSlotDeepest(Slot.Value, deepest);
         }
 
-        [Rpc(SendTo.Owner)]
-        void CreditBankedClientRpc(long credited)
-        {
-            if (credited <= 0L) return;
-            var meta = GameSession.Meta;
-            if (meta == null) return;
-            meta.EarnSalvage(credited);
-            // Salvage came through the Hatch for THIS seat: the guest's own wheel /
-            // equipment-slot unlock (MetaUpgrades.UpgradesUnlocked). Drip credits arrive
-            // per tick, so this floors at 1 rather than counting windows — the gate only
-            // ever reads >= 1.
-            if (meta.HatchConversions < 1)
-                meta.HatchConversions = 1;
-        }
-
-        [Rpc(SendTo.Owner)]
-        void PushProgressClientRpc(int deepest)
-        {
-            var meta = GameSession.Meta;
-            if (meta == null) return;
-            if (deepest > meta.DeepestWaveReached)
-                meta.DeepestWaveReached = deepest;
-        }
         #endregion
     }
 }

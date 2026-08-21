@@ -47,9 +47,10 @@ namespace GatekeepersProtocol.Sim
     /// After that chain clears, the run continues normally through wave MaxWaves.
     ///
     /// ECONOMY: AwardKill() splits Unbanked equally among PlayerCount slots (slot 0 is solo /
-    /// host). Hatch-bank drip/dump converts each slot; slot 0 EarnSalvage into host MetaState;
-    /// slots 1+ raise GuestConverted. Down of one guest wipes that slot; host down / hatch
-    /// breach wipe leftover Unbanked without converting.
+    /// host). Hatch-bank drip/dump converts each slot, and every slot EarnSalvage into the
+    /// realm's pot — a guest plays in somebody else's world and it is that world's salvage
+    /// that fills. Down of one guest wipes that slot; host down / hatch breach wipe leftover
+    /// Unbanked without converting.
     /// Terminal Wave-5 clear keeps Unbanked; Hatch-bank after the field is stripped converts
     /// and stays Prep. RepairHatch spends from the ship bank only.
     /// </summary>
@@ -129,10 +130,6 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Connected players this Run is counting. 1 in solo. Capped at
         /// <see cref="WaveDirector.PlayerCapacity"/>.</summary>
         public int PlayerCount => _wallets.Count;
-
-        /// <summary>Raised when a guest slot converts salvage. Slot 0 never fires — that
-        /// path writes host <see cref="MetaState"/> directly.</summary>
-        public event Action<int, long> GuestConverted;
 
         /// <summary>Unbanked spent raising intensity this pull. Reset on idle Prep after the pull.</summary>
         public long JuiceSpentThisPull { get; internal set; }

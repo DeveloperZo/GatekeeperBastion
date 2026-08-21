@@ -6,7 +6,8 @@ using UnityEngine;
 namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): connected-player count into the sim,
-    /// guest convert RPCs, guest DeepestWaveReached. Split so GameController.cs does not grow.</summary>
+    /// and each seat's depth for the per-seat bank cap. Split so GameController.cs does not
+    /// grow.</summary>
     public sealed partial class GameController
     {
         #region Public API
@@ -30,23 +31,6 @@ namespace GatekeepersProtocol.Game
         #endregion
 
         #region Private
-        void OnGuestConverted(int slot, long credited)
-        {
-            if (credited <= 0L) return;
-            var nm = NetworkManager.Singleton;
-            if (nm == null || !nm.IsServer) return;
-            var clients = nm.ConnectedClientsList;
-            for (int i = 0; i < clients.Count; i++)
-            {
-                var po = clients[i].PlayerObject;
-                if (po == null) continue;
-                var avatar = po.GetComponent<NetPlayerAvatar>();
-                if (avatar == null || avatar.Slot.Value != slot) continue;
-                avatar.CreditBanked(credited);
-                return;
-            }
-        }
-
         void PushGuestProgress()
         {
             if (Sim == null) return;
