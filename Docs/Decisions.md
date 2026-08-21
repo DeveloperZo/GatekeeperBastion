@@ -329,6 +329,35 @@ balance verdicts and "is this fun" still need a clean Run. The relaxation is abo
 
 First applied closing `M79`.
 
+## Locked — the save refuses what it cannot honestly read (Zo, 2026-08-21)
+
+From save version 13, a document written by an older build **does not load**. The game says
+so by name and stops, rather than reshaping the file into something the current build can
+open.
+
+**This is new policy, and it replaces a rule that was never written down.** The realm and
+Boarder milestone cited this document for "bump the schema, rename the keys, never write a
+migration shim". No such rule was here. The opposite was: `WeaponId.Vk7Rifle` keeps its
+value expressly *so old saves deserialize*, and every version from 3 to 11 shipped a
+migration gate in `FromSaveData`. The rule is real now because it was argued for on its
+merits, not because it was already binding.
+
+**Why the break is worth it here.** One progression document became two — a Boarder that
+travels with the player and a realm that stays with the world. A migration would have to
+decide, for a single-document save, which half of it belonged to the world. There is no
+honest answer: the same save records a pot the world owns and weapons the player owns, and
+the whole reason the split exists is that the old document could not tell them apart. A
+wrong guess does not fail loudly; it hands the player a corrupted campaign that looks fine.
+
+**What this does not license.** It is not permission to break saves whenever a schema is
+inconvenient. The bar is that migration would have to *invent* a fact the old document never
+recorded. A field that is merely added, renamed, or re-keyed still migrates, and a missing
+key whose absent value is also its correct default still needs no version bump at all.
+
+The version history stays in `Sim/Meta/SaveFormat.cs` even though none of it executes any
+more: it is the record of why keys are spelled the way they are.
+
+
 ## Shipped
 
 - **Deliver-loot-before-the-run-ends.** The *spirit* of Gears of War's active
