@@ -19,7 +19,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void MixedKills_AtFractionalDial_UnbankedEqualsFlooredAwards()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             long bankedBefore = meta.BankedSalvage;
             var sim = LiveAssault(meta, siphonLevel: 3);
 
@@ -36,7 +36,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void FractionalDial_UnbankedAgreesWithFloor()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             var sim = LiveAssault(meta, siphonLevel: 3);
             Assert.AreEqual(31.25f, sim.CurrentKillValue, 1e-4f);
 

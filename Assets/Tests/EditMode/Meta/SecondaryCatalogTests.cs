@@ -151,7 +151,7 @@ namespace GatekeepersProtocol.Tests
             m.SetEquipped(WeaponId.SecD);
             Assert.AreEqual(WeaponId.SecD, m.EquippedSecondary);
 
-            var loaded = MetaState.FromJson(m.ToJson());
+            var loaded = MetaState.FromSnapshotJson(m.ToSnapshotJson());
             Assert.IsTrue(loaded.Owns(WeaponId.SecD));
             Assert.AreEqual(WeaponId.SecD, loaded.EquippedSecondary);
         }

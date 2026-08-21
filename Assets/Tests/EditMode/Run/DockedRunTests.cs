@@ -10,7 +10,7 @@ namespace GatekeepersProtocol.Tests
     {
         static RunSim Tethered(out MetaState meta, int seed = 1)
         {
-            meta = new MetaState();
+            meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed);
             sim.StartRun();
             sim.EngageTether();
@@ -269,15 +269,15 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void OpenDoorIds_RoundTripJson_AndPreV10IsEmpty()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.SetOpenDoorIds(new[] { "D1", "D2" });
 
-            var back = MetaState.FromJson(meta.ToJson());
+            var back = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(2, back.OpenDoorIds.Length);
             Assert.AreEqual("D1", back.OpenDoorIds[0]);
             Assert.AreEqual("D2", back.OpenDoorIds[1]);
 
-            var old = MetaState.FromJson(
+            var old = MetaState.FromSnapshotJson(
                 "{\"SaveVersion\":9,\"OpenDoorIds\":[\"D1\"],\"CleanExits\":1}");
             Assert.AreEqual(0, old.OpenDoorIds.Length,
                 "a pre-v10 save opened its doors under the retired terminal rule; it gets none");
@@ -286,7 +286,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void SetOpenDoorIds_NullOrEmpty_Clears()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.SetOpenDoorIds(new[] { "D1" });
             meta.SetOpenDoorIds(null);
             Assert.AreEqual(0, meta.OpenDoorIds.Length);

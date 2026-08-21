@@ -122,7 +122,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
             // v9 landed with the demo flags; the pin follows the schema, not a literal.
-            Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion);
+            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
             Assert.IsTrue(BoarderProtocol.TryClaim(m, BoarderProtocolId.Default));
             Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
@@ -153,7 +153,7 @@ namespace GatekeepersProtocol.Tests
                 "{\"SaveVersion\":7,\"BankedSalvage\":100,\"LifetimeSalvageEarned\":24900," +
                 "\"LifetimeSalvageSpent\":24800,\"HatchArmorLevel\":0," +
                 "\"VitalityLevel\":5,\"StaminaLevel\":5,\"ScavengingLevel\":5,\"LuckLevel\":5}";
-            var m = MetaState.FromJson(json);
+            var m = MetaState.FromSnapshotJson(json);
             Assert.AreEqual(24800L, MetaState.SpentOnTrack(5) * 4L);
             Assert.AreEqual(24900L, m.BankedSalvage);
             Assert.AreEqual(0L, m.LifetimeSalvageSpent);
@@ -161,7 +161,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(m.SalvageLedgerBalances);
             Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
-            Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion);
+            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
         }
 
         [Test]
@@ -170,7 +170,7 @@ namespace GatekeepersProtocol.Tests
             const string json =
                 "{\"SaveVersion\":8,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
                 "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":1,\"EquippedPassive\":3}";
-            var m = MetaState.FromJson(json);
+            var m = MetaState.FromSnapshotJson(json);
             Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
         }
@@ -181,7 +181,7 @@ namespace GatekeepersProtocol.Tests
             const string json =
                 "{\"SaveVersion\":8,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
                 "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":99,\"EquippedPassive\":1}";
-            var m = MetaState.FromJson(json);
+            var m = MetaState.FromSnapshotJson(json);
             Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
         }

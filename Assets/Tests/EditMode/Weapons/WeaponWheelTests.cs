@@ -134,11 +134,11 @@ namespace GatekeepersProtocol.Tests
             // Two reload-centred purchases on the MK-1 ring: Reload +5, neighbours
             // Ability and Clip +3 each. Pins the ring's neighbour structure and the
             // save path in one round trip.
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.SetOwned(WeaponId.Mk1Sidearm, true);
             m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Reload);
             m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Reload);
-            var loaded = MetaState.FromJson(m.ToJson());
+            var loaded = MetaState.FromSnapshotJson(m.ToSnapshotJson());
             Assert.AreEqual(10, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Reload));
             Assert.AreEqual(6, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Ability));
             Assert.AreEqual(6, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Clip));
@@ -156,7 +156,7 @@ namespace GatekeepersProtocol.Tests
                 "\"LifetimeSalvageSpent\":1800,\"WeaponsOwned\":[true,false,false,false,false]," +
                 "\"WeaponTiers\":[3,0,0,0,0]," +
                 "\"EquippedPrimary\":-1,\"EquippedSecondary\":0,\"EquippedDrone\":-1}";
-            var m = MetaState.FromJson(json);
+            var m = MetaState.FromSnapshotJson(json);
             Assert.AreEqual(3, m.TierOf(WeaponId.Mk1Sidearm));
             Assert.AreEqual(18, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
             Assert.AreEqual(15, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Clip));
@@ -164,7 +164,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.FireRate));
             Assert.AreEqual(0, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Ability));
             Assert.AreEqual(33, WeaponWheel.TotalPoints(m.PointsOf(WeaponId.Mk1Sidearm)));
-            Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion);
+            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
         }
 
         [Test]
@@ -175,7 +175,7 @@ namespace GatekeepersProtocol.Tests
                 "\"LifetimeSalvageSpent\":1800,\"WeaponsOwned\":[true,false,false,false,false]," +
                 "\"WeaponTiers\":[3,0,0,0,0]," +
                 "\"EquippedPrimary\":-1,\"EquippedSecondary\":0,\"EquippedDrone\":-1}";
-            var m = MetaState.FromJson(json);
+            var m = MetaState.FromSnapshotJson(json);
             Assert.IsTrue(m.SalvageLedgerBalances);
             Assert.IsFalse(m.SalvageStatsWereRepaired);
             Assert.AreEqual(m.LifetimeSalvageEarned, m.BankedSalvage + m.LifetimeSalvageSpent);

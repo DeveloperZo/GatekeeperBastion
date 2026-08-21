@@ -158,7 +158,7 @@ namespace GatekeepersProtocol.Tests
             for (int digit = 1; digit <= 7; digit++)
             {
                 var m = GameController.BuildDemoCheckpoint(digit);
-                var back = MetaState.FromJson(m.ToJson());
+                var back = MetaState.FromSnapshotJson(m.ToSnapshotJson());
                 Assert.IsFalse(back.SalvageStatsWereRepaired, "checkpoint " + digit);
                 Assert.AreEqual(m.BankedSalvage, back.BankedSalvage, "checkpoint " + digit);
                 Assert.AreEqual(m.HatchConversions, back.HatchConversions, "checkpoint " + digit);

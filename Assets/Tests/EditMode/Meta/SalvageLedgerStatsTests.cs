@@ -25,7 +25,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void EarnAndSpend_KeepTheLedgerBalanced()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.EarnSalvage(1000);
             Assert.IsTrue(m.SpendSalvage(250));
             Assert.AreEqual(750L, m.BankedSalvage);
@@ -37,7 +37,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Earn_IgnoresNonPositive_Spend_RefusesOverdraftAndNonPositive()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.EarnSalvage(0);
             m.EarnSalvage(-50);
             Assert.AreEqual(0L, m.LifetimeSalvageEarned, "nothing was received");
@@ -53,10 +53,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void BuyingUpgrades_CreditsSpent()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.EarnSalvage(10000);
-            Assert.IsTrue(MetaUpgrades.Buy(m, ref m.HatchArmorLevel));   // 200
-            Assert.IsTrue(MetaUpgrades.Buy(m, ref m.HatchArmorLevel));   // 400
+            Assert.IsTrue(MetaUpgrades.Buy(m, ref m.Realm.HatchArmorLevel));   // 200
+            Assert.IsTrue(MetaUpgrades.Buy(m, ref m.Realm.HatchArmorLevel));   // 400
             // Free MK-1: own without SpendSalvage (cost 0).
             m.SetOwned(WeaponId.Mk1Sidearm, true);
             Assert.IsTrue(m.SpendSalvage(WeaponTier.Cost(0))); // Tier 0→1 = 400
@@ -70,10 +70,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void RoundTrip_PreservesTheTrio()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.EarnSalvage(5000);
-            MetaUpgrades.Buy(m, ref m.HatchArmorLevel);
-            var loaded = MetaState.FromJson(m.ToJson());
+            MetaUpgrades.Buy(m, ref m.Realm.HatchArmorLevel);
+            var loaded = MetaState.FromSnapshotJson(m.ToSnapshotJson());
             Assert.AreEqual(m.BankedSalvage, loaded.BankedSalvage);
             Assert.AreEqual(m.LifetimeSalvageEarned, loaded.LifetimeSalvageEarned);
             Assert.AreEqual(m.LifetimeSalvageSpent, loaded.LifetimeSalvageSpent);
@@ -83,7 +83,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ReconstructSpent_IncludesWeaponTiers()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.HatchArmorLevel = 1; // 200
             m.SetOwned(WeaponId.Br12Shotgun, true); // 900
             m.ReplacePointsFromFlatTier(WeaponId.Br12Shotgun, 2); // 400+600 = 1000
@@ -103,7 +103,7 @@ namespace GatekeepersProtocol.Tests
                 "\"PodEjections\":8,\"GunDamageLevel\":3,\"FireRateLevel\":3,\"HatchArmorLevel\":3," +
                 "\"RepairRigLevel\":2,\"WeaponOwned\":true,\"ClipSizeLevel\":2,\"VitalityLevel\":2," +
                 "\"StaminaLevel\":1,\"EngineeringLevel\":0,\"ScavengingLevel\":0,\"LuckLevel\":1}";
-            var m = MetaState.FromJson(v1);
+            var m = MetaState.FromSnapshotJson(v1);
 
             Assert.IsTrue(m.Owns(WeaponId.Mk1Sidearm));
             Assert.AreEqual(3, m.TierOf(WeaponId.Mk1Sidearm));
@@ -117,7 +117,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(m.SalvageLedgerBalances);
             Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
-            Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion, "loading migrates the save forward");
+            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion, "loading migrates the save forward");
         }
 
         [Test]
@@ -127,7 +127,7 @@ namespace GatekeepersProtocol.Tests
             const string tampered =
                 "{\"SaveVersion\":2,\"BankedSalvage\":1000,\"LifetimeSalvageEarned\":5," +
                 "\"LifetimeSalvageSpent\":0,\"WeaponOwned\":true}";
-            var m = MetaState.FromJson(tampered);
+            var m = MetaState.FromSnapshotJson(tampered);
             Assert.IsTrue(m.Owns(WeaponId.Mk1Sidearm));
             Assert.IsTrue(m.SalvageStatsWereRepaired);
             Assert.AreEqual(1000L, m.LifetimeSalvageEarned);
@@ -138,10 +138,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void SaveDataDto_CarriesTheTrioBothWays()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.EarnSalvage(900);
             m.SpendSalvage(200);
-            var back = MetaState.FromSaveData(m.ToSaveData());
+            var back = MetaState.FromSnapshotJson(m.ToSnapshotJson());
             Assert.AreEqual(700L, back.BankedSalvage);
             Assert.AreEqual(900L, back.LifetimeSalvageEarned);
             Assert.AreEqual(200L, back.LifetimeSalvageSpent);

@@ -29,7 +29,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void WeaponTracks_GatedBehindFirstBank_NotBehindLoss()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             Assert.AreEqual(0, meta.HatchConversions);
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(meta));
             meta.PodEjections = 1;
@@ -47,9 +47,9 @@ namespace GatekeepersProtocol.Tests
         {
             var meta = MetaState.CreateNew();
             meta.BankedSalvage += 200L;
-            Assert.IsTrue(MetaUpgrades.Buy(meta, ref meta.HatchArmorLevel));
+            Assert.IsTrue(MetaUpgrades.Buy(meta, ref meta.Realm.HatchArmorLevel));
             Assert.AreEqual(1, meta.HatchArmorLevel);
-            var loaded = MetaState.FromJson(meta.ToJson());
+            var loaded = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(1, loaded.HatchArmorLevel);
             Assert.AreEqual(BoarderProtocolId.None, loaded.EquippedProtocol);
         }

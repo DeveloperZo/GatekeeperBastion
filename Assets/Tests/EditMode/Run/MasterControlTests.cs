@@ -13,7 +13,7 @@ namespace GatekeepersProtocol.Tests
 
         static RunSim Tethered(out MetaState meta, int seed = 1)
         {
-            meta = new MetaState();
+            meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed);
             sim.StartRun();
             sim.EngageTether();
@@ -178,16 +178,16 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void CompletedTerminalIds_RoundTripJson_AndPreV7IsEmpty()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.SetCompletedTerminalIds(new[] { "T2", "T1" });
-            var loaded = MetaState.FromJson(meta.ToJson());
-            Assert.AreEqual(SaveData.CurrentVersion, loaded.SaveVersion);
+            var loaded = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
+            Assert.AreEqual(SaveFormat.CurrentVersion, loaded.SaveVersion);
             Assert.AreEqual(2, loaded.CompletedTerminalIds.Length);
             Assert.AreEqual("T2", loaded.CompletedTerminalIds[0]);
             Assert.AreEqual("T1", loaded.CompletedTerminalIds[1]);
 
-            var old = MetaState.FromJson("{\"SaveVersion\":6,\"BankedSalvage\":0}");
-            Assert.AreEqual(SaveData.CurrentVersion, old.SaveVersion);
+            var old = MetaState.FromSnapshotJson("{\"SaveVersion\":6,\"BankedSalvage\":0}");
+            Assert.AreEqual(SaveFormat.CurrentVersion, old.SaveVersion);
             Assert.AreEqual(0, old.CompletedTerminalIds.Length);
         }
 

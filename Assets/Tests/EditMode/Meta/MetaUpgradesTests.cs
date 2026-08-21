@@ -25,7 +25,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void CanBuy_TrueOnlyWhenAffordableAndBelowMax()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.BankedSalvage = 199;
             Assert.IsFalse(MetaUpgrades.CanBuy(meta, 0), "one short of the first level");
             meta.BankedSalvage = 200;
@@ -37,14 +37,14 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Buy_DeductsBankedAndIncrementsLevel()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.BankedSalvage = 1000;
 
-            Assert.IsTrue(MetaUpgrades.Buy(meta, ref meta.HatchArmorLevel));
+            Assert.IsTrue(MetaUpgrades.Buy(meta, ref meta.Realm.HatchArmorLevel));
             Assert.AreEqual(1, meta.HatchArmorLevel);
             Assert.AreEqual(800L, meta.BankedSalvage); // -200
 
-            Assert.IsTrue(MetaUpgrades.Buy(meta, ref meta.HatchArmorLevel));
+            Assert.IsTrue(MetaUpgrades.Buy(meta, ref meta.Realm.HatchArmorLevel));
             Assert.AreEqual(2, meta.HatchArmorLevel);
             Assert.AreEqual(400L, meta.BankedSalvage); // -400
         }
@@ -52,10 +52,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Buy_FailsWhenPoor_NoMutation()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.BankedSalvage = 399;
             meta.HatchArmorLevel = 1; // next level costs 400
-            Assert.IsFalse(MetaUpgrades.Buy(meta, ref meta.HatchArmorLevel));
+            Assert.IsFalse(MetaUpgrades.Buy(meta, ref meta.Realm.HatchArmorLevel));
             Assert.AreEqual(1, meta.HatchArmorLevel);
             Assert.AreEqual(399L, meta.BankedSalvage);
         }
@@ -63,10 +63,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Buy_CannotPassLevelFive()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.BankedSalvage = 1000000;
             meta.HatchArmorLevel = MetaUpgrades.MaxLevel;
-            Assert.IsFalse(MetaUpgrades.Buy(meta, ref meta.HatchArmorLevel));
+            Assert.IsFalse(MetaUpgrades.Buy(meta, ref meta.Realm.HatchArmorLevel));
             Assert.AreEqual(MetaUpgrades.MaxLevel, meta.HatchArmorLevel);
             Assert.AreEqual(1000000L, meta.BankedSalvage);
         }
@@ -74,10 +74,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Buy_FullTrack_TotalCostIs6200()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.BankedSalvage = 6200; // 200+400+800+1600+3200
             for (int i = 0; i < MetaUpgrades.MaxLevel; i++)
-                Assert.IsTrue(MetaUpgrades.Buy(meta, ref meta.HatchArmorLevel), "buy " + i);
+                Assert.IsTrue(MetaUpgrades.Buy(meta, ref meta.Realm.HatchArmorLevel), "buy " + i);
             Assert.AreEqual(MetaUpgrades.MaxLevel, meta.HatchArmorLevel);
             Assert.AreEqual(0L, meta.BankedSalvage, "the doubling curve sums to exactly 6200");
         }
@@ -103,13 +103,13 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Json_RoundTrip_PreservesUpgradeLevels()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.HatchArmorLevel = 3;
             meta.EquipmentSlotPurchased = true;
             meta.SetEquipmentOwned(EquipmentId.RepairRig, true);
             meta.EquippedEquipment = EquipmentId.RepairRig;
 
-            var loaded = MetaState.FromJson(meta.ToJson());
+            var loaded = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(3, loaded.HatchArmorLevel);
             Assert.IsTrue(loaded.EquipmentSlotPurchased);
             Assert.IsTrue(loaded.HasRepairRigEquipped);
@@ -118,7 +118,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Json_OldSaveWithoutUpgradeFields_DefaultsToZero()
         {
-            var loaded = MetaState.FromJson("{\"SaveVersion\":1,\"BankedSalvage\":5000,\"TotalRuns\":9}");
+            var loaded = MetaState.FromSnapshotJson("{\"SaveVersion\":1,\"BankedSalvage\":5000,\"TotalRuns\":9}");
             Assert.AreEqual(5000L, loaded.BankedSalvage);
             Assert.AreEqual(0, loaded.HatchArmorLevel);
             Assert.IsFalse(loaded.EquipmentSlotPurchased);
@@ -128,12 +128,12 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void SaveData_RoundTrip_PreservesUpgradeLevels()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.HatchArmorLevel = 4;
             meta.EquipmentSlotPurchased = true;
             meta.SetEquipmentOwned(EquipmentId.RepairRig, true);
             meta.EquippedEquipment = EquipmentId.RepairRig;
-            var restored = MetaState.FromSaveData(meta.ToSaveData());
+            var restored = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(4, restored.HatchArmorLevel);
             Assert.IsTrue(restored.HasRepairRigEquipped);
         }
@@ -149,7 +149,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void RunSim_UsesHatchHpFromArmorLevel()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.HatchArmorLevel = 5;
             var sim = new RunSim(meta, 9);
             Assert.AreEqual(375f, sim.Ship.Hatch.MaxHp, 1e-5f); // 300 * (1 + 0.05*5)

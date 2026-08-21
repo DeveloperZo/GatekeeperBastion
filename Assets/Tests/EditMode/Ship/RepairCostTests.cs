@@ -24,7 +24,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void FullHealthHatch_ChargesNothing()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.EarnSalvage(1000);
             LiveRun(meta, out var sim);
 
@@ -39,7 +39,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void PartialRepair_AtInsufficientFunds_LandsBankAtExactlyZero()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.EarnSalvage(5);
             LiveRun(meta, out var sim);
             sim.Ship.Hatch.Damage(100f);
@@ -55,7 +55,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ZeroBank_HealsNothing()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             LiveRun(meta, out var sim);
             sim.Ship.Hatch.Damage(40f);
             float before = sim.Ship.Hatch.Hp;
@@ -70,7 +70,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ContinuousTicks_ChargeAsApplied_NotAsLump()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.EarnSalvage(1000);
             LiveRun(meta, out var sim);
             sim.Ship.Hatch.Damage(80f);
@@ -102,7 +102,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void EndReport_EarnedSubtractsRepairSpend()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.EarnSalvage(500);
             LiveRun(meta, out var sim);
             sim.Ship.Hatch.Damage(50f);
@@ -122,7 +122,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void UsesSpendSalvage_LifetimeSpentTracks()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.EarnSalvage(200);
             LiveRun(meta, out var sim);
             sim.Ship.Hatch.Damage(30f);

@@ -106,7 +106,7 @@ namespace GatekeepersProtocol.Tests
                 + "(re-key 2026-08-18)");
 
             // --- persistence: exactly the JSON SaveService round-trips ---
-            MetaState loaded = MetaState.FromJson(meta.ToJson());
+            MetaState loaded = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(0L, loaded.BankedSalvage);
             Assert.AreEqual(1, loaded.PodEjections);
             Assert.AreEqual(1, loaded.TotalRuns);
@@ -137,7 +137,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void CoreLoop_DialUp_MakesKillsPayMore_AndIsLockedOnceTheDrawIsPulled()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             var sim = new RunSim(meta, 7);
             sim.StartRun();
             sim.EngageTether();

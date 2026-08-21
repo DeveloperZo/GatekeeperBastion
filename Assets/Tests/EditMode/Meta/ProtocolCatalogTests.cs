@@ -142,7 +142,7 @@ namespace GatekeepersProtocol.Tests
                     : BoarderAbilityId.None;
                 Assert.AreEqual(expectedPassive, m.EquippedPassive, "claimed passive on " + id);
 
-                var loaded = MetaState.FromJson(m.ToJson());
+                var loaded = MetaState.FromSnapshotJson(m.ToSnapshotJson());
                 Assert.AreEqual(id, loaded.EquippedProtocol, "round-trip of " + id);
                 Assert.AreEqual(expectedPassive, loaded.EquippedPassive,
                     "round-trip passive of " + id);
@@ -157,7 +157,7 @@ namespace GatekeepersProtocol.Tests
             const string json =
                 "{\"SaveVersion\":11,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
                 "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":42,\"EquippedPassive\":0}";
-            var m = MetaState.FromJson(json);
+            var m = MetaState.FromSnapshotJson(json);
             Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
 
@@ -166,7 +166,7 @@ namespace GatekeepersProtocol.Tests
             const string mismatched =
                 "{\"SaveVersion\":11,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
                 "\"LifetimeSalvageSpent\":0,\"EquippedProtocol\":2,\"EquippedPassive\":11}";
-            var n = MetaState.FromJson(mismatched);
+            var n = MetaState.FromSnapshotJson(mismatched);
             Assert.AreEqual(BoarderProtocolId.Veil, n.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, n.EquippedPassive);
         }

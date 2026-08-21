@@ -74,7 +74,7 @@ namespace GatekeepersProtocol.Tests
                 "\"WeaponTiers\":[0,0,0,0,0]," +
                 "\"EquippedPrimary\":-1,\"EquippedSecondary\":0,\"EquippedDrone\":-1}";
 
-            var m = MetaState.FromJson(json);
+            var m = MetaState.FromSnapshotJson(json);
             Assert.IsTrue(m.EquipmentSlotPurchased);
             Assert.IsTrue(m.OwnsEquipment(EquipmentId.RepairRig));
             Assert.AreEqual(EquipmentId.RepairRig, m.EquippedEquipment);
@@ -84,7 +84,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(m.SalvageLedgerBalances);
             Assert.IsFalse(m.SalvageStatsWereRepaired,
                 "a balanced save with lifetime fields needs no repair");
-            Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion);
+            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace GatekeepersProtocol.Tests
                 "\"LifetimeSalvageSpent\":200,\"PodEjections\":1,\"EngineeringLevel\":1," +
                 "\"WeaponsOwned\":[false,false,false,false,false]," +
                 "\"WeaponTiers\":[0,0,0,0,0]}";
-            var m = MetaState.FromJson(json);
+            var m = MetaState.FromSnapshotJson(json);
             Assert.IsTrue(m.EquipmentSlotPurchased);
             Assert.IsTrue(m.HasRepairRigEquipped);
         }

@@ -8,7 +8,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void TriggerDraw_SetsModeTerminal()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed: 1);
             sim.StartRun(1);
             sim.EngageTether();
@@ -20,7 +20,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void DamageHatch_NoOpInTerminalMode()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed: 1);
             sim.StartRun(1);
             sim.EngageTether();
@@ -33,7 +33,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void DamageHatch_DirectHatchDamage_StillApplies()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed: 1);
             sim.StartRun(1);
             sim.EngageTether();
@@ -133,7 +133,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ArmSequentialDraws_AfterClear_WaitsGapThenDraws()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed: 1);
             sim.StartRun(1);
             sim.EngageTether();
@@ -164,7 +164,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void FieldClear_LeavesUntimedPrep_HatchBankAllowed()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed: 1);
             sim.StartRun(1);
             sim.EngageTether();
@@ -182,7 +182,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ArmSequentialDraws_One_DoesNotFollowUp()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed: 1);
             sim.StartRun(1);
             sim.EngageTether();

@@ -12,7 +12,7 @@ namespace GatekeepersProtocol.Tests
     {
         private static RunSim NewTetheredSim(out MetaState meta)
         {
-            meta = new MetaState();
+            meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed: 4242);
             sim.StartRun();
             sim.EngageTether();
@@ -83,7 +83,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void PlayerDown_NoOpWhenDocked()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             var sim = new RunSim(meta, 4242);
             sim.StartRun();
             sim.NotifyPlayerDown();
@@ -170,7 +170,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(WeaponId.None, m.EquippedSecondary);
             Assert.AreEqual(0, m.TotalRuns);
             Assert.AreEqual(0, m.PodEjections);
-            Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion);
+            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
         }
 
         [Test]
@@ -199,7 +199,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void WeaponTier_BuyPath_DeductsAndIncrements()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.EarnSalvage(400);
             m.SetOwned(WeaponId.Mk1Sidearm, true);
             Assert.IsTrue(WeaponTier.CanBuy(m, 0));
@@ -217,7 +217,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void UpgradesUnlocked_FalseAtZeroConversions_TrueFromTheFirstBank()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m), "fresh save: gate closed");
             m.PodEjections = 7;
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m),
@@ -253,24 +253,24 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Json_RoundTrip_PreservesWeaponOwnershipAndTiers()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.SetOwned(WeaponId.Mk1Sidearm, true);
             m.ReplacePointsFromFlatTier(WeaponId.Mk1Sidearm, 3);
             m.EquippedSecondary = WeaponId.Mk1Sidearm;
-            var loaded = MetaState.FromJson(m.ToJson());
+            var loaded = MetaState.FromSnapshotJson(m.ToSnapshotJson());
             Assert.IsTrue(loaded.Owns(WeaponId.Mk1Sidearm));
             Assert.AreEqual(3, loaded.TierOf(WeaponId.Mk1Sidearm));
             Assert.AreEqual(WeaponId.Mk1Sidearm, loaded.EquippedSecondary);
 
-            var m2 = new MetaState();
-            var loaded2 = MetaState.FromJson(m2.ToJson());
+            var m2 = MetaState.CreateNew();
+            var loaded2 = MetaState.FromSnapshotJson(m2.ToSnapshotJson());
             Assert.IsFalse(loaded2.OwnsAnyWeapon);
         }
 
         [Test]
         public void Json_OldSaveWithoutWeaponFields_OwnsNothing()
         {
-            var loaded = MetaState.FromJson("{\"SaveVersion\":1,\"BankedSalvage\":5000,\"TotalRuns\":9}");
+            var loaded = MetaState.FromSnapshotJson("{\"SaveVersion\":1,\"BankedSalvage\":5000,\"TotalRuns\":9}");
             Assert.IsFalse(loaded.OwnsAnyWeapon);
             Assert.AreEqual(5000L, loaded.BankedSalvage);
         }
@@ -278,15 +278,15 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void SaveData_RoundTrip_PreservesWeapons()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.SetOwned(WeaponId.Mk1Sidearm, true);
             m.ReplacePointsFromFlatTier(WeaponId.Mk1Sidearm, WeaponTier.MaxTier);
             m.EquippedSecondary = WeaponId.Mk1Sidearm;
-            var restored = MetaState.FromSaveData(m.ToSaveData());
+            var restored = MetaState.FromSnapshotJson(m.ToSnapshotJson());
             Assert.IsTrue(restored.Owns(WeaponId.Mk1Sidearm));
             Assert.AreEqual(WeaponTier.MaxTier, restored.TierOf(WeaponId.Mk1Sidearm));
 
-            var fresh = MetaState.FromSaveData(new SaveData());
+            var fresh = MetaState.CreateNew();
             Assert.IsFalse(fresh.OwnsAnyWeapon);
         }
     }

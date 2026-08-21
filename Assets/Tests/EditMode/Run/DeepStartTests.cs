@@ -32,15 +32,15 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1, meta.DeepestWaveReached);
 
             meta.DeepestWaveReached = 3;
-            var loaded = MetaState.FromJson(meta.ToJson());
+            var loaded = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(3, loaded.DeepestWaveReached);
 
             // Absent field → 1 (old save).
-            var old = MetaState.FromJson("{\"SaveVersion\":3,\"BankedSalvage\":0,\"TotalRuns\":0}");
+            var old = MetaState.FromSnapshotJson("{\"SaveVersion\":3,\"BankedSalvage\":0,\"TotalRuns\":0}");
             Assert.AreEqual(1, old.DeepestWaveReached);
 
             // Written 0 → 1.
-            var zero = MetaState.FromJson("{\"DeepestWaveReached\":0}");
+            var zero = MetaState.FromSnapshotJson("{\"DeepestWaveReached\":0}");
             Assert.AreEqual(1, zero.DeepestWaveReached);
         }
 

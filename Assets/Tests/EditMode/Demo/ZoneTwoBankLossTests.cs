@@ -12,7 +12,7 @@ namespace GatekeepersProtocol.Tests
     {
         static RunSim Tethered(out MetaState meta, int seed = 1)
         {
-            meta = new MetaState();
+            meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed);
             sim.StartRun();
             sim.EngageTether();

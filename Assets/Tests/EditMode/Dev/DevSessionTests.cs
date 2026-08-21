@@ -55,7 +55,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(GameSession.DevTainted);
 
             // Disk must still hold the pre-taint StartNew snapshot, not the +999 mutation.
-            var fromDisk = MetaState.FromJson(File.ReadAllText(SaveService.SavePath));
+            var fromDisk = MetaState.FromSnapshotJson(File.ReadAllText(SaveService.SavePath));
             Assert.AreEqual(banked, fromDisk.BankedSalvage,
                 "Dev-tainted Save must not overwrite the campaign file");
         }
@@ -72,7 +72,7 @@ namespace GatekeepersProtocol.Tests
             GameSession.Meta.EarnSalvage(50);
             GameSession.Save();
 
-            var fromDisk = MetaState.FromJson(File.ReadAllText(SaveService.SavePath));
+            var fromDisk = MetaState.FromSnapshotJson(File.ReadAllText(SaveService.SavePath));
             Assert.AreEqual(50L, fromDisk.BankedSalvage);
         }
 
@@ -87,7 +87,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(5000L, GameSession.Meta.BankedSalvage);
 
             GameSession.Save();
-            var fromDisk = MetaState.FromJson(File.ReadAllText(SaveService.SavePath));
+            var fromDisk = MetaState.FromSnapshotJson(File.ReadAllText(SaveService.SavePath));
             Assert.AreEqual(0L, fromDisk.BankedSalvage, "granted salvage must not land on disk");
         }
 
@@ -104,7 +104,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(WeaponId.Mr35Rifle, GameSession.Meta.EquippedPrimary);
 
             GameSession.Save();
-            var fromDisk = MetaState.FromJson(File.ReadAllText(SaveService.SavePath));
+            var fromDisk = MetaState.FromSnapshotJson(File.ReadAllText(SaveService.SavePath));
             Assert.IsFalse(fromDisk.Owns(WeaponId.Mr35Rifle),
                 "Dev SetLoadout must not persist over a real campaign");
         }

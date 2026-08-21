@@ -7,7 +7,7 @@ namespace GatekeepersProtocol.Tests
     {
         static RunSim Tethered(out MetaState meta, int seed = 1)
         {
-            meta = new MetaState();
+            meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed);
             sim.StartRun();
             sim.EngageTether();
@@ -65,7 +65,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Convert_GuestDeepest2_CapsAndDoesNotWriteHostMeta()
+        public void Convert_CapsEachSeatByItsOwnDepth_AndBanksThemAllIntoTheRealm()
         {
             MetaState meta;
             var sim = Tethered(out meta);
@@ -75,24 +75,35 @@ namespace GatekeepersProtocol.Tests
             for (int i = 0; i < 200; i++)
                 sim.AwardKill();
 
-            long guestBefore = sim.UnbankedOf(1);
-            Assert.Greater(guestBefore, HatchBank.BankCap(2));
-
-            long guestCredited = 0L;
-            sim.GuestConverted += (slot, credited) =>
+            // Each seat's cap is set by its OWN depth, so seat 1 may convert more than the
+            // other two. Every pile here is over its cap, which is what makes the cap the
+            // thing being measured rather than the pile.
+            long[] before = { sim.UnbankedOf(0), sim.UnbankedOf(1), sim.UnbankedOf(2) };
+            long[] caps =
             {
-                if (slot == 1) guestCredited += credited;
+                HatchBank.BankCap(meta.DeepestWaveReached),
+                HatchBank.BankCap(2),
+                HatchBank.BankCap(1)
             };
+            Assert.Greater(before[1], caps[1], "seat 1's pile has to exceed its cap to test it");
+            long expected = 0L;
+            for (int i = 0; i < 3; i++)
+                expected += before[i] < caps[i] ? before[i] : caps[i];
+
+            long potBefore = meta.BankedSalvage;
 
             sim.NotifyAssaultCleared();
             sim.TriggerDraw(WaveMode.HatchBank);
             sim.Tick(HatchBank.DurationSeconds);
 
-            Assert.AreEqual(0L, sim.UnbankedOf(1));
-            Assert.AreEqual(HatchBank.BankCap(2), guestCredited);
-            Assert.Greater(guestCredited, 0L);
-            Assert.LessOrEqual(meta.BankedSalvage, HatchBank.BankCap(1));
-            Assert.Greater(meta.BankedSalvage, 0L);
+            Assert.AreEqual(0L, sim.UnbankedOf(1), "the guest's pile converted");
+            // Every seat banks into the realm's pot — a guest plays in somebody else's world
+            // and it is that world's salvage that fills. What the guest takes home is its
+            // Boarder (Docs/Milestones — the realm and the Boarder).
+            Assert.AreEqual(expected, meta.BankedSalvage - potBefore,
+                "all three seats converted into the realm, each capped by its own depth");
+            Assert.Greater(meta.BankedSalvage - potBefore, caps[0],
+                "the pot holds more than the host seat alone could have put there");
         }
 
         [Test]

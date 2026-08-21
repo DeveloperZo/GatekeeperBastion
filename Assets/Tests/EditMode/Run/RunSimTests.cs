@@ -11,7 +11,7 @@ namespace GatekeepersProtocol.Tests
     {
         private static RunSim NewSim(out MetaState meta)
         {
-            meta = new MetaState();
+            meta = MetaState.CreateNew();
             return new RunSim(meta, seed: 12345);
         }
 
@@ -472,7 +472,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void HatchMaxHp_ComesFromMetaArmorLevel()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.HatchArmorLevel = 2;
             var sim = new RunSim(meta, 1);
             Assert.AreEqual(330f, sim.Ship.Hatch.MaxHp, 1e-5f); // 300 * (1 + 0.05*2)
@@ -482,20 +482,20 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void MetaState_JsonRoundTrip_PreservesAllFields()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.BankedSalvage = 9876543210L;
             meta.TotalRuns = 42;
             meta.CleanExits = 30;
             meta.PodEjections = 12;
             meta.DeepestWaveReached = 4;
 
-            var loaded = MetaState.FromJson(meta.ToJson());
+            var loaded = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(9876543210L, loaded.BankedSalvage);
             Assert.AreEqual(42, loaded.TotalRuns);
             Assert.AreEqual(30, loaded.CleanExits);
             Assert.AreEqual(12, loaded.PodEjections);
             Assert.AreEqual(4, loaded.DeepestWaveReached);
-            Assert.AreEqual(SaveData.CurrentVersion, loaded.SaveVersion);
+            Assert.AreEqual(SaveFormat.CurrentVersion, loaded.SaveVersion);
         }
 
         [Test]
@@ -558,16 +558,16 @@ namespace GatekeepersProtocol.Tests
         {
             // FromJson always migrates forward to CurrentVersion (gotcha: raw JSON version
             // is not preserved after load).
-            var loaded = MetaState.FromJson("{\"SaveVersion\":8,\"BankedSalvage\":5}");
-            Assert.AreEqual(SaveData.CurrentVersion, loaded.SaveVersion);
+            var loaded = MetaState.FromSnapshotJson("{\"SaveVersion\":8,\"BankedSalvage\":5}");
+            Assert.AreEqual(SaveFormat.CurrentVersion, loaded.SaveVersion);
             Assert.AreEqual(5L, loaded.BankedSalvage);
         }
 
         [Test]
         public void MetaState_FromJson_MissingFieldsFallBackToDefaults()
         {
-            var loaded = MetaState.FromJson("{\"BankedSalvage\":100}");
-            Assert.AreEqual(SaveData.CurrentVersion, loaded.SaveVersion);
+            var loaded = MetaState.FromSnapshotJson("{\"BankedSalvage\":100}");
+            Assert.AreEqual(SaveFormat.CurrentVersion, loaded.SaveVersion);
             Assert.AreEqual(100L, loaded.BankedSalvage);
             Assert.AreEqual(0, loaded.TotalRuns);
         }
@@ -575,10 +575,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void MetaState_SaveDataRoundTrip()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
             meta.BankedSalvage = 777;
             meta.CleanExits = 3;
-            var restored = MetaState.FromSaveData(meta.ToSaveData());
+            var restored = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(777L, restored.BankedSalvage);
             Assert.AreEqual(3, restored.CleanExits);
             Assert.AreEqual(meta.SaveVersion, restored.SaveVersion);

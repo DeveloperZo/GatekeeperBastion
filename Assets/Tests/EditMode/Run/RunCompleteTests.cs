@@ -13,7 +13,7 @@ namespace GatekeepersProtocol.Tests
     {
         private static RunSim NewTetheredSim(out MetaState meta)
         {
-            meta = new MetaState();
+            meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed: 31337);
             sim.StartRun();
             sim.EngageTether();
@@ -319,7 +319,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void NewRun_ResetsRunSalvage_ButBankedSalvageCarriesOverAndAccumulates()
         {
-            var meta = new MetaState();
+            var meta = MetaState.CreateNew();
 
             var run1 = new RunSim(meta, 1);
             run1.StartRun();
@@ -353,7 +353,7 @@ namespace GatekeepersProtocol.Tests
             var sim = NewTetheredSim(out meta);
             MasterControlTests.SurviveSequence(sim, 0);
 
-            var loaded = MetaState.FromJson(meta.ToJson());
+            var loaded = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(1, loaded.CleanExits);
             Assert.AreEqual(0, loaded.PodEjections);
             Assert.AreEqual(0L, loaded.BankedSalvage);

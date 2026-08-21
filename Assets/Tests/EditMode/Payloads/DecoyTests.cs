@@ -96,10 +96,10 @@ namespace GatekeepersProtocol.Tests
             m.BankedSalvage = 1000L;
             m.SetPayloadOwned(PayloadId.Decoy, true);
             Assert.IsTrue(m.SetEquippedPayload(PayloadId.Decoy));
-            string json = m.ToJson();
+            string json = m.ToSnapshotJson();
 
-            var loaded = MetaState.FromJson(json);
-            Assert.AreEqual(SaveData.CurrentVersion, loaded.SaveVersion);
+            var loaded = MetaState.FromSnapshotJson(json);
+            Assert.AreEqual(SaveFormat.CurrentVersion, loaded.SaveVersion);
             Assert.IsTrue(loaded.OwnsPayload(PayloadId.Decoy));
             Assert.AreEqual(PayloadId.Decoy, loaded.EquippedDrone);
         }
@@ -122,10 +122,10 @@ namespace GatekeepersProtocol.Tests
                 "{\"SaveVersion\":5,\"BankedSalvage\":0,\"LifetimeSalvageEarned\":0," +
                 "\"LifetimeSalvageSpent\":0,\"WeaponsOwned\":[false,false,false,false,false]," +
                 "\"EquippedPrimary\":-1,\"EquippedSecondary\":0,\"EquippedDrone\":-1}";
-            var m = MetaState.FromJson(json);
+            var m = MetaState.FromSnapshotJson(json);
             Assert.AreEqual(PayloadId.None, m.EquippedDrone);
             Assert.AreEqual(0, m.OwnedPayloadMask);
-            Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion);
+            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
         }
 
         static DecoyState NewDecoyState()

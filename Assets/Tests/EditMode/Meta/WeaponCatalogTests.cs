@@ -158,21 +158,21 @@ namespace GatekeepersProtocol.Tests
             string v1 =
                 "{\"SaveVersion\":1,\"BankedSalvage\":500,\"TotalRuns\":4,\"PodEjections\":1," +
                 "\"GunDamageLevel\":2,\"FireRateLevel\":1,\"ClipSizeLevel\":3,\"WeaponOwned\":true}";
-            var m = MetaState.FromJson(v1);
+            var m = MetaState.FromSnapshotJson(v1);
             Assert.IsTrue(m.Owns(WeaponId.Mk1Sidearm));
             Assert.AreEqual(WeaponId.Mk1Sidearm, m.EquippedSecondary);
             Assert.AreEqual(3, m.TierOf(WeaponId.Mk1Sidearm));
             Assert.AreEqual(18, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
             Assert.AreEqual(15, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Clip));
             Assert.AreEqual(0, m.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Reload));
-            Assert.AreEqual(SaveData.CurrentVersion, m.SaveVersion);
+            Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
         }
 
         [Test]
         public void V1Save_WithoutWeapon_OwnsNothing()
         {
             string v1 = "{\"SaveVersion\":1,\"BankedSalvage\":50,\"WeaponOwned\":false}";
-            var m = MetaState.FromJson(v1);
+            var m = MetaState.FromSnapshotJson(v1);
             Assert.IsFalse(m.OwnsAnyWeapon);
         }
 
@@ -186,7 +186,7 @@ namespace GatekeepersProtocol.Tests
             m.EquippedSecondary = WeaponId.Mk1Sidearm;
             m.EquippedPrimary = WeaponId.Br12Shotgun;
 
-            var loaded = MetaState.FromJson(m.ToJson());
+            var loaded = MetaState.FromSnapshotJson(m.ToSnapshotJson());
             Assert.IsTrue(loaded.Owns(WeaponId.Br12Shotgun));
             Assert.AreEqual(5, loaded.TierOf(WeaponId.Br12Shotgun));
             Assert.AreEqual(30, loaded.PointOf(WeaponId.Br12Shotgun, WheelAttr.Damage));
