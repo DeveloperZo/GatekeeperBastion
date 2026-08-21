@@ -34,6 +34,8 @@ public sealed class PlayModeSaveFixture
             Debug.Log($"{Tag} guarding campaign save for PlayMode suite.");
         else
             Debug.LogWarning($"{Tag} SaveService.SavePath unresolved — suite is not guarding a save.");
+        if (string.IsNullOrEmpty(GatekeepersProtocol.PlayTests.PlayTestUtil.ResolveSaveRootForFixture()))
+            Debug.LogWarning($"{Tag} SaveService.SaveRoot unresolved — the campaign directory is NOT guarded.");
     }
 
     [OneTimeTearDown]
@@ -51,6 +53,7 @@ public sealed class PlayModeSaveFixture
 
     static void RecoverOrphanedBackup()
     {
+        RecoverOrphanedRootBackup();
         string path = GatekeepersProtocol.PlayTests.PlayTestUtil.ResolveSavePathForFixture();
         if (string.IsNullOrEmpty(path)) return;
         string backup = path + GatekeepersProtocol.PlayTests.PlayTestUtil.SaveFileGuard.BackupSuffix;
@@ -63,5 +66,27 @@ public sealed class PlayModeSaveFixture
         }
         catch (IOException e) { Debug.LogWarning($"{Tag} could not recover backup: {e.Message}"); }
         catch (UnauthorizedAccessException e) { Debug.LogWarning($"{Tag} could not recover backup: {e.Message}"); }
+    }
+
+    /// <summary>The campaign is a directory of Boarder and realm documents, and a crashed run
+    /// leaves it moved aside exactly as it leaves the legacy file copied aside. Recovering only
+    /// the file would restore the half nothing reads any more and abandon the half that is the
+    /// actual campaign.</summary>
+    static void RecoverOrphanedRootBackup()
+    {
+        string root = GatekeepersProtocol.PlayTests.PlayTestUtil.ResolveSaveRootForFixture();
+        if (string.IsNullOrEmpty(root)) return;
+        string backup = root + GatekeepersProtocol.PlayTests.PlayTestUtil.SaveFileGuard.BackupSuffix;
+        if (!Directory.Exists(backup)) return;
+        try
+        {
+            // Whatever is sitting in the live directory was written by the run that died, so it
+            // is test residue and not a campaign. The backup is the campaign.
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+            Directory.Move(backup, root);
+            Debug.LogWarning($"{Tag} restored a campaign directory left by a crashed test run.");
+        }
+        catch (IOException e) { Debug.LogWarning($"{Tag} could not recover campaign: {e.Message}"); }
+        catch (UnauthorizedAccessException e) { Debug.LogWarning($"{Tag} could not recover campaign: {e.Message}"); }
     }
 }

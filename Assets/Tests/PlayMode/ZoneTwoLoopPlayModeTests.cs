@@ -29,7 +29,7 @@ namespace GatekeepersProtocol.PlayTests
     /// </summary>
     /// <remarks>
     /// THE REAL SAVE. GameSession.Meta is the developer's live campaign. Setup serialises it
-    /// with MetaState.ToJson() BEFORE anything replaces it and teardown adopts the parsed
+    /// with MetaState.ToSnapshotJson() BEFORE anything replaces it and teardown adopts the parsed
     /// snapshot back, so the in-memory session is handed back exactly as found. The disk file is
     /// never written at all: AdoptDevState taints the session and GameSession.Save() is a no-op
     /// for a tainted session, and the assembly-wide PlayModeSaveFixture guards the file on top
@@ -80,7 +80,7 @@ namespace GatekeepersProtocol.PlayTests
             // which logs "[Demo] no teleporter wired" as an ERROR, which the test runner
             // turns into a failure: one new test took ten unrelated ones down with it.
             // A fixture may not decide what the session is for the fixtures after it.
-            _campaignJson = GameSession.Meta == null ? null : GameSession.Meta.ToJson();
+            _campaignJson = GameSession.Meta == null ? null : GameSession.Meta.ToSnapshotJson();
             yield return null;
         }
 
@@ -92,7 +92,7 @@ namespace GatekeepersProtocol.PlayTests
             // what everyone else sees.
             GameSession.AdoptDevState(_campaignJson == null
                 ? InertSession()
-                : MetaState.FromJson(_campaignJson));
+                : MetaState.FromSnapshotJson(_campaignJson));
             _campaignJson = null;
             yield return PlayTestUtil.ReturnToBlankScene();
         }
@@ -101,7 +101,7 @@ namespace GatekeepersProtocol.PlayTests
         /// hidden and nothing expects the beat-0 wake pieces to be authored in the scene.</summary>
         static MetaState InertSession()
         {
-            var m = new MetaState();
+            var m = MetaState.CreateNew();
             m.DemoActive = false;
             return m;
         }

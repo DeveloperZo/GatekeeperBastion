@@ -199,12 +199,12 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(serverAvatar.WaitingOnShip.Value, "unaffordable buy-back is refused");
             Assert.AreEqual(0L, GameSession.Meta.BankedSalvage);
 
+            // Fund the REALM's pot, which is what pays: a guest is playing in somebody else's
+            // world, and the cost of putting it back on its feet comes out of that world
+            // (Docs/Milestones — the realm and the Boarder). The gate is not poked directly
+            // here any more, because checking and debiting are now one call and a bare probe
+            // would spend the pot the request underneath is about to need.
             GameSession.Meta.BankedSalvage = HatchBank.BuyBackCost;
-            long hostBankIfSpentOnServer = GameSession.Meta.BankedSalvage;
-            Assert.IsTrue(_gc.TryNetBuyBack(serverAvatar, HatchBank.BuyBackCost),
-                "host gate allows a funded live window");
-            Assert.AreEqual(hostBankIfSpentOnServer, GameSession.Meta.BankedSalvage,
-                "TryNetBuyBack must not debit host Meta");
 
             LogAssert.Expect(LogType.Log,
                 "[Demo] buyback seat=" + serverAvatar.Slot.Value + " cost=" + HatchBank.BuyBackCost);
@@ -217,7 +217,7 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreEqual(guestUnbanked, _gc.Sim.UnbankedOf(serverAvatar.Slot.Value),
                 "buy-back must not touch Unbanked");
             Assert.AreEqual(0L, GameSession.Meta.BankedSalvage,
-                "owner spend debit the reported purse");
+                "the realm's pot paid for the rejoin");
 
             GameSession.Meta.BankedSalvage = bankSnap;
         }

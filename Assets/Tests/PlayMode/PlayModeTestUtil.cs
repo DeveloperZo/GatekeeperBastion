@@ -344,11 +344,26 @@ namespace GatekeepersProtocol.PlayTests
         /// behind. Same reflection lookup the guard uses; exposed rather than duplicated.</summary>
         public static string ResolveSavePathForFixture() => SaveFileGuard.ResolveSavePath();
 
+        /// <summary>Save DIRECTORY for the assembly-level fixture, for the same reason as
+        /// <see cref="ResolveSavePathForFixture"/>: it has to recover a backup a crashed run
+        /// left behind, before any guard exists to ask.</summary>
+        public static string ResolveSaveRootForFixture() => SaveFileGuard.ResolveSaveRoot();
+
         /// <summary>
-        /// Backs up the developer's real save file (SaveService.SavePath, located by reflection)
-        /// and restores it on Dispose, so these tests can start new sessions and buy things
-        /// without eating anyone's campaign.
+        /// Backs up the developer's real campaign and restores it on Dispose, so these tests can
+        /// start new sessions and buy things without eating anyone's progress.
         /// </summary>
+        /// <remarks>
+        /// A campaign is a DIRECTORY now, not a file: Boarders and realms are separate documents
+        /// under SaveService.SaveRoot. The legacy single file is still guarded alongside it —
+        /// it is a pre-split campaign this build refuses to load but has deliberately not
+        /// deleted, and a test suite is the last thing that should be the one to remove it.
+        ///
+        /// Both are located by reflection, which is load-bearing and fragile in the same breath:
+        /// renaming SaveService.SaveRoot or SavePath does not fail this build, it makes the
+        /// lookup return null, and a guard that silently guards nothing is exactly how the
+        /// suite ate a campaign once already.
+        /// </remarks>
         public sealed class SaveFileGuard : IDisposable
         {
             /// <summary>Suffix shared with <c>PlayModeSaveFixture</c> orphan recovery.
@@ -361,8 +376,15 @@ namespace GatekeepersProtocol.PlayTests
             readonly bool _existed;
             readonly bool _ownsBackup;
 
+            readonly string _root;
+            readonly string _rootBackup;
+            readonly bool _rootExisted;
+            readonly bool _ownsRoot;
+
             public SaveFileGuard()
             {
+                GuardSaveRoot(out _root, out _rootBackup, out _rootExisted, out _ownsRoot);
+
                 _path = ResolveSavePath();
                 if (string.IsNullOrEmpty(_path)) return;
 
@@ -392,6 +414,7 @@ namespace GatekeepersProtocol.PlayTests
 
             public void Dispose()
             {
+                RestoreSaveRoot();
                 if (!_ownsBackup || string.IsNullOrEmpty(_path)) return;
                 try
                 {
@@ -423,11 +446,69 @@ namespace GatekeepersProtocol.PlayTests
                 catch (TargetInvocationException) { /* best effort in teardown */ }
             }
 
+            /// <summary>Move the live save directory aside, so the suite writes into a clean
+            /// one and the developer's campaign cannot be touched at all. Moving beats copying
+            /// here: a test that writes a NEW realm must not leave it behind on restore.</summary>
+            static void GuardSaveRoot(out string root, out string backup, out bool existed, out bool owns)
+            {
+                root = ResolveSaveRoot();
+                backup = null;
+                existed = false;
+                owns = false;
+                if (string.IsNullOrEmpty(root)) return;
+
+                string candidate = root + BackupSuffix;
+                // Same nesting rule as the file half: an outer guard already holds the real
+                // campaign, and a second one would move the outer guard's backup out of reach.
+                if (Directory.Exists(candidate))
+                {
+                    Debug.LogWarning(
+                        "[SaveFileGuard] save-root backup already present — nested guard is a no-op.");
+                    return;
+                }
+                try
+                {
+                    existed = Directory.Exists(root);
+                    if (existed) Directory.Move(root, candidate);
+                    backup = candidate;
+                    owns = true;
+                }
+                catch (IOException) { owns = false; }
+                catch (UnauthorizedAccessException) { owns = false; }
+            }
+
+            void RestoreSaveRoot()
+            {
+                if (!_ownsRoot || string.IsNullOrEmpty(_root)) return;
+                try
+                {
+                    // Whatever the tests wrote goes, whether or not there is a backup to put
+                    // back — leaving a test's realms in the developer's list is its own defect.
+                    if (Directory.Exists(_root)) Directory.Delete(_root, true);
+                    if (_rootExisted && !string.IsNullOrEmpty(_rootBackup) && Directory.Exists(_rootBackup))
+                        Directory.Move(_rootBackup, _root);
+                }
+                catch (IOException) { /* best effort: never fail a test in teardown */ }
+                catch (UnauthorizedAccessException) { }
+            }
+
+            /// <summary>The save directory, by reflection. Null when the member is gone —
+            /// see the fragility note on this class.</summary>
+            internal static string ResolveSaveRoot()
+            {
+                return StaticStringProperty("GatekeepersProtocol.Game.SaveService", "SaveRoot");
+            }
+
             internal static string ResolveSavePath()
             {
-                Type saveService = FindType("GatekeepersProtocol.Game.SaveService");
-                if (saveService == null) return null;
-                PropertyInfo prop = saveService.GetProperty("SavePath",
+                return StaticStringProperty("GatekeepersProtocol.Game.SaveService", "SavePath");
+            }
+
+            static string StaticStringProperty(string typeName, string propertyName)
+            {
+                Type owner = FindType(typeName);
+                if (owner == null) return null;
+                PropertyInfo prop = owner.GetProperty(propertyName,
                     BindingFlags.Static | BindingFlags.Public);
                 if (prop == null || prop.PropertyType != typeof(string)) return null;
                 try { return prop.GetValue(null, null) as string; }
