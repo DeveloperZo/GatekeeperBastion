@@ -8,8 +8,15 @@ namespace GatekeepersProtocol.Game
     /// SaveService IO for the whole app (allowed exception to the no-new-statics rule).</summary>
     /// <remarks>
     /// Scene controllers read GameSession.Meta; every persistence call in the codebase goes
-    /// through Save()/StartNew()/ContinueGame() — nothing else may touch SaveService directly.
-    /// In future co-op this state lives on the host and is never mutated by remote clients.
+    /// through Save()/SaveBoarder()/SaveRealm()/StartNew()/ContinueGame() — nothing else may
+    /// touch SaveService directly.
+    ///
+    /// A session is a pair: a Boarder that belongs to this player and a realm that belongs to
+    /// whoever owns that world. The two are written independently, because the ownership rule
+    /// is not symmetric — a client writes its own Boarder, and only a world's host writes that
+    /// world. An earlier version of this comment claimed remote clients never mutate any of
+    /// this, which was never true of the Boarder half and is the reason the split exists.
+    ///
     /// Load and save are exception-guarded: a corrupt or unreadable save file must degrade to a
     /// fresh session, never take the game down on the way into or out of a run.
     /// </remarks>
@@ -19,6 +26,14 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>The live cross-run progression state, or null before StartNew/ContinueGame.</summary>
         public static MetaState Meta { get; private set; }
+
+        /// <summary>Id of the realm this session is playing in, or empty. On a guest this names
+        /// the guest's own last realm, not the host's — a visitor does not own the world it is
+        /// standing in and must never write it.</summary>
+        public static string CurrentRealmId { get; private set; } = "";
+
+        /// <summary>Id of the Boarder this session is playing as, or empty.</summary>
+        public static string CurrentBoarderId { get; private set; } = "";
 
         /// <summary>True once any Dev command has run this play session. A tainted session must
         /// never overwrite a real campaign save — <see cref="Save"/> becomes a no-op.</summary>
@@ -43,6 +58,8 @@ namespace GatekeepersProtocol.Game
         static void ResetStatics()
         {
             Meta = null;
+            CurrentRealmId = "";
+            CurrentBoarderId = "";
             DevTainted = false;
             PendingStartWave = 1;
             PendingEscapedLine = false;
@@ -85,14 +102,48 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        /// <summary>Begin a fresh campaign: new MetaState (0 banked, nothing owned) saved immediately.</summary>
+        /// <summary>Begin a fresh campaign: a new Boarder in a new realm, both written at once.
+        /// This is the path a player who never opens the realm list still takes, so it has to
+        /// mint both halves rather than assume the list did it.</summary>
         public static void StartNew()
         {
             DevTainted = false; // intentional new campaign may persist again
-            Meta = MetaState.CreateNew();
-            Save();
+            var boarder = RealmRegistry.CreateBoarder(null);
+            var realm = RealmRegistry.CreateRealm(null);
+            Adopt(boarder, realm);
             Log.Event("Ship",
-                $"new campaign — {Meta.BankedSalvage} banked to start with, no weapon yet");
+                $"new campaign — realm \"{realm.Name}\", {Meta.BankedSalvage} banked to start with, no weapon yet");
+        }
+
+        /// <summary>Take a Boarder into a realm. The realm list's whole job ends here: it
+        /// chooses the two documents, and this makes them the session.</summary>
+        public static bool EnterRealm(string realmId, string boarderId)
+        {
+            var realm = SaveService.LoadRealm(realmId);
+            var boarder = SaveService.LoadBoarder(boarderId);
+            if (realm == null || boarder == null)
+            {
+                // SaveService has already named the document that refused and why. What this
+                // adds is that nothing was entered, so the caller can stay where it is.
+                Log.Warn(Tag, "Could not enter realm — the session was left as it was.");
+                return false;
+            }
+            DevTainted = false;
+            Adopt(boarder, realm);
+            Log.Event("Ship",
+                $"entered realm \"{realm.Name}\" as \"{boarder.Name}\" — {Meta.BankedSalvage} banked, {LoadoutLog(Meta)}");
+            return true;
+        }
+
+        /// <summary>Compose the pair into the live session and remember it as the one to
+        /// continue into next time.</summary>
+        static void Adopt(BoarderState boarder, RealmState realm)
+        {
+            Meta = MetaState.Compose(boarder, realm);
+            CurrentBoarderId = boarder.Id;
+            CurrentRealmId = realm.Id;
+            RealmRegistry.LastBoarderId = boarder.Id;
+            RealmRegistry.LastRealmId = realm.Id;
         }
 
         /// <summary>Load the persisted campaign into Meta. Falls back to a fresh session on failure.</summary>
@@ -101,7 +152,10 @@ namespace GatekeepersProtocol.Game
             DevTainted = false; // disk load is a clean slate for save suppression
             try
             {
-                Meta = SaveService.Load();
+                string realmId, boarderId;
+                RealmRegistry.ResolveContinuePair(out realmId, out boarderId);
+                if (realmId == null || boarderId == null || !EnterRealm(realmId, boarderId))
+                    Meta = null;
             }
             catch (Exception e)
             {
@@ -153,25 +207,68 @@ namespace GatekeepersProtocol.Game
         /// a real campaign (skip Save while Dev mode has been used).</summary>
         public static void Save()
         {
+            if (RefusesWrite()) return;
+            WriteBoarder();
+            WriteRealm();
+        }
+
+        /// <summary>Persist only the Boarder. This is the write a guest is allowed to make: its
+        /// kit is its own wherever it earned it, and the world it is visiting is not.</summary>
+        public static void SaveBoarder()
+        {
+            if (RefusesWrite()) return;
+            WriteBoarder();
+        }
+
+        /// <summary>Persist only the realm. Only the owner of a world writes that world.
+        /// Deliberately independent of the Boarder write — requiring both would mean a guest
+        /// could not save its own kit without also claiming somebody else's world.</summary>
+        public static void SaveRealm()
+        {
+            if (RefusesWrite()) return;
+            WriteRealm();
+        }
+
+        /// <summary>The refusal both write paths share: a Dev-tainted session and an unloaded
+        /// session are each a no-op, and each says so.</summary>
+        static bool RefusesWrite()
+        {
             if (DevTainted)
             {
                 Log.Event("Dev", "Save skipped — session tainted by Dev mode");
-                return;
+                return true;
             }
             if (Meta == null)
             {
                 Log.Warn(Tag, "Save called with no session loaded; ignored.");
-                return;
+                return true;
             }
+            return false;
+        }
+
+        static void WriteBoarder()
+        {
             try
             {
-                SaveService.Save(Meta);
-                Log.Info(Tag, $"Saved (banked {Meta.BankedSalvage}, runs {Meta.TotalRuns}).");
+                SaveService.SaveBoarder(Meta.Boarder);
             }
             catch (Exception e)
             {
                 // Guard trip: a failed save must not abort the caller — this runs on the death path.
-                Log.Error(Tag, $"Save failed ({e.GetType().Name}: {e.Message}); progress this run may be lost.");
+                Log.Error(Tag, $"Boarder save failed ({e.GetType().Name}: {e.Message}); kit earned this run may be lost.");
+            }
+        }
+
+        static void WriteRealm()
+        {
+            try
+            {
+                SaveService.SaveRealm(Meta.Realm);
+                Log.Info(Tag, $"Saved (banked {Meta.BankedSalvage}, runs {Meta.TotalRuns}).");
+            }
+            catch (Exception e)
+            {
+                Log.Error(Tag, $"Realm save failed ({e.GetType().Name}: {e.Message}); progress this run may be lost.");
             }
         }
 
