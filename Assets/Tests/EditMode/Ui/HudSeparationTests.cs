@@ -55,7 +55,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ShipHosts_PairwiseGapAndPromptClearsWeapon()
         {
-            var scene = SceneHudYaml.Load("Assets/Scenes/Ship.unity");
+            var scene = SceneHudYaml.Load("Assets/Scenes/Ship - Demo.unity");
             string[] hosts = { "Hud Profile", "Hud Score", "Hud Weapon" };
             for (int r = 0; r < Widths.Length; r++)
             {
@@ -73,14 +73,14 @@ namespace GatekeepersProtocol.Tests
         public void OverflowTmp_WrapsOrAutoSizes_NotTruncated()
         {
             AssertOverflow("Assets/Scenes/Bastion.unity", "Canvas - Dynamic");
-            AssertOverflow("Assets/Scenes/Ship.unity", "Ship HUD");
+            AssertOverflow("Assets/Scenes/Ship - Demo.unity", "Ship HUD");
         }
 
         [Test]
         public void ProfileExp_IsInactive()
         {
             AssertProfileExpInactive("Assets/Scenes/Bastion.unity", "Canvas - Dynamic");
-            AssertProfileExpInactive("Assets/Scenes/Ship.unity", "Ship HUD");
+            AssertProfileExpInactive("Assets/Scenes/Ship - Demo.unity", "Ship HUD");
         }
 
         static void AssertOverflow(string scenePath, string ancestor)
@@ -119,7 +119,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ArmoryCatalogCostAndEffect_DoNotWrap()
         {
-            var scene = SceneHudYaml.Load("Assets/Scenes/Ship.unity");
+            var scene = SceneHudYaml.Load("Assets/Scenes/Ship - Demo.unity");
             for (int i = 1; i <= 3; i++)
             {
                 string row = "Catalog Row " + i;

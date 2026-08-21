@@ -131,6 +131,9 @@ namespace GatekeepersProtocol.Game
             }
             else
                 Log.Warn(Tag, "master-control hatch half — no BastionLayout");
+            Log.Event("Demo", "hatch finale send");
+            DemoVoice.PlayLocalAndBroadcast(
+                DemoConversationIds.HatchFinale, DemoVoiceMode.Subtitle);
         }
 
         /// <summary>A Hatch-bank window was survived (RunSim.BankWindowSurvived). This is the

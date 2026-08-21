@@ -62,6 +62,13 @@ namespace GatekeepersProtocol.Game
             {
                 Log.Event("Run", $"BASTION STRIPPED — Master Control Hatch-bank survived, " +
                     $"gross {r.grossEarned}, repair {r.repairSpent}, net {net}, banked now {Meta.BankedSalvage}");
+                // Escaped only. OfferDockIfBankSurvived already refuses the dock while the
+                // Master Hatch half is live, so a Docked end never reaches here as Escaped.
+                if (Meta != null && Meta.DemoActive)
+                {
+                    GameSession.PendingEscapedLine = true;
+                    DemoProgress.EndDemo(Meta);
+                }
             }
             else if (phase == RunPhase.Returned)
             {

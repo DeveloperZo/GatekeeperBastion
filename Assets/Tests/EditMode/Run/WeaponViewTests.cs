@@ -91,6 +91,70 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void Hold_Mk1KeepsTheHipConstants()
+        {
+            var h = WeaponView.Hold(WeaponId.Mk1Sidearm);
+            Assert.AreEqual(WeaponView.LocalGunRight, h.Right);
+            Assert.AreEqual(WeaponView.LocalGunDown, h.Down);
+            Assert.AreEqual(WeaponView.LocalGunForward, h.Forward);
+            Assert.AreEqual(0f, h.Pitch);
+            Assert.AreEqual(2f, h.Yaw);
+            Assert.AreEqual(10f, h.Roll);
+        }
+
+        [Test]
+        public void Hold_ShopGunsShareTheMk1Pocket()
+        {
+            var mk1 = WeaponView.Hold(WeaponId.Mk1Sidearm);
+            WeaponId[] shop =
+            {
+                WeaponId.SecD, WeaponId.Br12Shotgun, WeaponId.Mr35Rifle
+            };
+            for (int i = 0; i < shop.Length; i++)
+            {
+                var h = WeaponView.Hold(shop[i]);
+                Assert.AreEqual(mk1.Right, h.Right, shop[i].ToString());
+                Assert.AreEqual(mk1.Down, h.Down, shop[i].ToString());
+                Assert.AreEqual(mk1.Forward, h.Forward, shop[i].ToString());
+                Assert.AreEqual(mk1.Pitch, h.Pitch, shop[i].ToString());
+                Assert.AreEqual(mk1.Yaw, h.Yaw, shop[i].ToString());
+                Assert.AreEqual(mk1.Roll, h.Roll, shop[i].ToString());
+                Assert.AreEqual(mk1.Right, WeaponView.Hold(shop[i], true).Right);
+            }
+        }
+
+        [Test]
+        public void Hold_PriCKeepsTheMk1Hand_LowAndAlongTheBarrel()
+        {
+            var mk1 = WeaponView.Hold(WeaponId.Mk1Sidearm);
+            var sniper = WeaponView.Hold(WeaponId.PriC);
+            Assert.AreEqual(mk1.Right, sniper.Right);
+            Assert.AreEqual(mk1.Forward, sniper.Forward);
+            Assert.Less(sniper.Down, mk1.Down);
+            Assert.Less(sniper.Yaw, 0f);
+            Assert.AreEqual(0f, sniper.Roll);
+            Assert.AreEqual(sniper.Right, WeaponView.Hold(WeaponId.PriC, true).Right);
+            AssertInFrame(sniper);
+        }
+
+        [Test]
+        public void Hold_CutterKeepsTheMeleeCant()
+        {
+            var mk1 = WeaponView.Hold(WeaponId.Mk1Sidearm);
+            var cutter = WeaponView.Hold(WeaponId.None);
+            Assert.Greater(cutter.Roll, mk1.Roll);
+            AssertInFrame(cutter);
+        }
+
+        static void AssertInFrame(WeaponView.GunHold h)
+        {
+            Assert.Greater(h.Forward, 0.05f);
+            Assert.Less(h.Forward, 1f);
+            Assert.Less(h.Right, 0.5f);
+            Assert.Greater(h.Down, -0.5f);
+        }
+
+        [Test]
         public void FireClip_SplitsPistolShotgunRifle()
         {
             Assert.AreEqual(WeaponView.FirePistol, WeaponView.FireClip(WeaponId.Mk1Sidearm));

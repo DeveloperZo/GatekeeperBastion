@@ -15,7 +15,7 @@ namespace GatekeepersProtocol.Tests
     ///   spawnInterval         = max(0.4, 4.2 - 0.20*waveIndex)  (NO dial term) — SECONDS
     ///                           BETWEEN GROUPS since the horde retune, not between individuals
     ///   timeUntilNextWave     = 0 (obsolete under the draw model)
-    /// Per-kind composition (defaultCount/hunterCount/ramCount) is pinned in
+    /// Per-kind composition (defaultCount/hunterCount/thiefCount) is pinned in
     /// GatekeeperVariantsTests; this file owns the totals, the dial and the gaps.
     ///
     /// THE HORDE RETUNE — 3x BODIES, 1/3 HP, GROUP SPAWNS.
@@ -252,7 +252,7 @@ namespace GatekeepersProtocol.Tests
         {
             // Health and spawn gap USED to carry +0.20/level and -0.15s/level. They do not any
             // more, on purpose: one axis of cost, matched to the one axis of reward. Group size
-            // and the Hunter/Ram counts joined that list with the horde retune — the dial buys
+            // and the Hunter/Thief counts joined that list with the horde retune — the dial buys
             // BODIES, and (GatekeeperVariantsTests) every one of them is a Default.
             var director = new WaveDirector();
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
@@ -269,8 +269,8 @@ namespace GatekeepersProtocol.Tests
                         "group size must not move with the dial (wave " + w + ", dial " + level + ")");
                     Assert.AreEqual(atZero.hunterCount, spec.hunterCount,
                         "hunters must not move with the dial (wave " + w + ", dial " + level + ")");
-                    Assert.AreEqual(atZero.ramCount, spec.ramCount,
-                        "rams must not move with the dial (wave " + w + ", dial " + level + ")");
+                    Assert.AreEqual(atZero.thiefCount, spec.thiefCount,
+                        "thieves must not move with the dial (wave " + w + ", dial " + level + ")");
                     Assert.IsTrue(spec.enemyCount >= atZero.enemyCount,
                         "count is the only axis the dial moves, and it only goes up");
                 }
@@ -327,7 +327,7 @@ namespace GatekeepersProtocol.Tests
         public void Wave_EnemyHp_TimesMultiplier_IsTheActualPool()
         {
             // What the Game layer will actually spawn at siphon 0, per DEFAULT body:
-            // 30 / 42 / 54 / 66 / 78 HP (the same multiplier sizes a Hunter's 20 and a Ram's 120).
+            // 30 / 42 / 54 / 66 / 78 HP (the same multiplier sizes a Hunter's 20 and a Thief's 120).
             var director = new WaveDirector();
             float[] expected = { 30f, 42f, 54f, 66f, 78f };
             for (int w = 0; w < WaveDirector.MaxWaves; w++)

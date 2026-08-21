@@ -31,7 +31,7 @@ namespace GatekeepersProtocol.Tests
         {
             AssertAgent("Assets/Prefabs/EnemyGatekeeper.prefab", 0.4f, 2f);
             AssertAgent("Assets/Prefabs/HunterGatekeeper.prefab", 0.4f * 0.85f, 2f * 0.85f);
-            AssertAgent("Assets/Prefabs/RamGatekeeper.prefab", 0.4f * 1.4f, 2f * 1.4f);
+            AssertAgent("Assets/Prefabs/ThiefGatekeeper.prefab", 0.4f * 1.4f, 2f * 1.4f);
         }
 
         // Colour is the tutorial: each kind glows its own palette tint. Exact colours live in

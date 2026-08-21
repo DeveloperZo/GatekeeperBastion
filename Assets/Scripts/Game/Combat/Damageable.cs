@@ -19,7 +19,7 @@ namespace GatekeepersProtocol.Game
 
         // 30 mirrors WaveDirector.StatsFor(Default).maxHp (the gatekeeper baseline) so an actor built
         // without a SceneBuilder pass still starts at a tuned value. WaveSpawner overrides it per
-        // spawn with the actor's OWN kind's hp — a Hunter is 20 and a Ram is 120, and neither of
+        // spawn with the actor's OWN kind's hp — a Hunter is 20 and a Thief is 120, and neither of
         // those numbers may ever be inferred from this one.
         [SerializeField] float maxHp = 30f;
         [SerializeField] Color hitFlashColor = new Color(1f, 0.15f, 0.1f);

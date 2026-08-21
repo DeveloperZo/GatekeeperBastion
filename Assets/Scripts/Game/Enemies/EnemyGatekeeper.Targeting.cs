@@ -18,12 +18,12 @@ namespace GatekeepersProtocol.Game
         protected virtual bool MayTargetHatch => !ignoresHatch;
 
         /// <summary>May this gatekeeper go after a player at all — by aggro, by sight, or by being
-        /// shot? False for Rams, which walk past you to get to the door.</summary>
+        /// shot? False for Thieves, which walk past you to get to the door.</summary>
         protected virtual bool MayTargetPlayer => !ignoresPlayer;
 
         /// <summary>Can being shot (or a neighbour's shout) flip this gatekeeper onto the player?
         /// A gatekeeper that will never target a player can never be provoked into doing so —
-        /// shooting a Ram changes nothing at all about it, which is the whole design.</summary>
+        /// shooting a Thief changes nothing at all about it, which is the whole design.</summary>
         protected virtual bool CanBeProvoked => MayTargetPlayer;
 
         // ---------- provocation ----------
@@ -31,7 +31,7 @@ namespace GatekeepersProtocol.Game
         /// <summary>Shot by someone: hunt them, and pull the neighbours in with us.</summary>
         void OnDamaged(Transform source)
         {
-            // A Ram absorbs this and does not change: not its target, not its speed, and it does
+            // A Thief absorbs this and does not change: not its target, not its speed, and it does
             // not shout. Provoke() is the single gate, so there is no second path to miss.
             Provoke(source, shout: true);
         }
@@ -63,7 +63,7 @@ namespace GatekeepersProtocol.Game
                 var other = live[i];
                 if (other == null || other == this) continue;
                 if (Vector3.Distance(transform.position, other.transform.position) > alertRadius) continue;
-                // Rams in the group silently decline; only gatekeepers that actually joined count.
+                // Thieves in the group silently decline; only gatekeepers that actually joined count.
                 if (other.Provoke(source, shout: false)) joined++;
             }
             Log.Event("Gatekeepers", joined > 0
@@ -133,7 +133,7 @@ namespace GatekeepersProtocol.Game
             //   Default — as it always was.
             //   Hunter  — hatchAvailable is always false, so `!hatchAvailable` holds and it chases
             //             the player from the breach, for life.
-            //   Ram     — MayTargetPlayer is true on field-terminal Waves (2026-08-13), so it
+            //   Thief     — MayTargetPlayer is true on field-terminal Waves (2026-08-13), so it
             //             hunts the Boarder while the Hatch is out of the fight. Hatch-bank
             //             restores MayTargetPlayer false.
             _chasingPlayer = MayTargetPlayer && !_committedToHatch &&
@@ -141,7 +141,7 @@ namespace GatekeepersProtocol.Game
             _hatchTarget = hatchAvailable ? hatch : null;
             _standPoint = _committedToHatch && hatchAvailable ? HatchStandPoint(hatch) : (Vector3?)null;
 
-            // Decoy pull: ahead of Hatch and player when in radius. Rams never; committed Defaults never.
+            // Decoy pull: ahead of Hatch and player when in radius. Thieves never; committed Defaults never.
             _decoyTarget = null;
             _chasingDecoy = false;
             var gc = _game;

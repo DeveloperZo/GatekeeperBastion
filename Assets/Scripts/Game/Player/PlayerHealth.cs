@@ -73,6 +73,16 @@ namespace GatekeepersProtocol.Game
 
         bool _bulkheadArmed;
 
+        /// <summary>Cloak: off every targeting list while true. This is a removal, not a bias —
+        /// <see cref="PlayerRegistry.NearestAlive"/> skips the player outright, so no
+        /// multiplier on <see cref="AcquisitionMul"/> could express it.</summary>
+        public bool Cloaked { get; private set; }
+
+        public void SetCloaked(bool cloaked)
+        {
+            Cloaked = cloaked;
+        }
+
         public void ConfigureAcquisition(float mul)
         {
             AcquisitionMul = mul > 0f ? mul : 1f;

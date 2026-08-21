@@ -1,4 +1,5 @@
 using GatekeepersProtocol.Sim;
+using GatekeepersProtocol.Util;
 
 namespace GatekeepersProtocol.Game
 {
@@ -131,6 +132,21 @@ namespace GatekeepersProtocol.Game
             }
             if (cheapest == long.MaxValue) return true;
             return m.BankedSalvage < cheapest;
+        }
+
+        /// <summary>Escaped only. Flips the demo off and powers FAB; every other demo gate
+        /// already no-ops when <see cref="MetaState.DemoActive"/> is false, so those two
+        /// writes are the whole lift. Leaves <see cref="MetaState.DemoZone2BankLost"/>,
+        /// <see cref="MetaState.DemoRungTwoOpened"/> and <see cref="MetaState.DemoRungTwoBuysLeft"/>
+        /// alone — they are the record of what the player played, and every reader of them
+        /// is already DemoActive-gated. A Lost or Docked end must not call this.</summary>
+        public static void EndDemo(MetaState m)
+        {
+            if (m == null) return;
+            if (!m.DemoActive) return;
+            m.DemoActive = false;
+            m.DemoFabPowered = true;
+            Log.Event("Demo", "demo ended");
         }
     }
 }

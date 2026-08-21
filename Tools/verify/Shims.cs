@@ -149,6 +149,14 @@ namespace NUnit.Framework
             if (o == null) throw new AssertionException(With(message, "Expected: not null"));
         }
 
+        /// <summary>NUnit's string overload only — the protocol-catalog suite asserts that no
+        /// sheet row is blank. A null reads as empty, same as NUnit.</summary>
+        public static void IsNotEmpty(string value, string message = null)
+        {
+            if (string.IsNullOrEmpty(value))
+                throw new AssertionException(With(message, "Expected: not empty string"));
+        }
+
         static int Compare(object a, object b)
         {
             double x = Convert.ToDouble(a, System.Globalization.CultureInfo.InvariantCulture);

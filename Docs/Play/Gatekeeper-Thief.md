@@ -1,4 +1,4 @@
-<!-- Purpose: the Thief — slow, hunts you on a field-terminal Wave and the Hatch on a Hatch-bank, and the one kind that will not shout. Code identifier remains Ram until M63. / Status: working / Update trigger: when the Thief's immunity to provocation, its crowd priority, or who it hunts changes. / Last updated: 2026-08-20 -->
+<!-- Purpose: the Thief — slow, hunts you on a field-terminal Wave and the Hatch on a Hatch-bank, and the one kind that will not shout. / Status: working / Update trigger: when the Thief's immunity to provocation, its crowd priority, or who it hunts changes. / Last updated: 2026-08-20 -->
 
 # Thief
 
@@ -49,4 +49,3 @@ Intensity never adds Thieves. However high you juice, the number of Thieves is t
 - Nothing tells you a Thief is present or how many are left. The Assault count is one number for the whole Wave.
 - Its slowness reads as harmlessness. Nothing frames it as a budget you have to spend.
 - That it pushes through crowds rather than jamming in them is invisible — you cannot block it with bodies.
-- The player-facing name is Thief; the code identifier is still Ram until M63.

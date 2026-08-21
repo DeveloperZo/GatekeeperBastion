@@ -27,6 +27,8 @@ namespace GatekeepersProtocol.Sim
         {
             if (!hatchBank) return;
             if (Phase != RunPhase.Tethered) return;
+            // Finale access is refused here, not unguarded: a Docked end is unreachable
+            // while the Master Hatch half is live, so EndDemo never has to filter it.
             if (_masterPhase == MasterControlPhase.Hatch) return;
             DockOffered = true;
             var survived = BankWindowSurvived;

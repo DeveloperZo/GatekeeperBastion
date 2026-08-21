@@ -61,6 +61,10 @@ namespace GatekeepersProtocol.Game
             LastShotWasCrit = anyCrit;
             Effects.MuzzleFlash(origin + aimDir * 0.45f + Vector3.down * 0.08f);
             if (_view != null) _view.NotifyFired();
+            // Firing exits Cloak instantly — the layer's whole price. Cached in Slots.
+            if (_protocolAbilities == null)
+                _protocolAbilities = GetComponentInParent<PlayerProtocolAbilities>();
+            if (_protocolAbilities != null) _protocolAbilities.NotifyFired();
             if (pellets == 1)
                 SpawnTracer(origin + aimDir * 0.4f, lastEnd, anyCrit, def);
             else

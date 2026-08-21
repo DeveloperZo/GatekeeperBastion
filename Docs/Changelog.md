@@ -8,6 +8,111 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-20
 -->
 
+- 2026-08-20: **`M82` started — the weapon in your hands.** One
+  `Packs/Weapons/ViewModel.controller` (Speed / Fire / Reload) and four clips
+  keyed on the six wrapper roots. Animator lives on Boarder's `Grip`;
+  `WeaponViewModel` binds that before the body search. Reload clip speed is
+  `clipLength / ActiveReloadSeconds`, restored when the timer ends. Four
+  controller-less Animators on `Gen_*_WindowPiece` in `Bastion.unity` were
+  removed. Criteria 1–3 are eyes-on in a Run.
+
+- 2026-08-20: **The Gatekeeper wrappers actually wear their robots now — `M88`'s swap
+  finally ran.** `Hunter.prefab` was still on Synty's `Characters.fbx` and `Thief.prefab`
+  on `BR_Characters.fbx`, four weeks after `M88` specified `SK_Hunter` and
+  `SK_Exterminator`. Nothing was broken in the code: `EnsureWrapper` only runs inside a
+  scene build, and no scene build had run since. `M88` says as much in its own
+  Implementation section — "until a scene build ran, Hunter and Ram were mid-swap" — and
+  it was closed on that basis. Re-dressed through the production path
+  (`SceneBuilder.CreateEnemyPrefabs`, reached by reflection from a one-shot under
+  `Assets/_Scratch/Editor/`, since deleted) rather than by hand, so the result is what a
+  Build All would produce. **Prefabs and materials only — no scene was opened or saved.**
+  Mesh owners after, read back from the prefab text: `Default` → `SK_UtilityBot.fbx`,
+  `Hunter` → `SK_Hunter.fbx`, `Thief` → `SK_Exterminator.fbx`; every renderer on a
+  material inside `Packs/Gatekeepers/`; agent footprints unmoved at 0.4/2/1, 0.34/1.7/0.85
+  and 0.56/2.8/1.4. `Default.prefab` was already dressed and was left untouched, which is
+  what makes it the template the other two were rebuilt against. `M88` criteria 1 and 2
+  are true on disk for the first time; criteria 3 and 4 still want eyes on a Run.
+  **A false trail worth recording.** A `SceneBuilder.WrapperLooksDressed` "fix" was
+  written and then reverted: the claim was that the pack's `*_Base` prefabs are instances
+  of `ANM_*_Poses.fbx` rather than `Models/SK_*.fbx`, so the dressed-check could never
+  pass. It came from resolving a guid with `grep -rl "guid: <g>" --include=*.meta | head -1`,
+  which matches any meta that *mentions* the guid — the poses meta references the model's
+  guid, and sorted first. **Match the owning line (`^guid:`) instead.** Unity's own
+  AssetDatabase said `SK_UtilityBot.fbx` all along.
+
+- 2026-08-20: **`M63-3` started — the Cloaker, and another chunk off `M63`.** The
+  garrison's fourth kind advances only while no Boarder is looking at it: a 30°
+  half-angle watch cone (26 m, line of sight, 0.35 s hysteresis) gates both
+  `MayTargetHatch` and `MayTargetPlayer`, so being seen is expressed in the existing
+  three-virtual seam rather than in new machinery. Body is `SK_Tactical`, the last
+  FaxLab3D silhouette `M88` left unspent — `M80` shipped its elite as a high-HP Thief
+  on the Exterminator, so nothing was waiting on it. One new number, hp 45, derived as
+  two MK-1 T0 shots; every other stat is Default's, because the Cloaker writes nothing
+  the door-time log could move. `GatekeeperStats` gains no field: the refusal is a
+  state, not a constant. Wave counts `{0,0,1,2,3}`, deliberately small against the
+  pre-mortem's worst case (a crowded Wave in which somebody is always looking, and
+  every Cloaker is frozen for its whole life).
+  Shaved off `M63` with it: criterion 5, the **Ram→Thief rename** (a kind cannot be
+  authored under a name the enum is about to lose), and criteria 8 and 9, the
+  **`in_build` Compendium filter** (the Cloaker needs a player page; the eight unbuilt
+  kinds must not follow it in). `M63`'s criteria keep their numbers rather than being
+  renumbered — criterion 10, the door-time log, is cited by name from
+  `Brainstorms/gatekeepers-and-waves.md`. `M63` keeps the roster record, the refusal
+  rewording, properties, the draw rule, `M53`'s Ram exception and door-time.
+  Rejected in writing, with reasons: masking the HUD live count while cloaked (it *is*
+  the wave-cleared handshake, so it needs a second counter); invulnerability while
+  watched (one dominant answer in each direction); a static gaze flag on
+  `GatekeeperStats`.
+
+- 2026-08-20: **`M80` built — one final Hatch-bank window, the first elite, and
+  `EndDemo` on Escaped.** `HatchWaves` is a `static int` defaulting to 1 so
+  the multi-window no-dump path stays pinnable at 5. The elite is one Ram,
+  no escorts, at `FinaleEliteHp` 240 (624 spawned against a Wave-5 Ram's 312).
+  `EndDemo` writes `DemoActive false` and `DemoFabPowered true` and leaves
+  the rung-2 record alone; `PendingEscapedLine` carries `demo.escaped` onto
+  the Ship after the flag flips. `demo.master_control` and `demo.hatch_finale`
+  play on the hooks that already existed. Criteria 8 and 9 (two-seat
+  loopback, playthrough) stay open. Verified: `lint-arch` clean; Unity
+  EditMode 75/0 on the five fixtures named in the file. Offline `mcs`
+  harness skipped (not on PATH).
+
+- 2026-08-20: **`M93` started — three Primaries that read as three guns.** Catalog,
+  shop, slot `1`, abilities and per-weapon upgrades were already in the tree.
+  This pass adds metres to the `concussive shove` log (criterion 6), paints
+  Railshot **ARMED** on the HUD before cooldown hides it (criterion 5), and an
+  EditMode pairwise test so a future retune cannot collapse the three profiles.
+  `_m61_2_handoff/` was discarded: it is `M61-2` bastion mesh, not this work.
+  `PrimaryRowsOpen` is unchanged. Criterion 4 stays open until `M82`.
+  No `WeaponCatalog` numbers moved.
+
+- 2026-08-20: **Build All no longer unregisters scenes it does not own; the isometric
+  probe scene deleted.** `SceneBuilder.RegisterBuildScenes` assigned
+  `EditorBuildSettings.scenes` a fresh four-entry array, so **every scene registered
+  since was silently dropped** by `GatekeepersProtocol/Build/All Scenes`. It had a
+  victim: `ShipIsometricSceneTests` loads its scene *by name from Build Settings*, and
+  that fixture was already returning Inconclusive with `Ship_Isometric` sitting at
+  `enabled: 0`. The four boot scenes are now pinned at the head of the list and
+  everything else is kept with its enabled flag intact; the only rows removed are ones
+  whose scene file is gone, and both keeps and drops are logged, so the build set never
+  changes silently again.
+  The merge is extracted as a pure `SceneBuilder.MergeBuildScenes` — no UnityEditor
+  types, existence injected — so it is testable without an editor.
+  `BuildSceneRegistrationTests` pins the five cases, including that a boot scene listed
+  twice stays one enabled row.
+  `Ship_Isometric.unity`, its `.meta`, `ShipIsometricSceneTests.cs` and the Build
+  Settings row are **deleted** (Zo, `M89` being cancelled). `IsometricCameraRig`,
+  `WallRenderState` and `IsometricBodyPresentation` remain in the tree but are now
+  unreachable — no scene instantiates a rig, so every `_isoRig` is permanently null and
+  every `_isoRig != null` branch is dead. Removing them is a separate call.
+  Verified: the merge's five cases plus a seeded reproduction of the old assign-four
+  behaviour were executed offline against the real lifted source — the seed fails
+  exactly where the fix passes. All five Unity-generated assemblies build clean.
+  **Audit note:** `SceneBuilder` is `[InitializeOnLoad]` and polls four sentinel files at
+  the repo root once a second. `gkb_scene_build_request.txt` runs `BuildAllCore()`
+  **without** the `SaveCurrentModifiedScenesIfUserWantsTo()` prompt the menu item has, so
+  the file-triggered path can discard unsaved scene work that the menu path protects.
+  The sentinels are not gitignored. Flagged, not changed.
+
 - 2026-08-20: **`M91` started and its code half landed — the wake bed becomes a
   teleporter.** `ShipCapsule.cs` is now `ShipTeleporter.cs` (`git mv`, `.meta`
   moved with it so the component guid survives); the phase machine

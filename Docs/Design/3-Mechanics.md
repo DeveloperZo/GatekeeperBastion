@@ -26,7 +26,7 @@ has had; no tuning pass has come close.
 | Clearing the last Wave is not the win. Master Control's Hatch-bank is. | Fantasy (boarding objective); Challenge | Wave 5 terminal clear does not `CompleteRun`. `Escaped` / `CleanExits++` only after the Master Control Hatch half (`AdvanceMasterControl`). Both endings exit by one door: RETURN TO SHIP. |
 | Shooting a Default makes it come for you. | Challenge; Expression (you choose to pull) | `EnemyGatekeeper.OnDamaged`. |
 | A Hunter can never hurt the door, at any tuning. | Fantasy (kind identity); Challenge | `hatchDamage = 0`, `ignoresHatch`. |
-| A Thief hunts the Boarder on a field-terminal Wave; shooting it still will not shout. | Fantasy (kind identity); Challenge | `RamGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`; `CanBeProvoked` stays false. Player-facing name Thief; code id `Ram` until M63. |
+| A Thief hunts the Boarder on a field-terminal Wave; shooting it still will not shout. | Fantasy (kind identity); Challenge | `ThiefGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`; `CanBeProvoked` stays false. Player-facing name Thief; code id `Thief` until M63. |
 | All three kinds share one swing clock. | Challenge (readable kinds) | `GatekeeperAttackInterval`. A kind differs by what it hits and how hard, never by cadence. |
 | Gatekeepers arrive in groups with a gap, not as a stream. | Challenge | `WaveSpawner(+.Groups)`. |
 | Kills pay, and only in `Tethered + Assault`. | Challenge; Submission refused | `RunSim.AwardKill` → Unbanked. Prep pays nothing. |

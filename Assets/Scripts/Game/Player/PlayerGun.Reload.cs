@@ -12,6 +12,10 @@ namespace GatekeepersProtocol.Game
 
         public float ReloadProgress => SlotReloadProgress(_activeSlot);
 
+        /// <summary>Active slot's reload duration — the same number <see cref="StartReload"/>
+        /// writes onto the timer, so viewmodel clip speed can match the gun.</summary>
+        public float ActiveReloadSeconds => EffectiveReloadSeconds(_activeSlot);
+
         /// <summary>True when the given slot's reload timer is running (active or stowed).</summary>
         public bool SlotIsReloading(WeaponSlot slot) => _slots[(int)slot].reloadTimer > 0f;
 

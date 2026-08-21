@@ -2,6 +2,7 @@ using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace GatekeepersProtocol.Game
 {
@@ -35,7 +36,9 @@ namespace GatekeepersProtocol.Game
 
         [SerializeField] GameObject _gatekeeperPrefab;
         [SerializeField] GameObject _hunterPrefab;
-        [SerializeField] GameObject _ramPrefab;
+        // Was `_ramPrefab` until the Thief rename. Bastion.unity and both NetSession prefabs
+        // still carry the old key; FormerlySerializedAs keeps them bound without a re-save.
+        [SerializeField, FormerlySerializedAs("_ramPrefab")] GameObject _thiefPrefab;
 
         [SerializeField, Tooltip("Networked decoy prop. Spawned by the host bay.")]
         GameObject _decoyPrefab;
@@ -344,13 +347,13 @@ namespace GatekeepersProtocol.Game
                 Log.Warn(Tag, "LoadLobbyShip refused — session not listening.");
                 return false;
             }
-            if (!SceneFlow.CanLoad(SceneFlow.Ship))
+            if (!SceneFlow.CanLoad(SceneFlow.ShipCoop))
             {
-                Log.Error(Tag, "LoadLobbyShip refused — Ship not in Build Settings.");
+                Log.Error(Tag, "LoadLobbyShip refused — Ship - CoOp not in Build Settings.");
                 return false;
             }
-            _nm.SceneManager.LoadScene(SceneFlow.Ship, LoadSceneMode.Single);
-            Log.Event(Tag, "party load Ship");
+            _nm.SceneManager.LoadScene(SceneFlow.ShipCoop, LoadSceneMode.Single);
+            Log.Event(Tag, "party load Ship - CoOp");
             return true;
         }
 
@@ -381,13 +384,13 @@ namespace GatekeepersProtocol.Game
                 Log.Warn(Tag, "LoadPartyShip refused — session not listening.");
                 return false;
             }
-            if (!SceneFlow.CanLoad(SceneFlow.Ship))
+            if (!SceneFlow.CanLoad(SceneFlow.ShipCoop))
             {
-                Log.Error(Tag, "LoadPartyShip refused — Ship not in Build Settings.");
+                Log.Error(Tag, "LoadPartyShip refused — Ship - CoOp not in Build Settings.");
                 return false;
             }
-            _nm.SceneManager.LoadScene(SceneFlow.Ship, LoadSceneMode.Single);
-            Log.Event(Tag, "party return Ship");
+            _nm.SceneManager.LoadScene(SceneFlow.ShipCoop, LoadSceneMode.Single);
+            Log.Event(Tag, "party return Ship - CoOp");
             return true;
         }
 

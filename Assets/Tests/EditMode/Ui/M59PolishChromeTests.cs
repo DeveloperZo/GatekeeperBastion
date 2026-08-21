@@ -31,7 +31,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void StationCategoriesAndPreview_AreInactive()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - Demo.unity"));
             AssertInactive(yaml, "Categories");
             AssertInactive(yaml, "Preview Image");
         }
@@ -39,7 +39,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void StationBackgroundBlur_AllAlphasAtLeast065()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - Demo.unity"));
             var alphas = CollectNamedImageAlphas(yaml, "Background Blur");
             Assert.AreEqual(4, alphas.Count, "expected one Background Blur per station");
             for (int i = 0; i < alphas.Count; i++)
@@ -83,7 +83,7 @@ namespace GatekeepersProtocol.Tests
         {
             // Close is a stripped PrefabInstance. Authored gutters: top-anchored
             // Station Title → Purpose → Deal (16 each) and bottom-anchored Station Footer.
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - Demo.unity"));
             string[] stations = { "ARMORY", "FABRICATION", "CREW QUARTERS", "NAV MAP" };
             for (int i = 0; i < stations.Length; i++)
             {
@@ -267,7 +267,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void CrewQuarters_ProtocolSheet_IsBound()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - Demo.unity"));
             int sheetAt = yaml.IndexOf("m_Name: Protocol Sheet\n", System.StringComparison.Ordinal);
             if (sheetAt < 0)
                 sheetAt = yaml.IndexOf("m_Name: Protocol Sheet\r\n", System.StringComparison.Ordinal);

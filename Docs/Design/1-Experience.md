@@ -178,7 +178,7 @@ twelve lives in `../Brainstorms/gatekeepers-and-waves.md`.
 | ------- | -------------------------------------------------------------------- | --------------------------------------------------------- |
 | Default | you, on a field-terminal Wave; the Hatch on a Hatch-bank; diverts to you when provoked | — |
 | Hunter  | you, only                                                            | the Hatch, at any tuning                                  |
-| Thief   | the Hatch on a Hatch-bank Wave; the Boarder on a field-terminal Wave | being turned around by being shot; `playerDamage` stays 0. Code id `Ram` until M63. |
+| Thief   | the Hatch on a Hatch-bank Wave; the Boarder on a field-terminal Wave | being turned around by being shot; `playerDamage` stays 0. Code id `Thief` until M63. |
 
 
 **Boarders, in a friends session** (Fellowship, rank 1):

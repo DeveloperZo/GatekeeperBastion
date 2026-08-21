@@ -8,12 +8,16 @@ namespace GatekeepersProtocol.Sim
     {
         None = 0,
         Default = 1,
+        Veil = 2,
+        Forge = 3,
     }
 
     /// <summary>Doctrine written onto placed decoys. STOCK is 0; later protocols append.</summary>
     public enum DoctrineMode
     {
         Stock = 0,
+        Phantom = 1,
+        ParallelBays = 2,
     }
 
     /// <summary>Crew / Personal / Passive row ids. Save-adjacent — never renumber.</summary>
@@ -26,44 +30,120 @@ namespace GatekeepersProtocol.Sim
         Foresight = 4,
         Barrage = 5,
         Rush = 6,
+        Ping = 7,
+        Cloak = 8,
+        FieldRearm = 9,
+        Redeploy = 10,
+        MagnetHands = 11,
     }
 
     /// <summary>Catalog: protocol → doctrine / abilities, and every number as a function of
-    /// ability id. Verbs and server clamps read only these.</summary>
+    /// ability id. Verbs and server clamps read only these. Authored copy lives in
+    /// <see cref="BoarderSheets"/>.</summary>
     public static class BoarderProtocol
     {
         public const float BarrageFireMul = 2f;
         public const float RushFireMul = 1.5f;
         const float BarrageMulCap = 2f;
 
+        /// <summary>VEIL. Ghost biases acquisition ranges; Cloak leaves the lists outright and
+        /// so has no multiplier to name.</summary>
+        public const float GhostAcquisitionMul = 0.70f;
+
+        /// <summary>FORGE. The channel spends unbanked at a fixed clock and buys hardware HP;
+        /// carrying a machine costs pace.</summary>
+        public const float FieldRearmSalvagePerSecond = 20f;
+        public const float FieldRearmHpPerSalvage = 1.5f;
+        public const float FieldRearmReachMetres = 4f;
+        public const float RedeployCarrySpeedMul = 0.6f;
+
+        /// <summary>PARALLEL BAYS lets a second bay stand live. STOCK and PHANTOM keep the
+        /// payload's authored maxLive.</summary>
+        public const int ParallelBaysMaxLive = 2;
+
+        static readonly BoarderProtocolId[] Shop =
+        {
+            BoarderProtocolId.Default,
+            BoarderProtocolId.Veil,
+            BoarderProtocolId.Forge,
+        };
+
         public static BoarderProtocolId[] ShopProtocols()
         {
-            return new[] { BoarderProtocolId.Default };
+            var copy = new BoarderProtocolId[Shop.Length];
+            Array.Copy(Shop, copy, Shop.Length);
+            return copy;
+        }
+
+        /// <summary>True when the id is a protocol this build sells. A save carrying a retired
+        /// or unknown id answers false and is sanitised to None rather than throwing.</summary>
+        public static bool IsCatalogued(BoarderProtocolId id)
+        {
+            for (int i = 0; i < Shop.Length; i++)
+                if (Shop[i] == id) return true;
+            return false;
         }
 
         public static DoctrineMode DoctrineOf(BoarderProtocolId id)
         {
-            return DoctrineMode.Stock;
+            switch (id)
+            {
+                case BoarderProtocolId.Default: return DoctrineMode.Stock;
+                case BoarderProtocolId.Veil: return DoctrineMode.Phantom;
+                case BoarderProtocolId.Forge: return DoctrineMode.ParallelBays;
+                default: return DoctrineMode.Stock;
+            }
+        }
+
+        /// <summary>Live bays under a doctrine. The payload's own maxLive is the floor —
+        /// a doctrine may widen the bay, never narrow it.</summary>
+        public static int MaxLiveUnder(DoctrineMode mode, int payloadMaxLive)
+        {
+            if (mode != DoctrineMode.ParallelBays) return payloadMaxLive;
+            return payloadMaxLive > ParallelBaysMaxLive ? payloadMaxLive : ParallelBaysMaxLive;
         }
 
         public static BoarderAbilityId CrewAbilityOf(BoarderProtocolId id)
         {
-            return id == BoarderProtocolId.Default ? BoarderAbilityId.Barrage : BoarderAbilityId.None;
+            switch (id)
+            {
+                case BoarderProtocolId.Default: return BoarderAbilityId.Barrage;
+                case BoarderProtocolId.Veil: return BoarderAbilityId.Ping;
+                case BoarderProtocolId.Forge: return BoarderAbilityId.FieldRearm;
+                default: return BoarderAbilityId.None;
+            }
         }
 
         public static BoarderAbilityId PersonalAbilityOf(BoarderProtocolId id)
         {
-            return id == BoarderProtocolId.Default ? BoarderAbilityId.Rush : BoarderAbilityId.None;
+            switch (id)
+            {
+                case BoarderProtocolId.Default: return BoarderAbilityId.Rush;
+                case BoarderProtocolId.Veil: return BoarderAbilityId.Cloak;
+                case BoarderProtocolId.Forge: return BoarderAbilityId.Redeploy;
+                default: return BoarderAbilityId.None;
+            }
         }
 
         public static int PassiveCount(BoarderProtocolId id)
         {
-            return 0;
+            switch (id)
+            {
+                case BoarderProtocolId.Veil: return 1;
+                case BoarderProtocolId.Forge: return 1;
+                default: return 0;
+            }
         }
 
         public static BoarderAbilityId PassiveAt(BoarderProtocolId id, int index)
         {
-            return BoarderAbilityId.None;
+            if (index < 0 || index >= PassiveCount(id)) return BoarderAbilityId.None;
+            switch (id)
+            {
+                case BoarderProtocolId.Veil: return BoarderAbilityId.Ghost;
+                case BoarderProtocolId.Forge: return BoarderAbilityId.MagnetHands;
+                default: return BoarderAbilityId.None;
+            }
         }
 
         public static bool OwnsPassive(BoarderProtocolId protocol, BoarderAbilityId passive)
@@ -74,9 +154,12 @@ namespace GatekeepersProtocol.Sim
             return false;
         }
 
+        /// <summary>The general rule the one-protocol expression was a special case of: a
+        /// catalogued protocol wearing a passive it owns, or wearing none.</summary>
         public static bool IsLegalPair(BoarderProtocolId protocol, BoarderAbilityId passive)
         {
-            return protocol == BoarderProtocolId.Default && passive == BoarderAbilityId.None;
+            if (!IsCatalogued(protocol)) return false;
+            return passive == BoarderAbilityId.None || OwnsPassive(protocol, passive);
         }
 
         /// <summary>v8 equip fields, or None/None on older saves. Returns the crew-track refund.</summary>
@@ -86,17 +169,16 @@ namespace GatekeepersProtocol.Sim
             {
                 m.EquippedProtocol = (BoarderProtocolId)d.EquippedProtocol;
                 m.EquippedPassive = (BoarderAbilityId)d.EquippedPassive;
-                if (m.EquippedProtocol == BoarderProtocolId.Default)
-                {
-                    if (!IsLegalPair(m.EquippedProtocol, m.EquippedPassive))
-                        m.EquippedPassive = BoarderAbilityId.None;
-                    return 0;
-                }
-                if (!IsLegalPair(m.EquippedProtocol, m.EquippedPassive))
+                // An uncatalogued id — retired, or written by a build that sold more — resolves
+                // to None here rather than reaching a switch that has no arm for it.
+                if (!IsCatalogued(m.EquippedProtocol))
                 {
                     m.EquippedProtocol = BoarderProtocolId.None;
                     m.EquippedPassive = BoarderAbilityId.None;
+                    return 0;
                 }
+                if (!IsLegalPair(m.EquippedProtocol, m.EquippedPassive))
+                    m.EquippedPassive = BoarderAbilityId.None;
                 return 0;
             }
             m.EquippedProtocol = BoarderProtocolId.None;
@@ -112,9 +194,13 @@ namespace GatekeepersProtocol.Sim
             switch (id)
             {
                 case BoarderAbilityId.Anchor:
-                case BoarderAbilityId.Barrage: return 8f;
+                case BoarderAbilityId.Barrage:
+                case BoarderAbilityId.Ping:
+                case BoarderAbilityId.FieldRearm: return 8f;
                 case BoarderAbilityId.Bulkhead:
-                case BoarderAbilityId.Rush: return 6f;
+                case BoarderAbilityId.Rush:
+                case BoarderAbilityId.Cloak:
+                case BoarderAbilityId.Redeploy: return 6f;
                 default: return 0f;
             }
         }
@@ -124,9 +210,13 @@ namespace GatekeepersProtocol.Sim
             switch (id)
             {
                 case BoarderAbilityId.Anchor:
-                case BoarderAbilityId.Barrage: return 30f;
+                case BoarderAbilityId.Barrage:
+                case BoarderAbilityId.Ping:
+                case BoarderAbilityId.FieldRearm: return 30f;
                 case BoarderAbilityId.Bulkhead:
-                case BoarderAbilityId.Rush: return 40f;
+                case BoarderAbilityId.Rush:
+                case BoarderAbilityId.Cloak:
+                case BoarderAbilityId.Redeploy: return 40f;
                 default: return 0f;
             }
         }
@@ -148,13 +238,15 @@ namespace GatekeepersProtocol.Sim
             return v;
         }
 
-        /// <summary>Anchor: slow multiplier (0.5). Ghost: acquisition range multiplier (0.70).</summary>
+        /// <summary>Anchor: slow multiplier (0.5). Ghost: acquisition range multiplier (0.70).
+        /// Redeploy: carry speed multiplier (0.6).</summary>
         public static float Magnitude(BoarderAbilityId id)
         {
             switch (id)
             {
                 case BoarderAbilityId.Anchor: return 0.5f;
-                case BoarderAbilityId.Ghost: return 0.70f;
+                case BoarderAbilityId.Ghost: return GhostAcquisitionMul;
+                case BoarderAbilityId.Redeploy: return RedeployCarrySpeedMul;
                 default: return 0f;
             }
         }
@@ -187,6 +279,21 @@ namespace GatekeepersProtocol.Sim
             return 0f;
         }
 
+        /// <summary>Hardware HP a span of channel buys. Salvage spent is the clock.</summary>
+        public static float RearmHpForSeconds(float seconds)
+        {
+            if (seconds <= 0f) return 0f;
+            return seconds * FieldRearmSalvagePerSecond * FieldRearmHpPerSalvage;
+        }
+
+        /// <summary>Unbanked the channel spends over a span, clamped to what is carried.</summary>
+        public static float RearmSpendForSeconds(float seconds, float unbanked)
+        {
+            if (seconds <= 0f || unbanked <= 0f) return 0f;
+            float want = seconds * FieldRearmSalvagePerSecond;
+            return want > unbanked ? unbanked : want;
+        }
+
         public static string DisplayName(BoarderAbilityId id)
         {
             switch (id)
@@ -197,39 +304,42 @@ namespace GatekeepersProtocol.Sim
                 case BoarderAbilityId.Foresight: return "Foresight";
                 case BoarderAbilityId.Barrage: return "Barrage";
                 case BoarderAbilityId.Rush: return "Rush";
+                case BoarderAbilityId.Ping: return "Ping";
+                case BoarderAbilityId.Cloak: return "Cloak";
+                case BoarderAbilityId.FieldRearm: return "Field Rearm";
+                case BoarderAbilityId.Redeploy: return "Redeploy";
+                case BoarderAbilityId.MagnetHands: return "Magnet Hands";
                 default: return "";
             }
         }
 
         public static string ProtocolName(BoarderProtocolId id)
         {
-            return id == BoarderProtocolId.Default ? "Default Protocol" : "";
+            return BoarderSheets.Name(id);
         }
 
         public static string DoctrineText(BoarderProtocolId id)
         {
-            return "STOCK — hardware as sold";
+            return BoarderSheets.Doctrine(id);
         }
 
-        public const string CrewSheetDefault =
-            "G Barrage — Rooted. Fire ×2.0 for 8s. Other Boarders within 8 m ×2.0, not rooted. G again or window end unplants. Cooldown 30s.";
-        public const string PersonalSheetDefault =
-            "H Rush — You move. Fire ×1.5 for 6s. Cooldown 40s.";
-        public const string PassiveSheetDefault = "None.";
+        public const string CrewSheetDefault = BoarderSheets.CrewDefault;
+        public const string PersonalSheetDefault = BoarderSheets.PersonalDefault;
+        public const string PassiveSheetDefault = BoarderSheets.PassiveDefault;
 
         public static string CrewSheet(BoarderProtocolId id)
         {
-            return id == BoarderProtocolId.Default ? CrewSheetDefault : "";
+            return BoarderSheets.Crew(id);
         }
 
         public static string PersonalSheet(BoarderProtocolId id)
         {
-            return id == BoarderProtocolId.Default ? PersonalSheetDefault : "";
+            return BoarderSheets.Personal(id);
         }
 
         public static string PassiveSheet(BoarderProtocolId id)
         {
-            return id == BoarderProtocolId.Default ? PassiveSheetDefault : "";
+            return BoarderSheets.Passive(id);
         }
 
         /// <summary>One template's fields. Same keys for every protocol; values change.</summary>
@@ -261,7 +371,9 @@ namespace GatekeepersProtocol.Sim
                 PassiveSheet(id));
         }
 
-        /// <summary>Own and equip a shop protocol. Cost is 0. Sim has no shop UI.</summary>
+        /// <summary>Own and equip a shop protocol. Cost is 0. Sim has no shop UI. A protocol
+        /// that owns passives arrives wearing its first — a freshly claimed sheet with an
+        /// empty passive row is the CREW panel reading as broken.</summary>
         public static bool TryClaim(MetaState m, BoarderProtocolId id)
         {
             if (m.PayloadLoadoutLocked)
@@ -279,19 +391,13 @@ namespace GatekeepersProtocol.Sim
                 Log.Event("Ship", "BuyProtocol refused — already owned");
                 return false;
             }
-            var shop = ShopProtocols();
-            bool listed = false;
-            for (int i = 0; i < shop.Length; i++)
-            {
-                if (shop[i] == id) { listed = true; break; }
-            }
-            if (!listed)
+            if (!IsCatalogued(id))
             {
                 Log.Event("Ship", "BuyProtocol refused — not in shop");
                 return false;
             }
             m.EquippedProtocol = id;
-            m.EquippedPassive = BoarderAbilityId.None;
+            m.EquippedPassive = PassiveCount(id) > 0 ? PassiveAt(id, 0) : BoarderAbilityId.None;
             return true;
         }
     }

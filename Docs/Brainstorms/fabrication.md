@@ -218,7 +218,7 @@ not dying while you are at a terminal.
 
 ### Ship systems with run-level consequences
 
-Subsystems that change a Run — a scanner that marks Ram spawns, a beacon that shifts
+Subsystems that change a Run — a scanner that marks Thief spawns, a beacon that shifts
 breach locations — would make the shelf more than the drone plus Hatch Armor. The
 deferred subsystems in `../Decisions.md` (Reactor, TetherCore, Engines, LifeSupport)
 are waiting on exactly this outfitting layer.

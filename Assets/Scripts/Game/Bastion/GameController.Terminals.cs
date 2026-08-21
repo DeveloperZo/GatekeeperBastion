@@ -14,6 +14,7 @@ namespace GatekeepersProtocol.Game
         BastionLayout _pendingLayout;
         BastionLayout _hatchBankLayout;
         BastionTerminal _masterTerminal;
+        bool _masterLookPlayed;
         string _armedTerminalId;
         bool _armedHatch;
 
@@ -33,7 +34,10 @@ namespace GatekeepersProtocol.Game
                 ? sim.HatchCarry
                 : sim.WavesSinceBank;
             WaveSpec raw = s_preview.NextWave(HatchBank.CarryWaveIndex(carry), sim.Siphon.Level, sim.PlayerCount);
-            return HatchBank.ApplyHatchComposition(raw, carry).enemyCount;
+            WaveSpec spec = HatchBank.ApplyHatchComposition(raw, carry);
+            if (sim.MasterPhase == MasterControlPhase.Hatch)
+                spec = MasterControl.ApplyFinaleElite(spec);
+            return spec.enemyCount;
         }
 
         int FieldPreviewBodies()
@@ -57,6 +61,8 @@ namespace GatekeepersProtocol.Game
             }
             if (lookingHatch == null)
                 _armedHatch = false;
+            if (lookingTerminal != null && lookingTerminal.IsMaster)
+                NoticeMasterLook();
 
             bool hatchStartable = lookingHatch != null && lookingHatch.OffersHatchBank;
             var retriggerOffer = RetriggerOfferFor(lookingTerminal);

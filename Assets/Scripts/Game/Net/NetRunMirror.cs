@@ -51,6 +51,11 @@ namespace GatekeepersProtocol.Game
         public NetworkVariable<int> Intensity = new NetworkVariable<int>(
             0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>Host <see cref="WaveMode"/>. Clients need it to tell a Hatch-bank
+        /// Assault (buy-back) from a field-Terminal Assault (wait).</summary>
+        public NetworkVariable<byte> Mode = new NetworkVariable<byte>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         /// <summary>Packed hatch assignment (ShipHatches wire form). Written by
         /// <see cref="ServerSetHatchAssign"/> on party change and embark — never from
         /// LateUpdate, which is gated on the Bastion GameController and no-ops on Ship,
@@ -109,6 +114,7 @@ namespace GatekeepersProtocol.Game
             long banked = _game.Meta != null ? _game.Meta.BankedSalvage : 0L;
             long unbanked = sim.TotalUnbanked;
             int intensity = sim.Siphon != null ? sim.Siphon.Level : 0;
+            byte mode = (byte)sim.Mode;
 
             if (Phase.Value != phase) Phase.Value = phase;
             if (Wave.Value != wave) Wave.Value = wave;
@@ -120,6 +126,7 @@ namespace GatekeepersProtocol.Game
             if (Banked.Value != banked) Banked.Value = banked;
             if (Unbanked.Value != unbanked) Unbanked.Value = unbanked;
             if (Intensity.Value != intensity) Intensity.Value = intensity;
+            if (Mode.Value != mode) Mode.Value = mode;
         }
         #endregion
 

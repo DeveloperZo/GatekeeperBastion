@@ -32,20 +32,24 @@ namespace GatekeepersProtocol.Game
             if (!IsServer) return;
             var p = (BoarderProtocolId)protocol;
             var a = (BoarderAbilityId)passive;
-            if (p == BoarderProtocolId.None)
-                a = BoarderAbilityId.None;
-            else if (p == BoarderProtocolId.Default
-                && (a == BoarderAbilityId.Ghost || a == BoarderAbilityId.Foresight))
-                a = BoarderAbilityId.None;
-            if (p != BoarderProtocolId.None && !BoarderProtocol.IsLegalPair(p, a))
+            // One clamp, the catalog's. The hand-listed Default+Ghost/Foresight case this
+            // replaced was the general rule spelled out for the only protocol that existed.
+            if (!BoarderProtocol.IsCatalogued(p))
             {
                 p = BoarderProtocolId.None;
                 a = BoarderAbilityId.None;
             }
+            else if (!BoarderProtocol.IsLegalPair(p, a))
+            {
+                a = BoarderAbilityId.None;
+            }
             ProtocolId.Value = (int)p;
             PassiveId.Value = (int)a;
+            // Ghost is the one passive that biases acquisition; every other equip is unbiased.
             if (_health != null)
-                _health.ConfigureAcquisition(1f);
+                _health.ConfigureAcquisition(a == BoarderAbilityId.Ghost
+                    ? BoarderProtocol.Magnitude(BoarderAbilityId.Ghost)
+                    : 1f);
         }
     }
 }

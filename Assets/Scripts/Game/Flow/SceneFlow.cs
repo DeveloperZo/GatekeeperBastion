@@ -6,7 +6,8 @@ using UnityEngine.SceneManagement;
 namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: static scene-name registry and loaders for the game flow:
-    /// Splash → MainMenu → Ship (walkable hub) → Bastion (the fight).</summary>
+    /// Splash → MainMenu → Ship hub → Bastion (the fight). The hub is two scenes:
+    /// <see cref="Ship"/> (demo / solo) and <see cref="ShipCoop"/> (party lobby).</summary>
     /// <remarks>
     /// Every loader returns bool and logs its outcome. A scene missing from the build settings
     /// makes SceneManager.LoadScene throw, which used to strand the player on the lose screen
@@ -22,19 +23,28 @@ namespace GatekeepersProtocol.Game
         public const string Splash = "Splash";
 
         /// <summary>Campaign-menu scene. Owns the Shift Main Menu Canvas
-        /// (Continue / Start / Host / Join / Options / Quit). All four campaign paths
-        /// load <see cref="Ship"/>; Bastion is EMBARK from the nav map.</summary>
+        /// (Continue / Start / Host / Join / Options / Quit). Solo Start/Continue
+        /// load <see cref="Ship"/>; Host/Join load <see cref="ShipCoop"/> via
+        /// <see cref="NetSession"/>. Bastion is EMBARK from the nav map.</summary>
         public const string MainMenu = "MainMenu";
 
-        /// <summary>Walkable ship-hub scene name
-        /// (stations: Armory / Fabrication / Nav Map / Crew Quarters).</summary>
-        public const string Ship = "Ship";
+        /// <summary>Solo / demo ship-hub scene name
+        /// (<c>Assets/Scenes/Ship - Demo.unity</c>).</summary>
+        public const string Ship = "Ship - Demo";
+
+        /// <summary>Party ship-hub scene name
+        /// (<c>Assets/Scenes/Ship - CoOp.unity</c>).</summary>
+        public const string ShipCoop = "Ship - CoOp";
 
         /// <summary>Combat scene name (the bastion run).</summary>
         public const string Bastion = "Bastion";
 
         /// <summary>In-fiction name of the v0 bastion, for the nav map and the run-start log line.</summary>
         public const string BastionName = "ALPHA-7";
+
+        /// <summary>True when <paramref name="sceneName"/> is either ship hub.</summary>
+        public static bool IsShipHub(string sceneName) =>
+            sceneName == Ship || sceneName == ShipCoop;
 
         /// <summary>Name of the currently active scene ("" while no scene is valid).</summary>
         public static string ActiveSceneName
@@ -77,8 +87,11 @@ namespace GatekeepersProtocol.Game
 #endif
         }
 
-        /// <summary>Load the ship hub scene. Returns false (and logs an error) if it cannot load.</summary>
+        /// <summary>Load the solo / demo ship hub. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadShip() => Load(Ship);
+
+        /// <summary>Load the party ship hub. Returns false (and logs an error) if it cannot load.</summary>
+        public static bool LoadShipCoop() => Load(ShipCoop);
 
         /// <summary>Load the bastion combat scene. Returns false (and logs an error) if it cannot load.
         /// Guests in an active friends session must use party EMBARK — local load is refused.</summary>
@@ -149,7 +162,8 @@ namespace GatekeepersProtocol.Game
             {
                 // Guard trip: LoadScene would throw here and strand the caller (lose-screen soft-lock).
                 Log.Error(Tag, $"Cannot load scene '{sceneName}' — it is not in the build settings. " +
-                               "Run GatekeepersProtocol/Build/All Scenes to register Splash, MainMenu, Ship, Bastion.");
+                               "Run GatekeepersProtocol/Build/All Scenes to register Splash, MainMenu, " +
+                               "Ship - Demo, Ship - CoOp, Bastion.");
                 return false;
             }
 

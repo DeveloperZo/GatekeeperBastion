@@ -22,7 +22,7 @@ or the Hatch. The clock never pays. Juice is a bet you place at the trigger befo
 what you bought.
 
 **Every Gatekeeper kind is defined by what it refuses to do.** A Hunter can never hurt the Hatch.
-A Thief never turns when shot (code identifier `Ram` until M63). On a Hatch-bank it never hunts you; on a field-terminal Wave it
+A Thief never turns when shot. On a Hatch-bank it never hunts you; on a field-terminal Wave it
 does. These are rules in code, not tuning values, so no balance pass can soften one by accident.
 
 **The weapon is the build.** Progression is a weapon and its upgrade wheel, not a stat sheet.

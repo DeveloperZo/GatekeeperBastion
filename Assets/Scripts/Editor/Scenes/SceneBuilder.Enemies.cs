@@ -20,11 +20,11 @@ namespace GatekeepersProtocol.EditorTools
     /// channels that survive a dark corridor and a glance:
     ///   Default — the red they already know, unchanged, at 1.0 scale.
     ///   Hunter  — bright amber, 0.85 scale. Small and loud: the fast fragile one coming for you.
-    ///   Ram     — saturated violet-steel, 1.4 scale. Twice the silhouette of a Hunter.
-    /// Ram's violet is deliberately brighter and more saturated than the bastion's own walls
+    ///   Thief     — saturated violet-steel, 1.4 scale. Twice the silhouette of a Hunter.
+    /// Thief's violet is deliberately brighter and more saturated than the bastion's own walls
     /// (0.22, 0.17, 0.30) — a genuinely dark violet body against a dark violet hull is invisible,
     /// which is the opposite of the point. Its size does the rest of the work.
-    /// Silhouette is one FaxLab3D robot per kind (Default UtilityBot, Hunter Hunter, Ram
+    /// Silhouette is one FaxLab3D robot per kind (Default UtilityBot, Hunter Hunter, Thief
     /// Exterminator), which is what separates them on sight. The per-kind emission tint still
     /// rides on top, on each robot's authored glow regions, written by EnsureWrapperEmission.
     ///
@@ -36,7 +36,7 @@ namespace GatekeepersProtocol.EditorTools
     public static partial class SceneBuilder
     {
         const string HunterPrefabPath = PrefabDir + "/HunterGatekeeper.prefab";
-        const string RamPrefabPath = PrefabDir + "/RamGatekeeper.prefab";
+        const string ThiefPrefabPath = PrefabDir + "/ThiefGatekeeper.prefab";
         const string GatekeeperPackDir = "Assets/Packs/Gatekeepers";
         const string GatekeeperControllerPath = GatekeeperPackDir + "/Gatekeeper.controller";
         const string DefaultWrapperPath = GatekeeperPackDir + "/Default.prefab";
@@ -48,7 +48,7 @@ namespace GatekeepersProtocol.EditorTools
         const string RobotDir = "Assets/FaxLab3D/SciFiRobotCharactersPack/";
         const string DefaultFbx = RobotDir + "Models/SK_UtilityBot.fbx";
         const string HunterFbx = RobotDir + "Models/SK_Hunter.fbx";
-        const string RamFbx = RobotDir + "Models/SK_Exterminator.fbx";
+        const string ThiefFbx = RobotDir + "Models/SK_Exterminator.fbx";
         const string PackDefault = RobotDir + "Prefabs/UtilityBot_Base.prefab";
         const string PackHunter = RobotDir + "Prefabs/Hunter_Base.prefab";
         const string PackThief = RobotDir + "Prefabs/Exterminator_Base.prefab";
@@ -60,7 +60,7 @@ namespace GatekeepersProtocol.EditorTools
         /// <summary>The three gatekeeper prefabs, wired into the WaveSpawner as a set.</summary>
         sealed class EnemyPrefabs
         {
-            public GameObject Default, Hunter, Ram;
+            public GameObject Default, Hunter, Thief;
         }
 
         static EnemyPrefabs CreateEnemyPrefabs(Palette pal)
@@ -83,8 +83,8 @@ namespace GatekeepersProtocol.EditorTools
                     "EnemyGatekeeper", EnemyPrefabPath, pal.Enemy, GatekeeperKind.Default, 1f, dress),
                 Hunter = CreateGatekeeperPrefab<HunterGatekeeper>(
                     "HunterGatekeeper", HunterPrefabPath, pal.Hunter, GatekeeperKind.Hunter, 0.85f, dress),
-                Ram = CreateGatekeeperPrefab<RamGatekeeper>(
-                    "RamGatekeeper", RamPrefabPath, pal.Ram, GatekeeperKind.Ram, 1.4f, dress),
+                Thief = CreateGatekeeperPrefab<ThiefGatekeeper>(
+                    "ThiefGatekeeper", ThiefPrefabPath, pal.Thief, GatekeeperKind.Thief, 1.4f, dress),
             };
         }
 
@@ -92,7 +92,7 @@ namespace GatekeepersProtocol.EditorTools
         /// EnemyGatekeeper subclass, and the net components (inert until a session Spawn()s).
         /// If the asset already exists, load and dress it — never CreatePrimitive-wipe.
         /// <paramref name="scale"/> scales the silhouette AND the agent footprint together,
-        /// so a Ram takes up the room it looks like it takes up. Visual child localScale is
+        /// so a Thief takes up the room it looks like it takes up. Visual child localScale is
         /// 1/scale so War_Robot does not stack a second 1.4 on the root.</summary>
         static GameObject CreateGatekeeperPrefab<T>(string name, string path, Material material,
                                                  GatekeeperKind kind, float scale, bool dress)
@@ -125,7 +125,7 @@ namespace GatekeepersProtocol.EditorTools
             agent.speed = stats.patrolSpeed;
             agent.acceleration = 14f;
             agent.angularSpeed = 400f;
-            // Geometry follows the capsule: a 1.4-scale Ram is 1.4x as wide and as tall, and its
+            // Geometry follows the capsule: a 1.4-scale Thief is 1.4x as wide and as tall, and its
             // origin sits at the capsule's centre, so baseOffset must match the half-height or the
             // body sinks into (or floats over) the floor.
             agent.radius = 0.4f * scale;
@@ -209,28 +209,28 @@ namespace GatekeepersProtocol.EditorTools
         static string WrapperPath(GatekeeperKind kind)
         {
             if (kind == GatekeeperKind.Hunter) return HunterWrapperPath;
-            if (kind == GatekeeperKind.Ram) return ThiefWrapperPath;
+            if (kind == GatekeeperKind.Thief) return ThiefWrapperPath;
             return DefaultWrapperPath;
         }
 
         static string PackPrefabPath(GatekeeperKind kind)
         {
             if (kind == GatekeeperKind.Hunter) return PackHunter;
-            if (kind == GatekeeperKind.Ram) return PackThief;
+            if (kind == GatekeeperKind.Thief) return PackThief;
             return PackDefault;
         }
 
         static string PackModelPath(GatekeeperKind kind)
         {
             if (kind == GatekeeperKind.Hunter) return HunterFbx;
-            if (kind == GatekeeperKind.Ram) return RamFbx;
+            if (kind == GatekeeperKind.Thief) return ThiefFbx;
             return DefaultFbx;
         }
 
         static string VisualChildName(GatekeeperKind kind)
         {
             if (kind == GatekeeperKind.Hunter) return "Hunter";
-            if (kind == GatekeeperKind.Ram) return "Thief";
+            if (kind == GatekeeperKind.Thief) return "Thief";
             return "Default";
         }
 
@@ -241,7 +241,7 @@ namespace GatekeepersProtocol.EditorTools
             // green about files nothing renders.
             if (!FbxIsHuman(DefaultFbx, out reason)) return false;
             if (!FbxIsHuman(HunterFbx, out reason)) return false;
-            if (!FbxIsHuman(RamFbx, out reason)) return false;
+            if (!FbxIsHuman(ThiefFbx, out reason)) return false;
             AnimationClip walk = LoadHumanClip(ClipWalk);
             if (walk == null)
             {
@@ -305,13 +305,13 @@ namespace GatekeepersProtocol.EditorTools
 
             EnsureWrapper(GatekeeperKind.Default, controller);
             EnsureWrapper(GatekeeperKind.Hunter, controller);
-            EnsureWrapper(GatekeeperKind.Ram, controller);
+            EnsureWrapper(GatekeeperKind.Thief, controller);
 
             // Colour is the tutorial: kind-tinted emission on the pack's authored glow regions.
             // Runs after EnsureWrapper every build, so an already-dressed wrapper still converges.
             EnsureWrapperEmission(GatekeeperKind.Default, pal.Enemy.color);
             EnsureWrapperEmission(GatekeeperKind.Hunter, pal.Hunter.color);
-            EnsureWrapperEmission(GatekeeperKind.Ram, pal.Ram.color);
+            EnsureWrapperEmission(GatekeeperKind.Thief, pal.Thief.color);
         }
 
         /// <summary>Assigns the kind's authored material to every renderer slot in its wrapper and

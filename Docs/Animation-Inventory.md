@@ -28,7 +28,7 @@ set), M83 (remote fire/reload) cover every **missing** and **unreachable**
 line; M84 (flinch), M85 (death collapse), M86 (downed avatar) cover the
 hookable **no code hook** lines, cap waived by Zo. Fileless on purpose:
 spawn/entry (needs a wave-pacing ruling), dock (parked until M77 ships),
-boss (blocked on M80's inputs).
+boss (composition stamped on `M80`: one high-HP Thief elite, no distinct clip).
 
 ## Player, third person (Boarder.controller, used by remote avatars)
 
@@ -59,7 +59,7 @@ boss (blocked on M80's inputs).
 
 | Clip | Status | Notes |
 |---|---|---|
-| Everything | blocked | M80 names boss/elite composition as an absent input. No clip list can exist before that ruling. |
+| Everything | no code hook | Composition is one high-HP Thief (`FinaleEliteHp` 240). No distinct clip list — it reuses Thief's controller. A unique silhouette (`SK_Tactical`) is still free. |
 
 ## Weapon viewmodel, first person (no controller exists)
 

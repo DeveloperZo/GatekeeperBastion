@@ -28,6 +28,16 @@ namespace GatekeepersProtocol.Game
         /// resets to 1 after the run begins so a direct-play fallback stays a normal start.</summary>
         public static int PendingStartWave { get; set; } = 1;
 
+        /// <summary>Set on Escaped when EndDemo flips DemoActive off, consumed on the first
+        /// Ship frame so demo.escaped can play after the director's DemoActive-false path
+        /// would otherwise skip every line. Transient: never saved.</summary>
+        public static bool PendingEscapedLine;
+
+        /// <summary>F12 Bastion-fight digit (2, 4, 6, 7). Consumed by GameController.Start
+        /// after the run tethers so the player lands at the Hatch or Master with the
+        /// authored Unbanked. 0 = none. Transient: never saved.</summary>
+        public static int PendingDemoFight;
+
         /// <summary>Clears statics at play-mode start (domain-reload-disabled safety).</summary>
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
@@ -35,6 +45,8 @@ namespace GatekeepersProtocol.Game
             Meta = null;
             DevTainted = false;
             PendingStartWave = 1;
+            PendingEscapedLine = false;
+            PendingDemoFight = 0;
         }
 
         /// <summary>Mark this play session as Dev-touched. First call logs once; Save is then skipped.</summary>

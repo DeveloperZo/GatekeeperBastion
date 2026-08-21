@@ -16,8 +16,22 @@ namespace GatekeepersProtocol.Tests
         public void UnknownDigit_BuildsNothing()
         {
             Assert.IsNull(GameController.BuildDemoCheckpoint(0));
-            Assert.IsNull(GameController.BuildDemoCheckpoint(5), "digit 5 is the live reset");
-            Assert.IsNull(GameController.BuildDemoCheckpoint(6));
+            Assert.IsNull(GameController.BuildDemoCheckpoint(8), "digit 8 is the live reset");
+            Assert.IsNull(GameController.BuildDemoCheckpoint(9));
+        }
+
+        [Test]
+        public void Overlay_HasSevenBeatsAndTheLiveReset()
+        {
+            Assert.AreEqual(8, GameController.DemoCheckpointLabels.Length);
+            Assert.IsTrue(GameController.IsDemoFightCheckpoint(2));
+            Assert.IsTrue(GameController.IsDemoFightCheckpoint(4));
+            Assert.IsTrue(GameController.IsDemoFightCheckpoint(6));
+            Assert.IsTrue(GameController.IsDemoFightCheckpoint(7));
+            Assert.IsFalse(GameController.IsDemoFightCheckpoint(1));
+            Assert.IsFalse(GameController.IsDemoFightCheckpoint(3));
+            Assert.IsFalse(GameController.IsDemoFightCheckpoint(5));
+            Assert.IsFalse(GameController.IsDemoFightCheckpoint(8));
         }
 
         [Test]
@@ -35,9 +49,22 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void FirstReturn_LandsOnTheTopOfTheBeat()
+        public void PostZoneOneTerminals_MarksBothDone_AndBanksNothing()
         {
             var m = GameController.BuildDemoCheckpoint(2);
+            Assert.IsTrue(m.CompletedTerminalIds.Contains(FirstTerminal.Id));
+            Assert.IsTrue(m.CompletedTerminalIds.Contains(FirstTerminal.SecondId));
+            Assert.AreEqual(0, m.HatchConversions, "the Hatch-bank is the next verb");
+            Assert.AreEqual(0L, m.BankedSalvage, "Unbanked is seeded on the live Run, not Meta");
+            Assert.AreEqual(FirstTerminal.ZoneOneEndWave, m.ZoneDeepest(FirstTerminal.ZoneOneNumber));
+            Assert.AreEqual(0, m.OpenDoorIds.Length);
+            Assert.IsTrue(m.SalvageLedgerBalances);
+        }
+
+        [Test]
+        public void FirstReturn_LandsOnTheTopOfTheBeat()
+        {
+            var m = GameController.BuildDemoCheckpoint(3);
             Assert.AreEqual(1, m.PodEjections);
             Assert.AreEqual(1, m.HatchConversions);
             Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m), "the first bank opened the wheel");
@@ -57,9 +84,21 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void PostZoneTwoTerminals_HasDoorOneAndT3Done()
+        {
+            var m = GameController.BuildDemoCheckpoint(4);
+            Assert.IsTrue(m.OpenDoorIds.Contains("D1"));
+            Assert.IsFalse(m.OpenDoorIds.Contains("D2"));
+            Assert.IsTrue(m.CompletedTerminalIds.Contains(DemoZones.TerminalIdAt(2, 0)));
+            Assert.AreEqual(2, m.HatchConversions, "zone 2's bank is the next verb");
+            Assert.AreEqual(WaveDirector.MaxWaves, m.ZoneDeepest(2));
+            Assert.IsTrue(m.SalvageLedgerBalances);
+        }
+
+        [Test]
         public void DoorOneOpen_HasTheShopPassSpent_AndTheClaimDone()
         {
-            var m = GameController.BuildDemoCheckpoint(3);
+            var m = GameController.BuildZoneTwoReadyCheckpoint();
             Assert.AreEqual(0, m.DemoWheelBuysLeft);
             Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m));
             Assert.AreEqual(2, m.TierOf(WeaponId.Mk1Sidearm), "both Secondary buys landed");
@@ -68,6 +107,8 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(2, m.HatchConversions, "zone 1's bank was survived");
             Assert.IsTrue(m.OpenDoorIds.Contains("D1"));
             Assert.IsFalse(m.OpenDoorIds.Contains("D2"));
+            Assert.IsFalse(m.CompletedTerminalIds.Contains(DemoZones.TerminalIdAt(2, 0)),
+                "T3 is the next fight — this is the mouth of zone 2");
             Assert.IsTrue(m.SalvageLedgerBalances);
 
             bool doorOpen = m.OpenDoorIds.Contains("D1");
@@ -78,7 +119,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void DoorTwoOpen_CarriesThePrimaryKit()
         {
-            var m = GameController.BuildDemoCheckpoint(4);
+            var m = GameController.BuildDemoCheckpoint(5);
             Assert.IsTrue(m.OpenDoorIds.Contains("D1"));
             Assert.IsTrue(m.OpenDoorIds.Contains("D2"));
             Assert.IsTrue(m.DemoZone2BankLost,
@@ -94,11 +135,27 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void MasterControl_OpensD3_WithT4T5Done()
+        {
+            var m = GameController.BuildDemoCheckpoint(6);
+            Assert.IsTrue(m.OpenDoorIds.Contains("D3"));
+            Assert.IsTrue(m.CompletedTerminalIds.Contains("T4"));
+            Assert.IsTrue(m.CompletedTerminalIds.Contains("T5"));
+            Assert.IsTrue(m.Owns(WeaponId.PriC));
+            Assert.Greater(m.BankedSalvage, 0L, "prior banks remain; Unbanked is seeded on the Run");
+            Assert.IsTrue(m.SalvageLedgerBalances);
+
+            var finale = GameController.BuildDemoCheckpoint(7);
+            Assert.AreEqual(m.OpenDoorIds.Length, finale.OpenDoorIds.Length);
+            Assert.AreEqual(m.CompletedTerminalIds.Length, finale.CompletedTerminalIds.Length);
+            Assert.AreEqual(m.BankedSalvage, finale.BankedSalvage,
+                "digits 6 and 7 share meta; the elite pile is Unbanked on the live Run");
+        }
+
+        [Test]
         public void EveryCheckpoint_SurvivesTheSaveRoundTrip_Unrepaired()
         {
-            // The taint keeps these off disk in play; the round trip still must hold so a
-            // checkpoint behaves like a loaded save everywhere meta is re-read.
-            for (int digit = 1; digit <= 4; digit++)
+            for (int digit = 1; digit <= 7; digit++)
             {
                 var m = GameController.BuildDemoCheckpoint(digit);
                 var back = MetaState.FromJson(m.ToJson());

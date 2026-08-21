@@ -209,6 +209,8 @@ namespace GatekeepersProtocol.Game
             // NAV offered no wave choice: refight-avoidance is the terminal's retrigger.
             if (Meta.DemoActive)
                 Log.Event("Demo", "embark plain");
+
+            ApplyPendingDemoFight();
         }
 
         /// <summary>

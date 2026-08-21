@@ -8,7 +8,7 @@ namespace GatekeepersProtocol.Tests
     ///
     /// EACH KIND IS DEFINED BY WHAT IT REFUSES TO DO, so the refusals are asserted as DATA here,
     /// not left to the Game layer's state machine to honour: a Hunter's hatchDamage is 0 and a
-    /// Ram's playerDamage is 0, beside the ignoresHatch / ignoresPlayer flags that say the same
+    /// Thief's playerDamage is 0, beside the ignoresHatch / ignoresPlayer flags that say the same
     /// thing about targeting. Both halves have to hold; either alone is a rule you can half-obey.
     ///
     /// The stat lines, and the arithmetic every one of them is derived from (MK-1 L0 = 12 damage
@@ -18,14 +18,14 @@ namespace GatekeepersProtocol.Tests
     ///   | kind    | maxHp | player | hatch | interval | patrol | chase | refuses    |
     ///   | Default |    30 |      6 |     4 |     0.7s |    3.2 |   5.6 | —          |
     ///   | Hunter  |    20 |      6 |     0 |     0.7s |    6.5 |   6.5 | the hatch  |
-    ///   | Ram     |   120 |      0 |    20 |     0.7s |    2.2 |   2.2 | the player |
+    ///   | Thief     |   120 |      0 |    20 |     0.7s |    2.2 |   2.2 | the player |
     ///
     ///   Default 30 hp = 3 shots = 30/32 = 0.94s; three of them are 25.7 dps and kill a 100 hp
     ///           player in 3.9s, five are 42.9 dps and 2.3s. (At the pre-horde 18 damage, five
     ///           were 128.6 dps and 0.8s — not a fight, an execution.)
     ///   Hunter  20 hp = 2 shots = 0.63s, and 6.5 m/s beats the 5 m/s WALK while losing to the
     ///           7.5 m/s SPRINT: the first enemy that makes the Stamina track worth buying.
-    ///   Ram     120 hp = 10 shots = 3.75s of focused fire, 20 hatch damage / 0.7s = 28.6 dps, so
+    ///   Thief     120 hp = 10 shots = 3.75s of focused fire, 20 hatch damage / 0.7s = 28.6 dps, so
     ///           it strips 28.6 x 3.75 = 107 of the hatch's 300 hp while being killed. It must be
     ///           intercepted, which is what turns "shoot what is closest" into a decision.
     ///
@@ -73,9 +73,9 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void StatsFor_Ram_IsTheExactStatLine()
+        public void StatsFor_Thief_IsTheExactStatLine()
         {
-            var s = WaveDirector.StatsFor(GatekeeperKind.Ram);
+            var s = WaveDirector.StatsFor(GatekeeperKind.Thief);
             Assert.AreEqual(120f, s.maxHp, 1e-6f);
             Assert.AreEqual(0f, s.playerDamage, 1e-6f);
             Assert.AreEqual(20f, s.hatchDamage, 1e-6f);
@@ -105,19 +105,19 @@ namespace GatekeepersProtocol.Tests
                 if (s.ignoresPlayer) ignoresPlayer++;
             }
             Assert.AreEqual(1, ignoresHatch, "exactly one kind ignores the hatch: Hunter");
-            Assert.AreEqual(1, ignoresPlayer, "exactly one kind ignores the player: Ram");
+            Assert.AreEqual(1, ignoresPlayer, "exactly one kind ignores the player: Thief");
             Assert.IsTrue(WaveDirector.StatsFor(GatekeeperKind.Hunter).ignoresHatch);
-            Assert.IsTrue(WaveDirector.StatsFor(GatekeeperKind.Ram).ignoresPlayer);
+            Assert.IsTrue(WaveDirector.StatsFor(GatekeeperKind.Thief).ignoresPlayer);
         }
 
         [Test]
-        public void StatsFor_RamNeverDamagesThePlayer_AndHunterNeverDamagesTheHatch()
+        public void StatsFor_ThiefNeverDamagesThePlayer_AndHunterNeverDamagesTheHatch()
         {
             // THE DESIGN RULES AS DATA. Zeroed damage is the same refusal the flags state, said a
             // second way so it cannot be half-obeyed: a Hunter that somehow ends up at the hatch
-            // still cannot hurt it, and a Ram that somehow swings at you still cannot hurt you.
-            Assert.AreEqual(0f, WaveDirector.StatsFor(GatekeeperKind.Ram).playerDamage, 1e-6f,
-                "a Ram must never be able to hurt the player");
+            // still cannot hurt it, and a Thief that somehow swings at you still cannot hurt you.
+            Assert.AreEqual(0f, WaveDirector.StatsFor(GatekeeperKind.Thief).playerDamage, 1e-6f,
+                "a Thief must never be able to hurt the player");
             Assert.AreEqual(0f, WaveDirector.StatsFor(GatekeeperKind.Hunter).hatchDamage, 1e-6f,
                 "a Hunter must never be able to hurt the hatch");
 
@@ -141,14 +141,14 @@ namespace GatekeepersProtocol.Tests
         public void StatsFor_OnlyTheDefaultKindHasASecondGear()
         {
             // Chase speed exists because a Default gatekeeper CHANGES ITS MIND (provoke-on-damage,
-            // the biggest rule in the project). Hunter and Ram never do — one is already hunting
+            // the biggest rule in the project). Hunter and Thief never do — one is already hunting
             // at spawn, the other cannot be provoked — so for them chase == patrol by definition.
             var d = WaveDirector.StatsFor(GatekeeperKind.Default);
             Assert.IsTrue(d.chaseSpeed > d.patrolSpeed, "the Default gatekeeper speeds up when provoked");
             var h = WaveDirector.StatsFor(GatekeeperKind.Hunter);
             Assert.AreEqual(h.patrolSpeed, h.chaseSpeed, 1e-6f, "a Hunter has one speed");
-            var r = WaveDirector.StatsFor(GatekeeperKind.Ram);
-            Assert.AreEqual(r.patrolSpeed, r.chaseSpeed, 1e-6f, "a Ram has one speed");
+            var r = WaveDirector.StatsFor(GatekeeperKind.Thief);
+            Assert.AreEqual(r.patrolSpeed, r.chaseSpeed, 1e-6f, "a Thief has one speed");
         }
 
         [Test]
@@ -226,29 +226,29 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Ram_StripsAboutAThirdOfTheHatch_WhileBeingKilled()
+        public void Thief_StripsAboutAThirdOfTheHatch_WhileBeingKilled()
         {
-            // Why a Ram cannot be left for later: 120 hp is 3.75s of an unupgraded player's FULL
+            // Why a Thief cannot be left for later: 120 hp is 3.75s of an unupgraded player's FULL
             // attention (120 / 32 dps), during which it deals 20 / 0.7 = 28.6 dps to a 300 hp
-            // hatch — 107 hp, better than a third of the door, per Ram, and that is the GOOD case
+            // hatch — 107 hp, better than a third of the door, per Thief, and that is the GOOD case
             // where someone is already shooting it.
-            var ram = WaveDirector.StatsFor(GatekeeperKind.Ram);
-            float ttk = ram.maxHp / PlayerDps;
-            float hatchDps = ram.hatchDamage / ram.attackInterval;
-            Assert.AreEqual(3.75f, ttk, 1e-3f, "seconds of focused fire to kill one Ram");
+            var thief = WaveDirector.StatsFor(GatekeeperKind.Thief);
+            float ttk = thief.maxHp / PlayerDps;
+            float hatchDps = thief.hatchDamage / thief.attackInterval;
+            Assert.AreEqual(3.75f, ttk, 1e-3f, "seconds of focused fire to kill one Thief");
             Assert.AreEqual(28.57f, hatchDps, 1e-2f, "hatch damage per second");
-            Assert.AreEqual(107.1f, ttk * hatchDps, 0.1f, "hatch hp lost to one Ram that got home");
-            Assert.IsTrue(ttk * hatchDps > 300f / 3f, "one Ram is worth more than a third of the hatch");
+            Assert.AreEqual(107.1f, ttk * hatchDps, 0.1f, "hatch hp lost to one Thief that got home");
+            Assert.IsTrue(ttk * hatchDps > 300f / 3f, "one Thief is worth more than a third of the hatch");
         }
 
         [Test]
         public void ShotsToKill_IsThreeTwoAndTen_AtTheUnupgradedTwelveDamage()
         {
             // The reason the three kinds read differently through a gunsight: 12 damage a shot,
-            // so 30 hp is 3 shots, 20 hp is 2, and 120 hp is 10 — a Ram costs five Hunters.
+            // so 30 hp is 3 shots, 20 hp is 2, and 120 hp is 10 — a Thief costs five Hunters.
             Assert.AreEqual(3, ShotsToKill(GatekeeperKind.Default));
             Assert.AreEqual(2, ShotsToKill(GatekeeperKind.Hunter));
-            Assert.AreEqual(10, ShotsToKill(GatekeeperKind.Ram));
+            Assert.AreEqual(10, ShotsToKill(GatekeeperKind.Thief));
         }
 
         private static int ShotsToKill(GatekeeperKind kind)
@@ -270,18 +270,18 @@ namespace GatekeepersProtocol.Tests
             var director = new WaveDirector();
             int[] def = { 18, 26, 34, 40, 47 };
             int[] hunters = { 0, 4, 6, 10, 12 };
-            int[] rams = { 0, 0, 2, 4, 7 };
+            int[] thieves = { 0, 0, 2, 4, 7 };
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
                 var spec = director.NextWave(w, 0);
                 Assert.AreEqual(def[w], spec.defaultCount, "defaults, wave " + w);
                 Assert.AreEqual(hunters[w], spec.hunterCount, "hunters, wave " + w);
-                Assert.AreEqual(rams[w], spec.ramCount, "rams, wave " + w);
+                Assert.AreEqual(thieves[w], spec.thiefCount, "thieves, wave " + w);
             }
             Assert.AreEqual(0, director.NextWave(0, 5).hunterCount,
                 "wave 1 is all Default at EVERY dial setting — there is nothing else to meet yet");
-            Assert.AreEqual(0, director.NextWave(1, 5).ramCount,
-                "the Ram waits for wave 3 at every dial setting");
+            Assert.AreEqual(0, director.NextWave(1, 5).thiefCount,
+                "the Thief waits for wave 3 at every dial setting");
         }
 
         [Test]
@@ -297,9 +297,9 @@ namespace GatekeepersProtocol.Tests
                 {
                     var spec = director.NextWave(w, level);
                     Assert.AreEqual(spec.enemyCount,
-                        spec.defaultCount + spec.hunterCount + spec.ramCount,
+                        spec.defaultCount + spec.hunterCount + spec.thiefCount,
                         "kind counts must partition enemyCount (wave " + w + ", dial " + level + ")");
-                    Assert.IsTrue(spec.defaultCount >= 0 && spec.hunterCount >= 0 && spec.ramCount >= 0,
+                    Assert.IsTrue(spec.defaultCount >= 0 && spec.hunterCount >= 0 && spec.thiefCount >= 0,
                         "no negative kind counts (wave " + w + ", dial " + level + ")");
                 }
         }
@@ -307,10 +307,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Composition_DialSurplusLandsOnDefaultOnly()
         {
-            // THE RULE: the dial buys bodies, not composition. Hunter and Ram counts are fixed per
+            // THE RULE: the dial buys bodies, not composition. Hunter and Thief counts are fixed per
             // wave, so every extra gatekeeper the dial pays for is a Default. The simplest rule that
             // works, and the point of it is that the dial cannot silently multiply the scariest
-            // enemy: dial 5 wave 3 would otherwise be 3 Rams and 9 Hunters — a different fight
+            // enemy: dial 5 wave 3 would otherwise be 3 Thieves and 9 Hunters — a different fight
             // rather than a bigger one.
             var director = new WaveDirector();
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
@@ -324,8 +324,8 @@ namespace GatekeepersProtocol.Tests
                         "the whole surplus is Default (wave " + w + ", dial " + level + ")");
                     Assert.AreEqual(atZero.hunterCount, spec.hunterCount,
                         "hunters are fixed per wave (wave " + w + ", dial " + level + ")");
-                    Assert.AreEqual(atZero.ramCount, spec.ramCount,
-                        "rams are fixed per wave (wave " + w + ", dial " + level + ")");
+                    Assert.AreEqual(atZero.thiefCount, spec.thiefCount,
+                        "thieves are fixed per wave (wave " + w + ", dial " + level + ")");
                 }
             }
 
@@ -334,23 +334,23 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(99, top.enemyCount);
             Assert.AreEqual(80, top.defaultCount, "all 33 extra bodies are Default");
             Assert.AreEqual(12, top.hunterCount, "still twelve Hunters, exactly as at dial 0");
-            Assert.AreEqual(7, top.ramCount, "still seven Rams, exactly as at dial 0");
+            Assert.AreEqual(7, top.thiefCount, "still seven Thieves, exactly as at dial 0");
         }
 
         [Test]
         public void Composition_FullGrid_DefaultsAbsorbEveryDialStep()
         {
             // The Default column of the wave x dial grid, transcribed from the running code.
-            // Hunter and Ram columns are constant across each row (asserted above), so this IS
+            // Hunter and Thief columns are constant across each row (asserted above), so this IS
             // the whole grid.
             var director = new WaveDirector();
             int[][] defaults =
             {
                 new[] { 18, 20, 21, 23, 24, 27 }, // wave 0: count itself, no other kinds yet
                 new[] { 26, 29, 31, 34, 37, 41 }, // wave 1: count - 4 hunters
-                new[] { 34, 38, 40, 45, 49, 55 }, // wave 2: count - 6 hunters - 2 rams
-                new[] { 40, 45, 48, 54, 59, 67 }, // wave 3: count - 10 hunters - 4 rams
-                new[] { 47, 54, 57, 64, 70, 80 }, // wave 4: count - 12 hunters - 7 rams
+                new[] { 34, 38, 40, 45, 49, 55 }, // wave 2: count - 6 hunters - 2 thieves
+                new[] { 40, 45, 48, 54, 59, 67 }, // wave 3: count - 10 hunters - 4 thieves
+                new[] { 47, 54, 57, 64, 70, 80 }, // wave 4: count - 12 hunters - 7 thieves
             };
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
                 for (int level = 0; level <= TetherSiphon.MaxLevel; level++)
@@ -359,7 +359,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Composition_HunterAndRamCounts_CannotOverrunASmallWave()
+        public void Composition_HunterAndThiefCounts_CannotOverrunASmallWave()
         {
             // Defensive, not a tuning claim: the fixed per-wave counts are clamped into whatever
             // enemyCount happens to be, so a future wave smaller than 8 bodies cannot produce a
@@ -368,7 +368,7 @@ namespace GatekeepersProtocol.Tests
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
                 var spec = director.NextWave(w, 0);
-                Assert.IsTrue(spec.hunterCount + spec.ramCount <= spec.enemyCount, "wave " + w);
+                Assert.IsTrue(spec.hunterCount + spec.thiefCount <= spec.enemyCount, "wave " + w);
                 Assert.IsTrue(spec.defaultCount > 0, "every wave has Default gatekeepers in it, wave " + w);
             }
         }
@@ -447,7 +447,7 @@ namespace GatekeepersProtocol.Tests
                 Assert.AreEqual(14 + 6 * level, spec.enemyCount, "dormant count curve, level " + level);
                 Assert.AreEqual(spec.enemyCount, spec.defaultCount, "spool waves are all Default");
                 Assert.AreEqual(0, spec.hunterCount);
-                Assert.AreEqual(0, spec.ramCount);
+                Assert.AreEqual(0, spec.thiefCount);
                 Assert.AreEqual(1, spec.groupSize, "singles, as this curve was written");
                 Assert.AreEqual(WaveDirector.SpoolWaveInterval, spec.timeUntilNextWave, 1e-6f);
             }

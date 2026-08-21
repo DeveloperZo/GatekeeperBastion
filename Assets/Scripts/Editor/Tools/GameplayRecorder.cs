@@ -30,7 +30,7 @@ namespace GatekeepersProtocol.EditorTools
         internal const int Fps = 30;
         internal const float MaxMinutes = 20f;
 
-        const string ShipScene = "Assets/Scenes/Ship.unity";
+        const string ShipScene = "Assets/Scenes/Ship - Demo.unity";
         const string BastionScene = "Assets/Scenes/Bastion.unity";
         const string PendingKey = "GKB.GameplayRecorder.Pending";
 

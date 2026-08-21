@@ -34,7 +34,7 @@ Sources: [Capitalization Conventions](https://learn.microsoft.com/en-us/dotnet/s
 **Abbreviations: none, except mathematics and this project's own vocabulary.** Microsoft says
 never abbreviate; Unity carves out math (`Lerp`, `Slerp`). This project has a third carve-out
 that outranks both: `_meta/_definitions/language.md` is the ubiquitous language and its terms
-are the names. `Hp`, `Dps`, `Tier`, `Ram` stay. Expanding a table term to satisfy a style
+are the names. `Hp`, `Dps`, `Tier`, `Thief` stay. Expanding a table term to satisfy a style
 guide is a language violation, and the language file wins.
 
 **Redundant context: strip it.** Inside `Player`, the field is `Score`, not `PlayerScore`.
@@ -47,7 +47,7 @@ Unity states this one explicitly and it is the rule most often broken by generat
    being called — no compiler error. Declared `private`, they also break inheritance: Unity
    calls only the derived one. Any MonoBehaviour intended to be subclassed declares its
    messages `protected virtual`. This is live for `EnemyGatekeeper` → `HunterGatekeeper` /
-   `RamGatekeeper`. ([source](https://kybernetik.com.au/cs-unity/docs/introduction/methods/messages))
+   `ThiefGatekeeper`. ([source](https://kybernetik.com.au/cs-unity/docs/introduction/methods/messages))
 2. **`OnX` already means three things**: a Unity message (`OnEnable`), an event *raiser*
    (`OnDoorOpened()` invoking `DoorOpened`), and a hand-wired *handler* (`OnWaveStarted`).
    This codebase uses all three. **Rule: `OnX` is reserved for Unity messages and for

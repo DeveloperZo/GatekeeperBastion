@@ -11,7 +11,7 @@ namespace GatekeepersProtocol.Tests
         public void Catalog_DefaultSheet_Pins()
         {
             Assert.AreEqual(BoarderProtocolId.Default, BoarderProtocol.ShopProtocols()[0]);
-            Assert.AreEqual(1, BoarderProtocol.ShopProtocols().Length);
+            Assert.AreEqual(3, BoarderProtocol.ShopProtocols().Length);
             Assert.AreEqual(DoctrineMode.Stock, BoarderProtocol.DoctrineOf(BoarderProtocolId.Default));
             Assert.AreEqual(0, (int)DoctrineMode.Stock);
             Assert.AreEqual(BoarderAbilityId.Barrage, BoarderProtocol.CrewAbilityOf(BoarderProtocolId.Default));
@@ -58,17 +58,18 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ComingSoonNames_AreNotCatalogIds()
         {
-            BoarderProtocolId veil, aegis, ledger;
-            Assert.IsFalse(Enum.TryParse("VEIL", true, out veil));
+            // VEIL now parses — it is a sold protocol. AEGIS and LEDGER are still only copy,
+            // and the catalog must not answer to either.
+            BoarderProtocolId aegis, ledger;
             Assert.IsFalse(Enum.TryParse("AEGIS", true, out aegis));
             Assert.IsFalse(Enum.TryParse("LEDGER", true, out ledger));
             var shop = BoarderProtocol.ShopProtocols();
             for (int i = 0; i < shop.Length; i++)
             {
                 string name = BoarderProtocol.ProtocolName(shop[i]);
-                Assert.AreNotEqual("VEIL", name);
                 Assert.AreNotEqual("AEGIS", name);
                 Assert.AreNotEqual("LEDGER", name);
+                Assert.IsNotEmpty(name);
             }
         }
 

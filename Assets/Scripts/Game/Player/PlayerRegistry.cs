@@ -89,7 +89,9 @@ namespace GatekeepersProtocol.Game
             for (int i = 0; i < Registry.Count; i++)
             {
                 var candidate = Registry[i];
-                if (candidate == null || candidate.IsDead) continue;
+                // Cloak is a removal from this list, not a range bias — a lone cloaked player
+                // leaves nothing to return, which is what sends gatekeepers back to the Hatch.
+                if (candidate == null || candidate.IsDead || candidate.Cloaked) continue;
                 float sqr = (candidate.transform.position - position).sqrMagnitude;
                 if (sqr < bestSqr)
                 {

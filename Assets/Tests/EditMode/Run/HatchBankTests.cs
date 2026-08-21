@@ -43,9 +43,35 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1.50f, HatchBank.CarryConvert(99), 1e-5f);
             Assert.AreEqual(0, HatchBank.CarryWaveIndex(1));
             Assert.AreEqual(4, HatchBank.CarryWaveIndex(5));
-            Assert.AreEqual(1, HatchBank.ExtraRam(3));
-            Assert.AreEqual(0, HatchBank.ExtraRam(1));
-            Assert.AreEqual(0, HatchBank.ExtraRam(5));
+            Assert.AreEqual(1, HatchBank.ExtraThief(3));
+            Assert.AreEqual(0, HatchBank.ExtraThief(1));
+            Assert.AreEqual(0, HatchBank.ExtraThief(5));
+        }
+
+        [Test]
+        public void MasterTerminalUnbanked_IsFiveWaveFiveClears()
+        {
+            var director = new WaveDirector();
+            long perKill = (long)System.Math.Floor((double)MetaUpgrades.SalvagePerKill());
+            long waveFive = director.NextWave(WaveDirector.MaxWaves - 1, 0, 1).enemyCount * perKill;
+            Assert.AreEqual(waveFive * MasterControl.TerminalWaves, HatchBank.MasterTerminalUnbanked());
+            Assert.AreEqual(8250L, HatchBank.MasterTerminalUnbanked(),
+                "66 bodies × 25 × 5 terminal windows at dial 0");
+        }
+
+        [Test]
+        public void SeedBankPile_SetsUnbankedAndCarry()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            sim.SeedBankPile(HatchBank.BankCap(2), 2);
+            Assert.AreEqual(HatchBank.BankCap(2), sim.Unbanked);
+            Assert.AreEqual(2, sim.WavesSinceBank);
+            Assert.AreEqual(2, sim.CurrentWaveIndex);
+            sim.SeedBankPile(HatchBank.BankCap(5) - HatchBank.BankCap(2), 3, WaveDirector.MaxWaves);
+            Assert.AreEqual(HatchBank.BankCap(5) - HatchBank.BankCap(2), sim.Unbanked);
+            Assert.AreEqual(3, sim.WavesSinceBank);
+            Assert.AreEqual(WaveDirector.MaxWaves, sim.CurrentWaveIndex);
         }
 
         [Test]
@@ -321,7 +347,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void HatchBank_ThreeWaves_AddsExtraRam()
+        public void HatchBank_ThreeWaves_AddsExtraThief()
         {
             MetaState meta;
             var sim = Tethered(out meta);
@@ -333,8 +359,8 @@ namespace GatekeepersProtocol.Tests
             sim.TriggerDraw(WaveMode.HatchBank);
             Assert.AreEqual(3, sim.HatchCarry);
             WaveSpec field = director.NextWave(2, 0);
-            Assert.AreEqual(field.enemyCount + HatchBank.Carry3ExtraRam, hatch.enemyCount);
-            Assert.AreEqual(field.ramCount + HatchBank.Carry3ExtraRam, hatch.ramCount);
+            Assert.AreEqual(field.enemyCount + HatchBank.Carry3ExtraThief, hatch.enemyCount);
+            Assert.AreEqual(field.thiefCount + HatchBank.Carry3ExtraThief, hatch.thiefCount);
             Assert.AreEqual(field.defaultCount, hatch.defaultCount);
         }
 
@@ -409,6 +435,29 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0f, sim.RepairHatch(50f), 1e-5f);
             Assert.AreEqual(0L, sim.Unbanked);
             Assert.AreEqual(1000L, meta.BankedSalvage);
+        }
+
+        [Test]
+        public void BuyBackRefuse_LiveWindow_AllowsGuestWhoCanPay()
+        {
+            Assert.AreEqual(450L, HatchBank.BuyBackCost);
+            Assert.IsTrue(HatchBank.IsBuyBackWindow(WaveMode.HatchBank, AssaultState.Assault));
+            Assert.IsFalse(HatchBank.IsBuyBackWindow(WaveMode.HatchBank, AssaultState.Prep));
+            Assert.IsFalse(HatchBank.IsBuyBackWindow(WaveMode.Terminal, AssaultState.Assault));
+            Assert.IsTrue(HatchBank.IsFreeEmbarkWindow(WaveMode.HatchBank, AssaultState.Prep));
+            Assert.IsFalse(HatchBank.IsFreeEmbarkWindow(WaveMode.HatchBank, AssaultState.Assault));
+            Assert.IsNull(HatchBank.BuyBackRefuse(
+                false, true, WaveMode.HatchBank, AssaultState.Assault, HatchBank.BuyBackCost));
+            Assert.AreEqual("no live window", HatchBank.BuyBackRefuse(
+                false, true, WaveMode.HatchBank, AssaultState.Prep, HatchBank.BuyBackCost));
+            Assert.AreEqual("no live window", HatchBank.BuyBackRefuse(
+                false, true, WaveMode.Terminal, AssaultState.Assault, HatchBank.BuyBackCost));
+            Assert.AreEqual("cannot afford", HatchBank.BuyBackRefuse(
+                false, true, WaveMode.HatchBank, AssaultState.Assault, HatchBank.BuyBackCost - 1));
+            Assert.AreEqual("host cannot buy back", HatchBank.BuyBackRefuse(
+                true, true, WaveMode.HatchBank, AssaultState.Assault, HatchBank.BuyBackCost));
+            Assert.AreEqual("not waiting", HatchBank.BuyBackRefuse(
+                false, false, WaveMode.HatchBank, AssaultState.Assault, HatchBank.BuyBackCost));
         }
     }
 }

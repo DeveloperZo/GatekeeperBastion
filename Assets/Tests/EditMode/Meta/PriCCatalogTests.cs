@@ -125,7 +125,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void OneShot_NonRamAtEveryWave()
+        public void OneShot_NonThiefAtEveryWave()
         {
             var def = WeaponCatalog.Def(WeaponId.PriC);
             for (int w = 0; w < 5; w++)

@@ -30,7 +30,11 @@ namespace GatekeepersProtocol.PlayTests
         public void EveryFlowScene_IsRegisteredInBuildSettings()
         {
             // Boot path is Splash → MainMenu → Ship → Bastion (M35 criterion 3).
-            string[] flow = { SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.Ship, SceneFlow.Bastion };
+            string[] flow =
+            {
+                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.Ship, SceneFlow.ShipCoop,
+                SceneFlow.Bastion
+            };
 
             var missing = new List<string>();
             var present = new List<string>();
@@ -49,15 +53,20 @@ namespace GatekeepersProtocol.PlayTests
 
             Assert.IsEmpty(missing,
                 $"Scene(s) [{string.Join(", ", missing)}] are missing from Build Settings while " +
-                $"[{string.Join(", ", present)}] are registered. SceneFlow needs Splash, MainMenu, Ship, Bastion.");
+                $"[{string.Join(", ", present)}] are registered. SceneFlow needs Splash, MainMenu, " +
+                "Ship - Demo, Ship - CoOp, Bastion.");
         }
 
         /// <summary>The build-order smoke assertion that lived in the deleted
-        /// ShiftFrontEndMutate.Smoke, updated to the four-scene list (M35 criterion 3).</summary>
+        /// ShiftFrontEndMutate.Smoke, updated for the dual ship hub (2026-08-21).</summary>
         [Test]
-        public void BuildSettings_OrderIs_Splash_MainMenu_Ship_Bastion()
+        public void BuildSettings_OrderIs_Splash_MainMenu_ShipDemo_ShipCoop_Bastion()
         {
-            string[] expected = { SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.Ship, SceneFlow.Bastion };
+            string[] expected =
+            {
+                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.Ship, SceneFlow.ShipCoop,
+                SceneFlow.Bastion
+            };
 
             // The PlayMode harness injects its own InitTestScene into the build list for the
             // duration of the run (and it lands at slot 0, shifting every real scene) — filter
@@ -72,12 +81,12 @@ namespace GatekeepersProtocol.PlayTests
             }
 
             Assert.AreEqual(expected.Length, names.Count,
-                $"Build Settings holds [{string.Join(", ", names)}]; expected exactly the four flow scenes.");
+                $"Build Settings holds [{string.Join(", ", names)}]; expected exactly the five flow scenes.");
             for (int i = 0; i < expected.Length; i++)
             {
                 Assert.AreEqual(expected[i], names[i],
                     $"Build slot {i} is '{names[i]}'; expected '{expected[i]}'. " +
-                    "Order must be Splash, MainMenu, Ship, Bastion.");
+                    "Order must be Splash, MainMenu, Ship - Demo, Ship - CoOp, Bastion.");
             }
         }
 

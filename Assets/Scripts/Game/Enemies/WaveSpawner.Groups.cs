@@ -14,7 +14,7 @@ namespace GatekeepersProtocol.Game
     {
         /// <summary>Fill a wave emit's roster from the spec's three counts and shuffle it.</summary>
         /// <remarks>SHUFFLED, NOT BLOCKED: appending the kinds in order would send every Hunter
-        /// first and every Ram last, so the mix a player has to triage would only ever exist for
+        /// first and every Thief last, so the mix a player has to triage would only ever exist for
         /// the few seconds the blocks overlap. Mixing is the whole reason there are three kinds.
         ///
         /// The shuffle draws from RunSim.Rng — the sim's seeded stream, and ONLY that stream — so
@@ -26,9 +26,10 @@ namespace GatekeepersProtocol.Game
         void BuildRoster(WaveEmit emit, WaveSpec spec)
         {
             emit.Queue.Clear();
+            emit.FinaleElitePending = spec.finaleElite;
             AddKind(emit, GatekeeperKind.Default, spec.defaultCount);
             AddKind(emit, GatekeeperKind.Hunter, spec.hunterCount);
-            AddKind(emit, GatekeeperKind.Ram, spec.ramCount);
+            AddKind(emit, GatekeeperKind.Thief, spec.thiefCount);
 
             // The sim's contract is that the three counts sum to enemyCount. If a tuning pass ever
             // breaks that, spawn what the spec actually asked for rather than an empty wave, and
@@ -36,7 +37,7 @@ namespace GatekeepersProtocol.Game
             if (emit.Queue.Count != spec.enemyCount)
             {
                 Log.Warn(Tag, $"Wave roster {emit.Queue.Count} != spec.enemyCount {spec.enemyCount} " +
-                              $"({spec.defaultCount}/{spec.hunterCount}/{spec.ramCount}); using the roster.");
+                              $"({spec.defaultCount}/{spec.hunterCount}/{spec.thiefCount}); using the roster.");
                 if (emit.Queue.Count == 0) AddKind(emit, GatekeeperKind.Default, spec.enemyCount);
             }
 
@@ -178,7 +179,7 @@ namespace GatekeepersProtocol.Game
                                   $"({emit.Spawned}/{emit.Size}) — {AliveCount} live" + netTag);
         }
 
-        /// <summary>"2 Gatekeepers, 1 Hunter, 2 Rams" — the group's composition, kinds omitted when
+        /// <summary>"2 Gatekeepers, 1 Hunter, 2 Thieves" — the group's composition, kinds omitted when
         /// absent. This is the one place per-kind detail is worth log space: it is what makes a
         /// group's threat readable afterwards.</summary>
         static string Describe(int[] tally)
@@ -199,7 +200,7 @@ namespace GatekeepersProtocol.Game
             switch (kind)
             {
                 case GatekeeperKind.Hunter: return "Hunter";
-                case GatekeeperKind.Ram: return "Ram";
+                case GatekeeperKind.Thief: return "Thief";
                 default: return "Gatekeeper";
             }
         }
@@ -224,11 +225,17 @@ namespace GatekeepersProtocol.Game
             // comes from here, because a prefab's serialized fields are frozen at asset-creation
             // time and silently outrank any later code change (Docs/Architecture.md GOTCHA 1).
             GatekeeperStats stats = WaveDirector.StatsFor(kind);
+            if (kind == GatekeeperKind.Thief && emit.FinaleElitePending)
+            {
+                emit.FinaleElitePending = false;
+                stats.maxHp = MasterControl.FinaleEliteHp;
+                Log.Event(Tag, "finale elite hp=" + stats.maxHp);
+            }
 
             Vector3 at = GroupSlot(point.position, index, groupCount);
             // The agent's baseOffset lifts the transform on its FIRST update, so instantiating at
             // navmesh height buries the body and pops it up a metre on frame one (1.0 Default,
-            // 0.85 Hunter, 1.4 Ram — same class as the Ship's bed pose, 2026-08-18 defect).
+            // 0.85 Hunter, 1.4 Thief — same class as the Ship's bed pose, 2026-08-18 defect).
             // Spawn at the height the agent is going to hold anyway.
             Vector3 spawnAt = at + Vector3.up * PrefabBaseOffset(prefab);
             GameObject enemy = Instantiate(prefab, spawnAt, point.rotation);
@@ -315,8 +322,8 @@ namespace GatekeepersProtocol.Game
                 case GatekeeperKind.Hunter:
                     if (hunterPrefab != null) return hunterPrefab;
                     break;
-                case GatekeeperKind.Ram:
-                    if (ramPrefab != null) return ramPrefab;
+                case GatekeeperKind.Thief:
+                    if (thiefPrefab != null) return thiefPrefab;
                     break;
                 default:
                     return enemyPrefab;

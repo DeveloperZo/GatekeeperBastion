@@ -27,11 +27,59 @@ namespace GatekeepersProtocol.Sim
         public const string RightHandBone = "mixamorig:RightHand";
         public const string LocalHeadLayer = "LocalHead";
 
-        /// <summary>Local-owner gun pose in camera space. The body SMR is culled, so bind-pose
-        /// hand is behind the lens; this offset keeps the mesh in the lower-right of a 60° FOV.</summary>
+        /// <summary>MK-1 hip hold in camera space. The body SMR is culled, so bind-pose hand
+        /// is behind the lens; this offset keeps a sidearm in the lower-right of a 60° FOV.
+        /// Shop guns share it — a second pocket is a floating gun until arms exist.</summary>
         public const float LocalGunRight = 0.18f;
         public const float LocalGunDown = -0.14f;
         public const float LocalGunForward = 0.38f;
+
+        /// <summary>Camera-local metres and degrees for the Grip. Clips still key wrapper
+        /// roots; this is the hold the kick plays on top of.</summary>
+        public struct GunHold
+        {
+            public float Right, Down, Forward;
+            public float Pitch, Yaw, Roll;
+        }
+
+        /// <summary>Fbx-child local +Z. PriC 0.12 puts the pistol grip at the wrapper
+        /// origin (stock 0.19 m behind after z-scale 1.4). 0.257 held the butt and the
+        /// rifle floated in front of the MK-1 pocket.</summary>
+        public const float PriCFbxLocalZ = 0.12f;
+        public const float Mr35FbxLocalZ = 0.204f;
+
+        /// <summary>Shop guns share the MK-1 pocket. PRI-C keeps that hand (Right/Forward)
+        /// but sits lower and yaws in so the long mesh runs along the bottom toward the
+        /// reticle instead of as a side-on plank. Cutter is melee. Zoom is unused until arms.</summary>
+        public static GunHold Hold(WeaponId id, bool zoom = false)
+        {
+            if (id == WeaponId.None)
+            {
+                return new GunHold
+                {
+                    Right = 0.22f, Down = -0.08f, Forward = 0.30f,
+                    Pitch = 18f, Yaw = -10f, Roll = 50f
+                };
+            }
+            if (id == WeaponId.PriC)
+            {
+                return new GunHold
+                {
+                    Right = LocalGunRight, Down = -0.22f, Forward = LocalGunForward,
+                    Pitch = -6f, Yaw = -14f, Roll = 0f
+                };
+            }
+            return Mk1Hip();
+        }
+
+        static GunHold Mk1Hip()
+        {
+            return new GunHold
+            {
+                Right = LocalGunRight, Down = LocalGunDown, Forward = LocalGunForward,
+                Pitch = 0f, Yaw = 2f, Roll = 10f
+            };
+        }
 
         /// <summary>PlayOneShot volume scale on fire, reload, and footsteps. Placeholder PCM
         /// bursts at bus 0.9 were harsh; this is leverage #12, one number. Slider still multiplies.</summary>

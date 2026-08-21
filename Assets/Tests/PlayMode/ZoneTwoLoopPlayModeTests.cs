@@ -302,17 +302,18 @@ namespace GatekeepersProtocol.PlayTests
         /// this zone is the next fight, then load the real Bastion into it.
         /// </summary>
         /// <remarks>
-        /// The state is built by <see cref="GameController.BuildDemoCheckpoint"/> rather than
-        /// hand-rolled, so this test cannot drift from what the dev checkpoint means. It is
+        /// The state is built by <see cref="GameController.BuildZoneTwoReadyCheckpoint"/> rather
+        /// than hand-rolled, so this test cannot drift from the D1-open shop-spent meta the
+        /// seven F12 beats no longer expose as their own digit. It is
         /// adopted BEFORE the scene loads because GameController.Awake hands that exact
         /// MetaState instance to the RunSim, and a swap afterwards would leave the sim writing
         /// the gate flag onto an object nothing reads.
         /// </remarks>
         static IEnumerator EnterZoneTwo(int zone)
         {
-            MetaState checkpoint = GameController.BuildDemoCheckpoint(3);
+            MetaState checkpoint = GameController.BuildZoneTwoReadyCheckpoint();
             Assert.IsNotNull(checkpoint,
-                "GameController.BuildDemoCheckpoint(3) returned null — the checkpoint that "
+                "GameController.BuildZoneTwoReadyCheckpoint returned null — the state that "
                 + "stands at the mouth of zone 2 no longer exists.");
             GameSession.AdoptDevState(checkpoint);
             // A MAP deep start left behind by an earlier fixture would chain Waves at embark and

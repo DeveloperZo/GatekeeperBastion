@@ -147,6 +147,12 @@ namespace GatekeepersProtocol.Game
             {
                 _lineBuf.Append("<b>ABILITY ").Append(name).Append(" — SURGING</b>");
             }
+            else if (_gun != null && _gun.RailshotArmed)
+            {
+                // Cooldown starts on arm, so this must beat the cooldown branch or
+                // the armed window never paints (criterion 5).
+                _lineBuf.Append("<b>ABILITY ").Append(name).Append(" — ARMED</b>");
+            }
             else if (_ability.CooldownRemaining > 0.05f)
             {
                 _lineBuf.Append("ABILITY ").Append(name).Append("  ")

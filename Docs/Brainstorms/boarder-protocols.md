@@ -98,7 +98,7 @@ quota forcing filler pairs — pre-mortem 1 and kill criterion 5 exist for it.
   rule-bending twist sits in a parked pair, arriving after the identity is set.
 - All `M70` bans carry: no damage grants, no crit source, no heal or revive row, no
   numeric passive, no teammate displacement, no permanent mobility, kind refusals stand
-  (a Ram never retargets, a Hunter never touches the Hatch). Every ability and every
+  (a Thief never retargets, a Hunter never touches the Hatch). Every ability and every
   twist is a trade.
 - **Passives are pick 1 of 2 — locked at the onset (Zo, 2026-08-15).** Both-on stacks
   a pair into a second doctrine (Warden + Doorward is a permanent double-taunt); kill
@@ -246,7 +246,7 @@ geometry renders normally — firing exits instantly, no teammate is ever shifte
 | Twist (pick 1 of 2) | Rule change | Trade |
 |---|---|---|
 | **Hairtrigger** | Cloak pre-arms instead of casting; fires itself the instant a Gatekeeper acquires you; manual press gone while armed (RoR2's Old War Stealthkit) | You never choose the moment — a stray glance burns the window |
-| **Thrown Voice** | Entering the layer drops a noisemaker at your entry spot pulling the nearest non-committed, non-Ram Gatekeeper to it (Lure, folded; Thief's noisemaker) | The lure lands where you just were — cloaking in place parks an enemy on you; only moving pays |
+| **Thrown Voice** | Entering the layer drops a noisemaker at your entry spot pulling the nearest non-committed, non-Thief Gatekeeper to it (Lure, folded; Thief's noisemaker) | The lure lands where you just were — cloaking in place parks an enemy on you; only moving pays |
 
 Axis: automatic escape, or chosen slip. Parked pair (second slot): **Shroud**
 (teammates in radius enter with you; any cloaked Boarder firing collapses it for all;
@@ -278,7 +278,7 @@ to fight in and the Hatch's to hide behind; the root is yours.
 
 | Twist (pick 1 of 2) | Rule change | Trade |
 |---|---|---|
-| **Challenge** | While planted, Defaults and Hunters in the radius target you; unplanting breaks it; Rams refuse (folded; Vermintide's man-sized taunt, DR number stripped) | Everything in reach converges on a man who cannot move |
+| **Challenge** | While planted, Defaults and Hunters in the radius target you; unplanting breaks it; Thieves refuse (folded; Vermintide's man-sized taunt, DR number stripped) | Everything in reach converges on a man who cannot move |
 | **Ward Stone** | The plant becomes a destructible stake at a ghost-and-confirm spot; the slow lives on the stake until Gatekeepers smash it; one at a time (Bloons' placed slow, destructibility added) | Uptime is enemy-decided, and you gave up the indestructible version — yourself |
 
 Axis: you root, or a stake does. Parked pair (second slot): **Sieve** (the zone slows
@@ -300,7 +300,7 @@ timing.
 Axis: cast the window, or wear it. Parked pair (second slot): **Sentinel** (while
 still, the negation guards the nearest teammate — Overwatch's Projected Barrier;
 co-op-weighted) / **Doorplate** (the negation guards the Hatch while you stand in
-reach — the one legal answer to a Ram's output; needs a Hatch-damage intercept hook)
+reach — the one legal answer to a Thief's output; needs a Hatch-damage intercept hook)
 — "who else the window guards." Alternates on record: **Rebuff** (solo it re-selects
 you); **Rebuke** (no stagger state; gate `M63`); **Intervene** (displaced, mobility
 flag).
@@ -321,7 +321,7 @@ Hatch-bank** (`../Design/3-Mechanics.md`) — every line shapes risk and positio
 bypasses conversion. Two Ledgers diverge as: the economist turning kills into
 ground-truth piles versus the anchor running a conveyor of payouts into a killzone.
 
-**WRIT (`G`)** [new] — mark one non-Ram Gatekeeper for a window: it renders through
+**WRIT (`G`)** [new] — mark one non-Thief Gatekeeper for a window: it renders through
 walls for the team and walks toward you — a windowed overlay, never the provoke flag
 (the separation rule, carried from the pre-recut `M70`: windowed overlays never
 share a code path with Warden's permanent flag). The payout walks at you, armed. Beneficiary
@@ -331,7 +331,7 @@ delivery is yours.
 | Twist (pick 1 of 2) | Rule change | Trade |
 |---|---|---|
 | **Dead Letter** | The mark's kill payout drops as a world pile at the corpse instead of auto-crediting the killer (Hunt's bounty token at the corpse) | The payout becomes position — walkable, losable, stealable post-`M63` |
-| **Probate** | A mark dying inside the window passes the Writ to the nearest non-Ram for the remainder; the window never refreshes | You never choose the second target |
+| **Probate** | A mark dying inside the window passes the Writ to the nearest non-Thief for the remainder; the window never refreshes | You never choose the second target |
 
 Axis: the mark's death pays, or passes. Parked pair (second slot): **Summons** (the
 mark walks to your placed machine instead of you — DRG's L.U.R.E.) / **Class Action**
@@ -447,7 +447,7 @@ Hatch-bank wave (The Finals' cashbox throw). Twist pair drafted: Ammo Run (the p
 may be reserve ammo), Bucket Brigade (a mid-air catch goes straight to the catcher's
 unbanked; co-op-weighted). **Dead Run** (`H`) — full-sprint burst that sheds your
 unbanked behind you as micro-piles; sits squarely on the mobility cut. HIJACK:
-**Override** (`G`) — channel one non-Ram, non-Hunter Gatekeeper to fight beside you,
+**Override** (`G`) — channel one non-Thief, non-Hunter Gatekeeper to fight beside you,
 one at a time; while it stands, your kill payouts credit into the convert and fall as
 a pile wherever it dies — income held hostage in a body the enemy is deleting (Payday
 2's Joker, with an escrow price). **Switchboard** (`H`) — swap positions with your
@@ -519,7 +519,7 @@ many expression rows it unlocks. Build order follows demand, not sheet order.
 | 7 | **Hatch-damage intercept** (Doorplate) | Verified small — single funnel `HatchStation.ApplyDamage` | Doorplate (parked) | Small |
 | 8 | **Teleport / priced burst movement** | Absent (no gameplay dash or teleport exists) | Recall base; Sally + Round Trip (parked) + Slip (alternate), all mobility-flagged | Small-medium — build once for Recall, the only unflagged demander |
 | 9 | **Carry state** (hands-full, slow) | Absent (`MovementLocked` is down/menu only) | Redeploy base + Shoulder Rig; Haul (seed) | Small-medium |
-| 10 | **Wave-preview kind surface** (Foresight) | Data exists (`WaveDirector.NextWave` has kind counts); UI shows body count only | Foresight | Small — surface `hunterCount`/`ramCount` |
+| 10 | **Wave-preview kind surface** (Foresight) | Data exists (`WaveDirector.NextWave` has kind counts); UI shows body count only | Foresight | Small — surface `hunterCount`/`thiefCount` |
 | 11 | **Destructible placed aura** (Ward Stone) | Close — decoy has hp, placement flow (`DecoyPlacement` ghost-and-confirm) exists to reuse | Ward Stone | Small-medium |
 | 12 | **Deed counters** — one themed persistent counter per protocol gate, plus per-protocol play counters for the paced unlocks | Absent; `MetaState`/`SaveData` (`gatekeeper_meta.json`) is the home | The whole unlock spine (Albion model, Unlock and progression) | Small state per deed; every candidate deed counts a host-side event that already logs (kill, repair, bank, deploy) — no new earn rule to invent |
 | 13 | **Elite scaffolding** — a kind wearing one authored modifier: fixed per-wave counts in the existing composition-array pattern (`HunterPerWave`), an HP-and-telegraph tier authored with the body, never rolled, never touching a kind's refusal (why rolled died: The modifier pool) | Absent — source has kinds only, no variant tiers; `enemyHealthMultiplier` is one number for every kind (`WaveSpec`) | The modifier pool's Gatekeeper side; the whole elite system | Medium — gated on the one-Gatekeeper probe (kill question 1) reading, and the probe itself ships as a one-off exempt from this gate |
@@ -598,7 +598,7 @@ audit:
 | Default's damage lock (`_provoked`, permanent) | The provoke flag | **Warden** writes the identical flag, pointed at itself |
 | Decoy-chase (`_chasingDecoy`, the shipped goal override) | Windowed target override (mechanics bill 1) | **Phantom Echo**'s ghost, **Summons**, **Challenge**, **Thrown Voice** — all generalizations of the chase |
 | Hunter's player-hunt | Targeting/goal selection | **Writ** — a windowed hunt, leashed and pointed at the caster; **Ping**'s pull is the hunt invited |
-| Ram's absolute refusals | Kind refusal rules | The wall every ability respects; **Doorplate** is the one legal answer to a Ram |
+| Thief's absolute refusals | Kind refusal rules | The wall every ability respects; **Doorplate** is the one legal answer to a Thief |
 | Caller (`M63`, planned) | Overriding others' targets | **Ping** is the call inverted — onto yourself |
 | Thief (`M63`, planned) | World pile (mechanics bill 3) | **LEDGER**'s entire sheet, played from the other side |
 | Standoff Shooter (`M63`, planned) | Ranged emplacement | **UTL-H** is your standoff shooter; **Aegis Dome**'s reason to exist |

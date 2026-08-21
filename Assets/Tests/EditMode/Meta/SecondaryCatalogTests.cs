@@ -172,9 +172,9 @@ namespace GatekeepersProtocol.Tests
                 secondary);
 
             string unknown = KillLog.FormatUnknownSlot(
-                "Ram", 40L, 1, hatchDist: 0.4f, spawnDist: 2.5f);
+                "Thief", 40L, 1, hatchDist: 0.4f, spawnDist: 2.5f);
             Assert.AreEqual(
-                "killed a Ram (+40 unbanked) -- 1 left hatchDist=0.4 spawnDist=2.5",
+                "killed a Thief (+40 unbanked) -- 1 left hatchDist=0.4 spawnDist=2.5",
                 unknown);
         }
 

@@ -29,11 +29,12 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**M79** completed 2026-08-20 (built, realigned and closed the same day; criterion
+**M63-3** started 2026-08-20 — the Cloaker, the garrison's fourth kind, shaved off
+`M63` along with the Ram→Thief rename and the `in_build` Compendium filter.
+**M80** completed 2026-08-20 (built; criteria 8–9 open — two-seat loopback and
+the D2→Escaped playthrough). **M79** completed 2026-08-20 (built, realigned and closed the same day; criterion
 10 closed under the dev-tainted allowance ruled that day — criterion 9's
-composition bet is open and needs a logged Run). **M80** is now startable: both
-its owner-Zo inputs were stamped 2026-08-20 — one high-HP elite, no escorts, and
-D3 stays exactly as authored (zero code).
+composition bet is open and needs a logged Run).
 **M78** completed 2026-08-20 (Zo close; criterion 9 `Lost` +
 `Returned` playthroughs). **M88** completed 2026-08-19 (Zo close). **M81** and **M87**
 completed 2026-08-19 (Zo close). **M76** completed 2026-08-18 (Zo close; juice
@@ -59,9 +60,15 @@ run ends with a screen that tells them what happened. Queue is ordered against t
 sentence. Shared Ship + party EMBARK closed with **M72** (2026-08-17); remaining friends
 work is polish and dry-run length, not lobby topology.
 
-**Demo family cut 2026-08-17**: M74–M80 from `Demo/`'s beat specs. **M80** is
-cut but not started-able until Zo stamps the boss/elite composition and the
-finale-access ruling — the file names both.
+**M82** started 2026-08-20: shared viewmodel controller + four clips; reload
+speed-scales to each weapon's duration. Criteria 1–3 are a playthrough.
+
+**M93** started 2026-08-20: the three shop Primaries already differ in the sim; this
+pass makes that difference readable (concussive metres, Railshot ARMED, catalog test).
+Criterion 4 is unblocked (`M82` clips, 2026-08-20); playthrough remains.
+
+**Demo family cut 2026-08-17**: M74–M80 from `Demo/`'s beat specs. **M80**
+closed 2026-08-20.
 
 **Recommended next**, in this order.
 
@@ -70,10 +77,12 @@ finale-access ruling — the file names both.
 2. **M66** — hit confirm, per-kind tells, distinct players at lane range.
 3. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
    playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14, M55 juice unused,
-   M71 Regen Surge mag, M64 criteria 13–25 dry-run, M69 criterion 4, M73 criterion 6.
+   M71 Regen Surge mag, M64 criteria 13–25 dry-run, M69 criterion 4, M73 criterion 6,
+   M80 criteria 8–9.
    Next-Run list: `GatekeeperZo Notes/verification.md`.
 
-Planned count is **10** (at cap 10). Active **0** (cap 3).
+Planned count is over cap (files in `1. planned/` still include completed
+`M78`/`M79` and unindexed co-op rows). Active **2** of 3 (`M91`, `M93`).
 
 ## Order
 
@@ -139,8 +148,9 @@ this table — see the change log.
 | M61 | Polish Pass 2 | completed, Aug 2026 | IQ astronaut + Synty Space guns/desks (SKU 138857); Mixamo fire/reload stand-ins; stroke crosshair; RMB zoom | [`3. completed/M61`](Milestones/3.%20completed/M61-the-polish-pass-2.md) |
 | M61-2 | Polish Pass 2, the Bastion | completed, Aug 2026 | Kit blocks are POLYGON Sci-Fi Space meshes; re-framed mid-pass to scaler-2 station rooms with functional sliding doors and a bulkhead Hatch; Generated/Authored split; suite 2026-08-15T00:09Z adds no reds of its own; eyes/Stats/solo-run rows open in verification.md | [`3. completed/M61-2`](Milestones/3.%20completed/M61-2-polish-pass-2-the-bastion.md) |
 | M69 | The session has a voice | completed, Aug 2026 | Whispers on Ship/Bastion; fire/reload/footsteps on SFX; no store pack. Gate: `SessionMusicHostTests` 4/0. Criterion 4 slider playthrough open | [`3. completed/M69`](Milestones/3.%20completed/M69-the-session-has-a-voice.md) |
-| M63 | The garrison is a roster | later | Twelve-kind roster + properties + draw rule recorded; Ram→Thief in code; `in_build` filter; door-time logged | [`1. planned/M63`](Milestones/1.%20planned/M63-the-garrison-a-roster-with-bodies.md) |
+| M63 | The garrison is a roster | later | Twelve-kind roster + properties + draw rule recorded; `M53`'s Ram exception removed; door-time logged. Criteria 5, 8 and 9 (Ram→Thief, `in_build` filter) shaved off to `M63-3` 2026-08-20 | [`1. planned/M63`](Milestones/1.%20planned/M63-the-garrison-a-roster-with-bodies.md) |
 | M63-2 | The three that walk | completed, Aug 2026 | Default/Hunter/Thief (Ram) Synty meshes + Mixamo melee walk; player capsule mesh removed; Play pages Thief-named. Gate: GatekeeperPresentationTests; silhouette Zo-closed | [`3. completed/M63-2`](Milestones/3.%20completed/M63-2-the-three-that-walk.md) |
+| M63-3 | The one that stops when you look | active | The garrison's fourth kind: a **Cloaker** on the pack's last unspent silhouette (`SK_Tactical`) that advances only while no Boarder is looking at it — a 30° watch cone gates both targeting virtuals, and a two-material cloak drops when it is seen or shot. Carries `M63`'s Ram→Thief rename and `in_build` filter. Started 2026-08-20 | [`2. active/M63-3`](Milestones/2.%20active/M63-3-the-one-that-stops-when-you-look.md) |
 | M62 | The Compendium you can open | completed, Aug 2026 | Esc → Compendium; Game dimension + scroll nav; StreamingAssets copy; HUD hidden while open; `CompendiumFormTests` | [`3. completed/M62`](Milestones/3.%20completed/M62-the-compendium-you-can-open.md) |
 | M60 | A join a friend can use | completed, Aug 2026 | Unity Relay join code from Main Menu; join-in-Tethered; clean disconnect; host-quit message; LAN IP fallback. Gate: NetSessionAddressTests + Zo eyes-on criterion 4 | [`3. completed/M60`](Milestones/3.%20completed/M60-a-join-a-friend-can-use.md) |
 | M65 | Three players, and a fight that counts them | completed, Aug 2026 | Three supported, six cheap; waves scale by player count; salvage split to own wallets. Gate: `PlayerWalletTests`, `WavePlayerCountTests`, `NetThreePlayerTests` (cumulative BankCap; `RunSim.Wallets.cs`). Full suite still has unrelated reds | [`3. completed/M65`](Milestones/3.%20completed/M65-three-players-and-a-fight-that-counts-them.md) |
@@ -159,21 +169,44 @@ this table — see the change log.
 | M77 | The run can end Docked | completed, Aug 2026 (criteria 2 and 3 at close; 1, 4, 5, 6, 8 settled 2026-08-20 in HP-2; 7 as TH-13 in HP-4) | Doors key on bank-window survival (failed bank never unlocks); held interact at the Hatch → `EndRun("docked")`; snapshot persists banked + doors. Kill criteria on the dock/push-on decision | [`3. completed/M77`](Milestones/3.%20completed/M77-the-run-can-end-docked.md) |
 | M78 | The first return | completed, Aug 2026 | ARMORY ladder rung 1 + MP unlock on first buy + state-keyed exit standing + CREW claim (re-keyed unlock) + plain EMBARK + composite retrigger with partial election. Closed 2026-08-20 (Zo; `Lost` + `Returned` playthroughs). HP-2 settled with the `Returned` half | [`3. completed/M78`](Milestones/3.%20completed/M78-after-the-first-loss.md) |
 | M79 | This loss opens the Primary | completed, Aug 2026 | Zone 2 = 1 terminal × 3 consecutive Waves + a heavier bank; that bank falling writes `DemoZone2BankLost`, which sells the PRIMARY rows + 2 buys on their own counter; D2 on survival; slots retired. **The Primary rows were already open — the milestone had to ADD the gate.** Closed 2026-08-20 under the dev-tainted allowance; criterion 9's composition bet is open and needs a logged Run | [`3. completed/M79`](Milestones/3.%20completed/M79-the-loss-that-opens-the-primary.md) |
-| M80 | One final window | later | Control Room copy + `M73` spawn wiring; `HatchWaves` 5 → 1 with the first boss/elite; `EndDemo` on Escaped only. Blocked on two owner-Zo inputs (boss composition; finale access) | [`1. planned/M80`](Milestones/1.%20planned/M80-one-final-window.md) |
+| M80 | One final window | completed, Aug 2026 | Control Room copy + `M73` spawn wiring; `HatchWaves` 5 → 1 with the first boss/elite; `EndDemo` on Escaped only. Criteria 8–9 (two-seat loopback, playthrough) open | [`3. completed/M80`](Milestones/3.%20completed/M80-one-final-window.md) |
 | M81 | The Gatekeeper's swing | completed, Aug 2026 | One retargeted attack clip into the shared Gatekeeper controller — Attack stops playing PlayerIdle for all three kinds and ship intruders. Free-retarget probe accepted (Zo close 2026-08-19) | [`3. completed/M81`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md) |
-| M82 | The weapon in your hands | later | Shared viewmodel controller + four hand-keyed clips (idle/move/fire/reload) for all six weapons; reload speed-scales to each weapon's duration; resolves the two controller-less Animators in Bastion.unity | [`1. planned/M82`](Milestones/1.%20planned/M82-the-weapon-in-your-hands.md) |
+| M82 | The weapon in your hands | active | Shared viewmodel controller + four hand-keyed clips (idle/move/fire/reload) for all six weapons; reload speed-scales to each weapon's duration; four controller-less window Animators in Bastion.unity removed. Started 2026-08-20 | [`2. active/M82`](Milestones/2.%20active/M82-the-weapon-in-your-hands.md) |
 | M83 | Crewmates fire on camera | later | Replicate fire/reload to non-owner avatars via the existing ClientRpc pattern — drives Boarder.controller's wired-but-unreachable Fire/Reload states; code only, clips already exist | [`1. planned/M83`](Milestones/1.%20planned/M83-crewmates-fire-on-camera.md) |
 | M84 | Gatekeepers flinch when shot | later | One flinch clip on a masked upper-body layer of the shared controller, triggered from the existing `Damaged` event; movement and attacks uninterrupted; ShipIntruder gains the same subscription | [`1. planned/M84`](Milestones/1.%20planned/M84-gatekeepers-flinch-when-shot.md) |
 | M85 | The collapse under the burst | later | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail, so a corpse never delays a wave clear; co-op carrier named as the open question | [`1. planned/M85`](Milestones/1.%20planned/M85-the-collapse-under-the-burst.md) |
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
 | M87 | A bought body in an hour | completed, Aug 2026 | Utility Bot on the pack's Built-In Shader Graph in the Ship; graduation test passed 2026-08-18; Zo close 2026-08-19 (criterion 6 elapsed time unrecorded) | [`3. completed/M87`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md) |
 | M88 | The Gatekeepers are machines | completed, Aug 2026 | One FaxLab3D robot per Gatekeeper kind — silhouette tells the kind, on the pack's Built-In Shader Graph. Zo close 2026-08-19 | [`3. completed/M88`](Milestones/3.%20completed/M88-the-gatekeepers-are-machines.md) |
-| M89 | The Ship, from above | cancelled, Aug 2026 | Killed 2026-08-20 (Zo): first person is chosen, not inherited — the isometric probe never runs. Part of the rig had already landed with `ce7d2ba` (`Ship_Isometric.unity`, `IsometricCameraRig`, `WallRenderState`, `IsometricBodyPresentation`); it stays in the tree, disabled in Build Settings | [`5. cancelled/M89`](Milestones/5.%20cancelled/M89-the-ship-from-above.md) |
+| M89 | The Ship, from above | cancelled, Aug 2026 | Killed 2026-08-20 (Zo): first person is chosen, not inherited — the isometric probe never runs. Part of the rig had already landed with `ce7d2ba`; `Ship_Isometric.unity` and its PlayMode fixture were **deleted 2026-08-20 (Zo)** and the scene unregistered. `IsometricCameraRig`, `WallRenderState` and `IsometricBodyPresentation` remain in the tree, now unreachable — no scene instantiates a rig, so every `_isoRig` is null | [`5. cancelled/M89`](Milestones/5.%20cancelled/M89-the-ship-from-above.md) |
 | M91 | You wake standing | active (code landed, scene pending) | Beat 0's wake bed becomes a teleporter — upright materialise on a pad inside a glass cylinder that retracts on hold-E. Removes three dated defects, chiefly the session-long `SetCapsuleTrigger(true)` that was never restored. Code landed 2026-08-20; the `Demo Teleporter` subtree and its four bindings are Zo's scene pass | [`2. active/M91`](Milestones/2.%20active/M91-you-wake-standing.md) |
 | M90 | Buy back at a live window | later | A dead guest pays their own banked Salvage to re-enter while a bank window is live, rejoining at the Hatch. Split out of `M79` 2026-08-20. **Blocked on three owner-Zo rulings**: per-seat banked salvage does not exist (a guest's `Banked` is never reported to the host), what "live window" means against the existing free embark, and whether door state becomes networked | [`1. planned/M90`](Milestones/1.%20planned/M90-buy-back-at-a-live-window.md) |
 | M92 | A bigger ship with three hatches | active | Ship hull grown on the SR-2 profile with a starboard hatch gallery; three hatch doors with stable ids, open state assigned by seat count (1 → middle, 2 → outer pair, 3 → all); look-at strings + `[Hatch] assigned` log; guest cap 3 → 2. The hull and the doors only — per-hatch HP and enemy routing are the co-op demo's. Started 2026-08-20 | [`2. active/M92`](Milestones/2.%20active/M92-a-bigger-ship-with-three-hatches.md) |
+| M93 | Three primaries that read as three guns | active | The three shop Primaries (BR-12, MR-35, PRI-C) already differ in the sim; this pass makes the difference legible — concussive metres in the log, Railshot ARMED on the HUD, a pairwise catalog test. Criterion 4 (viewmodel motion) unblocked by `M82` 2026-08-20; playthrough remains. Started 2026-08-20 | [`2. active/M93`](Milestones/2.%20active/M93-three-primaries-that-read-as-three-guns.md) |
 
 ## Strategy
+
+**Three phases, in order** (Zo, 2026-08-21). Everything below is read against these.
+
+1. **Finish and polish the solo demo.** `M82`, `M93`, `M84`, `M85`, `M66`, and the
+   garrison content in `M63` / `M63-3`.
+2. **Build out the co-op demo.** `M83`, `M86`, `M90`, `M94`, `M95`, `M98`.
+3. **Ship / Realm / Safehouse.** `M96`, `M97`, and the realm-lock entry still in
+   `Brainstorms/realms.md`.
+
+Three things sit across that order rather than inside it:
+
+- **`M99` is upstream of phase 1 and is queued last.** It depends on nothing and it is how
+  `M82`, `M93`, `M84` and `M85` get verified without a Run each. Ordered where it is, phase
+  1 pays the three-Run toll on every weapon question it asks.
+- **`M82` is load-bearing across phases 1 and 2.** `M83` reads it three times over —
+  crewmates firing on camera is the same animator work. It is the one phase-1 file whose
+  slip moves phase 2.
+- **`Ship - CoOp` is the destination** (Zo, 2026-08-21): `Ship - Demo` is transitional and
+  the co-op hub is what everything is built against from here. The split itself is already
+  wired — `SceneFlow.Ship` / `ShipCoop` name both scenes, `SceneBuilder.BootScenes` pins the
+  five-scene boot order, and Build Settings matches disk. New work targets `Ship - CoOp`;
+  `Ship - Demo` gets changes only while beat 0 still runs there.
 
 **Friends alpha.** The filter is a session a friend can operate without Zo narrating: two
 friends install a build, join, play five Waves, both participate, and an end screen names

@@ -84,7 +84,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(30, specs[1].enemyCount);
             Assert.AreEqual(26, specs[1].defaultCount);
             Assert.AreEqual(4, specs[1].hunterCount, "the wave that teaches the Hunter");
-            Assert.AreEqual(0, specs[1].ramCount, "the Ram waits for wave 3");
+            Assert.AreEqual(0, specs[1].thiefCount, "the Thief waits for wave 3");
             Assert.AreEqual(1.4f, specs[1].enemyHealthMultiplier, 1e-5f);
             Assert.AreEqual(42f, WaveDirector.BaseEnemyHp * specs[1].enemyHealthMultiplier, 1e-3f);
 

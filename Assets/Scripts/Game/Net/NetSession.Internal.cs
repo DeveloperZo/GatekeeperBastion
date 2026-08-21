@@ -71,7 +71,7 @@ namespace GatekeepersProtocol.Game
             System.Collections.Generic.List<ulong> timedOut)
         {
             if (string.IsNullOrEmpty(sceneName)) return;
-            if (!sceneName.Contains(SceneFlow.Ship)) return;
+            if (!SceneFlow.IsShipHub(sceneName)) return;
             _lobbyShipLogged = false;
             if (_nm != null)
                 TryLogLobbyShip(_nm.LocalClientId);
@@ -137,7 +137,7 @@ namespace GatekeepersProtocol.Game
             RegisterPrefab(_mirrorPrefab);
             RegisterPrefab(_gatekeeperPrefab);
             RegisterPrefab(_hunterPrefab);
-            RegisterPrefab(_ramPrefab);
+            RegisterPrefab(_thiefPrefab);
             RegisterPrefab(_decoyPrefab);
         }
 
@@ -245,7 +245,7 @@ namespace GatekeepersProtocol.Game
         void TryLogLobbyShip(ulong clientId)
         {
             if (_lobbyShipLogged) return;
-            if (SceneFlow.ActiveSceneName != SceneFlow.Ship) return;
+            if (SceneFlow.ActiveSceneName != SceneFlow.ShipCoop) return;
             if (_nm == null) return;
             if (clientId != _nm.LocalClientId) return;
             _lobbyShipLogged = true;

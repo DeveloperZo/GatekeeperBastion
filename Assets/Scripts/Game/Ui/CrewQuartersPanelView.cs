@@ -19,11 +19,26 @@ namespace GatekeepersProtocol.Game
 
         bool _bindingsChecked;
 
-        public PanelRowView ProtocolRow => _vitalityRow;
-        public PanelRowView GhostRow => _staminaRow;
-        public PanelRowView ForesightRow => _scavengingRow;
-        public PanelRowView UnusedRow => _luckRow;
+        /// <summary>How many catalog rows this panel can draw. The station fills them from
+        /// the catalog and pads the remainder with Coming Soon copy.</summary>
+        public const int RowCount = 4;
+
         public ProtocolSheetView Sheet => _sheet;
+
+        /// <summary>Catalog row by position. The serialized field names are the old upgrade
+        /// tracks and stay that way so the Ship.unity bindings survive; position is what the
+        /// station addresses them by.</summary>
+        public PanelRowView RowAt(int index)
+        {
+            switch (index)
+            {
+                case 0: return _vitalityRow;
+                case 1: return _staminaRow;
+                case 2: return _scavengingRow;
+                case 3: return _luckRow;
+                default: return null;
+            }
+        }
 
         void Awake() => ValidateRequiredBindings();
 

@@ -81,11 +81,25 @@ namespace GatekeepersProtocol.Game
                 return false;
             }
 
+            Log.Event("Demo", "master-control room fight");
             Log.Event("Terminal", "master-control started terminalWaves=" + MasterControl.TerminalWaves
                 + " hatchWaves=" + MasterControl.HatchWaves
                 + " intensity=" + intensity
                 + " juiced=" + juiced);
             return true;
+        }
+
+        /// <summary>First Master look-at this Run: the Control Room line already played on
+        /// D3, this one is the pull briefing. Once-per-Run because this component dies with
+        /// the Bastion load. Party so a guest looking at the same terminal hears it.</summary>
+        void NoticeMasterLook()
+        {
+            if (_masterLookPlayed) return;
+            MetaState meta = Meta;
+            if (meta == null || !meta.DemoActive) return;
+            _masterLookPlayed = true;
+            DemoVoice.PlayLocalAndBroadcast(
+                DemoConversationIds.MasterControl, DemoVoiceMode.Lock);
         }
     }
 }

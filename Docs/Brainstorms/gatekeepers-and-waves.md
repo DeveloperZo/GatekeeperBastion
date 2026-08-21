@@ -20,7 +20,7 @@ Three kinds in `Sim/Waves/GatekeeperKind.cs`. Two Wave modes ship (`WaveMode`):
 **Terminal** hunts the Boarder (Hatch cannot be hurt); **HatchBank** hunts the Hatch
 and converts Unbanked (Hunters still hunt you). Default / Thief retarget with the
 mode (`M52`/`M53`); Hunter refuses the Hatch on both. `WaveDirector`'s
-`HunterPerWave` / `RamPerWave` tables fix the counts; `defaultCount` absorbs the
+`HunterPerWave` / `ThiefPerWave` tables fix the counts; `defaultCount` absorbs the
 remainder; intensity surplus is entirely Default.
 
 The two jobs are the shipped loop. What the three kinds still do not use: levels,
@@ -32,8 +32,8 @@ enforced in code (`1-Experience.md` §1.4). Damage amounts, fallback attacks and
 kind does when cornered are not protected. Overriding a target for a Wave mode is a
 dated break.
 
-**Ram becomes Thief** in `M63`, name only this slice. The salvage rule is recorded
-below and not built.
+**Ram became Thief in code** with `M63-3` (2026-08-20), name only. The salvage rule is
+recorded below and not built.
 
 ## The roster
 
@@ -48,7 +48,7 @@ No two rows name the same thing taken.
 |---|---|---|---|
 | Default | the choice — Hatch or you | — | in-build |
 | Hunter | the camp | the Hatch | in-build |
-| Thief | salvage on a carrier | damaging while salvage exists (recorded, not built) | in-build as Ram; rename in `M63` |
+| Thief | salvage on a carrier | damaging while salvage exists (recorded, not built) | in-build |
 | Source | the empty room | open | named |
 | Enabler | other kinds' jobs | open | named |
 | Alarmer | this group's size | open | named |
@@ -59,8 +59,8 @@ No two rows name the same thing taken.
 | Ailment Shooter | a resource that is not HP | a clean HP-only fight | named |
 | Cloaker | information | being seen | named |
 
-**In-build rows** keep today's targeting until their own slice. Thief still walks as
-Ram until the salvage slice.
+**In-build rows** keep today's targeting until their own slice. The Thief still walks the
+old battering errand until the salvage slice; only its name has changed.
 
 **Named rows** have no hp, damage, speed or Wave count. `4-Data.md` gains none of them
 until the kind exists.

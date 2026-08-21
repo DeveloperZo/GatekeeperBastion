@@ -5,23 +5,46 @@ namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): Dev demo checkpoints — jump the session
     /// to a demo beat instead of replaying every loop to reach it (F12, then a digit). Always
-    /// compiled, like the rest of the Dev command surface. Digits 1–4 adopt a constructed,
-    /// session-only MetaState (the taint keeps it off the real save) and reload the Ship;
-    /// digit 5 resets the live Bastion's terminals and doors so a zone loop replays in place.
-    /// Numbers mirror the beat docs' authored aims (Docs/Demo), not live tuning.</summary>
+    /// compiled, like the rest of the Dev command surface. Digits 1, 3, 5 adopt a constructed
+    /// session-only MetaState and reload the Ship; digits 2, 4, 6, 7 load the Bastion at the
+    /// fight with the authored Unbanked. Digit 8 resets the live Bastion's terminals and doors.
+    /// Salvage numbers come from <see cref="HatchBank.BankCap"/> / 
+    /// <see cref="HatchBank.MasterTerminalUnbanked"/>, not authored aims.</summary>
     public sealed partial class GameController
     {
-        /// <summary>Overlay rows for the F12 digit prompt — DevConsole draws exactly these.</summary>
-        public static readonly string[] DemoCheckpointLabels =
-        {
-            "1  beat 0 done — first EMBARK next",
-            "2  first return — loss 1 banked, wheel opens, D1 shut",
-            "3  D1 open — buys spent, protocol claimed, zone 2 next",
-            "4  D1+D2 open — Primary kit, Control Room next",
-            "5  reset terminals + doors (live Bastion run)",
-        };
+        const string TerminalFourId = "T4";
+        const string TerminalFiveId = "T5";
+        const string DoorThreeId = "D3";
 
-        /// <summary>F12 + digit 1–4: build a state and go to the Ship. Digit 5 (the live
+        /// <summary>Overlay rows for the F12 digit prompt — DevConsole draws exactly these.
+        /// Last row is the live reset, not a constructed state.</summary>
+        public static readonly string[] DemoCheckpointLabels = BuildDemoCheckpointLabels();
+
+        static string[] BuildDemoCheckpointLabels()
+        {
+            long zoneOne = HatchBank.BankCap(2);
+            long zoneTwo = HatchBank.BankCap(5) - HatchBank.BankCap(2);
+            long master = HatchBank.MasterTerminalUnbanked();
+            return new[]
+            {
+                "1  start — beat 0 done, first EMBARK next",
+                "2  post zone-1 terminals — Hatch, " + zoneOne + " unbanked",
+                "3  post first Hatch-bank — Ship, wheel opens",
+                "4  post zone-2 terminals — Hatch, " + zoneTwo + " unbanked",
+                "5  post second Hatch-bank — D2 open, Primary, Control Room next",
+                "6  Master Control — Control Room, pull ready",
+                "7  finale Hatch-bank — elite window, " + master + " unbanked",
+                "8  reset terminals + doors (live Bastion run)",
+            };
+        }
+
+        /// <summary>True for digits that load the Bastion and apply a live fight, not the Ship.</summary>
+        public static bool IsDemoFightCheckpoint(int digit)
+        {
+            return digit == 2 || digit == 4 || digit == 6 || digit == 7;
+        }
+
+        /// <summary>F12 + digit 1–7: build a state and load Ship or Bastion. Digit 8 (the live
         /// reset) is DevConsole's — it holds the sanctioned GameController handle.</summary>
         public static void LoadDemoCheckpoint(int digit)
         {
@@ -40,21 +63,66 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             GameSession.AdoptDevState(state);
-            Log.Event("Dev", $"demo checkpoint {digit} — {DemoCheckpointLabels[digit - 1]}; loading the Ship");
-            if (!SceneFlow.LoadShip())
-                Log.Warn(Tag, "checkpoint adopted but the Ship scene failed to load.");
+            bool fight = IsDemoFightCheckpoint(digit);
+            GameSession.PendingDemoFight = fight ? digit : 0;
+            GameSession.PendingStartWave = 1;
+            string dest = fight ? "Bastion" : "Ship";
+            Log.Event("Dev", $"demo checkpoint {digit} — {DemoCheckpointLabels[digit - 1]}; loading the {dest}");
+            bool loaded = fight ? SceneFlow.LoadBastion() : SceneFlow.LoadShip();
+            if (!loaded)
+                Log.Warn(Tag, "checkpoint adopted but the " + dest + " scene failed to load.");
         }
 
         /// <summary>A fresh MetaState at the named demo point. Public for the EditMode pins;
         /// null on an unknown digit. Salvage moves through Earn/Spend so the ledger balances,
-        /// and every gate reads exactly what the beats say it reads.</summary>
+        /// and every gate reads exactly what the beats say it reads. Digits 2/4/6/7 carry the
+        /// completed-terminal snapshot the Bastion fight restore reads; Unbanked itself is
+        /// seeded on the live Run, not in Meta.</summary>
         public static MetaState BuildDemoCheckpoint(int digit)
         {
-            if (digit < 1 || digit > 4) return null;
+            if (digit < 1 || digit > 7) return null;
 
-            // Beat 0 complete on every checkpoint — the Ship intro is never the section
-            // under test, and its gates are the EMBARK refuse table's.
             var m = MetaState.CreateNew();
+            ApplyBeatZero(m);
+            if (digit == 1) return m;
+
+            if (digit == 2)
+            {
+                ApplyZoneOneTerminalsDone(m);
+                return m;
+            }
+
+            ApplyFirstReturn(m);
+            if (digit == 3) return m;
+
+            ApplyDoorOneOpen(m);
+            if (digit == 4)
+            {
+                ApplyZoneTwoTerminalsDone(m);
+                return m;
+            }
+
+            ApplyDoorTwoOpen(m);
+            if (digit == 5) return m;
+
+            ApplyControlRoomReady(m);
+            return m;
+        }
+
+        /// <summary>D1 open, shop spent, zone 2's terminal still live. PlayMode uses this
+        /// to stand at the mouth of zone 2; it is not an F12 digit (that list is the seven
+        /// demo beats).</summary>
+        public static MetaState BuildZoneTwoReadyCheckpoint()
+        {
+            var m = MetaState.CreateNew();
+            ApplyBeatZero(m);
+            ApplyFirstReturn(m);
+            ApplyDoorOneOpen(m);
+            return m;
+        }
+
+        static void ApplyBeatZero(MetaState m)
+        {
             m.DemoCapsuleOpened = true;
             m.DemoNavPowered = true;
             m.DemoArmoryPowered = true;
@@ -62,25 +130,27 @@ namespace GatekeepersProtocol.Game
             m.DemoShipFightDone = true;
             m.SetOwned(WeaponId.Mk1Sidearm, true);
             m.SetEquipped(WeaponId.Mk1Sidearm);
-            if (digit == 1) return m;
+        }
 
-            // Loss 1 taken, the authored ~500 banked through the Hatch (Demo beat 2 aims):
-            // the wheel key is open, the first-return lines have not played, D1 is shut —
-            // the first Docked resolve runs the whole beat from its top.
+        static void ApplyZoneOneTerminalsDone(MetaState m)
+        {
+            m.DeepestWaveReached = FirstTerminal.ZoneOneEndWave;
+            m.SetZoneDeepest(FirstTerminal.ZoneOneNumber, FirstTerminal.ZoneOneEndWave);
+            m.SetCompletedTerminalIds(new[] { FirstTerminal.Id, FirstTerminal.SecondId });
+        }
+
+        static void ApplyFirstReturn(MetaState m)
+        {
             m.TotalRuns = 1;
             m.PodEjections = 1;
             m.HatchConversions = 1;
             m.EarnSalvage(500);
             m.DeepestWaveReached = FirstTerminal.ZoneOneEndWave;
             m.SetZoneDeepest(FirstTerminal.ZoneOneNumber, FirstTerminal.ZoneOneEndWave);
-            if (digit == 2) return m;
+        }
 
-            // The shop pass is spent (both Secondary buys), the Default is claimed, and
-            // zone 1's bank was survived — D1 stands open, zone 2 is the next fight.
-            // The buys are funded at the reconstruction floor's rate: the load-time repair
-            // prices every tier on the historical curve (WeaponTier.SpentToReach(int)), not
-            // the Secondary lane the live shop charges, and a checkpoint below that floor
-            // would be "repaired" on adoption and stop resembling a quiet save.
+        static void ApplyDoorOneOpen(MetaState m)
+        {
             m.DemoCrewMenuUnlocked = true;
             m.DemoWheelBuysLeft = 0;
             m.ReplacePointsFromFlatTier(WeaponId.Mk1Sidearm, 2);
@@ -93,26 +163,27 @@ namespace GatekeepersProtocol.Game
             m.EarnSalvage(350);
             m.SetCompletedTerminalIds(new[] { FirstTerminal.Id, FirstTerminal.SecondId });
             m.SetOpenDoorIds(new[] { "D1" });
-            if (digit == 3) return m;
+        }
 
-            // Zone 2 taken: its bank fell — which is what put a Primary on the rack — then
-            // the retrigger cleared the zone and D2 opened. The Control Room approach is the
-            // next section. The kit is bought, not granted: an unpaid weapon trips the
-            // load-time spend-floor repair and the state stops resembling a played save.
-            // PodEjections is bookkeeping here, NOT the gate: DemoZone2BankLost is what sells
-            // the rack, and it is set below so this checkpoint exercises the real key rather
-            // than a count that no longer opens anything
-            // (Docs/Demo - Single/5-repeat-to-control-room.md).
+        static void ApplyZoneTwoTerminalsDone(MetaState m)
+        {
+            int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
+            m.DeepestWaveReached = WaveDirector.MaxWaves;
+            m.SetZoneDeepest(zoneTwo, WaveDirector.MaxWaves);
+            m.SetCompletedTerminalIds(new[]
+            {
+                FirstTerminal.Id, FirstTerminal.SecondId, DemoZones.TerminalIdAt(zoneTwo, 0),
+            });
+        }
+
+        static void ApplyDoorTwoOpen(MetaState m)
+        {
+            int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
             m.TotalRuns = 3;
             m.PodEjections = 2;
             m.HatchConversions = 3;
             m.DeepestWaveReached = WaveDirector.MaxWaves;
-            int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
             m.SetZoneDeepest(zoneTwo, WaveDirector.MaxWaves);
-            // The bank that fell, and the rung it opened. DemoRungTwoOpened is the resolve's
-            // once-per-save latch, so setting it here keeps demo.second_loss from replaying
-            // on the Ship load this checkpoint drops the player into — the rack is already
-            // open at this point in the beat, and the line has already been heard.
             m.DemoZone2BankLost = true;
             m.DemoRungTwoOpened = true;
             long kitCost = WeaponCatalog.Def(WeaponId.PriC).cost + WeaponTier.SpentToReach(2);
@@ -121,8 +192,6 @@ namespace GatekeepersProtocol.Game
             m.SetOwned(WeaponId.PriC, true);
             m.ReplacePointsFromFlatTier(WeaponId.PriC, 2);
             m.SetEquipped(WeaponId.PriC);
-            // One rung-2 buy spent on the kit's tiers above, one left to walk to the ARMORY
-            // and spend, so the checkpoint lands mid-rung rather than on a spent ladder.
             m.DemoRungTwoBuysLeft = 1;
             m.EarnSalvage(400);
             m.SetCompletedTerminalIds(new[]
@@ -130,10 +199,25 @@ namespace GatekeepersProtocol.Game
                 FirstTerminal.Id, FirstTerminal.SecondId, DemoZones.TerminalIdAt(zoneTwo, 0),
             });
             m.SetOpenDoorIds(new[] { DemoZones.DoorId(FirstTerminal.ZoneOneNumber), DemoZones.DoorId(zoneTwo) });
-            return m;
         }
 
-        /// <summary>Digit 5: replay the zone loop in place — every terminal incomplete, every
+        static void ApplyControlRoomReady(MetaState m)
+        {
+            int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
+            m.SetCompletedTerminalIds(new[]
+            {
+                FirstTerminal.Id, FirstTerminal.SecondId, DemoZones.TerminalIdAt(zoneTwo, 0),
+                TerminalFourId, TerminalFiveId,
+            });
+            m.SetOpenDoorIds(new[]
+            {
+                DemoZones.DoorId(FirstTerminal.ZoneOneNumber),
+                DemoZones.DoorId(zoneTwo),
+                DoorThreeId,
+            });
+        }
+
+        /// <summary>Digit 8: replay the zone loop in place — every terminal incomplete, every
         /// locked door shut, snapshots cleared, the next draw pointed back at wave 1. The
         /// saved DemoZoneDeepestWave is deliberately kept, so the retrigger offer re-appears
         /// at the deepest terminal exactly as after a real loss. Nothing about the Hatch-bank

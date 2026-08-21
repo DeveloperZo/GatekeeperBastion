@@ -69,6 +69,13 @@ namespace GatekeepersProtocol.Game
             var m = GameSession.Meta;
             if (m == null) return;
 
+            if (GameSession.PendingEscapedLine)
+            {
+                GameSession.PendingEscapedLine = false;
+                DemoVoice.PlayLocalAndBroadcast(
+                    DemoConversationIds.Escaped, DemoVoiceMode.Lock);
+            }
+
             if (!m.DemoActive)
             {
                 _placed = true;

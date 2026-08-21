@@ -1,0 +1,136 @@
+# Realms
+
+<!--
+Purpose: The realm model — what belongs to a player and what belongs to a world — and
+**the safehouse it exists to serve**. Two aims, not one: the persistence split, and a Ship
+that is worth walking into because a crew's time accumulates in it. Drop-in play sits on
+both. Sourced from No Rest for the Wicked (Zo, 2026-08-20) and deliberately simplified.
+Status: brainstorm
+Update trigger: when an item moves across the character/realm line, when a remaining
+idea graduates, or when the farm-valve watch turns into a decision.
+Last updated: 2026-08-20
+-->
+
+## What this covers
+
+**Two central aims.** The persistence split, and the safehouse that split is for — a realm
+model is only worth building if it makes a Ship somebody wants to come back to. Decisions
+here are judged against both, and where they conflict the safehouse is the reason the
+realm exists.
+
+**Boundary with `the-safehouse.md`** (one canonical list per thing): this file owns
+*ownership, identity and where state lives*. That file owns *what there is to do in the
+Ship*. Activities never propose their own storage; anything they bank is realm state.
+
+Persistence split between the player and the world: what a Boarder carries between
+sessions, what a Ship and its bastion progress hold instead, and what that split makes
+possible — a safehouse worth walking into and a party you can join without everyone
+being online at the same minute. It does not cover the co-op demo, which **defers
+persistence entirely** (`../Demo - Coop/README.md`) and therefore inherits nothing from
+this file until it ships.
+
+## Where it stands
+
+Nothing here is built. What exists that this file has to fit:
+
+- **One save, one balance.** `MetaState` carries `BankedSalvage`, `EquippedPrimary`,
+  `EquippedProtocol`, upgrade levels and demo flags as one document. There is no
+  concept of a world separate from a player.
+- **Station buys are not net-routed at all.** Every Ship station mutates that seat's
+  local `GameSession.Meta` with no server check. Any shared balance forces the first
+  server-validated buy in the project.
+- **Joins are refused during the embark countdown** (`M72`), and a guest cannot dock
+  the Run (`DockRun` has no net route). There is no mid-run join surface of any kind.
+- **The Ship has no display objects.** `Stations` plus `ShipDress` with two beds
+  (`Ship.unity`). `M92` builds a larger hull and explicitly excludes trophies.
+- **The crew pot** (`../Demo - Coop/0-the-invite.md`) is one salvage balance the party
+  shops from, with persistence deferred. It is realm-side salvage with the character
+  half switched off, which is why it does not have to be thrown away later.
+- **Identity is anonymous and per-install.** `com.unity.services.authentication` and
+  `com.unity.services.relay` are in `Packages/manifest.json`; Relay runs on anonymous auth.
+  An anonymous ID persists only while its session token is cached, so a reinstall is a new
+  player and a realm keyed to it is orphaned. **"Owned by an account" needs account
+  linking** — same service, free at any tier, not turned on. The cost of fixing this is
+  code, not money.
+- **Standing save rule** (`../Decisions.md`): bump the schema, rename the key, never
+  write a migration shim. Splitting one save into two documents is a restructure under
+  that rule, not an exception to it.
+
+## Graduation test
+
+The character side and the realm side must be listed item by item, and the mid-run join
+rule ruled, before any milestone can be written from this file.
+
+**Satisfied 2026-08-20 (Zo)** for the entries that have since graduated. He approved the
+initial split with the note that **play testing will dictate the specifics**, and ruled
+the join rule as **between waves, never during waves**, reasoning from how quickly the
+game can scale for an arriving player. Graduated to
+[`M96`](../Milestones/1.%20planned/M96-the-realm-and-the-boarder.md) (the split and the
+save restructure),
+[`M97`](../Milestones/1.%20planned/M97-the-ship-remembers.md) (the Ship shows the
+realm's record) and
+[`M98`](../Milestones/1.%20planned/M98-drop-in-between-waves.md) (drop-in and the
+between-waves join). Those milestones are now the record; the entries are gone from this
+file rather than duplicated.
+
+## Ideas
+
+### More than one realm
+
+The source model lets a player hold several realms, each with independent progress, and
+carry one character across all of them. Correctness for two realms is a criterion in
+`M96`; a main-menu realm list with management, renaming and deletion as a feature in its
+own right is not, and does not need to be until someone has more realms than fit on a
+screen.
+
+### A realm a friend can open while you are offline
+
+The 2am-chest shape needs exactly one thing that does not exist: **a friend able to enter
+your realm when you are not there.** Nothing else about it is asynchronous, and it does not
+need a game server — the session stays peer-hosted over Relay as it is today, and what
+moves off one machine is the realm *document*, not the simulation. Three parts: the realm
+stored against the owner's player ID, an access list, and **a single-writer lock**
+(`lockedBy` plus a heartbeat; opening takes it, a stale one can be broken, the holder
+hosts). The Boarder stays personal — only the realm has to be reachable. *This entry is
+milestone-shaped and is the next thing here likely to graduate.*
+
+**Cost, checked 2026-08-21.** Cloud Save's free tier is 5 GiB/month storage, 1,000,000
+writes and 1,000,000 reads; Authentication is free outright, so account linking is a code
+task rather than a bill. Against a realm that is one save file's worth of JSON and a group
+writing tens of times a session, neither axis binds — this is free at the scale it is for.
+Verify before relying on it: `unity.com/products/gaming-services/pricing`.
+
+**Trust is accepted, not solved.** Station buys are not net-routed (above), so a guest
+holding the lock can write anything to your realm. Stated cost of a friends game.
+
+### What a realm is worth naming after
+
+Realms are named at creation (`M96`) and the name is realm-side state. Whether anything
+else in the fiction hangs off that name, or it stays a label on a save, is untouched.
+*Unknown, needs play data.*
+
+## Watch
+
+**The fresh-realm farm valve.** In No Rest for the Wicked, spinning a new realm makes
+early content available again, which is a real strategy for clearing or skipping
+content and, in Zo's play, not an enjoyable one (2026-08-20). If GKB's salvage pot is
+realm-side, the same valve exists here. Accepted as a thing to watch rather than a
+blocker; it becomes a decision only if a played session shows people using it.
+
+## Constraints
+
+Any milestone from this file respects `R1`-`R8` (`reference: research findings`), in
+particular that sim mutations go through `RunSim` command methods called from
+`GameController` commands, and that a realm balance is host-owned rather than a client
+free-for-all. It also respects the standing save rule above. **A realm is opened by one writer at a
+time**: any milestone that puts a realm anywhere reachable by two people ships the lock in
+the same milestone, never as a follow-up. **No shared player
+wallet**: a realm pot is the world's salvage, not a pooled personal balance, and the
+rejected shared-party-wallet idea stays rejected.
+
+## Rejected
+
+A second player-owned space separate from the Ship (struck by Zo, 2026-08-20: "no more
+host bastion just a bigger ship that doubles as safe house"). Host migration. Realm
+difficulty selection at creation, which is their model and not a question this project
+has yet.

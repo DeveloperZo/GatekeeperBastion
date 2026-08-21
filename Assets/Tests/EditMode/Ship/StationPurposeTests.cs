@@ -54,7 +54,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void CrewQuarters_ComingSoonCopy_IsNotACatalogId()
         {
-            Assert.AreEqual("VEIL", CrewQuartersStation.StubVeil);
+            // VEIL left this list by entering the catalog; AEGIS and LEDGER are still copy.
             Assert.AreEqual("AEGIS", CrewQuartersStation.StubAegis);
             Assert.AreEqual("LEDGER", CrewQuartersStation.StubLedger);
             Assert.AreEqual("Coming Soon", CrewQuartersStation.ComingSoon);
@@ -69,10 +69,12 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(BoarderProtocol.CrewSheetDefault, BoarderProtocol.CrewSheet(BoarderProtocolId.Default));
             Assert.AreEqual(BoarderProtocol.PersonalSheetDefault, BoarderProtocol.PersonalSheet(BoarderProtocolId.Default));
             Assert.AreEqual(BoarderProtocol.PassiveSheetDefault, BoarderProtocol.PassiveSheet(BoarderProtocolId.Default));
-            BoarderProtocolId veil;
-            Assert.IsFalse(System.Enum.TryParse("VEIL", true, out veil));
+            // The stub copy must never name a protocol the catalog sells. AEGIS and LEDGER
+            // are the two left; VEIL became a catalog id and its row is a real sheet now.
+            BoarderProtocolId aegis;
+            Assert.IsFalse(System.Enum.TryParse("AEGIS", true, out aegis));
             Assert.AreEqual(BoarderProtocolId.Default, BoarderProtocol.ShopProtocols()[0]);
-            Assert.AreEqual(1, BoarderProtocol.ShopProtocols().Length);
+            Assert.AreEqual(3, BoarderProtocol.ShopProtocols().Length);
         }
     }
 }

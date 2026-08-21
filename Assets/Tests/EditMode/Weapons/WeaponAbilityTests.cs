@@ -104,7 +104,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(2, build.Hits);
 
             // T10 MR-35 one-shots Defaults; charge must survive the target change so the
-            // tipping shot on a Ram can Ready and pin.
+            // tipping shot on a Thief can Ready and pin.
             build.RegisterHit(2, WeaponAbility.PinBuildDecaySeconds);
             Assert.AreEqual(WeaponAbility.PinHitThreshold, build.Hits);
             Assert.AreEqual(2, build.TargetKey);

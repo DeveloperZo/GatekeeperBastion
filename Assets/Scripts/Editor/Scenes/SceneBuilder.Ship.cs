@@ -11,8 +11,8 @@ namespace GatekeepersProtocol.EditorTools
     /// <summary>Ship hull on the Synty 5 m occupancy grid, SR-2 profile: a long spine
     /// with rooms off it, a wider midship, a bow cockpit and stern engineering, and a
     /// full-length starboard gallery carrying the three hatch doors
-    /// (Docs/Demo - Coop/README.md). Rebuilds "Ship 1.unity" — the expanded hull is
-    /// authored there while Ship.unity stays the shipped hub untouched; adopting the
+    /// (Docs/Demo - Coop/README.md). Rebuilds "Ship - CoOp.unity" — the expanded hull is
+    /// authored there while Ship - Demo.unity stays the shipped solo hub untouched; adopting the
     /// new hull as the hub is a deliberate swap, not a side effect of Build All. The
     /// grid is a superset of the old hull, so authored content (Stations, ShipDress,
     /// Player, demo markers) keeps its place and bindings while the hull grows around
@@ -24,7 +24,7 @@ namespace GatekeepersProtocol.EditorTools
         const float ShipWallHeight = 3f;
         const float G = 5f;
         const string HatchesRootName = "Hatches";
-        const string Ship1ScenePath = "Assets/Scenes/Ship 1.unity";
+        const string Ship1ScenePath = "Assets/Scenes/Ship - CoOp.unity";
 
         sealed class ShipPalette
         {

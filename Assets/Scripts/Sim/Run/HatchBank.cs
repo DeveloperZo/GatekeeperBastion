@@ -15,9 +15,9 @@ namespace GatekeepersProtocol.Sim
         /// Enemy wipe and Unbanked hitting 0 do not end it.</summary>
         public const float DurationSeconds = 45f;
         /// <summary>Extra Thieves on a 3-Wave Hatch-bank. Field Wave 3 stays at table
-        /// ramCount; the first Hatch-bank after three field Waves is the designed overrun
+        /// thiefCount; the first Hatch-bank after three field Waves is the designed overrun
         /// for an unupgraded MK-1. [unconfirmed: 2026-08-16]</summary>
-        public const int Carry3ExtraRam = 1;
+        public const int Carry3ExtraThief = 1;
         /// <summary>Share of each slot's leftover Unbanked a Returned run keeps; Lost still
         /// wipes it all. Deliberately slight: greed must stay carrying a bigger pile into
         /// fewer extracts, and a large survival rebate turns the dock into the optimal line
@@ -31,12 +31,40 @@ namespace GatekeepersProtocol.Sim
         public const float MultMid = 1.25f;
         public const float Mult4 = 1.35f;
         public const float MultHigh = 1.50f;
+        /// <summary>Banked Salvage a dead guest pays to rejoin a live Hatch-bank Assault.
+        /// Debited on that guest's own Meta, never the host's.</summary>
+        public const long BuyBackCost = 450L;
 
         /// <summary>Salvage/s withdrawn at a full Hatch. Catalog repair HP/s times salvage/HP
         /// so the two holds stay on one rate.</summary>
         public static float WithdrawPerSecond =>
             EquipmentCatalog.Def(EquipmentId.RepairRig).repairPerSecond
             * ShipSystems.RepairSalvagePerHp;
+
+        /// <summary>Paid rejoin is offered only while a Hatch-bank Assault is running.
+        /// Prep Hatch-bank is the free embark window; the two are disjoint.</summary>
+        public static bool IsBuyBackWindow(WaveMode mode, AssaultState assault)
+        {
+            return mode == WaveMode.HatchBank && assault == AssaultState.Assault;
+        }
+
+        /// <summary>Free wait-return after a survived Hatch-bank. Same gate as
+        /// <c>NetPlayerAvatar.TryAcceptEmbark</c>.</summary>
+        public static bool IsFreeEmbarkWindow(WaveMode mode, AssaultState assault)
+        {
+            return mode == WaveMode.HatchBank && assault == AssaultState.Prep;
+        }
+
+        /// <summary>Null when the seat may pay and rejoin. Named refuse otherwise.</summary>
+        public static string BuyBackRefuse(bool isHostSeat, bool waitingOnShip,
+            WaveMode mode, AssaultState assault, long reportedBanked)
+        {
+            if (isHostSeat) return "host cannot buy back";
+            if (!waitingOnShip) return "not waiting";
+            if (!IsBuyBackWindow(mode, assault)) return "no live window";
+            if (reportedBanked < BuyBackCost) return "cannot afford";
+            return null;
+        }
 
         /// <summary>Field Waves cleared since the last Hatch-bank, clamped to 1..MaxWaves.</summary>
         public static int ClampCarry(int waves)
@@ -69,19 +97,19 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>Thieves added on top of <see cref="WaveDirector.NextWave"/> for a
         /// Hatch-bank of this carry. Extra bodies, not converted Defaults.</summary>
-        public static int ExtraRam(int carry)
+        public static int ExtraThief(int carry)
         {
-            return ClampCarry(carry) == 3 ? Carry3ExtraRam : 0;
+            return ClampCarry(carry) == 3 ? Carry3ExtraThief : 0;
         }
 
         /// <summary>Hatch-bank spec: same curve as the matching field Wave, plus
-        /// <see cref="ExtraRam"/> on carry 3. Counts still sum to enemyCount.</summary>
+        /// <see cref="ExtraThief"/> on carry 3. Counts still sum to enemyCount.</summary>
         public static WaveSpec ApplyHatchComposition(WaveSpec spec, int carry)
         {
-            int extra = ExtraRam(carry);
+            int extra = ExtraThief(carry);
             if (extra <= 0)
                 return spec;
-            spec.ramCount += extra;
+            spec.thiefCount += extra;
             spec.enemyCount += extra;
             return spec;
         }
@@ -114,6 +142,18 @@ namespace GatekeepersProtocol.Sim
             for (int i = 0; i < d; i++)
                 cap += (long)director.NextWave(i, 0, 1).enemyCount * perKill;
             return cap;
+        }
+
+        /// <summary>Unbanked from Master Control's terminal half at dial 0, solo:
+        /// <see cref="MasterControl.TerminalWaves"/> draws of the Wave-5 table. That half
+        /// does not walk waves 1..5 — each window is the Wave-5 count — so this is not
+        /// <see cref="BankCap"/>.</summary>
+        public static long MasterTerminalUnbanked()
+        {
+            var director = new WaveDirector();
+            long perKill = (long)Math.Floor((double)MetaUpgrades.SalvagePerKill());
+            long one = (long)director.NextWave(WaveDirector.MaxWaves - 1, 0, 1).enemyCount * perKill;
+            return one * MasterControl.TerminalWaves;
         }
 
         public static long DripUnits(float dt, ref float accrued)

@@ -236,6 +236,36 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void EndDemo_FlipsTheTwoWrites_AndLeavesTheRungTwoRecord()
+        {
+            var m = DemoMeta();
+            m.DemoZone2BankLost = true;
+            m.DemoRungTwoOpened = true;
+            m.DemoRungTwoBuysLeft = 1;
+            m.DemoWheelBuysLeft = 0;
+            DemoProgress.EndDemo(m);
+            Assert.IsFalse(m.DemoActive);
+            Assert.IsTrue(m.DemoFabPowered);
+            Assert.IsTrue(m.DemoZone2BankLost, "the loss record stays");
+            Assert.IsTrue(m.DemoRungTwoOpened);
+            Assert.AreEqual(1, m.DemoRungTwoBuysLeft);
+            Assert.AreEqual(DemoStationVerdict.Open, DemoProgress.FabricationVerdict(m));
+            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m));
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),
+                "DemoActive-gated readers open the moment the flag flips");
+        }
+
+        [Test]
+        public void EndDemo_IsIdempotent_AndIgnoresNull()
+        {
+            DemoProgress.EndDemo(null);
+            var m = DemoMeta();
+            m.DemoActive = false;
+            DemoProgress.EndDemo(m);
+            Assert.IsFalse(m.DemoFabPowered, "a campaign save is not a demo end");
+        }
+
+        [Test]
         public void GrantLog_FiresBeforeBuyWeapon()
         {
             string src = File.ReadAllText(Path.GetFullPath(

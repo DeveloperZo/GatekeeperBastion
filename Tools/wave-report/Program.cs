@@ -55,7 +55,7 @@ public static class WaveReport
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     static readonly Regex KillRe = new Regex(
-        @"^killed\s+a\s+(Gatekeeper|Hunter|Ram|Boarder|boarder|gatekeeper|hunter|ram)\b",
+        @"^killed\s+a\s+(Gatekeeper|Hunter|Thief|Ram|Boarder|boarder|gatekeeper|hunter|thief|ram)\b",
         RegexOptions.Compiled);
 
     static readonly Regex HatchDistRe = new Regex(
@@ -71,7 +71,7 @@ public static class WaveReport
     const double FarWallMetres = 25.0;
 
     static readonly Regex KindCountRe = new Regex(
-        @"(\d+)\s+(Gatekeepers?|Hunters?|Rams?|boarders?|gatekeepers?)\b",
+        @"(\d+)\s+(Gatekeepers?|Hunters?|Thie(?:f|ves)|Rams?|boarders?|gatekeepers?)\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     static readonly Regex TrackRe = new Regex(
@@ -608,7 +608,9 @@ public static class WaveReport
         switch (raw.ToLowerInvariant())
         {
             case "hunter": return "Hunter";
-            case "ram": return "Ram";
+            // Ram was this kind's name until 2026-08-20; old logs still say it.
+            case "thief":
+            case "ram": return "Thief";
             case "boarder":
             case "gatekeeper":
             default: return "Gatekeeper";
@@ -753,7 +755,7 @@ public static class WaveReport
         foreach (var s in rows)
         {
             dropped += s.SpawnDistAbsent;
-            foreach (string kind in new[] { "Gatekeeper", "Hunter", "Ram" })
+            foreach (string kind in new[] { "Gatekeeper", "Hunter", "Thief" })
             {
                 if (!s.HatchDistByKind.TryGetValue(kind, out List<double> list) || list.Count == 0)
                     continue;

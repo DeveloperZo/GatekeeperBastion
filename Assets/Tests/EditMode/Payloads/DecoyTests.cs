@@ -76,13 +76,13 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void RamIsNeverPulled()
+        public void ThiefIsNeverPulled()
         {
             Assert.IsFalse(DecoyState.ShouldPull(
-                GatekeeperKind.Ram, committedToHatch: false,
+                GatekeeperKind.Thief, committedToHatch: false,
                 decoyLive: true, distanceToDecoy: 0.5f, pullRadius: 12f));
             Assert.IsFalse(DecoyState.ShouldPull(
-                GatekeeperKind.Ram, committedToHatch: true,
+                GatekeeperKind.Thief, committedToHatch: true,
                 decoyLive: true, distanceToDecoy: 0.5f, pullRadius: 12f));
         }
 

@@ -108,7 +108,7 @@ are named here.
 | **Gatekeeper** | Any enemy. They hold the Bastion; you are the intruder. | enemy, mob, creature, hostile, boarder *(that is the player now)* |
 | **Default** | The Gatekeeper that marches on the Hatch and can be provoked onto the Boarder. | grunt, basic, marcher *(descriptive prose may say "marcher"; the kind's name is Default)* |
 | **Hunter** | The Gatekeeper that only ever wants the Boarder. | chaser, stalker |
-| **Thief** | The Gatekeeper that hunts the Boarder on a field-terminal Wave and the Hatch on a Hatch-bank Wave; shooting it never shouts. Code identifier is still `Ram` until M63. | brute, tank, charger, Ram *(player-facing)* |
+| **Thief** | The Gatekeeper that hunts the Boarder on a field-terminal Wave and the Hatch on a Hatch-bank Wave; shooting it never shouts. | brute, tank, charger, Ram *(the code identifier until `M63-3`, 2026-08-20; not a synonym to reintroduce)* |
 | **spawn point** | Where a group of Gatekeepers enters the fight. They garrison the Bastion; they do not breach it. | breach point *(retired 2026-08-08: the Boarder is the one who breaches)*, muster point *(coined and struck the same day; do not reintroduce)*, portal, door |
 | **group** | The unit Gatekeepers arrive in — one spawn point, several bodies, at once. | pack, squad, cluster |
 | **provoke** | To make a Default target the Boarder. Permanent for that Gatekeeper's life. | aggro *(builder shorthand only, never player-facing)* |
@@ -278,10 +278,11 @@ the forbidden Hatch synonym already listed above. None earned a row. NAV MAP now
 Bastion is garrisoned; the upgrade lock is named as a lock. Do not reintroduce `Gate` as a
 fiction noun.
 
-**7. Player-facing name is Thief; the code identifier is still `Ram` until M63.**
-Play pages, this table, and the Compendium use Thief. `GatekeeperKind.Ram`,
-`RamGatekeeper`, and the generated Field Manual stay Ram until M63's rename
-commit. Do not half-fix the code in a Play-page change.
+**7. Thief is the name in code and in copy alike.** `M63-3`'s rename commit
+(2026-08-20) closed the split: `GatekeeperKind.Thief`, `ThiefGatekeeper`,
+`WaveSpec.thiefCount`, the generated Field Manual, the Play pages, this table and the
+Compendium all say Thief. `Ram` survives only in shipped milestone files, the Changelog
+and Zo's play records, where it is a record of what was true then.
 
 ## Adding a term
 

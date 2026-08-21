@@ -67,6 +67,18 @@ namespace GatekeepersProtocol.Game
             return null;
         }
 
+        /// <summary>The Master Control terminal, or null when the layout has none.</summary>
+        public BastionTerminal FindMaster()
+        {
+            for (int i = 0; i < _terminals.Count; i++)
+            {
+                BastionTerminal t = _terminals[i];
+                if (t != null && t.Kind == BastionTerminalKind.Master)
+                    return t;
+            }
+            return null;
+        }
+
         /// <summary>True when <paramref name="from"/> is within <paramref name="range"/> of a
         /// Field or Master terminal.</summary>
         public bool AnyTriggerInRange(Vector3 from, float range)

@@ -95,7 +95,7 @@ namespace GatekeepersProtocol.Sim
         // ---- Per-wave composition. Fixed counts; Default absorbs the remainder. ----
 
         private static readonly int[] HunterPerWave = { 0, 4, 6, 10, 12 };
-        private static readonly int[] RamPerWave = { 0, 0, 2, 4, 7 };
+        private static readonly int[] ThiefPerWave = { 0, 0, 2, 4, 7 };
 
         /// <summary>The stat line of one gatekeeper kind. Unknown kinds fall back to Default.</summary>
         public static GatekeeperStats StatsFor(GatekeeperKind kind)
@@ -114,9 +114,9 @@ namespace GatekeepersProtocol.Sim
                     stats.ignoresHatch = true;
                     break;
 
-                case GatekeeperKind.Ram:
+                case GatekeeperKind.Thief:
                     stats.maxHp = 120f;
-                    stats.playerDamage = 0f;  // THE RULE: a Ram can never hurt the player
+                    stats.playerDamage = 0f;  // THE RULE: a Thief can never hurt the player
                     stats.hatchDamage = 20f;
                     stats.patrolSpeed = 2.2f; // no second gear: nothing makes it change its mind
                     stats.chaseSpeed = 2.2f;
@@ -141,8 +141,8 @@ namespace GatekeepersProtocol.Sim
         ///                           n = playerCount (clamped >= 1). n = 1 is today's table.
         ///                           dial = TetherSiphon.RewardMultiplierFor(siphonLevel)
         ///   hunterCount           = {0,4,6,10,12}[waveIndex]   (never scaled by the dial)
-        ///   ramCount              = {0,0,2,4,7}[waveIndex]     (never scaled by the dial)
-        ///   defaultCount          = enemyCount - hunterCount - ramCount
+        ///   thiefCount              = {0,0,2,4,7}[waveIndex]     (never scaled by the dial)
+        ///   defaultCount          = enemyCount - hunterCount - thiefCount
         ///   enemyHealthMultiplier = 1 + EnemyHealthPerWave*waveIndex  (0.40 → 1.00/1.40/1.80/2.20/2.60)
         ///   groupSize             = min(3 + waveIndex, MaxGroupSize=7, enemyCount)  → 3/4/5/6/7
         ///   spawnInterval         = max(0.4, 4.2 - 0.20*waveIndex)  — PER GROUP, see WaveSpec
@@ -150,7 +150,7 @@ namespace GatekeepersProtocol.Sim
         ///
         /// The dial scales BODY COUNT ONLY. Health, group size, spawn gap and composition do not
         /// see it, and the dial's surplus is entirely Default so it cannot multiply Hunters or
-        /// Rams. Both rules are load-bearing — see Docs/Design/2-Dynamics.md before relaxing either.
+        /// Thieves. Both rules are load-bearing — see Docs/Design/2-Dynamics.md before relaxing either.
         /// </summary>
         public WaveSpec NextWave(int waveIndex, int siphonLevel, int playerCount = 1)
         {
@@ -176,8 +176,8 @@ namespace GatekeepersProtocol.Sim
             // the three counts ALWAYS sum to enemyCount — the Game layer's spawn loop relies on
             // that without checking.
             spec.hunterCount = Math.Min(Row(HunterPerWave, waveIndex), spec.enemyCount);
-            spec.ramCount = Math.Min(Row(RamPerWave, waveIndex), spec.enemyCount - spec.hunterCount);
-            spec.defaultCount = spec.enemyCount - spec.hunterCount - spec.ramCount;
+            spec.thiefCount = Math.Min(Row(ThiefPerWave, waveIndex), spec.enemyCount - spec.hunterCount);
+            spec.defaultCount = spec.enemyCount - spec.hunterCount - spec.thiefCount;
 
             spec.enemyHealthMultiplier = 1f + EnemyHealthPerWave * waveIndex;
             spec.groupSize = Math.Max(1, Math.Min(Math.Min(BaseGroupSize + waveIndex, MaxGroupSize),
@@ -206,7 +206,7 @@ namespace GatekeepersProtocol.Sim
             spec.enemyCount = 14 + 6 * siphonLevel;
             spec.defaultCount = spec.enemyCount;
             spec.hunterCount = 0;
-            spec.ramCount = 0;
+            spec.thiefCount = 0;
             spec.enemyHealthMultiplier = 1.25f + 0.20f * siphonLevel;
             spec.groupSize = 1;
             spec.spawnInterval = Math.Max(0.15f, 0.75f - 0.05f * siphonLevel);

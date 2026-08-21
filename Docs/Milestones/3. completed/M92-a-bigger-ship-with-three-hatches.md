@@ -85,17 +85,22 @@ structure the later co-op slices build on, rather than changing a parameter.
 
 ## Implementation
 
-1. **Change** `Assets/Scripts/Editor/Scenes/SceneBuilder.Ship.cs` and rebuild
-   `Assets/Scenes/Ship 1.unity` through it — a copy of `Ship.unity` under its own
-   GUID; `Ship.unity` itself is never edited. The hull graybox is builder-owned (the
-   `Environment` root) and the builder used to *skip* the Ship wipe when a
-   `ShipDress` root existed. In `Ship 1` that guard is retired, and the dress is
-   split: `ShipDress` holds **prefab instances** (invisible to plain-GameObject
-   scans) — a Synty shell of the *old* hull (F/C/N/S/E/W wall, floor and ceiling
-   tiles plus mounted lights, 124 pieces) and the props (helm, tanks, crates,
-   chairs, beds, consoles). The shell is removed from `Ship 1` — otherwise the old
-   dressed ship sits visibly nested inside the new hull — while every prop stays.
-   Re-dressing the new hull is later work, not this milestone's.
+1. **Author** `Assets/Scenes/Ship 1.unity` as a kit-built ship — a copy of
+   `Ship.unity`'s content (props, stations, teleporter, rig, UI) whose hull is
+   assembled from the Synty PolygonSciFiSpace pieces the ship already uses,
+   following the ship's own convention: **invisible graybox carries all collision;
+   the kit shell has its per-instance prefab colliders disabled**. 57-cell
+   Normandy-profile single deck — `SM_Bld_Bridge_*` glass-canopy module at the bow
+   (node (10,0,50), rear door on the spine axis), 1-wide neck, 3-wide CIC (Map
+   station unmoved), central spine with corridor arches and ceiling pipe runs,
+   port crew quarters/mess/wing (stations and furniture unmoved), starboard
+   armory/teleporter bay, aft engineering (Fabrication unmoved) and an engine room
+   with a drive-core column, and the starboard gallery whose three hatches are
+   `SM_Bld_Wall_Escpod_Hatch_01` airlock pieces with `SM_Sign_AirLock_01` over
+   them. `ShipHatchDoor` tints each airlock's door-leaf renderer: open = the
+   safety-orange hatch material, sealed = the kit's own atlas material. Doorway
+   collider stubs flank each `SM_Bld_Wall_Doorframe_01` opening. Only the two helm
+   chairs moved (into the canopy bridge). `Ship.unity` is never edited.
    The new occupancy grid is a **superset** of the old one, so `Stations`,
    `ShipDress` and the M91 teleporter keep their positions and bindings untouched
    while the hull grows around them — a bow cockpit, stern engineering, and a
@@ -134,7 +139,8 @@ structure the later co-op slices build on, rather than changing a parameter.
    mirror's `LateUpdate` — that path is gated on the Bastion `GameController`, which
    is null on Ship. No new NetworkBehaviour (R8).
 7. *(struck — `Bastion_Coop` does not exist yet; registering it is `M95`'s step.
-   `Ship_Isometric` stays at `enabled: 0` and is not deleted in this milestone.)*
+   `Ship_Isometric` was deleted outright on 2026-08-20 (Zo) — scene, PlayMode fixture
+   and Build Settings row — so there is no longer a row to keep disabled here.)*
 8. **Change** `RelayJoin.MaxGuestConnections` from 3 to 2, so four seats cannot exist
    against three hatches. One constant.
 

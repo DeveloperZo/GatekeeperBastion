@@ -109,15 +109,15 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Mr35_KillsWave3Ram_InSevenShots()
+        public void Mr35_KillsWave3Thief_InSevenShots()
         {
             var def = WeaponCatalog.Def(WeaponId.Mr35Rifle);
-            float wave3RamHp = WaveDirector.StatsFor(GatekeeperKind.Ram).maxHp
+            float wave3ThiefHp = WaveDirector.StatsFor(GatekeeperKind.Thief).maxHp
                 * (1f + WaveDirector.EnemyHealthPerWave * 2f);
             float dmg = WeaponWheel.EffectiveDamage(def, 0);
             Assert.AreEqual(32f, dmg, 0.01f);
-            Assert.AreEqual(7, (int)Math.Ceiling(wave3RamHp / dmg),
-                "MR-35 must kill a wave-3 Ram (216 HP) in exactly 7 shots at T0");
+            Assert.AreEqual(7, (int)Math.Ceiling(wave3ThiefHp / dmg),
+                "MR-35 must kill a wave-3 Thief (216 HP) in exactly 7 shots at T0");
             Assert.AreEqual(2, def.pierceCount);
         }
 

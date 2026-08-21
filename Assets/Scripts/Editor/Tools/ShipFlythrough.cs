@@ -25,7 +25,7 @@ namespace GatekeepersProtocol.EditorTools
     /// </summary>
     public static class ShipFlythrough
     {
-        const string ShipScene = "Assets/Scenes/Ship.unity";
+        const string ShipScene = "Assets/Scenes/Ship - Demo.unity";
         const string OutputName = "ShipFlythrough.mp4";
         const string PendingKey = "GKB.ShipFlythrough.Pending";
 

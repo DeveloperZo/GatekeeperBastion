@@ -30,10 +30,10 @@ namespace GatekeepersProtocol.Sim
         /// what they hit and how hard, never by cadence.</summary>
         public float attackInterval;
 
-        /// <summary>Move speed while walking its default errand (Default/Ram to the hatch).</summary>
+        /// <summary>Move speed while walking its default errand (Default/Thief to the hatch).</summary>
         public float patrolSpeed;
 
-        /// <summary>Move speed while provoked or hunting. For Hunter and Ram this equals
+        /// <summary>Move speed while provoked or hunting. For Hunter and Thief this equals
         /// <see cref="patrolSpeed"/> — neither has a second gear, because neither changes its mind.</summary>
         public float chaseSpeed;
 
@@ -41,7 +41,7 @@ namespace GatekeepersProtocol.Sim
         /// radius that pulls a Default gatekeeper back to it.</summary>
         public bool ignoresHatch;
 
-        /// <summary>Ram: never targets the player AND is never provoked by being shot — the one
+        /// <summary>Thief: never targets the player AND is never provoked by being shot — the one
         /// enemy in the game that ignores the provoke-on-damage rule.</summary>
         public bool ignoresPlayer;
     }

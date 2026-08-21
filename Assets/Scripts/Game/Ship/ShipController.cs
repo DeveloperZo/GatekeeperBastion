@@ -2,6 +2,7 @@ using GatekeepersProtocol.Sim;
 using GatekeepersProtocol.Util;
 using Michsky.UI.Shift;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GatekeepersProtocol.Game
 {
@@ -123,18 +124,12 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
-        /// <summary>Pause EMBARK — Hatch-bank get-up, or party Ready / Cancel countdown.</summary>
+        /// <summary>Pause EMBARK — Hatch-bank get-up, paid buy-back, or party Ready / Cancel countdown.</summary>
         public void TryEmbarkFromPause()
         {
             if (NetShipWait.IsActive)
             {
-                var avatar = NetPlayerAvatar.LocalOwner;
-                if (avatar == null)
-                {
-                    Log.Event("Net", "embark refused — no avatar");
-                    return;
-                }
-                avatar.RequestEmbark();
+                TryWaitRejoin();
                 return;
             }
 
@@ -156,6 +151,61 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             session.Lobby.SetReady(!local.LobbyReady.Value);
+        }
+
+        void TryWaitRejoin()
+        {
+            var avatar = NetPlayerAvatar.LocalOwner;
+            if (avatar == null)
+            {
+                Log.Event("Net", "embark refused — no avatar");
+                return;
+            }
+            WaveMode mode;
+            AssaultState assault;
+            ReadWaitWindow(out mode, out assault);
+            if (HatchBank.IsFreeEmbarkWindow(mode, assault))
+            {
+                avatar.RequestEmbark();
+                return;
+            }
+            avatar.RequestBuyBack();
+        }
+
+        static void LabelWaitRejoin(GameObject buttonGo)
+        {
+            if (buttonGo == null) return;
+            var button = buttonGo.GetComponent<Button>();
+            if (button == null) button = buttonGo.GetComponentInChildren<Button>(true);
+            if (button == null) return;
+            WaveMode mode;
+            AssaultState assault;
+            ReadWaitWindow(out mode, out assault);
+            if (HatchBank.IsFreeEmbarkWindow(mode, assault))
+            {
+                UiBind.SetButtonLabel(button, "EMBARK");
+                return;
+            }
+            long cost = HatchBank.BuyBackCost;
+            var meta = GameSession.Meta;
+            long banked = meta != null ? meta.BankedSalvage : 0L;
+            string label = "BUY BACK (" + cost + ")";
+            if (!HatchBank.IsBuyBackWindow(mode, assault))
+                label = "BUY BACK - no live window";
+            else if (banked < cost)
+                label = "BUY BACK (" + cost + ") - can't afford";
+            UiBind.SetButtonLabel(button, label);
+        }
+
+        static void ReadWaitWindow(out WaveMode mode, out AssaultState assault)
+        {
+            mode = WaveMode.Terminal;
+            assault = AssaultState.Prep;
+            var session = NetSession.FindLive();
+            var mirror = session != null ? session.Mirror : null;
+            if (mirror == null) return;
+            mode = (WaveMode)mirror.Mode.Value;
+            assault = (AssaultState)mirror.Phase.Value;
         }
 
         /// <summary>Camera-forward ray, same range as <see cref="Interactor"/> — self-contained
@@ -270,6 +320,7 @@ namespace GatekeepersProtocol.Game
                 bool partyCountdown = !wait && session != null && session.Lobby != null
                     && session.Lobby.IsCountingDown;
                 _embarkPauseButton.SetActive(wait || partyGuest || partyCountdown);
+                if (wait) LabelWaitRejoin(_embarkPauseButton);
             }
             IsSettingsOpen = true;
             SetWalkMode(false);

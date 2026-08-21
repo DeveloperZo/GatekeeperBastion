@@ -377,7 +377,8 @@ namespace GatekeepersProtocol.Sim
                 _awaitingDelivery = true;
         }
 
-        /// <summary>One pull: 5 Terminal Waves then 5 Hatch-bank windows. Refuses outside
+        /// <summary>One pull: <see cref="MasterControl.TerminalWaves"/> Terminal Waves then
+        /// <see cref="MasterControl.HatchWaves"/> Hatch-bank windows. Refuses outside
         /// Tethered+Prep, or when a sequence is already live. Disables deep-start chaining.</summary>
         public bool StartMasterControl()
         {
@@ -802,6 +803,8 @@ namespace GatekeepersProtocol.Sim
             WaveSpec spec = _director.NextWave(idx, Siphon.Level, PlayerCount);
             if (Mode == WaveMode.HatchBank)
                 spec = HatchBank.ApplyHatchComposition(spec, _hatchCarry);
+            if (Mode == WaveMode.HatchBank && _masterPhase == MasterControlPhase.Hatch)
+                spec = MasterControl.ApplyFinaleElite(spec);
             if (Mode != WaveMode.HatchBank)
             {
                 CurrentWaveIndex++;

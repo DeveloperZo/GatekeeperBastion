@@ -52,13 +52,13 @@ namespace GatekeepersProtocol.Game
             HideLocalRig();
             Log.Event(Tag, "ship wait — Bastion view hidden");
 
-            if (!SceneFlow.CanLoad(SceneFlow.Ship))
+            if (!SceneFlow.CanLoad(SceneFlow.ShipCoop))
             {
-                Log.Error(Tag, "client down — Ship is not in Build Settings");
+                Log.Error(Tag, "client down — Ship - CoOp is not in Build Settings");
                 return;
             }
 
-            SceneManager.LoadSceneAsync(SceneFlow.Ship, LoadSceneMode.Additive);
+            SceneManager.LoadSceneAsync(SceneFlow.ShipCoop, LoadSceneMode.Additive);
             SceneFlow.EnsureEventSystem();
         }
 
@@ -72,7 +72,7 @@ namespace GatekeepersProtocol.Game
 
             RestoreCombatUi();
 
-            if (!SceneManager.GetSceneByName(SceneFlow.Ship).IsValid())
+            if (!SceneManager.GetSceneByName(SceneFlow.ShipCoop).IsValid())
             {
                 EnableRig();
                 return;
@@ -202,7 +202,7 @@ namespace GatekeepersProtocol.Game
 
         static IEnumerator UnloadThenEnableRig()
         {
-            var op = SceneManager.UnloadSceneAsync(SceneFlow.Ship);
+            var op = SceneManager.UnloadSceneAsync(SceneFlow.ShipCoop);
             if (op != null)
             {
                 while (!op.isDone)

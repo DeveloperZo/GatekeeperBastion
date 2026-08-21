@@ -400,13 +400,20 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
+            ApplyRejoin();
+            Log.Event(Tag, "client embark hatch-bank clientId=" + OwnerClientId);
+        }
+
+        /// <summary>Heal, clear the wait flag, tell the owner to reset to Hatch spawn.
+        /// Shared by free Hatch-bank Prep embark and paid buy-back.</summary>
+        void ApplyRejoin()
+        {
             if (_health != null)
             {
                 _health.HealToFull();
                 Hp.Value = _health.Hp;
             }
             WaitingOnShip.Value = false;
-            Log.Event(Tag, "client embark hatch-bank clientId=" + OwnerClientId);
             EmbarkAcceptedClientRpc();
         }
         #endregion

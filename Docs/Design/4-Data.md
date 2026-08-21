@@ -85,11 +85,11 @@ old 6 x 90) — a redistribution, not an inflation.
 |---|---|---|---|---|---|---|
 | Default | 30 | 6 | 4 | 3.2 | 5.6 | — |
 | Hunter | 20 | 6 | **0** | 6.5 | 6.5 | the Hatch (`ignoresHatch`) |
-| Ram | 120 | **0** | 20 | 2.2 | 2.2 | the player (`ignoresPlayer`; never provoked) |
+| Thief | 120 | **0** | 20 | 2.2 | 2.2 | the player (`ignoresPlayer`; never provoked) |
 <!-- GKB:END gatekeepers -->
 
 GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game override
-(`RamGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`). Player-facing name is Thief.
+(`ThiefGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`). Player-facing name is Thief.
 
 - **Default** 30 HP = **1 shot** at MK-1 T0. 6 dmg/0.7s = 8.6 dps
   each: three on you kill a 100 HP player in **3.9s**, five in **2.3s** (at the old
@@ -98,8 +98,8 @@ GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game ov
 - **Hunter** 20 HP = **1 shot**. 6.5 m/s beats the 5 m/s walk and loses to the
   7.5 m/s sprint — the first Gatekeeper that makes **sprint** load-bearing. Zero Hatch
   damage: it cannot be answered by standing on the Hatch.
-- **Ram** 120 HP = **4 shots** = `120/59 = 2.03s` of focused fire while dealing
-  `20/0.7 = 28.6` dps → `28.6 x 2.03 = 58` HP of the 300 HP door, per Ram that
+- **Thief** 120 HP = **4 shots** = `120/59 = 2.03s` of focused fire while dealing
+  `20/0.7 = 28.6` dps → `28.6 x 2.03 = 58` HP of the 300 HP door, per Thief that
   got home *while being shot*. Intercepting it turns "shoot the closest" into "shoot the
   right thing"; it cannot hurt you, so it costs only the time the Hunters are using.
 - Melee reach 2.4 m (player) / 3.5 m (Hatch), +1.2 m hysteresis. Aggro: shot at,
@@ -115,8 +115,8 @@ hand-authored table, never a formula — `TetherSiphon.RewardMultiplierFor` =
 ```
 dial                  = TetherSiphon.RewardMultiplierFor(siphonLevel)
 enemyCount            = min(120, round((18 + 12*waveIndex) * dial))
-hunterCount           = {0,4,6,10,12}[waveIndex]  ramCount = {0,0,2,4,7}[waveIndex]  (dial-proof)
-defaultCount          = enemyCount - hunterCount - ramCount   (takes the whole surplus)
+hunterCount           = {0,4,6,10,12}[waveIndex]  thiefCount = {0,0,2,4,7}[waveIndex]  (dial-proof)
+defaultCount          = enemyCount - hunterCount - thiefCount   (takes the whole surplus)
 enemyHealthMultiplier = 1 + 0.40*waveIndex                       (x each kind's HP)
 groupSize             = min(3 + waveIndex, 7, enemyCount)        (3 / 4 / 5 / 6 / 7)
 spawnInterval         = max(0.4, 4.2 - 0.20*waveIndex)   SECONDS BETWEEN GROUPS
@@ -127,7 +127,7 @@ gatekeepers, wave 1..5   L0 18/30/42/54/66
 lands in `(ceil(count/groupSize) - 1) * gap` = **21.0 / 28.0 / 30.4 / 28.8 / 30.6s**; read as a
 per-individual gap the same Waves take 44 / 72 / 96s and no fight ever starts. First
 field to check if a Wave feels empty. **The dial's surplus is all Default** (Hunter and
-Ram counts are fixed per Wave), so L5 Wave 3 is 55 D + 6 H + 2 R: a bigger fight, not a
+Thief counts are fixed per Wave), so L5 Wave 3 is 55 D + 6 H + 2 T: a bigger fight, not a
 different one, and the dial cannot multiply the scariest Gatekeeper.
 
 **`TerminalChainGap = 8s`** (`WaveDirector`). Unused by the field loop: `T` after `E`
@@ -143,7 +143,7 @@ on paper; the wager is the residual, since gatekeepers overlap and leak. **Sipho
 baseline** every table below rests on:
 
 <!-- GKB:GEN waves — WaveDirector.NextWave(i, 0) -->
-| Wave | Bodies | Default | Hunter | Ram | HP × | groups of | Every |
+| Wave | Bodies | Default | Hunter | Thief | HP × | groups of | Every |
 |---|---|---|---|---|---|---|---|
 | 1 | 18 | 18 | 0 | 0 | 1 | 3 | 4.2 s |
 | 2 | 30 | 26 | 4 | 0 | 1.4 | 4 | 4 s |
@@ -164,7 +164,7 @@ baseline** every table below rests on:
 <!-- GKB:END dial -->
 
 Body count scales linearly with connected players: `min(120 × n, round((18 + 12×i) × dial) × n)`.
-`n = 1` is the table above. Hunters and Rams stay on the per-wave rows; surplus is Default.
+`n = 1` is the table above. Hunters and Thieves stay on the per-wave rows; surplus is Default.
 Bank cap at conversion is solo expected unbanked for waves 1..DeepestWaveReached at dial 0 /
 scavenging 0, and applies only when `n > 1`.
 
@@ -238,13 +238,17 @@ dumps when the timer ends.
 | 5 | ×1.50 | 5 | 66 |
 <!-- GKB:END hatch-bank -->
 
-Master Control is 5 terminal Waves then 5 Hatch-bank windows. Gap is `WaveDirector.InterWaveGap`.
+Master Control is 5 terminal Waves then 1 Hatch-bank window. Gap is `WaveDirector.InterWaveGap`.
+The finale elite is one Thief, no escorts, at `MasterControl.FinaleEliteHp` (240 pre-multiplier;
+Wave-5 Thief spawned HP is 120 × 2.60 = 312, the elite is 240 × 2.60 = 624). The 45 s window
+stays Hatch-bank; the Wave-5 horde does not spawn with it.
 
-<!-- GKB:GEN master-control — MasterControl.TerminalWaves, HatchWaves, WaveDirector.InterWaveGap -->
+<!-- GKB:GEN master-control — MasterControl.TerminalWaves, HatchWaves, FinaleEliteHp, WaveDirector.InterWaveGap -->
 | | |
 |---|---|
 | terminal Waves | 5 |
-| Hatch-bank Waves | 5 |
+| Hatch-bank Waves | 1 |
+| finale elite HP | 240 |
 | gap | 3 s |
 <!-- GKB:END master-control -->
 
@@ -272,7 +276,7 @@ Run; the decoy is the first row. All figures **initial, tunable, needs play data
 | effective dps (conversion) | **3.43** (`4 / 0.7 × ~60%` landing) |
 | gatekeeper-seconds / charge | `120 / 3.43 ≈ 35` (~40% of a 300 HP door's ~88 gs budget) |
 
-Pulls Defaults and Hunters inside the radius; refuses Rams entirely and Defaults already
+Pulls Defaults and Hunters inside the radius; refuses Thieves entirely and Defaults already
 committed inside 8 m of the Hatch. Takes the attacker's Hatch-damage value. Player fire
 cannot damage it. Per-Wave log tag: `Decoy` (`gatekeeper-seconds absorbed`).
 
@@ -352,7 +356,7 @@ Numbers in `Sim/Meta/WeaponAbility.cs`. Dial points come from the upgrade wheel'
 **The MR-35's Pin Shot registers on the first damaged body of a shot only** (M31), and the
 hit charge is weapon-scoped — target changes do not reset Hits; only the 1.25 s decay does.
 Same-target reset left the build unreachable once TTK fell below 3 (T10 FocusAtMax one-shots
-Defaults and kills Wave-5 Rams in two). The BR-12 and MK-1 rows shipped with M20.
+Defaults and kills Wave-5 Thieves in two). The BR-12 and MK-1 rows shipped with M20.
 
 Secondary baseline regen: **0.4 rounds/s**. Surge multiplies that rate only while Secondary
 is active. Gatekeeper-seconds log tag: `Ability`.

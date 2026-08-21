@@ -3,6 +3,7 @@ using GatekeepersProtocol.Sim;
 using GatekeepersProtocol.Util;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace GatekeepersProtocol.Game
 {
@@ -15,8 +16,8 @@ namespace GatekeepersProtocol.Game
     /// and despawns remaining gatekeepers.</summary>
     /// <remarks>
     /// WHY GROUPS: one-at-a-time arrivals meant the 12m shout radius only fired when the spacing
-    /// happened to be kind, and a Ram would arrive alone and die politely. A group at one door is
-    /// the unit of pressure — the shout fires by construction, and a Ram shows up escorted.
+    /// happened to be kind, and a Thief would arrive alone and die politely. A group at one door is
+    /// the unit of pressure — the shout fires by construction, and a Thief shows up escorted.
     /// The roster and the group emission itself live in WaveSpawner.Groups.cs; this file is the
     /// lifecycle, the alive count and the wave-cleared handshake.
     ///
@@ -54,6 +55,9 @@ namespace GatekeepersProtocol.Game
             /// <summary>Frame the wave started. Its first advance ran synchronously that frame,
             /// so TickDelivery skips it until the next one (no double-charged dt).</summary>
             public int BornFrame;
+            /// <summary>The next Thief spawned from this wave wears <see cref="MasterControl.FinaleEliteHp"/>.
+            /// Latched from <see cref="WaveSpec.finaleElite"/> at roster build.</summary>
+            public bool FinaleElitePending;
         }
 
         [Tooltip("Default gatekeeper prefab (capsule + NavMeshAgent + EnemyGatekeeper + Damageable). Wired by SceneBuilder.")]
@@ -62,8 +66,13 @@ namespace GatekeepersProtocol.Game
         [Tooltip("Hunter prefab (HunterGatekeeper). Falls back to enemyPrefab when unassigned.")]
         public GameObject hunterPrefab;
 
-        [Tooltip("Ram prefab (RamGatekeeper). Falls back to enemyPrefab when unassigned.")]
-        public GameObject ramPrefab;
+        // FormerlySerializedAs: this field was `ramPrefab` until the Thief rename. Every scene
+        // that already wired it keeps its reference without being re-saved, which matters because
+        // Bastion.unity is the only scene that wires it and re-saving a scene to migrate a field
+        // name is a scene write nobody asked for.
+        [FormerlySerializedAs("ramPrefab")]
+        [Tooltip("Thief prefab (ThiefGatekeeper). Falls back to enemyPrefab when unassigned.")]
+        public GameObject thiefPrefab;
 
         [Tooltip("Explicit spawn points; when empty, falls back to the SpawnPoint registry.")]
         public SpawnPoint[] spawnPoints;

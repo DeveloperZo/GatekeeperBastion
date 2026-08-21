@@ -29,6 +29,20 @@ namespace GatekeepersProtocol.Sim
             _wallets.TakeTotal(units);
         }
 
+        /// <summary>Burn one seat's unbanked on something that is not banking, and report what
+        /// was actually affordable. A sink, not a conversion — nothing is credited and
+        /// <see cref="HatchConversions"/> is untouched, so the Hatch-bank wall
+        /// (Docs/Design/3-Mechanics.md) still holds. Intensity juice is the same shape.</summary>
+        public long SpendUnbanked(int slot, long units)
+        {
+            if (units <= 0L) return 0L;
+            long have = _wallets.Of(slot);
+            if (have <= 0L) return 0L;
+            long spend = units > have ? have : units;
+            _wallets.Set(slot, have - spend);
+            return spend;
+        }
+
         void WipeUnbanked()
         {
             _wallets.WipeAll();

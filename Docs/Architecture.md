@@ -51,7 +51,7 @@ Assets/Scripts/
     Player/    FirstPersonController  PlayerGun(+.Firing, +.Slots, +.Reload)
                PlayerProtocolAbilities  PlayerHealth  PlayerRegistry  Interactor
                BoarderPresentation  WeaponViewModel
-    Enemies/   EnemyGatekeeper(+.Targeting)  HunterGatekeeper  RamGatekeeper
+    Enemies/   EnemyGatekeeper(+.Targeting)  HunterGatekeeper  ThiefGatekeeper
                WaveSpawner(+.Groups)  SpawnPoint
     Combat/    Damageable  Effects
     Bastion/  GameController(+.EndScreen, +.DevCommands, +.Client, +.Terminals,

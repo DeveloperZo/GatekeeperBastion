@@ -214,13 +214,13 @@ namespace GatekeepersProtocol.Game
             {
                 var spec = s_preview.NextWave(idx, 0, sim.PlayerCount);
                 sb.Append(' ').Append(spec.hunterCount).Append('H')
-                    .Append('/').Append(spec.ramCount).Append('R')
+                    .Append('/').Append(spec.thiefCount).Append('R')
                     .Append('/').Append(spec.defaultCount).Append('D');
                 if (idx != _foresightLoggedWave)
                 {
                     _foresightLoggedWave = idx;
                     Log.Event("Protocol", "foresight wave " + idx
-                        + " H" + spec.hunterCount + " R" + spec.ramCount + " D" + spec.defaultCount);
+                        + " H" + spec.hunterCount + " R" + spec.thiefCount + " D" + spec.defaultCount);
                 }
             }
         }

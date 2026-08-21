@@ -15,8 +15,9 @@ namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Gray-box geometry rebuilds. "Build All Scenes" rebuilds the
     /// owned set — the <c>Environment</c> root, the <c>SpawnPoints</c> root, the
-    /// <c>Directional Light</c> and the NavMesh asset — IN PLACE in Ship.unity and
-    /// Bastion.unity, and registers Splash, MainMenu, Ship, Bastion in EditorBuildSettings.
+    /// <c>Directional Light</c> and the NavMesh asset — IN PLACE in Ship - Demo.unity and
+    /// Bastion.unity, and pins Splash, MainMenu, Ship - Demo, Ship - CoOp, Bastion at the head of
+    /// EditorBuildSettings without unregistering anything else that is listed there.
     /// Everything else in those scenes is authored, persistent content this class never
     /// touches: station consoles, the Hatch, player rigs, ShipController/GameSystems,
     /// EventSystems, and every UI canvas. The owned set carries no serialized
@@ -33,7 +34,8 @@ namespace GatekeepersProtocol.EditorTools
         const string ScenePath = "Assets/Scenes/Bastion.unity";
         const string SplashScenePath = "Assets/Scenes/Splash.unity";
         const string MainMenuScenePath = "Assets/Scenes/MainMenu.unity";
-        const string ShipScenePath = "Assets/Scenes/Ship.unity";
+        const string ShipScenePath = "Assets/Scenes/Ship - Demo.unity";
+        const string ShipCoopScenePath = "Assets/Scenes/Ship - CoOp.unity";
         const string NavMeshDataPath = "Assets/Scenes/Bastion-NavMesh.asset";
         const string PrefabDir = "Assets/Prefabs";
         const string MaterialDir = "Assets/Materials";
@@ -108,7 +110,7 @@ namespace GatekeepersProtocol.EditorTools
 
         sealed class Palette
         {
-            public Material Floor, Wall, Rib, Enemy, Hunter, Ram, Hatch, Player, Breach;
+            public Material Floor, Wall, Rib, Enemy, Hunter, Thief, Hatch, Player, Breach;
         }
 
         // ---------- menu items ----------
@@ -152,23 +154,103 @@ namespace GatekeepersProtocol.EditorTools
             RebuildBastionGeometry();
             RegisterBuildScenes();
             AssetDatabase.SaveAssets();
-            Debug.Log("[SceneBuilder] In-place geometry rebuild done; EditorBuildSettings.scenes = Splash, MainMenu, Ship, Bastion.");
+            Debug.Log("[SceneBuilder] In-place geometry rebuild done; EditorBuildSettings.scenes leads with Splash, MainMenu, Ship, Bastion.");
         }
 
         // Build All Scenes is the only entry point. A Bastion-only item existed until
         // 2026-08-04 and was a narrower duplicate of it: the full build takes seconds, and a
         // Bastion rebuilt without re-registering build settings is exactly the state that
         // hides gotcha 4 (Docs/Working-Rules.md, "Tools, scripts and the menu").
+        /// <summary>Pins the four boot scenes at the head of EditorBuildSettings in flow order,
+        /// and KEEPS every other registered scene after them with its enabled flag intact.
+        ///
+        /// This used to assign a fresh four-entry array, which silently unregistered anything
+        /// added since — a scene loaded by name (tests do this) then failed to load with no
+        /// mention of Build All having removed it. Any scene registered later is now preserved
+        /// by default; the only entries dropped are ones whose file no longer exists, which
+        /// keeps the list self-healing after a scene is deleted. Both outcomes are logged, so
+        /// this never changes the build set silently.</summary>
         static void RegisterBuildScenes()
         {
-            // Boot order: Splash → MainMenu → Ship → Bastion.
-            EditorBuildSettings.scenes = new[]
+            var existing = new List<SceneEntry>();
+            foreach (EditorBuildSettingsScene sc in EditorBuildSettings.scenes)
             {
-                new EditorBuildSettingsScene(SplashScenePath, true),
-                new EditorBuildSettingsScene(MainMenuScenePath, true),
-                new EditorBuildSettingsScene(ShipScenePath, true),
-                new EditorBuildSettingsScene(ScenePath, true),
-            };
+                if (sc == null || string.IsNullOrEmpty(sc.path)) continue;
+                existing.Add(new SceneEntry(sc.path, sc.enabled));
+            }
+
+            List<string> kept, dropped;
+            List<SceneEntry> merged = MergeBuildScenes(
+                existing, BootScenes,
+                rel => File.Exists(Path.Combine(Root, rel)),
+                out kept, out dropped);
+
+            var result = new EditorBuildSettingsScene[merged.Count];
+            for (int i = 0; i < merged.Count; i++)
+                result[i] = new EditorBuildSettingsScene(merged[i].Path, merged[i].Enabled);
+            EditorBuildSettings.scenes = result;
+
+            if (kept.Count > 0)
+                Debug.Log("[SceneBuilder] Kept " + kept.Count + " non-boot build scene(s): "
+                          + string.Join(", ", kept));
+            if (dropped.Count > 0)
+                Debug.LogWarning("[SceneBuilder] Dropped " + dropped.Count
+                                 + " build scene(s) whose file is gone: "
+                                 + string.Join(", ", dropped));
+        }
+
+        /// <summary>One build-settings row, decoupled from UnityEditor so the merge below can
+        /// be exercised without an editor.</summary>
+        public struct SceneEntry
+        {
+            public readonly string Path;
+            public readonly bool Enabled;
+            public SceneEntry(string path, bool enabled) { Path = path; Enabled = enabled; }
+        }
+
+        /// <summary>Boot order. These four lead the build list and are always enabled.</summary>
+        public static readonly string[] BootScenes =
+            { SplashScenePath, MainMenuScenePath, ShipScenePath, ShipCoopScenePath, ScenePath };
+
+        /// <summary>Pins <paramref name="bootOrder"/> at the head of the build list and KEEPS
+        /// every other registered scene after it, enabled flag intact.
+        ///
+        /// This replaces an assignment of a fresh four-entry array, which silently
+        /// unregistered anything added since — a scene loaded by name (tests do this) then
+        /// failed to load with nothing pointing at Build All as the cause. Scenes registered
+        /// later now survive by default. The only rows removed are ones whose file is gone,
+        /// which keeps the list self-healing after a scene is deleted, and both outcomes are
+        /// reported so the build set never changes silently.
+        ///
+        /// Pure: no UnityEditor types, existence supplied by <paramref name="exists"/>.</summary>
+        public static List<SceneEntry> MergeBuildScenes(
+            List<SceneEntry> existing, string[] bootOrder, Func<string, bool> exists,
+            out List<string> kept, out List<string> dropped)
+        {
+            kept = new List<string>();
+            dropped = new List<string>();
+
+            var result = new List<SceneEntry>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string path in bootOrder)
+            {
+                if (!seen.Add(path)) continue;
+                result.Add(new SceneEntry(path, true));
+            }
+
+            foreach (SceneEntry entry in existing)
+            {
+                if (string.IsNullOrEmpty(entry.Path)) continue;
+                if (!seen.Add(entry.Path)) continue;   // already pinned, or a duplicate row
+                if (!exists(entry.Path))
+                {
+                    dropped.Add(entry.Path);
+                    continue;
+                }
+                result.Add(entry);
+                kept.Add(entry.Path + (entry.Enabled ? "" : " (disabled)"));
+            }
+            return result;
         }
 
         static bool SceneHasRootNamed(Scene scene, string name)
@@ -282,10 +364,10 @@ namespace GatekeepersProtocol.EditorTools
                 Wall = MakeMaterial("Wall", new Color(0.22f, 0.17f, 0.30f)),
                 Rib = MakeMaterial("Rib", new Color(0.16f, 0.32f, 0.32f)),
                 // The three gatekeeper kinds read by colour before anyone learns their names; see
-                // SceneBuilder.Enemies.cs for why Ram's violet is brighter than the hull's.
+                // SceneBuilder.Enemies.cs for why Thief's violet is brighter than the hull's.
                 Enemy = MakeMaterial("Enemy", new Color(0.85f, 0.15f, 0.12f)),
                 Hunter = MakeMaterial("Hunter", new Color(1f, 0.78f, 0.10f)),
-                Ram = MakeMaterial("Ram", new Color(0.38f, 0.28f, 0.66f)),
+                Thief = MakeMaterial("Thief", new Color(0.38f, 0.28f, 0.66f)),
                 Hatch = MakeMaterial("Hatch", new Color(1f, 0.55f, 0.1f)),
                 Player = MakeMaterial("Player", new Color(0.85f, 0.85f, 0.9f)),
                 Breach = MakeMaterial("Breach", new Color(0.25f, 0.75f, 0.35f)),

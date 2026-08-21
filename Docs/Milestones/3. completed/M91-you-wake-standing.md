@@ -202,6 +202,31 @@ instead. And `GlassRetractMetres` moved **1.1 → 2.5**: 1.1 was a slab-lid numb
 and a 2.4 m tube dropped 1.1 m is still chest-high, so criterion 3's "drops the
 glass into the pad" would have failed on sight.
 
+**Criterion 2 failed in play, and was refitted.** Zo's report: *"to escape from the
+spawner I have to look down instead of at the cylinder."* Probed with real raycasts from
+the wake pose, the cause was two-fold and neither is visible in the scene tree:
+
+- The single `Console` box gave a **±7 deg pitch window** at 0.92 m — one mouse twitch
+  off level and the prompt vanished.
+- `Interactor` resolves targets with `GetComponentInParent<IInteractable>()`, so **every
+  solid child of the root that carries `ShipTeleporter` was a release button**, `Pad` and
+  `Emitter` included. Staring at the floor at 70-80 deg down worked, which is the path
+  Zo found. Criterion 2 forbids exactly that — "not overhead and not underfoot".
+
+Fixed by making the tube surface the target, which is the shape criterion 2 already
+sanctioned ("a ring or console at the pad's edge"). `Console` is now a **10-segment ring
+at r 0.85, 0.7 m tall, renderers off** — the collider is the point, the glass stays the
+thing you see. `Pad` and `Emitter` moved to a sibling root `Demo Teleporter Fixtures`:
+still solid, still exactly where they were, no longer interactable.
+
+*The ring cannot be a collider on the `Glass` itself.* A raycast that starts inside a
+collider does not report it, and the player's eye is at the cylinder's axis — so a
+capsule on the glass would be invisible to the very ray that needs it. A ring sitting
+just outside the glass radius is hit from the inside normally.
+
+Re-probed from the wake pose: **pitch -20 to +20 deg hits the ring at any yaw**, and
+60-80 deg down now hits `Floor`/`Pad` with no interactable — the floor-stare is closed.
+
 **Known graybox limit:** Built-in `Standard` exposes no `_Cull` here, so the tube
 would vanish when the camera is inside it. `Glass Inner` — the same cylinder
 mirrored on one axis, parented to `Glass` so it retracts with it and `_glass`

@@ -27,7 +27,7 @@ dial (`IntensityJuice`, `TetherSiphon`) and carry depth (`HatchBank.CarryConvert
 - The Hatch-bank window pays nothing — `CurrentKillAward` returns 0 in `WaveMode.HatchBank`.
   The window's reward slot is empty by design, not by oversight.
 - Kind introduction is wave-indexed and resets every Run (`WaveDirector.HunterPerWave`,
-  `RamPerWave`; the `GatekeeperKind` doc comments read *"introduced in wave 2 / 3"*). Five
+  `ThiefPerWave`; the `GatekeeperKind` doc comments read *"introduced in wave 2 / 3"*). Five
   Waves cannot introduce twelve kinds, so the roster of twelve needs a second axis whatever
   else is decided.
 - Salvage value is flat per kill (`MetaUpgrades.SalvagePerKill`, 25 + 5×Scavenging) and does

@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 6876765822964325091}
   - component: {fileID: 8370265987561305905}
   m_Layer: 0
-  m_Name: RamGatekeeper
+  m_Name: ThiefGatekeeper
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -113,7 +113,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 70a7c3b1a3338b645a8d5d9cc90fb8b4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.RamGatekeeper
+  m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.ThiefGatekeeper
   attackRange: 2.4
   hatchAttackRange: 3.5
   attackInterval: 0.7
@@ -211,6 +211,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.NetEnemy
   ShowTopMostFoldoutHeaderGroup: 1
+  Hp:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
 --- !u!1001 &5715429876177372564
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -93,6 +93,7 @@ namespace GatekeepersProtocol.PlayTests
             Scene active = SceneManager.GetActiveScene();
             bool isGameScene = active.IsValid() &&
                                (active.name == GatekeepersProtocol.Game.SceneFlow.Ship ||
+                                active.name == GatekeepersProtocol.Game.SceneFlow.ShipCoop ||
                                 active.name == GatekeepersProtocol.Game.SceneFlow.Bastion ||
                                 active.name == GatekeepersProtocol.Game.SceneFlow.MainMenu ||
                                 active.name == GatekeepersProtocol.Game.SceneFlow.Splash);

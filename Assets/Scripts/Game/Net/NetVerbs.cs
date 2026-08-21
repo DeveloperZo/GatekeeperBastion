@@ -138,9 +138,11 @@ namespace GatekeepersProtocol.Game
                 hit++;
             }
 
+            // Shove returns walk-back seconds; metres are that product (criterion 6).
+            float metresMoved = credited * WaveDirector.GatekeeperPatrolSpeed;
             Log.Event("Ability",
-                "concussive shove — " + hit + " gatekeeper(s), " + credited.ToString("0.##")
-                + " gatekeeper-seconds");
+                "concussive shove — " + hit + " gatekeeper(s), " + metresMoved.ToString("0.##")
+                + "m, " + credited.ToString("0.##") + " gatekeeper-seconds");
         }
         #endregion
 

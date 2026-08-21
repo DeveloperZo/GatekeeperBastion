@@ -9,7 +9,7 @@ namespace GatekeepersProtocol.Game
     /// <summary>HOST-ONLY: NavMesh gatekeeper — paths to the Hatch (HatchStation.Instance) and
     /// attacks it on an interval; harasses the NEAREST LIVE player (PlayerRegistry, re-picked
     /// every retarget) within aggro radius, hunting players outright once the hatch is gone.
-    /// BASE CLASS for the three kinds: <see cref="HunterGatekeeper"/> and <see cref="RamGatekeeper"/>
+    /// BASE CLASS for the three kinds: <see cref="HunterGatekeeper"/> and <see cref="ThiefGatekeeper"/>
     /// override only the targeting rule (see EnemyGatekeeper.Targeting.cs) and their crowd priority;
     /// every number they differ by is pushed from the sim through <see cref="Configure"/>.</summary>
     /// <remarks>
@@ -25,7 +25,7 @@ namespace GatekeepersProtocol.Game
     /// gatekeeper configured with Hunter stats behaves like a Hunter whatever prefab it came from.
     /// The subclasses exist to carry identity (Kind, and therefore colour/scale/prefab), to make
     /// the refusal unmissable at the call site, and to harden it: HunterGatekeeper cannot latch onto
-    /// the hatch and RamGatekeeper cannot be provoked EVEN IF the flags were mis-pushed.
+    /// the hatch and ThiefGatekeeper cannot be provoked EVEN IF the flags were mis-pushed.
     /// </remarks>
     [RequireComponent(typeof(NavMeshAgent))]
     [RequireComponent(typeof(Damageable))]
@@ -132,14 +132,14 @@ namespace GatekeepersProtocol.Game
             _committedToHatch ? Mathf.Max(0f, Time.time - _committedAt) : 0f;
 
         /// <summary>Crowd avoidance quality. 42 simultaneous agents is 3x the old load, so the
-        /// chaff kinds get a cheaper solver; RamGatekeeper keeps a high-quality one because its whole
+        /// chaff kinds get a cheaper solver; ThiefGatekeeper keeps a high-quality one because its whole
         /// job is shouldering through a crowd to reach the hatch.</summary>
         protected virtual ObstacleAvoidanceType AvoidanceQuality =>
             ObstacleAvoidanceType.MedQualityObstacleAvoidance;
 
         /// <summary>Equal-priority agents push each other symmetrically and orbit a shared
         /// destination forever; staggered priorities let a crowd settle against the hatch. LOWER
-        /// is stronger — RamGatekeeper overrides into a band that outranks every chaff gatekeeper.</summary>
+        /// is stronger — ThiefGatekeeper overrides into a band that outranks every chaff gatekeeper.</summary>
         protected virtual int AvoidancePriority => 30 + (GetInstanceID() & 0x1F);
 
         /// <summary>Push tuning from the sim onto this gatekeeper at spawn. WaveSpawner calls this so
@@ -194,7 +194,7 @@ namespace GatekeepersProtocol.Game
                 _agent.obstacleAvoidanceType = AvoidanceQuality;
                 _agent.avoidancePriority = Mathf.Clamp(AvoidancePriority, 0, 99);
             }
-            // A Ram must not be left mid-hunt by a late re-Configure, and a Hunter must not be
+            // A Thief must not be left mid-hunt by a late re-Configure, and a Hunter must not be
             // left latched on the hatch: re-derive the target under the new refusals right now.
             if (ignoresPlayer)
             {

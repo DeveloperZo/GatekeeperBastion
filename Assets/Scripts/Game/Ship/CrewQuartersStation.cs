@@ -9,12 +9,16 @@ namespace GatekeepersProtocol.Game
     {
         const string Tag = "CrewQuartersStation";
 
-        public const string StubVeil = "VEIL";
         public const string StubAegis = "AEGIS";
         public const string StubLedger = "LEDGER";
         public const string ComingSoon = "Coming Soon";
         public const string StubSheet = "Coming Soon — no sheet yet";
         public const string SelectLabel = "SELECT";
+
+        /// <summary>Protocols the roster names but no slice has authored yet. They pad the
+        /// catalog after the sold ones; a protocol leaves this list by entering
+        /// <see cref="BoarderProtocol.ShopProtocols"/>, never by being edited in two places.</summary>
+        static readonly string[] ComingSoonNames = { StubAegis, StubLedger };
 
         [SerializeField] CrewQuartersPanelView _body;
 
@@ -87,12 +91,24 @@ namespace GatekeepersProtocol.Game
             _body.ShowSheet(false);
             _body.SetCatalogVisible(true);
             var ids = BoarderProtocol.ShopProtocols();
-            var id = ids.Length > 0 ? ids[0] : BoarderProtocolId.Default;
-            bool owned = m.EquippedProtocol == id;
-            BindCatalogRow(_body.ProtocolRow, BoarderProtocol.ProtocolName(id), 0, owned);
-            BindCatalogRow(_body.GhostRow, StubVeil, 1, false);
-            BindCatalogRow(_body.ForesightRow, StubAegis, 2, false);
-            BindCatalogRow(_body.UnusedRow, StubLedger, 3, false);
+            for (int i = 0; i < CrewQuartersPanelView.RowCount; i++)
+            {
+                var row = _body.RowAt(i);
+                if (row == null) continue;
+                if (i < ids.Length)
+                {
+                    BindCatalogRow(row, BoarderProtocol.ProtocolName(ids[i]), i,
+                        m.EquippedProtocol == ids[i]);
+                    continue;
+                }
+                int stub = i - ids.Length;
+                if (stub < ComingSoonNames.Length)
+                {
+                    BindCatalogRow(row, ComingSoonNames[stub], i, false);
+                    continue;
+                }
+                UiBind.Show(row, false);
+            }
         }
 
         void BuildSheetMode(StationPanelView view, MetaState m)
@@ -103,23 +119,27 @@ namespace GatekeepersProtocol.Game
             view.SetCloseLabel(ProtocolSheetView.BackLabel);
 
             var ids = BoarderProtocol.ShopProtocols();
-            var id = ids.Length > 0 ? ids[0] : BoarderProtocolId.Default;
-            bool owned = m.EquippedProtocol == id;
             BoarderProtocol.Sheet sheet;
             string claim;
             bool canBuy;
             Action onClaim;
-            if (_selected == 0)
+            if (_selected >= 0 && _selected < ids.Length)
             {
+                var id = ids[_selected];
+                bool owned = m.EquippedProtocol == id;
                 sheet = BoarderProtocol.SheetOf(id);
                 canBuy = !owned && !m.PayloadLoadoutLocked;
                 claim = owned ? "EQUIPPED" : "BUY";
-                onClaim = canBuy ? () => ShipCommands.BuyProtocol(id) : null;
+                var claimed = id;
+                onClaim = canBuy ? () => ShipCommands.BuyProtocol(claimed) : null;
             }
             else
             {
-                string stub = _selected == 1 ? StubVeil : _selected == 2 ? StubAegis : StubLedger;
-                sheet = new BoarderProtocol.Sheet(stub, "", StubSheet, StubSheet, StubSheet);
+                int stub = _selected - ids.Length;
+                string name = stub >= 0 && stub < ComingSoonNames.Length
+                    ? ComingSoonNames[stub]
+                    : ComingSoon;
+                sheet = new BoarderProtocol.Sheet(name, "", StubSheet, StubSheet, StubSheet);
                 claim = ComingSoon;
                 canBuy = false;
                 onClaim = null;

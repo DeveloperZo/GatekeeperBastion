@@ -5,6 +5,12 @@ namespace GatekeepersProtocol.Tests
 {
     public class MasterControlTests
     {
+        [TearDown]
+        public void RestoreHatchWaves()
+        {
+            MasterControl.HatchWaves = 1;
+        }
+
         static RunSim Tethered(out MetaState meta, int seed = 1)
         {
             meta = new MetaState();
@@ -66,7 +72,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Sequence_FiveTerminalThenFiveHatch_Escapes()
+        public void Sequence_FiveTerminalThenHatchWindows_Escapes()
         {
             MetaState meta;
             var sim = Tethered(out meta);
@@ -93,6 +99,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void HatchHalf_DoesNotDumpUntilLastWindow()
         {
+            MasterControl.HatchWaves = 5;
             MetaState meta;
             var sim = Tethered(out meta);
             sim.TriggerDraw();
@@ -144,6 +151,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0L, sim.Unbanked);
             Assert.AreEqual(banked, meta.BankedSalvage);
             Assert.AreEqual(0, meta.CleanExits);
+            Assert.IsTrue(meta.DemoActive, "a Lost half must not end the demo");
         }
 
         [Test]
@@ -241,6 +249,62 @@ namespace GatekeepersProtocol.Tests
             restored.RestoreOpenDoors(graph.CopyOpenDoorIds());
             Assert.IsTrue(restored.IsDoorOpen("D1"));
             Assert.IsFalse(restored.IsDoorOpen("D_control"));
+        }
+
+        [Test]
+        public void HatchWaves_DefaultsToOne()
+        {
+            Assert.AreEqual(1, MasterControl.HatchWaves);
+        }
+
+        [Test]
+        public void FinaleWindow_IsOneEliteThief()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            Assert.IsTrue(sim.StartMasterControl());
+            for (int i = 0; i < MasterControl.TerminalWaves; i++)
+            {
+                sim.NotifyAssaultCleared();
+                if (i < MasterControl.TerminalWaves - 1)
+                    sim.Tick(WaveDirector.InterWaveGap);
+            }
+
+            WaveSpec hatch = default;
+            sim.WaveStarted += s => hatch = s;
+            sim.Tick(WaveDirector.InterWaveGap);
+
+            Assert.IsTrue(hatch.finaleElite, "the final window carries the elite flag");
+            Assert.AreEqual(MasterControl.FinaleEliteCount, hatch.enemyCount);
+            Assert.AreEqual(MasterControl.FinaleEliteCount, hatch.thiefCount);
+            Assert.AreEqual(0, hatch.hunterCount, "no escorts");
+            Assert.AreEqual(0, hatch.defaultCount, "no escorts");
+            Assert.AreEqual(1, hatch.groupSize);
+            Assert.Greater(MasterControl.FinaleEliteHp * hatch.enemyHealthMultiplier,
+                WaveDirector.StatsFor(GatekeeperKind.Thief).maxHp * hatch.enemyHealthMultiplier,
+                "spawned elite HP must sit above a Wave-5 Thief");
+        }
+
+        [Test]
+        public void SkipToMasterHatchHalf_DrawsEliteWithExpectedUnbanked()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            WaveSpec hatch = default;
+            bool hatchHalf = false;
+            sim.WaveStarted += s => hatch = s;
+            sim.MasterHatchHalfStarted += () => hatchHalf = true;
+
+            Assert.IsTrue(sim.SkipToMasterHatchHalf());
+            Assert.IsTrue(hatchHalf, "hatch spawns arm before the draw");
+            Assert.AreEqual(MasterControlPhase.Hatch, sim.MasterPhase);
+            Assert.AreEqual(AssaultState.Assault, sim.Assault);
+            Assert.AreEqual(WaveMode.HatchBank, sim.Mode);
+            Assert.AreEqual(HatchBank.MasterTerminalUnbanked(), sim.Unbanked);
+            Assert.AreEqual(HatchBank.CarryConvert(5), sim.HatchConvertMultiplier, 1e-5f);
+            Assert.IsTrue(hatch.finaleElite);
+            Assert.AreEqual(1, hatch.enemyCount);
+            Assert.AreEqual(1, hatch.thiefCount);
         }
     }
 }

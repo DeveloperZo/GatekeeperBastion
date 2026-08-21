@@ -464,7 +464,7 @@ public static class Docgen
         sb.AppendLine("|---|---|---|---|---|---|---|");
         AppendGkRow(sb, "Default", GatekeeperKind.Default);
         AppendGkRow(sb, "Hunter", GatekeeperKind.Hunter);
-        AppendGkRow(sb, "Ram", GatekeeperKind.Ram);
+        AppendGkRow(sb, "Thief", GatekeeperKind.Thief);
         return sb.ToString().TrimEnd('\r', '\n');
     }
 
@@ -478,7 +478,7 @@ public static class Docgen
         string pd = s.playerDamage <= 0f ? "**0**" : N(s.playerDamage);
         string hd = s.hatchDamage <= 0f ? "**0**" : N(s.hatchDamage);
         if (kind == GatekeeperKind.Hunter) hd = "**0**";
-        if (kind == GatekeeperKind.Ram) pd = "**0**";
+        if (kind == GatekeeperKind.Thief) pd = "**0**";
 
         sb.AppendLine("| " + name + " | " + N(s.maxHp) + " | " + pd + " | " + hd + " | " +
                       N(s.patrolSpeed) + " | " + N(s.chaseSpeed) + " | " + refuses + " |");
@@ -488,13 +488,13 @@ public static class Docgen
     {
         var wd = new WaveDirector();
         var sb = new StringBuilder();
-        sb.AppendLine("| Wave | Bodies | Default | Hunter | Ram | HP × | groups of | Every |");
+        sb.AppendLine("| Wave | Bodies | Default | Hunter | Thief | HP × | groups of | Every |");
         sb.AppendLine("|---|---|---|---|---|---|---|---|");
         for (int i = 0; i < WaveDirector.MaxWaves; i++)
         {
             var s = wd.NextWave(i, 0);
             sb.AppendLine("| " + (i + 1) + " | " + s.enemyCount + " | " + s.defaultCount + " | " +
-                          s.hunterCount + " | " + s.ramCount + " | " +
+                          s.hunterCount + " | " + s.thiefCount + " | " +
                           N(s.enemyHealthMultiplier) + " | " + s.groupSize + " | " +
                           N(s.spawnInterval) + " s |");
         }
@@ -591,6 +591,7 @@ public static class Docgen
         sb.AppendLine("|---|---|");
         sb.AppendLine("| terminal Waves | " + MasterControl.TerminalWaves + " |");
         sb.AppendLine("| Hatch-bank Waves | " + MasterControl.HatchWaves + " |");
+        sb.AppendLine("| finale elite HP | " + N(MasterControl.FinaleEliteHp) + " |");
         sb.AppendLine("| gap | " + N(WaveDirector.InterWaveGap) + " s |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
@@ -828,7 +829,7 @@ public static class Docgen
             "nothing — it will march, and it will turn on you if you hurt it");
         AppendManualGk(sb, GatekeeperKind.Hunter, "Hunter",
             "to touch the hatch; it only ever wants you");
-        AppendManualGk(sb, GatekeeperKind.Ram, "Ram",
+        AppendManualGk(sb, GatekeeperKind.Thief, "Thief",
             "to turn when shot; Hatch-bank it marches the Hatch, field-terminal it hunts you — it never hurts you");
         sb.AppendLine();
         sb.AppendLine("HP above is the base line. Later waves multiply it (see the wave table).");
@@ -859,18 +860,18 @@ public static class Docgen
         sb.AppendLine();
         sb.AppendLine("At intensity 0:");
         sb.AppendLine();
-        sb.AppendLine("| Wave | Bodies | Default | Hunter | Ram | HP × | Arrive in groups of | Every |");
+        sb.AppendLine("| Wave | Bodies | Default | Hunter | Thief | HP × | Arrive in groups of | Every |");
         sb.AppendLine("|---|---|---|---|---|---|---|---|");
         for (int i = 0; i < WaveDirector.MaxWaves; i++)
         {
             var s = wd.NextWave(i, 0);
             sb.AppendLine("| " + (i + 1) + " | " + s.enemyCount + " | " + s.defaultCount + " | " +
-                          s.hunterCount + " | " + s.ramCount + " | " +
+                          s.hunterCount + " | " + s.thiefCount + " | " +
                           N(s.enemyHealthMultiplier) + " | " + s.groupSize + " | " +
                           N(s.spawnInterval) + " s |");
         }
         sb.AppendLine();
-        sb.AppendLine("Hunters and Rams are on a fixed schedule — intensity never adds more of them.");
+        sb.AppendLine("Hunters and Thieves are on a fixed schedule — intensity never adds more of them.");
         sb.AppendLine();
     }
 
@@ -880,7 +881,7 @@ public static class Docgen
         sb.AppendLine();
         sb.AppendLine("Juice at a field terminal, Master Control, or the Hatch (`+/-`), then `E` to select and `T` to start. Locked once a");
         sb.AppendLine("wave is live. It pays more and sends more, and the extra bodies are **all Defaults** —");
-        sb.AppendLine("it cannot conjure a sixth Ram. It changes nothing else: no extra health, no tighter");
+        sb.AppendLine("it cannot conjure a sixth Thief. It changes nothing else: no extra health, no tighter");
         sb.AppendLine("spacing, no larger groups. Juice costs `" + IntensityJuice.CostPerStep +
                       "` unbanked per step.");
         sb.AppendLine();

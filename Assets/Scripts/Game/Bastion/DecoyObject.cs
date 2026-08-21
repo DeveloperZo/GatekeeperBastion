@@ -36,6 +36,15 @@ namespace GatekeepersProtocol.Game
             _mode = mode;
         }
 
+        /// <summary>Re-read life from the bay's state. The prop mirrors <see cref="DecoyState"/>
+        /// rather than owning HP, so anything that writes life there — FIELD REARM's channel —
+        /// must say so or this mirror goes stale.</summary>
+        public void SyncHp()
+        {
+            if (_bay == null) return;
+            _hp = _bay.State.Hp;
+        }
+
         /// <summary>Gatekeeper Hatch-damage intake. Returns true when this hit destroys the decoy.</summary>
         public bool ApplyDamage(float amount)
         {

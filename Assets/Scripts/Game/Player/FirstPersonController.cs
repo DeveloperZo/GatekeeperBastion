@@ -86,6 +86,10 @@ namespace GatekeepersProtocol.Game
 
         public bool MovementLocked { get; set; }
 
+        /// <summary>Planar speed multiplier for a Boarder whose hands are full (REDEPLOY).
+        /// 1 = free hands. Pushed at run time, never serialized.</summary>
+        public float SpeedMul { get; set; } = 1f;
+
         /// <summary>Current sprint stamina, 0..StaminaMax. HUD reads this.</summary>
         public float Stamina => _stamina;
 
@@ -98,6 +102,9 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>True when WASD is producing planar motion this tick.</summary>
         public bool IsMoving { get; private set; }
+
+        /// <summary>True while RMB zoom is live (FOV 40). WeaponViewModel tucks long guns.</summary>
+        public bool IsZooming { get; private set; }
 
         /// <summary>Apply the Crew Quarters stamina pool (GameController pushes MetaUpgrades values
         /// here). Fills the tank — called at run start, never mid-fight, so the player never
@@ -261,10 +268,15 @@ namespace GatekeepersProtocol.Game
         /// <summary>Hold RMB. Hip 60 / zoom 40. Decoy aim keeps RMB as cancel.</summary>
         void TickZoom()
         {
-            if (_cam == null) return;
+            if (_cam == null)
+            {
+                IsZooming = false;
+                return;
+            }
             bool decoyAiming = _decoy != null && _decoy.IsAiming;
             bool zoom = !MovementLocked && !DemoVoice.LocksInput && !decoyAiming
                 && Controls.Held(ControlId.AltFire);
+            IsZooming = zoom;
             float want = zoom ? WeaponView.ZoomFov : WeaponView.HipFov;
             if (Mathf.Abs(_cam.fieldOfView - want) > 0.01f)
                 _cam.fieldOfView = want;
@@ -306,7 +318,7 @@ namespace GatekeepersProtocol.Game
                     IsSprinting = false; // this frame's move already spent the last of it
                 }
                 _regenDelay = StaminaRegenDelaySeconds;
-                return sprintSpeed;
+                return sprintSpeed * SpeedMul;
             }
 
             // Not sprinting: serve out the delay, then refill.
@@ -314,7 +326,7 @@ namespace GatekeepersProtocol.Game
             else if (_stamina < staminaMax)
                 _stamina = Mathf.Min(staminaMax, _stamina + StaminaRegenPerSecond * dt);
 
-            return moveSpeed;
+            return moveSpeed * SpeedMul;
         }
 
         static void SetCursorLocked(bool locked)

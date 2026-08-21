@@ -14,7 +14,9 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Player-seeker. Ignores the hatch entirely. Introduced in wave 2.</summary>
         Hunter = 1,
 
-        /// <summary>Hatch-only battering ram. Ignores the player entirely. Introduced in wave 3.</summary>
-        Ram = 2,
+        /// <summary>Hatch-only. Ignores the player entirely. Introduced in wave 3. Its salvage
+        /// rule — never damage while there is salvage to take — is recorded and NOT built
+        /// (Docs/Brainstorms/gatekeepers-and-waves.md); today it still walks at the hatch.</summary>
+        Thief = 2,
     }
 }

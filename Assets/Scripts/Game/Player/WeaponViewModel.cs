@@ -35,6 +35,8 @@ namespace GatekeepersProtocol.Game
         AudioClip _reload;
         WeaponId _shown = (WeaponId)(-99);
         bool _hidden;
+        float _reloadClipLength = 1f;
+        bool _reloadSpeedSet;
 
         void Awake()
         {
@@ -42,19 +44,22 @@ namespace GatekeepersProtocol.Game
             _fpc = GetComponent<FirstPersonController>();
             if (_rightHand == null)
                 _rightHand = FindNamed(transform, WeaponView.RightHandBone);
-            if (_animator == null)
-                _animator = GetComponentInChildren<Animator>(true);
+            if (_grip == null)
+            {
+                Transform named = FindNamed(transform, "Grip");
+                _grip = named;
+            }
             if (_mk1 == null) _mk1 = FindGo("Mk1");
             if (_secD == null) _secD = FindGo("SecD");
             if (_br12 == null) _br12 = FindGo("Br12");
             if (_mr35 == null) _mr35 = FindGo("Mr35");
             if (_priC == null) _priC = FindGo("PriC");
             if (_cutter == null) _cutter = FindGo("Cutter");
-            if (_grip == null)
-            {
-                Transform named = FindNamed(transform, "Grip");
-                _grip = named;
-            }
+            // Grip only. GetComponentInChildren binds the Boarder body Animator and
+            // Fire/Reload never reach the gun.
+            if (_animator == null && _grip != null)
+                _animator = _grip.GetComponent<Animator>();
+            CacheReloadClipLength();
             _sfx = GetComponent<AudioSource>();
             if (_sfx == null)
             {
@@ -85,6 +90,7 @@ namespace GatekeepersProtocol.Game
 
             ApplyShown();
             PoseLocalGun();
+            RestoreReloadSpeedIfIdle();
         }
 
         /// <summary>Ship has WeaponViewModel and no PlayerGun — LateUpdate used to leave the
@@ -128,9 +134,10 @@ namespace GatekeepersProtocol.Game
             if (_grip == null || _fpc == null) return;
             Transform cam = _fpc.cameraTransform;
             if (cam == null) return;
+            var hold = WeaponView.Hold(_shown, _fpc.IsZooming);
             _grip.position = cam.TransformPoint(new Vector3(
-                WeaponView.LocalGunRight, WeaponView.LocalGunDown, WeaponView.LocalGunForward));
-            _grip.rotation = cam.rotation;
+                hold.Right, hold.Down, hold.Forward));
+            _grip.rotation = cam.rotation * Quaternion.Euler(hold.Pitch, hold.Yaw, hold.Roll);
         }
 
         /// <summary>Enable the mapped mesh. Called from LateUpdate and from the assemble bind.</summary>
@@ -144,7 +151,12 @@ namespace GatekeepersProtocol.Game
 
         public void NotifyFired()
         {
-            if (_animator != null) _animator.SetTrigger(FireHash);
+            if (_animator != null)
+            {
+                RestoreReloadSpeed();
+                _animator.ResetTrigger(ReloadHash);
+                _animator.SetTrigger(FireHash);
+            }
             if (_sfx == null) return;
             AudioClip clip = FireClip(_shown);
             if (clip != null) _sfx.PlayOneShot(clip, WeaponView.SfxOneShotScale);
@@ -152,8 +164,46 @@ namespace GatekeepersProtocol.Game
 
         public void NotifyReload()
         {
-            if (_animator != null) _animator.SetTrigger(ReloadHash);
+            if (_animator != null)
+            {
+                float duration = _gun != null
+                    ? Mathf.Max(0.01f, _gun.ActiveReloadSeconds)
+                    : 1f;
+                _animator.speed = _reloadClipLength / duration;
+                _reloadSpeedSet = true;
+                _animator.SetTrigger(ReloadHash);
+            }
             if (_sfx != null && _reload != null) _sfx.PlayOneShot(_reload, WeaponView.SfxOneShotScale);
+        }
+
+        void RestoreReloadSpeedIfIdle()
+        {
+            if (!_reloadSpeedSet) return;
+            if (_gun != null && _gun.IsReloading) return;
+            RestoreReloadSpeed();
+        }
+
+        void RestoreReloadSpeed()
+        {
+            if (!_reloadSpeedSet) return;
+            if (_animator != null) _animator.speed = 1f;
+            _reloadSpeedSet = false;
+        }
+
+        void CacheReloadClipLength()
+        {
+            if (_animator == null) return;
+            var controller = _animator.runtimeAnimatorController;
+            if (controller == null) return;
+            AnimationClip[] clips = controller.animationClips;
+            for (int i = 0; i < clips.Length; i++)
+            {
+                AnimationClip clip = clips[i];
+                if (clip == null) continue;
+                if (clip.name != "ViewModel_Reload") continue;
+                _reloadClipLength = Mathf.Max(0.01f, clip.length);
+                return;
+            }
         }
 
         void ShowHidden()

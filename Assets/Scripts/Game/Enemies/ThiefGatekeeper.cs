@@ -12,13 +12,13 @@ namespace GatekeepersProtocol.Game
     /// is always false, so Provoke() returns immediately without touching speed, target or the
     /// shout counter.
     ///
-    /// Crowd priority is INVERTED relative to the chaff: a Ram outranks every Default and Hunter
+    /// Crowd priority is INVERTED relative to the chaff: a Thief outranks every Default and Hunter
     /// (lower avoidancePriority wins in Unity), so a wall of bodies at the hatch parts for it
     /// instead of stalling it in the doorway it exists to reach.
     /// </remarks>
-    public sealed class RamGatekeeper : EnemyGatekeeper
+    public sealed class ThiefGatekeeper : EnemyGatekeeper
     {
-        public override GatekeeperKind Kind => GatekeeperKind.Ram;
+        public override GatekeeperKind Kind => GatekeeperKind.Thief;
 
         /// <summary>True on field-terminal Waves only (2026-08-13). Hatch-bank keeps the old rule.</summary>
         protected override bool MayTargetPlayer =>
@@ -35,7 +35,7 @@ namespace GatekeepersProtocol.Game
             ObstacleAvoidanceType.HighQualityObstacleAvoidance;
 
         /// <summary>Outranks the chaff band (30..61) outright, still staggered inside its own band
-        /// so two Rams at the same door do not deadlock each other symmetrically.</summary>
+        /// so two Thieves at the same door do not deadlock each other symmetrically.</summary>
         protected override int AvoidancePriority => 4 + (GetInstanceID() & 0x0F);
     }
 }

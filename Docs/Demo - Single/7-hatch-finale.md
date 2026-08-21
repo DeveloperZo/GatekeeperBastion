@@ -158,7 +158,7 @@ Nothing. The five-window sequence retunes to one via `MasterControl.HatchWaves`
 | Slot spend | 0 | `M54` c4 |
 | Drip | 8/s | `HatchBank.DripPerSecond` |
 | Convert mul | snapshotted at half start from carry | `M54` |
-| Boss/elite stats | — absent, not invented | to be specced |
+| Boss/elite stats | HP 240 pre-multiplier (624 spawned at Wave-5 ×2.60); Ram damage/speed; one body, no escorts | `MasterControl.FinaleEliteHp` (Zo, 2026-08-20) |
 | Buy-back cost | tunable, not set | Zo, 2026-08-17 |
 
 One 45 s window after five room Waves. Wave counts are tunable levers; do not
@@ -256,7 +256,7 @@ friends dry-run (`Roadmap.md`). Shared Ship is `M72`.
   layout (pre-authored, clearly marked, not cumulative) — a candidate
   satisfying `Marketing/gaps.md` Focus #4's probe. The boss/elite's presence
   in the final window **is** spec; its layout is parked.
-- Boss/elite stats and final-window composition are absent, not invented.
+- Boss/elite stats: one high-HP elite, no escorts. HP is `MasterControl.FinaleEliteHp`.
 
 ## After this save
 

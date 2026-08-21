@@ -142,7 +142,7 @@ namespace GatekeepersProtocol.Game
         void TickPinDecay(float dt)
         {
             // Charge is weapon-scoped — a dead build target must not wipe Hits, or trash kills
-            // that arm a Ram pin can never land. Only the decay window clears the build.
+            // that arm a Thief pin can never land. Only the decay window clears the build.
             if (_pinBuild.Hits <= 0) return;
             _pinBuild.Tick(dt);
         }
@@ -263,8 +263,10 @@ namespace GatekeepersProtocol.Game
             }
 
             _waveGatekeeperSeconds += credited;
+            // Shove returns walk-back seconds; metres are that product (criterion 6).
+            float metresMoved = credited * WaveDirector.GatekeeperPatrolSpeed;
             Log.Event("Ability",
-                $"concussive shove — {hit} gatekeeper(s), {credited:0.##} gatekeeper-seconds");
+                $"concussive shove — {hit} gatekeeper(s), {metresMoved:0.##}m, {credited:0.##} gatekeeper-seconds");
             return true;
         }
 

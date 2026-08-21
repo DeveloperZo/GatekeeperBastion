@@ -111,7 +111,7 @@ is `if (collidingWithFloor() && getRenderState() != INVISIBLE)`
 
 **A base class is right when the shared thing is policy a subtype cannot opt out of**, not
 merely shared code. `Damageable` enforcing HP clamping and death ordering qualifies.
-`EnemyGatekeeper` → `HunterGatekeeper` / `RamGatekeeper` qualifies as long as the base owns
+`EnemyGatekeeper` → `HunterGatekeeper` / `ThiefGatekeeper` qualifies as long as the base owns
 the targeting contract rather than accumulating each kind's behaviour.
 **Falsification test:** if a subclass ever overrides a method to do nothing, or if two
 siblings share nothing but the base's existence, the hierarchy is wrong.

@@ -48,7 +48,22 @@ Three channels, each with a rule:
 | The HUD  | fight and end screens draw through `Game/Ui/` views (`BastionHudView`); `HudController.OnGUI` is the Dev-taint banner only. Never `GUILayout` on the Bastion HUD. | `../Architecture.md` gotcha 3 |
 | The log  | a line when a player-visible thing happened, or when a refusal must be answerable from the log alone ("I clicked BUY and nothing happened"). Once per distinct reason, never per frame. No counters, no aggregation. | `../Working-Rules.md`         |
 | The docs | anything countable is generated from the code; anything arguable is written.                                                                                                                                         | `../README.md`                |
+| The frame | a Gatekeeper reads against the surface behind it, at the range it is fought from. Legibility outranks mood: an art pass that darkens the room owns the contrast it removes. | `../Brainstorms/bodies-and-art-direction.md` |
 
+
+**Darkness is a channel too, and it is the one that fails silently.** The 2026-08-20
+lighting pass dropped ambient and repainted the atlas toward a near-black hull, which is
+right for the look and is exactly the change that can take a Gatekeeper out of the
+player's model without taking it out of the game. The reference this art aims at is dark
+*with strong light pools*; a room that is uniformly dark instead reads flat and hides its
+occupants. **The check runs on every pass that touches ambient, emission or albedo
+range**: stand at the far end of the longest sightline in the zone and confirm each kind
+is identifiable before it is in range — not merely visible, *identifiable*, since kind
+refusals are the whole of `1-Experience.md` §1.4 and a player who cannot tell a Thief from
+a Hunter is playing without the rule. Where a body loses against its background, the fix
+is the body's own emissive, never raising ambient back — ambient lifts the room and the
+enemy together and returns the flat look the pass just removed. The robot pack ships a
+separate emissive map per kind for exactly this.
 
 **The deliberate silences are audited.** Every page in `../Play/` ends with a `## Gaps`
 section listing what the game never tells the player. That list is this tier's backlog: a

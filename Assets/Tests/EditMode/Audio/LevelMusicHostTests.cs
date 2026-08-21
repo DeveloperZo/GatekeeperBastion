@@ -15,7 +15,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ShipAndBastion_HostWhispersAsLevelMusic()
         {
-            AssertWhispersHost("Assets/Scenes/Ship.unity");
+            AssertWhispersHost("Assets/Scenes/Ship - Demo.unity");
             AssertWhispersHost("Assets/Scenes/Bastion.unity");
         }
 

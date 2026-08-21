@@ -1,10 +1,10 @@
 # M82 — The weapon in your hands
 
 <!--
-Status: later
+Status: active
 Update trigger: when the viewmodel controller or clips land, or when a weapon
 gains a bespoke clip that overrides the shared set
-Last updated: 2026-08-19
+Last updated: 2026-08-21
 -->
 
 One shared viewmodel animator — idle, move, fire, reload — hand-keyed in
@@ -69,26 +69,32 @@ Decisions made here:
    motion.
 4. Exactly one controller asset serves all six weapons; switching weapons
    mid-Run keeps criteria 1 to 3 true.
-5. The two Animator components in `Bastion.unity` with no controller assigned
-   (audit's open note) are resolved: assigned this controller or removed.
+5. Animator components in `Bastion.unity` with no controller assigned
+   (audit's open note; four on `Gen_*_WindowPiece` as of 2026-08-20) are
+   resolved: assigned this controller or removed.
 
 ## Implementation
 
-Editor and clip work plus one small code change; Zo executes, in order:
+Landed 2026-08-20. Clips and controller are assets under `Packs/Weapons/`.
+The Animator sits on Boarder's `Grip` (not the body): `PoseLocalGun` writes
+Grip world TRS every LateUpdate, so the four clips key the six wrapper roots
+(`Mk1`, `SecD`, `Br12`, `Mr35`, `PriC`, `Cutter`) and never the fbx child.
+`WeaponViewModel` binds `_grip.GetComponent<Animator>()` before
+`GetComponentInChildren`, so Fire/Reload/Speed do not hit `Boarder.controller`.
 
-1. **Create** `Packs/Weapons/ViewModel.controller` with the parameters and
-   states above.
-2. **Create** the four `.anim` clips in `Packs/Weapons/`, keyed on the
-   viewmodel root and weapon child transforms. Start crude: fire is a short
-   back-kick and recover; reload is a lower-tilt-raise; move is a small loop.
-3. **Change** the viewmodel object (scene or prefab): ensure one Animator on
-   the root `WeaponViewModel` resolves, controller assigned.
-4. **Change** `Assets/Scripts/Game/Player/WeaponViewModel.cs` — on reload
-   start, set the animator speed to `clipLength / reloadDuration` for the
-   Reload state (read the duration from the same source `PlayerGun.Reload`
-   uses); restore to 1 when it completes. This is the only code in the
-   milestone.
-5. Resolve the two controller-less Animators in `Bastion.unity` (criterion 5).
+Reload: `NotifyReload` sets `animator.speed = clipLength / ActiveReloadSeconds`
+(`PlayerGun.EffectiveReloadSeconds`, the same number `StartReload` writes on
+the timer). LateUpdate restores `speed = 1` when `IsReloading` is false.
+`NotifyFired` restores speed and `ResetTrigger(Reload)` so a mid-reload shot
+does not play Fire at the scaled clock.
+
+`WeaponView.Hold` is the per-class rest pose on Grip (PRI-C higher and flatter,
+BR-12 rolled, cutter off the look axis). Shared clips stay identical; the hold
+is what stops a sniper sitting in the pistol pocket. Animator lookup is Grip
+only — `GetComponentInChildren` was binding `Boarder.controller`.
+
+Criterion 5: four controller-less Animators on `Gen_*_WindowPiece` in
+`Bastion.unity` were removed (imported kit avatars, not a viewmodel).
 
 ## Verification
 
@@ -98,22 +104,25 @@ Editor and clip work plus one small code change; Zo executes, in order:
 2. Criterion 4 — switch through all six weapons in one Run, fire and reload
    at least two of them; confirm no weapon goes static. A guid search of the
    weapon prefabs and viewmodel object should find exactly one
-   `.controller` reference.
+   `.controller` reference. `ViewModelAnimTests` pins clips, Grip lookup,
+   hold, and Bastion's zero controller-less Animators.
 3. Criterion 5 — scene search for Animator components with a null controller
    in `Bastion.unity`; expect zero after the change.
 
 ## Watch
 
 `WeaponViewModel` guards every animator call with null checks today; keep
-them (the Ship scene may run without a viewmodel).
+them (the Ship scene may run without a viewmodel). Do not fall back to
+`GetComponentInChildren<Animator>` — that is the body.
 
 Since 2026-08-19 each gun wrapper nests its fbx on a child that carries a corrective
 rotation (barrel +Z, top +Y — see `Assets/Packs/weapon_source/README.md`). **Key the
-clips on the wrapper root and the viewmodel root only.** The wrapper roots are identity
+clips on the wrapper root only.** The wrapper roots are identity
 and were kept at their original fileIDs so Boarder's overrides still bind; animating the
-fbx child instead overwrites the correction and lays the gun on its side.
+fbx child instead overwrites the correction and lays the gun on its side. Class
+silhouette is `WeaponView.Hold` on Grip, not a second set of clips.
 
 ## Depends on / Unblocks
 
-Independent of M81 and M83. Unblocks nothing structurally; first-person feel
-work later builds on these clips.
+Independent of M81 and M83. Unblocks `M93` criterion 4 (viewmodel fire/reload
+motion at each weapon's rate).

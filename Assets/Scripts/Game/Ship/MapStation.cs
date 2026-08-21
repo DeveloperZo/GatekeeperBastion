@@ -87,7 +87,8 @@ namespace GatekeepersProtocol.Game
                 int remain = lobby != null ? (int)(lobby.CountdownRemaining.Value * 10f) : 0;
                 return base.ContentHash(m) * 397 ^ _startWave * 17 ^ (_embarking ? 1 : 0) ^ (_loadFailed ? 2 : 0)
                     ^ (_mapOpen ? 1 << 12 : 0) ^ (NetShipWait.IsActive ? 1 << 13 : 0)
-                    ^ (ready << 14) ^ (counting << 15) ^ remain;
+                    ^ (ready << 14) ^ (counting << 15) ^ remain
+                    ^ WaitWindowHash();
             }
         }
 
@@ -110,7 +111,7 @@ namespace GatekeepersProtocol.Game
                 _body.ShowStartWavePicker(false);
                 _body.ShowWarnings(false, false, false);
                 _body.BindPartyLobby(false, null, false, null, null);
-                _body.BindEmbark("EMBARK", () => TryEmbark(m));
+                BindWaitRejoin(m);
                 _body.ShowLoadFailed(false);
                 return;
             }
@@ -262,6 +263,64 @@ namespace GatekeepersProtocol.Game
             session.Lobby.CancelCountdown();
         }
 
+        void BindWaitRejoin(MetaState m)
+        {
+            WaveMode mode;
+            AssaultState assault;
+            ReadWaitWindow(out mode, out assault);
+            if (HatchBank.IsFreeEmbarkWindow(mode, assault))
+            {
+                _body.BindEmbark("EMBARK", () => TryEmbark(m));
+                return;
+            }
+            long cost = HatchBank.BuyBackCost;
+            long banked = m != null ? m.BankedSalvage : 0L;
+            string label = "BUY BACK (" + cost + ")";
+            if (!HatchBank.IsBuyBackWindow(mode, assault))
+                label = "BUY BACK - no live window";
+            else if (banked < cost)
+                label = "BUY BACK (" + cost + ") - can't afford";
+            _body.BindEmbark(label, TryWaitRejoin);
+        }
+
+        void TryWaitRejoin()
+        {
+            var avatar = NetPlayerAvatar.LocalOwner;
+            if (avatar == null)
+            {
+                Log.Event("Net", "embark refused — no avatar");
+                return;
+            }
+            WaveMode mode;
+            AssaultState assault;
+            ReadWaitWindow(out mode, out assault);
+            if (HatchBank.IsFreeEmbarkWindow(mode, assault))
+            {
+                avatar.RequestEmbark();
+                return;
+            }
+            avatar.RequestBuyBack();
+        }
+
+        static void ReadWaitWindow(out WaveMode mode, out AssaultState assault)
+        {
+            mode = WaveMode.Terminal;
+            assault = AssaultState.Prep;
+            var session = NetSession.FindLive();
+            var mirror = session != null ? session.Mirror : null;
+            if (mirror == null) return;
+            mode = (WaveMode)mirror.Mode.Value;
+            assault = (AssaultState)mirror.Phase.Value;
+        }
+
+        static int WaitWindowHash()
+        {
+            WaveMode mode;
+            AssaultState assault;
+            ReadWaitWindow(out mode, out assault);
+            return ((int)mode << 16) ^ ((int)assault << 20);
+        }
+
         void TryPartyEmbark(MetaState m, NetSession session)
         {
             if (!session.IsPartyLead)
@@ -287,13 +346,7 @@ namespace GatekeepersProtocol.Game
         {
             if (NetShipWait.IsActive)
             {
-                var avatar = NetPlayerAvatar.LocalOwner;
-                if (avatar == null)
-                {
-                    Log.Event("Net", "embark refused — no avatar");
-                    return;
-                }
-                avatar.RequestEmbark();
+                TryWaitRejoin();
                 return;
             }
 

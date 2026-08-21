@@ -1,11 +1,15 @@
 # M80 — One final window
 
 <!--
-Status: later
-Update trigger: when the boss/elite composition is stamped, when the
-mid-finale return or finale-access question is ruled, when
-MasterControl.HatchWaves moves
+Status: shipped, Aug 2026 — built 2026-08-20. Playthrough (criterion 9) and
+two-seat loopback (criterion 8) are not observed; they stay open on this
+file the same way M79's composition bet did.
+Update trigger: closed. Corrections only.
 Last updated: 2026-08-20
+Closed on: 2026-08-20. Gate: Unity EditMode `MasterControlTests` +
+`DemoProgressTests` + `DemoFinaleSourceTests` + `HatchBankTests` +
+`RunCompleteTests` 75/0. `lint-arch` clean. Offline `mcs` harness skipped
+(mcs/mono not on PATH, same as `M79`).
 -->
 
 Beats 6 + 7: the Control Room fight (copy + spawn wiring — the mechanics are
@@ -13,6 +17,10 @@ Beats 6 + 7: the Control Room fight (copy + spawn wiring — the mechanics are
 carrying the game's first boss/elite; survive it → Escaped and the demo ends.
 Cut 7 of the demo family. **Both owner-Zo inputs were stamped 2026-08-20 and
 this milestone is startable.**
+
+Built 2026-08-20. `EndDemo`, the HatchWaves retune, the elite, and the three
+unplayed voice lines landed; the merge rule, ControlW/E wiring, and WaveIsIn
+Lost-write were already in the tree.
 
 ## Story
 
@@ -143,11 +151,30 @@ inputs. Where this section and the prose above disagree, this section wins.
 
 ## Implementation
 
-Beat 6 and beat 7 Create / Change / Delete tables are the file list: the
-merge rule and two beat-6 lines + log; the `MasterHatchHalfStarted` hook;
-`DemoProgress.EndDemo` and its flags table; `HatchWaves` 5 → 1; the boss
-spawn in the final window (from input 1); buy-back wiring at the finale.
+Landed 2026-08-20, matching Code state:
+
+- **Change** `MasterControl.HatchWaves` — `const` 5 → `static int` default 1. `HatchHalf_DoesNotDumpUntilLastWindow` sets 5 and TearDown restores it.
+- **Change** `MasterControl.ApplyFinaleElite` — replaces the Hatch-bank spec with one Ram at `FinaleEliteHp` 240 (spawned 624 vs Wave-5 Ram 312). No escorts: that is the one lever. WaveSpec.finaleElite flags the HP override.
+- **Create** `DemoProgress.EndDemo` — `DemoActive false`, `DemoFabPowered true`. Called from `EnterTerminalPhase` on Escaped only. `GameSession.PendingEscapedLine` carries `demo.escaped` onto the Ship after the flag flips.
+- **Change** `OnMasterHatchHalfStarted` — `[Demo] hatch finale send` + `demo.hatch_finale` Subtitle, Party.
+- **Change** first Master look-at — `demo.master_control` Lock, Party; start logs `[Demo] master-control room fight`.
+- WaveIsIn Lost-write, D3 merge rule, ControlW/E wiring: already in tree. Buy-back stayed with `M90`.
+
 **Delete** nothing — the five-window machinery stays.
+
+## Verification
+
+1. D3 merge — `DemoFinaleSourceTests.D3_SpeaksControlRoom_NotADoorId`; `BastionKitSceneTests` still names Spawn_ControlW/E.
+2. Hatch HP through Terminal half — existing `MasterControlTests` (Hatch not damaged in Terminal). Five Waves in R15 is play, not this suite.
+3. `HatchWaves` 1 — `HatchWaves_DefaultsToOne`; `Sequence_FiveTerminalThenHatchWindows_Escapes`; multi-window pin `HatchHalf_DoesNotDumpUntilLastWindow` at 5.
+4. Elite — `FinaleWindow_IsOneEliteRam`; source pin `EliteSpawn_OverridesTheFirstRamHp`.
+5. Send — source pin `HatchHalf_SendsFinaleSubtitle_BeforeAnyHalfFlipLogGate`.
+6. EndDemo — `DemoProgressTests.EndDemo_FlipsTheTwoWrites_AndLeavesTheRungTwoRecord`; Lost leaves `DemoActive` (`HatchHalfBreach_KeepsDripped_WipesRemainder`); Dock refused on finale (`DockOffer_IsRefusedOnTheFinale`).
+7. Withdrawn.
+8. Party send is `PlayLocalAndBroadcast` on hatch_finale / escaped / master_control. Two-seat load not observed.
+9. Playthrough not observed.
+
+Unity EditMode 2026-08-20: the five fixtures above **75/0**. `lint-arch` clean.
 
 ## Traps
 
@@ -160,6 +187,13 @@ code.
 
 Depends: M79 (D2 open — built and closed 2026-08-20), `M54` + `M73` (in tree),
 M74 (lines), the two owner-Zo inputs above. **Not** `M90`: buy-back was
-withdrawn from this milestone's criteria (see criterion 7). Unblocks: the live game on that save; the friends
-close of the demo (still needs the five-Wave friends session,
-`../../Roadmap.md`).
+withdrawn from this milestone's criteria (see criterion 7). Unblocks: the live
+game on that save; the friends close of the demo (still needs the five-Wave
+friends session, `../../Roadmap.md`).
+
+## Open
+
+- Criterion 8 — both seats on the shared Ship after Escaped. The Party
+  broadcast is wired; a two-seat load was not run.
+- Criterion 9 — playthrough from D2 through Escaped. EditMode proves the
+  shape, not the fight.

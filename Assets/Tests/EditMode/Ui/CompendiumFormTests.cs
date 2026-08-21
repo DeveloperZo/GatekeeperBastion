@@ -154,14 +154,14 @@ namespace GatekeepersProtocol.Tests
         public void ExtractGameView_OmitsReferenceAndGaps()
         {
             const string sample =
-                "<!-- builder -->\n# Ram\n\n## Game\n\nGame body.\n\n## Reference\n\nLonger.\n\n## See also\n\n[A](A.md).\n\n## Gaps\n\n- secret\n";
+                "<!-- builder -->\n# Thief\n\n## Game\n\nGame body.\n\n## Reference\n\nLonger.\n\n## See also\n\n[A](A.md).\n\n## Gaps\n\n- secret\n";
             string stripped = CompendiumCatalog.StripBuilderAudit(sample);
             Assert.IsFalse(stripped.Contains("builder"));
             Assert.IsFalse(stripped.Contains("## Gaps"));
             Assert.IsFalse(stripped.Contains("secret"));
             StringAssert.Contains("## Reference", stripped);
 
-            string game = CompendiumCatalog.ExtractGameView(stripped, "Ram");
+            string game = CompendiumCatalog.ExtractGameView(stripped, "Thief");
             StringAssert.Contains("Game body", game);
             StringAssert.Contains("## See also", game);
             Assert.IsFalse(game.Contains("## Reference"), game);

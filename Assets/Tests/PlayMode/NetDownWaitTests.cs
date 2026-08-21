@@ -141,6 +141,109 @@ namespace GatekeepersProtocol.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator BuyBack_HatchBankAssaultRejoins_RefusesOtherwise()
+        {
+            _dummy = new GameObject("HostStandIn");
+            _dummy.transform.position = new Vector3(80f, 0f, 0f);
+            _dummy.AddComponent<PlayerHealth>();
+
+            yield return BootHostRun();
+            Assert.IsNotNull(GameSession.Meta, "buy-back needs a Meta purse");
+            long bankSnap = GameSession.Meta.BankedSalvage;
+            GameSession.Meta.BankedSalvage = 0L;
+
+            var serverGo = SpawnObject(_avatarPrefab, m_ServerNetworkManager);
+            var serverNet = serverGo.GetComponent<NetworkObject>();
+            yield return WaitForSpawnedOnAllOrTimeOut(serverNet);
+            AssertOnTimeout("avatar did not spawn on client");
+
+            serverGo.transform.position = Vector3.zero;
+            serverNet.ChangeOwnership(m_ClientNetworkManagers[0].LocalClientId);
+            yield return WaitForConditionOrTimeOut(() =>
+            {
+                var avatar = serverGo.GetComponent<NetPlayerAvatar>();
+                return avatar != null && !avatar.IsOwner
+                    && PlayerRegistry.NearestAlive(Vector3.zero) == avatar.Body;
+            });
+            AssertOnTimeout("server did not register the remote avatar");
+
+            var serverAvatar = serverGo.GetComponent<NetPlayerAvatar>();
+            serverAvatar.Bind(_gc);
+            var serverHealth = serverAvatar.Body;
+            Assert.IsTrue(
+                m_ClientNetworkManagers[0].SpawnManager.SpawnedObjects.TryGetValue(
+                    serverNet.NetworkObjectId, out var clientNet),
+                "client has the avatar clone");
+            var clientAvatar = clientNet.GetComponent<NetPlayerAvatar>();
+
+            serverHealth.TakeDamage(serverHealth.Hp + 1f);
+            yield return WaitForConditionOrTimeOut(() =>
+                serverAvatar.WaitingOnShip.Value && serverHealth.IsDead);
+            AssertOnTimeout("lethal damage did not set WaitingOnShip");
+            long unbankedAtDown = _gc.Sim.TotalUnbanked;
+
+            LogAssert.Expect(LogType.Log, "[Demo] buyback refused — no live window");
+            clientAvatar.RequestBuyBack();
+            yield return WaitForTicks(m_ServerNetworkManager, 8);
+            Assert.IsTrue(serverAvatar.WaitingOnShip.Value, "Terminal buy-back is refused");
+            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage, "refuse must not debit");
+
+            _gc.Sim.TriggerDraw(WaveMode.HatchBank);
+            Assert.AreEqual(AssaultState.Assault, _gc.Sim.Assault);
+            Assert.AreEqual(WaveMode.HatchBank, _gc.Sim.Mode);
+
+            LogAssert.Expect(LogType.Log, "[Demo] buyback refused — cannot afford");
+            clientAvatar.RequestBuyBack();
+            yield return WaitForTicks(m_ServerNetworkManager, 8);
+            Assert.IsTrue(serverAvatar.WaitingOnShip.Value, "unaffordable buy-back is refused");
+            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage);
+
+            GameSession.Meta.BankedSalvage = HatchBank.BuyBackCost;
+            long hostBankIfSpentOnServer = GameSession.Meta.BankedSalvage;
+            Assert.IsTrue(_gc.TryNetBuyBack(serverAvatar, HatchBank.BuyBackCost),
+                "host gate allows a funded live window");
+            Assert.AreEqual(hostBankIfSpentOnServer, GameSession.Meta.BankedSalvage,
+                "TryNetBuyBack must not debit host Meta");
+
+            LogAssert.Expect(LogType.Log,
+                "[Demo] buyback seat=" + serverAvatar.Slot.Value + " cost=" + HatchBank.BuyBackCost);
+            clientAvatar.RequestBuyBack();
+            yield return WaitForConditionOrTimeOut(() =>
+                !serverAvatar.WaitingOnShip.Value
+                && !serverHealth.IsDead
+                && serverHealth.Hp >= serverHealth.MaxHp - 0.01f);
+            AssertOnTimeout("Hatch-bank Assault buy-back did not restore HP");
+            Assert.AreEqual(unbankedAtDown, _gc.Sim.TotalUnbanked,
+                "buy-back must not touch Unbanked");
+            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage,
+                "owner spend debit the reported purse");
+
+            GameSession.Meta.BankedSalvage = bankSnap;
+        }
+
+        [UnityTest]
+        public IEnumerator BuyBack_HostAttempt_RefusedNamed()
+        {
+            yield return BootHostRun();
+            var serverGo = SpawnObject(_avatarPrefab, m_ServerNetworkManager);
+            var serverNet = serverGo.GetComponent<NetworkObject>();
+            yield return WaitForSpawnedOnAllOrTimeOut(serverNet);
+            AssertOnTimeout("host avatar did not spawn");
+
+            var serverAvatar = serverGo.GetComponent<NetPlayerAvatar>();
+            serverAvatar.Bind(_gc);
+            _gc.Sim.TriggerDraw(WaveMode.HatchBank);
+            if (GameSession.Meta != null)
+                GameSession.Meta.BankedSalvage = HatchBank.BuyBackCost;
+
+            LogAssert.Expect(LogType.Log, "[Demo] buyback refused — host cannot buy back");
+            serverAvatar.RequestBuyBack();
+            yield return WaitForTicks(m_ServerNetworkManager, 8);
+            Assert.IsFalse(serverAvatar.WaitingOnShip.Value);
+            Assert.AreEqual(RunPhase.Tethered, _gc.Sim.Phase);
+        }
+
+        [UnityTest]
         public IEnumerator DownWait_HostDie_EndsRunWithoutWait()
         {
             yield return BootHostRun();

@@ -113,7 +113,7 @@ the same 0.7 s clock — they differ in what they hit, never in how often.
 |---|---|---|---|---|---|
 | **Default** | 30 | 6 | 4 | 3.2 → 5.6 m/s when provoked | nothing — it will march, and it will turn on you if you hurt it |
 | **Hunter** | 20 | 6 | — | 6.5 m/s | to touch the hatch; it only ever wants you |
-| **Ram** | 120 | — | 20 | 2.2 m/s | to turn when shot; Hatch-bank it marches the Hatch, field-terminal it hunts you — it never hurts you |
+| **Thief** | 120 | — | 20 | 2.2 m/s | to turn when shot; Hatch-bank it marches the Hatch, field-terminal it hunts you — it never hurts you |
 
 HP above is the base line. Later waves multiply it (see the wave table).
 
@@ -126,7 +126,7 @@ Gatekeepers arrive in groups, not a stream.
 
 At intensity 0:
 
-| Wave | Bodies | Default | Hunter | Ram | HP × | Arrive in groups of | Every |
+| Wave | Bodies | Default | Hunter | Thief | HP × | Arrive in groups of | Every |
 |---|---|---|---|---|---|---|---|
 | 1 | 18 | 18 | 0 | 0 | 1 | 3 | 4.2 s |
 | 2 | 30 | 26 | 4 | 0 | 1.4 | 4 | 4 s |
@@ -134,13 +134,13 @@ At intensity 0:
 | 4 | 54 | 40 | 10 | 4 | 2.2 | 6 | 3.6 s |
 | 5 | 66 | 47 | 12 | 7 | 2.6 | 7 | 3.4 s |
 
-Hunters and Rams are on a fixed schedule — intensity never adds more of them.
+Hunters and Thieves are on a fixed schedule — intensity never adds more of them.
 
 ## Intensity — the wager
 
 Juice at a field terminal, Master Control, or the Hatch (`+/-`), then `E` to select and `T` to start. Locked once a
 wave is live. It pays more and sends more, and the extra bodies are **all Defaults** —
-it cannot conjure a sixth Ram. It changes nothing else: no extra health, no tighter
+it cannot conjure a sixth Thief. It changes nothing else: no extra health, no tighter
 spacing, no larger groups. Juice costs `100` unbanked per step.
 
 | Intensity | You earn | Wave 1 sends | Wave 5 sends |
