@@ -439,14 +439,33 @@ STAIR_S = 5.0 / 5.798
 RUN = 8.022 * STAIR_S
 obj('Stair', DRESS, (-5.0, 0.0, 25.0), 0.0, (STAIR_S, STAIR_S, STAIR_S),
     mesh=MESH['Stairs'])
-# Thin walk plane through the treads. A 0.4 m rotated box was tried: its south
-# end-cap is 54 deg and slopeLimit is 45, so the capsule stops at the foot.
-# Thickness 0.05 m is under stepOffset 0.3, so the end-cap is a step onto the
-# 35.9 deg top face. GStairHead covers the void at the head (kit landing gone).
+# Walk plane through the treads, thick enough to be a normal stable ramp. The
+# player's CharacterController has skinWidth 0.08 - the first version of this
+# box was 0.05 m thick (half-thickness 0.025), THINNER than the engine's own
+# collision-resolution tolerance for that capsule. That is not a cosmetic
+# issue: a live FirstPersonController walking it (not the straight scripted
+# path in ShipCoopStairWalkTests) reported intermittent lift/pop and falling
+# back through to deck-1 height instead of a smooth climb - classic thin-
+# collider instability. 0.35 m gives a 4x+ margin over skin width.
 ang = math.degrees(math.atan2(5.0, RUN))
 hq = math.radians(-ang) / 2.0
-gbox('GStairWalk', (-4.09, 2.5, 28.45), (1.96, 0.05, math.hypot(RUN, 5.0)),
-     quat='{x: %.7f, y: 0, z: 0, w: %.7f}' % (math.sin(hq), math.cos(hq)), hint=-ang)
+q = (math.sin(hq), 0.0, 0.0, math.cos(hq))
+def _qrot(q, v):
+    qx, qy, qz, qw = q
+    vx, vy, vz = v
+    tx = 2.0 * (qy * vz - qz * vy)
+    ty = 2.0 * (qz * vx - qx * vz)
+    tz = 2.0 * (qx * vy - qy * vx)
+    return (vx + qw * tx + (qy * tz - qz * ty),
+            vy + qw * ty + (qz * tx - qx * tz),
+            vz + qw * tz + (qx * ty - qy * tx))
+OLD_HALF, NEW_HALF = 0.025, 0.175          # 0.05 m -> 0.35 m thick
+old_center = (-4.09, 2.5, 28.45)
+normal = _qrot(q, (0.0, 1.0, 0.0))          # world direction of the box's local +Y
+surface = tuple(old_center[k] + OLD_HALF * normal[k] for k in range(3))
+new_center = tuple(surface[k] - NEW_HALF * normal[k] for k in range(3))
+gbox('GStairWalk', new_center, (1.96, 2 * NEW_HALF, math.hypot(RUN, 5.0)),
+     quat='{x: %.7f, y: 0, z: 0, w: %.7f}' % (q[0], q[3]), hint=-ang)
 gbox('GStairHead', (-5.0, 4.75, 32.5), (3.0, 0.5, 3.0))
 print("stair: 5.0 m rise over %.2f m run = %.1f deg" % (RUN, ang))
 
