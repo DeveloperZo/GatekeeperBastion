@@ -51,6 +51,7 @@ MESH = {   # Synty PolygonSciFiSpace, guids are stable across the pack
     'Stairs': '3a9167268fb73cb48b6f3226667f05f2',        # SM_Prop_Stairs_01
     'StairPlat': 'edc81c185e0ff9142b2c988d0a2dae60',     # SM_Prop_StairsPlatform_01
     'Rail': 'b3987b6acf41dc643a6332babc3a7dc9',          # SM_Bld_Floor_Small_Hand_Rail_01
+    'LightPanel': '170064085127c8748ae64c26a823cd8c',  # SM_Prop_Light_Panel_01
     'Airlock': '031ef83336706614e9aac66905586671',       # SM_Bld_Wall_EscPod_Hatch_01
 }
 AIRLOCK_SUBMESH = 4300004
@@ -275,6 +276,29 @@ for deck, y in DECK_Y.items():
         low = ix in (-1, 0)
         obj('C%d_%d_%d' % (deck, ix, iz), DRESS, (5 * ix + 5, y, 5 * iz), 0.0,
             mesh=MESH['CeilLow'] if low else MESH['Ceil'])
+
+# The void has no deck 2 floor, but it still needs the deck 2 ceiling over it or the
+# drive core looks up into nothing.
+for (ix, iz) in sorted(VOID):
+    obj('CVoid_%d_%d' % (ix, iz), DRESS, (5 * ix + 5, DECK_Y[2], 5 * iz), 0.0,
+        mesh=MESH['Ceil'])
+
+# Ceiling lights. Identity rotation, seated so the panel's 0.102 m body tucks under the
+# ceiling it hangs from - the same rule BastionSegmentVisuals uses. The old hull rotated
+# these 90 degrees about X, which stood them on edge through the ceiling plane.
+LIGHT_H = 0.102
+lights = 0
+for deck, y in DECK_Y.items():
+    for (ix, iz) in sorted(D1 if deck == 1 else D2):
+        under = 3.49 if ix in (-1, 0) else 4.0        # Ceiling_02 over the spine columns
+        obj('Light%d_%d_%d' % (deck, ix, iz), DRESS,
+            (5 * ix + 2.5, y + under - LIGHT_H, 5 * iz + 2.5), 0.0, mesh=MESH['LightPanel'])
+        lights += 1
+for (ix, iz) in sorted(VOID):                          # high over the drive core
+    obj('LightVoid_%d_%d' % (ix, iz), DRESS,
+        (5 * ix + 2.5, DECK_Y[2] + 4.0 - LIGHT_H, 5 * iz + 2.5), 0.0, mesh=MESH['LightPanel'])
+    lights += 1
+print("  ceiling lights: %d" % lights)
 
 # ---- hull walls: one line, one owner -------------------------------------------
 # constant-z line -> N piece owned by the cell to the south
