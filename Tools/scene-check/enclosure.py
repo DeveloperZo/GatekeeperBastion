@@ -81,6 +81,18 @@ def main():
         if m:
             walls[int(m.group(1))].append((m.group(2), int(m.group(3)) / 10.0,
                                            int(m.group(4)) / 10.0)); continue
+        # A window bay (M102) carries SM_Bld_Wall_Exterior_Window_01 instead of the
+        # Wall+Skin pair. The mesh is authored offset (Unity-local x[4.75,9.75]) and
+        # placed flipped, so the covered wall line's pivot is recovered from the
+        # window's actual transform, not trusted from the name's suffix.
+        m = re.match(r'^Win(\d)_([NSEW])_(-?\d+)_(-?\d+)$', n)
+        if m:
+            t = {'N': 0.0, 'E': 90.0, 'S': 180.0, 'W': -90.0}[m.group(2)]
+            wx, wy, wz = world(i, tf)
+            walls[int(m.group(1))].append((m.group(2),
+                                           wx - 4.75 * math.cos(math.radians(t)),
+                                           wz + 4.75 * math.sin(math.radians(t))))
+            continue
         m = re.match(r'^AirlockShell_(-?\d+)$', n)
         if m:
             hatches.append(world(i, tf)); continue

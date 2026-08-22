@@ -211,7 +211,7 @@ MeshRenderer:
 """
 
 def obj(name, parent, pos, yaw=0.0, scale=(1, 1, 1), mesh=None, submesh=4300000,
-        box=False, renderer=True, collider=False, quat=None, hint=None, mat=None):
+        box=False, renderer=True, collider=False, mesh_col=None, quat=None, hint=None, mat=None):
     gid, tid = nid(), nid()
     comps = ["  - component: {fileID: %d}\n" % tid]
     body = []
@@ -242,6 +242,18 @@ def obj(name, parent, pos, yaw=0.0, scale=(1, 1, 1), mesh=None, submesh=4300000,
                     "  m_LayerOverridePriority: 0\n  m_IsTrigger: 0\n  m_ProvidesContacts: 0\n"
                     "  m_Enabled: 1\n  serializedVersion: 3\n  m_Size: {x: 1, y: 1, z: 1}\n"
                     "  m_Center: {x: 0, y: 0, z: 0}\n" % (cid, gid))
+    if mesh_col:
+        cid = nid()
+        comps.append("  - component: {fileID: %d}\n" % cid)
+        body.append("--- !u!64 &%d\nMeshCollider:\n  m_ObjectHideFlags: 0\n"
+                    "  m_CorrespondingSourceObject: {fileID: 0}\n  m_PrefabInstance: {fileID: 0}\n"
+                    "  m_PrefabAsset: {fileID: 0}\n  m_GameObject: {fileID: %d}\n"
+                    "  m_Material: {fileID: 0}\n  m_IncludeLayers:\n    serializedVersion: 2\n"
+                    "    m_Bits: 0\n  m_ExcludeLayers:\n    serializedVersion: 2\n    m_Bits: 0\n"
+                    "  m_LayerOverridePriority: 0\n  m_IsTrigger: 0\n  m_ProvidesContacts: 0\n"
+                    "  m_Enabled: 1\n  serializedVersion: 5\n  m_Convex: 0\n"
+                    "  m_CookingOptions: 30\n  m_Mesh: {fileID: 4300000, guid: %s, type: 3}\n"
+                    % (cid, gid, mesh_col))
     EMIT.append("--- !u!1 &%d\nGameObject:\n  m_ObjectHideFlags: 0\n"
                 "  m_CorrespondingSourceObject: {fileID: 0}\n  m_PrefabInstance: {fileID: 0}\n"
                 "  m_PrefabAsset: {fileID: 0}\n  serializedVersion: 6\n  m_Component:\n%s"
@@ -425,20 +437,17 @@ for (ix, iz) in sorted(VOID):
 # the kit stair rises 5.798 m; the decks are 5.0 apart, so scale it to land exactly
 STAIR_S = 5.0 / 5.798
 RUN = 8.022 * STAIR_S
-obj('Stair', DRESS, (-5.0, 0.0, 25.0), 0.0, (STAIR_S, STAIR_S, STAIR_S), mesh=MESH['Stairs'])
-obj('StairLanding', DRESS, (-5.0, 0.0, 25.0 + RUN), 0.0,
-    (STAIR_S, 1.0, STAIR_S), mesh=MESH['StairPlat'])   # kit height (5.002 m) already fits;
-                                                        # STAIR_S squashed it 0.687 m short
-
-# walkable ramp under the stair: 5 m rise over RUN, inside the 45 deg slopeLimit
+obj('Stair', DRESS, (-5.0, 0.0, 25.0), 0.0, (STAIR_S, STAIR_S, STAIR_S),
+    mesh=MESH['Stairs'])
+# Thin walk plane through the treads. A 0.4 m rotated box was tried: its south
+# end-cap is 54 deg and slopeLimit is 45, so the capsule stops at the foot.
+# Thickness 0.05 m is under stepOffset 0.3, so the end-cap is a step onto the
+# 35.9 deg top face. GStairHead covers the void at the head (kit landing gone).
 ang = math.degrees(math.atan2(5.0, RUN))
 hq = math.radians(-ang) / 2.0
-gbox('GStairRamp', (-4.0, 2.5, 25.0 + RUN / 2), (2.0, 0.4, math.hypot(RUN, 5.0)),
+gbox('GStairWalk', (-4.09, 2.5, 28.45), (1.96, 0.05, math.hypot(RUN, 5.0)),
      quat='{x: %.7f, y: 0, z: 0, w: %.7f}' % (math.sin(hq), math.cos(hq)), hint=-ang)
-# x=-4 (not -6): the visible Stair mesh spans x[-5.07,-3.11] inside the void's own
-# footprint (ix=-1 is x[-5,0]) - it never crosses the void's west wall at x=-5. The old
-# ramp sat one full bay further west, under solid deck-2 floor and grazing the z=25
-# partition; at x=-4 it falls inside that partition's own excluded gap (x[-5,-1.25]).
+gbox('GStairHead', (-5.0, 4.75, 32.5), (3.0, 0.5, 3.0))
 print("stair: 5.0 m rise over %.2f m run = %.1f deg" % (RUN, ang))
 
 # ---- airlock shells at the three hatch bays ------------------------------------
@@ -581,12 +590,16 @@ for deck, lines in PARTITIONS.items():
             ixm = int(math.floor(mid / 5.0))
             if (ixm, iz_s) not in cs or (ixm, iz_n) not in cs:
                 continue                      # no room either side of this stretch
-            if deck == 1 and abs(L - 25.0) < 0.01 and px in (-1.25, 5.0):
-                continue                      # port: the stair foot rises through this
-                                               # bay; starboard: without this the void's
-                                               # starboard rooms (ix=0,1 rows 5-6) have no
-                                               # opening anywhere and are fully sealed -
-                                               # found by the reachability checker.
+            if px in (5.0, 10.0):
+                continue                      # starboard stays one open gallery, bow to
+                                               # stern, on both decks - all three hatches
+                                               # sit on it. Port keeps its partitioned
+                                               # rooms (Zo, 2026-08-22: the hatch rooms
+                                               # read as detached boxes once chopped up;
+                                               # the original ship had one continuous
+                                               # starboard Gallery and this restores that).
+            if deck == 1 and abs(L - 25.0) < 0.01 and px == -1.25:
+                continue                      # the stair foot rises through this bay
             obj('Part%d_%d_%d' % (deck, int(L * 10), int(px * 10)), DRESS,
                 (px, y, L), 0.0, (sx_, 1, 1), mesh=MESH['Wall'])
             gbox('GPart%d_%d_%d' % (deck, int(L * 10), int(px * 10)),
