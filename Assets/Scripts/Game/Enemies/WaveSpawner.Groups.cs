@@ -236,7 +236,8 @@ namespace GatekeepersProtocol.Game
 
             Vector3 at = GroupSlot(point.position, index, groupCount);
             float multiplier = spec.enemyHealthMultiplier > 0f ? spec.enemyHealthMultiplier : 1f;
-            if (CreateActor(kind, stats, prefab, at, point.rotation, multiplier, isElite) == null)
+            if (CreateActor(kind, stats, prefab, at, point.rotation, multiplier, isElite,
+                    waveBody: true) == null)
                 return false;
 
             emit.Spawned++;
@@ -251,7 +252,7 @@ namespace GatekeepersProtocol.Game
         ///
         /// <paramref name="at"/> is navmesh height; the vertical lift is applied here.</summary>
         EnemyGatekeeper CreateActor(GatekeeperKind kind, GatekeeperStats stats, GameObject prefab,
-            Vector3 at, Quaternion rotation, float healthMultiplier, bool isElite)
+            Vector3 at, Quaternion rotation, float healthMultiplier, bool isElite, bool waveBody)
         {
             // The agent's baseOffset lifts the transform on its FIRST update, so instantiating at
             // navmesh height buries the body and pops it up a metre on frame one (1.0 Default,
@@ -290,6 +291,16 @@ namespace GatekeepersProtocol.Game
                     netObj.Spawn(true);
                 else
                     Log.Warn("Net", "spawn skipped — no NetworkObject kind=" + kind);
+            }
+
+            if (!waveBody)
+            {
+                // A practice body is the same actor, deliberately, but it is not part of a Wave:
+                // it must not hold an Assault open through AliveCount, and killing it must not
+                // pay salvage into the realm's pot. The wave listener does both, so it is not
+                // attached. Death still routes through Despawn — the actor calls that itself —
+                // so the spawn ledger stays correct.
+                return gatekeeper;
             }
 
             AliveCount++;

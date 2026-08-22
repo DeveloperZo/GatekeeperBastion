@@ -28,6 +28,17 @@ namespace GatekeepersProtocol.Game
         }
         #endregion
 
+        /// <summary>Server: this seat is no longer waiting to follow anyone. Called as the
+        /// roster closes, so a wait cannot outlive the run that created it.</summary>
+        public void ServerReleaseFollowWait()
+        {
+            if (!IsServer || !AwaitingFollow.Value) return;
+            AwaitingFollow.Value = false;
+            if (WaitingOnShip.Value) WaitingOnShip.Value = false;
+            EmbarkAcceptedClientRpc();
+            Log.Event(Tag, "mid-run wait released — the run ended clientId=" + OwnerClientId);
+        }
+
         #region Private
         /// <summary>Take a late arrival into the run. Prep only: a wave already on the floor was
         /// composed for the party standing there when it was drawn, and letting a seat in under
@@ -55,7 +66,12 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
-            if (!RunSeats.Admit(OwnerClientId)) return;
+            // Admit reports false for a seat that is already in the run. That is not a
+            // refusal from here: it means this seat is already playing and only its flags are
+            // stale, which is exactly the state a run ending underneath a waiting arrival
+            // leaves behind. Treating it as a refusal stranded the player on the Ship with the
+            // only button that could free them refusing every press.
+            RunSeats.Admit(OwnerClientId);
 
             AwaitingFollow.Value = false;
             ApplyRejoin();

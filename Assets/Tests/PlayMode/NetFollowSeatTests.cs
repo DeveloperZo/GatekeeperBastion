@@ -113,14 +113,16 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(ShipHatches.IsOpen(both, 0));
             Assert.IsTrue(ShipHatches.IsOpen(both, 2));
 
-            // The seat drops mid-wave. Sealing now would be a free save, so nothing moves.
+            // The seat drops mid-wave and the roster holds it. What is asserted here is the
+            // ROSTER, not the doors: this fixture keeps the guest in ConnectedClientsList, so a
+            // recompute would see it whether or not the roster held it, and asserting the doors
+            // here would pass with the roster filter deleted. The real guarantee — that nothing
+            // recomputes mid-Assault at all — lives in the disconnect path, which calls
+            // NoteLeft and deliberately returns before Recompute (NetSession.Internal.cs).
             RunSeats.NoteLeft(guestId);
-            LogAssert.Expect(LogType.Log, "[Hatch] assigned slot=0 hatch=1 seats=2");
-            LogAssert.Expect(LogType.Log, "[Hatch] assigned slot=1 hatch=3 seats=2");
-            int stillOut = ShipHatchAssignment.ServerRecompute(
-                m_ServerNetworkManager, serverMirror, "mid-wave, seat held");
-            Assert.AreEqual(both, stillOut,
-                "a departure mid-Assault must not change a single door");
+            Assert.IsTrue(RunSeats.IsAdmitted(guestId),
+                "sealing a hatch under attack would be a free save — the seat is still counted");
+            Assert.IsTrue(RunSeats.HasPending, "and the departure is waiting for the break");
 
             // The break applies it and the door seals there.
             Assert.IsTrue(RunSeats.ApplyBoundary());

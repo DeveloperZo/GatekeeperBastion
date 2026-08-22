@@ -19,9 +19,20 @@ namespace GatekeepersProtocol.Game
 
             bool tethered = Sim.Phase == RunPhase.Tethered;
             if (tethered && !RunSeats.IsLive)
+            {
                 RunSeats.BeginRun(NetworkManager.Singleton);
+            }
             else if (!tethered && RunSeats.IsLive)
+            {
+                // Clear the waiting flags BEFORE the roster closes. A seat that arrived mid-run
+                // and never got a break carries AwaitingFollow and WaitingOnShip on the server;
+                // nothing else ever clears them, so at the next embark it would be admitted by
+                // BeginRun — counted for waves and paid a share — while its owner sat in the
+                // Ship overlay unable to move, pressing a follow button that refused because it
+                // was already seated.
+                ReleaseWaitingSeats();
                 RunSeats.EndRun();
+            }
 
             // Any Prep is a boundary, not only the one an Assault just ended on: a seat that
             // leaves during Prep should go at that break rather than wait out a whole wave.
@@ -32,6 +43,23 @@ namespace GatekeepersProtocol.Game
 
             ShipHatchAssignment.Recompute("seat left at the break");
             RefreshPlayerCount();
+        }
+
+        /// <summary>Drop the mid-run wait from every seat still carrying it. The run is over, so
+        /// there is nothing left to follow into — and a flag that outlives its run is worse than
+        /// one that was never set.</summary>
+        void ReleaseWaitingSeats()
+        {
+            var nm = NetworkManager.Singleton;
+            if (nm == null || !nm.IsServer) return;
+            var clients = nm.ConnectedClientsList;
+            for (int i = 0; i < clients.Count; i++)
+            {
+                var po = clients[i].PlayerObject;
+                if (po == null) continue;
+                var avatar = po.GetComponent<NetPlayerAvatar>();
+                if (avatar != null) avatar.ServerReleaseFollowWait();
+            }
         }
         #endregion
     }

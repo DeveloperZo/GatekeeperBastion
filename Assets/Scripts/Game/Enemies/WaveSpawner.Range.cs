@@ -56,7 +56,9 @@ namespace GatekeepersProtocol.Game
             // The kind's own numbers, unscaled. A range that quietly buffed what it spawned
             // would answer questions about a Gatekeeper nobody ever meets.
             GatekeeperStats stats = WaveDirector.StatsFor(kind);
-            var actor = CreateActor(kind, stats, prefab, at, rotation, 1f, false);
+            // waveBody: false — see CreateActor. A range kill must not pay the realm, and a
+            // body on the lane must not hold a Bastion Assault open.
+            var actor = CreateActor(kind, stats, prefab, at, rotation, 1f, false, waveBody: false);
             if (actor == null)
             {
                 Log.Warn(Tag, "range spawn failed — " + kind + " prefab carries no EnemyGatekeeper");
