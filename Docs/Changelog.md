@@ -8,6 +8,11 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-21
 -->
 
+- 2026-08-21: **`M90` closed — buy back at a live window.** Zo close.
+  Playthrough (criterion 6) stamped. Two-box host-save half of criterion 2
+  stays unprovable in-process (shared Meta); `TryNetBuyBack` does not spend.
+  Dead-host still refused named. Doors remain `M95`.
+
 - 2026-08-21: **`M96` built — the realm and the Boarder.** One progression document
   becomes two. `BoarderState` travels with the player; `RealmState` stays with the world.
   `MetaState` keeps every old member as forwarding, so roughly eight hundred call sites went
@@ -34,6 +39,13 @@ Last updated: 2026-08-21
   for the split — including the ledger regression the whole thing exists to prevent.
   Compiles and lints clean; **nothing has been run in the editor**, so the milestone stays in
   `1. planned/` until a verification pass and a playthrough say otherwise.
+
+  **Supersedes part of `M90`, closed hours earlier the same day.** Buy-back was stamped as
+  paying from the rejoining player's own banked Salvage, report-and-ask. With the pot moved
+  onto the realm there is no separate purse to report: the host reads the world's pot
+  directly, adjudicates and debits it in one call, and the guest sends no wallet figure.
+  `M90`'s criterion 2 is unaffected — the host's own Boarder is still not spent — but the
+  wallet the cost comes out of is not the one that milestone described.
 
 - 2026-08-21: **`M84` built — Gatekeepers flinch when shot.** Additive
   HitReact layer on the shared controller, 0.25s muscle clip
