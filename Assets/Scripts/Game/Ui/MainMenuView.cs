@@ -86,6 +86,7 @@ namespace GatekeepersProtocol.Game
             Wire(_hostEnterBtn, () => { if (onHostEnter != null) onHostEnter.Invoke(); });
             Wire(_hostLanBtn, () => { if (onHostLan != null) onHostLan.Invoke(); });
             Wire(_hostBackBtn, () => { if (onHostBack != null) onHostBack.Invoke(); });
+            UiBind.SetButtonLabel(_startNewBtn, "REALMS");
             UiBind.SetButtonLabel(_hostCopyBtn, "COPY");
             UiBind.SetButtonLabel(_hostEnterBtn, "TO SHIP");
             UiBind.SetButtonLabel(_hostLanBtn, "HOST ON LAN");

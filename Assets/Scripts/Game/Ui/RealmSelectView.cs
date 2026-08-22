@@ -33,11 +33,15 @@ namespace GatekeepersProtocol.Game
         [SerializeField] Button _createBtn;
         [SerializeField] Button _enterBtn;
         [SerializeField] Button _backBtn;
+        [SerializeField] Button _demoBtn;
         [SerializeField] TextMeshProUGUI _status;
 
         public Action onCreate;
         public Action onEnter;
         public Action onBack;
+
+        /// <summary>The alternate way in: the first-Bastion demo, on its own ship.</summary>
+        public Action onDemo;
         public Action<int> onPickRealm;
         public Action<int> onPickBoarder;
 
@@ -63,6 +67,7 @@ namespace GatekeepersProtocol.Game
             Wire(_createBtn, () => { if (onCreate != null) onCreate.Invoke(); });
             Wire(_enterBtn, () => { if (onEnter != null) onEnter.Invoke(); });
             Wire(_backBtn, () => { if (onBack != null) onBack.Invoke(); });
+            Wire(_demoBtn, () => { if (onDemo != null) onDemo.Invoke(); });
             if (_title != null) _title.text = "REALMS";
         }
 
@@ -83,6 +88,7 @@ namespace GatekeepersProtocol.Game
             Require(_createBtn, "_createBtn");
             Require(_enterBtn, "_enterBtn");
             Require(_backBtn, "_backBtn");
+            Require(_demoBtn, "_demoBtn");
         }
 
         void Require(UnityEngine.Object reference, string field)

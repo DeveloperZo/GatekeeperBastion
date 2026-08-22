@@ -34,9 +34,13 @@ namespace GatekeepersProtocol.Game
                 "5  post second Hatch-bank — D2 open, Primary, Control Room next",
                 "6  Master Control — Control Room, pull ready",
                 "7  finale Hatch-bank — elite window, " + master + " unbanked",
-                "8  reset terminals + doors (live Bastion run)",
+                "8  stock realm record + Boarder kit (in place, no reload)",
+                "9  reset terminals + doors (live Bastion run)",
             };
         }
+
+        /// <summary>The digit that fills a realm's record and a Boarder's kit in place.</summary>
+        public const int StockDigit = 8;
 
         /// <summary>True for digits that load the Bastion and apply a live fight, not the Ship.</summary>
         public static bool IsDemoFightCheckpoint(int digit)
@@ -44,14 +48,24 @@ namespace GatekeepersProtocol.Game
             return digit == 2 || digit == 4 || digit == 6 || digit == 7;
         }
 
-        /// <summary>F12 + digit 1–7: build a state and load Ship or Bastion. Digit 8 (the live
-        /// reset) is DevConsole's — it holds the sanctioned GameController handle.</summary>
+        /// <summary>F12 + digit 1–7: build a state and load Ship or Bastion. Digit 8 stocks
+        /// the standing session in place. The last digit (the live reset) is DevConsole's — it
+        /// holds the sanctioned GameController handle.</summary>
         public static void LoadDemoCheckpoint(int digit)
         {
             var live = NetSession.FindLive();
             if (live != null && live.Active)
             {
                 Log.Event("Dev", "checkpoint refused — solo tool; leave the co-op session first");
+                return;
+            }
+
+            // Stocking mutates the session you are standing in rather than building a new
+            // one and reloading — the point is to watch a bare hull fill in, and a reload
+            // would throw away the thing being looked at.
+            if (digit == StockDigit)
+            {
+                StockRealmAndBoarder();
                 return;
             }
 
