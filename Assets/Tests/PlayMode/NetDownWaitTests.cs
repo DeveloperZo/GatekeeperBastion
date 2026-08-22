@@ -214,6 +214,11 @@ namespace GatekeepersProtocol.PlayTests
             // would spend the pot the request underneath is about to need.
             GameSession.Meta.BankedSalvage = HatchBank.BuyBackCost;
 
+            // Bracket the rejoin itself. The earlier reading was taken before the window even
+            // opened, and the drip has been converting out of this pile ever since, so
+            // comparing across all of that measures the drip rather than the buy-back.
+            long unbankedBeforeRejoin = _gc.Sim.UnbankedOf(serverAvatar.Slot.Value);
+
             LogAssert.Expect(LogType.Log,
                 "[Demo] buyback seat=" + serverAvatar.Slot.Value + " cost=" + HatchBank.BuyBackCost);
             clientAvatar.RequestBuyBack();
@@ -222,8 +227,14 @@ namespace GatekeepersProtocol.PlayTests
                 && !serverHealth.IsDead
                 && serverHealth.Hp >= serverHealth.MaxHp - 0.01f);
             AssertOnTimeout("Hatch-bank Assault buy-back did not restore HP");
-            Assert.AreEqual(guestUnbanked, _gc.Sim.UnbankedOf(serverAvatar.Slot.Value),
-                "buy-back must not touch Unbanked");
+            // The pile may have ticked down by a drip unit or two in the meantime; what it
+            // must never do is pay for the rejoin. A cost coming out of here instead of the
+            // realm's pot would be a lump of BuyBackCost, which is orders larger.
+            long tookFromThePile = unbankedBeforeRejoin - _gc.Sim.UnbankedOf(serverAvatar.Slot.Value);
+            Assert.Less(tookFromThePile, HatchBank.BuyBackCost,
+                "buy-back is paid by the realm, never out of the field pile");
+            Assert.GreaterOrEqual(guestUnbanked, _gc.Sim.UnbankedOf(serverAvatar.Slot.Value),
+                "and the pile only ever goes down, by conversion");
             Assert.AreEqual(0L, GameSession.Meta.BankedSalvage,
                 "the realm's pot paid for the rejoin");
 
