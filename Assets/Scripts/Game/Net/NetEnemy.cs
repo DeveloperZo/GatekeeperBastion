@@ -126,9 +126,19 @@ namespace GatekeepersProtocol.Game
         {
             if (!IsServer) return;
             WriteReplicatedHp();
+            PlayDeathRpc();
+            // WaveSpawner.Despawn owns the deferred destroy. Despawning here would
+            // delete the clone before the death clip can play on either side.
+            if (_ai != null && _ai.HasLifetimeOwner) return;
             var netObj = NetworkObject;
             if (netObj != null && netObj.IsSpawned)
                 netObj.Despawn(true);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        void PlayDeathRpc()
+        {
+            if (_ai != null) _ai.BeginDeathPresentation();
         }
         #endregion
     }

@@ -86,6 +86,10 @@ namespace GatekeepersProtocol.Game
         static readonly int AnimSpeed = Animator.StringToHash("Speed");
         static readonly int AnimAttack = Animator.StringToHash("Attack");
         static readonly int AnimHitReact = Animator.StringToHash("HitReact");
+        static readonly int AnimDie = Animator.StringToHash("Die");
+        /// <summary>Destroy-tail delay for the wired falling-back clip (~2s Mixamo take).
+        /// Ledger removal is immediate; only the GameObject lasts this long.</summary>
+        const float CorpseSeconds = 2f;
 
         NavMeshAgent _agent;
         Damageable _damageable;
@@ -114,6 +118,10 @@ namespace GatekeepersProtocol.Game
         /// 0 on a hand-placed actor. The kill line quotes it so a body can be traced back to
         /// its spawn across a whole run's log.</summary>
         public int SpawnId { get; set; }
+
+        /// <summary>True when WaveSpawner owns destroy. NetEnemy then must not despawn
+        /// in onDeath — that would delete the corpse before the clip can play.</summary>
+        public bool HasLifetimeOwner => _spawner != null;
 
         /// <summary>Which kind this actor is. Identity only — behaviour comes from the flags, so
         /// this is what the kill line and the prefab palette read, never the AI.</summary>
@@ -481,16 +489,28 @@ namespace GatekeepersProtocol.Game
             Effects.HatchDamageSparks(hatch.transform.position + Vector3.up * 1.2f);
         }
 
+        /// <summary>Inert corpse: Die trigger, agent off, colliders off. Host fires this
+        /// from onDeath; clones fire it from NetEnemy's death Rpc. Burst stays host-side.</summary>
+        public void BeginDeathPresentation()
+        {
+            if (_animator != null) _animator.SetTrigger(AnimDie);
+            StopAgent();
+            if (_agent != null) _agent.enabled = false;
+            var cols = GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < cols.Length; i++)
+                if (cols[i] != null) cols[i].enabled = false;
+        }
+
         void OnDeath()
         {
             // The kill LINE belongs to WaveSpawner: it owns the alive count this death changes,
             // and its listener closes over this gatekeeper's kind. So does the DESTROY —
             // Despawn is the one path that removes a spawned actor from the ledger and the
             // scene. A hand-placed actor has no spawner and cleans up after itself.
-            StopAgent();
+            BeginDeathPresentation();
             SpawnDeathBurst();
             var spawner = _spawner;
-            if (spawner != null) spawner.Despawn(this);
+            if (spawner != null) spawner.Despawn(this, CorpseSeconds);
             else Destroy(gameObject);
         }
 

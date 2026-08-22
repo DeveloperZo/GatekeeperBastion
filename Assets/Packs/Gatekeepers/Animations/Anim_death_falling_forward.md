@@ -6,4 +6,4 @@ Speed - unrecorded
 Overdrive - unrecorded
 Character arm-space - unrecorded
 Trim: unrecorded
-Note: one of three death candidates; which one is wired is M85's call.
+Note: spare. M85 wired `Anim_death_falling_back`.

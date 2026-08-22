@@ -8,6 +8,11 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-22
 -->
 
+- 2026-08-22: **`M85` closed — the collapse under the burst.** Death clip,
+  deferred destroy tail, collider disable, and `PlayDeathRpc` on disk.
+  `DeathCollapseTests` is the close gate. Eyes-on 1/3/4 wait on `M99`.
+  Merged from planned without taking an active slot (queue is `M84` + `M99`).
+
 - 2026-08-22: **Root is folders + contract files.** Deleted regenerated `*.csproj` /
   `*.slnx` from disk; untracked `Gatekeepers Protocol.slnx`. `run-windowed.bat` moved to
   `Tools/release/` (release-gate + Release docs updated). `.cursorignore` and shared

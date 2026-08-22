@@ -60,6 +60,12 @@ namespace GatekeepersProtocol.Game
             public bool FinaleElitePending;
         }
 
+        sealed class Corpse
+        {
+            public EnemyGatekeeper Actor;
+            public float Remaining;
+        }
+
         [Tooltip("Default gatekeeper prefab (capsule + NavMeshAgent + EnemyGatekeeper + Damageable). Wired by SceneBuilder.")]
         public GameObject enemyPrefab;
 
@@ -88,6 +94,10 @@ namespace GatekeepersProtocol.Game
         /// <summary>Every gatekeeper this spawner Instantiated and has not yet seen die or
         /// despawn. Entries can be fake-null (destroyed elsewhere) — iterate with == null checks.</summary>
         readonly List<EnemyGatekeeper> _live = new List<EnemyGatekeeper>();
+
+        /// <summary>Bodies already dropped from <see cref="_live"/> whose destroy tail has
+        /// not fired. Teardown must still wipe these; a wave clear must not wait on them.</summary>
+        readonly List<Corpse> _corpses = new List<Corpse>();
 
         /// <summary>The live ledger, read-only: ability cones and the provoke shout iterate this
         /// instead of a process-global actor list, so two worlds could never share it. Entries can
@@ -294,13 +304,41 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>THE one destroy path for a spawned gatekeeper: drop it from the spawn ledger
-        /// and destroy the actor. EnemyGatekeeper routes its death here (it holds this spawner
-        /// from Configure), and the teardown/dev sweeps go through here too — nothing else
-        /// Destroys a spawned gatekeeper.</summary>
-        public void Despawn(EnemyGatekeeper gatekeeper)
+        /// immediately, then destroy the actor. <paramref name="corpseSeconds"/> defers only the
+        /// destroy tail (default 0, so every other caller is unchanged). A corpse must never
+        /// delay a wave clear — AliveCount already dropped in <see cref="OnGatekeeperDied"/>.</summary>
+        public void Despawn(EnemyGatekeeper gatekeeper, float corpseSeconds = 0f)
         {
             if (gatekeeper == null) return; // guard: destroyed between bookkeeping and here
             _live.Remove(gatekeeper);
+            if (corpseSeconds > 0f)
+            {
+                _corpses.Add(new Corpse { Actor = gatekeeper, Remaining = corpseSeconds });
+                return;
+            }
+            DestroyActor(gatekeeper);
+        }
+
+        void TickCorpses(float dt)
+        {
+            for (int i = _corpses.Count - 1; i >= 0; i--)
+            {
+                Corpse corpse = _corpses[i];
+                if (corpse.Actor == null)
+                {
+                    _corpses.RemoveAt(i);
+                    continue;
+                }
+                corpse.Remaining -= dt;
+                if (corpse.Remaining > 0f) continue;
+                _corpses.RemoveAt(i);
+                DestroyActor(corpse.Actor);
+            }
+        }
+
+        void DestroyActor(EnemyGatekeeper gatekeeper)
+        {
+            if (gatekeeper == null) return; // guard: destroyed between bookkeeping and here
             var netObj = gatekeeper.GetComponent<NetworkObject>();
             if (netObj != null && netObj.IsSpawned)
             {
@@ -310,9 +348,9 @@ namespace GatekeepersProtocol.Game
             Destroy(gatekeeper.gameObject);
         }
 
-        /// <summary>Destroy every gatekeeper in the spawn ledger and clear it. Works on a copy:
-        /// Destroy side-effects must not mutate the list mid-walk. Returns how many actors
-        /// were actually destroyed (fake-null entries are skipped, not counted).</summary>
+        /// <summary>Destroy every gatekeeper in the spawn ledger and any pending corpses.
+        /// Works on a copy: Destroy side-effects must not mutate the list mid-walk. Returns
+        /// how many actors were actually destroyed (fake-null entries are skipped, not counted).</summary>
         int DestroyTrackedGatekeepers()
         {
             var live = _live.ToArray();
@@ -323,9 +361,18 @@ namespace GatekeepersProtocol.Game
                 var gatekeeper = live[i];
                 if (gatekeeper == null) continue; // guard: destroyed between bookkeeping and here
                 gatekeeper.enabled = false;       // stop the AI THIS frame; Destroy is end-of-frame
-                Despawn(gatekeeper);
+                DestroyActor(gatekeeper);
                 despawned++;
             }
+            for (int i = 0; i < _corpses.Count; i++)
+            {
+                var gatekeeper = _corpses[i].Actor;
+                if (gatekeeper == null) continue;
+                gatekeeper.enabled = false;
+                DestroyActor(gatekeeper);
+                despawned++;
+            }
+            _corpses.Clear();
             return despawned;
         }
 
