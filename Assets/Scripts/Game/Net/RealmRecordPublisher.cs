@@ -29,6 +29,13 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             var mirror = session.Mirror;
+            if (mirror != null && !mirror.IsSpawned)
+            {
+                // Writing into an unspawned mirror is a silent no-op downstream, so saying
+                // "published" here would hide an ordering regression rather than surface it.
+                Log.Warn(Tag, "publish skipped — the mirror is not spawned yet (" + reason + ")");
+                return;
+            }
             if (mirror == null)
             {
                 Log.Warn(Tag, "publish — no mirror to replicate (" + reason + ")");

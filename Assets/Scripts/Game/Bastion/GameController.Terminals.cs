@@ -423,6 +423,9 @@ namespace GatekeepersProtocol.Game
         /// SetZoneDeepest is raise-only, so re-clearing an earlier Wave cannot lower it.</summary>
         void OnFieldWaveCleared(int wave)
         {
+            // Depth rises here, mid-run, and the plate on the Ship shows it. A guest waiting
+            // out a down would otherwise read the pre-run figure until the run ended.
+            RealmRecordPublisher.Publish("wave cleared");
             MetaState meta = Meta;
             if (meta == null || !meta.DemoActive)
                 return;

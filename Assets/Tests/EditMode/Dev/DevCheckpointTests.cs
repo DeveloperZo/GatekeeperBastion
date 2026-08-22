@@ -21,9 +21,19 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Overlay_HasSevenBeatsAndTheLiveReset()
+        public void Overlay_HasSevenBeats_TheStockRow_AndTheLiveReset()
         {
-            Assert.AreEqual(8, GameController.DemoCheckpointLabels.Length);
+            // Seven beats, then the in-place stock row, then the live reset LAST. The order is
+            // load-bearing, not cosmetic: DevConsole derives the digit range from this array's
+            // length AND treats the final row as the reset, so a row appended rather than
+            // inserted would silently take the reset's digit.
+            Assert.AreEqual(9, GameController.DemoCheckpointLabels.Length);
+            Assert.AreEqual(GameController.StockDigit,
+                GameController.DemoCheckpointLabels.Length - 1,
+                "the stock row sits immediately before the reset");
+            StringAssert.Contains("reset",
+                GameController.DemoCheckpointLabels[GameController.DemoCheckpointLabels.Length - 1],
+                "the live reset stays last");
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(2));
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(4));
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(6));
@@ -32,6 +42,8 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(GameController.IsDemoFightCheckpoint(3));
             Assert.IsFalse(GameController.IsDemoFightCheckpoint(5));
             Assert.IsFalse(GameController.IsDemoFightCheckpoint(8));
+            Assert.IsFalse(GameController.IsDemoFightCheckpoint(GameController.StockDigit),
+                "stocking mutates the session in place and loads nothing");
         }
 
         [Test]

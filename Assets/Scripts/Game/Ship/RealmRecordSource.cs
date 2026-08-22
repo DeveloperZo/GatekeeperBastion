@@ -40,6 +40,16 @@ namespace GatekeepersProtocol.Game
             return LocalBanked();
         }
 
+        /// <summary>True when the realm being stood in is this machine's to change. Solo and
+        /// the party lead own it; a visitor does not. Anything that WRITES realm state — as
+        /// against reading it — has to ask this first.</summary>
+        public static bool OwnsThisRealm()
+        {
+            var session = NetSession.FindLive();
+            if (session == null || !session.Active) return true;
+            return session.IsPartyLead;
+        }
+
         static RealmRecord LocalRecord()
         {
             var meta = GameSession.Meta;

@@ -43,7 +43,8 @@ Everything wants the same pile:
 - **The Hatch** at FABRICATION: a bigger pool (Hatch Armor), the Repair Rig that makes repairing possible at all, and the Decoy.
 - **Repairs, mid-Run.** The one bill you did not plan for.
 
-CREW QUARTERS spends nothing on Default (cost 0, same as the free sidearm). Specialist protocols are Coming Soon.
+CREW QUARTERS spends nothing on Default (cost 0, same as the free sidearm). VEIL and
+FORGE are claimable there too.
 
 There is no order that is correct for everyone, but there is a wrong instinct: treating the bank as a score. It is not banked so you can look at it. See [Upgrades](Upgrades.md) for what to do with it.
 

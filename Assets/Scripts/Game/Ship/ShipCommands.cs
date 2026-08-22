@@ -51,6 +51,10 @@ namespace GatekeepersProtocol.Game
 
             m.EquipmentSlotPurchased = true;
             GameSession.Save();
+            // Hatch armour is the realm's, and it is on the plate. Without this the buyer sees
+            // the new level and everyone else aboard keeps reading the old one until the next
+            // embark — a number that is wrong for the rest of the session.
+            RealmRecordPublisher.Publish("upgrade bought");
             Log.Event("Ship",
                 $"equipment slot unlocked — purchased for {price}, banked {m.BankedSalvage} left");
             DemoShipStanding.Reevaluate();
@@ -221,6 +225,15 @@ namespace GatekeepersProtocol.Game
 
         public static bool BuyUpgrade(UpgradeTrack track)
         {
+            // The hatch belongs to the world, not to the visitor. A guest buying it spent their
+            // own salvage to raise their own realm's armour while standing on somebody else's
+            // ship — the run they were about to play took its hatch HP from the host, so the
+            // purchase bought them nothing and put two different armour numbers in one room.
+            if (!RealmRecordSource.OwnsThisRealm())
+            {
+                Log.Event(Tag, "upgrade refused — this realm is not yours to upgrade");
+                return false;
+            }
             var m = GameSession.Meta;
             if (m == null)
             {

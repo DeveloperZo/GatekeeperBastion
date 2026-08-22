@@ -108,13 +108,18 @@ namespace GatekeepersProtocol.Game
             ApplyRelevance(!hide);
             if (hide || m == null) return;
 
+            // Salvage and depth belong to the realm being stood in, which on a guest is the
+            // host's — not the one in this machine's save. Reading locally put the HUD at odds
+            // with the plate on the wall a few metres away.
+            var record = RealmRecordSource.Current();
+            long banked = RealmRecordSource.Banked();
             int loadoutHash = LoadoutHash(m);
-            int deepest = m.DeepestWaveReached;
+            int deepest = record.DeepestWave;
             int runs = m.TotalRuns;
-            if (_cachedSalvage != m.BankedSalvage || _cachedLoadoutHash != loadoutHash
+            if (_cachedSalvage != banked || _cachedLoadoutHash != loadoutHash
                 || _cachedRuns != runs || _cachedDeepest != deepest)
             {
-                _cachedSalvage = m.BankedSalvage;
+                _cachedSalvage = banked;
                 _cachedLoadoutHash = loadoutHash;
                 _cachedRuns = runs;
                 _cachedDeepest = deepest;
@@ -122,7 +127,7 @@ namespace GatekeepersProtocol.Game
                 _view.SetProfile(ShipHudView.ProfileRank, null);
 
                 _lineBuf.Clear();
-                _lineBuf.Append("Salvage ").Append(m.BankedSalvage);
+                _lineBuf.Append("Salvage ").Append(banked);
                 string salvage = _lineBuf.ToString();
                 _lineBuf.Clear();
                 if (deepest < 1) deepest = 1;

@@ -2,7 +2,9 @@
 
 ## Game
 
-Permanent, campaign-wide. CREW QUARTERS sells the **Boarder Protocol** you wear — how hardware deploys, a Barrage dump, a Rush on your gun. Default is a 0-salvage claim. FABRICATION changes the Hatch — how much it can absorb, the Repair Rig without which you cannot repair at all, and the Decoy that fills the Drone bay.
+Permanent, campaign-wide. CREW QUARTERS sells the **Boarder Protocol** you wear —
+Default, VEIL, or FORGE. FABRICATION changes the Hatch — how much it can absorb, the
+Repair Rig without which you cannot repair at all, and the Decoy that fills the Drone bay.
 
 Weapon Tiers and the equipment slot stay locked until Salvage first converts through the Hatch. Claiming Default and Hatch Armor do not. Costs and curves: [Field Manual](Field-Manual.md).
 
@@ -16,15 +18,22 @@ The one remaining **track** works the same way it always did: each level costs m
 
 There are no attribute tracks. Vitality, Stamina, Scavenging and Luck were refunded and deleted. Health, sprint, Salvage per kill and crit chance do not move from this console.
 
-You claim the **Default Protocol** at this console (cost 0). Bindings for the bursts: [Field Manual](Field-Manual.md).
+You claim a **Boarder Protocol** at this console. Default costs 0. **VEIL** and
+**FORGE** are also claimable. Bindings for the bursts: [Field Manual](Field-Manual.md).
 
-**STOCK** is the doctrine: decoys place as sold. Not a flavour label — it is written when you place, not when you repair.
+**Default — STOCK.** Decoys place as sold. **Barrage** (`G`): plant, rooted, your gun
+and nearby Boarders dump fire. **Rush** (`H`): your gun only, you still move. No Passive.
 
-**Barrage** is the Crew ability: you plant, you cannot walk, your gun and nearby Boarders dump fire.
+**VEIL — PHANTOM.** A decoy you place holds the aggro you are carrying. **Ping** (`G`):
+the room marks Gatekeepers for the crew and pulls Defaults and Hunters onto you.
+**Cloak** (`H`): off targeting lists until you fire. Passive **Ghost**: they notice you
+closer in.
 
-**Rush** is the Personal ability: your gun only, and you can still move.
+**FORGE — PARALLEL BAYS.** Two decoys may stand live. **Field Deploy** (`G`): stand a
+turret where you look. **Overcharge** (`H`): redline that turret (and yourself) for a
+window. Passive **Magnet Hands**: hunters that would take you take the turret instead.
 
-There is no Passive pick on Default. VEIL, AEGIS and LEDGER sit on the panel as Coming Soon.
+AEGIS and LEDGER are not on the panel.
 
 ### FABRICATION — the tracks that change the door
 
