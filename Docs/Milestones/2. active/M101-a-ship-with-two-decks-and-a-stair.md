@@ -141,9 +141,25 @@ run against every future hull edit, not once.
 pass — they are placed against a hull that no longer exists. The window *rule* survives in
 the brainstorm; the placements do not.
 
+**Create** `Tools/ship-hull/build_hull.py` — the generator. Reversed from the original
+plan to keep it outside the repo: the scene diff is ~386k lines and cannot be reviewed
+directly, so the auditable artefact has to be the 430-line script plus the checker. It
+carries a destructive-operation warning because, like `SceneBuilder.Ship`, it deletes every
+child of `Environment` and `ShipDress`. Re-running it is a decision, never a chore.
+
 **Do not run `SceneBuilder.Ship`.** It produced the twenty seams and the missing skin, and
 re-running it destroys hand authoring. The hull is authored offline as YAML with the editor
 closed, per the practice already recorded for this scene.
+
+## Open questions
+
+**Criterion 8 is not met by the first build.** The hull shell, decks, void, stair, skin and
+hatches are in; the side strips are still a single 8.75 m volume running the ship's length
+because no interior room partitions exist yet. The partitions are awkward on this grid: a
+5 m doorframe's opening is centred on a cell, so it does not line up with a spine corridor
+centred on `x = 0`. Either the corridor moves to be centred on a cell, or the partitions
+take a short return piece the kit does not have. **Owner: Zo.** Until it is settled the
+rooms named in the layout table are labels, not enclosures.
 
 ## Verification
 
