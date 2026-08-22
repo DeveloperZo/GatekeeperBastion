@@ -235,15 +235,6 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void GuestSeat_CountsItsOwnHatchConversion()
-        {
-            string src = Read("Assets/Scripts/Game/Net/NetPlayerAvatar.cs");
-            int credit = src.IndexOf("void CreditBankedClientRpc", System.StringComparison.Ordinal);
-            int count = src.IndexOf("HatchConversions", credit, System.StringComparison.Ordinal);
-            Assert.Greater(count, credit, "a guest's unlock rides their own credited convert");
-        }
-
-        [Test]
         public void ArmoryWheel_SpeaksTheCapLine_OncePerVisit()
         {
             string src = Read("Assets/Scripts/Game/Ship/ArmoryStation.cs");

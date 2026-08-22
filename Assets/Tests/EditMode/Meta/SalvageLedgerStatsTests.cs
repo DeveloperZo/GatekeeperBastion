@@ -81,13 +81,21 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void ReconstructSpent_IncludesWeaponTiers()
+        public void ReconstructSpent_CountsTheRealmsOwnTrack_AndTheKitSeparately()
         {
             var m = MetaState.CreateNew();
-            m.HatchArmorLevel = 1; // 200
-            m.SetOwned(WeaponId.Br12Shotgun, true); // 900
-            m.ReplacePointsFromFlatTier(WeaponId.Br12Shotgun, 2); // 400+600 = 1000
-            Assert.AreEqual(200L + 900L + 1000L, m.ReconstructSpentFromLevels());
+            m.HatchArmorLevel = 1;                                  // 200, the realm's own
+            m.SetOwned(WeaponId.Br12Shotgun, true);                 // 900, the Boarder's
+            m.ReplacePointsFromFlatTier(WeaponId.Br12Shotgun, 2);   // 400 + 600, also the Boarder's
+
+            // The two floors are deliberately separate. A realm's floor has to be
+            // reconstructible from inside that one document, or a well-equipped Boarder
+            // walking into a fresh realm raises a floor it never paid for and the ledger
+            // starts claiming salvage the realm never earned.
+            Assert.AreEqual(200L, m.ReconstructSpentFromLevels(),
+                "the realm owes for its own hatch armour and nothing else");
+            Assert.AreEqual(900L + 1000L, m.Boarder.ReconstructSpentOnKit(),
+                "the weapon and its Tier are the Boarder's spend, wherever they were bought");
         }
 
         [Test]
