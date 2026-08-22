@@ -261,6 +261,15 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>A line the player can act on: why Enter is unavailable, or what just
         /// happened. Never left holding a stale message from a previous action.</summary>
+        /// <summary>What the status line currently reads. Exists so a test can assert the
+        /// player was actually told something — the confirm prompt was once written and then
+        /// painted over by the very next call, which is invisible from the outside without
+        /// this.</summary>
+        public string StatusText
+        {
+            get { return _status != null ? _status.text : ""; }
+        }
+
         public void SetStatus(string message)
         {
             if (_status == null) return;

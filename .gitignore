@@ -57,9 +57,21 @@ Thumbs.db
 # ---------------------------------------------------------------------------
 /gkb_*.log
 /gkb_*.json
+/gkb_*.txt
+/gkb_*.md
 /bastion_ui_assemble.log
 /*_report.json
 /*_report.prev.json
+/*_batch.log
+/GameplayCapture_*.mp4
+/ShipFlythrough.mp4
+/*.mp4
+
+# Discarded one-shot handoffs. Delete when empty; never commit.
+/_m61_2_handoff/
+/_skill_updates/
+/_wp4_author_park/
+/_stage_snap/
 
 # Unity Test Runner PlayMode bootstrap scenes. Created per run, deleted on
 # teardown; leftovers are not project history.

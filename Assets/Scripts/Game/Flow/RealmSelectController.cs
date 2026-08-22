@@ -111,9 +111,10 @@ namespace GatekeepersProtocol.Game
             _view.SetBoarders(_boarders, _pickedBoarder);
             _view.SetEnterEnabled(CanEnter());
             _view.SetOpenEnabled(CanEnter());
-            _view.SetDeleteEnabled(Picked(_realms, _pickedRealm) || PickedUnloadable(_realms, _pickedRealm),
-                Picked(_boarders, _pickedBoarder) || PickedUnloadable(_boarders, _pickedBoarder));
-            _view.SetDeleteLabels(_armedRealm.Target, _armedBoarder.Target);
+            _view.SetDeleteEnabled(Deletable(_realms, _pickedRealm),
+                Deletable(_boarders, _pickedBoarder));
+            _view.SetDeleteLabels(ArmedName(_realms, _pickedRealm, _armedRealm),
+                ArmedName(_boarders, _pickedBoarder, _armedBoarder));
             _view.SetStatus(WhyNotEnter());
         }
 
@@ -142,7 +143,8 @@ namespace GatekeepersProtocol.Game
         void OnCreate()
         {
             string typed = _view != null ? _view.NameText : null;
-            var realm = RealmRegistry.CreateRealm(typed);
+            bool written;
+            var realm = RealmRegistry.CreateRealm(typed, out written);
             if (_view != null) _view.ClearName();
             Refresh();
             // Land the player on the realm they just made rather than wherever the sort put it.
@@ -153,7 +155,10 @@ namespace GatekeepersProtocol.Game
                 break;
             }
             Repaint();
-            if (_view != null) _view.SetStatus("Created \"" + realm.Name + "\".");
+            if (_view != null)
+                _view.SetStatus(written
+                    ? "Created \"" + realm.Name + "\"."
+                    : "\"" + realm.Name + "\" could not be written to disk — it will not be here next time.");
         }
 
         void OnEnter()
@@ -203,7 +208,8 @@ namespace GatekeepersProtocol.Game
         void OnNewBoarder()
         {
             string typed = _view != null ? _view.NameText : null;
-            var boarder = RealmRegistry.CreateBoarder(typed);
+            bool written;
+            var boarder = RealmRegistry.CreateBoarder(typed, out written);
             if (_view != null) _view.ClearName();
             Refresh();
             for (int i = 0; i < _boarders.Length; i++)
@@ -213,7 +219,10 @@ namespace GatekeepersProtocol.Game
                 break;
             }
             Repaint();
-            if (_view != null) _view.SetStatus("Created \"" + boarder.Name + "\".");
+            if (_view != null)
+                _view.SetStatus(written
+                    ? "Created \"" + boarder.Name + "\"."
+                    : "\"" + boarder.Name + "\" could not be written to disk — it will not be here next time.");
         }
 
         /// <summary>First press arms, second deletes. Deleting a realm throws away every run
@@ -226,15 +235,15 @@ namespace GatekeepersProtocol.Game
             if (refusal != null)
             {
                 _armedRealm.Disarm();
-                if (_view != null) _view.SetStatus(refusal);
                 Repaint();
+                if (_view != null) _view.SetStatus(refusal);
                 return;
             }
-            if (!_armedRealm.Fire(row.Name, Time.unscaledTime))
+            if (!_armedRealm.Fire(row.Id, Time.unscaledTime))
             {
+                Repaint();
                 if (_view != null)
                     _view.SetStatus("Press again to delete \"" + row.Name + "\" — this cannot be undone in game.");
-                Repaint();
                 return;
             }
             bool gone = RealmRegistry.DeleteRealm(row.Id);
@@ -254,15 +263,15 @@ namespace GatekeepersProtocol.Game
             if (refusal != null)
             {
                 _armedBoarder.Disarm();
-                if (_view != null) _view.SetStatus(refusal);
                 Repaint();
+                if (_view != null) _view.SetStatus(refusal);
                 return;
             }
-            if (!_armedBoarder.Fire(row.Name, Time.unscaledTime))
+            if (!_armedBoarder.Fire(row.Id, Time.unscaledTime))
             {
+                Repaint();
                 if (_view != null)
                     _view.SetStatus("Press again to delete \"" + row.Name + "\" — the kit goes with it.");
-                Repaint();
                 return;
             }
             bool gone = RealmRegistry.DeleteBoarder(row.Id);
@@ -292,9 +301,13 @@ namespace GatekeepersProtocol.Game
             return rows != null && index >= 0 && index < rows.Length;
         }
 
-        static bool PickedUnloadable(RealmRegistry.SaveRow[] rows, int index)
+        /// <summary>The picked row's name when the delete is armed against that exact
+        /// document, else null. Names are not unique — nothing stops two realms being called
+        /// ORION — so the arming holds the id and only the label uses the name.</summary>
+        static string ArmedName(RealmRegistry.SaveRow[] rows, int index, ArmedAction armed)
         {
-            return Deletable(rows, index) && !rows[index].Loadable;
+            if (!Deletable(rows, index)) return null;
+            return armed.Target == rows[index].Id ? rows[index].Name : null;
         }
 
         /// <summary>Null when the delete may proceed. Deleting what the live session is

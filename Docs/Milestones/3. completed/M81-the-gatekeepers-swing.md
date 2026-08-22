@@ -12,7 +12,7 @@ see the end of "What has landed")
 
 One retargeted attack clip into the shared Gatekeeper controller, so the Attack
 trigger the code already fires shows a swing instead of the player's idle pose.
-This is also Phase 0 of the asset strategy (`../../asset-audit-2026-08-18.md`,
+This is also Phase 0 of the asset strategy (`../../Architecture/asset-audit-2026-08-18.md`,
 section 6): the first proof of whether free retargeted clips read on Synty
 proportions, which every later clip-sourcing decision depends on.
 

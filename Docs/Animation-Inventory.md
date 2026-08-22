@@ -8,7 +8,7 @@ Last updated: 2026-08-21
 -->
 
 Every character and viewmodel clip the game needs, against what exists.
-Baseline verified on disk 2026-08-18 (see `asset-audit-2026-08-18.md` for
+Baseline verified on disk 2026-08-18 (see `Architecture/asset-audit-2026-08-18.md` for
 method). Environment animation is code-owned in this project and is out of
 scope here: doors slide by transform in `BastionDoor.cs`, combat effects are
 generated in `Effects.cs`, station panels and HUD are Shift UI controllers.

@@ -12,7 +12,7 @@ Last updated: 2026-08-19
 ## What this covers
 
 The visual identity of characters and held weapons, and the sourcing decisions behind
-them. Not clip sourcing — that is `../asset-audit-2026-08-18.md` section 6 and the
+them. Not clip sourcing — that is `../Architecture/asset-audit-2026-08-18.md` section 6 and the
 `M81`–`M86` family. Not the weapon roster or what weapons do, which is
 [`armory-and-weapons`](closed/armory-and-weapons.md), closed.
 

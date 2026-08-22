@@ -38,4 +38,5 @@ a run feels like.
 Window > General > Test Runner > **EditMode** > Run All. The sim core is pure C#
 and fully covered there. PlayMode tests cover scene contracts and the core loop.
 Menu **GatekeepersProtocol > Validate > Integration Check** runs both and writes
-`gkb_verify_report.json`. Logs: see [README-LOGS.md](README-LOGS.md).
+`gkb_verify_report.json` at the project root (gitignored session output). Logs:
+see [`Docs/Working-Rules.md`](Docs/Working-Rules.md) § Evidence.

@@ -5,7 +5,7 @@ Purpose: Summary and id register over Docs/Hygiene/. Which passes exist, what ea
 Status: living index
 Authority: none over design or code. A pass records a debt and the observation that settles it; it does not gate anything.
 Update trigger: when a pass is created, moves folder, or when an id is issued, settled or evicted.
-Last updated: 2026-08-20
+Last updated: 2026-08-22
 -->
 
 Owed items live here as **hygiene passes** — one file per sitting, folder as status. The
@@ -30,7 +30,7 @@ those, so a green harness run does not settle those items
 |---|---|---|---|---|
 | HP-1 | [Beat zero, observed](1.%20open/HP-1-beat-zero-observed.md) | open | AutoVerify (pre-v9 save staged), plus one play pass for the refuse strings and three quit-and-reload cycles | TH-1 … TH-6 |
 | HP-2 | [The dock round trip](2.%20settled/HP-2-the-dock-round-trip.md) | settled, 2026-08-20 (Zo; M78 `Returned`) | — | TH-10, TH-12, TH-14, TH-17 … TH-20 |
-| HP-3 | [Hands only Zo has](1.%20open/HP-3-hands-only-zo-has.md) | open | Zo, at the filesystem | TH-7 |
+| HP-3 | [Hands only Zo has](2.%20settled/HP-3-hands-only-zo-has.md) | settled, 2026-08-22 | — | TH-7 |
 | HP-4 | [The lost endings hold](1.%20open/HP-4-the-lost-endings-hold.md) | open | Zo, two runs plus one demo-off run | TH-13 |
 
 Settled passes move to `2. settled/` and stay in this table with their close date.
@@ -46,7 +46,7 @@ the changelog cite item ids, so a reused id silently re-points an old reference 
 | id | Owed | Where it is |
 |---|---|---|
 | TH-1 … TH-6 | M75 criteria 2–7, never separately observed | `HP-1`, open |
-| TH-7 | Delete `_to_delete/m75_scratch/` | `HP-3`, open |
+| TH-7 | Delete `_to_delete/m75_scratch/` | **Settled** 2026-08-22 — `HP-3`; root tidy emptied `_to_delete/` |
 | TH-8 | Delete `Assets/_Scratch/Editor/` | **Settled** 2026-08-19 — Zo deleted it; the verify gate compiles again |
 | TH-9 | M76 juice teach — `demo.juice_teach`, `+` spends 100, next Wave `intensity=1` with an Event line | **Evicted** 2026-08-19 — see below |
 | TH-10 | M76 criterion 3: `DemoZoneDeepestWave[1]` on each field-Wave clear | **Settled** 2026-08-20 — `HP-2`, with M78 |

@@ -8,6 +8,14 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-22
 -->
 
+- 2026-08-22: **Root tidy.** Untracked session litter deleted (`gkb_*` logs/reports,
+  M35 batch logs). Tracked root videos and `gkb_wp3_handback.md` removed from git
+  (videos parked under gitignored `Recordings/`). Discarded `_m61_2_handoff/`,
+  `_skill_updates/`, `_wp4_author_park/`, `_upm_tmp/`; emptied `_to_delete/` (settles
+  `HP-3` / TH-7). `README-LOGS.md` folded into `Working-Rules` Evidence (root README
+  points there). `asset-audit-2026-08-18.md` moved under `Docs/Architecture/`.
+  `.gitignore` widened for root `gkb_*.txt`/`.md`, `/*.mp4`, and discarded handoff dirs.
+
 - 2026-08-22: **`M82` closed — the weapon in your hands.** Zo close. Shared
   `ViewModel.controller` + four clips; `ViewModelAnimTests`; Bastion window
   Animators cleaned. Active queue is now `M84` + `M99` (2/3).

@@ -109,7 +109,7 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `Animation-Inventory.md` | Clip tracker: what is on disk, what code fires that has no clip, and the rulings behind each. |
 | `Release-Gate.md` | The pre-send checklist, and [`Release-Send.md`](Release-Send.md) the copy that goes with a build. |
 | `GatekeeperZo Notes/` | Zo's own files — `verification.md` is the Next-Run list the dashboard reads; `playthrough.md` is raw session notes. |
-| `asset-audit-2026-08-18.md` | Dated snapshot of what art is on disk against what is referenced. Figures drift after its stamp, by its own declaration. |
+| [`Architecture/asset-audit-2026-08-18.md`](Architecture/asset-audit-2026-08-18.md) | Dated snapshot of what art is on disk against what is referenced. Figures drift after its stamp, by its own declaration. |
 | `Brainstorms/` | Ideas before they graduate. |
 | `Demo/` | First Bastion demo (through Master Control, with multiplayer). Implementable beat specs 0–7 plus voice pipe. Cut milestones from these files when asked; do not duplicate them into a brainstorm. |
 | `Marketing/` | Research, strategy, and claim-accurate copy. Pitch lives here, not in `Design/` or `Play/`. Honesty gaps: [`Marketing/gaps.md`](Marketing/gaps.md). |

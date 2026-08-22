@@ -139,6 +139,67 @@ namespace GatekeepersProtocol.PlayTests
             yield return PlayTestUtil.ReturnToBlankScene();
         }
 
+        /// <summary>One press arms and says so; it does not delete. This is the test for a
+        /// defect that shipped: the prompt was written and then immediately painted over by
+        /// Repaint, which ends by writing the enter-refusal over the status line. The button
+        /// label still changed, so the only visible sign was one word — and the realm survived
+        /// either way, which is exactly what makes it easy to miss.</summary>
+        [UnityTest]
+        public IEnumerator DeletingARealm_AsksFirst_AndSaysSo()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.RealmSelect);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.RealmSelect);
+
+            TypeName("SPENT LANTERN");
+            View().onCreate.Invoke();
+            yield return null;
+            int before = RealmRegistry.Realms().Length;
+
+            View().onDeleteRealm.Invoke();
+            yield return null;
+
+            Assert.AreEqual(before, RealmRegistry.Realms().Length,
+                "one press must never delete a world");
+            StringAssert.Contains("Press again", View().StatusText,
+                "and the player has to be told that a second press will");
+            StringAssert.Contains("SPENT LANTERN", View().StatusText,
+                "naming what is about to go");
+
+            yield return PlayTestUtil.ReturnToBlankScene();
+        }
+
+        /// <summary>The second press deletes, and the document is moved rather than unlinked,
+        /// so a mispress is recoverable outside the game.</summary>
+        [UnityTest]
+        public IEnumerator DeletingARealm_Twice_RetiresIt()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.RealmSelect);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.RealmSelect);
+
+            TypeName("COLD FURROW");
+            View().onCreate.Invoke();
+            yield return null;
+            string id = null;
+            var realms = RealmRegistry.Realms();
+            for (int i = 0; i < realms.Length; i++)
+                if (realms[i].Name == "COLD FURROW") id = realms[i].Id;
+            Assert.IsNotNull(id, "the realm under test was created");
+
+            View().onDeleteRealm.Invoke();
+            View().onDeleteRealm.Invoke();
+            yield return null;
+
+            realms = RealmRegistry.Realms();
+            for (int i = 0; i < realms.Length; i++)
+                Assert.AreNotEqual(id, realms[i].Id, "the realm is gone from the chooser");
+            Assert.IsFalse(System.IO.File.Exists(SaveService.RealmPath(id)),
+                "and out of the realms directory");
+            Assert.IsTrue(System.IO.Directory.Exists(SaveService.RetiredDirectory),
+                "moved, not unlinked — a mispress stays recoverable by hand");
+
+            yield return PlayTestUtil.ReturnToBlankScene();
+        }
+
         [UnityTest]
         public IEnumerator ReEnteringARealm_FindsItsWorldExactlyAsItWasLeft()
         {

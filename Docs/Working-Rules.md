@@ -319,6 +319,11 @@ paste a stack trace.
 Theorising about a runtime bug before reading the log is how a session gets
 spent on the wrong cause.
 
+**Root litter is not evidence.** Editor batches leave `gkb_*.log` / `gkb_*.json` /
+`gkb_*.txt` at the project root; they are gitignored and disposable. Do not cite them
+in a milestone. The session log under `Logs/` is the record. One-shot handoffs land in
+`_to_delete/` or `Assets/_Scratch/`, never as permanent root folders.
+
 ## Verification
 
 Three paths, in increasing cost:
