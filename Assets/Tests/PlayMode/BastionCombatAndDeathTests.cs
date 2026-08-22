@@ -240,8 +240,8 @@ namespace GatekeepersProtocol.PlayTests
 
             // Not a skip: if Bastion is playable but Ship is not registered, the ONLY exit from
             // the lose screen throws and the player is stranded. That is the shipped bug.
-            Assert.IsTrue(PlayTestUtil.IsSceneInBuild(SceneFlow.Ship),
-                $"DEAD END: scene '{SceneFlow.Ship}' is not in Build Settings (registered: " +
+            Assert.IsTrue(PlayTestUtil.IsSceneInBuild(SceneFlow.ShipCoop),
+                $"DEAD END: scene '{SceneFlow.ShipCoop}' is not in Build Settings (registered: " +
                 $"{PlayTestUtil.RegisteredScenes()}), but GameController.ReturnToShip() -> SceneFlow.LoadShip() " +
                 "is the lose screen's only exit. Pressing RETURN TO SHIP would throw and strand the player. " +
                 "Register all four flow scenes (GatekeepersProtocol/Build/All Scenes).");
@@ -328,8 +328,10 @@ namespace GatekeepersProtocol.PlayTests
                 // ---- the only exit: RETURN TO SHIP ----
                 gc.ReturnToShip();
                 yield return PlayTestUtil.WaitUntil(
-                    () => SceneManager.GetActiveScene().name == SceneFlow.Ship, 20f);
-                Assert.AreEqual(SceneFlow.Ship, SceneManager.GetActiveScene().name,
+                    () => SceneManager.GetActiveScene().name == SceneFlow.ShipCoop, 20f);
+                // A Run returns to the realm's ship, and a realm's ship is the co-op hull
+                // (Docs/Milestones — the realm and the Boarder).
+                Assert.AreEqual(SceneFlow.ShipCoop, SceneManager.GetActiveScene().name,
                     "GameController.ReturnToShip() did not land in the Ship scene within 20 s — the lose " +
                     "screen dead-ends and the player can never start another run. " +
                     $"(active scene: '{SceneManager.GetActiveScene().name}')");

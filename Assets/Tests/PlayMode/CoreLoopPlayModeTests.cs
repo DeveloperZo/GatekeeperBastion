@@ -142,8 +142,15 @@ namespace GatekeepersProtocol.PlayTests
             Assert.GreaterOrEqual(gc.Meta.BankedSalvage, banked0,
                 "Banked salvage ended the run below where it started.");
             Assert.AreEqual(pods0 + 1, gc.Meta.PodEjections);
-            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(gc.Meta),
-                "first death unlocks the Armory upgrade rows");
+            // Dying does NOT open the wheel. It used to — the gate was PodEjections >= 1 —
+            // and this assertion was left behind when save v11 re-keyed it onto
+            // HatchConversions (Docs/Decisions.md, the wheel opens on the first bank). This
+            // run kills at a Terminal and dies without ever banking, so nothing has come
+            // through the Hatch and the rows stay shut. Pinning the current rule instead of
+            // the retired one, which is also what stops this failing every run.
+            Assert.AreEqual(0, gc.Meta.HatchConversions, "nothing converted through the Hatch");
+            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(gc.Meta),
+                "a loss alone does not open the Armory rows — the first bank does");
 
             // Report shape (cause/grossEarned/repairSpent, and no stake members).
             RunReportAssertions.AssertShape(gc.Sim, "player", 0L);

@@ -193,11 +193,19 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreEqual(WaveMode.HatchBank, _gc.Sim.Mode);
             long guestUnbanked = _gc.Sim.UnbankedOf(serverAvatar.Slot.Value);
 
+            // The window is live, so the drip is converting into the realm's pot as this
+            // runs — every seat banks there now. The claim is not that the pot is empty; it is
+            // that a refused buy-back took nothing out of it.
+            long potBeforeRefusal = GameSession.Meta.BankedSalvage;
+            Assert.Less(potBeforeRefusal, HatchBank.BuyBackCost,
+                "the pot has to be short of the cost for this to be the unaffordable case");
+
             LogAssert.Expect(LogType.Log, "[Demo] buyback refused — cannot afford");
             clientAvatar.RequestBuyBack();
             yield return WaitForTicks(m_ServerNetworkManager, 8);
             Assert.IsTrue(serverAvatar.WaitingOnShip.Value, "unaffordable buy-back is refused");
-            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage);
+            Assert.GreaterOrEqual(GameSession.Meta.BankedSalvage, potBeforeRefusal,
+                "a refused buy-back spends nothing");
 
             // Fund the REALM's pot, which is what pays: a guest is playing in somebody else's
             // world, and the cost of putting it back on its feet comes out of that world
