@@ -234,7 +234,7 @@ namespace GatekeepersProtocol.Game
                 LogSessionSnapshot("connected clientId=" + clientId
                     + " localId=" + _nm.LocalClientId
                     + " role=host");
-                if (RunSeats.IsLive)
+                if (RunSeats.HasRoster)
                 {
                     // The party is already out. This seat waits on the Ship and is worth no
                     // door and no share of the pot until it follows them in at a break, so
@@ -266,7 +266,7 @@ namespace GatekeepersProtocol.Game
             {
                 if (_lobby != null)
                     _lobby.ServerNotifyGuestLeft(clientId);
-                if (RunSeats.IsLive)
+                if (RunSeats.HasRoster)
                 {
                     // Sealing a hatch the moment somebody drops would be a free save in the
                     // middle of a wave. The seat is held and the break applies it.

@@ -121,19 +121,28 @@ nothing to buy back.
 loading when one would have fired. The owner enters the wait from its own tick instead,
 scoped to the late arrival so the buy-back path keeps being driven purely by the callback.
 
-**Compiled, not run.** The whole `GatekeepersProtocol` assembly — 165 sources, every change
+**Verified in Unity, 2026-08-22.** EditMode 669 passed / 11 failed, PlayMode 70 / 1 — the
+twelve failures are the recorded pre-existing set, name for name. All thirteen `RunSeatsTests`
+and both `NetFollowSeatTests` pass.
+
+**Caught by that run, and fixed**: the first build regressed two `NetDownWaitTests`. The host
+owns its own avatar, and the mid-run marking had no `IsOwner` guard — `TryMarkWaiting` excludes
+it for exactly that reason — so the host was put on the Ship at its own embark, which also
+stopped buy-back refusing a host attempt. Underneath it, a *live but empty* roster was being
+read as "nobody is admitted", when it means solo or a run whose seats were never enumerated.
+Consumers now ask `HasRoster` — live **and** naming seats — so solo and the lobby fall back to
+exactly the old behaviour. Both causes have a test.
+
+**Compiled offline as well.** The whole `GatekeepersProtocol` assembly — 165 sources, every change
 here among them — and both new fixtures compile clean against Unity's own `UnityEngine`
 modules and the `Unity.Netcode.Runtime` the project builds with, via a `dotnet` replica of the
 assembly. That is a real compile of the real source set, not a subset smoke test.
 
-**Owed.** No test has *executed*. `mono` is not on this machine's PATH, so
-`Tools/verify/run.sh` ran its lints (clean) and not its Sim leg, and the Unity Test Runner has
-not seen either fixture — compiling is not passing. Criteria 1, 2 and 6 are eyes-on across two editor instances and nobody has looked.
-Criterion 9's offline wave-harness diff against the recorded baseline has not been run —
-`RunSeatsTests` argues solo is unchanged from the count's side, which is weaker than the diff
-the milestone asks for.
-
-## Usable, or it did not ship
+**Owed.** Criteria 1, 2 and 6 are eyes-on across two editor instances and nobody has
+looked — the fixtures prove the seat rule and the doors, not what a late arrival sees. Criterion
+9's offline wave-harness diff against the recorded baseline has not been run: `RunSeatsTests`
+argues solo is unchanged from the count's side, which is weaker than the diff the milestone
+asks for. `mono` is not on this machine's PATH, so `Tools/verify/run.sh` ran its lints only. ## Usable, or it did not ship
 
 **Driven**: joining a realm, and pressing follow. **Shown**: the ship you land on, the
 prompt, and a door opening as you arrive. **Reads back**: the refusal reason during a

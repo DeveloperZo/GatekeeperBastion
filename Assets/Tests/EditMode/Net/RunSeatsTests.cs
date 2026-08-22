@@ -40,6 +40,21 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void ALiveRunWithAnEmptyRoster_TreatsNobodyAsAnOutsider()
+        {
+            // Solo, or a run whose seats were never enumerated because there was no listening
+            // server. Reading "not admitted" off that marked every seat as a late arrival and
+            // put the host on the Ship at its own embark, so the consumers ask HasRoster.
+            RunSeats.BeginRun(null);
+            Assert.IsTrue(RunSeats.IsLive);
+            Assert.IsFalse(RunSeats.HasRoster,
+                "an empty roster is not evidence that a seat arrived late");
+
+            RunSeats.Admit(7);
+            Assert.IsTrue(RunSeats.HasRoster, "one named seat and the roster governs");
+        }
+
+        [Test]
         public void ArrivingMidRun_IsNotASeatUntilItFollows()
         {
             RunSeats.BeginRun(null);

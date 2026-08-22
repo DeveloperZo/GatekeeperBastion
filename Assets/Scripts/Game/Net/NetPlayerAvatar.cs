@@ -132,7 +132,10 @@ namespace GatekeepersProtocol.Game
                 ReportOwnerMeta();
             }
 
-            if (IsServer && RunSeats.IsLive && !RunSeats.IsAdmitted(OwnerClientId))
+            // IsOwner is the host's own body, which cannot have arrived late — it is the
+            // seat the run is being hosted from. TryMarkWaiting excludes it for the same
+            // reason, and leaving it out here put the host on the Ship at its own embark.
+            if (IsServer && !IsOwner && RunSeats.HasRoster && !RunSeats.IsAdmitted(OwnerClientId))
             {
                 AwaitingFollow.Value = true;
                 WaitingOnShip.Value = true;

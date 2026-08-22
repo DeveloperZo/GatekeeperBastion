@@ -48,6 +48,13 @@ namespace GatekeepersProtocol.Game
             }
         }
 
+        /// <summary>True when a run is under way AND the roster actually names seats. An
+        /// empty roster is not "nobody is admitted" — it is solo, or a run whose seats were
+        /// never enumerated because there was no listening server to enumerate. Every consumer
+        /// that would otherwise treat everyone as an outsider asks this, not
+        /// <see cref="IsLive"/>.</summary>
+        public static bool HasRoster => _live && Admitted.Count > 0;
+
         /// <summary>True when a departure is waiting for the next Prep to be applied.</summary>
         public static bool HasPending => Leaving.Count > 0;
         #endregion

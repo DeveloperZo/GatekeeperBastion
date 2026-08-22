@@ -110,7 +110,7 @@ namespace GatekeepersProtocol.Game
                 var client = clients[i];
                 if (client.ClientId == excludeClientId) continue;
                 // A connected seat that has not followed the party in owns no hatch yet.
-                if (RunSeats.IsLive && !RunSeats.IsAdmitted(client.ClientId)) continue;
+                if (RunSeats.HasRoster && !RunSeats.IsAdmitted(client.ClientId)) continue;
                 int slot = -1;
                 var po = client.PlayerObject;
                 if (po != null)

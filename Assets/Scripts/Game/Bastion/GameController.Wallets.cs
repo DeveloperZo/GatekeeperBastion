@@ -22,7 +22,7 @@ namespace GatekeepersProtocol.Game
             if (_net != null && _net.IsClientOnly) return;
             int n = 1;
             var nm = NetworkManager.Singleton;
-            if (RunSeats.IsLive)
+            if (RunSeats.HasRoster)
             {
                 n = RunSeats.Count;
             }
