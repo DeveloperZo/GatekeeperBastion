@@ -382,7 +382,7 @@ namespace GatekeepersProtocol.Game
 
             if (_awaitingCheckpointDigit)
                 DrawCheckpointRows(x, y + 8f, w);
-            if (_awaitingRangeDigit) DrawRangeRows(x, y + 8f, w);
+            if (HasRange) DrawRangeRows(x, y + 8f, w);
         }
 
         void DrawLoadoutPicker(float vw)
@@ -474,6 +474,9 @@ namespace GatekeepersProtocol.Game
         {
             _label = _title = _dim = null;
             _guiFaulted = false;
+            // A range is a tool, and a tool whose controls are hidden behind a key you have to
+            // know about is not one. Everywhere else the overlay stays off until F1.
+            if (HasRange) _overlay = true;
         }
     }
 }

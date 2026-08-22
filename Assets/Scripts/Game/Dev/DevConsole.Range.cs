@@ -68,6 +68,11 @@ namespace GatekeepersProtocol.Game
         /// something. Drawn here rather than in DevConsole.cs, which is at its line cap.</summary>
         void DrawRangeRows(float x, float y, float w)
         {
+            // The heading says how to reach the digits, because the legend is up before the
+            // prompt is armed and a bare list of numbers would not say what presses them.
+            GUI.Label(new Rect(x, y, w, 18f),
+                _awaitingRangeDigit ? "RANGE — press a digit" : "RANGE — F3, then a digit", _title);
+            y += 20f;
             string[] rows =
             {
                 "1  target at 5 m       6  cycle kind (now " + RangeKinds[_rangeKind] + ")",
