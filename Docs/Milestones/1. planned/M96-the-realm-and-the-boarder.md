@@ -189,6 +189,39 @@ exists to remove.
 clear one bastion, quit to menu, create realm "B", enter with the same Boarder. The
 Primary is in your hands. The bastion is uncleared.
 
+## State at build, 2026-08-21
+
+Built on branch `m96-realm-and-boarder`. **Compiles and lints; not yet run in the editor.**
+
+**Proven.** A dotnet replication of `Tools/verify/run.sh` (mcs and mono are absent on this
+machine) runs the EditMode suite: **575 passed, 10 failed, and the failing set is identical to
+`main`'s**, verified by running the same harness against a detached worktree of `main` rather
+than by argument. `lint-arch` and `lint-language` are clean apart from five pre-existing hits
+in the co-op docs.
+
+**Owed before this can close.**
+
+- **The editor has never opened this branch.** `Assets/Scenes/RealmSelect.unity` was
+  hand-authored offline and never imported; the hand-authored `TMP_InputField` is the likeliest
+  thing to need a fix on first open. Criteria 1–6 need a playthrough.
+- **Criterion 8 is half proven.** That a guest's session leaves the host's Boarder untouched is
+  tested. The mirror — that the host does not write a guest's Boarder — is NOT, and deliberately
+  has no test: host and guest share one static `GameSession.Meta` in a single process, so the
+  guest's Boarder would be an object nothing was ever handed and any such test would pass by
+  construction. It needs a two-machine check.
+- **The offline harness skips 17 test files** that cannot compile outside Unity, so a green run
+  here is not a green suite. `Dev/DevSessionTests.cs` is among them and was rewritten blind.
+
+**Superseded elsewhere.** `M90` closed hours before this was built, stamping buy-back as paying
+from the rejoining player's own banked Salvage. With the pot on the realm there is no separate
+purse: the host reads the world's pot, adjudicates and debits it in one call. `M90`'s criterion
+2 is unaffected — the host's own Boarder is still not spent — but the wallet is not the one that
+milestone described.
+
+**Version 13, not 12.** Separate in-flight work claimed 12 for `WeaponWheelCentres`. That field
+is Boarder-shaped and must be folded onto `BoarderState` when the two branches meet; it was
+deliberately stripped from this branch rather than absorbed unverified.
+
 ## Usable, or it did not ship
 
 **Driven**: creating a realm, naming it, choosing which Boarder enters. **Shown**: the
