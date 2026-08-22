@@ -142,8 +142,13 @@ namespace GatekeepersProtocol.Game
                 Refresh();
                 return;
             }
-            if (!SceneFlow.LoadShip())
-                Log.Warn(Tag, "realm entered but the Ship scene would not load.");
+            // A realm's ship is the co-op hull, not the demo one. A realm is the world you
+            // and anyone you invite share, so it opens on the ship that can hold a party —
+            // the alternative is the same realm looking different depending on how you
+            // entered it. Solo is fine there: the party panel and the hatch assignment both
+            // check for a live session and fall back to one seat.
+            if (!SceneFlow.LoadShipCoop())
+                Log.Warn(Tag, "realm entered but the co-op Ship scene would not load.");
         }
 
         void OnBack()

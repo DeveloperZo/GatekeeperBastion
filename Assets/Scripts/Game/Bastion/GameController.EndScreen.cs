@@ -200,7 +200,9 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
-            if (SceneFlow.LoadShip()) return;
+            // Back to the realm's ship, which is the co-op hull. Coming home to a
+            // different ship than you embarked from is the same incoherence CONTINUE avoids.
+            if (SceneFlow.LoadShipCoop()) return;
 
             // Guard trip: the load failed (scene not in build settings). Re-arm so the button and
             // the keyboard fallback keep working instead of soft-locking on a dead screen.

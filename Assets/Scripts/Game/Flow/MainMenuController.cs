@@ -81,13 +81,17 @@ namespace GatekeepersProtocol.Game
             _view.ShowMain();
         }
 
+        /// <summary>Straight back into the realm played last. It opens the co-op ship for
+        /// the same reason the chooser does: a realm is one world however you reached it, and
+        /// landing in a different hull depending on which button you pressed would read as a
+        /// bug (Docs/Milestones — the realm and the Boarder).</summary>
         void OnContinue()
         {
             if (_loading || !GameSession.HasSave) return;
             _loading = true;
             GameSession.ContinueGame();
             FrontEndMusic.Stop();
-            if (!SceneFlow.LoadShip())
+            if (!SceneFlow.LoadShipCoop())
                 _loading = false;
         }
 

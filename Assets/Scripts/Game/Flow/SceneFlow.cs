@@ -23,9 +23,10 @@ namespace GatekeepersProtocol.Game
         public const string Splash = "Splash";
 
         /// <summary>Campaign-menu scene. Owns the Shift Main Menu Canvas
-        /// (Continue / Start / Host / Join / Options / Quit). Solo Start/Continue
-        /// load <see cref="Ship"/>; Host/Join load <see cref="ShipCoop"/> via
-        /// <see cref="NetSession"/>. Bastion is EMBARK from the nav map.</summary>
+        /// (Continue / Start / Host / Join / Options / Quit). START NEW opens
+        /// <see cref="RealmSelect"/>; CONTINUE re-enters the realm played last. Both, and
+        /// Host/Join, land on <see cref="ShipCoop"/> — a realm's ship is the co-op hull
+        /// whichever way you reached it. Bastion is EMBARK from the nav map.</summary>
         public const string MainMenu = "MainMenu";
 
         /// <summary>Realm chooser. Stands between the menu and a ship hub: a session is a
@@ -33,12 +34,15 @@ namespace GatekeepersProtocol.Game
         /// (Docs/Milestones — the realm and the Boarder).</summary>
         public const string RealmSelect = "RealmSelect";
 
-        /// <summary>Solo / demo ship-hub scene name
-        /// (<c>Assets/Scenes/Ship - Demo.unity</c>).</summary>
+        /// <summary>The first-Bastion tutorial's ship hub
+        /// (<c>Assets/Scenes/Ship - Demo.unity</c>). No longer the destination of normal play:
+        /// realms open <see cref="ShipCoop"/>, and this is reached only by the F12 dev
+        /// checkpoints, which build a demo beat directly.</summary>
         public const string Ship = "Ship - Demo";
 
-        /// <summary>Party ship-hub scene name
-        /// (<c>Assets/Scenes/Ship - CoOp.unity</c>).</summary>
+        /// <summary>A realm's ship hub (<c>Assets/Scenes/Ship - CoOp.unity</c>). Named for
+        /// the party it can hold, but it is where solo play lives too: the party panel and the
+        /// hatch assignment both check for a live session and fall back to a single seat.</summary>
         public const string ShipCoop = "Ship - CoOp";
 
         /// <summary>Combat scene name (the bastion run).</summary>

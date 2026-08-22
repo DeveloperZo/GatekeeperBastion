@@ -154,10 +154,16 @@ namespace GatekeepersProtocol.Game
             if (_enterBtn != null) _enterBtn.interactable = enabled;
         }
 
-        public void ClearName()
+        /// <summary>Put text in the name field. The chooser only ever clears it today, but a
+        /// field you can read and not write is half a binding — and a caller that sets a name
+        /// and reads it back is the only way to prove the field is wired rather than merely
+        /// present in the scene.</summary>
+        public void SetName(string name)
         {
-            if (_nameField != null) _nameField.text = "";
+            if (_nameField != null) _nameField.text = name == null ? "" : name;
         }
+
+        public void ClearName() { SetName(""); }
 
         void OnDestroy()
         {

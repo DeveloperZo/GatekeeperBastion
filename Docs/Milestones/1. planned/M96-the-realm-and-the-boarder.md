@@ -193,6 +193,22 @@ bastion is uncleared. The taint is stated in the close, per `../../Decisions.md`
 
 Most of that is automatable and should be automated — see *State at build* above.
 
+## A realm's ship is the co-op hull (Zo, 2026-08-21)
+
+Entering a realm opens `Ship - CoOp`, not `Ship - Demo`, and so does CONTINUE and the return
+from a Run. A realm is one world however you reached it; landing in a different hull depending
+on which button you pressed reads as a defect. `Ship - Demo` stays reachable only from the F12
+dev checkpoints, which build a demo beat directly.
+
+Checked rather than assumed: `Ship - CoOp` is a strict superset of `Ship - Demo` — every
+project component in the demo ship is present in the co-op one, and the co-op scene carries
+about half as many again. Solo play is safe there because the party panel and the hatch
+assignment each check for a live session and fall back to a single seat.
+
+**Consequence, accepted**: a fresh realm starts `DemoActive`, so the first-Bastion tutorial now
+plays out on the co-op hull. That is the intent — the demo is a world's first Bastion, and the
+world's ship is this one.
+
 ## State at build, 2026-08-21
 
 Built on branch `m96-realm-and-boarder`. **Compiles and lints; not yet run in the editor.**
