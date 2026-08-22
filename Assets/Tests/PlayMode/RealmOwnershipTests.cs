@@ -22,8 +22,14 @@ namespace GatekeepersProtocol.PlayTests
     /// The in-process limit is real and worth stating: host and guest share one static
     /// GameSession.Meta, so "the host's Boarder" and "the guest's Boarder" cannot both be live
     /// at once. GameSession.UseBoarder is the seam that makes the assertion possible — a second
-    /// Boarder is swapped in, the guest's session is played out against the host's realm, and
-    /// the first Boarder is then checked byte-for-byte.
+    /// Boarder is swapped in BEFORE the run boots, the guest's session is played out against
+    /// the host's realm, and the first Boarder is then checked byte-for-byte.
+    ///
+    /// The mirror claim — that the host does not write a guest's Boarder — is deliberately NOT
+    /// tested here. In one process the guest's Boarder would be an object nothing was ever
+    /// handed, so any such test passes by construction and could not fail under any regression.
+    /// A test that cannot fail is worse than an absent one, because it reads as coverage. That
+    /// half of criterion 8 is owed a two-machine check, and is recorded as owed.
     /// </remarks>
     public class RealmOwnershipTests
     {
@@ -49,6 +55,9 @@ namespace GatekeepersProtocol.PlayTests
             if (back != null) GameSession.AdoptDevState(back);
         }
 
+        /// <summary>Start a run against whatever session is loaded RIGHT NOW. GameController
+        /// captures GameSession.Meta in Awake, so anything a test wants the sim to see — a
+        /// swapped Boarder above all — has to be in place before this is called.</summary>
         IEnumerator BootHostRun()
         {
             GameSession.EnsureLoaded();
@@ -91,19 +100,25 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator AGuestsSessionLeavesTheHostsBoarderUntouched()
         {
-            yield return BootHostRun();
-
+            GameSession.EnsureLoaded();
             var hostBoarder = GameSession.Meta.Boarder;
             string hostBefore = hostBoarder.ToJson();
 
-            // Stand a second Boarder in for the visiting player. In one process this is the only
-            // way two Boarders can exist at once, which is precisely what makes the claim
-            // testable rather than merely true.
+            // Stand a second Boarder in for the visiting player, BEFORE the run starts. In one
+            // process this is the only way two Boarders can exist at once, which is what makes
+            // the claim testable rather than merely true — and the order matters: swap after
+            // the run boots and the sim is still holding the host's session, so the test would
+            // pass without exercising anything.
             var guestBoarder = BoarderState.CreateNew("ownership-guest", "GUEST");
             Assert.IsTrue(GameSession.UseBoarder(guestBoarder), "the guest takes the seat");
 
+            yield return BootHostRun();
+            // GameController captures GameSession.Meta in Awake, so the session the run is
+            // being played against is the one standing here at boot — the guest's.
+            Assert.AreSame(guestBoarder, GameSession.Meta.Boarder,
+                "the run booted onto the guest's Boarder, not the host's");
+
             BankAWindow(2);
-            // and the guest buys something with the world's salvage
             // What the guest's own machine does to its own Boarder. The purchase RULES are
             // covered by the EditMode ShipCommands tests; what is on trial here is where the
             // write lands, so the write is made directly and unambiguously.
@@ -114,23 +129,8 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(GameSession.UseBoarder(hostBoarder), "the host takes its seat back");
             Assert.AreEqual(hostBefore, hostBoarder.ToJson(),
                 "nothing the guest earned, spent or bought reached the host's Boarder");
-        }
-
-        [UnityTest]
-        public IEnumerator AHostsSessionLeavesAGuestsBoarderUntouched()
-        {
-            yield return BootHostRun();
-
-            var guestBoarder = BoarderState.CreateNew("ownership-guest-2", "GUEST");
-            string guestBefore = guestBoarder.ToJson();
-
-            // The guest is not in the seat: the host plays its own world with its own Boarder.
-            BankAWindow(1);
-            GameSession.Meta.Boarder.SetOwned(WeaponId.Br12Shotgun, true);
-            GameSession.Meta.Boarder.AwardWheel(WeaponId.Br12Shotgun, WheelAttr.Damage);
-
-            Assert.AreEqual(guestBefore, guestBoarder.ToJson(),
-                "a visiting player's kit is not the host's to write");
+            Assert.IsFalse(hostBoarder.Owns(WeaponId.Mk1Sidearm),
+                "and the guest's purchase in particular did not");
         }
 
         [UnityTest]
@@ -145,7 +145,7 @@ namespace GatekeepersProtocol.PlayTests
             guestBoarder.SetOwned(WeaponId.Mk1Sidearm, true);
             guestBoarder.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Damage);
             long potInTheHostsWorld = GameSession.Meta.BankedSalvage;
-            int clearedInTheHostsWorld = GameSession.Meta.DeepestWaveReached;
+            Assert.Greater(potInTheHostsWorld, 0L, "the host's world has salvage in it to leave behind");
 
             // Leaving: the Boarder travels, the realm stays behind. A Boarder document carries
             // no trace of the world it was standing in.
@@ -162,7 +162,6 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreNotEqual(potInTheHostsWorld, home.BankedSalvage);
             Assert.AreEqual(1, home.DeepestWaveReached,
                 "and so did how deep that world had been taken");
-            Assert.LessOrEqual(clearedInTheHostsWorld, GameSession.Meta.DeepestWaveReached);
         }
     }
 }

@@ -52,6 +52,14 @@ namespace GatekeepersProtocol.Sim
             }
         }
 
+        /// <summary>True when this build has a row for the id. NOT the same question as
+        /// <see cref="OwnershipBit"/>, which is a mask helper: C# masks a shift count, so
+        /// <c>1 &lt;&lt; 99</c> is a perfectly non-zero bit for an id that does not exist.</summary>
+        public static bool IsCatalogued(PayloadId id)
+        {
+            return id == PayloadId.None || id == PayloadId.Decoy;
+        }
+
         /// <summary>Bit in <see cref="MetaState.OwnedPayloadMask"/> for this id. None → 0.</summary>
         public static int OwnershipBit(PayloadId id)
         {

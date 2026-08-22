@@ -42,6 +42,14 @@ namespace GatekeepersProtocol.Sim
         }
 
         /// <summary>Bit in <see cref="MetaState.OwnedEquipmentMask"/> for this id. None → 0.</summary>
+        /// <summary>True when this build has a row for the id. Not <see cref="OwnershipBit"/>:
+        /// that is a mask helper and returns a non-zero bit for ids that do not exist, because
+        /// C# masks the shift count.</summary>
+        public static bool IsCatalogued(EquipmentId id)
+        {
+            return id == EquipmentId.None || id == EquipmentId.RepairRig;
+        }
+
         public static int OwnershipBit(EquipmentId id)
         {
             if (id == EquipmentId.None) return 0;

@@ -20,7 +20,10 @@ namespace GatekeepersProtocol.Sim
         public string Id = "";
 
         /// <summary>Display name, shown on the realm select rows.</summary>
-        public string Name = "REALM";
+        public string Name = DefaultName;
+
+        /// <summary>What an unnamed realm is called.</summary>
+        public const string DefaultName = "REALM";
 
         public long BankedSalvage;
         public long LifetimeSalvageEarned;
@@ -179,8 +182,12 @@ namespace GatekeepersProtocol.Sim
         /// that realm's floor by kit it bought somewhere else entirely, and the ledger would
         /// then claim salvage the realm never earned. Anything the Boarder carries is the
         /// Boarder's spend to account for; the realm counts only its own.
-        /// Granted armour (a debug or scripted grant) is not counted either — the floor is a
-        /// record of purchases, not of possessions.
+        /// Granted armour IS counted, because nothing records how a level was come by. The
+        /// floor is reconstructed from what the realm HAS, not from what it bought, so a
+        /// scripted or debug grant raises it exactly as a purchase would and the ledger will
+        /// report salvage that was never spent. That is a known limit of reconstructing a
+        /// floor at all, and `EquipmentTests.GrantsNotCountedInSpendFloor` pins the armour
+        /// term at its face value rather than at a purchase history.
         /// </remarks>
         public long ReconstructSpentFromLevels()
         {
@@ -207,11 +214,22 @@ namespace GatekeepersProtocol.Sim
         }
 
         /// <summary>A realm nobody has played yet. Ids and names come from the game layer.</summary>
+        /// <summary>A realm always has something to be called. An empty name reaches a log
+        /// line and a chooser row, and "" in either reads as a bug rather than as a realm.</summary>
+        static string NameOrDefault(string name)
+        {
+            return string.IsNullOrEmpty(name) ? DefaultName : name;
+        }
+
+        /// <summary>Built through CreateNew or FromJson only, for the same reason as
+        /// BoarderState's: a bare instance has not had its zone array sized.</summary>
+        RealmState() { }
+
         public static RealmState CreateNew(string id, string name)
         {
             var r = new RealmState();
             r.Id = id ?? "";
-            r.Name = string.IsNullOrEmpty(name) ? "REALM" : name;
+            r.Name = NameOrDefault(name);
             r.EnsureDemoZones();
             return r;
         }
@@ -223,7 +241,7 @@ namespace GatekeepersProtocol.Sim
             sb.Append('{');
             JsonText.AppendLong(sb, "SaveVersion", SaveFormat.CurrentVersion, false);
             JsonText.AppendString(sb, "Id", Id, true);
-            JsonText.AppendString(sb, "Name", Name, true);
+            JsonText.AppendString(sb, "Name", NameOrDefault(Name), true);
             JsonText.AppendLong(sb, "BankedSalvage", BankedSalvage, true);
             JsonText.AppendLong(sb, "LifetimeSalvageEarned", LifetimeSalvageEarned, true);
             JsonText.AppendLong(sb, "LifetimeSalvageSpent", LifetimeSalvageSpent, true);
@@ -267,7 +285,7 @@ namespace GatekeepersProtocol.Sim
 
             var r = new RealmState();
             r.Id = JsonText.ExtractString(json, "Id", "");
-            r.Name = JsonText.ExtractString(json, "Name", "REALM");
+            r.Name = NameOrDefault(JsonText.ExtractString(json, "Name", DefaultName));
             r.BankedSalvage = JsonText.ExtractLong(json, "BankedSalvage", 0L);
             r.TotalRuns = JsonText.ExtractInt(json, "TotalRuns", 0);
             r.CleanExits = JsonText.ExtractInt(json, "CleanExits", 0);

@@ -86,14 +86,25 @@ namespace GatekeepersProtocol.Game
             }
             NotifyDevAction();
             Meta = state;
+            // The ids name whatever was ENTERED. A constructed state is not on disk under
+            // them, so leaving them set would have any later reader pointing at documents
+            // this session is not actually playing.
+            CurrentBoarderId = state.Boarder == null ? "" : state.Boarder.Id;
+            CurrentRealmId = state.Realm == null ? "" : state.Realm.Id;
         }
 
-        /// <summary>True when a save file exists on disk.</summary>
+        /// <summary>True when there is a pair on disk this build can actually open. Not
+        /// merely "files exist": offering CONTINUE for documents that will be refused turns
+        /// one press into a silent new campaign.</summary>
         public static bool HasSave
         {
             get
             {
-                try { return SaveService.Exists(); }
+                try
+                {
+                    SaveService.ReportLegacySaveOnce();
+                    return RealmRegistry.HasLoadablePair();
+                }
                 catch (Exception e)
                 {
                     Log.Warn(Tag, $"HasSave check failed ({e.GetType().Name}: {e.Message}); assuming no save.");
@@ -108,9 +119,15 @@ namespace GatekeepersProtocol.Game
         public static void StartNew()
         {
             DevTainted = false; // intentional new campaign may persist again
-            var boarder = RealmRegistry.CreateBoarder(null);
-            var realm = RealmRegistry.CreateRealm(null);
+            bool boarderWritten, realmWritten;
+            var boarder = RealmRegistry.CreateBoarder(null, out boarderWritten);
+            var realm = RealmRegistry.CreateRealm(null, out realmWritten);
             Adopt(boarder, realm);
+            if (!boarderWritten || !realmWritten)
+                Log.Error(Tag, "A new campaign could not be written to disk "
+                    + "(Boarder " + (boarderWritten ? "saved" : "FAILED")
+                    + ", realm " + (realmWritten ? "saved" : "FAILED")
+                    + "). Play will continue, but nothing is being kept.");
             Log.Event("Ship",
                 $"new campaign — realm \"{realm.Name}\", {Meta.BankedSalvage} banked to start with, no weapon yet");
         }
@@ -176,8 +193,21 @@ namespace GatekeepersProtocol.Game
             {
                 string realmId, boarderId;
                 RealmRegistry.ResolveContinuePair(out realmId, out boarderId);
-                if (realmId == null || boarderId == null || !EnterRealm(realmId, boarderId))
+                if (realmId == null || boarderId == null)
+                {
+                    // Something is on disk or we would not be here, and none of it can be
+                    // opened. Name every refused document before falling through to a new
+                    // campaign, or the player presses Continue and simply loses their world.
+                    RealmRegistry.ReportUnloadable();
+                    Log.Warn(Tag, "Nothing on disk can be opened by this build — "
+                        + "starting a new campaign rather than continuing. "
+                        + "The documents above have been left exactly where they are.");
                     Meta = null;
+                }
+                else if (!EnterRealm(realmId, boarderId))
+                {
+                    Meta = null;
+                }
             }
             catch (Exception e)
             {

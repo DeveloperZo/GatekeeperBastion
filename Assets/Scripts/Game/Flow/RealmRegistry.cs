@@ -100,8 +100,16 @@ namespace GatekeepersProtocol.Game
         /// <summary>Create and write a realm nobody has played yet.</summary>
         public static RealmState CreateRealm(string name)
         {
+            bool written;
+            return CreateRealm(name, out written);
+        }
+
+        /// <summary>As above, reporting whether the document actually reached disk. A caller
+        /// that is about to treat this as the player's campaign needs to know.</summary>
+        public static RealmState CreateRealm(string name, out bool written)
+        {
             var realm = RealmState.CreateNew(MintId(), CleanName(name, "REALM"));
-            SaveService.SaveRealm(realm);
+            written = SaveService.SaveRealm(realm);
             Log.Event("Ship", "realm created — \"" + realm.Name + "\"");
             return realm;
         }
@@ -109,8 +117,15 @@ namespace GatekeepersProtocol.Game
         /// <summary>Create and write a Boarder carrying nothing.</summary>
         public static BoarderState CreateBoarder(string name)
         {
+            bool written;
+            return CreateBoarder(name, out written);
+        }
+
+        /// <summary>As above, reporting whether the document actually reached disk.</summary>
+        public static BoarderState CreateBoarder(string name, out bool written)
+        {
             var boarder = BoarderState.CreateNew(MintId(), CleanName(name, "BOARDER"));
-            SaveService.SaveBoarder(boarder);
+            written = SaveService.SaveBoarder(boarder);
             Log.Event("Ship", "Boarder created — \"" + boarder.Name + "\"");
             return boarder;
         }
@@ -156,6 +171,49 @@ namespace GatekeepersProtocol.Game
         {
             get { return PlayerPrefs.GetString(LastBoarderKey, ""); }
             set { PlayerPrefs.SetString(LastBoarderKey, value == null ? "" : value); PlayerPrefs.Save(); }
+        }
+
+        /// <summary>True when there is a pair this build can actually open.</summary>
+        /// <remarks>
+        /// Counting files is not enough. A directory full of documents from an older build is
+        /// not a campaign this build can continue, and offering CONTINUE for it means pressing
+        /// it silently starts a new game — which reads to a player exactly like their save
+        /// being deleted. That is the failure the refusal exists to prevent, so the check has
+        /// to be "loadable", not "present".
+        /// </remarks>
+        public static bool HasLoadablePair()
+        {
+            return AnyLoadable(Realms()) && AnyLoadable(Boarders());
+        }
+
+        static bool AnyLoadable(SaveRow[] rows)
+        {
+            if (rows == null) return false;
+            for (int i = 0; i < rows.Length; i++)
+                if (rows[i].Loadable) return true;
+            return false;
+        }
+
+        /// <summary>Say once, per document, why something on disk cannot be opened. Called
+        /// when a continue was expected and could not happen — the player is owed the reason
+        /// at the moment it matters, not silence.</summary>
+        public static void ReportUnloadable()
+        {
+            ReportUnloadable(Realms(), SaveService.RealmsDirectory, "Realm");
+            ReportUnloadable(Boarders(), SaveService.BoardersDirectory, "Boarder");
+        }
+
+        static void ReportUnloadable(SaveRow[] rows, string directory, string kind)
+        {
+            if (rows == null) return;
+            for (int i = 0; i < rows.Length; i++)
+            {
+                if (rows[i].Loadable) continue;
+                string json = TryRead(System.IO.Path.Combine(directory, rows[i].Id + ".json"));
+                int version = json == null ? 0 : SaveService.VersionIn(json);
+                Log.Warn(Tag, kind + " \"" + rows[i].Name + "\" (" + rows[i].Id + ".json): "
+                    + SaveFormat.RefusalFor(version) + ".");
+            }
         }
 
         /// <summary>The pair to continue into: whatever was played last, falling back to the

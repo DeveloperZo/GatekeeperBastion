@@ -149,9 +149,13 @@ namespace GatekeepersProtocol.Sim
             for (int i = 0; i < parts.Length; i++)
             {
                 string p = parts[i].Trim();
-                if (p.Length >= 2 && p[0] == '"' && p[p.Length - 1] == '"')
-                    p = p.Substring(1, p.Length - 2);
-                if (p.Length == 0) continue;
+                bool quoted = p.Length >= 2 && p[0] == '"' && p[p.Length - 1] == '"';
+                if (quoted) p = p.Substring(1, p.Length - 2);
+                // A quoted empty string is an ELEMENT and must survive; an unquoted gap is a
+                // trailing comma or whitespace and must not. Dropping both made a written
+                // array come back shorter than it went out, which silently loses a door or a
+                // terminal from the middle of a saved unlock graph.
+                if (!quoted && p.Length == 0) continue;
                 parts[n++] = Unescape(p);
             }
             if (n == parts.Length) return parts;

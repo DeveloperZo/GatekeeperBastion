@@ -30,6 +30,10 @@ namespace GatekeepersProtocol.Game
         const string LegacyFileName = "gatekeeper_meta.json";
 
         const string RootFolder = "gkb_save";
+
+        /// <summary>Extension for a half-written document. Not ".json.tmp" on purpose — see
+        /// the remarks on <see cref="WriteDocument"/>.</summary>
+        const string TempSuffix = ".writing";
         const string BoardersFolder = "boarders";
         const string RealmsFolder = "realms";
 
@@ -116,7 +120,14 @@ namespace GatekeepersProtocol.Game
             try
             {
                 if (!Directory.Exists(directory)) return Array.Empty<string>();
-                return Directory.GetFiles(directory, "*.json");
+                string[] all = Directory.GetFiles(directory, "*.json");
+                // Windows matches *.json against 8.3 short names too, so re-check the real
+                // extension rather than trusting the pattern.
+                var kept = new System.Collections.Generic.List<string>(all.Length);
+                for (int i = 0; i < all.Length; i++)
+                    if (all[i].EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                        kept.Add(all[i]);
+                return kept.ToArray();
             }
             catch (Exception e)
             {
@@ -139,55 +150,79 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Write one Boarder. Requires nothing of the realm — a guest owns its Boarder
         /// even while the world around it is the host's.</summary>
-        public static void SaveBoarder(BoarderState boarder)
+        public static bool SaveBoarder(BoarderState boarder)
         {
             if (boarder == null)
             {
                 Log.Warn(Tag, "SaveBoarder called with no Boarder; nothing written.");
-                return;
+                return false;
             }
             string path = BoarderPath(boarder.Id);
             if (path == null)
             {
                 Log.Error(Tag, "Boarder \"" + boarder.Name + "\" has no usable id; refusing to write it.");
-                return;
+                return false;
             }
-            WriteDocument(path, boarder.ToJson(), "Boarder");
+            return WriteDocument(path, boarder.ToJson(), "Boarder");
         }
 
         /// <summary>Write one realm. Requires nothing of the Boarder — only the host of a world
         /// writes that world, and it writes it whether or not anyone's kit changed.</summary>
-        public static void SaveRealm(RealmState realm)
+        public static bool SaveRealm(RealmState realm)
         {
             if (realm == null)
             {
                 Log.Warn(Tag, "SaveRealm called with no realm; nothing written.");
-                return;
+                return false;
             }
             string path = RealmPath(realm.Id);
             if (path == null)
             {
                 Log.Error(Tag, "Realm \"" + realm.Name + "\" has no usable id; refusing to write it.");
-                return;
+                return false;
             }
-            WriteDocument(path, realm.ToJson(), "Realm");
+            return WriteDocument(path, realm.ToJson(), "Realm");
         }
 
-        static void WriteDocument(string path, string json, string kind)
+        /// <summary>Write, then swap. A direct write to the live path leaves a truncated
+        /// document if the process dies mid-write, and a truncated document is worse than a
+        /// missing one: it still carries its version key, so it loads as a realm that has
+        /// simply forgotten everything. Writing beside the target and moving it into place
+        /// means the live file is either the old document or the new one.</summary>
+        /// <remarks>
+        /// The temp file deliberately does NOT end in <c>.json</c>. Windows still matches
+        /// <c>*.json</c> against 8.3 short names, so <c>&lt;id&gt;.json.tmp</c> could show up in a
+        /// directory listing and be offered to the player as a realm.
+        /// </remarks>
+        static bool WriteDocument(string path, string json, string kind)
         {
+            string temp = path + TempSuffix;
             try
             {
                 string directory = Path.GetDirectoryName(path);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
-                File.WriteAllText(path, json);
+                File.WriteAllText(temp, json);
+                if (File.Exists(path)) File.Replace(temp, path, null);
+                else File.Move(temp, path);
                 Log.Info(Tag, kind + " saved to " + path + ".");
+                return true;
             }
             catch (Exception e)
             {
                 Log.Error(Tag, "Failed to save " + kind.ToLowerInvariant() + " to " + path
-                    + " (" + e.GetType().Name + ": " + e.Message + ").");
+                    + " (" + e.GetType().Name + ": " + e.Message + "). The previous "
+                    + kind.ToLowerInvariant() + " on disk is unchanged.");
+                TryDeleteTemp(temp);
+                return false;
             }
+        }
+
+        static void TryDeleteTemp(string temp)
+        {
+            try { if (File.Exists(temp)) File.Delete(temp); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
         }
 
         // ---- Reads: null on refusal, with the reason and the file name in the log ----
@@ -208,9 +243,7 @@ namespace GatekeepersProtocol.Game
                     LogRefusal(path, json);
                     return null;
                 }
-                // The file IS the identity. A document written without its id key still belongs
-                // to the name it was found under, and putting it back keeps the next write in place.
-                if (string.IsNullOrEmpty(boarder.Id)) boarder.Id = id;
+                AdoptFileIdentity(ref boarder.Id, id, "Boarder");
                 return boarder;
             }
             catch (Exception e)
@@ -237,7 +270,7 @@ namespace GatekeepersProtocol.Game
                     LogRefusal(path, json);
                     return null;
                 }
-                if (string.IsNullOrEmpty(realm.Id)) realm.Id = id;
+                AdoptFileIdentity(ref realm.Id, id, "Realm");
                 return realm;
             }
             catch (Exception e)
@@ -246,6 +279,23 @@ namespace GatekeepersProtocol.Game
                     + e.GetType().Name + ": " + e.Message + "); it was not loaded.");
                 return null;
             }
+        }
+
+        /// <summary>The file name IS the identity, always — not merely when the document
+        /// forgot to carry one.</summary>
+        /// <remarks>
+        /// Letting an embedded id win looks harmless and loses data. Copy a realm file to
+        /// back it up and both documents carry the original's id; enter the copy, and every
+        /// save writes over the original while the copy silently stops changing. Taking the
+        /// name it was found under makes a copied file a real, separate realm, which is what
+        /// the person copying it plainly meant.
+        /// </remarks>
+        static void AdoptFileIdentity(ref string documentId, string fileId, string kind)
+        {
+            if (!string.IsNullOrEmpty(documentId) && documentId != fileId)
+                Log.Warn(Tag, kind + " " + fileId + ".json carries the id \"" + documentId
+                    + "\"; the file name wins and it will save as " + fileId + ".json.");
+            documentId = fileId;
         }
 
         static string ReadDocument(string path, string kind)
@@ -264,6 +314,18 @@ namespace GatekeepersProtocol.Game
                     Log.Warn(Tag, kind + " " + Path.GetFileName(path) + " is empty; nothing loaded.");
                     return null;
                 }
+                if (!LooksWhole(json))
+                {
+                    // Every document opens with its version, so a file cut short still passes
+                    // the version gate and then reads every remaining key as its default —
+                    // loading as a realm that has forgotten its salvage, its doors and its
+                    // clears. Refusing here is the difference between a visible problem and a
+                    // silent one, and the next save would have made the loss permanent.
+                    Log.Error(Tag, kind + " " + Path.GetFileName(path)
+                        + " is truncated or corrupt (it does not end where a document should); "
+                        + "it was NOT loaded and has been left on disk untouched.");
+                    return null;
+                }
                 return json;
             }
             catch (Exception e)
@@ -279,6 +341,16 @@ namespace GatekeepersProtocol.Game
         static void LogRefusal(string path, string json)
         {
             Log.Warn(Tag, Path.GetFileName(path) + ": " + SaveFormat.RefusalFor(VersionIn(json)) + ".");
+        }
+
+        /// <summary>Cheap structural check that a document is not cut short: it must open and
+        /// close as one object. This is not a parser — it is the smallest test that separates
+        /// "half a file" from "a file", which the version key alone cannot do because the
+        /// version is the first thing written.</summary>
+        static bool LooksWhole(string json)
+        {
+            string trimmed = json.Trim();
+            return trimmed.Length >= 2 && trimmed[0] == '{' && trimmed[trimmed.Length - 1] == '}';
         }
 
         /// <summary>The SaveVersion in a raw document, or 0 when it carries none.</summary>

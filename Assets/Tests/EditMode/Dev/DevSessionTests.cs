@@ -10,34 +10,35 @@ namespace GatekeepersProtocol.Tests
     /// no-op so a real campaign file cannot be overwritten by a scratch loadout/grant.</summary>
     public class DevSessionTests
     {
-        string _backupPath;
-        bool _hadSave;
-        string _originalJson;
-
         [SetUp]
         public void SetUp()
         {
-            _backupPath = SaveService.SavePath + ".m13test.bak";
-            _hadSave = File.Exists(SaveService.SavePath);
-            _originalJson = _hadSave ? File.ReadAllText(SaveService.SavePath) : null;
-            if (File.Exists(SaveService.SavePath)) File.Delete(SaveService.SavePath);
-            if (File.Exists(_backupPath)) File.Delete(_backupPath);
+            // The developer's campaign is a DIRECTORY now, and EditModeSaveFixture has already
+            // moved it out of reach for the whole assembly. All this has to do is start each
+            // test from an empty one.
+            EditModeSaveFixture.ClearGuardedSaveRoot();
         }
 
         [TearDown]
         public void TearDown()
         {
-            // Wipe whatever the test wrote, then restore the caller's campaign file.
-            if (File.Exists(SaveService.SavePath)) File.Delete(SaveService.SavePath);
-            if (_hadSave && _originalJson != null)
-                File.WriteAllText(SaveService.SavePath, _originalJson);
-            if (File.Exists(_backupPath)) File.Delete(_backupPath);
-
-            // Domain-reload-disabled: clear DevTainted / Meta without leaving a test save.
+            // Domain-reload-disabled: clear DevTainted / Meta so the next test does not inherit
+            // a tainted session. The write this makes lands in the guarded directory and the
+            // fixture throws it away at the end of the run.
             GameSession.StartNew();
-            if (File.Exists(SaveService.SavePath)) File.Delete(SaveService.SavePath);
-            if (_hadSave && _originalJson != null)
-                File.WriteAllText(SaveService.SavePath, _originalJson);
+            EditModeSaveFixture.ClearGuardedSaveRoot();
+        }
+
+        /// <summary>The realm this session is playing, read back off disk.</summary>
+        static RealmState RealmOnDisk()
+        {
+            return SaveService.LoadRealm(GameSession.CurrentRealmId);
+        }
+
+        /// <summary>The Boarder this session is playing, read back off disk.</summary>
+        static BoarderState BoarderOnDisk()
+        {
+            return SaveService.LoadBoarder(GameSession.CurrentBoarderId);
         }
 
         [Test]
@@ -54,10 +55,12 @@ namespace GatekeepersProtocol.Tests
             GameSession.Save(); // must no-op
             Assert.IsTrue(GameSession.DevTainted);
 
-            // Disk must still hold the pre-taint StartNew snapshot, not the +999 mutation.
-            var fromDisk = MetaState.FromSnapshotJson(File.ReadAllText(SaveService.SavePath));
+            // Disk must still hold the pre-taint StartNew state, not the +999 mutation.
+            // Salvage lives on the realm, so that is the document to read back.
+            var fromDisk = RealmOnDisk();
+            Assert.IsNotNull(fromDisk, "StartNew wrote a realm this build can read");
             Assert.AreEqual(banked, fromDisk.BankedSalvage,
-                "Dev-tainted Save must not overwrite the campaign file");
+                "Dev-tainted Save must not overwrite the campaign");
         }
 
         [Test]
@@ -72,7 +75,8 @@ namespace GatekeepersProtocol.Tests
             GameSession.Meta.EarnSalvage(50);
             GameSession.Save();
 
-            var fromDisk = MetaState.FromSnapshotJson(File.ReadAllText(SaveService.SavePath));
+            var fromDisk = RealmOnDisk();
+            Assert.IsNotNull(fromDisk);
             Assert.AreEqual(50L, fromDisk.BankedSalvage);
         }
 
@@ -87,7 +91,8 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(5000L, GameSession.Meta.BankedSalvage);
 
             GameSession.Save();
-            var fromDisk = MetaState.FromSnapshotJson(File.ReadAllText(SaveService.SavePath));
+            var fromDisk = RealmOnDisk();
+            Assert.IsNotNull(fromDisk);
             Assert.AreEqual(0L, fromDisk.BankedSalvage, "granted salvage must not land on disk");
         }
 
@@ -104,7 +109,9 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(WeaponId.Mr35Rifle, GameSession.Meta.EquippedPrimary);
 
             GameSession.Save();
-            var fromDisk = MetaState.FromSnapshotJson(File.ReadAllText(SaveService.SavePath));
+            // Weapons ride the Boarder, so the loadout's absence is proved on that document.
+            var fromDisk = BoarderOnDisk();
+            Assert.IsNotNull(fromDisk);
             Assert.IsFalse(fromDisk.Owns(WeaponId.Mr35Rifle),
                 "Dev SetLoadout must not persist over a real campaign");
         }

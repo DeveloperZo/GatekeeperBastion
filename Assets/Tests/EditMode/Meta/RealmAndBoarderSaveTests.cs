@@ -75,6 +75,12 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(2, back.CompletedTerminalIds.Length);
             Assert.AreEqual(1, back.OpenDoorIds.Length);
             Assert.AreEqual(3, back.ZoneDeepest(1));
+            // Played() grants hatch armour without spending for it, so the load clamps the
+            // ledger up to the floor that armour proves. Assert it rather than let a real
+            // ledger bug hide inside an unexamined round trip.
+            Assert.AreEqual(600L, back.LifetimeSalvageSpent, "raised to the armour floor");
+            Assert.AreEqual(1500L, back.LifetimeSalvageEarned);
+            Assert.IsTrue(back.SalvageLedgerBalances);
 
             string json = Played("r1", "ALPHA").ToJson();
             Assert.IsFalse(json.Contains("WeaponsOwned"), "weapons are the Boarder's");
@@ -139,6 +145,17 @@ namespace GatekeepersProtocol.Tests
             var session = MetaState.Compose(boarder, fresh);
 
             Assert.IsNotNull(fresh);
+
+            // The load-bearing assertion. If the kit term ever creeps back into the realm's
+            // floor, THIS is what moves: the floor is what the repair clamps the ledger up to,
+            // so a non-zero floor here is exactly the inflation the split exists to prevent.
+            // The ledger assertions below cannot catch it on their own, because the repair has
+            // already run inside FromJson before the Boarder is anywhere near this session.
+            Assert.AreEqual(0L, session.ReconstructSpentFromLevels(),
+                "a realm that has sold nothing owes nothing, whatever the visitor is carrying");
+            Assert.Greater(boarder.ReconstructSpentOnKit(), 0L,
+                "the kit did cost something; it is simply not this realm's debt");
+
             Assert.AreEqual(0L, session.LifetimeSalvageEarned,
                 "a fresh realm has earned nothing, however well equipped the visitor is");
             Assert.AreEqual(0L, session.LifetimeSalvageSpent);
@@ -146,8 +163,6 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(session.SalvageLedgerBalances);
             Assert.IsFalse(fresh.SalvageStatsWereRepaired,
                 "nothing to repair — the numbers were consistent to begin with");
-            Assert.Greater(boarder.ReconstructSpentOnKit(), 0L,
-                "the kit did cost something; it is simply not this realm's debt");
         }
 
         [Test]
@@ -166,6 +181,105 @@ namespace GatekeepersProtocol.Tests
                 "and the version it wanted");
             Assert.IsFalse(SaveFormat.IsSupported(11));
             Assert.IsTrue(SaveFormat.IsSupported(SaveFormat.CurrentVersion));
+        }
+
+        [Test]
+        public void ADocumentCarryingNoVersionAtAllIsRefused()
+        {
+            // A missing key must not read as "current". Both loaders fall back to 0 for the
+            // version precisely so an unversioned file cannot impersonate one this build wrote.
+            Assert.IsNull(BoarderState.FromJson("{\"EquippedPrimary\":2}"));
+            Assert.IsNull(RealmState.FromJson("{\"BankedSalvage\":5000}"));
+            Assert.IsFalse(SaveFormat.IsSupported(0));
+            StringAssert.Contains("no readable version", SaveFormat.RefusalFor(0));
+        }
+
+        [Test]
+        public void ADocumentFromANewerBuildIsRefused_AndSaysSo()
+        {
+            int newer = SaveFormat.CurrentVersion + 1;
+            Assert.IsNull(RealmState.FromJson("{\"SaveVersion\":" + newer + "}"));
+            Assert.IsFalse(SaveFormat.IsSupported(newer));
+            StringAssert.Contains("newer build", SaveFormat.RefusalFor(newer),
+                "a save from the future is a different problem than a save from the past");
+        }
+
+        [Test]
+        public void ABoarderMissingEveryOptionalKeyLoadsCarryingNothing()
+        {
+            var b = BoarderState.FromJson("{\"SaveVersion\":" + SaveFormat.CurrentVersion + "}");
+
+            Assert.IsNotNull(b);
+            Assert.IsFalse(b.OwnsAnyWeapon);
+            Assert.AreEqual(WeaponId.None, b.EquippedPrimary);
+            Assert.AreEqual(WeaponId.None, b.EquippedSecondary);
+            Assert.IsFalse(b.EquipmentSlotPurchased);
+            Assert.AreEqual(EquipmentId.None, b.EquippedEquipment);
+            Assert.AreEqual(PayloadId.None, b.EquippedDrone);
+            Assert.AreEqual(0, b.OwnedPayloadMask);
+            Assert.AreEqual(BoarderProtocolId.None, b.EquippedProtocol);
+        }
+
+        [Test]
+        public void ATamperedLedgerIsRaisedToWhatTheRealmsOwnTrackProves()
+        {
+            // The clamp is what makes a hand-edited ledger safe, and it is the realm's OWN
+            // floor doing it. Hatch armour 3 costs 200 * (2^3 - 1); a file claiming nothing
+            // was ever spent cannot be true while that armour is on the hatch.
+            var r = RealmState.FromJson(
+                "{\"SaveVersion\":" + SaveFormat.CurrentVersion + ",\"BankedSalvage\":100,"
+                + "\"LifetimeSalvageEarned\":100,\"LifetimeSalvageSpent\":0,"
+                + "\"HatchArmorLevel\":3}");
+
+            Assert.IsNotNull(r);
+            Assert.AreEqual(1400L, r.ReconstructSpentFromLevels(), "the realm's own floor");
+            Assert.AreEqual(1400L, r.LifetimeSalvageSpent, "spent was raised to the floor");
+            Assert.AreEqual(1500L, r.LifetimeSalvageEarned, "and earned follows so the trio adds up");
+            Assert.IsTrue(r.SalvageLedgerBalances);
+            Assert.IsTrue(r.SalvageStatsWereRepaired, "and the repair is flagged, not silent");
+        }
+
+        [Test]
+        public void AnEquippedIdThisBuildDoesNotCarry_DoesNotSurviveALoad()
+        {
+            // Not a migration rule. A hand-edited document, or one from a build that sold more
+            // than this one does, can put any integer in these fields at the CURRENT version,
+            // and an uncatalogued id reaches a switch with no arm for it.
+            var b = BoarderState.FromJson(
+                "{\"SaveVersion\":" + SaveFormat.CurrentVersion + ",\"EquippedDrone\":99,"
+                + "\"EquippedEquipment\":98,\"EquippedPrimary\":97,\"EquippedSecondary\":96}");
+
+            Assert.IsNotNull(b);
+            Assert.AreEqual(PayloadId.None, b.EquippedDrone, "an unknown payload leaves the bay");
+            Assert.AreEqual(EquipmentId.None, b.EquippedEquipment);
+            Assert.AreEqual(WeaponId.None, b.EquippedPrimary);
+            Assert.AreEqual(WeaponId.None, b.EquippedSecondary);
+        }
+
+        [Test]
+        public void AWeaponEquippedIntoTheWrongSlot_DoesNotSurviveALoad()
+        {
+            // Br12Shotgun is a Primary. A document claiming it as the Secondary is malformed,
+            // and honouring it would put a Primary in a slot the wheel and the HUD do not
+            // expect to find one in.
+            var b = BoarderState.FromJson(
+                "{\"SaveVersion\":" + SaveFormat.CurrentVersion
+                + ",\"EquippedSecondary\":" + (int)WeaponId.Br12Shotgun + "}");
+
+            Assert.IsNotNull(b);
+            Assert.AreEqual(WeaponId.None, b.EquippedSecondary);
+        }
+
+        [Test]
+        public void TheVersionLiteralsInThisSuite_TrackTheSchema()
+        {
+            // Several tests here and elsewhere spell the current version into a JSON literal,
+            // because a document has to carry SOME version to be loadable at all. When the
+            // schema bumps, grep the EditMode suite for the old number and bump it — a stale
+            // literal gets null back and then fails as a NullReferenceException, which reads
+            // like a crash rather than like the version mismatch it is.
+            Assert.AreEqual(13, SaveFormat.CurrentVersion,
+                "schema bumped — update the version literals across the EditMode suite");
         }
 
         [Test]

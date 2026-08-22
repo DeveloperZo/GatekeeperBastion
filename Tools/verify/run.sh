@@ -71,6 +71,7 @@ fi
 # EditMode tests that cannot compile outside Unity. Each needs a reason; a file added
 # here without one is coverage quietly dropped.
 declare -A EXCLUDED=(
+  ["EditModeSaveFixture.cs"]="assembly-level [SetUpFixture]; needs GatekeepersProtocol.Game (SaveService.SaveRoot), UnityEngine.PlayerPrefs and NUnit SetUpFixture"
   ["Dev/DevSessionTests.cs"]="needs GatekeepersProtocol.Game (SaveService) and a real filesystem save"
   ["Dev/DevCheckpointTests.cs"]="needs GameController (MonoBehaviour) for BuildDemoCheckpoint"
   ["Weapons/ReloadSwapTests.cs"]="needs PlayerGun MonoBehaviour, GameObject, and UnityEngine.TestTools.LogAssert"

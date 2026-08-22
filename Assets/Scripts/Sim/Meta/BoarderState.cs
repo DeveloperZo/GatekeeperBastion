@@ -57,6 +57,10 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>A Boarder with the given identity and empty kit. Ids come from the game
         /// layer; an empty or null name falls back to the default rather than saving blank.</summary>
+        /// <summary>Built through CreateNew or FromJson only: a bare instance has null
+        /// arrays until EnsureArrays runs, which is a shape nothing should be handed.</summary>
+        BoarderState() { }
+
         public static BoarderState CreateNew(string id, string name)
         {
             var b = new BoarderState();
@@ -284,6 +288,33 @@ namespace GatekeepersProtocol.Sim
         /// and the run summary both want to say what a Boarder is carrying — so it lives here,
         /// on the document that actually owns the kit.
         /// </remarks>
+        /// <summary>Drop any equipped id this build has no row for.</summary>
+        /// <remarks>
+        /// The pre-split loader sanitised the drone bay on every load, not only on an old
+        /// document — the version gate was never what made it necessary. Losing it with the
+        /// migration would have let <c>"EquippedDrone":99</c> reach
+        /// <c>PayloadCatalog.Def</c>'s switch, which has no arm for it. The weapon and
+        /// equipment slots get the same treatment for the same reason.
+        /// </remarks>
+        void ValidateEquippedIds()
+        {
+            if (!PayloadCatalog.IsCatalogued(EquippedDrone))
+                EquippedDrone = PayloadId.None;
+            if (!EquipmentCatalog.IsCatalogued(EquippedEquipment))
+                EquippedEquipment = EquipmentId.None;
+            EquippedPrimary = KnownWeaponOr(EquippedPrimary, WeaponSlot.Primary);
+            EquippedSecondary = KnownWeaponOr(EquippedSecondary, WeaponSlot.Secondary);
+        }
+
+        /// <summary>The weapon if this build catalogues it for that slot, else None.</summary>
+        static WeaponId KnownWeaponOr(WeaponId id, WeaponSlot slot)
+        {
+            if (id == WeaponId.None) return WeaponId.None;
+            int i = (int)id;
+            if (i < 0 || i >= WeaponCatalog.ArraySize) return WeaponId.None;
+            return WeaponCatalog.Def(id).slot == slot ? id : WeaponId.None;
+        }
+
         public long ReconstructSpentOnKit()
         {
             EnsureArrays();
@@ -364,9 +395,13 @@ namespace GatekeepersProtocol.Sim
             b.EquippedDrone = (PayloadId)JsonText.ExtractInt(json, "EquippedDrone", (int)PayloadId.None);
             b.OwnedPayloadMask = JsonText.ExtractInt(json, "OwnedPayloadMask", 0);
 
-            // An id this build has no catalog row for — retired, or written by a build that sold
-            // more — has to resolve to None here rather than reach a switch with no arm for it.
+            // An id this build has no catalog row for — retired, or written by a build that
+            // sold more — has to resolve to None here rather than reach a switch with no arm
+            // for it. This is not migration and did not go with it: it applies to a document
+            // of the CURRENT version just as much, because a hand-edited file or a rolled-back
+            // build can put any integer in these fields.
             BoarderProtocol.ValidateEquip(b);
+            b.ValidateEquippedIds();
             return b;
         }
     }

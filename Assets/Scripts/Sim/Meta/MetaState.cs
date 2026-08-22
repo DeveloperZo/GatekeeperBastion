@@ -363,7 +363,13 @@ namespace GatekeepersProtocol.Sim
             }
             var b = BoarderState.FromJson(boarder);
             var r = RealmState.FromJson(realm);
-            if (b == null || r == null) return null;
+            if (b == null || r == null)
+            {
+                Log.Warn("Save", "snapshot refused — "
+                    + (b == null ? "its Boarder" : "its realm")
+                    + " was written by a version this build does not read.");
+                return null;
+            }
             return Compose(b, r);
         }
 
