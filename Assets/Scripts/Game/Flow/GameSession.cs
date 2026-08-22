@@ -74,6 +74,20 @@ namespace GatekeepersProtocol.Game
             Log.Event("Dev", "session tainted — GameSession.Save suppressed for this play session");
         }
 
+        /// <summary>No realm is open any more. Called when the menu loads: the ids name what
+        /// this session is STANDING IN, and once you are back at the menu you are standing in
+        /// nothing. Leaving them set made the chooser refuse to delete the realm you had just
+        /// played — "go back to the menu first" said to a player already at the menu, with no
+        /// action in the game that could satisfy it short of relaunching.</summary>
+        public static void ReleaseCurrent()
+        {
+            if (string.IsNullOrEmpty(CurrentRealmId) && string.IsNullOrEmpty(CurrentBoarderId))
+                return;
+            CurrentRealmId = "";
+            CurrentBoarderId = "";
+            Log.Event(Tag, "no realm open — back at the menu");
+        }
+
         /// <summary>Dev checkpoints only: replace the live Meta with a constructed state for
         /// this play session. Taints FIRST, so the constructed state can never reach the real
         /// campaign save — quitting or reloading from disk returns the untouched campaign.</summary>

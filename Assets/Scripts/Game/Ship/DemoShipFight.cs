@@ -60,8 +60,12 @@ namespace GatekeepersProtocol.Game
             get
             {
                 var m = GameSession.Meta;
+                // Either hub. A fresh realm is DemoActive and now plays the tutorial on the
+                // co-op hull, so gating this on the demo scene left the floor off exactly where
+                // the tutorial actually runs — and the Ship has no GameController, so a death
+                // there ends in a guard-trip log and a freed cursor rather than a lose screen.
                 return m != null && m.DemoActive
-                    && SceneFlow.ActiveSceneName == SceneFlow.Ship;
+                    && SceneFlow.IsShipHub(SceneFlow.ActiveSceneName);
             }
         }
 

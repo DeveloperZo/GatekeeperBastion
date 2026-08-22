@@ -40,8 +40,15 @@ namespace GatekeepersProtocol.Game
         public static bool MultiplayerUnlocked(MetaState m)
         {
             if (m == null) return true;
-            if (!m.DemoActive) return true;
-            return m.DemoWheelBuysLeft < 2;
+            return MultiplayerUnlocked(m.DemoActive, m.DemoWheelBuysLeft);
+        }
+
+        /// <summary>The same rule against a realm that has not been entered, so a chooser can
+        /// refuse BEFORE handing out a join code rather than after.</summary>
+        public static bool MultiplayerUnlocked(bool demoActive, int wheelBuysLeft)
+        {
+            if (!demoActive) return true;
+            return wheelBuysLeft < 2;
         }
 
         /// <summary>Primary-slot rows are for sale only once zone 2's bank has fallen — that

@@ -173,11 +173,18 @@ namespace GatekeepersProtocol.Game
             string boarderId = _boarders[_pickedBoarder].Id;
             if (!GameSession.EnterRealm(realmId, boarderId))
             {
+                // Repaint FIRST: Refresh ends in Repaint, which writes WhyNotEnter over the
+                // status line, so setting the message before it painted the refusal away — and
+                // Refresh also re-picks from the last-played pointer, silently moving the
+                // highlight off the realm that just failed onto a different one, where a second
+                // press would enter a world the player never chose. Keep their pick.
+                Refresh();
+                _pickedRealm = IndexOfId(_realms, realmId);
+                Repaint();
                 // SaveService has already named the document and the reason in the log; the
                 // player needs the short version, here, next to the button they pressed.
                 if (_view != null)
                     _view.SetStatus("That realm could not be opened. Nothing was changed.");
-                Refresh();
                 return;
             }
             // A realm's ship is the co-op hull, not the demo one. A realm is the world you
@@ -230,6 +237,10 @@ namespace GatekeepersProtocol.Game
         void OnDeleteRealm()
         {
             if (!Deletable(_realms, _pickedRealm)) return;
+            // Arming one destructive button disarms the other. Without this, DELETE REALM stayed
+            // armed while the player moved to DELETE BOARDER — which also overwrote the status
+            // line — so a press meant for the Boarder's confirmation deleted a realm instead.
+            _armedBoarder.Disarm();
             var row = _realms[_pickedRealm];
             string refusal = WhyNotDelete(row.Id, GameSession.CurrentRealmId, "realm");
             if (refusal != null)
@@ -258,6 +269,7 @@ namespace GatekeepersProtocol.Game
         void OnDeleteBoarder()
         {
             if (!Deletable(_boarders, _pickedBoarder)) return;
+            _armedRealm.Disarm();
             var row = _boarders[_pickedBoarder];
             string refusal = WhyNotDelete(row.Id, GameSession.CurrentBoarderId, "Boarder");
             if (refusal != null)
@@ -296,6 +308,16 @@ namespace GatekeepersProtocol.Game
         /// <summary>A row is deletable whether or not this build can open it — a document an
         /// older build wrote is exactly the kind a player wants rid of, and refusing to delete
         /// what we already refuse to load would leave it on the list forever.</summary>
+        /// <summary>Row index of a document by id, or -1. Used to hold a selection across a
+        /// Refresh that would otherwise re-pick from the last-played pointer.</summary>
+        static int IndexOfId(RealmRegistry.SaveRow[] rows, string id)
+        {
+            if (rows == null || string.IsNullOrEmpty(id)) return -1;
+            for (int i = 0; i < rows.Length; i++)
+                if (rows[i].Id == id) return i;
+            return -1;
+        }
+
         static bool Deletable(RealmRegistry.SaveRow[] rows, int index)
         {
             return rows != null && index >= 0 && index < rows.Length;
@@ -335,6 +357,21 @@ namespace GatekeepersProtocol.Game
             {
                 Log.Event(Tag, "open refused — " + WhyNotEnter());
                 Repaint();
+                return;
+            }
+
+            // Read the picked realm off disk and apply the multiplayer rule BEFORE Relay is
+            // asked for anything. Every FRESH realm is DemoActive with two wheel buys left, so
+            // this is the default path, not an edge case — and refusing after the fact meant the
+            // player had already copied a code and sent it to a friend who could never use it.
+            var picked = SaveService.LoadRealm(_realms[_pickedRealm].Id);
+            if (picked != null
+                && !DemoProgress.MultiplayerUnlocked(picked.DemoActive, picked.DemoWheelBuysLeft))
+            {
+                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                if (_view != null)
+                    _view.SetStatus("\"" + _realms[_pickedRealm].Name
+                        + "\" is still in the opening — multiplayer unlocks on your first upgrade.");
                 return;
             }
 

@@ -33,7 +33,9 @@ namespace GatekeepersProtocol.Game
             var m = GameSession.Meta;
             if (m == null || !m.DemoActive) return;
             if (m.HatchConversions < 1) return;
-            if (SceneFlow.ActiveSceneName != SceneFlow.Ship) return;
+            // Either hub — the tutorial runs on the co-op hull for a fresh realm, and the
+            // post-first-bank objective never appeared there.
+            if (!SceneFlow.IsShipHub(SceneFlow.ActiveSceneName)) return;
 
             if (DemoProgress.NoBuyableUpgradeRemains(m))
             {

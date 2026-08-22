@@ -252,7 +252,11 @@ namespace GatekeepersProtocol.Game
 
                 var button = go.GetComponent<Button>();
                 if (button == null) continue;
-                button.interactable = row.Loadable;
+                // Selectable even when this build refuses to OPEN it — an older build's
+                // document is precisely what a player wants to delete, and making the row
+                // unclickable stranded it on the list forever. ENTER still refuses it; the
+                // controller's CanEnter tests Loadable, this only decides what can be picked.
+                button.interactable = true;
                 int index = i; // captured per row, not per loop
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(() => { if (onPick != null) onPick.Invoke(index); });

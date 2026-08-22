@@ -55,6 +55,7 @@ namespace GatekeepersProtocol.Game
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+            GameSession.ReleaseCurrent();
             RefreshMenu();
         }
 
