@@ -61,6 +61,7 @@ namespace GatekeepersProtocol.Game
         GameController _gameCached;
         bool _awaitingWaveDigit;
         bool _awaitingCheckpointDigit;
+        bool _awaitingRangeDigit;
         bool _gatekeeperReadout;
         bool _loadoutPicker;
         bool _guiFaulted;
@@ -108,6 +109,8 @@ namespace GatekeepersProtocol.Game
                 _capture = CaptureKind.CheckpointDigit;
                 _suppressFightKeys = true;
             }
+            // The range digit borrows the jump digit's capture: same shape, same suppression.
+            else if (_awaitingRangeDigit) { _capture = CaptureKind.JumpDigit; _suppressFightKeys = true; }
             else if (_loadoutPicker)
             {
                 _capture = CaptureKind.LoadoutPicker;
@@ -148,11 +151,8 @@ namespace GatekeepersProtocol.Game
             if (_awaitingCheckpointDigit && TickCheckpointDigit())
                 return;
 
+            if (_awaitingRangeDigit && TickRangeDigit()) return;
             RefreshCapture();
-
-            // Alt-chords first: they no-op outside the range, and reading them before the table
-            // stops an Alt+digit reaching a bare-digit handler in the same frame.
-            if (TickRangeKeys()) return;
 
             for (int i = 0; i < DevCommands.All.Length; i++)
             {
@@ -175,6 +175,7 @@ namespace GatekeepersProtocol.Game
                 _awaitingWaveDigit = false;
             if (action != DevCommands.Kind.ArmDemoCheckpoint)
                 _awaitingCheckpointDigit = false;
+            if (action != DevCommands.Kind.ArmJumpToWave) _awaitingRangeDigit = false;
 
             var gc = Game;
 
@@ -192,12 +193,14 @@ namespace GatekeepersProtocol.Game
                     break;
 
                 case DevCommands.Kind.ArmJumpToWave:
-                    _awaitingWaveDigit = true;
                     _overlay = true; // discovery: show that a digit is expected
+                    if (TryArmRange()) break;
+                    _awaitingWaveDigit = true;
                     Log.Event(Tag, $"jump armed — press 1..{WaveDirector.MaxWaves}");
                     break;
 
                 case DevCommands.Kind.ClearGatekeepers:
+                    ClearRangeLane();
                     if (gc != null) gc.ClearGatekeepers();
                     else Log.Warn(Tag, "ClearGatekeepers ignored — no GameController.");
                     break;
@@ -366,18 +369,20 @@ namespace GatekeepersProtocol.Game
                 title = $"DEV — press 1..{WaveDirector.MaxWaves} for jump (Esc cancel)";
             else if (_awaitingCheckpointDigit)
                 title = "DEV — press a checkpoint digit (Esc cancel)";
+            else if (_awaitingRangeDigit) title = "DEV — RANGE: press 1..9 (Esc cancel)";
             GUI.Label(new Rect(x, y, w, 22f), title, _title);
             y += 26f;
 
             for (int i = 0; i < DevCommands.All.Length; i++)
             {
                 var b = DevCommands.All[i];
-                GUI.Label(new Rect(x, y, w, 18f), $"{b.Key}  {b.Label}", _label);
+                GUI.Label(new Rect(x, y, w, 18f), $"{b.Key}  {LabelFor(b)}", _label);
                 y += 18f;
             }
 
             if (_awaitingCheckpointDigit)
                 DrawCheckpointRows(x, y + 8f, w);
+            if (_awaitingRangeDigit) DrawRangeRows(x, y + 8f, w);
         }
 
         void DrawLoadoutPicker(float vw)
