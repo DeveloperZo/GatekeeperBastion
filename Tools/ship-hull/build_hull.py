@@ -39,29 +39,20 @@ def cells(deck):
 
 D1, D2 = cells(1), cells(2)
 
-MESH = {
-    'Floor':      '9f2b7c1e0000000000000000000000f0',   # replaced below from guidmap
+MESH = {   # Synty PolygonSciFiSpace, guids are stable across the pack
+    'Floor': '549f0d5274edea6458f754e1aac98efb',         # SM_Bld_Floor_01
+    'Ceil': '2a5a2a9a9489337489fb0458762db8eb',          # SM_Bld_Ceiling_01
+    'CeilLow': '09bfb280021fbcd41ad1d71823655ea1',       # SM_Bld_Ceiling_02
+    'Wall': '8d217d0e1fada5e4591985711fc87b86',          # SM_Bld_Wall_01
+    'Door': '31d557d4571f9d84c939fd1ce47b5cd8',          # SM_Bld_Wall_Doorframe_01
+    'Skin': '3bdbd97455c79064c8b39a7764c17bd6',          # SM_Bld_Wall_Exterior_01
+    'SkinPillar': 'ad3df2d4b491d454c96764f575db0130',    # SM_Bld_Wall_Exterior_Pillar_01
+    'Window': '4f630417843179749aa8ba87d708a645',        # SM_Bld_Wall_Exterior_Window_01
+    'Stairs': '3a9167268fb73cb48b6f3226667f05f2',        # SM_Prop_Stairs_01
+    'StairPlat': 'edc81c185e0ff9142b2c988d0a2dae60',     # SM_Prop_StairsPlatform_01
+    'Rail': 'b3987b6acf41dc643a6332babc3a7dc9',          # SM_Bld_Floor_Small_Hand_Rail_01
+    'Airlock': '031ef83336706614e9aac66905586671',       # SM_Bld_Wall_EscPod_Hatch_01
 }
-import guids
-GM = guids.get()
-REV = {v: k for k, v in GM.items()}
-def g(name):
-    return REV['Synty/PolygonSciFiSpace/Models/%s.fbx' % name]
-
-MESH = {k: g(v) for k, v in {
-    'Floor': 'SM_Bld_Floor_01',
-    'Ceil': 'SM_Bld_Ceiling_01',
-    'CeilLow': 'SM_Bld_Ceiling_02',
-    'Wall': 'SM_Bld_Wall_01',
-    'Door': 'SM_Bld_Wall_Doorframe_01',
-    'Skin': 'SM_Bld_Wall_Exterior_01',
-    'SkinPillar': 'SM_Bld_Wall_Exterior_Pillar_01',
-    'Window': 'SM_Bld_Wall_Exterior_Window_01',
-    'Stairs': 'SM_Prop_Stairs_01',
-    'StairPlat': 'SM_Prop_StairsPlatform_01',
-    'Rail': 'SM_Bld_Floor_Small_Hand_Rail_01',
-    'Airlock': 'SM_Bld_Wall_EscPod_Hatch_01',
-}.items()}
 AIRLOCK_SUBMESH = 4300004
 AIRLOCK_LEAF = 4300006
 MAT = "{fileID: 2100000, guid: 4cee7a5983b187943adc589b9cb1f084, type: 2}"
@@ -153,9 +144,14 @@ print("stripping %d old hull objects (%d docs)" % (len(doomed_tf), len(doomed_do
 
 # ---------------------------------------------------------------- emit
 
+# Re-running against a scene that already holds this generator's output must not
+# reuse its ids, so skip anything already present.
+TAKEN = set(byid)
 NEXT = [4100000001]
 def nid():
     NEXT[0] += 4
+    while NEXT[0] in TAKEN:
+        NEXT[0] += 4
     return NEXT[0]
 
 EMIT = []
@@ -404,11 +400,11 @@ for d in docs:
 
 # ---- rehome the fixed objects --------------------------------------------------
 PLACE = {
-    'Station_Armory':       ((9.108, 0.0, 22.5), -90.0),
+    'Station_Armory':       ((10.0, 0.0, 12.5), -90.0),   # clear of the rack and plate
     'Station_Fabrication':  ((-10.0, 0.0, 17.5), 90.0),
-    'Station_CrewQuarters': ((9.108, 0.0, 42.5), -90.0),
+    'Station_CrewQuarters': ((10.0, 0.0, 42.5), -90.0),
     'Station_Map':          ((-7.5, 5.0, 50.0), 180.0),
-    'Ship Terminal':        ((-4.108, 5.0, 7.5), 90.0),
+    'Ship Terminal':        ((-5.0, 5.0, 7.5), 90.0),
     'Demo Teleporter':      ((-7.5, 0.0, 42.5), 180.0),
     'Spawn_Teleporter':     ((-7.5, 1.1, 41.0), 180.0),
     'Player':               ((-7.5, 1.1, 41.0), 180.0),
@@ -428,6 +424,65 @@ for i, iz in enumerate(sorted(HATCH_Z)):
         set_tf(ids[0], (9.65, 5.0, HATCH_Z[iz]), -90.0)
     else:
         missing.append('Hatch_%d' % (i + 1))
+
+
+# ---- M97 realm record: authored at fixed world coordinates on the OLD hull ------
+# Marks sat on the old gallery wall at x=25 and Mounts on the old armory wall at
+# x=20. The rebuilt hull ends at x=10, so both were left outside the ship. Each
+# group is repositioned as a whole, which preserves the spacing M97 authored.
+#   Marks  local x 24.85 -> port wall of deck 2, faced back inboard by a 180 yaw
+#   Mounts local x 19.55 -> starboard armory wall of deck 1, same facing
+#   Plate  local x  9.54 -> nudged out to the new starboard face
+REALM = {
+    'Marks':        ((15.0, 5.0, 30.0), 180.0),
+    'Mounts':       ((-9.7, 0.0, 0.0), None),
+    'Record Plate': ((0.31, 0.0, 0.0), None),
+}
+for nm, (pos, yaw) in REALM.items():
+    ids = by_name.get(nm)
+    if not ids:
+        print("  MISSING realm-record group", nm); continue
+    set_tf(ids[0], pos, yaw)
+    print("  realm record: %s group -> %s%s" % (nm, pos, '' if yaw is None else ' yaw %g' % yaw))
+
+# ---- sealed hatches wore the hull atlas, so they read as wall ------------------
+MAT_HATCH_SEALED = '660fe0a96d9d4de40aa50d53e1ba9e23'
+ATLAS = '4cee7a5983b187943adc589b9cb1f084'
+sealed = 0
+for d in docs:
+    if d[1] != 114 or 'ShipHatchDoor' not in d[2]:
+        continue
+    new = re.sub(r'(_sealedMaterial: \{fileID: 2100000, guid: )' + ATLAS,
+                 r'\g<1>' + MAT_HATCH_SEALED, d[2], count=1)
+    if new != d[2]:
+        d[2] = new
+        sealed += 1
+print("  sealed-hatch material repointed on %d doors" % sealed)
+
+# ---- per-station console colour was on Desk/Screen, both authored inactive -----
+# Move it onto the visible ConsoleScreen so the station actually reads its colour;
+# the console body stays on the shared atlas so it still reads as ship hardware.
+STATION_MAT = {
+    'Station_Armory': 'bcb552d38c7d16947bd2a3cf808141f9',
+    'Station_CrewQuarters': 'c8fc703cbdc178340824051f016eb1ab',
+    'Station_Fabrication': '926c67abdc4ca044493a75819238065e',
+    'Station_Map': 'cda6a55ddf5f69e4e969e114ae94bc7e',
+}
+painted = 0
+for sname, mguid in STATION_MAT.items():
+    stf = by_name.get(sname)
+    if not stf:
+        continue
+    for t, v in tf.items():
+        if v['father'] != stf[0] or name_of.get(t) != 'ConsoleScreen':
+            continue
+        for c in go_comps.get(v['go'], []):
+            if byid.get(c) and byid[c][1] == 23:
+                byid[c][2] = byid[c][2].replace(
+                    '- {fileID: 2100000, guid: %s, type: 2}' % ATLAS,
+                    '- {fileID: 2100000, guid: %s, type: 2}' % mguid, 1)
+                painted += 1
+print("  station colour painted on %d console screens" % painted)
 
 print("deck 1 cells %d, deck 2 cells %d, total %d" % (len(D1), len(D2), len(D1) + len(D2)))
 print("emitted %d objects" % (len(KIDS.get(ENV, [])) + len(KIDS.get(DRESS, []))))
