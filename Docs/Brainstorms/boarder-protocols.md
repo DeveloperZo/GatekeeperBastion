@@ -9,10 +9,11 @@ unlock model, the growth levers, the five protocol sheets (the Default plus four
 specialists), the candidate axes toward the 8–10 roster, and the doctrine matrix. It
 spans the crew-skills and fabrication brainstorm areas, which is why it has its own
 file.
-Status: Default shipped (`M70` closed 2026-08-17); specialist sheets await their slices.
+Status: Default shipped (`M70`); VEIL and FORGE claimable in CREW (`M94` play-close
+owed). AEGIS and LEDGER remain brainstorm-only.
 Update trigger: when Zo vetoes or accepts a row, doctrine or structure call; when a gate
 named on an expansion row ships; when a candidate axis earns or loses a sheet.
-Last updated: 2026-08-17
+Last updated: 2026-08-22
 -->
 
 ## What this is

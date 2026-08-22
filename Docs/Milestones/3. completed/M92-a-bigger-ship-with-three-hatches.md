@@ -1,10 +1,10 @@
 # M92 — A bigger ship with three hatches
 
 <!--
-Status: active
+Status: completed
 Update trigger: when the hatch count or the seat-count assignment changes, when a
 station moves, when the co-op demo's beat 0 is re-specced
-Last updated: 2026-08-20
+Last updated: 2026-08-22
 -->
 
 The Ship is rebuilt larger on a Normandy SR-2 profile and doubles as the safehouse.

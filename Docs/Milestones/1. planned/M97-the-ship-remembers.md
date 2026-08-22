@@ -4,7 +4,7 @@
 Status: planned
 Update trigger: when the realm split changes what is available to display, when a
 display surface is added or cut, when the Ship layout moves
-Last updated: 2026-08-20
+Last updated: 2026-08-22
 -->
 
 The Ship stops being four stations in an empty hull and starts showing what this realm
@@ -82,6 +82,49 @@ without reading.
 **Playthrough path**: enter a realm with two bastions cleared and three weapons owned.
 From the Boarder spawn, walk to the ARMORY and count three weapons on the rack, then to
 the record wall and count two marks.
+
+## Premises corrected before building, 2026-08-22
+
+Three of this doc's claims stopped being true when `M96` landed, and are corrected here rather
+than worked around.
+
+- **`Ship.unity` does not exist.** Step 2 named it. The realm's ship is `Ship - CoOp.unity`
+  (Zo, 2026-08-21), and that is where the surfaces went.
+- **Criterion 3 contradicted criterion 8.** The rack was to show "every weapon this realm's
+  crew owns", but `M96` put weapons on the BOARDER — `RealmState` has none. The rack shows the
+  kit of whoever is aboard, which is what a crew's rack physically is, and criterion 8 is read
+  as "reads the record, never a cached copy of it" (Zo, 2026-08-22).
+- **Criterion 2 asked for a count that does not exist.** There is no bastions-cleared field,
+  and one bastion. The wall shows **one mark per clean exit** — a tally of runs survived here,
+  which is real data and fills as you play (Zo, 2026-08-22).
+
+## State at build, 2026-08-22
+
+**Verified in the Unity runner: EditMode 656 passed / 11 failed, PlayMode 68 / 1.** Every one
+of those twelve is the recorded pre-existing set; this milestone introduces no failure.
+
+Built: `RealmRecord` (the four numbers, packed into one replicated long, clamped not
+truncated), `NetRunMirror.RealmRecordPacked` with `RealmRecordPublisher` pushing host-side,
+`RealmRecordSource` as the read seam, and `RealmRecordView` driving 12 marks, 7 weapon mounts
+and a plate authored into `Ship - CoOp.unity`.
+
+**Owed.**
+
+- **Eyes on the hull.** Nobody has walked it. Criteria 1, 2 and 6 are judgements about what a
+  player can read at a glance, and no test settles them. The geometry was corrected against
+  the surrounding wall panels after a review found the rack buried and the mount plates in
+  another room entirely, so it is right on paper and unseen in practice.
+- **Criterion 7 needs two machines.** A guest reading the host's record is built and cannot be
+  shown in one process, the same limit `M96`'s criterion 8 hit.
+
+**Found while building, fixed here rather than left**: buying hatch armour never published, so
+every other player aboard read a stale plate for the session; the Ship HUD's salvage and
+cleared-wave still came from the visitor's own realm; and FABRICATION was ungated, letting a
+guest raise their own realm's hatch armour while standing on someone else's ship.
+
+**Found and NOT fixed**: a guest's shadow sim clamps its start wave and restores doors from its
+own realm, diverging its local bastion layout from the host's. It predates the realm split and
+is run-critical, so it wants two machines and its own change.
 
 ## Usable, or it did not ship
 

@@ -224,8 +224,9 @@ Named so they read as decisions rather than omissions:
 - **Whether the third protocol should be reachable inside the co-op demo or granted at
   its start.** *Unknown.* The demo grants kit rather than teaching shops, which argues
   for granted.
-- **`2. active/` is at its cap of 3** (`M63-3`, `M91`, `M93`), so this file cannot move
-  to active without a status change elsewhere. Owner call.
+- **`2. active/` is at its cap of 3** (`M82`, `M84`, `M93`). Code for VEIL/FORGE is on
+  disk; Compendium no longer says Coming Soon. Play-close and activate wait on a free
+  slot (phase 2) or a Zo over-cap call.
 
 ## Verification
 

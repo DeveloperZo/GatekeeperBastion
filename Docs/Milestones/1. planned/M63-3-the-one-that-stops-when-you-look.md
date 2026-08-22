@@ -1,10 +1,10 @@
 # M63-3 — The one that stops when you look
 
 <!--
-Status: next (current) — started 2026-08-20
+Status: planned — parked 2026-08-22 (no Cloaker code yet; active slot freed for M84 play-close)
 Update trigger: when the Cloaker's watch rule, its cone, its body or its Wave counts
 change, or when a fifth kind ships
-Last updated: 2026-08-20
+Last updated: 2026-08-22
 -->
 
 The garrison's fourth kind. A **Cloaker** advances only while no Boarder is looking at

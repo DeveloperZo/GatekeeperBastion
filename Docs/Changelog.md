@@ -5,8 +5,17 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 -->
+
+- 2026-08-22: **Milestone queue sweep.** Code evidence vs folders: `M84` activated
+  (HitReact + `Anim_flinch` on disk; playthrough 1–4 owed); `M63-3` parked to planned
+  (no `GatekeeperKind.Cloaker` yet — active slot was false occupancy). Roadmap Current
+  and rows synced for `M91`/`M92`/`M96` folder-completed and the three active play-close
+  slots. Compendium: VEIL/FORGE replace Coming Soon; realm pot + Boarder travel named;
+  Hatch-conversion unlock (not Lost) corrected on Getting Started; co-op hull / three
+  hatches on The Ship; buy-back on A Run. `M94` stays planned under the cap; play-close
+  still owed.
 
 - 2026-08-22: **`M96` closed — the realm and the Boarder.** Zo close. Verified in the
   Unity runner on the merged tree: EditMode 649 passed / 11 failed, PlayMode 68 / 1, every

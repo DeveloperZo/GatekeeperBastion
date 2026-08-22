@@ -77,11 +77,16 @@ Three things to internalise:
 
 Fix it during Prep, when nothing is hitting you. Fixing it during an Assault means standing still at the exact spot everything is walking toward.
 
-#### Mistake 3: expecting to upgrade your weapon before you've died
+#### Mistake 3: expecting to upgrade your weapon before you have banked
 
-Weapon **Tiers at the ARMORY and the equipment slot at FABRICATION are locked until you have lost a Run once.** The protocol at CREW QUARTERS and Hatch Armor at FABRICATION are never locked.
+Weapon **Tiers at the ARMORY and the equipment slot at FABRICATION are locked until
+Salvage first converts through the Hatch.** Docked or Lost after that does not matter —
+the conversion is the key. The protocol at CREW QUARTERS and Hatch Armor at FABRICATION
+are never locked.
 
-So on a fresh save, banking a pile of Salvage and going to the ARMORY to make your gun stronger does not work. Spend early Salvage on Hatch Armor, or hold it. After your first death, the weapon tracks open up.
+So on a fresh save, banking nothing and going to the ARMORY to make your gun stronger
+does not work. Spend early Salvage on Hatch Armor, or hold it. After the first convert,
+the weapon tracks open up.
 
 ### Also worth knowing on run one
 

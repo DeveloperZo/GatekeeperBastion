@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -29,64 +29,35 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**M63-3** started 2026-08-20 — the Cloaker, the garrison's fourth kind, shaved off
-`M63` along with the Ram→Thief rename and the `in_build` Compendium filter.
-**M80** completed 2026-08-20 (built; criteria 8–9 open — two-seat loopback and
-the D2→Escaped playthrough). **M79** completed 2026-08-20 (built, realigned and closed the same day; criterion
-10 closed under the dev-tainted allowance ruled that day — criterion 9's
-composition bet is open and needs a logged Run).
-**M78** completed 2026-08-20 (Zo close; criterion 9 `Lost` +
-`Returned` playthroughs). **M88** completed 2026-08-19 (Zo close). **M81** and **M87**
-completed 2026-08-19 (Zo close). **M76** completed 2026-08-18 (Zo close; juice
-teach deferred — TH-9, evicted 2026-08-19; survive-log TH-11 evicted;
-zone-deepest TH-10 and Docked voice TH-12 settled 2026-08-20 in
-[`HP-2`](Hygiene/2.%20settled/HP-2-the-dock-round-trip.md)).
-**M75** closed 2026-08-18 on Zo's beat 0 playthrough through to the Bastion;
-criteria 2 to 7 were not separately observed and are owed as TH-1 to TH-6 in
-[`HP-1`](Hygiene/1.%20open/HP-1-beat-zero-observed.md). Survive path (door unlock
-on bank success, Ship return) is **M77** (built; criteria 2 and 3 stamped at
-close; TH-14 and TH-17–TH-20 settled 2026-08-20 in
-[`HP-2`](Hygiene/2.%20settled/HP-2-the-dock-round-trip.md); TH-13 remains in
-[`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md)).
-**M74** closed 2026-08-17 (demo voice pipe). **M72** and **M73** completed
-2026-08-17.
-**M47, M48, M49, M50, M51, M52, M53, M54** completed 2026-08-13. **M61** and **M61-2**
-completed 2026-08-14. **M55, M57, M58, M59, M60, M62, M63-2, M64, M65, M71** completed
-2026-08-15. **M69** and **M70** completed 2026-08-17.
+**Active (3/3):** `M82` (viewmodel — code landed, playthrough 1–3), `M84` (flinch —
+code landed 2026-08-21, playthrough 1–4), `M93` (Primary legibility — metres/ARMED +
+catalog tests on disk, playthrough remains).
+
+**Parked 2026-08-22:** `M63-3` returned to planned — no `GatekeeperKind.Cloaker` yet;
+Ram→Thief rename already shipped. Reactivate when Cloaker build starts.
+
+**Folder-completed since 2026-08-20:** `M90`, `M91`, `M92`, `M96`. `M94` VEIL/FORGE
+catalog + abilities are on disk; stays planned under the active cap and phase-2 order
+(play-close still owed). Compendium no longer says Coming Soon for those two.
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
 developer touching a keyboard, play a full five-wave run with both participating, and the
-run ends with a screen that tells them what happened. Queue is ordered against that
-sentence. Shared Ship + party EMBARK closed with **M72** (2026-08-17); remaining friends
-work is polish and dry-run length, not lobby topology.
-
-**M90** completed 2026-08-21 (Zo close; playthrough stamped).
-**M84** built 2026-08-21: additive HitReact layer + `Anim_flinch.anim`;
-criterion 5 on disk; playthrough 1–4 owed.
-
-**M82** started 2026-08-20: shared viewmodel controller + four clips; reload
-speed-scales to each weapon's duration. Criteria 1–3 are a playthrough.
-
-**M93** started 2026-08-20: the three shop Primaries already differ in the sim; this
-pass makes that difference readable (concussive metres, Railshot ARMED, catalog test).
-Criterion 4 is unblocked (`M82` clips, 2026-08-20); playthrough remains.
-
-**Demo family cut 2026-08-17**: M74–M80 from `Demo/`'s beat specs. **M80**
-closed 2026-08-20.
+run ends with a screen that tells them what happened. Shared Ship + party EMBARK closed
+with **M72**; remaining friends work is polish and dry-run length.
 
 **Recommended next**, in this order.
 
-1. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
-   ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13). M77's remaining play stamp.
-2. **M66** — hit confirm, per-kind tells, distinct players at lane range.
-3. **Play close-outs** still open on completed files: M32 criterion 7, M26 Path 2, M31 pin
-   playthrough, M47 criterion 18 wave-report, M61-2 criteria 4/13/14, M55 juice unused,
-   M71 Regen Surge mag, M64 criteria 13–25 dry-run, M69 criterion 4, M73 criterion 6,
-   M80 criteria 8–9.
+1. **Play-stamp the active three** — `M82`, `M84`, `M93` (frees slots for Cloaker or `M94`).
+2. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
+   ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
+3. **`M99`** when weapon questions stack — range scene verifies `M82`/`M93`/`M84`/`M85`
+   without a full Run each.
+4. Older play close-outs still open on completed files: M32 criterion 7, M26 Path 2, M31 pin,
+   M47 criterion 18, M61-2 4/13/14, M55 juice, M71 Regen Surge, M64 13–25, M69 criterion 4,
+   M73 criterion 6, M80 criteria 8–9.
    Next-Run list: `GatekeeperZo Notes/verification.md`.
 
-Planned count is over cap (files in `1. planned/` still include completed
-`M78`/`M79` and unindexed co-op rows). Active **2** of 3 (`M91`, `M93`).
+Active **3** of 3 (`M82`, `M84`, `M93`).
 
 ## Order
 
@@ -154,7 +125,7 @@ this table — see the change log.
 | M69 | The session has a voice | completed, Aug 2026 | Whispers on Ship/Bastion; fire/reload/footsteps on SFX; no store pack. Gate: `SessionMusicHostTests` 4/0. Criterion 4 slider playthrough open | [`3. completed/M69`](Milestones/3.%20completed/M69-the-session-has-a-voice.md) |
 | M63 | The garrison is a roster | later | Twelve-kind roster + properties + draw rule recorded; `M53`'s Ram exception removed; door-time logged. Criteria 5, 8 and 9 (Ram→Thief, `in_build` filter) shaved off to `M63-3` 2026-08-20 | [`1. planned/M63`](Milestones/1.%20planned/M63-the-garrison-a-roster-with-bodies.md) |
 | M63-2 | The three that walk | completed, Aug 2026 | Default/Hunter/Thief (Ram) Synty meshes + Mixamo melee walk; player capsule mesh removed; Play pages Thief-named. Gate: GatekeeperPresentationTests; silhouette Zo-closed | [`3. completed/M63-2`](Milestones/3.%20completed/M63-2-the-three-that-walk.md) |
-| M63-3 | The one that stops when you look | active | The garrison's fourth kind: a **Cloaker** on the pack's last unspent silhouette (`SK_Tactical`) that advances only while no Boarder is looking at it — a 30° watch cone gates both targeting virtuals, and a two-material cloak drops when it is seen or shot. Carries `M63`'s Ram→Thief rename and `in_build` filter. Started 2026-08-20 | [`2. active/M63-3`](Milestones/2.%20active/M63-3-the-one-that-stops-when-you-look.md) |
+| M63-3 | The one that stops when you look | later (parked 2026-08-22) | Cloaker kind — watch cone + two-material cloak on `SK_Tactical`; carries `M63` Ram→Thief rename and `in_build` filter. Parked: no Cloaker code yet; active slot freed for `M84` play-close | [`1. planned/M63-3`](Milestones/1.%20planned/M63-3-the-one-that-stops-when-you-look.md) |
 | M62 | The Compendium you can open | completed, Aug 2026 | Esc → Compendium; Game dimension + scroll nav; StreamingAssets copy; HUD hidden while open; `CompendiumFormTests` | [`3. completed/M62`](Milestones/3.%20completed/M62-the-compendium-you-can-open.md) |
 | M60 | A join a friend can use | completed, Aug 2026 | Unity Relay join code from Main Menu; join-in-Tethered; clean disconnect; host-quit message; LAN IP fallback. Gate: NetSessionAddressTests + Zo eyes-on criterion 4 | [`3. completed/M60`](Milestones/3.%20completed/M60-a-join-a-friend-can-use.md) |
 | M65 | Three players, and a fight that counts them | completed, Aug 2026 | Three supported, six cheap; waves scale by player count; salvage split to own wallets. Gate: `PlayerWalletTests`, `WavePlayerCountTests`, `NetThreePlayerTests` (cumulative BankCap; `RunSim.Wallets.cs`). Full suite still has unrelated reds | [`3. completed/M65`](Milestones/3.%20completed/M65-three-players-and-a-fight-that-counts-them.md) |
@@ -177,15 +148,15 @@ this table — see the change log.
 | M81 | The Gatekeeper's swing | completed, Aug 2026 | One retargeted attack clip into the shared Gatekeeper controller — Attack stops playing PlayerIdle for all three kinds and ship intruders. Free-retarget probe accepted (Zo close 2026-08-19) | [`3. completed/M81`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md) |
 | M82 | The weapon in your hands | active | Shared viewmodel controller + four hand-keyed clips (idle/move/fire/reload) for all six weapons; reload speed-scales to each weapon's duration; four controller-less window Animators in Bastion.unity removed. Started 2026-08-20 | [`2. active/M82`](Milestones/2.%20active/M82-the-weapon-in-your-hands.md) |
 | M83 | Crewmates fire on camera | later | Replicate fire/reload to non-owner avatars via the existing ClientRpc pattern — drives Boarder.controller's wired-but-unreachable Fire/Reload states; code only, clips already exist | [`1. planned/M83`](Milestones/1.%20planned/M83-crewmates-fire-on-camera.md) |
-| M84 | Gatekeepers flinch when shot | later (built 2026-08-21) | One 0.25s muscle flinch on a masked additive HitReact layer from `Damaged`; criterion 5 on disk; playthrough 1–4 owed | [`1. planned/M84`](Milestones/1.%20planned/M84-gatekeepers-flinch-when-shot.md) |
+| M84 | Gatekeepers flinch when shot | active (built 2026-08-21) | One 0.25s muscle flinch on a masked additive HitReact layer from `Damaged`; criterion 5 on disk; playthrough 1–4 owed | [`2. active/M84`](Milestones/2.%20active/M84-gatekeepers-flinch-when-shot.md) |
 | M85 | The collapse under the burst | later | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail, so a corpse never delays a wave clear; co-op carrier named as the open question | [`1. planned/M85`](Milestones/1.%20planned/M85-the-collapse-under-the-burst.md) |
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
 | M87 | A bought body in an hour | completed, Aug 2026 | Utility Bot on the pack's Built-In Shader Graph in the Ship; graduation test passed 2026-08-18; Zo close 2026-08-19 (criterion 6 elapsed time unrecorded) | [`3. completed/M87`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md) |
 | M88 | The Gatekeepers are machines | completed, Aug 2026 | One FaxLab3D robot per Gatekeeper kind — silhouette tells the kind, on the pack's Built-In Shader Graph. Zo close 2026-08-19 | [`3. completed/M88`](Milestones/3.%20completed/M88-the-gatekeepers-are-machines.md) |
 | M89 | The Ship, from above | cancelled, Aug 2026 | Killed 2026-08-20 (Zo): first person is chosen, not inherited — the isometric probe never runs. Part of the rig had already landed with `ce7d2ba`; `Ship_Isometric.unity` and its PlayMode fixture were **deleted 2026-08-20 (Zo)** and the scene unregistered. `IsometricCameraRig`, `WallRenderState` and `IsometricBodyPresentation` remain in the tree, now unreachable — no scene instantiates a rig, so every `_isoRig` is null | [`5. cancelled/M89`](Milestones/5.%20cancelled/M89-the-ship-from-above.md) |
-| M91 | You wake standing | active (code landed, scene pending) | Beat 0's wake bed becomes a teleporter — upright materialise on a pad inside a glass cylinder that retracts on hold-E. Removes three dated defects, chiefly the session-long `SetCapsuleTrigger(true)` that was never restored. Code landed 2026-08-20; the `Demo Teleporter` subtree and its four bindings are Zo's scene pass | [`2. active/M91`](Milestones/2.%20active/M91-you-wake-standing.md) |
+| M91 | You wake standing | completed, Aug 2026 | Beat 0 wake is a teleporter — upright on a pad, glass retracts on hold-E; `SetCapsuleTrigger` gone | [`3. completed/M91`](Milestones/3.%20completed/M91-you-wake-standing.md) |
 | M90 | Buy back at a live window | completed, Aug 2026 | A dead guest pays `HatchBank.BuyBackCost` from their own banked Salvage and rejoins at the Hatch during a Hatch-bank Assault. Report-and-ask wallet, doors deferred to `M95`. **Wallet superseded by `M96`**: with the pot on the realm the host reads and debits the world's salvage directly, so no purse is reported. Zo close 2026-08-21 | [`3. completed/M90`](Milestones/3.%20completed/M90-buy-back-at-a-live-window.md) |
-| M92 | A bigger ship with three hatches | active | Ship hull grown on the SR-2 profile with a starboard hatch gallery; three hatch doors with stable ids, open state assigned by seat count (1 → middle, 2 → outer pair, 3 → all); look-at strings + `[Hatch] assigned` log; guest cap 3 → 2. The hull and the doors only — per-hatch HP and enemy routing are the co-op demo's. Started 2026-08-20 | [`2. active/M92`](Milestones/2.%20active/M92-a-bigger-ship-with-three-hatches.md) |
+| M92 | A bigger ship with three hatches | completed, Aug 2026 | SR-2 hull with three hatch doors; seat-count assignment; lives as `Ship - CoOp`. Per-hatch HP / enemy routing remain co-op demo work | [`3. completed/M92`](Milestones/3.%20completed/M92-a-bigger-ship-with-three-hatches.md) |
 | M93 | Three primaries that read as three guns | active | The three shop Primaries (BR-12, MR-35, PRI-C) already differ in the sim; this pass makes the difference legible — concussive metres in the log, Railshot ARMED on the HUD, a pairwise catalog test. Criterion 4 (viewmodel motion) unblocked by `M82` 2026-08-20; playthrough remains. Started 2026-08-20 | [`2. active/M93`](Milestones/2.%20active/M93-three-primaries-that-read-as-three-guns.md) |
 | M96 | The realm and the Boarder | completed, Aug 2026 | One save becomes two: a Boarder that travels with the player (weapons, focus rings, equipped Primary/Secondary, protocol, equipment, drone bay) and a realm that stays with the world (the whole salvage ledger, run record, doors and terminals, hatch armour, depth, the twelve demo flags). Save version 13 REFUSES anything older rather than migrating it, and leaves the old campaign on disk. Every seat banks into the realm's pot, so buy-back now pays from the world. New `RealmSelect` scene; `MainMenu.unity` untouched. Built 2026-08-21 — compiles and lints clean, nothing yet RUN in the editor, and criteria 1–6 need a playthrough | [`3. completed/M96`](Milestones/3.%20completed/M96-the-realm-and-the-boarder.md) |
 
@@ -196,8 +167,8 @@ this table — see the change log.
 1. **Finish and polish the solo demo.** `M82`, `M93`, `M84`, `M85`, `M66`, and the
    garrison content in `M63` / `M63-3`.
 2. **Build out the co-op demo.** `M83`, `M86`, `M94`, `M95`, `M98`.
-3. **Ship / Realm / Safehouse.** `M96`, `M97`, and the realm-lock entry still in
-   `Brainstorms/realms.md`.
+3. **Ship / Realm / Safehouse.** `M97`, and the realm-lock entry still in
+   `Brainstorms/realms.md`. (`M96` closed 2026-08-22.)
 
 Three things sit across that order rather than inside it:
 

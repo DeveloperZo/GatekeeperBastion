@@ -62,7 +62,7 @@ A Hatch-bank Wave hunts the Hatch. It is one step heavier than the last field Wa
 
 Four things end a Run.
 
-**You die.** Your health does not come back during a Run — there is no healing, no regeneration, no pickup, no respawn. What you take, you keep until the Run ends. When it runs out you go down, and the Run is over — for solo, and for the host. If a second Boarder is in the Bastion, their down does not end the Run; they wait on the Ship and can embark again while the host is in Hatch-bank Prep.
+**You die.** Your health does not come back during a Run — there is no healing, no regeneration, no pickup, no respawn. What you take, you keep until the Run ends. When it runs out you go down, and the Run is over — for solo, and for the host. If a second Boarder is in the Bastion, their down does not end the Run; they wait on the Ship and can embark again while the host is in Hatch-bank Prep. During a live Hatch-bank Assault a downed guest can **buy back** from the realm's shared Salvage pot and rejoin at the Hatch.
 
 **The Hatch falls.** The Hatch is the umbilical junction back to your Ship. When its health reaches zero the Run ends on the spot, whatever else was happening, and it cannot be repaired back from zero.
 

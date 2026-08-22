@@ -4,10 +4,14 @@
 
 ## Game
 
-Between Runs you stand on the Ship. Solo: your own hub. Friends session: the shared Ship — party lead owns NAV EMBARK; each seat shops their own loadout. This is the only place Salvage gets spent, and the only way back to the Bastion. Four consoles, each owning one subject: **ARMORY**, **CREW QUARTERS**, **FABRICATION**, **NAV MAP**.
+Between Runs you stand on the Ship. Solo and friends both use the co-op hull: three
+hatch doors along one side, one open per seat. Party lead owns NAV EMBARK; each seat
+shops their own loadout. This is the only place Salvage gets spent, and the only way
+back to the Bastion. Four consoles, each owning one subject: **ARMORY**, **CREW
+QUARTERS**, **FABRICATION**, **NAV MAP**.
 
-Buy the free sidearm first. Then CREW QUARTERS — claim the Default Protocol (it costs
-nothing; that is how you learn the console). Weapon upgrades and the equipment slot
+Buy the free sidearm first. Then CREW QUARTERS — claim a protocol (Default costs
+nothing; VEIL and FORGE are also on that panel). Weapon upgrades and the equipment slot
 wait until Salvage first converts through the Hatch. The NAV MAP warns if you own no weapon or no
 protocol and lets you go anyway. Numbers and bindings: [Field Manual](Field-Manual.md).
 
@@ -27,9 +31,9 @@ Each console owns exactly one subject. Nothing is sold in two places.
 
 **ARMORY — the weapon in your hands.** Weapons, and the upgrade wheel for a weapon you already own. This is also the only place you decide which owned weapon fills your Primary slot and which fills your Secondary; in the Bastion the weapon keys only swap between the slots you are already carrying, never between things you own. Buying a weapon equips it into its own slot straight away. Upgrades are bought per weapon, so Salvage poured into one gun stays in that gun — buy a different Primary and its upgrade wheel starts at nothing.
 
-**CREW QUARTERS — you.** The protocol you embark wearing: how hardware deploys, a
-Barrage you plant so the crew dumps fire, a Rush that speeds only your gun. Claim
-Default here at cost 0; VEIL, AEGIS and LEDGER read Coming Soon. Repairing the Hatch
+**CREW QUARTERS — you.** The protocol you embark wearing: doctrine, Crew ability on
+`G`, Personal on `H`, and a passive where the sheet has one. Claim Default at cost 0,
+or claim **VEIL** or **FORGE**. AEGIS and LEDGER are not sold. Repairing the Hatch
 is not here; that is the Repair Rig at FABRICATION.
 
 **FABRICATION — the Hatch.** How much the door can take before it falls, plus the equipment slot, the Repair Rig, and the Decoy that fills the Drone bay. What it buys applies from your next embark onward, not retroactively.

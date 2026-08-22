@@ -1,9 +1,9 @@
 # M84 — Gatekeepers flinch when shot
 
 <!--
-Status: later (built 2026-08-21; playthrough 1–4 unstamped)
+Status: active (built 2026-08-21; playthrough 1–4 unstamped)
 Update trigger: when criteria 1–4 are play-stamped, or when the clip is swapped
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 -->
 
 One short flinch clip on a masked upper-body additive layer of the shared

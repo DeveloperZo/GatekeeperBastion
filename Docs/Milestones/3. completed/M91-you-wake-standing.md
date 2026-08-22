@@ -1,9 +1,9 @@
 # M91 — You wake standing
 
 <!--
-Status: next (current)
+Status: completed
 Update trigger: when the wake sequence, the glass, or the beat-0 reload matrix moves.
-Last updated: 2026-08-20
+Last updated: 2026-08-22
 -->
 
 Beat 0's wake capsule becomes a teleporter: you materialise **upright** on a pad, inside a
