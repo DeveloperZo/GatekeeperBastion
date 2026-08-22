@@ -8,6 +8,14 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-22
 -->
 
+- 2026-08-22: **`M100` written, and `M98` corrected.** The realm-lock entry in
+  `Brainstorms/realms.md` graduates to `M100` — the realm document keyed to its owner's
+  ID, an access list held on both sides, and a single-writer lock whose holder hosts;
+  the session stays peer-hosted, so no game server. `M98`'s first criterion had assumed
+  a realm reachable while its owner is offline, which has never existed; it is narrowed
+  to membership and the offline half is named as `M100`'s. The two are independent —
+  `M98` is *when* a seat may enter a live run, `M100` is *whether the realm is there*.
+
 - 2026-08-22: **Milestone queue sweep.** Code evidence vs folders: `M84` activated
   (HitReact + `Anim_flinch` on disk; playthrough 1–4 owed); `M63-3` parked to planned
   (no `GatekeeperKind.Cloaker` yet — active slot was false occupancy). Roadmap Current

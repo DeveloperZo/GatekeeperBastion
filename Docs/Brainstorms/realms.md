@@ -91,8 +91,8 @@ need a game server — the session stays peer-hosted over Relay as it is today, 
 moves off one machine is the realm *document*, not the simulation. Three parts: the realm
 stored against the owner's player ID, an access list, and **a single-writer lock**
 (`lockedBy` plus a heartbeat; opening takes it, a stale one can be broken, the holder
-hosts). The Boarder stays personal — only the realm has to be reachable. *This entry is
-milestone-shaped and is the next thing here likely to graduate.*
+hosts). The Boarder stays personal — only the realm has to be reachable. **Graduated to
+`M100` on 2026-08-22**, with the three parts intact and the roster held on both sides.
 
 **Cost, checked 2026-08-21.** Cloud Save's free tier is 5 GiB/month storage, 1,000,000
 writes and 1,000,000 reads; Authentication is free outright, so account linking is a code

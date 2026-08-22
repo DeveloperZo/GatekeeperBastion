@@ -159,6 +159,7 @@ this table — see the change log.
 | M92 | A bigger ship with three hatches | completed, Aug 2026 | SR-2 hull with three hatch doors; seat-count assignment; lives as `Ship - CoOp`. Per-hatch HP / enemy routing remain co-op demo work | [`3. completed/M92`](Milestones/3.%20completed/M92-a-bigger-ship-with-three-hatches.md) |
 | M93 | Three primaries that read as three guns | active | The three shop Primaries (BR-12, MR-35, PRI-C) already differ in the sim; this pass makes the difference legible — concussive metres in the log, Railshot ARMED on the HUD, a pairwise catalog test. Criterion 4 (viewmodel motion) unblocked by `M82` 2026-08-20; playthrough remains. Started 2026-08-20 | [`2. active/M93`](Milestones/2.%20active/M93-three-primaries-that-read-as-three-guns.md) |
 | M96 | The realm and the Boarder | completed, Aug 2026 | One save becomes two: a Boarder that travels with the player (weapons, focus rings, equipped Primary/Secondary, protocol, equipment, drone bay) and a realm that stays with the world (the whole salvage ledger, run record, doors and terminals, hatch armour, depth, the twelve demo flags). Save version 13 REFUSES anything older rather than migrating it, and leaves the old campaign on disk. Every seat banks into the realm's pot, so buy-back now pays from the world. New `RealmSelect` scene; `MainMenu.unity` untouched. Built 2026-08-21 — compiles and lints clean, nothing yet RUN in the editor, and criteria 1–6 need a playthrough | [`3. completed/M96`](Milestones/3.%20completed/M96-the-realm-and-the-boarder.md) |
+| M100 | A realm you can open while its owner is offline | planned | Graduates the realm-lock entry from `Brainstorms/realms.md`: the realm document keyed to its owner's ID, an access list held on both sides, and a single-writer lock whose holder hosts. The session stays peer-hosted over Relay — no game server, because what moves off one machine is the document and not the simulation. Written 2026-08-22, and it is the half of `M98`'s first criterion that `M98` never owned | [`1. planned/M100`](Milestones/1.%20planned/M100-a-realm-you-can-open-while-its-owner-is-offline.md) |
 
 ## Strategy
 
@@ -167,8 +168,8 @@ this table — see the change log.
 1. **Finish and polish the solo demo.** `M82`, `M93`, `M84`, `M85`, `M66`, and the
    garrison content in `M63` / `M63-3`.
 2. **Build out the co-op demo.** `M83`, `M86`, `M94`, `M95`, `M98`.
-3. **Ship / Realm / Safehouse.** `M97`, and the realm-lock entry still in
-   `Brainstorms/realms.md`. (`M96` closed 2026-08-22.)
+3. **Ship / Realm / Safehouse.** `M97`, and `M100`, which is the realm-lock entry
+   graduated out of `Brainstorms/realms.md` on 2026-08-22. (`M96` closed 2026-08-22.)
 
 Three things sit across that order rather than inside it:
 

@@ -3,8 +3,9 @@
 <!--
 Status: planned
 Update trigger: when the between-waves gate moves, when the hatch open rule changes,
-when wave composition stops being computed per wave
-Last updated: 2026-08-20
+when wave composition stops being computed per wave, when M100 changes where a realm
+lives
+Last updated: 2026-08-22
 -->
 
 A friend joins a realm whenever they like, walks the Ship alone if nobody is home, and
@@ -40,8 +41,9 @@ Leverage tier (`../../Working-Rules.md`): **#4, self-organisation.**
 
 ## Acceptance criteria
 
-1. A player enters a realm whose owner is offline, spawns on the Ship, and can walk it
-   and use every station alone.
+1. A player enters a realm they are a member of, spawns on the Ship, and can walk it
+   and use every station alone. *Whether the owner has to be online for that is `M100`'s
+   question, not this one.*
 2. A player joins a realm whose party is mid-run and lands on the Ship, not in the
    bastion, with a prompt saying they will join at the next break.
 3. Pressing that prompt during the party's **Prep** puts them in the bastion with the
@@ -106,6 +108,12 @@ wave, the open-count log, and the next wave's composition line carrying the high
 
 Depends on `M96` for realms to join and `M92` for hatch doors to open. `M97` is
 unrelated and can land either side.
+
+`M100` owns reaching a realm whose owner is not running the game. This milestone was
+written on 2026-08-20 as though that already worked; it never has, and folding it in here
+would have made a join-timing milestone carry a storage change. The two are independent:
+this one is about *when* a seat may enter a live run, `M100` is about *whether the realm
+is there to enter*.
 
 ## Open questions
 
