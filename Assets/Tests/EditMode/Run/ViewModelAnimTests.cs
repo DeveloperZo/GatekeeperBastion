@@ -122,10 +122,12 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void PriCAndMr35_FbxChildLocalZ_IsPinned()
         {
-            Assert.AreEqual(0.12f, GatekeepersProtocol.Sim.WeaponView.PriCFbxLocalZ);
+            Assert.AreEqual(0.204f, GatekeepersProtocol.Sim.WeaponView.PriCFbxLocalZ);
             Assert.AreEqual(0.204f, GatekeepersProtocol.Sim.WeaponView.Mr35FbxLocalZ);
             StringAssert.Contains(
-                "propertyPath: m_LocalPosition.z\n      value: 0.12",
+                "propertyPath: m_LocalPosition.z\n      value: 0.204",
+                Read("Assets/Packs/Weapons/PriC.prefab"));
+            StringAssert.Contains("m_LocalScale: {x: 1, y: 1, z: 1}",
                 Read("Assets/Packs/Weapons/PriC.prefab"));
             StringAssert.Contains(
                 "propertyPath: m_LocalPosition.z\n      value: 0.204",

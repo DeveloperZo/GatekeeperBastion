@@ -108,7 +108,7 @@ namespace GatekeepersProtocol.Tests
             var mk1 = WeaponView.Hold(WeaponId.Mk1Sidearm);
             WeaponId[] shop =
             {
-                WeaponId.SecD, WeaponId.Br12Shotgun, WeaponId.Mr35Rifle
+                WeaponId.SecD, WeaponId.Br12Shotgun, WeaponId.Mr35Rifle, WeaponId.PriC
             };
             for (int i = 0; i < shop.Length; i++)
             {
@@ -121,20 +121,6 @@ namespace GatekeepersProtocol.Tests
                 Assert.AreEqual(mk1.Roll, h.Roll, shop[i].ToString());
                 Assert.AreEqual(mk1.Right, WeaponView.Hold(shop[i], true).Right);
             }
-        }
-
-        [Test]
-        public void Hold_PriCKeepsTheMk1Hand_LowAndAlongTheBarrel()
-        {
-            var mk1 = WeaponView.Hold(WeaponId.Mk1Sidearm);
-            var sniper = WeaponView.Hold(WeaponId.PriC);
-            Assert.AreEqual(mk1.Right, sniper.Right);
-            Assert.AreEqual(mk1.Forward, sniper.Forward);
-            Assert.Less(sniper.Down, mk1.Down);
-            Assert.Less(sniper.Yaw, 0f);
-            Assert.AreEqual(0f, sniper.Roll);
-            Assert.AreEqual(sniper.Right, WeaponView.Hold(WeaponId.PriC, true).Right);
-            AssertInFrame(sniper);
         }
 
         [Test]

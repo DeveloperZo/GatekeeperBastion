@@ -1,10 +1,10 @@
 # M82 — The weapon in your hands
 
 <!--
-Status: active
+Status: completed
 Update trigger: when the viewmodel controller or clips land, or when a weapon
 gains a bespoke clip that overrides the shared set
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 -->
 
 One shared viewmodel animator — idle, move, fire, reload — hand-keyed in
@@ -98,9 +98,9 @@ Criterion 5: four controller-less Animators on `Gen_*_WindowPiece` in
 
 ## Verification
 
-1. Criteria 1 to 3 — playthrough path: from Play, start a Run; fire the MK-1,
-   then a slower-reloading weapon; reload each; sprint and stop while
-   watching the viewmodel. Each transition should be visible on screen.
+1. Criteria 1 to 3 — playthrough on `M99` when it ships (not a full Run). Until then:
+   `ViewModelAnimTests` + controller/clip assets on disk close existence. Eyes-on kick /
+   reload / bob are confirmation after the range.
 2. Criterion 4 — switch through all six weapons in one Run, fire and reload
    at least two of them; confirm no weapon goes static. A guid search of the
    weapon prefabs and viewmodel object should find exactly one
@@ -126,3 +126,10 @@ silhouette is `WeaponView.Hold` on Grip, not a second set of clips.
 
 Independent of M81 and M83. Unblocks `M93` criterion 4 (viewmodel fire/reload
 motion at each weapon's rate).
+
+## Closed, Aug 2026
+
+Closed by Zo 2026-08-22. Shared `ViewModel.controller` + four clips on disk;
+`ViewModelAnimTests`; Bastion controller-less window Animators removed. Eyes-on
+that Verification routed through `M99` is accepted as first-pass play rather than
+a range stamp — `M99` was still building at close.

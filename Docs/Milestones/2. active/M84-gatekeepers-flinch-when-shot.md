@@ -1,8 +1,8 @@
 # M84 — Gatekeepers flinch when shot
 
 <!--
-Status: active (built 2026-08-21; playthrough 1–4 unstamped)
-Update trigger: when criteria 1–4 are play-stamped, or when the clip is swapped
+Status: active (built 2026-08-21; eyes-on 1–4 wait on `M99`)
+Update trigger: when criteria 1–4 are stamped on the range, or when the clip is swapped
 Last updated: 2026-08-22
 -->
 
@@ -116,21 +116,19 @@ rg -n "^guid:" "Assets/Packs/Gatekeepers/Animations/Anim_flinch.anim.meta"
    The Flinch state's `m_Motion` guid equals the clip meta's `guid`. Attack
    still references `03ede1e3f3df7b14fbb44ae773ed0c02`. A controller that
    had not done the work has one layer and no `HitReact` parameter.
-2. Criteria 1 and 2 — playthrough path: from Play, start a Run, shoot a
-   Gatekeeper while it crosses open ground; flinch on each hit, no movement
-   hitch.
-3. Criterion 3 — let one reach the Hatch, keep shooting it; hatch damage
-   sparks continue on interval.
-4. Criterion 4 — shoot a Default, a Hunter and a Thief in the Bastion;
-   Ship fight to the intruder spawn and shoot it.
+2. Criteria 1 and 2 — playthrough on `M99` when it ships: shoot a Gatekeeper on open
+   ground; flinch on each hit, no movement hitch. Not a full Run.
+3. Criterion 3 — on the range (or a Bastion hatch reach in a short fixture): keep
+   shooting while it attacks; hatch damage sparks continue on interval.
+4. Criterion 4 — on the range: Default, Hunter, Thief, plus Ship intruder once.
 5. Co-op visibility of the flinch shares M85's replication question; verify
    in the same two-instance session M85 uses.
 
 ### What has landed
 
 **Landed 2026-08-21 (agent).** Clip, mask, layer and both code hooks are on disk.
-Criterion 5 reads clean in the files. Criteria 1–4 are structurally in place and
-unproven — they need the playthrough below.
+Criterion 5 reads clean in the files. Criteria 1–4 are structurally in place;
+eyes-on waits on `M99` (`Decisions.md` 2026-08-22) — not an unpaid full-Run stamp.
 
 `Anim_flinch.anim` guid `0cd7751cb3144b74fb47045e6061905f`; Flinch `m_Motion`
 fileID `7400000` matches the clip meta. `UpperBody.mask` guid

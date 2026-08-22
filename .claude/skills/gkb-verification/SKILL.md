@@ -82,6 +82,11 @@ A criterion closes when it is checkable from the session log, the test harness, 
 number. "Feels better" does not close a milestone, and neither does a criterion that can be
 satisfied without doing the work.
 
+**A playthrough stamp is not required to close until a replayable slice exists** for that
+criterion (`Docs/Decisions.md`, 2026-08-22). Without one, close disk and harness criteria;
+write the playthrough path and stamp it after the slice ships (`M99` for weapon / hit
+feedback). Do not stack unpaid Run playthroughs as the only remaining gate.
+
 **A criterion may gate on reading the editor's output. It may not require driving the editor** —
 that puts a domain reload in the loop and turns authoring into code generation.
 

@@ -1,10 +1,10 @@
 # M93 — Three primaries that read as three guns
 
 <!--
-Status: next
+Status: completed
 Update trigger: when a Primary is added, retired or re-statted, when M82's viewmodel
 contract changes, when PrimaryRowsOpen moves
-Last updated: 2026-08-20
+Last updated: 2026-08-22
 -->
 
 The three shippable Primaries are bought, held and fired, and each one is
@@ -136,3 +136,15 @@ indicator, and one log line per ability carrying its number.
 A fourth Primary. Any stat retune. Arms meshes. Per-weapon bespoke clips beyond
 `M82`'s shared set. Hit confirm, which is `M66`. Opening the Primary rack before
 zone 2's bank falls.
+
+## Closed, Aug 2026
+
+Closed by Zo 2026-08-22. First pass: the three Primaries read as three guns.
+Concussive metres, Railshot **ARMED** on the HUD, and `PrimaryDifferentiationTests`
+are on disk. Criterion 9 held — no `WeaponCatalog` combat-number edit in this
+milestone.
+
+**Owed, not blocking.** PRI-C needs more tuning; that is a later leverage pass, not
+a reopen of this milestone. Eyes-on that Verification routed through `M99` is
+accepted as first-pass play rather than a range stamp — `M99` was still planned at
+close.

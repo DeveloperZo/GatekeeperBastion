@@ -163,6 +163,11 @@ Anything the player drives gets a **playthrough path**: from pressing Play, the 
 route to exercising it, and what on screen or in the log says it worked. A change proven
 only by a passing test and a source grep is proven to exist, not proven to be usable.
 
+**A playthrough path is not a blocking close gate until a replayable slice exists for
+that class of criterion** (`Decisions.md`, 2026-08-22). Name the slice in Verification
+(`M99`, an F12 beat, a PlayMode that paints). Until then, close what the harness and
+disk can check; leave the playthrough as confirmation after the slice ships.
+
 ## Optional sections
 
 Used only when there is something to say, in the order they usually appear: **Supporting

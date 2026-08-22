@@ -8,6 +8,22 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-22
 -->
 
+- 2026-08-22: **`M82` closed — the weapon in your hands.** Zo close. Shared
+  `ViewModel.controller` + four clips; `ViewModelAnimTests`; Bastion window
+  Animators cleaned. Active queue is now `M84` + `M99` (2/3).
+
+- 2026-08-22: **`M93` closed — three primaries that read as three guns.** Zo close,
+  first pass. Concussive metres, Railshot ARMED, `PrimaryDifferentiationTests` on
+  disk; criterion 9 held. **PRI-C further tuning owed** outside this milestone, not
+  a reopen. Freed slot activates `M99` (range).
+
+- 2026-08-22: **Locked — a play stamp needs a replayable slice** (Zo). Weapon-feel /
+  hit-feedback milestones may not require a full-Run playthrough to close until a
+  named short loop exists (`M99`, F12 beat, painting PlayMode). Roadmap recommended
+  next leads with `M99`; the prior "queued last" line is overturned. `M82` / `M84` /
+  `M93` verification points eyes-on at the range. Recorded in `Decisions.md`,
+  `_meta/_definitions/milestone.md`, and `gkb-verification`.
+
 - 2026-08-22: **`M100` written, and `M98` corrected.** The realm-lock entry in
   `Brainstorms/realms.md` graduates to `M100` — the realm document keyed to its owner's
   ID, an access list held on both sides, and a single-writer lock whose holder hosts;

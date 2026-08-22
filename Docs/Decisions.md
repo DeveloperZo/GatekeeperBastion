@@ -329,6 +329,20 @@ balance verdicts and "is this fun" still need a clean Run. The relaxation is abo
 
 First applied closing `M79`.
 
+## Locked — a play stamp needs a replayable slice (Zo, 2026-08-22)
+
+A milestone may not **require** a playthrough stamp to close until a **replayable
+slice** exists that exercises the criteria without a full economy Run (the range
+`M99`, a named F12 beat, a PlayMode fixture that paints the Game view — named in
+Verification). Disk criteria, EditMode, and PlayMode harnesses still close what
+they can see. Playthrough paths stay written in the milestone; they are not the
+blocking gate while the only route is "embark and play a Run."
+
+Cause: weapon-feel and hit-feedback gates (`M82`, `M84`, `M93`, later `M85` /
+`M66`) were stacking unpaid play stamps with no short loop to stamp against.
+`M99` is the slice that unlocks those stamps — not an optional convenience after
+them.
+
 ## Locked — the save refuses what it cannot honestly read (Zo, 2026-08-21)
 
 From save version 13, a document written by an older build **does not load**. The game says

@@ -42,15 +42,13 @@ namespace GatekeepersProtocol.Sim
             public float Pitch, Yaw, Roll;
         }
 
-        /// <summary>Fbx-child local +Z. PriC 0.12 puts the pistol grip at the wrapper
-        /// origin (stock 0.19 m behind after z-scale 1.4). 0.257 held the butt and the
-        /// rifle floated in front of the MK-1 pocket.</summary>
-        public const float PriCFbxLocalZ = 0.12f;
+        /// <summary>Fbx-child local +Z so the stock sits at the Grip origin. PRI-C uses
+        /// the same shift and 1,1,1 scale as MR-35 — the 1.4 z-stretch made a plank.</summary>
+        public const float PriCFbxLocalZ = 0.204f;
         public const float Mr35FbxLocalZ = 0.204f;
 
-        /// <summary>Shop guns share the MK-1 pocket. PRI-C keeps that hand (Right/Forward)
-        /// but sits lower and yaws in so the long mesh runs along the bottom toward the
-        /// reticle instead of as a side-on plank. Cutter is melee. Zoom is unused until arms.</summary>
+        /// <summary>Shop guns share the MK-1 pocket. Cutter is melee.
+        /// <paramref name="zoom"/> is unused until an arms mesh can ADS.</summary>
         public static GunHold Hold(WeaponId id, bool zoom = false)
         {
             if (id == WeaponId.None)
@@ -59,14 +57,6 @@ namespace GatekeepersProtocol.Sim
                 {
                     Right = 0.22f, Down = -0.08f, Forward = 0.30f,
                     Pitch = 18f, Yaw = -10f, Roll = 50f
-                };
-            }
-            if (id == WeaponId.PriC)
-            {
-                return new GunHold
-                {
-                    Right = LocalGunRight, Down = -0.22f, Forward = LocalGunForward,
-                    Pitch = -6f, Yaw = -14f, Roll = 0f
                 };
             }
             return Mk1Hip();
