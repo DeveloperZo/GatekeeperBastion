@@ -211,47 +211,34 @@ world's ship is this one.
 
 ## State at build, 2026-08-21
 
-Built on branch `m96-realm-and-boarder`. **Compiles and lints; not yet run in the editor.**
+Merged to `main`. **Verified in the Unity runner**, both modes, on the merged tree.
 
-**Proven.** A dotnet replication of `Tools/verify/run.sh` (mcs and mono are absent on this
-machine) runs the EditMode suite: **575 passed, 10 failed, and the failing set is identical to
-`main`'s**, verified by running the same harness against a detached worktree of `main` rather
-than by argument. `lint-arch` and `lint-language` are clean apart from five pre-existing hits
-in the co-op docs.
+**EditMode 649 passed / 11 failed. PlayMode 68 passed / 1 failed.** Every one of those twelve
+is the recorded pre-existing set — the M59 polish five, the two HUD separation rows, the
+BastionDoorAperture 3.5-vs-4.5, SessionMusic, the `MasterControl.HatchWaves` isolation row,
+ViewModelAnim, and `NetVerbTests` repair timing at 229.5 against a 229.0 ±0.05 tolerance.
+**This milestone introduces no test failure.** Attribution was by experiment rather than
+argument: the same offline harness was run against a detached worktree of `main` before the
+merge, and the failing sets match.
 
-**Owed before this can close.**
+**What the criteria now rest on.** 1 and 6 are closed by `RealmChooserTests`, which loads
+`RealmSelect.unity`, types a name, creates a realm, enters it, leaves for another world and
+comes back to find the pot, the doors, the clears and the ship upgrade as they were. 2, 3, 4,
+5, 9 and 10 are closed by `RealmAndBoarderSaveTests` at the document level, which is where
+those claims live, with 4 and 5 also driven end-to-end through the chooser. 7 is covered for
+the half that one process can show.
 
-- **The editor has never opened the chooser.** `Assets/Scenes/RealmSelect.unity` imports
-  without error but nothing has LOADED it; the hand-authored `TMP_InputField` is the likeliest
-  thing to need a fix.
-- **Criteria 1 and 6 want a driven session, not a playthrough** (Zo, 2026-08-21). Replaying
-  the loop to reach a menu screen buys nothing: the game has dev checkpoints precisely so a
-  beat is reachable in seconds, and `../../Decisions.md` already rules that a dev-tainted
-  session may close a gate provided the taint is stated. Better still, neither criterion
-  actually needs a human — a PlayMode test can load the chooser, create a realm, enter it,
-  return to the menu and re-enter, which is the whole of 1 and 6. That is the intended path.
-- **Criteria 2, 3, 4, 5, 9 and 10 are already proven** at the document level by
-  `RealmAndBoarderSaveTests`, which is where those claims live: which column a fact lands in,
-  that a fresh realm carries none of the world, that two realms cannot reach into each other,
-  and that an older document is refused with a reason. What a driven session adds is only that
-  the game is wired to those documents, which is one test rather than a session.
-- **Criterion 8 is half proven.** That a guest's session leaves the host's Boarder untouched is
-  tested. The mirror — that the host does not write a guest's Boarder — is NOT, and deliberately
-  has no test: host and guest share one static `GameSession.Meta` in a single process, so the
-  guest's Boarder would be an object nothing was ever handed and any such test would pass by
-  construction. It needs a two-machine check.
-- **The offline harness skips 17 test files** that cannot compile outside Unity, so a green run
-  here is not a green suite. `Dev/DevSessionTests.cs` is among them and was rewritten blind.
+The scene is no longer an unknown: it was hand-authored offline, and a test now loads it every
+run and proves the name field is bound both ways rather than merely present.
 
-**Superseded elsewhere.** `M90` closed hours before this was built, stamping buy-back as paying
-from the rejoining player's own banked Salvage. With the pot on the realm there is no separate
-purse: the host reads the world's pot, adjudicates and debits it in one call. `M90`'s criterion
-2 is unaffected — the host's own Boarder is still not spent — but the wallet is not the one that
-milestone described.
+**Still owed.**
 
-**Version 13, not 12.** Separate in-flight work claimed 12 for `WeaponWheelCentres`. That field
-is Boarder-shaped and must be folded onto `BoarderState` when the two branches meet; it was
-deliberately stripped from this branch rather than absorbed unverified.
+- **Criterion 8's second half.** That a guest's session does not write the host's Boarder is
+  tested. The mirror is not, and deliberately has no test: host and guest share one static
+  `GameSession.Meta` in a single process, so a guest's Boarder would be an object nothing was
+  handed and any such test would pass by construction. It needs two machines.
+- **Eyes on the chooser.** It is proven to load and bind; nobody has looked at it. The layout
+  was reasoned about, not seen.
 
 ## Usable, or it did not ship
 
