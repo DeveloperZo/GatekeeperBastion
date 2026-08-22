@@ -451,3 +451,27 @@ rulemaking authority lives there.
   so arrivals no longer outrun the Hatch budget on Wave 2. Earlier softens (`-0.13/wave`
   from `-0.55`, then dropping the dial's gap term) were not enough after the horde and
   swing-landing fixes.
+
+## Locked — you host a realm, not a session (Zo, 2026-08-22)
+
+Hosting belongs to the realm chooser and nowhere else. The Main Menu's HOST button is gone.
+
+The menu could not name what it was hosting. `HOST` called `LoadCampaignForNet`, which resolves
+whichever realm was opened last, so the world a party landed in was decided by history rather
+than by the player. That is backwards once the realm is the centre: a realm is the world you
+and everyone you invite share, and choosing it is the first decision, not a side effect.
+
+The chooser is the only screen that knows the realm **and** the Boarder, so **OPEN TO FRIENDS**
+sits beside **ENTER** there — the same decision, taken with the door open or shut. The Relay
+code is asked for first and shown large with COPY beside it; the realm is entered and the
+session started only on **TO SHIP**, so backing out has changed nothing. The LAN fallback moved
+across with it, because Relay being down must not take co-op with it.
+
+**JOIN stays on the menu.** It is the one door that leads to somebody else's world and needs no
+realm of your own. Its own-code branch — type the code you were just given and host instead of
+joining — went with hosting, since no code is allocated on the menu any more.
+
+**Not settled here**: the code is still a Relay *session* code. It is minted per session and
+dies with it, so "a code is for a realm, and a player admitted once keeps a slot they can
+return to at their leisure" is not what this builds. That needs the realm to have an identity
+and an access list that outlive the session, which is `M100`.

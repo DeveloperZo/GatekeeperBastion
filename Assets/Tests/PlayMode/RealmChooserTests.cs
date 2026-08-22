@@ -83,6 +83,41 @@ namespace GatekeepersProtocol.PlayTests
             yield return PlayTestUtil.ReturnToBlankScene();
         }
 
+        /// <summary>Hosting lives here now, and it opens closed. A player arriving at the
+        /// chooser is picking a realm, not already handing out a code.</summary>
+        [UnityTest]
+        public IEnumerator TheChooser_OpensOnTheLists_NotOnTheJoinCode()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.RealmSelect);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.RealmSelect);
+
+            var panel = FindByName("Session Panel");
+            Assert.IsNotNull(panel, "RealmSelect.unity carries the open-to-friends panel");
+            Assert.IsFalse(panel.activeSelf,
+                "the chooser shows its lists first — the code panel is opened deliberately");
+
+            var open = FindByName("OPENTOFRIENDSButton");
+            Assert.IsNotNull(open, "and the button that opens it");
+
+            yield return PlayTestUtil.ReturnToBlankScene();
+        }
+
+        /// <summary>Inactive objects are invisible to the usual finds, and the panel under test
+        /// is inactive by design, so this walks the hierarchy including what is switched
+        /// off.</summary>
+        static GameObject FindByName(string name)
+        {
+            var roots = UnityEngine.SceneManagement.SceneManager
+                .GetActiveScene().GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                var all = roots[i].GetComponentsInChildren<Transform>(true);
+                for (int j = 0; j < all.Length; j++)
+                    if (all[j].name == name) return all[j].gameObject;
+            }
+            return null;
+        }
+
         [UnityTest]
         public IEnumerator CreatingARealm_NamesIt_AndListsIt()
         {

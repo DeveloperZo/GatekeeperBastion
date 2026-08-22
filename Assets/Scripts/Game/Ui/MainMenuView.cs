@@ -17,7 +17,6 @@ namespace GatekeepersProtocol.Game
     {
         public const string HomePanel = "Home";
         public const string JoinPanel = "Join";
-        public const string HostPanel = JoinPanel;
 
         [SerializeField] MainPanelManager _panels;
         [SerializeField, Tooltip("Shift 'Main Panels' root. Authored in MainMenu.unity.")]
@@ -26,7 +25,6 @@ namespace GatekeepersProtocol.Game
         [SerializeField] TextMeshProUGUI _campaignLine;
         [SerializeField] Button _continueBtn;
         [SerializeField] Button _startNewBtn;
-        [SerializeField] Button _hostBtn;
         [SerializeField] Button _joinBtn;
         [SerializeField] Button _optionsBtn;
         [SerializeField] Button _quitBtn;
@@ -44,23 +42,12 @@ namespace GatekeepersProtocol.Game
         [SerializeField] Button _joinConnectBtn;
         [SerializeField] Button _joinBackBtn;
         [SerializeField] TextMeshProUGUI _joinRefusal;
-        [SerializeField] TextMeshProUGUI _hostCodeLabel;
-        [SerializeField] Button _hostCopyBtn;
-        [SerializeField] Button _hostEnterBtn;
-        [SerializeField] Button _hostLanBtn;
-        [SerializeField] Button _hostBackBtn;
-        [SerializeField] TextMeshProUGUI _hostStatus;
 
         public Action onContinue;
         public Action onStartNew;
-        public Action onHost;
         public Action onJoin;
         public Action onJoinConnect;
         public Action onJoinBack;
-        public Action onHostCopy;
-        public Action onHostEnter;
-        public Action onHostLan;
-        public Action onHostBack;
         public Action onOptions;
         public Action onOverwriteConfirm;
         public Action onQuitConfirm;
@@ -68,7 +55,6 @@ namespace GatekeepersProtocol.Game
         public string JoinAddressText => _joinAddressField != null ? _joinAddressField.text : "";
         public string JoinPortText => _joinPortField != null ? _joinPortField.text : "";
         public string JoinCodeText => _joinCodeField != null ? _joinCodeField.text : "";
-        public string HostCodeText => _hostCodeLabel != null ? _hostCodeLabel.text : "";
 
         void Awake()
         {
@@ -76,20 +62,12 @@ namespace GatekeepersProtocol.Game
 
             Wire(_continueBtn, () => { if (onContinue != null) onContinue.Invoke(); });
             Wire(_startNewBtn, () => { if (onStartNew != null) onStartNew.Invoke(); });
-            Wire(_hostBtn, () => { if (onHost != null) onHost.Invoke(); });
             Wire(_joinBtn, () => { if (onJoin != null) onJoin.Invoke(); });
             Wire(_optionsBtn, () => { if (onOptions != null) onOptions.Invoke(); });
             Wire(_quitBtn, () => { if (onQuitConfirm != null) onQuitConfirm.Invoke(); });
             Wire(_joinConnectBtn, () => { if (onJoinConnect != null) onJoinConnect.Invoke(); });
             Wire(_joinBackBtn, () => { if (onJoinBack != null) onJoinBack.Invoke(); });
-            Wire(_hostCopyBtn, () => { if (onHostCopy != null) onHostCopy.Invoke(); });
-            Wire(_hostEnterBtn, () => { if (onHostEnter != null) onHostEnter.Invoke(); });
-            Wire(_hostLanBtn, () => { if (onHostLan != null) onHostLan.Invoke(); });
-            Wire(_hostBackBtn, () => { if (onHostBack != null) onHostBack.Invoke(); });
             UiBind.SetButtonLabel(_startNewBtn, "REALMS");
-            UiBind.SetButtonLabel(_hostCopyBtn, "COPY");
-            UiBind.SetButtonLabel(_hostEnterBtn, "TO SHIP");
-            UiBind.SetButtonLabel(_hostLanBtn, "HOST ON LAN");
             Wire(_overwriteConfirmBtn, () =>
             {
                 HideModal(_overwriteModal);
@@ -116,7 +94,6 @@ namespace GatekeepersProtocol.Game
             Require(_campaignLine, nameof(_campaignLine));
             Require(_continueBtn, nameof(_continueBtn));
             Require(_startNewBtn, nameof(_startNewBtn));
-            Require(_hostBtn, nameof(_hostBtn));
             Require(_joinBtn, nameof(_joinBtn));
             Require(_optionsBtn, nameof(_optionsBtn));
             Require(_quitBtn, nameof(_quitBtn));
@@ -134,12 +111,6 @@ namespace GatekeepersProtocol.Game
             Require(_joinConnectBtn, nameof(_joinConnectBtn));
             Require(_joinBackBtn, nameof(_joinBackBtn));
             Require(_joinRefusal, nameof(_joinRefusal));
-            Require(_hostCodeLabel, nameof(_hostCodeLabel));
-            Require(_hostCopyBtn, nameof(_hostCopyBtn));
-            Require(_hostEnterBtn, nameof(_hostEnterBtn));
-            Require(_hostLanBtn, nameof(_hostLanBtn));
-            Require(_hostBackBtn, nameof(_hostBackBtn));
-            Require(_hostStatus, nameof(_hostStatus));
         }
 
         void Require(UnityEngine.Object reference, string field)
@@ -194,8 +165,9 @@ namespace GatekeepersProtocol.Game
             FocusDefault();
         }
 
-        /// <summary>Opens the authored Join panel. Code field is the default; LAN IP/port
-        /// stay as the fallback row. Port defaults to 7777 when empty.</summary>
+        /// <summary>Opens the authored session panel, which is Join's alone since hosting
+        /// moved to the realm chooser. Code field is the default; LAN IP/port stay as the
+        /// fallback row. Port defaults to 7777 when empty.</summary>
         public void ShowJoin()
         {
             HideModal(_overwriteModal);
@@ -203,7 +175,7 @@ namespace GatekeepersProtocol.Game
             RevealMainPanelsRoot();
             if (_joinPortField != null && string.IsNullOrEmpty(_joinPortField.text))
                 _joinPortField.text = "7777";
-            ApplySessionLayout(host: false);
+            ApplySessionLayout();
             OpenPanel(JoinPanel);
             var es = EventSystem.current;
             if (es != null && _joinCodeField != null)
@@ -215,45 +187,16 @@ namespace GatekeepersProtocol.Game
             UiBind.SetText(_joinRefusal, message != null ? message : "");
         }
 
-        /// <summary>Same Shift panel as Join; host widgets replace the code/IP rows.</summary>
-        public void ShowHost()
+        /// <summary>The session panel is Join's alone now. Hosting moved to the realm
+        /// chooser, which is the only screen that knows which realm is being opened.</summary>
+        void ApplySessionLayout()
         {
-            HideModal(_overwriteModal);
-            HideModal(_exitModal);
-            RevealMainPanelsRoot();
-            ApplySessionLayout(host: true);
-            OpenPanel(HostPanel);
-        }
-
-        public void SetHostCode(string code)
-        {
-            UiBind.SetText(_hostCodeLabel, code != null ? code : "");
-        }
-
-        public void SetHostStatus(string message)
-        {
-            UiBind.SetText(_hostStatus, message != null ? message : "");
-        }
-
-        public void SetHostLanVisible(bool visible)
-        {
-            if (_hostLanBtn != null) UiBind.Show(_hostLanBtn.gameObject, visible);
-        }
-
-        /// <summary>Host and Join share one authored panel. Toggle which rows are live.</summary>
-        void ApplySessionLayout(bool host)
-        {
-            UiBind.SetText(_sessionTitle, host ? "HOST" : "JOIN");
-            UiBind.Show(_joinCodeField, !host);
-            UiBind.Show(_joinAddressField, !host);
-            UiBind.Show(_joinPortField, !host);
-            UiBind.Show(_joinConnectBtn, !host);
-            UiBind.Show(_joinRefusal, !host);
-            UiBind.Show(_hostCodeLabel, host);
-            UiBind.Show(_hostCopyBtn, host);
-            UiBind.Show(_hostEnterBtn, host);
-            UiBind.Show(_hostStatus, host);
-            if (!host) SetHostLanVisible(false);
+            UiBind.SetText(_sessionTitle, "JOIN");
+            UiBind.Show(_joinCodeField, true);
+            UiBind.Show(_joinAddressField, true);
+            UiBind.Show(_joinPortField, true);
+            UiBind.Show(_joinConnectBtn, true);
+            UiBind.Show(_joinRefusal, true);
         }
 
         /// <summary>Shift Main Panel Root defaults to Invisible (alpha 0). SplashScreenManager

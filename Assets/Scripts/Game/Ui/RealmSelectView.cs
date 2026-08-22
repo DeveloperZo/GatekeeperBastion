@@ -36,9 +36,29 @@ namespace GatekeepersProtocol.Game
         [SerializeField] Button _demoBtn;
         [SerializeField] TextMeshProUGUI _status;
 
+        [Header("Open to friends")]
+        [SerializeField] Button _openBtn;
+        [SerializeField] GameObject _sessionPanel;
+        [SerializeField] TextMeshProUGUI _codeLabel;
+        [SerializeField] Button _copyBtn;
+        [SerializeField] Button _toShipBtn;
+        [SerializeField] Button _lanBtn;
+        [SerializeField] Button _sessionBackBtn;
+        [SerializeField] TextMeshProUGUI _sessionStatus;
+
         public Action onCreate;
         public Action onEnter;
         public Action onBack;
+
+        /// <summary>Host the picked realm rather than entering it alone. Hosting lives here
+        /// because this is the only screen that knows which realm and which Boarder — a HOST
+        /// button on the menu could only ever host whichever realm you happened to open
+        /// last.</summary>
+        public Action onOpen;
+        public Action onCopy;
+        public Action onToShip;
+        public Action onLan;
+        public Action onSessionBack;
 
         /// <summary>The alternate way in: the first-Bastion demo, on its own ship.</summary>
         public Action onDemo;
@@ -68,6 +88,17 @@ namespace GatekeepersProtocol.Game
             Wire(_enterBtn, () => { if (onEnter != null) onEnter.Invoke(); });
             Wire(_backBtn, () => { if (onBack != null) onBack.Invoke(); });
             Wire(_demoBtn, () => { if (onDemo != null) onDemo.Invoke(); });
+            Wire(_openBtn, () => { if (onOpen != null) onOpen.Invoke(); });
+            Wire(_copyBtn, () => { if (onCopy != null) onCopy.Invoke(); });
+            Wire(_toShipBtn, () => { if (onToShip != null) onToShip.Invoke(); });
+            Wire(_lanBtn, () => { if (onLan != null) onLan.Invoke(); });
+            Wire(_sessionBackBtn, () => { if (onSessionBack != null) onSessionBack.Invoke(); });
+            UiBind.SetButtonLabel(_openBtn, "OPEN TO FRIENDS");
+            UiBind.SetButtonLabel(_copyBtn, "COPY");
+            UiBind.SetButtonLabel(_toShipBtn, "TO SHIP");
+            UiBind.SetButtonLabel(_lanBtn, "HOST ON LAN");
+            UiBind.SetButtonLabel(_sessionBackBtn, "BACK");
+            ShowChooser();
             if (_title != null) _title.text = "REALMS";
         }
 
@@ -89,6 +120,52 @@ namespace GatekeepersProtocol.Game
             Require(_enterBtn, "_enterBtn");
             Require(_backBtn, "_backBtn");
             Require(_demoBtn, "_demoBtn");
+            Require(_openBtn, "_openBtn");
+            Require(_sessionPanel, "_sessionPanel");
+            Require(_codeLabel, "_codeLabel");
+            Require(_copyBtn, "_copyBtn");
+            Require(_toShipBtn, "_toShipBtn");
+            Require(_lanBtn, "_lanBtn");
+            Require(_sessionBackBtn, "_sessionBackBtn");
+            Require(_sessionStatus, "_sessionStatus");
+        }
+
+        // ---- Open to friends ----
+
+        /// <summary>The chooser proper: lists, name field, ENTER and OPEN TO FRIENDS.</summary>
+        public void ShowChooser()
+        {
+            UiBind.Show(_sessionPanel, false);
+        }
+
+        /// <summary>The code and the way aboard. Shown once a join code has been asked for, so
+        /// the player can copy it before committing — the code is the only thing a friend needs
+        /// and it is easier to send from here than from inside the ship.</summary>
+        public void ShowSession()
+        {
+            UiBind.Show(_sessionPanel, true);
+        }
+
+        public void SetCode(string code)
+        {
+            UiBind.SetText(_codeLabel, string.IsNullOrEmpty(code) ? "------" : code);
+        }
+
+        public void SetSessionStatus(string text)
+        {
+            UiBind.SetText(_sessionStatus, text);
+        }
+
+        /// <summary>The LAN fallback only appears when Relay could not give out a code. It is
+        /// an escape hatch, and showing it always would read as an equal choice.</summary>
+        public void SetLanVisible(bool visible)
+        {
+            UiBind.Show(_lanBtn, visible);
+        }
+
+        public void SetOpenEnabled(bool enabled)
+        {
+            if (_openBtn != null) _openBtn.interactable = enabled;
         }
 
         void Require(UnityEngine.Object reference, string field)
