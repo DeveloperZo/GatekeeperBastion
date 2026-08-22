@@ -85,6 +85,14 @@ namespace GatekeepersProtocol.Game
         /// spawnerless scene (tests); callers null-check.</summary>
         public WaveSpawner Spawner => _spawner;
 
+        /// <summary>The hosted weapon ability, resolved from the rig at run start. Exposed the
+        /// same way <see cref="Spawner"/> is so the practice range can reach it without a scene
+        /// lookup; null before ApplyMetaEffects has run.</summary>
+        public PlayerAbility Ability => _ability;
+
+        /// <summary>The hosted protocol abilities, crew and personal.</summary>
+        public PlayerProtocolAbilities Protocol => _protocol;
+
         /// <summary>Bastion net session. Null when unwired (solo, Ship, tests).</summary>
         public NetSession Net => _net;
 
