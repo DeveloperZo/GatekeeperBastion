@@ -211,7 +211,7 @@ MeshRenderer:
 """
 
 def obj(name, parent, pos, yaw=0.0, scale=(1, 1, 1), mesh=None, submesh=4300000,
-        box=False, renderer=True, collider=False, quat=None, hint=None):
+        box=False, renderer=True, collider=False, quat=None, hint=None, mat=None):
     gid, tid = nid(), nid()
     comps = ["  - component: {fileID: %d}\n" % tid]
     body = []
@@ -224,7 +224,7 @@ def obj(name, parent, pos, yaw=0.0, scale=(1, 1, 1), mesh=None, submesh=4300000,
             mat = "{fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}"
         else:
             mref = "{fileID: %d, guid: %s, type: 3}" % (submesh, mesh)
-            mat = MAT
+            mat = mat or MAT
         body.append("--- !u!33 &%d\nMeshFilter:\n  m_ObjectHideFlags: 0\n"
                     "  m_CorrespondingSourceObject: {fileID: 0}\n  m_PrefabInstance: {fileID: 0}\n"
                     "  m_PrefabAsset: {fileID: 0}\n  m_GameObject: {fileID: %d}\n  m_Mesh: %s\n"
@@ -273,6 +273,8 @@ for deck, y in DECK_Y.items():
     for (ix, iz) in sorted(cs):
         gbox('GFloor_%d_%d_%d' % (deck, ix, iz), (5 * ix + 2.5, y - 0.25, 5 * iz + 2.5), (5, .5, 5))
         obj('F%d_%d_%d' % (deck, ix, iz), DRESS, (5 * ix + 5, y, 5 * iz), 0.0, mesh=MESH['Floor'])
+        if deck == 1 and (ix, iz) in VOID:
+            continue          # open to the double-height void; CVoid caps it higher up
         low = ix in (-1, 0)
         obj('C%d_%d_%d' % (deck, ix, iz), DRESS, (5 * ix + 5, y, 5 * iz), 0.0,
             mesh=MESH['CeilLow'] if low else MESH['Ceil'])
@@ -290,6 +292,8 @@ LIGHT_H = 0.102
 lights = 0
 for deck, y in DECK_Y.items():
     for (ix, iz) in sorted(D1 if deck == 1 else D2):
+        if deck == 1 and (ix, iz) in VOID:
+            continue          # LightVoid covers this column from higher up
         under = 3.49 if ix in (-1, 0) else 4.0        # Ceiling_02 over the spine columns
         obj('Light%d_%d_%d' % (deck, ix, iz), DRESS,
             (5 * ix + 2.5, y + under - LIGHT_H, 5 * iz + 2.5), 0.0, mesh=MESH['LightPanel'])
@@ -321,9 +325,29 @@ for deck, y in DECK_Y.items():
                 continue                        # the other cell owns this line
             perimeter.append((deck, y, k, px, pz, yaw, ix, iz))
 
+# Window bays: the Exterior_Window piece has a real opening and is a full-thickness
+# exterior wall, so it replaces BOTH the interior Wall and the Skin on its bay. The
+# graybox stays, which keeps the opening sealed for the player. Bays are chosen away
+# from the hatch bays, the wall-mounted stations, the M97 Mounts (starboard deck 1,
+# z 16..19.6) and the M97 Marks (port deck 2, z 21.75..38.25 - which rules the port
+# void rows out); the starboard void row still gives the drive core its view. The
+# mesh is authored offset (Unity-local x[4.75,9.75]) and reversed, hence the +4.75
+# pivot shift along the wall's local +x and the 180-degree yaw flip.
+WINDOW_BAYS = {
+    (1, 'W', -2, 5), (1, 'W', -2, 7), (1, 'E', 1, 9), (1, 'E', 1, 6),
+    (2, 'W', -2, 2), (2, 'W', -2, 3), (2, 'W', -2, 8),
+    (2, 'E', 1, 4), (2, 'E', 1, 5), (2, 'E', 1, 7),
+}
+windows = 0
 for deck, y, k, px, pz, yaw, ix, iz in perimeter:
     if deck == 2 and k == 'E' and (ix, iz) in HATCH_EDGES:
         continue                                # the airlock shell fills this bay
+    if (deck, k, ix, iz) in WINDOW_BAYS:
+        ux, uz = math.cos(math.radians(yaw)), -math.sin(math.radians(yaw))
+        obj('Win%d_%s_%d_%d' % (deck, k, int(px * 10), int(pz * 10)), DRESS,
+            (px + 4.75 * ux, y, pz + 4.75 * uz), yaw + 180.0, mesh=MESH['Window'])
+        windows += 1
+        continue
     obj('W%d_%s_%d_%d' % (deck, k, int(px * 10), int(pz * 10)), DRESS,
         (px, y, pz), yaw, mesh=MESH['Wall'])
     ox, oz = {0.0: (0, WALL_T), 180.0: (0, -WALL_T),
@@ -364,40 +388,57 @@ for iz, (a, b) in SPINE_Z:
 
 
 # ---- the void: railing on deck 2, stair up its port edge -----------------------
+# Rail mesh (SM_Bld_Floor_Small_Hand_Rail_01) has its length along LOCAL Z, pivoted at
+# the z=0 end, extending to z=-2.5. To lay it flush along a 5 m edge in two 2.5 m halves,
+# the pivot for each half goes at the FAR end of that half (in the direction of travel)
+# with yaw chosen so local +Z maps to the direction BACK toward the near end:
+#   edge running +X (N/S walls): yaw = -90   edge running +Z (E/W walls): yaw = 180
+# The previous version reused the WALL yaw convention (0/90), which is 90 deg off for a
+# mesh whose long axis is Z instead of X - every rail ran perpendicular to its edge.
 for (ix, iz) in sorted(VOID):
     for k, (dx, dz) in (('N', (0, 1)), ('S', (0, -1)), ('E', (1, 0)), ('W', (-1, 0))):
         if (ix + dx, iz + dz) in VOID:
             continue
-        if k == 'N':   px, pz, yaw = 5 * ix + 5, 5 * iz + 5, 0.0
-        elif k == 'S': px, pz, yaw = 5 * ix + 5, 5 * iz, 0.0
-        elif k == 'E': px, pz, yaw = 5 * ix + 5, 5 * iz, 90.0
-        else:          px, pz, yaw = 5 * ix, 5 * iz, 90.0
-        if k == 'W' and ix == -1 and iz == 5:
-            continue                              # the stair lands here, left open
-        for half in (0, 1):
-            ox = 2.5 * half if yaw == 0 else 0
-            oz = 2.5 * half if yaw != 0 else 0
+        # box-orientation yaw: independent of the rail fix, kept as the wall convention
+        if k == 'N':   bpx, bpz, byaw = 5 * ix + 5, 5 * iz + 5, 0.0
+        elif k == 'S': bpx, bpz, byaw = 5 * ix + 5, 5 * iz, 0.0
+        elif k == 'E': bpx, bpz, byaw = 5 * ix + 5, 5 * iz, 90.0
+        else:          bpx, bpz, byaw = 5 * ix, 5 * iz, 90.0
+        if k == 'W' and ix == -1 and iz == 6:
+            continue          # the landing (z 30-35) opens onto the deck-2 ring here
+        A = {'N': (5 * ix, 5 * iz + 5), 'S': (5 * ix, 5 * iz),
+             'E': (5 * ix + 5, 5 * iz), 'W': (5 * ix, 5 * iz)}[k]
+        ux, uz = (1, 0) if k in 'NS' else (0, 1)
+        rail_yaw = -90.0 if k in 'NS' else 180.0
+        mid = (A[0] + 2.5 * ux, A[1] + 2.5 * uz)
+        far = (A[0] + 5.0 * ux, A[1] + 5.0 * uz)
+        for half, piv in enumerate((mid, far)):
             obj('VoidRail_%s_%d_%d_%d' % (k, ix, iz, half), DRESS,
-                (px - ox, 5.0, pz + oz), yaw, mesh=MESH['Rail'])
-        if yaw == 0:
-            gbox('GVoid_%s_%d_%d' % (k, int(px * 10), int(pz * 10)),
-                 (px - 2.5, 5.6, pz), (5, 1.2, 0.4))
+                (piv[0], 5.0, piv[1]), rail_yaw, mesh=MESH['Rail'])
+        if byaw == 0.0:
+            gbox('GVoid_%s_%d_%d' % (k, int(bpx * 10), int(bpz * 10)),
+                 (bpx - 2.5, 5.6, bpz), (5, 1.2, 0.4))
         else:
-            gbox('GVoid_%s_%d_%d' % (k, int(px * 10), int(pz * 10)),
-                 (px, 5.6, pz + 2.5), (0.4, 1.2, 5))
+            gbox('GVoid_%s_%d_%d' % (k, int(bpx * 10), int(bpz * 10)),
+                 (bpx, 5.6, bpz + 2.5), (0.4, 1.2, 5))
 
 # the kit stair rises 5.798 m; the decks are 5.0 apart, so scale it to land exactly
 STAIR_S = 5.0 / 5.798
 RUN = 8.022 * STAIR_S
 obj('Stair', DRESS, (-5.0, 0.0, 25.0), 0.0, (STAIR_S, STAIR_S, STAIR_S), mesh=MESH['Stairs'])
 obj('StairLanding', DRESS, (-5.0, 0.0, 25.0 + RUN), 0.0,
-    (STAIR_S, STAIR_S, STAIR_S), mesh=MESH['StairPlat'])
+    (STAIR_S, 1.0, STAIR_S), mesh=MESH['StairPlat'])   # kit height (5.002 m) already fits;
+                                                        # STAIR_S squashed it 0.687 m short
 
 # walkable ramp under the stair: 5 m rise over RUN, inside the 45 deg slopeLimit
 ang = math.degrees(math.atan2(5.0, RUN))
 hq = math.radians(-ang) / 2.0
-gbox('GStairRamp', (-6.0, 2.5, 25.0 + RUN / 2), (2.0, 0.4, math.hypot(RUN, 5.0)),
+gbox('GStairRamp', (-4.0, 2.5, 25.0 + RUN / 2), (2.0, 0.4, math.hypot(RUN, 5.0)),
      quat='{x: %.7f, y: 0, z: 0, w: %.7f}' % (math.sin(hq), math.cos(hq)), hint=-ang)
+# x=-4 (not -6): the visible Stair mesh spans x[-5.07,-3.11] inside the void's own
+# footprint (ix=-1 is x[-5,0]) - it never crosses the void's west wall at x=-5. The old
+# ramp sat one full bay further west, under solid deck-2 floor and grazing the z=25
+# partition; at x=-4 it falls inside that partition's own excluded gap (x[-5,-1.25]).
 print("stair: 5.0 m rise over %.2f m run = %.1f deg" % (RUN, ang))
 
 # ---- airlock shells at the three hatch bays ------------------------------------
@@ -428,7 +469,7 @@ PLACE = {
     'Station_Fabrication':  ((-10.0, 0.0, 17.5), 90.0),
     'Station_CrewQuarters': ((10.0, 0.0, 42.5), -90.0),
     'Station_Map':          ((-7.5, 5.0, 50.0), 180.0),
-    'Ship Terminal':        ((-5.0, 5.0, 7.5), 90.0),
+    'Ship Terminal':        ((-4.2, 5.0, 7.5), 90.0),   # clear of the x=-5 wall face
     'Demo Teleporter':      ((-7.5, 0.0, 42.5), 180.0),
     'Spawn_Teleporter':     ((-7.5, 1.1, 41.0), 180.0),
     'Player':               ((-7.5, 1.1, 41.0), 180.0),
@@ -436,6 +477,16 @@ PLACE = {
     'Spawn_Intruder_1':     ((7.5, 5.0, 17.5), 180.0),
     'Spawn_Intruder_2':     ((7.5, 5.0, 47.5), 180.0),
 }
+# Scene hygiene: canvas-driven RectTransforms serialized at scale 0 while authoring
+# offline (no canvas system running) - StationSceneGate hard-fails on them, and they
+# ride along every regeneration unless normalised here.
+for cnm in ('Canvas', 'Ship HUD Canvas'):
+    for cid in by_name.get(cnm, []):
+        d = byid[cid]
+        d[2] = d[2].replace('m_LocalScale: {x: 0, y: 0, z: 0}',
+                            'm_LocalScale: {x: 1, y: 1, z: 1}', 1)
+print("  canvas scales normalised")
+
 missing = []
 for nm, (pos, yaw) in PLACE.items():
     ids = by_name.get(nm)
@@ -530,14 +581,271 @@ for deck, lines in PARTITIONS.items():
             ixm = int(math.floor(mid / 5.0))
             if (ixm, iz_s) not in cs or (ixm, iz_n) not in cs:
                 continue                      # no room either side of this stretch
-            if deck == 1 and abs(L - 25.0) < 0.01 and px == -1.25:
-                continue                      # the stair foot rises through this bay
+            if deck == 1 and abs(L - 25.0) < 0.01 and px in (-1.25, 5.0):
+                continue                      # port: the stair foot rises through this
+                                               # bay; starboard: without this the void's
+                                               # starboard rooms (ix=0,1 rows 5-6) have no
+                                               # opening anywhere and are fully sealed -
+                                               # found by the reachability checker.
             obj('Part%d_%d_%d' % (deck, int(L * 10), int(px * 10)), DRESS,
                 (px, y, L), 0.0, (sx_, 1, 1), mesh=MESH['Wall'])
             gbox('GPart%d_%d_%d' % (deck, int(L * 10), int(px * 10)),
                  (mid, y + 2, L + 0.25), (hi - lo, 4, 0.5))
             parts += 1
 print("  transverse partitions: %d panels" % parts)
+
+# ---- M102 exterior: Normandy-style silhouette (Hull_* dress, no colliders) ------
+# The box hull reads as a shipping container from outside. This section dresses it:
+# an octagonal cross-section (45-degree chamfer ring above, skirt ring below, flat
+# roof and belly), a tapered prow with a glazed canopy hump, a blunt engine stern
+# with twin canted tail fins, and nacelle pods standing off the hull on pylons whose
+# roots sit AFT of the pods (pods forward - the signature read). Dress only: the
+# graybox perimeter already blocks the player and space outside is unreachable, so
+# none of these carry colliders. Everything lives under one Hull group in ShipDress.
+
+MESH.update({
+    'Pod': 'c1c7be44267cd2c4c9c3c79e6fd94048',        # SM_Ship_Stealth_02
+    'Fin': '4b9415ac1f63fc6448cd52da04c145db',        # SM_Veh_Part_Wing_06
+    'Pylon': '29693e2d4b0dfbd4bb48c2b34e3a7707',      # SM_Veh_Part_Wing_07
+    'EngineBig': '6441e525436b8ee4ea012960b80fa290',  # SM_Veh_Part_Engine_05
+    'Tube': 'e19ea463faef7494480b9c6020d71082',       # SM_Prop_CenterTube_01
+    'Canopy': '21c222af3ed37cd4b9e7f9b3671ca428',     # SM_Bld_Bridge_Walls_01
+})
+CANOPY_GLASS = 4300002                                # SM_Bld_Bridge_Walls_Glass_01
+MAT_GLASS = "{fileID: 2100000, guid: 3fa8c21d7b6e4d0a92c5e8b1f4a6d973, type: 2}"
+
+# -- quaternion helpers (Unity convention, same algebra yawq already uses) --------
+def qmul(a, b):
+    ax, ay, az, aw = a; bx, by, bz, bw = b
+    return (aw * bx + ax * bw + ay * bz - az * by,
+            aw * by - ax * bz + ay * bw + az * bx,
+            aw * bz + ax * by - ay * bx + az * bw,
+            aw * bw - ax * bx - ay * by - az * bz)
+
+def qaxis(axis, deg):
+    l = math.sqrt(sum(c * c for c in axis))
+    h = math.radians(deg) / 2.0
+    s = math.sin(h) / l
+    return (axis[0] * s, axis[1] * s, axis[2] * s, math.cos(h))
+
+def qrot(q, v):
+    x, y, z, w = q
+    tx = 2 * (y * v[2] - z * v[1])
+    ty = 2 * (z * v[0] - x * v[2])
+    tz = 2 * (x * v[1] - y * v[0])
+    return (v[0] + w * tx + y * tz - z * ty,
+            v[1] + w * ty + z * tx - x * tz,
+            v[2] + w * tz + x * ty - y * tx)
+
+def qfmt(q):
+    f = lambda v: ('%.7f' % v).rstrip('0').rstrip('.') if abs(v) > 1e-7 else '0'
+    return '{x: %s, y: %s, z: %s, w: %s}' % tuple(f(v) for v in q)
+
+def cross(a, b):
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0])
+
+def qfrom_cols(c0, c1, c2):
+    """Quaternion whose rotation maps local x/y/z to the given world columns."""
+    m00, m10, m20 = c0; m01, m11, m21 = c1; m02, m12, m22 = c2
+    tr = m00 + m11 + m22
+    if tr > 0:
+        s = math.sqrt(tr + 1.0) * 2
+        q = ((m21 - m12) / s, (m02 - m20) / s, (m10 - m01) / s, s / 4)
+    elif m00 > m11 and m00 > m22:
+        s = math.sqrt(1.0 + m00 - m11 - m22) * 2
+        q = (s / 4, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s)
+    elif m11 > m22:
+        s = math.sqrt(1.0 + m11 - m00 - m22) * 2
+        q = ((m01 + m10) / s, s / 4, (m12 + m21) / s, (m02 - m20) / s)
+    else:
+        s = math.sqrt(1.0 + m22 - m00 - m11) * 2
+        q = ((m02 + m20) / s, (m12 + m21) / s, s / 4, (m10 - m01) / s)
+    for axis, col in (((1, 0, 0), c0), ((0, 1, 0), c1), ((0, 0, 1), c2)):
+        got = qrot(q, axis)
+        assert all(abs(g - c) < 1e-4 for g, c in zip(got, col)), 'bad quat %s' % (q,)
+    return q
+
+HULL_GID, HULL_TID = nid(), nid()
+HN = [0]
+def hpiece(name, pos, scale=(1, 1, 1), mesh=None, submesh=4300000, yaw=None,
+           quat=None, mat=None):
+    HN[0] += 1
+    return obj('Hull_' + name, HULL_TID, pos, yaw or 0.0, scale, mesh=mesh,
+               submesh=submesh, quat=quat, mat=mat)
+
+# -- one flat exterior panel, placed by an edge line and a facing direction -------
+# SM_Bld_Wall_Exterior_01 in Unity-local metres: x[-5,0] (run), y[-1.037,4] (height),
+# z[0,0.713] (thickness, detail face outboard at z=0.713).
+SKIN_YMIN, SKIN_YMAX = -1.037, 4.0
+
+def panel(name, start, end, face, sy=1.0, anchor='pivot'):
+    d = (end[0] - start[0], end[1] - start[1], end[2] - start[2])
+    L = math.sqrt(d[0] ** 2 + d[1] ** 2 + d[2] ** 2)
+    dn = (d[0] / L, d[1] / L, d[2] / L)
+    fd = face[0] * dn[0] + face[1] * dn[1] + face[2] * dn[2]
+    f = (face[0] - fd * dn[0], face[1] - fd * dn[1], face[2] - fd * dn[2])
+    fl = math.sqrt(f[0] ** 2 + f[1] ** 2 + f[2] ** 2)
+    f = (f[0] / fl, f[1] / fl, f[2] / fl)
+    c0 = (-dn[0], -dn[1], -dn[2])       # local +x image; x[-5,0] spans start->end
+    c1 = cross(f, c0)                   # local +y image (z cross x = y)
+    if c1[1] < -1e-6:                   # run sense made local up point down: flip it
+        start, end = end, start
+        c0 = (dn[0], dn[1], dn[2])
+        c1 = cross(f, c0)
+    q = qfrom_cols(c0, c1, f)
+    ay = {'ymin': SKIN_YMIN, 'ymax': SKIN_YMAX, 'pivot': 0.0}[anchor] * sy
+    pos = (start[0] - ay * c1[0], start[1] - ay * c1[1], start[2] - ay * c1[2])
+    return hpiece(name, pos, scale=(L / 5.0, sy, 1.0), mesh=MESH['Skin'],
+                  quat=qfmt(q))
+
+# -- P1: octagon ring. 45-degree chamfer band above the skin, skirt band below. ---
+# Band cross-sections (from the panel above, before rotation):
+#   chamfer: sy 0.8 -> 4.03 m of panel at 45 deg = edge y 8.8 up-in to y 11.65
+#   skirt:   sy 0.55 -> 2.77 m of panel at 45 deg = edge y -0.75 down-in to y -2.71
+# At every outline corner the two rectangular bands cross and mutually cover, which
+# reads as a mitred hip; no corner pieces are needed.
+CH_Y, CH_SY = 8.8, 0.8
+SK_Y, SK_SY = -0.75, 0.55
+
+def ring_strip(base, p0, p1, nrm):
+    L = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
+    nseg = max(1, int(math.ceil(L / 5.0 - 1e-6)))
+    for i in range(nseg):
+        a = (p0[0] + (p1[0] - p0[0]) * i / nseg, p0[1] + (p1[1] - p0[1]) * i / nseg)
+        b = (p0[0] + (p1[0] - p0[0]) * (i + 1) / nseg,
+             p0[1] + (p1[1] - p0[1]) * (i + 1) / nseg)
+        panel('Cham_%s_%d' % (base, i), (a[0], CH_Y, a[1]), (b[0], CH_Y, b[1]),
+              (nrm[0], 1.0, nrm[1]), sy=CH_SY, anchor='ymin')
+        panel('Skirt_%s_%d' % (base, i), (a[0], SK_Y, a[1]), (b[0], SK_Y, b[1]),
+              (nrm[0], -1.0, nrm[1]), sy=SK_SY, anchor='ymax')
+
+# Outline edge lines, tucked 0.15 inboard of the outer skin faces (mid sides
+# x 11.605, narrow sides x 6.605, shoulders z 8.395 / 51.605, stern face z -1.605).
+PW = 0.9217, 0.3879                     # prow flank normal (unit, starboard)
+RING = [
+    ('sm', (11.45, 8.55), (11.45, 51.45), (1, 0)),      # starboard mid
+    ('pm', (-11.45, 8.55), (-11.45, 51.45), (-1, 0)),   # port mid
+    ('ssn', (6.45, -1.45), (6.45, 8.55), (1, 0)),       # stern narrows
+    ('psn', (-6.45, -1.45), (-6.45, 8.55), (-1, 0)),
+    ('sbn', (6.45, 51.45), (6.45, 61.45), (1, 0)),      # bow narrows
+    ('pbn', (-6.45, 51.45), (-6.45, 61.45), (-1, 0)),
+    ('sbs', (6.45, 51.45), (11.45, 51.45), (0, 1)),     # bow shoulders
+    ('pbs', (-11.45, 51.45), (-6.45, 51.45), (0, 1)),
+    ('sss', (6.45, 8.55), (11.45, 8.55), (0, -1)),      # stern shoulders
+    ('pss', (-11.45, 8.55), (-6.45, 8.55), (0, -1)),
+    ('sf', (-6.45, -1.45), (6.45, -1.45), (0, -1)),     # stern face
+    ('spf', (7.215, 59.79), (2.015, 73.69), (PW[0], PW[1])),   # prow flanks
+    ('ppf', (-7.215, 59.79), (-2.015, 73.69), (-PW[0], PW[1])),
+]
+for base, p0, p1, nrm in RING:
+    ring_strip(base, p0, p1, nrm)
+
+# -- P1: roof and belly planes. Panels laid flat, detail face out. ----------------
+ROOF_Y, BELLY_Y = 10.74, -1.887         # faces at 11.45 and -2.6
+def flat(name, px, y, pz, w, sy, up):
+    panel(name, (px, y, pz), (px - w, y, pz), (0, 1.0 if up else -1.0, 0), sy=sy)
+
+for c, px in enumerate((10.0, 5.0, 0.0, -5.0)):         # mid body x[-10,10]
+    for r in range(8):
+        flat('Roof_m%d_%d' % (c, r), px, ROOF_Y, 14.0 + 5 * r, 5, 1.0, True)
+        flat('Belly_m%d_%d' % (c, r), px, BELLY_Y, 11.0 + 5 * r, 5, 1.0, False)
+for c, px in enumerate((7.5, 2.5, -2.5)):               # narrow bow/stern x[-7.5,7.5]
+    for r, pz in enumerate((4.0, 9.0, 54.0, 59.0)):
+        flat('Roof_n%d_%d' % (c, r), px, ROOF_Y, pz, 5, 1.0, True)
+    for r, pz in enumerate((1.0, 6.0, 51.0, 56.0)):
+        flat('Belly_n%d_%d' % (c, r), px, BELLY_Y, pz, 5, 1.0, False)
+
+# -- P2: prow. Plan-tapered flanks z 61.5 -> 73.5 (half-width 6.55 -> 1.5), the
+# chamfer/skirt bands continued along them (emitted with RING above), tapering
+# roof/belly valley tiles between the band edges, and a vertical chisel cap. The
+# profile keeps a level ridge; the taper is carried by the plan view.
+# Start aft of the body corner (skin outer face x=6.605 ends at z=60) so the
+# flank OVERLAPS the side skin - closure by overlap, like the corner mitres.
+# The old start (6.55, 61.5) left an open notch x[5,6.6] z[60,61.5] both sides.
+PROW_A, PROW_B = (6.7, 59.6), (1.5, 73.5)
+for side in (1, -1):
+    sfx = 's' if side > 0 else 'p'
+    nrm = (side * PW[0], 0, PW[1])
+    for row, (py, rsy) in enumerate(((0.0, 1.0), (5.0, 1.0))):
+        a = (side * PROW_A[0], py, PROW_A[1])
+        b = (side * PROW_B[0], py, PROW_B[1])
+        d = math.hypot(PROW_B[0] - PROW_A[0], PROW_B[1] - PROW_A[1])
+        for i in range(3):
+            aa = tuple(a[j] + (b[j] - a[j]) * i / 3.0 for j in range(3))
+            bb = tuple(a[j] + (b[j] - a[j]) * (i + 1) / 3.0 for j in range(3))
+            panel('Prow_%s%d_%d' % (sfx, row, i), aa, bb, nrm, sy=rsy)
+# valley tiles between the prow chamfer top edges (roof) / skirt bottom edges (belly)
+for i, (pz, w) in enumerate(((63.8, 4.0), (66.8, 2.8), (69.8, 1.55), (72.8, 0.7))):
+    flat('ProwRoof_%d' % i, w, ROOF_Y, pz, 2 * w, 0.6, True)
+for i, (pz, w) in enumerate(((62.0, 4.7), (65.0, 3.5), (68.0, 2.2), (71.0, 1.0))):
+    flat('ProwBelly_%d' % i, w, BELLY_Y, pz, 2 * w, 0.6, False)
+# chisel cap: two full rows plus a short ridge cap
+panel('ProwCap_0', (1.55, 0.0, 73.4), (-1.55, 0.0, 73.4), (0, 0, 1))
+panel('ProwCap_1', (1.55, 5.0, 73.4), (-1.55, 5.0, 73.4), (0, 0, 1))
+panel('ProwCap_2', (1.55, 8.9, 73.35), (-1.55, 8.9, 73.35), (0, 0, 1), sy=0.6)
+
+# glazed canopy hump over the cockpit rows: the Bridge_Walls shell scaled onto the
+# 10 m bow, glass band forward, seated just into the roof plane.
+CANOPY_S = (0.61, 0.75, 0.71)
+CANOPY_POS = (4.577, 12.1, 50.3)        # local x [-16.5,1.5] scaled, centred on 0
+hpiece('Canopy', CANOPY_POS, scale=CANOPY_S, mesh=MESH['Canopy'])
+hpiece('CanopyGlass', CANOPY_POS, scale=CANOPY_S, mesh=MESH['Canopy'],
+       submesh=CANOPY_GLASS, mat=MAT_GLASS)
+
+# -- P3: stern. Two big engines, a centre tube nozzle, twin canted tail fins. -----
+for side in (1, -1):
+    hpiece('Engine_%s' % ('s' if side > 0 else 'p'), (side * 3.6, 4.2, -5.6),
+           scale=(1.3, 1.3, 1.3), mesh=MESH['EngineBig'])
+hpiece('EngineCore', (0, 4.5, -0.2), scale=(1.2, 1.2, 1.2), mesh=MESH['Tube'],
+       quat=qfmt(qaxis((1, 0, 0), -90.0)))            # tube axis y -> -z (aft)
+FIN_S = (1.2, 1.4, 1.4)
+FIN_HALF = 3.81 * FIN_S[1]
+for side in (1, -1):
+    ydir = qrot(qaxis((0, 0, 1), -30.0 * side), (0, 1, 0))   # cant top outboard
+    base = (side * 3.8, 10.9, 3.5)                            # tip tucked in roof
+    hpiece('Fin_%s' % ('s' if side > 0 else 'p'),
+           (base[0] + FIN_HALF * ydir[0], base[1] + FIN_HALF * ydir[1], base[2]),
+           scale=FIN_S, mesh=MESH['Fin'], quat=qfmt(qaxis((0, 0, 1), -30.0 * side)))
+
+# -- P4: nacelle pods on forward-swept pylons. Roots on the mid hull at z 11 and
+# z 16, pods standing off at x +-17 with noses reaching z 37 - pods FORWARD of the
+# pylon roots, which is the read that matters.
+POD_S = (0.55, 0.85, 1.15)
+for side in (1, -1):
+    sfx = 's' if side > 0 else 'p'
+    hpiece('Pod_%s' % sfx, (side * 17.0, 6.0, 27.0), scale=POD_S, mesh=MESH['Pod'])
+    for k, rz in enumerate((11.0, 16.0)):
+        root = (side * 10.6, 6.0, rz)
+        tip = (side * 17.2, 6.0, rz + 14.5)
+        yaw = math.degrees(math.atan2(side * (tip[0] - root[0]), tip[2] - root[2]))
+        length = math.hypot(tip[0] - root[0], tip[2] - root[2])
+        hpiece('Pylon_%s%d' % (sfx, k),
+               ((root[0] + tip[0]) / 2, 6.0, (root[2] + tip[2]) / 2),
+               scale=(1.2, 1.3, length / 17.826), mesh=MESH['Pylon'],
+               yaw=side * yaw)
+
+# -- the Hull group itself, wired under ShipDress ---------------------------------
+hull_kids = KIDS.pop(HULL_TID, [])
+EMIT.append("--- !u!1 &%d\nGameObject:\n  m_ObjectHideFlags: 0\n"
+            "  m_CorrespondingSourceObject: {fileID: 0}\n  m_PrefabInstance: {fileID: 0}\n"
+            "  m_PrefabAsset: {fileID: 0}\n  serializedVersion: 6\n  m_Component:\n"
+            "  - component: {fileID: %d}\n"
+            "  m_Layer: 0\n  m_Name: Hull\n  m_TagString: Untagged\n  m_Icon: {fileID: 0}\n"
+            "  m_NavMeshLayer: 0\n  m_StaticEditorFlags: 0\n  m_IsActive: 1\n"
+            % (HULL_GID, HULL_TID))
+EMIT.append("--- !u!4 &%d\nTransform:\n  m_ObjectHideFlags: 0\n"
+            "  m_CorrespondingSourceObject: {fileID: 0}\n  m_PrefabInstance: {fileID: 0}\n"
+            "  m_PrefabAsset: {fileID: 0}\n  m_GameObject: {fileID: %d}\n  serializedVersion: 2\n"
+            "  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}\n  m_LocalPosition: {x: 0, y: 0, z: 0}\n"
+            "  m_LocalScale: {x: 1, y: 1, z: 1}\n  m_ConstrainProportionsScale: 0\n"
+            "  m_Children:\n%s"
+            "  m_Father: {fileID: %d}\n"
+            "  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}\n"
+            % (HULL_TID, HULL_GID,
+               ''.join('  - {fileID: %d}\n' % k for k in hull_kids), DRESS))
+KIDS.setdefault(DRESS, []).append(HULL_TID)
+print("  exterior hull: %d pieces, %d window bays" % (HN[0], windows))
 
 print("deck 1 cells %d, deck 2 cells %d, total %d" % (len(D1), len(D2), len(D1) + len(D2)))
 print("emitted %d objects" % (len(KIDS.get(ENV, [])) + len(KIDS.get(DRESS, []))))
