@@ -8,12 +8,12 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-22
 -->
 
-- 2026-08-22: **`M83` closed — crewmates fire on camera.** Owner notifies on
-  a gated shot and on reload start; server relays `Fire`/`Reload` triggers to
-  non-owner Boarder animators (`NetPlayerAvatar.Anim.cs`). Gate:
-  `NetAvatarAnimTests` 2/0 (2026-08-22T15:56:13Z) plus
-  `DriveRemoteAnimator_SetsSpeedWhenMoved` Passed (2026-08-22T15:57:11Z).
-  Two-window eyes-on is confirmation. Did not occupy an active slot.
+- 2026-08-22: **Meta docs — repository map.** Root `README.md` gains layout (Assets/
+  Scripts/Scenes, Docs shelves, Tools), accurate pitch (intensity / Unbanked /
+  Hatch-bank; co-op present), and clone steps with current scene names (`RealmSelect`,
+  `Ship - Demo`, `Ship - CoOp`). `Docs/README` indexes `Story/` and `Demo - Single` /
+  `Demo - Coop`. `AGENTS.md` points at the root map. Architecture gotcha 4 scene list
+  matches Build Settings.
 
 - 2026-08-22: **`M85` closed — the collapse under the burst.** Death clip,
   deferred destroy tail, collider disable, and `PlayDeathRpc` on disk.

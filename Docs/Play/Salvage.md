@@ -4,11 +4,17 @@
 
 ## Game
 
-Salvage is the only currency. Kills fill Unbanked; only a Hatch-bank converts it to the ship. Prep pays nothing. Surviving pays nothing.
+Salvage is the only currency. There is no second resource and nothing else to collect.
 
-Unbanked is wiped if you go down or the Hatch falls. What already converted stays. Repairing the Hatch spends banked Salvage from the same purse you shop with — a Run that beats on the door costs you twice.
+Kills fill Unbanked. Only a Hatch-bank converts it to the ship. Prep pays nothing. Walking the room pays nothing. Surviving pays nothing. Stripping the place pays no bonus.
 
-A Run has a limited number of Hatch-banks. When they are gone, the Hatch refuses. Everything on the Ship competes for the converted pile: weapons, Tiers, Hatch Armor, the Repair Rig, the Decoy, and mid-Run repair. Rates: [Field Manual](Field-Manual.md).
+Unbanked is wiped if I go down or the Hatch falls. What already converted stays, whatever happens after. A Run that fell apart early paid me exactly what made it through.
+
+One thing moves the money backwards: repairing. It is charged out of the bank I shop with, as the healing lands. A Run where the Hatch takes a beating costs me twice, once there and again at the console I walk back to and cannot afford.
+
+A Run holds a limited number of Hatch-banks. When they are gone the Hatch simply refuses.
+
+Everything competes for the same pile. Weapons, Tiers, Hatch Armor, the Repair Rig, the Decoy, and the repairs I did not plan for. Treating the bank as a score is the wrong instinct. It is not banked so I can look at it.
 
 ## Reference
 

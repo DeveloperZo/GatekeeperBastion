@@ -2,11 +2,21 @@
 
 ## Game
 
-You have just cut in. Walk the four Ship consoles before you leave — each owns one subject — then embark from the NAV MAP. You arrive already tethered near the Hatch. Nothing comes until you start a Wave at a field terminal.
+First time out, in order.
 
-The first Wave is Defaults only, hunting you. Fight, then Prep: Hatch-bank if you want Salvage on the ship, or pull the next. Survive a bank and you may dock home from the Hatch. Your health does not return during a Run. The Hatch does not heal itself. Weapon Tiers wait until Salvage first converts through the Hatch; the protocol and Hatch Armor do not.
+Buy the free Secondary. It costs nothing and it is still bought, at the ARMORY. Then walk the other three consoles so you know where things live. Then embark.
 
-Bindings and every number: [Field Manual](Field-Manual.md). Pause lists whatever is live right now. The rest of the Compendium starts at [The Game](The-Game.md).
+You arrive already tethered, standing near the Hatch, and nothing happens. It stays nothing for as long as you leave it. The first Wave is Defaults only, and on a Wave called from a field terminal they come for you rather than the Hatch. It is the gentlest thing this place will ever send.
+
+Three things cost me Runs before I understood them.
+
+Health does not come back. Not from anything, anywhere, at any point. What the first Wave takes off me I still carry on the last one.
+
+The Hatch does not heal itself. It comes back only if I stand at it and hold, and only with the Repair Rig, and it spends banked Salvage per point to do it. On a fresh save I have nothing banked, so it is genuinely unfixable until the first convert.
+
+Weapon Tiers and the equipment slot stay shut until Salvage first converts through the Hatch. Nothing on the panel says so.
+
+Ammunition is not a resource here. I rationed it for two Runs before I noticed.
 
 ## Reference
 

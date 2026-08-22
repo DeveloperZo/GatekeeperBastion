@@ -4,7 +4,7 @@
 Purpose: Where code lives, the conventions that govern it, and the gotchas that cost real time. The rules subtree behind it is Architecture/, which is the master reference for how code is written.
 Status: working
 Update trigger: when an assembly, folder or convention changes, or when a gotcha is found that would otherwise be rediscovered.
-Last updated: 2026-08-19
+Last updated: 2026-08-22
 -->
 
 ## The one structural rule
@@ -195,10 +195,11 @@ room. A YAML test (`BastionKitSceneTests`) fails the run if `Bastion.unity` drop
 back in. `EnsureAuthoredSpawnRooms` re-places closets without emitting rooms
 (`gkb_bastion_spawn_rooms_request.txt`). Build All
 does not wipe a `SpawnPoints` root that still holds `SpawnRoom` instances.
-`Ship.unity` with a `ShipDress` root is the same: Build All registers scenes and skips the
-Environment wipe. Without `ShipDress`, it still rebuilds collider graybox + light. It does
-**not** touch stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem`,
-or any UI canvas. Build settings list **Splash, MainMenu, Ship, Bastion**. After a
+`Ship - Demo.unity` / `Ship - CoOp.unity` with a `ShipDress` root are the same: Build All
+registers scenes and skips the Environment wipe. Without `ShipDress`, it still rebuilds
+collider graybox + light. It does **not** touch stations, the player rig, `ShipController`,
+`GameSystems`, the `EventSystem`, or any UI canvas. Build settings lead with **Splash,
+MainMenu, Ship - Demo, Ship - CoOp, Bastion** (plus `RealmSelect` when registered). After a
 spawn-point or kit-floor change, drop `gkb_bastion_navmesh_request.txt` (or Build All).
 Hand-editing **kit geometry** and **ShipDress** persists. A scene missing from build
 settings makes `SceneManager.LoadScene` throw, which strands the player on the end

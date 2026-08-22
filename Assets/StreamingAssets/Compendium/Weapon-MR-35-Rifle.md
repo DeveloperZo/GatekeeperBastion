@@ -2,11 +2,17 @@
 
 ## Game
 
-A **Primary** for things that will not come to you. One heavy, accurate shot with pierce through bodies in a line — no falloff out to its reach.
+A Primary for things that will not come to me. One heavy accurate shot per pull, no spread, and no falloff at all. It does the same work at the far end of its reach as at contact, and that reach is the longest here.
 
-Start on Thieves from across the room; their walk is your whole budget. Defaults in a corridor pay for pierce. A Hunter already in your face is the Secondary's job.
+It pierces. A shot continues through a body and into the ones behind it, up to a limit. Walls still stop it. Bodies already dead do not soak it. This only pays when bodies are lined up behind one another, so shoot down a corridor rather than across it. A group abreast gives me one hit. The same group in file gives me several from one pull.
 
-Numbers: [Field Manual](Field-Manual.md).
+Cadence is slow and a missed shot is real time lost. It rewards a steady hand and punishes a spray.
+
+Start on Thieves from across the room. Their walk is the whole budget I have, and this is the only weapon that can spend it from a distance.
+
+The weak spot is a Hunter already inside my range. One is fine. Several arriving while I am between shots is how a Run ends. That is the price of taking this over the BR-12, and it is a real price.
+
+A Damage focus compounds here better than anywhere else. Dropping a Thief in one fewer shot is worth more than the step looks.
 
 ## Reference
 

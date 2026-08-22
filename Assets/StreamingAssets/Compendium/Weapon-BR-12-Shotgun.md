@@ -2,11 +2,17 @@
 
 ## Game
 
-A **Primary** for things that come to you. One pull throws a cone of pellets — strong only when the target is close and filling the crosshair. Shortest reach in the game; no pierce.
+A Primary for things that come to me. One pull throws a cone of pellets. Each pellet is nothing on its own. The shot is strong only when most of them land, which means only when the target is close and filling the crosshair.
 
-Let them close. Deletes Hunters. Wrong tool for Thieves and long corridors — start a Thief early and expect to spend time on it while Hunters use that time on you.
+Damage bleeds off with distance and by the edge of its reach it does nothing at all. That reach is the shortest I have carried, by a wide margin, and there is no cue anywhere for where the falloff starts. A shot that looks like a hit can do almost nothing.
 
-Numbers: [Field Manual](Field-Manual.md).
+Pellets do not pierce. Every one stops on the first thing it touches, so the cone does not sweep a group. Pellets that land on a second body are pellets that did not kill the first. Pick a body. Give it the whole shot.
+
+Slow cadence, small clip, the longest reload of the three Primaries. Very few pulls between long vulnerable pauses. Break contact and reload before the clip is empty, or swap instead, which is faster.
+
+Let them close. That is the whole weapon, and against Hunters it costs nothing, because they do the closing. It deletes them.
+
+Wrong tool for Thieves and for long corridors. Start on a Thief early and expect to spend real time there while the Hunters use that time on me.
 
 ## Reference
 
