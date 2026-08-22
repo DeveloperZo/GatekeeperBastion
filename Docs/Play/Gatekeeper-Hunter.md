@@ -4,11 +4,17 @@
 
 ## Game
 
-The Hunter comes for you and nothing else. Its frame is the lean one — you can pick it in a group by silhouette before it closes. It will not hit the Hatch, cannot hit the Hatch, and will not be distracted from you by anything in the Bastion.
+The lean frame. I can pick it out of a group before it closes, which is most of what I have.
 
-It picks you the moment it arrives and walks straight at you for life. It closes and swings: melee contact. It is fast, fragile, and already hunting — shooting it still shouts, so Defaults near it join the hunt. Deal with it first; there is no positioning answer, and standing on the Hatch just brings it to the worst place for a fight.
+It wants me. It picked me the moment it arrived and it walks straight at me, at full pace, for life. It has no second gear because it never needed one. It closes and swings.
 
-Health, damage, speed and how many appear in each Wave: [Field Manual](Field-Manual.md).
+It will not touch the Hatch. Not while standing on it. Not ever. The Hatch does not appear to exist in whatever it is using for a world. So holding the Hatch is a good answer to two of the three kinds here and no answer at all to this one. It just brings it to the worst place in the room to fight.
+
+It is the fastest thing coming and the easiest to kill. There is no positioning answer. The answer is to shoot it, and to do that before anything else.
+
+Shooting one still shouts. It arrived hunting but it had not been provoked, and provoking it brings its escort along. Opening on one walking in with Defaults around it converts all of them. Thieves in the same group ignore it and keep walking.
+
+Nothing warns me one is here. The Hatch alarm never fires for it, because it never hits the Hatch. Only the silhouette.
 
 ## Reference
 

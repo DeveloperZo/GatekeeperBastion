@@ -4,11 +4,17 @@
 
 ## Game
 
-The plain machine, and the one every other rule is stated against. On a Wave started at a field terminal it walks at you. On a Hatch-bank it walks to the Hatch and will pass you to get there — until something flips it onto you for the rest of its life. It closes and swings: melee contact.
+The plain frame. Everything else here I describe by how it differs from this.
 
-Shooting it, being seen at range, or standing near it puts it on you. The first two are permanent; nearness is temporary. Once it flips it shouts, and the whole group joins. Once it reaches the Hatch it stops negotiating — kill it there, or the door takes the hits.
+On a field-terminal Wave it walks at me. On a Hatch-bank it walks to the Hatch and will pass straight by me to get there. It closes and swings. Contact only.
 
-Numbers — health, damage to you, damage to the Hatch, speeds: [Field Manual](Field-Manual.md).
+Three things put one on me. Shooting it. Being seen by it at distance across a clear line. And standing in its space, which is the only one of the three that wears off. The first two are permanent for the rest of its life, and when it flips it also picks up pace. Faster than my walk. Slower than my sprint. Backing away while firing is a slow loss, not a stalemate.
+
+Hurt one and it shouts, and everything near it drops what it was doing and joins. The ones it pulls do not shout again. One shot buys one group's attention, which is either a tool or an accident depending on whether I meant it.
+
+Once one reaches the Hatch it stops negotiating. It will keep hitting while I shoot it, while I stand beside it, while its friends chase me. It is a decision only while it is still walking.
+
+Individually the weakest thing here. It wins by count, and the surplus from a raised intensity is entirely this.
 
 ## Reference
 

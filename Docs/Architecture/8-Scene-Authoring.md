@@ -4,8 +4,12 @@
 Purpose: How scenes are structured so an agent can work on one part without breaking the rest, and what a scene edit must assert.
 Status: working
 Update trigger: when a scene root is added or renamed, when UI moves out of a gameplay scene, or when a swap rule changes.
-Last updated: 2026-08-16
+Last updated: 2026-08-22
 -->
+
+Current Ship hubs: **`Ship - Demo.unity`** (solo / transitional) and **`Ship - CoOp.unity`**
+(destination hub). Historical notes below that say `Ship.unity` mean the pre-rename hub;
+the authoring rules still apply to whichever hub you edit.
 
 ## Why this file exists
 

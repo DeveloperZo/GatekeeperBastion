@@ -9,11 +9,15 @@ slot/reload behaviour changes. / Last updated: 2026-08-20
 
 ## Game
 
-Everything about the gun in your hands is decided on the Ship. Nothing about it can be changed once you are on the Bastion.
+Everything about the gun in my hands is decided on the Ship. Nothing about it can be changed once I am aboard the Bastion. The fight-time keys only move between the slots I am already carrying.
 
-You carry a **Primary** and a **Secondary**. The **Drone** bay holds a payload, not a gun — the Decoy, bought at FABRICATION. Guns are owned and equipped only at the ARMORY. Ammunition is infinite; a reload costs only time. Switching cancels a reload in progress unless you changed that setting.
+A Primary and a Secondary. The Drone bay holds a payload rather than a gun, and that payload is bought at FABRICATION, not the ARMORY. Guns are the ARMORY's and only the ARMORY's.
 
-Your Primary answers one of the room's three questions well. The others get harder. Damage, clip, cadence, range and prices: [Field Manual](Field-Manual.md).
+Ammunition is infinite. A reload costs time and nothing else. Each slot keeps its own clip, so a dry Primary is not a crisis, it is a swap. Swapping does throw away a reload in progress, which has cost me more than it should have.
+
+Every shop weapon but one carries an activated ability on the same key, and how hard it lands is bought on that weapon's own wheel. A purchase moves several spokes at once, weighted by the one I centre. It never moves reach, spread, pierce, or anything on a weapon I am not holding. The money goes into one gun and stays there.
+
+My Primary answers one of the room's three questions well and makes the other two harder. There is no gun that answers all three. I have looked.
 
 ## Reference
 

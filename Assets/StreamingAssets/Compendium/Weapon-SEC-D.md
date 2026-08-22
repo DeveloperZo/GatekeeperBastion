@@ -4,11 +4,17 @@
 
 ## Game
 
-Your **close-quarters Secondary**. Free at the ARMORY. The other free Secondary is the **MK-1** (reach).
+The contact Secondary. Free at the ARMORY. The other free Secondary is the MK-1, which trades contact for reach.
 
-It dumps a regenerating pool into whatever is already on you. Dead across a room. Paired with a reach Primary it answers a Hunter in your face; paired with the BR-12 it commits the whole loadout to contact.
+It dumps a regenerating pool into whatever is already touching me. Inside a few metres it hits hard. At the distance the MK-1 works comfortably it is a dead trigger.
 
-Numbers: [Field Manual](Field-Manual.md).
+Swap to it when something is on me, not when something is still walking down the corridor. Empty the pool into the body in front of me and let it refill during the quiet. The refill is slow relative to how fast it empties.
+
+Paired with a reach Primary it is the answer to a Hunter in my face. Paired with the BR-12 it commits the whole loadout to knife range, which is a decision about the entire Run rather than about this gun.
+
+Wrong tool for a Thief.
+
+It carries no ability, and that spoke on its wheel cannot be bought. I do not know why it is drawn there.
 
 ## Reference
 

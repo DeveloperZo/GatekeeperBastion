@@ -4,11 +4,15 @@
 
 ## Game
 
-Your **far-wall Primary**. Bought at the ARMORY. Full damage across the Bastion floor; slow enough that a late Wave will drown you if this is all you fire.
+The far-wall Primary. Full damage across the whole Bastion floor, at distances the MR-35 has already given up on.
 
-Leave the Hatch. Fire when bodies stack in the mouth. A Hunter in your face is the Secondary's job. **Railshot** arms the next shot to pierce further, then lapses if you do not fire.
+Slow. Slow enough that a late Wave will drown me if this is all I fire. This gun is empty by the time I turn around, so a Hunter in my face is the Secondary's job, always.
 
-Numbers: [Field Manual](Field-Manual.md).
+It is strongest where I never stand. Leave the Hatch. Fire up the bore when bodies stack in the mouth of it. A pierced line up a corridor is what the rate is paying for.
+
+Its ability arms the next shot to pierce further at full damage, and lapses if I do not fire it. Arming and then not firing is the most common way I waste it.
+
+Its wheel orders clip and reload differently from the MR-35's, so the same focus buys a different gun. Strength is damage. Weakness is fire rate.
 
 ## Reference
 

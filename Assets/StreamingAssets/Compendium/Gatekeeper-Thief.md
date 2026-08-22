@@ -2,11 +2,19 @@
 
 ## Game
 
-The Thief is the heavy frame — slow, unmistakable in a group. It is walking to the Hatch on a Hatch-bank. On a Wave started at a field terminal it walks at you instead. Shooting it does not provoke it. It does not shout, does not speed up, and the Defaults standing beside it stay on their own hunt.
+Heavy frame. The slowest thing on this hull, and unmistakable in a group.
 
-It never hurts you. On a Hatch-bank it bites the Hatch. It is the safe thing to fire into in a crowd, and the thing to start on early. Its slowness is a budget, not a reprieve — backing away buys seconds, not a solution.
+I emptied a clip into one at close range and it did not react. Not a flinch that could be called a flinch. It does not turn. It does not call. The ones walking beside it do not look up.
 
-Health, damage, speed and how many appear per Wave: [Field Manual](Field-Manual.md).
+It has never taken my blood. On a field-terminal Wave it walks at me and takes nothing when it arrives. On a Hatch-bank it wants the Hatch, and it gets there unless I spend the time on it. When it arrives it takes a serious bite.
+
+Time is the entire cost. It is slow, and that slowness is the offer, not a reprieve. Backing away buys seconds. Seconds are not an answer. The only answer is to kill it, and killing it takes time I am spending in front of everything else.
+
+It has the most health of anything here and that scales with the Wave like everything else, so the same frame late in a Run is a substantially longer job than the first one I met. Intensity never adds one.
+
+It is the safe thing to fire into in a crowd, because it is the one target that will not shout the group onto me.
+
+Note: it is built to be shot and appears not to know that it is being shot. I have no explanation for this.
 
 ## Reference
 

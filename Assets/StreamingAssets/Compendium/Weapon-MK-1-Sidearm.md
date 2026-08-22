@@ -2,11 +2,15 @@
 
 ## Game
 
-Your **ranged Secondary**. Free at the ARMORY, and still bought there. The other free Secondary is **SEC-D** (contact).
+The ranged Secondary. Free, and still bought, at the ARMORY. The other free Secondary is SEC-D, which trades reach for contact.
 
-Early it is your whole loadout if you picked reach. Later it is the bridge — what you fire while the Primary reloads. Accurate single shots, no pierce: finish wounded bodies, swap under pressure, leave Thieves alone.
+Early it is the whole loadout if I picked reach. Later it is the bridge: what I fire while the Primary is empty. Because each slot keeps its own clip, swapping and continuing to shoot beats standing still through a reload with something walking at me. With this one, the bridge still works at distance.
 
-Numbers: [Field Manual](Field-Manual.md).
+One accurate round per pull, no scatter, no pierce. A miss is a whole round of nothing. It rewards standing still and placing shots more than either Primary does. Its best work is finishing bodies that are already nearly done, which saves the Primary's clip for something that needs all of it.
+
+Poor at volume. The clip is small, the damage is modest, and everything gets tougher every Wave while this does not. Deep in a Run it takes visibly more pulls per body than it did on the first.
+
+Wrong tool for a Thief. Emptying this into one, with a reload between each clip, is usually slower than its walk to the Hatch.
 
 ## Reference
 

@@ -4,16 +4,17 @@
 
 ## Game
 
-Between Runs you stand on the Ship. Solo and friends both use the co-op hull: three
-hatch doors along one side, one open per seat. Party lead owns NAV EMBARK; each seat
-shops their own loadout. This is the only place Salvage gets spent, and the only way
-back to the Bastion. Four consoles, each owning one subject: **ARMORY**, **CREW
-QUARTERS**, **FABRICATION**, **NAV MAP**.
+Between Runs I stand on my own Ship, in first person, hands empty until I buy something. This is the only place Salvage gets spent and the only way back to the Bastion.
 
-Buy the free sidearm first. Then CREW QUARTERS — claim a protocol (Default costs
-nothing; VEIL and FORGE are also on that panel). Weapon upgrades and the equipment slot
-wait until Salvage first converts through the Hatch. The NAV MAP warns if you own no weapon or no
-protocol and lets you go anyway. Numbers and bindings: [Field Manual](Field-Manual.md).
+Three hatch doors along one side. One opens per seat. The party lead owns the EMBARK, and each seat shops their own loadout.
+
+Four consoles and each owns exactly one subject, so I always know where a thing is bought. Weapons and their wheels at the ARMORY. The protocol I wear at CREW QUARTERS. The Hatch, the Repair Rig, the equipment slot and the Decoy at FABRICATION. Where I go, and the button that commits me, at the NAV MAP.
+
+Buy the free Secondary first. It costs nothing and it is sold rather than given so the first thing I learn is which console weapons come from. Then claim a protocol, which also costs nothing at its plainest.
+
+Weapon Tiers and the equipment slot stay shut until Salvage first converts through the Hatch. Nothing else waits.
+
+The NAV MAP will warn me if I own no weapon and no protocol, and then let me go anyway. It is willing to let me make a bad bet. That is consistent with everything else here.
 
 ## Reference
 

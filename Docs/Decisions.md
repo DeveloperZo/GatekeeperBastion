@@ -70,8 +70,9 @@ re-litigating a cut costs more than the cut saved.
   `.ogg` and the rest of the list in `../.gitattributes` (Zo, 2026-08-10).
 - **Asset Store vendor dumps in git.** The pack tree is not project history; the wrappers
   that reference it are. `Assets/Synty/` is gitignored (260 MB / 6728 files on disk,
-  2026-08-14). Eight project files reference nine assets in it (`Assets/Packs/Weapons/*`,
-  `Assets/Packs/Boarder/Boarder.prefab`, `Assets/Scenes/Ship.unity`). After clone, import
+  2026-08-14). Project wrappers that resolve Synty GUIDs live under `Assets/Packs/`
+  (weapons, Boarder) and the dressed Ship hubs (`Ship - Demo.unity`, `Ship - CoOp.unity`).
+  After clone, import
   [POLYGON Sci-Fi Space](https://assetstore.unity.com/packages/3d/environments/sci-fi/polygon-sci-fi-space-pack-art-by-synty-138857)
   SKU **138857**, **v1.14.0**, to `Assets/Synty/PolygonSciFiSpace/` so those GUIDs resolve.
   `Assets/Packs/` stays tracked. Shift, Odin (`Assets/Plugins/Sirenix/`), and MCPForUnity

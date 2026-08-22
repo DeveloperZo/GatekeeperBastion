@@ -2,11 +2,19 @@
 
 ## Game
 
-Your health does not come back during a Run. The Hatch comes back only when you repair it with the Repair Rig and banked Salvage. Every tactic here is about spending as little of those two pools as possible per kill.
+Two pools end a Run and neither refills for free. Mine does not refill at all. The Hatch's refills only when I stand at it with the Repair Rig and spend the bank. So every habit below is the same habit: spend less of those two per body killed.
 
-On a Hatch-bank, hurt Defaults on the approach — a pull is permanent, and once they commit to the Hatch they will not leave. On a field-terminal Wave they are already on you. One shot shouts one group, not the whole Bastion. Sprint outruns a chase; walking does not.
+Hurt a Default on the approach and it is mine for the rest of its life. It does not cool off. It does not go back to the Hatch. It does not lose me. But there is a deadline: once one is close enough to the Hatch it stops listening, permanently, and after that shooting it changes nothing except its health. Hurt them on the way in and they are a choice. Hurt them once they arrive and they are a job.
 
-Triage by refusal: Hunters cost health, Thieves cost the door on a Hatch-bank and your attention on a field Wave (they never hurt you), Defaults are the only kind you can steer. Bindings and numbers: [Field Manual](Field-Manual.md).
+I can be noticed without firing. A clear line of sight at distance is enough, and being noticed is as permanent as being shot. A long open corridor hands out attention for free. I have walked into rooms and been owned by them before I did anything at all.
+
+One shot pulls one group and no further. The ones it pulls do not pull their own neighbours. This is the most useful bound I know and there is no way to see it, only to infer it.
+
+Walking away from something that wants me does not work. It closes the whole time. Sprinting works until the tank is empty, and the tank locks out for longer than the bar suggests.
+
+Triage by what each refuses. Hunters cost me health only. Thieves cost the Hatch on a Hatch-bank, cost me attention on a field-terminal Wave, and never cost me blood. Defaults are the only kind I can steer, and only on a Hatch-bank.
+
+Repair in the quiet. Repairing in a live Wave means standing still, unable to fire, at the exact spot everything is walking toward.
 
 ## Reference
 

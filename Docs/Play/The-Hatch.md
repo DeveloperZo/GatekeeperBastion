@@ -4,11 +4,17 @@
 
 ## Game
 
-The Hatch is the umbilical junction back to your Ship. If it reaches zero the Run ends immediately — the same ending as your own death.
+The Hatch is the umbilical junction back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Run on the spot, same as my own death, same screen, same counter.
 
-Field-terminal Waves leave it invulnerable. A Hatch-bank is when it can be hurt, and when Unbanked converts to the ship. Defaults and Thieves hit it on that Wave; Hunters never do. Survive that bank and, until you start the next Wave, hold interact here to dock home.
+It starts every Run whole. Whatever I did to it last time did not carry.
 
-Repair needs the Repair Rig equipped and spends banked Salvage per point healed. Letting a Thief reach the door costs more than killing it. Health, rate and price: [Field Manual](Field-Manual.md).
+On a field-terminal Wave nothing can touch it. A Hatch-bank is the window where it can be hurt and the window where Unbanked converts. Defaults and Thieves go for it. Hunters never do, at any range, even standing on it.
+
+Repair means standing at it and holding. It needs the Repair Rig equipped, and without the Rig the hold does nothing at any bank balance. It spends banked Salvage per point healed and it will take the bank to exactly zero if I hold that long.
+
+Survive a Hatch-bank and it offers something different: hold and dock home, with what I banked. That offer lives until I start the next Wave and then it is gone. Fail the bank and it never appears at all.
+
+The arithmetic that matters: letting a Thief reach it costs more than killing it. Not in danger. In money. That is the whole reason to walk out and meet one.
 
 ## Reference
 

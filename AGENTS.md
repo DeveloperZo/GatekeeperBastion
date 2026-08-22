@@ -1,7 +1,8 @@
 # AGENTS.md
 
 Working contract for any agent on Gatekeeper's Protocol. Applies to Claude Code, Cursor,
-and anything else. Read this first, then `Docs/README.md`.
+and anything else. Read this first, then `Docs/README.md`. Repository layout (folders,
+Tools, scene names) lives in the root [`README.md`](README.md) — do not invent a second map.
 
 Wiring: this file is the source. `CLAUDE.md` and `.cursor/rules/project.mdc` are
 one-line pointers to it. Do not duplicate content into them.
@@ -183,9 +184,10 @@ MDA — Aesthetics, Dynamics, Mechanics — which is Meadows' leverage ladder re
 against everything above it.
 
 **`Docs/Architecture.md`, `Working-Rules.md`, `Decisions.md` and `Roadmap.md` are how the
-game gets made** and are deliberately off that ladder and unnumbered.
+game gets made** and are deliberately off that ladder and unnumbered. `Docs/Story/` is
+fiction draft — also off the ladder.
 
-`Docs/README.md` is the game on one page. Read it first.
+`Docs/README.md` is the game on one page. Root `README.md` is the repository map. Read both.
 
 Code comments say what the code does and what breaks if it changes. Design rationale,
 tuning history and conclusions go in `Docs/`. `WaveDirector.cs` once carried 203 comment

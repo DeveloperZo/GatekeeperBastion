@@ -4,11 +4,17 @@
 
 ## Game
 
-A Run is one trip out to the Bastion and back. You embark already tethered near the Hatch. Nothing happens until you start a Wave.
+One trip out and back. I embark already tethered. Nothing happens until I start a Wave.
 
-Prep is quiet and untimed. Assault lasts until every Gatekeeper that Wave sent is dead. A field-terminal Wave hunts you; a Hatch-bank hunts the Hatch and converts Unbanked.
+Prep is the quiet. Untimed, pays nothing, and the only state in which I can juice intensity or work on the Hatch without something chewing on me. Assault runs until every Gatekeeper that Wave sent is dead. Not until the last one arrives. Until the last one drops.
 
-Four endings: you die, the Hatch falls, you dock after a survived Hatch-bank, or you survive Master Control. Converted Salvage stays either way. Unbanked is wiped on Lost. How many Waves: [Field Manual](Field-Manual.md).
+A Wave called at a field terminal hunts me and cannot touch the Hatch. A Hatch-bank hunts the Hatch and converts what I am carrying. Two different fights out of the same room.
+
+Four ways it finishes. I go down. The Hatch goes down. I dock home after surviving a Hatch-bank. Or I survive Master Control and the Bastion is stripped.
+
+Converted Salvage stays whichever way it goes. Unbanked does not survive me.
+
+The Ship offers to start me deeper. It is not a skip. It delivers everything up to that point back to back, in one Assault, with no quiet in the middle. Same content, much less room.
 
 ## Reference
 

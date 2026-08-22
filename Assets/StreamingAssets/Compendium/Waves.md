@@ -2,11 +2,15 @@
 
 ## Game
 
-A Run is a fixed number of Waves, each bigger than the last. Four things escalate together: more bodies, tougher bodies, wider groups, shorter gaps. Intensity adds bodies on top; it does not touch the other three.
+Each Wave is bigger than the last, and it grows in four directions at once. More bodies. Tougher bodies. Wider groups. Shorter gaps between them.
 
-Kinds arrive on a fixed schedule. The first Wave is Defaults only. Hunters enter after that, Thieves later still. Within a group the mix is shuffled — you sort what is in front of you, every time.
+Intensity adds to the first of those and to nothing else. I have checked this repeatedly.
 
-Difficulty is overlap: how much of the Wave is in the room at once. Starting deep from the NAV MAP stacks Waves with no Prep between them on purpose. Counts and composition: [Field Manual](Field-Manual.md).
+The kinds arrive on a schedule I cannot influence. The first Wave is Defaults only. Hunters start after that. Thieves later still, and they come thickest at the end. Inside a group the mix is shuffled, so I never get a clean phase of one thing. Sorting what is in front of me is the job.
+
+The difficulty is not any single machine. It is overlap: how much of the Wave is standing in the room at the same time. That is what rises. Late on, the next group is inside before I have finished the last.
+
+Starting deep from the Ship does the same thing on purpose, between Waves instead of within one.
 
 ## Reference
 

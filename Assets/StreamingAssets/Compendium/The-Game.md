@@ -4,11 +4,15 @@
 
 ## Game
 
-You are the **Boarder**. Your Ship cuts into a garrisoned **Bastion** and siphons it for Salvage. **Gatekeepers** already hold it — three machines, told apart by silhouette. The umbilical back to your Ship ends in the **Hatch** — your way home, and the thing you must hold. Lose the Hatch, or go down yourself, and the Run is Lost. Survive a Hatch-bank and you may dock home by choice.
+I cut into a Bastion and strip it. The Gatekeepers were already there. Three machines, each a different frame, and I can tell which is which before it is close enough to matter.
 
-Nothing arrives until you call it. Prep is yours. Intensity is a wager before each Wave — more Salvage, more Defaults, nothing else. Converted Salvage stays banked on the **realm** you entered; Unbanked is gone if you go down or the Hatch falls. Your **Boarder** — weapons, wheel, protocol, equipment — travels with you between realms.
+Behind me is the Hatch. It is the umbilical to my Ship and it is the only way back. If it falls, the Run is over. If I fall, the Run is over. Those are the only two.
 
-Between Runs, four consoles on the Ship each own one subject. The first weapon is free and still bought at the ARMORY. Numbers: [Field Manual](Field-Manual.md).
+Nothing comes until I call it. That took me a while to trust. Prep is mine and it is untimed. Intensity is the only bet on offer and it is an honest one: more pay, more of the plainest machine, nothing else moved.
+
+Salvage sits Unbanked until a Hatch-bank converts it. Converted is mine and stays mine on this realm. Unbanked dies with me. What I carry between realms is myself: weapons, wheel, protocol, equipment.
+
+Between Runs I walk my own Ship. Four consoles. Each owns one subject and nothing is sold in two places.
 
 ## Reference
 

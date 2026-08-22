@@ -4,11 +4,17 @@
 
 ## Game
 
-Gatekeepers hold the Bastion. You are the Boarder who cut in; they are already home. They arrive from garrison to repel an intrusion — reclaim the room, cut the umbilical, throw you off.
+They hold the Bastion. I am the one who cut in. They are not defending a wreck, they are already home, and they arrive from garrison to put me off it.
 
-Three machines, told apart by silhouette before they arrive. Separated only by what each refuses. A Default can be pulled off the Hatch at a cost. A Hunter is already on you and never touches the door. A Thief hunts you on a field-terminal Wave and the Hatch on a Hatch-bank, and shooting it never shouts. They all swing on the same clock.
+Three frames. Three machines, not three paints, and I can sort a group by shape before it is in range. They all swing on the same clock. None of them is faster at hitting than another. None has a weak point and none resists anything. What separates them is entirely what each one refuses to do.
 
-They arrive in groups from rotating entry points. Kill them during a live Wave and Salvage sits Unbanked until a Hatch-bank. Numbers: [Field Manual](Field-Manual.md).
+Ask one question of anything in the room: can this be moved off what it is doing. A Default can, and moving it costs. A Hunter is already on me and cannot be moved anywhere. A Thief hunts me on a field-terminal Wave, hunts the Hatch on a Hatch-bank, and will not be shouted at in either direction.
+
+They arrive in groups, all of a group through one spawn point, and the next group somewhere else. The point rotates. I cannot hold one direction, only cover what I can turn to.
+
+That is the whole garrison. Nothing shoots. Nothing heals. Nothing makes another one stronger. There is no larger version of any of them.
+
+I would like to know where they come from. The rooms they walk out of do not open for me.
 
 ## Reference
 

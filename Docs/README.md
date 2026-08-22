@@ -1,5 +1,8 @@
 # Gatekeeper's Protocol — the game on one page
 
+Repository folders, Tools, and scene names: root [`README.md`](../README.md).
+This page is the game and the docs index.
+
 Sci-fi wave-defense FPS. Unity 6, PC/Steam, first-person. The Boarder is the IQ astronaut
 with FaxLab3D shooter-pack guns (the Cutter sword is still Synty, 2026-08-19); Ship desks
 and the Bastion kit are dressed (M61-2 closed 2026-08-14:
@@ -111,7 +114,8 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `GatekeeperZo Notes/` | Zo's own files — `verification.md` is the Next-Run list the dashboard reads; `playthrough.md` is raw session notes. |
 | [`Architecture/asset-audit-2026-08-18.md`](Architecture/asset-audit-2026-08-18.md) | Dated snapshot of what art is on disk against what is referenced. Figures drift after its stamp, by its own declaration. |
 | `Brainstorms/` | Ideas before they graduate. |
-| `Demo/` | First Bastion demo (through Master Control, with multiplayer). Implementable beat specs 0–7 plus voice pipe. Cut milestones from these files when asked; do not duplicate them into a brainstorm. |
+| `Demo - Single/`, `Demo - Coop/` | Solo and friends demo beat specs (voice pipes included). Cut milestones from these; do not duplicate them into a brainstorm. |
+| `Story/` | Fiction premise, beats, voices — draft, not on the Design ladder. Index: [`Story/README.md`](Story/README.md). |
 | `Marketing/` | Research, strategy, and claim-accurate copy. Pitch lives here, not in `Design/` or `Play/`. Honesty gaps: [`Marketing/gaps.md`](Marketing/gaps.md). |
 | `_meta/_definitions/` | `milestone.md`, `brainstorm.md`, `hygiene.md`, `animation-sidecar.md`, and `language.md` — the ubiquitous language every doc, log line and player-facing string uses. |
 | `Play/` | The **Compendium** — volumes of related entries. Each hand-written page holds `## Game` (what pause shows) and `## Reference` (fuller brief). Folder path is `Play/` (language lint); player-facing name is Compendium. In-game reader shipped (M62, Esc → Compendium). |

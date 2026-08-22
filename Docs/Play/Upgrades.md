@@ -4,11 +4,17 @@
 
 ## Game
 
-Permanent, campaign-wide. CREW QUARTERS sells the **Boarder Protocol** you wear —
-Default, VEIL, or FORGE. FABRICATION changes the Hatch — how much it can absorb, the
-Repair Rig without which you cannot repair at all, and the Decoy that fills the Drone bay.
+Permanent and campaign-wide. Nothing bought here is lost when a Run ends badly. Once a level is mine it stays mine.
 
-Weapon Tiers and the equipment slot stay locked until Salvage first converts through the Hatch. Claiming Default and Hatch Armor do not. Costs and curves: [Field Manual](Field-Manual.md).
+CREW QUARTERS sells the protocol I embark wearing: a standing rule about how my hardware behaves, a field I plant for the crew, one burst that is mine alone, and a passive where the sheet has one. There are no attribute tracks there. Health, sprint, pay per kill and crit chance do not move from that console and I have stopped looking for them.
+
+FABRICATION changes the Hatch. Hatch Armor raises what it can absorb, and applies from the next embark, so buying it changes nothing I can see while standing here. The Repair Rig is not a track, it is a one-off, and without it equipped I cannot repair at all at any bank balance. It does not make repair cheaper. It makes repair possible.
+
+Weapon Tiers and the equipment slot wait for the first convert through the Hatch. Claiming a protocol and buying Hatch Armor do not.
+
+Hatch Armor is the buy when I am losing Runs with my health bar still full. That is a clean signal. The Run ended at the Hatch and no amount of personal upgrade fixes it.
+
+The Repair Rig treats the symptom. If I am repairing a lot, the real answer is killing Thieves further out.
 
 ## Reference
 
