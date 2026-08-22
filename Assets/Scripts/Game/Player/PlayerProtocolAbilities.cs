@@ -106,6 +106,15 @@ namespace GatekeepersProtocol.Game
 
         public void SetHosted(bool hosted) { _hosted = hosted; }
 
+        /// <summary>Drop both protocol cooldowns. The range's bypass, cleared from outside for
+        /// the same reason <see cref="PlayerAbility.ClearCooldown"/> is. An open window is left
+        /// alone: a window is the ability doing its job, not the wait afterwards.</summary>
+        public void ClearCooldowns()
+        {
+            _crew.CooldownRemaining = 0f;
+            _personal.CooldownRemaining = 0f;
+        }
+
         void Update()
         {
             if (_hosted) return;

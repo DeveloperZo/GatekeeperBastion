@@ -48,6 +48,12 @@ namespace GatekeepersProtocol.Game
         /// <summary>Combat scene name (the bastion run).</summary>
         public const string Bastion = "Bastion";
 
+        /// <summary>The practice range (<c>Assets/Scenes/Range.unity</c>), reached through a
+        /// door on <see cref="ShipCoop"/>. Bastion-shaped so a Gatekeeper can think in it — the
+        /// brain reads run state off a live controller — but it never draws a Wave
+        /// (Docs/Milestones — a range you can fight in).</summary>
+        public const string Range = "Range";
+
         /// <summary>In-fiction name of the v0 bastion, for the nav map and the run-start log line.</summary>
         public const string BastionName = "ALPHA-7";
 
@@ -103,6 +109,8 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Load the party ship hub. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadShipCoop() => Load(ShipCoop);
+
+        public static bool LoadRange() => Load(Range);
 
         /// <summary>Load the bastion combat scene. Returns false (and logs an error) if it cannot load.
         /// Guests in an active friends session must use party EMBARK — local load is refused.</summary>

@@ -112,6 +112,16 @@ namespace GatekeepersProtocol.Game
 
         public void SetHosted(bool hosted) { _hosted = hosted; }
 
+        /// <summary>Drop whatever cooldown is left. Exists for the practice range, which
+        /// bypasses the wait by clearing it from OUT HERE rather than by branching the ability
+        /// path on where it is being used — the point of a range is to judge the shipped
+        /// mechanism, and an ability that knows it is in a range is a different ability
+        /// (Docs/Milestones — a range you can fight in, Trap).</summary>
+        public void ClearCooldown()
+        {
+            _cooldown = 0f;
+        }
+
         void Update()
         {
             if (_hosted) return; // the Bastion tick owner calls Tick in the written order
