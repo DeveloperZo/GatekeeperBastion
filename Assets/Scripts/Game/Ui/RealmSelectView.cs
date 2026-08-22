@@ -97,7 +97,7 @@ namespace GatekeepersProtocol.Game
             UiBind.SetButtonLabel(_copyBtn, "COPY");
             UiBind.SetButtonLabel(_toShipBtn, "TO SHIP");
             UiBind.SetButtonLabel(_lanBtn, "HOST ON LAN");
-            UiBind.SetButtonLabel(_sessionBackBtn, "BACK");
+            UiBind.SetButtonLabel(_sessionBackBtn, "CLOSE");
             ShowChooser();
             if (_title != null) _title.text = "REALMS";
         }

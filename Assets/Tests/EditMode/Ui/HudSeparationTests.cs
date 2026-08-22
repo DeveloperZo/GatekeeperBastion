@@ -274,6 +274,13 @@ namespace GatekeepersProtocol.Tests
             return min;
         }
 
+        /// <summary>Whether a named object exists under an ancestor. Lets a test assert a
+        /// widget is ABSENT, which name-based lookup otherwise cannot express.</summary>
+        public bool Has(string name, string ancestor)
+        {
+            return FindGo(name, ancestor) != 0;
+        }
+
         public bool IsActive(string name, string ancestor)
         {
             long goId = FindGo(name, ancestor);
