@@ -98,6 +98,36 @@ spawns on the Ship. Guest reads the follow prompt, presses it during a wave and 
 refused, presses it again once the wave clears, and arrives in the bastion as a second
 door opens.
 
+## Built, 2026-08-22
+
+The distinction the code did not have is now a type: `RunSeats`, a host-only roster of the
+seats **playing** as against the seats **connected**. It opens as the run becomes Tethered
+seeded with everyone who embarked, and closes when the run ends or the Ship loads for real.
+A seat that connects mid-run is not in it until it follows; a seat that drops is held in it
+until the next Prep. Three consumers read it while a run is live — the wave-composition
+count, the wallet split behind it, and the hatch doors — and none of them before one, so the
+lobby is untouched and solo still answers one seat.
+
+`WaveDirector.NextWave` was not touched, as implementation step 5 required.
+
+**Reused rather than rebuilt**: the downed-Boarder wait already puts a seat on the Ship over
+a live Bastion. `AwaitingFollow` distinguishes an arrival from a casualty — that one buys
+back at a Hatch-bank window, this one only waits for the break — and `TryAcceptFollow` is
+`TryAcceptEmbark` with the Hatch-bank condition dropped, since a seat that never embarked has
+nothing to buy back.
+
+**Found while building, fixed here**: a `NetworkVariable`'s initial value raises no
+`OnValueChanged` on the owner that has just spawned, and the Bastion scene can still be
+loading when one would have fired. The owner enters the wait from its own tick instead,
+scoped to the late arrival so the buy-back path keeps being driven purely by the callback.
+
+**Owed.** Nothing has been through Unity: `mono` is not on this machine's PATH, so
+`Tools/verify/run.sh` ran its lints (clean) and not its Sim leg, and neither test fixture has
+executed. Criteria 1, 2 and 6 are eyes-on across two editor instances and nobody has looked.
+Criterion 9's offline wave-harness diff against the recorded baseline has not been run —
+`RunSeatsTests` argues solo is unchanged from the count's side, which is weaker than the diff
+the milestone asks for.
+
 ## Usable, or it did not ship
 
 **Driven**: joining a realm, and pressing follow. **Shown**: the ship you land on, the
