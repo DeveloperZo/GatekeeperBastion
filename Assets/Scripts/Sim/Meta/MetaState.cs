@@ -245,6 +245,11 @@ namespace GatekeepersProtocol.Sim
 
         public void CopyPointsInto(WeaponId id, int[] dest) { Boarder.CopyPointsInto(id, dest); }
 
+        public int WheelCentresOf(WeaponId id, WheelAttr attr)
+        {
+            return Boarder.WheelCentresOf(id, attr);
+        }
+
         public void AwardWheel(WeaponId id, WheelAttr centre) { Boarder.AwardWheel(id, centre); }
 
         public void ReplacePointsFromFlatTier(WeaponId id, int tier)

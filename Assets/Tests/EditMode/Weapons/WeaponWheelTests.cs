@@ -145,6 +145,10 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
             Assert.AreEqual(0, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.FireRate));
             Assert.AreEqual(2, loaded.TierOf(WeaponId.Mk1Sidearm));
+            Assert.AreEqual(2, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Reload));
+            Assert.AreEqual(0, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
+            Assert.AreEqual(0, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Ability),
+                "neighbour +3 must not count as a centred buy");
         }
 
         [Test]
@@ -193,6 +197,57 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(4.04f, WeaponWheel.ClipMul(WeaponWheel.FocusAtMax), 0.05f);
             Assert.AreEqual(0.37f, WeaponWheel.ReloadMul(WeaponWheel.FocusAtMax), 0.02f);
             Assert.AreEqual(1.79f, WeaponWheel.FireRateMul(WeaponWheel.FocusAtMax), 0.02f);
+        }
+
+        [Test]
+        public void CostKeysOnCentredSpoke_NotDerivedTier()
+        {
+            var m = MetaState.CreateNew();
+            m.SetOwned(WeaponId.Mk1Sidearm, true);
+            m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Damage);
+
+            var slot = WeaponSlot.Secondary;
+            Assert.AreEqual(1, m.TierOf(WeaponId.Mk1Sidearm));
+            Assert.AreEqual(WeaponTier.Cost(slot, 1),
+                WeaponTier.Cost(slot, m.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Damage)));
+            Assert.AreEqual(WeaponTier.Cost(slot, 0),
+                WeaponTier.Cost(slot, m.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Reload)),
+                "a Damage centre must not raise Reload");
+            Assert.AreEqual(WeaponTier.Cost(slot, 0),
+                WeaponTier.Cost(slot, m.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Ability)),
+                "neighbour +3 must not raise Ability");
+            Assert.AreEqual(WeaponTier.Cost(slot, 0),
+                WeaponTier.CheapestSpokeCost(m, WeaponId.Mk1Sidearm));
+        }
+
+        [Test]
+        public void CentresDerivedFromPoints_OvercountAStackedNeighbour()
+        {
+            // Deriving centre counts from points is lossy, and the loss is worth pinning. It
+            // used to be reached by loading a pre-v12 document; version 13 refuses those, but
+            // the derivation itself is still live — it runs for the flat-Tier shape and for a
+            // document that arrives without the key at all, which is how it is reached here.
+            var b = BoarderState.CreateNew("b1", "VESSEL");
+            b.SetOwned(WeaponId.Mk1Sidearm, true);
+            b.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Reload);
+            b.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Reload);
+
+            string json = b.ToJson();
+            int at = json.IndexOf(",\"WeaponWheelCentres\":", System.StringComparison.Ordinal);
+            int end = json.IndexOf(']', at) + 1;
+            var loaded = BoarderState.FromJson(json.Remove(at, end - at));
+
+            Assert.IsNotNull(loaded);
+            Assert.AreEqual(2, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Reload),
+                "the centred spoke's two buys are recoverable from its ten points");
+            Assert.AreEqual(1, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Ability),
+                "but the neighbour's spill of 6 points reads as one buy it never had");
+
+            // And the saved counts are exact, which is the whole reason they are saved.
+            var kept = BoarderState.FromJson(b.ToJson());
+            Assert.AreEqual(2, kept.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Reload));
+            Assert.AreEqual(0, kept.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Ability),
+                "a document that carries the key does not have to guess");
         }
     }
 }

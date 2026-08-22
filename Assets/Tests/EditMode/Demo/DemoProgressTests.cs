@@ -194,15 +194,22 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void ExitStanding_FlipsWhenBankedFallsBelowTheNextCost()
+        public void ExitStanding_FlipsWhenBankedFallsBelowTheCheapestSpoke()
         {
-            // The salvage-short seat: one buy landed (tier 1, next cost 300), 150 left.
-            var m = FirstReturnMeta(150);
+            // One Damage buy landed; Reload (and every other spoke) is still 150.
+            // 149 cannot buy any remaining spoke. 150 still can.
+            var m = FirstReturnMeta(149);
             m.DemoWheelBuysLeft = 1;
             m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Damage);
             Assert.AreEqual(1, m.TierOf(WeaponId.Mk1Sidearm));
+            Assert.AreEqual(1, m.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
+            Assert.AreEqual(0, m.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Reload));
             Assert.IsTrue(DemoProgress.NoBuyableUpgradeRemains(m),
-                "banked below the next cost is the other half of the state key");
+                "banked below every remaining spoke cost is the other half of the state key");
+
+            m.BankedSalvage = 150;
+            Assert.IsFalse(DemoProgress.NoBuyableUpgradeRemains(m),
+                "150 still buys a spoke that has never been centred");
         }
 
         [Test]
@@ -219,7 +226,7 @@ namespace GatekeepersProtocol.Tests
         {
             var m = FirstReturnMeta(150);
             m.DemoWheelBuysLeft = 1;
-            m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Damage); // MK-1 next cost 300
+            m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Damage); // MK-1 Damage next 300; other spokes 150
             m.SetOwned(WeaponId.SecD, true);                     // SEC-D wheel at T0: 150
             Assert.IsFalse(DemoProgress.NoBuyableUpgradeRemains(m),
                 "once OWNED, a second Secondary's wheel is a real buyable upgrade");

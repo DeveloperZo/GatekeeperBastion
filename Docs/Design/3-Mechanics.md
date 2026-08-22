@@ -141,7 +141,9 @@ pays `FocusAward = 5` to the centre, `NeighbourAward = 3` to each neighbour, and
 two spokes at ring distance 2: `5 + 3 + 3 = 11 = PointsPerPurchase`, landing on three spokes of
 five. `MaxPurchases = WeaponTier.MaxTier = 10`, so a weapon's whole life is `10 × 11 = 110` points,
 and `DerivedTier = TotalPoints / 11` is a readout of what was bought rather than the thing
-bought.
+bought. The salvage cost of a purchase is `WeaponTier.Cost(slot, centres on that spoke)`:
+stacking Damage raises the next Damage buy, not Reload. Neighbour +3 does not raise the
+neighbour's next price. Ten purchases still cap the weapon.
 
 Because the far two are paid nothing, adjacency on a weapon's wheel is that weapon's identity,
 and the ring order is where the design decision sits. `RingOf` authors BR-12 as

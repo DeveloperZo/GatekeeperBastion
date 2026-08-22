@@ -27,8 +27,8 @@ namespace GatekeepersProtocol.Sim
     ///  10  — OpenDoorIds: door state stopped being derivable and became its own saved fact
     ///  11  — HatchConversions: the wheel re-keyed off PodEjections onto Hatch conversions
     ///  12  — WeaponWheelCentres: centred-purchase counts per weapon per spoke, so the cost
-    ///         of the next focus buy keys on the centred spoke rather than derived Tier.
-    ///         Claimed by separate work; this build does not read a v12 document.
+    ///         of the next focus buy keys on the centred spoke rather than derived Tier. That
+    ///         field survives at 13 and rides the Boarder, where kit belongs.
     ///  13  — the Boarder / realm split. Two documents, no migration.
     /// </remarks>
     public static class SaveFormat

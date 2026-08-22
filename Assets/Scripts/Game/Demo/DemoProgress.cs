@@ -127,7 +127,8 @@ namespace GatekeepersProtocol.Game
                 if (WeaponWheel.RingOf(id) == null) continue;
                 int tier = m.TierOf(id);
                 if (tier >= WeaponTier.MaxTier) continue;
-                long cost = WeaponTier.Cost(WeaponCatalog.Def(id).slot, tier);
+                long cost = WeaponTier.CheapestSpokeCost(m, id);
+                if (cost < 0) continue;
                 if (cost < cheapest) cheapest = cost;
             }
             if (cheapest == long.MaxValue) return true;

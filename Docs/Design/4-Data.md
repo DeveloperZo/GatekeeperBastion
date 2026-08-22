@@ -309,12 +309,16 @@ are the progression. Hatch Armor keeps the doubling curve. CREW attribute tracks
 
 **Weapon upgrade wheel** (`Sim/Meta/WeaponWheel.cs`) — five attributes (reload, clip,
 damage, fire rate, ability). One purchase awards **5 / 3 / 3 / 0 / 0** by ring distance.
-Ten purchases, 110 points. Tier is derived (`total / 11`), never stored.
+Ten purchases, 110 points. Tier is derived (`total / 11`), never stored. Salvage cost
+keys on how many times that spoke was the centre (`WeaponTier.Cost(slot, centredCount)`),
+not on derived Tier — stacking Damage raises the next Damage buy; Reload stays at its
+own count. Neighbour +3 does not raise the neighbour's price. Rule is leverage #5; the
+400/150 curves are #12 and did not move.
 
 <!-- GKB:GEN tier-cost — WeaponTier.Cost, SpentToReach -->
-Cost of the next purchase, Primary slot `400 + 200 × currentTier` = 400/600/800/1,000/1,200/1,400/1,600/1,800/2,000/2,200,
-**13,000** cumulative. Secondary slot `150 + 150 × currentTier` = 150/300/450/600/750/900/1,050/1,200/1,350/1,500,
-**8,250** cumulative.
+Cost of the next purchase on one centred spoke, Primary slot `400 + 200 × centredCount` = 400/600/800/1,000/1,200/1,400/1,600/1,800/2,000/2,200,
+**13,000** cumulative to stack ten on that spoke. Secondary slot `150 + 150 × centredCount` = 150/300/450/600/750/900/1,050/1,200/1,350/1,500,
+**8,250** cumulative. Neighbour spill does not raise a neighbour's next price. Ten purchases still cap the weapon.
 <!-- GKB:END tier-cost -->
 
 Per-point compound multipliers (dials — retune freely). Mid-ladder (35 pts) keeps the old

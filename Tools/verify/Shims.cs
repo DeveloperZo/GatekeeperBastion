@@ -192,6 +192,21 @@ namespace NUnit.Framework
                     "Expected: at most " + Show(arg2) + "\n  But was:  " + Show(arg1)));
         }
 
+        /// <summary>NUnit's member test: the item is somewhere in the collection. Added
+        /// 2026-08-20 for Meta/PrimaryDifferentiationTests, which could not compile offline
+        /// without it — the same gap CollectionAssert.AreEqual was added to close.</summary>
+        public static void Contains(object expected, IEnumerable actual, string message = null)
+        {
+            if (actual != null)
+            {
+                foreach (object item in actual)
+                    if (Equals(item, expected)) return;
+            }
+            throw new AssertionException(With(message,
+                "Expected: collection containing " + Show(expected) +
+                "\n  But was:  " + Show(actual)));
+        }
+
         public static T Throws<T>(Action code, string message = null) where T : Exception
         {
             try { code(); }

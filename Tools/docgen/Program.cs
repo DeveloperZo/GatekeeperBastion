@@ -412,13 +412,13 @@ public static class Docgen
             primary.Add(WeaponTier.Cost(t).ToString("N0", Inv));
             secondary.Add(WeaponTier.Cost(WeaponSlot.Secondary, t).ToString("N0", Inv));
         }
-        return "Cost of the next purchase, Primary slot `400 + 200 × currentTier` = " +
+        return "Cost of the next purchase on one centred spoke, Primary slot `400 + 200 × centredCount` = " +
                string.Join("/", primary) + ",\n**" +
                WeaponTier.SpentToReach(WeaponTier.MaxTier).ToString("N0", Inv) +
-               "** cumulative. Secondary slot `150 + 150 × currentTier` = " +
+               "** cumulative to stack ten on that spoke. Secondary slot `150 + 150 × centredCount` = " +
                string.Join("/", secondary) + ",\n**" +
                WeaponTier.SpentToReach(WeaponSlot.Secondary, WeaponTier.MaxTier).ToString("N0", Inv) +
-               "** cumulative.";
+               "** cumulative. Neighbour spill does not raise a neighbour's next price. Ten purchases still cap the weapon.";
     }
 
     static string EmitAbilities()
@@ -798,14 +798,14 @@ public static class Docgen
                       N(WeaponWheel.FireRateMul(WeaponWheel.NeighbourAtMax)) + " |");
         sb.AppendLine();
 
-        sb.Append("Each Primary purchase costs ");
+        sb.Append("Each Primary purchase on one spoke costs ");
         var costs = new List<string>();
         for (int t = 0; t < WeaponTier.MaxTier; t++)
             costs.Add(WeaponTier.Cost(t).ToString("N0", Inv));
         sb.AppendLine(string.Join(" / ", costs) + " salvage — **" +
                       WeaponTier.SpentToReach(WeaponTier.MaxTier).ToString("N0", Inv) +
                       "** to take one weapon all the way (" + WeaponTier.MaxTier + " purchases).");
-        sb.Append("Each Secondary purchase costs ");
+        sb.Append("Each Secondary purchase on one spoke costs ");
         var secCosts = new List<string>();
         for (int t = 0; t < WeaponTier.MaxTier; t++)
             secCosts.Add(WeaponTier.Cost(WeaponSlot.Secondary, t).ToString("N0", Inv));

@@ -340,7 +340,7 @@ namespace GatekeepersProtocol.Game
                 SpokeTicks = spokeTicks,
             };
 
-            long cost = maxed ? 0 : WeaponTier.Cost(def.slot, tier);
+            long cost = maxed ? 0 : WeaponTier.Cost(def.slot, m.WheelCentresOf(id, centre));
             if (lockedLabel != null)
             {
                 d.ReasonLine = maxed
@@ -397,7 +397,9 @@ namespace GatekeepersProtocol.Game
         {
             int tier = m.TierOf(id);
             if (tier >= WeaponTier.MaxTier) return "MAX";
-            return "upgrade " + WeaponTier.Cost(WeaponCatalog.Def(id).slot, tier);
+            long cost = WeaponTier.CheapestSpokeCost(m, id);
+            if (cost < 0) return "MAX";
+            return "upgrade " + cost;
         }
 
         void BindCatalogRow(PanelRowView row, MetaState m, WeaponId id, WeaponId equippedInSlot)

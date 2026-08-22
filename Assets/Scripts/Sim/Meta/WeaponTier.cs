@@ -8,27 +8,49 @@ namespace GatekeepersProtocol.Sim
     {
         public const int MaxTier = 10;
 
-        /// <summary>Primary-slot cost of the next purchase from <paramref name="currentTier"/>.
-        /// Linear: 400 + 200 * currentTier → 400…2200. Cumulative 13,000. Also the historical
-        /// shared curve every pre-wheel purchase was made at — reconstruction reads this one.</summary>
-        public static long Cost(int currentTier)
+        /// <summary>Primary-slot cost of the next purchase from <paramref name="centredCount"/>
+        /// already centred on that spoke. Linear: 400 + 200 * centredCount → 400…2200.
+        /// Cumulative 13,000 to stack ten on one spoke. Reconstruction of pre-wheel spends
+        /// still reads this curve — those purchases had no per-spoke count.</summary>
+        public static long Cost(int centredCount)
         {
-            if (currentTier < 0 || currentTier >= MaxTier)
-                throw new ArgumentOutOfRangeException("currentTier",
-                    "Tier cost is only defined for currentTier 0..9.");
-            return 400L + 200L * currentTier;
+            if (centredCount < 0 || centredCount >= MaxTier)
+                throw new ArgumentOutOfRangeException("centredCount",
+                    "Spoke cost is only defined for centredCount 0..9.");
+            return 400L + 200L * centredCount;
         }
 
-        /// <summary>Slot-aware cost. Secondaries ride a cheaper lane: 150 + 150 * currentTier
-        /// → 150…1500, cumulative 8,250 — the first two purchases (150 + 300) equal one wave-1
-        /// clear at Scavenging 0 (Zo, 2026-08-14). Primaries keep <see cref="Cost(int)"/>.</summary>
-        public static long Cost(WeaponSlot slot, int currentTier)
+        /// <summary>Slot-aware cost of the next purchase centred on one spoke. Secondaries
+        /// ride a cheaper lane: 150 + 150 * centredCount → 150…1500, cumulative 8,250 —
+        /// the first two on the same spoke (150 + 300) equal one wave-1 clear at Scavenging 0
+        /// (Zo, 2026-08-14). A first buy on a different spoke stays 150. Primaries keep
+        /// <see cref="Cost(int)"/>. Neighbour spill does not raise a neighbour's price.</summary>
+        public static long Cost(WeaponSlot slot, int centredCount)
         {
-            if (slot != WeaponSlot.Secondary) return Cost(currentTier);
-            if (currentTier < 0 || currentTier >= MaxTier)
-                throw new ArgumentOutOfRangeException("currentTier",
-                    "Tier cost is only defined for currentTier 0..9.");
-            return 150L + 150L * currentTier;
+            if (slot != WeaponSlot.Secondary) return Cost(centredCount);
+            if (centredCount < 0 || centredCount >= MaxTier)
+                throw new ArgumentOutOfRangeException("centredCount",
+                    "Spoke cost is only defined for centredCount 0..9.");
+            return 150L + 150L * centredCount;
+        }
+
+        /// <summary>Cheapest remaining centred buy on <paramref name="id"/>, or -1 when the
+        /// weapon is at MaxPurchases or has no purchasable spoke.</summary>
+        public static long CheapestSpokeCost(MetaState meta, WeaponId id)
+        {
+            if (meta == null) throw new ArgumentNullException("meta");
+            if (id == WeaponId.None) return -1L;
+            if (meta.TierOf(id) >= MaxTier) return -1L;
+            var slot = WeaponCatalog.Def(id).slot;
+            long cheapest = long.MaxValue;
+            for (int a = 0; a < WeaponWheel.AttrCount; a++)
+            {
+                var attr = (WheelAttr)a;
+                if (!WeaponWheel.SpokePurchasable(id, attr)) continue;
+                long c = Cost(slot, meta.WheelCentresOf(id, attr));
+                if (c < cheapest) cheapest = c;
+            }
+            return cheapest == long.MaxValue ? -1L : cheapest;
         }
 
         /// <summary>True when the weapon is below MaxTier and the bank covers <see cref="Cost(int)"/>.</summary>

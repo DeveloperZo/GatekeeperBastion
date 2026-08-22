@@ -34,6 +34,9 @@ namespace GatekeepersProtocol.Sim
         bool[] _weaponsOwned;
         /// <summary>Flat ArraySize×5: index = weaponId * AttrCount + (int)WheelAttr.</summary>
         int[] _wheelPoints;
+        /// <summary>Same layout as <see cref="_wheelPoints"/>: how many purchases have been
+        /// CENTRED on each spoke. Neighbour spill does not count.</summary>
+        int[] _wheelCentres;
         public WeaponId EquippedPrimary = WeaponId.None;
         public WeaponId EquippedSecondary = WeaponId.None;
 
@@ -86,6 +89,13 @@ namespace GatekeepersProtocol.Sim
                 if (_wheelPoints != null)
                     Array.Copy(_wheelPoints, next, Math.Min(_wheelPoints.Length, next.Length));
                 _wheelPoints = next;
+            }
+            if (_wheelCentres == null || _wheelCentres.Length != need)
+            {
+                var next = new int[need];
+                if (_wheelCentres != null)
+                    Array.Copy(_wheelCentres, next, Math.Min(_wheelCentres.Length, next.Length));
+                _wheelCentres = next;
             }
         }
 
@@ -231,6 +241,18 @@ namespace GatekeepersProtocol.Sim
             return _wheelPoints[i * WeaponWheel.AttrCount + (int)attr];
         }
 
+        /// <summary>How many purchases have been centred on this spoke. Neighbour spill does
+        /// not increment it. The next buy's cost reads this count rather than the derived
+        /// Tier, which is why it is saved rather than recomputed.</summary>
+        public int WheelCentresOf(WeaponId id, WheelAttr attr)
+        {
+            if (id == WeaponId.None) return 0;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= WeaponCatalog.ArraySize) return 0;
+            return _wheelCentres[i * WeaponWheel.AttrCount + (int)attr];
+        }
+
         public void CopyPointsInto(WeaponId id, int[] dest)
         {
             if (dest == null || dest.Length != WeaponWheel.AttrCount)
@@ -255,6 +277,9 @@ namespace GatekeepersProtocol.Sim
             var scratch = PointsOf(id);
             WeaponWheel.Award(scratch, ring, centre);
             WritePoints(id, scratch);
+            int i = (int)id;
+            if (i >= 0 && i < WeaponCatalog.ArraySize)
+                _wheelCentres[i * WeaponWheel.AttrCount + (int)centre]++;
         }
 
         /// <summary>Dev / migration: replace counters with the flat-tier migration shape.
@@ -266,6 +291,29 @@ namespace GatekeepersProtocol.Sim
             var pts = new int[WeaponWheel.AttrCount];
             WeaponWheel.DistributeFlatTier(pts, tier);
             WritePoints(id, pts);
+            FillCentresFromPoints(id);
+        }
+
+        /// <summary>Derive centre counts from points: centre count = floor(points /
+        /// FocusAward). Exact after nought or one centred buy; a neighbour sitting at 6 points
+        /// after two stacked centres reads as 1. Used for the flat-Tier shape, and for a
+        /// document that somehow arrives without the key.</summary>
+        void FillCentresFromPoints(WeaponId id)
+        {
+            if (id == WeaponId.None) return;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= WeaponCatalog.ArraySize) return;
+            int baseIdx = i * WeaponWheel.AttrCount;
+            for (int a = 0; a < WeaponWheel.AttrCount; a++)
+                _wheelCentres[baseIdx + a] = _wheelPoints[baseIdx + a] / WeaponWheel.FocusAward;
+        }
+
+        void FillAllCentresFromPoints()
+        {
+            EnsureArrays();
+            for (int w = 0; w < WeaponCatalog.ArraySize; w++)
+                FillCentresFromPoints((WeaponId)w);
         }
 
         void WritePoints(WeaponId id, int[] pts)
@@ -350,6 +398,7 @@ namespace GatekeepersProtocol.Sim
             JsonText.AppendLong(sb, "EquippedEquipment", (int)EquippedEquipment, true);
             JsonText.AppendBoolArray(sb, "WeaponsOwned", _weaponsOwned);
             JsonText.AppendIntArray(sb, "WeaponWheelPoints", _wheelPoints);
+            JsonText.AppendIntArray(sb, "WeaponWheelCentres", _wheelCentres);
             JsonText.AppendLong(sb, "EquippedPrimary", (int)EquippedPrimary, true);
             JsonText.AppendLong(sb, "EquippedSecondary", (int)EquippedSecondary, true);
             JsonText.AppendLong(sb, "EquippedDrone", (int)EquippedDrone, true);
@@ -389,6 +438,13 @@ namespace GatekeepersProtocol.Sim
             b.EnsureArrays();
             JsonText.ExtractBoolArray(json, "WeaponsOwned", b._weaponsOwned);
             JsonText.ExtractIntArray(json, "WeaponWheelPoints", b._wheelPoints);
+            // Absent only on a hand-edited document — this build always writes the key. Derive
+            // rather than zero, or a Boarder would silently have every spoke back at its
+            // first-purchase price.
+            if (json.IndexOf("\"WeaponWheelCentres\"", StringComparison.Ordinal) >= 0)
+                JsonText.ExtractIntArray(json, "WeaponWheelCentres", b._wheelCentres);
+            else
+                b.FillAllCentresFromPoints();
             b.EquippedPrimary = (WeaponId)JsonText.ExtractInt(json, "EquippedPrimary", (int)WeaponId.None);
             b.EquippedSecondary = (WeaponId)JsonText.ExtractInt(json, "EquippedSecondary", (int)WeaponId.None);
 
