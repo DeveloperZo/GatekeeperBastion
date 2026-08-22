@@ -4,9 +4,16 @@ using UnityEngine;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>LOCAL-OWNER: MainMenu front-end flow — CONTINUE / START NEW (overwrite
-    /// confirm) / HOST / JOIN / OPTIONS / QUIT. Solo Continue / Start New load Ship
-    /// offline. Host / Join start a DDOL <see cref="NetSession"/> then party-load Ship.</summary>
+    /// <summary>LOCAL-OWNER: MainMenu front-end flow — CONTINUE / REALMS / JOIN / OPTIONS /
+    /// QUIT. CONTINUE re-enters the realm played last; REALMS opens the chooser. Both land on
+    /// the co-op hull.
+    ///
+    /// There is no HOST here any more. Hosting needs a realm, and this screen cannot name one —
+    /// it could only ever have hosted whichever realm happened to be opened last, which is a
+    /// choice the player never made. It belongs to
+    /// <see cref="RealmSelectController"/>, the one screen that knows the realm and the Boarder.
+    /// JOIN stays, because joining is the one door that leads to somebody else's world and
+    /// needs no realm of your own.</summary>
     public sealed class MainMenuController : MonoBehaviour
     {
         const string Tag = "MainMenu";
@@ -18,8 +25,6 @@ namespace GatekeepersProtocol.Game
 
         bool _loading;
         bool _busy;
-        RelayJoin.Payload _pendingRelay;
-        string _pendingJoinCode;
 
         void Awake()
         {
@@ -38,14 +43,9 @@ namespace GatekeepersProtocol.Game
 
             _view.onContinue = OnContinue;
             _view.onStartNew = OnStartNew;
-            _view.onHost = OnHost;
             _view.onJoin = OnJoin;
             _view.onJoinConnect = OnJoinConnect;
             _view.onJoinBack = OnJoinBack;
-            _view.onHostCopy = OnHostCopy;
-            _view.onHostEnter = OnHostEnter;
-            _view.onHostLan = OnHostLan;
-            _view.onHostBack = OnJoinBack;
             _view.onOptions = () => OptionsScreen.Open(null);
             _view.onOverwriteConfirm = StartNewAndGoToShip;
             _view.onQuitConfirm = Quit;
@@ -117,105 +117,6 @@ namespace GatekeepersProtocol.Game
             OnStartNew();
         }
 
-        /// <summary>Home HOST — allocate a Relay join code on the menu, then confirm.
-        /// LAN fallback is on the Host panel when Relay is down.</summary>
-        async void OnHost()
-        {
-            if (_loading || _busy || _view == null) return;
-            _busy = true;
-            _pendingRelay = default;
-            _pendingJoinCode = null;
-            _view.SetHostCode("");
-            _view.SetHostLanVisible(false);
-            _view.SetHostStatus("Requesting join code…");
-            _view.ShowHost();
-            RelayJoin.Result result = await RelayJoin.TryHost();
-            _busy = false;
-            if (!result.Ok)
-            {
-                NetJoinIntent.LastError = result.Error;
-                _view.SetHostStatus(result.Error);
-                _view.SetHostLanVisible(true);
-                return;
-            }
-            _pendingRelay = result.Payload;
-            _pendingJoinCode = result.JoinCode;
-            _view.SetHostCode(result.JoinCode);
-            GUIUtility.systemCopyBuffer = result.JoinCode;
-            _view.SetHostStatus("Copied to clipboard.");
-            _view.SetHostLanVisible(false);
-        }
-
-        void OnHostCopy()
-        {
-            if (string.IsNullOrEmpty(_pendingJoinCode)) return;
-            GUIUtility.systemCopyBuffer = _pendingJoinCode;
-            if (_view != null) _view.SetHostStatus("Copied to clipboard.");
-        }
-
-        void OnHostEnter()
-        {
-            if (_loading || _busy) return;
-            if (!RelayJoin.HasPayload(_pendingRelay) || string.IsNullOrEmpty(_pendingJoinCode))
-            {
-                if (_view != null) _view.SetHostStatus("No join code yet — wait or Host on LAN.");
-                return;
-            }
-            EnterSessionHost(relay: true);
-        }
-
-        void OnHostLan()
-        {
-            if (_loading || _busy) return;
-            EnterSessionHost(relay: false);
-        }
-
-        void EnterSessionHost(bool relay)
-        {
-            var existing = NetSession.FindLive();
-            if (existing != null && existing.Active)
-            {
-                if (_view != null)
-                    _view.SetHostStatus("Already hosting — leave the session first.");
-                Log.Warn(Tag, "Host refused — session already active.");
-                return;
-            }
-
-            _loading = true;
-            LoadCampaignForNet();
-            if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
-            {
-                _loading = false;
-                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
-                if (_view != null)
-                    _view.SetHostStatus("Multiplayer unlocks after your first upgrade — play the opening solo.");
-                return;
-            }
-            NetJoinIntent.LastError = null;
-            NetJoinIntent.Clear();
-            FrontEndMusic.Stop();
-
-            var session = NetSession.CreateBootstrap();
-            if (session == null)
-            {
-                _loading = false;
-                if (_view != null) _view.SetHostStatus("Net session bootstrap missing.");
-                return;
-            }
-            if (relay)
-                session.StartHostRelay(_pendingRelay, _pendingJoinCode);
-            else
-                session.StartHost();
-            if (!session.Active)
-            {
-                _loading = false;
-                if (_view != null) _view.SetHostStatus("Host start failed.");
-                return;
-            }
-            if (!session.LoadLobbyShip())
-                _loading = false;
-        }
-
         void OnJoin()
         {
             if (_loading || _busy) return;
@@ -239,13 +140,6 @@ namespace GatekeepersProtocol.Game
                 if (!NetJoinIntent.TryParseJoinCode(codeText, out string code))
                 {
                     _view.SetJoinRefusal("Enter a six-character join code.");
-                    return;
-                }
-                if (string.Equals(code, _pendingJoinCode, System.StringComparison.OrdinalIgnoreCase)
-                    && RelayJoin.HasPayload(_pendingRelay))
-                {
-                    Log.Event(Tag, "join is this host's code — starting host");
-                    EnterSessionHost(relay: true);
                     return;
                 }
                 _busy = true;
