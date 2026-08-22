@@ -29,14 +29,15 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**Active (2/3):** `M84` (flinch), `M99` (range — replayable slice).
+**Active (3/3):** `M84` (flinch), `M99` (range — replayable slice), `M101` (two-deck ship).
 
 **Closed 2026-08-22:** `M93`, `M82` (Zo first pass), `M85` (disk/harness; eyes-on
-on `M99`). PRI-C further tuning owed outside `M93`.
+on `M99`), `M83` (PlayMode 2/0; two-window confirmation). PRI-C further tuning
+owed outside `M93`.
 
 **Parked 2026-08-22:** `M63-3` — no `GatekeeperKind.Cloaker` yet.
 
-**Folder-completed since 2026-08-20:** `M82`, `M85`, `M90`, `M91`, `M92`, `M93`, `M96`.
+**Folder-completed since 2026-08-20:** `M82`, `M83`, `M85`, `M90`, `M91`, `M92`, `M93`, `M96`.
 `M94` VEIL/FORGE on disk; stays planned under phase-2 order.
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
@@ -53,7 +54,7 @@ with **M72**; remaining friends work is polish and dry-run length.
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
 4. Older play close-outs: `GatekeeperZo Notes/verification.md`.
 
-Active **2** of 3 (`M84`, `M99`).
+Active **3** of 3 (`M84`, `M99`, `M101`).
 
 ## Order
 
@@ -143,7 +144,7 @@ this table — see the change log.
 | M80 | One final window | completed, Aug 2026 | Control Room copy + `M73` spawn wiring; `HatchWaves` 5 → 1 with the first boss/elite; `EndDemo` on Escaped only. Criteria 8–9 (two-seat loopback, playthrough) open | [`3. completed/M80`](Milestones/3.%20completed/M80-one-final-window.md) |
 | M81 | The Gatekeeper's swing | completed, Aug 2026 | One retargeted attack clip into the shared Gatekeeper controller — Attack stops playing PlayerIdle for all three kinds and ship intruders. Free-retarget probe accepted (Zo close 2026-08-19) | [`3. completed/M81`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md) |
 | M82 | The weapon in your hands | completed, Aug 2026 | Shared viewmodel controller + four clips; reload speed-scales; Bastion window Animators cleaned; Zo close 2026-08-22 | [`3. completed/M82`](Milestones/3.%20completed/M82-the-weapon-in-your-hands.md) |
-| M83 | Crewmates fire on camera | later | Replicate fire/reload to non-owner avatars via the existing ClientRpc pattern — drives Boarder.controller's wired-but-unreachable Fire/Reload states; code only, clips already exist | [`1. planned/M83`](Milestones/1.%20planned/M83-crewmates-fire-on-camera.md) |
+| M83 | Crewmates fire on camera | completed, Aug 2026 | Remote Fire/Reload on non-owner Boarder animators; `NetAvatarAnimTests` 2/0 (2026-08-22T15:56:13Z); two-window eyes-on confirmation | [`3. completed/M83`](Milestones/3.%20completed/M83-crewmates-fire-on-camera.md) |
 | M84 | Gatekeepers flinch when shot | active (built 2026-08-21) | HitReact layer + `Anim_flinch` on disk; eyes-on 1–4 wait on `M99` | [`2. active/M84`](Milestones/2.%20active/M84-gatekeepers-flinch-when-shot.md) |
 | M85 | The collapse under the burst | completed, Aug 2026 | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail; `PlayDeathRpc` is the co-op carrier. Disk/harness closed 2026-08-22; eyes-on 1/3/4 wait on `M99` | [`3. completed/M85`](Milestones/3.%20completed/M85-the-collapse-under-the-burst.md) |
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
@@ -158,6 +159,7 @@ this table — see the change log.
 | M99 | A range you can fight in | active | `Ship - CoOp` door → `Range.unity`; grants kit; real Gatekeepers at marked distances; unlocks play stamps for `M82`/`M84`/`M85`/`M94`. Recut 2026-08-21. Activated 2026-08-22 on `M93` close | [`2. active/M99`](Milestones/2.%20active/M99-a-range-you-can-fight-in.md) |
 | M98 | Drop in between waves | built 2026-08-22, unverified | `RunSeats` splits the seats playing from the seats connected: a late arrival waits on the Ship and follows at a Prep, a departure is held to the next one, and wave composition, the wallet split and the hatch doors all read the roster rather than the connected list. `WaveDirector` untouched. Nothing through Unity yet; criteria 1, 2, 6 eyes-on owed | [`1. planned/M98`](Milestones/1.%20planned/M98-drop-in-between-waves.md) |
 | M100 | A realm you can open while its owner is offline | planned | Graduates the realm-lock entry from `Brainstorms/realms.md`: the realm document keyed to its owner's ID, an access list held on both sides, and a single-writer lock whose holder hosts. The session stays peer-hosted over Relay — no game server, because what moves off one machine is the document and not the simulation. Written 2026-08-22, and it is the half of `M98`'s first criterion that `M98` never owned | [`1. planned/M100`](Milestones/1.%20planned/M100-a-realm-you-can-open-while-its-owner-is-offline.md) |
+| M101 | A ship with two decks and a stair | active (specified 2026-08-22) | Hull rebuilt long and narrow over two decks joined by an open stair; exterior skin, one-owner wall lines, ~80 cells | [`2. active/M101`](Milestones/2.%20active/M101-a-ship-with-two-decks-and-a-stair.md) |
 
 ## Strategy
 
@@ -165,7 +167,7 @@ this table — see the change log.
 
 1. **Finish and polish the solo demo.** `M84`, `M99`, `M66`, and the
    garrison content in `M63` / `M63-3`. (`M82`, `M93`, and `M85` closed 2026-08-22.)
-2. **Build out the co-op demo.** `M83`, `M86`, `M94`, `M95`, `M98`.
+2. **Build out the co-op demo.** `M86`, `M94`, `M95`, `M98`. (`M83` closed 2026-08-22.)
 3. **Ship / Realm / Safehouse.** `M97`, and `M100`, which is the realm-lock entry
    graduated out of `Brainstorms/realms.md` on 2026-08-22. (`M96` closed 2026-08-22.)
 
@@ -174,9 +176,8 @@ Three things sit across that order rather than inside it:
 - **`M99` is upstream of remaining hit-feedback closes.** It is how `M84` and `M85`
   get verified without a Run each (`Decisions.md` 2026-08-22). Active. `M85` disk/harness
   closed 2026-08-22; the play stamp still waits here.
-- **`M82` closed 2026-08-22.** `M83` still reads the same animator contract — the
-  shared viewmodel path is the one phase-1 file whose slip would have moved phase 2;
-  that risk is retired for the viewmodel half.
+- **`M82` closed 2026-08-22.** `M83` closed the same day — remote Fire/Reload on
+  the Boarder controller, independent of the viewmodel path.
 - **`Ship - CoOp` is the destination** (Zo, 2026-08-21): `Ship - Demo` is transitional and
   the co-op hub is what everything is built against from here. The split itself is already
   wired — `SceneFlow.Ship` / `ShipCoop` name both scenes, `SceneBuilder.BootScenes` pins the

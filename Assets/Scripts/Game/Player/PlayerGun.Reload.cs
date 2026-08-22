@@ -91,6 +91,7 @@ namespace GatekeepersProtocol.Game
             s.reloadTimer = Mathf.Max(0.01f, EffectiveReloadSeconds(_activeSlot));
             s.reloadLogged = true;
             if (_view != null) _view.NotifyReload();
+            NotifyAvatarReloadStarted();
         }
 
         float EffectiveReloadSeconds(WeaponSlot slot)
