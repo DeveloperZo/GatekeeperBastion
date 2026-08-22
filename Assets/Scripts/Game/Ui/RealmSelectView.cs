@@ -36,6 +36,11 @@ namespace GatekeepersProtocol.Game
         [SerializeField] Button _demoBtn;
         [SerializeField] TextMeshProUGUI _status;
 
+        [Header("Housekeeping")]
+        [SerializeField] Button _newBoarderBtn;
+        [SerializeField] Button _deleteRealmBtn;
+        [SerializeField] Button _deleteBoarderBtn;
+
         [Header("Open to friends")]
         [SerializeField] Button _openBtn;
         [SerializeField] GameObject _sessionPanel;
@@ -47,6 +52,9 @@ namespace GatekeepersProtocol.Game
         [SerializeField] TextMeshProUGUI _sessionStatus;
 
         public Action onCreate;
+        public Action onNewBoarder;
+        public Action onDeleteRealm;
+        public Action onDeleteBoarder;
         public Action onEnter;
         public Action onBack;
 
@@ -88,6 +96,11 @@ namespace GatekeepersProtocol.Game
             Wire(_enterBtn, () => { if (onEnter != null) onEnter.Invoke(); });
             Wire(_backBtn, () => { if (onBack != null) onBack.Invoke(); });
             Wire(_demoBtn, () => { if (onDemo != null) onDemo.Invoke(); });
+            Wire(_newBoarderBtn, () => { if (onNewBoarder != null) onNewBoarder.Invoke(); });
+            Wire(_deleteRealmBtn, () => { if (onDeleteRealm != null) onDeleteRealm.Invoke(); });
+            Wire(_deleteBoarderBtn, () => { if (onDeleteBoarder != null) onDeleteBoarder.Invoke(); });
+            UiBind.SetButtonLabel(_createBtn, "NEW REALM");
+            UiBind.SetButtonLabel(_newBoarderBtn, "NEW BOARDER");
             Wire(_openBtn, () => { if (onOpen != null) onOpen.Invoke(); });
             Wire(_copyBtn, () => { if (onCopy != null) onCopy.Invoke(); });
             Wire(_toShipBtn, () => { if (onToShip != null) onToShip.Invoke(); });
@@ -120,6 +133,9 @@ namespace GatekeepersProtocol.Game
             Require(_enterBtn, "_enterBtn");
             Require(_backBtn, "_backBtn");
             Require(_demoBtn, "_demoBtn");
+            Require(_newBoarderBtn, "_newBoarderBtn");
+            Require(_deleteRealmBtn, "_deleteRealmBtn");
+            Require(_deleteBoarderBtn, "_deleteBoarderBtn");
             Require(_openBtn, "_openBtn");
             Require(_sessionPanel, "_sessionPanel");
             Require(_codeLabel, "_codeLabel");
@@ -161,6 +177,25 @@ namespace GatekeepersProtocol.Game
         public void SetLanVisible(bool visible)
         {
             UiBind.Show(_lanBtn, visible);
+        }
+
+        // ---- Deleting ----
+
+        /// <summary>Paint the two delete buttons. The armed one says what it is about to
+        /// destroy, by name: "DELETE" twice in a row is a click, "DELETE ORION?" is a decision.
+        /// </summary>
+        public void SetDeleteLabels(string realmArmed, string boarderArmed)
+        {
+            UiBind.SetButtonLabel(_deleteRealmBtn,
+                string.IsNullOrEmpty(realmArmed) ? "DELETE REALM" : "DELETE " + realmArmed + "?");
+            UiBind.SetButtonLabel(_deleteBoarderBtn,
+                string.IsNullOrEmpty(boarderArmed) ? "DELETE BOARDER" : "DELETE " + boarderArmed + "?");
+        }
+
+        public void SetDeleteEnabled(bool realm, bool boarder)
+        {
+            if (_deleteRealmBtn != null) _deleteRealmBtn.interactable = realm;
+            if (_deleteBoarderBtn != null) _deleteBoarderBtn.interactable = boarder;
         }
 
         public void SetOpenEnabled(bool enabled)

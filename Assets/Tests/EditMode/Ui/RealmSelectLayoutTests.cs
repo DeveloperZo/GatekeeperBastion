@@ -52,7 +52,10 @@ namespace GatekeepersProtocol.Tests
             AssertOnScreen(scene, "REALMS", Canvas);
             AssertOnScreen(scene, "REALM", Canvas);
             AssertOnScreen(scene, "BOARDER", Canvas);
-            AssertOnScreen(scene, "CREATEButton", Canvas);
+            AssertOnScreen(scene, "NEWREALMButton", Canvas);
+            AssertOnScreen(scene, "NEWBOARDERButton", Canvas);
+            AssertOnScreen(scene, "DELETEREALMButton", Canvas);
+            AssertOnScreen(scene, "DELETEBOARDERButton", Canvas);
             AssertOnScreen(scene, "ENTERButton", Canvas);
             AssertOnScreen(scene, "OPENTOFRIENDSButton", Canvas);
             AssertOnScreen(scene, "BACKButton", Canvas);

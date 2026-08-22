@@ -37,6 +37,12 @@ namespace GatekeepersProtocol.Game
         const string BoardersFolder = "boarders";
         const string RealmsFolder = "realms";
 
+        /// <summary>Where deleted documents go. Deleting a realm throws away every run anyone
+        /// ever banked into it, and a chooser is one mispress away from doing that, so the file
+        /// is moved rather than unlinked. Nothing reads this folder — it exists so a mistake is
+        /// recoverable by hand instead of not at all.</summary>
+        const string RetiredFolder = "retired";
+
         /// <summary>Longest id this layer will build a path from. Ids are minted short by
         /// <see cref="RealmRegistry"/>; anything longer arrived from somewhere it should not have.</summary>
         const int MaxIdLength = 64;
@@ -53,6 +59,10 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Where realm documents are kept.</summary>
         public static string RealmsDirectory { get { return Path.Combine(SaveRoot, RealmsFolder); } }
+
+        /// <summary>Where deleted documents are kept. Not a save location: nothing lists it and
+        /// nothing loads from it.</summary>
+        public static string RetiredDirectory { get { return Path.Combine(SaveRoot, RetiredFolder); } }
 
         /// <summary>Path of the pre-split single-document save. It is never read and never
         /// written any more, but the name STAYS: the PlayMode save guard resolves this member by
@@ -114,6 +124,56 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Every realm document on disk. Empty on any IO trouble.</summary>
         public static string[] RealmFiles() { return FilesIn(RealmsDirectory); }
+
+        /// <summary>Move a realm out of play. True when the document is gone from the realms
+        /// directory afterwards, which is the only thing a caller can act on.</summary>
+        public static bool RetireRealm(string id)
+        {
+            return Retire(RealmPath(id), RealmsFolder, "realm");
+        }
+
+        /// <summary>Move a Boarder out of play.</summary>
+        public static bool RetireBoarder(string id)
+        {
+            return Retire(BoarderPath(id), BoardersFolder, "Boarder");
+        }
+
+        /// <summary>The move itself. A name already taken in the retired folder is suffixed
+        /// rather than overwritten — deleting a second time must not destroy the first
+        /// mistake's only copy.</summary>
+        static bool Retire(string path, string kindFolder, string kind)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                Log.Warn(Tag, "retire refused — no path for that " + kind);
+                return false;
+            }
+            if (!File.Exists(path))
+            {
+                Log.Warn(Tag, "retire refused — no " + kind + " at " + path);
+                return false;
+            }
+            try
+            {
+                string dir = Path.Combine(RetiredDirectory, kindFolder);
+                Directory.CreateDirectory(dir);
+                string name = Path.GetFileNameWithoutExtension(path);
+                string target = Path.Combine(dir, name + ".json");
+                int n = 1;
+                while (File.Exists(target) && n < 1000)
+                    target = Path.Combine(dir, name + "-" + n++ + ".json");
+                File.Move(path, target);
+                Log.Event(Tag, "retired " + kind + " to " + target);
+                return true;
+            }
+            catch (Exception e)
+            {
+                // The document is still where it was, so the caller's list is still true.
+                Log.Error(Tag, "retire failed for " + path + " (" + e.GetType().Name + ": "
+                    + e.Message + ")");
+                return false;
+            }
+        }
 
         static string[] FilesIn(string directory)
         {

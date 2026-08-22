@@ -27,6 +27,9 @@ namespace GatekeepersProtocol.Game
         int _pickedRealm = -1;
         int _pickedBoarder = -1;
 
+        readonly ArmedAction _armedRealm = new ArmedAction();
+        readonly ArmedAction _armedBoarder = new ArmedAction();
+
         RelayJoin.Payload _relay;
         string _joinCode;
         bool _busy;
@@ -47,13 +50,28 @@ namespace GatekeepersProtocol.Game
             _view.onEnter = OnEnter;
             _view.onBack = OnBack;
             _view.onDemo = OnDemo;
+            _view.onNewBoarder = OnNewBoarder;
+            _view.onDeleteRealm = OnDeleteRealm;
+            _view.onDeleteBoarder = OnDeleteBoarder;
             _view.onOpen = OnOpenToFriends;
             _view.onCopy = OnCopyCode;
             _view.onToShip = OnToShip;
             _view.onLan = OnHostLan;
             _view.onSessionBack = OnSessionBack;
-            _view.onPickRealm = i => { _pickedRealm = i; Repaint(); };
-            _view.onPickBoarder = i => { _pickedBoarder = i; Repaint(); };
+            _view.onPickRealm = i =>
+            {
+                _pickedRealm = i;
+                // An arming names a document, not a row, but disarming on any pick is the
+                // honest reading: the player has moved on from what they were about to delete.
+                _armedRealm.Disarm();
+                Repaint();
+            };
+            _view.onPickBoarder = i =>
+            {
+                _pickedBoarder = i;
+                _armedBoarder.Disarm();
+                Repaint();
+            };
         }
 
         void Start()
@@ -93,6 +111,9 @@ namespace GatekeepersProtocol.Game
             _view.SetBoarders(_boarders, _pickedBoarder);
             _view.SetEnterEnabled(CanEnter());
             _view.SetOpenEnabled(CanEnter());
+            _view.SetDeleteEnabled(Picked(_realms, _pickedRealm) || PickedUnloadable(_realms, _pickedRealm),
+                Picked(_boarders, _pickedBoarder) || PickedUnloadable(_boarders, _pickedBoarder));
+            _view.SetDeleteLabels(_armedRealm.Target, _armedBoarder.Target);
             _view.SetStatus(WhyNotEnter());
         }
 
@@ -166,6 +187,127 @@ namespace GatekeepersProtocol.Game
         void OnBack()
         {
             SceneFlow.LoadMainMenu();
+        }
+
+        // ---- Housekeeping ----
+
+        void Update()
+        {
+            // An arming that has run out must stop claiming it is armed, or the label goes on
+            // offering a confirmation the next press would not honour.
+            bool a = _armedRealm.TickExpiry(Time.unscaledTime);
+            bool b = _armedBoarder.TickExpiry(Time.unscaledTime);
+            if (a || b) Repaint();
+        }
+
+        void OnNewBoarder()
+        {
+            string typed = _view != null ? _view.NameText : null;
+            var boarder = RealmRegistry.CreateBoarder(typed);
+            if (_view != null) _view.ClearName();
+            Refresh();
+            for (int i = 0; i < _boarders.Length; i++)
+            {
+                if (_boarders[i].Id != boarder.Id) continue;
+                _pickedBoarder = i;
+                break;
+            }
+            Repaint();
+            if (_view != null) _view.SetStatus("Created \"" + boarder.Name + "\".");
+        }
+
+        /// <summary>First press arms, second deletes. Deleting a realm throws away every run
+        /// anyone banked into it, so it is the one action here that asks twice.</summary>
+        void OnDeleteRealm()
+        {
+            if (!Deletable(_realms, _pickedRealm)) return;
+            var row = _realms[_pickedRealm];
+            string refusal = WhyNotDelete(row.Id, GameSession.CurrentRealmId, "realm");
+            if (refusal != null)
+            {
+                _armedRealm.Disarm();
+                if (_view != null) _view.SetStatus(refusal);
+                Repaint();
+                return;
+            }
+            if (!_armedRealm.Fire(row.Name, Time.unscaledTime))
+            {
+                if (_view != null)
+                    _view.SetStatus("Press again to delete \"" + row.Name + "\" — this cannot be undone in game.");
+                Repaint();
+                return;
+            }
+            bool gone = RealmRegistry.DeleteRealm(row.Id);
+            _pickedRealm = -1;
+            Refresh();
+            if (_view != null)
+                _view.SetStatus(gone
+                    ? "Deleted \"" + row.Name + "\"."
+                    : "That realm could not be deleted. Nothing was changed.");
+        }
+
+        void OnDeleteBoarder()
+        {
+            if (!Deletable(_boarders, _pickedBoarder)) return;
+            var row = _boarders[_pickedBoarder];
+            string refusal = WhyNotDelete(row.Id, GameSession.CurrentBoarderId, "Boarder");
+            if (refusal != null)
+            {
+                _armedBoarder.Disarm();
+                if (_view != null) _view.SetStatus(refusal);
+                Repaint();
+                return;
+            }
+            if (!_armedBoarder.Fire(row.Name, Time.unscaledTime))
+            {
+                if (_view != null)
+                    _view.SetStatus("Press again to delete \"" + row.Name + "\" — the kit goes with it.");
+                Repaint();
+                return;
+            }
+            bool gone = RealmRegistry.DeleteBoarder(row.Id);
+            _pickedBoarder = -1;
+            // The screen guarantees a Boarder to take in, so deleting the last one mints a
+            // fresh one rather than leaving a chooser nobody can leave.
+            if (gone && RealmRegistry.Boarders().Length == 0)
+            {
+                RealmRegistry.CreateBoarder(null);
+                Refresh();
+                if (_view != null)
+                    _view.SetStatus("Deleted \"" + row.Name + "\". A new Boarder was made — you need one to go in.");
+                return;
+            }
+            Refresh();
+            if (_view != null)
+                _view.SetStatus(gone
+                    ? "Deleted \"" + row.Name + "\"."
+                    : "That Boarder could not be deleted. Nothing was changed.");
+        }
+
+        /// <summary>A row is deletable whether or not this build can open it — a document an
+        /// older build wrote is exactly the kind a player wants rid of, and refusing to delete
+        /// what we already refuse to load would leave it on the list forever.</summary>
+        static bool Deletable(RealmRegistry.SaveRow[] rows, int index)
+        {
+            return rows != null && index >= 0 && index < rows.Length;
+        }
+
+        static bool PickedUnloadable(RealmRegistry.SaveRow[] rows, int index)
+        {
+            return Deletable(rows, index) && !rows[index].Loadable;
+        }
+
+        /// <summary>Null when the delete may proceed. Deleting what the live session is
+        /// standing in would have the next Save write the document straight back, so the
+        /// refusal is about honesty as much as safety.</summary>
+        static string WhyNotDelete(string id, string openId, string kind)
+        {
+            var live = NetSession.FindLive();
+            if (live != null && live.Active)
+                return "Leave the session first — you cannot delete a " + kind + " while playing.";
+            if (!string.IsNullOrEmpty(openId) && openId == id)
+                return "That " + kind + " is the one this session has open. Go back to the menu first.";
+            return null;
         }
 
         // ---- Open to friends ----

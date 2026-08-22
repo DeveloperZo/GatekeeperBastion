@@ -173,6 +173,36 @@ namespace GatekeepersProtocol.Game
             set { PlayerPrefs.SetString(LastBoarderKey, value == null ? "" : value); PlayerPrefs.Save(); }
         }
 
+        // ---- Deleting ----
+
+        /// <summary>Take a realm out of play. The document is moved, not unlinked
+        /// (<see cref="SaveService.RetireRealm"/>), so a mispress on a chooser is recoverable
+        /// by hand rather than final.</summary>
+        /// <remarks>
+        /// The last-played pointer is cleared when it named this realm. Leaving it would make
+        /// CONTINUE resolve to a document that is no longer there, and the resolve falls back
+        /// to whatever is first on disk — so pressing CONTINUE would silently open somebody
+        /// else's world. That reads as the save being swapped, which is worse than being told
+        /// there is nothing to continue.
+        /// </remarks>
+        public static bool DeleteRealm(string id)
+        {
+            if (!SaveService.RetireRealm(id)) return false;
+            if (LastRealmId == id) LastRealmId = "";
+            Log.Event(Tag, "realm deleted id=" + id);
+            return true;
+        }
+
+        /// <summary>Take a Boarder out of play. The kit dies with it; realms are untouched,
+        /// which is the whole point of the two documents being separate.</summary>
+        public static bool DeleteBoarder(string id)
+        {
+            if (!SaveService.RetireBoarder(id)) return false;
+            if (LastBoarderId == id) LastBoarderId = "";
+            Log.Event(Tag, "Boarder deleted id=" + id);
+            return true;
+        }
+
         /// <summary>True when there is a pair this build can actually open.</summary>
         /// <remarks>
         /// Counting files is not enough. A directory full of documents from an older build is
