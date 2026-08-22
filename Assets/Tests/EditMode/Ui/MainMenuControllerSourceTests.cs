@@ -25,9 +25,13 @@ namespace GatekeepersProtocol.Tests
         public void TheMenu_CannotStartAHostSession()
         {
             string src = Read(Menu);
-            StringAssert.DoesNotContain("CreateBootstrap", src);
+            // NOT CreateBootstrap: joining stands up a session too, so the bootstrap call is
+            // common to both and says nothing about who is hosting. What has to be absent is
+            // the host start itself.
             StringAssert.DoesNotContain("StartHostRelay", src);
+            StringAssert.DoesNotContain("session.StartHost()", src);
             StringAssert.DoesNotContain("EnterSessionHost", src);
+            StringAssert.DoesNotContain("LoadLobbyShip", src);
         }
 
         /// <summary>Joining is the one door to somebody else's world and needs no realm of your
