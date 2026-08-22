@@ -4,7 +4,7 @@
 Status: living tracker
 Update trigger: when a clip lands, a controller changes, or a ruling below is
 made; re-verify Status lines against Packs/ and the controllers, not this file
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 -->
 
 Every character and viewmodel clip the game needs, against what exists.
@@ -24,7 +24,7 @@ suits the clips — every Gatekeeper clip was downloaded on the SK_UtilityBot ri
 The viewmodel ruling below is untouched;
 the viewmodel takes the shared path. Milestone M81 (attack) closed 2026-08-19;
 M82 (viewmodel
-set), M83 (remote fire/reload) cover every **missing** and **unreachable**
+set), M83 (remote fire/reload, closed 2026-08-22) cover every **missing** and **unreachable**
 line; M84 (flinch, built 2026-08-21, playthrough open), M85 (death collapse), M86 (downed avatar) cover the
 hookable **no code hook** lines, cap waived by Zo. Fileless on purpose:
 spawn/entry (needs a wave-pacing ruling), dock (parked until M77 ships),
@@ -38,8 +38,8 @@ boss (composition stamped on `M80`: one high-HP Thief elite, no distinct clip).
 | Walk | have | Anim_Walking |
 | Run | have | Anim_PlayerRun |
 | Rifle idle | have | Anim_RifleIdle |
-| Fire | have, unreachable | Anim_FiringRifle is wired in the controller but no code fires the trigger; remote players never show firing. Code gap (Zo), not an asset gap. Milestone: M83. |
-| Reload | have, unreachable | Anim_Reloading, same situation as Fire. Milestone: M83. |
+| Fire | have | Anim_FiringRifle; remote avatars `SetTrigger("Fire")` via `NetPlayerAvatar` (M83, 2026-08-22). |
+| Reload | have | Anim_Reloading; remote avatars `SetTrigger("Reload")` via `NetPlayerAvatar` (M83, 2026-08-22). |
 | Death / downed | planned | Milestone: M86 — `Dead` bool driven from replicated Hp, reversible on restore-from-zero. Local first-person out of M86's scope. |
 | Dock / interact | no code hook | Hold-E dock (M77) has no animator hook planned. Parked until M77 ships (its named trigger); no milestone on purpose. |
 
@@ -82,10 +82,10 @@ for it.
 
 ## Count that matters
 
-Code-driven today: **1 enemy attack clip + 1 flinch clip + the viewmodel set
-(4 clips shared)** — M81 closed the swing; M84 wired the flinch (not yet seen
-in play); M82 closes the viewmodel rest, and M83 adds the missing code
-drives for clips that already exist. M85 to M86 (death collapse,
+Code-driven today: **1 enemy attack clip + 1 flinch clip + remote fire/reload
++ the viewmodel set (4 clips shared)** — M81 closed the swing; M84 wired the
+flinch (not yet seen in play); M83 closed the remote Fire/Reload drives
+2026-08-22; M82 closes the viewmodel rest. M85 to M86 (death collapse,
 downed avatar) add two more clips plus their hooks, covering everything on
 this page that can currently carry a gate. Total new clips across the family:
 eight. Still gateless: spawn/entry, dock, boss (reasons on their lines).

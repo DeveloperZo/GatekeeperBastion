@@ -63,6 +63,7 @@ namespace GatekeepersProtocol.Game
         PlayerHealth _owner;
         PlayerAbility _ability;
         WeaponViewModel _view;
+        NetPlayerAvatar _avatar;
         // Pushed by GameController.ApplyMetaEffects (the rig is runtime-resolved, so the
         // controller binds itself). Null outside a fight scene.
         GameController _game;
@@ -433,6 +434,27 @@ namespace GatekeepersProtocol.Game
                 else Log.Info(Tag, $"Fire refused: {reason}.");
             }
             return false;
+        }
+
+        /// <summary>The FPS rig is not a child of the puppet; LocalOwner is the existing bind.</summary>
+        void BindAvatarIfNeeded()
+        {
+            if (_avatar != null) return;
+            _avatar = NetPlayerAvatar.LocalOwner;
+        }
+
+        void NotifyAvatarFired()
+        {
+            BindAvatarIfNeeded();
+            if (_avatar != null)
+                _avatar.NotifyFired();
+        }
+
+        void NotifyAvatarReloadStarted()
+        {
+            BindAvatarIfNeeded();
+            if (_avatar != null)
+                _avatar.NotifyReloadStarted();
         }
     }
 }

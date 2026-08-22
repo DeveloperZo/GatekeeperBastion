@@ -147,7 +147,7 @@ this table — see the change log.
 | M80 | One final window | completed, Aug 2026 | Control Room copy + `M73` spawn wiring; `HatchWaves` 5 → 1 with the first boss/elite; `EndDemo` on Escaped only. Criteria 8–9 (two-seat loopback, playthrough) open | [`3. completed/M80`](Milestones/3.%20completed/M80-one-final-window.md) |
 | M81 | The Gatekeeper's swing | completed, Aug 2026 | One retargeted attack clip into the shared Gatekeeper controller — Attack stops playing PlayerIdle for all three kinds and ship intruders. Free-retarget probe accepted (Zo close 2026-08-19) | [`3. completed/M81`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md) |
 | M82 | The weapon in your hands | active | Shared viewmodel controller + four hand-keyed clips (idle/move/fire/reload) for all six weapons; reload speed-scales to each weapon's duration; four controller-less window Animators in Bastion.unity removed. Started 2026-08-20 | [`2. active/M82`](Milestones/2.%20active/M82-the-weapon-in-your-hands.md) |
-| M83 | Crewmates fire on camera | later | Replicate fire/reload to non-owner avatars via the existing ClientRpc pattern — drives Boarder.controller's wired-but-unreachable Fire/Reload states; code only, clips already exist | [`1. planned/M83`](Milestones/1.%20planned/M83-crewmates-fire-on-camera.md) |
+| M83 | Crewmates fire on camera | completed, Aug 2026 | Remote Fire/Reload on non-owner Boarder animators; `NetAvatarAnimTests` 2/0 (2026-08-22T15:56:13Z); two-window eyes-on confirmation | [`3. completed/M83`](Milestones/3.%20completed/M83-crewmates-fire-on-camera.md) |
 | M84 | Gatekeepers flinch when shot | active (built 2026-08-21) | One 0.25s muscle flinch on a masked additive HitReact layer from `Damaged`; criterion 5 on disk; playthrough 1–4 owed | [`2. active/M84`](Milestones/2.%20active/M84-gatekeepers-flinch-when-shot.md) |
 | M85 | The collapse under the burst | later | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail, so a corpse never delays a wave clear; co-op carrier named as the open question | [`1. planned/M85`](Milestones/1.%20planned/M85-the-collapse-under-the-burst.md) |
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
@@ -168,7 +168,7 @@ this table — see the change log.
 
 1. **Finish and polish the solo demo.** `M82`, `M93`, `M84`, `M85`, `M66`, and the
    garrison content in `M63` / `M63-3`.
-2. **Build out the co-op demo.** `M83`, `M86`, `M94`, `M95`, `M98`.
+2. **Build out the co-op demo.** `M86`, `M94`, `M95`, `M98`. (`M83` closed 2026-08-22.)
 3. **Ship / Realm / Safehouse.** `M97`, and `M100`, which is the realm-lock entry
    graduated out of `Brainstorms/realms.md` on 2026-08-22. (`M96` closed 2026-08-22.)
 
@@ -177,9 +177,9 @@ Three things sit across that order rather than inside it:
 - **`M99` is upstream of phase 1 and is queued last.** It depends on nothing and it is how
   `M82`, `M93`, `M84` and `M85` get verified without a Run each. Ordered where it is, phase
   1 pays the three-Run toll on every weapon question it asks.
-- **`M82` is load-bearing across phases 1 and 2.** `M83` reads it three times over —
-  crewmates firing on camera is the same animator work. It is the one phase-1 file whose
-  slip moves phase 2.
+- **`M82` is load-bearing across phases 1 and 2.** Viewmodel work is still the
+  first-person half; `M83` closed the remote Fire/Reload half independently
+  (clips already existed). Slip on `M82` no longer blocks seeing a crewmate shoot.
 - **`Ship - CoOp` is the destination** (Zo, 2026-08-21): `Ship - Demo` is transitional and
   the co-op hub is what everything is built against from here. The split itself is already
   wired — `SceneFlow.Ship` / `ShipCoop` name both scenes, `SceneBuilder.BootScenes` pins the

@@ -8,7 +8,14 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-22
 -->
 
-- 2026-08-22: **`M100` written, and `M98` corrected.** The realm-lock entry in
+- 2026-08-22: **`M83` closed — crewmates fire on camera.** Owner notifies on
+  a gated shot and on reload start; server relays `Fire`/`Reload` triggers to
+  non-owner Boarder animators (`NetPlayerAvatar.Anim.cs`). Gate:
+  `NetAvatarAnimTests` 2/0 (2026-08-22T15:56:13Z) plus
+  `DriveRemoteAnimator_SetsSpeedWhenMoved` Passed (2026-08-22T15:57:11Z).
+  Two-window eyes-on is confirmation. Did not occupy an active slot.
+
+
   `Brainstorms/realms.md` graduates to `M100` — the realm document keyed to its owner's
   ID, an access list held on both sides, and a single-writer lock whose holder hosts;
   the session stays peer-hosted, so no game server. `M98`'s first criterion had assumed
