@@ -43,6 +43,12 @@ namespace GatekeepersProtocol.Game
                 // Demo gates own the string while a station is dark / grant-only / heal-only.
                 string demo = DemoStationGate.PromptOverride(this);
                 if (demo != null) return demo;
+                // A down-wait refuses every station but the map, and used to do it while still
+                // offering "[E] ARMORY — equip and focus-upgrade the weapon in your hands". The
+                // player walked up, pressed, and nothing happened, with the reason in a log they
+                // cannot see. Say it on the crosshair instead.
+                if (NetShipWait.IsActive && !(this is MapStation))
+                    return StationName + " — sealed while the Run is live";
                 return "[" + Controls.DisplayOf(ControlId.Interact) + "] " + StationName
                     + " — " + PromptHint;
             }
@@ -362,6 +368,14 @@ namespace GatekeepersProtocol.Game
             long banked = meta != null ? meta.BankedSalvage : 0L;
             bool canBuy = banked >= cost;
             string refuse = canBuy ? null : "need " + (cost - banked) + " more";
+            // The hatch belongs to the realm, and ShipCommands.BuyUpgrade refuses a visitor —
+            // but only in the log, so on a guest this button lit up, took the press and did
+            // nothing. The UI has to ask the same question the command does.
+            if (!RealmRecordSource.OwnsThisRealm())
+            {
+                canBuy = false;
+                refuse = "not your realm to upgrade";
+            }
             row.Bind(
                 trackName,
                 "cost " + cost,
