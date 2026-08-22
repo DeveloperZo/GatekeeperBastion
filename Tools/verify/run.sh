@@ -86,6 +86,7 @@ declare -A EXCLUDED=(
   ["Bastion/BastionSegmentDoorAlongTests.cs"]="needs GatekeepersProtocol.Game (BastionSegment.TryDoorPillars)"
   ["Bastion/BastionDoorOpensForTests.cs"]="needs EnemyGatekeeper, CharacterController, and UnityEngine"
   ["Bastion/SpawnRoomPrefabTests.cs"]="needs SpawnRoom prefab load and UnityEngine"
+  ["Net/RunSeatsTests.cs"]="needs GatekeepersProtocol.Game (RunSeats) and Unity.Netcode"
 )
 
 if ! command -v mcs >/dev/null 2>&1 || ! command -v mono >/dev/null 2>&1; then

@@ -132,6 +132,13 @@ namespace GatekeepersProtocol.Game
                 ReportOwnerMeta();
             }
 
+            if (IsServer && RunSeats.IsLive && !RunSeats.IsAdmitted(OwnerClientId))
+            {
+                AwaitingFollow.Value = true;
+                WaitingOnShip.Value = true;
+                Log.Event(Tag, "seat arrived mid-run clientId=" + OwnerClientId);
+            }
+
             if (IsServer)
             {
                 AssignSlot();
@@ -192,7 +199,16 @@ namespace GatekeepersProtocol.Game
             ApplyOwnerPresentation();
             if (IsOwner)
             {
-                if (WaitingOnShip.Value) return;
+                if (WaitingOnShip.Value)
+                {
+                    // A NetworkVariable's initial value raises no OnValueChanged on the owner
+                    // that just spawned, and the Bastion scene can still be loading when one
+                    // would have fired. Scoped to the late arrival so the buy-back wait keeps
+                    // being driven purely by the change callback, as it always has been.
+                    if (AwaitingFollow.Value && !NetShipWait.IsActive)
+                        NetShipWait.Enter();
+                    return;
+                }
                 if (_rig == null)
                     BindOwnerRig();
                 if (_rig == null) return;

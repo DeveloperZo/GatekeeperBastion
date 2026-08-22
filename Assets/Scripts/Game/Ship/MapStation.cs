@@ -275,6 +275,17 @@ namespace GatekeepersProtocol.Game
             WaveMode mode;
             AssaultState assault;
             ReadWaitWindow(out mode, out assault);
+            var late = NetPlayerAvatar.LocalOwner;
+            if (late != null && late.AwaitingFollow.Value)
+            {
+                // Named before it is pressed: a seat waiting out a wave has to be able to tell
+                // the rule from a dead button. The station is where this is normally read; the
+                // pause label carries the same two strings.
+                _body.BindEmbark(assault == AssaultState.Prep
+                    ? "FOLLOW THE PARTY"
+                    : "FOLLOW - at the next break", TryWaitRejoin);
+                return;
+            }
             if (HatchBank.IsFreeEmbarkWindow(mode, assault))
             {
                 _body.BindEmbark("EMBARK", () => TryEmbark(m));
@@ -298,6 +309,11 @@ namespace GatekeepersProtocol.Game
             if (avatar == null)
             {
                 Log.Event("Net", "embark refused — no avatar");
+                return;
+            }
+            if (avatar.AwaitingFollow.Value)
+            {
+                avatar.RequestFollow();
                 return;
             }
             WaveMode mode;

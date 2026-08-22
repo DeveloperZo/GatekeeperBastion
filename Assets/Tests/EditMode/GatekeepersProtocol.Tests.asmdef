@@ -4,6 +4,7 @@
         "GatekeepersProtocol.Sim",
         "GatekeepersProtocol",
         "GatekeepersProtocol.Editor",
+        "Unity.Netcode.Runtime",
         "Michsky.UI.Shift",
         "Unity.TextMeshPro",
         "UnityEngine.UI",

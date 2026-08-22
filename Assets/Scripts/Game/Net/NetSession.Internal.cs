@@ -234,6 +234,14 @@ namespace GatekeepersProtocol.Game
                 LogSessionSnapshot("connected clientId=" + clientId
                     + " localId=" + _nm.LocalClientId
                     + " role=host");
+                if (RunSeats.IsLive)
+                {
+                    // The party is already out. This seat waits on the Ship and is worth no
+                    // door and no share of the pot until it follows them in at a break, so
+                    // the assignment is deliberately left where it is.
+                    Log.Event(Tag, "joined mid-run — waiting on the Ship clientId=" + clientId);
+                    return;
+                }
                 ShipHatchAssignment.Recompute("guest joined");
                 return;
             }
@@ -258,6 +266,13 @@ namespace GatekeepersProtocol.Game
             {
                 if (_lobby != null)
                     _lobby.ServerNotifyGuestLeft(clientId);
+                if (RunSeats.IsLive)
+                {
+                    // Sealing a hatch the moment somebody drops would be a free save in the
+                    // middle of a wave. The seat is held and the break applies it.
+                    RunSeats.NoteLeft(clientId);
+                    return;
+                }
                 // The leaver can still sit in the connected list inside this callback,
                 // so it is excluded by id rather than trusted to be gone.
                 ShipHatchAssignment.Recompute("guest left", clientId);

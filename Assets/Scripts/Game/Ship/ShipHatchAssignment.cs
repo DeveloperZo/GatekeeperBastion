@@ -96,8 +96,9 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        /// <summary>One seat per connected client, capped at the hatch count; slot from
-        /// the seat's avatar. A seat with no avatar yet (a just-approved join, or a
+        /// <summary>One seat per client in the run, capped at the hatch count; slot from
+        /// the seat's avatar. While a run is live that is the admitted roster rather than the
+        /// connected list, so a seat still waiting on the Ship holds no door open. A seat with no avatar yet (a just-approved join, or a
         /// fixture without player avatars) falls back to connection order — the next
         /// party-change recompute corrects it. Ascending on return.</summary>
         static int GatherSeatSlots(NetworkManager nm, ulong excludeClientId, int[] slots)
@@ -108,6 +109,8 @@ namespace GatekeepersProtocol.Game
             {
                 var client = clients[i];
                 if (client.ClientId == excludeClientId) continue;
+                // A connected seat that has not followed the party in owns no hatch yet.
+                if (RunSeats.IsLive && !RunSeats.IsAdmitted(client.ClientId)) continue;
                 int slot = -1;
                 var po = client.PlayerObject;
                 if (po != null)

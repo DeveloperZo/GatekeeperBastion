@@ -265,6 +265,7 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
+            TickSeatRoster();
             RefreshPlayerCount();
 
             Sim.Tick(dt);                                             // 2

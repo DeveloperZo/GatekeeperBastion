@@ -79,6 +79,11 @@ namespace GatekeepersProtocol.Game
             Log.Event("Ship", "aboard the ship — " + GameSession.Meta.BankedSalvage + " banked, " +
                                         GameSession.Meta.PodEjections + " run(s) lost, " +
                                         GameSession.Meta.CleanExits + " cleared");
+            // Standing on the Ship for real means the run is over, so the seat roster stops
+            // being what the count means. A down-wait is the exception the line above already
+            // draws: that Ship is additive over a live Bastion and the run is still going.
+            if (!NetShipWait.IsActive)
+                RunSeats.EndRun();
             ShipHatchAssignment.Recompute("ship loaded");
             RealmRecordPublisher.Publish("ship loaded");
         }
@@ -162,6 +167,13 @@ namespace GatekeepersProtocol.Game
                 Log.Event("Net", "embark refused — no avatar");
                 return;
             }
+            if (avatar.AwaitingFollow.Value)
+            {
+                // A seat that arrived after the party embarked has nothing to buy back — it
+                // never went out. It follows them in at the next break.
+                avatar.RequestFollow();
+                return;
+            }
             WaveMode mode;
             AssaultState assault;
             ReadWaitWindow(out mode, out assault);
@@ -182,6 +194,16 @@ namespace GatekeepersProtocol.Game
             WaveMode mode;
             AssaultState assault;
             ReadWaitWindow(out mode, out assault);
+            var avatar = NetPlayerAvatar.LocalOwner;
+            if (avatar != null && avatar.AwaitingFollow.Value)
+            {
+                // The refusal has to be readable before it is pressed, or a seat waiting out a
+                // wave cannot tell a rule from a broken button.
+                UiBind.SetButtonLabel(button, assault == AssaultState.Prep
+                    ? "FOLLOW THE PARTY"
+                    : "FOLLOW - at the next break");
+                return;
+            }
             if (HatchBank.IsFreeEmbarkWindow(mode, assault))
             {
                 UiBind.SetButtonLabel(button, "EMBARK");
