@@ -121,9 +121,14 @@ nothing to buy back.
 loading when one would have fired. The owner enters the wait from its own tick instead,
 scoped to the late arrival so the buy-back path keeps being driven purely by the callback.
 
-**Owed.** Nothing has been through Unity: `mono` is not on this machine's PATH, so
-`Tools/verify/run.sh` ran its lints (clean) and not its Sim leg, and neither test fixture has
-executed. Criteria 1, 2 and 6 are eyes-on across two editor instances and nobody has looked.
+**Compiled, not run.** The whole `GatekeepersProtocol` assembly — 165 sources, every change
+here among them — and both new fixtures compile clean against Unity's own `UnityEngine`
+modules and the `Unity.Netcode.Runtime` the project builds with, via a `dotnet` replica of the
+assembly. That is a real compile of the real source set, not a subset smoke test.
+
+**Owed.** No test has *executed*. `mono` is not on this machine's PATH, so
+`Tools/verify/run.sh` ran its lints (clean) and not its Sim leg, and the Unity Test Runner has
+not seen either fixture — compiling is not passing. Criteria 1, 2 and 6 are eyes-on across two editor instances and nobody has looked.
 Criterion 9's offline wave-harness diff against the recorded baseline has not been run —
 `RunSeatsTests` argues solo is unchanged from the count's side, which is weaker than the diff
 the milestone asks for.
