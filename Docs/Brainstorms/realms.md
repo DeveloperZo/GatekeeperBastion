@@ -31,18 +31,28 @@ this file until it ships.
 
 ## Where it stands
 
-Nothing here is built. What exists that this file has to fit:
+**Was "nothing here is built"; corrected 2026-08-22.** `M96` shipped the split and `M98`
+shipped the mid-run join, so most of the list below described the world before them. Each
+entry now says what is actually true. What remains unbuilt is the reachable realm itself,
+which is `M100`.
 
-- **One save, one balance.** `MetaState` carries `BankedSalvage`, `EquippedPrimary`,
-  `EquippedProtocol`, upgrade levels and demo flags as one document. There is no
-  concept of a world separate from a player.
-- **Station buys are not net-routed at all.** Every Ship station mutates that seat's
-  local `GameSession.Meta` with no server check. Any shared balance forces the first
-  server-validated buy in the project.
-- **Joins are refused during the embark countdown** (`M72`), and a guest cannot dock
-  the Run (`DockRun` has no net route). There is no mid-run join surface of any kind.
-- **The Ship has no display objects.** `Stations` plus `ShipDress` with two beds
-  (`Ship.unity`). `M92` builds a larger hull and explicitly excludes trophies.
+- ~~**One save, one balance.**~~ **Built (`M96`).** There are two documents:
+  `BoarderState` travels with the player, `RealmState` stays with the world, and `MetaState`
+  is now a facade forwarding to both. The whole salvage ledger, the run record, doors and
+  terminals, hatch armour and the demo flags are the realm's.
+- **Station buys are still not net-routed**, with one exception. Every Ship station
+  mutates that seat's local `GameSession.Meta` with no server check. `ShipCommands.BuyUpgrade`
+  is the exception and it is a client-side REFUSAL, not a route: a visitor is told the hatch is
+  not theirs to upgrade. Any shared balance still forces the first server-validated buy in the
+  project.
+- **Joins are refused during the embark countdown** (`M72`), and a guest still cannot dock
+  the Run (`DockRun` has no net route). ~~There is no mid-run join surface of any kind.~~
+  **`M98` built one**: a late arrival lands on the Ship, waits, and follows the party in at a
+  Prep boundary — `RunSeats`, `AwaitingFollow` / `RequestFollow`, and the FOLLOW labels.
+- ~~**The Ship has no display objects.**~~ **`M97` built one**: the `Realm Record` root on
+  `Ship - CoOp` carries twelve marks, a seven-mount weapon rack and a record plate. `M92`
+  excluded trophies; the record is not one — it displays the realm, not the player. (This entry
+  cited `Ship.unity`, which does not exist; the hubs are `Ship - CoOp` and `Ship - Demo`.)
 - **The crew pot** (`../Demo - Coop/0-the-invite.md`) is one salvage balance the party
   shops from, with persistence deferred. It is realm-side salvage with the character
   half switched off, which is why it does not have to be thrown away later.
@@ -79,8 +89,9 @@ file rather than duplicated.
 
 The source model lets a player hold several realms, each with independent progress, and
 carry one character across all of them. Correctness for two realms is a criterion in
-`M96`; a main-menu realm list with management, renaming and deletion as a feature in its
-own right is not, and does not need to be until someone has more realms than fit on a
+`M96`. Creation and deletion of both realms and Boarders shipped on 2026-08-22 with an
+armed two-press confirm and a soft delete that retires the document rather than unlinking it.
+**Renaming still does not exist** and does not need to until someone has more realms than fit on a
 screen.
 
 ### A realm a friend can open while you are offline
@@ -100,8 +111,12 @@ task rather than a bill. Against a realm that is one save file's worth of JSON a
 writing tens of times a session, neither axis binds — this is free at the scale it is for.
 Verify before relying on it: `unity.com/products/gaming-services/pricing`.
 
-**Trust is accepted, not solved.** Station buys are not net-routed (above), so a guest
-holding the lock can write anything to your realm. Stated cost of a friends game.
+**Trust is accepted, not solved.** Station buys are not net-routed (above). The shape has
+changed rather than closed: a guest can no longer write hatch armour to your realm — that one is
+refused — but every other purchase silently writes to the guest's OWN realm instead, while the
+Ship HUD and the wall plate beside them show the host's numbers. Two salvage figures on one
+screen, and a buy that lands somewhere the player is not looking. Stated cost of a friends game,
+now with a named edge.
 
 ### What a realm is worth naming after
 

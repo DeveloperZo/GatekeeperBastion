@@ -36,8 +36,9 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>The first-Bastion tutorial's ship hub
         /// (<c>Assets/Scenes/Ship - Demo.unity</c>). No longer the destination of normal play:
-        /// realms open <see cref="ShipCoop"/>, and this is reached only by the F12 dev
-        /// checkpoints, which build a demo beat directly.</summary>
+        /// realms open <see cref="ShipCoop"/>. Two things reach it: the realm chooser's DEMO
+        /// button, which is the alternate way in, and the F12 dev checkpoints, which build a
+        /// demo beat directly.</summary>
         public const string Ship = "Ship - Demo";
 
         /// <summary>A realm's ship hub (<c>Assets/Scenes/Ship - CoOp.unity</c>). Named for
@@ -48,10 +49,14 @@ namespace GatekeepersProtocol.Game
         /// <summary>Combat scene name (the bastion run).</summary>
         public const string Bastion = "Bastion";
 
-        /// <summary>The practice range (<c>Assets/Scenes/Range.unity</c>), reached through a
-        /// door on <see cref="ShipCoop"/>. Bastion-shaped so a Gatekeeper can think in it — the
+        /// <summary>The practice range. Bastion-shaped so a Gatekeeper can think in it — the
         /// brain reads run state off a live controller — but it never draws a Wave
-        /// (Docs/Milestones — a range you can fight in).</summary>
+        /// (Docs/Milestones — a range you can fight in).
+        ///
+        /// <b>The scene does not exist yet.</b> <c>Assets/Scenes/Range.unity</c> is unbuilt, it
+        /// is not in the build settings, and no door reaches it, so <see cref="LoadRange"/> will
+        /// refuse until the milestone lands. The constant is here because the code seams around
+        /// it are built; do not read it as evidence the range is.</summary>
         public const string Range = "Range";
 
         /// <summary>In-fiction name of the v0 bastion, for the nav map and the run-start log line.</summary>
@@ -182,7 +187,7 @@ namespace GatekeepersProtocol.Game
                 // Guard trip: LoadScene would throw here and strand the caller (lose-screen soft-lock).
                 Log.Error(Tag, $"Cannot load scene '{sceneName}' — it is not in the build settings. " +
                                "Run GatekeepersProtocol/Build/All Scenes to register Splash, MainMenu, " +
-                               "Ship - Demo, Ship - CoOp, Bastion.");
+                               "RealmSelect, Ship - Demo, Ship - CoOp, Bastion.");
                 return false;
             }
 

@@ -20,21 +20,31 @@ damage — is `missions-and-destinations.md`. What the four existing stations se
 
 ## Where it stands
 
-**The hub scene is authored.** `Ship - CoOp.unity` — 2,633 GameObjects, generated on the
+**The hub scene is authored.** `Ship - CoOp.unity` — roughly 2,700 GameObjects, generated on the
 grid convention (`Floor_x_y`, `GW_<dir>_x_y`, `GS_*`, `GB_*`) and then dressed, per the
 generate-then-author paradigm. It holds:
 
 - **Four stations**, each a full fixture rather than a menu hook: `Station_Armory`,
   `Station_Fabrication`, `Station_Map`, `Station_CrewQuarters`, each with `Desk`, `Screen`,
-  `Label`, `Console`, `ConsoleScreen` and `Interact`, and each with its own console
-  material (`Mat_ConsoleArmory` and siblings).
-- **Three hatches** — `Hatch_1`, `Hatch_2`, `Hatch_3`, sharing `Mat_Hatch`. The multi-port
-  idea in `missions-and-destinations.md` already has its geometry.
+  `Label`, `Console`, `ConsoleScreen` and `Interact`. **Three of those six are not doing
+  what this list implies** (audited 2026-08-22): `Desk` and `Screen` are authored inactive on
+  all four stations, and every reference to the per-station console materials
+  (`Mat_ConsoleArmory` and siblings) sits on those inactive renderers — so the four live
+  `ConsoleScreen`s all wear the generic hull atlas and no station has its own colour. The
+  interact surface is not the visible console either: it is an invisible `Interact` volume
+  2.25 m in front of the station, while the `Console` prop's collider is disabled and sits to
+  one side.
+- **Three hatches** — `Hatch_1`, `Hatch_2`, `Hatch_3`, sharing `Mat_Hatch` as their OPEN
+  material only. The sealed material on all three is the hull atlas, and the leaves are
+  authored with it, so **a sealed hatch is indistinguishable from the wall** and every door
+  reads sealed until the first assignment runs. `Assets/Materials/Mat_HatchSealed.mat` exists
+  and is referenced by nothing (audited 2026-08-22). The multi-port idea in
+  `missions-and-destinations.md` already has its geometry.
 - **The teleporter** — `Demo Teleporter` and `Spawn_Teleporter`, so `M91` landed.
 - `Environment`, `ShipDress`, `Level Music`, `Player`, `ShipController`, `Ship Terminal`.
 
-It shares the Bastion's look: 473 references to the Synty atlas material, so the
-2026-08-20 repaint reaches it.
+It shares the Bastion's look — several hundred references to the Synty atlas material — so
+the 2026-08-20 repaint reaches it.
 
 `Ship - Demo.unity` is the separate beat-0 scene — 1,170 GameObjects, 187 prefab
 instances, and the only one carrying a baked reflection probe.
@@ -45,9 +55,17 @@ calling EMBARK — and the scene supplies the room. What is missing is that **ev
 the four stations is still a shop or a launcher**: something you open, transact at, and
 close. Nothing in the Ship is an *activity*.
 
-**Wired 2026-08-21:** `SceneFlow.Ship` is `"Ship - Demo"`, `SceneFlow.ShipCoop` is
-`"Ship - CoOp"`. Solo Start/Continue and return-to-ship load Demo; party Host/Join and
-additive ship-wait load CoOp. Both are in Build Settings.
+**Wired 2026-08-21, corrected 2026-08-22:** `SceneFlow.Ship` is `"Ship - Demo"`,
+`SceneFlow.ShipCoop` is `"Ship - CoOp"`. Both are in Build Settings. **Every ordinary way in
+now lands on CoOp** — CONTINUE, the realm chooser's ENTER, party Host/Join, the additive
+ship-wait, and return-to-ship at the end of a Run. `Ship - Demo` is reached by exactly two
+things: the chooser's DEMO button and the F12 dev checkpoints. The earlier claim here — that
+solo paths load Demo — stopped being true when `M96` made a realm's ship the co-op hull.
+
+**A consequence worth naming**: a fresh realm is `DemoActive`, so the first-Bastion tutorial
+now plays out on the hull, and until 2026-08-22 two of its safety systems still tested for
+the demo scene — the 1-HP damage floor did not apply here, and a tutorial death on the Ship
+had no lose screen to land on.
 
 ## Graduation test
 
@@ -69,12 +87,15 @@ wanted to.
 
 ### A lobby of doors and a room of props
 The hub splits by weight. Anything needing a live Gatekeeper, a NavMesh or a
-`GameController` is **a door** to its own scene, the way `M99`'s range is — the machinery
+`GameController` is **a door** to its own scene, the way `M99`'s range will be — that range
+is active and its code seams exist, but `Range.unity`, the door and the build registration do
+not yet (checked 2026-08-22) — the machinery
 stays out of the one scene deliberately free of Run machinery, and the fiction still reads
 as your hideout because you walk there. Anything that is a prop and an animation is
 **furniture in the Ship**. That split decides where each idea below lands before it is
-designed, and it keeps `Ship.unity` — already 958 GameObjects, 844 of them under
-`Canvas` — from absorbing every new feature.
+designed, and it keeps the hub scene — most of whose object count is already UI under
+`Canvas` — from absorbing every new feature. (This paragraph named `Ship.unity` until
+2026-08-22; there is no such file. The hubs are `Ship - CoOp.unity` and `Ship - Demo.unity`.)
 
 ### Calibration (the Garrus nod)
 A bench where a weapon is calibrated: a deliberate action, a short animation, a small
@@ -136,7 +157,7 @@ people can see they have brought three of the same thing.
   question**: contribution reads as a chore when it is required, not when it is quiet, so
   the rule above is the guard and no further one is needed.
 - **Doors, not stations, for anything that needs a brain.** See *A lobby of doors*.
-- **One subtree per edit to `Ship.unity`** (`../Architecture/8-Scene-Authoring.md`).
+- **One subtree per edit to `Ship - CoOp.unity`** (`../Architecture/8-Scene-Authoring.md`).
 
 ## Rejected
 
