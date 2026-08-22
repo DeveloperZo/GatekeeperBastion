@@ -150,6 +150,10 @@ namespace GatekeepersProtocol.Game
 
             RefreshCapture();
 
+            // Alt-chords first: they no-op outside the range, and reading them before the table
+            // stops an Alt+digit reaching a bare-digit handler in the same frame.
+            if (TickRangeKeys()) return;
+
             for (int i = 0; i < DevCommands.All.Length; i++)
             {
                 var b = DevCommands.All[i];
