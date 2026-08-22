@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using GatekeepersProtocol.Sim;
 using UnityEngine;
@@ -35,8 +36,10 @@ namespace GatekeepersProtocol.Game
             "can sell. Authored in the Ship scene.")]
         Transform _rackRoot;
 
-        [SerializeField, Tooltip("Weapon prefab per catalog row, in WeaponId order. A row with " +
-            "no prefab leaves its mount standing empty rather than drawing nothing at all.")]
+        [SerializeField, OptionalBinding, Tooltip("Weapon prefab per catalog row, in WeaponId " +
+            "order. Rows with no prefab are deliberate — Vk7Rifle is retired and " +
+            "ThrowawayComposite is test-only — so the nulls are expected and the binding gate " +
+            "is told so rather than being made to lie.")]
         GameObject[] _weaponPrefabs;
 
         [SerializeField, Tooltip("Plate carrying runs survived, runs lost and deepest wave.")]
@@ -69,6 +72,9 @@ namespace GatekeepersProtocol.Game
                     + "(wire _marksRoot, _rackRoot and _plate in the Ship scene).", this);
         }
 
+        /// <summary>Children in sibling order. For the rack that order IS the WeaponId order —
+        /// mount 0 is catalog row 0 — so reordering the mounts in the Hierarchy silently
+        /// reassigns which weapon stands where, with nothing to catch it.</summary>
         static Transform[] Children(Transform root)
         {
             if (root == null) return new Transform[0];
@@ -87,17 +93,17 @@ namespace GatekeepersProtocol.Game
         {
             if (Time.unscaledTime < _nextCheck) return;
             _nextCheck = Time.unscaledTime + _checkInterval;
-            Repaint(false);
+            Repaint();
         }
 
         /// <summary>Paint if anything moved. Nothing allocates on the unchanged path, which is
         /// almost every check.</summary>
-        public void Repaint(bool force)
+        public void Repaint()
         {
             RealmRecord record = RealmRecordSource.Current();
             int owned = OwnedMask();
             long packed = record.Pack();
-            if (!force && _painted && packed == _paintedRecord && owned == _paintedOwned) return;
+            if (_painted && packed == _paintedRecord && owned == _paintedOwned) return;
 
             PaintMarks(record);
             PaintRack(owned);
@@ -192,11 +198,13 @@ namespace GatekeepersProtocol.Game
             }
             else
             {
-                _line.Append("SURVIVED ").Append(record.CleanExits);
-                _line.Append("   LOST ").Append(record.RunsLost);
-                _line.Append("   DEEPEST WAVE ").Append(record.DeepestWave);
+                // Stacked, not strung out. One line of this ran about three times the width of
+                // the plate it is mounted on, and TextMesh does not wrap.
+                _line.Append("SURVIVED ").Append(record.CleanExits).Append(Environment.NewLine);
+                _line.Append("LOST ").Append(record.RunsLost).Append(Environment.NewLine);
+                _line.Append("WAVE ").Append(record.DeepestWave);
                 if (record.HatchArmor > 0)
-                    _line.Append("   HATCH +").Append(record.HatchArmor);
+                    _line.Append(Environment.NewLine).Append("HATCH +").Append(record.HatchArmor);
             }
             _plate.text = _line.ToString();
         }
