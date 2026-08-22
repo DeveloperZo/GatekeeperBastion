@@ -459,14 +459,26 @@ def _qrot(q, v):
     return (vx + qw * tx + (qy * tz - qz * ty),
             vy + qw * ty + (qz * tx - qx * tz),
             vz + qw * tz + (qx * ty - qy * tx))
+# X-alignment: REVERTED an attempted "fix" here that hand-parsed the FBX vertex
+# bounds and computed a center of x=-5.91. Unity's own live Renderer.bounds on
+# the imported "Stair" mesh reports its true center as x=-4.088 - the manual
+# FBX arithmetic was wrong (axis or pivot assumption never checked against
+# anything real), and the ShipCoopStairWalkTests alignment assertion, written
+# specifically to catch this class of error, caught it: it failed loudly
+# rather than silently reintroducing the misalignment it was written to
+# prevent. -4.09 (unchanged from before) is correct; only the thickness fix
+# from the previous commit stands.
+STAIR_WORLD_X = -4.09
+HALF_W = 0.98
+
 OLD_HALF, NEW_HALF = 0.025, 0.175          # 0.05 m -> 0.35 m thick
-old_center = (-4.09, 2.5, 28.45)
+old_center = (STAIR_WORLD_X, 2.5, 28.45)
 normal = _qrot(q, (0.0, 1.0, 0.0))          # world direction of the box's local +Y
 surface = tuple(old_center[k] + OLD_HALF * normal[k] for k in range(3))
 new_center = tuple(surface[k] - NEW_HALF * normal[k] for k in range(3))
-gbox('GStairWalk', new_center, (1.96, 2 * NEW_HALF, math.hypot(RUN, 5.0)),
+gbox('GStairWalk', new_center, (2 * HALF_W, 2 * NEW_HALF, math.hypot(RUN, 5.0)),
      quat='{x: %.7f, y: 0, z: 0, w: %.7f}' % (q[0], q[3]), hint=-ang)
-gbox('GStairHead', (-5.0, 4.75, 32.5), (3.0, 0.5, 3.0))
+gbox('GStairHead', (STAIR_WORLD_X, 4.75, 32.5), (3.0, 0.5, 3.0))
 print("stair: 5.0 m rise over %.2f m run = %.1f deg" % (RUN, ang))
 
 # ---- airlock shells at the three hatch bays ------------------------------------
