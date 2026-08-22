@@ -8,6 +8,24 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-21
 -->
 
+- 2026-08-22: **`M96` closed — the realm and the Boarder.** Zo close. Verified in the
+  Unity runner on the merged tree: EditMode 649 passed / 11 failed, PlayMode 68 / 1, every
+  one of those twelve the recorded pre-existing set, attributed by running the same harness
+  against a detached worktree of `main` before the merge. Criteria 1 and 6 close on
+  `RealmChooserTests`, which loads the chooser scene and drives it; 2, 3, 4, 5, 9 and 10 on
+  `RealmAndBoarderSaveTests` at the document level.
+
+  **Two items closed as owed rather than met**, on Zo's ruling: criterion 8's mirror — that a
+  host does not write a guest's Boarder — cannot be shown in one process where both share a
+  single static session, and needs two machines; and nobody has looked at the chooser, which
+  is proven to load and bind but whose layout was reasoned about rather than seen.
+
+  Rulings made during the build and recorded in the doc: the salvage ledger stays whole on the
+  realm, `HatchConversions` and the twelve demo flags are the realm's, the pot is the world's
+  so every seat banks into it, save version 13 refuses older documents rather than migrating
+  them, and a realm's ship is `Ship - CoOp`. The playthrough gate was replaced by a driven
+  test (Zo: the game is advanced enough to reach a segment with dev commands).
+
 - 2026-08-21: **`M90` closed — buy back at a live window.** Zo close.
   Playthrough (criterion 6) stamped. Two-box host-save half of criterion 2
   stays unprovable in-process (shared Meta); `TryNetBuyBack` does not spend.

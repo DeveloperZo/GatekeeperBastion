@@ -1,10 +1,10 @@
 # M96 — The realm and the Boarder
 
 <!--
-Status: planned
+Status: completed
 Update trigger: when an item moves between the character side and the realm side, when
 the save version changes, when the realm list gains a feature
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 -->
 
 One save becomes two. A **Boarder** is yours and travels: weapons, focus-ring upgrades,
@@ -209,9 +209,10 @@ assignment each check for a live session and fall back to a single seat.
 plays out on the co-op hull. That is the intent — the demo is a world's first Bastion, and the
 world's ship is this one.
 
-## State at build, 2026-08-21
+## Closed, Aug 2026
 
-Merged to `main`. **Verified in the Unity runner**, both modes, on the merged tree.
+Closed by Zo 2026-08-22 with two items explicitly accepted as owed rather than met — see
+*Still owed* below. Merged to `main` and **verified in the Unity runner**, both modes.
 
 **EditMode 649 passed / 11 failed. PlayMode 68 passed / 1 failed.** Every one of those twelve
 is the recorded pre-existing set — the M59 polish five, the two HUD separation rows, the
@@ -231,9 +232,9 @@ the half that one process can show.
 The scene is no longer an unknown: it was hand-authored offline, and a test now loads it every
 run and proves the name field is bound both ways rather than merely present.
 
-**Still owed.**
+**Still owed, and accepted as such at close (Zo, 2026-08-22).**
 
-- **Criterion 8's second half.** That a guest's session does not write the host's Boarder is
+- **Criterion 8's second half.** Closed as owed rather than met. That a guest's session does not write the host's Boarder is
   tested. The mirror is not, and deliberately has no test: host and guest share one static
   `GameSession.Meta` in a single process, so a guest's Boarder would be an object nothing was
   handed and any such test would pass by construction. It needs two machines.
