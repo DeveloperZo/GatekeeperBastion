@@ -7,7 +7,8 @@ namespace GatekeepersProtocol.Game
     /// to a demo beat instead of replaying every loop to reach it (F12, then a digit). Always
     /// compiled, like the rest of the Dev command surface. Digits 1, 3, 5 adopt a constructed
     /// session-only MetaState and reload the Ship; digits 2, 4, 6, 7 load the Bastion at the
-    /// fight with the authored Unbanked. Digit 8 resets the live Bastion's terminals and doors.
+    /// fight with the authored Unbanked. Digit 8 stocks a realm record and a Boarder kit in
+    /// place, and digit 9 resets the live Bastion's terminals and doors.
     /// Salvage numbers come from <see cref="HatchBank.BankCap"/> / 
     /// <see cref="HatchBank.MasterTerminalUnbanked"/>, not authored aims.</summary>
     public sealed partial class GameController
@@ -231,7 +232,7 @@ namespace GatekeepersProtocol.Game
             });
         }
 
-        /// <summary>Digit 8: replay the zone loop in place — every terminal incomplete, every
+        /// <summary>Digit 9: replay the zone loop in place — every terminal incomplete, every
         /// locked door shut, snapshots cleared, the next draw pointed back at wave 1. The
         /// saved DemoZoneDeepestWave is deliberately kept, so the retrigger offer re-appears
         /// at the deepest terminal exactly as after a real loss. Nothing about the Hatch-bank
