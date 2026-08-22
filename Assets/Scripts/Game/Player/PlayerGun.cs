@@ -443,11 +443,25 @@ namespace GatekeepersProtocol.Game
             _avatar = NetPlayerAvatar.LocalOwner;
         }
 
+        /// <summary>Raised once per round that actually left the barrel. The practice range
+        /// counts shots off this; nothing else subscribes. It is here rather than in Sim
+        /// because a shot counter in Sim is exactly the rollup the design rules reject
+        /// (Docs/Design/3-Mechanics.md, rejected list).</summary>
+        public event System.Action Fired;
+
         void NotifyAvatarFired()
         {
             BindAvatarIfNeeded();
             if (_avatar != null)
                 _avatar.NotifyFired();
+            var fired = Fired;
+            if (fired == null) return;
+            // Guard trip: a readout that throws must not stop the gun firing.
+            try { fired(); }
+            catch (System.Exception e)
+            {
+                Log.Error(Tag, "Fired listener threw " + e.GetType().Name + ": " + e.Message);
+            }
         }
 
         void NotifyAvatarReloadStarted()

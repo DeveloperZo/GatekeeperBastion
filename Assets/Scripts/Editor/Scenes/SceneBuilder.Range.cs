@@ -4,7 +4,9 @@ using GatekeepersProtocol.Sim;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace GatekeepersProtocol.EditorTools
 {
@@ -31,6 +33,12 @@ namespace GatekeepersProtocol.EditorTools
     {
         const string RangeScenePath = "Assets/Scenes/Range.unity";
         const string ControlRoomPrefabPath = "Assets/Prefabs/Bastion/Kit/ControlRoom.prefab";
+
+        /// <summary>The range hosts the SHIP bed, not the Bastion's combat one. It came in on
+        /// the Bastion copy carrying the wrong music and a FrontEndMusic host besides; the audio
+        /// tests already class the range as ship-like, and they are right — nothing is hunting
+        /// you on a lane.</summary>
+        const string LevelMusicClipPath = "Assets/Resources/Audio/Beds/Hydro-Ship.mp3";
 
         /// <summary>The range's OWN navmesh asset. BakeNavMesh defaults to the Bastion's, and
         /// letting it do that here baked the lane straight over Bastion-NavMesh.asset — the
@@ -96,9 +104,10 @@ namespace GatekeepersProtocol.EditorTools
                 GameObject hall = PlaceControlRoom(env.transform);
                 if (hall == null) return;
                 if (!MeasureLane(hall)) return;
-                PlaceMarks(env.transform);
+                Transform marksRoot = PlaceMarks(env.transform);
                 PlaceFiringLine();
-                EnsureRangeRoot();
+                EnsureLevelMusic();
+                EnsureRangeRoot(marksRoot);
 
                 BakeNavMesh(env, RangeNavMeshPath);
                 EditorSceneManager.MarkSceneDirty(scene);
@@ -204,7 +213,7 @@ namespace GatekeepersProtocol.EditorTools
         /// <summary>A marker where each body stands, and a post either side of it so the
         /// distance is readable from the firing line. Markers are empty transforms: the console
         /// spawns onto the navmesh at one, rather than into a prop.</summary>
-        static void PlaceMarks(Transform env)
+        static Transform PlaceMarks(Transform env)
         {
             Palette palette = CreatePalette();
             var marks = new GameObject("Marks");
@@ -227,6 +236,7 @@ namespace GatekeepersProtocol.EditorTools
 
             Box("Firing_Line", new Vector3(_firingLineX, 0.01f, _laneZ),
                 new Vector3(0.12f, 0.02f, 6f), palette.Breach, marks.transform);
+            return marks.transform;
         }
 
         /// <summary>Put the player on the firing line looking down the lane. The rig came from
@@ -245,9 +255,10 @@ namespace GatekeepersProtocol.EditorTools
                 new Vector3(_firingLineX, 0.2f, _laneZ), Quaternion.Euler(0f, 90f, 0f));
         }
 
-        /// <summary>The range's own root, carrying the rules. The console and readout attach
-        /// here as they land; nothing else in the scene owns them.</summary>
-        static void EnsureRangeRoot()
+        /// <summary>The range's own root: the rules, the console that grants and spawns, and the
+        /// readout. Everything is bound here rather than dragged in the inspector, so a rebuild
+        /// cannot leave a half-wired scene behind.</summary>
+        static void EnsureRangeRoot(Transform marks)
         {
             GameObject root = GameObject.Find("Range");
             if (root == null) root = new GameObject("Range");
@@ -255,10 +266,78 @@ namespace GatekeepersProtocol.EditorTools
 
             var rules = root.GetComponent<RangeRules>();
             if (rules == null) rules = root.AddComponent<RangeRules>();
+            var console = root.GetComponent<RangeConsole>();
+            if (console == null) console = root.AddComponent<RangeConsole>();
+            var readout = root.GetComponent<RangeReadout>();
+            if (readout == null) readout = root.AddComponent<RangeReadout>();
 
             var game = Object.FindFirstObjectByType<GameController>();
-            if (game != null) rules.Bind(game);
-            else Debug.LogWarning("[SceneBuilder] Range: no GameController to bind the rules to.");
+            if (game == null)
+            {
+                Debug.LogWarning("[SceneBuilder] Range: no GameController to bind to.");
+                return;
+            }
+            rules.Bind(game);
+            console.Bind(game, rules, marks);
+            readout.Bind(game, rules, BuildReadoutText(root.transform));
+        }
+
+        /// <summary>Swap the Bastion's music host for the ship bed. The copy arrives with a
+        /// "Background Music" root, which is the FRONT-END host — leaving it in a playable scene
+        /// means two things owning the music.</summary>
+        static void EnsureLevelMusic()
+        {
+            GameObject frontEnd = GameObject.Find("Background Music");
+            if (frontEnd != null) Object.DestroyImmediate(frontEnd);
+
+            GameObject host = GameObject.Find("Level Music");
+            if (host == null) host = new GameObject("Level Music");
+            host.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+
+            var source = host.GetComponent<AudioSource>();
+            if (source == null) source = host.AddComponent<AudioSource>();
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(LevelMusicClipPath);
+            if (clip == null)
+            {
+                Debug.LogWarning("[SceneBuilder] Range: no music bed at " + LevelMusicClipPath);
+                return;
+            }
+            source.clip = clip;
+            source.loop = true;
+            source.playOnAwake = true;
+            source.spatialBlend = 0f;
+        }
+
+        /// <summary>A screen-space line for the readout. Its own canvas rather than the Bastion
+        /// HUD's: the HUD is driven by run state this scene deliberately never enters, and
+        /// borrowing it would put range numbers inside a fight's layout.</summary>
+        static TMP_Text BuildReadoutText(Transform parent)
+        {
+            var canvasGo = new GameObject("Range HUD",
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvasGo.transform.SetParent(parent, false);
+            var canvas = canvasGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+
+            var textGo = new GameObject("Readout", typeof(TextMeshProUGUI));
+            textGo.transform.SetParent(canvasGo.transform, false);
+            var text = textGo.GetComponent<TextMeshProUGUI>();
+            text.fontSize = 26f;
+            text.alignment = TextAlignmentOptions.TopLeft;
+            text.text = "";
+            text.raycastTarget = false;
+
+            var rt = textGo.GetComponent<RectTransform>();
+            // Top-left, inset. Anchored to the corner so it does not drift with resolution.
+            rt.anchorMin = new Vector2(0f, 1f);
+            rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.anchoredPosition = new Vector2(40f, -40f);
+            rt.sizeDelta = new Vector2(900f, 120f);
+            return text;
         }
 
         /// <summary>Append Range.unity to the build settings, after the boot scenes and without

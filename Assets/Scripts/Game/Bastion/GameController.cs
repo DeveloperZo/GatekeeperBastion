@@ -93,6 +93,10 @@ namespace GatekeepersProtocol.Game
         /// <summary>The hosted protocol abilities, crew and personal.</summary>
         public PlayerProtocolAbilities Protocol => _protocol;
 
+        /// <summary>The hosted weapon. Exposed for the practice range's readout, which counts
+        /// shots off its Fired event and has to re-resolve when the rig is rebuilt.</summary>
+        public PlayerGun Gun => _gun;
+
         /// <summary>Bastion net session. Null when unwired (solo, Ship, tests).</summary>
         public NetSession Net => _net;
 
@@ -218,7 +222,7 @@ namespace GatekeepersProtocol.Game
 
             // Stable fields after the prose. The sentence stays readable;
             // wave-report reads startWave=/primary=/… without re-parsing the prose.
-            Log.Event("Run", $"run begins at {SceneFlow.BastionName} starting at wave {Sim.StartWave} — " +
+            Log.Event("Run", $"run begins at {SceneFlow.CombatDisplayName} starting at wave {Sim.StartWave} — " +
                 $"{LoadoutSummary(Meta)}, " +
                 $"{Meta.BankedSalvage} banked, hatch {Sim.Ship.Hatch.MaxHp:0}hp " +
                 $"{RunBeginsFields(Meta, Sim.StartWave)}; seed {Run.Sim.Seed}");

@@ -81,6 +81,7 @@ namespace GatekeepersProtocol.Game
             if (RealmRegistry.Boarders().Length == 0)
                 RealmRegistry.CreateBoarder(null);
             Refresh();
+            FrontEndMusic.CaptureOrJoin(null);
         }
 
         void Refresh()
@@ -192,6 +193,7 @@ namespace GatekeepersProtocol.Game
             // the alternative is the same realm looking different depending on how you
             // entered it. Solo is fine there: the party panel and the hatch assignment both
             // check for a live session and fall back to one seat.
+            FrontEndMusic.Stop();
             if (!SceneFlow.LoadShipCoop())
                 Log.Warn(Tag, "realm entered but the co-op Ship scene would not load.");
         }
@@ -308,13 +310,12 @@ namespace GatekeepersProtocol.Game
         /// <summary>A row is deletable whether or not this build can open it — a document an
         /// older build wrote is exactly the kind a player wants rid of, and refusing to delete
         /// what we already refuse to load would leave it on the list forever.</summary>
-        /// <summary>Row index of a document by id, or -1. Used to hold a selection across a
-        /// Refresh that would otherwise re-pick from the last-played pointer.</summary>
+        /// <summary>Row index of a document by id, or -1. Holds a selection across a Refresh
+        /// that would otherwise re-pick from the last-played pointer.</summary>
         static int IndexOfId(RealmRegistry.SaveRow[] rows, string id)
         {
             if (rows == null || string.IsNullOrEmpty(id)) return -1;
-            for (int i = 0; i < rows.Length; i++)
-                if (rows[i].Id == id) return i;
+            for (int i = 0; i < rows.Length; i++) if (rows[i].Id == id) return i;
             return -1;
         }
 
@@ -505,6 +506,7 @@ namespace GatekeepersProtocol.Game
         /// entering it does not pick one (Docs/Milestones — the realm and the Boarder).</summary>
         void OnDemo()
         {
+            FrontEndMusic.Stop();
             if (!SceneFlow.LoadShip())
                 Log.Warn(Tag, "demo refused — the demo Ship scene would not load.");
         }
