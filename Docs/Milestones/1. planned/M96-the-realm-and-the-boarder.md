@@ -185,9 +185,13 @@ exists to remove.
   original plan.
 - Criterion 10: load a v11 save and read the refusal in `Logs/gkb_latest.log`.
 
-**Playthrough path**: MainMenu, create realm "A", enter with a Boarder, buy a Primary,
-clear one bastion, quit to menu, create realm "B", enter with the same Boarder. The
-Primary is in your hands. The bastion is uncleared.
+**Driven path** (supersedes the playthrough this section originally called for; Zo,
+2026-08-21): from the chooser, create realm "A", enter with a Boarder, grant a Primary and a
+cleared bastion through the dev commands rather than by replaying the loop to earn them, quit
+to the menu, create realm "B", enter with the same Boarder. The Primary is in your hands. The
+bastion is uncleared. The taint is stated in the close, per `../../Decisions.md`.
+
+Most of that is automatable and should be automated — see *State at build* above.
 
 ## State at build, 2026-08-21
 
@@ -201,9 +205,20 @@ in the co-op docs.
 
 **Owed before this can close.**
 
-- **The editor has never opened this branch.** `Assets/Scenes/RealmSelect.unity` was
-  hand-authored offline and never imported; the hand-authored `TMP_InputField` is the likeliest
-  thing to need a fix on first open. Criteria 1–6 need a playthrough.
+- **The editor has never opened the chooser.** `Assets/Scenes/RealmSelect.unity` imports
+  without error but nothing has LOADED it; the hand-authored `TMP_InputField` is the likeliest
+  thing to need a fix.
+- **Criteria 1 and 6 want a driven session, not a playthrough** (Zo, 2026-08-21). Replaying
+  the loop to reach a menu screen buys nothing: the game has dev checkpoints precisely so a
+  beat is reachable in seconds, and `../../Decisions.md` already rules that a dev-tainted
+  session may close a gate provided the taint is stated. Better still, neither criterion
+  actually needs a human — a PlayMode test can load the chooser, create a realm, enter it,
+  return to the menu and re-enter, which is the whole of 1 and 6. That is the intended path.
+- **Criteria 2, 3, 4, 5, 9 and 10 are already proven** at the document level by
+  `RealmAndBoarderSaveTests`, which is where those claims live: which column a fact lands in,
+  that a fresh realm carries none of the world, that two realms cannot reach into each other,
+  and that an older document is refused with a reason. What a driven session adds is only that
+  the game is wired to those documents, which is one test rather than a session.
 - **Criterion 8 is half proven.** That a guest's session leaves the host's Boarder untouched is
   tested. The mirror — that the host does not write a guest's Boarder — is NOT, and deliberately
   has no test: host and guest share one static `GameSession.Meta` in a single process, so the
