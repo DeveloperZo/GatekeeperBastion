@@ -263,9 +263,14 @@ namespace GatekeepersProtocol.Sim
             Ship.HatchDestroyed += OnHatchDestroyed;
         }
 
-        /// <summary>Begin the run in Docked. Increments MetaState.TotalRuns. Callable once.
-        /// <paramref name="startWave"/> is 1-based and clamped to 1..min(MaxWaves, DeepestWaveReached).</summary>
-        public void StartRun(int startWave = 1)
+        /// <summary>Begin the run in Docked. Callable once.
+        /// <paramref name="startWave"/> is 1-based and clamped to 1..min(MaxWaves, DeepestWaveReached).
+        /// <paramref name="countRun"/> ticks the realm's TotalRuns and defaults to true. It is
+        /// false only for a sim that is a local shadow of a run owned elsewhere: the run belongs
+        /// to the realm it is played in, and that realm's document is not on this machine. Every
+        /// other effect — the phase, the clamped start wave, the once-only latch — still
+        /// applies, because the shadow drives that machine's own phase and UI.</summary>
+        public void StartRun(int startWave = 1, bool countRun = true)
         {
             if (_runStarted)
             {
@@ -273,7 +278,7 @@ namespace GatekeepersProtocol.Sim
                 return;
             }
             _runStarted = true;
-            _meta.TotalRuns++;
+            if (countRun) _meta.TotalRuns++;
             _startWave = ClampStartWave(startWave);
             SetPhase(RunPhase.Docked);
         }

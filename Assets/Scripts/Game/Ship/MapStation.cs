@@ -88,6 +88,10 @@ namespace GatekeepersProtocol.Game
                 return base.ContentHash(m) * 397 ^ _startWave * 17 ^ (_embarking ? 1 : 0) ^ (_loadFailed ? 2 : 0)
                     ^ (_mapOpen ? 1 << 12 : 0) ^ (NetShipWait.IsActive ? 1 << 13 : 0)
                     ^ (ready << 14) ^ (counting << 15) ^ remain
+                    // A guest's panel now paints the HOST realm's cap and pot; neither is in
+                    // the base hash (that reads this machine's own save), so the panel would
+                    // hold a stale buy-back label without them here.
+                    ^ RealmRecordSource.Current().DeepestWave * 31 ^ RealmRecordSource.Banked().GetHashCode()
                     ^ WaitWindowHash();
             }
         }
@@ -101,7 +105,10 @@ namespace GatekeepersProtocol.Game
             _body.SetDestination($"Bastion {SceneFlow.BastionName}");
             _body.SetPremise(PremiseBrief);
 
-            int deepest = m.DeepestWaveReached < 1 ? 1 : m.DeepestWaveReached;
+            // The picker is capped by the realm being PLAYED, not by this machine's own
+            // realm — a guest's save has no say over how deep somebody else's bastion has
+            // been taken. RealmRecordSource already floors DeepestWave at 1.
+            int deepest = RealmRecordSource.Current().DeepestWave;
             if (deepest > WaveDirector.MaxWaves) deepest = WaveDirector.MaxWaves;
             if (_startWave < 1) _startWave = 1;
             if (_startWave > deepest) _startWave = deepest;
@@ -274,7 +281,9 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             long cost = HatchBank.BuyBackCost;
-            long banked = m != null ? m.BankedSalvage : 0L;
+            // The pot belongs to the realm being played, not to this machine's save — the
+            // same read ShipController's pause label makes (RealmRecordSource).
+            long banked = RealmRecordSource.Banked();
             string label = "BUY BACK (" + cost + ")";
             if (!HatchBank.IsBuyBackWindow(mode, assault))
                 label = "BUY BACK - no live window";

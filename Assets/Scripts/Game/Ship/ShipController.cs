@@ -80,6 +80,7 @@ namespace GatekeepersProtocol.Game
                                         GameSession.Meta.PodEjections + " run(s) lost, " +
                                         GameSession.Meta.CleanExits + " cleared");
             ShipHatchAssignment.Recompute("ship loaded");
+            RealmRecordPublisher.Publish("ship loaded");
         }
 
         void Update()
@@ -187,8 +188,10 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             long cost = HatchBank.BuyBackCost;
-            var meta = GameSession.Meta;
-            long banked = meta != null ? meta.BankedSalvage : 0L;
+            // Affordability is priced against the pot the buy-back actually spends from: on a
+            // guest that is the HOST realm's bank (the mirror carries it for the whole run),
+            // never the guest's own save, which it cannot spend from here.
+            long banked = RealmRecordSource.Banked();
             string label = "BUY BACK (" + cost + ")";
             if (!HatchBank.IsBuyBackWindow(mode, assault))
                 label = "BUY BACK - no live window";

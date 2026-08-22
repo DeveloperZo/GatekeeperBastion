@@ -180,7 +180,15 @@ namespace GatekeepersProtocol.Game
             if (_fpc == null)
                 _metaBindWindow = MetaBindWindowSeconds;
 
-            Sim.StartRun(startWave);
+            // A guest's sim is a local shadow of the host's run: it MUST still StartRun +
+            // EngageTether, because Tethered/Prep is what its own phase, HUD and Prep RPC path
+            // key on (GameController.Client.cs, TickClientPrepCommands). What it must not do is
+            // tick TotalRuns — that counter belongs to the realm being played, which is the
+            // host's, not the one in this machine's save.
+            bool clientOnly = _net != null && _net.IsClientOnly;
+            if (clientOnly)
+                Log.Event("Run", "guest run — this machine's realm run counter left alone");
+            Sim.StartRun(startWave, !clientOnly);
             Sim.EngageTether(); // → Tethered (Prep)
             if (Sim.StartWave > 1 && _layout != null && Meta != null)
                 _layout.RestoreCompletedTerminals(Meta.CompletedTerminalIds);
@@ -197,7 +205,7 @@ namespace GatekeepersProtocol.Game
             // written order from here on; its own Update yields.
             if (_spawner != null) _spawner.SetHosted(true);
 
-            if (_net != null && _net.IsClientOnly)
+            if (clientOnly)
                 return;
 
             // Stable fields after the prose. The sentence stays readable;

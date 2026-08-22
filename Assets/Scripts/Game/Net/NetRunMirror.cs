@@ -63,6 +63,14 @@ namespace GatekeepersProtocol.Game
         public NetworkVariable<int> HatchAssign = new NetworkVariable<int>(
             0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>Packed realm record (<see cref="RealmRecord"/> wire form) for the realm
+        /// the party is playing in. Written by <see cref="ServerSetRealmRecord"/> on Ship load
+        /// and at run end — never from LateUpdate, which is gated on the Bastion GameController
+        /// and no-ops on the Ship, where the record is read. 0 until the host first publishes,
+        /// which unpacks to a fresh realm rather than to a realm at wave zero.</summary>
+        public NetworkVariable<long> RealmRecordPacked = new NetworkVariable<long>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         public bool HasEnd => _hasEnd;
         public EndSummary LastEnd => _lastEnd;
         #endregion
@@ -149,6 +157,15 @@ namespace GatekeepersProtocol.Game
         {
             if (!IsServer || !IsSpawned) return;
             if (HatchAssign.Value != packed) HatchAssign.Value = packed;
+        }
+
+        /// <summary>Server: adopt the record of the realm being played, so every seat reads
+        /// the host's realm rather than the one in its own save.</summary>
+        public void ServerSetRealmRecord(RealmRecord record)
+        {
+            if (!IsServer || !IsSpawned) return;
+            long packed = record.Pack();
+            if (RealmRecordPacked.Value != packed) RealmRecordPacked.Value = packed;
         }
 
         /// <summary>Server: start a Party-scope demo line on every connected seat. The host

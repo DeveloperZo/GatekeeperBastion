@@ -81,6 +81,10 @@ namespace GatekeepersProtocol.Game
                     $"gross {r.grossEarned}, repair {r.repairSpent}, net {net}, banked now {Meta.BankedSalvage}");
             }
             GameSession.Save();
+            // A run end is the other moment the record moves (clean exit, lost run, a deeper
+            // wave). Push before the end screen so a guest's ship shows the realm it just
+            // played in, not the one in its own save. Host-only inside.
+            RealmRecordPublisher.Publish("run ended");
 
             if (_net != null && _net.Mirror != null)
                 _net.Mirror.ServerShowEnd(BuildEndSummary(phase, r, net));
