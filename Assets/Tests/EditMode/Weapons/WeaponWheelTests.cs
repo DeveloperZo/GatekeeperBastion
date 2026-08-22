@@ -145,6 +145,10 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
             Assert.AreEqual(0, loaded.PointOf(WeaponId.Mk1Sidearm, WheelAttr.FireRate));
             Assert.AreEqual(2, loaded.TierOf(WeaponId.Mk1Sidearm));
+            Assert.AreEqual(2, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Reload));
+            Assert.AreEqual(0, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
+            Assert.AreEqual(0, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Ability),
+                "neighbour +3 must not count as a centred buy");
         }
 
         [Test]
@@ -194,6 +198,41 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(4.04f, WeaponWheel.ClipMul(WeaponWheel.FocusAtMax), 0.05f);
             Assert.AreEqual(0.37f, WeaponWheel.ReloadMul(WeaponWheel.FocusAtMax), 0.02f);
             Assert.AreEqual(1.79f, WeaponWheel.FireRateMul(WeaponWheel.FocusAtMax), 0.02f);
+        }
+
+        [Test]
+        public void CostKeysOnCentredSpoke_NotDerivedTier()
+        {
+            var m = MetaState.CreateNew();
+            m.SetOwned(WeaponId.Mk1Sidearm, true);
+            m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Damage);
+
+            var slot = WeaponSlot.Secondary;
+            Assert.AreEqual(1, m.TierOf(WeaponId.Mk1Sidearm));
+            Assert.AreEqual(WeaponTier.Cost(slot, 1),
+                WeaponTier.Cost(slot, m.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Damage)));
+            Assert.AreEqual(WeaponTier.Cost(slot, 0),
+                WeaponTier.Cost(slot, m.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Reload)),
+                "a Damage centre must not raise Reload");
+            Assert.AreEqual(WeaponTier.Cost(slot, 0),
+                WeaponTier.Cost(slot, m.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Ability)),
+                "neighbour +3 must not raise Ability");
+            Assert.AreEqual(WeaponTier.Cost(slot, 0),
+                WeaponTier.CheapestSpokeCost(m, WeaponId.Mk1Sidearm));
+        }
+
+        [Test]
+        public void Prev12_TwoStackedCentres_OvercountsNeighbourFromPoints()
+        {
+            var m = MetaState.CreateNew();
+            m.SetOwned(WeaponId.Mk1Sidearm, true);
+            m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Reload);
+            m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Reload);
+            string json = m.ToJson().Replace("\"SaveVersion\":12", "\"SaveVersion\":11");
+            var loaded = MetaState.FromJson(json);
+            Assert.AreEqual(2, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Reload));
+            Assert.AreEqual(1, loaded.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Ability),
+                "pre-v12: neighbour 6 points / 5 = 1 fake centre");
         }
     }
 }

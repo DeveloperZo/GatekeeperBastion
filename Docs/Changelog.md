@@ -31,6 +31,26 @@ Last updated: 2026-08-21
   controller-less Animators on `Gen_*_WindowPiece` in `Bastion.unity` were
   removed. Criteria 1–3 are eyes-on in a Run.
 
+- 2026-08-20: **The offline EditMode gate runs again, and two things are blocking the
+  real one.** With Unity's TestRunner wedged, the whole EditMode suite was run through a
+  dotnet replication of `Tools/verify/run.sh` (mcs/mono are still absent): Sim against
+  `Shims.cs`, then `Game/Settings` + `Game/Demo` + every EditMode test minus run.sh's
+  EXCLUDED list, run with cwd at the repo root. **578 passed, 10 failed.** Eight are the
+  known set (`HudSeparation` ×2, `M59PolishChrome` ×5, `SessionMusicHost`); the other two
+  are in-flight work, not regressions: `TwoRunIsolationTests` now names
+  `MasterControl.HatchWaves` as static mutable state in `Sim/` — the `const` → `static int`
+  that `M80` made deliberately so tests could pin the multi-window machinery — and
+  `ViewModelAnimTests` wants `blendParameter: Speed` on a controller `M82` has not built yet.
+  **`Tools/verify/Shims.cs` gained `Assert.Contains`**, without which
+  `Meta/PrimaryDifferentiationTests` cannot compile offline at all — the same gap
+  `CollectionAssert.AreEqual` was added to close.
+  **Still owed, and not fixed here because it is a design call:**
+  `Settings/BuildSceneRegistrationTests.cs` needs `GatekeepersProtocol.EditorTools.SceneBuilder`,
+  which lives in the Editor assembly the harness does not compile, and it is **not** in the
+  EXCLUDED list — so `Tools/verify/run.sh` cannot compile as it stands. Either it earns an
+  EXCLUDED row, or `MergeBuildScenes` moves out of the Editor assembly so it really is
+  "testable without an editor" the way its own changelog entry claims.
+
 - 2026-08-20: **Enemy bodies actually scale now, and the finale elite towers.** Zo asked
   for enemies 25% smaller and the elite 50% bigger, because the boss did not read as a
   boss. The reason it did not is that **no kind's body has ever scaled**:

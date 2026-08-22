@@ -32,6 +32,10 @@ namespace GatekeepersProtocol.Sim
     ///       UpgradesUnlocked re-keys to it (was PodEjections >= 1 — a loss gate that never
     ///       fired for a player who banks and docks). Pre-v11 saves with PodEjections >= 1 or
     ///       CleanExits >= 1 migrate to 1 so the re-key cannot re-lock an open wheel.
+    ///  12 — WeaponWheelCentres: centred-purchase counts per weapon per spoke, same layout
+    ///       as WeaponWheelPoints. Wheel cost keys on the centred spoke, not derived Tier.
+    ///       Pre-v12 fills each cell as points / FocusAward (5) — exact after 0–1 purchases,
+    ///       and over-counts a neighbour after two stacked centres (6/5 = 1).
     /// Migration from earlier versions lives in <see cref="MetaState.FromJson"/> /
     /// <see cref="MetaState.FromSaveData"/>.
     /// </remarks>
@@ -39,7 +43,7 @@ namespace GatekeepersProtocol.Sim
     public class SaveData
     {
         /// <summary>Schema version written by the current build.</summary>
-        public const int CurrentVersion = 11;
+        public const int CurrentVersion = 12;
 
         public int SaveVersion = CurrentVersion;
         public long BankedSalvage;
@@ -113,6 +117,10 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>v4: weapon-major flat ArraySize×5 — index = weaponId * AttrCount + WheelAttr.</summary>
         public int[] WeaponWheelPoints;
+
+        /// <summary>v12: centred buys, same layout as WeaponWheelPoints. Cost of the next
+        /// purchase on a spoke reads this cell, not derived Tier.</summary>
+        public int[] WeaponWheelCentres;
 
         // ---- Legacy fields: parse-only so old saves migrate ----
         public int[] WeaponTiers;

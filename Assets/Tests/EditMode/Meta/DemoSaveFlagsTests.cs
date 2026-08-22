@@ -46,7 +46,7 @@ namespace GatekeepersProtocol.Tests
             m.SetZoneDeepest(2, 3);
 
             string json = m.ToJson();
-            Assert.IsTrue(json.Contains("\"SaveVersion\":11"), "v11 is the written schema");
+            Assert.IsTrue(json.Contains("\"SaveVersion\":12"), "v12 is the written schema");
 
             var back = MetaState.FromJson(json);
             Assert.IsTrue(back.DemoActive);

@@ -131,7 +131,7 @@ Arithmetic on the constants above, not measured. The Damage row in full: damage
 32 × 1.0456^5 = 39.99, clip `round(10 × 1.0283^3)` = 11, reload 2.4 × 0.98035^3 = 2.261,
 rate unchanged at 1.6, so 11 × 39.99 ÷ (11 ÷ 1.6 + 2.261) = 48.15. The old flat "~30% a
 step" holds as the best case only; the worst case is a sixth of it, for the same
-400–2,200 Salvage (`WeaponTier.Cost` = 400 + 200 × currentTier over currentTier 0..9,
+400–2,200 Salvage (`WeaponTier.Cost` = 400 + 200 × centredCount on that spoke over 0..9,
 `Sim/Meta/WeaponTier.cs`).
 
 **The loop does not close inside a Run.** Purchases happen only in the Ship scene, so R1

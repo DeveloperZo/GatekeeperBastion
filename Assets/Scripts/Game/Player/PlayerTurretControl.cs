@@ -75,15 +75,21 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
-        /// <summary>Where the turret goes: the first thing the Boarder is looking at within
-        /// reach, or a step in front of them when they are looking at open air.</summary>
+        /// <summary>How level a surface has to be to stand a turret on it. A raycast hits walls
+        /// and ceilings just as readily as floors, and a turret bolted to a wall face reads as
+        /// a bug rather than a placement.</summary>
+        const float MinFloorNormalY = 0.7f;
+
+        /// <summary>Where the turret goes: the floor the Boarder is looking at within reach, or
+        /// a step in front of them when they are looking at a wall or at open air.</summary>
         Vector3 PlacementPoint()
         {
             Transform eye = _fpc != null && _fpc.cameraTransform != null
                 ? _fpc.cameraTransform
                 : transform;
             RaycastHit hit;
-            if (Physics.Raycast(eye.position, eye.forward, out hit, PlaceReachMetres))
+            if (Physics.Raycast(eye.position, eye.forward, out hit, PlaceReachMetres)
+                && hit.normal.y >= MinFloorNormalY)
                 return hit.point;
             Vector3 fwd = transform.forward;
             fwd.y = 0f;

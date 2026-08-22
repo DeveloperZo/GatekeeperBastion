@@ -146,7 +146,7 @@ namespace GatekeepersProtocol.Game
                 return false;
             }
 
-            long price = WeaponTier.Cost(WeaponCatalog.Def(id).slot, tier);
+            long price = WeaponTier.Cost(WeaponCatalog.Def(id).slot, m.WheelCentresOf(id, centre));
             if (m.BankedSalvage < price)
             {
                 Log.Event("Ship",

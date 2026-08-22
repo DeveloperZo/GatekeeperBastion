@@ -33,6 +33,7 @@ namespace GatekeepersProtocol.Sim
             AppendField(sb, "EquippedEquipment", d.EquippedEquipment.ToString(CultureInfo.InvariantCulture), true);
             AppendBoolArray(sb, "WeaponsOwned", d.WeaponsOwned);
             AppendIntArray(sb, "WeaponWheelPoints", d.WeaponWheelPoints);
+            AppendIntArray(sb, "WeaponWheelCentres", d.WeaponWheelCentres);
             AppendField(sb, "EquippedPrimary", d.EquippedPrimary.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "EquippedSecondary", d.EquippedSecondary.ToString(CultureInfo.InvariantCulture), true);
             AppendField(sb, "EquippedDrone", d.EquippedDrone.ToString(CultureInfo.InvariantCulture), true);
@@ -129,6 +130,11 @@ namespace GatekeepersProtocol.Sim
                 {
                     d.WeaponWheelPoints = new int[WeaponCatalog.ArraySize * WeaponWheel.AttrCount];
                     ExtractIntArray(json, "WeaponWheelPoints", d.WeaponWheelPoints);
+                    if (json.IndexOf("\"WeaponWheelCentres\"", StringComparison.Ordinal) >= 0)
+                    {
+                        d.WeaponWheelCentres = new int[WeaponCatalog.ArraySize * WeaponWheel.AttrCount];
+                        ExtractIntArray(json, "WeaponWheelCentres", d.WeaponWheelCentres);
+                    }
                 }
                 else
                 {

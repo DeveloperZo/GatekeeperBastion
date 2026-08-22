@@ -212,7 +212,7 @@ it. Next lever after that is +1 Thief on that carry (`2-first-hatch-bank.md`).
 ## In-tree facts the beats assume
 
 Wave 1: 18 Defaults, HP mul 1.0. MK-1 damage **30**.
-Salvage 25/kill. Secondary wheel 150 then 300. Hatch-bank window 45 s, drip **8**/s.
+Salvage 25/kill. Secondary wheel 150 then 300 on the same spoke. Hatch-bank window 45 s, drip **8**/s.
 Slots 3. Player 100 HP. Swing 0.7 s. Hatch 300 HP.
 
 Kit graph: `bastion-defense-layout.txt` lines 6–8 and 70–73.

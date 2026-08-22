@@ -70,7 +70,7 @@ authored aim is **~500** banked (tunable, beat 2), which funds both buys
 | **Game** | `demo.mp_unlocked` · Lock · Local · Game. **The upgrade stays on the weapon in your hands. And the Ship answers hails now — friends can join you.** Once per save, on the first successful wheel buy. |
 | **Standing** | Spend Salvage at the ARMORY — unless the buy leaves no affordable upgrade (state key, step 3), then **EMBARK from the NAV MAP** |
 | **Log** | existing wheel success line + `demoBuysLeft=1` then `[Demo] multiplayer unlocked` |
-| **Have** | `BuyWheelUpgrade` gate chain (owned → ring → `UpgradesUnlocked` → tier < 10 → bank); success awards centre +5, neighbours +3, Save. Costs `150 + 150×tier`. |
+| **Have** | `BuyWheelUpgrade` gate chain (owned → ring → `UpgradesUnlocked` → tier < 10 → bank); success awards centre +5, neighbours +3, Save. Costs `150 + 150×centres` on that spoke. A second buy on a different spoke stays 150. |
 | **Build** | `DemoWheelBuysLeft` decrement (v9). F10/F11 + lobby gate reads `DemoWheelBuysLeft < 2 || !DemoActive` — no new flag. The line + log. |
 
 ### 3 — Second buy; the cap and the exit standing
@@ -111,7 +111,7 @@ chain. This file specifies ARMORY only.
 | ARMORY powered | yes (after beat 0) | `DemoArmoryPowered` from the ship terminal | Have |
 | Wheel unlock on first loss | yes | `UpgradesUnlocked` (`PodEjections >= 1`) | Have — also the panel-vs-grant switch |
 | `BuyWheelUpgrade` gates + logs | yes | `ShipCommands` | Have |
-| Wheel award / costs | yes | centre +5, neighbours +3; 150 / 300 | Have |
+| Wheel award / costs | yes | centre +5, neighbours +3; 150 then 300 on the same spoke | Have |
 | Wheel lock copy | yes | `LOCKED — survive a death first` | Have (survive branch) |
 | SEC-D free row | yes | `BuyWeapon`, cost 0 | Have |
 | CREW heal-on-interact / FAB dark | spec | beat 0 gates | Have (built in beat 0's milestone) |
@@ -159,17 +159,18 @@ Nothing.
 | Name | Value | Source |
 |---|---|---|
 | Banked at this Docked (authored aim) | **~500**, tunable | Zo, 2026-08-17 (beat 2 overwhelm aim) |
-| Buy 1 / Buy 2 | 150 / 300 | `WeaponTier.Cost(Secondary, 0/1)` |
+| Buy 1 / Buy 2 (same spoke) | 150 / 300 | `WeaponTier.Cost(Secondary, 0/1)` |
+| Buy 2 (different spoke) | 150 | own centre count stays 0 |
 | MaxTier | 10 | live wheel; gated to 2 buys |
 | Wheel award | +5 centre, +3 neighbours | `MetaState.AwardWheel` |
 | Multiplayer unlock | first successful wheel buy | this spec |
 | Ladder rung 2 | Primary + 2 upgrades granted at loss 2, **outside** the 2-buy count | Zo, 2026-08-17 — another editor's beat |
 
-At the ~500 aim both buys land and a third click meets the cap refuse. If the
-tune lands short (e.g. banked 300): first buy lands (and unlocks multiplayer),
-the second shows the existing salvage-short refuse — and the exit standing
-still flips, because it is state-keyed on no-buyable-remaining, not on the cap
-refuse. Do not gift Salvage.
+At the ~500 aim both buys land (same-spoke 150+300, or a different spoke at 150) and a
+third click meets the cap refuse. If the tune lands short (e.g. banked 300): first buy
+lands (and unlocks multiplayer); a second click on the same spoke is salvage-short, a
+second click on another spoke lands. The exit standing flips when nothing remaining is
+affordable, not on the cap refuse. Do not gift Salvage.
 
 ## Multiplayer
 

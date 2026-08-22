@@ -43,7 +43,8 @@ Two jobs, and they are different jobs.
 ### Tiering it
 
 The MK-1 has an upgrade ring (strength Reload, weakness Damage). Purchases cost
-150 + 150 × current tier on the Secondary curve, and unlock after the first lost Run.
+150 + 150 × times you have centred that spoke on the Secondary curve, and unlock after
+the first lost Run.
 
 ## See also
 

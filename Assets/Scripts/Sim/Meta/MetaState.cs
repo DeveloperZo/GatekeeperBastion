@@ -160,6 +160,7 @@ namespace GatekeepersProtocol.Sim
         bool[] _weaponsOwned;
         /// <summary>Flat ArraySize×5: index = weaponId * AttrCount + (int)WheelAttr.</summary>
         int[] _wheelPoints;
+        int[] _wheelCentres;
         public WeaponId EquippedPrimary = WeaponId.None;
         public WeaponId EquippedSecondary = WeaponId.None;
 
@@ -292,6 +293,18 @@ namespace GatekeepersProtocol.Sim
             return _wheelPoints[i * WeaponWheel.AttrCount + (int)attr];
         }
 
+        /// <summary>How many purchases have been centred on this spoke. Neighbour spill
+        /// does not increment it. Next-buy cost is <see cref="WeaponTier.Cost(WeaponSlot,int)"/>
+        /// of this count.</summary>
+        public int WheelCentresOf(WeaponId id, WheelAttr attr)
+        {
+            if (id == WeaponId.None) return 0;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= WeaponCatalog.ArraySize) return 0;
+            return _wheelCentres[i * WeaponWheel.AttrCount + (int)attr];
+        }
+
         public void CopyPointsInto(WeaponId id, int[] dest)
         {
             if (dest == null || dest.Length != WeaponWheel.AttrCount)
@@ -316,6 +329,9 @@ namespace GatekeepersProtocol.Sim
             var scratch = PointsOf(id);
             WeaponWheel.Award(scratch, ring, centre);
             WritePoints(id, scratch);
+            int i = (int)id;
+            if (i >= 0 && i < WeaponCatalog.ArraySize)
+                _wheelCentres[i * WeaponWheel.AttrCount + (int)centre]++;
         }
 
         /// <summary>Dev / migration: replace counters with the flat-tier migration shape.
@@ -327,6 +343,7 @@ namespace GatekeepersProtocol.Sim
             var pts = new int[WeaponWheel.AttrCount];
             WeaponWheel.DistributeFlatTier(pts, tier);
             WritePoints(id, pts);
+            FillCentresFromPoints(id);
         }
 
         void WritePoints(WeaponId id, int[] pts)
@@ -336,6 +353,27 @@ namespace GatekeepersProtocol.Sim
             int baseIdx = i * WeaponWheel.AttrCount;
             for (int a = 0; a < WeaponWheel.AttrCount; a++)
                 _wheelPoints[baseIdx + a] = pts[a];
+        }
+
+        /// <summary>Pre-v12 / flat-tier: centre count = floor(points / FocusAward). Exact
+        /// after one centred buy (5/5, neighbours 3/5 = 0); a neighbour at 6 points
+        /// after two stacked centres reads as 1.</summary>
+        void FillCentresFromPoints(WeaponId id)
+        {
+            if (id == WeaponId.None) return;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= WeaponCatalog.ArraySize) return;
+            int baseIdx = i * WeaponWheel.AttrCount;
+            for (int a = 0; a < WeaponWheel.AttrCount; a++)
+                _wheelCentres[baseIdx + a] = _wheelPoints[baseIdx + a] / WeaponWheel.FocusAward;
+        }
+
+        void FillAllCentresFromPoints()
+        {
+            EnsureArrays();
+            for (int w = 0; w < WeaponCatalog.ArraySize; w++)
+                FillCentresFromPoints((WeaponId)w);
         }
 
         public WeaponId Equipped(WeaponSlot slot)
@@ -453,6 +491,13 @@ namespace GatekeepersProtocol.Sim
                     Array.Copy(_wheelPoints, next, Math.Min(_wheelPoints.Length, next.Length));
                 _wheelPoints = next;
             }
+            if (_wheelCentres == null || _wheelCentres.Length != need)
+            {
+                var next = new int[need];
+                if (_wheelCentres != null)
+                    Array.Copy(_wheelCentres, next, Math.Min(_wheelCentres.Length, next.Length));
+                _wheelCentres = next;
+            }
         }
 
         public SaveData ToSaveData()
@@ -476,6 +521,7 @@ namespace GatekeepersProtocol.Sim
             d.EquippedEquipment = (int)EquippedEquipment;
             d.WeaponsOwned = (bool[])_weaponsOwned.Clone();
             d.WeaponWheelPoints = (int[])_wheelPoints.Clone();
+            d.WeaponWheelCentres = (int[])_wheelCentres.Clone();
             d.WeaponTiers = null;
             d.RepairRigLevel = 0;
             d.EngineeringLevel = 0;
@@ -545,6 +591,15 @@ namespace GatekeepersProtocol.Sim
                 {
                     Array.Copy(d.WeaponWheelPoints, m._wheelPoints,
                         Math.Min(d.WeaponWheelPoints.Length, m._wheelPoints.Length));
+                    if (d.SaveVersion >= 12 && d.WeaponWheelCentres != null)
+                    {
+                        Array.Copy(d.WeaponWheelCentres, m._wheelCentres,
+                            Math.Min(d.WeaponWheelCentres.Length, m._wheelCentres.Length));
+                    }
+                    else
+                    {
+                        m.FillAllCentresFromPoints();
+                    }
                 }
                 else if (d.WeaponTiers != null)
                 {
