@@ -1,0 +1,25 @@
+{
+  "files.exclude": {
+    "**/*.csproj": true,
+    "**/*.sln": true,
+    "**/*.slnx": true,
+    "**/Library": true,
+    "**/Logs": true,
+    "**/Temp": true,
+    "**/Obj": true,
+    "**/UserSettings": true,
+    "**/Recordings": true,
+    "**/_to_delete": true,
+    "**/_backup": true,
+    "**/_upm_tmp": true,
+    "gkb_*": true
+  },
+  "search.exclude": {
+    "**/Library": true,
+    "**/Logs": true,
+    "**/Temp": true,
+    "**/*.csproj": true,
+    "**/*.sln": true,
+    "**/*.slnx": true
+  }
+}

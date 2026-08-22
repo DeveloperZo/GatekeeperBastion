@@ -11,7 +11,6 @@ Recordings/
 
 # IDE / editor
 .vs/
-.vscode/
 .idea/
 .consulo/
 *.csproj
@@ -30,6 +29,11 @@ Recordings/
 *.VC.db
 ExportedObj/
 .gradle/
+
+# VS Code / Cursor: share only the files.exclude that keeps the root readable.
+# Unity regenerates *.csproj / *.slnx at the project root on open; they are not source.
+.vscode/*
+!.vscode/settings.json
 
 # Cursor — rules are shared, local CLI state is not.
 .cursor/cli.json

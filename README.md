@@ -40,3 +40,12 @@ and fully covered there. PlayMode tests cover scene contracts and the core loop.
 Menu **GatekeepersProtocol > Validate > Integration Check** runs both and writes
 `gkb_verify_report.json` at the project root (gitignored session output). Logs:
 see [`Docs/Working-Rules.md`](Docs/Working-Rules.md) § Evidence.
+
+## Repository root
+
+Tracked at the root: `README.md`, `AGENTS.md`, `CLAUDE.md`, `.gitignore`,
+`.gitattributes`, `.vsconfig`. Everything else lives under a folder. Unity will
+regenerate `*.csproj` / `*.slnx` here when the editor opens — they are gitignored
+and hidden in Cursor (`.cursorignore` / `.vscode/settings.json`); delete them anytime.
+The windowed-escape template is [`Tools/release/run-windowed.bat`](Tools/release/run-windowed.bat)
+(ship a copy beside the player exe).

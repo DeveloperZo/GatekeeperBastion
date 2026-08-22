@@ -324,6 +324,12 @@ spent on the wrong cause.
 in a milestone. The session log under `Logs/` is the record. One-shot handoffs land in
 `_to_delete/` or `Assets/_Scratch/`, never as permanent root folders.
 
+**Root stays folders + a handful of contract files.** Tracked at the top level:
+`README.md`, `AGENTS.md`, `CLAUDE.md`, `.gitignore`, `.gitattributes`, `.vsconfig`.
+Unity regenerates `*.csproj` / `*.slnx` at the root on open — gitignored, hidden in
+the editor tree, safe to delete. Do not commit them. The player escape hatch template is
+`Tools/release/run-windowed.bat`.
+
 ## Verification
 
 Three paths, in increasing cost:

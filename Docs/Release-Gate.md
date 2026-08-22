@@ -26,7 +26,7 @@ Human items: eyes and a second machine. Send copy: `Release-Send.md`.
 | 14 | red | Esc → Quit from every scene | Friend trapped mid-fight with no exit | human |
 | 15 | red | Failed join: reason + timeout ≤ 10 s | Spinner forever; evening spent guessing | human |
 | 16 | red | Audio on another machine, including device change after launch | Silent build; no way to know fight SFX landed | human |
-| 17 | red | `run-windowed.bat` beside the exe | No escape hatch for bad display/GPU | human (file ships; machine can prove template exists) |
+| 17 | red | `Tools/release/run-windowed.bat` ships beside the exe | No escape hatch for bad display/GPU | human (template in repo; machine can prove file exists) |
 | 18 | red | Dual-box chrome: normal window (no `-popupwindow`) | Eyes-on session has no title bar / min-max | human |
 | 19 | red | Host and Join: shared Ship; party lead EMBARK | No co-presence; guest local embark; hang | human |
 | 20 | red | ARMORY change on that Ship is the gun in Bastion (both seats) | Wrong loadout; CREW/FAB feel broken | human |

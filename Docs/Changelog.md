@@ -8,6 +8,12 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-22
 -->
 
+- 2026-08-22: **Root is folders + contract files.** Deleted regenerated `*.csproj` /
+  `*.slnx` from disk; untracked `Gatekeepers Protocol.slnx`. `run-windowed.bat` moved to
+  `Tools/release/` (release-gate + Release docs updated). `.cursorignore` and shared
+  `.vscode/settings.json` hide Unity project files when they reappear. Tracked root is
+  `README` / `AGENTS` / `CLAUDE` / git metadata / `.vsconfig` only.
+
 - 2026-08-22: **Root tidy.** Untracked session litter deleted (`gkb_*` logs/reports,
   M35 batch logs). Tracked root videos and `gkb_wp3_handback.md` removed from git
   (videos parked under gitignored `Recordings/`). Discarded `_m61_2_handoff/`,

@@ -14,4 +14,5 @@ If something breaks, send a short note of what you did and attach:
 
 `%USERPROFILE%\AppData\LocalLow\Gatekeeper\Gatekeeper's Protocol\Player.log`
 
-Stuck on a black screen or wrong monitor: run `run-windowed.bat` in the same folder as the exe.
+Stuck on a black screen or wrong monitor: run `run-windowed.bat` in the same folder as the exe
+(template: `Tools/release/run-windowed.bat` in the repo).

@@ -137,9 +137,9 @@ else
   NOTES+=("editorVersion=${editor_ver} — confirm patched for CVE-2025-59489 (human item 4)")
 fi
 
-# --- optional: run-windowed template at repo root ---
-if [[ ! -f "$ROOT/run-windowed.bat" ]]; then
-  NOTES+=("run-windowed.bat missing at repo root (must ship beside exe — human item 17)" )
+# --- optional: run-windowed template (ships beside the exe; lives under Tools/) ---
+if [[ ! -f "$ROOT/Tools/release/run-windowed.bat" ]]; then
+  NOTES+=("Tools/release/run-windowed.bat missing (must ship beside exe — human item 17)" )
 fi
 
 # --- report ---

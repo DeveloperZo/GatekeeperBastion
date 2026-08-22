@@ -235,12 +235,30 @@ namespace GatekeepersProtocol.Game
             }
 
             Vector3 at = GroupSlot(point.position, index, groupCount);
+            float multiplier = spec.enemyHealthMultiplier > 0f ? spec.enemyHealthMultiplier : 1f;
+            if (CreateActor(kind, stats, prefab, at, point.rotation, multiplier, isElite) == null)
+                return false;
+
+            emit.Spawned++;
+            return true;
+        }
+
+        /// <summary>Instantiate one configured actor and take ownership of it. Extracted from
+        /// <see cref="SpawnOne"/> so the practice range can put the SAME actor on its lane —
+        /// same prefab, same stats push, same spawn ledger, same death routing. A range that
+        /// spawned its own flavour of Gatekeeper would not be measuring the game
+        /// (Docs/Milestones — a range you can fight in, "Do not build").
+        ///
+        /// <paramref name="at"/> is navmesh height; the vertical lift is applied here.</summary>
+        EnemyGatekeeper CreateActor(GatekeeperKind kind, GatekeeperStats stats, GameObject prefab,
+            Vector3 at, Quaternion rotation, float healthMultiplier, bool isElite)
+        {
             // The agent's baseOffset lifts the transform on its FIRST update, so instantiating at
             // navmesh height buries the body and pops it up a metre on frame one (1.0 Default,
             // 0.85 Hunter, 1.4 Thief — same class as the Ship's bed pose, 2026-08-18 defect).
             // Spawn at the height the agent is going to hold anyway.
             Vector3 spawnAt = at + Vector3.up * PrefabBaseOffset(prefab);
-            GameObject enemy = Instantiate(prefab, spawnAt, point.rotation);
+            GameObject enemy = Instantiate(prefab, spawnAt, rotation);
             if (isElite) GrowEliteBody(enemy);
             var damageable = enemy.GetComponent<Damageable>();
             if (damageable != null)
@@ -248,7 +266,7 @@ namespace GatekeepersProtocol.Game
                 // Absolute, not relative: scaling whatever the prefab happened to carry made the
                 // tuned baseline depend on a serialized asset that can drift (and a re-scaled
                 // pooled instance would compound). The kind's own maxHp is the one source.
-                float multiplier = spec.enemyHealthMultiplier > 0f ? spec.enemyHealthMultiplier : 1f;
+                float multiplier = healthMultiplier > 0f ? healthMultiplier : 1f;
                 damageable.SetMaxHp(Mathf.Max(1f, stats.maxHp) * multiplier);
             }
 
@@ -259,7 +277,8 @@ namespace GatekeepersProtocol.Game
                 // state (RunIsOver, Decoys) from it, never from a global — and so does this
                 // spawner, the one owner of the actor's destroy (Despawn).
                 gatekeeper.Configure(stats, _game, this);
-                gatekeeper.SpawnId = _game.Run.TakeSpawnId();
+                if (_game != null && _game.Run != null)
+                    gatekeeper.SpawnId = _game.Run.TakeSpawnId();
                 gatekeeper.SpawnedAt = spawnAt;
                 _live.Add(gatekeeper); // spawn ledger: removed by Despawn; swept on teardown
             }
@@ -274,7 +293,6 @@ namespace GatekeepersProtocol.Game
             }
 
             AliveCount++;
-            emit.Spawned++;
 
             // The listener captures ITS gatekeeper's KIND and ACTOR so the kill line can name
             // what died (and its spawn id). Ledger removal is Despawn's job — the actor's own
@@ -288,7 +306,7 @@ namespace GatekeepersProtocol.Game
                 EnemyGatekeeper actor = gatekeeper;
                 damageable.onDeath.AddListener(() => OnGatekeeperDied(died, body, actor));
             }
-            return true;
+            return gatekeeper;
         }
 
         /// <summary>Where slot <paramref name="index"/> of a group stands. Slot 0 takes the breach
