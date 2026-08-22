@@ -72,6 +72,7 @@ namespace GatekeepersProtocol.Game
         /// waves. Allocates nothing: all state lives on the WaveEmit entries in _active.</summary>
         public void TickDelivery(float dt)
         {
+            TickCorpses(dt);
             if (_teardown) return; // latched: delivery never advances again
             for (int i = 0; i < _active.Count; i++)
             {

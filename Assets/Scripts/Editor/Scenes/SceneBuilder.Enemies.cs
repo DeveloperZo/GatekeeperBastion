@@ -67,6 +67,7 @@ namespace GatekeepersProtocol.EditorTools
         const string ClipRun = "Assets/Packs/Boarder/Anim_PlayerRun.fbx";
         const string ClipAttack = GatekeeperPackDir + "/Animations/Anim_attack_melee.fbx";
         const string ClipFlinch = GatekeeperPackDir + "/Animations/Anim_flinch.anim";
+        const string ClipDeath = GatekeeperPackDir + "/Animations/Anim_death_falling_back.fbx";
         const string UpperBodyMaskPath = GatekeeperPackDir + "/UpperBody.mask";
 
         /// <summary>The three gatekeeper prefabs, wired into the WaveSpawner as a set.</summary>
@@ -484,8 +485,10 @@ namespace GatekeepersProtocol.EditorTools
             var existing = AssetDatabase.LoadAssetAtPath<AnimatorController>(GatekeeperControllerPath);
             if (existing != null)
             {
-                // Returning the existing asset used to skip the HitReact layer.
-                if (EnsureHitReactLayer(existing))
+                // Returning the existing asset used to skip the HitReact layer and the Death state.
+                bool dirty = EnsureHitReactLayer(existing);
+                if (EnsureDeathState(existing)) dirty = true;
+                if (dirty)
                 {
                     EditorUtility.SetDirty(existing);
                     AssetDatabase.SaveAssets();
@@ -547,6 +550,7 @@ namespace GatekeepersProtocol.EditorTools
             back.duration = 0.08f;
 
             EnsureHitReactLayer(controller);
+            EnsureDeathState(controller);
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             return controller;
@@ -674,6 +678,55 @@ namespace GatekeepersProtocol.EditorTools
             back.exitTime = 0.85f;
             back.duration = 0.08f;
 
+            EditorUtility.SetDirty(controller);
+            return true;
+        }
+
+        /// <summary>Returns true when the Die parameter or Death state was added.
+        /// No-op when both are already present, so a later Build All does not dirty the asset.</summary>
+        static bool EnsureDeathState(AnimatorController controller)
+        {
+            if (controller == null) return false;
+
+            bool dirty = false;
+            bool hasDie = false;
+            AnimatorControllerParameter[] parms = controller.parameters;
+            for (int i = 0; i < parms.Length; i++)
+            {
+                if (parms[i].name == "Die")
+                {
+                    hasDie = true;
+                    break;
+                }
+            }
+            if (!hasDie)
+            {
+                controller.AddParameter("Die", AnimatorControllerParameterType.Trigger);
+                dirty = true;
+            }
+
+            AnimatorStateMachine sm = controller.layers[0].stateMachine;
+            ChildAnimatorState[] children = sm.states;
+            for (int i = 0; i < children.Length; i++)
+            {
+                if (children[i].state != null && children[i].state.name == "Death")
+                    return dirty;
+            }
+
+            AnimationClip clip = LoadHumanClip(ClipDeath);
+            if (clip == null)
+            {
+                Debug.LogError("[SceneBuilder] " + ClipDeath + " missing clip — Death state skipped.");
+                return dirty;
+            }
+
+            AnimatorState death = sm.AddState("Death");
+            death.motion = clip;
+            AnimatorStateTransition toDeath = sm.AddAnyStateTransition(death);
+            toDeath.AddCondition(AnimatorConditionMode.If, 0f, "Die");
+            toDeath.hasExitTime = false;
+            toDeath.duration = 0.05f;
+            toDeath.canTransitionToSelf = false;
             EditorUtility.SetDirty(controller);
             return true;
         }

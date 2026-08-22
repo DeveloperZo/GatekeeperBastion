@@ -8,6 +8,11 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-22
 -->
 
+- 2026-08-22: **`M85` closed — the collapse under the burst.** Death clip,
+  deferred destroy tail, collider disable, and `PlayDeathRpc` on disk.
+  `DeathCollapseTests` is the close gate. Eyes-on 1/3/4 wait on `M99`.
+  Built from planned without taking an active slot (queue was 3/3).
+
 - 2026-08-22: **`M100` written, and `M98` corrected.** The realm-lock entry in
   `Brainstorms/realms.md` graduates to `M100` — the realm document keyed to its owner's
   ID, an access list held on both sides, and a single-writer lock whose holder hosts;

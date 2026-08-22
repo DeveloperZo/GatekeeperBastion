@@ -1,9 +1,9 @@
 Source: Mixamo — unrecorded
-Slot: Gatekeepers / Death (M85) — spare, imported for later variation
+Slot: Gatekeepers / Death (M85) — wired
 In Place: unrecorded
 Attitude - unrecorded
 Speed - unrecorded
 Overdrive - unrecorded
 Character arm-space - unrecorded
 Trim: unrecorded
-Note: one of three death candidates; which one is wired is M85's call.
+Note: the death clip M85 wired into Gatekeeper.controller. `_forward` and `_twist` stay imported as spares.

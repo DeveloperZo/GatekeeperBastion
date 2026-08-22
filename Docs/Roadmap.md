@@ -149,7 +149,7 @@ this table — see the change log.
 | M82 | The weapon in your hands | active | Shared viewmodel controller + four hand-keyed clips (idle/move/fire/reload) for all six weapons; reload speed-scales to each weapon's duration; four controller-less window Animators in Bastion.unity removed. Started 2026-08-20 | [`2. active/M82`](Milestones/2.%20active/M82-the-weapon-in-your-hands.md) |
 | M83 | Crewmates fire on camera | later | Replicate fire/reload to non-owner avatars via the existing ClientRpc pattern — drives Boarder.controller's wired-but-unreachable Fire/Reload states; code only, clips already exist | [`1. planned/M83`](Milestones/1.%20planned/M83-crewmates-fire-on-camera.md) |
 | M84 | Gatekeepers flinch when shot | active (built 2026-08-21) | One 0.25s muscle flinch on a masked additive HitReact layer from `Damaged`; criterion 5 on disk; playthrough 1–4 owed | [`2. active/M84`](Milestones/2.%20active/M84-gatekeepers-flinch-when-shot.md) |
-| M85 | The collapse under the burst | later | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail, so a corpse never delays a wave clear; co-op carrier named as the open question | [`1. planned/M85`](Milestones/1.%20planned/M85-the-collapse-under-the-burst.md) |
+| M85 | The collapse under the burst | completed, Aug 2026 | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail; `PlayDeathRpc` is the co-op carrier. Disk/harness closed 2026-08-22; eyes-on 1/3/4 wait on `M99` | [`3. completed/M85`](Milestones/3.%20completed/M85-the-collapse-under-the-burst.md) |
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
 | M87 | A bought body in an hour | completed, Aug 2026 | Utility Bot on the pack's Built-In Shader Graph in the Ship; graduation test passed 2026-08-18; Zo close 2026-08-19 (criterion 6 elapsed time unrecorded) | [`3. completed/M87`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md) |
 | M88 | The Gatekeepers are machines | completed, Aug 2026 | One FaxLab3D robot per Gatekeeper kind — silhouette tells the kind, on the pack's Built-In Shader Graph. Zo close 2026-08-19 | [`3. completed/M88`](Milestones/3.%20completed/M88-the-gatekeepers-are-machines.md) |
@@ -166,8 +166,8 @@ this table — see the change log.
 
 **Three phases, in order** (Zo, 2026-08-21). Everything below is read against these.
 
-1. **Finish and polish the solo demo.** `M82`, `M93`, `M84`, `M85`, `M66`, and the
-   garrison content in `M63` / `M63-3`.
+1. **Finish and polish the solo demo.** `M82`, `M93`, `M84`, `M66`, and the
+   garrison content in `M63` / `M63-3`. (`M85` closed on disk 2026-08-22; eyes-on waits on `M99`.)
 2. **Build out the co-op demo.** `M83`, `M86`, `M94`, `M95`, `M98`.
 3. **Ship / Realm / Safehouse.** `M97`, and `M100`, which is the realm-lock entry
    graduated out of `Brainstorms/realms.md` on 2026-08-22. (`M96` closed 2026-08-22.)
@@ -176,7 +176,8 @@ Three things sit across that order rather than inside it:
 
 - **`M99` is upstream of phase 1 and is queued last.** It depends on nothing and it is how
   `M82`, `M93`, `M84` and `M85` get verified without a Run each. Ordered where it is, phase
-  1 pays the three-Run toll on every weapon question it asks.
+  1 pays the three-Run toll on every weapon question it asks. `M85` disk/harness closed
+  2026-08-22; the play stamp still waits here.
 - **`M82` is load-bearing across phases 1 and 2.** `M83` reads it three times over —
   crewmates firing on camera is the same animator work. It is the one phase-1 file whose
   slip moves phase 2.
