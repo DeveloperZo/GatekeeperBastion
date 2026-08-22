@@ -218,6 +218,7 @@ namespace GatekeepersProtocol.PlayTests
             // opened, and the drip has been converting out of this pile ever since, so
             // comparing across all of that measures the drip rather than the buy-back.
             long unbankedBeforeRejoin = _gc.Sim.UnbankedOf(serverAvatar.Slot.Value);
+            long potBeforeRejoin = GameSession.Meta.BankedSalvage;
 
             LogAssert.Expect(LogType.Log,
                 "[Demo] buyback seat=" + serverAvatar.Slot.Value + " cost=" + HatchBank.BuyBackCost);
@@ -235,8 +236,16 @@ namespace GatekeepersProtocol.PlayTests
                 "buy-back is paid by the realm, never out of the field pile");
             Assert.GreaterOrEqual(guestUnbanked, _gc.Sim.UnbankedOf(serverAvatar.Slot.Value),
                 "and the pile only ever goes down, by conversion");
-            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage,
-                "the realm's pot paid for the rejoin");
+            // The pot is moving in both directions here: the rejoin takes BuyBackCost out of
+            // it, and the drip keeps putting conversions in. So the exact figure afterwards is
+            // not a fixed number — what is fixed is that the cost came out. Whatever sits above
+            // the floor of (before - cost) is drip, and it cannot be negative without the pot
+            // having paid more than it owed.
+            long dripAdded = GameSession.Meta.BankedSalvage - (potBeforeRejoin - HatchBank.BuyBackCost);
+            Assert.GreaterOrEqual(dripAdded, 0L,
+                "the realm's pot cannot have paid more than the rejoin cost");
+            Assert.Less(dripAdded, HatchBank.BuyBackCost,
+                "the realm's pot paid for the rejoin — what is left of it is conversion");
 
             GameSession.Meta.BankedSalvage = bankSnap;
         }
