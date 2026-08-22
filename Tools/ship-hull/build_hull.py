@@ -323,7 +323,7 @@ for deck, y, k, px, pz, yaw, ix, iz in perimeter:
 # ---- spine corridor ------------------------------------------------------------
 # port line uses W pieces, starboard line uses E pieces, so the 2.5 m clear width is kept
 SPINE_Z = [(iz, ROWS[iz]) for iz in sorted(ROWS)]
-DOOR_ROWS = {2: 1, 4: 1, 7: 1, 10: 1}
+DOOR_ROWS = {1: 1, 3: 1, 4: 1, 8: 1, 11: 1}
 for iz, (a, b) in SPINE_Z:
     for deck, y in DECK_Y.items():
         if deck == 2 and any((ix, iz) in VOID for ix in range(a, b + 1)):
@@ -483,6 +483,37 @@ for sname, mguid in STATION_MAT.items():
                     '- {fileID: 2100000, guid: %s, type: 2}' % mguid, 1)
                 painted += 1
 print("  station colour painted on %d console screens" % painted)
+
+
+# ---- transverse partitions: rooms, not one 60 m strip ---------------------------
+# A partition has to run from the hull to the spine wall, which is 8.75 m - not a
+# multiple of the 5 m panel. It is closed with one full panel plus one scaled 0.75
+# in X. Scaling a plain panel horizontally is safe: unlike the vertical scaling
+# rejected above, there is no door aperture in it to distort, and the kit's
+# flat-colour atlas has no horizontal detail to smear.
+PARTITIONS = {1: [10.0, 20.0, 25.0, 35.0, 50.0], 2: [10.0, 50.0]}
+FILL = 3.75 / 5.0
+
+parts = 0
+for deck, lines in PARTITIONS.items():
+    y = DECK_Y[deck]
+    cs = D1 if deck == 1 else D2
+    for L in lines:
+        iz_s, iz_n = int(L / 5) - 1, int(L / 5)
+        for px, sx_, lo, hi in ((-5.0, 1.0, -10.0, -5.0), (-1.25, FILL, -5.0, -1.25),
+                                (5.0, FILL, 1.25, 5.0), (10.0, 1.0, 5.0, 10.0)):
+            mid = (lo + hi) / 2.0
+            ixm = int(math.floor(mid / 5.0))
+            if (ixm, iz_s) not in cs or (ixm, iz_n) not in cs:
+                continue                      # no room either side of this stretch
+            if deck == 1 and abs(L - 25.0) < 0.01 and px == -1.25:
+                continue                      # the stair foot rises through this bay
+            obj('Part%d_%d_%d' % (deck, int(L * 10), int(px * 10)), DRESS,
+                (px, y, L), 0.0, (sx_, 1, 1), mesh=MESH['Wall'])
+            gbox('GPart%d_%d_%d' % (deck, int(L * 10), int(px * 10)),
+                 (mid, y + 2, L + 0.25), (hi - lo, 4, 0.5))
+            parts += 1
+print("  transverse partitions: %d panels" % parts)
 
 print("deck 1 cells %d, deck 2 cells %d, total %d" % (len(D1), len(D2), len(D1) + len(D2)))
 print("emitted %d objects" % (len(KIDS.get(ENV, [])) + len(KIDS.get(DRESS, []))))
