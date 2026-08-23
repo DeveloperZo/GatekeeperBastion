@@ -109,6 +109,7 @@ namespace GatekeepersProtocol.EditorTools
                 if (!MeasureLane(hall)) return;
                 Transform marksRoot = PlaceMarks(env.transform);
                 PlaceFiringLine();
+                StripCombatHud();
                 EnsureLevelMusic();
                 EnsureRangeRoot(marksRoot);
 
@@ -311,6 +312,61 @@ namespace GatekeepersProtocol.EditorTools
             rules.Bind(game);
             console.Bind(game, rules, marks);
             readout.Bind(game, rules, BuildReadoutText(root.transform));
+        }
+
+        /// <summary>Everything on the Bastion HUD that a lane has no answer for. The copy
+        /// arrives with the full combat readout — waves, hatch integrity, banked salvage,
+        /// intensity, the PREP drawer — none of which the range ever changes, all of it drawn
+        /// over the readout that matters. They are DEACTIVATED rather than deleted: HudController
+        /// holds serialized references to them, and a null reference would be a worse problem
+        /// than a hidden object.</summary>
+        static readonly string[] CombatHudToHide =
+        {
+            "Hud Score",      // wave counter and salvage — no waves, no economy
+            "Hud Hatch",      // hatch integrity — there is no hatch to hold
+            "Hatch Alarm",
+            "Hud Drawer Left", "Hud Drawer Right",   // the PREP panel
+            "Emergency", "Arriving", "End Screen",
+            "Demo Voice",
+            "Hud Msg Player", "Hud Msg General",
+            "Hud Profile",    // the Boarder chip, which sat on top of the range readout
+        };
+
+        static void StripCombatHud()
+        {
+            // GameObject.Find only sees ACTIVE objects, and the in-game canvas is authored
+            // inactive — so the first version of this silently hid nothing and I read the
+            // already-inactive End Screen as proof it had worked.
+            Transform dynamic = null;
+            var all = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < all.Length; i++)
+            {
+                if (all[i] == null || all[i].name != "Canvas - Dynamic") continue;
+                dynamic = all[i];
+                break;
+            }
+            if (dynamic == null)
+            {
+                Debug.LogWarning("[SceneBuilder] Range: no Canvas - Dynamic to tidy.");
+                return;
+            }
+            int hidden = 0;
+            for (int i = 0; i < CombatHudToHide.Length; i++)
+            {
+                Transform t = dynamic.Find(CombatHudToHide[i]);
+                if (t == null)
+                {
+                    Debug.LogWarning("[SceneBuilder] Range HUD: no panel named "
+                        + CombatHudToHide[i]);
+                    continue;
+                }
+                if (!t.gameObject.activeSelf) continue;
+                t.gameObject.SetActive(false);
+                hidden++;
+            }
+            Debug.Log("[SceneBuilder] Range HUD: hid " + hidden + " of " + CombatHudToHide.Length
+                + " combat panels; crosshair, weapon and vitals stay.");
         }
 
         /// <summary>Swap the Bastion's music host for the ship bed. The copy arrives with a
