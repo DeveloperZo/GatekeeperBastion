@@ -135,7 +135,25 @@ namespace GatekeepersProtocol.Game
         /// <summary>Load the party ship hub. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadShipCoop() => Load(ShipCoop);
 
-        public static bool LoadRange() => Load(Range);
+        /// <summary>Load the practice range. Refused while a Run is live (M99 criterion 10):
+        /// the range is a practice scene with no Wave and no accounting, so walking into it
+        /// from a Run would end that Run without any of the banking a Docked return does, and
+        /// the salvage would simply be gone.
+        ///
+        /// The check is here rather than on the door so a dev command or a checkpoint that
+        /// loads the range is refused on the same terms. One scene-wide lookup on a scene
+        /// change is not the per-frame Find the architecture rejects.</summary>
+        public static bool LoadRange()
+        {
+            var live = Object.FindFirstObjectByType<GameController>();
+            if (live != null && live.Sim != null
+                && live.Sim.Phase == GatekeepersProtocol.Sim.RunPhase.Tethered)
+            {
+                Log.Event("Range", "range refused — a Run is live; dock or lose it first");
+                return false;
+            }
+            return Load(Range);
+        }
 
         /// <summary>Load the bastion combat scene. Returns false (and logs an error) if it cannot load.
         /// Guests in an active friends session must use party EMBARK — local load is refused.</summary>

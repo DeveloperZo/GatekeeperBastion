@@ -58,6 +58,7 @@ namespace GatekeepersProtocol.EditorTools
         static string TerminalsSentinelPath => Path.Combine(Root, "gkb_bastion_terminals_request.txt");
         static string RangeSentinelPath => Path.Combine(Root, "gkb_range_build_request.txt");
         static string ProtocolBarSentinelPath => Path.Combine(Root, "gkb_protocol_bar_request.txt");
+        static string RangeDoorSentinelPath => Path.Combine(Root, "gkb_range_door_request.txt");
 
         static SceneBuilder()
         {
@@ -92,6 +93,18 @@ namespace GatekeepersProtocol.EditorTools
                     return;
                 }
                 PlaceBastionObstaclesInPlace();
+                return;
+            }
+
+            if (File.Exists(RangeDoorSentinelPath))
+            {
+                try { File.Delete(RangeDoorSentinelPath); }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[SceneBuilder] range door sentinel: " + e.Message);
+                    return;
+                }
+                BuildRangeDoorsInPlace();
                 return;
             }
 

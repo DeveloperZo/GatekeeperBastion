@@ -84,9 +84,16 @@ your range.
    toggleable, so a burst can be repeated without walking back to the console.
 7. A lane with **distance markers at 5, 14, 30, 60 and 90 m**, readable from the firing
    line — the range values of BR-12, MR-35 and PRI-C, so falloff is checked by walking.
-8. **A payload placed in the range behaves as it does in a Run**: a decoy pulls Gatekeepers
-   inside `DecoyState.PullRadius`, and switching protocol switches the doctrine written
-   onto it. Refusals by kind (a Thief never pulls) hold here too.
+8. **A deployable placed in the range behaves as it does in a Run**: FORGE's turret stands
+   where it is put, shoots inside `TurretRangeMetres`, and can be shot down. Switching
+   protocol away takes it with them.
+
+   *Recut 2026-08-23 (Zo): "we have turret, we don't need decoy bay."* The criterion was
+   written around the drone-bay decoy. `DecoyBay` is constructed by nothing but tests — no
+   scene and no prefab hosts one — so the decoy is not a thing the range could exercise
+   without first making it exist. The turret is the deployable the game actually has, it
+   comes with a protocol the range already grants, and `PlayerProtocolAbilities` adds
+   `PlayerTurretControl` itself, so it needs no scene authoring at all.
 9. A readout shows, for the current kit since the last clear: shots fired, total damage,
    time-to-kill on the last body, and each ability's cooldown state. It reads from existing
    events; **no counters or rollups are added to `Sim/`**
@@ -138,17 +145,19 @@ against the shipped Gatekeeper or it is not measuring the game.
 - Criterion 4: press the weapon ability five times in five seconds with bypass on; toggle
   off and confirm the second press is refused until `CooldownRemaining` reaches 0.
 - Criteria 5, 6, 8: spawn a Default at 30 m, pin it, shove it, read `concussive shove`
-  metres from the log; place a decoy and confirm it pulls; switch protocol and confirm the
-  doctrine on the next decoy changes; spawn a Thief and confirm it never pulls. Kill one
-  body and watch it return with respawn on. **This is `M93` criteria 6 and 7 with no Run.**
+  metres from the log; take FORGE, stand a turret, confirm it fires on the body and that
+  switching protocol away removes it. Kill one body and watch it return with respawn on.
+  **This is `M93` criteria 6 and 7 with no Run.**
 - Criterion 7: fire BR-12 at 5 m and 30 m and read the damage difference.
 - Criterion 9: kill one body, read TTK; clear, swap the whole kit, repeat.
 - Criterion 11: `Tools/verify/run.sh` — Build All keeps the boot five in order and keeps
   `Range.unity` after them.
 
-**Playthrough path**: Play, Continue, walk to the range door on `Ship - CoOp`, grant BR-12
-plus Default protocol, spawn a Default at 14 m, empty a clip, fire the weapon ability, fire
-Barrage and Rush, place a decoy, read the readout, clear, swap to PRI-C and Veil, repeat.
+**Playthrough path**: Play, Continue, hold E on the range door on `Ship - CoOp` (port side
+deck 1, z 7.5), spawn a Default at 14 m with F3-then-2, empty a clip, fire the weapon
+ability, fire Barrage and Rush, take FORGE with F3-then-7 and stand a turret, read the
+readout, F4 to clear, swap weapon with F7, repeat. Hold E on the door behind the firing
+line to come back.
 
 ## Usable, or it did not ship
 
@@ -174,3 +183,39 @@ exists for this and is the only sanctioned path.
 **Do not branch the ability path on "am I in the range".** A bypass that lives inside
 `PlayerAbility` means the thing being judged is no longer the thing that ships. Zero the
 cooldown from outside, or the range measures a copy.
+
+## Where it landed
+
+Built, and standing up to the gate:
+
+- **1** — `RangeDoor` on both ends: `Ship - CoOp` at (-9.2, 1.15, 7.5) and behind the range
+  firing line at (-47, 1.15, 0). One component, both directions; hold E for 1.0 s, matching
+  the teleporter's unlock hold. Authored by `SceneBuilder.BuildRangeDoorsInPlace` so a range
+  rebuild cannot drop the return door.
+- **2** — every grant runs through `RangeConsole`, and the lane now *opens* unlocked rather
+  than waiting for a first grant: the whole weapon catalogue at full focus, the equipment
+  slot, a protocol equipped on frame one, and a salvage balance nothing can refuse.
+  `GrantProtocol` sets `EquippedProtocol` directly instead of calling
+  `BoarderProtocol.TryClaim` — the shop's purchase refuses mid-Run, and a range is Tethered
+  from its first frame, so every protocol cycle after the first was being refused.
+- **3** — `GrantWeapon(id, tier)` writes a flat tier through `ReplacePointsFromFlatTier`.
+- **4** — `RangeRules.ToggleCooldownBypass`, zeroing the timers from outside the ability, and
+  the state is on the readout as `COOLDOWNS BYPASSED` / `REAL`.
+- **5, 6** — `RangeConsole.SpawnAt` / `RangeRules` respawn queue, capped at `LaneCap` 6, F4
+  clears. Bodies spawned here are not wave bodies, so a range kill pays no salvage.
+- **7** — marks at 5, 14, 30, 60 and 90 m, measured off the floor renderers.
+- **8** — FORGE's turret, which needs no scene work (see the recut above).
+- **9** — `RangeReadout`: shots off `PlayerGun.Fired`, damage as the frame-to-frame drop in
+  each body's `Hp`, TTK, and each cooldown. Nothing counted inside `Sim/`.
+- **10** — `SceneFlow.LoadRange` refuses while a Run is live and says so in the log. Put on
+  the loader rather than the door so a dev command is refused on the same terms.
+- **11** — `RegisterRangeScene` appends `Range.unity` after the boot scenes, idempotently,
+  and `SessionAndBuildSettingsTests` pins the order with Range last.
+
+**Not done, and deliberately not blocking:** the console is the dev overlay (F3 then a digit,
+F7 for the loadout), not a walk-up fixture with rows, and the doors are graybox slabs rather
+than signed geometry. Both are presentation on a tool, which is the lowest-leverage thing in
+this milestone; the range is drivable without them.
+
+**Not yet stamped:** no criterion has been confirmed by eyes-on play. The playthrough path
+above is the stamp.
