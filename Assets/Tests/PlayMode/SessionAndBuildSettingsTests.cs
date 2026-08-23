@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using GatekeepersProtocol.Game;
 using GatekeepersProtocol.Sim;
@@ -35,13 +36,18 @@ namespace GatekeepersProtocol.PlayTests
             string[] flow =
             {
                 SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.RealmSelect, SceneFlow.Ship,
-                SceneFlow.ShipCoop, SceneFlow.Bastion
+                SceneFlow.ShipCoop, SceneFlow.Bastion, SceneFlow.BastionCoop,
+                // Registered by the range builder and kept by RegisterBuildScenes. Non-boot: it
+                // sits after the flow scenes and must not displace them (M99 criterion 11).
+                SceneFlow.Range
             };
 
             var missing = new List<string>();
             var present = new List<string>();
             foreach (string scene in flow)
             {
+                if (scene == SceneFlow.BastionCoop && !CoopCombatSceneFileExists())
+                    continue;
                 if (PlayTestUtil.IsSceneInBuild(scene)) present.Add(scene);
                 else missing.Add(scene);
             }
@@ -56,18 +62,21 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsEmpty(missing,
                 $"Scene(s) [{string.Join(", ", missing)}] are missing from Build Settings while " +
                 $"[{string.Join(", ", present)}] are registered. SceneFlow needs Splash, MainMenu, " +
-                "RealmSelect, Ship - Demo, Ship - CoOp, Bastion.");
+                "RealmSelect, Ship - Demo, Ship - CoOp, Bastion, Bastion_Coop.");
         }
 
         /// <summary>The build-order smoke assertion that lived in the deleted
         /// ShiftFrontEndMutate.Smoke, updated for the dual ship hub (2026-08-21).</summary>
         [Test]
-        public void BuildSettings_OrderIs_Splash_MainMenu_RealmSelect_ShipDemo_ShipCoop_Bastion()
+        public void BuildSettings_OrderIs_Splash_MainMenu_RealmSelect_ShipDemo_ShipCoop_Bastion_BastionCoop_Range()
         {
             string[] expected =
             {
                 SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.RealmSelect, SceneFlow.Ship,
-                SceneFlow.ShipCoop, SceneFlow.Bastion
+                SceneFlow.ShipCoop, SceneFlow.Bastion, SceneFlow.BastionCoop,
+                // The practice range ships in the list so a dev build can reach it. It has no
+                // door yet, so it is last: nothing loads it by index.
+                SceneFlow.Range
             };
 
             // The PlayMode harness injects its own InitTestScene into the build list for the
@@ -83,12 +92,13 @@ namespace GatekeepersProtocol.PlayTests
             }
 
             Assert.AreEqual(expected.Length, names.Count,
-                $"Build Settings holds [{string.Join(", ", names)}]; expected exactly the five flow scenes.");
+                $"Build Settings holds [{string.Join(", ", names)}]; expected exactly the flow scenes.");
             for (int i = 0; i < expected.Length; i++)
             {
                 Assert.AreEqual(expected[i], names[i],
                     $"Build slot {i} is '{names[i]}'; expected '{expected[i]}'. " +
-                    "Order must be Splash, MainMenu, RealmSelect, Ship - Demo, Ship - CoOp, Bastion.");
+                    "Order must be Splash, MainMenu, RealmSelect, Ship - Demo, Ship - CoOp, Bastion, " +
+                    "Bastion_Coop, Range.");
             }
         }
 
@@ -164,6 +174,12 @@ namespace GatekeepersProtocol.PlayTests
             yield return null;
             Assert.AreEqual(SceneFlow.Bastion, SceneFlow.ActiveSceneName,
                 "Embark must land on Bastion.");
+        }
+
+        static bool CoopCombatSceneFileExists()
+        {
+            string path = Path.Combine(Application.dataPath, "Scenes", "Bastion_Coop.unity");
+            return File.Exists(path);
         }
 
         static void AssertEventSystemPresent(string sceneName)

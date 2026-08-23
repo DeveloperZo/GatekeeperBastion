@@ -4,7 +4,7 @@ namespace GatekeepersProtocol.Sim
     /// Pure floats — no UnityEngine (Sim seam + offline harness).
     /// Scaler 2 over metre multiples: big lost-station rooms (Half 16 m), one lever.
     /// Sketch room centres are world metres, so a scaler change re-authors the sketch too.
-    /// ControlRoom is the wide finale hall — twice as wide as deep.</summary>
+    /// ControlRoom is the wide finale hall — twice as wide as deep (multiple 47, aspect 0.5).</summary>
     public static class BastionKit
     {
         public const float ScalerX = 2f;
@@ -35,7 +35,7 @@ namespace GatekeepersProtocol.Sim
                 case BastionBlockKind.Half: return 8;
                 case BastionBlockKind.Full: return 13;
                 case BastionBlockKind.OpenArea: return 21;
-                case BastionBlockKind.ControlRoom: return 76;
+                case BastionBlockKind.ControlRoom: return 47;
                 default: return 5;
             }
         }

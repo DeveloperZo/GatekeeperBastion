@@ -75,7 +75,7 @@ Assets/Scripts/
                M57 additive wait stays off NetworkSceneManager)
   Editor/
     Scenes/  SceneBuilder(+.Ship, +.Enemies) — Environment/spawns/light/NavMesh; hosts+UI authored
-    Bastion/ BastionKitEmitter  BastionSketchEmitter  BastionGeomGroupTool
+    Bastion/ BastionKitEmitter  BastionSketchEmitter  BastionSketchHatchDoors  BastionGeomGroupTool
              BastionFieldConsole  BastionTerminalEditor
     Tools/   IntegrationCheck  BindingValidator  LogTools  GameplayRecorder
              ShipFlythrough  StationSceneGate  CompendiumCopy

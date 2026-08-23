@@ -425,7 +425,7 @@ rulemaking authority lives there.
 
 - **Bastion kit re-scaled to station rooms (Zo, 2026-08-14, `M61-2`).** The M47
   footprint lock is waived: multiples are now metres on `BastionKit` scaler 2 —
-  Half 16 m, Full 26 m, OpenArea 42 m, ControlRoom 152×76 m (multiple 76, aspect 0.5)
+  Half 16 m, Full 26 m, OpenArea 42 m, ControlRoom 94×47 m (multiple 47, aspect 0.5)
   — sized so a room is a place a Boarder walks through and the whole station reads
   as one huge lost structure. Sketch room centres are world metres, so the scaler
   and the sketch move together (`Tools/bastion-sketch/bastion-defense-layout.txt`).

@@ -23,5 +23,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Bastion.unity
     guid: e00cbf204aeb650459a8471c7bce4363
+  - enabled: 1
+    path: Assets/Scenes/Bastion_Coop.unity
+    guid: 58aef22ff05c79f4cbb0ddb209277fbd
+  - enabled: 1
+    path: Assets/Scenes/Range.unity
+    guid: e39e0f55b2448c04eb5f7e7b7e2f97a8
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

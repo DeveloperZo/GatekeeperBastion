@@ -95,6 +95,7 @@ namespace GatekeepersProtocol.PlayTests
                                (active.name == GatekeepersProtocol.Game.SceneFlow.Ship ||
                                 active.name == GatekeepersProtocol.Game.SceneFlow.ShipCoop ||
                                 active.name == GatekeepersProtocol.Game.SceneFlow.Bastion ||
+                                active.name == GatekeepersProtocol.Game.SceneFlow.BastionCoop ||
                                 active.name == GatekeepersProtocol.Game.SceneFlow.MainMenu ||
                                 active.name == GatekeepersProtocol.Game.SceneFlow.Splash);
             if (!isGameScene)

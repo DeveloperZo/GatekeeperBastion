@@ -16,7 +16,8 @@ namespace GatekeepersProtocol.EditorTools
     /// <summary>Gray-box geometry rebuilds. "Build All Scenes" rebuilds the
     /// owned set — the <c>Environment</c> root, the <c>SpawnPoints</c> root, the
     /// <c>Directional Light</c> and the NavMesh asset — IN PLACE in Ship - Demo.unity and
-    /// Bastion.unity, and pins Splash, MainMenu, Ship - Demo, Ship - CoOp, Bastion at the head of
+    /// Bastion.unity, and pins Splash, MainMenu, RealmSelect, Ship - Demo, Ship - CoOp, Bastion,
+    /// Bastion_Coop at the head of
     /// EditorBuildSettings without unregistering anything else that is listed there.
     /// Everything else in those scenes is authored, persistent content this class never
     /// touches: station consoles, the Hatch, player rigs, ShipController/GameSystems,
@@ -32,6 +33,7 @@ namespace GatekeepersProtocol.EditorTools
     public static partial class SceneBuilder
     {
         const string ScenePath = "Assets/Scenes/Bastion.unity";
+        const string BastionCoopScenePath = "Assets/Scenes/Bastion_Coop.unity";
         const string SplashScenePath = "Assets/Scenes/Splash.unity";
         const string MainMenuScenePath = "Assets/Scenes/MainMenu.unity";
         const string ShipScenePath = "Assets/Scenes/Ship - Demo.unity";
@@ -54,6 +56,8 @@ namespace GatekeepersProtocol.EditorTools
         static string NavMeshSentinelPath => Path.Combine(Root, "gkb_bastion_navmesh_request.txt");
         static string ObstaclesSentinelPath => Path.Combine(Root, "gkb_bastion_obstacles_request.txt");
         static string TerminalsSentinelPath => Path.Combine(Root, "gkb_bastion_terminals_request.txt");
+        static string RangeSentinelPath => Path.Combine(Root, "gkb_range_build_request.txt");
+        static string ProtocolBarSentinelPath => Path.Combine(Root, "gkb_protocol_bar_request.txt");
 
         static SceneBuilder()
         {
@@ -91,15 +95,49 @@ namespace GatekeepersProtocol.EditorTools
                 return;
             }
 
+            if (File.Exists(ProtocolBarSentinelPath))
+            {
+                try { File.Delete(ProtocolBarSentinelPath); }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[SceneBuilder] protocol bar sentinel: " + e.Message);
+                    return;
+                }
+                BuildProtocolBarInPlace();
+                return;
+            }
+
+            if (File.Exists(RangeSentinelPath))
+            {
+                try { File.Delete(RangeSentinelPath); }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[SceneBuilder] range sentinel: " + e.Message);
+                    return;
+                }
+                BuildRangeSceneInPlace();
+                return;
+            }
+
             if (File.Exists(NavMeshSentinelPath))
             {
-                try { File.Delete(NavMeshSentinelPath); }
+                string navBody = "";
+                try
+                {
+                    navBody = File.ReadAllText(NavMeshSentinelPath);
+                    File.Delete(NavMeshSentinelPath);
+                }
                 catch (Exception e)
                 {
                     Debug.LogWarning("[SceneBuilder] navmesh sentinel: " + e.Message);
                     return;
                 }
-                BakeBastionNavMeshInPlace();
+
+                string bakeScene = ScenePath;
+                string requested = FirstNonEmptyLine(navBody);
+                if (requested.Length > 0)
+                    bakeScene = ResolveBastionScenePath(requested);
+                BakeBastionNavMeshInPlace(bakeScene, NavMeshAssetPathForScene(bakeScene));
                 return;
             }
 
@@ -155,14 +193,14 @@ namespace GatekeepersProtocol.EditorTools
             RebuildBastionGeometry();
             RegisterBuildScenes();
             AssetDatabase.SaveAssets();
-            Debug.Log("[SceneBuilder] In-place geometry rebuild done; EditorBuildSettings.scenes leads with Splash, MainMenu, Ship, Bastion.");
+            Debug.Log("[SceneBuilder] In-place geometry rebuild done; EditorBuildSettings.scenes leads with Splash, MainMenu, RealmSelect, Ship - Demo, Ship - CoOp, Bastion, Bastion_Coop.");
         }
 
         // Build All Scenes is the only entry point. A Bastion-only item existed until
         // 2026-08-04 and was a narrower duplicate of it: the full build takes seconds, and a
         // Bastion rebuilt without re-registering build settings is exactly the state that
         // hides gotcha 4 (Docs/Working-Rules.md, "Tools, scripts and the menu").
-        /// <summary>Pins the four boot scenes at the head of EditorBuildSettings in flow order,
+        /// <summary>Pins the boot scenes at the head of EditorBuildSettings in flow order,
         /// and KEEPS every other registered scene after them with its enabled flag intact.
         ///
         /// This used to assign a fresh four-entry array, which silently unregistered anything
@@ -213,7 +251,7 @@ namespace GatekeepersProtocol.EditorTools
         public static readonly string[] BootScenes =
         {
             SplashScenePath, MainMenuScenePath, RealmSelectScenePath,
-            ShipScenePath, ShipCoopScenePath, ScenePath
+            ShipScenePath, ShipCoopScenePath, ScenePath, BastionCoopScenePath
         };
 
         /// <summary>Pins <paramref name="bootOrder"/> at the head of the build list and KEEPS
@@ -314,31 +352,81 @@ namespace GatekeepersProtocol.EditorTools
                 "generate freestyle bastion geometry. Author kit segments or restore from VCS.");
         }
 
-        /// <summary>Rebake <c>Bastion-NavMesh.asset</c> from current Environment children (kit floors
-        /// included). Does not rebuild or delete scene geometry.</summary>
+        /// <summary>Rebake the scene's sibling <c>*-NavMesh.asset</c> from current Environment
+        /// children (kit floors included). Does not rebuild or delete scene geometry.
+        /// Defaults are Bastion.unity → Bastion-NavMesh.asset.</summary>
         public static void BakeBastionNavMeshInPlace()
         {
+            BakeBastionNavMeshInPlace(ScenePath, NavMeshDataPath);
+        }
+
+        public static void BakeBastionNavMeshInPlace(string scenePath, string assetPath = null)
+        {
+            if (string.IsNullOrEmpty(scenePath))
+                scenePath = ScenePath;
+            scenePath = ResolveBastionScenePath(scenePath);
+            if (string.IsNullOrEmpty(assetPath))
+                assetPath = NavMeshAssetPathForScene(scenePath);
+
             BastionSegment.SuppressValidateRebuild = true;
             try
             {
-                Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
                 GameObject env = GameObject.Find("Environment");
                 if (env == null)
                 {
-                    Debug.LogError("[SceneBuilder] No Environment root in Bastion.unity — cannot bake NavMesh.");
+                    Debug.LogError("[SceneBuilder] No Environment root in " + scenePath
+                        + " — cannot bake NavMesh.");
                     return;
                 }
 
-                BakeNavMesh(env);
+                BakeNavMesh(env, assetPath);
                 EditorSceneManager.MarkSceneDirty(scene);
-                EditorSceneManager.SaveScene(scene, ScenePath);
+                EditorSceneManager.SaveScene(scene);
                 AssetDatabase.SaveAssets();
-                Debug.Log("[SceneBuilder] Bastion NavMesh rebaked in place from Environment children.");
+                Debug.Log("[SceneBuilder] NavMesh rebaked in place from Environment children → "
+                    + assetPath);
             }
             finally
             {
                 BastionSegment.SuppressValidateRebuild = false;
             }
+        }
+
+        static string FirstNonEmptyLine(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return "";
+            string[] lines = text.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (line.Length > 0)
+                    return line;
+            }
+            return "";
+        }
+
+        static string ResolveBastionScenePath(string raw)
+        {
+            if (string.IsNullOrEmpty(raw))
+                return ScenePath;
+            string n = raw.Trim().Replace('\\', '/');
+            int assets = n.IndexOf("/Assets/", StringComparison.OrdinalIgnoreCase);
+            if (assets >= 0)
+                return n.Substring(assets + 1);
+            if (n.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+                return n;
+            return n;
+        }
+
+        static string NavMeshAssetPathForScene(string scenePath)
+        {
+            string n = ResolveBastionScenePath(scenePath);
+            const string suffix = ".unity";
+            if (n.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                return n.Substring(0, n.Length - suffix.Length) + "-NavMesh.asset";
+            return NavMeshDataPath;
         }
 
         static bool BastionSceneHasKitSegments()
@@ -400,8 +488,10 @@ namespace GatekeepersProtocol.EditorTools
 
         // ---------- NavMesh ----------
 
-        static void BakeNavMesh(GameObject env)
+        static void BakeNavMesh(GameObject env, string assetPath = null)
         {
+            if (string.IsNullOrEmpty(assetPath))
+                assetPath = NavMeshDataPath;
             NavMeshSurface[] existing = env.GetComponents<NavMeshSurface>();
             for (int i = existing.Length - 1; i >= 0; i--)
                 UnityEngine.Object.DestroyImmediate(existing[i]);
@@ -419,6 +509,16 @@ namespace GatekeepersProtocol.EditorTools
                 hiddenLeaves.Add(slab.gameObject);
             }
 
+            ShipHatchDoor[] hatches = env.GetComponentsInChildren<ShipHatchDoor>(true);
+            for (int i = 0; i < hatches.Length; i++)
+            {
+                Transform slab = hatches[i] != null ? hatches[i].transform.Find("Slab") : null;
+                if (slab == null || !slab.gameObject.activeSelf)
+                    continue;
+                slab.gameObject.SetActive(false);
+                hiddenLeaves.Add(slab.gameObject);
+            }
+
             try
             {
                 var surface = env.AddComponent<NavMeshSurface>();
@@ -430,9 +530,9 @@ namespace GatekeepersProtocol.EditorTools
                     Debug.LogWarning("[SceneBuilder] NavMesh bake produced no data.");
                     return;
                 }
-                AssetDatabase.DeleteAsset(NavMeshDataPath);
-                AssetDatabase.CreateAsset(surface.navMeshData, NavMeshDataPath);
-                surface.navMeshData = AssetDatabase.LoadAssetAtPath<UnityEngine.AI.NavMeshData>(NavMeshDataPath);
+                AssetDatabase.DeleteAsset(assetPath);
+                AssetDatabase.CreateAsset(surface.navMeshData, assetPath);
+                surface.navMeshData = AssetDatabase.LoadAssetAtPath<UnityEngine.AI.NavMeshData>(assetPath);
             }
             finally
             {

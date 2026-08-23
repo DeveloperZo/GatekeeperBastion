@@ -10,7 +10,7 @@ Authority: proposed. Rows marked Ruled are Zo's; rows marked Stamped are mine an
 await his override.
 Update trigger: when a stamp is overridden, when a beat ships, when M92 lands, when
 juice or persistence come back
-Last updated: 2026-08-20
+Last updated: 2026-08-22
 Depends: ../Demo - Single/README.md (the verbs, already taught), ../Decisions.md
 -->
 
@@ -108,7 +108,7 @@ where it is more visible and costs no new systems.
 | Revive | A teammate verb, not a self-serve respawn. Immobile at 0 HP for a bleed-out window; any living seat holds Interact to bring them up at partial HP. M57's `WaitingOnShip` stays as the fallback on bleed-out. Cost is exposure | Beat 2. Blocking M-D |
 | Unbanked on down | Not wiped on down. Today a downed guest's pile is zeroed at 0 HP (`NetPlayerAvatar.cs:307-308`), which would make a revive worthless the moment it lands. With the crew pot there may be nothing per-seat left to wipe; confirm when the pot lands | Beat 2 |
 | Teammate presence | Pitch, weapon id, a fire event, a name label. Four adds to `NetPlayerAvatar`. Not replicated: reload, crouch, sprint, ADS, voice, ping wheel | Beat 4. Blocking M-C |
-| Scope fence | The Ship expansion adds doors and the space they need, not new stations. One zone plus the boss stretch on the derelict. No second destination, no new resource | Every beat |
+| Scope fence | The Ship expansion adds doors and the space they need, not new stations. **Overridden 2026-08-22:** co-op bastion is another kit spine (same as the solo demo), three hatches on R1 — not one zone plus the boss stretch. No second destination, no new resource | Every beat |
 
 ## The multi-hatch change, counted
 

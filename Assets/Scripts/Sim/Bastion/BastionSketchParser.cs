@@ -50,6 +50,12 @@ namespace GatekeepersProtocol.Sim
                     if (!doorResult.Success)
                         return doorResult;
                 }
+                else if (string.Equals(verb, "stair", StringComparison.OrdinalIgnoreCase))
+                {
+                    BastionSketchParseResult stairResult = ParseStair(tokens, lineIndex + 1, sketch);
+                    if (!stairResult.Success)
+                        return stairResult;
+                }
                 else
                 {
                     return BastionSketchParseResult.Fail("line " + (lineIndex + 1) + ": unknown verb '" + verb + "'");
@@ -88,8 +94,20 @@ namespace GatekeepersProtocol.Sim
                 CenterZ = z,
             };
 
+            bool sawStorey = false;
             for (int i = 5; i < tokens.Length; i++)
             {
+                if (tokens[i].StartsWith("storey=", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (sawStorey)
+                        return BastionSketchParseResult.Fail("line " + lineNumber + ": duplicate storey=");
+                    if (!TryParseStorey(tokens[i], out int storey))
+                        return BastionSketchParseResult.Fail("line " + lineNumber + ": invalid storey '" + tokens[i] + "'");
+                    room.Storey = storey;
+                    sawStorey = true;
+                    continue;
+                }
+
                 BastionSketchParseResult markResult = ParseMark(tokens[i], lineNumber, room);
                 if (!markResult.Success)
                     return markResult;
@@ -106,6 +124,9 @@ namespace GatekeepersProtocol.Sim
                 room.Marks.Add(new BastionSketchMark { Kind = BastionSketchMarkKind.Hatch });
                 return BastionSketchParseResult.Ok(null);
             }
+
+            if (token.StartsWith("H:", StringComparison.OrdinalIgnoreCase))
+                return ParseNumberedHatch(token, lineNumber, room);
 
             if (string.Equals(token, "M", StringComparison.OrdinalIgnoreCase))
             {
@@ -133,6 +154,19 @@ namespace GatekeepersProtocol.Sim
 
                 string spawnId = refId.Substring(0, edgeColon);
                 string edgeToken = refId.Substring(edgeColon + 1);
+                int minSeats = 1;
+                int minColon = edgeToken.IndexOf(':');
+                if (minColon >= 0)
+                {
+                    string minRaw = edgeToken.Substring(minColon + 1);
+                    edgeToken = edgeToken.Substring(0, minColon);
+                    if (!TryParseMinSeats(minRaw, out minSeats))
+                    {
+                        return BastionSketchParseResult.Fail(
+                            "line " + lineNumber + ": invalid spawn minSeats '" + minRaw + "'");
+                    }
+                }
+
                 if (!TryParseDirection(edgeToken, out BastionSketchDirection edge))
                 {
                     return BastionSketchParseResult.Fail(
@@ -145,6 +179,7 @@ namespace GatekeepersProtocol.Sim
                     RefId = spawnId,
                     Direction = edge,
                     HasDirection = true,
+                    MinSeats = minSeats,
                 });
                 return BastionSketchParseResult.Ok(null);
             }
@@ -156,6 +191,49 @@ namespace GatekeepersProtocol.Sim
             }
 
             return BastionSketchParseResult.Fail("line " + lineNumber + ": unknown mark prefix '" + prefix + "'");
+        }
+
+        static BastionSketchParseResult ParseNumberedHatch(string token, int lineNumber, BastionSketchRoom room)
+        {
+            string raw = token.Substring(2);
+            if (raw.Length == 0)
+                return BastionSketchParseResult.Fail("line " + lineNumber + ": empty hatch id in '" + token + "'");
+            if (raw.IndexOf(':') >= 0)
+                return BastionSketchParseResult.Fail("line " + lineNumber + ": invalid hatch id '" + token + "'");
+            if (!TryParseHatchId(raw, out string id))
+                return BastionSketchParseResult.Fail("line " + lineNumber + ": invalid hatch id '" + token + "'");
+
+            room.Marks.Add(new BastionSketchMark { Kind = BastionSketchMarkKind.Hatch, RefId = id });
+            return BastionSketchParseResult.Ok(null);
+        }
+
+        static bool TryParseHatchId(string text, out string id)
+        {
+            id = null;
+            if (text == null || text.Length == 0)
+                return false;
+            if (text.Length > 1 && text[0] == '0')
+                return false;
+
+            int value = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (c < '0' || c > '9')
+                    return false;
+                value = value * 10 + (c - '0');
+            }
+
+            for (int i = 0; i < ShipHatches.Count; i++)
+            {
+                if (ShipHatches.IdOf(i) == value)
+                {
+                    id = text;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         static BastionSketchParseResult ParseSide(string[] tokens, int lineNumber, BastionSketch sketch)
@@ -281,7 +359,6 @@ namespace GatekeepersProtocol.Sim
             if (sketch.Rooms.Count == 0)
                 return BastionSketchParseResult.Fail("sketch has no rooms");
 
-            int hatchCount = 0;
             int masterCount = 0;
             int controlRoomCount = 0;
             var terminalIds = new HashSet<string>();
@@ -295,17 +372,16 @@ namespace GatekeepersProtocol.Sim
                 for (int m = 0; m < room.Marks.Count; m++)
                 {
                     BastionSketchMark mark = room.Marks[m];
-                    if (mark.Kind == BastionSketchMarkKind.Hatch)
-                        hatchCount++;
-                    else if (mark.Kind == BastionSketchMarkKind.Master)
+                    if (mark.Kind == BastionSketchMarkKind.Master)
                         masterCount++;
                     else if (mark.Kind == BastionSketchMarkKind.Terminal)
                         terminalIds.Add(mark.RefId);
                 }
             }
 
-            if (hatchCount != 1)
-                return BastionSketchParseResult.Fail("sketch must have exactly one H mark (found " + hatchCount + ")");
+            BastionSketchParseResult hatches = ValidateHatches(sketch);
+            if (!hatches.Success)
+                return hatches;
 
             if (masterCount != 1)
                 return BastionSketchParseResult.Fail("sketch must have exactly one M mark (found " + masterCount + ")");
@@ -360,7 +436,88 @@ namespace GatekeepersProtocol.Sim
             if (!spawnEdge.Success)
                 return spawnEdge;
 
+            BastionSketchParseResult stairs = ValidateStairs(sketch);
+            if (!stairs.Success)
+                return stairs;
+
             return BastionSketchParseResult.Ok(sketch);
+        }
+
+        static BastionSketchParseResult ValidateHatches(BastionSketch sketch)
+        {
+            int hatchCount = 0;
+            int bareCount = 0;
+            int numberedCount = 0;
+            string hatchRoomId = null;
+            bool multipleRooms = false;
+            var numberedIds = new HashSet<string>();
+            bool duplicateId = false;
+
+            for (int i = 0; i < sketch.Rooms.Count; i++)
+            {
+                BastionSketchRoom room = sketch.Rooms[i];
+                for (int m = 0; m < room.Marks.Count; m++)
+                {
+                    BastionSketchMark mark = room.Marks[m];
+                    if (mark.Kind != BastionSketchMarkKind.Hatch)
+                        continue;
+
+                    hatchCount++;
+                    if (string.IsNullOrEmpty(mark.RefId))
+                    {
+                        bareCount++;
+                    }
+                    else
+                    {
+                        numberedCount++;
+                        if (!numberedIds.Add(mark.RefId))
+                            duplicateId = true;
+                    }
+
+                    if (hatchRoomId == null)
+                        hatchRoomId = room.Id;
+                    else if (hatchRoomId != room.Id)
+                        multipleRooms = true;
+                }
+            }
+
+            if (hatchCount == 1 && bareCount == 1)
+                return BastionSketchParseResult.Ok(sketch);
+
+            if (bareCount > 0 && numberedCount > 0)
+            {
+                return BastionSketchParseResult.Fail(
+                    "sketch must not mix a bare H mark with numbered hatch marks");
+            }
+
+            if (duplicateId)
+                return BastionSketchParseResult.Fail("sketch has a duplicate H mark id");
+
+            if (hatchCount == 1 && numberedCount == 1)
+                return BastionSketchParseResult.Fail("sketch with one H mark must be a bare H");
+
+            if (hatchCount == ShipHatches.Count && numberedCount == ShipHatches.Count)
+            {
+                if (multipleRooms)
+                    return BastionSketchParseResult.Fail("numbered H marks must all be on the same room");
+
+                bool complete = true;
+                for (int i = 0; i < ShipHatches.Count; i++)
+                {
+                    string id = ShipHatches.IdOf(i).ToString(CultureInfo.InvariantCulture);
+                    if (!numberedIds.Contains(id))
+                        complete = false;
+                }
+
+                if (complete)
+                    return BastionSketchParseResult.Ok(sketch);
+
+                return BastionSketchParseResult.Fail(
+                    "numbered H marks must be ids 1, 2 and 3");
+            }
+
+            return BastionSketchParseResult.Fail(
+                "sketch must have exactly one H mark (found " + hatchCount + ")");
         }
 
         static BastionSketchParseResult ValidateSpawnEdges(BastionSketch sketch)
@@ -402,6 +559,88 @@ namespace GatekeepersProtocol.Sim
             return BastionSketchParseResult.Ok(sketch);
         }
 
+        static BastionSketchParseResult ParseStair(string[] tokens, int lineNumber, BastionSketch sketch)
+        {
+            if (tokens.Length != 3)
+                return BastionSketchParseResult.Fail("line " + lineNumber + ": stair requires two room ids");
+
+            string a = tokens[1];
+            string b = tokens[2];
+            if (a == b)
+                return BastionSketchParseResult.Fail("line " + lineNumber + ": stair cannot join a room to itself");
+
+            for (int i = 0; i < sketch.Stairs.Count; i++)
+            {
+                BastionSketchStair existing = sketch.Stairs[i];
+                bool same = (existing.LowerId == a && existing.UpperId == b)
+                    || (existing.LowerId == b && existing.UpperId == a);
+                if (same)
+                    return BastionSketchParseResult.Fail("line " + lineNumber + ": duplicate stair");
+            }
+
+            sketch.Stairs.Add(new BastionSketchStair { LowerId = a, UpperId = b });
+            return BastionSketchParseResult.Ok(sketch);
+        }
+
+        static BastionSketchParseResult ValidateStairs(BastionSketch sketch)
+        {
+            var byId = new Dictionary<string, BastionSketchRoom>();
+            for (int i = 0; i < sketch.Rooms.Count; i++)
+                byId[sketch.Rooms[i].Id] = sketch.Rooms[i];
+
+            for (int s = 0; s < sketch.Stairs.Count; s++)
+            {
+                BastionSketchStair stair = sketch.Stairs[s];
+                if (!byId.TryGetValue(stair.LowerId, out BastionSketchRoom a))
+                    return BastionSketchParseResult.Fail("stair references unknown room '" + stair.LowerId + "'");
+                if (!byId.TryGetValue(stair.UpperId, out BastionSketchRoom b))
+                    return BastionSketchParseResult.Fail("stair references unknown room '" + stair.UpperId + "'");
+
+                int diff = a.Storey - b.Storey;
+                if (diff < 0)
+                    diff = -diff;
+                if (diff != 1)
+                {
+                    return BastionSketchParseResult.Fail(
+                        "stair " + a.Id + "-" + b.Id + " must join adjacent storeys");
+                }
+
+                if (!FootprintsOverlap(a, b))
+                {
+                    return BastionSketchParseResult.Fail(
+                        "stair " + a.Id + "-" + b.Id + " rooms do not overlap in XZ");
+                }
+
+                if (a.Storey < b.Storey)
+                {
+                    stair.LowerId = a.Id;
+                    stair.UpperId = b.Id;
+                }
+                else
+                {
+                    stair.LowerId = b.Id;
+                    stair.UpperId = a.Id;
+                }
+
+                sketch.Stairs[s] = stair;
+            }
+
+            return BastionSketchParseResult.Ok(sketch);
+        }
+
+        static bool FootprintsOverlap(BastionSketchRoom a, BastionSketchRoom b)
+        {
+            float dx = a.CenterX - b.CenterX;
+            if (dx < 0f)
+                dx = -dx;
+            float dz = a.CenterZ - b.CenterZ;
+            if (dz < 0f)
+                dz = -dz;
+            float maxX = (BastionKit.FootprintWidth(a.Kind) + BastionKit.FootprintWidth(b.Kind)) * 0.5f;
+            float maxZ = (BastionKit.FootprintDepth(a.Kind) + BastionKit.FootprintDepth(b.Kind)) * 0.5f;
+            return dx < maxX && dz < maxZ;
+        }
+
         static string[] SplitTokens(string line)
         {
             var tokens = new List<string>();
@@ -435,6 +674,47 @@ namespace GatekeepersProtocol.Sim
         static bool TryParseAlong(string token, out float along)
         {
             return TryParseFloat(token.Substring("along=".Length), out along);
+        }
+
+        static bool TryParseStorey(string token, out int storey)
+        {
+            storey = 0;
+            string raw = token.Substring("storey=".Length);
+            if (raw.Length == 0)
+                return false;
+            if (raw[0] == '-')
+                return false;
+            int value = 0;
+            for (int i = 0; i < raw.Length; i++)
+            {
+                char c = raw[i];
+                if (c < '0' || c > '9')
+                    return false;
+                value = value * 10 + (c - '0');
+            }
+
+            storey = value;
+            return true;
+        }
+
+        static bool TryParseMinSeats(string text, out int minSeats)
+        {
+            minSeats = 1;
+            if (text == null || text.Length == 0)
+                return false;
+            int value = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (c < '0' || c > '9')
+                    return false;
+                value = value * 10 + (c - '0');
+            }
+
+            if (value < 1 || value > ShipHatches.Count)
+                return false;
+            minSeats = value;
+            return true;
         }
 
         static bool TryParseBlockKind(string text, out BastionBlockKind kind)

@@ -99,6 +99,9 @@ Assets/_Scratch/*
 # Harness output, if GKB_HARNESS_OUT is ever pointed inside the repo.
 /gkb-harness/
 
+# Local audio analysis / loop-cut scratch (ffmpeg, spectrograms).
+/Tools/_audio-scratch/
+
 # Skill eval output and the baseline-run staging dir. Generated per run, never history.
 .claude/skills/_evals/results/
 .claude/skills/_evals/.hidden/

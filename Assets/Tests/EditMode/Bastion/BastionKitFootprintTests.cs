@@ -22,8 +22,8 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Footprint_ControlRoom_IsWideLandscapeHall()
         {
-            Assert.AreEqual(152f, BastionKit.FootprintWidth(BastionBlockKind.ControlRoom), 1e-4f);
-            Assert.AreEqual(76f, BastionKit.FootprintDepth(BastionBlockKind.ControlRoom), 1e-4f);
+            Assert.AreEqual(94f, BastionKit.FootprintWidth(BastionBlockKind.ControlRoom), 1e-4f);
+            Assert.AreEqual(47f, BastionKit.FootprintDepth(BastionBlockKind.ControlRoom), 1e-4f);
         }
 
         [Test]

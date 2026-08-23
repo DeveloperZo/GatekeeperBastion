@@ -32,13 +32,36 @@ namespace GatekeepersProtocol.Game
                 if (n < 1) n = 1;
                 if (n > WaveDirector.PlayerCapacity) n = WaveDirector.PlayerCapacity;
             }
-            if (n == Sim.PlayerCount) return;
-            Sim.SetPlayerCount(n);
-            Log.Event("Net", "playerCount=" + n);
+            if (n != Sim.PlayerCount)
+            {
+                Sim.SetPlayerCount(n);
+                Log.Event("Net", "playerCount=" + n);
+            }
+
+            MuteSeatSpawns();
         }
         #endregion
 
         #region Private
+        /// <summary>Two-seat mute: minSeats=3 closets (S7–S12) go inactive. Hatch sealed
+        /// state stays <see cref="ShipHatches"/> / <see cref="ShipHatchDoor"/>.</summary>
+        void MuteSeatSpawns()
+        {
+            int seats = Sim.PlayerCount;
+            SpawnRoom[] closets = UnityEngine.Object.FindObjectsByType<SpawnRoom>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < closets.Length; i++)
+            {
+                SpawnRoom closet = closets[i];
+                if (closet == null)
+                    continue;
+                bool live = BastionSeatSpawns.IsLive(closet.MinSeats, seats);
+                if (closet.gameObject.activeSelf == live)
+                    continue;
+                closet.gameObject.SetActive(live);
+            }
+        }
+
         void PushGuestProgress()
         {
             if (Sim == null) return;

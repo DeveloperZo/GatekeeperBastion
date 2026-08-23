@@ -386,7 +386,7 @@ namespace GatekeepersProtocol.Game
                 for (int attempt = 0; attempt < spawnPoints.Length; attempt++)
                 {
                     var bp = spawnPoints[_spawnCursor++ % spawnPoints.Length];
-                    if (bp != null) return bp.transform;
+                    if (bp != null && bp.gameObject.activeInHierarchy) return bp.transform;
                 }
                 Log.Warn(Tag, "All wired spawn points are missing; falling back to the registry.");
             }
@@ -395,7 +395,7 @@ namespace GatekeepersProtocol.Game
             for (int attempt = 0; attempt < all.Count; attempt++)
             {
                 var bp = all[_spawnCursor++ % all.Count];
-                if (bp != null) return bp.transform;
+                if (bp != null && bp.gameObject.activeInHierarchy) return bp.transform;
             }
             return null;
         }

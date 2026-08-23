@@ -220,6 +220,8 @@ namespace GatekeepersProtocol.Game
             if (clientOnly)
                 return;
 
+            RefreshPlayerCount();
+
             // Stable fields after the prose. The sentence stays readable;
             // wave-report reads startWave=/primary=/… without re-parsing the prose.
             Log.Event("Run", $"run begins at {SceneFlow.CombatDisplayName} starting at wave {Sim.StartWave} — " +

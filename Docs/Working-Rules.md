@@ -201,7 +201,7 @@ not a temporary compromise.
 | Step | Who | How |
 |---|---|---|
 | Kit prefabs | agent | `gkb_bastion_kit_request.txt` |
-| Segment layout + H/S/T/D + unlock graph | agent | sketch under `Tools/bastion-sketch/`, then `gkb_bastion_sketch_request.txt` (path in file, or empty for default). Emits into `Bastion.unity` under `Environment`. |
+| Segment layout + H/S/T/D + unlock graph | agent | sketch under `Tools/bastion-sketch/`, then `gkb_bastion_sketch_request.txt` (path in file, or empty for default; optional second line is the scene path, default `Assets/Scenes/Bastion.unity`). Emits into that scene under `Environment`. New rooms rebuild in `Generated/` then **settle into `Authored/`** (unpacked, unique scene geometry). Rooms already in `Authored/` are not duplicated. Kit footprint retune of Control Rooms: `gkb_bastion_control_rebuild_request.txt` (scene path, optional sketch path). Settle leftovers: `gkb_bastion_settle_request.txt` (scene path). |
 | Obstacle seed | agent | `GatekeepersProtocol/Build/Place Bastion Obstacles` (or `gkb_bastion_obstacles_request.txt`). Names encode intent (`LongLane_*`, `Corner_*`, `Choke_*`, `Mask_*`). Skips hatch bay `02` when already authored. |
 | Field consoles | agent | `gkb_bastion_terminals_request.txt` — Ship Desk/Screen/Label on each `BastionTerminal`; ensures GateSlab on existing `BastionDoor` markers only (does not move gates or change Door/None sides); ensures `BastionLayout` on Environment. |
 | Passages vs gates | author | Segment **Door** with no `D` = passage (always walk). **`D` / `BastionDoor`** = progression gate (starts locked). Soft-lock parked. |

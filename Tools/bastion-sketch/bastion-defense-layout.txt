@@ -1,5 +1,5 @@
 # Bastion Defense Layout — Zo's diagram, 2026-08-14. Coordinates are world metres
-# at kit scaler 2 (Half 16 m, Full 26 m, OpenArea 42 m, ControlRoom 152x76 m).
+# at kit scaler 2 (Half 16 m, Full 26 m, OpenArea 42 m, ControlRoom 94x47 m).
 # North = +Z, East = +X. The authored Hatch docks against R1's south wall
 # (world z = -61); the H mark is the room tag, not the hatch position.
 #
@@ -32,7 +32,7 @@ room R13 Half -29 83 S:S5:N
 room R14 Half 29 83 S:S6:N
 
 # --- Final control room (behind the control door) -----------------------------
-room R15 ControlRoom 0 129 M S:ControlW:W S:ControlE:E
+room R15 ControlRoom 0 114.5 M S:ControlW:W S:ControlE:E
 
 # --- Open passages: both faces carry a Door side; along= aligns the shared
 # aperture when room centres differ on that axis.

@@ -21,9 +21,11 @@ namespace GatekeepersProtocol.Game
 
         [SerializeField] BastionDoor door;
         [SerializeField] SpawnPoint spawnPoint;
+        [SerializeField] int minSeats = 1;
 
         public BastionDoor Door => door;
         public SpawnPoint Spawn => spawnPoint;
+        public int MinSeats => minSeats < 1 ? 1 : minSeats;
 
         public void AttachTo(BastionSegment segment, BastionDoorEdge edge)
         {
@@ -58,6 +60,11 @@ namespace GatekeepersProtocol.Game
             if (spawnPoint == null)
                 return;
             spawnPoint.gameObject.name = "S_" + spawnId;
+        }
+
+        public void SetMinSeats(int value)
+        {
+            minSeats = value < 1 ? 1 : value;
         }
 
         void Reset()

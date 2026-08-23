@@ -102,7 +102,7 @@ namespace GatekeepersProtocol.Game
 
             _body.BindMap(() => _mapOpen = true, _mapOpen);
 
-            _body.SetDestination($"Bastion {SceneFlow.BastionName}");
+            _body.SetDestination($"Bastion {SceneFlow.CombatDisplayName}");
             _body.SetPremise(PremiseBrief);
 
             // The picker is capped by the realm being PLAYED, not by this machine's own
@@ -360,7 +360,7 @@ namespace GatekeepersProtocol.Game
             }
             GameSession.PendingStartWave = _startWave;
             Log.Event("Ship",
-                $"party embark armed for bastion {SceneFlow.BastionName} starting at wave {_startWave} — " +
+                $"party embark armed for bastion {SceneFlow.CombatDisplayName} starting at wave {_startWave} — " +
                 $"{m.BankedSalvage} banked, " +
                 $"{(m.OwnsAnyWeapon ? LoadoutBrief(m) : "NO WEAPON (improvised cutter only)")}, " +
                 $"{(m.HasRepairRigEquipped ? "repair rig equipped" : "NO REPAIR RIG")}");
@@ -393,14 +393,14 @@ namespace GatekeepersProtocol.Game
                 Log.Event("Demo", "first embark");
             GameSession.PendingStartWave = _startWave;
             Log.Event("Ship",
-                $"embarked for bastion {SceneFlow.BastionName} starting at wave {_startWave} — " +
+                $"embarked for bastion {SceneFlow.CombatDisplayName} starting at wave {_startWave} — " +
                 $"{m.BankedSalvage} banked, " +
                 $"{(m.OwnsAnyWeapon ? LoadoutBrief(m) : "NO WEAPON (improvised cutter only)")}, " +
                 $"{(m.HasRepairRigEquipped ? "repair rig equipped" : "NO REPAIR RIG")}");
             _embarking = SceneFlow.LoadBastion();
             _loadFailed = !_embarking;
             if (_loadFailed)
-                Log.Error("Ship", "embark refused — Bastion is not in Build Settings / not loadable");
+                Log.Error("Ship", "embark refused — " + SceneFlow.CombatScene + " is not in Build Settings / not loadable");
         }
 
         /// <summary>Beat 0's named EMBARK refuses. One id, three reason strings — copy rides

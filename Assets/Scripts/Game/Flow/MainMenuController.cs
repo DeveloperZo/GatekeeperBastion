@@ -104,7 +104,6 @@ namespace GatekeepersProtocol.Game
         {
             if (_loading) return;
             _loading = true;
-            FrontEndMusic.Stop();
             if (!SceneFlow.LoadRealmSelect())
                 _loading = false;
         }

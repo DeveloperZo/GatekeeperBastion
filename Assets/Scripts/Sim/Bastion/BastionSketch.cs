@@ -8,6 +8,7 @@ namespace GatekeepersProtocol.Sim
         public List<BastionSketchRoom> Rooms { get; } = new List<BastionSketchRoom>();
         public List<BastionSketchSideOverride> Sides { get; } = new List<BastionSketchSideOverride>();
         public List<BastionSketchDoor> Doors { get; } = new List<BastionSketchDoor>();
+        public List<BastionSketchStair> Stairs { get; } = new List<BastionSketchStair>();
     }
 
     public sealed class BastionSketchRoom
@@ -16,7 +17,18 @@ namespace GatekeepersProtocol.Sim
         public BastionBlockKind Kind;
         public float CenterX;
         public float CenterZ;
+        /// <summary>0 is the ground floor. World Y is <see cref="CenterY"/>.</summary>
+        public int Storey;
         public List<BastionSketchMark> Marks { get; } = new List<BastionSketchMark>();
+
+        public float CenterY => Storey * BastionKit.StoreyHeight;
+    }
+
+    /// <summary>Vertical well between two overlapping rooms one storey apart.</summary>
+    public sealed class BastionSketchStair
+    {
+        public string LowerId;
+        public string UpperId;
     }
 
     public enum BastionSketchMarkKind : byte
@@ -30,11 +42,15 @@ namespace GatekeepersProtocol.Sim
     public struct BastionSketchMark
     {
         public BastionSketchMarkKind Kind;
-        /// <summary>Spawn or terminal id from S:id / T:id. Empty for hatch and master.</summary>
+        /// <summary>Spawn or terminal id from S:id / T:id, or hatch id from H:id
+        /// (ShipHatches.IdOf: "1","2","3"). Empty for a bare H mark and for master.</summary>
         public string RefId;
         /// <summary>Spawn marks require an edge (S:S1:W). Unused for other kinds.</summary>
         public BastionSketchDirection Direction;
         public bool HasDirection;
+        /// <summary>Spawn is live when the run's seat count is at least this.
+        /// 1 (default) is always on. 3 is the two-seat mute.</summary>
+        public int MinSeats;
     }
 
     public enum BastionSketchDirection : byte

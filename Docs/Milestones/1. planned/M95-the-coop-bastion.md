@@ -4,12 +4,13 @@
 Status: planned
 Update trigger: when the zone shape changes, when the hatch count changes, when the
 sketch parser gains or loses a mark kind
-Last updated: 2026-08-20
+Last updated: 2026-08-22
 -->
 
-A second derelict layout, `Assets/Scenes/Bastion_Coop.unity`, authored so that a party
-of two or three docks two or three hatch doors against it and has to hold all of them.
-One zone plus the finale. Smaller than `Bastion.unity`.
+A second kit layout, `Assets/Scenes/Bastion_Coop.unity`, authored so that a party
+of two or three docks two or three hatch doors against it and has to hold all of
+them. **20–30 rooms, two storeys.** Ground is the demo spine (R1–R15). Storey 1
+is three galleries that do not skip D1/D2/D3. Three hatches on R1.
 
 ## Story
 
@@ -18,23 +19,16 @@ several of us, so that the layout itself is the reason we cannot stand in one do
 
 ## Why it matters
 
-**`Bastion.unity` has one hatch and cannot express the rule.** The current layout has a
-single `H` in R1 and a door graph keyed to terminal completions across three zones. The
-co-op demo's whole argument is that a party presents two or three doors to hold, and
-there is nowhere in the tree that shape can exist.
+**`Bastion.unity` has one hatch and cannot express the rule.** The demo has a single
+`H` in R1. Co-op presents two or three doors. That is the delta, not a reason to
+shrink the map.
 
-**Travel is not the content here.** The solo demo spends its length teaching verbs.
-This demo teaches nothing, so a three-zone walk is dead time. One zone plus the finale
-is the shape (`Docs/Demo - Coop/README.md`), and the counts are tunable while the shape
-is spec.
+The one-zone shrink is struck (Zo, 2026-08-22). Demo is **15** rooms on one floor.
+Co-op aims **20–30** split across **two** floors (`StoreyHeight` 5). Author for
+three seats; two-seat runs mute the extra mouths (`S:id:edge:3`) and seal hatch 2.
+Circular Variant A is grammar only — not a graph to copy this pass.
 
-**The reference layout is a guide, not a command** (Zo, 2026-08-20). `Circular Variant
-A` shows the grammar this project's bastions use: sized rooms, hub rooms at 21, spawn
-rooms feeding a defended room, terminals gating doors, a Control Room at the end. Take
-the grammar; do not copy the graph.
-
-Leverage tier (`../../Working-Rules.md`): **#4, self-organisation.** A new structure
-the demo's beats run inside.
+Leverage tier (`../../Working-Rules.md`): **#4, self-organisation.**
 
 ## Acceptance criteria
 
@@ -44,15 +38,15 @@ the demo's beats run inside.
    before any party-wide load.
 3. The defended room carries **three** hatch-door positions along the side the ship
    docks to, with stable ids matching the Ship's three.
-4. In a two-seat Run, hatches 1 and 3 are open in this scene and the middle reads
-   sealed, matching the Ship's assignment.
+4. In a two-seat Run, hatches 1 and 3 are open and the middle reads sealed, and
+   spawn marks with minSeats=3 (S7–S12) are inactive.
 5. Standing at hatch 1, a player can see hatch 3's position and reach it on foot inside
    ten seconds at normal move speed.
-6. The layout is one zone plus the finale: field terminals gating one bank, then the
-   Control Room and its final window.
-7. Every spawn room has a path to every open hatch door, so a body can target any of
-   them.
-8. Total room count is lower than `Bastion.unity`'s.
+6. The ground spine matches the demo: T1+T2 gate D1, T3 gates D2, T4+T5 gate the
+   Control Room. Storey 1 does not skip those gates.
+7. Every spawn room has a path to every hatch door that is open for its island.
+8. Room count is **20–30**, with rooms on storey 0 and storey 1. Sketch is
+   `Tools/bastion-sketch/bastion-coop-layout.txt` (28 rooms, three stairs).
 9. A guest loads the scene and sees the same room and door state the host does.
 10. `Bastion.unity` is unchanged by this milestone.
 
@@ -67,10 +61,11 @@ the demo's beats run inside.
    first thing to fix and it is small.
 3. **Change** Build Settings to add and enable the scene. This is also step 7 of `M92`;
    whichever lands first does it, and the other verifies it.
-4. **Author** the room sizes from the existing grammar: hub rooms at 21, the defended
-   room large enough that three door positions are not adjacent, spawn rooms at 8.
-5. **Do not** re-use `Bastion.unity`'s door graph. This layout's doors key on bank
-   success per the ruled loop unit, not on terminal completion.
+4. **Author** 20–30 rooms on two storeys. Ground = demo R1–R15. Upper = islands
+   U1–U5, U6–U8, U10–U14 at the same XZ, `storey=1`. Stairs `R1 U1`, `R6 U6`,
+   `R10 U10`. Parser: `storey=`, `stair`, `S:id:edge:3`.
+5. **Use** the demo door graph on the ground. Three numbered hatch marks on R1.
+   Two-seat mute is hatch 2 plus S7–S12.
 
 Rejected: procedurally generating the layout. Nothing else in this project generates a
 bastion at runtime, and a demo needs a known shape to author beats against.
@@ -84,13 +79,12 @@ bastion at runtime, and a demo needs a known shape to author beats against.
 
 ## Verification
 
-- Criteria 1, 5, 6, 8: playthrough. Embark into the scene, walk every room, time the
-  run between hatch 1 and hatch 3, count rooms against `Bastion.unity`.
+- Criteria 1, 5, 6, 8: playthrough. Embark, walk both storeys, time hatch 1 to 3,
+  confirm 20–30 rooms and the three stairs.
 - Criteria 2, 10: read `ProjectSettings/EditorBuildSettings.asset` for the enabled
   entry, and `git diff` on `Bastion.unity` showing no change.
-- Criteria 3, 4, 7: EditMode test over the parsed sketch asserting three hatch marks
-  with the expected ids, and a navmesh path assertion from each spawn room to each
-  hatch position.
+- Criteria 3, 4, 7: EditMode test over the parsed sketch — three hatch marks, S7–S12
+  minSeats=3, zone-1 spawns path to R1. Scene emit later.
 - Criterion 9: eyes-on, two editor instances. The net fixture cannot test scene load
   across MPPM.
 
@@ -112,5 +106,5 @@ close until it lands.
 
 ## Do not build
 
-A second destination. A third zone. Per-hatch HP or enemy target selection, which are
-the demo's. Any change to `Bastion.unity`.
+A second destination. Circular Variant A as a new graph. Per-hatch HP or enemy target
+selection, which are the demo's. Any change to `Bastion.unity`.

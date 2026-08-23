@@ -98,6 +98,25 @@ namespace GatekeepersProtocol.Tests.EditMode.Bastion
         }
 
         [Test]
+        public void StackedStoreys_PairSeparately()
+        {
+            var sketch = new BastionSketch();
+            AddRoom(sketch, "A0", BastionBlockKind.Full, 0f, 0f);
+            AddRoom(sketch, "B0", BastionBlockKind.Full, 26f, 0f);
+            BastionSketchRoom a1 = AddRoom(sketch, "A1", BastionBlockKind.Full, 0f, 0f);
+            a1.Storey = 1;
+            BastionSketchRoom b1 = AddRoom(sketch, "B1", BastionBlockKind.Full, 26f, 0f);
+            b1.Storey = 1;
+            AddDoorSide(sketch, "A0", BastionSketchDirection.East);
+            AddDoorSide(sketch, "B0", BastionSketchDirection.West);
+            AddDoorSide(sketch, "A1", BastionSketchDirection.East);
+            AddDoorSide(sketch, "B1", BastionSketchDirection.West);
+
+            List<BastionSketchPassage> passages = BastionSketchPassages.Find(sketch);
+            Assert.AreEqual(2, passages.Count);
+        }
+
+        [Test]
         public void DefenseLayout_ElevenPassages_ThreeGates()
         {
             // Mirror of Tools/bastion-sketch/bastion-defense-layout.txt: 11 open passages

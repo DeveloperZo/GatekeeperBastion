@@ -25,6 +25,7 @@ ROWS = {0: (-1, 0), 1: (-1, 0),
         6: (-2, 1), 7: (-2, 1), 8: (-2, 1), 9: (-2, 1),
         10: (-1, 0), 11: (-1, 0)}
 VOID = {(-1, 5), (0, 5), (-1, 6), (0, 6)}      # deck 2 has no floor here
+STAIR_HOLE = {(-2, 5), (-2, 6)}                 # deck-2 floor omitted; deck-1 floor stays (buried ramp)
 DECK_Y = {1: 0.0, 2: 5.0}
 CORRIDOR_HALF = 1.25                            # spine runs x[-1.25, 1.25]
 
@@ -32,7 +33,7 @@ def cells(deck):
     out = set()
     for iz, (a, b) in ROWS.items():
         for ix in range(a, b + 1):
-            if deck == 2 and (ix, iz) in VOID:
+            if deck == 2 and ((ix, iz) in VOID or (ix, iz) in STAIR_HOLE):
                 continue
             out.add((ix, iz))
     return out
@@ -285,7 +286,7 @@ for deck, y in DECK_Y.items():
     for (ix, iz) in sorted(cs):
         gbox('GFloor_%d_%d_%d' % (deck, ix, iz), (5 * ix + 2.5, y - 0.25, 5 * iz + 2.5), (5, .5, 5))
         obj('F%d_%d_%d' % (deck, ix, iz), DRESS, (5 * ix + 5, y, 5 * iz), 0.0, mesh=MESH['Floor'])
-        if deck == 1 and (ix, iz) in VOID:
+        if deck == 1 and ((ix, iz) in VOID or (ix, iz) in STAIR_HOLE):
             continue          # open to the double-height void; CVoid caps it higher up
         low = ix in (-1, 0)
         obj('C%d_%d_%d' % (deck, ix, iz), DRESS, (5 * ix + 5, y, 5 * iz), 0.0,
@@ -296,6 +297,10 @@ for deck, y in DECK_Y.items():
 for (ix, iz) in sorted(VOID):
     obj('CVoid_%d_%d' % (ix, iz), DRESS, (5 * ix + 5, DECK_Y[2], 5 * iz), 0.0,
         mesh=MESH['Ceil'])
+# Stair hole keeps the deck-2 ceiling (roof) that D2 skipped with the floor.
+for (ix, iz) in sorted(STAIR_HOLE):
+    obj('C2_%d_%d' % (ix, iz), DRESS, (5 * ix + 5, DECK_Y[2], 5 * iz), 0.0,
+        mesh=MESH['Ceil'])
 
 # Ceiling lights. Identity rotation, seated so the panel's 0.102 m body tucks under the
 # ceiling it hangs from - the same rule BastionSegmentVisuals uses. The old hull rotated
@@ -304,7 +309,7 @@ LIGHT_H = 0.102
 lights = 0
 for deck, y in DECK_Y.items():
     for (ix, iz) in sorted(D1 if deck == 1 else D2):
-        if deck == 1 and (ix, iz) in VOID:
+        if deck == 1 and ((ix, iz) in VOID or (ix, iz) in STAIR_HOLE):
             continue          # LightVoid covers this column from higher up
         under = 3.49 if ix in (-1, 0) else 4.0        # Ceiling_02 over the spine columns
         obj('Light%d_%d_%d' % (deck, ix, iz), DRESS,
@@ -312,6 +317,10 @@ for deck, y in DECK_Y.items():
         lights += 1
 for (ix, iz) in sorted(VOID):                          # high over the drive core
     obj('LightVoid_%d_%d' % (ix, iz), DRESS,
+        (5 * ix + 2.5, DECK_Y[2] + 4.0 - LIGHT_H, 5 * iz + 2.5), 0.0, mesh=MESH['LightPanel'])
+    lights += 1
+for (ix, iz) in sorted(STAIR_HOLE):
+    obj('Light2_%d_%d' % (ix, iz), DRESS,
         (5 * ix + 2.5, DECK_Y[2] + 4.0 - LIGHT_H, 5 * iz + 2.5), 0.0, mesh=MESH['LightPanel'])
     lights += 1
 print("  ceiling lights: %d" % lights)
@@ -437,7 +446,7 @@ for (ix, iz) in sorted(VOID):
 # the kit stair rises 5.798 m; the decks are 5.0 apart, so scale it to land exactly
 STAIR_S = 5.0 / 5.798
 RUN = 8.022 * STAIR_S
-obj('Stair', DRESS, (-5.0, 0.0, 25.0), 0.0, (STAIR_S, STAIR_S, STAIR_S),
+obj('Stair', DRESS, (-8.5, 0.0, 25.0), 0.0, (STAIR_S, STAIR_S, STAIR_S),
     mesh=MESH['Stairs'])
 # Walk plane through the treads, thick enough to be a normal stable ramp. The
 # player's CharacterController has skinWidth 0.08 - the first version of this
@@ -450,35 +459,14 @@ obj('Stair', DRESS, (-5.0, 0.0, 25.0), 0.0, (STAIR_S, STAIR_S, STAIR_S),
 ang = math.degrees(math.atan2(5.0, RUN))
 hq = math.radians(-ang) / 2.0
 q = (math.sin(hq), 0.0, 0.0, math.cos(hq))
-def _qrot(q, v):
-    qx, qy, qz, qw = q
-    vx, vy, vz = v
-    tx = 2.0 * (qy * vz - qz * vy)
-    ty = 2.0 * (qz * vx - qx * vz)
-    tz = 2.0 * (qx * vy - qy * vx)
-    return (vx + qw * tx + (qy * tz - qz * ty),
-            vy + qw * ty + (qz * tx - qx * tz),
-            vz + qw * tz + (qx * ty - qy * tx))
-# X-alignment: REVERTED an attempted "fix" here that hand-parsed the FBX vertex
-# bounds and computed a center of x=-5.91. Unity's own live Renderer.bounds on
-# the imported "Stair" mesh reports its true center as x=-4.088 - the manual
-# FBX arithmetic was wrong (axis or pivot assumption never checked against
-# anything real), and the ShipCoopStairWalkTests alignment assertion, written
-# specifically to catch this class of error, caught it: it failed loudly
-# rather than silently reintroducing the misalignment it was written to
-# prevent. -4.09 (unchanged from before) is correct; only the thickness fix
-# from the previous commit stands.
-STAIR_WORLD_X = -4.09
-HALF_W = 0.98
-
-OLD_HALF, NEW_HALF = 0.025, 0.175          # 0.05 m -> 0.35 m thick
-old_center = (STAIR_WORLD_X, 2.5, 28.45)
-normal = _qrot(q, (0.0, 1.0, 0.0))          # world direction of the box's local +Y
-surface = tuple(old_center[k] + OLD_HALF * normal[k] for k in range(3))
-new_center = tuple(surface[k] - NEW_HALF * normal[k] for k in range(3))
-gbox('GStairWalk', new_center, (2 * HALF_W, 2 * NEW_HALF, math.hypot(RUN, 5.0)),
+# Port well at (-8.5, 0, 25) yaw 0. Climb is +Z. Walk box is a child of Stair
+# in the live scene so moving the mesh moves the collider. Do not add a
+# MeshCollider to SM_Prop_Stairs_01 — the step faces wall the capsule.
+BURY = 2.0
+old_len = math.hypot(RUN, 5.0)
+gbox('GStairWalk', (-7.5885, 1.7929, 27.7274), (2.85, 0.35, old_len + BURY),
      quat='{x: %.7f, y: 0, z: 0, w: %.7f}' % (q[0], q[3]), hint=-ang)
-gbox('GStairHead', (STAIR_WORLD_X, 4.75, 32.5), (3.0, 0.5, 3.0))
+gbox('GStairHead', (-7.5885, 4.75, 32.5), (3.0, 0.5, 3.0))
 print("stair: 5.0 m rise over %.2f m run = %.1f deg" % (RUN, ang))
 
 # ---- airlock shells at the three hatch bays ------------------------------------
@@ -629,8 +617,8 @@ for deck, lines in PARTITIONS.items():
                                                # read as detached boxes once chopped up;
                                                # the original ship had one continuous
                                                # starboard Gallery and this restores that).
-            if deck == 1 and abs(L - 25.0) < 0.01 and px == -1.25:
-                continue                      # the stair foot rises through this bay
+            if deck == 1 and px == -5.0 and (abs(L - 25.0) < 0.01 or abs(L - 35.0) < 0.01):
+                continue                      # port-room stair well (foot at z=35, yaw 180)
             obj('Part%d_%d_%d' % (deck, int(L * 10), int(px * 10)), DRESS,
                 (px, y, L), 0.0, (sx_, 1, 1), mesh=MESH['Wall'])
             gbox('GPart%d_%d_%d' % (deck, int(L * 10), int(px * 10)),

@@ -357,18 +357,18 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
-        /// <summary>Host: NetworkSceneManager loads Bastion for every seat after countdown.</summary>
+        /// <summary>Host: NetworkSceneManager loads Bastion_Coop for every seat after countdown.</summary>
         public void ServerLoadPartyBastion(int startWave)
         {
             if (_nm == null || !_nm.IsServer) return;
             GameSession.PendingStartWave = startWave;
-            if (!SceneFlow.CanLoad(SceneFlow.Bastion))
+            if (!SceneFlow.CanLoad(SceneFlow.BastionCoop))
             {
-                Log.Error(Tag, "party Bastion load refused — Bastion not in Build Settings.");
+                Log.Error(Tag, "party Bastion load refused — " + SceneFlow.BastionCoop + " not in Build Settings.");
                 return;
             }
-            _nm.SceneManager.LoadScene(SceneFlow.Bastion, LoadSceneMode.Single);
-            Log.Event(Tag, "party load Bastion startWave=" + startWave);
+            _nm.SceneManager.LoadScene(SceneFlow.BastionCoop, LoadSceneMode.Single);
+            Log.Event(Tag, "party load " + SceneFlow.BastionCoop + " startWave=" + startWave);
         }
 
         /// <summary>Host: NetworkSceneManager returns the party to Ship without shutdown.</summary>

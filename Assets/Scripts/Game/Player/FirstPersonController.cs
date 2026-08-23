@@ -119,6 +119,13 @@ namespace GatekeepersProtocol.Game
             SetCursorLocked(locked);
         }
 
+        /// <summary>Zero accumulated fall so a Dev teleport or respawn does not carry a
+        /// downward velocity through the floor on the next Move.</summary>
+        public void ClearFallVelocity()
+        {
+            _verticalVelocity = -1f;
+        }
+
         /// <summary>Set the look pitch through the controller's own pipeline. THE ONLY legal
         /// way to point the camera up/down from outside: pitch lives in _pitch and is
         /// re-applied to the camera every look tick, so writing camera.localRotation

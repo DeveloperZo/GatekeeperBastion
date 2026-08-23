@@ -4,26 +4,38 @@ using NUnit.Framework;
 
 namespace GatekeepersProtocol.Tests
 {
-    /// <summary>Whispers of the Void hosts on Ship and Bastion, plus SFX start-click
-    /// fades — YAML / PCM on disk, no scene load.</summary>
+    /// <summary>Hydrodynamics beds on Ship/Bastion/Range, Stardust slices on
+    /// Splash/MainMenu, plus SFX start-click fades — YAML / PCM on disk, no scene load.</summary>
     public class SessionMusicHostTests
     {
-        const string WhispersGuid = "482f8aeab93ef914d92d74c5ed0ad611";
-        const string StardustGuid = "baf9676f5db601447905dbe89a258d66";
+        const string HydroShipGuid = "3bd1c2ee836c46b8a8fe6f8c233e5ae0";
+        const string HydroCombatGuid = "453afb1138044a779a326d8b645307fb";
+        const string StardustSplashGuid = "9613e068e24e4a7593e67b62325d7661";
+        const string StardustMenuGuid = "d82376462b3a451dad39b380c35a22e0";
+        const string StardustRealmGuid = "97d9e3b2a38743d680c38cc26298cf48";
         const float MaxFirstSample = 0.02f;
 
         [Test]
-        public void ShipAndBastion_HostWhispersAsLevelMusic()
+        public void ShipAndRange_HostHydroShipAsLevelMusic()
         {
-            AssertWhispersHost("Assets/Scenes/Ship - Demo.unity");
-            AssertWhispersHost("Assets/Scenes/Bastion.unity");
+            AssertLevelHost("Assets/Scenes/Ship - Demo.unity", HydroShipGuid);
+            AssertLevelHost("Assets/Scenes/Ship - CoOp.unity", HydroShipGuid);
+            AssertLevelHost("Assets/Scenes/Range.unity", HydroShipGuid);
         }
 
         [Test]
-        public void SplashAndMainMenu_HostStardustAsBackgroundMusic()
+        public void Bastions_HostHydroCombatAsLevelMusic()
         {
-            AssertStardustHost("Assets/Scenes/Splash.unity");
-            AssertStardustHost("Assets/Scenes/MainMenu.unity");
+            AssertLevelHost("Assets/Scenes/Bastion.unity", HydroCombatGuid);
+            AssertLevelHost("Assets/Scenes/Bastion_Coop.unity", HydroCombatGuid);
+        }
+
+        [Test]
+        public void SplashAndMainMenu_HostStardustSlicesAsBackgroundMusic()
+        {
+            AssertFrontEndHost("Assets/Scenes/Splash.unity", StardustSplashGuid);
+            AssertFrontEndHost("Assets/Scenes/MainMenu.unity", StardustMenuGuid);
+            AssertFrontEndHost("Assets/Scenes/RealmSelect.unity", StardustRealmGuid);
         }
 
         [Test]
@@ -39,8 +51,11 @@ namespace GatekeepersProtocol.Tests
                 string path = Path.GetFullPath("Assets/Resources/Audio/Sfx/" + names[i]);
                 Assert.IsTrue(File.Exists(path), "missing " + path);
             }
-            Assert.IsTrue(File.Exists(Path.GetFullPath("Assets/Resources/Audio/Stardust Drifter.mp3")));
-            Assert.IsTrue(File.Exists(Path.GetFullPath("Assets/Resources/Audio/Whispers of the Void.mp3")));
+            Assert.IsTrue(File.Exists(Path.GetFullPath("Assets/Resources/Audio/Beds/Stardust-Splash.mp3")));
+            Assert.IsTrue(File.Exists(Path.GetFullPath("Assets/Resources/Audio/Beds/Stardust-Menu.mp3")));
+            Assert.IsTrue(File.Exists(Path.GetFullPath("Assets/Resources/Audio/Beds/Stardust-Realm.mp3")));
+            Assert.IsTrue(File.Exists(Path.GetFullPath("Assets/Resources/Audio/Beds/Hydro-Ship.mp3")));
+            Assert.IsTrue(File.Exists(Path.GetFullPath("Assets/Resources/Audio/Beds/Hydro-Combat.mp3")));
         }
 
         [Test]
@@ -50,22 +65,22 @@ namespace GatekeepersProtocol.Tests
             AssertFirstNearSilence("Assets/Resources/Audio/Sfx/Footstep-Walk.wav");
         }
 
-        static void AssertWhispersHost(string scenePath)
+        static void AssertLevelHost(string scenePath, string clipGuid)
         {
             string yaml = Read(scenePath);
             Assert.IsTrue(yaml.Contains("m_Name: Level Music"), scenePath + " missing Level Music");
-            Assert.IsTrue(yaml.Contains("guid: " + WhispersGuid),
-                scenePath + " is not bound to Whispers of the Void");
+            Assert.IsTrue(yaml.Contains("guid: " + clipGuid),
+                scenePath + " is not bound to the Hydrodynamics bed");
             Assert.IsFalse(yaml.Contains("m_Name: Background Music"),
                 scenePath + " still has a FrontEndMusic host");
         }
 
-        static void AssertStardustHost(string scenePath)
+        static void AssertFrontEndHost(string scenePath, string clipGuid)
         {
             string yaml = Read(scenePath);
             Assert.IsTrue(yaml.Contains("m_Name: Background Music"), scenePath + " missing Background Music");
-            Assert.IsTrue(yaml.Contains("guid: " + StardustGuid),
-                scenePath + " is not bound to Stardust Drifter");
+            Assert.IsTrue(yaml.Contains("guid: " + clipGuid),
+                scenePath + " is not bound to the Stardust slice");
         }
 
         static void AssertFirstNearSilence(string relative)

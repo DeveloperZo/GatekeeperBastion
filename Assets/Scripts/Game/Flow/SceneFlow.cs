@@ -46,21 +46,27 @@ namespace GatekeepersProtocol.Game
         /// hatch assignment both check for a live session and fall back to a single seat.</summary>
         public const string ShipCoop = "Ship - CoOp";
 
-        /// <summary>Combat scene name (the bastion run).</summary>
+        /// <summary>Solo / demo combat scene (<c>Assets/Scenes/Bastion.unity</c>).</summary>
         public const string Bastion = "Bastion";
+
+        /// <summary>Co-op combat scene (<c>Assets/Scenes/Bastion_Coop.unity</c>).
+        /// <see cref="LoadBastion"/> opens this from <see cref="ShipCoop"/>.</summary>
+        public const string BastionCoop = "Bastion_Coop";
 
         /// <summary>The practice range. Bastion-shaped so a Gatekeeper can think in it — the
         /// brain reads run state off a live controller — but it never draws a Wave
         /// (Docs/Milestones — a range you can fight in).
         ///
-        /// <b>The scene does not exist yet.</b> <c>Assets/Scenes/Range.unity</c> is unbuilt, it
-        /// is not in the build settings, and no door reaches it, so <see cref="LoadRange"/> will
-        /// refuse until the milestone lands. The constant is here because the code seams around
-        /// it are built; do not read it as evidence the range is.</summary>
+        /// The scene is built and in the build settings. What it still has no door: nothing in
+        /// Ship - CoOp reaches it, so today it is entered by opening Range.unity directly.</summary>
         public const string Range = "Range";
 
-        /// <summary>In-fiction name of the v0 bastion, for the nav map and the run-start log line.</summary>
+        /// <summary>In-fiction name of the solo bastion, for the nav map and the run-start log line.</summary>
         public const string BastionName = "ALPHA-7";
+
+        /// <summary>In-fiction name of the co-op layout, so run-start / embark logs name
+        /// which combat scene loaded.</summary>
+        public const string BastionCoopName = "COOP-1";
 
         /// <summary>True when <paramref name="sceneName"/> is either ship hub.</summary>
         public static bool IsShipHub(string sceneName) =>
@@ -78,12 +84,26 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>True when the active scene is a combat scene (weapons live). The ship hub
         /// is weapons-holstered; PlayerGun gates firing on this.</summary>
-        /// <remarks>Verified against SceneBuilder: the bastion is saved as
-        /// Assets/Scenes/Bastion.unity, so the active scene name in play mode is exactly
-        /// "Bastion" — including when that scene is opened and played directly in the editor.
+        /// <remarks>Combat destinations are Assets/Scenes/Bastion.unity and
+        /// Assets/Scenes/Bastion_Coop.unity, so the active name is "Bastion" or "Bastion_Coop"
+        /// — including when that scene is opened and played directly in the editor.
         /// PlayerGun additionally treats "a live GameController is in the scene" as a
         /// direct-play fallback, so a renamed or duplicated combat scene still fires.</remarks>
-        public static bool InCombatScene => ActiveSceneName == Bastion;
+        public static bool InCombatScene =>
+            ActiveSceneName == Bastion || ActiveSceneName == BastionCoop;
+
+        /// <summary>Combat scene <see cref="LoadBastion"/> opens: <see cref="BastionCoop"/>
+        /// from <see cref="ShipCoop"/>, otherwise <see cref="Bastion"/>.</summary>
+        public static string CombatScene =>
+            ActiveSceneName == ShipCoop ? BastionCoop : Bastion;
+
+        /// <summary>Fiction name of the combat scene this embark opens, or of the active
+        /// combat scene. <see cref="BastionCoopName"/> on <see cref="ShipCoop"/> and in
+        /// <see cref="BastionCoop"/>; otherwise <see cref="BastionName"/>.</summary>
+        public static string CombatDisplayName =>
+            ActiveSceneName == ShipCoop || ActiveSceneName == BastionCoop
+                ? BastionCoopName
+                : BastionName;
 
         /// <summary>Campaign menu scene — always MainMenu. Never Ship.</summary>
         public static string FrontEndScene => MainMenu;
@@ -130,7 +150,7 @@ namespace GatekeepersProtocol.Game
                     Log.Event("Net", "embark refused — use party EMBARK");
                 return false;
             }
-            return Load(Bastion);
+            return Load(CombatScene);
         }
 
         /// <summary>Exactly one EventSystem for uGUI. Shift Canvas variants nest one; scenes may
@@ -187,7 +207,7 @@ namespace GatekeepersProtocol.Game
                 // Guard trip: LoadScene would throw here and strand the caller (lose-screen soft-lock).
                 Log.Error(Tag, $"Cannot load scene '{sceneName}' — it is not in the build settings. " +
                                "Run GatekeepersProtocol/Build/All Scenes to register Splash, MainMenu, " +
-                               "RealmSelect, Ship - Demo, Ship - CoOp, Bastion.");
+                               "RealmSelect, Ship - Demo, Ship - CoOp, Bastion, Bastion_Coop.");
                 return false;
             }
 

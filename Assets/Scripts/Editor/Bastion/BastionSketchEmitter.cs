@@ -11,13 +11,16 @@ using UnityEngine.SceneManagement;
 namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Emits kit segment instances from a bastion sketch file. Trigger via
-    /// gkb_bastion_sketch_request.txt at the project root (path to sketch, or empty for default).
-    /// Closets only: gkb_bastion_spawn_rooms_request.txt — no room emit.</summary>
+    /// gkb_bastion_sketch_request.txt at the project root: first non-empty line is the sketch
+    /// path (empty file = default sketch); optional second line is the scene path to emit into
+    /// (empty / omitted = Assets/Scenes/Bastion.unity). Closets only:
+    /// gkb_bastion_spawn_rooms_request.txt — no room emit.</summary>
     [InitializeOnLoad]
     public static class BastionSketchEmitter
     {
         const string KitDir = "Assets/Prefabs/Bastion/Kit";
         const string DefaultSketchRelative = "Tools/bastion-sketch/bastion-defense-layout.txt";
+        const string DefaultSceneRelative = "Assets/Scenes/Bastion.unity";
         const string RootName = "BastionKit";
         const string GeneratedName = "Generated";
         const string AuthoredName = "Authored";
@@ -36,6 +39,8 @@ namespace GatekeepersProtocol.EditorTools
         static string SentinelPath => Path.Combine(Root, "gkb_bastion_sketch_request.txt");
         static string SpawnRoomsSentinelPath => Path.Combine(Root, "gkb_bastion_spawn_rooms_request.txt");
         static string SpawnRoomsReportPath => Path.Combine(Root, "gkb_bastion_spawn_rooms_report.json");
+        static string ControlRebuildSentinelPath => Path.Combine(Root, "gkb_bastion_control_rebuild_request.txt");
+        static string SettleSentinelPath => Path.Combine(Root, "gkb_bastion_settle_request.txt");
         static string DefaultSketchPath => Path.Combine(Root, DefaultSketchRelative);
 
         static BastionSketchEmitter()
@@ -63,17 +68,51 @@ namespace GatekeepersProtocol.EditorTools
                 return;
             }
 
+            if (File.Exists(ControlRebuildSentinelPath))
+            {
+                string rebuildText = "";
+                try
+                {
+                    rebuildText = File.ReadAllText(ControlRebuildSentinelPath);
+                    File.Delete(ControlRebuildSentinelPath);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[BastionSketchEmitter] control-rebuild sentinel: " + e.Message);
+                    return;
+                }
+
+                RebuildControlRoomsFromSentinel(rebuildText);
+                return;
+            }
+
+            if (File.Exists(SettleSentinelPath))
+            {
+                string settleText = "";
+                try
+                {
+                    settleText = File.ReadAllText(SettleSentinelPath);
+                    File.Delete(SettleSentinelPath);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[BastionSketchEmitter] settle sentinel: " + e.Message);
+                    return;
+                }
+
+                SettleSceneFromSentinel(settleText);
+                return;
+            }
+
             if (!File.Exists(SentinelPath)) return;
 
             string sketchPath = DefaultSketchPath;
+            string scenePath = DefaultSceneRelative;
             try
             {
-                string sentinelText = File.ReadAllText(SentinelPath).Trim();
+                string sentinelText = File.ReadAllText(SentinelPath);
                 File.Delete(SentinelPath);
-                if (sentinelText.Length > 0)
-                    sketchPath = Path.IsPathRooted(sentinelText)
-                        ? sentinelText
-                        : Path.Combine(Root, sentinelText);
+                ParseSketchSentinel(sentinelText, ref sketchPath, ref scenePath);
             }
             catch (Exception e)
             {
@@ -81,17 +120,16 @@ namespace GatekeepersProtocol.EditorTools
                 return;
             }
 
-            EmitFromSketchFile(sketchPath);
+            EmitFromSketchFile(sketchPath, scenePath);
         }
 
         /// <summary>Opens Bastion from disk, places missing closets, saves. Does not emit
         /// rooms. Report is <c>gkb_bastion_spawn_rooms_report.json</c>.</summary>
         static void PlaceAuthoredSpawnRoomsFromDisk()
         {
-            const string bastionScenePath = "Assets/Scenes/Bastion.unity";
             try
             {
-                Scene bastion = EditorSceneManager.OpenScene(bastionScenePath, OpenSceneMode.Single);
+                Scene bastion = EditorSceneManager.OpenScene(DefaultSceneRelative, OpenSceneMode.Single);
                 int placed = EnsureAuthoredSpawnRooms();
                 EditorSceneManager.MarkSceneDirty(bastion);
                 EditorSceneManager.SaveScene(bastion);
@@ -113,7 +151,206 @@ namespace GatekeepersProtocol.EditorTools
             }
         }
 
+        /// <summary>One ControlRoom line per request: scene path, optional sketch path on the
+        /// next line (positions). Unparents from Authored so Rebuild can run, stamps the new
+        /// kit footprint, unpacks leftover pack links, then settles back under Authored.</summary>
+        static void RebuildControlRoomsFromSentinel(string text)
+        {
+            string scenePath = DefaultSceneRelative;
+            string sketchPath = "";
+            if (!string.IsNullOrEmpty(text))
+            {
+                string[] lines = text.Split('\n');
+                int filled = 0;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i].Trim();
+                    if (line.Length == 0)
+                        continue;
+                    if (filled == 0)
+                        scenePath = NormalizeScenePath(line);
+                    else if (filled == 1)
+                        sketchPath = Path.IsPathRooted(line) ? line : Path.Combine(Root, line);
+                    filled++;
+                }
+            }
+
+            try
+            {
+                Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                GameObject layoutRoot = FindOrCreateRoot();
+                FindOrCreateSubtrees(layoutRoot, out GameObject generated, out GameObject authored);
+
+                var sketchCenters = new Dictionary<string, Vector3>();
+                if (!string.IsNullOrEmpty(sketchPath) && File.Exists(sketchPath))
+                {
+                    BastionSketchParseResult parsed = BastionSketchParser.Parse(File.ReadAllText(sketchPath));
+                    if (parsed.Success)
+                    {
+                        for (int i = 0; i < parsed.Sketch.Rooms.Count; i++)
+                        {
+                            BastionSketchRoom room = parsed.Sketch.Rooms[i];
+                            if (room.Kind != BastionBlockKind.ControlRoom)
+                                continue;
+                            sketchCenters[room.Id] = new Vector3(room.CenterX, 0f, room.CenterZ);
+                        }
+                    }
+                    else
+                        Debug.LogError("[BastionSketchEmitter] Control rebuild sketch failed: " + parsed.Error);
+                }
+
+                BastionSegment[] segments = UnityEngine.Object.FindObjectsByType<BastionSegment>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None);
+                int rebuilt = 0;
+                BastionSegment.SuppressValidateRebuild = true;
+                try
+                {
+                    for (int i = 0; i < segments.Length; i++)
+                    {
+                        BastionSegment segment = segments[i];
+                        if (segment == null || segment.BlockKind != BastionBlockKind.ControlRoom)
+                            continue;
+                        if (!segment.CanMutateHierarchy())
+                            continue;
+
+                        Transform t = segment.transform;
+                        t.SetParent(generated.transform, true);
+                        if (sketchCenters.TryGetValue(t.name, out Vector3 center))
+                            t.position = new Vector3(center.x, t.position.y, center.z);
+
+                        segment.Rebuild();
+                        UnpackGeom(t);
+                        t.SetParent(authored.transform, true);
+                        rebuilt++;
+                    }
+                }
+                finally
+                {
+                    BastionSegment.SuppressValidateRebuild = false;
+                }
+
+                UnpackGeom(generated.transform);
+                UnpackGeom(authored.transform);
+                int settled = SettleGeneratedIntoAuthored();
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+                Debug.Log("[BastionSketchEmitter] ControlRoom rebuild scene=" + scene.path
+                    + " rebuilt=" + rebuilt + " settled=" + settled);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("[BastionSketchEmitter] ControlRoom rebuild: " + e);
+            }
+        }
+
+        static void SettleSceneFromSentinel(string text)
+        {
+            string scenePath = DefaultSceneRelative;
+            if (!string.IsNullOrEmpty(text))
+            {
+                string[] lines = text.Split('\n');
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i].Trim();
+                    if (line.Length == 0)
+                        continue;
+                    scenePath = NormalizeScenePath(line);
+                    break;
+                }
+            }
+
+            try
+            {
+                Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                GameObject layoutRoot = FindOrCreateRoot();
+                FindOrCreateSubtrees(layoutRoot, out _, out _);
+                UnpackGeom(layoutRoot.transform);
+                int settled = SettleGeneratedIntoAuthored();
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+                Debug.Log("[BastionSketchEmitter] Settled " + settled
+                    + " room(s) into Authored in " + scene.path);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("[BastionSketchEmitter] Settle: " + e);
+            }
+        }
+
+        /// <summary>Move every remaining Generated child under Authored. Rooms rebuild while
+        /// they live in Generated; once they sit here they are unique scene geometry.</summary>
+        static int SettleGeneratedIntoAuthored()
+        {
+            GameObject layoutRoot = GameObject.Find(RootName);
+            if (layoutRoot == null)
+                layoutRoot = GameObject.Find("BastionLayout");
+            if (layoutRoot == null)
+                return 0;
+
+            FindOrCreateSubtrees(layoutRoot, out GameObject generated, out GameObject authored);
+            UnpackGeom(generated.transform);
+            int moved = 0;
+            for (int i = generated.transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = generated.transform.GetChild(i);
+                if (child == null)
+                    continue;
+                child.SetParent(authored.transform, true);
+                moved++;
+            }
+
+            return moved;
+        }
+
+        static void UnpackGeom(Transform root)
+        {
+            if (root == null)
+                return;
+            Transform[] all = root.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < all.Length; i++)
+            {
+                GameObject go = all[i].gameObject;
+                if (!PrefabUtility.IsOutermostPrefabInstanceRoot(go))
+                    continue;
+                PrefabUtility.UnpackPrefabInstance(
+                    go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            }
+        }
+
+        static void CollectExistingMarks(
+            Transform room,
+            Dictionary<string, SpawnPoint> spawnByName,
+            Dictionary<string, BastionTerminal> terminalById)
+        {
+            SpawnPoint[] spawns = room.GetComponentsInChildren<SpawnPoint>(true);
+            for (int i = 0; i < spawns.Length; i++)
+            {
+                SpawnPoint sp = spawns[i];
+                if (sp == null)
+                    continue;
+                string id = sp.name;
+                if (id.StartsWith("Spawn_", StringComparison.Ordinal))
+                    id = id.Substring("Spawn_".Length);
+                if (id.Length > 0)
+                    spawnByName[id] = sp;
+            }
+
+            BastionTerminal[] terminals = room.GetComponentsInChildren<BastionTerminal>(true);
+            for (int i = 0; i < terminals.Length; i++)
+            {
+                BastionTerminal t = terminals[i];
+                if (t == null || string.IsNullOrEmpty(t.TerminalId))
+                    continue;
+                terminalById[t.TerminalId] = t;
+            }
+        }
+
         public static void EmitFromSketchFile(string sketchPath)
+        {
+            EmitFromSketchFile(sketchPath, DefaultSceneRelative);
+        }
+
+        public static void EmitFromSketchFile(string sketchPath, string scenePath)
         {
             if (!File.Exists(sketchPath))
             {
@@ -121,8 +358,11 @@ namespace GatekeepersProtocol.EditorTools
                 return;
             }
 
-            const string bastionScenePath = "Assets/Scenes/Bastion.unity";
-            Scene bastion = EditorSceneManager.OpenScene(bastionScenePath, OpenSceneMode.Single);
+            if (string.IsNullOrEmpty(scenePath))
+                scenePath = DefaultSceneRelative;
+            scenePath = NormalizeScenePath(scenePath);
+
+            Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
 
             string text = File.ReadAllText(sketchPath);
             BastionSketchParseResult parsed = BastionSketchParser.Parse(text);
@@ -132,7 +372,7 @@ namespace GatekeepersProtocol.EditorTools
                 return;
             }
 
-            EmitSketch(parsed.Sketch, sketchPath, bastion);
+            EmitSketch(parsed.Sketch, sketchPath, scene);
         }
 
         /// <summary>Places missing sketch spawn closets on the open Bastion scene without
@@ -141,7 +381,7 @@ namespace GatekeepersProtocol.EditorTools
         public static int EnsureAuthoredSpawnRooms()
         {
             Scene scene = SceneManager.GetActiveScene();
-            if (scene.path != "Assets/Scenes/Bastion.unity")
+            if (scene.path != DefaultSceneRelative)
             {
                 Debug.LogError("[BastionSketchEmitter] EnsureAuthoredSpawnRooms needs Bastion.unity open.");
                 return 0;
@@ -189,7 +429,10 @@ namespace GatekeepersProtocol.EditorTools
                         {
                             var closet = existing.GetComponent<SpawnRoom>();
                             if (closet != null && closet.Spawn != null)
+                            {
+                                closet.SetMinSeats(mark.MinSeats);
                                 spawnByName[mark.RefId] = closet.Spawn;
+                            }
                             continue;
                         }
 
@@ -244,12 +487,13 @@ namespace GatekeepersProtocol.EditorTools
             }
         }
 
-        static void EmitSketch(BastionSketch sketch, string sketchPath, Scene bastionScene)
+        static void EmitSketch(BastionSketch sketch, string sketchPath, Scene scene)
         {
             BastionSegment.SuppressValidateRebuild = true;
             int roomCount = 0;
             int markerCount = 0;
             int doorMarkerCount = 0;
+            var roomObjects = new Dictionary<string, GameObject>();
 
             try
             {
@@ -264,7 +508,6 @@ namespace GatekeepersProtocol.EditorTools
                 if (game == null)
                     Debug.LogError("[BastionSketchEmitter] No GameController in scene — terminals emit unwired and Interact dead-ends.");
 
-                var roomObjects = new Dictionary<string, GameObject>();
                 var effectiveSides = BuildEffectiveSides(sketch);
                 ApplyDoorSides(sketch, effectiveSides);
 
@@ -276,13 +519,27 @@ namespace GatekeepersProtocol.EditorTools
                 for (int i = 0; i < sketch.Rooms.Count; i++)
                 {
                     BastionSketchRoom room = sketch.Rooms[i];
+                    Transform authoredRoom = authored.transform.Find(room.Id);
+                    if (authoredRoom != null)
+                    {
+                        // Already unique scene geometry. Keep it; do not stamp a twin into
+                        // Generated. Sketch centre (including storey Y) still wins so a kit
+                        // retune can slide the room.
+                        authoredRoom.position = new Vector3(
+                            room.CenterX, room.CenterY, room.CenterZ);
+                        roomObjects[room.Id] = authoredRoom.gameObject;
+                        CollectExistingMarks(authoredRoom, spawnByName, terminalById);
+                        StampSpawnMinSeats(room, spawnByName);
+                        continue;
+                    }
+
                     GameObject instance = InstantiateRoom(room);
                     if (instance == null)
                         continue;
 
                     instance.name = room.Id;
                     instance.transform.SetParent(generated.transform, false);
-                    instance.transform.position = new Vector3(room.CenterX, 0f, room.CenterZ);
+                    instance.transform.position = new Vector3(room.CenterX, room.CenterY, room.CenterZ);
 
                     // Room roots carry BastionSegment, so CleanupOrphanGeneratedGeom skips them.
                     if (instance.GetComponent<BastionGeneratedGeom>() == null)
@@ -300,6 +557,8 @@ namespace GatekeepersProtocol.EditorTools
                         if (CreateMark(instance.transform, room.Marks[m], spawnByName, terminalById, game))
                             markerCount++;
                     }
+
+                    StampSpawnMinSeats(room, spawnByName);
                 }
 
                 Material gateMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Mat_Hatch.mat");
@@ -307,6 +566,8 @@ namespace GatekeepersProtocol.EditorTools
                 {
                     BastionSketchDoor door = sketch.Doors[i];
                     if (!roomObjects.TryGetValue(door.RoomId, out GameObject roomGo))
+                        continue;
+                    if (roomGo.transform.Find("D_" + door.DoorId) != null)
                         continue;
 
                     BastionDoor component = CreateDoorMarker(roomGo.transform, door, gateMat);
@@ -332,6 +593,8 @@ namespace GatekeepersProtocol.EditorTools
                     BastionSketchPassage passage = passages[i];
                     if (!roomObjects.TryGetValue(passage.RoomId, out GameObject roomGo))
                         continue;
+                    if (roomGo.transform.Find("D_" + passage.Id) != null)
+                        continue;
                     GameObject go = CreateNamedMarker(roomGo.transform, "D_" + passage.Id, typeof(BastionDoor));
                     var auto = go.GetComponent<BastionDoor>();
                     if (auto == null)
@@ -347,9 +610,10 @@ namespace GatekeepersProtocol.EditorTools
 
                 WireSealedSpawns(spawnByName);
                 WireControlSpawns(spawnByName);
+                BastionSketchHatchDoors.SnapStationToMiddle();
 
-                if (bastionScene.IsValid())
-                    EditorSceneManager.MarkSceneDirty(bastionScene);
+                if (scene.IsValid())
+                    EditorSceneManager.MarkSceneDirty(scene);
             }
             finally
             {
@@ -361,11 +625,13 @@ namespace GatekeepersProtocol.EditorTools
             int geomCreated = BastionSegment.RebuildObjectsCreated;
             int geomMarked = BastionSegment.RebuildObjectsMarked;
             BastionKitEmitter.CleanupOrphanGeneratedGeom();
+            int settled = SettleGeneratedIntoAuthored();
+            int stairCount = BastionSketchStairs.Emit(sketch, roomObjects);
 
-            if (bastionScene.IsValid())
+            if (scene.IsValid())
             {
-                EditorSceneManager.MarkSceneDirty(bastionScene);
-                EditorSceneManager.SaveScene(bastionScene, "Assets/Scenes/Bastion.unity");
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
             }
 
             if (geomCreated != geomMarked)
@@ -373,11 +639,14 @@ namespace GatekeepersProtocol.EditorTools
                     + " object(s) but marked " + geomMarked + " with BastionGeneratedGeom.");
 
             Debug.Log("[BastionSketchEmitter] Emitted from " + sketchPath
+                + " into " + scene.path
                 + ": rooms=" + roomCount
                 + " markers=" + markerCount
                 + " doorMarkers=" + doorMarkerCount
                 + " doors=" + sketch.Doors.Count
+                + " stairs=" + stairCount
                 + " sideOverrides=" + sketch.Sides.Count
+                + " settled=" + settled
                 + (geomCreated == geomMarked
                     ? " geomCreated=" + geomCreated + " geomMarked=" + geomMarked
                     : ""));
@@ -596,7 +865,8 @@ namespace GatekeepersProtocol.EditorTools
             switch (mark.Kind)
             {
                 case BastionSketchMarkKind.Hatch:
-                    CreateNamedMarker(room, "H", null);
+                    if (!BastionSketchHatchDoors.TryCreate(room, mark))
+                        CreateNamedMarker(room, "H", null);
                     return true;
                 case BastionSketchMarkKind.Spawn:
                 {
@@ -619,6 +889,7 @@ namespace GatekeepersProtocol.EditorTools
                     var segment = room.GetComponent<BastionSegment>();
                     closet.AttachTo(segment, ToDoorEdge(mark.Direction));
                     closet.NameSpawn(mark.RefId);
+                    closet.SetMinSeats(mark.MinSeats);
 
                     var sp = closet.Spawn;
                     if (sp != null)
@@ -693,7 +964,7 @@ namespace GatekeepersProtocol.EditorTools
             var lockedWingSpawns = new List<SpawnPoint>();
             foreach (KeyValuePair<string, SpawnPoint> pair in spawnByName)
             {
-                if (pair.Key == "S1" || pair.Key == "S2")
+                if (IsZoneOneAlwaysLive(pair.Key))
                     continue;
                 if (IsControlRoomSpawn(pair.Value))
                     continue;
@@ -770,6 +1041,69 @@ namespace GatekeepersProtocol.EditorTools
                 return false;
             BastionSegment segment = spawn.GetComponentInParent<BastionSegment>();
             return segment != null && segment.BlockKind == BastionBlockKind.ControlRoom;
+        }
+
+        /// <summary>S1/S2 (ground) and S7/S8 (upper island A) stay live from the start.
+        /// S9–S12 wait on D2 with S3–S6. Two-seat mute is runtime <see cref="BastionSeatSpawns"/>,
+        /// not this list.</summary>
+        static bool IsZoneOneAlwaysLive(string spawnId)
+        {
+            return spawnId == "S1" || spawnId == "S2" || spawnId == "S7" || spawnId == "S8";
+        }
+
+        static void StampSpawnMinSeats(BastionSketchRoom room, Dictionary<string, SpawnPoint> spawnByName)
+        {
+            for (int m = 0; m < room.Marks.Count; m++)
+            {
+                BastionSketchMark mark = room.Marks[m];
+                if (mark.Kind != BastionSketchMarkKind.Spawn)
+                    continue;
+                if (!spawnByName.TryGetValue(mark.RefId, out SpawnPoint sp) || sp == null)
+                    continue;
+                SpawnRoom closet = sp.GetComponentInParent<SpawnRoom>();
+                if (closet != null)
+                    closet.SetMinSeats(mark.MinSeats);
+            }
+        }
+
+        static void ParseSketchSentinel(string text, ref string sketchPath, ref string scenePath)
+        {
+            if (string.IsNullOrEmpty(text))
+                return;
+
+            string[] lines = text.Split('\n');
+            int filled = 0;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (line.Length == 0)
+                    continue;
+                if (filled == 0)
+                {
+                    sketchPath = Path.IsPathRooted(line)
+                        ? line
+                        : Path.Combine(Root, line);
+                    filled = 1;
+                }
+                else
+                {
+                    scenePath = NormalizeScenePath(line);
+                    break;
+                }
+            }
+        }
+
+        static string NormalizeScenePath(string raw)
+        {
+            if (string.IsNullOrEmpty(raw))
+                return DefaultSceneRelative;
+            string n = raw.Trim().Replace('\\', '/');
+            int assets = n.IndexOf("/Assets/", StringComparison.OrdinalIgnoreCase);
+            if (assets >= 0)
+                return n.Substring(assets + 1);
+            if (n.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+                return n;
+            return n;
         }
 
         static GameObject CreateNamedMarker(Transform parent, string name, Type componentType)

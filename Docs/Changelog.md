@@ -8,6 +8,41 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-22
 -->
 
+- 2026-08-22: **Co-op ship stair foot buried.** `GStairWalk`'s end-cap is 54°
+  (perpendicular to the 36° ramp), above `slopeLimit` 45 — walk-through from
+  the front, climb from the back. The box extends 2 m under the deck so the
+  approach hits the 36° top. `ShipCoopStairWalkTests` now raycasts that face.
+
+- 2026-08-22: **Beds capped at 45 s.** Same slice starts, first 45 s only
+  (mp3 encoder reports 45.024 s). Listen copies in `Assets/Audio/`.
+
+- 2026-08-22: **`M95` co-op bastion emit.** `Bastion_Coop.unity` takes the locked
+  28-room two-storey sketch (R1/U1 and three graybox stairs). S7/S8 stay live
+  with S1/S2; minSeats=3 closets mute at two seats.
+
+- 2026-08-22: **`M95` layout.** Co-op bastion is 20–30 rooms on two storeys
+  (sketch: 28, demo spine on the ground, three galleries above). One-zone
+  shrink struck (Zo).
+
+- 2026-08-22: **Stardust slices.** Splash / MainMenu / RealmSelect play
+  0–49 / 49–152.5 / 152.5–228.5 s of the same track, crossfaded. Listen
+  copies (mp3) of every bed sit in `Assets/Audio/`.
+
+- 2026-08-22: **F12 fight checkpoints keep authored Y.** Digits 2/4/6/7 had written
+  NavMesh Y into a CharacterController with centre `(0,0,0)`, putting the capsule in
+  the deck (same fall-through class as ShipTeleporter). Stand is room-side NavMesh XZ
+  + spawn Y, with a physics-floor refuse and `ClearFallVelocity`.
+
+- 2026-08-22: **Control Room multiple 76 → 47** at scaler 2 (footprint 94 × 47 m,
+  aspect 0.5). Kit-wide; Bastion, Bastion_Coop and Range halls follow.
+  Emit settles new rooms into `Authored/` after unpack.
+
+- 2026-08-22: **Hydrodynamics beds.** Ship/Range loop the 44.5–180 s pad
+  (`Hydro-Ship`); Bastion loops the 180–259.5 s shimmer (`Hydro-Combat`).
+  Menu Stardust continues through RealmSelect; 1.5 s equal-power fade at
+  session entry, embark, and return. Combat scenes that still hosted
+  Stardust as `Background Music` now host `Level Music`.
+
 - 2026-08-22: **Meta docs — repository map.** Root `README.md` gains layout (Assets/
   Scripts/Scenes, Docs shelves, Tools), accurate pitch (intensity / Unbanked /
   Hatch-bank; co-op present), and clone steps with current scene names (`RealmSelect`,

@@ -14,6 +14,36 @@ metadata:
 - **Report as verified what you did not observe.** "You should see X" is a prediction. Say what
   changed and what to look for.
 - **Report work verified on a suite you did not run.**
+- **Call offline/static analysis "verified."** Parsed scene YAML, hand-computed collider
+  geometry, a capsule-sweep done in Python against extracted transforms — none of it is
+  verification, no matter how much math is behind it. Reserve "verified" for a check that
+  actually ran (AutoVerify, a compiled test) — the ship hull's stair sequence (2026-08-22)
+  called "76/76 reachable" and "empirically confirmed" verified before AutoVerify had run
+  once, on analysis that could not see a MeshCollider's step geometry or a
+  CharacterController's skin width — the two things that actually broke it.
+- **Write a test whose expected value is a literal that could coincidentally match a broken
+  implementation.** `ShipCoopStairWalkTests` hardcoded its start position as a number that
+  happened to equal wherever the (wrong) ramp collider already was. Two real, run AutoVerify
+  passes proved nothing, because the test and the bug shared the same unverified assumption
+  — moving the ramp anywhere and updating the literal to match would have kept it green.
+  Rewritten to read the live mesh's `Renderer.bounds` every run and assert the collider sits
+  under it; that version failed immediately on the next wrong edit, the same turn it was
+  introduced, before the wrong edit was ever claimed fixed. **A geometry test must derive
+  its expected value from the same live scene the implementation reads, never from a number
+  copied out of the implementation.**
+- **Trust hand-derived geometry (FBX vertex bytes, manual quaternion math) over a live,
+  authoritative source once one exists.** Parsing the kit mesh's FBX bounds by hand produced
+  a "corrected" stair-mesh center 1.8 m from the truth; Unity's own `Renderer.bounds`, read
+  by the rewritten test, said otherwise and was right. If the Editor or a test can report the
+  real number, that number outranks any offline recomputation of it, however carefully done.
+- **Declare a repeat bug fixed on the same evidence class that already failed once.** If an
+  offline check said "fixed" and a human found it broken, the next claim needs a *different*
+  kind of evidence, not a second offline check. If a run PlayMode test said "fixed" and it
+  broke again in live play, the same test passing again is not new evidence — get a screenshot
+  or log of the actual failure before touching the scene again. (Open as of 2026-08-22: the
+  co-op ship stair failed a third time, in live play, after two independently-run AutoVerify
+  passes on two different fixes both said it worked. Root cause not yet found — this bullet
+  exists because guessing a fourth time was about to happen anyway.)
 - **Close a gate with a tainted log.** A session log carrying a `[Dev]` tag cannot support
   a claim. F10/F11 host/join log `[Net]` and do not taint. Neither can a stale log: before
   a log speaks for current code, the

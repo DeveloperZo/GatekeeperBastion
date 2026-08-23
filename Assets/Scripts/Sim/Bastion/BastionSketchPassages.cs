@@ -181,7 +181,8 @@ namespace GatekeepersProtocol.Sim
                 at = room.CenterZ + along;
             }
 
-            long q = (long)System.Math.Round(edge * 4.0) * 1000000L
+            long q = (long)room.Storey * 10000000000L
+                + (long)System.Math.Round(edge * 4.0) * 1000000L
                 + (long)System.Math.Round(at * 4.0) * 4L
                 + (northSouth ? 1L : 2L);
 

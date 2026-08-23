@@ -56,6 +56,8 @@ namespace GatekeepersProtocol.Tests
             string wait = Read("Assets/Scripts/Game/Net/NetShipWait.cs");
             Assert.IsTrue(wait.IndexOf("ship wait — Bastion view hidden",
                 System.StringComparison.Ordinal) >= 0);
+            Assert.IsTrue(wait.IndexOf("SceneFlow.BastionCoop",
+                System.StringComparison.Ordinal) >= 0);
             string client = Read("Assets/Scripts/Game/Bastion/GameController.Client.cs");
             Assert.IsTrue(client.IndexOf("NetShipWait.IsActive",
                 System.StringComparison.Ordinal) >= 0);
