@@ -5,8 +5,13 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-08-22
+Last updated: 2026-08-23
 -->
+
+- 2026-08-23: **`M84` closed — Gatekeepers flinch when shot.** Additive
+  HitReact layer, `Anim_flinch`, and both Damaged hooks on disk.
+  `HitReactTests` is the close gate. Eyes-on 1–4 wait on `M99`.
+  Active queue is now `M99` + `M101` (2/3).
 
 - 2026-08-22: **Co-op ship stair foot buried.** `GStairWalk`'s end-cap is 54°
   (perpendicular to the 36° ramp), above `slopeLimit` 45 — walk-through from

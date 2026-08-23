@@ -1,9 +1,11 @@
 # M84 — Gatekeepers flinch when shot
 
 <!--
-Status: active (built 2026-08-21; eyes-on 1–4 wait on `M99`)
-Update trigger: when criteria 1–4 are stamped on the range, or when the clip is swapped
-Last updated: 2026-08-22
+Status: completed, Aug 2026
+Closed on: 2026-08-23 (disk / harness). Criteria 1–4 eyes-on wait on `M99`
+(`Decisions.md` 2026-08-22).
+Update trigger: never — shipped milestones are a record. Corrections only.
+Last updated: 2026-08-23
 -->
 
 One short flinch clip on a masked upper-body additive layer of the shared
@@ -73,7 +75,7 @@ Decisions made here:
 5. `Packs/Gatekeepers/Gatekeeper.controller` has a `HitReact` trigger and a
    second layer named `HitReact` whose Flinch state's motion guid matches
    `Anim_flinch.anim`'s guid; Base Layer's Attack motion and the locomotion
-   blend tree are unchanged.
+   blend tree are unchanged. `HitReactTests` pins the disk and the call sites.
 
 ## Implementation
 
@@ -106,16 +108,9 @@ Decisions made here:
 
 ## Verification
 
-1. Criterion 5 — from the two files, no editor:
-
-```bash
-rg -n "m_Name: HitReact" "Assets/Packs/Gatekeepers/Gatekeeper.controller"
-rg -n "^guid:" "Assets/Packs/Gatekeepers/Animations/Anim_flinch.anim.meta"
-```
-
-   The Flinch state's `m_Motion` guid equals the clip meta's `guid`. Attack
-   still references `03ede1e3f3df7b14fbb44ae773ed0c02`. A controller that
-   had not done the work has one layer and no `HitReact` parameter.
+1. Criterion 5 — `Tools/verify/run.sh --filter HitReact`. Expect
+   `HitReactTests` 7/0. A controller that had not done the work has
+   one layer and no `guid: 0cd7751cb3144b74fb47045e6061905f`.
 2. Criteria 1 and 2 — playthrough on `M99` when it ships: shoot a Gatekeeper on open
    ground; flinch on each hit, no movement hitch. Not a full Run.
 3. Criterion 3 — on the range (or a Bastion hatch reach in a short fixture): keep
@@ -126,9 +121,10 @@ rg -n "^guid:" "Assets/Packs/Gatekeepers/Animations/Anim_flinch.anim.meta"
 
 ### What has landed
 
-**Landed 2026-08-21 (agent).** Clip, mask, layer and both code hooks are on disk.
-Criterion 5 reads clean in the files. Criteria 1–4 are structurally in place;
-eyes-on waits on `M99` (`Decisions.md` 2026-08-22) — not an unpaid full-Run stamp.
+**Closed 2026-08-23 (disk / harness).** Clip, mask, layer and both code hooks
+are on disk. Criterion 5 is the close gate (`HitReactTests` 7/0). Criteria
+1–4 are structurally in place; eyes-on waits on `M99` (`Decisions.md`
+2026-08-22) — not an unpaid full-Run stamp.
 
 `Anim_flinch.anim` guid `0cd7751cb3144b74fb47045e6061905f`; Flinch `m_Motion`
 fileID `7400000` matches the clip meta. `UpperBody.mask` guid

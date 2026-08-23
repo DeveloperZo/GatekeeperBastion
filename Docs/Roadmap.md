@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-22
+Last updated: 2026-08-23
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -29,7 +29,9 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**Active (3/3):** `M84` (flinch), `M99` (range — replayable slice), `M101` (two-deck ship).
+**Active (2/3):** `M99` (range — replayable slice), `M101` (two-deck ship).
+
+**Closed 2026-08-23:** `M84` (disk/harness; eyes-on on `M99`).
 
 **Closed 2026-08-22:** `M93`, `M82` (Zo first pass), `M85` (disk/harness; eyes-on
 on `M99`), `M83` (PlayMode 2/0; two-window confirmation). PRI-C further tuning
@@ -37,7 +39,7 @@ owed outside `M93`.
 
 **Parked 2026-08-22:** `M63-3` — no `GatekeeperKind.Cloaker` yet.
 
-**Folder-completed since 2026-08-20:** `M82`, `M83`, `M85`, `M90`, `M91`, `M92`, `M93`, `M96`.
+**Folder-completed since 2026-08-20:** `M82`, `M83`, `M84`, `M85`, `M90`, `M91`, `M92`, `M93`, `M96`.
 `M94` VEIL/FORGE on disk; stays planned under phase-2 order.
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
@@ -48,13 +50,11 @@ with **M72**; remaining friends work is polish and dry-run length.
 **Recommended next**, in this order.
 
 1. **Build `M99`** — unlocks short-loop stamps for `M84` / `M85` eyes-on (and kit for `M94`).
-2. **Close harness/disk on `M84`** where criteria allow; stamp eyes-on on the range
-   after `M99`.
-3. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
+2. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
-4. Older play close-outs: `GatekeeperZo Notes/verification.md`.
+3. Older play close-outs: `GatekeeperZo Notes/verification.md`.
 
-Active **3** of 3 (`M84`, `M99`, `M101`).
+Active **2** of 3 (`M99`, `M101`).
 
 ## Order
 
@@ -145,7 +145,7 @@ this table — see the change log.
 | M81 | The Gatekeeper's swing | completed, Aug 2026 | One retargeted attack clip into the shared Gatekeeper controller — Attack stops playing PlayerIdle for all three kinds and ship intruders. Free-retarget probe accepted (Zo close 2026-08-19) | [`3. completed/M81`](Milestones/3.%20completed/M81-the-gatekeepers-swing.md) |
 | M82 | The weapon in your hands | completed, Aug 2026 | Shared viewmodel controller + four clips; reload speed-scales; Bastion window Animators cleaned; Zo close 2026-08-22 | [`3. completed/M82`](Milestones/3.%20completed/M82-the-weapon-in-your-hands.md) |
 | M83 | Crewmates fire on camera | completed, Aug 2026 | Remote Fire/Reload on non-owner Boarder animators; `NetAvatarAnimTests` 2/0 (2026-08-22T15:56:13Z); two-window eyes-on confirmation | [`3. completed/M83`](Milestones/3.%20completed/M83-crewmates-fire-on-camera.md) |
-| M84 | Gatekeepers flinch when shot | active (built 2026-08-21) | HitReact layer + `Anim_flinch` on disk; eyes-on 1–4 wait on `M99` | [`2. active/M84`](Milestones/2.%20active/M84-gatekeepers-flinch-when-shot.md) |
+| M84 | Gatekeepers flinch when shot | completed, Aug 2026 | HitReact layer + `Anim_flinch` on disk; `HitReactTests` is the close gate. Disk/harness closed 2026-08-23; eyes-on 1–4 wait on `M99` | [`3. completed/M84`](Milestones/3.%20completed/M84-gatekeepers-flinch-when-shot.md) |
 | M85 | The collapse under the burst | completed, Aug 2026 | Death clip under the unchanged kill-confirm burst; `Despawn` keeps ledger removal immediate and defers only the destroy tail; `PlayDeathRpc` is the co-op carrier. Disk/harness closed 2026-08-22; eyes-on 1/3/4 wait on `M99` | [`3. completed/M85`](Milestones/3.%20completed/M85-the-collapse-under-the-burst.md) |
 | M86 | Downed crewmates look downed | later | `Dead` bool on Boarder.controller driven from replicated Hp; reversible on restore-from-zero (dev heal now, buy-back after M79); local first-person out of scope | [`1. planned/M86`](Milestones/1.%20planned/M86-downed-crewmates-look-downed.md) |
 | M87 | A bought body in an hour | completed, Aug 2026 | Utility Bot on the pack's Built-In Shader Graph in the Ship; graduation test passed 2026-08-18; Zo close 2026-08-19 (criterion 6 elapsed time unrecorded) | [`3. completed/M87`](Milestones/3.%20completed/M87-a-bought-body-in-an-hour.md) |
@@ -165,17 +165,17 @@ this table — see the change log.
 
 **Three phases, in order** (Zo, 2026-08-21). Everything below is read against these.
 
-1. **Finish and polish the solo demo.** `M84`, `M99`, `M66`, and the
-   garrison content in `M63` / `M63-3`. (`M82`, `M93`, and `M85` closed 2026-08-22.)
+1. **Finish and polish the solo demo.** `M99`, `M66`, and the
+   garrison content in `M63` / `M63-3`. (`M82`, `M93`, `M85` closed 2026-08-22; `M84` closed 2026-08-23.)
 2. **Build out the co-op demo.** `M86`, `M94`, `M95`, `M98`. (`M83` closed 2026-08-22.)
 3. **Ship / Realm / Safehouse.** `M97`, and `M100`, which is the realm-lock entry
    graduated out of `Brainstorms/realms.md` on 2026-08-22. (`M96` closed 2026-08-22.)
 
 Three things sit across that order rather than inside it:
 
-- **`M99` is upstream of remaining hit-feedback closes.** It is how `M84` and `M85`
-  get verified without a Run each (`Decisions.md` 2026-08-22). Active. `M85` disk/harness
-  closed 2026-08-22; the play stamp still waits here.
+- **`M99` is upstream of remaining hit-feedback eyes-on.** It is how `M84` and `M85`
+  get play-stamped without a Run each (`Decisions.md` 2026-08-22). Active. Both
+  disk/harness closed (`M85` 2026-08-22, `M84` 2026-08-23); the play stamps wait here.
 - **`M82` closed 2026-08-22.** `M83` closed the same day — remote Fire/Reload on
   the Boarder controller, independent of the viewmodel path.
 - **`Ship - CoOp` is the destination** (Zo, 2026-08-21): `Ship - Demo` is transitional and
