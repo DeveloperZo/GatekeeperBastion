@@ -76,6 +76,7 @@ namespace GatekeepersProtocol.Tests
 
             string[] stairs =
             {
+                "Stair_R1_U1", "Stair_R6_U6", "Stair_R10_U10",
                 "GStairWalk_R1_U1", "GStairWalk_R6_U6", "GStairWalk_R10_U10"
             };
             for (int i = 0; i < stairs.Length; i++)
@@ -86,6 +87,41 @@ namespace GatekeepersProtocol.Tests
                     RegexOptions.Multiline).Count;
                 Assert.GreaterOrEqual(names, 1, stairs[i] + " missing");
             }
+
+            string stairsCs = Read("Assets/Scripts/Editor/Bastion/BastionSketchStairs.cs");
+            Match guidM = Regex.Match(stairsCs, @"StairMeshGuid = ""([0-9a-f]+)""");
+            Assert.IsTrue(guidM.Success, "BastionSketchStairs has no StairMeshGuid");
+            string hull = Read("Tools/ship-hull/build_hull.py");
+            StringAssert.Contains(guidM.Groups[1].Value, hull,
+                "StairMeshGuid must be the ship kit Stairs guid");
+            Assert.GreaterOrEqual(
+                Regex.Matches(yaml, @"guid: " + guidM.Groups[1].Value).Count,
+                3,
+                "each Stair_* must reference SM_Prop_Stairs_01");
+
+            Assert.IsTrue(
+                TransformChildrenEmpty(yaml, "Generated"),
+                "Generated must be empty after settle — rooms left there get wiped by ClearChildren");
+            Assert.IsFalse(
+                TransformChildrenEmpty(yaml, "Authored"),
+                "co-op rooms must sit under Authored");
+        }
+
+        [Test]
+        public void Emitter_EmitsStairsThenSettlesIntoAuthored_BySubtreeRef()
+        {
+            string src = Read("Assets/Scripts/Editor/Bastion/BastionSketchEmitter.cs");
+            int emit = src.IndexOf("static void EmitSketch");
+            Assert.Greater(emit, 0, "EmitSketch missing");
+            int stairs = src.IndexOf("BastionSketchStairs.Emit", emit);
+            int settle = src.IndexOf("SettleGeneratedIntoAuthored(generated, authored)", emit);
+            Assert.Greater(stairs, emit, "EmitSketch must call BastionSketchStairs.Emit");
+            Assert.Greater(settle, stairs, "settle must run after stairs so the mesh rides the room");
+            StringAssert.Contains(
+                "static int SettleGeneratedIntoAuthored(GameObject generated, GameObject authored)",
+                src);
+            string stairsCs = Read("Assets/Scripts/Editor/Bastion/BastionSketchStairs.cs");
+            StringAssert.Contains("IsUnderAuthored", stairsCs);
         }
 
         [Test]
@@ -112,6 +148,22 @@ namespace GatekeepersProtocol.Tests
             Match m = Regex.Match(meta, @"^guid: ([0-9a-f]+)\s*$", RegexOptions.Multiline);
             Assert.IsTrue(m.Success, "BastionSegment.cs.meta has no guid");
             return m.Groups[1].Value;
+        }
+
+        static bool TransformChildrenEmpty(string yaml, string objectName)
+        {
+            Match header = Regex.Match(
+                yaml,
+                @"m_Name: " + Regex.Escape(objectName)
+                + @"\s*\n(?:  [^\n]*\n){0,8}--- !u!4[^\n]*\nTransform:",
+                RegexOptions.Multiline);
+            Assert.IsTrue(header.Success, objectName + " transform not found in scene YAML");
+            int from = header.Index;
+            int nextDoc = yaml.IndexOf("\n--- ", from + header.Length);
+            string block = nextDoc < 0
+                ? yaml.Substring(from)
+                : yaml.Substring(from, nextDoc - from);
+            return Regex.IsMatch(block, @"m_Children: \[\]");
         }
 
         static string Read(string relative)

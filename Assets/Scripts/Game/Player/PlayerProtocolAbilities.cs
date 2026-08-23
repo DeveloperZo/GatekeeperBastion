@@ -67,6 +67,19 @@ namespace GatekeepersProtocol.Game
         /// HANDS; the gun never does — the aura is positional, not owner-scoped.</summary>
         public TurretObject Turret => _turretControl != null ? _turretControl.Live : null;
 
+        /// <summary>Whichever ability currently has a window open, or None. Personal wins a
+        /// tie: a Cloak inside a running Ping is the louder thing to be told about, and two
+        /// screen treatments at once average into a colour belonging to neither.</summary>
+        public BoarderAbilityId ActiveWindowAbility
+        {
+            get
+            {
+                if (_personal.WindowOpen) return PersonalAbility;
+                if (_crew.WindowOpen) return CrewAbility;
+                return BoarderAbilityId.None;
+            }
+        }
+
         public string CrewName => BoarderProtocol.DisplayName(CrewAbility);
         public string PersonalName => BoarderProtocol.DisplayName(PersonalAbility);
         public string PassiveName => BoarderProtocol.DisplayName(_passive);
@@ -90,6 +103,8 @@ namespace GatekeepersProtocol.Game
             if (_turretControl == null) _turretControl = GetComponent<PlayerTurretControl>();
             if (_turretControl == null) _turretControl = gameObject.AddComponent<PlayerTurretControl>();
             _turretControl.Bind(game, _fpc);
+            if (GetComponent<ProtocolLayerView>() == null)
+                gameObject.AddComponent<ProtocolLayerView>();
             ApplyPassive();
         }
 

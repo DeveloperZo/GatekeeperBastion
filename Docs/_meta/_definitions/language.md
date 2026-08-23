@@ -77,7 +77,7 @@ everything the game contains.
 | **Prep** | The quiet state between Waves. Untimed, pays nothing, the only time juice raises intensity. | downtime, intermission, break |
 | **Assault** | The state while a Wave is live. | combat, the fight |
 | **the Siphon Draw** | Retired as the Wave-start verb (M52). Prep `T` starts the selected trigger (Field, Master, Hatch-bank). `T` without a select is a logged refusal. | spawn, trigger, call the wave, the draw *(alone)* |
-| **Wave** | One delivery of Gatekeepers. `+/-` juice, `E` selects, `T` starts at a **field terminal**. A terminal opens its door after its authored count (T1 is 5). Prep `E` then `T` at the Hatch is Hatch-bank. | round, horde |
+| **Wave** | One delivery of Gatekeepers. `+/-` juice, `E` selects, `T` starts at a **field terminal**. A terminal opens its door after its authored count (kit bastion: T1 is 3, the rest 1). Prep `E` then `T` at the Hatch is Hatch-bank. | round, horde |
 | **field terminal** | A bastion console marked **T**. `E` selects intensity; `T` starts one Boarder-hunt Wave. N clears complete it and open its **D**. | station *(alone)*, objective, console *(the Ship's four are stations)* |
 | **cleared** / **stripped** | Survived Master Control's Hatch-bank half. Field Waves beaten is field stripped, not Escaped. | won, completed, extracted |
 | **Escaped** | Terminal, good: Master Control's Hatch-bank half survived. Wave 5 does not Escaped. | won, victory |

@@ -21,7 +21,17 @@ namespace GatekeepersProtocol.PlayTests
             yield return PlayTestUtil.ReturnToBlankScene();
         }
 
-        static IEnumerator WalkFrom(Vector3 start, Vector3 climb, PlayerHealth player, CharacterController cc)
+        /// <summary>Height that counts as standing on deck 2 rather than still on the flight.</summary>
+        const float DeckTwoY = 4.9f;
+
+        /// <summary>How far past the top tread the walk has to get before the climb counts.
+        /// y alone is not enough: the ramp REACHES deck height while still inside the stair
+        /// well, so a barrier across the head of the flight — which is exactly what the void
+        /// railing was — lets a y-only assertion pass on a stair you cannot actually leave.</summary>
+        const float PastHead = 0.75f;
+
+        static IEnumerator WalkFrom(Vector3 start, Vector3 climb, Vector3 head,
+            PlayerHealth player, CharacterController cc)
         {
             player.transform.SetPositionAndRotation(start, Quaternion.LookRotation(climb));
             Physics.SyncTransforms();
@@ -37,10 +47,15 @@ namespace GatekeepersProtocol.PlayTests
                     dt = 0.02f;
                 yVel = cc.isGrounded ? -1f : yVel + gravity * dt;
                 cc.Move((climb * speed + Vector3.up * yVel) * dt);
-                if (player.transform.position.y >= 4.5f)
+                if (OnDeckTwo(player.transform.position, climb, head))
                     yield break;
                 yield return null;
             }
+        }
+
+        static bool OnDeckTwo(Vector3 p, Vector3 climb, Vector3 head)
+        {
+            return p.y >= DeckTwoY && Vector3.Dot(p - head, climb) > PastHead;
         }
 
         [UnityTest]
@@ -54,8 +69,10 @@ namespace GatekeepersProtocol.PlayTests
             var stairRenderer = stairGo.GetComponent<Renderer>();
             Assert.IsNotNull(stairRenderer, "Stair has no Renderer to derive an approach from.");
 
-            var walk = GameObject.Find("GStairWalk");
-            Assert.IsNotNull(walk, "Ship - CoOp has no GStairWalk — the stair has no CharacterController surface.");
+            var walk = GameObject.Find("GStairRamp");
+            if (walk == null)
+                walk = GameObject.Find("GStairWalk");
+            Assert.IsNotNull(walk, "Ship - CoOp Stair has no GStairRamp / GStairWalk — no CharacterController surface.");
             var walkCol = walk.GetComponent<Collider>();
             Assert.IsNotNull(walkCol, "GStairWalk has no collider.");
             Assert.IsTrue(walkCol.enabled, "GStairWalk collider is disabled.");
@@ -69,6 +86,7 @@ namespace GatekeepersProtocol.PlayTests
             Bounds mesh = stairRenderer.bounds;
             float halfRun = mesh.extents.x * Mathf.Abs(climb.x) + mesh.extents.z * Mathf.Abs(climb.z);
             Vector3 foot = mesh.center - climb * halfRun;
+        Vector3 head = mesh.center + climb * halfRun;
 
             Assert.GreaterOrEqual(mesh.center.x, walkCol.bounds.min.x - 0.1f,
                 "GStairWalk's west edge is east of the visible Stair mesh's centre.");
@@ -91,7 +109,8 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(
                 Physics.Raycast(approach, climb, out RaycastHit face, 8f),
                 "No collider on the stair approach from " + approach + ".");
-            Assert.AreEqual("GStairWalk", face.collider.name,
+            Assert.IsTrue(
+                face.collider.name == "GStairRamp" || face.collider.name == "GStairWalk",
                 "Approach hit " + face.collider.name + " at " + face.point);
             float slope = Vector3.Angle(face.normal, Vector3.up);
             Assert.Less(slope, 45f,
@@ -112,12 +131,18 @@ namespace GatekeepersProtocol.PlayTests
             {
                 Vector3 start = foot - climb * 2f + right * lat;
                 start.y = 1.1f;
-                yield return WalkFrom(start, climb, player, cc);
+                yield return WalkFrom(start, climb, head, player, cc);
 
                 Vector3 p = player.transform.position;
-                Assert.GreaterOrEqual(p.y, 4.5f,
+                float past = Vector3.Dot(p - head, climb);
+                Assert.GreaterOrEqual(p.y, DeckTwoY,
                     "CharacterController did not reach deck 2 from lateral " + lat
                     + ". Started " + start + ", ended at " + p + " grounded=" + cc.isGrounded + ".");
+                Assert.Greater(past, PastHead,
+                    "CharacterController reached deck height from lateral " + lat
+                    + " but never got off the flight — ended at " + p + ", only "
+                    + past.ToString("F2") + " m past the top tread. Something is walling the "
+                    + "head of the stair.");
             }
         }
     }

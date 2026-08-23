@@ -44,7 +44,7 @@ room U1 OpenArea 0 -40 storey=1
 room U2 Full -34 -40 storey=1
 room U3 Full 34 -40 storey=1
 room U4 Half -34 -19 storey=1 S:S7:W:3
-room U5 Half 34 -19 storey=1 S:S8:E:3
+room U5 Half 34 -19 storey=1 S:S8:N:3
 
 # --- Upper island B — over hub ----------------------------------------------
 room U6 OpenArea 0 2 storey=1
@@ -95,6 +95,9 @@ side U2 N Door
 side U5 S Door
 side U3 N Door
 side U1 S Window
+# U5 east sits on S2's closet roof — wall, do not punch a door onto it.
+# S8 hangs north instead.
+side U5 E Wall
 
 # --- Upper island B passages (U6 south/north Wall — no skip over D1/D2) -----
 side U7 E Door

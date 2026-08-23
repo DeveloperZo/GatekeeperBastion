@@ -13,6 +13,30 @@ Last updated: 2026-08-23
   `HitReactTests` is the close gate. Eyes-on 1–4 wait on `M99`.
   Active queue is now `M99` + `M101` (2/3).
 
+- 2026-08-23: **Co-op `Stair_R6_U6` walk fitted to the dress mesh.** Zo's
+  yaw-180 pose stays; `GStairWalk_R6_U6` is buried 2 m under R6, `GStairLand_R6_U6`
+  sits flush with U6, and the U6 well is re-punched on the live mesh bounds.
+
+- 2026-08-23: **Co-op `Stair_R1_U1` walk fitted to the dress mesh.** Zo's
+  yaw-180 pose stays; `GStairWalk_R1_U1` is buried 2 m under R1 (end-cap is
+  54°, above `slopeLimit` 45), `GStairLand_R1_U1` sits flush with U1, and
+  the U1 well is re-punched on the live mesh bounds.
+
+- 2026-08-23: **Co-op ship stair prefab walk box buried.** `GStairRamp`'s
+  north end-cap is 57° (90−33), above `slopeLimit` 45 — the 33° top now
+  meets deck 1 north of the first tread so the capsule never hits the cap.
+
+- 2026-08-23: **Co-op bastion rooms settle into Authored.** Generated is
+  rebuild scratch; rooms left there died on the next emit's `ClearChildren`,
+  taking hand stairs with them.
+
+- 2026-08-23: **U5 east is a wall.** That face sits on S2's closet roof;
+  the 3-seat mouth S8 hangs north of U5 instead of punching `Gen_East_Doorframe`.
+
+- 2026-08-23: **Co-op bastion stairs use the kit mesh.** Each well gets
+  `Stair_*` (`SM_Prop_Stairs_01`, MeshCollider stripped) with `GStairWalk_*`
+  as a child, same split as `Ship - CoOp`.
+
 - 2026-08-22: **Co-op ship stair foot buried.** `GStairWalk`'s end-cap is 54°
   (perpendicular to the 36° ramp), above `slopeLimit` 45 — walk-through from
   the front, climb from the back. The box extends 2 m under the deck so the

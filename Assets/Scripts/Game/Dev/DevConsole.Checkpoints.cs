@@ -46,7 +46,7 @@ namespace GatekeepersProtocol.Game
 
         void DrawCheckpointRows(float x, float y, float w)
         {
-            GUI.Label(new Rect(x, y, w, 20f), "DEMO CHECKPOINT", _title);
+            GUI.Label(new Rect(x, y, w, 20f), "F12  DEMO CHECKPOINT — Esc back", _title);
             y += 22f;
             var labels = GameController.DemoCheckpointLabels;
             for (int i = 0; i < labels.Length; i++)

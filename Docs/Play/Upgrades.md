@@ -71,7 +71,7 @@ The protocol at CREW QUARTERS, Hatch Armor at FABRICATION, the Decoy, and buying
 
 ## See also
 
-[The Ship](The-Ship.md). [Weapons](Weapons.md). [Salvage](Salvage.md). [The Hatch](The-Hatch.md).
+[The Ship](The-Ship.md). [Protocols](Protocols.md). [Weapons](Weapons.md). [Salvage](Salvage.md). [The Hatch](The-Hatch.md).
 
 ## Gaps
 

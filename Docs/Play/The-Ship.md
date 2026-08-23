@@ -63,7 +63,7 @@ first converts through the Hatch. Hatch Armor at FABRICATION is also open from t
 
 ## See also
 
-[Upgrades](Upgrades.md). [Weapons](Weapons.md). [A Run](A-Run.md). [The Hatch](The-Hatch.md).
+[Upgrades](Upgrades.md). [Protocols](Protocols.md). [Weapons](Weapons.md). [A Run](A-Run.md). [The Hatch](The-Hatch.md).
 
 ## Gaps
 

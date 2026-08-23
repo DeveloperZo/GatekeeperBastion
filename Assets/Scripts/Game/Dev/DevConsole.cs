@@ -358,26 +358,33 @@ namespace GatekeepersProtocol.Game
             GUI.matrix = prev;
         }
 
+        /// <summary>Two panels, never both: the top-level keys, or the digits of the one key
+        /// that is armed.
+        ///
+        /// An armed menu REPLACES the binding list rather than stacking under it. While a menu
+        /// is up a digit is the only thing that does anything, so the twelve parent rows are
+        /// twelve lines the eye has to skip past to reach the four that can be pressed — and
+        /// the range's nine rows used to be up permanently, whether or not F3 had been touched.
+        /// Esc comes back. Rows that open a menu are marked, so the parent says which keys have
+        /// a second level without the player having to press them to find out.</summary>
         void DrawOverlay(float vw)
         {
             float w = Mathf.Min(OverlayWidth, vw - 32f);
             float x = vw - w - 16f;
             float y = OverlayTop;
 
-            string title = "DEV MODE";
+            if (_awaitingCheckpointDigit) { DrawCheckpointRows(x, y, w); return; }
+            if (_awaitingRangeDigit) { DrawRangeRows(x, y, w); return; }
             if (_awaitingWaveDigit)
-                title = $"DEV — press 1..{WaveDirector.MaxWaves} for jump (Esc cancel)";
-            else if (_awaitingCheckpointDigit)
-                title = "DEV — press a checkpoint digit (Esc cancel)";
-            else if (_awaitingRangeDigit) title = "DEV — RANGE: press 1..9 (Esc cancel)";
-            GUI.Label(new Rect(x, y, w, 22f), title, _title);
-            y += 26f;
+            {
+                // No printed row list: the digits are "any wave", not a named menu.
+                GUI.Label(new Rect(x, y, w, 22f),
+                    $"F3  JUMP TO WAVE — press 1..{WaveDirector.MaxWaves}, Esc back", _title);
+                return;
+            }
 
-            y = DrawBindingRows(x, y, w);
-
-            if (_awaitingCheckpointDigit)
-                DrawCheckpointRows(x, y + 8f, w);
-            if (HasRange) DrawRangeRows(x, y + 8f, w);
+            GUI.Label(new Rect(x, y, w, 22f), "DEV MODE", _title);
+            DrawBindingRows(x, y + 26f, w);
         }
 
         void DrawLoadoutPicker(float vw)

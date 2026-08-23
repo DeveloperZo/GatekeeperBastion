@@ -231,7 +231,7 @@ namespace GatekeepersProtocol.EditorTools
 
                 UnpackGeom(generated.transform);
                 UnpackGeom(authored.transform);
-                int settled = SettleGeneratedIntoAuthored();
+                int settled = SettleGeneratedIntoAuthored(generated, authored);
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
                 Debug.Log("[BastionSketchEmitter] ControlRoom rebuild scene=" + scene.path
@@ -263,9 +263,9 @@ namespace GatekeepersProtocol.EditorTools
             {
                 Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
                 GameObject layoutRoot = FindOrCreateRoot();
-                FindOrCreateSubtrees(layoutRoot, out _, out _);
+                FindOrCreateSubtrees(layoutRoot, out GameObject generated, out GameObject authored);
                 UnpackGeom(layoutRoot.transform);
-                int settled = SettleGeneratedIntoAuthored();
+                int settled = SettleGeneratedIntoAuthored(generated, authored);
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
                 Debug.Log("[BastionSketchEmitter] Settled " + settled
@@ -278,16 +278,15 @@ namespace GatekeepersProtocol.EditorTools
         }
 
         /// <summary>Move every remaining Generated child under Authored. Rooms rebuild while
-        /// they live in Generated; once they sit here they are unique scene geometry.</summary>
-        static int SettleGeneratedIntoAuthored()
+        /// they live in Generated; once they sit here they are unique scene geometry.
+        /// Uses the subtree refs from the open emit, not GameObject.Find — BastionKit
+        /// lives under Environment, and a missed Find left rooms in Generated so the
+        /// next ClearChildren wiped hand stairs.</summary>
+        static int SettleGeneratedIntoAuthored(GameObject generated, GameObject authored)
         {
-            GameObject layoutRoot = GameObject.Find(RootName);
-            if (layoutRoot == null)
-                layoutRoot = GameObject.Find("BastionLayout");
-            if (layoutRoot == null)
+            if (generated == null || authored == null)
                 return 0;
 
-            FindOrCreateSubtrees(layoutRoot, out GameObject generated, out GameObject authored);
             UnpackGeom(generated.transform);
             int moved = 0;
             for (int i = generated.transform.childCount - 1; i >= 0; i--)
@@ -494,11 +493,13 @@ namespace GatekeepersProtocol.EditorTools
             int markerCount = 0;
             int doorMarkerCount = 0;
             var roomObjects = new Dictionary<string, GameObject>();
+            GameObject generated = null;
+            GameObject authored = null;
 
             try
             {
                 GameObject layoutRoot = FindOrCreateRoot();
-                FindOrCreateSubtrees(layoutRoot, out GameObject generated, out GameObject authored);
+                FindOrCreateSubtrees(layoutRoot, out generated, out authored);
                 MigrateLegacyChildren(layoutRoot, generated, authored);
                 ClearChildren(generated);
 
@@ -625,8 +626,9 @@ namespace GatekeepersProtocol.EditorTools
             int geomCreated = BastionSegment.RebuildObjectsCreated;
             int geomMarked = BastionSegment.RebuildObjectsMarked;
             BastionKitEmitter.CleanupOrphanGeneratedGeom();
-            int settled = SettleGeneratedIntoAuthored();
+            // Stairs parent to rooms still in Generated, then settle carries them.
             int stairCount = BastionSketchStairs.Emit(sketch, roomObjects);
+            int settled = SettleGeneratedIntoAuthored(generated, authored);
 
             if (scene.IsValid())
             {

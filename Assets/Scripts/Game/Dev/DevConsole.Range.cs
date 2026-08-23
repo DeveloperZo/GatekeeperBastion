@@ -74,10 +74,20 @@ namespace GatekeepersProtocol.Game
             {
                 var b = DevCommands.All[i];
                 if (range && HiddenInRange(b.Action)) continue;
-                GUI.Label(new Rect(x, y, w, 18f), $"{b.Key}  {LabelFor(b)}", _label);
+                string more = OpensMenu(b.Action) ? "  >" : "";
+                GUI.Label(new Rect(x, y, w, 18f), $"{b.Key}  {LabelFor(b)}{more}", _label);
                 y += 18f;
             }
             return y;
+        }
+
+        /// <summary>Keys that arm a second panel instead of doing something outright. Marked in
+        /// the parent list so the player can see where the depth is without pressing every key
+        /// to find out.</summary>
+        static bool OpensMenu(DevCommands.Kind action)
+        {
+            return action == DevCommands.Kind.ArmJumpToWave
+                || action == DevCommands.Kind.ArmDemoCheckpoint;
         }
 
         /// <summary>Commands with no meaning on a lane. Hidden rather than disabled: a row you
@@ -103,10 +113,9 @@ namespace GatekeepersProtocol.Game
         /// something. Drawn here rather than in DevConsole.cs, which is at its line cap.</summary>
         void DrawRangeRows(float x, float y, float w)
         {
-            // The heading says how to reach the digits, because the legend is up before the
-            // prompt is armed and a bare list of numbers would not say what presses them.
-            GUI.Label(new Rect(x, y, w, 18f),
-                _awaitingRangeDigit ? "RANGE — press a digit" : "RANGE — F3, then a digit", _title);
+            // Only drawn while F3 is armed, so the heading names the parent key and the way
+            // back rather than explaining how to get here.
+            GUI.Label(new Rect(x, y, w, 18f), "F3  RANGE — press a digit, Esc back", _title);
             y += 20f;
             string[] rows =
             {

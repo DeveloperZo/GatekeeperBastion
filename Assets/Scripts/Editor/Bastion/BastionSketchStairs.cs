@@ -6,27 +6,34 @@ using UnityEngine;
 
 namespace GatekeepersProtocol.EditorTools
 {
-    /// <summary>Graybox stair wells after kit Rebuild. A 0.05 m box at atan(rise/run)
-    /// (~32° for StoreyHeight 5 over 8 m) stays under CharacterController slopeLimit 45.
-    /// Kit stair MeshColliders wall the capsule; this walk box is the surface. Call after
-    /// RebuildAllSegments + Settle or floor tiles come back.</summary>
-    static class BastionSketchStairs
+    /// <summary>Stair wells after kit Rebuild. Dress is SM_Prop_Stairs_01 (same object
+    /// as Ship - CoOp's Stair). Walk is a child box — kit MeshColliders wall the capsule.
+    /// Call after RebuildAllSegments, before Settle so the mesh rides the room into
+    /// Authored. Rooms already under Authored keep existing Stair_* objects.</summary>
+    public static class BastionSketchStairs
     {
-        const float WalkThickness = 0.05f;
-        const float MinRun = 8f;
-        const float WalkWidth = 4f;
+        // SM_Prop_Stairs_01 — Tools/ship-hull/build_hull.py MESH['Stairs'].
+        const string StairMeshGuid = "3a9167268fb73cb48b6f3226667f05f2";
+        const float WalkThickness = 0.35f;
+        const float WalkWidth = 2.85f;
         const float WellPad = 0.3f;
+        const float BuryDepth = 2f;
+        const float LandingDepth = 2f;
         const string WalkPrefix = "GStairWalk_";
+        const string LandPrefix = "GStairLand_";
+        const string StairPrefix = "Stair_";
 
         public static int Emit(BastionSketch sketch, Dictionary<string, GameObject> roomObjects)
         {
             if (sketch == null || roomObjects == null)
                 return 0;
 
+            GameObject stairSource = LoadStairSource();
+            if (stairSource == null)
+                Debug.LogError("[BastionSketchStairs] SM_Prop_Stairs_01 (guid "
+                    + StairMeshGuid + ") missing — walk boxes only.");
+
             float rise = BastionKit.StoreyHeight;
-            float run = MinRun;
-            float angle = Mathf.Atan(rise / run) * Mathf.Rad2Deg;
-            float hypot = Mathf.Sqrt(rise * rise + run * run);
             int placed = 0;
 
             for (int i = 0; i < sketch.Stairs.Count; i++)
@@ -38,8 +45,21 @@ namespace GatekeepersProtocol.EditorTools
                     continue;
 
                 string walkName = WalkPrefix + stair.LowerId + "_" + stair.UpperId;
+                string stairName = StairPrefix + stair.LowerId + "_" + stair.UpperId;
+                // Authored rooms keep hand-finished stairs. Re-emit used to
+                // DestroyNamedUnder then stamp a fresh kit mesh.
+                if (IsUnderAuthored(lower.transform)
+                    && (HasNamedUnder(lower.transform, stairName)
+                        || HasNamedUnder(upper.transform, stairName)))
+                {
+                    placed++;
+                    continue;
+                }
+
                 DestroyNamedUnder(lower.transform, walkName);
+                DestroyNamedUnder(lower.transform, stairName);
                 DestroyNamedUnder(upper.transform, walkName);
+                DestroyNamedUnder(upper.transform, stairName);
 
                 Vector3 lowerPos = lower.transform.position;
                 float cx = lowerPos.x;
@@ -47,12 +67,30 @@ namespace GatekeepersProtocol.EditorTools
                 float lowerY = lowerPos.y;
                 float upperY = upper.transform.position.y;
 
-                // North of centre, away from R1's south hatch wall. Foot at room centre.
+                float run;
+                float wellWidth;
+                Transform stairRoot = PlaceStairMesh(
+                    stairSource,
+                    lower.transform,
+                    stairName,
+                    cx,
+                    lowerY,
+                    cz,
+                    rise,
+                    out run,
+                    out wellWidth);
+                if (run < 0.5f)
+                    run = 8f;
+                if (wellWidth < WalkWidth)
+                    wellWidth = WalkWidth;
+
+                float angle = Mathf.Atan(rise / run) * Mathf.Rad2Deg;
+                float hypot = Mathf.Sqrt(rise * rise + run * run);
                 Vector3 foot = new Vector3(cx, lowerY, cz);
                 Vector3 head = new Vector3(cx, upperY, cz + run);
                 Vector3 mid = (foot + head) * 0.5f;
 
-                float halfW = WalkWidth * 0.5f + WellPad;
+                float halfW = wellWidth * 0.5f + WellPad;
                 var well = new Bounds();
                 well.SetMinMax(
                     new Vector3(cx - halfW, lowerY - 0.6f, cz - WellPad),
@@ -62,28 +100,248 @@ namespace GatekeepersProtocol.EditorTools
                 DisableOverlappingTiles(lower, BastionSegment.GroupCeiling, "CeilingTile", well);
                 PunchPhysicsFloor(upper, well);
 
-                PlaceWalkBox(lower.transform, walkName, mid, angle, hypot);
+                Transform walkParent = stairRoot != null ? stairRoot : lower.transform;
+                PlaceWalkBox(walkParent, walkName, mid, angle, hypot, wellWidth);
                 placed++;
             }
 
             return placed;
         }
 
-        static void PlaceWalkBox(Transform parent, string walkName, Vector3 mid, float angle, float hypot)
+        /// <summary>Keep the dress mesh pose. Rebuild the walk box (foot buried so the
+        /// end-cap is not a wall), add a landing flush with the upper floor, and re-punch
+        /// the well on the live mesh bounds.</summary>
+        public static void FitWalkAndWellToDress(GameObject stair, GameObject lower, GameObject upper)
+        {
+            if (stair == null || lower == null || upper == null)
+                return;
+
+            Renderer dress = stair.GetComponent<Renderer>();
+            if (dress == null)
+            {
+                Debug.LogError("[BastionSketchStairs] " + stair.name + " has no Renderer.");
+                return;
+            }
+
+            Bounds mesh = dress.bounds;
+            float rise = BastionKit.StoreyHeight;
+            float lowerY = lower.transform.position.y;
+            float upperY = upper.transform.position.y;
+
+            string suffix = stair.name.StartsWith(StairPrefix, System.StringComparison.Ordinal)
+                ? stair.name.Substring(StairPrefix.Length)
+                : stair.name;
+            string walkName = WalkPrefix + suffix;
+            string landName = LandPrefix + suffix;
+
+            Vector3 climb = Vector3.forward;
+            Transform existingWalk = stair.transform.Find(walkName);
+            if (existingWalk != null)
+            {
+                climb = existingWalk.forward;
+                climb.y = 0f;
+                if (climb.sqrMagnitude > 0.01f)
+                    climb.Normalize();
+                else
+                    climb = Vector3.forward;
+            }
+
+            float halfRun = mesh.extents.x * Mathf.Abs(climb.x) + mesh.extents.z * Mathf.Abs(climb.z);
+            float run = halfRun * 2f;
+            if (run < 0.5f)
+                run = 8f;
+
+            float angle = Mathf.Atan(rise / run) * Mathf.Rad2Deg;
+            float hypot = Mathf.Sqrt(rise * rise + run * run);
+            float extra = BuryDepth / Mathf.Max(0.2f, Mathf.Sin(angle * Mathf.Deg2Rad));
+            Vector3 slopeDir = (climb * run + Vector3.up * rise).normalized;
+            Vector3 mid = mesh.center - slopeDir * (extra * 0.5f);
+            float width = Mathf.Max(WalkWidth, mesh.size.x);
+
+            DestroyNamedUnder(stair.transform, walkName);
+            DestroyNamedUnder(stair.transform, landName);
+            PlaceWalkBox(stair.transform, walkName, mid, angle, hypot + extra, width);
+
+            Vector3 landPos = mesh.center + climb * (halfRun + LandingDepth * 0.45f);
+            landPos.y = upperY - WalkThickness * 0.5f;
+            PlaceLanding(stair.transform, landName, landPos, width, LandingDepth);
+
+            float halfW = width * 0.5f + WellPad;
+            var well = new Bounds();
+            well.SetMinMax(
+                new Vector3(mesh.center.x - halfW, lowerY - 0.6f, mesh.min.z - WellPad),
+                new Vector3(mesh.center.x + halfW, upperY + 0.6f, mesh.max.z + WellPad));
+
+            EnableTiles(upper, BastionSegment.GroupFloors, "FloorTile");
+            EnableTiles(lower, BastionSegment.GroupCeiling, "CeilingTile");
+            DisableOverlappingTiles(upper, BastionSegment.GroupFloors, "FloorTile", well);
+            DisableOverlappingTiles(lower, BastionSegment.GroupCeiling, "CeilingTile", well);
+            ReactivateGenFloor(upper);
+            PunchPhysicsFloor(upper, well);
+        }
+
+        static GameObject LoadStairSource()
+        {
+            string path = AssetDatabase.GUIDToAssetPath(StairMeshGuid);
+            if (string.IsNullOrEmpty(path))
+                return null;
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        static Transform PlaceStairMesh(
+            GameObject source,
+            Transform parent,
+            string stairName,
+            float cx,
+            float lowerY,
+            float cz,
+            float rise,
+            out float run,
+            out float wellWidth)
+        {
+            run = 0f;
+            wellWidth = WalkWidth;
+            if (source == null)
+                return null;
+
+            GameObject stair = PrefabUtility.InstantiatePrefab(source, parent) as GameObject;
+            if (stair == null)
+                stair = Object.Instantiate(source, parent);
+            if (stair == null)
+                return null;
+
+            stair.name = stairName;
+            if (PrefabUtility.IsPartOfPrefabInstance(stair))
+                PrefabUtility.UnpackPrefabInstance(
+                    stair, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            StripColliders(stair);
+
+            Mesh mesh = MeshOf(stair);
+            if (mesh == null)
+            {
+                Debug.LogError("[BastionSketchStairs] " + stairName + " has no mesh.");
+                return stair.transform;
+            }
+
+            Bounds local = mesh.bounds;
+            float nativeRise = local.size.y;
+            if (nativeRise < 0.01f)
+                nativeRise = 5.798f;
+            float scale = rise / nativeRise;
+            stair.transform.localScale = new Vector3(scale, scale, scale);
+            stair.transform.rotation = Quaternion.identity;
+            stair.transform.position = new Vector3(
+                cx - local.center.x * scale,
+                lowerY - local.min.y * scale,
+                cz - local.min.z * scale);
+
+            run = local.size.z * scale;
+            wellWidth = Mathf.Max(WalkWidth, local.size.x * scale);
+            if (stair.GetComponent<BastionGeneratedGeom>() == null)
+                stair.AddComponent<BastionGeneratedGeom>();
+            return stair.transform;
+        }
+
+        static Mesh MeshOf(GameObject stair)
+        {
+            MeshFilter filter = stair.GetComponentInChildren<MeshFilter>();
+            if (filter == null)
+                return null;
+            return filter.sharedMesh;
+        }
+
+        static void StripColliders(GameObject root)
+        {
+            Collider[] colliders = root.GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] != null)
+                    Object.DestroyImmediate(colliders[i]);
+            }
+        }
+
+        static void PlaceWalkBox(
+            Transform parent,
+            string walkName,
+            Vector3 mid,
+            float angle,
+            float hypot,
+            float width)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = walkName;
             go.layer = 0;
             go.transform.position = mid;
             go.transform.rotation = Quaternion.Euler(-angle, 0f, 0f);
-            go.transform.localScale = new Vector3(WalkWidth, WalkThickness, hypot);
+            go.transform.localScale = new Vector3(width, WalkThickness, hypot);
             go.transform.SetParent(parent, true);
             go.AddComponent<BastionGeneratedGeom>();
+
+            var renderer = go.GetComponent<MeshRenderer>();
+            if (renderer != null)
+                renderer.enabled = false;
 
             const StaticEditorFlags flags =
                 StaticEditorFlags.BatchingStatic
                 | StaticEditorFlags.NavigationStatic;
             GameObjectUtility.SetStaticEditorFlags(go, flags);
+        }
+
+        static void PlaceLanding(
+            Transform parent,
+            string landName,
+            Vector3 worldPos,
+            float width,
+            float depth)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.name = landName;
+            go.layer = 0;
+            go.transform.position = worldPos;
+            go.transform.rotation = Quaternion.identity;
+            go.transform.localScale = new Vector3(width, WalkThickness, depth);
+            go.transform.SetParent(parent, true);
+            go.AddComponent<BastionGeneratedGeom>();
+
+            var renderer = go.GetComponent<MeshRenderer>();
+            if (renderer != null)
+                renderer.enabled = false;
+
+            const StaticEditorFlags flags =
+                StaticEditorFlags.BatchingStatic
+                | StaticEditorFlags.NavigationStatic;
+            GameObjectUtility.SetStaticEditorFlags(go, flags);
+        }
+
+        static void EnableTiles(
+            GameObject room,
+            string groupName,
+            string nameContains)
+        {
+            Transform group = FindGeomGroup(room, groupName);
+            if (group == null)
+                return;
+
+            Renderer[] renderers = group.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer r = renderers[i];
+                if (r == null)
+                    continue;
+                if (r.gameObject.name.IndexOf(nameContains, System.StringComparison.Ordinal) < 0)
+                    continue;
+                r.gameObject.SetActive(true);
+            }
+        }
+
+        static void ReactivateGenFloor(GameObject upper)
+        {
+            Transform floors = FindGeomGroup(upper, BastionSegment.GroupFloors);
+            if (floors == null)
+                return;
+            Transform genFloor = floors.Find(BastionSegment.GenPrefix + "Floor");
+            if (genFloor != null)
+                genFloor.gameObject.SetActive(true);
         }
 
         static void DisableOverlappingTiles(
@@ -181,6 +439,33 @@ namespace GatekeepersProtocol.EditorTools
             if (geom == null)
                 return null;
             return geom.Find(groupName);
+        }
+
+        static bool IsUnderAuthored(Transform t)
+        {
+            while (t != null)
+            {
+                if (t.name == BastionSegment.AuthoredParentName)
+                    return true;
+                t = t.parent;
+            }
+            return false;
+        }
+
+        static bool HasNamedUnder(Transform root, string name)
+        {
+            if (root == null)
+                return false;
+            Transform[] all = root.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < all.Length; i++)
+            {
+                Transform t = all[i];
+                if (t == null || t == root)
+                    continue;
+                if (t.name == name)
+                    return true;
+            }
+            return false;
         }
 
         static void DestroyNamedUnder(Transform root, string name)
