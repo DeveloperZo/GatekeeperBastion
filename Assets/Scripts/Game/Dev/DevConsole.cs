@@ -373,12 +373,7 @@ namespace GatekeepersProtocol.Game
             GUI.Label(new Rect(x, y, w, 22f), title, _title);
             y += 26f;
 
-            for (int i = 0; i < DevCommands.All.Length; i++)
-            {
-                var b = DevCommands.All[i];
-                GUI.Label(new Rect(x, y, w, 18f), $"{b.Key}  {LabelFor(b)}", _label);
-                y += 18f;
-            }
+            y = DrawBindingRows(x, y, w);
 
             if (_awaitingCheckpointDigit)
                 DrawCheckpointRows(x, y + 8f, w);

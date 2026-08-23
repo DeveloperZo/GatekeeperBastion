@@ -57,6 +57,10 @@ namespace GatekeepersProtocol.EditorTools
         /// edge, where they fell through.</summary>
         const float FiringLineInset = 3f;
 
+        /// <summary>Clearance kept behind the farthest mark so a body is not standing in the
+        /// wall.</summary>
+        const float EndMargin = 1f;
+
         static float _firingLineX;
         static float _laneZ;
 
@@ -86,12 +90,11 @@ namespace GatekeepersProtocol.EditorTools
             BastionSegment.SuppressValidateRebuild = true;
             try
             {
+                // Opened, not yet saved anywhere. Writing Range.unity up front meant a later
+                // refusal left a HALF-BUILT scene on disk — stripped of the Bastion and without
+                // the lane. The save happens once, at the end, when there is something worth
+                // saving. Bastion.unity is never written: SaveScene re-targets to the new path.
                 Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
-                if (!EditorSceneManager.SaveScene(scene, RangeScenePath))
-                {
-                    Debug.LogError("[SceneBuilder] Could not write " + RangeScenePath);
-                    return;
-                }
 
                 GameObject env = GameObject.Find("Environment");
                 if (env == null)
@@ -111,7 +114,11 @@ namespace GatekeepersProtocol.EditorTools
 
                 BakeNavMesh(env, RangeNavMeshPath);
                 EditorSceneManager.MarkSceneDirty(scene);
-                EditorSceneManager.SaveScene(scene, RangeScenePath);
+                if (!EditorSceneManager.SaveScene(scene, RangeScenePath))
+                {
+                    Debug.LogError("[SceneBuilder] Could not write " + RangeScenePath);
+                    return;
+                }
                 RegisterRangeScene();
                 AssetDatabase.SaveAssets();
                 Debug.Log("[SceneBuilder] Range.unity built — one ControlRoom hall, firing line at x="
@@ -188,23 +195,47 @@ namespace GatekeepersProtocol.EditorTools
         /// reads as a distance the weapon cannot reach.</summary>
         static bool MeasureLane(GameObject hall)
         {
+            // FLOOR renderers only. Bounds over everything includes the walls, whose faces sit
+            // metres outside the floor they enclose — measuring off those put the firing line
+            // two-tenths of a metre past the last floor tile, on the invisible collider slab but
+            // OFF the navmesh, which is baked from render meshes. The player stood there fine and
+            // nothing walking could reach them.
             var renderers = hall.GetComponentsInChildren<MeshRenderer>(true);
-            Bounds bounds = renderers[0].bounds;
-            for (int i = 1; i < renderers.Length; i++)
-                bounds.Encapsulate(renderers[i].bounds);
-
-            _firingLineX = bounds.min.x + FiringLineInset;
-            _laneZ = bounds.center.z;
-
-            float longest = _firingLineX + RangeMarks[RangeMarks.Length - 1];
-            if (longest > bounds.max.x - 1f)
+            bool any = false;
+            Bounds bounds = new Bounds();
+            for (int i = 0; i < renderers.Length; i++)
             {
-                Debug.LogError("[SceneBuilder] Range: the hall is " + bounds.size.x.ToString("0.#")
-                    + " m across; the " + RangeMarks[RangeMarks.Length - 1]
-                    + " m mark would sit outside it. Refusing to build a lane that lies.");
+                if (renderers[i] == null) continue;
+                if (renderers[i].name.IndexOf("Floor", System.StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+                if (!any) { bounds = renderers[i].bounds; any = true; }
+                else bounds.Encapsulate(renderers[i].bounds);
+            }
+            if (!any)
+            {
+                Debug.LogError("[SceneBuilder] Range: the hall generated no floor renderers — "
+                    + "the navmesh bakes from render meshes, so there would be nothing to walk on.");
                 return false;
             }
-            Debug.Log("[SceneBuilder] Range lane: floor x " + bounds.min.x.ToString("0.#") + ".."
+
+            // Stand as far back as the floor allows, up to the preferred inset. The hall is
+            // only a few centimetres longer than 90 m plus that inset, and refusing over one of
+            // them would have been pedantry — but a mark PAST the floor is not, so the fit is
+            // checked after the squeeze rather than instead of it.
+            float longestMark = RangeMarks[RangeMarks.Length - 1];
+            float room = bounds.size.x - longestMark - EndMargin;
+            float inset = Mathf.Clamp(room, 0f, FiringLineInset);
+            _firingLineX = bounds.min.x + inset;
+            _laneZ = bounds.center.z;
+
+            if (_firingLineX + longestMark > bounds.max.x)
+            {
+                Debug.LogError("[SceneBuilder] Range: the floor is " + bounds.size.x.ToString("0.#")
+                    + " m across and the longest mark is " + longestMark
+                    + " m — it will not fit. Refusing to build a lane that lies.");
+                return false;
+            }
+            Debug.Log("[SceneBuilder] Range lane: FLOOR x " + bounds.min.x.ToString("0.#") + ".."
                 + bounds.max.x.ToString("0.#") + ", firing line " + _firingLineX.ToString("0.#")
                 + ", lane z " + _laneZ.ToString("0.#"));
             return true;

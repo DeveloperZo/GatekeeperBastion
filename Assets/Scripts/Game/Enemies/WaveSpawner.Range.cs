@@ -55,6 +55,20 @@ namespace GatekeepersProtocol.Game
 
             // The kind's own numbers, unscaled. A range that quietly buffed what it spawned
             // would answer questions about a Gatekeeper nobody ever meets.
+            // Snap onto the navmesh. A marker is authored geometry and can sit just off the
+            // walkable surface — an agent placed off-mesh has no ground under it and drops
+            // through the floor the moment anything disturbs it.
+            if (UnityEngine.AI.NavMesh.SamplePosition(at, out var hit, 4f,
+                    UnityEngine.AI.NavMesh.AllAreas))
+            {
+                at = hit.position;
+            }
+            else
+            {
+                Log.Warn(Tag, "range spawn refused — no navmesh within 4 m of " + at.ToString("0.#"));
+                return null;
+            }
+
             GatekeeperStats stats = WaveDirector.StatsFor(kind);
             // waveBody: false — see CreateActor. A range kill must not pay the realm, and a
             // body on the lane must not hold a Bastion Assault open.

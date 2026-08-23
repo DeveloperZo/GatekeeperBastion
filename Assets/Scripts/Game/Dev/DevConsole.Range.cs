@@ -63,6 +63,41 @@ namespace GatekeepersProtocol.Game
             }
         }
 
+        /// <summary>The binding rows, minus the ones that mean nothing here. A range runs no
+        /// Wave, has no Hatch and hosts no party, so replay/jump/restore/host/join/checkpoint are
+        /// six lines of noise above the five that matter. Drawn here rather than in
+        /// DevConsole.cs, which is at its line cap. Returns the next y.</summary>
+        float DrawBindingRows(float x, float y, float w)
+        {
+            bool range = HasRange;
+            for (int i = 0; i < DevCommands.All.Length; i++)
+            {
+                var b = DevCommands.All[i];
+                if (range && HiddenInRange(b.Action)) continue;
+                GUI.Label(new Rect(x, y, w, 18f), $"{b.Key}  {LabelFor(b)}", _label);
+                y += 18f;
+            }
+            return y;
+        }
+
+        /// <summary>Commands with no meaning on a lane. Hidden rather than disabled: a row you
+        /// cannot use is still a row you have to read past.</summary>
+        static bool HiddenInRange(DevCommands.Kind action)
+        {
+            switch (action)
+            {
+                case DevCommands.Kind.ReplayWave:
+                case DevCommands.Kind.RestoreHatch:
+                case DevCommands.Kind.GrantSalvage:
+                case DevCommands.Kind.StartCoopHost:
+                case DevCommands.Kind.StartCoopClient:
+                case DevCommands.Kind.ArmDemoCheckpoint:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         /// <summary>The armed menu, printed so the digits do not have to be memorised — five
         /// distances and four toggles is more than anyone should hold in their head to shoot at
         /// something. Drawn here rather than in DevConsole.cs, which is at its line cap.</summary>
