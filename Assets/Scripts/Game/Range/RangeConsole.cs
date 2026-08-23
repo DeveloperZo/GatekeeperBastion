@@ -13,9 +13,12 @@ namespace GatekeepersProtocol.Game
     /// that survived into a played save would make every later economy observation wrong, and
     /// nothing in the game would report it.
     ///
-    /// The range starts from a BLANK kit rather than the player's own. Judging a weapon while
-    /// carrying whatever you last equipped answers a question about your save, not about the
-    /// weapon (Docs/Milestones — a range you can fight in).</summary>
+    /// The range starts from a FULLY UNLOCKED kit rather than the player's own. Two separate
+    /// reasons, and both matter: judging a weapon while carrying whatever you last equipped
+    /// answers a question about your save rather than about the weapon (Docs/Milestones — a
+    /// range you can fight in), and until the game is tuned, everything has to be reachable
+    /// without earning it first (Zo, 2026-08-22). So the state is fresh — never the player's —
+    /// but it owns the whole catalogue.</summary>
     public sealed class RangeConsole : MonoBehaviour
     {
         const string Tag = "Range";
@@ -57,6 +60,20 @@ namespace GatekeepersProtocol.Game
             _game = game;
             _rules = rules;
             _marks = marks;
+        }
+
+        /// <summary>Adopt the unlocked kit as the lane opens, rather than waiting for the first
+        /// grant. EnsureRangeState used to be reached only through a Grant call, so a range you
+        /// simply loaded and shot in was running the DEFAULT state — nothing owned, no protocol —
+        /// and "everything is unlocked" was only true once you had asked for something.
+        ///
+        /// Safe in either order against GameController.Start: if this lands first, the
+        /// controller's own ApplyMetaEffects picks the new state up; if it lands second, the
+        /// ReapplyKit here pushes it onto the rig the controller already built.</summary>
+        void Start()
+        {
+            EnsureRangeState();
+            ReapplyKit();
         }
 
         // ---- Grants ----
@@ -151,9 +168,8 @@ namespace GatekeepersProtocol.Game
             ReapplyKit();
         }
 
-        /// <summary>The range's own state, adopted once. Built blank rather than copied from the
-        /// player: what is being judged is the kit granted here, not what happened to be
-        /// equipped when the door was opened.</summary>
+        /// <summary>The range's own state, adopted once: fresh rather than copied from the
+        /// player, and with the whole catalogue already unlocked.</summary>
         MetaState EnsureRangeState()
         {
             if (_adopted) return GameSession.Meta;
@@ -162,11 +178,56 @@ namespace GatekeepersProtocol.Game
             // Not a tutorial. DemoActive would gate stations and lock multiplayer, neither of
             // which means anything on a lane.
             m.Realm.DemoActive = false;
+            UnlockEverything(m);
             GameSession.AdoptDevState(m);
             _adopted = true;
-            Log.Event(Tag, "range kit adopted — this session is dev-tainted and will not save");
+            Log.Event(Tag, "range kit adopted — everything unlocked, dev-tainted, will not save");
             return GameSession.Meta;
         }
+
+        /// <summary>Own the catalogue outright.
+        ///
+        /// Nothing on a lane should refuse for want of a purchase — the point is to reach any
+        /// weapon, protocol, payload or piece of equipment and feel it, so every grant below is
+        /// ownership rather than a transaction. Weapons arrive at FULL focus because an ability
+        /// at zero points and the same ability maxed are different abilities; F3-then-7 and the
+        /// loadout picker dial that back down when the flat comparison is what you want.
+        ///
+        /// This runs on state that <see cref="GameSession.AdoptDevState"/> is about to taint, so
+        /// none of it can reach a save.</summary>
+        static void UnlockEverything(MetaState m)
+        {
+            foreach (WeaponId id in WeaponCatalog.All())
+            {
+                m.SetOwned(id, true);
+                // Disabled and test-only rows are OWNED but stay unequippable — GrantWeapon still
+                // asks IsAvailable. Owning them costs nothing and keeps "unlocked" honest.
+                if (WeaponCatalog.IsAvailable(id))
+                    m.Boarder.ReplacePointsFromFlatTier(id, WeaponWheel.MaxPurchases);
+            }
+            // Something in hand on arrival, so the lane is shootable before touching a menu.
+            m.SetEquipped(WeaponId.Mk1Sidearm);
+
+            m.SetPayloadOwned(PayloadId.Decoy, true);
+            m.Boarder.EquipmentSlotPurchased = true;
+            m.SetEquipmentOwned(EquipmentId.RepairRig, true);
+
+            // A protocol from the first frame, so the ability bar has something to show before
+            // anything is cycled. Set, not claimed — see GrantProtocol for why.
+            m.EquippedProtocol = BoarderProtocolId.Default;
+            m.EquippedPassive = BoarderProtocol.PassiveCount(BoarderProtocolId.Default) > 0
+                ? BoarderProtocol.PassiveAt(BoarderProtocolId.Default, 0)
+                : BoarderAbilityId.None;
+
+            // Salvage for anything that still charges. Earned is raised with it: RealmState keeps
+            // the ledger invariant earned == banked + spent, and a wallet conjured without it
+            // would put the range's own state permanently out of balance.
+            m.Realm.BankedSalvage = RangeSalvage;
+            m.Realm.LifetimeSalvageEarned = RangeSalvage;
+        }
+
+        /// <summary>Enough that nothing on the lane ever refuses for price.</summary>
+        const long RangeSalvage = 1000000L;
 
         /// <summary>Push the changed kit onto the live rig. Without this a grant sits in the
         /// state and the weapon in your hands is still the last one.</summary>
