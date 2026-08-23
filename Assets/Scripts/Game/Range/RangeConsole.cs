@@ -83,18 +83,40 @@ namespace GatekeepersProtocol.Game
             ReapplyKit();
         }
 
-        /// <summary>Claim a protocol, including ones no save has ever unlocked. Veil and Forge
-        /// exist in code and cannot be earned yet; the range is where they are judged.</summary>
+        /// <summary>Set a protocol, including ones no save has ever unlocked. Veil and Forge
+        /// exist in code and cannot be earned yet; the range is where they are judged.
+        ///
+        /// This SETS rather than buys, and deliberately does not go through
+        /// <c>BoarderProtocol.TryClaim</c>. TryClaim is the shop's purchase and carries the
+        /// shop's three rules, all of which are wrong here:
+        ///
+        /// <list type="bullet">
+        /// <item>it refuses while a Run holds the loadout lock — and a range is Tethered from its
+        /// first frame, so the lock is on the entire time the lane exists. Every cycle after the
+        /// first was refused with "BuyProtocol refused — run in progress track=crew";</item>
+        /// <item>it refuses a protocol that is already equipped, so cycling back to one you had
+        /// would stop working too;</item>
+        /// <item>it refuses anything outside the shop catalogue, which is the exact opposite of
+        /// what a range is for — the protocols worth judging are the ones not yet on sale.</item>
+        /// </list>
+        ///
+        /// The passive is seeded the same way TryClaim seeds it, so a set protocol arrives with
+        /// its first passive rather than with whatever the last one left behind.</summary>
         public void GrantProtocol(BoarderProtocolId id)
         {
-            MetaState m = EnsureRangeState();
-            if (m == null) return;
-            if (!BoarderProtocol.TryClaim(m, id))
+            if (id == BoarderProtocolId.None)
             {
-                Log.Warn(Tag, "grant refused — " + id + " could not be claimed");
+                Log.Warn(Tag, "grant refused — None is not a protocol");
                 return;
             }
-            Log.Event(Tag, "granted protocol " + id);
+            MetaState m = EnsureRangeState();
+            if (m == null) return;
+
+            m.EquippedProtocol = id;
+            m.EquippedPassive = BoarderProtocol.PassiveCount(id) > 0
+                ? BoarderProtocol.PassiveAt(id, 0)
+                : BoarderAbilityId.None;
+            Log.Event(Tag, "set protocol " + id);
             ReapplyKit();
         }
 

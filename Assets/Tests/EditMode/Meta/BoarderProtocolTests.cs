@@ -210,5 +210,47 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(maxLive, s.MaxLive);
             Assert.IsTrue(DecoyState.ShouldPull(GatekeeperKind.Default, false, true, 1f, pull));
         }
+
+        /// <summary>The shop's purchase refuses while a Run holds the loadout lock. Pinned here
+        /// because it is why the practice range does NOT call TryClaim: a range is Tethered from
+        /// its first frame, so the lock is on for the whole life of the lane and every protocol
+        /// cycle after the first came back "BuyProtocol refused — run in progress track=crew".
+        /// RangeConsole.GrantProtocol sets EquippedProtocol directly instead. If this rule is
+        /// ever relaxed, that workaround can go — but nobody should fold the range back onto
+        /// TryClaim while the rule stands.</summary>
+        [Test]
+        public void TryClaim_RefusesUnderTheRunLoadoutLock()
+        {
+            MetaState m = MetaState.CreateNew();
+            m.Boarder.PayloadLoadoutLocked = false;
+            Assert.IsTrue(BoarderProtocol.TryClaim(m, BoarderProtocolId.Veil),
+                "precondition: Veil is claimable when no run holds the loadout");
+
+            MetaState locked = MetaState.CreateNew();
+            locked.Boarder.PayloadLoadoutLocked = true;
+            Assert.IsFalse(BoarderProtocol.TryClaim(locked, BoarderProtocolId.Veil),
+                "the shop must still refuse a purchase mid-run");
+            Assert.AreNotEqual(BoarderProtocolId.Veil, locked.EquippedProtocol,
+                "a refused claim must not have changed the equipped protocol");
+        }
+
+        /// <summary>And the direct set the range uses works under that same lock, with the
+        /// protocol's first passive seeded the way TryClaim seeds it.</summary>
+        [Test]
+        public void DirectSet_WorksUnderTheLock_AndSeedsTheFirstPassive()
+        {
+            MetaState m = MetaState.CreateNew();
+            m.Boarder.PayloadLoadoutLocked = true;
+
+            m.EquippedProtocol = BoarderProtocolId.Veil;
+            m.EquippedPassive = BoarderProtocol.PassiveCount(BoarderProtocolId.Veil) > 0
+                ? BoarderProtocol.PassiveAt(BoarderProtocolId.Veil, 0)
+                : BoarderAbilityId.None;
+
+            Assert.AreEqual(BoarderProtocolId.Veil, m.EquippedProtocol);
+            if (BoarderProtocol.PassiveCount(BoarderProtocolId.Veil) > 0)
+                Assert.AreEqual(BoarderProtocol.PassiveAt(BoarderProtocolId.Veil, 0),
+                    m.EquippedPassive, "the set protocol must arrive with its own first passive");
+        }
     }
 }
