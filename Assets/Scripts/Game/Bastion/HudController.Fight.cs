@@ -31,6 +31,14 @@ namespace GatekeepersProtocol.Game
         string _cacheCrewCdLabel;
         string _cachePersonalCdLabel;
         int _cacheHasProtocol = -1;
+        // Protocol IDENTITY, not just its cooldown state. Without these the cache key was
+        // (has, both fills, both countdown labels) — every one of which is identical between
+        // two protocols that are simply both ready, so granting a new protocol from the range
+        // console repainted nothing and the bar kept the old names until an ability was fired
+        // and moved a fill. Enums, so the comparison is free.
+        BoarderAbilityId _cacheCrewAbility = BoarderAbilityId.None;
+        BoarderAbilityId _cachePersonalAbility = BoarderAbilityId.None;
+        BoarderAbilityId _cachePassive = BoarderAbilityId.None;
         bool _cacheAlarm;
         bool _cachePlayerDead;
 
@@ -207,6 +215,9 @@ namespace GatekeepersProtocol.Game
             }
 
             int has = _protocol.HasProtocol ? 1 : 0;
+            BoarderAbilityId crewAbility = _protocol.CrewAbility;
+            BoarderAbilityId personalAbility = _protocol.PersonalAbility;
+            BoarderAbilityId passive = _protocol.Passive;
             float crewFill = BoarderProtocol.OverlayFill(_protocol.CrewWindow, _protocol.CrewCooldown,
                 BoarderProtocol.Window(_protocol.CrewAbility),
                 BoarderProtocol.Cooldown(_protocol.CrewAbility));
@@ -216,9 +227,14 @@ namespace GatekeepersProtocol.Game
             string crewCd = CdLabel(_protocol.CrewWindow, _protocol.CrewCooldown);
             string persCd = CdLabel(_protocol.PersonalWindow, _protocol.PersonalCooldown);
             if (has == _cacheHasProtocol && crewFill == _cacheCrewFill && persFill == _cachePersonalFill
-                && crewCd == _cacheCrewCdLabel && persCd == _cachePersonalCdLabel)
+                && crewCd == _cacheCrewCdLabel && persCd == _cachePersonalCdLabel
+                && crewAbility == _cacheCrewAbility && personalAbility == _cachePersonalAbility
+                && passive == _cachePassive)
                 return;
             _cacheHasProtocol = has;
+            _cacheCrewAbility = crewAbility;
+            _cachePersonalAbility = personalAbility;
+            _cachePassive = passive;
             _cacheCrewFill = crewFill;
             _cachePersonalFill = persFill;
             _cacheCrewCdLabel = crewCd;
