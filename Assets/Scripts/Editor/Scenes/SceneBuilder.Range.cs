@@ -325,7 +325,11 @@ namespace GatekeepersProtocol.EditorTools
             "Hud Score",      // wave counter and salvage — no waves, no economy
             "Hud Hatch",      // hatch integrity — there is no hatch to hold
             "Hatch Alarm",
-            "Hud Drawer Left", "Hud Drawer Right",   // the PREP panel
+            // NOT Hud Drawer Left: it carries Shortcut Keys, the ability cards, which is the one
+            // thing on this HUD a range most needs. Hiding the whole drawer to be rid of the PREP
+            // text took the skills panel with it — the PREP content is the RIGHT drawer's
+            // Active Mission.
+            "Hud Drawer Right",
             "Emergency", "Arriving", "End Screen",
             "Demo Voice",
             "Hud Msg Player", "Hud Msg General",
@@ -365,8 +369,18 @@ namespace GatekeepersProtocol.EditorTools
                 t.gameObject.SetActive(false);
                 hidden++;
             }
+            // And force the skills drawer OPEN. It is authored inactive and opens on a Run's
+            // Prep, which the range never enters — so the one panel a range actually wants,
+            // the ability keycaps, would never appear on its own.
+            Transform skills = dynamic.Find("Hud Drawer Left");
+            if (skills != null && !skills.gameObject.activeSelf)
+            {
+                skills.gameObject.SetActive(true);
+                Debug.Log("[SceneBuilder] Range HUD: skills drawer forced open.");
+            }
+
             Debug.Log("[SceneBuilder] Range HUD: hid " + hidden + " of " + CombatHudToHide.Length
-                + " combat panels; crosshair, weapon and vitals stay.");
+                + " combat panels; crosshair, weapon, vitals and the skills drawer stay.");
         }
 
         /// <summary>Swap the Bastion's music host for the ship bed. The copy arrives with a
