@@ -110,33 +110,45 @@ namespace GatekeepersProtocol.EditorTools
             return null;
         }
 
-        /// <summary>One line of protocol text, above the bar.</summary>
+        /// <summary>One line of protocol text, above the squares.</summary>
         static TMP_Text MakeLine(Transform canvas)
         {
             var go = new GameObject("Protocol Line", typeof(TextMeshProUGUI));
             go.transform.SetParent(canvas, false);
             var text = go.GetComponent<TextMeshProUGUI>();
-            text.fontSize = 22f;
+            text.fontSize = 20f;
+            text.color = Warm;
             text.alignment = TextAlignmentOptions.Center;
             text.raycastTarget = false;
             text.text = "";
-            Anchor(go, new Vector2(0.5f, 0f), new Vector2(0f, 176f), new Vector2(760f, 26f));
+            Anchor(go, new Vector2(0.5f, 0f), new Vector2(0f, 190f), new Vector2(760f, 24f));
             return text;
         }
 
-        /// <summary>The bar itself: three slots across the bottom centre, Passive on the left,
+        /// <summary>The HUD's warm white. Everything else on this canvas is tinted with it.</summary>
+        static readonly Color Warm = new Color(0.98f, 0.98f, 0.95f, 1f);
+
+        /// <summary>Square edge, and the gap between squares. LoL reads at a glance because the
+        /// tiles are square and identical — the eye finds "the third one" by position rather than
+        /// by reading it, which a row of wide name-plates does not allow.</summary>
+        const float Tile = 72f;
+        const float Gap = 16f;
+
+        /// <summary>The bar: three ability squares across the bottom centre, Passive on the left,
         /// Crew — the ult — on the right, in the order the player earns them.</summary>
         static ProtocolAbilityBarView MakeBar(Transform canvas)
         {
             var go = new GameObject("Protocol Bar", typeof(ProtocolAbilityBarView));
             go.transform.SetParent(canvas, false);
-            Anchor(go, new Vector2(0.5f, 0f), new Vector2(0f, 120f), new Vector2(760f, 48f));
+            float width = Tile * 3f + Gap * 2f;
+            Anchor(go, new Vector2(0.5f, 0f), new Vector2(0f, 112f), new Vector2(width, Tile));
 
             var bar = go.GetComponent<ProtocolAbilityBarView>();
             var so = new SerializedObject(bar);
-            BindSlot(so, "_passive", MakeSlot(go.transform, "Passive Slot", -250f));
+            float step = Tile + Gap;
+            BindSlot(so, "_passive", MakeSlot(go.transform, "Passive Slot", -step));
             BindSlot(so, "_personal", MakeSlot(go.transform, "Personal Slot", 0f));
-            BindSlot(so, "_crew", MakeSlot(go.transform, "Crew Slot", 250f));
+            BindSlot(so, "_crew", MakeSlot(go.transform, "Crew Slot", step));
             so.ApplyModifiedPropertiesWithoutUndo();
             return bar;
         }
@@ -158,17 +170,20 @@ namespace GatekeepersProtocol.EditorTools
             p.FindPropertyRelative("countdown").objectReferenceValue = slot.Countdown;
         }
 
-        /// <summary>One slot: the key that fires it, what it is called, a fill that drains while
-        /// it recharges, and the seconds left. Every one of those is something HudController
-        /// already computes and currently throws away.</summary>
+        /// <summary>One ability square, stacked back to front: a dark plate, the Shift frame, the
+        /// radial cooldown scrim, then the text. The scrim is UNDER the text on purpose — the
+        /// seconds remaining are the one thing that has to stay readable while it sweeps.
+        ///
+        /// ProtocolAbilityBarView swaps the name for the countdown while an ability is cooling,
+        /// so both sit centred in the same place rather than side by side.</summary>
         static Slot MakeSlot(Transform bar, string name, float x)
         {
             var root = new GameObject(name, typeof(Image));
             root.transform.SetParent(bar, false);
             var plate = root.GetComponent<Image>();
-            plate.color = new Color(0.05f, 0.06f, 0.09f, 0.72f);
+            plate.color = new Color(0.05f, 0.06f, 0.09f, 0.86f);
             plate.raycastTarget = false;
-            Anchor(root, new Vector2(0.5f, 0.5f), new Vector2(x, 0f), new Vector2(228f, 44f));
+            Anchor(root, new Vector2(0.5f, 0.5f), new Vector2(x, 0f), new Vector2(Tile, Tile));
 
             var frameGo = new GameObject("Frame", typeof(Image));
             frameGo.transform.SetParent(root.transform, false);
@@ -177,49 +192,86 @@ namespace GatekeepersProtocol.EditorTools
             if (frame.sprite == null)
                 Debug.LogWarning("[SceneBuilder] Protocol bar: no frame sprite at " + FrameSpritePath);
             frame.type = Image.Type.Sliced;   // m_Type: 1
+            // Cut Frame FILLED is a filled panel, not an outline. Left at white it paints a solid
+            // white block over the whole square, which is exactly what the first version shipped.
+            // The HUD's own idiom for this sprite as a SURFACE is a few percent alpha; this is
+            // that, a little stronger, so the square reads as a lit tile on the dark plate.
+            frame.color = new Color(Warm.r, Warm.g, Warm.b, 0.14f);
             frame.raycastTarget = false;
             Stretch(frameGo);
 
             var fillGo = new GameObject("CooldownFill", typeof(Image));
             fillGo.transform.SetParent(root.transform, false);
             var fill = fillGo.GetComponent<Image>();
-            fill.color = new Color(0.30f, 0.66f, 0.72f, 0.55f);
+            // The sweep: a dark wedge covering the share of the cooldown still to run, wiping
+            // clockwise from twelve as it expires. HudController hands the view the REMAINING
+            // fraction (BoarderProtocol.OverlayFill), so fillAmount is that number directly and
+            // the wedge empties on its own — nothing here inverts or animates it.
+            fill.color = new Color(0.02f, 0.03f, 0.06f, 0.80f);
             fill.type = Image.Type.Filled;
-            fill.fillMethod = Image.FillMethod.Horizontal;
+            fill.fillMethod = Image.FillMethod.Radial360;
+            fill.fillOrigin = (int)Image.Origin360.Top;
+            fill.fillClockwise = true;
+            fill.fillAmount = 0f;    // ready. The view shows this object only while cooling.
             fill.raycastTarget = false;
             Stretch(fillGo);
+
+            TMP_Text nameText = Centred(root.transform, "Name", 15f, false);
+            // Ability names are longer than a 72 px square: let them shrink rather than clip.
+            nameText.enableAutoSizing = true;
+            nameText.fontSizeMin = 9f;
+            nameText.fontSizeMax = 15f;
 
             return new Slot
             {
                 Root = root,
-                // 24 x 20 at font 16 — the chrome test pins these, so the keycaps stay the
-                // size the rest of the HUD's caps are rather than whatever looked right here.
-                Key = Label(root.transform, "Key", 16f, TextAlignmentOptions.Left,
-                    new Vector2(10f, 0f), new Vector2(24f, 20f)),
-                Name = Label(root.transform, "Name", 20f, TextAlignmentOptions.Left,
-                    new Vector2(54f, 0f), new Vector2(120f, 40f)),
-                Countdown = Label(root.transform, "Countdown", 20f, TextAlignmentOptions.Right,
-                    new Vector2(-10f, 0f), new Vector2(56f, 40f)),
+                Name = nameText,
+                Countdown = Centred(root.transform, "Countdown", 30f, true),
+                // 24 x 20 at font 16 — the chrome test pins these, so the keycaps stay the size
+                // the rest of the HUD's caps are rather than whatever looked right here. Bottom
+                // right of the square, where an ability's key sits in every game that has one.
+                Key = Corner(root.transform, "Key", 16f),
                 Fill = fill,
             };
         }
 
-        static TMP_Text Label(Transform parent, string name, float size,
-            TextAlignmentOptions align, Vector2 offset, Vector2 size2)
+        /// <summary>Name and countdown both live dead centre, inset off the frame edge. They are
+        /// never up at the same time, so they do not have to share the room.</summary>
+        static TMP_Text Centred(Transform parent, string name, float size, bool bold)
         {
             var go = new GameObject(name, typeof(TextMeshProUGUI));
             go.transform.SetParent(parent, false);
             var text = go.GetComponent<TextMeshProUGUI>();
             text.fontSize = size;
-            text.alignment = align;
+            text.color = Warm;
+            if (bold) text.fontStyle = FontStyles.Bold;
+            text.alignment = TextAlignmentOptions.Center;
             text.raycastTarget = false;
             text.text = "";
             var rt = go.GetComponent<RectTransform>();
-            bool right = align == TextAlignmentOptions.Right;
-            rt.anchorMin = rt.anchorMax = new Vector2(right ? 1f : 0f, 0.5f);
-            rt.pivot = new Vector2(right ? 1f : 0f, 0.5f);
-            rt.anchoredPosition = offset;
-            rt.sizeDelta = size2;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = new Vector2(6f, 6f);
+            rt.offsetMax = new Vector2(-6f, -6f);
+            return text;
+        }
+
+        /// <summary>The keycap, bottom right of the square.</summary>
+        static TMP_Text Corner(Transform parent, string name, float size)
+        {
+            var go = new GameObject(name, typeof(TextMeshProUGUI));
+            go.transform.SetParent(parent, false);
+            var text = go.GetComponent<TextMeshProUGUI>();
+            text.fontSize = size;
+            text.color = Warm;
+            text.alignment = TextAlignmentOptions.Right;
+            text.raycastTarget = false;
+            text.text = "";
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot = new Vector2(1f, 0f);
+            rt.anchoredPosition = new Vector2(-6f, 4f);
+            rt.sizeDelta = new Vector2(24f, 20f);
             return text;
         }
 
