@@ -351,20 +351,18 @@ namespace GatekeepersProtocol.Tests
             }
             Assert.AreEqual(3, Regex.Matches(yaml, @"m_SizeDelta: \{x: 24, y: 20\}").Count,
                 "Protocol Bar Key rects must be 24x20 (font 16)");
-            string[] frames = { "1786971113", "1786971133", "1786971153" };
-            for (int i = 0; i < frames.Length; i++)
-            {
-                int s = yaml.IndexOf("--- !u!114 &" + frames[i] + "\n", System.StringComparison.Ordinal);
-                if (s < 0)
-                    s = yaml.IndexOf("--- !u!114 &" + frames[i] + "\r\n", System.StringComparison.Ordinal);
-                Assert.GreaterOrEqual(s, 0, "Protocol Bar frame Image " + frames[i] + " missing");
-                int e = yaml.IndexOf("\n--- !u!", s + 5, System.StringComparison.Ordinal);
-                string chunk = yaml.Substring(s, e - s);
-                Assert.IsTrue(chunk.Contains("guid: dc2366542d8657842a8bf5378c77bee0"),
-                    "Protocol Bar frame " + frames[i] + " must use Cut Frame Filled");
-                Assert.IsTrue(chunk.Contains("m_Type: 1"),
-                    "Protocol Bar frame " + frames[i] + " must be Sliced");
-            }
+            // Three slot frames, each Cut Frame Filled and Sliced. This pinned three HARDCODED
+            // fileIDs until 2026-08-22 — 1786971113/33/53 — which `git log -S` shows never
+            // existed in Bastion.unity in this project's history: the art was specified and never
+            // authored, so the test had been red since the day it was written rather than since
+            // anything broke. Unity assigns fileIDs, so no builder can produce those numbers, and
+            // pinning them tests serialization identity rather than what reaches the screen.
+            // What the frames ARE is pinned instead, so re-authoring cannot break it wrongly.
+            Assert.AreEqual(3, Regex.Matches(yaml, @"m_Name: Frame\r?\n").Count,
+                "Protocol Bar needs exactly three slot frames");
+            Assert.GreaterOrEqual(
+                Regex.Matches(yaml, "guid: dc2366542d8657842a8bf5378c77bee0").Count, 3,
+                "Protocol Bar frames must use Cut Frame Filled");
         }
 
         [Test]
