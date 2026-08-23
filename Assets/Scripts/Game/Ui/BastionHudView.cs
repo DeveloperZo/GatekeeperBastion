@@ -30,11 +30,16 @@ namespace GatekeepersProtocol.Game
         [SerializeField] GameObject _vignetteRoot;
         [SerializeField, OptionalBinding] TMP_Text _downLabel;
 
+        // Profile, Score and Hatch are OPTIONAL: they are the run-economy cards, and a HUD in
+        // a scene that runs no economy legitimately has none. ShowCornerCards drives them
+        // through UiBind.Show, which ignores a null, so unbound omits the card rather than
+        // half-showing it. Bastion and Bastion_Coop must still bind all three — a test holds
+        // that, because unbinding one THERE would be an accident.
         [Header("Corner cards")]
-        [SerializeField] GameObject _profileRoot;
+        [SerializeField, OptionalBinding] GameObject _profileRoot;
         [SerializeField] TMP_Text _profileLevel;
         [SerializeField] TMP_Text _profileExp;
-        [SerializeField] GameObject _scoreRoot;
+        [SerializeField, OptionalBinding] GameObject _scoreRoot;
         [SerializeField] TMP_Text _scoreSalvage;
         [SerializeField] TMP_Text _scoreMeta;
         [SerializeField] GameObject _vitalsRoot;
@@ -51,7 +56,7 @@ namespace GatekeepersProtocol.Game
         [SerializeField] TMP_Text _weaponAmmo;
 
         [Header("Hatch (top centre)")]
-        [SerializeField] GameObject _hatchRoot;
+        [SerializeField, OptionalBinding] GameObject _hatchRoot;
         [SerializeField] TMP_Text _hatchLabel;
         [SerializeField] TMP_Text _hatchValue;
         [SerializeField] Slider _hatchBar;
@@ -128,7 +133,6 @@ namespace GatekeepersProtocol.Game
                 LogMissing(nameof(_endScreen), _endScreen);
                 LogMissing(nameof(_vitalsRoot), _vitalsRoot);
                 LogMissing(nameof(_weaponCardRoot), _weaponCardRoot);
-                LogMissing(nameof(_hatchRoot), _hatchRoot);
             }
 
             if (_returnWired) return;

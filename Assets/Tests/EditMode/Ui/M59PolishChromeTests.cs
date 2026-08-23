@@ -312,6 +312,32 @@ namespace GatekeepersProtocol.Tests
                 "BastionHudView._protocolLine is unbound");
         }
 
+        /// <summary>Profile, Score and Hatch became OptionalBinding so the practice range can
+        /// omit its run-economy cards — the range is Tethered from its first frame, so hiding
+        /// those panels in the scene did nothing: ShowCornerCards turned them back on. Making
+        /// them optional means the binding validator no longer speaks for them, and an accidental
+        /// unbinding in a scene that DOES run an economy would now be silent. This is that
+        /// guard.</summary>
+        [Test]
+        public void RunEconomyCards_StayBoundOnPlayableBastions()
+        {
+            string[] scenes = { "Assets/Scenes/Bastion.unity", "Assets/Scenes/Bastion_Coop.unity" };
+            string[] fields = { "_profileRoot", "_scoreRoot", "_hatchRoot" };
+            for (int i = 0; i < scenes.Length; i++)
+            {
+                if (!File.Exists(Path.GetFullPath(scenes[i]))) continue;
+                string yaml = File.ReadAllText(Path.GetFullPath(scenes[i]));
+                for (int f = 0; f < fields.Length; f++)
+                {
+                    Assert.IsTrue(Regex.IsMatch(yaml, fields[f] + @": \{fileID: \d+"),
+                        scenes[i] + " has no " + fields[f] + " at all");
+                    Assert.IsFalse(Regex.IsMatch(yaml, fields[f] + @": \{fileID: 0\}"),
+                        scenes[i] + ": BastionHudView." + fields[f]
+                        + " is unbound — that card is only optional for the range");
+                }
+            }
+        }
+
         [Test]
         public void ProtocolBar_IsBoundOnBastionHud()
         {

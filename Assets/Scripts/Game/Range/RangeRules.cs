@@ -30,6 +30,7 @@ namespace GatekeepersProtocol.Game
         readonly RespawnQueue _respawn = new RespawnQueue();
 
         bool _bypass = true;
+        bool _missionDrawerClosed;
 
         /// <summary>True while abilities fire as fast as they can be pressed. Default, because
         /// that is what practice needs; one input restores the real wait.</summary>
@@ -104,8 +105,25 @@ namespace GatekeepersProtocol.Game
             _respawn.Clear();
         }
 
+        /// <summary>Put the Active Mission drawer away, once.
+        ///
+        /// A range is Tethered from Start like any Bastion — GameController.Start engages the
+        /// tether — so HudController runs its once-per-Run "Prep opens the mission drawer", and
+        /// a lane that has no mission gets a PREP panel it never asked for. This waits for that
+        /// auto-open and closes it through the same Controls flag the player's own toggle uses,
+        /// so the drawer is closed rather than suppressed: the toggle still opens it.</summary>
+        void CloseMissionDrawerOnce()
+        {
+            if (_missionDrawerClosed) return;
+            if (!Controls.MissionDrawerOpen) return;   // not opened yet; wait for the Prep frame
+            _missionDrawerClosed = true;
+            Controls.SetMissionDrawerOpen(false);
+            Log.Event(Tag, "mission drawer closed — a lane has no mission");
+        }
+
         void Update()
         {
+            CloseMissionDrawerOnce();
             if (!_bypass) return;
             var game = _game;
             if (game == null) return;

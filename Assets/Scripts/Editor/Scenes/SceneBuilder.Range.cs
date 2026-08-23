@@ -369,9 +369,10 @@ namespace GatekeepersProtocol.EditorTools
                 t.gameObject.SetActive(false);
                 hidden++;
             }
-            // And force the skills drawer OPEN. It is authored inactive and opens on a Run's
-            // Prep, which the range never enters — so the one panel a range actually wants,
-            // the ability keycaps, would never appear on its own.
+            // And force the skills drawer OPEN so the scene READS the way it plays. At runtime
+            // HudController drives it from Controls.Collapsed every frame and will open it
+            // anyway — a range is Tethered from Start like any Bastion — but a scene authored
+            // with the ability keycaps hidden invites the next person to "fix" the wrong thing.
             Transform skills = dynamic.Find("Hud Drawer Left");
             if (skills != null && !skills.gameObject.activeSelf)
             {
@@ -379,8 +380,45 @@ namespace GatekeepersProtocol.EditorTools
                 Debug.Log("[SceneBuilder] Range HUD: skills drawer forced open.");
             }
 
+            int unbound = UnbindRunEconomyCards();
+
             Debug.Log("[SceneBuilder] Range HUD: hid " + hidden + " of " + CombatHudToHide.Length
-                + " combat panels; crosshair, weapon, vitals and the skills drawer stay.");
+                + " combat panels and unbound " + unbound
+                + " run-economy cards; crosshair, weapon, vitals and the skills drawer stay.");
+        }
+
+        /// <summary>Cut Profile, Score and Hatch off the HUD view.
+        ///
+        /// Deactivating them in the scene is NOT enough and the first version of this only did
+        /// that: BastionHudView.ShowCornerCards runs UiBind.Show(root, true) the moment the run
+        /// reaches Prep, which a range does on its first frame, and every panel switched off here
+        /// came straight back on. UiBind.Show ignores a null, so the binding is what has to go —
+        /// the three fields are OptionalBinding for exactly this. Returns how many were cleared.</summary>
+        static int UnbindRunEconomyCards()
+        {
+            var view = Object.FindFirstObjectByType<BastionHudView>();
+            if (view == null)
+            {
+                Debug.LogWarning("[SceneBuilder] Range HUD: no BastionHudView to unbind.");
+                return 0;
+            }
+            string[] fields = { "_profileRoot", "_scoreRoot", "_hatchRoot" };
+            var so = new SerializedObject(view);
+            int cleared = 0;
+            for (int i = 0; i < fields.Length; i++)
+            {
+                SerializedProperty p = so.FindProperty(fields[i]);
+                if (p == null)
+                {
+                    Debug.LogWarning("[SceneBuilder] Range HUD: no field " + fields[i]);
+                    continue;
+                }
+                if (p.objectReferenceValue == null) continue;
+                p.objectReferenceValue = null;
+                cleared++;
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return cleared;
         }
 
         /// <summary>Swap the Bastion's music host for the ship bed. The copy arrives with a
