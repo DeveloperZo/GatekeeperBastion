@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -29,7 +29,12 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**Active (2/3):** `M101` (two-deck ship), `M86` (downed crewmates).
+**Active (3/3):** `M86` (downed crewmates), `M97` (the ship remembers — activated
+2026-08-24; built and rescued through `M101`, view tests in; eyes-on and two-box owed),
+`M98` (recut 2026-08-24 by Zo: the between-waves seam also owns death — a limited
+per-seat pool prices in-wave respawns, break respawns are unlimited, every one costs
+150 × uses+1 from the realm pot, host and solo included; the free Hatch-bank embark
+and flat buy-back retire).
 
 **Closed 2026-08-24:** `M94` (played and closed by Zo). Turret health readout,
 number tuning and PARALLEL BAYS carried.
@@ -58,7 +63,7 @@ with **M72**; remaining friends work is polish and dry-run length.
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
 3. Older play close-outs: `GatekeeperZo Notes/verification.md`.
 
-Active **2** of 3 (`M101`, `M86`).
+Active **3** of 3 (`M86`, `M97`, `M98`).
 
 ## Order
 
@@ -163,9 +168,10 @@ this table — see the change log.
 | M93 | Three primaries that read as three guns | completed, Aug 2026 | Three Primaries read as three guns — concussive metres, Railshot ARMED, catalog tests; Zo first pass 2026-08-22; PRI-C further tuning owed outside this file | [`3. completed/M93`](Milestones/3.%20completed/M93-three-primaries-that-read-as-three-guns.md) |
 | M96 | The realm and the Boarder | completed, Aug 2026 | Boarder travels, realm stays; save v13 refuses older docs; `RealmSelect`; Zo close 2026-08-22 (chooser eyes-on + two-box Boarder mirror owed) | [`3. completed/M96`](Milestones/3.%20completed/M96-the-realm-and-the-boarder.md) |
 | M99 | A range you can fight in | completed, Aug 2026 | `Ship - CoOp` door → `Range.unity`; opens with the whole catalogue unlocked; real Gatekeepers at marked distances; cooldown bypass and respawn; readout. Criterion 8 recut to FORGE's turret 2026-08-23. Played and closed 2026-08-23. Console is the F-key overlay and the doors are graybox — carried, presentation on a dev tool | [`3. completed/M99`](Milestones/3.%20completed/M99-a-range-you-can-fight-in.md) |
-| M98 | Drop in between waves | built 2026-08-22, unverified | `RunSeats` splits the seats playing from the seats connected: a late arrival waits on the Ship and follows at a Prep, a departure is held to the next one, and wave composition, the wallet split and the hatch doors all read the roster rather than the connected list. `WaveDirector` untouched. Nothing through Unity yet; criteria 1, 2, 6 eyes-on owed | [`1. planned/M98`](Milestones/1.%20planned/M98-drop-in-between-waves.md) |
+| M98 | Drop in between waves | active (join half built 2026-08-22; recut 2026-08-24) | `RunSeats` splits the seats playing from the seats connected: a late arrival waits on the Ship and follows at a Prep, a departure is held to the next one, and wave composition, the wallet split and the hatch doors all read the roster rather than the connected list. `WaveDirector` untouched. Recut 2026-08-24: one respawn rule replaces the buy-back windows — a per-seat pool prices in-wave returns, break returns are unlimited, cost escalates 150 × uses+1 from the realm pot, and host/solo death becomes a DOWN state when the offer can be honored. Join-half criteria 1, 2, 6 eyes-on owed | [`2. active/M98`](Milestones/2.%20active/M98-drop-in-between-waves.md) |
+| M97 | The ship remembers | active (built 2026-08-22, activated 2026-08-24) | The realm's record on the hull, no menu: twelve clean-exit marks on the deck-2 port wall, the crew's rack in the ARMORY, a plate with survived / lost / deepest wave / hatch armour. Everything reads through `RealmRecordSource` — a guest gets the host's record off `NetRunMirror`, never its own save. View + packing tests pass in EditMode; eyes-on (criteria 1, 2, 6) and two-box criterion 7 owed | [`2. active/M97`](Milestones/2.%20active/M97-the-ship-remembers.md) |
 | M100 | A realm you can open while its owner is offline | planned | Graduates the realm-lock entry from `Brainstorms/realms.md`: the realm document keyed to its owner's ID, an access list held on both sides, and a single-writer lock whose holder hosts. The session stays peer-hosted over Relay — no game server, because what moves off one machine is the document and not the simulation. Written 2026-08-22, and it is the half of `M98`'s first criterion that `M98` never owned | [`1. planned/M100`](Milestones/1.%20planned/M100-a-realm-you-can-open-while-its-owner-is-offline.md) |
-| M101 | A ship with two decks and a stair | active (specified 2026-08-22) | Hull rebuilt long and narrow over two decks joined by an open stair; exterior skin, one-owner wall lines, ~80 cells | [`2. active/M101`](Milestones/2.%20active/M101-a-ship-with-two-decks-and-a-stair.md) |
+| M101 | A ship with two decks and a stair | completed, Aug 2026 | Hull rebuilt long and narrow over two decks joined by an open stair; exterior skin, one-owner wall lines, ~80 cells. Merged 2026-08-22 | [`3. completed/M101`](Milestones/3.%20completed/M101-a-ship-with-two-decks-and-a-stair.md) |
 
 ## Strategy
 

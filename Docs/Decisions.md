@@ -163,6 +163,16 @@ built 2026-08-15. Solo and host: no in-Run respawn.
 live — see *Locked — return to Ship at a surviving bank* below. Wait-then-embark stays;
 buy-back is the new option. Solo and host: still no in-Run respawn (host is the open
 question recorded there).
+**Amended 2026-08-24 (Zo, `M98` recut):** one respawn rule replaces the windows.
+Every dead seat — guest, host, **solo included** — may respawn during a wave while a
+shared per-seat pool has charges, and at any wave break without limit, each respawn
+costing `Respawns.BaseCost × (taken + 1)` from the **realm's pot** (the pot is the
+world's, `M96` — the 2026-08-17 "their own banked Salvage" wording was already
+superseded by that ruling). The free Hatch-bank Prep embark and the flat buy-back are
+retired. Host and solo death enters a DOWN state while the offer can be honored;
+otherwise Lost exactly as before — a fresh realm's pot is 0, so the demo's first loss
+is unchanged. The old host-death open question is closed by this: the host respawns
+from the DOWN overlay, and host migration stays unbuilt.
 
 ## Locked — Bastion kit geometry (Zo, 2026-08-13)
 
@@ -264,8 +274,13 @@ bank window down and breach remain the only enders.
   stays on Hatch-bank Prep. Guest wallet is report-and-ask (client-authoritative):
   friends-only (`../Marketing/gtm.md`). Banked Salvage does not move into the sim.
   Door state stays HOST-ONLY; `M95` criterion 9 owns replicating it. **Owned by `M90`.**
+  **Superseded 2026-08-24 by the `M98` recut** — see the amendment under *Locked —
+  co-op down* above: one escalating-cost respawn rule at the between-waves seam, pool
+  charges for in-wave returns, realm pot pays, solo and host included.
 - **Open — needs Zo's call, recorded not resolved:** a dead HOST rejoining collides
-  with host-death-ends-the-run (`M49`), which is architecture-driven.
+  with host-death-ends-the-run (`M49`), which is architecture-driven. **Closed
+  2026-08-24 by the `M98` recut:** the host respawns from the DOWN overlay while the
+  run continues; host migration stays unbuilt.
 - **Demo consistency:** the demo's two authored losses are unclearable windows, so
   return-to-Ship cannot skip the unlock deaths; the wheel unlock key — the first pod
   ejection — still holds. *(Superseded 2026-08-18 — see* Locked — the wheel opens on
