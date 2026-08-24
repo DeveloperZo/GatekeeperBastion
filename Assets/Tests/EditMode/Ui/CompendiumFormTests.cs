@@ -124,16 +124,26 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void StreamingAssets_StemSetMatchesPlay()
+        public void StreamingAssets_StemSetMatchesPlaysInBuildSet()
         {
+            // Not the raw Play set: a page marked `in_build: false` is authored-but-not-shipped,
+            // so it must be ABSENT from StreamingAssets while its source stays in Docs/Play.
+            // (Was StreamingAssets_StemSetMatchesPlay until the in_build flag existed.)
             string play = ProjectPlayFolder();
             string stream = ProjectStreamingFolder();
             Assert.IsTrue(Directory.Exists(stream),
                 "StreamingAssets/Compendium missing — run GatekeepersProtocol/Build/Copy Compendium Pages");
 
             var playStems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var pulledStems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (string path in Directory.GetFiles(play, "*.md"))
-                playStems.Add(Path.GetFileNameWithoutExtension(path));
+            {
+                string stem = Path.GetFileNameWithoutExtension(path);
+                if (CompendiumCatalog.MarkdownIsInBuild(File.ReadAllText(path)))
+                    playStems.Add(stem);
+                else
+                    pulledStems.Add(stem);
+            }
 
             var streamStems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (string path in Directory.GetFiles(stream, "*.md"))
@@ -145,9 +155,35 @@ namespace GatekeepersProtocol.Tests
             var onlyStream = new List<string>();
             foreach (string s in streamStems)
                 if (!playStems.Contains(s)) onlyStream.Add(s);
+            var shippedPulled = new List<string>();
+            foreach (string s in pulledStems)
+                if (streamStems.Contains(s)) shippedPulled.Add(s);
 
             Assert.IsEmpty(onlyPlay, "In Play but not StreamingAssets: " + string.Join(", ", onlyPlay));
             Assert.IsEmpty(onlyStream, "In StreamingAssets but not Play: " + string.Join(", ", onlyStream));
+            Assert.IsEmpty(shippedPulled,
+                "Marked in_build: false but still shipped: " + string.Join(", ", shippedPulled));
+        }
+
+        [Test]
+        public void MarkdownIsInBuild_MissingMeansTrue_FalseMeansPulled()
+        {
+            // The one parser (CompendiumCatalog.MarkdownIsInBuild) the copier, the pause nav
+            // and the stem-set test all share. Missing means true: every page written before
+            // the flag existed ships.
+            Assert.IsTrue(CompendiumCatalog.MarkdownIsInBuild("# Page\n\nNo comment at all.\n"));
+            Assert.IsTrue(CompendiumCatalog.MarkdownIsInBuild(
+                "<!-- Purpose: x / Status: working -->\n# Page\n"), "comment without the flag");
+            Assert.IsTrue(CompendiumCatalog.MarkdownIsInBuild(
+                "<!-- Purpose: x / in_build: true -->\n# Page\n"));
+            Assert.IsFalse(CompendiumCatalog.MarkdownIsInBuild(
+                "<!-- Purpose: x / in_build: false -->\n# Page\n"));
+            Assert.IsFalse(CompendiumCatalog.MarkdownIsInBuild(
+                "<!-- in_build: FALSE -->\n# Page\n"), "case-insensitive");
+            Assert.IsTrue(CompendiumCatalog.MarkdownIsInBuild(
+                "# Page\n\nBody text saying in_build: false outside any comment.\n<!-- late comment -->"),
+                "only the opening comment carries the flag");
+            Assert.IsTrue(CompendiumCatalog.MarkdownIsInBuild(""), "empty page defaults in");
         }
 
         [Test]

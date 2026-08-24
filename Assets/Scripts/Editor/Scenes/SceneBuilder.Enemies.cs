@@ -11,16 +11,19 @@ using UnityEngine.AI;
 
 namespace GatekeepersProtocol.EditorTools
 {
-    /// <summary>SceneBuilder, enemy assets: the three gatekeeper prefabs and the materials that make
+    /// <summary>SceneBuilder, enemy assets: the four gatekeeper prefabs and the materials that make
     /// them tellable apart. Same idempotent contract as the rest of the builder — each prefab is
     /// saved to a fixed path so re-running keeps its GUID and any scene reference to it.</summary>
     /// <remarks>
-    /// COLOUR AND SIZE ARE THE ONLY TUTORIAL THIS GAME HAS. A player meets three kinds at once
+    /// COLOUR AND SIZE ARE THE ONLY TUTORIAL THIS GAME HAS. A player meets several kinds at once
     /// and has to triage them before knowing any of their names, so the read is built from two
     /// channels that survive a dark corridor and a glance:
     ///   Default — the red they already know, at 1.0 of the base spread.
     ///   Hunter  — bright amber, 0.85. Small and loud: the fast fragile one coming for you.
     ///   Thief   — saturated violet-steel, 1.4. Well over half again the silhouette of a Hunter.
+    ///   Cloaker — cold teal, 1.0 (Default's footprint exactly — its tell is the cloak and the
+    ///             freeze, not a new silhouette size; Docs/Milestones, "the one that stops when
+    ///             you look").
     /// Those are RELATIVE; BodyScale multiplies all three, and the finale elite multiplies again
     /// on top of the Thief (MasterControl.FinaleEliteScale).
     /// Thief's violet is deliberately brighter and more saturated than the bastion's own walls
@@ -39,11 +42,14 @@ namespace GatekeepersProtocol.EditorTools
     {
         const string HunterPrefabPath = PrefabDir + "/HunterGatekeeper.prefab";
         const string ThiefPrefabPath = PrefabDir + "/ThiefGatekeeper.prefab";
+        const string CloakerPrefabPath = PrefabDir + "/CloakerGatekeeper.prefab";
         const string GatekeeperPackDir = "Assets/Packs/Gatekeepers";
         const string GatekeeperControllerPath = GatekeeperPackDir + "/Gatekeeper.controller";
         const string DefaultWrapperPath = GatekeeperPackDir + "/Default.prefab";
         const string HunterWrapperPath = GatekeeperPackDir + "/Hunter.prefab";
         const string ThiefWrapperPath = GatekeeperPackDir + "/Thief.prefab";
+        const string CloakerWrapperPath = GatekeeperPackDir + "/Cloaker.prefab";
+        const string CloakerCloakedMatPath = GatekeeperPackDir + "/Cloaker_Cloaked.mat";
         // One robot model per kind. Silhouette is what tells the kinds apart now; before this
         // they were three Synty humanoids separated by an emission tint, which asked the player to
         // read a colour on a body they had already learned.
@@ -51,9 +57,11 @@ namespace GatekeepersProtocol.EditorTools
         const string DefaultFbx = RobotDir + "Models/SK_UtilityBot.fbx";
         const string HunterFbx = RobotDir + "Models/SK_Hunter.fbx";
         const string ThiefFbx = RobotDir + "Models/SK_Exterminator.fbx";
+        const string CloakerFbx = RobotDir + "Models/SK_Tactical.fbx";
         const string PackDefault = RobotDir + "Prefabs/UtilityBot_Base.prefab";
         const string PackHunter = RobotDir + "Prefabs/Hunter_Base.prefab";
         const string PackThief = RobotDir + "Prefabs/Exterminator_Base.prefab";
+        const string PackCloaker = RobotDir + "Prefabs/Tactical_Base.prefab";
         // BODY SCALE PER KIND. The relative spread (1 : 0.85 : 1.4) is the authored read;
         // BodyScale shrinks all three together so the finale elite towers over them
         // (Zo, 2026-08-20 — the elite did not read as bigger, because until this change
@@ -62,6 +70,9 @@ namespace GatekeepersProtocol.EditorTools
         const float DefaultScale = 1f * BodyScale;
         const float HunterScale = 0.85f * BodyScale;
         const float ThiefScale = 1.4f * BodyScale;
+        // Identical to Default on purpose (milestone criterion 5): same footprint, same agent
+        // radius/height/baseOffset, so no navmesh assumption changes with the fourth kind.
+        const float CloakerScale = 1f * BodyScale;
         const string ClipIdle = "Assets/Packs/Boarder/Anim_PlayerIdle.fbx";
         const string ClipWalk = "Assets/Packs/Boarder/Anim_Walking.fbx";
         const string ClipRun = "Assets/Packs/Boarder/Anim_PlayerRun.fbx";
@@ -70,10 +81,10 @@ namespace GatekeepersProtocol.EditorTools
         const string ClipDeath = GatekeeperPackDir + "/Animations/Anim_death_falling_back.fbx";
         const string UpperBodyMaskPath = GatekeeperPackDir + "/UpperBody.mask";
 
-        /// <summary>The three gatekeeper prefabs, wired into the WaveSpawner as a set.</summary>
+        /// <summary>The four gatekeeper prefabs, wired into the WaveSpawner as a set.</summary>
         sealed class EnemyPrefabs
         {
-            public GameObject Default, Hunter, Thief;
+            public GameObject Default, Hunter, Thief, Cloaker;
         }
 
         static EnemyPrefabs CreateEnemyPrefabs(Palette pal)
@@ -98,6 +109,8 @@ namespace GatekeepersProtocol.EditorTools
                     "HunterGatekeeper", HunterPrefabPath, pal.Hunter, GatekeeperKind.Hunter, HunterScale, dress),
                 Thief = CreateGatekeeperPrefab<ThiefGatekeeper>(
                     "ThiefGatekeeper", ThiefPrefabPath, pal.Thief, GatekeeperKind.Thief, ThiefScale, dress),
+                Cloaker = CreateGatekeeperPrefab<CloakerGatekeeper>(
+                    "CloakerGatekeeper", CloakerPrefabPath, pal.Cloaker, GatekeeperKind.Cloaker, CloakerScale, dress),
             };
         }
 
@@ -161,6 +174,10 @@ namespace GatekeepersProtocol.EditorTools
             {
                 DestroyCapsuleMesh(go);
                 DressVisual(go, kind, wrapper);
+                // The Cloaker's two-material swap rides a separate component (NetEnemy disables
+                // the AI on clones), and its references are SERIALIZED here, not resolved at
+                // runtime — the prefab-freeze rule.
+                if (kind == GatekeeperKind.Cloaker) WireCloakerPresentation(go);
             }
             else if (!existed)
             {
@@ -228,6 +245,7 @@ namespace GatekeepersProtocol.EditorTools
         {
             if (kind == GatekeeperKind.Hunter) return HunterWrapperPath;
             if (kind == GatekeeperKind.Thief) return ThiefWrapperPath;
+            if (kind == GatekeeperKind.Cloaker) return CloakerWrapperPath;
             return DefaultWrapperPath;
         }
 
@@ -235,6 +253,7 @@ namespace GatekeepersProtocol.EditorTools
         {
             if (kind == GatekeeperKind.Hunter) return PackHunter;
             if (kind == GatekeeperKind.Thief) return PackThief;
+            if (kind == GatekeeperKind.Cloaker) return PackCloaker;
             return PackDefault;
         }
 
@@ -242,6 +261,7 @@ namespace GatekeepersProtocol.EditorTools
         {
             if (kind == GatekeeperKind.Hunter) return HunterFbx;
             if (kind == GatekeeperKind.Thief) return ThiefFbx;
+            if (kind == GatekeeperKind.Cloaker) return CloakerFbx;
             return DefaultFbx;
         }
 
@@ -249,7 +269,30 @@ namespace GatekeepersProtocol.EditorTools
         {
             if (kind == GatekeeperKind.Hunter) return "Hunter";
             if (kind == GatekeeperKind.Thief) return "Thief";
+            if (kind == GatekeeperKind.Cloaker) return "Cloaker";
             return "Default";
+        }
+
+        /// <summary>Serialize the Cloaker's presentation references into the saved prefab: the
+        /// body's skinned renderers and the two committed materials. An unwired presentation is
+        /// a silent no-op at runtime, so missing materials are an ERROR here, not a fallback —
+        /// same policy as EnsureWrapperEmission.</summary>
+        static void WireCloakerPresentation(GameObject root)
+        {
+            var presentation = GetOrAdd<CloakerPresentation>(root);
+            var solid = AssetDatabase.LoadAssetAtPath<Material>(
+                GatekeeperPackDir + "/" + VisualChildName(GatekeeperKind.Cloaker) + ".mat");
+            var cloaked = AssetDatabase.LoadAssetAtPath<Material>(CloakerCloakedMatPath);
+            if (solid == null || cloaked == null)
+            {
+                Debug.LogError("[SceneBuilder] Cloaker material missing ("
+                    + (solid == null ? "Cloaker.mat" : "Cloaker_Cloaked.mat")
+                    + ") — cloak swap left unwired.");
+                return;
+            }
+            presentation.renderers = root.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            presentation.solidMaterial = solid;
+            presentation.cloakedMaterial = cloaked;
         }
 
         static bool GatekeeperModelsRetarget(out string reason)
@@ -260,6 +303,7 @@ namespace GatekeepersProtocol.EditorTools
             if (!FbxIsHuman(DefaultFbx, out reason)) return false;
             if (!FbxIsHuman(HunterFbx, out reason)) return false;
             if (!FbxIsHuman(ThiefFbx, out reason)) return false;
+            if (!FbxIsHuman(CloakerFbx, out reason)) return false;
             AnimationClip walk = LoadHumanClip(ClipWalk);
             if (walk == null)
             {
@@ -272,7 +316,7 @@ namespace GatekeepersProtocol.EditorTools
                 return false;
             }
             reason = null;
-            Debug.Log("[SceneBuilder] gatekeeper models retarget: all three avatars are Humanoid.");
+            Debug.Log("[SceneBuilder] gatekeeper models retarget: all four avatars are Humanoid.");
             return true;
         }
 
@@ -324,12 +368,14 @@ namespace GatekeepersProtocol.EditorTools
             EnsureWrapper(GatekeeperKind.Default, controller);
             EnsureWrapper(GatekeeperKind.Hunter, controller);
             EnsureWrapper(GatekeeperKind.Thief, controller);
+            EnsureWrapper(GatekeeperKind.Cloaker, controller);
 
             // Colour is the tutorial: kind-tinted emission on the pack's authored glow regions.
             // Runs after EnsureWrapper every build, so an already-dressed wrapper still converges.
             EnsureWrapperEmission(GatekeeperKind.Default, pal.Enemy.color);
             EnsureWrapperEmission(GatekeeperKind.Hunter, pal.Hunter.color);
             EnsureWrapperEmission(GatekeeperKind.Thief, pal.Thief.color);
+            EnsureWrapperEmission(GatekeeperKind.Cloaker, pal.Cloaker.color);
         }
 
         /// <summary>Assigns the kind's authored material to every renderer slot in its wrapper and
@@ -573,31 +619,31 @@ namespace GatekeepersProtocol.EditorTools
                     path = "",
                     type = typeof(Animator),
                     propertyName = "Spine Front-Back"
-                }, FlinchMuscleCurve(-0.28f));
+                }, FlinchMuscleCurve(-0.7f));
                 AnimationUtility.SetEditorCurve(clip, new EditorCurveBinding
                 {
                     path = "",
                     type = typeof(Animator),
                     propertyName = "Chest Front-Back"
-                }, FlinchMuscleCurve(-0.40f));
+                }, FlinchMuscleCurve(-0.9f));
                 AnimationUtility.SetEditorCurve(clip, new EditorCurveBinding
                 {
                     path = "",
                     type = typeof(Animator),
                     propertyName = "Head Nod Down-Up"
-                }, FlinchMuscleCurve(0.18f));
+                }, FlinchMuscleCurve(0.45f));
                 AnimationUtility.SetEditorCurve(clip, new EditorCurveBinding
                 {
                     path = "",
                     type = typeof(Animator),
                     propertyName = "Left Arm Down-Up"
-                }, FlinchMuscleCurve(0.22f));
+                }, FlinchMuscleCurve(0.55f));
                 AnimationUtility.SetEditorCurve(clip, new EditorCurveBinding
                 {
                     path = "",
                     type = typeof(Animator),
                     propertyName = "Right Arm Down-Up"
-                }, FlinchMuscleCurve(0.22f));
+                }, FlinchMuscleCurve(0.55f));
                 AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(clip);
                 settings.loopTime = false;
                 AnimationUtility.SetAnimationClipSettings(clip, settings);

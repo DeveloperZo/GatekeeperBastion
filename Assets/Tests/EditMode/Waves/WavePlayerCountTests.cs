@@ -16,6 +16,7 @@ namespace GatekeepersProtocol.Tests
                 Assert.AreEqual(a.enemyCount, b.enemyCount, "wave " + w);
                 Assert.AreEqual(a.hunterCount, b.hunterCount, "hunters wave " + w);
                 Assert.AreEqual(a.thiefCount, b.thiefCount, "thieves wave " + w);
+                Assert.AreEqual(a.cloakerCount, b.cloakerCount, "cloakers wave " + w);
             }
             Assert.AreEqual(18, director.NextWave(0, 0, 1).enemyCount);
             Assert.AreEqual(120, director.NextWave(9, 0, 1).enemyCount);
@@ -31,7 +32,9 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(54, three.enemyCount);
             Assert.AreEqual(solo.hunterCount, three.hunterCount);
             Assert.AreEqual(solo.thiefCount, three.thiefCount);
-            Assert.AreEqual(54 - three.hunterCount - three.thiefCount, three.defaultCount);
+            Assert.AreEqual(solo.cloakerCount, three.cloakerCount);
+            Assert.AreEqual(54 - three.hunterCount - three.thiefCount - three.cloakerCount,
+                three.defaultCount);
         }
 
         [Test]

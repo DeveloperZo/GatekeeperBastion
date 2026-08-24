@@ -4,12 +4,14 @@ using GatekeepersProtocol.Sim;
 namespace GatekeepersProtocol.Tests
 {
     /// <summary>
-    /// EditMode tests for the three gatekeeper kinds and the horde-scale wave composition.
+    /// EditMode tests for the four gatekeeper kinds and the horde-scale wave composition.
     ///
     /// EACH KIND IS DEFINED BY WHAT IT REFUSES TO DO, so the refusals are asserted as DATA here,
     /// not left to the Game layer's state machine to honour: a Hunter's hatchDamage is 0 and a
     /// Thief's playerDamage is 0, beside the ignoresHatch / ignoresPlayer flags that say the same
     /// thing about targeting. Both halves have to hold; either alone is a rule you can half-obey.
+    /// The Cloaker's refusal (being seen) is a STATE in the Game layer, so what is pinned here is
+    /// the opposite claim: its stat line is Default's with one owned number, the hp.
     ///
     /// The stat lines, and the arithmetic every one of them is derived from (MK-1 L0 = 12 damage
     /// x 4 shots/s = 32 EFFECTIVE dps after the 66.7% duty cycle; player 100 hp, walk 5 m/s,
@@ -18,7 +20,8 @@ namespace GatekeepersProtocol.Tests
     ///   | kind    | maxHp | player | hatch | interval | patrol | chase | refuses    |
     ///   | Default |    30 |      6 |     4 |     0.7s |    3.2 |   5.6 | —          |
     ///   | Hunter  |    20 |      6 |     0 |     0.7s |    6.5 |   6.5 | the hatch  |
-    ///   | Thief     |   120 |      0 |    20 |     0.7s |    2.2 |   2.2 | the player |
+    ///   | Thief   |   120 |      0 |    20 |     0.7s |    2.2 |   2.2 | the player |
+    ///   | Cloaker |    45 |      6 |     4 |     0.7s |    3.2 |   5.6 | being seen (a state, not a flag) |
     ///
     ///   Default 30 hp = 3 shots = 30/32 = 0.94s; three of them are 25.7 dps and kill a 100 hp
     ///           player in 3.9s, five are 42.9 dps and 2.3s. (At the pre-horde 18 damage, five
@@ -86,6 +89,24 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(s.ignoresPlayer);
         }
 
+        [Test]
+        public void StatsFor_Cloaker_IsDefaultsLineWithItsOwnHp()
+        {
+            // The Cloaker's ONE owned number is 45 hp (two MK-1 T0 shots where a Default is
+            // one); every other figure IS Default's constant, read from the same place, so a
+            // Default retune retunes the Cloaker with it and the watch rule stays the only
+            // thing that separates them.
+            var s = WaveDirector.StatsFor(GatekeeperKind.Cloaker);
+            Assert.AreEqual(45f, s.maxHp, 1e-6f);
+            Assert.AreEqual(WaveDirector.GatekeeperPlayerDamage, s.playerDamage, 1e-6f);
+            Assert.AreEqual(WaveDirector.GatekeeperHatchDamage, s.hatchDamage, 1e-6f);
+            Assert.AreEqual(WaveDirector.GatekeeperAttackInterval, s.attackInterval, 1e-6f);
+            Assert.AreEqual(WaveDirector.GatekeeperPatrolSpeed, s.patrolSpeed, 1e-6f);
+            Assert.AreEqual(WaveDirector.GatekeeperChaseSpeed, s.chaseSpeed, 1e-6f);
+            Assert.IsFalse(s.ignoresHatch, "the Cloaker's refusal is a state, never a pushed flag");
+            Assert.IsFalse(s.ignoresPlayer, "the Cloaker's refusal is a state, never a pushed flag");
+        }
+
         // ================================================================
         //  The refusals, asserted as data
         // ================================================================
@@ -138,13 +159,18 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void StatsFor_OnlyTheDefaultKindHasASecondGear()
+        public void StatsFor_SecondGearBelongsToTheKindsThatChangeTheirMind()
         {
-            // Chase speed exists because a Default gatekeeper CHANGES ITS MIND (provoke-on-damage,
-            // the biggest rule in the project). Hunter and Thief never do — one is already hunting
-            // at spawn, the other cannot be provoked — so for them chase == patrol by definition.
+            // Chase speed exists because a gatekeeper CHANGES ITS MIND (provoke-on-damage, the
+            // biggest rule in the project). Hunter and Thief never do — one is already hunting
+            // at spawn, the other cannot be provoked — so for them chase == patrol by
+            // definition. The Cloaker is a Default whenever it is unobserved, provocation
+            // included, so it carries Default's two gears. (Was named
+            // OnlyTheDefaultKindHasASecondGear until the fourth kind made that claim false.)
             var d = WaveDirector.StatsFor(GatekeeperKind.Default);
             Assert.IsTrue(d.chaseSpeed > d.patrolSpeed, "the Default gatekeeper speeds up when provoked");
+            var c = WaveDirector.StatsFor(GatekeeperKind.Cloaker);
+            Assert.IsTrue(c.chaseSpeed > c.patrolSpeed, "an unobserved Cloaker is a Default, gears included");
             var h = WaveDirector.StatsFor(GatekeeperKind.Hunter);
             Assert.AreEqual(h.patrolSpeed, h.chaseSpeed, 1e-6f, "a Hunter has one speed");
             var r = WaveDirector.StatsFor(GatekeeperKind.Thief);
@@ -244,11 +270,14 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ShotsToKill_IsThreeTwoAndTen_AtTheUnupgradedTwelveDamage()
         {
-            // The reason the three kinds read differently through a gunsight: 12 damage a shot,
+            // The reason the kinds read differently through a gunsight: 12 damage a shot,
             // so 30 hp is 3 shots, 20 hp is 2, and 120 hp is 10 — a Thief costs five Hunters.
+            // The Cloaker's 45 lands at 4: noticeably tougher than the Default it impersonates,
+            // still nothing like a Thief.
             Assert.AreEqual(3, ShotsToKill(GatekeeperKind.Default));
             Assert.AreEqual(2, ShotsToKill(GatekeeperKind.Hunter));
             Assert.AreEqual(10, ShotsToKill(GatekeeperKind.Thief));
+            Assert.AreEqual(4, ShotsToKill(GatekeeperKind.Cloaker));
         }
 
         private static int ShotsToKill(GatekeeperKind kind)
@@ -266,30 +295,35 @@ namespace GatekeepersProtocol.Tests
         public void Composition_TeachesOneKindPerWave_ExactAtDialZero()
         {
             // wave 1: the game as it was. wave 2: the first enemy that comes for YOU.
-            // wave 3: the first enemy you must CHOOSE to shoot. waves 4–5 escalate composition.
+            // wave 3: the first enemies you must CHOOSE how to answer — the Thief through the
+            // gun, the lone Cloaker through the gaze. waves 4–5 escalate composition.
             var director = new WaveDirector();
-            int[] def = { 18, 26, 34, 40, 47 };
+            int[] def = { 18, 26, 33, 38, 44 };
             int[] hunters = { 0, 4, 6, 10, 12 };
             int[] thieves = { 0, 0, 2, 4, 7 };
+            int[] cloakers = { 0, 0, 1, 2, 3 };
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
                 var spec = director.NextWave(w, 0);
                 Assert.AreEqual(def[w], spec.defaultCount, "defaults, wave " + w);
                 Assert.AreEqual(hunters[w], spec.hunterCount, "hunters, wave " + w);
                 Assert.AreEqual(thieves[w], spec.thiefCount, "thieves, wave " + w);
+                Assert.AreEqual(cloakers[w], spec.cloakerCount, "cloakers, wave " + w);
             }
             Assert.AreEqual(0, director.NextWave(0, 5).hunterCount,
                 "wave 1 is all Default at EVERY dial setting — there is nothing else to meet yet");
             Assert.AreEqual(0, director.NextWave(1, 5).thiefCount,
                 "the Thief waits for wave 3 at every dial setting");
+            Assert.AreEqual(0, director.NextWave(1, 5).cloakerCount,
+                "the Cloaker waits for wave 3 at every dial setting");
         }
 
         [Test]
         public void Composition_CountsSumToEnemyCount_AtEveryWaveAndEveryDial()
         {
             // THE STRUCTURAL INVARIANT the Game layer's spawn loop is allowed to rely on without
-            // checking: the three kind counts partition enemyCount exactly, everywhere, including
-            // at probe indices past the three real waves and at the 120 cap.
+            // checking: the four kind counts partition enemyCount exactly, everywhere, including
+            // at probe indices past the five real waves and at the 120 cap.
             var director = new WaveDirector();
             int[] probes = { 0, 1, 2, 3, 7, 9, 40, 1000 };
             foreach (int w in probes)
@@ -297,9 +331,10 @@ namespace GatekeepersProtocol.Tests
                 {
                     var spec = director.NextWave(w, level);
                     Assert.AreEqual(spec.enemyCount,
-                        spec.defaultCount + spec.hunterCount + spec.thiefCount,
+                        spec.defaultCount + spec.hunterCount + spec.thiefCount + spec.cloakerCount,
                         "kind counts must partition enemyCount (wave " + w + ", dial " + level + ")");
-                    Assert.IsTrue(spec.defaultCount >= 0 && spec.hunterCount >= 0 && spec.thiefCount >= 0,
+                    Assert.IsTrue(spec.defaultCount >= 0 && spec.hunterCount >= 0
+                        && spec.thiefCount >= 0 && spec.cloakerCount >= 0,
                         "no negative kind counts (wave " + w + ", dial " + level + ")");
                 }
         }
@@ -307,11 +342,13 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Composition_DialSurplusLandsOnDefaultOnly()
         {
-            // THE RULE: the dial buys bodies, not composition. Hunter and Thief counts are fixed per
-            // wave, so every extra gatekeeper the dial pays for is a Default. The simplest rule that
-            // works, and the point of it is that the dial cannot silently multiply the scariest
-            // enemy: dial 5 wave 3 would otherwise be 3 Thieves and 9 Hunters — a different fight
-            // rather than a bigger one.
+            // THE RULE: the dial buys bodies, not composition. Hunter, Thief and Cloaker counts
+            // are fixed per wave, so every extra gatekeeper the dial pays for is a Default. The
+            // simplest rule that works, and the point of it is that the dial cannot silently
+            // multiply the scariest enemy: dial 5 wave 3 would otherwise be 3 Thieves and 9
+            // Hunters — a different fight rather than a bigger one. For the Cloaker the rule is
+            // load-bearing twice over: a dial that multiplied Cloakers would multiply frozen
+            // free salvage, the pre-mortem this kind ships against.
             var director = new WaveDirector();
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
@@ -326,31 +363,34 @@ namespace GatekeepersProtocol.Tests
                         "hunters are fixed per wave (wave " + w + ", dial " + level + ")");
                     Assert.AreEqual(atZero.thiefCount, spec.thiefCount,
                         "thieves are fixed per wave (wave " + w + ", dial " + level + ")");
+                    Assert.AreEqual(atZero.cloakerCount, spec.cloakerCount,
+                        "cloakers are fixed per wave (wave " + w + ", dial " + level + ")");
                 }
             }
 
             // The corner the rule exists for, spelled out: the biggest draw in the game.
             var top = director.NextWave(4, TetherSiphon.MaxLevel);
             Assert.AreEqual(99, top.enemyCount);
-            Assert.AreEqual(80, top.defaultCount, "all 33 extra bodies are Default");
+            Assert.AreEqual(77, top.defaultCount, "all 33 extra bodies are Default");
             Assert.AreEqual(12, top.hunterCount, "still twelve Hunters, exactly as at dial 0");
             Assert.AreEqual(7, top.thiefCount, "still seven Thieves, exactly as at dial 0");
+            Assert.AreEqual(3, top.cloakerCount, "still three Cloakers, exactly as at dial 0");
         }
 
         [Test]
         public void Composition_FullGrid_DefaultsAbsorbEveryDialStep()
         {
             // The Default column of the wave x dial grid, transcribed from the running code.
-            // Hunter and Thief columns are constant across each row (asserted above), so this IS
-            // the whole grid.
+            // Hunter, Thief and Cloaker columns are constant across each row (asserted above),
+            // so this IS the whole grid.
             var director = new WaveDirector();
             int[][] defaults =
             {
                 new[] { 18, 20, 21, 23, 24, 27 }, // wave 0: count itself, no other kinds yet
                 new[] { 26, 29, 31, 34, 37, 41 }, // wave 1: count - 4 hunters
-                new[] { 34, 38, 40, 45, 49, 55 }, // wave 2: count - 6 hunters - 2 thieves
-                new[] { 40, 45, 48, 54, 59, 67 }, // wave 3: count - 10 hunters - 4 thieves
-                new[] { 47, 54, 57, 64, 70, 80 }, // wave 4: count - 12 hunters - 7 thieves
+                new[] { 33, 37, 39, 44, 48, 54 }, // wave 2: count - 6 hunters - 2 thieves - 1 cloaker
+                new[] { 38, 43, 46, 52, 57, 65 }, // wave 3: count - 10 hunters - 4 thieves - 2 cloakers
+                new[] { 44, 51, 54, 61, 67, 77 }, // wave 4: count - 12 hunters - 7 thieves - 3 cloakers
             };
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
                 for (int level = 0; level <= TetherSiphon.MaxLevel; level++)
@@ -368,7 +408,8 @@ namespace GatekeepersProtocol.Tests
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
                 var spec = director.NextWave(w, 0);
-                Assert.IsTrue(spec.hunterCount + spec.thiefCount <= spec.enemyCount, "wave " + w);
+                Assert.IsTrue(spec.hunterCount + spec.thiefCount + spec.cloakerCount <= spec.enemyCount,
+                    "wave " + w);
                 Assert.IsTrue(spec.defaultCount > 0, "every wave has Default gatekeepers in it, wave " + w);
             }
         }
@@ -448,6 +489,7 @@ namespace GatekeepersProtocol.Tests
                 Assert.AreEqual(spec.enemyCount, spec.defaultCount, "spool waves are all Default");
                 Assert.AreEqual(0, spec.hunterCount);
                 Assert.AreEqual(0, spec.thiefCount);
+                Assert.AreEqual(0, spec.cloakerCount);
                 Assert.AreEqual(1, spec.groupSize, "singles, as this curve was written");
                 Assert.AreEqual(WaveDirector.SpoolWaveInterval, spec.timeUntilNextWave, 1e-6f);
             }

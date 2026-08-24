@@ -173,6 +173,10 @@ namespace GatekeepersProtocol.Game
                 for (int i = 0; i < volume.EntryStems.Length; i++)
                 {
                     string stem = volume.EntryStems[i];
+                    // Volumes mirror Docs/Play/README.md and list every page; whether a page
+                    // SHIPS is its own in_build flag, read here so a pulled page vanishes from
+                    // the nav instead of opening blank.
+                    if (!CompendiumCatalog.IsInBuild(stem)) continue;
                     string title = CompendiumCatalog.DisplayTitle(stem);
                     SpawnEntry(content, entryTemplate, stem, title);
                 }

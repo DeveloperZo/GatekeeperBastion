@@ -127,6 +127,12 @@ namespace GatekeepersProtocol.Game
         /// this is what the kill line and the prefab palette read, never the AI.</summary>
         public virtual GatekeeperKind Kind => GatekeeperKind.Default;
 
+        /// <summary>Per-kind tick, called once per Update ahead of the retarget tick. The one
+        /// sanctioned place for a kind to run state of its own (the Cloaker's watch poll); the
+        /// base does nothing. Exists so no subclass is ever tempted to declare its own Update,
+        /// which would silently hide the base's.</summary>
+        protected virtual void KindTick(float dt) { }
+
         /// <summary>True while a pin holds this gatekeeper in place. Commit latch is unchanged.</summary>
         public bool IsPinned => _pinRemaining > 0f;
 
@@ -278,6 +284,11 @@ namespace GatekeepersProtocol.Game
             }
 
             RecomputeSpeed();
+
+            // Kind seam, ahead of the retarget tick. A subclass MUST use this and never
+            // declare its own Update — that would hide this method entirely and stop the
+            // gatekeeper dead (Unity calls the most-derived declaration only).
+            KindTick(dt);
 
             _retargetTimer -= dt;
             if (_chasingDecoy && (_decoyTarget == null || !_decoyTarget.IsAlive))

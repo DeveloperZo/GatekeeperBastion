@@ -21,11 +21,19 @@ namespace GatekeepersProtocol.Game
         Damageable _damageable;
         EnemyGatekeeper _ai;
         NavMeshAgent _agent;
+        CloakerPresentation _cloak;
         #endregion
 
         #region Properties
         public NetworkVariable<float> Hp = new NetworkVariable<float>(
             0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        /// <summary>Cloaker only (default false = solid, right for every other kind): whether
+        /// the body renders cloaked right now. Global, not per-viewer — one player looking
+        /// stops it for everybody, so there is nothing per-viewer to replicate. Host-side
+        /// CloakerGatekeeper writes it; clones drive CloakerPresentation from it. No RPC.</summary>
+        public NetworkVariable<bool> Cloaked = new NetworkVariable<bool>(
+            false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         #endregion
 
         #region Unity Lifecycle
@@ -34,6 +42,7 @@ namespace GatekeepersProtocol.Game
             _damageable = GetComponent<Damageable>();
             _ai = GetComponent<EnemyGatekeeper>();
             _agent = GetComponent<NavMeshAgent>();
+            _cloak = GetComponent<CloakerPresentation>();
             if (_damageable != null)
             {
                 _damageable.onDeath.AddListener(OnHostDeath);
@@ -54,6 +63,7 @@ namespace GatekeepersProtocol.Game
         {
             base.OnNetworkSpawn();
             Hp.OnValueChanged += OnReplicatedHpChanged;
+            Cloaked.OnValueChanged += OnReplicatedCloakChanged;
             if (IsServer)
             {
                 WriteReplicatedHp();
@@ -61,12 +71,16 @@ namespace GatekeepersProtocol.Game
             }
             if (_ai != null) _ai.enabled = false;
             if (_agent != null) _agent.enabled = false;
+            // Late joiner: the variable arrives already true for a cloaked body, and no
+            // OnValueChanged fires for state that never changes — apply it once here.
+            if (_cloak != null) _cloak.SetCloaked(Cloaked.Value);
             Log.Event(Tag, "clone enemy=" + NetworkObjectId);
         }
 
         public override void OnNetworkDespawn()
         {
             Hp.OnValueChanged -= OnReplicatedHpChanged;
+            Cloaked.OnValueChanged -= OnReplicatedCloakChanged;
             base.OnNetworkDespawn();
         }
         #endregion
@@ -96,6 +110,15 @@ namespace GatekeepersProtocol.Game
         }
         #endregion
 
+        /// <summary>Host-side CloakerGatekeeper's one write path for the replicated cloak.
+        /// Safe to call unspawned or in fixtures — it simply does nothing there, and the
+        /// local CloakerPresentation call beside it carries solo play.</summary>
+        public void SetCloaked(bool cloaked)
+        {
+            if (!IsSpawned || !IsServer) return;
+            if (Cloaked.Value != cloaked) Cloaked.Value = cloaked;
+        }
+
         #region Private
         void WriteReplicatedHp()
         {
@@ -111,6 +134,14 @@ namespace GatekeepersProtocol.Game
         void OnHostDamaged(Transform _)
         {
             WriteReplicatedHp();
+        }
+
+        void OnReplicatedCloakChanged(bool previous, bool next)
+        {
+            // The host's presentation was already set directly by CloakerGatekeeper.
+            if (IsServer) return;
+            if (_cloak == null) _cloak = GetComponent<CloakerPresentation>();
+            if (_cloak != null) _cloak.SetCloaked(next);
         }
 
         void OnReplicatedHpChanged(float previous, float next)

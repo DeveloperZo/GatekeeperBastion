@@ -40,6 +40,7 @@ namespace GatekeepersProtocol.Sim
         {
             spec.defaultCount = 0;
             spec.hunterCount = 0;
+            spec.cloakerCount = 0;
             spec.thiefCount = FinaleEliteCount;
             spec.enemyCount = FinaleEliteCount;
             spec.groupSize = 1;

@@ -114,7 +114,10 @@ namespace GatekeepersProtocol.Game
 
         // ---------- the retarget tick ----------
 
-        void Retarget()
+        /// <summary>Protected, not private: a kind whose targeting rule flips between retargets
+        /// (the Cloaker's gaze state) re-derives its target the frame the rule changes instead
+        /// of waiting out the 0.75 s tick. Kinds do not otherwise call this.</summary>
+        protected void Retarget()
         {
             // Co-op ready: re-pick the closest LIVE player every retarget tick. NearestAlive means
             // a downed player stops drawing aggro the instant the run ends, and the registry
@@ -125,14 +128,21 @@ namespace GatekeepersProtocol.Game
             // MayTargetHatch folds straight into "is there a hatch for me": a Hunter simply lives
             // in a world with no hatch in it, so every hatch branch below is closed to it without
             // a single kind test in the flow. Field-terminal Waves leave Hatch out of the fight.
-            bool hatchMode = _game != null && _game.Sim != null
-                && _game.Sim.Mode == WaveMode.HatchBank;
+            // Faucet field Waves (the dev-gated faucet graybox) borrow Hatch-bank targeting:
+            // the Wave hunts the Hatch, and only damage or proximity puts a body on a Boarder.
+            bool faucetField = _game != null && _game.Sim != null && _game.Sim.FaucetHatchHunt;
+            bool hatchMode = faucetField || (_game != null && _game.Sim != null
+                && _game.Sim.Mode == WaveMode.HatchBank);
             bool hatchAvailable = MayTargetHatch && hatchMode && hatch != null && !hatch.IsDestroyed;
             bool playerNear = MayTargetPlayer && _player != null &&
                               Vector3.Distance(transform.position, _player.transform.position) <= AggroRadiusFor(_player);
 
-            // Seeing the player down a sightline counts as encountering them.
-            if (!_provoked && MayTargetPlayer && _player != null && !playerNear && CanSeePlayer())
+            // Seeing the player down a sightline counts as encountering them. Not on a faucet
+            // Wave: sight-provoke would stickily pull the stream off the Hatch, which is the
+            // hunt-you grammar that mode retires. Proximity (playerNear) stays — it is the
+            // transient peel — and being shot still provokes through OnDamaged.
+            if (!_provoked && MayTargetPlayer && !faucetField && _player != null
+                && !playerNear && CanSeePlayer())
                 Provoke(_player.transform, shout: false);
 
             // Player is the target when they get in the way — or when the hatch is gone.
@@ -165,12 +175,16 @@ namespace GatekeepersProtocol.Game
             _hatchTarget = hatchAvailable ? hatch : null;
             _standPoint = _committedToHatch && hatchAvailable ? HatchStandPoint(hatch) : (Vector3?)null;
 
-            // Decoy pull: ahead of Hatch and player when in radius. Thieves never; committed Defaults never.
+            // Decoy pull: ahead of Hatch and player when in radius. Thieves never; committed
+            // Defaults never. MayTargetPlayer gates it because this branch bypasses the three
+            // targeting virtuals: a watched Cloaker must not walk to a decoy while it refuses
+            // everything else. Behaviour-preserving for the other kinds — ShouldPull already
+            // refuses Thieves by kind, and Default/Hunter answer MayTargetPlayer true always.
             _decoyTarget = null;
             _chasingDecoy = false;
             var gc = _game;
             var bay = gc != null ? gc.Decoys : null;
-            if (bay != null && bay.State.IsLive && bay.Live != null && bay.Live.IsAlive)
+            if (MayTargetPlayer && bay != null && bay.State.IsLive && bay.Live != null && bay.Live.IsAlive)
             {
                 float dist = Vector3.Distance(transform.position, bay.Live.transform.position);
                 if (GatekeepersProtocol.Sim.DecoyState.ShouldPull(Kind, _committedToHatch, true, dist, bay.State.PullRadius))

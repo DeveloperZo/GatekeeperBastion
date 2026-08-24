@@ -10,7 +10,8 @@ namespace GatekeepersProtocol.Sim
     public struct WaveSpec
     {
         /// <summary>Total gatekeepers in this wave. Always equals
-        /// <see cref="defaultCount"/> + <see cref="hunterCount"/> + <see cref="thiefCount"/>.</summary>
+        /// <see cref="defaultCount"/> + <see cref="hunterCount"/> + <see cref="thiefCount"/> +
+        /// <see cref="cloakerCount"/>.</summary>
         public int enemyCount;
 
         /// <summary>How many of <see cref="enemyCount"/> are <see cref="GatekeeperKind.Default"/>.
@@ -24,6 +25,10 @@ namespace GatekeepersProtocol.Sim
         /// <summary>How many of <see cref="enemyCount"/> are <see cref="GatekeeperKind.Thief"/>.
         /// Fixed per wave; the dial never multiplies it.</summary>
         public int thiefCount;
+
+        /// <summary>How many of <see cref="enemyCount"/> are <see cref="GatekeeperKind.Cloaker"/>.
+        /// Fixed per wave; the dial never multiplies it.</summary>
+        public int cloakerCount;
 
         /// <summary>Master Control's final Hatch-bank window: one Thief at
         /// <see cref="MasterControl.FinaleEliteHp"/>, no escorts. The counts still sum to

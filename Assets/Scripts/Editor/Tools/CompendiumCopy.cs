@@ -45,11 +45,15 @@ namespace GatekeepersProtocol.EditorTools
 
             Directory.CreateDirectory(dest);
 
-            // Remove stale stems so the StreamingAssets set matches Docs/Play.
+            // Remove stale stems so the StreamingAssets set matches Docs/Play's IN-BUILD set:
+            // a page that was deleted, and a page still on disk but marked `in_build: false`
+            // in its opening comment, both come out of the build here.
             foreach (string existing in Directory.GetFiles(dest, "*.md"))
             {
                 string name = Path.GetFileName(existing);
-                if (!File.Exists(Path.Combine(source, name)))
+                string srcPath = Path.Combine(source, name);
+                if (!File.Exists(srcPath) ||
+                    !GatekeepersProtocol.Game.CompendiumCatalog.MarkdownIsInBuild(File.ReadAllText(srcPath)))
                     File.Delete(existing);
             }
 
@@ -58,6 +62,10 @@ namespace GatekeepersProtocol.EditorTools
             {
                 string name = Path.GetFileName(srcPath);
                 string raw = File.ReadAllText(srcPath);
+                // in_build: false is authored-but-not-shipped; missing means true. One parser
+                // (CompendiumCatalog.MarkdownIsInBuild) for copier, reader and tests alike.
+                if (!GatekeepersProtocol.Game.CompendiumCatalog.MarkdownIsInBuild(raw))
+                    continue;
                 string cleaned = StripForPlayer(raw);
                 string outPath = Path.Combine(dest, name);
                 File.WriteAllText(outPath, cleaned);

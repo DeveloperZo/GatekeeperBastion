@@ -30,14 +30,15 @@ namespace GatekeepersProtocol.Game
             AddKind(emit, GatekeeperKind.Default, spec.defaultCount);
             AddKind(emit, GatekeeperKind.Hunter, spec.hunterCount);
             AddKind(emit, GatekeeperKind.Thief, spec.thiefCount);
+            AddKind(emit, GatekeeperKind.Cloaker, spec.cloakerCount);
 
-            // The sim's contract is that the three counts sum to enemyCount. If a tuning pass ever
+            // The sim's contract is that the four counts sum to enemyCount. If a tuning pass ever
             // breaks that, spawn what the spec actually asked for rather than an empty wave, and
             // say so — a silently short wave clears itself and looks like a win.
             if (emit.Queue.Count != spec.enemyCount)
             {
                 Log.Warn(Tag, $"Wave roster {emit.Queue.Count} != spec.enemyCount {spec.enemyCount} " +
-                              $"({spec.defaultCount}/{spec.hunterCount}/{spec.thiefCount}); using the roster.");
+                              $"({spec.defaultCount}/{spec.hunterCount}/{spec.thiefCount}/{spec.cloakerCount}); using the roster.");
                 if (emit.Queue.Count == 0) AddKind(emit, GatekeeperKind.Default, spec.enemyCount);
             }
 
@@ -153,7 +154,7 @@ namespace GatekeepersProtocol.Game
         {
             int size = Mathf.Min(groupSize, emit.Queue.Count);
             Transform point = PickSpawnPoint();
-            var tally = new int[3];
+            var tally = new int[4]; // indexed by GatekeeperKind — one slot per kind
 
             for (int i = 0; i < size; i++)
             {
@@ -202,6 +203,7 @@ namespace GatekeepersProtocol.Game
             {
                 case GatekeeperKind.Hunter: return "Hunter";
                 case GatekeeperKind.Thief: return "Thief";
+                case GatekeeperKind.Cloaker: return "Cloaker";
                 default: return "Gatekeeper";
             }
         }
@@ -380,6 +382,9 @@ namespace GatekeepersProtocol.Game
                     break;
                 case GatekeeperKind.Thief:
                     if (thiefPrefab != null) return thiefPrefab;
+                    break;
+                case GatekeeperKind.Cloaker:
+                    if (cloakerPrefab != null) return cloakerPrefab;
                     break;
                 default:
                     return enemyPrefab;

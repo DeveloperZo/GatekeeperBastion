@@ -80,6 +80,9 @@ namespace GatekeepersProtocol.Game
         [Tooltip("Thief prefab (ThiefGatekeeper). Falls back to enemyPrefab when unassigned.")]
         public GameObject thiefPrefab;
 
+        [Tooltip("Cloaker prefab (CloakerGatekeeper). Falls back to enemyPrefab when unassigned.")]
+        public GameObject cloakerPrefab;
+
         [Tooltip("Explicit spawn points; when empty, falls back to the SpawnPoint registry.")]
         public SpawnPoint[] spawnPoints;
 

@@ -96,6 +96,9 @@ namespace GatekeepersProtocol.Sim
 
         private static readonly int[] HunterPerWave = { 0, 4, 6, 10, 12 };
         private static readonly int[] ThiefPerWave = { 0, 0, 2, 4, 7 };
+        // Deliberately small: a Wave where somebody is always looking at every Cloaker freezes
+        // them all and turns the kind into free salvage (the milestone's pre-mortem, case b).
+        private static readonly int[] CloakerPerWave = { 0, 0, 1, 2, 3 };
 
         /// <summary>The stat line of one gatekeeper kind. Unknown kinds fall back to Default.</summary>
         public static GatekeeperStats StatsFor(GatekeeperKind kind)
@@ -123,6 +126,22 @@ namespace GatekeepersProtocol.Sim
                     stats.ignoresPlayer = true;
                     break;
 
+                case GatekeeperKind.Cloaker:
+                    // Two MK-1 T0 shots where a Default is one (Docs/Design/4-Data.md, MK-1
+                    // damage/shot) — the ONLY number this kind owns. Everything else is
+                    // Default's, read from the same constants, because the watch rule is the
+                    // kind and its damage must not open a second question (see the milestone:
+                    // "the one that stops when you look", door-time note).
+                    stats.maxHp = 45f;
+                    stats.playerDamage = GatekeeperPlayerDamage;
+                    stats.hatchDamage = GatekeeperHatchDamage;
+                    stats.patrolSpeed = GatekeeperPatrolSpeed;
+                    stats.chaseSpeed = GatekeeperChaseSpeed;
+                    // Neither refusal flag: the Cloaker's refusal is a per-frame STATE
+                    // (observed / unobserved) owned by the Game layer's CloakerGatekeeper,
+                    // not a constant this struct could push.
+                    break;
+
                 default: // GatekeeperKind.Default, and anything unrecognised
                     stats.maxHp = BaseEnemyHp; // ONE copy of this number, shared with the wave curve
                     stats.playerDamage = GatekeeperPlayerDamage;
@@ -141,8 +160,9 @@ namespace GatekeepersProtocol.Sim
         ///                           n = playerCount (clamped >= 1). n = 1 is today's table.
         ///                           dial = TetherSiphon.RewardMultiplierFor(siphonLevel)
         ///   hunterCount           = {0,4,6,10,12}[waveIndex]   (never scaled by the dial)
-        ///   thiefCount              = {0,0,2,4,7}[waveIndex]     (never scaled by the dial)
-        ///   defaultCount          = enemyCount - hunterCount - thiefCount
+        ///   thiefCount            = {0,0,2,4,7}[waveIndex]     (never scaled by the dial)
+        ///   cloakerCount          = {0,0,1,2,3}[waveIndex]     (never scaled by the dial)
+        ///   defaultCount          = enemyCount - hunterCount - thiefCount - cloakerCount
         ///   enemyHealthMultiplier = 1 + EnemyHealthPerWave*waveIndex  (0.40 → 1.00/1.40/1.80/2.20/2.60)
         ///   groupSize             = min(3 + waveIndex, MaxGroupSize=7, enemyCount)  → 3/4/5/6/7
         ///   spawnInterval         = max(0.4, 4.2 - 0.20*waveIndex)  — PER GROUP, see WaveSpec
@@ -173,11 +193,14 @@ namespace GatekeepersProtocol.Sim
             spec.enemyCount = Math.Min(MaxEnemyCount * playerCount, bodies * playerCount);
 
             // The Min() calls only bite on probe indices past the five real waves, and exist so
-            // the three counts ALWAYS sum to enemyCount — the Game layer's spawn loop relies on
+            // the four counts ALWAYS sum to enemyCount — the Game layer's spawn loop relies on
             // that without checking.
             spec.hunterCount = Math.Min(Row(HunterPerWave, waveIndex), spec.enemyCount);
             spec.thiefCount = Math.Min(Row(ThiefPerWave, waveIndex), spec.enemyCount - spec.hunterCount);
-            spec.defaultCount = spec.enemyCount - spec.hunterCount - spec.thiefCount;
+            spec.cloakerCount = Math.Min(Row(CloakerPerWave, waveIndex),
+                                         spec.enemyCount - spec.hunterCount - spec.thiefCount);
+            spec.defaultCount = spec.enemyCount - spec.hunterCount - spec.thiefCount
+                                - spec.cloakerCount;
 
             spec.enemyHealthMultiplier = 1f + EnemyHealthPerWave * waveIndex;
             spec.groupSize = Math.Max(1, Math.Min(Math.Min(BaseGroupSize + waveIndex, MaxGroupSize),
@@ -207,6 +230,7 @@ namespace GatekeepersProtocol.Sim
             spec.defaultCount = spec.enemyCount;
             spec.hunterCount = 0;
             spec.thiefCount = 0;
+            spec.cloakerCount = 0;
             spec.enemyHealthMultiplier = 1.25f + 0.20f * siphonLevel;
             spec.groupSize = 1;
             spec.spawnInterval = Math.Max(0.15f, 0.75f - 0.05f * siphonLevel);

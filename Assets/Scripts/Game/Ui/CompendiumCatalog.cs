@@ -53,7 +53,8 @@ namespace GatekeepersProtocol.Game
                 Title = "IV. The Garrison",
                 EntryStems = new[]
                 {
-                    "Gatekeepers", "Gatekeeper-Default", "Gatekeeper-Hunter", "Gatekeeper-Thief"
+                    "Gatekeepers", "Gatekeeper-Default", "Gatekeeper-Hunter", "Gatekeeper-Thief",
+                    "Gatekeeper-Cloaker"
                 }
             },
             new Volume
@@ -82,6 +83,8 @@ namespace GatekeepersProtocol.Game
 
         static readonly Regex HtmlComment = new Regex(
             @"<!--.*?-->", RegexOptions.Singleline | RegexOptions.Compiled);
+        static readonly Regex InBuildFlag = new Regex(
+            @"\bin_build:\s*(true|false)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         static readonly Regex MdLink = new Regex(
             @"\[([^\]]+)\]\(([^)]+\.md)\)", RegexOptions.Compiled);
         static readonly Regex Bold = new Regex(
@@ -164,6 +167,30 @@ namespace GatekeepersProtocol.Game
             if (File.Exists(docs)) return docs;
 #endif
             return File.Exists(runtime) ? runtime : null;
+        }
+
+        /// <summary>The `in_build` flag from a page's opening HTML comment; MISSING MEANS TRUE —
+        /// every page written before the flag existed ships. The one parser for the flag: the
+        /// build copier, the pause reader and the form tests all call here, so they cannot
+        /// drift on what "in build" means.</summary>
+        public static bool MarkdownIsInBuild(string markdown)
+        {
+            if (string.IsNullOrEmpty(markdown)) return true;
+            var comment = HtmlComment.Match(markdown);
+            if (!comment.Success) return true;
+            var flag = InBuildFlag.Match(comment.Value);
+            if (!flag.Success) return true;
+            return !string.Equals(flag.Groups[1].Value, "false", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>Whether the page behind a stem is in the build. An unresolvable page reads
+        /// true — absence is a different failure with its own reporting, not a filter.</summary>
+        public static bool IsInBuild(string stem)
+        {
+            string path = ResolvePagePath(stem);
+            if (path == null || !File.Exists(path)) return true;
+            try { return MarkdownIsInBuild(File.ReadAllText(path)); }
+            catch (Exception) { return true; }
         }
 
         /// <summary>Strip HTML comments and ## Gaps. Keeps Game, Reference, See also.</summary>

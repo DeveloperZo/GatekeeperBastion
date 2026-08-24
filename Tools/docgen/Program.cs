@@ -466,6 +466,7 @@ public static class Docgen
         AppendGkRow(sb, "Default", GatekeeperKind.Default);
         AppendGkRow(sb, "Hunter", GatekeeperKind.Hunter);
         AppendGkRow(sb, "Thief", GatekeeperKind.Thief);
+        AppendGkRow(sb, "Cloaker", GatekeeperKind.Cloaker);
         return sb.ToString().TrimEnd('\r', '\n');
     }
 
@@ -475,6 +476,11 @@ public static class Docgen
         string refuses = "—";
         if (s.ignoresHatch) refuses = "the Hatch (`ignoresHatch`)";
         else if (s.ignoresPlayer) refuses = "the player (`ignoresPlayer`; never provoked)";
+        // The Cloaker's refusal is a per-frame STATE (watched / unobserved) in the Game
+        // layer's CloakerGatekeeper — neither pushed flag is set, so it is stated here or
+        // the table prints "—" and the kind reads as a Default in a costume.
+        if (kind == GatekeeperKind.Cloaker)
+            refuses = "being seen (watch cone; a state in `CloakerGatekeeper`, not a flag)";
 
         string pd = s.playerDamage <= 0f ? "**0**" : N(s.playerDamage);
         string hd = s.hatchDamage <= 0f ? "**0**" : N(s.hatchDamage);
@@ -489,13 +495,13 @@ public static class Docgen
     {
         var wd = new WaveDirector();
         var sb = new StringBuilder();
-        sb.AppendLine("| Wave | Bodies | Default | Hunter | Thief | HP × | groups of | Every |");
-        sb.AppendLine("|---|---|---|---|---|---|---|---|");
+        sb.AppendLine("| Wave | Bodies | Default | Hunter | Thief | Cloaker | HP × | groups of | Every |");
+        sb.AppendLine("|---|---|---|---|---|---|---|---|---|");
         for (int i = 0; i < WaveDirector.MaxWaves; i++)
         {
             var s = wd.NextWave(i, 0);
             sb.AppendLine("| " + (i + 1) + " | " + s.enemyCount + " | " + s.defaultCount + " | " +
-                          s.hunterCount + " | " + s.thiefCount + " | " +
+                          s.hunterCount + " | " + s.thiefCount + " | " + s.cloakerCount + " | " +
                           N(s.enemyHealthMultiplier) + " | " + s.groupSize + " | " +
                           N(s.spawnInterval) + " s |");
         }

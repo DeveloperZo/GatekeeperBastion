@@ -162,7 +162,7 @@ namespace GatekeepersProtocol.EditorTools
 
         sealed class Palette
         {
-            public Material Floor, Wall, Rib, Enemy, Hunter, Thief, Hatch, Player, Breach;
+            public Material Floor, Wall, Rib, Enemy, Hunter, Thief, Cloaker, Hatch, Player, Breach;
         }
 
         // ---------- menu items ----------
@@ -473,6 +473,9 @@ namespace GatekeepersProtocol.EditorTools
                 Enemy = MakeMaterial("Enemy", new Color(0.85f, 0.15f, 0.12f)),
                 Hunter = MakeMaterial("Hunter", new Color(1f, 0.78f, 0.10f)),
                 Thief = MakeMaterial("Thief", new Color(0.38f, 0.28f, 0.66f)),
+                // Cold teal: distinct from Default red, Hunter amber and Thief violet, and from
+                // the hull's own violet wall and teal rib at a glance (brighter than the rib).
+                Cloaker = MakeMaterial("Cloaker", new Color(0.20f, 0.85f, 0.78f)),
                 Hatch = MakeMaterial("Hatch", new Color(1f, 0.55f, 0.1f)),
                 Player = MakeMaterial("Player", new Color(0.85f, 0.85f, 0.9f)),
                 Breach = MakeMaterial("Breach", new Color(0.25f, 0.75f, 0.35f)),

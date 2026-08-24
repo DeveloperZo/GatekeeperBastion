@@ -39,6 +39,7 @@ namespace GatekeepersProtocol.Game
         // Was `_ramPrefab` until the Thief rename. Bastion.unity and both NetSession prefabs
         // still carry the old key; FormerlySerializedAs keeps them bound without a re-save.
         [SerializeField, FormerlySerializedAs("_ramPrefab")] GameObject _thiefPrefab;
+        [SerializeField] GameObject _cloakerPrefab;
 
         [SerializeField, Tooltip("Networked decoy prop. Spawned by the host bay.")]
         GameObject _decoyPrefab;

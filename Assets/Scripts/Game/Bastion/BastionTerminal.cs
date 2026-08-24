@@ -119,6 +119,10 @@ namespace GatekeepersProtocol.Game
                         break;
                 }
 
+                // The live faucet cycle's origin outranks every other row — it is the off
+                // switch, and it stays the off switch even once the terminal completes.
+                if (_game != null && _game.Sim != null && _game.IsFaucetOrigin(terminalId))
+                    return FaucetPrompt(_game);
                 if (_layout != null && _layout.IsTerminalDone(terminalId))
                 {
                     // No "[E] Open door" branch: a completed terminal no longer opens anything.
@@ -159,6 +163,29 @@ namespace GatekeepersProtocol.Game
                 s_prompt.Append("  [").Append(key).Append(armed ? "] edit" : "] select");
                 return s_prompt.ToString();
             }
+        }
+
+        /// <summary>The faucet origin's rows (faucet graybox): before the mark, the count to
+        /// hold for; at the mark, the shutoff verb and the draft size the hold has earned.</summary>
+        string FaucetPrompt(GameController gc)
+        {
+            var sim = gc.Sim;
+            string startKey = Controls.DisplayOf(ControlId.PullDraw);
+            s_prompt.Clear();
+            if (sim.FaucetAwaitingDraft)
+            {
+                s_prompt.Append("Terminal ").Append(terminalId).Append(" — off. Draft open");
+                return s_prompt.ToString();
+            }
+            if (sim.FaucetMarked)
+                s_prompt.Append('[').Append(startKey).Append("] Terminal ").Append(terminalId)
+                    .Append(" — SHUT OFF (draft ")
+                    .Append(FaucetLoop.DraftSize(sim.FaucetWavesEndured)).Append(')');
+            else
+                s_prompt.Append("Terminal ").Append(terminalId)
+                    .Append(" — faucet wave ").Append(sim.FaucetWavesEndured + 1)
+                    .Append(" (off at ").Append(FaucetLoop.MarkAfterWaves).Append(')');
+            return s_prompt.ToString();
         }
 
         /// <summary>Retrigger offer rows (copy draft — Zo, beat 4): the elected row leads
@@ -215,12 +242,14 @@ namespace GatekeepersProtocol.Game
                 var spec = s_preview.NextWave(idx, 0, sim.PlayerCount);
                 sb.Append(' ').Append(spec.hunterCount).Append('H')
                     .Append('/').Append(spec.thiefCount).Append('R')
+                    .Append('/').Append(spec.cloakerCount).Append('C')
                     .Append('/').Append(spec.defaultCount).Append('D');
                 if (idx != _foresightLoggedWave)
                 {
                     _foresightLoggedWave = idx;
                     Log.Event("Protocol", "foresight wave " + idx
-                        + " H" + spec.hunterCount + " R" + spec.thiefCount + " D" + spec.defaultCount);
+                        + " H" + spec.hunterCount + " R" + spec.thiefCount
+                        + " C" + spec.cloakerCount + " D" + spec.defaultCount);
                 }
             }
         }
