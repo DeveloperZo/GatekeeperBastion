@@ -18894,7 +18894,7 @@ MonoBehaviour:
   _avatarPrefab: {fileID: 7578676510071751952, guid: 04306d209da1b6b47b532700e87a4453, type: 3}
   _gatekeeperPrefab: {fileID: 1397712982800884421, guid: 2677fac0780193e4fae0c9f381742eb8, type: 3}
   _hunterPrefab: {fileID: 8362424237665421886, guid: 62c430b7b7bf6154ca45b1e6f9ba61eb, type: 3}
-  _thiefPrefab: {fileID: 0}
+  _thiefPrefab: {fileID: 7671676083526859099, guid: a1571208dbbebe446b69202598c81ec1, type: 3}
   _decoyPrefab: {fileID: 4819203748291057461, guid: d1a8f3c62e5b4d7190a4c8e2b6f13590, type: 3}
 --- !u!114 &465071189
 MonoBehaviour:
@@ -24481,7 +24481,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: GatekeeperBastion::GatekeeperBastion.Game.WaveSpawner
   enemyPrefab: {fileID: 1397712982800884421, guid: 2677fac0780193e4fae0c9f381742eb8, type: 3}
   hunterPrefab: {fileID: 8362424237665421886, guid: 62c430b7b7bf6154ca45b1e6f9ba61eb, type: 3}
-  thiefPrefab: {fileID: 0}
+  thiefPrefab: {fileID: 7671676083526859099, guid: a1571208dbbebe446b69202598c81ec1, type: 3}
   spawnPoints: []
   _game: {fileID: 597519392}
 --- !u!114 &597519391
