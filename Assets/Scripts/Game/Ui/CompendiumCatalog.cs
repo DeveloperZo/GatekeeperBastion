@@ -28,9 +28,10 @@ namespace GatekeepersProtocol.Game
             public string BodyMarkdown;
         }
 
-        /// <summary>Seven pause volumes, in the order Docs/Play/README.md states them — that
+        /// <summary>The pause volumes, in the order Docs/Play/README.md states them — that
         /// file is the structure of record and this array mirrors it. Field Manual stays in
-        /// Docs/Play; the reader has no table layout and does not open it.</summary>
+        /// Docs/Play; the reader has no table layout and does not open it. Coming Soon pages
+        /// carry the marker in their own titles and ship like any other entry.</summary>
         public static readonly Volume[] Volumes =
         {
             new Volume
@@ -41,7 +42,10 @@ namespace GatekeepersProtocol.Game
             new Volume
             {
                 Title = "II. A Run",
-                EntryStems = new[] { "A-Run", "Waves", "Intensity", "Salvage", "Staying-Alive" }
+                EntryStems = new[]
+                {
+                    "A-Run", "Waves", "Intensity", "Salvage", "Going-Down", "Staying-Alive"
+                }
             },
             new Volume
             {
@@ -62,7 +66,8 @@ namespace GatekeepersProtocol.Game
                 Title = "V. Doctrine",
                 EntryStems = new[]
                 {
-                    "Protocols", "Protocol-Default", "Protocol-VEIL", "Protocol-FORGE"
+                    "Protocols", "Protocol-Default", "Protocol-VEIL", "Protocol-FORGE",
+                    "Protocol-AEGIS", "Protocol-LEDGER"
                 }
             },
             new Volume
@@ -78,6 +83,11 @@ namespace GatekeepersProtocol.Game
             {
                 Title = "VII. The Hull",
                 EntryStems = new[] { "The-Ship", "Upgrades" }
+            },
+            new Volume
+            {
+                Title = "VIII. The Realm",
+                EntryStems = new[] { "Realms", "The-Crew", "Shared-Realms" }
             }
         };
 

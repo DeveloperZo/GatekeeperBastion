@@ -3,16 +3,17 @@
 
 
 What we have worked out about the place we cut into, the garrison that already holds it,
-the hull we leave from, and why the trip is worth taking. The entries point at each other
-because the answers do.
+the hull we leave from, the worlds we hold, and why the trip is worth taking. The entries
+point at each other because the answers do. A page marked Coming Soon names something on
+its way; it is short on purpose.
 
 ## I. The Situation
 
 I am the Boarder. The Bastion is held. The Hatch is the way home.
 
-[The Game](The-Game.md) is the shape of the whole thing: what a Run is, why there are three
-kinds, what losing costs. [Getting Started](Getting-Started.md) is the first hours in order,
-and the three mistakes that eat early Runs.
+[The Game](The-Game.md) is the shape of the whole thing: what a Run is, why there are
+kinds, what losing costs. [Getting Started](Getting-Started.md) is the first hours in
+order, and the three mistakes that eat early Runs.
 
 ## II. A Run
 
@@ -20,6 +21,7 @@ One trip out and back. [A Run](A-Run.md) is embark, Prep, intensity, Assault, Ha
 and the four ways it finishes. [Waves](Waves.md) is how the room gets worse.
 [Intensity](Intensity.md) is the only wager on offer and it is an honest one.
 [Salvage](Salvage.md) is the only currency, and it is not mine until it converts.
+[Going Down](Going-Down.md) is what a death costs and who pays it.
 [Staying Alive](Staying-Alive.md) is what the room rewards, traced back to the rule that
 makes each one work.
 
@@ -48,6 +50,9 @@ Then the sheets: [Default](Protocol-Default.md), which adds output and changes n
 [VEIL](Protocol-VEIL.md), which moves attention onto me and then takes me off the list.
 [FORGE](Protocol-FORGE.md), which builds the thing they look at.
 
+The roster is not finished: [AEGIS](Protocol-AEGIS.md) and [LEDGER](Protocol-LEDGER.md)
+are Coming Soon.
+
 ## VI. Arms
 
 Every decision about the gun in my hands was made on the Ship. [Weapons](Weapons.md) is the
@@ -63,3 +68,19 @@ Then the guns: [MK-1 Sidearm](Weapon-MK-1-Sidearm.md), [SEC-D](Weapon-SEC-D.md),
 Between Runs I walk my own Ship. [The Ship](The-Ship.md) is the hub and the four consoles,
 each owning one subject. [Upgrades](Upgrades.md) is what is permanent, what waits for the
 first convert, and what is actually worth buying.
+
+## VIII. The Realm
+
+The world is a thing I keep, and I am a thing that travels between worlds.
+[Realms](Realms.md) is the split: what stays with the world, what leaves with me, and
+whose money the pot is. [The Crew](The-Crew.md) is playing a world together: the join
+code, following in at the break, and a room that counts us.
+[Shared Realms](Shared-Realms.md) is Coming Soon: a friend's world that answers when they
+are not home.
+
+## Appendix
+
+The numbers live in one place: the [Field Manual](Field-Manual.md), generated from the game itself — every
+figure, key, cost and Wave table. The entries above say "often" and "the slowest thing
+here" on purpose; when a page owes you a number it points there. The pause reader does
+not open it; it ships beside the Compendium for reading outside the game.

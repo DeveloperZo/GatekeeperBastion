@@ -37,7 +37,7 @@ is not here; that is the Repair Rig at FABRICATION.
 
 **FABRICATION — the Hatch.** How much the door can take before it falls, plus the equipment slot, the Repair Rig, and the Decoy that fills the Drone bay. What it buys applies from your next embark onward, not retroactively.
 
-**NAV MAP — where you go, and going there.** One destination. A selector for which Wave you start on, capped by the deepest Wave you have cleared. And the EMBARK button, which is the point of no return: once the Bastion loads, the only exits are clearing it and losing. On a friends session only the party lead's EMBARK commits the party.
+**NAV MAP — where you go, and going there.** One destination. A selector for which Wave you start on, capped by the deepest Wave you have cleared. And the EMBARK button, which is the point of no return: once the Bastion loads, the only exits are clearing it and losing. On a friends session only the party lead's EMBARK commits the party. While the party fights without you — arrived late, or dead — the NAV MAP is also the wait surface: FOLLOW at the next break, or a priced RESPAWN ([Going Down](Going-Down.md)).
 
 ### The start-Wave selector
 
@@ -61,4 +61,4 @@ first converts through the Hatch. Hatch Armor at FABRICATION is also open from t
 
 ## See also
 
-[Upgrades](Upgrades.md). [Protocols](Protocols.md). [Weapons](Weapons.md). [A Run](A-Run.md). [The Hatch](The-Hatch.md).
+[Upgrades](Upgrades.md). [Protocols](Protocols.md). [Weapons](Weapons.md). [Realms](Realms.md). [A Run](A-Run.md). [The Hatch](The-Hatch.md).

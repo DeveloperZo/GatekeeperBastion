@@ -10,7 +10,7 @@ Prep is the quiet. Untimed, pays nothing, and the only state in which I can juic
 
 A Wave called at a field terminal hunts me and cannot touch the Hatch. A Hatch-bank hunts the Hatch and converts what I am carrying. Two different fights out of the same room.
 
-Four ways it finishes. I go down. The Hatch goes down. I dock home after surviving a Hatch-bank. Or I survive Master Control and the Bastion is stripped.
+Four ways it finishes. I go down and stay down — the realm's pot can pay to stand a dead seat back up, while it can. The Hatch goes down, which nothing pays for. I dock home after surviving a Hatch-bank. Or I survive Master Control and the Bastion is stripped.
 
 Converted Salvage stays whichever way it goes. Unbanked does not survive me.
 
@@ -68,7 +68,7 @@ A Hatch-bank Wave hunts the Hatch. It is one step heavier than the last field Wa
 
 Four things end a Run.
 
-**You die.** Your health does not come back during a Run — there is no healing, no regeneration, no pickup, no respawn. What you take, you keep until the Run ends. When it runs out you go down, and the Run is over — for solo, and for the host. If a second Boarder is in the Bastion, their down does not end the Run; they wait on the Ship and can embark again while the host is in Hatch-bank Prep. During a live Hatch-bank Assault a downed guest can **buy back** from the realm's shared Salvage pot and rejoin at the Hatch.
+**You die and stay dead.** Your health does not come back while you stand — there is no healing, no regeneration, no pickup. What you take, you keep until you go down. Going down wipes your Unbanked and offers a **priced respawn** from the realm's banked pot: rationed by a shared stock of charges mid-Wave, unrationed at any break, at a price that climbs with every respawn this Run, whoever took it. Solo and host wait behind a DOWN overlay that names the price; a guest waits on the Ship. When no respawn can be honored and nobody else still fights — on a fresh realm's empty pot, always — the Run is over. The whole rule: [Going Down](Going-Down.md).
 
 **The Hatch falls.** The Hatch is the umbilical junction back to your Ship. When its health reaches zero the Run ends on the spot, whatever else was happening, and it cannot be repaired back from zero.
 
@@ -107,11 +107,11 @@ A condensed run, then. Same Waves, same total bodies, much less room.
 
 ## See also
 
-[Waves](Waves.md). [Intensity](Intensity.md). [The Hatch](The-Hatch.md). [Salvage](Salvage.md). [The Ship](The-Ship.md).
+[Waves](Waves.md). [Intensity](Intensity.md). [The Hatch](The-Hatch.md). [Salvage](Salvage.md). [Going Down](Going-Down.md). [The Ship](The-Ship.md).
 
 ## Gaps
 
-- **Your health never returns during a Run.** Nothing in the game says this. There is no heal, no regen, no item, and the only refill happens at run start.
+- **Your health never returns while you stand.** Nothing in the game says this. There is no heal, no regen, no item; the only refills are run start and a paid respawn.
 - **Repairing the Hatch spends banked Salvage** — the same purse you shop with at the consoles. The prompt quotes the rate, but nothing tells you that the money is coming out of your upgrade budget, or that with an empty bank you cannot repair at all.
 - **Repairing needs the Repair Rig equipped.** Without it the key does nothing however much you have banked, and nothing in the Run says why.
 - Nothing states that there is **no leave-anytime bail-out**. Outside a survived Hatch-bank window, down and breach remain the only early enders; the dock prompt is that window only.

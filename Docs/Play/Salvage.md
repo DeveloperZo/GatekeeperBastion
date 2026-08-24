@@ -10,7 +10,7 @@ Kills fill Unbanked. Only a Hatch-bank converts it to the ship. Prep pays nothin
 
 Unbanked is wiped if I go down or the Hatch falls. What already converted stays, whatever happens after. A Run that fell apart early paid me exactly what made it through.
 
-One thing moves the money backwards: repairing. It is charged out of the bank I shop with, as the healing lands. A Run where the Hatch takes a beating costs me twice, once there and again at the console I walk back to and cannot afford.
+Two things move the money backwards: repairing, and standing dead crew back up. Both are charged out of the bank I shop with — repair as the healing lands, respawns at a price that climbs per death this Run. A Run where the Hatch takes a beating costs me twice, once there and again at the console I walk back to and cannot afford. A Run where the crew keeps dying does the same arithmetic faster.
 
 A Run holds a limited number of Hatch-banks. When they are gone the Hatch simply refuses.
 
@@ -36,9 +36,11 @@ This is why leaving the Hatch is an economy, not just a door. Being Lost keeps c
 
 A Run you convert through a Hatch-bank and a Run you lose differ in whether leftover Unbanked survives. Converted Salvage stays either way. Wave 5 does not convert leftover and does not wipe it. See [A Run](A-Run.md).
 
-### The one thing that takes it back
+### The two things that take it back
 
-Repairing the Hatch. Repair is charged out of your banked Salvage as the healing lands — the same bank you were saving, spent from inside the Run. See [The Hatch](The-Hatch.md).
+**Repairing the Hatch.** Repair is charged out of your banked Salvage as the healing lands — the same bank you were saving, spent from inside the Run. See [The Hatch](The-Hatch.md).
+
+**Respawns.** A dead seat buys its way back from the same bank, at a price that climbs with every respawn taken this Run. See [Going Down](Going-Down.md).
 
 This is the one place where the game can move your money in the wrong direction, and it is worth understanding as a cost rather than an action. **A Run where the Hatch takes a beating is a Run that costs you twice:** once in the Salvage that went into the door, and again in the purchase you walked back to the Ship unable to make.
 
@@ -49,7 +51,8 @@ Everything wants the same pile:
 - **A weapon** at the ARMORY. The largest single decision, and the one that fixes what kind of fight you are good at.
 - **Weapon Tiers**, also at the ARMORY, per weapon. The deepest sink in the game and the least transferable — the money goes into one gun and stays there.
 - **The Hatch** at FABRICATION: a bigger pool (Hatch Armor), the Repair Rig that makes repairing possible at all, and the Decoy.
-- **Repairs, mid-Run.** The one bill you did not plan for.
+- **Repairs, mid-Run.** The bill you did not plan for.
+- **Respawns, mid-Run.** The other one, and it climbs.
 
 CREW QUARTERS spends nothing on Default (cost 0, same as the free sidearm). VEIL and
 FORGE are claimable there too.
@@ -58,7 +61,7 @@ There is no order that is correct for everyone, but there is a wrong instinct: t
 
 ## See also
 
-[The Hatch](The-Hatch.md). [Intensity](Intensity.md). [Upgrades](Upgrades.md). [A Run](A-Run.md).
+[The Hatch](The-Hatch.md). [Intensity](Intensity.md). [Upgrades](Upgrades.md). [Going Down](Going-Down.md). [Realms](Realms.md). [A Run](A-Run.md).
 
 ## Gaps
 

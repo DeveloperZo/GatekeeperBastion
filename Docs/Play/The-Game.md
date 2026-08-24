@@ -13,7 +13,7 @@ Last updated: 2026-08-20
 
 I cut into a Bastion and strip it. The Gatekeepers were already there. Three machines, each a different frame, and I can tell which is which before it is close enough to matter.
 
-Behind me is the Hatch. It is the umbilical to my Ship and it is the only way back. If it falls, the Run is over. If I fall, the Run is over. Those are the only two.
+Behind me is the Hatch. It is the umbilical to my Ship and it is the only way back. If it falls, the Run is over, and nothing buys a door back. If I fall, the realm can pay to stand me up — at a price that climbs — and when it cannot, the Run is over the old way.
 
 Nothing comes until I call it. That took me a while to trust. Prep is mine and it is untimed. Intensity is the only bet on offer and it is an honest one: more pay, more of the plainest machine, nothing else moved.
 
@@ -68,7 +68,7 @@ The room asks three questions at once, and the answer to each makes the other tw
 
 ### Losing, and what losing costs
 
-There are exactly two ways a Run ends badly: **you die, or the Hatch dies.** There is no leave-anytime lever and no respawn for the Boarder who owns the Run (solo or host). A second Boarder going down does not end the Run — they wait on the Ship and can embark again while the host is in Hatch-bank Prep.
+There are exactly two ways a Run ends badly: **you die and stay dead, or the Hatch dies.** There is no leave-anytime lever. Death offers a priced respawn out of the realm's banked pot — rationed by shared charges mid-Wave, unrationed at any break, at a price that climbs per respawn this Run — and going down wipes your Unbanked whether or not you come back. When no respawn can be honored (a fresh realm's pot is empty, so at first: always), the Run ends. The Hatch has no such offer at any price. The whole rule: [Going Down](Going-Down.md).
 
 Survive a Hatch-bank and you get a third path that is neither Lost nor Escaped: hold interact at the Hatch to **dock** — return to the Ship with what you banked. Fail that bank and the prompt never appears. Start the next Wave and it is gone.
 
@@ -97,4 +97,4 @@ The first weapon is free, and it is still bought at the ARMORY.
 
 ## See also
 
-[A Run](A-Run.md). [Gatekeepers](Gatekeepers.md). [The Ship](The-Ship.md). [Weapons](Weapons.md). [Getting Started](Getting-Started.md). Numbers: [Field Manual](Field-Manual.md).
+[A Run](A-Run.md). [Gatekeepers](Gatekeepers.md). [The Ship](The-Ship.md). [Weapons](Weapons.md). [Realms](Realms.md). [Getting Started](Getting-Started.md). Numbers: [Field Manual](Field-Manual.md).

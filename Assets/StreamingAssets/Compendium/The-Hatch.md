@@ -2,7 +2,7 @@
 
 ## Game
 
-The Hatch is the umbilical junction back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Run on the spot, same as my own death, same screen, same counter.
+The Hatch is the umbilical junction back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Run on the spot — the one loss no pot buys back. A dead Boarder can be priced back onto the floor; a dead door cannot.
 
 It starts every Run whole. Whatever I did to it last time did not carry.
 
@@ -18,7 +18,7 @@ The arithmetic that matters: letting a Thief reach it costs more than killing it
 
 The Hatch is the umbilical junction back to your Ship, at one end of the Bastion. It is the only thing in the Run that is being defended, and it is why you are stood where you are stood.
 
-It has its own health, separate from yours. It cannot be moved, closed, sealed, or traded away. **If it reaches zero the Run ends immediately** — the same ending as your own death, the same counter, the same screen. There is no version of the Run that continues without it.
+It has its own health, separate from yours. It cannot be moved, closed, sealed, or traded away. **If it reaches zero the Run ends immediately** — the same Lost ending, counter and screen as a death nothing could pay back. There is no version of the Run that continues without it, and no respawn for a door ([Going Down](Going-Down.md) is a Boarder rule only).
 
 Field-terminal Waves leave it invulnerable. A Hatch-bank Wave is when it can be hurt, and when Unbanked converts to the ship — drip on the Score card, dump when the timer ends. Unbanked hitting 0 does not end the defense. How hard that Wave is, and how much the convert pays, is how many field Waves you carried in before you called it.
 

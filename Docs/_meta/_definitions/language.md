@@ -5,7 +5,7 @@ Purpose: the ubiquitous language of Gatekeeper's Protocol. One name per thing, u
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired, or when player-facing voice rules change.
-Last updated: 2026-08-18
+Last updated: 2026-08-24 (realm row; voice rule 1 mirrored from ../../Story/Voices.md; protocol roster refreshed)
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in
@@ -124,7 +124,7 @@ are named here.
 | **Equipment** | Gear bought at FABRICATION into the equipment slot (unlocked after first loss, bought once). The Repair Rig is the first piece. | payload *(that is the Drone's)*, item, kit, Utility |
 | **Tier** | A step on a weapon's upgrade track. | level, rank, mark, upgrade |
 | **ability** | A weapon's one activated effect, on a cooldown. | special, power, skill, ult |
-| **Boarder Protocol** | The named sheet CREW QUARTERS sells: one doctrine, one Crew ability, one Personal ability. Default is a 0-salvage claim; specialists show as Coming Soon until their slice. Working name **DEFAULT** — renameable. | archetype, class, kit, loadout *(loadout is weapons)* |
+| **Boarder Protocol** | The named sheet CREW QUARTERS sells: one doctrine, one Crew ability, one Personal ability, a Passive where the sheet has one. Default (0-salvage claim), VEIL and FORGE ship; unshipped specialists are marked Coming Soon (in the Compendium's Doctrine volume). | archetype, class, kit, loadout *(loadout is weapons)* |
 | **doctrine** | How a protocol treats hardware at decoy place. **STOCK** (working name, renameable) is hardware as sold. Written at `TryPlace`, not on repair. | stance, mode-as-flavour |
 | **Crew ability** | A Boarder-owned burst on `G`: brief window, moderate-to-long cooldown. Default sheet: **Barrage** (working name, renameable). | skill, perk, track, weapon ability |
 | **Personal ability** | A Boarder-owned burst on `H`: brief window, long cooldown, for the presser. Default sheet: **Rush** (working name, renameable). | skill, perk, ult, weapon ability |
@@ -158,6 +158,7 @@ mark in the commit that builds it.
 | **Ready** | Guest session control before party EMBARK. | prepared, set |
 | **join code** | Relay code shown on Host, typed at Join. | room code, lobby code |
 | **shared Ship** | The one Ship instance a friends session stands on. | lobby *(player-facing)* |
+| **realm** | The persistent world half of a save: its banked pot, Hatch Armor, doors, deepest Wave, first-time gates. Chosen at the REALMS chooser; a Boarder travels between realms. | world, server, save slot *(a realm is half a save; the Boarder is the other half)* |
 
 ### The tracks
 
@@ -174,7 +175,7 @@ Written in caps in player-facing text, matching what the player reads on the con
 | Term | Owns | Never called |
 |---|---|---|
 | **ARMORY** | The weapon in your hands. | weapons bay, shop, Armory *(caps, always)* |
-| **CREW QUARTERS** | The Boarder's protocol — doctrine, Crew and Personal abilities. Default is a claim; other protocols Coming Soon. | barracks, skills, attributes |
+| **CREW QUARTERS** | The Boarder's protocol — doctrine, Crew and Personal abilities. Default, VEIL and FORGE are claims; AEGIS and LEDGER are Coming Soon. | barracks, skills, attributes |
 | **FABRICATION** | The Ship's gear and the Hatch. | workshop |
 | **NAV MAP** | Where you go, and going there. | map, bridge, terminal |
 | **Compendium** | The Boarder's working knowledge of the game: volumes of related entries (situation, Run, Bastion, garrison, arms, hull), not a glossary of terms. Markdown lives in `Docs/Play/` (M28 language lint). In-game reader shipped (`M62`, Esc → Compendium). | Codex, encyclopedia, wiki, lore bible, Hyrule Compendium, Persona Compendium |
@@ -204,7 +205,7 @@ Test a Play page's Game dimension (skip HTML comments, Reference, and Gaps). One
 
 | # | Rule | Good | Banned |
 |---|---|---|---|
-| 1 | Person is *you* / the Boarder. No *I*, named diarist, or "the player". | "You cut in. They are already home." | "I've watched them stomp…" / "The player should…" |
+| 1 | The `## Game` block is first-person Boarder — the hands of `../../Story/Voices.md` (one hand per protocol, never revealed; ruled 2026-08-22, mirrored here 2026-08-24). No named diarist, no "the player". Reference blocks may address *you*. | "I cut in. They are already home." | "Day 12 — J." / "The player should…" |
 | 2 | Sentence one is a situating fact in this world. | "The Thief is walking to the Hatch." | "A first-person Wave-defense game…" |
 | 3 | The first paragraph states a playable rule the HUD does not print. | "Shooting it does not provoke it." | Opening that only restates HP, clip, or a key already on pause. |
 | 4 | Numbers and bindings only by linking Field Manual. | "How many: [Field Manual](Field-Manual.md)." | "The Thief has 180 HP." / "Press F." |

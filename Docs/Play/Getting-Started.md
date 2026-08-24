@@ -12,7 +12,7 @@ You arrive already tethered, standing near the Hatch, and nothing happens. It st
 
 Three things cost me Runs before I understood them.
 
-Health does not come back. Not from anything, anywhere, at any point. What the first Wave takes off me I still carry on the last one.
+Health does not come back while I stand, and on a fresh realm there is no paying to get back up either — the pot that buys a respawn starts empty. What the first Wave takes off me I still carry on the last one.
 
 The Hatch does not heal itself. It comes back only if I stand at it and hold, and only with the Repair Rig, and it spends banked Salvage per point to do it. On a fresh save I have nothing banked, so it is genuinely unfixable until the first convert.
 
@@ -71,7 +71,7 @@ Then spend it. That's the loop.
 
 #### Mistake 1: assuming you will heal
 
-You will not. There is no healing in a Run — no regeneration, no pickup, no medkit, no respawn. Health refills exactly once, at run start. The damage you take shrugging off the first Wave is damage you still have on the last one. In co-op, a second Boarder's down does not end the Run; they wait on the Ship and can embark again while the host is in Hatch-bank Prep. The host's down still ends it.
+You will not. There is no healing in a Run — no regeneration, no pickup, no medkit. Health refills only at a spawn, and a respawn is bought from the realm's banked pot at a price that climbs ([Going Down](Going-Down.md)). On a fresh realm the pot is empty, so your first Runs really are one life each. In co-op, a downed Boarder waits on the Ship with that same priced way back in; the Run holds while any seat still fights or a respawn can be honored.
 
 This changes how you should play from the very first Gatekeeper: taking a swing is not a cost you pay and recover from, it is a permanent bite out of the Run. Avoid damage you could have avoided even when you are winning comfortably.
 

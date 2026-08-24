@@ -8,7 +8,7 @@ A protocol is the identity I embark wearing. It is claimed at CREW QUARTERS and 
 
 Every sheet answers the same four rows. A doctrine, which is always on and changes what my hardware does in my hands without changing what the hardware is. A crew burst, whose output belongs to whoever is nearby and whose cost belongs to me. A personal burst, which is mine alone. And a passive, where the sheet has one.
 
-The plainest sheet costs nothing, same as the free Secondary. Two others are claimable beside it.
+The plainest sheet costs nothing, same as the free Secondary. Two others are claimable beside it, and the roster is not finished — two more sheets are named and not yet sold.
 
 One protocol at a time, and the choice is fixed the moment I embark. The bursts refuse if I embarked wearing nothing, and the NAV MAP will let me do exactly that.
 
@@ -45,6 +45,8 @@ The NAV MAP warns if you own no protocol and then lets you embark anyway. With n
 
 Read the column that matters: **who the room is looking at.** Default does not change it and buys output instead. VEIL moves attention onto you on purpose and then takes you off the list. FORGE puts a machine in the room for the garrison to look at.
 
+Two more sheets are designed and not yet claimable — [AEGIS](Protocol-AEGIS.md) and [LEDGER](Protocol-LEDGER.md), both marked Coming Soon.
+
 ### What a protocol does not do
 
 - It does not change health, sprint, Salvage per kill or crit chance. There are no attribute tracks at CREW QUARTERS; those were refunded and deleted.
@@ -54,7 +56,7 @@ Read the column that matters: **who the room is looking at.** Default does not c
 
 ## See also
 
-[Default](Protocol-Default.md). [VEIL](Protocol-VEIL.md). [FORGE](Protocol-FORGE.md). [Upgrades](Upgrades.md). [The Ship](The-Ship.md).
+[Default](Protocol-Default.md). [VEIL](Protocol-VEIL.md). [FORGE](Protocol-FORGE.md). [AEGIS](Protocol-AEGIS.md). [LEDGER](Protocol-LEDGER.md). [Upgrades](Upgrades.md). [The Ship](The-Ship.md).
 
 ## Gaps
 

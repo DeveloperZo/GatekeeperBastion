@@ -10,7 +10,7 @@ It does not toughen anything. It does not tighten the spacing. Every extra body 
 
 Set it in Prep, at the trigger, before the select. Once Assault begins it is locked. Turning it down is free and refunds nothing.
 
-Three questions before I raise it. Can I kill the surplus before it reaches me. What will my health look like afterwards, given it does not come back. And is the Hatch already hurt, because repair comes out of the same bank the extra pay lands in. Intensity pays gross. The Hatch charges net.
+Three questions before I raise it. Can I kill the surplus before it reaches me. What will my health look like afterwards, given it does not come back while I stand. And is the Hatch already hurt, because repair comes out of the same bank the extra pay lands in. Intensity pays gross. The Hatch charges net.
 
 Start deep and one juice governs the whole chain. I learned that the expensive way.
 
@@ -46,7 +46,7 @@ Ask three questions, in this order.
 
 **1. Can you kill the surplus before it reaches you?** Extra bodies hunt you on a field-terminal Wave. Your ceiling is how much you can put out between a group spawning and that group closing. If you are already finishing Waves hurt, more bodies means more chip.
 
-**2. What is your health going to look like afterwards?** Health does not come back during a Run. A bigger Wave is more swings, and that damage carries into every Wave after it. Intensity's cost is paid across the rest of the Run, not just this Wave.
+**2. What is your health going to look like afterwards?** Health does not come back while you stand, and the refill that exists is a priced respawn that also eats your Unbanked. A bigger Wave is more swings, and that damage carries into every Wave after it. Intensity's cost is paid across the rest of the Run, not just this Wave.
 
 **3. Is the Hatch already hurt?** Repairing costs banked Salvage. If you raise intensity and the door takes more damage, some of the extra income goes straight back out through the repair. Intensity pays gross; the door charges net.
 

@@ -4,7 +4,7 @@
 
 ## Game
 
-Two pools end a Run and neither refills for free. Mine does not refill at all. The Hatch's refills only when I stand at it with the Repair Rig and spend the bank. So every habit below is the same habit: spend less of those two per body killed.
+Two pools end a Run and neither refills for free. Mine refills only by going down and letting the realm buy me back — a price that climbs, plus everything Unbanked, which is the most expensive refill on offer. The Hatch's refills only when I stand at it with the Repair Rig and spend the bank. So every habit below is the same habit: spend less of those two per body killed.
 
 Hurt a Default on the approach and it is mine for the rest of its life. It does not cool off. It does not go back to the Hatch. It does not lose me. But there is a deadline: once one is close enough to the Hatch it stops listening, permanently, and after that shooting it changes nothing except its health. Hurt them on the way in and they are a choice. Hurt them once they arrive and they are a job.
 
@@ -22,7 +22,7 @@ Repair in the quiet. Repairing in a live Wave means standing still, unable to fi
 
 Every tactic here is a rule the room already runs. Bindings and numbers are in the [Field Manual](Field-Manual.md).
 
-The two things that end a Run are your health and the Hatch's, and neither comes back for free. Your health does not come back **at all** during a Run. The Hatch's comes back only when you stand at it with the Repair Rig equipped and spend banked Salvage. So every tactic below is really about the same thing: spending as little of those two pools as possible per Gatekeeper killed.
+The two things that end a Run are your health and the Hatch's, and neither comes back for free. Your health does not come back **while you stand** — the only refill is a respawn priced from the realm's pot, which also costs everything Unbanked ([Going Down](Going-Down.md)). The Hatch's comes back only when you stand at it with the Repair Rig equipped and spend banked Salvage. So every tactic below is really about the same thing: spending as little of those two pools as possible per Gatekeeper killed.
 
 ### Pull them off the door on a Hatch-bank, because a pull is permanent
 
@@ -92,7 +92,7 @@ Groups arrive at one spawn point at a time and the point rotates group by group,
 
 ## See also
 
-[Gatekeepers](Gatekeepers.md). [The Hatch](The-Hatch.md). [Weapons](Weapons.md). [A Run](A-Run.md). [Upgrades](Upgrades.md).
+[Gatekeepers](Gatekeepers.md). [The Hatch](The-Hatch.md). [Weapons](Weapons.md). [A Run](A-Run.md). [Going Down](Going-Down.md). [Upgrades](Upgrades.md).
 
 ## Gaps
 

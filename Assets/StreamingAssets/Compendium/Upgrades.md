@@ -2,7 +2,7 @@
 
 ## Game
 
-Permanent and campaign-wide. Nothing bought here is lost when a Run ends badly. Once a level is mine it stays mine.
+Permanent. Nothing bought here is lost when a Run ends badly. Once a level is mine it stays mine — on my Boarder if it is gear or a protocol, on the realm if it is the Hatch's.
 
 CREW QUARTERS sells the protocol I embark wearing: a standing rule about how my hardware behaves, a field I plant for the crew, one burst that is mine alone, and a passive where the sheet has one. There are no attribute tracks there. Health, sprint, pay per kill and crit chance do not move from that console and I have stopped looking for them.
 
@@ -16,7 +16,7 @@ The Repair Rig treats the symptom. If I am repairing a lot, the real answer is k
 
 ## Reference
 
-Permanent, campaign-wide, and bought at two consoles. Nothing here is lost when a Run ends badly. Once a level is bought it is yours for good.
+Permanent, and bought at two consoles. Nothing here is lost when a Run ends badly. Once a level is bought it is yours for good — protocol and gear travel with the Boarder, Hatch Armor stays with the realm ([Realms](Realms.md)).
 
 The one remaining **track** works the same way it always did: each level costs more than the last, and each level buys the same size of step. That track is Hatch Armor. Everything else at these consoles is a one-off, a payload, or a protocol pick.
 

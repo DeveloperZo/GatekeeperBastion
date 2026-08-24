@@ -6,7 +6,8 @@ the authorship implicit. This is where the fiction actually reaches the player a
 Status: draft. Ruled by Zo 2026-08-22 (one hand per protocol, never revealed).
 Update trigger: when a protocol ships or is retired, when an entry is added, or when the
 voice rules change. Mirror any rule change into ../_meta/_definitions/language.md.
-Last updated: 2026-08-22
+Last updated: 2026-08-24 (roster covers every current page; Coming Soon rule added;
+first-person rule mirrored into language.md, which had still banned "I").
 -->
 
 The player-facing dimension of every Compendium entry, the `## Game` block, is a Boarder's
@@ -26,17 +27,25 @@ The tell is the lens. What a hand notices is what its doctrine makes salient.
 
 | Hand | Lens | Entries |
 |---|---|---|
-| STOCK | sequence, counts, what happened in what order | The Game, Getting Started, A Run, Waves, Salvage, The Ship, Default, MK-1, BR-12 |
-| PHANTOM | attention, who is looking at whom, being noticed | Gatekeepers, Hunter, Staying Alive, SEC-D |
-| PARALLEL BAYS | load, throughput, what a thing is made of and what it takes | The Hatch, Intensity, Thief, Weapons, MR-35, PRI-C, Upgrades |
+| STOCK | sequence, counts, what happened in what order | The Game, Getting Started, A Run, Waves, Salvage, The Ship, Protocols, Protocol-Default, Gatekeeper-Default, MK-1, BR-12, Realms, Shared Realms *(CS)* |
+| PHANTOM | attention, who is looking at whom, being noticed | Gatekeepers, Hunter, Cloaker, Staying Alive, SEC-D, Protocol-VEIL, The Crew |
+| PARALLEL BAYS | load, throughput, what a thing is made of and what it takes | The Hatch, Intensity, Thief, Weapons, MR-35, PRI-C, Upgrades, Protocol-FORGE, Going Down, AEGIS *(CS)*, LEDGER *(CS)* |
 
 Assignment is by relevance, not rotation, so the set reads as three specialists before it
-reads as three people.
+reads as three people. Each protocol sheet is written by its own hand — the one place the
+authorship comes closest to the surface, and it still is not stated.
 
 **Growth rule.** A newly shipped protocol brings a hand and writes new entries only. Existing
 entries keep their hand permanently and are never reassigned, or the Compendium churns on
 every roster addition. The roster target is 8 to 10 protocols, so the hand set grows the same
 way. A protocol without a natural lens writes nothing rather than getting a manufactured one.
+
+**Coming Soon rule.** A page marked Coming Soon (*CS* above) carries the marker in its
+title, stays in the build so the nav shows the roster as unfinished on purpose, and is
+written by the nearest *existing* hand — the protocol it marks has no hand until it ships.
+It is short: a couple of true sentences about what the thing will be about, never a
+mechanic described as live. When the thing ships, the page is replaced, not edited, and
+the replacing hand is whichever the grown roster assigns.
 
 ## Tone
 
