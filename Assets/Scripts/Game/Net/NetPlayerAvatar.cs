@@ -21,6 +21,7 @@ namespace GatekeepersProtocol.Game
         const string Tag = "Net";
         /// <summary>Matches WeaponViewModel / Boarder.controller blend thresholds.</summary>
         static readonly int SpeedHash = Animator.StringToHash("Speed");
+        static readonly int DeadHash = Animator.StringToHash("Dead");
         /// <summary>Planar m/s below this is idle — absorbs NetworkTransform jitter.</summary>
         const float MoveEpsMps = 0.4f;
         /// <summary>At/above this planar m/s → run (1); else walk (0.5). Midway walk 5 / sprint 7.5.</summary>
@@ -366,11 +367,15 @@ namespace GatekeepersProtocol.Game
                 _collider.enabled = !hide;
         }
 
-        /// <summary>Remote clients: Boarder.controller Speed from replicated transform delta.
-        /// Owner mesh is hidden; local FPC + WeaponViewModel own first-person anim.</summary>
+        /// <summary>Remote clients: Boarder.controller Speed from replicated transform delta,
+        /// Dead from replicated Hp. Owner mesh is hidden; local FPC + WeaponViewModel own
+        /// first-person anim.</summary>
         void DriveRemoteAnimator()
         {
             if (_animator == null) return;
+            bool dead = Hp.Value <= 0f;
+            _animator.SetBool(DeadHash, dead);
+
             Vector3 pos = transform.position;
             if (!_haveAnimSample)
             {
@@ -384,6 +389,7 @@ namespace GatekeepersProtocol.Game
             Vector3 delta = pos - _lastAnimPos;
             _lastAnimPos = pos;
             if (dt <= 0f) return;
+            if (dead) return;
             delta.y = 0f;
             float mps = delta.magnitude / dt;
             float speed = 0f;

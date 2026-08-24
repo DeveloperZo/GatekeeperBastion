@@ -1,10 +1,9 @@
 # M86 — Downed crewmates look downed
 
 <!--
-Status: later
-Update trigger: when the down clip lands, or when the buy-back/restore flow
-(M79) changes what "restored from zero" means
-Last updated: 2026-08-18
+Status: active
+Update trigger: when the down clip lands
+Last updated: 2026-08-23
 -->
 
 A crewmate at zero HP drops in your view and stands back up when restored.
@@ -22,7 +21,8 @@ and a guest going down deliberately does not end the host's run
 (`endsTheRunOnDeath` is per-player; verified 2026-08-18). But the avatar has
 no down state: a dead crewmate's body keeps idling upright. Restore from
 zero clears `IsDead` without moving the body, and buy-back at live windows
-is planned (M79), so the state must be enterable and leavable.
+has since shipped (**M90**, corrected 2026-08-23 — this doc previously cited
+the wrong milestone, M79), so the state must be enterable and leavable.
 
 Decisions made here:
 
@@ -42,8 +42,8 @@ Decisions made here:
 
 1. In a two-player session, when player A reaches zero HP, player B sees A's
    avatar drop and stay down.
-2. When A is restored from zero (dev heal now; buy-back once M79 lands), B
-   sees A's avatar stand and locomote normally again.
+2. When A is restored from zero (dev heal, or buy-back at a live window —
+   M90 has shipped), B sees A's avatar stand and locomote normally again.
 3. A live avatar's idle, walk and run are unchanged, and Fire/Reload (M83,
    if landed) still play.
 
@@ -64,9 +64,32 @@ Decisions made here:
    in Gatekeeper melee until down; the host watches the avatar drop.
 2. Criterion 2 — restore the downed player from zero via the dev path
    (`PlayerHealth`'s restore already clears `IsDead`); the host watches the
-   avatar stand. Re-verify via buy-back when M79 lands.
+   avatar stand. Also provable via buy-back now that M90 has shipped.
 3. Criterion 3 — normal co-op play before and after; no change to live
    avatars.
+
+### What has landed
+
+**Landed 2026-08-23 (agent).** `Boarder.controller` gained a `Dead` bool
+parameter, a `Down` state (`Any State -> Down` on `Dead == true`, `Down ->
+Locomotion` on `Dead == false`, both no-exit-time so the transition is
+driven purely by the bool), and `NetPlayerAvatar.DriveRemoteAnimator` now
+sets `Dead` from `Hp.Value <= 0f` every frame and skips the Speed drive
+while dead, guarded by the same `_animator == null` fake-null check the
+Speed path already used.
+
+**Not landed: the clip itself.** `Down`'s `m_Motion` is `{fileID: 0}` (None)
+— `Packs/Boarder/Anim_Down.fbx` has not been sourced. Zo is sourcing it
+separately (free retarget path, mixamorig skeleton matching the other six
+Boarder clips). Once the FBX and its `.meta` land, wiring it in is a
+one-line edit to the `Down` state's `m_Motion` field in
+`Boarder.controller` (state fileID `-8000000000000000001`) — no other
+change is needed to close the milestone. Until then, a downed remote
+avatar holds its bind pose rather than a collapse pose; criteria 1 and 2
+are structurally provable today (the state transition and the stand-back-up
+path both work), but the visual is not yet the intended clip.
+
+Nothing has been run through the Editor or bridge for this change yet.
 
 ## Watch
 
@@ -77,5 +100,6 @@ milestone renders the state and takes no position on who may be down.
 
 ## Depends on / Unblocks
 
-Independent to build. Criterion 2's full verification is cheapest after M79;
-the dev restore path proves it before then.
+Independent to build. Criterion 2's full verification no longer waits on
+anything — M90 (buy-back) has shipped; the dev restore path remains the
+cheaper proof for day-to-day iteration.
