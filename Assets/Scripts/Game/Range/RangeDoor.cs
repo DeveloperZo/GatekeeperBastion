@@ -13,7 +13,7 @@ namespace GatekeepersProtocol.Game
     ///
     /// The refusal for walking into the range mid-Run is NOT here. It lives in
     /// <see cref="SceneFlow.LoadRange"/>, so a dev command or a checkpoint that loads the range
-    /// is refused on the same terms as the door (M99 criterion 10).</summary>
+    /// is refused on the same terms as the door.</summary>
     public sealed class RangeDoor : MonoBehaviour, IInteractable
     {
         const string Tag = "Range";

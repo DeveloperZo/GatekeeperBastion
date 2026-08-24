@@ -29,9 +29,10 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**Active (2/3):** `M99` (range — replayable slice), `M101` (two-deck ship).
+**Active (2/3):** `M101` (two-deck ship), `M86` (downed crewmates).
 
-**Closed 2026-08-23:** `M84` (disk/harness; eyes-on on `M99`).
+**Closed 2026-08-23:** `M99` (played and closed by Zo), `M84` (disk/harness;
+eyes-on on `M99`).
 
 **Closed 2026-08-22:** `M93`, `M82` (Zo first pass), `M85` (disk/harness; eyes-on
 on `M99`), `M83` (PlayMode 2/0; two-window confirmation). PRI-C further tuning
@@ -49,12 +50,13 @@ with **M72**; remaining friends work is polish and dry-run length.
 
 **Recommended next**, in this order.
 
-1. **Build `M99`** — unlocks short-loop stamps for `M84` / `M85` eyes-on (and kit for `M94`).
+1. **Take the `M84` / `M85` eyes-on through `M99`** — the range is closed and the
+   short-loop path it existed to provide is open.
 2. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
 3. Older play close-outs: `GatekeeperZo Notes/verification.md`.
 
-Active **2** of 3 (`M99`, `M101`).
+Active **2** of 3 (`M101`, `M86`).
 
 ## Order
 
@@ -154,9 +156,10 @@ this table — see the change log.
 | M91 | You wake standing | completed, Aug 2026 | Beat 0 wake is a teleporter — upright on a pad, glass retracts on hold-E; `SetCapsuleTrigger` gone | [`3. completed/M91`](Milestones/3.%20completed/M91-you-wake-standing.md) |
 | M90 | Buy back at a live window | completed, Aug 2026 | A dead guest pays `HatchBank.BuyBackCost` from their own banked Salvage and rejoins at the Hatch during a Hatch-bank Assault. Report-and-ask wallet, doors deferred to `M95`. **Wallet superseded by `M96`**: with the pot on the realm the host reads and debits the world's salvage directly, so no purse is reported. Zo close 2026-08-21 | [`3. completed/M90`](Milestones/3.%20completed/M90-buy-back-at-a-live-window.md) |
 | M92 | A bigger ship with three hatches | completed, Aug 2026 | SR-2 hull with three hatch doors; seat-count assignment; lives as `Ship - CoOp`. Per-hatch HP / enemy routing remain co-op demo work | [`3. completed/M92`](Milestones/3.%20completed/M92-a-bigger-ship-with-three-hatches.md) |
+| M95 | The co-op bastion | built 2026-08-23, unverified | `Bastion_Coop.unity`: 28 rooms, two storeys, three hatches on R1, three authored stairs with fitted walk/landing. Disk/harness hold 2–4, 6–8; PlayMode climb passed 2026-08-23; playthrough seams owed. Stays planned — co-op demo is phase 2. | [`1. planned/M95`](Milestones/1.%20planned/M95-the-coop-bastion.md) |
 | M93 | Three primaries that read as three guns | completed, Aug 2026 | Three Primaries read as three guns — concussive metres, Railshot ARMED, catalog tests; Zo first pass 2026-08-22; PRI-C further tuning owed outside this file | [`3. completed/M93`](Milestones/3.%20completed/M93-three-primaries-that-read-as-three-guns.md) |
 | M96 | The realm and the Boarder | completed, Aug 2026 | Boarder travels, realm stays; save v13 refuses older docs; `RealmSelect`; Zo close 2026-08-22 (chooser eyes-on + two-box Boarder mirror owed) | [`3. completed/M96`](Milestones/3.%20completed/M96-the-realm-and-the-boarder.md) |
-| M99 | A range you can fight in | active | `Ship - CoOp` door → `Range.unity`; grants kit; real Gatekeepers at marked distances; unlocks play stamps for `M82`/`M84`/`M85`/`M94`. Recut 2026-08-21. Activated 2026-08-22 on `M93` close | [`2. active/M99`](Milestones/2.%20active/M99-a-range-you-can-fight-in.md) |
+| M99 | A range you can fight in | completed, Aug 2026 | `Ship - CoOp` door → `Range.unity`; opens with the whole catalogue unlocked; real Gatekeepers at marked distances; cooldown bypass and respawn; readout. Criterion 8 recut to FORGE's turret 2026-08-23. Played and closed 2026-08-23. Console is the F-key overlay and the doors are graybox — carried, presentation on a dev tool | [`3. completed/M99`](Milestones/3.%20completed/M99-a-range-you-can-fight-in.md) |
 | M98 | Drop in between waves | built 2026-08-22, unverified | `RunSeats` splits the seats playing from the seats connected: a late arrival waits on the Ship and follows at a Prep, a departure is held to the next one, and wave composition, the wallet split and the hatch doors all read the roster rather than the connected list. `WaveDirector` untouched. Nothing through Unity yet; criteria 1, 2, 6 eyes-on owed | [`1. planned/M98`](Milestones/1.%20planned/M98-drop-in-between-waves.md) |
 | M100 | A realm you can open while its owner is offline | planned | Graduates the realm-lock entry from `Brainstorms/realms.md`: the realm document keyed to its owner's ID, an access list held on both sides, and a single-writer lock whose holder hosts. The session stays peer-hosted over Relay — no game server, because what moves off one machine is the document and not the simulation. Written 2026-08-22, and it is the half of `M98`'s first criterion that `M98` never owned | [`1. planned/M100`](Milestones/1.%20planned/M100-a-realm-you-can-open-while-its-owner-is-offline.md) |
 | M101 | A ship with two decks and a stair | active (specified 2026-08-22) | Hull rebuilt long and narrow over two decks joined by an open stair; exterior skin, one-owner wall lines, ~80 cells | [`2. active/M101`](Milestones/2.%20active/M101-a-ship-with-two-decks-and-a-stair.md) |

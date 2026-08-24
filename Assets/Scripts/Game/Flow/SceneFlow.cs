@@ -135,7 +135,7 @@ namespace GatekeepersProtocol.Game
         /// <summary>Load the party ship hub. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadShipCoop() => Load(ShipCoop);
 
-        /// <summary>Load the practice range. Refused while a Run is live (M99 criterion 10):
+        /// <summary>Load the practice range. Refused while a Run is live:
         /// the range is a practice scene with no Wave and no accounting, so walking into it
         /// from a Run would end that Run without any of the banking a Docked return does, and
         /// the salvage would simply be gone.

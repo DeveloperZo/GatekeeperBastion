@@ -8,6 +8,28 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-23
 -->
 
+- 2026-08-23: **`M99` closed — a range you can fight in.** Played and closed by
+  Zo. `Ship - CoOp` door in at deck 1 port z 7.5, return door behind the firing
+  line; `SceneFlow.LoadRange` refuses while a Run is live. The lane opens with the
+  whole catalogue unlocked rather than granting piecemeal, and `GrantProtocol`
+  sets `EquippedProtocol` directly — the shop's `TryClaim` refuses mid-Run and a
+  range is Tethered from frame one, so every cycle after the first was being
+  refused. Criterion 8 recut to FORGE's turret: the drone-bay decoy it was written
+  around is hosted by nothing but tests. Carried, both presentation on a dev tool:
+  the console is the F-key overlay, the doors are graybox. Active queue is now
+  `M101` + `M86` (2/3).
+
+- 2026-08-23: **`M95` reviewed, still planned.** `Bastion_Coop` is built
+  unverified: R10 stair fitted like R1/R6, landings required in scene tests,
+  upper islands cannot skip D1/D2/D3, every spawn walks to R1.
+  `BastionCoopStairWalkTests.CharacterController_ReachesStoreyOne_OnEachStair`
+  passed 2026-08-23 (6.86 s). Playthrough seams still owed. Not activated.
+
+- 2026-08-23: **Co-op `Stair_R10_U10` walk fitted to the dress mesh.** Same
+  yaw-180 pose as R1/R6; `GStairWalk_R10_U10` is buried 2 m under R10,
+  `GStairLand_R10_U10` sits flush with U10, and the U10 well is re-punched on
+  the live mesh bounds.
+
 - 2026-08-23: **`M84` closed — Gatekeepers flinch when shot.** Additive
   HitReact layer, `Anim_flinch`, and both Damaged hooks on disk.
   `HitReactTests` is the close gate. Eyes-on 1–4 wait on `M99`.

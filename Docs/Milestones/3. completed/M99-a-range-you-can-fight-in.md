@@ -1,10 +1,19 @@
 # M99 — A range you can fight in
 
 <!--
-Status: active — started 2026-08-22 (`M93` freed the slot)
-Update trigger: when a weapon, weapon ability, protocol, protocol ability, payload or
-Gatekeeper kind is added, or when the Ship door that reaches the range moves
-Last updated: 2026-08-22
+Status: completed, Aug 2026
+Closed on: 2026-08-23 (Zo, having played it: "ok just played. We can close 99").
+The playthrough is the gate. Criteria 1-7 and 9-11 were in tree and are the ones
+the walk exercises: in through the Ship - CoOp door, targets at the marks, the kit
+granted and swapped on the spot, cooldowns bypassed, the readout counting, and out
+through the door behind the firing line. Criterion 8 was recut to FORGE's turret
+mid-milestone (see the criterion) because the drone-bay decoy it was written around
+is hosted by nothing but tests.
+Carried, not blocking, both presentation on a dev tool: the console is the F-key
+overlay rather than a walk-up fixture with rows, and both doors are graybox slabs
+rather than signed geometry.
+Update trigger: never - shipped milestones are a record. Corrections only.
+Last updated: 2026-08-23
 -->
 
 A range reached through a door on `Ship - CoOp`: any weapon, any protocol, any payload,
@@ -217,5 +226,4 @@ F7 for the loadout), not a walk-up fixture with rows, and the doors are graybox 
 than signed geometry. Both are presentation on a tool, which is the lowest-leverage thing in
 this milestone; the range is drivable without them.
 
-**Not yet stamped:** no criterion has been confirmed by eyes-on play. The playthrough path
-above is the stamp.
+**Stamped 2026-08-23** by Zo's playthrough, which is what closed the milestone.

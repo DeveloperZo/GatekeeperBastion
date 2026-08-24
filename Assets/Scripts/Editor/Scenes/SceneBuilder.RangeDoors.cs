@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Authors the two ends of the range door: the way in, on Ship - CoOp, and the way
-    /// back, behind the range's firing line (M99 criterion 1).
+    /// back, behind the range's firing line.
     ///
     /// A builder rather than a hand edit because Range.unity is regenerated wholesale by
     /// <c>BuildRangeInPlace</c> — a door dragged in by hand would be gone on the next rebuild —
@@ -29,12 +29,9 @@ namespace GatekeepersProtocol.EditorTools
 
         static readonly Vector3 DoorSize = new Vector3(0.3f, 2.3f, 1.4f);
 
-        [MenuItem("GatekeepersProtocol/Build/Range Doors", false, 64)]
-        public static void BuildRangeDoorsMenu()
-        {
-            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-            BuildRangeDoorsInPlace();
-        }
+        // No [MenuItem]. The menu fence in Docs/Architecture/README.md requires permission
+        // before a row is added, and this builder is driven by the sentinel the other scene
+        // builders use — a menu row would be a permanent shared surface bought for nothing.
 
         public static void BuildRangeDoorsInPlace()
         {
