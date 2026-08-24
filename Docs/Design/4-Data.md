@@ -221,14 +221,13 @@ composition both read field Waves cleared since the last Hatch-bank (snapshotted
 start). The window is `DurationSeconds`; Unbanked hitting 0 does not end it. Leftover
 dumps when the timer ends.
 
-<!-- GKB:GEN hatch-bank — HatchBank.DripPerSecond, DurationSeconds, CarryConvert, CarryWaveIndex, WithdrawPerSecond, BuyBackCost -->
+<!-- GKB:GEN hatch-bank — HatchBank.DripPerSecond, DurationSeconds, CarryConvert, CarryWaveIndex, WithdrawPerSecond -->
 | | |
 |---|---|
 | drip | 8 unbanked/s |
 | duration | 45 s |
 | withdraw | 16 salvage/s |
 | returned keeps | 10% of leftover unbanked (Lost wipes it all) |
-| buy-back | 450 banked |
 
 | Waves carried | convert | Hatch Wave | bodies at intensity 0 |
 |---|---|---|---|
@@ -239,9 +238,24 @@ dumps when the timer ends.
 | 5 | ×1.50 | 5 | 66 |
 <!-- GKB:END hatch-bank -->
 
-Buy-back costs `HatchBank.BuyBackCost` = **450**, one Wave-1 Hatch-bank convert at dial 0
-(`18 × 25`). The rule — pay to re-enter a live Hatch-bank Assault; free embark stays on
-the survived Prep window — is leverage **#5**; this number is **#12**.
+## Respawns (M98 recut)
+
+One rule prices every dead seat's way back into a live run — guest, host, solo alike.
+The pool gates only *when* (mid-Assault); the cost is what every respawn pays, and it
+climbs with each one taken this run. The pot debited is the realm's bank. The old pair —
+free embark on Hatch-bank Prep, flat 450 buy-back on Hatch-bank Assault — is retired
+(`Decisions.md`, *Locked — co-op down*, amended 2026-08-24). `BaseCost` = 150 is one
+Secondary MK-1 purchase, so the first death is affordable off one banked wave. The rule
+is leverage **#5**; the numbers are **#12**.
+
+<!-- GKB:GEN respawns — Respawns.PoolPerSeat, BaseCost, CostFor -->
+| | |
+|---|---|
+| pool | 1 charge/seat, gates mid-Assault returns only |
+| cost | 150 × (taken + 1), from the realm pot |
+| first three | 150 / 300 / 450 |
+| at the break | unlimited, paid, no charge burned |
+<!-- GKB:END respawns -->
 
 Master Control is 5 terminal Waves then 1 Hatch-bank window. Gap is `WaveDirector.InterWaveGap`.
 The finale elite is one Thief, no escorts, at `MasterControl.FinaleEliteHp` (240 pre-multiplier;

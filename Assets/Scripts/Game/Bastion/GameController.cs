@@ -285,7 +285,10 @@ namespace GatekeepersProtocol.Game
             Sim.Tick(dt);                                             // 2
 
             if (Sim.Phase == RunPhase.Tethered)
+            {
                 TickFightInput();                                     // 3
+                TickLocalDown();
+            }
 
             if (_fpc != null) _fpc.Tick(dt);                          // 4
             if (_gun != null) _gun.Tick(dt);                          // 5
@@ -333,27 +336,6 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             Sim.AwardKill();
-        }
-
-        /// <summary>Command from PlayerHealth: the player is dead — end the run exactly like a
-        /// hatch loss. Unbanked is wiped; already-converted ship Salvage is kept. Only meaningful
-        /// while Tethered.</summary>
-        public void PlayerDied()
-        {
-            if (Sim == null)
-            {
-                // Guard trip: no sim means no lose screen — free the cursor so the player isn't
-                // trapped in a dead body with a captured mouse.
-                Log.Error(Tag, "PlayerDied with no Sim; freeing the cursor as a last resort.");
-                EnsureCursorFree();
-                return;
-            }
-            if (Sim.Phase != RunPhase.Tethered)
-            {
-                Log.Warn(Tag, $"PlayerDied ignored in phase {Sim.Phase} (run already over).");
-                return;
-            }
-            Sim.NotifyPlayerDown();
         }
 
         /// <summary>Command from HatchStation: damage the authoritative sim Hatch.

@@ -437,27 +437,5 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1000L, meta.BankedSalvage);
         }
 
-        [Test]
-        public void BuyBackRefuse_LiveWindow_AllowsGuestWhoCanPay()
-        {
-            Assert.AreEqual(450L, HatchBank.BuyBackCost);
-            Assert.IsTrue(HatchBank.IsBuyBackWindow(WaveMode.HatchBank, AssaultState.Assault));
-            Assert.IsFalse(HatchBank.IsBuyBackWindow(WaveMode.HatchBank, AssaultState.Prep));
-            Assert.IsFalse(HatchBank.IsBuyBackWindow(WaveMode.Terminal, AssaultState.Assault));
-            Assert.IsTrue(HatchBank.IsFreeEmbarkWindow(WaveMode.HatchBank, AssaultState.Prep));
-            Assert.IsFalse(HatchBank.IsFreeEmbarkWindow(WaveMode.HatchBank, AssaultState.Assault));
-            Assert.IsNull(HatchBank.BuyBackRefuse(
-                false, true, WaveMode.HatchBank, AssaultState.Assault, HatchBank.BuyBackCost));
-            Assert.AreEqual("no live window", HatchBank.BuyBackRefuse(
-                false, true, WaveMode.HatchBank, AssaultState.Prep, HatchBank.BuyBackCost));
-            Assert.AreEqual("no live window", HatchBank.BuyBackRefuse(
-                false, true, WaveMode.Terminal, AssaultState.Assault, HatchBank.BuyBackCost));
-            Assert.AreEqual("cannot afford", HatchBank.BuyBackRefuse(
-                false, true, WaveMode.HatchBank, AssaultState.Assault, HatchBank.BuyBackCost - 1));
-            Assert.AreEqual("host cannot buy back", HatchBank.BuyBackRefuse(
-                true, true, WaveMode.HatchBank, AssaultState.Assault, HatchBank.BuyBackCost));
-            Assert.AreEqual("not waiting", HatchBank.BuyBackRefuse(
-                false, false, WaveMode.HatchBank, AssaultState.Assault, HatchBank.BuyBackCost));
-        }
     }
 }

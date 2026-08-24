@@ -21,7 +21,7 @@ public static class Docgen
     static readonly string[] KnownBlockIds =
     {
         "mk1-base", "wheel", "rings", "tier-cost", "abilities",
-        "gatekeepers", "waves", "dial", "player-count", "intensity-juice", "hatch", "hatch-bank", "master-control", "tracks",
+        "gatekeepers", "waves", "dial", "player-count", "intensity-juice", "hatch", "hatch-bank", "respawns", "master-control", "tracks",
         "bastion-mesh", "ship-camera"
     };
 
@@ -330,6 +330,7 @@ public static class Docgen
         d["intensity-juice"] = EmitIntensityJuice();
         d["hatch"] = EmitHatch();
         d["hatch-bank"] = EmitHatchBank();
+        d["respawns"] = EmitRespawns();
         d["master-control"] = EmitMasterControl();
         d["tracks"] = EmitTracks();
         d["bastion-mesh"] = EmitBastionMesh();
@@ -570,7 +571,6 @@ public static class Docgen
         sb.AppendLine("| withdraw | " + N(HatchBank.WithdrawPerSecond) + " salvage/s |");
         sb.AppendLine("| returned keeps | " + N(HatchBank.ReturnedKeepShare * 100f) +
                       "% of leftover unbanked (Lost wipes it all) |");
-        sb.AppendLine("| buy-back | " + HatchBank.BuyBackCost + " banked |");
         sb.AppendLine();
         sb.AppendLine("| Waves carried | convert | Hatch Wave | bodies at intensity 0 |");
         sb.AppendLine("|---|---|---|---|");
@@ -582,6 +582,19 @@ public static class Docgen
                           HatchBank.CarryConvert(w).ToString("0.00", Inv) +
                           " | " + (idx + 1) + " | " + spec.enemyCount + " |");
         }
+        return sb.ToString().TrimEnd('\r', '\n');
+    }
+
+    static string EmitRespawns()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("| | |");
+        sb.AppendLine("|---|---|");
+        sb.AppendLine("| pool | " + Respawns.PoolPerSeat + " charge/seat, gates mid-Assault returns only |");
+        sb.AppendLine("| cost | " + Respawns.BaseCost + " × (taken + 1), from the realm pot |");
+        sb.AppendLine("| first three | " + Respawns.CostFor(0) + " / " + Respawns.CostFor(1) +
+                      " / " + Respawns.CostFor(2) + " |");
+        sb.AppendLine("| at the break | unlimited, paid, no charge burned |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
 

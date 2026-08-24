@@ -31,40 +31,12 @@ namespace GatekeepersProtocol.Sim
         public const float MultMid = 1.25f;
         public const float Mult4 = 1.35f;
         public const float MultHigh = 1.50f;
-        /// <summary>Banked Salvage a dead guest pays to rejoin a live Hatch-bank Assault.
-        /// Debited on that guest's own Meta, never the host's.</summary>
-        public const long BuyBackCost = 450L;
 
         /// <summary>Salvage/s withdrawn at a full Hatch. Catalog repair HP/s times salvage/HP
         /// so the two holds stay on one rate.</summary>
         public static float WithdrawPerSecond =>
             EquipmentCatalog.Def(EquipmentId.RepairRig).repairPerSecond
             * ShipSystems.RepairSalvagePerHp;
-
-        /// <summary>Paid rejoin is offered only while a Hatch-bank Assault is running.
-        /// Prep Hatch-bank is the free embark window; the two are disjoint.</summary>
-        public static bool IsBuyBackWindow(WaveMode mode, AssaultState assault)
-        {
-            return mode == WaveMode.HatchBank && assault == AssaultState.Assault;
-        }
-
-        /// <summary>Free wait-return after a survived Hatch-bank. Same gate as
-        /// <c>NetPlayerAvatar.TryAcceptEmbark</c>.</summary>
-        public static bool IsFreeEmbarkWindow(WaveMode mode, AssaultState assault)
-        {
-            return mode == WaveMode.HatchBank && assault == AssaultState.Prep;
-        }
-
-        /// <summary>Null when the seat may pay and rejoin. Named refuse otherwise.</summary>
-        public static string BuyBackRefuse(bool isHostSeat, bool waitingOnShip,
-            WaveMode mode, AssaultState assault, long reportedBanked)
-        {
-            if (isHostSeat) return "host cannot buy back";
-            if (!waitingOnShip) return "not waiting";
-            if (!IsBuyBackWindow(mode, assault)) return "no live window";
-            if (reportedBanked < BuyBackCost) return "cannot afford";
-            return null;
-        }
 
         /// <summary>Field Waves cleared since the last Hatch-bank, clamped to 1..MaxWaves.</summary>
         public static int ClampCarry(int waves)

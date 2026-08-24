@@ -272,9 +272,9 @@ namespace GatekeepersProtocol.Game
 
         void BindWaitRejoin(MetaState m)
         {
-            WaveMode mode;
             AssaultState assault;
-            ReadWaitWindow(out mode, out assault);
+            int stock, taken;
+            ReadWaitWindow(out assault, out stock, out taken);
             var late = NetPlayerAvatar.LocalOwner;
             if (late != null && late.AwaitingFollow.Value)
             {
@@ -286,20 +286,15 @@ namespace GatekeepersProtocol.Game
                     : "FOLLOW - at the next break", TryWaitRejoin);
                 return;
             }
-            if (HatchBank.IsFreeEmbarkWindow(mode, assault))
-            {
-                _body.BindEmbark("EMBARK", () => TryEmbark(m));
-                return;
-            }
-            long cost = HatchBank.BuyBackCost;
+            long cost = Respawns.CostFor(taken);
             // The pot belongs to the realm being played, not to this machine's save — the
             // same read ShipController's pause label makes (RealmRecordSource).
             long banked = RealmRecordSource.Banked();
-            string label = "BUY BACK (" + cost + ")";
-            if (!HatchBank.IsBuyBackWindow(mode, assault))
-                label = "BUY BACK - no live window";
+            string label = "RESPAWN (" + cost + ")";
+            if (assault == AssaultState.Assault && stock <= 0)
+                label = "RESPAWN - no charges until the break";
             else if (banked < cost)
-                label = "BUY BACK (" + cost + ") - can't afford";
+                label = "RESPAWN (" + cost + ") - can't afford";
             _body.BindEmbark(label, TryWaitRejoin);
         }
 
@@ -316,34 +311,28 @@ namespace GatekeepersProtocol.Game
                 avatar.RequestFollow();
                 return;
             }
-            WaveMode mode;
-            AssaultState assault;
-            ReadWaitWindow(out mode, out assault);
-            if (HatchBank.IsFreeEmbarkWindow(mode, assault))
-            {
-                avatar.RequestEmbark();
-                return;
-            }
-            avatar.RequestBuyBack();
+            avatar.RequestRespawn();
         }
 
-        static void ReadWaitWindow(out WaveMode mode, out AssaultState assault)
+        static void ReadWaitWindow(out AssaultState assault, out int stock, out int taken)
         {
-            mode = WaveMode.Terminal;
             assault = AssaultState.Prep;
+            stock = 0;
+            taken = 0;
             var session = NetSession.FindLive();
             var mirror = session != null ? session.Mirror : null;
             if (mirror == null) return;
-            mode = (WaveMode)mirror.Mode.Value;
             assault = (AssaultState)mirror.Phase.Value;
+            stock = mirror.RespawnStock.Value;
+            taken = mirror.RespawnsTaken.Value;
         }
 
         static int WaitWindowHash()
         {
-            WaveMode mode;
             AssaultState assault;
-            ReadWaitWindow(out mode, out assault);
-            return ((int)mode << 16) ^ ((int)assault << 20);
+            int stock, taken;
+            ReadWaitWindow(out assault, out stock, out taken);
+            return ((int)assault << 20) ^ (stock << 8) ^ taken;
         }
 
         void TryPartyEmbark(MetaState m, NetSession session)

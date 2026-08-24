@@ -6,6 +6,21 @@ namespace GatekeepersProtocol.Sim
     /// so drip ticks cannot each credit up to BankCap.</summary>
     public sealed partial class RunSim
     {
+        /// <summary>How many piles AwardKill splits across, and the n in NextWave. 1 in solo.
+        /// A mid-run increase also grows the respawn pool for the seats it admits.</summary>
+        public void SetPlayerCount(int count)
+        {
+            GrowRespawnPool(PlayerCount, count);
+            _wallets.SetCount(count);
+        }
+
+        /// <summary>Guest progress for the banking cap. Slot 0 reads host Meta instead.</summary>
+        public void SetSlotDeepest(int slot, int deepest) => _wallets.SetDeepest(slot, deepest);
+
+        /// <summary>A seat went down: wipe that slot's unbanked. Death wipes the pile
+        /// whether or not a respawn follows — a respawn is pure cost.</summary>
+        public void WipeUnbankedSlot(int slot) => _wallets.Wipe(slot);
+
         void ResetConvertedThisBank()
         {
             for (int i = 0; i < _convertedThisBank.Length; i++)

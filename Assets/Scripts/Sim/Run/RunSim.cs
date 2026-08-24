@@ -137,15 +137,6 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Unbanked pile for a connected slot. Slot 0 is solo / host.</summary>
         public long UnbankedOf(int slot) => _wallets.Of(slot);
 
-        /// <summary>How many piles AwardKill splits across, and the n in NextWave. 1 in solo.</summary>
-        public void SetPlayerCount(int count) => _wallets.SetCount(count);
-
-        /// <summary>Guest progress for the banking cap. Slot 0 reads host Meta instead.</summary>
-        public void SetSlotDeepest(int slot, int deepest) => _wallets.SetDeepest(slot, deepest);
-
-        /// <summary>Guest down: wipe that slot's unbanked. Host down still ends the Run.</summary>
-        public void WipeUnbankedSlot(int slot) => _wallets.Wipe(slot);
-
         /// <summary>Field Waves cleared since the last Hatch-bank. 0 until the first Terminal draw.</summary>
         public int WavesSinceBank { get; private set; }
 
@@ -294,6 +285,7 @@ namespace GatekeepersProtocol.Sim
             }
             Assault = AssaultState.Prep;
             SetPhase(RunPhase.Tethered);
+            SeedRespawns();
         }
 
         /// <summary>Set the siphon dial (clamped 0..5). Only legal while Tethered+Prep —

@@ -5,8 +5,8 @@ using UnityEngine;
 namespace GatekeepersProtocol.Game
 {
     /// <summary>REPLICATED-STATE: shared-Ship ready gate and party EMBARK countdown.
-    /// Host-spawned with the session. Distinct from <see cref="NetPlayerAvatar.RequestEmbark"/>
-    /// (Hatch-bank get-up).</summary>
+    /// Host-spawned with the session. Distinct from <see cref="NetPlayerAvatar.RequestRespawn"/>
+    /// (a downed seat's paid return).</summary>
     [RequireComponent(typeof(NetworkObject))]
     public sealed class NetPartyLobby : NetworkBehaviour
     {

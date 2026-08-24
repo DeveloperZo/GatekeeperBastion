@@ -322,11 +322,42 @@ namespace GatekeepersProtocol.Game
             }
 
             if (player.IsDead)
-                _view.SetVignette(1f, true, "YOU ARE DOWN");
+                _view.SetVignette(1f, true, DownText());
             else if (_vignette > 0f)
                 _view.SetVignette(Mathf.Clamp01(_vignette / 0.35f) * 0.35f, false, null);
             else
                 _view.SetVignette(0f, false, null);
+        }
+
+        // Cache key for the DOWN overlay line — rebuilt only when the offer changes, so the
+        // per-frame vignette push stays allocation-free like every other push here.
+        long _cacheDownCost = long.MinValue;
+        string _cacheDownReason;
+        string _cacheDownText;
+
+        /// <summary>DOWN overlay line. Host and solo carry the respawn offer or its refuse
+        /// reason (the sim adjudicates); a guest keeps the plain line — its surface is the
+        /// Ship wait.</summary>
+        string DownText()
+        {
+            var gc = _game;
+            var sim = gc != null ? gc.Sim : null;
+            var net = gc != null ? gc.Net : null;
+            if (sim == null || sim.Phase != RunPhase.Tethered
+                || (net != null && net.IsClientOnly))
+                return "YOU ARE DOWN";
+
+            string reason = sim.RespawnRefuse();
+            long cost = sim.NextRespawnCost;
+            if (cost != _cacheDownCost || reason != _cacheDownReason)
+            {
+                _cacheDownCost = cost;
+                _cacheDownReason = reason;
+                _cacheDownText = reason == null
+                    ? "YOU ARE DOWN — ENTER: RESPAWN (" + cost + ")"
+                    : "YOU ARE DOWN — " + reason;
+            }
+            return _cacheDownText;
         }
 
         void ReadFightReadout(RunSim sim, out AssaultState assault, out int wave, out int alive,

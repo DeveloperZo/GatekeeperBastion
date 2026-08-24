@@ -130,7 +130,7 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
-        /// <summary>Pause EMBARK — Hatch-bank get-up, paid buy-back, or party Ready / Cancel countdown.</summary>
+        /// <summary>Pause EMBARK — paid respawn, follow-the-party, or party Ready / Cancel countdown.</summary>
         public void TryEmbarkFromPause()
         {
             if (NetShipWait.IsActive)
@@ -169,20 +169,12 @@ namespace GatekeepersProtocol.Game
             }
             if (avatar.AwaitingFollow.Value)
             {
-                // A seat that arrived after the party embarked has nothing to buy back — it
-                // never went out. It follows them in at the next break.
+                // A seat that arrived after the party embarked never died — it follows
+                // them in at the next break, free.
                 avatar.RequestFollow();
                 return;
             }
-            WaveMode mode;
-            AssaultState assault;
-            ReadWaitWindow(out mode, out assault);
-            if (HatchBank.IsFreeEmbarkWindow(mode, assault))
-            {
-                avatar.RequestEmbark();
-                return;
-            }
-            avatar.RequestBuyBack();
+            avatar.RequestRespawn();
         }
 
         static void LabelWaitRejoin(GameObject buttonGo)
@@ -191,9 +183,9 @@ namespace GatekeepersProtocol.Game
             var button = buttonGo.GetComponent<Button>();
             if (button == null) button = buttonGo.GetComponentInChildren<Button>(true);
             if (button == null) return;
-            WaveMode mode;
             AssaultState assault;
-            ReadWaitWindow(out mode, out assault);
+            int stock, taken;
+            ReadWaitWindow(out assault, out stock, out taken);
             var avatar = NetPlayerAvatar.LocalOwner;
             if (avatar != null && avatar.AwaitingFollow.Value)
             {
@@ -204,33 +196,30 @@ namespace GatekeepersProtocol.Game
                     : "FOLLOW - at the next break");
                 return;
             }
-            if (HatchBank.IsFreeEmbarkWindow(mode, assault))
-            {
-                UiBind.SetButtonLabel(button, "EMBARK");
-                return;
-            }
-            long cost = HatchBank.BuyBackCost;
-            // Affordability is priced against the pot the buy-back actually spends from: on a
-            // guest that is the HOST realm's bank (the mirror carries it for the whole run),
-            // never the guest's own save, which it cannot spend from here.
+            long cost = Respawns.CostFor(taken);
+            // Affordability is priced against the pot the respawn actually spends from: the
+            // HOST realm's bank (the mirror carries it for the whole run), never the guest's
+            // own save, which it cannot spend from here.
             long banked = RealmRecordSource.Banked();
-            string label = "BUY BACK (" + cost + ")";
-            if (!HatchBank.IsBuyBackWindow(mode, assault))
-                label = "BUY BACK - no live window";
+            string label = "RESPAWN (" + cost + ")";
+            if (assault == AssaultState.Assault && stock <= 0)
+                label = "RESPAWN - no charges until the break";
             else if (banked < cost)
-                label = "BUY BACK (" + cost + ") - can't afford";
+                label = "RESPAWN (" + cost + ") - can't afford";
             UiBind.SetButtonLabel(button, label);
         }
 
-        static void ReadWaitWindow(out WaveMode mode, out AssaultState assault)
+        static void ReadWaitWindow(out AssaultState assault, out int stock, out int taken)
         {
-            mode = WaveMode.Terminal;
             assault = AssaultState.Prep;
+            stock = 0;
+            taken = 0;
             var session = NetSession.FindLive();
             var mirror = session != null ? session.Mirror : null;
             if (mirror == null) return;
-            mode = (WaveMode)mirror.Mode.Value;
             assault = (AssaultState)mirror.Phase.Value;
+            stock = mirror.RespawnStock.Value;
+            taken = mirror.RespawnsTaken.Value;
         }
 
         /// <summary>Camera-forward ray, same range as <see cref="Interactor"/> — self-contained

@@ -56,6 +56,15 @@ namespace GatekeepersProtocol.Game
         public NetworkVariable<byte> Mode = new NetworkVariable<byte>(
             0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>In-wave respawn charges left on the host sim, so a waiting guest's
+        /// RESPAWN label can refuse before the RPC does.</summary>
+        public NetworkVariable<int> RespawnStock = new NetworkVariable<int>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        /// <summary>Respawns taken this run, pricing the next one (Respawns.CostFor).</summary>
+        public NetworkVariable<int> RespawnsTaken = new NetworkVariable<int>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         /// <summary>Packed hatch assignment (ShipHatches wire form). Written by
         /// <see cref="ServerSetHatchAssign"/> on party change and embark — never from
         /// LateUpdate, which is gated on the Bastion GameController and no-ops on Ship,
@@ -135,6 +144,8 @@ namespace GatekeepersProtocol.Game
             if (Unbanked.Value != unbanked) Unbanked.Value = unbanked;
             if (Intensity.Value != intensity) Intensity.Value = intensity;
             if (Mode.Value != mode) Mode.Value = mode;
+            if (RespawnStock.Value != sim.RespawnStock) RespawnStock.Value = sim.RespawnStock;
+            if (RespawnsTaken.Value != sim.RespawnsTaken) RespawnsTaken.Value = sim.RespawnsTaken;
         }
         #endregion
 

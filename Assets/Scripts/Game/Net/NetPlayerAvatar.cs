@@ -10,7 +10,8 @@ namespace GatekeepersProtocol.Game
     /// Owner-authoritative NetworkTransform. Capsule collider + PlayerHealth so the host
     /// targeting set can see a remote player. Copies the local rig's position and yaw each
     /// LateUpdate. Owner collider stays off so it does not double-physics with the FPS rig.
-    /// A non-host owner at 0 HP waits on an additive Ship and embarks in Hatch-bank Prep.</summary>
+    /// A non-host owner at 0 HP waits on an additive Ship and pays to respawn — mid-wave
+    /// while the pool has charges, at any break otherwise.</summary>
     [RequireComponent(typeof(NetworkObject))]
     [RequireComponent(typeof(NetworkTransform))]
     [RequireComponent(typeof(CapsuleCollider))]
@@ -245,13 +246,6 @@ namespace GatekeepersProtocol.Game
                 _game.Sim.SetSlotDeepest(Slot.Value, deepest);
         }
 
-        /// <summary>Owner request: return from the Ship wait into the live Run (Hatch-bank).
-        /// Not the party lobby EMBARK — that is <see cref="NetPartyLobby.RequestPartyEmbark"/>.</summary>
-        public void RequestEmbark()
-        {
-            RequestEmbarkServerRpc();
-        }
-
         /// <summary>Server: lobby Ready flag for party embark quorum.</summary>
         public void ServerSetLobbyReady(bool ready)
         {
@@ -398,34 +392,8 @@ namespace GatekeepersProtocol.Game
             _animator.SetFloat(SpeedHash, speed);
         }
 
-        void TryAcceptEmbark()
-        {
-            if (!WaitingOnShip.Value) return;
-
-            var sim = _game != null ? _game.Sim : null;
-            if (sim == null) return;
-
-            if (sim.Phase != RunPhase.Tethered)
-                return;
-
-            if (sim.Assault != AssaultState.Prep)
-            {
-                Log.Event(Tag, "embark refused — Assault is live clientId=" + OwnerClientId);
-                return;
-            }
-
-            if (sim.Mode != WaveMode.HatchBank)
-            {
-                Log.Event(Tag, "embark refused — not Hatch-bank Prep clientId=" + OwnerClientId);
-                return;
-            }
-
-            ApplyRejoin();
-            Log.Event(Tag, "client embark hatch-bank clientId=" + OwnerClientId);
-        }
-
         /// <summary>Heal, clear the wait flag, tell the owner to reset to Hatch spawn.
-        /// Shared by free Hatch-bank Prep embark and paid buy-back.</summary>
+        /// Shared by the paid respawn and the free late-arrival follow.</summary>
         void ApplyRejoin()
         {
             if (_health != null)
@@ -455,13 +423,6 @@ namespace GatekeepersProtocol.Game
                 NetShipWait.Enter();
             else if (!next && previous)
                 NetShipWait.Exit();
-        }
-
-        [Rpc(SendTo.Server)]
-        void RequestEmbarkServerRpc()
-        {
-            if (!IsServer) return;
-            TryAcceptEmbark();
         }
 
         [Rpc(SendTo.Owner)]
