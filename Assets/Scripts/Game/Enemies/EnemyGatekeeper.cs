@@ -87,9 +87,9 @@ namespace GatekeepersProtocol.Game
         static readonly int AnimAttack = Animator.StringToHash("Attack");
         static readonly int AnimHitReact = Animator.StringToHash("HitReact");
         static readonly int AnimDie = Animator.StringToHash("Die");
-        /// <summary>Destroy-tail delay for the wired falling-back clip (~2s Mixamo take).
-        /// Ledger removal is immediate; only the GameObject lasts this long.</summary>
-        const float CorpseSeconds = 2f;
+        /// <summary>Destroy-tail delay for the wired falling-back clip (Mixamo take is 3.63s /
+        /// 109 frames at 30fps). Ledger removal is immediate; only the GameObject lasts this long.</summary>
+        const float CorpseSeconds = 3.7f;
 
         NavMeshAgent _agent;
         Damageable _damageable;
@@ -501,12 +501,18 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Inert corpse: Die trigger, agent off, colliders off. Host fires this
-        /// from onDeath; clones fire it from NetEnemy's death Rpc. Burst stays host-side.</summary>
+        /// from onDeath; clones fire it from NetEnemy's death Rpc. Burst stays host-side.
+        /// Root motion is on for this clip only — locomotion leaves it off so walk does not
+        /// slide. Agent must be off first or it fights the fall.</summary>
         public void BeginDeathPresentation()
         {
-            if (_animator != null) _animator.SetTrigger(AnimDie);
             StopAgent();
             if (_agent != null) _agent.enabled = false;
+            if (_animator != null)
+            {
+                _animator.applyRootMotion = true;
+                _animator.SetTrigger(AnimDie);
+            }
             var cols = GetComponentsInChildren<Collider>(true);
             for (int i = 0; i < cols.Length; i++)
                 if (cols[i] != null) cols[i].enabled = false;

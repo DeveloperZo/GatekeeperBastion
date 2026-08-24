@@ -24,6 +24,7 @@ namespace GatekeepersProtocol.Game
         Transform _owner;
         bool _presentationOnly;
         Renderer _bodyRenderer;
+        TurretLifeBar _lifeBar;
         float _shotClock;
         int _shotsFired;
 
@@ -106,6 +107,7 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             PushTint();
+            PushLife();
             if (_presentationOnly) return;
             TickFiring(Time.deltaTime);
         }
@@ -170,6 +172,16 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
+        /// <summary>The life bar over the machine. In a session the scenery copy's state is
+        /// fed by <see cref="NetVerbs"/>'s replicated Hp, so this one read covers every
+        /// seat.</summary>
+        void PushLife()
+        {
+            if (_lifeBar == null) return;
+            float max = _state.MaxHp;
+            _lifeBar.SetFraction(max > 0f ? _state.Hp / max : 0f);
+        }
+
         /// <summary>Overcharged turrets run hot, and the tint is the only thing that says so
         /// from across the room.</summary>
         void PushTint()
@@ -221,6 +233,7 @@ namespace GatekeepersProtocol.Game
             turret.Configure(state, game, owner, presentationOnly);
             turret._bodyRenderer = Tint(body, new Color(0.35f, 0.75f, 1f, 1f));
             Tint(barrel, new Color(0.22f, 0.5f, 0.7f, 1f));
+            turret._lifeBar = TurretLifeBar.Attach(go.transform);
             return turret;
         }
 

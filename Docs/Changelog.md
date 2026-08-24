@@ -8,6 +8,53 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-24
 -->
 
+- 2026-08-24: **Mission contiguity is now a test the sketch documents answer to.**
+  `Tests/EditMode/Bastion/BastionMissionProgressionTests` parses BOTH committed layout
+  files from disk (the first tests to do so — a syntax error in either now fails the
+  suite) and proves the run's spine by reachability: the hatch room is the single
+  start, at least one terminal is reachable before any gate opens, every locked
+  door's terminals are reachable before that door, each gate's opening must grow the
+  reachable set (a gallery or stair bypassing D1–D3 fails here), the control room
+  stays sealed until the control door and holds the M mark, and with the level fully
+  open the control room and every spawn closet reach the hatch room where the final
+  hatch wave is fought. Scene-binding halves pin `Bastion.unity` and
+  `Bastion_Coop.unity` to the sketch: every `T_*` terminal present, every `D_*` door
+  locked with exactly the sketch's `unlock=` wiring, exactly one control door.
+  Proven against three seeded violations (progression deadlock, D1 bypass passage,
+  unlock-wiring drift) — each caught by name. Adjacency is read from footprints via
+  `BastionKit`, so the checks run offline; 685/11 offline after.
+- 2026-08-24: **The third stair well finished, and the stairs pinned by geometry.**
+  `Bastion_Coop`'s R10–U10 stair was raw emit output — no landing, walk foot ending
+  at the floor so its end-cap walled the ramp — while R1 and R6 carried the full fit
+  pass. Finished through the production `BastionSketchStairs.FitWalkAndWellToDress`
+  path (scratch one-shot, deleted after). The half-day of stair understanding is now
+  a test: `Tests/EditMode/Bastion/StairwellGeometryTests` reads the stair list from
+  `Tools/bastion-sketch/bastion-coop-layout.txt` and pins, from scene YAML, that every
+  declared well has its walk buried below the lower floor, reaching the upper storey,
+  and a landing flush with it — it runs offline (no `UnityEngine`) and failed on the
+  pre-fix scene before passing on the fixed one. Suite hygiene in the same sitting:
+  the repair-release race in `NetVerbTests` (capture-before-RPC-lands, the recurring
+  PlayMode flake) now brackets the resting point after the release settles; the two
+  cursor-gated combat tests skip with the `ShipSceneContractTests` stance instead of
+  failing when an unfocused editor refuses the lock; `Tools/verify/run.sh` gained the
+  owed `Run/RespawnQueueTests.cs` row, and `DeathCollapseTests` +
+  `MainMenuControllerSourceTests` turn out to compile offline again (10 tests of
+  recovered coverage) now Shims carries `StringAssert`. Bridge on this tree:
+  EditMode 799/12 (all recorded pre-existing), PlayMode 82/0 — the first green
+  PlayMode leg on record.
+- 2026-08-24: **The Boarder wears a borrowed body, and `HP-5` watches it.** The Mixamo
+  placeholder in `Packs/Boarder/Boarder.prefab` was swapped for `SK_Tactical` — blue
+  `_PaintColor`, cyan visor, via the new project-owned `Packs/Boarder/BoarderBot.mat`
+  (a copy of the vendor blue variant) — as a stand-in until a real Boarder model is
+  cut. The `Body` GameObject, its Animator and `Grip` (with all six nested weapon
+  prefabs) kept their fileIDs, so every scene and `NetPlayerAvatar` reference
+  survived; the humanoid avatar was repointed at `SK_Tactical` and `Grip` re-parented
+  onto `hand.r`. `Ship - CoOp` carries the one unpacked copy and was redressed in the
+  same operation. Verified structurally (`Animator.Rebind()` maps hips/head/right
+  hand) and by render, not in motion — the watch list is `HP-5` (TH-21 … TH-24):
+  gun-in-hand on a remote avatar, the clips in motion, the read against the Cloaker
+  (which took the same robot the same day), and retiring the now-boneless
+  `WeaponView.RightHandBone` remnant.
 - 2026-08-24: **`M63-3` unparked and built — the one that stops when you look.** The
   garrison's fourth kind: `GatekeeperKind.Cloaker` on `SK_Tactical` (the pack's last
   unspent robot), advancing only while unobserved. The rule is a 30° half-angle / 26 m

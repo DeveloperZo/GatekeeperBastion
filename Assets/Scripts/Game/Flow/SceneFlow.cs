@@ -93,9 +93,13 @@ namespace GatekeepersProtocol.Game
             ActiveSceneName == Bastion || ActiveSceneName == BastionCoop;
 
         /// <summary>Combat scene <see cref="LoadBastion"/> opens: <see cref="BastionCoop"/>
-        /// from <see cref="ShipCoop"/>, otherwise <see cref="Bastion"/>.</summary>
+        /// from <see cref="ShipCoop"/> — and from inside <see cref="BastionCoop"/> itself, so
+        /// a dev checkpoint reload stays on the hull being tested instead of ejecting to the
+        /// solo Bastion. Otherwise <see cref="Bastion"/>.</summary>
         public static string CombatScene =>
-            ActiveSceneName == ShipCoop ? BastionCoop : Bastion;
+            ActiveSceneName == ShipCoop || ActiveSceneName == BastionCoop
+                ? BastionCoop
+                : Bastion;
 
         /// <summary>Fiction name of the combat scene this embark opens, or of the active
         /// combat scene. <see cref="BastionCoopName"/> on <see cref="ShipCoop"/> and in

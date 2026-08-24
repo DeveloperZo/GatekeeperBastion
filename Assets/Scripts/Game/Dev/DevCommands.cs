@@ -56,7 +56,7 @@ namespace GatekeepersProtocol.Game
             new Binding(KeyCode.F10, "host co-op session", Kind.StartCoopHost),
             new Binding(KeyCode.F11, "join 127.0.0.1", Kind.StartCoopClient),
 #endif
-            new Binding(KeyCode.F12, "demo checkpoint (then digit)", Kind.ArmDemoCheckpoint),
+            new Binding(KeyCode.F12, "demo checkpoint (then letter)", Kind.ArmDemoCheckpoint),
             new Binding(KeyCode.Home, "toggle faucet loop (graybox)", Kind.ToggleFaucetLoop),
         };
 

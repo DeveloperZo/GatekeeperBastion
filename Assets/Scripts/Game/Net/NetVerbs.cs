@@ -22,6 +22,11 @@ namespace GatekeepersProtocol.Game
         public readonly NetworkVariable<bool> TurretStanding = new NetworkVariable<bool>(
             false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>Server-written: the standing machine's remaining life. Without it every
+        /// scenery copy's bar reads full until the machine vanishes.</summary>
+        public readonly NetworkVariable<float> TurretHp = new NetworkVariable<float>(
+            0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         GameController _game;
         bool _repairing;
         bool _loggedRange;
@@ -31,6 +36,7 @@ namespace GatekeepersProtocol.Game
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
+            TurretHp.OnValueChanged += OnTurretHpChanged;
             if (!IsServer || _game != null) return;
             var session = NetworkManager.GetComponent<NetSession>();
             if (session != null)
@@ -41,12 +47,14 @@ namespace GatekeepersProtocol.Game
         {
             if (!IsSpawned || !IsServer) return;
             TickServerOvercharge(Time.deltaTime);
+            TickServerTurretMirror();
             if (!_repairing) return;
             TickRepair(Time.deltaTime);
         }
 
         public override void OnNetworkDespawn()
         {
+            TurretHp.OnValueChanged -= OnTurretHpChanged;
             // A machine must not outlive the player who stood it up.
             if (IsServer) ClearServerTurret();
             if (_turretScenery != null) _turretScenery.Despawn();
@@ -358,6 +366,7 @@ namespace GatekeepersProtocol.Game
                 _turretLive = TurretObject.Spawn(position, _turretState, _game, transform);
             }
             TurretStanding.Value = _turretState.IsLive;
+            TurretHp.Value = _turretState.Hp;
             ApplyTurretClientRpc(position, deploying);
         }
 
@@ -389,6 +398,30 @@ namespace GatekeepersProtocol.Game
             if (_turretShadow != null) _turretShadow.SetOvercharged(on);
         }
 
+        /// <summary>Keep the wire's view of the machine honest. A gatekeeper kills the turret
+        /// inside <see cref="TurretObject"/>, which knows nothing of the session — without
+        /// this watch the standing flag stays true and every client keeps a ghost machine.
+        /// While it lives, its life rides <see cref="TurretHp"/> for the scenery bars.</summary>
+        void TickServerTurretMirror()
+        {
+            if (TurretStanding.Value && !_turretState.IsLive)
+            {
+                ClearServerTurret();
+                ApplyTurretClientRpc(Vector3.zero, false);
+                return;
+            }
+            if (_turretState.IsLive && TurretHp.Value != _turretState.Hp)
+                TurretHp.Value = _turretState.Hp;
+        }
+
+        /// <summary>Client intake for the replicated life — onto the scenery copy's state,
+        /// where the bar reads it.</summary>
+        void OnTurretHpChanged(float previous, float current)
+        {
+            if (IsServer) return;
+            if (_turretShadow != null) _turretShadow.MirrorHp(current);
+        }
+
         /// <summary>Server-side burn. The window lives on the owner, but the life it spends is
         /// the server's machine, so the clock that spends it runs here.</summary>
         void TickServerOvercharge(float dt)
@@ -407,7 +440,11 @@ namespace GatekeepersProtocol.Game
             if (_turretLive != null) _turretLive.Despawn();
             _turretLive = null;
             _turretState.Clear();
-            if (IsServer && IsSpawned) TurretStanding.Value = false;
+            if (IsServer && IsSpawned)
+            {
+                TurretStanding.Value = false;
+                TurretHp.Value = 0f;
+            }
         }
 
         /// <summary>The body the server targets for this player. NetVerbs and the avatar's

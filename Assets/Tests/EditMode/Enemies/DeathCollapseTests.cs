@@ -31,11 +31,14 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("guid: " + AttackGuid, src);
             string meta = Read(DeathMeta);
             StringAssert.Contains("guid: " + DeathGuid, meta);
-            // Bake root into pose: the Animator has applyRootMotion off (locomotion
-            // must not slide), so an unbaked Mixamo fall is discarded and they die standing.
-            StringAssert.Contains("keepOriginalPositionY: 1", meta);
-            StringAssert.Contains("keepOriginalPositionXZ: 1", meta);
+            // Do not bake root into pose. Baking Y with applyRootMotion off is an
+            // in-place vertical sink (Range play, 2026-08-24). The fall is Mixamo
+            // root motion; BeginDeathPresentation turns applyRootMotion on.
+            StringAssert.Contains("keepOriginalPositionY: 0", meta);
+            StringAssert.Contains("keepOriginalPositionXZ: 0", meta);
+            StringAssert.Contains("keepOriginalOrientation: 0", meta);
             StringAssert.Contains("loopTime: 0", meta);
+            StringAssert.Contains("lastFrame: 109", meta);
         }
 
         [Test]
@@ -55,7 +58,9 @@ namespace GatekeepersProtocol.Tests
             string src = Read("Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs");
             StringAssert.Contains("AnimDie", src);
             StringAssert.Contains("BeginDeathPresentation", src);
+            StringAssert.Contains("applyRootMotion = true", src);
             StringAssert.Contains("Despawn(this, CorpseSeconds)", src);
+            StringAssert.Contains("const float CorpseSeconds = 3.7f", src);
             StringAssert.Contains("SpawnDeathBurst", src);
             StringAssert.Contains("cols[i].enabled = false", src);
         }

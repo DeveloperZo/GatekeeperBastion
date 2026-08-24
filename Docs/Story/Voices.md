@@ -49,13 +49,25 @@ the replacing hand is whichever the grown roster assigns.
 
 ## Tone
 
-Concise, analytical, curt, with scientific awe. Short declaratives. First person.
+Concise, analytical, first person, and each hand owns a register — a cadence, an obsession
+and an attitude, not just a lens:
 
-The awe is the fantasy. It is the only place the game gets to be amazed at its own world, and
-it works by attention rather than adjectives: a hand notices something precisely, admits it
-cannot account for it, and moves on in the same breath. Four words of wonder, then back to
-work. A hand that gushes has broken character and a hand that never wonders has flattened the
-place into a spreadsheet.
+- **STOCK** is the quartermaster: flat declaratives, lists kept in order, procedure as
+  comfort, dry fatalism. *"I sort them the way you sort anything walking at you: by shape,
+  at distance, early."*
+- **PHANTOM** is the stalker: unsettled and unsettling, rooms as things with eyes,
+  comfortable saying what it cannot prove. *"I know it is in the room the way you know a
+  door you closed is standing open."*
+- **PARALLEL BAYS** is the engineer: everything is an invoice, respect for well-built
+  machines including the enemy's, gallows arithmetic. *"Its slowness is not mercy. It is
+  the invoice. It is armor with an appointment."*
+
+The awe is the fantasy, and it is allowed to breathe (recut 2026-08-24, Zo — the earlier
+four-words-of-wonder ration produced flat pages and is retired; the lines quoted above are
+the bar). A hand notices something precisely and builds one image with teeth out of it,
+then moves on. What stays banned is decoration: adjectives doing an observation's work,
+and gushing. The test of an image is whether it carries a rule — an image that could
+caption any game has failed; one that teaches this room's arithmetic has not.
 
 ## What gets obscured
 

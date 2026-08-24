@@ -4,12 +4,14 @@ using GatekeepersProtocol.Util;
 namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): Dev demo checkpoints — jump the session
-    /// to a demo beat instead of replaying every loop to reach it (F12, then a digit). Always
-    /// compiled, like the rest of the Dev command surface. Digits 1, 3, 5 adopt a constructed
-    /// session-only MetaState and reload the Ship; digits 2, 4, 6, 7 load the Bastion at the
-    /// fight with the authored Unbanked. Digit 8 stocks a realm record and a Boarder kit in
-    /// place, and digit 9 resets the live Bastion's terminals and doors.
-    /// Salvage numbers come from <see cref="HatchBank.BankCap"/> / 
+    /// to a demo beat instead of replaying every loop to reach it (F12, then a letter; rows
+    /// are A..J so the beats never collide with the weapon-slot digits). Always compiled,
+    /// like the rest of the Dev command surface. Beats A, C, E adopt a constructed
+    /// session-only MetaState and reload the Ship; B, D, F, G, H load the Bastion at the
+    /// fight with the authored Unbanked. I stocks a realm record and a Boarder kit in
+    /// place, and J resets the live Bastion's terminals and doors. Internally a beat is
+    /// still its 1-based row index — the letter is the key cap, not the identity.
+    /// Salvage numbers come from <see cref="HatchBank.BankCap"/> /
     /// <see cref="HatchBank.MasterTerminalUnbanked"/>, not authored aims.</summary>
     public sealed partial class GameController
     {
@@ -17,40 +19,48 @@ namespace GatekeepersProtocol.Game
         const string TerminalFiveId = "T5";
         const string DoorThreeId = "D3";
 
-        /// <summary>Overlay rows for the F12 digit prompt — DevConsole draws exactly these.
-        /// Last row is the live reset, not a constructed state.</summary>
+        /// <summary>Overlay rows for the F12 letter prompt — DevConsole draws exactly these
+        /// and derives the key range (A..) from the array length. Last row is the live
+        /// reset, not a constructed state.</summary>
         public static readonly string[] DemoCheckpointLabels = BuildDemoCheckpointLabels();
 
         static string[] BuildDemoCheckpointLabels()
         {
             long zoneOne = HatchBank.BankCap(2);
             long zoneTwo = HatchBank.BankCap(5) - HatchBank.BankCap(2);
+            long zoneThree = ZoneThreePile();
             long master = HatchBank.MasterTerminalUnbanked();
             return new[]
             {
-                "1  start — beat 0 done, first EMBARK next",
-                "2  post zone-1 terminals — Hatch, " + zoneOne + " unbanked",
-                "3  post first Hatch-bank — Ship, wheel opens",
-                "4  post zone-2 terminals — Hatch, " + zoneTwo + " unbanked",
-                "5  post second Hatch-bank — D2 open, Primary, Control Room next",
-                "6  Master Control — Control Room, pull ready",
-                "7  finale Hatch-bank — elite window, " + master + " unbanked",
-                "8  stock realm record + Boarder kit (in place, no reload)",
-                "9  reset terminals + doors (live Bastion run)",
+                "A  start — beat 0 done, first EMBARK next",
+                "B  post zone-1 terminals — Hatch, " + zoneOne + " unbanked",
+                "C  post first Hatch-bank — Ship, wheel opens",
+                "D  post zone-2 terminals — Hatch, " + zoneTwo + " unbanked",
+                "E  post second Hatch-bank — D2 open, Primary, zone 3 next",
+                "F  post zone-3 terminals — Hatch, " + zoneThree + " unbanked, D3 next",
+                "G  Master Control — Control Room, pull ready",
+                "H  finale Hatch-bank — elite window, " + master + " unbanked",
+                "I  stock realm record + Boarder kit (in place, no reload)",
+                "J  reset terminals + doors (live Bastion run)",
             };
         }
 
-        /// <summary>The digit that fills a realm's record and a Boarder's kit in place.</summary>
-        public const int StockDigit = 8;
+        /// <summary>The zone-3 bank pile: two Waves' worth at the deep end of the field —
+        /// the same BankCap arithmetic the other fight beats use, not an authored aim.</summary>
+        static long ZoneThreePile() =>
+            HatchBank.BankCap(WaveDirector.MaxWaves) - HatchBank.BankCap(3);
 
-        /// <summary>True for digits that load the Bastion and apply a live fight, not the Ship.</summary>
+        /// <summary>The beat that fills a realm's record and a Boarder's kit in place.</summary>
+        public const int StockDigit = 9;
+
+        /// <summary>True for beats that load the Bastion and apply a live fight, not the Ship.</summary>
         public static bool IsDemoFightCheckpoint(int digit)
         {
-            return digit == 2 || digit == 4 || digit == 6 || digit == 7;
+            return digit == 2 || digit == 4 || digit == 6 || digit == 7 || digit == 8;
         }
 
-        /// <summary>F12 + digit 1–7: build a state and load Ship or Bastion. Digit 8 stocks
-        /// the standing session in place. The last digit (the live reset) is DevConsole's — it
+        /// <summary>F12 + letter A–H: build a state and load Ship or Bastion. I stocks the
+        /// standing session in place. The last row (the live reset) is DevConsole's — it
         /// holds the sanctioned GameController handle.</summary>
         public static void LoadDemoCheckpoint(int digit)
         {
@@ -95,7 +105,7 @@ namespace GatekeepersProtocol.Game
         /// seeded on the live Run, not in Meta.</summary>
         public static MetaState BuildDemoCheckpoint(int digit)
         {
-            if (digit < 1 || digit > 7) return null;
+            if (digit < 1 || digit > 8) return null;
 
             var m = MetaState.CreateNew();
             ApplyBeatZero(m);
@@ -120,8 +130,25 @@ namespace GatekeepersProtocol.Game
             ApplyDoorTwoOpen(m);
             if (digit == 5) return m;
 
+            if (digit == 6)
+            {
+                ApplyZoneThreeTerminalsDone(m);
+                return m;
+            }
+
             ApplyControlRoomReady(m);
-            return m;
+            return m; // 7 and 8 share meta; the finale's elite pile is Unbanked on the Run
+        }
+
+        /// <summary>T4 and T5 done, D3 still shut: standing at the mouth of the third bank.</summary>
+        static void ApplyZoneThreeTerminalsDone(MetaState m)
+        {
+            int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
+            m.SetCompletedTerminalIds(new[]
+            {
+                FirstTerminal.Id, FirstTerminal.SecondId, DemoZones.TerminalIdAt(zoneTwo, 0),
+                TerminalFourId, TerminalFiveId,
+            });
         }
 
         /// <summary>D1 open, shop spent, zone 2's terminal still live. PlayMode uses this

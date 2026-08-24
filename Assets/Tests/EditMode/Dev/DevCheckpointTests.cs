@@ -16,34 +16,52 @@ namespace GatekeepersProtocol.Tests
         public void UnknownDigit_BuildsNothing()
         {
             Assert.IsNull(GameController.BuildDemoCheckpoint(0));
-            Assert.IsNull(GameController.BuildDemoCheckpoint(8), "digit 8 is the live reset");
-            Assert.IsNull(GameController.BuildDemoCheckpoint(9));
+            Assert.IsNull(GameController.BuildDemoCheckpoint(9), "row 9 (I) is the stock beat");
+            Assert.IsNull(GameController.BuildDemoCheckpoint(10), "row 10 (J) is the live reset");
         }
 
         [Test]
-        public void Overlay_HasSevenBeats_TheStockRow_AndTheLiveReset()
+        public void Overlay_HasEightBeats_TheStockRow_AndTheLiveReset()
         {
-            // Seven beats, then the in-place stock row, then the live reset LAST. The order is
-            // load-bearing, not cosmetic: DevConsole derives the digit range from this array's
-            // length AND treats the final row as the reset, so a row appended rather than
-            // inserted would silently take the reset's digit.
-            Assert.AreEqual(9, GameController.DemoCheckpointLabels.Length);
+            // Eight beats, then the in-place stock row, then the live reset LAST. The order is
+            // load-bearing, not cosmetic: DevConsole derives the letter range (A..) from this
+            // array's length AND treats the final row as the reset, so a row appended rather
+            // than inserted would silently take the reset's letter.
+            Assert.AreEqual(10, GameController.DemoCheckpointLabels.Length);
             Assert.AreEqual(GameController.StockDigit,
                 GameController.DemoCheckpointLabels.Length - 1,
                 "the stock row sits immediately before the reset");
             StringAssert.Contains("reset",
                 GameController.DemoCheckpointLabels[GameController.DemoCheckpointLabels.Length - 1],
                 "the live reset stays last");
+            // Rows are keyed by letter, in order — the label leads with its own key cap.
+            for (int i = 0; i < GameController.DemoCheckpointLabels.Length; i++)
+                StringAssert.StartsWith(((char)('A' + i)).ToString(),
+                    GameController.DemoCheckpointLabels[i]);
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(2));
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(4));
-            Assert.IsTrue(GameController.IsDemoFightCheckpoint(6));
+            Assert.IsTrue(GameController.IsDemoFightCheckpoint(6),
+                "the zone-3 mouth (F) is a Bastion fight beat");
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(7));
+            Assert.IsTrue(GameController.IsDemoFightCheckpoint(8));
             Assert.IsFalse(GameController.IsDemoFightCheckpoint(1));
             Assert.IsFalse(GameController.IsDemoFightCheckpoint(3));
             Assert.IsFalse(GameController.IsDemoFightCheckpoint(5));
-            Assert.IsFalse(GameController.IsDemoFightCheckpoint(8));
             Assert.IsFalse(GameController.IsDemoFightCheckpoint(GameController.StockDigit),
                 "stocking mutates the session in place and loads nothing");
+        }
+
+        [Test]
+        public void ZoneThreeTerminalsDone_HasT4T5_ButD3StillShut()
+        {
+            var m = GameController.BuildDemoCheckpoint(6);
+            Assert.IsTrue(m.CompletedTerminalIds.Contains("T4"));
+            Assert.IsTrue(m.CompletedTerminalIds.Contains("T5"));
+            Assert.IsTrue(m.OpenDoorIds.Contains("D1"));
+            Assert.IsTrue(m.OpenDoorIds.Contains("D2"));
+            Assert.IsFalse(m.OpenDoorIds.Contains("D3"),
+                "the third bank is the next verb — D3 must still be shut on this beat");
+            Assert.IsTrue(m.SalvageLedgerBalances);
         }
 
         [Test]
@@ -149,7 +167,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void MasterControl_OpensD3_WithT4T5Done()
         {
-            var m = GameController.BuildDemoCheckpoint(6);
+            var m = GameController.BuildDemoCheckpoint(7);
             Assert.IsTrue(m.OpenDoorIds.Contains("D3"));
             Assert.IsTrue(m.CompletedTerminalIds.Contains("T4"));
             Assert.IsTrue(m.CompletedTerminalIds.Contains("T5"));
@@ -157,17 +175,17 @@ namespace GatekeepersProtocol.Tests
             Assert.Greater(m.BankedSalvage, 0L, "prior banks remain; Unbanked is seeded on the Run");
             Assert.IsTrue(m.SalvageLedgerBalances);
 
-            var finale = GameController.BuildDemoCheckpoint(7);
+            var finale = GameController.BuildDemoCheckpoint(8);
             Assert.AreEqual(m.OpenDoorIds.Length, finale.OpenDoorIds.Length);
             Assert.AreEqual(m.CompletedTerminalIds.Length, finale.CompletedTerminalIds.Length);
             Assert.AreEqual(m.BankedSalvage, finale.BankedSalvage,
-                "digits 6 and 7 share meta; the elite pile is Unbanked on the live Run");
+                "beats G and H share meta; the elite pile is Unbanked on the live Run");
         }
 
         [Test]
         public void EveryCheckpoint_SurvivesTheSaveRoundTrip_Unrepaired()
         {
-            for (int digit = 1; digit <= 7; digit++)
+            for (int digit = 1; digit <= 8; digit++)
             {
                 var m = GameController.BuildDemoCheckpoint(digit);
                 var back = MetaState.FromSnapshotJson(m.ToSnapshotJson());

@@ -7,7 +7,7 @@ namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): apply an F12 Bastion-fight checkpoint
     /// after the run tethers — restore terminals, seed Unbanked, place the player, and for
-    /// digit 7 start the elite Hatch window.</summary>
+    /// the finale beat start the elite Hatch window.</summary>
     public sealed partial class GameController
     {
         const float FightStandBack = 2.2f;
@@ -39,9 +39,15 @@ namespace GatekeepersProtocol.Game
                     PlacePlayerAtHatch();
                     break;
                 case 6:
-                    PlacePlayerAtMaster();
+                    // Zone-3 mouth: T4+T5 done, the third bank is the next verb.
+                    Sim.SeedBankPile(HatchBank.BankCap(WaveDirector.MaxWaves) - HatchBank.BankCap(3),
+                        2, WaveDirector.MaxWaves);
+                    PlacePlayerAtHatch();
                     break;
                 case 7:
+                    PlacePlayerAtMaster();
+                    break;
+                case 8:
                     ApplyFinaleHatchFight();
                     break;
             }

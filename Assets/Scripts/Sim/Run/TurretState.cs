@@ -75,6 +75,18 @@ namespace GatekeepersProtocol.Sim
             Overcharged = IsLive && on;
         }
 
+        /// <summary>Replication intake for a scenery copy: the server's Hp, so a client's life
+        /// bar reads the truth instead of full-forever. Never flips <see cref="IsLive"/> —
+        /// removal stays with the despawn message, so a zero arriving first just shows an
+        /// empty bar on a machine about to fall.</summary>
+        public void MirrorHp(float hp)
+        {
+            if (!IsLive) return;
+            if (hp < 0f) hp = 0f;
+            if (hp > MaxHp) hp = MaxHp;
+            Hp = hp;
+        }
+
         /// <summary>Burn life for a span of overcharge. True when the burn is what killed it —
         /// the gatekeepers did not, the operator did.</summary>
         public bool BurnOvercharge(float dt, out float burned)

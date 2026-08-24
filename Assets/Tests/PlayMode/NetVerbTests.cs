@@ -81,12 +81,16 @@ namespace GatekeepersProtocol.PlayTests
             Assert.Greater(hatch.Hp, hpBefore, "host hatch HP rose");
             Assert.Less(GameSession.Meta.BankedSalvage, bankBefore, "host banked fell");
 
+            _clientVerbs.SetRepairing(false);
+            // The release is an RPC; the drip keeps healing until it lands on the host.
+            // Capture the resting point after it has, then hold — the pre-capture race
+            // was this test's recurring flake.
+            yield return WaitForTicks(m_ServerNetworkManager, 5);
             float hpAtStop = hatch.Hp;
             long bankAtStop = GameSession.Meta.BankedSalvage;
-            _clientVerbs.SetRepairing(false);
             yield return WaitForTicks(m_ServerNetworkManager, 15);
 
-            Assert.AreEqual(hpAtStop, hatch.Hp, 0.05f, "HP stops rising after release");
+            Assert.AreEqual(hpAtStop, hatch.Hp, 0.001f, "HP stops rising after release");
             Assert.AreEqual(bankAtStop, GameSession.Meta.BankedSalvage, "bank stops falling after release");
         }
 

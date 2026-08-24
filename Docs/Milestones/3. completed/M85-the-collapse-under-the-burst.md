@@ -117,7 +117,7 @@ on `M99` (`Decisions.md` 2026-08-22).
 `Anim_death_falling_back.fbx` guid `09d7b63af6247d34281bf977e47d7eb0`;
 Death `m_Motion` fileID `-203655887218126122` matches the Mixamo take.
 Attack still references `03ede1e3f3df7b14fbb44ae773ed0c02`. Death has
-`m_Transitions: []`. `CorpseSeconds` is 2.
+`m_Transitions: []`. `CorpseSeconds` is 3.7 (clip is 3.63s / 109 frames at 30fps).
 
 `EnsureDeathState` is a no-op when the state is already present, so a
 later Build All does not dirty the controller.

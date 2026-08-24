@@ -4,19 +4,17 @@
 
 ## Game
 
-Heavy frame. The slowest thing on this hull, and unmistakable in a group.
+Somebody built this thing to walk through gunfire, and then never told it about the gunfire.
 
-I emptied a clip into one at close range and it did not react. Not a flinch that could be called a flinch. It does not turn. It does not call. The ones walking beside it do not look up.
+Heaviest frame on the hull, slowest thing aboard, and it has never once taken my blood. On a field-terminal Wave it walks at me and arrives with nothing. On a Hatch-bank it walks at the door and arrives with a bite that costs more than killing it would have.
 
-It has never taken my blood. On a field-terminal Wave it walks at me and takes nothing when it arrives. On a Hatch-bank it wants the Hatch, and it gets there unless I spend the time on it. When it arrives it takes a serious bite.
+I put a full clip into one's back at arm's length. No stagger, no turn, no call to its escort. The rounds land, the walk continues. The ones beside it do not look up.
 
-Time is the entire cost. It is slow, and that slowness is the offer, not a reprieve. Backing away buys seconds. Seconds are not an answer. The only answer is to kill it, and killing it takes time I am spending in front of everything else.
+Its slowness is not mercy. It is the invoice. It is armor with an appointment, and the time it gives me is exactly the time it takes to kill — spent facing away from everything else in the room. Backing away buys seconds, and seconds are not an answer.
 
-It has the most health of anything here and that scales with the Wave like everything else, so the same frame late in a Run is a substantially longer job than the first one I met. Intensity never adds one.
+It carries the most health of anything here, and it scales with the Wave like everything else: the same frame late in a Run is a longer job than the first one I met. Intensity never adds one. The schedule is the schedule.
 
-It is the safe thing to fire into in a crowd, because it is the one target that will not shout the group onto me.
-
-Note: it is built to be shot and appears not to know that it is being shot. I have no explanation for this.
+In a crowd it is the one safe thing to shoot — the only frame that will not shout the group onto me. Fire through the group into the Thief and the group never learns my name.
 
 ## Reference
 

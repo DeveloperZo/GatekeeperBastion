@@ -93,8 +93,13 @@ namespace GatekeepersProtocol.PlayTests
                     "reachable through Input.GetMouseButton in Update().");
 
                 // Some gun paths refuse to fire while the cursor is free; make the state legal.
+                // An unfocused editor refuses to hold the lock at all — that is the session,
+                // not the gun, so skip rather than fail (same stance as ShipSceneContractTests).
                 Cursor.lockState = CursorLockMode.Locked;
                 yield return null;
+                if (Cursor.lockState != CursorLockMode.Locked)
+                    Assert.Inconclusive("SKIPPED: this session does not honour Cursor.lockState; " +
+                        "the fire gate cannot be satisfied without a focused Game view.");
 
                 MetaState meta = GameSession.Meta;
                 bool originallyOwned = meta.Owns(WeaponId.Mk1Sidearm);
@@ -192,8 +197,13 @@ namespace GatekeepersProtocol.PlayTests
                 Assert.IsNotNull(player);
                 var gun = player.GetComponentInChildren<PlayerGun>();
                 Assert.IsNotNull(gun);
+                // An unfocused editor refuses to hold the lock; that is the session, not the
+                // clip bookkeeping under test — skip rather than fail.
                 Cursor.lockState = CursorLockMode.Locked;
                 yield return null;
+                if (Cursor.lockState != CursorLockMode.Locked)
+                    Assert.Inconclusive("SKIPPED: this session does not honour Cursor.lockState; " +
+                        "TryFire cannot be exercised without a focused Game view.");
 
                 gun.SelectSlot(WeaponSlot.Primary);
                 yield return null;

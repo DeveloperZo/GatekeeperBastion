@@ -4,13 +4,14 @@ using UnityEngine;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>The F12 demo-checkpoint digit (partial of DevConsole): digit capture, the
-    /// overlay rows, and the dispatch. Split from DevConsole.cs when the picker pushed it
-    /// over the Game line cap — same console, one capture mode per file. State construction
-    /// and the live reset live on GameController (DevCheckpoints partial).</summary>
+    /// <summary>The F12 demo-checkpoint prompt (partial of DevConsole): letter capture, the
+    /// overlay rows, and the dispatch. Beats are keyed A.. so they never collide with the
+    /// weapon-slot digits. Split from DevConsole.cs when the picker pushed it over the Game
+    /// line cap — same console, one capture mode per file. State construction and the live
+    /// reset live on GameController (DevCheckpoints partial).</summary>
     public sealed partial class DevConsole
     {
-        /// <summary>Esc or a digit while the checkpoint prompt is armed. True = consumed.</summary>
+        /// <summary>Esc or a letter while the checkpoint prompt is armed. True = consumed.</summary>
         bool TickCheckpointDigit()
         {
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -20,11 +21,11 @@ namespace GatekeepersProtocol.Game
                 Log.Event(Tag, "checkpoint cancelled");
                 return true;
             }
-            if (!TryReadDigit(GameController.DemoCheckpointLabels.Length, out int checkpoint))
+            if (!TryReadLetter(GameController.DemoCheckpointLabels.Length, out int checkpoint))
                 return false;
 
-            // Keep suppress through the rest of this frame so PlayerGun does not also
-            // treat the digit as a weapon-slot switch (same rule as the F3 jump digit).
+            // Keep suppress through the rest of this frame so the letter is not also read
+            // as a fight verb (E interact, F/G/H abilities) — same rule as the F3 digit.
             _awaitingCheckpointDigit = false;
             _capture = CaptureKind.None;
             _suppressFightKeys = true;

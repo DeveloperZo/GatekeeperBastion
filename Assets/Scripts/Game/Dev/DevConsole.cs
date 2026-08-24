@@ -39,10 +39,20 @@ namespace GatekeepersProtocol.Game
             switch (_capture)
             {
                 case CaptureKind.JumpDigit:
-                case CaptureKind.CheckpointDigit:
                     return id == ControlId.SlotPrimary
                         || id == ControlId.SlotSecondary
                         || id == ControlId.SlotDrone;
+                case CaptureKind.CheckpointDigit:
+                    // Beats are letters (A..): also mute the fight verbs that live on
+                    // letters in that range, or picking beat E would hold-interact and
+                    // beat G would fire the crew ability.
+                    return id == ControlId.SlotPrimary
+                        || id == ControlId.SlotSecondary
+                        || id == ControlId.SlotDrone
+                        || id == ControlId.Interact
+                        || id == ControlId.WeaponAbility
+                        || id == ControlId.CrewAbility
+                        || id == ControlId.PersonalAbility;
                 case CaptureKind.LoadoutPicker:
                     return id == ControlId.SlotPrimary
                         || id == ControlId.SlotSecondary
@@ -50,10 +60,14 @@ namespace GatekeepersProtocol.Game
                         || id == ControlId.SlotLast
                         || id == ControlId.Interact;
                 default:
-                    // One-frame linger after a digit was consumed this Update.
+                    // One-frame linger after a digit or letter was consumed this Update.
                     return id == ControlId.SlotPrimary
                         || id == ControlId.SlotSecondary
-                        || id == ControlId.SlotDrone;
+                        || id == ControlId.SlotDrone
+                        || id == ControlId.Interact
+                        || id == ControlId.WeaponAbility
+                        || id == ControlId.CrewAbility
+                        || id == ControlId.PersonalAbility;
             }
         }
 
@@ -256,9 +270,10 @@ namespace GatekeepersProtocol.Game
 
                 case DevCommands.Kind.ArmDemoCheckpoint:
                     _awaitingCheckpointDigit = true;
-                    _overlay = true; // discovery: the overlay lists the checkpoint digits
-                    Log.Event(Tag, "checkpoint armed — press 1.."
-                        + GameController.DemoCheckpointLabels.Length + " (Esc cancel)");
+                    _overlay = true; // discovery: the overlay lists the checkpoint rows
+                    Log.Event(Tag, "checkpoint armed — press A.."
+                        + (char)('A' + GameController.DemoCheckpointLabels.Length - 1)
+                        + " (Esc cancel)");
                     break;
 
                 case DevCommands.Kind.ToggleFaucetLoop:
@@ -325,6 +340,22 @@ namespace GatekeepersProtocol.Game
                 if (Input.GetKeyDown(KeyCode.Alpha0 + d) || Input.GetKeyDown(KeyCode.Keypad0 + d))
                 {
                     digit = d;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Letter capture (A..): 1-based row index of the pressed letter, so beat
+        /// rows never collide with the weapon-slot digits. Capped at Z.</summary>
+        static bool TryReadLetter(int max, out int index)
+        {
+            index = 0;
+            for (int i = 1; i <= max && i <= 26; i++)
+            {
+                if (Input.GetKeyDown(KeyCode.A + (i - 1)))
+                {
+                    index = i;
                     return true;
                 }
             }
