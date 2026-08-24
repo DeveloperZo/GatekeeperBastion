@@ -5,8 +5,29 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 -->
+
+- 2026-08-24: **`M94` closed — two more protocols.** Played and closed by Zo.
+  `BoarderProtocolId` stops being a set of ternaries on Default and becomes a
+  catalog of three: VEIL and FORGE beside it, each with a distinct crew ability, a
+  distinct personal ability, one passive and a full sheet. `IsLegalPair` is now the
+  general rule its single expression was a special case of, and an id this build does
+  not sell resolves to None instead of reaching a switch with no arm for it.
+  FORGE's turret was built here rather than waited on for UTL-H: the first cut,
+  Field Rearm plus Redeploy, was recut because both rows were the same shape — make
+  yourself weak while you fiddle with hardware — and neither had a moment where the
+  Boarder got stronger. All four new abilities replicate; the first cut ran host-side
+  only, which left a guest's cloak invisible to every gatekeeper in the game because
+  enemies read the avatar's PlayerHealth and not the guest's own rig. Every open
+  window now telegraphs on screen, and the HUD stopped drawing a running ability
+  exactly like a cooling one. Carried: no turret health readout, first-guess numbers,
+  and PARALLEL BAYS written onto decoys with no reader — the sheet and the Compendium
+  both say so rather than describing a behaviour the build does not have.
+
+- 2026-08-24: **Co-op bastion skybox.** `Bastion_Coop` RenderSettings uses
+  `PolygonSciFiSpace_Skybox_01` (same guid as `Ship - CoOp`). U5 east stays a
+  wall over S2's closet.
 
 - 2026-08-23: **`M99` closed — a range you can fight in.** Played and closed by
   Zo. `Ship - CoOp` door in at deck 1 port z 7.5, return door behind the firing
