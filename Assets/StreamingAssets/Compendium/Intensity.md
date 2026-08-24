@@ -2,17 +2,17 @@
 
 ## Game
 
-Intensity is a wager, placed per Wave, before I commit.
+Intensity is a wager, placed per Wave, before I commit. It is the one dial on this machine that is mine.
 
-Raising it multiplies what each body pays and how many bodies arrive. Both halves move together and they read off the same table. They cannot come apart. This is the cleanest mechanism on the Bastion and I do not fully understand why it was built this honest.
+Raising it multiplies what each body pays and how many bodies arrive. Both halves read off the same table and cannot come apart. It is the cleanest mechanism on the Bastion and I do not fully understand why it was built this honest.
 
-It does not toughen anything. It does not tighten the spacing. Every extra body is a Default. Never a Hunter, never a Thief. A raised Wave is the same fight with more of the easiest thing in it.
+It toughens nothing. It tightens nothing. Every extra body is a Default — never a Hunter, never a Thief. A raised Wave is the same fight with more of the cheapest thing in it.
 
 Set it in Prep, at the trigger, before the select. Once Assault begins it is locked. Turning it down is free and refunds nothing.
 
-Three questions before I raise it. Can I kill the surplus before it reaches me. What will my health look like afterwards, given it does not come back while I stand. And is the Hatch already hurt, because repair comes out of the same bank the extra pay lands in. Intensity pays gross. The Hatch charges net.
+Three lines of the ledger before I raise it. Can I kill the surplus before it reaches me. What is my health afterwards, given it does not come back while I stand. And is the door already hurt — because repair is billed from the same bank the extra pay lands in. Intensity pays gross. The Hatch charges net.
 
-Start deep and one juice governs the whole chain. I learned that the expensive way.
+Start deep and one juice governs the whole chain. I learned that at full price.
 
 ## Reference
 

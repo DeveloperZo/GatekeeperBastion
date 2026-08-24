@@ -11,15 +11,17 @@ Last updated: 2026-08-20
 
 ## Game
 
-I cut into a Bastion and strip it. The Gatekeepers were already there. Three machines, each a different frame, and I can tell which is which before it is close enough to matter.
+I cut into a Bastion and strip it. That is the whole job, and nobody makes me do it.
 
-Behind me is the Hatch. It is the umbilical to my Ship and it is the only way back. If it falls, the Run is over, and nothing buys a door back. If I fall, the realm can pay to stand me up — at a price that climbs — and when it cannot, the Run is over the old way.
+The Gatekeepers were already here. Here before me, here after me, and in between they come up out of rooms that do not open for me — in groups, on a schedule I pay for. Four frames. I sort them the way you sort anything walking at you: by shape, at distance, early.
 
-Nothing comes until I call it. That took me a while to trust. Prep is mine and it is untimed. Intensity is the only bet on offer and it is an honest one: more pay, more of the plainest machine, nothing else moved.
+Behind me is the Hatch, the umbilical to my Ship, the one way home. If it falls, the Run is over, and nothing buys a door back. If I fall, the realm can pay to stand me up — the price climbs — and when it cannot, the Run is over the old way.
 
-Salvage sits Unbanked until a Hatch-bank converts it. Converted is mine and stays mine on this realm. Unbanked dies with me. What I carry between realms is myself: weapons, wheel, protocol, equipment.
+Nothing comes until I call it. That took me longest to trust. Prep is mine and untimed. Intensity is the only bet on offer and it is an honest one: more pay, more of the plainest machine, nothing else moved.
 
-Between Runs I walk my own Ship. Four consoles. Each owns one subject and nothing is sold in two places.
+Salvage is not mine until a Hatch-bank converts it. Converted stays with this realm. Unbanked dies with me. What travels between worlds is what I am: weapons, wheel, protocol, equipment.
+
+Between Runs I walk my own Ship. Four consoles, four subjects, nothing sold twice.
 
 ## Reference
 

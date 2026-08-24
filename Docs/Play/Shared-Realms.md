@@ -6,7 +6,7 @@
 
 Coming Soon.
 
-Today a friend's realm exists for me while they hold it open. The rest is on its way: worlds with members, a door that answers when the owner is not home, their Ship walked alone, my conversions waiting in their pot when they wake.
+Today a friend's world exists for me only while they hold the door open. The rest is on its way: worlds with members, a door that answers when the owner is not home, their Ship walked alone, my conversions waiting in their pot when they wake.
 
 When it works, these notes will say how it works. Not before.
 

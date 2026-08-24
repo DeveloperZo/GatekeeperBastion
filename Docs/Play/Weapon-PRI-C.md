@@ -9,15 +9,15 @@ Last updated: 2026-08-15
 
 ## Game
 
-The far-wall Primary. Full damage across the whole Bastion floor, at distances the MR-35 has already given up on.
+The far-wall Primary. Full damage across the whole floor, at distances the MR-35 has already given up on. Nothing else I have carried treats the far half of the room as workable.
 
-Slow. Slow enough that a late Wave will drown me if this is all I fire. This gun is empty by the time I turn around, so a Hunter in my face is the Secondary's job, always.
+Slow. Slow enough that a late Wave will drown me if this is all I fire. It is empty by the time I turn around, so a Hunter in my face is the Secondary's job — always, not usually.
 
-It is strongest where I never stand. Leave the Hatch. Fire up the bore when bodies stack in the mouth of it. A pierced line up a corridor is what the rate is paying for.
+It is strongest where I never stand. Leave the Hatch. Fire up the bore when bodies stack in its mouth. One pierced line up a corridor is what the rate is paying for, and the line is worth the wait.
 
-Its ability arms the next shot to pierce further at full damage, and lapses if I do not fire it. Arming and then not firing is the most common way I waste it.
+Its ability arms the next shot to pierce further at full damage, and lapses unfired. Arming it and then not firing is the most common way I waste it. The gun forgives distance and punishes indecision.
 
-Its wheel orders clip and reload differently from the MR-35's, so the same focus buys a different gun. Strength is damage. Weakness is fire rate.
+Its wheel orders clip and reload differently from the MR-35's, so the same focus buys a different gun. Strength is damage. Weakness is rate. It knows what it is.
 
 ## Reference
 

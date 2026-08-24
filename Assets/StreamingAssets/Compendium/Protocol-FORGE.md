@@ -2,15 +2,15 @@
 
 ## Game
 
-This sheet puts a second thing in the room that the garrison has to account for, and it is the only sheet where something other than me deals damage.
+This sheet puts a second machine in the room for the garrison to account for, and it is the only sheet where something other than me deals the damage.
 
 Its doctrine widens the bay: two of my decoys may stand live at once instead of one.
 
-The crew burst stands a turret where I am looking. It acquires and fires on its own out to a useful distance, and while it stands, every Boarder near it fires faster. It is a plant, an emplacement and a buff at the same time, and placing a new one replaces the old.
+The crew burst stands a turret where I am looking. It acquires and fires on its own out to a useful distance, and while it stands, every Boarder near it fires faster. A plant, an emplacement and a buff on one invoice — and standing a new one replaces the old, so the fleet is always exactly one machine deep.
 
-The personal burst redlines that turret. It fires substantially harder and so does my own gun, and the machine pays for the window out of its own life at a steady rate. A full window on a healthy turret leaves it wounded. On a wounded one it kills it. The burn is the whole cost and it refuses outright with nothing standing.
+The personal burst redlines it. The turret fires much harder, my own gun fires harder, and the machine pays for the window out of its own life at a steady burn. A full window on a healthy turret leaves it wounded. On a wounded one, it is a burnout I scheduled. It refuses outright with nothing standing.
 
-The passive is the one that matters and the one nobody reads: a Gatekeeper that would come for me comes for the turret instead, whenever both are in reach. That is what makes the sheet work, and it is also the only way the turret is ever attacked. Without the passive the machine would be an emplacement nothing can touch. With it, the machine is mortal and it is mortal on my behalf.
+The passive is the one nobody reads and the one that makes the sheet work: a Gatekeeper that would come for me takes the turret instead, whenever both are in reach. It is the only way the turret is ever attacked. Without it the machine would be furniture. With it, the machine is mortal, and it is mortal on my behalf.
 
 Attention and structure are the same subject here. I build the thing they look at.
 

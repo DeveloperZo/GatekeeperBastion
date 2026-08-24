@@ -9,15 +9,15 @@ slot/reload behaviour changes. / Last updated: 2026-08-20
 
 ## Game
 
-Everything about the gun in my hands is decided on the Ship. Nothing about it can be changed once I am aboard the Bastion. The fight-time keys only move between the slots I am already carrying.
+Everything about the gun in my hands was decided on the Ship, and the Bastion honors the spec exactly. The fight-time keys only move between the slots I already carry.
 
-A Primary and a Secondary. The Drone bay holds a payload rather than a gun, and that payload is bought at FABRICATION, not the ARMORY. Guns are the ARMORY's and only the ARMORY's.
+A Primary and a Secondary. The Drone bay holds a payload, not a gun, and the payload is FABRICATION's. Guns are the ARMORY's, and only the ARMORY's.
 
-Ammunition is infinite. A reload costs time and nothing else. Each slot keeps its own clip, so a dry Primary is not a crisis, it is a swap. Swapping does throw away a reload in progress, which has cost me more than it should have.
+Ammunition is infinite. A reload bills time and nothing else. Each slot keeps its own clip, so a dry Primary is not a crisis — it is a swap. The swap throws away a reload in progress, which has cost me more than it should have, more than once.
 
-Every shop weapon but one carries an activated ability on the same key, and how hard it lands is bought on that weapon's own wheel. A purchase moves several spokes at once, weighted by the one I centre. It never moves reach, spread, pierce, or anything on a weapon I am not holding. The money goes into one gun and stays there.
+Every shop weapon but one carries an activated ability on the same key, and how hard it lands is bought on that weapon's own wheel. A purchase moves several spokes at once, weighted toward the one I centre. It never moves reach, spread, pierce, or anything on a weapon I am not holding. Money into a gun stays in the gun. The wheel is a marriage.
 
-My Primary answers one of the room's three questions well and makes the other two harder. There is no gun that answers all three. I have looked.
+My Primary answers one of the room's three questions well and makes the other two harder. There is no gun that answers all three. I have looked. I keep looking.
 
 ## Reference
 

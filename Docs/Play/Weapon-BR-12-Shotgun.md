@@ -4,17 +4,17 @@
 
 ## Game
 
-A Primary for things that come to me. One pull throws a cone of pellets. Each pellet is nothing on its own. The shot is strong only when most of them land, which means only when the target is close and filling the crosshair.
+A Primary for things that come to me. One pull throws a cone of pellets, and each pellet is nothing on its own. The shot is strong only when most of them land — which means close, and filling the crosshair.
 
-Damage bleeds off with distance and by the edge of its reach it does nothing at all. That reach is the shortest I have carried, by a wide margin, and there is no cue anywhere for where the falloff starts. A shot that looks like a hit can do almost nothing.
+Damage bleeds off with distance, and at the edge of its reach it does nothing at all. That reach is the shortest I have carried, by a wide margin, and there is no cue for where the falloff starts. A shot that looked like a hit can be a blank.
 
-Pellets do not pierce. Every one stops on the first thing it touches, so the cone does not sweep a group. Pellets that land on a second body are pellets that did not kill the first. Pick a body. Give it the whole shot.
+Pellets stop on the first thing they touch. The cone does not sweep a group — pellets that land on a second body are pellets that failed to kill the first. Pick one body. Give it everything.
 
-Slow cadence, small clip, the longest reload of the three Primaries. Very few pulls between long vulnerable pauses. Break contact and reload before the clip is empty, or swap instead, which is faster.
+Slow cadence, small clip, the longest reload of the three Primaries. Very few pulls between long, vulnerable pauses. Break contact and reload before empty, or swap, which is faster.
 
-Let them close. That is the whole weapon, and against Hunters it costs nothing, because they do the closing. It deletes them.
+Let them close. That is the whole weapon. Against Hunters it costs nothing — they do the closing, and it deletes them.
 
-Wrong tool for Thieves and for long corridors. Start on a Thief early and expect to spend real time there while the Hunters use that time on me.
+Wrong tool for Thieves and for long corridors. Start on a Thief early, and count the time as spent, because the Hunters will spend it on me.
 
 ## Reference
 

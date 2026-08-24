@@ -4,17 +4,17 @@
 
 ## Game
 
-One trip out and back. I embark already tethered. Nothing happens until I start a Wave.
+One trip out and back. Everything in it happens in an order I choose and cannot skip.
 
-Prep is the quiet. Untimed, pays nothing, and the only state in which I can juice intensity or work on the Hatch without something chewing on me. Assault runs until every Gatekeeper that Wave sent is dead. Not until the last one arrives. Until the last one drops.
+I embark already tethered. Nothing happens until I start a Wave. Prep is the quiet: untimed, unpaid, and the only state where I can juice intensity or work the door without something chewing on me. Assault runs until every Gatekeeper that Wave sent is dead — not until the last one arrives. Until the last one drops.
 
-A Wave called at a field terminal hunts me and cannot touch the Hatch. A Hatch-bank hunts the Hatch and converts what I am carrying. Two different fights out of the same room.
+A Wave called at a field terminal hunts me and cannot touch the Hatch. A Hatch-bank hunts the Hatch and converts what I carry. Two different fights, one room.
 
-Four ways it finishes. I go down and stay down — the realm's pot can pay to stand a dead seat back up, while it can. The Hatch goes down, which nothing pays for. I dock home after surviving a Hatch-bank. Or I survive Master Control and the Bastion is stripped.
+Four ways it finishes, and I keep them in this order. I go down and stay down — the realm's pot can stand a dead seat back up, while it can. The Hatch goes down, which nothing pays for. I dock home after a survived bank. Or I outlast Master Control and the Bastion is stripped.
 
-Converted Salvage stays whichever way it goes. Unbanked does not survive me.
+Converted Salvage survives all four. Unbanked survives none of me.
 
-The Ship offers to start me deeper. It is not a skip. It delivers everything up to that point back to back, in one Assault, with no quiet in the middle. Same content, much less room.
+The Ship offers to start me deeper. It is not a skip. It is the same content delivered back to back, one Assault, no quiet in the middle. Same Waves. Much less room.
 
 ## Reference
 

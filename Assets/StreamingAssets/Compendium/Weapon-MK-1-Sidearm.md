@@ -2,15 +2,15 @@
 
 ## Game
 
-The ranged Secondary. Free, and still bought, at the ARMORY. The other free Secondary is SEC-D, which trades reach for contact.
+The reach Secondary. Free, and still bought, at the ARMORY. The other free Secondary is SEC-D, which trades reach for contact.
 
-Early it is the whole loadout if I picked reach. Later it is the bridge: what I fire while the Primary is empty. Because each slot keeps its own clip, swapping and continuing to shoot beats standing still through a reload with something walking at me. With this one, the bridge still works at distance.
+Early, it is the whole loadout if I picked reach. Later, it is the bridge: what I fire while the Primary is empty. Each slot keeps its own clip, so swapping and continuing to shoot beats standing still through a reload with something walking at me — and with this one, the bridge still works at distance.
 
-One accurate round per pull, no scatter, no pierce. A miss is a whole round of nothing. It rewards standing still and placing shots more than either Primary does. Its best work is finishing bodies that are already nearly done, which saves the Primary's clip for something that needs all of it.
+One accurate round per pull. No scatter, no pierce. A miss is a whole round of nothing, so it rewards a planted stance and a placed shot more than either Primary does. Its best work is finishing bodies that are nearly done, which saves the Primary's clip for something that needs all of it.
 
-Poor at volume. The clip is small, the damage is modest, and everything gets tougher every Wave while this does not. Deep in a Run it takes visibly more pulls per body than it did on the first.
+Poor at volume. Small clip, modest damage, and everything on this hull gets tougher every Wave while this does not. Deep in a Run, the same body takes visibly more pulls.
 
-Wrong tool for a Thief. Emptying this into one, with a reload between each clip, is usually slower than its walk to the Hatch.
+Wrong tool for a Thief. Emptying this into one, reload by reload, is usually slower than its walk to the Hatch. I have run that race. The Thief won.
 
 ## Reference
 

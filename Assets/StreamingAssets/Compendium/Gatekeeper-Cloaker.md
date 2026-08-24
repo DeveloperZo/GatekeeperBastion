@@ -2,17 +2,17 @@
 
 ## Game
 
-The teal seams. That is all I get while it walks: a faint outline and its glow lines, somewhere it thinks I am not looking.
+I know it is in the room the way you know a door you closed is standing open.
 
-It moves where I am not. Put it in the middle of my view and it stops dead and turns solid — a machine standing in the open, caught. It does not fight the gaze. It just waits, and the moment my eyes are somewhere else it is walking again.
+Look at it and it stops. Solid, caught, patient. It does not flinch and does not fight the gaze — it stands in the open letting me understand that my eyes are the only wall it respects, and that I have exactly two.
 
-So looking at it works, and that is the trap. While I hold one still, I am not covering the door, the corridor behind me, or the Thief on its way home. The Cloaker never costs me health. It costs me everywhere I am not looking, which in a room this size is most of the room.
+It costs me everywhere I am not looking. Hold one still and the door goes unwatched, the corridor behind me goes unwatched, the Thief is halfway home. In a room this size, everywhere I am not looking is most of the room.
 
-Two of us can pin two of them. That still leaves the rest of the arc to whoever is not staring at a frozen machine.
+My gaze holds it for the whole crew, so two of us can pin two of them. The room has more directions than we have eyes.
 
-Shooting one blind works if the shot connects — it flashes solid for a moment, wherever it is, and a hit is the only thing that makes it show itself without my eyes on it. It takes more killing than the red ones. Not much more.
+While it moves it is a shimmer with lit seams, hardest to find exactly when nobody is looking for it. Shoot into the dark and a hit answers: one flash of something solid where nothing should be. The flash is the only honest thing it does. It takes a little more killing than the red ones, and it hits no harder.
 
-When nothing has eyes on it, it behaves like any of the red ones: the Hatch when the Hatch is in the fight, me when I get close or make it personal.
+Unwatched, it wants what a Default wants — the Hatch when the Hatch is in the fight, me when I get close or make it personal. Watched, it wants nothing at all. That is the part I mind most.
 
 ## Reference
 

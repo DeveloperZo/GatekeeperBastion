@@ -2,15 +2,15 @@
 
 ## Game
 
-Each Wave is bigger than the last, and it grows in four directions at once. More bodies. Tougher bodies. Wider groups. Shorter gaps between them.
+Each Wave is bigger than the last, and it grows in four directions at once. More bodies. Tougher bodies. Wider groups. Shorter gaps. I have counted, and the count only ever moves one way.
 
-Intensity adds to the first of those and to nothing else. I have checked this repeatedly.
+Intensity adds to the first of those and to nothing else. Checked, rechecked, holds.
 
-The kinds arrive on a schedule I cannot influence. The first Wave is Defaults only. Hunters start after that. Thieves later still, and they come thickest at the end. Inside a group the mix is shuffled, so I never get a clean phase of one thing. Sorting what is in front of me is the job.
+The kinds arrive on a schedule I cannot buy, sell, or argue with. First Wave: Defaults only. Hunters after that. Thieves later still, thickest at the end. Inside a group the mix is shuffled, so there is no clean phase of one problem — sorting what is in front of me is the job, every group, every time.
 
-The difficulty is not any single machine. It is overlap: how much of the Wave is standing in the room at the same time. That is what rises. Late on, the next group is inside before I have finished the last.
+The difficulty was never any single machine. It is overlap: how much of the Wave stands in the room at once. Early, I finish a group and wait. Late, the next group is inside before the last one is down.
 
-Starting deep from the Ship does the same thing on purpose, between Waves instead of within one.
+Starting deep from the Ship does the same thing on purpose — the overlap moves between Waves instead of within one. Same content. Less room. No quiet.
 
 ## Reference
 

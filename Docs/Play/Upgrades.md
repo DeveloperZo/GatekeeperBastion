@@ -4,17 +4,17 @@
 
 ## Game
 
-Permanent. Nothing bought here is lost when a Run ends badly. Once a level is mine it stays mine — on my Boarder if it is gear or a protocol, on the realm if it is the Hatch's.
+Permanent. Nothing bought here is lost when a Run ends badly — gear and protocol stay on my Boarder, the Hatch's improvements stay with the realm. Once a level is bought, it stays bought.
 
-CREW QUARTERS sells the protocol I embark wearing: a standing rule about how my hardware behaves, a field I plant for the crew, one burst that is mine alone, and a passive where the sheet has one. There are no attribute tracks there. Health, sprint, pay per kill and crit chance do not move from that console and I have stopped looking for them.
+CREW QUARTERS sells identity, not numbers. There are no attribute tracks; health, sprint, pay per kill and crit chance do not move from that console, and I have stopped looking for them.
 
-FABRICATION changes the Hatch. Hatch Armor raises what it can absorb, and applies from the next embark, so buying it changes nothing I can see while standing here. The Repair Rig is not a track, it is a one-off, and without it equipped I cannot repair at all at any bank balance. It does not make repair cheaper. It makes repair possible.
+FABRICATION changes the door. Hatch Armor raises what it absorbs, from the next embark — buying it changes nothing I can see standing here, which is either faith or engineering, and on this Ship those are the same purchase. The Repair Rig is not a track: it is a one-off, and without it equipped I cannot repair at all, at any bank balance. It does not make repair cheaper. It makes repair exist.
 
-Weapon Tiers and the equipment slot wait for the first convert through the Hatch. Claiming a protocol and buying Hatch Armor do not.
+Weapon Tiers and the equipment slot wait for the first convert through the Hatch. A protocol claim and Hatch Armor never wait.
 
-Hatch Armor is the buy when I am losing Runs with my health bar still full. That is a clean signal. The Run ended at the Hatch and no amount of personal upgrade fixes it.
+Hatch Armor is the buy when I lose Runs with my health bar still full. That signal is clean: the Run ended at the door, and no upgrade to me fixes a door.
 
-The Repair Rig treats the symptom. If I am repairing a lot, the real answer is killing Thieves further out.
+The Rig treats a symptom. If I am repairing often, the actual fault is Thieves reaching the door, and the fix for that is sold at the ARMORY.
 
 ## Reference
 

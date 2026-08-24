@@ -4,11 +4,11 @@
 
 A realm is the world. I am not.
 
-The chooser comes first: REALMS, from the main menu. Realms on one list, Boarders on another. NEW REALM starts a world. NEW BOARDER starts a self. ENTER commits the pair, onto that world's Ship. The same Boarder can walk different worlds, one after another, and nothing gets confused by it.
+The chooser comes first: REALMS, from the main menu. Worlds on one list, Boarders on the other. NEW REALM starts a world. NEW BOARDER starts a self. ENTER commits the pair onto that world's Ship. One Boarder can walk many worlds, in order, and nothing gets confused.
 
-What stays when I leave is the world's: the banked pot, Hatch Armor, the doors already opened, the deepest Wave already cleared. What travels is mine: weapons, wheel, protocol, equipment. I arrive in a fresh realm well-armed and broke.
+What stays when I leave is the world's: the banked pot, Hatch Armor, the doors already open, the deepest Wave already cleared. What travels is mine: weapons, wheel, protocol, equipment. I arrive in a fresh realm well-armed and broke.
 
-The money is the world's and the gear is mine — wherever I bought it. Bank in a friend's realm and it lands in their pot. Buy in a friend's realm and it comes out of that same pot, onto my Boarder, and leaves with me. Both directions are one rule read twice.
+The money is the world's and the gear is mine — wherever I bought it. Bank in a friend's realm and it lands in their pot. Buy in a friend's realm and it leaves in my hands, billed to their world. Both directions are one rule read twice.
 
 A realm opened to friends is played together in that world. Everything the crew converts, whoever converted it, lands in the one pot, and repairs and respawns are paid back out of it.
 

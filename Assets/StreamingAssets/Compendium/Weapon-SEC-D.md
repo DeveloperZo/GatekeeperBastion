@@ -6,15 +6,15 @@
 
 The contact Secondary. Free at the ARMORY. The other free Secondary is the MK-1, which trades contact for reach.
 
-It dumps a regenerating pool into whatever is already touching me. Inside a few metres it hits hard. At the distance the MK-1 works comfortably it is a dead trigger.
+It dumps a regenerating pool into whatever has already found me. Inside a few metres it hits hard. At the distance the MK-1 works comfortably, it is a dead trigger. It answers things that arrived, and nothing else.
 
-Swap to it when something is on me, not when something is still walking down the corridor. Empty the pool into the body in front of me and let it refill during the quiet. The refill is slow relative to how fast it empties.
+Swap to it when something is on me, not when something is still coming down the corridor. Empty the pool into the body in front of me, let the quiet refill it. The refill is slow against how fast it empties, and it does not care that I am in a hurry.
 
-Paired with a reach Primary it is the answer to a Hunter in my face. Paired with the BR-12 it commits the whole loadout to knife range, which is a decision about the entire Run rather than about this gun.
+Paired with a reach Primary it is the answer to a Hunter in my face. Paired with the BR-12 it commits the whole loadout to knife range — a decision about the entire Run, not about this gun.
 
-Wrong tool for a Thief.
+Wrong tool for a Thief. Everything is, at this range, for as long as that takes.
 
-It carries no ability, and that spoke on its wheel cannot be bought. I do not know why it is drawn there.
+It carries no ability, and the spoke where one would live cannot be bought. The wheel keeps drawing the empty seat. I have stopped asking who it is for.
 
 ## Reference
 

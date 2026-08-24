@@ -4,17 +4,17 @@
 
 ## Game
 
-A Primary for things that will not come to me. One heavy accurate shot per pull, no spread, and no falloff at all. It does the same work at the far end of its reach as at contact, and that reach is the longest here.
+A Primary for things that will not come to me. One heavy, accurate shot per pull, no spread, and no falloff at all — the same work at the far end of its reach as at contact, and the reach is the longest here.
 
-It pierces. A shot continues through a body and into the ones behind it, up to a limit. Walls still stop it. Bodies already dead do not soak it. This only pays when bodies are lined up behind one another, so shoot down a corridor rather than across it. A group abreast gives me one hit. The same group in file gives me several from one pull.
+It pierces. A shot continues through a body into the ones behind it, up to a limit. Walls still stop it; the dead do not soak it. The trick only pays when bodies queue, so I shoot down corridors, never across them. A group abreast is one hit. The same group in file is several, from one pull.
 
-Cadence is slow and a missed shot is real time lost. It rewards a steady hand and punishes a spray.
+The cadence is slow, and a miss is real time gone. It rewards a steady hand and punishes a spray. If I am holding the trigger, I am holding the wrong gun.
 
-Start on Thieves from across the room. Their walk is the whole budget I have, and this is the only weapon that can spend it from a distance.
+Thieves are what it is for. Their walk is the entire budget I get, and this is the only weapon that spends it from across the room.
 
-The weak spot is a Hunter already inside my range. One is fine. Several arriving while I am between shots is how a Run ends. That is the price of taking this over the BR-12, and it is a real price.
+The weak spot is a Hunter already inside my range. One is fine. Several, arriving between shots, is how Runs end. That is the price of taking this over the BR-12, and the price is real.
 
-A Damage focus compounds here better than anywhere else. Dropping a Thief in one fewer shot is worth more than the step looks.
+A Damage focus compounds here better than anywhere else. A Thief dropped one shot sooner is worth more than the step looks on the panel.
 
 ## Reference
 

@@ -6,13 +6,13 @@
 
 This sheet is about who is looking at me, which turns out to be the only question I ever really had.
 
-Its doctrine changes what a decoy is. Placed while wearing this, a decoy comes up already holding the attention I was carrying, instead of pulling neutrally from whoever happens to be near. I hand the room's interest to a machine and walk out of it.
+Its doctrine changes what a decoy is. Placed while I wear this, a decoy comes up already holding the attention I was carrying, instead of pulling neutrally from whoever is near. I hand the room's interest to a machine and walk out of the room.
 
-The crew burst is the loud one. Every Gatekeeper renders through walls for everyone for the window, which is the most useful thing anyone can give a crew, and while it runs every Default and Hunter in the place is coming for me. The crew gets the map. I get the room. That is the trade written plainly, and it is not a drawback, it is the price on the tin.
+The crew burst is the loud one. For the window, every Gatekeeper renders through walls, for everyone — the most useful thing anyone can hand a crew — and for the same window, every Default and Hunter in the place is coming for me. The crew gets the map. I get the room. That is not a drawback. It is the price on the tin, and I choose where to set the tin down.
 
-The personal burst takes me off every targeting list outright. Anything already mid-swing finishes the swing. Firing puts me back on instantly, which means it is a repositioning tool and never a damage window.
+The personal burst takes me off every targeting list outright. Anything mid-swing finishes the swing. Firing puts me back on instantly, so it is a way to leave, never a way to win. The room forgets me exactly as long as I give it nothing to remember.
 
-The passive is standing: they notice me closer in than they otherwise would. Not silence, not stillness, just less range on being seen. Standing still was never the requirement, which took me three Runs to stop believing.
+The passive is standing: they notice me closer in than they otherwise would. Not silence, not stillness — just less reach on being seen. Standing still was never the requirement. It took me three Runs to stop believing it was.
 
 ## Reference
 

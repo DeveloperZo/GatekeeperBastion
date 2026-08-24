@@ -4,15 +4,15 @@
 
 ## Game
 
-A protocol is the identity I embark wearing. It is claimed at CREW QUARTERS and it is the only thing on the Ship that changes what I am rather than what I carry.
+A protocol is the identity I embark wearing, and it is the only thing on the Ship that changes what I am instead of what I carry.
 
-Every sheet answers the same four rows. A doctrine, which is always on and changes what my hardware does in my hands without changing what the hardware is. A crew burst, whose output belongs to whoever is nearby and whose cost belongs to me. A personal burst, which is mine alone. And a passive, where the sheet has one.
+Every sheet answers the same four rows, in the same order. A doctrine, always on, changing what my hardware does in my hands without changing what the hardware is. A crew burst, whose output belongs to whoever is near and whose cost belongs to me. A personal burst, mine alone. And a passive, where the sheet has one.
 
-The plainest sheet costs nothing, same as the free Secondary. Two others are claimable beside it, and the roster is not finished — two more sheets are named and not yet sold.
+The plainest sheet costs nothing, same as the free Secondary, and for the same reason: the claiming is the lesson. Two more are claimable beside it, and the roster is not finished — two further sheets are named and not yet sold.
 
-One protocol at a time, and the choice is fixed the moment I embark. The bursts refuse if I embarked wearing nothing, and the NAV MAP will let me do exactly that.
+One protocol at a time, fixed the moment I embark. The bursts refuse if I embarked wearing nothing, and the NAV MAP will let me do exactly that.
 
-The three sheets are not tiers. They are three answers to what I want the room to be looking at.
+The sheets are not tiers. They are different answers to one question: what do I want this room looking at.
 
 ## Reference
 

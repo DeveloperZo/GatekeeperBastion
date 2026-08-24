@@ -6,15 +6,15 @@
 
 The room counts us.
 
-A realm is opened from the chooser: OPEN TO FRIENDS, and a join code to read out. Friends land on the Ship — this world's Ship — and shop their own loadout out of the world's one pot. The party lead owns EMBARK. Everyone else readies.
+A realm is opened from the chooser: OPEN TO FRIENDS, and a join code to read out. Friends land on this world's Ship and shop their own loadout out of the world's one pot. The party lead owns EMBARK. Everyone else readies.
 
-Arrive after the party has gone and nothing is wasted. The Ship holds me, the prompt names the next break, and FOLLOW puts me aboard at that break, free. My own hatch door opens as I arrive.
+Arrive after the party has gone and nothing is wasted. The Ship holds me, the prompt names the next break, and FOLLOW puts me aboard at that break, free, my own hatch door opening as I arrive.
 
-The garrison answers the number of us standing, and it answers at the break, never mid-Wave. A Wave already on the floor stays the Wave it was, whoever arrives or leaves. The next one is sized for whoever is actually in the room.
+The garrison answers the number of us standing, and it answers at the break, never mid-Wave. A Wave already on the floor stays the Wave it was, whoever arrives or leaves. It counts once, at the boundary, and lives with the answer.
 
-More eyes is the real change. Two of us can hold two Cloakers. A crew burst has a crew to land on. And every Default that flips is flipping onto somebody — the room's attention becomes a thing we pass between us.
+More eyes is the real change. Two of us can hold two Cloakers. A crew burst has a crew to land on. Every Default that flips is flipping onto somebody — attention becomes a thing we pass between us, and passing it well is most of what a good crew is.
 
-Going down puts a seat back on the Ship, waiting, with a priced way back in. The price comes out of the world's pot, so a crew that does not die is a crew that can still afford to.
+Going down puts a seat back on the Ship, waiting, priced. The price comes out of the world's pot, so the cheapest crew is the one that does not die.
 
 ## Reference
 

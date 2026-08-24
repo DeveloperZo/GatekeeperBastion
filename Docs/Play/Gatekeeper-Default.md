@@ -4,17 +4,17 @@
 
 ## Game
 
-The plain frame. Everything else here I describe by how it differs from this.
+The plain frame. Everything else on this hull, I measure against it.
 
-On a field-terminal Wave it walks at me. On a Hatch-bank it walks to the Hatch and will pass straight by me to get there. It closes and swings. Contact only.
+On a field-terminal Wave it walks at me. On a Hatch-bank it walks to the Hatch and will pass me by to get there. It closes and it swings. That is the whole manual.
 
-Three things put one on me. Shooting it. Being seen by it at distance across a clear line. And standing in its space, which is the only one of the three that wears off. The first two are permanent for the rest of its life, and when it flips it also picks up pace. Faster than my walk. Slower than my sprint. Backing away while firing is a slow loss, not a stalemate.
+Three things put one on me, and I keep the list in order. Shooting it: permanent. Being seen down a clear line at distance: permanent. Standing in its space: wears off when I leave. The permanent two also put it in a hurry — faster than my walk, slower than my sprint — which makes backing away while firing a slow loss dressed as a plan.
 
-Hurt one and it shouts, and everything near it drops what it was doing and joins. The ones it pulls do not shout again. One shot buys one group's attention, which is either a tool or an accident depending on whether I meant it.
+Hurt one and it shouts, and everything near it drops what it was doing and joins. The ones it pulls do not shout again. One shot buys one group. Whether that was a purchase or an accident depends on whether I meant it.
 
-Once one reaches the Hatch it stops negotiating. It will keep hitting while I shoot it, while I stand beside it, while its friends chase me. It is a decision only while it is still walking.
+At the Hatch it stops negotiating. It hits the door while I shoot it, while I stand beside it, while its friends chase me. A Default is a decision while it walks and a timer once it arrives.
 
-Individually the weakest thing here. It wins by count, and the surplus from a raised intensity is entirely this.
+Weakest thing here, one at a time. It has never needed to be strong. It brings count, and every body a raised intensity adds is this one.
 
 ## Reference
 

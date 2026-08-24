@@ -4,19 +4,21 @@
 
 ## Game
 
-Two pools end a Run and neither refills for free. Mine refills only by going down and letting the realm buy me back — a price that climbs, plus everything Unbanked, which is the most expensive refill on offer. The Hatch's refills only when I stand at it with the Repair Rig and spend the bank. So every habit below is the same habit: spend less of those two per body killed.
+Everything in this room runs on attention, and the room never forgets a face.
 
-Hurt a Default on the approach and it is mine for the rest of its life. It does not cool off. It does not go back to the Hatch. It does not lose me. But there is a deadline: once one is close enough to the Hatch it stops listening, permanently, and after that shooting it changes nothing except its health. Hurt them on the way in and they are a choice. Hurt them once they arrive and they are a job.
+Two pools end a Run and neither refills for free. Mine refills only by going down and letting the realm buy me back — the price climbs, and everything Unbanked burns with it. The Hatch's refills only while I stand at it with the Rig, spending the bank. Every habit below is one habit: pay less of those two per body killed.
 
-I can be noticed without firing. A clear line of sight at distance is enough, and being noticed is as permanent as being shot. A long open corridor hands out attention for free. I have walked into rooms and been owned by them before I did anything at all.
+Hurt a Default on its way in and it is mine for the rest of its life. It does not cool off, does not go home, does not lose me. But there is a deadline: close enough to the Hatch, it stops listening for good, and after that my fire changes nothing but its health. On the approach they are a choice. At the door they are a job.
 
-One shot pulls one group and no further. The ones it pulls do not pull their own neighbours. This is the most useful bound I know and there is no way to see it, only to infer it.
+I can be noticed without firing. A clear sightline at distance is enough, and being seen is as permanent as being shot. Long open corridors hand out my name for free. I have been owned by rooms before I did anything in them.
 
-Walking away from something that wants me does not work. It closes the whole time. Sprinting works until the tank is empty, and the tank locks out for longer than the bar suggests.
+One shot pulls one group and no further — the ones it pulls do not pull their own neighbours. It is the most useful bound I know, and there is no way to see it. Only to trust it.
 
-Triage by what each refuses. Hunters cost me health only. Thieves cost the Hatch on a Hatch-bank, cost me attention on a field-terminal Wave, and never cost me blood. Defaults are the only kind I can steer, and only on a Hatch-bank.
+Walking away from something that wants me does not work; it closes the whole way. Sprinting works until the tank is empty, and the tank stays locked longer than the bar admits.
 
-Repair in the quiet. Repairing in a live Wave means standing still, unable to fire, at the exact spot everything is walking toward.
+Triage by refusals. Hunters only ever cost blood. Thieves never do. Defaults are the only kind I can steer, and only on a Hatch-bank.
+
+And repair in the quiet. Repairing in a live Wave is standing still, unarmed, at the exact point everything is walking toward.
 
 ## Reference
 

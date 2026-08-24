@@ -6,9 +6,9 @@
 
 Coming Soon.
 
-There is a fourth answer to what the room should be looking at, and it is the ground itself. A sheet about holding: where the garrison slows, which swing never lands, who stands at the door on purpose.
+There is a fourth answer to what the room should look at, and it is the ground itself. A sheet about holding: where the garrison slows, which swing never lands, who stands in the doorway and means it.
 
-Not on the panel yet. When it is claimable, this page will be worth reading.
+Not on the panel yet. When it is claimable, this page will earn its ink.
 
 ## Reference
 

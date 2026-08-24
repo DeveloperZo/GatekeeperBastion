@@ -2,17 +2,19 @@
 
 ## Game
 
-The Hatch is the umbilical junction back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Run on the spot — the one loss no pot buys back. A dead Boarder can be priced back onto the floor; a dead door cannot.
+One door with a pulse, and everything on this hull is arranged around it.
 
-It starts every Run whole. Whatever I did to it last time did not carry.
+The Hatch is the umbilical back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Run on the spot — the one loss no pot buys back. A dead Boarder can be priced back onto the floor. A dead door cannot.
 
-On a field-terminal Wave nothing can touch it. A Hatch-bank is the window where it can be hurt and the window where Unbanked converts. Defaults and Thieves go for it. Hunters never do, at any range, even standing on it.
+It starts every Run whole. Whatever I let happen to it last time did not carry.
 
-Repair means standing at it and holding. It needs the Repair Rig equipped, and without the Rig the hold does nothing at any bank balance. It spends banked Salvage per point healed and it will take the bank to exactly zero if I hold that long.
+On a field-terminal Wave nothing can touch it. A Hatch-bank is the window where it can be hurt, and the same window where Unbanked converts — the payout and the damage come through the same slot. Defaults and Thieves bill the door. Hunters never do, at any range, standing on it.
 
-Survive a Hatch-bank and it offers something different: hold and dock home, with what I banked. That offer lives until I start the next Wave and then it is gone. Fail the bank and it never appears at all.
+Repair is me at the door, holding — with the Rig equipped, or the hold does nothing at any bank balance. It bills banked Salvage per point healed and will take the bank to exactly zero if I let it.
 
-The arithmetic that matters: letting a Thief reach it costs more than killing it. Not in danger. In money. That is the whole reason to walk out and meet one.
+Survive a Hatch-bank and the door offers something better: hold, and dock home with what I banked. The offer lives until the next Wave starts, and never appears after a failed bank.
+
+The arithmetic worth keeping: a Thief that reaches this door costs more than killing it. Not in danger. In money. That is the whole reason to walk out and meet one.
 
 ## Reference
 

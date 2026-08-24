@@ -4,17 +4,17 @@
 
 Going down is a bill, and the realm pays it or the Run ends.
 
-What I was carrying is gone either way. Unbanked dies where I fell, and no price brings it back. The pot pays to stand me up; nothing pays to hand back the carry.
+The carry is gone either way. Unbanked dies where I fell, at any price. The pot pays to stand me up; nothing pays to hand back what I was holding.
 
-A respawn is bought out of the realm's banked Salvage, and the price climbs with every one bought this Run — whoever it was bought for. The counter is the Run's, not mine. We drain one pot and we run up one bill.
+A respawn is billed to the realm's banked Salvage, and the price climbs with every one bought this Run — whoever it was bought for. The counter is the Run's, not mine. One pot, one tab, everybody drinking.
 
-During an Assault the crew also draws on a shared stock of charges, seeded from how many of us embarked. A mid-Wave stand-up burns a charge and pays the price. When the charges are gone, the fallen wait for the break. At a break there is no ration — only the price, still climbing.
+Mid-Assault there is a ration on top: a shared stock of charges, seeded by how many of us embarked. A mid-Wave stand-up burns a charge and pays the price. Charges out, the fallen wait for the break. At the break there is no ration — only the price, still climbing.
 
-Down, I wait behind the vignette and the offer is written on it, priced. A guest waits on the Ship, where the same offer sits on the wait surface. If the pot cannot pay and nobody is left standing, there is no offer, and the Run is lost.
+Down, I wait behind the vignette with the offer written on it, priced. A guest waits on the Ship with the same offer. If the pot cannot pay and nobody is left standing, there is no offer. That is the whole difference between a setback and a loss.
 
 A fresh realm has banked nothing, so its first death simply ends the Run. Credit is not extended here.
 
-The Hatch is the exception to all of it. When the door falls there is nothing to buy. The Run is over, whatever is in the pot.
+The Hatch is the exception to everything above. When the door falls there is nothing to buy. The Run is over, whatever is in the pot.
 
 ## Reference
 

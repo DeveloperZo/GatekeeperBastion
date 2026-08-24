@@ -2,17 +2,15 @@
 
 ## Game
 
-The lean frame. I can pick it out of a group before it closes, which is most of what I have.
+The lean one. I get its silhouette, and that is all I get — the Hatch alarm never fires for it, because it has never once touched the Hatch.
 
-It wants me. It picked me the moment it arrived and it walks straight at me, at full pace, for life. It has no second gear because it never needed one. It closes and swings.
+It chose me the moment it arrived. Not provoked, not lured, not confused about anything: it walks straight at me, at full pace, for life. It has no second gear because it never needed one.
 
-It will not touch the Hatch. Not while standing on it. Not ever. The Hatch does not appear to exist in whatever it is using for a world. So holding the Hatch is a good answer to two of the three kinds here and no answer at all to this one. It just brings it to the worst place in the room to fight.
+The Hatch does not exist in whatever it uses for a world. It will not swing at the door while standing on it. So holding the door answers two of the four kinds and answers this one not at all — it just delivers it to the worst place in the room to be found.
 
-It is the fastest thing coming and the easiest to kill. There is no positioning answer. The answer is to shoot it, and to do that before anything else.
+It is the fastest thing coming and the easiest to kill, and both of those are the same instruction. There is no positioning answer. The answer is the gun, and it gets the gun first.
 
-Shooting one still shouts. It arrived hunting but it had not been provoked, and provoking it brings its escort along. Opening on one walking in with Defaults around it converts all of them. Thieves in the same group ignore it and keep walking.
-
-Nothing warns me one is here. The Hatch alarm never fires for it, because it never hits the Hatch. Only the silhouette.
+Open on one walking in with escort and the escort comes too — it arrived hunting but was never provoked, and provoking it shouts. The Thieves beside it do not look up. They never look up.
 
 ## Reference
 

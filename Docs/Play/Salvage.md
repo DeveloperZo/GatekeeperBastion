@@ -4,17 +4,17 @@
 
 ## Game
 
-Salvage is the only currency. There is no second resource and nothing else to collect.
+Salvage is the only currency. There is no second resource, and nothing here to collect but the pay.
 
-Kills fill Unbanked. Only a Hatch-bank converts it to the ship. Prep pays nothing. Walking the room pays nothing. Surviving pays nothing. Stripping the place pays no bonus.
+The sequence never changes: kills fill Unbanked, a Hatch-bank converts it, converted lands with the realm. Prep pays nothing. Walking pays nothing. Surviving pays nothing. Stripping the place pays no bonus. Killing, during a live Wave. That is the entire payroll.
 
-Unbanked is wiped if I go down or the Hatch falls. What already converted stays, whatever happens after. A Run that fell apart early paid me exactly what made it through.
+Unbanked is wiped if I go down or the Hatch falls. Converted stays, whatever happens after. A Run that fell apart early paid exactly what made it through, and not one unit more.
 
-Two things move the money backwards: repairing, and standing dead crew back up. Both are charged out of the bank I shop with — repair as the healing lands, respawns at a price that climbs per death this Run. A Run where the Hatch takes a beating costs me twice, once there and again at the console I walk back to and cannot afford. A Run where the crew keeps dying does the same arithmetic faster.
+Two things move the money backwards: repairing, and standing dead crew back up. Both bill the bank I shop with — repair as the healing lands, respawns at a price that climbs per death this Run. A Run where the door takes a beating costs twice: once at the door, once at the console I walk back to and cannot afford. A dying crew runs the same arithmetic faster.
 
-A Run holds a limited number of Hatch-banks. When they are gone the Hatch simply refuses.
+A Run holds a limited count of Hatch-banks. When they are spent, the Hatch refuses, politely and permanently.
 
-Everything competes for the same pile. Weapons, Tiers, Hatch Armor, the Repair Rig, the Decoy, and the repairs I did not plan for. Treating the bank as a score is the wrong instinct. It is not banked so I can look at it.
+Everything competes for one pile — weapons, Tiers, Hatch Armor, the Rig, the Decoy, the repairs I did not plan for, the deaths I did not plan for. The bank is not a score. It is not banked so I can look at it.
 
 ## Reference
 

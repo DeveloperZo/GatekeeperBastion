@@ -4,21 +4,21 @@
 
 ## Game
 
-First time out, in order.
+First time out, in order. The order matters more than the aim.
 
-Buy the free Secondary. It costs nothing and it is still bought, at the ARMORY. Then walk the other three consoles so you know where things live. Then embark.
+Buy the free Secondary. It costs nothing and it is still bought, at the ARMORY, because the first lesson this place teaches is where things come from. Walk the other three consoles so you know what each one owns. Then embark.
 
-You arrive already tethered, standing near the Hatch, and nothing happens. It stays nothing for as long as you leave it. The first Wave is Defaults only, and on a Wave called from a field terminal they come for you rather than the Hatch. It is the gentlest thing this place will ever send.
+I arrive already tethered, near the Hatch, and nothing happens. Nothing keeps happening for as long as I allow it. The first Wave is Defaults only, and called from a field terminal they come for me, not the door. It is the gentlest thing this place will ever send, and it is still a Wave.
 
-Three things cost me Runs before I understood them.
+Three lessons were billed to my first Runs.
 
-Health does not come back while I stand, and on a fresh realm there is no paying to get back up either — the pot that buys a respawn starts empty. What the first Wave takes off me I still carry on the last one.
+Health does not come back while I stand, and a fresh realm cannot afford to stand me up either — the pot that buys a respawn starts empty. What the first Wave takes off me, the last Wave collects.
 
-The Hatch does not heal itself. It comes back only if I stand at it and hold, and only with the Repair Rig, and it spends banked Salvage per point to do it. On a fresh save I have nothing banked, so it is genuinely unfixable until the first convert.
+The Hatch does not heal itself. It comes back only if I stand at it and hold, only with the Repair Rig, and it bills the bank per point. A fresh realm has banked nothing, so at first the door stays exactly as broken as I let it get.
 
-Weapon Tiers and the equipment slot stay shut until Salvage first converts through the Hatch. Nothing on the panel says so.
+Weapon Tiers and the equipment slot stay shut until Salvage first converts through the Hatch. Nothing on the panel says so. Now something somewhere does.
 
-Ammunition is not a resource here. I rationed it for two Runs before I noticed.
+Ammunition is not a resource here. I rationed it for two Runs before I noticed nothing ever ran out.
 
 ## Reference
 
