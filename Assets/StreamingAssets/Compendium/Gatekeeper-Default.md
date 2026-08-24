@@ -53,4 +53,4 @@ Late in a Run they are the same Gatekeeper with substantially more health. Inten
 
 ## See also
 
-[Gatekeepers](Gatekeepers.md). [Hunter](Gatekeeper-Hunter.md). [Thief](Gatekeeper-Thief.md). [The Hatch](The-Hatch.md).
+[Gatekeepers](Gatekeepers.md). [Hunter](Gatekeeper-Hunter.md). [Thief](Gatekeeper-Thief.md). [Cloaker](Gatekeeper-Cloaker.md). [The Hatch](The-Hatch.md).

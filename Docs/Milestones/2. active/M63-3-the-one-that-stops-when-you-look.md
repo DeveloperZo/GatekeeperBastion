@@ -1,10 +1,11 @@
 # M63-3 — The one that stops when you look
 
 <!--
-Status: planned — parked 2026-08-22 (no Cloaker code yet; active slot freed for M84 play-close)
+Status: active — unparked 2026-08-24 at Zo's direction (Active runs 4/3 with it; flagged)
 Update trigger: when the Cloaker's watch rule, its cone, its body or its Wave counts
 change, or when a fifth kind ships
-Last updated: 2026-08-22
+Last updated: 2026-08-24 — premise check against the tree; five corrections, marked
+"Premise fix 2026-08-24" where they land
 -->
 
 The garrison's fourth kind. A **Cloaker** advances only while no Boarder is looking at
@@ -135,6 +136,23 @@ the Wave counts are deliberately small because of it.
 
 ## Implementation
 
+**Built 2026-08-24, steps 2–13 in one sitting** (step 1 landed 2026-08-20). Everything
+below exists in the tree; the deviations from the written plan are the "Premise fix
+2026-08-24" blocks in place. What the build verified: offline EditMode 670/11 and the
+full Unity bridge run EditMode 796/14 / PlayMode 81/1 — every failure the recorded
+pre-existing set, none of them this slice's; `CloakerWatchTests` (PlayMode, real Bastion,
+real agent) passed on the first bridge run; the scene-build console line reads
+*"gatekeeper models retarget: all four avatars are Humanoid."*; `Tools/docgen --check`
+clean; lint-arch / lint-vendor / lint-language add no new violations. The prefab was
+built through `SceneBuilder.CreateEnemyPrefabs` (reflection one-shot, deleted after),
+and the `cloakerPrefab` / `_cloakerPrefab` wires were authored as YAML into
+`Bastion.unity`, `Bastion_Coop.unity`, `Range.unity` and both `NetSession.prefab`
+copies. The pure half of the watch rule was lifted all the way into
+`Sim/Waves/CloakerWatch.cs` (stronger than the plan's "a static"): the offline harness
+runs its tests, at the cost of a `Vector3` shim in `Tools/verify/Shims.cs` — the
+sanctioned extension. Still owed: Zo's playthrough (criterion 3's felt 0.25 s, the
+two-seat eyes-on of criterion 8) and the kill criterion's two logged Runs.
+
 Ordered. The rename is step 1 and lands alone, exactly as `M63` requires, so no file in
 this slice is ever authored under the old name.
 
@@ -187,17 +205,32 @@ this slice is ever authored under the old name.
    {
        [SerializeField] float watchRange = 26f;      // mirrors EnemyGatekeeper.noticeRange
        [SerializeField] float watchHalfAngle = 30f;
-       const float WatchRefresh = 0.1f;   // gaze poll: the 0.25s criterion needs better than the 0.75s retarget
-       const float WatchRelease = 0.35f;  // hysteresis: stay "observed" this long after leaving the cone
+       const float WatchRefresh = 0.1f;    // gaze poll: the 0.25s criterion needs better than the 0.75s retarget
+       const float ReleaseAngleSlack = 6f; // hysteresis: held at <=30 deg, released only past 36
+       const float ReleaseRangeSlack = 2f; // and only past 28 m, when range is what freed it
        const float RevealOnHitSeconds = 1f;
 
        public override GatekeeperKind Kind => GatekeeperKind.Cloaker;
        protected override bool MayTargetHatch => !_observed && base.MayTargetHatch;
        protected override bool MayTargetPlayer => !_observed && base.MayTargetPlayer;
+       // NOT gated on _observed: being shot while held still latches the grudge, so a
+       // Cloaker you wounded comes for you the moment you look away — which is what
+       // "targets exactly as a Default" requires. Retarget still refuses to chase while
+       // observed, because MayTargetPlayer is false; the latch just survives the freeze.
+       protected override bool CanBeProvoked => !ignoresPlayer;
        protected override void KindTick(float dt) { ... }
        bool AnyoneWatching() { ... }      // iterates PlayerRegistry.All; allocates nothing
    }
    ```
+
+   **Premise fix 2026-08-24 — the hysteresis is angular, not temporal.** The first cut
+   held "observed" for 0.35 s after the gaze left, which contradicts this file's own
+   criterion 3: a deliberate 45° turn-away would resume the walk at ~0.45 s, not 0.25.
+   Edge strobing is angle noise, so the guard is a Schmitt band on the angle (enter at
+   30°, release past 36°) and on range (enter at 26 m, release past 28 m), polled every
+   0.1 s. A deliberate turn crosses the whole band in one poll — both directions land
+   inside 0.25 s — while mouse jitter of a few degrees can never cross 6°. LOS stays
+   binary and unslacked.
 
    `AnyoneWatching` is the whole rule: for each live player, planar delta to the eye
    point, `Vector3.Angle` against that player's `transform.forward` — the FPS root's yaw
@@ -207,7 +240,17 @@ this slice is ever authored under the old name.
    owner-authoritative `NetworkTransform`, so a guest's yaw is on the host. When
    `_observed` flips, `KindTick` calls `Retarget()` in that frame instead of waiting up to
    0.75 s, and pushes the state to the presentation and to `NetEnemy`. It subscribes to
-   `Damageable.Damaged` to hold the solid material for `RevealOnHitSeconds`.
+   `Damageable.Damaged` in `OnEnable`/`OnDisable` (never in `Awake` — a subclass `Awake`
+   would hide the base's and unhook the whole kind) to hold the solid material for
+   `RevealOnHitSeconds`.
+
+   **Premise fix 2026-08-24 — two base changes ride along with the seam, both one-liners.**
+   `Retarget()` becomes `protected` (it is `private`; the flip-frame retarget cannot reach
+   it otherwise), and the decoy branch in `Retarget()` gains a `MayTargetPlayer &&` guard —
+   without it a frozen Cloaker walks to a PHANTOM decoy, because that branch bypasses all
+   three targeting virtuals. The guard is behaviour-preserving for every existing kind:
+   `DecoyState.ShouldPull` already refuses Thieves by kind, and Default and Hunter answer
+   `MayTargetPlayer` true always.
 
    **30° is chosen against the screen, not by taste.** Hip FOV is 60° vertical
    (`Sim/Run/WeaponView.HipFov`), which at 16:9 is ≈91° horizontal — ≈45.7° each side. A
@@ -225,10 +268,29 @@ this slice is ever authored under the old name.
    `OnValueChanged` on clones calling `CloakerPresentation.SetCloaked`. The flag is global
    rather than per-viewer because the freeze is global: one player looking stops it for
    everybody, so there is nothing per-viewer to replicate.
+
+   **Premise fix 2026-08-24 — the network prefab registration this step forgot.**
+   `NetSession` carries one serialized field per enemy prefab and registers each with NGO
+   (`EnsurePrefabsRegistered`); a kind missing there cannot replicate. So this slice also
+   adds `_cloakerPrefab` to `NetSession`, registers it, and wires it — in **both**
+   `NetSession.prefab` copies (`Prefabs/Net`, `Resources/Net`) and in the scene-embedded
+   NetSessions of `Bastion.unity`, `Bastion_Coop.unity` and `Range.unity`, beside the
+   `WaveSpawner.cloakerPrefab` wire in the two Bastion scenes.
+
+   **And the defect the check found:** all three scenes were re-saved after the Thief
+   rename with `thiefPrefab`/`_thiefPrefab` written as **None** — the old `ramPrefab`
+   key is gone and nothing bound the new one, so every Thief has been spawning on the
+   `enemyPrefab` fallback (Default body, Default colour, warning suppressed after the
+   first), and `ThiefGatekeeper.prefab` is not network-registered from those scenes. The
+   two `NetSession.prefab` assets still carry the wired old key, which is how it stayed
+   invisible. Repaired here by YAML edit, its own commit, before any Cloaker wiring.
 9. **Change** `Game/Enemies/WaveSpawner.cs` / `.Groups.cs` — a `cloakerPrefab` field
    beside the other two, `PrefabFor` / `KindName` cases, and
    `AddKind(emit, GatekeeperKind.Cloaker, spec.cloakerCount)` in `BuildRoster`. The roster
-   shuffle and the group tally line pick it up with no further change.
+   shuffle picks it up with no further change. **Premise fix 2026-08-24:** the group tally
+   line does NOT — `EmitGroup` allocates `var tally = new int[3]` and indexes it by kind,
+   so `Cloaker = 3` is an `IndexOutOfRangeException` on the first mixed group. The array
+   goes to 4 in the same edit.
 10. **Change** `Editor/Scenes/SceneBuilder.cs` — a `Cloaker` palette entry, a cold teal
     `(0.20, 0.85, 0.78)`: distinct from Default red, Hunter amber and Thief violet, and
     from the hull's own violet wall and teal rib at a glance.
@@ -249,17 +311,31 @@ this slice is ever authored under the old name.
     Shader Graph is not opened, edited or retargeted — that is what `lint-vendor` guards,
     and `M88` records what it cost the last time.
 12. **Change** `Editor/Tools/CompendiumCopy.cs` — read `in_build` from the opening HTML
-    comment before `StripForPlayer`; skip a page marked false; missing means true.
-    **Change** `Game/Ui/CompendiumCatalog.cs` — the same flag filters the Garrison volume
-    at read time, and `"Gatekeeper-Cloaker"` joins its stems.
+    comment before `StripForPlayer`; skip a page marked false; missing means true. The
+    parser lives once, in `CompendiumCatalog.IsInBuild`, so the copier, the reader and the
+    tests cannot drift.
+    **Change** `Game/Ui/CompendiumCatalog.cs` — `IsInBuild`, and `"Gatekeeper-Cloaker"`
+    joins the Garrison stems. **Change** `Game/Ui/CompendiumView.cs` — the nav loop skips
+    a stem whose page is not in-build; that is the "filters at read time" of criterion 10
+    (`Volumes` itself stays the mirror of `Docs/Play/README.md` and lists every page).
+    **Premise fix 2026-08-24:** `CompendiumFormTests.StreamingAssets_StemSetMatchesPlay`
+    asserts Play and StreamingAssets hold the SAME stem set, so the first page ever marked
+    `in_build: false` fails it. The test becomes flag-aware in the same edit: a false page
+    must be absent from StreamingAssets, an in-build page present.
     **Create** `Docs/Play/Gatekeeper-Cloaker.md` — the shape of `Gatekeeper-Hunter.md`:
     Game / Reference / See also / Gaps, `in_build: true`, no numbers (they live in the
     Field Manual). **Change** `Docs/Play/Gatekeepers.md` and the three existing kind pages'
-    See-also lines.
+    See-also lines, **and `Docs/Play/README.md`'s Garrison paragraph** — the catalog
+    mirrors the README (`CompendiumCatalog.Volumes` doc comment), so a page added to one
+    and not the other is unreachable or a test failure.
 13. **Change** docs: `../../Brainstorms/gatekeepers-and-waves.md` (Cloaker row to
     `in-build`; the Thief row's "rename in `M63`" note resolved),
     `../../Animation-Inventory.md` (`SK_Tactical` is spent), `../../Design/4-Data.md` via
     `Tools/docgen`, `../../Roadmap.md` row and **Current** line, `../../Changelog.md`.
+    **Premise fix 2026-08-24:** docgen's `AppendGkRow` derives the `refuses` column from
+    the two pushed flags, and the Cloaker sets neither — its row would print `—`, exactly
+    the "Default in a costume" this file exists to avoid. The emitter states the Cloaker's
+    refusal explicitly: being seen, a state in `CloakerGatekeeper`, not a pushed flag.
 
 **Rejected: masking the HUD live count while a Cloaker is cloaked.** It is the truest
 reading of "takes information", and it costs more than it returns: `AliveCount` *is* the

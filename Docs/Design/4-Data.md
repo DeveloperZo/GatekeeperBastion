@@ -73,10 +73,10 @@ clip 8 → `96 / 6.73 = 14.3 dps`. A hard Run, not a dead end.
   exploit. Change the five stamina numbers together or not at all.
 - Interact (hold-E) range 3.2 m.
 
-## Gatekeepers — three kinds, each defined by what it REFUSES to do
+## Gatekeepers — four kinds, each defined by what it REFUSES to do
 
 `Sim/Waves/WaveDirector.StatsFor(kind)`, pushed onto each spawn by `Game/Enemies/WaveSpawner.cs`. All
-three share one **0.7s swing clock**: kinds differ by what they hit, never by cadence.
+four share one **0.7s swing clock**: kinds differ by what they hit, never by cadence.
 HP 90 → 30 with 3x the bodies, so Wave 1 is still **540 HP of gatekeeper** (18 x 30 = the
 old 6 x 90) — a redistribution, not an inflation.
 
@@ -86,6 +86,7 @@ old 6 x 90) — a redistribution, not an inflation.
 | Default | 30 | 6 | 4 | 3.2 | 5.6 | — |
 | Hunter | 20 | 6 | **0** | 6.5 | 6.5 | the Hatch (`ignoresHatch`) |
 | Thief | 120 | **0** | 20 | 2.2 | 2.2 | the player (`ignoresPlayer`; never provoked) |
+| Cloaker | 45 | 6 | 4 | 3.2 | 5.6 | being seen (watch cone; a state in `CloakerGatekeeper`, not a flag) |
 <!-- GKB:END gatekeepers -->
 
 GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game override
@@ -102,6 +103,13 @@ GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game ov
   `20/0.7 = 28.6` dps → `28.6 x 2.03 = 58` HP of the 300 HP door, per Thief that
   got home *while being shot*. Intercepting it turns "shoot the closest" into "shoot the
   right thing"; it cannot hurt you, so it costs only the time the Hunters are using.
+- **Cloaker** 45 HP = **2 shots** at MK-1 T0, where a Default is one — the ONLY number it
+  owns; every other figure is Default's, read from the same constants, so the watch rule
+  stays the whole difference. The rule is Game-layer state (`CloakerGatekeeper`): inside a
+  **30° half-angle** cone of any live Boarder's planar forward, within **26 m**, with line
+  of sight, it targets nothing and holds; release past 36° / 28 m (Schmitt band, 0.1 s
+  poll), reveal-on-hit 1.0 s. Cloaked it renders on `Cloaker_Cloaked.mat` (Fade, alpha
+  0.12, teal seams lit); observed or freshly hit, `Cloaker.mat`.
 - Melee reach 2.4 m (player) / 3.5 m (Hatch), +1.2 m hysteresis. Aggro: shot at,
   or seen within 26 m; a provoked gatekeeper alerts others within 12 m; inside 8 m
   of the Hatch a Default commits to the Hatch regardless (a Hunter never does).
@@ -116,7 +124,8 @@ hand-authored table, never a formula — `TetherSiphon.RewardMultiplierFor` =
 dial                  = TetherSiphon.RewardMultiplierFor(siphonLevel)
 enemyCount            = min(120, round((18 + 12*waveIndex) * dial))
 hunterCount           = {0,4,6,10,12}[waveIndex]  thiefCount = {0,0,2,4,7}[waveIndex]  (dial-proof)
-defaultCount          = enemyCount - hunterCount - thiefCount   (takes the whole surplus)
+cloakerCount          = {0,0,1,2,3}[waveIndex]                                         (dial-proof)
+defaultCount          = enemyCount - hunterCount - thiefCount - cloakerCount  (takes the whole surplus)
 enemyHealthMultiplier = 1 + 0.40*waveIndex                       (x each kind's HP)
 groupSize             = min(3 + waveIndex, 7, enemyCount)        (3 / 4 / 5 / 6 / 7)
 spawnInterval         = max(0.4, 4.2 - 0.20*waveIndex)   SECONDS BETWEEN GROUPS
@@ -126,9 +135,10 @@ gatekeepers, wave 1..5   L0 18/30/42/54/66
 **`spawnInterval` is a GROUP gap now — the name did not change with it.** A Wave
 lands in `(ceil(count/groupSize) - 1) * gap` = **21.0 / 28.0 / 30.4 / 28.8 / 30.6s**; read as a
 per-individual gap the same Waves take 44 / 72 / 96s and no fight ever starts. First
-field to check if a Wave feels empty. **The dial's surplus is all Default** (Hunter and
-Thief counts are fixed per Wave), so L5 Wave 3 is 55 D + 6 H + 2 T: a bigger fight, not a
-different one, and the dial cannot multiply the scariest Gatekeeper.
+field to check if a Wave feels empty. **The dial's surplus is all Default** (Hunter, Thief
+and Cloaker counts are fixed per Wave), so L5 Wave 3 is 54 D + 6 H + 2 T + 1 C: a bigger
+fight, not a different one, and the dial cannot multiply the scariest Gatekeeper — nor
+multiply Cloakers into frozen free salvage.
 
 **`TerminalChainGap = 8s`** (`WaveDirector`). Unused by the field loop: `T` after `E`
 starts one Wave, Prep after the clear is untimed, Hatch-bank is legal there. The constant stays
@@ -143,13 +153,13 @@ on paper; the wager is the residual, since gatekeepers overlap and leak. **Sipho
 baseline** every table below rests on:
 
 <!-- GKB:GEN waves — WaveDirector.NextWave(i, 0) -->
-| Wave | Bodies | Default | Hunter | Thief | HP × | groups of | Every |
-|---|---|---|---|---|---|---|---|
-| 1 | 18 | 18 | 0 | 0 | 1 | 3 | 4.2 s |
-| 2 | 30 | 26 | 4 | 0 | 1.4 | 4 | 4 s |
-| 3 | 42 | 34 | 6 | 2 | 1.8 | 5 | 3.8 s |
-| 4 | 54 | 40 | 10 | 4 | 2.2 | 6 | 3.6 s |
-| 5 | 66 | 47 | 12 | 7 | 2.6 | 7 | 3.4 s |
+| Wave | Bodies | Default | Hunter | Thief | Cloaker | HP × | groups of | Every |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 18 | 18 | 0 | 0 | 0 | 1 | 3 | 4.2 s |
+| 2 | 30 | 26 | 4 | 0 | 0 | 1.4 | 4 | 4 s |
+| 3 | 42 | 33 | 6 | 2 | 1 | 1.8 | 5 | 3.8 s |
+| 4 | 54 | 38 | 10 | 4 | 2 | 2.2 | 6 | 3.6 s |
+| 5 | 66 | 44 | 12 | 7 | 3 | 2.6 | 7 | 3.4 s |
 <!-- GKB:END waves -->
 
 <!-- GKB:GEN dial — TetherSiphon.RewardMultiplierFor, NextWave body counts -->

@@ -4,9 +4,9 @@
 
 They hold the Bastion. I am the one who cut in. They are not defending a wreck, they are already home, and they arrive from garrison to put me off it.
 
-Three frames. Three machines, not three paints, and I can sort a group by shape before it is in range. They all swing on the same clock. None of them is faster at hitting than another. None has a weak point and none resists anything. What separates them is entirely what each one refuses to do.
+Four frames. Four machines, not four paints, and I can sort a group by shape before it is in range. They all swing on the same clock. None of them is faster at hitting than another. None has a weak point and none resists anything. What separates them is entirely what each one refuses to do.
 
-Ask one question of anything in the room: can this be moved off what it is doing. A Default can, and moving it costs. A Hunter is already on me and cannot be moved anywhere. A Thief hunts me on a field-terminal Wave, hunts the Hatch on a Hatch-bank, and will not be shouted at in either direction.
+Ask one question of anything in the room: can this be moved off what it is doing. A Default can, and moving it costs. A Hunter is already on me and cannot be moved anywhere. A Thief hunts me on a field-terminal Wave, hunts the Hatch on a Hatch-bank, and will not be shouted at in either direction. A Cloaker moves only where I am not looking, so moving it is free and holding it still is what costs.
 
 They arrive in groups, all of a group through one spawn point, and the next group somewhere else. The point rotates. I cannot hold one direction, only cover what I can turn to.
 
@@ -16,11 +16,11 @@ I would like to know where they come from. The rooms they walk out of do not ope
 
 ## Reference
 
-Everything that comes at you on the Bastion is a Gatekeeper. There are three kinds and no others. They are machines — three different frames, not three paints on one body — so you can sort a group by shape at engagement distance. They all swing on the same clock — none of them attacks faster than another — and they all die the same way, to bullets, with no weak point and no resistances. What separates them in play is entirely **what each one refuses to do**.
+Everything that comes at you on the Bastion is a Gatekeeper. There are four kinds and no others. They are machines — four different frames, not four paints on one body — so you can sort a group by shape at engagement distance. They all swing on the same clock — none of them attacks faster than another — and they all die the same way, to bullets, with no weak point and no resistances. What separates them in play is entirely **what each one refuses to do**.
 
 For every number on this page — health, damage, speed, how many of each kind a Wave contains — see the [Field Manual](Field-Manual.md).
 
-### The three kinds
+### The four kinds
 
 
 | Kind                             | Wants                                      | Refuses                                |
@@ -28,9 +28,10 @@ For every number on this page — health, damage, speed, how many of each kind a
 | [Default](Gatekeeper-Default.md) | you, on a Wave started at a field terminal | nothing                                |
 | [Hunter](Gatekeeper-Hunter.md)   | you, from the moment it arrives            | to touch the Hatch, ever, at any range |
 | [Thief](Gatekeeper-Thief.md)     | you, on a Wave started at a field terminal | to shout, or to speed up when shot     |
+| [Cloaker](Gatekeeper-Cloaker.md) | whatever a Default wants, unobserved       | to move, or to want anything, while any Boarder watches it |
 
 
-Read that as a set of answers to one question: *can this thing be moved off what it is doing?* A Default can, and moving it costs you. A Hunter is already on you and cannot be moved anywhere else. A Thief hunts you and still will not shout.
+Read that as a set of answers to one question: *can this thing be moved off what it is doing?* A Default can, and moving it costs you. A Hunter is already on you and cannot be moved anywhere else. A Thief hunts you and still will not shout. A Cloaker is moved off everything by being looked at — and holding your look there is the cost.
 
 That is the whole roster. There is nothing that shoots at range, nothing that heals, nothing that buffs another Gatekeeper, and no elite or boss version of any kind.
 

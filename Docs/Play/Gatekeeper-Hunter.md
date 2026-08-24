@@ -46,7 +46,7 @@ Intensity never adds Hunters. If a Wave feels like it is drowning you in Hunters
 
 ## See also
 
-[Gatekeepers](Gatekeepers.md). [Default](Gatekeeper-Default.md). [Thief](Gatekeeper-Thief.md). [Staying Alive](Staying-Alive.md).
+[Gatekeepers](Gatekeepers.md). [Default](Gatekeeper-Default.md). [Thief](Gatekeeper-Thief.md). [Cloaker](Gatekeeper-Cloaker.md). [Staying Alive](Staying-Alive.md).
 
 ## Gaps
 

@@ -47,4 +47,4 @@ Intensity never adds Thieves. However high you juice, the number of Thieves is t
 
 ## See also
 
-[Gatekeepers](Gatekeepers.md). [Default](Gatekeeper-Default.md). [Hunter](Gatekeeper-Hunter.md). [The Hatch](The-Hatch.md).
+[Gatekeepers](Gatekeepers.md). [Default](Gatekeeper-Default.md). [Hunter](Gatekeeper-Hunter.md). [Cloaker](Gatekeeper-Cloaker.md). [The Hatch](The-Hatch.md).

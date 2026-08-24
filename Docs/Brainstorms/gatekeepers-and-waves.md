@@ -57,7 +57,7 @@ No two rows name the same thing taken.
 | Exploder | the ground you stand on | open | named |
 | Standoff Shooter | the Hatch from range | closing | named (was demoted M18) |
 | Ailment Shooter | a resource that is not HP | a clean HP-only fight | named |
-| Cloaker | information | being seen | named |
+| Cloaker | information | being seen | in-build |
 
 **In-build rows** keep today's targeting until their own slice. The Thief still walks the
 old battering errand until the salvage slice; only its name has changed.

@@ -30,13 +30,14 @@ Run, the bill I did not plan for, and the way home after a survived bank.
 
 ## IV. The Garrison
 
-They live here. Three frames, not three paints, and each one is defined by what it refuses.
+They live here. Four frames, not four paints, and each one is defined by what it refuses.
 [Gatekeepers](Gatekeepers.md) is the garrison whole: how they arrive, what puts one on me,
 how Waves mix them.
 
 Then the kinds: [Default](Gatekeeper-Default.md), the only one I can steer.
 [Hunter](Gatekeeper-Hunter.md), which wants me and never the Hatch.
 [Thief](Gatekeeper-Thief.md), which will not turn however much I shoot it.
+[Cloaker](Gatekeeper-Cloaker.md), which moves only where nobody is looking.
 
 ## V. Doctrine
 

@@ -59,7 +59,7 @@ boss (composition stamped on `M80`: one high-HP Thief elite, no distinct clip).
 
 | Clip | Status | Notes |
 |---|---|---|
-| Everything | no code hook | Composition is one high-HP Thief (`FinaleEliteHp` 240). No distinct clip list — it reuses Thief's controller. A unique silhouette (`SK_Tactical`) is still free. |
+| Everything | no code hook | Composition is one high-HP Thief (`FinaleEliteHp` 240). No distinct clip list — it reuses Thief's controller. A unique silhouette is no longer free: `SK_Tactical` was spent on the Cloaker (the fourth kind, 2026-08-24) — the pack's four robots are all assigned. An elite silhouette now means scale (as shipped) or a new purchase. |
 
 ## Weapon viewmodel, first person (no controller exists)
 
