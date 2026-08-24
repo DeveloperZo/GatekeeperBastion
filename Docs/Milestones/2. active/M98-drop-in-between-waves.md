@@ -281,12 +281,17 @@ recut 4-Data blocks — which also re-derives the solo wave and hatch-bank compo
 tables from the live `WaveDirector` against the committed baseline, criterion 9's diff
 in substance.
 
-**Owed.** One green Unity PlayMode leg over the second commit: the tree stopped
-compiling under concurrent work (`CloudRealmStore.cs` awaiting the Cloud Save package)
-before the rerun could go through, so the fix is compile-proven offline and its fixture
-has not re-run in Unity. Criteria 1, 2, 6 eyes-on (join half) still owed as recorded
-above; the recut's own eyes-on (the DOWN overlay text, the priced button labels) rides
-the same two-editor session. The kill criterion reads the first co-op session's log.
+**The owed PlayMode leg landed the same afternoon** (run of 2026-08-24 20:24 UTC, over
+the tree carrying both commits): PlayMode 80 passed / 1 failed — the recorded
+`NetVerbTests` repair-timing flake alone. `Down_HostFundedPot_HoldsRunOpenAndRespawns`
+and every other recut fixture pass in Unity. EditMode 773 / 16: the recorded set plus
+four failures belonging to concurrent in-flight work on other milestones
+(`BastionCoopSceneTests`, `CompendiumFormTests`, `RealmShareServiceTests` ×2), none in
+this area.
+
+**Owed.** Criteria 1, 2, 6 eyes-on (join half) as recorded above; the recut's own
+eyes-on (the DOWN overlay text, the priced button labels) rides the same two-editor
+session. The kill criterion reads the first co-op session's log.
 
 ## Usable, or it did not ship
 
