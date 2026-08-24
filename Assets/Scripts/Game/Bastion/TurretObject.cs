@@ -5,11 +5,14 @@ using UnityEngine;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>HOST-ONLY: FORGE's standing turret. The only player-owned thing that deals
-    /// damage, so it goes through <see cref="Damageable.TakeDamage"/> exactly as player fire
-    /// does — kill credit then reaches Unbanked through the spawner's own death path and this
-    /// file never touches the wallet. Life and the overcharge burn live in
-    /// <see cref="TurretState"/>; this is presentation plus the firing clock.</summary>
+    /// <summary>FORGE's standing turret, and the only player-owned thing that deals damage —
+    /// so it goes through <see cref="Damageable.TakeDamage"/> exactly as player fire does, and
+    /// kill credit reaches Unbanked through the spawner's own death path without this file
+    /// touching the wallet. Life and the overcharge burn live in <see cref="TurretState"/>;
+    /// this is presentation plus the firing clock.
+    /// <para>In a session the server owns the one that shoots and every client carries a
+    /// presentation-only copy — see <see cref="Configure(TurretState, GameController,
+    /// Transform, bool)"/>. Solo, the local one is both.</para></summary>
     public sealed class TurretObject : MonoBehaviour
     {
         const string Tag = "Turret";
@@ -19,6 +22,7 @@ namespace GatekeepersProtocol.Game
         TurretState _state;
         GameController _game;
         Transform _owner;
+        bool _presentationOnly;
         Renderer _bodyRenderer;
         float _shotClock;
         int _shotsFired;
@@ -65,9 +69,20 @@ namespace GatekeepersProtocol.Game
 
         public void Configure(TurretState state, GameController game, Transform owner)
         {
+            Configure(state, game, owner, false);
+        }
+
+        /// <summary>A turret exists twice in a session: once on the server, which owns its life
+        /// and its gun, and once on every client as scenery. The client copy must never fire —
+        /// two guns for one machine would double its output and desync every Damageable it
+        /// touched.</summary>
+        public void Configure(TurretState state, GameController game, Transform owner,
+            bool presentationOnly)
+        {
             _state = state;
             _game = game;
             _owner = owner;
+            _presentationOnly = presentationOnly;
             _shotClock = 0f;
             _shotsFired = 0;
         }
@@ -91,6 +106,7 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             PushTint();
+            if (_presentationOnly) return;
             TickFiring(Time.deltaTime);
         }
 
@@ -174,9 +190,16 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Build a turret at a world position. Graybox primitive — a base and a barrel
-        /// so facing reads. Networked spawn is not built; FIELD DEPLOY is host-side.</summary>
+        /// so facing reads. In a session the server calls this for the live machine and each
+        /// client calls it again with presentationOnly for scenery.</summary>
         public static TurretObject Spawn(Vector3 position, TurretState state,
             GameController game, Transform owner)
+        {
+            return Spawn(position, state, game, owner, false);
+        }
+
+        public static TurretObject Spawn(Vector3 position, TurretState state,
+            GameController game, Transform owner, bool presentationOnly)
         {
             var go = new GameObject("Turret");
             go.transform.position = position + Vector3.up * 0.5f;
@@ -195,7 +218,7 @@ namespace GatekeepersProtocol.Game
             StripCollider(barrel);
 
             var turret = go.AddComponent<TurretObject>();
-            turret.Configure(state, game, owner);
+            turret.Configure(state, game, owner, presentationOnly);
             turret._bodyRenderer = Tint(body, new Color(0.35f, 0.75f, 1f, 1f));
             Tint(barrel, new Color(0.22f, 0.5f, 0.7f, 1f));
             return turret;

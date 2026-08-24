@@ -276,11 +276,32 @@ namespace GatekeepersProtocol.Game
             _loggedCrewExpiry = false;
         }
 
+        /// <summary>Cloak both sides of the wire. The local rig keeps the flag for its own
+        /// registry entry; the server needs it on the avatar, which is the body every host-side
+        /// gatekeeper actually targets. Setting only the local one leaves a guest uncloaked in
+        /// the eyes of every enemy in the game.</summary>
+        void SetCloaked(bool cloaked)
+        {
+            if (_health != null) _health.SetCloaked(cloaked);
+            var verbs = LocalVerbs();
+            if (verbs != null) verbs.RequestCloak(cloaked);
+        }
+
         /// <summary>VEIL's PING: the crew gets the map, the caster gets the room. The pull is
         /// the existing provoke rule, so every kind refusal (a Thief walks on and never
         /// retargets) is honoured without this knowing which kinds those are.</summary>
         void PulsePing(float ready)
         {
+            var verbs = LocalVerbs();
+            if (verbs != null)
+            {
+                // Gatekeepers are host-only; a guest provoking its own clones moves nothing.
+                verbs.RequestPing();
+                Log.Event(Tag, "crew Ping — requested, "
+                    + BoarderProtocol.Window(BoarderAbilityId.Ping).ToString("0")
+                    + "s render sat-ready=" + ready.ToString("0.##"));
+                return;
+            }
             int turned = 0;
             var live = LiveGatekeepers();
             for (int i = 0; i < live.Count; i++)
@@ -289,8 +310,7 @@ namespace GatekeepersProtocol.Game
                 if (gk == null) continue;
                 if (gk.Provoke(transform, shout: false)) turned++;
             }
-            // POC: the through-walls render for the whole crew is not built. PingWindowOpen is
-            // the flag a presentation pass reads; until then Ping ships as the pull half only.
+            PingMarker.ShowAll(live, BoarderProtocol.Window(BoarderAbilityId.Ping));
             Log.Event(Tag, "crew Ping — " + turned + " gatekeeper(s) turned on the caster, "
                 + BoarderProtocol.Window(BoarderAbilityId.Ping).ToString("0")
                 + "s render sat-ready=" + ready.ToString("0.##"));
@@ -325,7 +345,10 @@ namespace GatekeepersProtocol.Game
 
             // Overcharge has a hard precondition: a machine must be standing to redline.
             // Ask before the window is spent, or the cooldown eats a press that did nothing.
-            if (id == BoarderAbilityId.Overcharge && Turret == null)
+            // HasTurret, not Turret: in a session the machine is the server's and this rig
+            // holds no reference to it, so asking for the object would refuse every guest.
+            if (id == BoarderAbilityId.Overcharge
+                && (_turretControl == null || !_turretControl.HasTurret))
             {
                 Log.Event(Tag, "self Overcharge refused — no turret standing");
                 return;
@@ -342,7 +365,7 @@ namespace GatekeepersProtocol.Game
                     Log.Event(Tag, "self Rush sat-ready=" + ready.ToString("0.##"));
                     break;
                 case BoarderAbilityId.Cloak:
-                    if (_health != null) _health.SetCloaked(true);
+                    SetCloaked(true);
                     Log.Event(Tag, "self Cloak sat-ready=" + ready.ToString("0.##")
                         + " — off every targeting list");
                     break;
@@ -361,7 +384,7 @@ namespace GatekeepersProtocol.Game
             switch (id)
             {
                 case BoarderAbilityId.Cloak:
-                    if (_health != null) _health.SetCloaked(false);
+                    SetCloaked(false);
                     break;
                 case BoarderAbilityId.Overcharge:
                     if (_turretControl != null) _turretControl.SetOvercharged(false);

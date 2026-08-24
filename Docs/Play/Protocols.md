@@ -41,7 +41,7 @@ The NAV MAP warns if you own no protocol and then lets you embark anyway. With n
 |---|---|---|---|---|
 | [Default](Protocol-Default.md) | STOCK: decoys place as sold | Barrage: plant, rooted, you and nearby Boarders fire faster | Rush: your gun only, you still move | none |
 | [VEIL](Protocol-VEIL.md) | PHANTOM: a placed decoy holds the aggro you are carrying | Ping: the room marks Gatekeepers for the crew and pulls Defaults and Hunters onto you | Cloak: off targeting lists until you fire | Ghost: they notice you closer in |
-| [FORGE](Protocol-FORGE.md) | PARALLEL BAYS: two decoys may stand live | Field Deploy: stand a turret where you look | Overcharge: redline that turret and yourself | Magnet Hands: Gatekeepers take the turret instead of you |
+| [FORGE](Protocol-FORGE.md) | PARALLEL BAYS: two decoys may stand live (not yet active) | Field Deploy: stand a turret where you look | Overcharge: redline that turret and yourself | Magnet Hands: Gatekeepers take the turret instead of you |
 
 Read the column that matters: **who the room is looking at.** Default does not change it and buys output instead. VEIL moves attention onto you on purpose and then takes you off the list. FORGE puts a machine in the room for the garrison to look at.
 

@@ -22,6 +22,8 @@ Claimed at CREW QUARTERS, on the same panel as Default.
 
 Two of your decoys may stand live at once. STOCK and PHANTOM keep the payload's authored live count.
 
+**Not yet active.** The bay still holds one decoy. The doctrine is written onto every decoy you place and nothing reads it, so a decoy placed under PARALLEL BAYS behaves exactly as one placed under STOCK. Raising the count needs the bay to track more than one live machine, which is a change to the decoy payload rather than to this protocol.
+
 ### Crew: Field Deploy
 
 Stands a turret at the point you are looking at. It acquires and fires on its own out to its range. While it stands, every Boarder inside its aura radius fires faster. Deploying again replaces the standing turret rather than adding one.

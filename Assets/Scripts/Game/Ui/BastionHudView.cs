@@ -397,13 +397,14 @@ namespace GatekeepersProtocol.Game
         public void SetProtocolAbilities(
             string passiveName, float passiveFill, string passiveCd,
             string personalKey, string personalName, float personalFill, string personalCd,
-            string crewKey, string crewName, float crewFill, string crewCd)
+            bool personalActive,
+            string crewKey, string crewName, float crewFill, string crewCd, bool crewActive)
         {
             if (_protocolBar == null) return;
             _protocolBar.Bind(
                 passiveName, passiveFill, passiveCd,
-                personalKey, personalName, personalFill, personalCd,
-                crewKey, crewName, crewFill, crewCd);
+                personalKey, personalName, personalFill, personalCd, personalActive,
+                crewKey, crewName, crewFill, crewCd, crewActive);
         }
 
         public void SetReloadBlockVisible(bool visible) =>

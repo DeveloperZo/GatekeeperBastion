@@ -24,10 +24,33 @@ namespace GatekeepersProtocol.Game
 
         public TurretState State => _state;
 
-        /// <summary>The standing machine, or null. Target selection reads this for MAGNET HANDS.</summary>
+        /// <summary>The session's verbs, or null solo. When present the SERVER owns the machine
+        /// that shoots: a guest standing one locally would be a gun no gatekeeper can see and no
+        /// teammate can stand in the aura of.</summary>
+        NetVerbs Verbs
+        {
+            get
+            {
+                var net = _game != null ? _game.Net : null;
+                return net != null ? net.LocalVerbs : null;
+            }
+        }
+
+        /// <summary>The standing machine, or null. Target selection reads this for MAGNET HANDS.
+        /// Null on a guest even while their turret stands, because the machine is the server's.</summary>
         public TurretObject Live => _live != null && _live.IsAlive ? _live : null;
 
-        public bool HasTurret => Live != null;
+        /// <summary>Whether a machine is standing for this Boarder anywhere — the server's in a
+        /// session, the local one solo. Asking <see cref="Live"/> would tell a guest they have
+        /// no turret while one is plainly standing in front of them.</summary>
+        public bool HasTurret
+        {
+            get
+            {
+                var verbs = Verbs;
+                return verbs != null ? verbs.ServerTurretStanding : Live != null;
+            }
+        }
 
         public void Bind(GameController game, FirstPersonController fpc)
         {
@@ -43,6 +66,16 @@ namespace GatekeepersProtocol.Game
             Clear();
 
             Vector3 at = PlacementPoint();
+            var verbs = Verbs;
+            if (verbs != null)
+            {
+                // The server stands it, fires it and kills it; the scenery comes back by RPC.
+                verbs.RequestTurret(at, true);
+                Log.Event(Tag, "crew Field Deploy — turret requested at "
+                    + at.ToString("0.#") + " sat-ready=" + satReady.ToString("0.##"));
+                return true;
+            }
+
             string reason;
             if (!_state.TryPlace(at.x, at.y, at.z, out reason))
             {
@@ -60,6 +93,12 @@ namespace GatekeepersProtocol.Game
 
         public void SetOvercharged(bool on)
         {
+            var verbs = Verbs;
+            if (verbs != null)
+            {
+                verbs.RequestOvercharge(on);
+                return;
+            }
             _state.SetOvercharged(on);
         }
 
@@ -67,6 +106,9 @@ namespace GatekeepersProtocol.Game
         /// it — the caller's window then has nothing left to redline.</summary>
         public bool TickOvercharge(float dt)
         {
+            // In a session the burn is spent on the server's machine by the server's clock.
+            // Burning here too would charge the same life twice.
+            if (Verbs != null) return false;
             float burned;
             if (!_state.BurnOvercharge(dt, out burned)) return false;
             Log.Event(Tag, "self Overcharge burned the turret out — "
@@ -99,6 +141,9 @@ namespace GatekeepersProtocol.Game
 
         public void Clear()
         {
+            var verbs = Verbs;
+            if (verbs != null && verbs.ServerTurretStanding)
+                verbs.RequestTurret(Vector3.zero, false);
             if (_live != null) _live.Despawn();
             _live = null;
             _state.Clear();

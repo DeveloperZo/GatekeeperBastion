@@ -17,6 +17,11 @@ namespace GatekeepersProtocol.Game
         #endregion
 
         #region State
+        /// <summary>Server-written: is this player's turret standing? See
+        /// <see cref="ServerTurretStanding"/> for why it has to cross the wire.</summary>
+        public readonly NetworkVariable<bool> TurretStanding = new NetworkVariable<bool>(
+            false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         GameController _game;
         bool _repairing;
         bool _loggedRange;
@@ -34,8 +39,19 @@ namespace GatekeepersProtocol.Game
 
         void Update()
         {
-            if (!IsSpawned || !IsServer || !_repairing) return;
+            if (!IsSpawned || !IsServer) return;
+            TickServerOvercharge(Time.deltaTime);
+            if (!_repairing) return;
             TickRepair(Time.deltaTime);
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            // A machine must not outlive the player who stood it up.
+            if (IsServer) ClearServerTurret();
+            if (_turretScenery != null) _turretScenery.Despawn();
+            _turretScenery = null;
+            base.OnNetworkDespawn();
         }
         #endregion
 
@@ -75,6 +91,40 @@ namespace GatekeepersProtocol.Game
         {
             RequestBulkheadServerRpc();
         }
+
+        /// <summary>VEIL Cloak. The flag has to live on the SERVER's copy of this player:
+        /// gatekeepers are host-only and read <see cref="PlayerRegistry.NearestAlive"/>, which
+        /// for a guest holds the avatar's PlayerHealth, not the guest's own rig. Set locally
+        /// only, a guest's cloak is invisible to every enemy in the game.</summary>
+        public void RequestCloak(bool cloaked)
+        {
+            RequestCloakServerRpc(cloaked);
+        }
+
+        /// <summary>VEIL Ping. The provoke has to run where the gatekeepers are.</summary>
+        public void RequestPing()
+        {
+            RequestPingServerRpc();
+        }
+
+        /// <summary>FORGE Field Deploy. The server stands the machine that actually shoots;
+        /// every client gets scenery at the same spot.</summary>
+        public void RequestTurret(Vector3 position, bool deploying)
+        {
+            RequestTurretServerRpc(position, deploying);
+        }
+
+        /// <summary>FORGE Overcharge. The burn is life on the server's machine.</summary>
+        public void RequestOvercharge(bool on)
+        {
+            RequestOverchargeServerRpc(on);
+        }
+
+        /// <summary>True while the server has a machine standing for this player. Replicated,
+        /// not read off the server's own state: a guest asking its local copy would be asking an
+        /// object the server never writes, and would be told "no turret" with one standing in
+        /// front of it. The owner reads this to refuse Overcharge without a machine.</summary>
+        public bool ServerTurretStanding => TurretStanding.Value;
         #endregion
 
         #region Private
@@ -235,6 +285,138 @@ namespace GatekeepersProtocol.Game
         void RequestBulkheadServerRpc()
         {
             if (!IsServer) return;
+        }
+
+        // ---------- VEIL ----------
+
+        [Rpc(SendTo.Server)]
+        void RequestCloakServerRpc(bool cloaked)
+        {
+            if (!IsServer) return;
+            var body = AvatarBody();
+            if (body == null) return;
+            body.SetCloaked(cloaked);
+            Log.Event("Protocol", "cloak " + (cloaked ? "up" : "down")
+                + " clientId=" + OwnerClientId);
+        }
+
+        [Rpc(SendTo.Server)]
+        void RequestPingServerRpc()
+        {
+            if (!IsServer) return;
+            var gc = _game;
+            var spawner = gc != null ? gc.Spawner : null;
+            if (spawner == null) return;
+            var live = spawner.Live;
+            int turned = 0;
+            for (int i = 0; i < live.Count; i++)
+            {
+                var gk = live[i];
+                if (gk == null) continue;
+                if (gk.Provoke(transform, shout: false)) turned++;
+            }
+            Log.Event("Protocol", "crew Ping — " + turned
+                + " gatekeeper(s) turned on the caster clientId=" + OwnerClientId);
+
+            // The render is the crew's half of the ability, so it is broadcast rather than
+            // shown where the caster stands. The server marks its own room directly; the
+            // ClientRpc reaches everyone else.
+            float window = BoarderProtocol.Window(BoarderAbilityId.Ping);
+            PingMarker.ShowAll(live, window);
+            ShowPingClientRpc(window);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        void ShowPingClientRpc(float seconds)
+        {
+            var gc = _game;
+            var spawner = gc != null ? gc.Spawner : null;
+            if (spawner == null) return;
+            PingMarker.ShowAll(spawner.Live, seconds);
+        }
+
+        // ---------- FORGE ----------
+
+        readonly TurretState _turretState = new TurretState();
+        TurretObject _turretLive;
+        TurretState _turretShadow;
+        TurretObject _turretScenery;
+
+        [Rpc(SendTo.Server)]
+        void RequestTurretServerRpc(Vector3 position, bool deploying)
+        {
+            if (!IsServer) return;
+            ClearServerTurret();
+            if (deploying)
+            {
+                string reason;
+                if (!_turretState.TryPlace(position.x, position.y, position.z, out reason))
+                {
+                    Log.Event("Protocol", "crew Field Deploy refused — " + reason);
+                    return;
+                }
+                _turretLive = TurretObject.Spawn(position, _turretState, _game, transform);
+            }
+            TurretStanding.Value = _turretState.IsLive;
+            ApplyTurretClientRpc(position, deploying);
+        }
+
+        /// <summary>Scenery only. The server's machine is the one that shoots and the one that
+        /// dies; this copy exists so the room is not empty where it stands.</summary>
+        [Rpc(SendTo.NotServer)]
+        void ApplyTurretClientRpc(Vector3 position, bool deploying)
+        {
+            if (_turretScenery != null) _turretScenery.Despawn();
+            _turretScenery = null;
+            if (!deploying) return;
+            if (_turretShadow == null) _turretShadow = new TurretState();
+            _turretShadow.ResetForRun();
+            _turretShadow.TryPlace(position.x, position.y, position.z, out _);
+            _turretScenery = TurretObject.Spawn(position, _turretShadow, _game, null, true);
+        }
+
+        [Rpc(SendTo.Server)]
+        void RequestOverchargeServerRpc(bool on)
+        {
+            if (!IsServer) return;
+            _turretState.SetOvercharged(on);
+            ApplyOverchargeClientRpc(on);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        void ApplyOverchargeClientRpc(bool on)
+        {
+            if (_turretShadow != null) _turretShadow.SetOvercharged(on);
+        }
+
+        /// <summary>Server-side burn. The window lives on the owner, but the life it spends is
+        /// the server's machine, so the clock that spends it runs here.</summary>
+        void TickServerOvercharge(float dt)
+        {
+            if (!_turretState.IsLive || !_turretState.Overcharged) return;
+            float burned;
+            if (!_turretState.BurnOvercharge(dt, out burned)) return;
+            Log.Event("Protocol", "self Overcharge burned the turret out — "
+                + _turretState.LifeBurned.ToString("0") + " life spent clientId=" + OwnerClientId);
+            ClearServerTurret();
+            ApplyTurretClientRpc(Vector3.zero, false);
+        }
+
+        void ClearServerTurret()
+        {
+            if (_turretLive != null) _turretLive.Despawn();
+            _turretLive = null;
+            _turretState.Clear();
+            if (IsServer && IsSpawned) TurretStanding.Value = false;
+        }
+
+        /// <summary>The body the server targets for this player. NetVerbs and the avatar's
+        /// PlayerHealth share the PlayerObject, so this is the same component
+        /// <see cref="PlayerRegistry"/> holds — which is the whole point: a cloak written
+        /// anywhere else is invisible to every host-side gatekeeper.</summary>
+        PlayerHealth AvatarBody()
+        {
+            return GetComponent<PlayerHealth>();
         }
         #endregion
     }

@@ -42,29 +42,41 @@ namespace GatekeepersProtocol.Game
 
         public void SetVisible(bool visible) => UiBind.Show(gameObject, visible);
 
+        /// <summary>Running and cooling are opposite states and must not read the same. The
+        /// active flags are what separates them: without one, a square counting down 4s while
+        /// the ability is DOING ITS JOB looks exactly like a square counting down 4s until the
+        /// player may use it again.</summary>
         public void Bind(
             string passiveName, float passiveFill, string passiveCd,
             string personalKey, string personalName, float personalFill, string personalCd,
-            string crewKey, string crewName, float crewFill, string crewCd)
+            bool personalActive,
+            string crewKey, string crewName, float crewFill, string crewCd, bool crewActive)
         {
-            Apply(_passive, "", passiveName, passiveFill, passiveCd);
-            Apply(_personal, personalKey, personalName, personalFill, personalCd);
-            Apply(_crew, crewKey, crewName, crewFill, crewCd);
+            Apply(_passive, "", passiveName, passiveFill, passiveCd, false);
+            Apply(_personal, personalKey, personalName, personalFill, personalCd, personalActive);
+            Apply(_crew, crewKey, crewName, crewFill, crewCd, crewActive);
         }
 
+        /// <summary>Live ability squares keep their name and burn the fill hot; cooling ones
+        /// drop the name and burn it dim. Same geometry, opposite reading.</summary>
+        static readonly Color ActiveFill = new Color(1f, 0.62f, 0.18f, 1f);
+        static readonly Color CoolingFill = new Color(0.32f, 0.36f, 0.42f, 1f);
+
         static void Apply(AbilitySlotBinding slot, string key, string abilityName, float fill,
-            string countdown)
+            string countdown, bool active)
         {
             if (slot == null) return;
             UiBind.SetText(slot.key, key != null ? key : "");
             UiBind.Show(slot.key, !string.IsNullOrEmpty(key));
-            bool cooling = !string.IsNullOrEmpty(countdown);
+            bool hasCountdown = !string.IsNullOrEmpty(countdown);
             UiBind.SetText(slot.name, abilityName != null ? abilityName : "");
-            UiBind.Show(slot.name, !cooling);
+            // The name stays up while the ability runs — that is the tell that it is running.
+            UiBind.Show(slot.name, active || !hasCountdown);
             if (slot.cooldownFill != null)
             {
                 slot.cooldownFill.fillAmount = fill;
-                UiBind.Show(slot.cooldownFill, cooling);
+                slot.cooldownFill.color = active ? ActiveFill : CoolingFill;
+                UiBind.Show(slot.cooldownFill, hasCountdown);
             }
             UiBind.SetTextOrHide(slot.countdown, countdown);
         }

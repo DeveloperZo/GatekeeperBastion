@@ -126,9 +126,32 @@ namespace GatekeepersProtocol.Game
 
             Live = DecoyObject.Spawn(position, this, State.MaxHp, ResolveSpawnPrefab());
             if (Live != null) Live.Configure(this, State.MaxHp, State.Mode);
+            int inherited = ApplyPhantom();
             Log.Event(Tag,
-                $"placed — charges left {State.ChargesRemaining}, hp {State.MaxHp:0}");
+                $"placed — charges left {State.ChargesRemaining}, hp {State.MaxHp:0}"
+                + (inherited > 0 ? $", phantom inherited {inherited} gatekeeper(s)" : ""));
             return true;
+        }
+
+        /// <summary>VEIL's PHANTOM doctrine: the decoy comes up already holding the attention
+        /// its placer was carrying, instead of pulling neutrally from whoever is near. Every
+        /// kind refusal still stands — this hands interest over, it does not create it.
+        /// Returns how many gatekeepers changed hands; 0 under any other doctrine.</summary>
+        int ApplyPhantom()
+        {
+            if (State.Mode != DoctrineMode.Phantom || Live == null) return 0;
+            var gc = _game;
+            var spawner = gc != null ? gc.Spawner : null;
+            if (spawner == null) return 0;
+            var live = spawner.Live;
+            int moved = 0;
+            for (int i = 0; i < live.Count; i++)
+            {
+                var gk = live[i];
+                if (gk == null) continue;
+                if (gk.TransferInterestTo(Live)) moved++;
+            }
+            return moved;
         }
 
         public void NotifyDestroyed(DecoyObject obj)

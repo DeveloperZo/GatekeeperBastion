@@ -28,8 +28,9 @@ namespace GatekeepersProtocol.Game
             public string BodyMarkdown;
         }
 
-        /// <summary>Six pause volumes. Field Manual stays in Docs/Play; the reader has
-        /// no table layout and does not open it.</summary>
+        /// <summary>Seven pause volumes, in the order Docs/Play/README.md states them — that
+        /// file is the structure of record and this array mirrors it. Field Manual stays in
+        /// Docs/Play; the reader has no table layout and does not open it.</summary>
         public static readonly Volume[] Volumes =
         {
             new Volume
@@ -57,7 +58,15 @@ namespace GatekeepersProtocol.Game
             },
             new Volume
             {
-                Title = "V. Arms",
+                Title = "V. Doctrine",
+                EntryStems = new[]
+                {
+                    "Protocols", "Protocol-Default", "Protocol-VEIL", "Protocol-FORGE"
+                }
+            },
+            new Volume
+            {
+                Title = "VI. Arms",
                 EntryStems = new[]
                 {
                     "Weapons", "Weapon-MK-1-Sidearm", "Weapon-SEC-D", "Weapon-BR-12-Shotgun",
@@ -66,7 +75,7 @@ namespace GatekeepersProtocol.Game
             },
             new Volume
             {
-                Title = "VI. The Hull",
+                Title = "VII. The Hull",
                 EntryStems = new[] { "The-Ship", "Upgrades" }
             }
         };

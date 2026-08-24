@@ -76,6 +76,28 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Clear line of sight to the player within noticeRange? Cheap: only runs on the
         /// retarget tick, and only until the gatekeeper is provoked.</summary>
+        /// <summary>PHANTOM: hand this gatekeeper's interest to a decoy it did not pull.
+        /// True only when this call is what moved it, so the caller can count real transfers.
+        /// Refused by anything that would not chase a decoy anyway — a Thief walks on, and a
+        /// gatekeeper already committed to the Hatch keeps its commitment. The doctrine changes
+        /// what a decoy INHERITS; it never overrules what a kind refuses.</summary>
+        public bool TransferInterestTo(DecoyObject decoy)
+        {
+            if (decoy == null || !decoy.IsAlive) return false;
+            if (Kind == GatekeeperKind.Thief) return false;
+            if (_committedToHatch || !_chasingPlayer) return false;
+
+            _decoyTarget = decoy;
+            _chasingDecoy = true;
+            _chasingPlayer = false;
+            _chasingTurret = false;
+            _turretTarget = null;
+            _standPoint = null;
+            _retargetTimer = 0f;
+            Retarget();
+            return true;
+        }
+
         bool CanSeePlayer()
         {
             if (_player == null) return false;

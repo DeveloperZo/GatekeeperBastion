@@ -15,7 +15,7 @@ namespace GatekeepersProtocol.Sim
             "PHANTOM — a decoy you place spawns holding the aggro you are carrying, instead of "
             + "pulling neutrally.";
         public const string DoctrineForge =
-            "PARALLEL BAYS — two of your decoys may stand live at once.";
+            "PARALLEL BAYS — two of your decoys may stand live at once. Not yet active: the bay still holds one.";
 
         public const string CrewDefault =
             "G Barrage — Rooted. Fire ×2.0 for 8s. Other Boarders within 8 m ×2.0, not rooted. G again or window end unplants. Cooldown 30s.";

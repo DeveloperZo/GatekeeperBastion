@@ -4,7 +4,7 @@
 Status: planned
 Update trigger: when a protocol is added or retired, when an ability id gains numbers,
 when the legality rule changes, when the CREW sheet layout changes
-Last updated: 2026-08-21
+Last updated: 2026-08-23
 -->
 
 `BoarderProtocolId` grows from one to three. **VEIL** and **FORGE** are authored end to
@@ -195,18 +195,40 @@ Read these before implementing; the earlier draft asserted each wrongly.
 Rejected: making protocols purchasable rather than claimed. `M70` settled claim at 0
 salvage and changing it is a separate economic decision.
 
+## Telegraphing, added 2026-08-23
+
+Every ability was a rule with no body — a multiplier or a targeting-list removal the
+player had no way to see. Three things fixed that:
+
+- **`ProtocolLayerView`** puts a screen treatment on whichever window is running, built
+  at run time as a post-process volume. **No scene edit, no custom shader, no new
+  package**: PPv2 was already installed, `PostProcessLayer` is already on the fight
+  cameras, and the HUD canvas is Screen Space Overlay so the readout stays crisp.
+  **Only Cloak drains colour** — it is a disengage and the world may go somewhere else.
+  Ping, Rush, Barrage and Overcharge land mid-fight, where taking saturation or light
+  away would be hostile, so they get an edge wash in their own colour and nothing more.
+- **`PingMarker`** is Ping's through-walls render, on the project's own
+  `GKB/AlwaysOnTop` shader. Broadcast from the server so the whole crew sees it, which
+  is the ability's entire output.
+- **The HUD stopped lying.** `CdLabel` returned a bare seconds count for both an open
+  window and a cooldown, and the bar hid the ability name whenever a countdown was
+  present — so a *running* ability read exactly like a *cooling* one. The bar now takes
+  an active flag: live squares keep their name and burn a hot fill, cooling ones drop
+  the name and burn dim.
+
 ## Deferred, deliberately
 
 Named so they read as decisions rather than omissions:
 
-- **Ping's through-walls render.** Ping ships as its pull half — the crew ability
-  turns the room onto the caster and says so in the log. `PingWindowOpen` is the flag
-  a presentation pass reads. Marked `// POC:` at the site. **This is the one place
-  M94 does not fully meet *Shown*.**
-- **Doctrine behaviour.** `Phantom` and `ParallelBays` are *written* onto placed
-  decoys; neither has a reader yet. This is exactly how `Stock` shipped — the
-  brainstorm's own note reads *"STOCK writes 0. VEIL is the first reader."*
-  `MaxLiveUnder` is in the catalog, tested, and unconsumed by `DecoyBay`.
+- **PARALLEL BAYS.** Written onto placed decoys with no reader, exactly how `Stock`
+  shipped. Raising the live count needs `DecoyState` to track more than one machine —
+  a change to the decoy payload, not to this protocol — so the sheet and the Compendium
+  both say *"not yet active"* rather than describing a behaviour the build does not
+  have. `MaxLiveUnder` is in the catalog and tested against the day it gets a reader.
+- **The turret's life is not shown.** It tints hot while overcharged and that is all;
+  there is no health readout on the machine.
+- **Every number is a first guess.** Turret life, aura, burn rate and the screen-tint
+  values have never been played.
 - **Twist slots and second passives.** Growth levers, one at a time, behind the
   pick-rate audit. Not this slice.
 - **The turret as bought hardware.** No `PayloadId`, no FABRICATION shelf row, no charges,
@@ -215,9 +237,7 @@ Named so they read as decisions rather than omissions:
 - **A repair verb for the turret.** Field Rearm's channel was written and then cut with the
   recut; a wounded machine currently has no way back. It is the obvious home for that
   channel when a later slice wants it.
-- **Server paths for the new verbs.** Barrage still routes through `NetVerbs`; Ping,
-  Cloak, Field Rearm and Redeploy run host-side only. Criterion 8 is what tests
-  whether that is enough.
+
 
 ## Open questions
 
@@ -241,8 +261,12 @@ Named so they read as decisions rather than omissions:
   own first shot; Redeploy puts a machine in your hands, slows you and holsters the
   gun. Whether the three *read* as different in play is eyes-on and is the thing the
   tests cannot see.
-- Criterion 8: PlayMode net test against `NetcodeIntegrationTest` with two seats on
-  different protocols, asserting each seat's ability state moves independently.
+- Criterion 8: `NetProtocolTests.TwoSeats_DifferentProtocolsKeepTheirOwnAbilities`,
+  asserting on the **server** that one seat's cloak reaches it, that its neighbour is
+  untouched, and that a turret stands for the seat that deployed it and for no one else.
+  Asserted server-side on purpose: gatekeepers are host-only, so an ability that exists
+  only on the guest's own machine is a no-op dressed as an ability. That is precisely
+  what the first cut of this milestone shipped, and what this criterion caught.
 
 **Playthrough path**: Play, Continue, CREW, claim VEIL, embark, press `H` at a
 gatekeeper and watch it lose you; press `G` and watch the room turn. Repeat with
@@ -257,8 +281,29 @@ tints hot while it is overcharged. **Reads back**: the sheet text, the ability b
 log line per ability — Field Deploy's names the machine's life and its aura; Overcharge's
 names both multipliers, and a separate line fires when the burn is what killed the turret.
 
-**Where it falls short**: Ping's *Shown* is the log line and nothing in the world
-until the render pass lands. Called out above rather than left silent.
+**Where it falls short**: the turret carries no health readout, so a machine about to
+die looks like one that just stood up. Called out above rather than left silent.
+
+## Co-op, closed 2026-08-23
+
+The first cut ran every new ability host-side only, which made this milestone's own
+justification false: `Cloaked` was written on the local rig, while every host-side
+gatekeeper reads `PlayerRegistry.NearestAlive`, which for a guest holds the **avatar's**
+`PlayerHealth`. A guest's cloak was invisible to every enemy in the game, and the same
+shape applied to Ping and to the turret.
+
+All four now cross the wire on the idiom Barrage already used — an owner request, a
+server-authoritative apply, and a ClientRpc for presentation:
+
+- **Cloak** sets the flag on the server's copy of the player, which is the body enemies
+  actually target.
+- **Ping** provokes where the gatekeepers are, and broadcasts its render to the crew.
+- **Field Deploy** stands the machine that shoots on the server; every client gets a
+  presentation-only copy that never fires, because two guns for one machine would double
+  its output.
+- **Overcharge** burns life on the server's machine, on the server's clock. The owner
+  reads a replicated `TurretStanding` to refuse without one — asking its own rig would
+  refuse every guest while a turret stood in front of them.
 
 ## Unblocks
 
@@ -269,6 +314,7 @@ until the render pass lands. Called out above rather than left silent.
 A fourth protocol. Protocol purchase costs. Passive swapping UI beyond what the sheet
 already does. The `Bulkhead` handler — neither chosen protocol takes it. Twists.
 Sightline's in-world radii. LEDGER's world piles. A second turret. Turret upgrades.
+Multi-live decoys for PARALLEL BAYS. Tuning any of the first-guess numbers.
 **Making the decoy destructible** — `DecoyObject.ApplyDamage` has no caller and decoys are
 currently invulnerable lures; that is a real pre-existing defect, it is filed separately,
 and it is deliberately not fixed inside this milestone.

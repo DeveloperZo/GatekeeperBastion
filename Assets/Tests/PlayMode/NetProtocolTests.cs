@@ -25,6 +25,7 @@ namespace GatekeepersProtocol.PlayTests
         NetVerbs _clientVerbs;
         NetVerbs _clientVerbs2;
         PlayerHealth _serverHealth;
+        PlayerHealth _serverHealth2;
 
         [UnityTearDown]
         public IEnumerator DestroyHostRun()
@@ -36,6 +37,8 @@ namespace GatekeepersProtocol.PlayTests
             }
             _clientVerbs = null;
             _clientVerbs2 = null;
+            _serverHealth = null;
+            _serverHealth2 = null;
             yield return null;
         }
 
@@ -158,6 +161,42 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreEqual(1f, serverHealth.AcquisitionMul, 0.01f);
         }
 
+        /// <summary>Criterion 8: two seats, two protocols, and neither one's ability reaching
+        /// the other. Both halves are asserted on the SERVER, because that is the only place
+        /// they mean anything — gatekeepers are host-only, so a cloak or a turret that exists
+        /// solely on the guest's own machine is a no-op dressed as an ability.</summary>
+        [UnityTest]
+        public IEnumerator TwoSeats_DifferentProtocols_KeepTheirOwnAbilities()
+        {
+            yield return BootHostRun();
+            yield return SpawnClientVerbs();
+            yield return SpawnSecondClientVerbs();
+            Assert.IsNotNull(_serverHealth);
+            Assert.IsNotNull(_serverHealth2);
+            Assert.IsFalse(_serverHealth.Cloaked, "nobody starts cloaked");
+            Assert.IsFalse(_serverHealth2.Cloaked);
+
+            // Seat 1 runs VEIL and cloaks.
+            _clientVerbs.RequestCloak(true);
+            yield return WaitForTicks(m_ServerNetworkManager, 4);
+            Assert.IsTrue(_serverHealth.Cloaked,
+                "a guest's cloak has to reach the server or no gatekeeper can honour it");
+            Assert.IsFalse(_serverHealth2.Cloaked, "seat 2 was not cloaked by its neighbour");
+
+            // Seat 2 runs FORGE and stands a turret.
+            _clientVerbs2.RequestTurret(new Vector3(5f, 0f, 5f), true);
+            yield return WaitForTicks(m_ServerNetworkManager, 4);
+            Assert.IsTrue(_clientVerbs2.ServerTurretStanding, "seat 2's machine is standing");
+            Assert.IsFalse(_clientVerbs.ServerTurretStanding,
+                "seat 1 did not gain a turret it never deployed");
+
+            // And releasing one seat's ability leaves the other's alone.
+            _clientVerbs.RequestCloak(false);
+            yield return WaitForTicks(m_ServerNetworkManager, 4);
+            Assert.IsFalse(_serverHealth.Cloaked, "seat 1 dropped its own cloak");
+            Assert.IsTrue(_clientVerbs2.ServerTurretStanding, "seat 2 still has its machine");
+        }
+
         IEnumerator BootHostRun()
         {
             var go = new GameObject("HostGC");
@@ -188,6 +227,7 @@ namespace GatekeepersProtocol.PlayTests
             var serverGo = SpawnObject(_verbsPrefab, m_ServerNetworkManager);
             var serverNet = serverGo.GetComponent<NetworkObject>();
             serverGo.GetComponent<NetVerbs>().Bind(_gc);
+            _serverHealth2 = serverGo.GetComponent<PlayerHealth>();
             yield return WaitForSpawnedOnAllOrTimeOut(serverNet);
             AssertOnTimeout("second verbs object did not spawn on client");
             Assert.IsTrue(

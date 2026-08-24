@@ -249,8 +249,8 @@ namespace GatekeepersProtocol.Game
                 _view.SetProtocolLine("NO PROTOCOL");
                 _view.SetProtocolAbilities(
                     "—", 0f, "",
-                    Controls.DisplayOf(ControlId.PersonalAbility), "—", 0f, "",
-                    Controls.DisplayOf(ControlId.CrewAbility), "—", 0f, "");
+                    Controls.DisplayOf(ControlId.PersonalAbility), "—", 0f, "", false,
+                    Controls.DisplayOf(ControlId.CrewAbility), "—", 0f, "", false);
                 return;
             }
 
@@ -265,12 +265,14 @@ namespace GatekeepersProtocol.Game
                     BoarderProtocol.Window(_protocol.PersonalAbility),
                     BoarderProtocol.Cooldown(_protocol.PersonalAbility)),
                 CdLabel(_protocol.PersonalWindow, _protocol.PersonalCooldown),
+                _protocol.PersonalWindow > 0f,
                 Controls.DisplayOf(ControlId.CrewAbility),
                 _protocol.CrewName,
                 BoarderProtocol.OverlayFill(_protocol.CrewWindow, _protocol.CrewCooldown,
                     BoarderProtocol.Window(_protocol.CrewAbility),
                     BoarderProtocol.Cooldown(_protocol.CrewAbility)),
-                CdLabel(_protocol.CrewWindow, _protocol.CrewCooldown));
+                CdLabel(_protocol.CrewWindow, _protocol.CrewCooldown),
+                _protocol.CrewWindow > 0f);
         }
 
         static readonly string[] SecLabel = BuildSecLabel();
