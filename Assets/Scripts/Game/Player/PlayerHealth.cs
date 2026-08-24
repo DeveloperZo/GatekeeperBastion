@@ -260,7 +260,7 @@ namespace GatekeepersProtocol.Game
                     Log.Event("Player", "down — client does not end the host run");
                     return;
                 }
-                gc.PlayerDied();
+                gc.PlayerDied(this);
                 return;
             }
 

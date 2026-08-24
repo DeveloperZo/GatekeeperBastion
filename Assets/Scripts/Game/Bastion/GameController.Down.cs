@@ -12,6 +12,13 @@ namespace GatekeepersProtocol.Game
     /// GameController.cs stays under cap; the guest path is GameController.Respawn.cs.</summary>
     public sealed partial class GameController
     {
+        #region State
+        // The body PlayerDied reported. Held so the DOWN tick and the respawn act on the
+        // rig that actually died rather than re-resolving through the registry, whose
+        // Local requires an FPS rig. Overwritten on the next death; stale outside Tethered.
+        PlayerHealth _downBody;
+        #endregion
+
         #region Properties
         /// <summary>True while the local (host or solo) body is dead and the run is still
         /// live — the DOWN overlay is up and Confirm buys the way back.</summary>
@@ -20,8 +27,7 @@ namespace GatekeepersProtocol.Game
             get
             {
                 if (Sim == null || Sim.Phase != RunPhase.Tethered) return false;
-                var rig = PlayerRegistry.Local;
-                return rig != null && rig.IsDead;
+                return _downBody != null && _downBody.IsDead;
             }
         }
         #endregion
@@ -30,8 +36,14 @@ namespace GatekeepersProtocol.Game
         /// <summary>Command from PlayerHealth: the player is dead. While a respawn can be
         /// honored the run holds open behind the DOWN overlay; otherwise the run ends
         /// exactly like a hatch loss. Unbanked is wiped either way; already-converted ship
-        /// Salvage is kept. Only meaningful while Tethered.</summary>
+        /// Salvage is kept. Only meaningful while Tethered. The bare overload is a death
+        /// with no body to put back — it always ends the run.</summary>
         public void PlayerDied()
+        {
+            PlayerDied(null);
+        }
+
+        public void PlayerDied(PlayerHealth body)
         {
             if (Sim == null)
             {
@@ -46,7 +58,7 @@ namespace GatekeepersProtocol.Game
                 Log.Warn(Tag, $"PlayerDied ignored in phase {Sim.Phase} (run already over).");
                 return;
             }
-            if (TryEnterLocalDown())
+            if (body != null && TryEnterLocalDown(body))
                 return;
             Sim.NotifyPlayerDown();
         }
@@ -56,12 +68,13 @@ namespace GatekeepersProtocol.Game
         public bool TryLocalRespawn()
         {
             if (Sim == null || Sim.Phase != RunPhase.Tethered) return false;
-            var rig = PlayerRegistry.Local;
+            var rig = _downBody;
             if (rig == null || !rig.IsDead) return false;
             if (!Sim.TryRespawn(out long cost)) return false;
             rig.ResetToSpawn();
             // ResetToSpawn alone leaves MovementLocked set from Die(); HealToFull clears it.
             rig.HealToFull();
+            _downBody = null;
             Log.Event("Demo", "respawn seat=0 cost=" + cost);
             return true;
         }
@@ -71,7 +84,7 @@ namespace GatekeepersProtocol.Game
         /// <summary>Called from PlayerDied. True holds the run open behind the DOWN
         /// overlay; false means no respawn can be honored and the caller ends the run,
         /// exactly as every death did before the recut.</summary>
-        bool TryEnterLocalDown()
+        bool TryEnterLocalDown(PlayerHealth body)
         {
             string reason = Sim.RespawnRefuse();
             if (reason != null && !AnyRemoteSeatFighting())
@@ -79,6 +92,7 @@ namespace GatekeepersProtocol.Game
                 Log.Event("Demo", "no respawn — " + reason);
                 return false;
             }
+            _downBody = body;
             // Dying wipes the seat's pile whether or not a respawn follows.
             Sim.WipeUnbankedSlot(0);
             Log.Event("Demo", reason == null
@@ -87,12 +101,16 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
-        /// <summary>Confirm on the DOWN overlay. Ticked from Update while Tethered.</summary>
+        /// <summary>Confirm on the DOWN overlay. Ticked from Update while Tethered. ESC is
+        /// bound to Confirm for the end screens and to FreeCursor for pause — the sampler
+        /// ORs bindings without context, so a press that is also FreeCursor is the pause
+        /// on its way open, not a respawn.</summary>
         void TickLocalDown()
         {
             if (!LocalDownActive) return;
             if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
-            if (!Controls.Down(ControlId.Confirm)) return;
+            var frame = Controls.Sample();
+            if (!frame.confirmDown || frame.freeCursorDown) return;
             TryLocalRespawn();
         }
 

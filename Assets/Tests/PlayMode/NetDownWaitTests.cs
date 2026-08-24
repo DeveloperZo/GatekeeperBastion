@@ -298,7 +298,6 @@ namespace GatekeepersProtocol.PlayTests
             _gc.Sim.AwardKill();
             Assert.Greater(_gc.Sim.UnbankedOf(0), 0L, "there is a pile to wipe");
             yield return null;
-            Assert.AreSame(rig, PlayerRegistry.Local, "the stand-in rig is the local body");
 
             LogAssert.Expect(LogType.Log,
                 "[Demo] down — respawn offered at " + Respawns.CostFor(0));
