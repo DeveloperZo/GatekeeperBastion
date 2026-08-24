@@ -255,6 +255,39 @@ looked — the fixtures prove the seat rule and the doors, not what a late arriv
 argues solo is unchanged from the count's side, which is weaker than the diff the milestone
 asks for. `mono` is not on this machine's PATH, so `Tools/verify/run.sh` ran its lints only.
 
+## Recut built, 2026-08-24
+
+Implemented as specified, steps 7–16, commits `a3aa959` and `b263880` on the doc recut
+`8d9f81a`. Two designs moved while building, both recorded in the files:
+
+- **PlayerDied carries the dying body.** `PlayerRegistry.Local` requires an FPS rig by
+  design (puppets must not steal it), which returned null under the test fixture — and
+  round-tripping the registry was never necessary, because the dying `PlayerHealth` is
+  the caller. The bare `PlayerDied()` overload still ends the run, which is exactly what
+  the legacy dev/test callers mean by it.
+- **ESC would have bought a respawn.** `Controls.Sample()` ORs bindings without context,
+  and ESC is bound to Confirm (end screens) and FreeCursor (pause) both. The DOWN tick
+  accepts Confirm only when the press is not also FreeCursor.
+
+**Verified.** EditMode through Unity: 767 passed / 14 failed — the recorded pre-existing
+set plus `BastionCoopSceneTests` and `CompendiumFormTests`, both belonging to concurrent
+in-flight work on other milestones, none in this area; all eight `RespawnsTests` and the
+recut fixtures pass. PlayMode through Unity: 79 / 2 — the recorded `NetVerbTests`
+repair-timing flake, plus `Down_HostFundedPot_HoldsRunOpenAndRespawns` failing on the
+registry lookup that the second commit replaced. Offline, the full source set (Sim,
+Game, EditMode tests, PlayMode tests) compiles clean with the fix in, and the offline
+EditMode replication holds at the recorded failure set. `docgen --check` matches the
+recut 4-Data blocks — which also re-derives the solo wave and hatch-bank composition
+tables from the live `WaveDirector` against the committed baseline, criterion 9's diff
+in substance.
+
+**Owed.** One green Unity PlayMode leg over the second commit: the tree stopped
+compiling under concurrent work (`CloudRealmStore.cs` awaiting the Cloud Save package)
+before the rerun could go through, so the fix is compile-proven offline and its fixture
+has not re-run in Unity. Criteria 1, 2, 6 eyes-on (join half) still owed as recorded
+above; the recut's own eyes-on (the DOWN overlay text, the priced button labels) rides
+the same two-editor session. The kill criterion reads the first co-op session's log.
+
 ## Usable, or it did not ship
 
 **Driven**: joining a realm, pressing follow, pressing `RESPAWN (<cost>)` on the Ship
