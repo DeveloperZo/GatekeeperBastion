@@ -29,11 +29,37 @@ namespace GatekeepersProtocol.Game
         public NetworkVariable<int> PendingStartWave = new NetworkVariable<int>(
             1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>The shared realm this session is standing in, for a guest's chooser to
+        /// remember: realm id, the OWNER's store player id, and the display name. Empty until
+        /// the host's share upload lands, and forever on LAN — a guest treats empty as
+        /// "nothing to remember" (Docs/Milestones — a realm you can open while its owner is
+        /// offline).</summary>
+        public NetworkVariable<Unity.Collections.FixedString64Bytes> SharedRealmId =
+            new NetworkVariable<Unity.Collections.FixedString64Bytes>(
+                default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public NetworkVariable<Unity.Collections.FixedString64Bytes> SharedRealmOwner =
+            new NetworkVariable<Unity.Collections.FixedString64Bytes>(
+                default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public NetworkVariable<Unity.Collections.FixedString64Bytes> SharedRealmName =
+            new NetworkVariable<Unity.Collections.FixedString64Bytes>(
+                default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         /// <summary>True while the party countdown is running.</summary>
         public bool IsCountingDown => IsSpawned && CountingDown.Value;
         #endregion
 
         #region Unity Lifecycle
+        public override void OnNetworkDespawn()
+        {
+            if (!IsServer)
+                SharedRealmOwner.OnValueChanged -= OnSharedRealmChanged;
+            if (_session != null)
+                _session.UnregisterLobby(this);
+            base.OnNetworkDespawn();
+        }
+
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -47,19 +73,35 @@ namespace GatekeepersProtocol.Game
                     session.RegisterLobby(this);
                 }
             }
+            if (!IsServer)
+            {
+                // A guest remembers the realm the moment the host's share lands — which may
+                // be after this spawn, so the change is watched, not just the spawn value.
+                SharedRealmOwner.OnValueChanged += OnSharedRealmChanged;
+                RememberIfShared();
+            }
             Log.Event(Tag, "party lobby spawned role=" + (IsServer ? "host" : "client"));
         }
 
-        public override void OnNetworkDespawn()
+        void OnSharedRealmChanged(
+            Unity.Collections.FixedString64Bytes before, Unity.Collections.FixedString64Bytes after)
         {
-            if (_session != null)
-                _session.UnregisterLobby(this);
-            base.OnNetworkDespawn();
+            RememberIfShared();
+        }
+
+        void RememberIfShared()
+        {
+            if (IsServer) return;
+            RealmShareService.RememberJoinedRealm(
+                SharedRealmId.Value.ToString(),
+                SharedRealmOwner.Value.ToString(),
+                SharedRealmName.Value.ToString());
         }
 
         void Update()
         {
             if (!IsSpawned || !IsServer) return;
+            PublishSharedRealm();
             if (!CountingDown.Value) return;
             float next = CountdownRemaining.Value - Time.unscaledDeltaTime;
             if (next > 0f)
@@ -112,6 +154,25 @@ namespace GatekeepersProtocol.Game
         #endregion
 
         #region Private
+        /// <summary>Host: put the shared realm's identity on the wire once the share upload
+        /// has landed. Cheap once set; stays empty for LAN and unshared sessions.</summary>
+        void PublishSharedRealm()
+        {
+            if (!SharedRealmId.Value.IsEmpty) return;
+            if (!RealmShareService.Holding) return;
+            var meta = GameSession.Meta;
+            if (meta == null || meta.Realm == null) return;
+            if (RealmShareService.HeldRealmId != meta.Realm.Id) return;
+            // The realm's OWNER, not this machine — a member can host a borrowed realm, and
+            // a guest's later reads seed from the owner's store slot.
+            string owner = RealmShareService.HeldOwnerId;
+            if (string.IsNullOrEmpty(owner)) return;
+            SharedRealmId.Value = meta.Realm.Id;
+            SharedRealmOwner.Value = owner;
+            SharedRealmName.Value = string.IsNullOrEmpty(meta.Realm.Name) ? "" : meta.Realm.Name;
+            Log.Event(Tag, "shared realm on the wire — " + meta.Realm.Id + " of " + owner);
+        }
+
         bool GuestsAllReady()
         {
             var nm = NetworkManager;

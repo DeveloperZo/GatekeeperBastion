@@ -58,6 +58,16 @@ namespace GatekeepersProtocol.Sim
         /// <summary>When true, <see cref="SetEquippedPayload"/> is a logged no-op (Run in progress).</summary>
         [NonSerialized] public bool PayloadLoadoutLocked;
 
+        // ---- Realms this Boarder has been admitted to ----
+        // The menu's half of the shared-realm roster: the realm's own member list decides
+        // ADMISSION, these rows only decide what the chooser offers, and a row the realm no
+        // longer honours is pruned when entry is refused (Docs/Milestones — a realm you can
+        // open while its owner is offline). Parallel arrays in the house JSON style; absent
+        // on an older document, which reads as none remembered.
+        string[] _knownRealmIds = Array.Empty<string>();
+        string[] _knownRealmOwners = Array.Empty<string>();
+        string[] _knownRealmNames = Array.Empty<string>();
+
         /// <summary>A Boarder with the given identity and empty kit. Ids come from the game
         /// layer; an empty or null name falls back to the default rather than saving blank.</summary>
         /// <summary>Built through CreateNew or FromJson only: a bare instance has null
@@ -381,6 +391,76 @@ namespace GatekeepersProtocol.Sim
             return spent;
         }
 
+        // ---- Known-realm rows ----
+
+        /// <summary>One remembered shared realm: enough to list it and to fetch it.</summary>
+        public struct KnownRealm
+        {
+            public string RealmId;
+            public string OwnerId;
+            public string Name;
+        }
+
+        public int KnownRealmCount { get { return _knownRealmIds.Length; } }
+
+        public KnownRealm KnownRealmAt(int index)
+        {
+            var k = new KnownRealm();
+            if (index < 0 || index >= _knownRealmIds.Length) return k;
+            k.RealmId = _knownRealmIds[index];
+            k.OwnerId = _knownRealmOwners[index];
+            k.Name = _knownRealmNames[index];
+            return k;
+        }
+
+        /// <summary>Remember a shared realm, or refresh its name. Idempotent — playing in the
+        /// same realm twice is one row.</summary>
+        public void RememberRealm(string realmId, string ownerId, string name)
+        {
+            if (string.IsNullOrEmpty(realmId) || string.IsNullOrEmpty(ownerId)) return;
+            for (int i = 0; i < _knownRealmIds.Length; i++)
+            {
+                if (_knownRealmIds[i] != realmId) continue;
+                _knownRealmOwners[i] = ownerId;
+                _knownRealmNames[i] = name ?? "";
+                return;
+            }
+            int n = _knownRealmIds.Length;
+            Array.Resize(ref _knownRealmIds, n + 1);
+            Array.Resize(ref _knownRealmOwners, n + 1);
+            Array.Resize(ref _knownRealmNames, n + 1);
+            _knownRealmIds[n] = realmId;
+            _knownRealmOwners[n] = ownerId;
+            _knownRealmNames[n] = name ?? "";
+        }
+
+        /// <summary>Drop a remembered realm. True when there was a row to drop. Called when
+        /// the realm refuses this player, and by the chooser's forget action.</summary>
+        public bool ForgetRealm(string realmId)
+        {
+            if (string.IsNullOrEmpty(realmId)) return false;
+            int at = -1;
+            for (int i = 0; i < _knownRealmIds.Length; i++)
+                if (_knownRealmIds[i] == realmId) { at = i; break; }
+            if (at < 0) return false;
+            int n = _knownRealmIds.Length - 1;
+            var ids = new string[n];
+            var owners = new string[n];
+            var names = new string[n];
+            for (int i = 0, k = 0; i <= n; i++)
+            {
+                if (i == at) continue;
+                ids[k] = _knownRealmIds[i];
+                owners[k] = _knownRealmOwners[i];
+                names[k] = _knownRealmNames[i];
+                k++;
+            }
+            _knownRealmIds = ids;
+            _knownRealmOwners = owners;
+            _knownRealmNames = names;
+            return true;
+        }
+
         /// <summary>The document as written to disk. Always stamped with the current version —
         /// a live object is by definition current.</summary>
         public string ToJson()
@@ -403,6 +483,9 @@ namespace GatekeepersProtocol.Sim
             JsonText.AppendLong(sb, "EquippedSecondary", (int)EquippedSecondary, true);
             JsonText.AppendLong(sb, "EquippedDrone", (int)EquippedDrone, true);
             JsonText.AppendLong(sb, "OwnedPayloadMask", OwnedPayloadMask, true);
+            JsonText.AppendStringArray(sb, "KnownRealmIds", _knownRealmIds);
+            JsonText.AppendStringArray(sb, "KnownRealmOwners", _knownRealmOwners);
+            JsonText.AppendStringArray(sb, "KnownRealmNames", _knownRealmNames);
             sb.Append('}');
             return sb.ToString();
         }
@@ -450,6 +533,19 @@ namespace GatekeepersProtocol.Sim
 
             b.EquippedDrone = (PayloadId)JsonText.ExtractInt(json, "EquippedDrone", (int)PayloadId.None);
             b.OwnedPayloadMask = JsonText.ExtractInt(json, "OwnedPayloadMask", 0);
+
+            b._knownRealmIds = JsonText.ExtractStringArray(json, "KnownRealmIds") ?? Array.Empty<string>();
+            b._knownRealmOwners = JsonText.ExtractStringArray(json, "KnownRealmOwners") ?? Array.Empty<string>();
+            b._knownRealmNames = JsonText.ExtractStringArray(json, "KnownRealmNames") ?? Array.Empty<string>();
+            // The three are parallel or they are nothing: a hand-edited document that broke
+            // the alignment must not let row 3's name stand beside row 2's owner.
+            if (b._knownRealmOwners.Length != b._knownRealmIds.Length
+                || b._knownRealmNames.Length != b._knownRealmIds.Length)
+            {
+                b._knownRealmIds = Array.Empty<string>();
+                b._knownRealmOwners = Array.Empty<string>();
+                b._knownRealmNames = Array.Empty<string>();
+            }
 
             // An id this build has no catalog row for — retired, or written by a build that
             // sold more — has to resolve to None here rather than reach a switch with no arm

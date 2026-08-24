@@ -16,7 +16,7 @@ namespace GatekeepersProtocol.Game
     /// cannot open, is told which of those it is rather than being left pressing a button that
     /// does nothing.
     /// </remarks>
-    public sealed class RealmSelectController : MonoBehaviour
+    public sealed partial class RealmSelectController : MonoBehaviour
     {
         const string Tag = "RealmSelect";
 
@@ -27,11 +27,13 @@ namespace GatekeepersProtocol.Game
         int _pickedRealm = -1;
         int _pickedBoarder = -1;
 
+        /// <summary>The shared-realm half of this screen: which rows are borrowed, and the
+        /// store-gated flows in and out of them.</summary>
+        readonly RealmSelectShared _shared = new RealmSelectShared();
+
         readonly ArmedAction _armedRealm = new ArmedAction();
         readonly ArmedAction _armedBoarder = new ArmedAction();
 
-        RelayJoin.Payload _relay;
-        string _joinCode;
         bool _busy;
         bool _leaving;
 
@@ -70,6 +72,12 @@ namespace GatekeepersProtocol.Game
             {
                 _pickedBoarder = i;
                 _armedBoarder.Disarm();
+                // The remote tail belongs to the picked Boarder, so it changes with the pick.
+                // The realm highlight follows its document across the rebuild where it can.
+                string keptRealm = _pickedRealm >= 0 && _pickedRealm < _realms.Length
+                    ? _realms[_pickedRealm].Id : null;
+                RebuildRealmRows();
+                _pickedRealm = IndexOfId(_realms, keptRealm);
                 Repaint();
             };
         }
@@ -86,11 +94,17 @@ namespace GatekeepersProtocol.Game
 
         void Refresh()
         {
-            _realms = RealmRegistry.Realms();
             _boarders = RealmRegistry.Boarders();
-            _pickedRealm = PreferredIndex(_realms, RealmRegistry.LastRealmId);
             _pickedBoarder = PreferredIndex(_boarders, RealmRegistry.LastBoarderId);
+            RebuildRealmRows();
+            _pickedRealm = PreferredIndex(_realms, RealmRegistry.LastRealmId);
             Repaint();
+        }
+
+        void RebuildRealmRows()
+        {
+            _realms = _shared.BuildRows(RealmRegistry.Realms(),
+                Picked(_boarders, _pickedBoarder) ? _boarders[_pickedBoarder].Id : null);
         }
 
         /// <summary>The row to start on: the one played last, else the first that can be opened,
@@ -162,8 +176,9 @@ namespace GatekeepersProtocol.Game
                     : "\"" + realm.Name + "\" could not be written to disk — it will not be here next time.");
         }
 
-        void OnEnter()
+        async void OnEnter()
         {
+            if (_leaving || _busy) return;
             if (!CanEnter())
             {
                 Log.Event(Tag, "enter refused — " + WhyNotEnter());
@@ -172,6 +187,34 @@ namespace GatekeepersProtocol.Game
             }
             string realmId = _realms[_pickedRealm].Id;
             string boarderId = _boarders[_pickedBoarder].Id;
+
+            if (_shared.IsRemote(_pickedRealm))
+            {
+                var row = _realms[_pickedRealm];
+                _busy = true;
+                if (_view != null) _view.SetStatus("Opening \"" + row.Name + "\" from the store…");
+                var outcome = await _shared.Enter(row, _pickedRealm, boarderId);
+                _busy = false;
+                if (outcome.Left) { _leaving = true; return; }
+                if (outcome.RowsChanged) { RebuildRealmRows(); _pickedRealm = -1; }
+                Repaint();
+                if (_view != null && outcome.Status != null) _view.SetStatus(outcome.Status);
+                return;
+            }
+
+            // An owned realm that has been SHARED opens under the lock, so a member playing
+            // in it right now refuses this machine too — the owner is one member among the
+            // members where the lock is concerned.
+            _busy = true;
+            string refusal = await RealmSelectShared.AcquireIfShared(realmId);
+            _busy = false;
+            if (refusal != null)
+            {
+                Log.Event(Tag, "enter refused — " + refusal);
+                if (_view != null) _view.SetStatus(refusal);
+                return;
+            }
+
             if (!GameSession.EnterRealm(realmId, boarderId))
             {
                 // Repaint FIRST: Refresh ends in Repaint, which writes WhyNotEnter over the
@@ -243,6 +286,24 @@ namespace GatekeepersProtocol.Game
             // armed while the player moved to DELETE BOARDER — which also overwrote the status
             // line — so a press meant for the Boarder's confirmation deleted a realm instead.
             _armedBoarder.Disarm();
+
+            // A remote row is a memory, not a document: DELETE forgets it here. The realm
+            // itself lives with its owner, and playing there again remembers it again.
+            if (_shared.IsRemote(_pickedRealm))
+            {
+                string status;
+                if (_shared.ArmedForget(_realms[_pickedRealm],
+                    Picked(_boarders, _pickedBoarder) ? _boarders[_pickedBoarder].Id : null,
+                    _armedRealm, Time.unscaledTime, out status))
+                {
+                    _pickedRealm = -1;
+                    RebuildRealmRows();
+                }
+                Repaint();
+                if (_view != null) _view.SetStatus(status);
+                return;
+            }
+
             var row = _realms[_pickedRealm];
             string refusal = WhyNotDelete(row.Id, GameSession.CurrentRealmId, "realm");
             if (refusal != null)
@@ -344,161 +405,6 @@ namespace GatekeepersProtocol.Game
             if (!string.IsNullOrEmpty(openId) && openId == id)
                 return "That " + kind + " is the one this session has open. Go back to the menu first.";
             return null;
-        }
-
-        // ---- Open to friends ----
-
-        /// <summary>Ask Relay for a code for the picked realm. Nothing is committed yet: the
-        /// realm is entered on TO SHIP, at the same moment ENTER would have entered it, so
-        /// backing out of this panel leaves the session exactly as it was found.</summary>
-        async void OnOpenToFriends()
-        {
-            if (_leaving || _busy) return;
-            if (!CanEnter())
-            {
-                Log.Event(Tag, "open refused — " + WhyNotEnter());
-                Repaint();
-                return;
-            }
-
-            // Read the picked realm off disk and apply the multiplayer rule BEFORE Relay is
-            // asked for anything. Every FRESH realm is DemoActive with two wheel buys left, so
-            // this is the default path, not an edge case — and refusing after the fact meant the
-            // player had already copied a code and sent it to a friend who could never use it.
-            var picked = SaveService.LoadRealm(_realms[_pickedRealm].Id);
-            if (picked != null
-                && !DemoProgress.MultiplayerUnlocked(picked.DemoActive, picked.DemoWheelBuysLeft))
-            {
-                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
-                if (_view != null)
-                    _view.SetStatus("\"" + _realms[_pickedRealm].Name
-                        + "\" is still in the opening — multiplayer unlocks on your first upgrade.");
-                return;
-            }
-
-            _busy = true;
-            _relay = default;
-            _joinCode = null;
-            if (_view != null)
-            {
-                _view.SetCode("");
-                _view.SetLanVisible(false);
-                _view.SetSessionStatus("Requesting join code…");
-                _view.ShowSession();
-            }
-
-            RelayJoin.Result result = await RelayJoin.TryHost();
-            _busy = false;
-            if (_view == null) return;
-            if (!result.Ok)
-            {
-                // Relay is down or unreachable. LAN is still a way to play together on one
-                // network, so the panel stays up and offers it rather than closing.
-                _view.SetSessionStatus(result.Error);
-                _view.SetLanVisible(true);
-                return;
-            }
-            _relay = result.Payload;
-            _joinCode = result.JoinCode;
-            _view.SetCode(_joinCode);
-            _view.SetSessionStatus("Send this code to a friend, then go aboard.");
-        }
-
-        void OnCopyCode()
-        {
-            if (string.IsNullOrEmpty(_joinCode)) return;
-            GUIUtility.systemCopyBuffer = _joinCode;
-            if (_view != null) _view.SetSessionStatus("Copied to clipboard.");
-        }
-
-        void OnToShip()
-        {
-            if (!RelayJoin.HasPayload(_relay) || string.IsNullOrEmpty(_joinCode))
-            {
-                if (_view != null)
-                    _view.SetSessionStatus("No join code yet — wait, or host on LAN.");
-                return;
-            }
-            StartHosting(relay: true);
-        }
-
-        void OnHostLan()
-        {
-            StartHosting(relay: false);
-        }
-
-        /// <summary>Back out without having hosted. The realm was never entered, so there is
-        /// nothing to undo.</summary>
-        void OnSessionBack()
-        {
-            if (_busy) return;
-            _relay = default;
-            _joinCode = null;
-            if (_view != null) _view.ShowChooser();
-        }
-
-        /// <summary>Enter the picked realm, then start the session in it. The order is the
-        /// point: the realm is chosen before anyone is hosting it, so "which world are we in"
-        /// is answered by the player rather than by whichever one was opened last.</summary>
-        void StartHosting(bool relay)
-        {
-            if (_leaving || _busy) return;
-            var existing = NetSession.FindLive();
-            if (existing != null && existing.Active)
-            {
-                if (_view != null) _view.SetSessionStatus("Already hosting — leave that session first.");
-                Log.Warn(Tag, "host refused — session already active.");
-                return;
-            }
-            if (!CanEnter())
-            {
-                if (_view != null) _view.SetSessionStatus(WhyNotEnter());
-                return;
-            }
-
-            string realmId = _realms[_pickedRealm].Id;
-            string boarderId = _boarders[_pickedBoarder].Id;
-            if (!GameSession.EnterRealm(realmId, boarderId))
-            {
-                if (_view != null)
-                    _view.SetSessionStatus("That realm could not be opened. Nothing was changed.");
-                Refresh();
-                return;
-            }
-
-            if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
-            {
-                if (_view != null)
-                    _view.SetSessionStatus("Multiplayer unlocks after your first upgrade — play the opening solo.");
-                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
-                return;
-            }
-
-            _leaving = true;
-            NetJoinIntent.LastError = null;
-            NetJoinIntent.Clear();
-            FrontEndMusic.Stop();
-
-            var session = NetSession.CreateBootstrap();
-            if (session == null)
-            {
-                _leaving = false;
-                if (_view != null) _view.SetSessionStatus("Net session bootstrap missing.");
-                return;
-            }
-            if (relay) session.StartHostRelay(_relay, _joinCode);
-            else session.StartHost();
-            if (!session.Active)
-            {
-                _leaving = false;
-                if (_view != null) _view.SetSessionStatus("Host start failed.");
-                return;
-            }
-            if (!session.LoadLobbyShip())
-            {
-                _leaving = false;
-                if (_view != null) _view.SetSessionStatus("The co-op Ship scene would not load.");
-            }
         }
 
         /// <summary>The alternate way in. The first-Bastion demo keeps its own ship and its own

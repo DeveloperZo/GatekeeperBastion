@@ -333,6 +333,61 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void Parse_CoopLayoutFile_UpperIslandsDoNotSkipLockedDoors()
+        {
+            string text = System.IO.File.ReadAllText(System.IO.Path.GetFullPath(CoopLayoutPath));
+            BastionSketchParseResult result = BastionSketchParser.Parse(text);
+            Assert.IsTrue(result.Success, result.Error);
+
+            Assert.IsFalse(HasDoorOverride(result.Sketch, "U1", BastionSketchDirection.North));
+            Assert.IsFalse(HasDoorOverride(result.Sketch, "U6", BastionSketchDirection.South));
+            Assert.IsFalse(HasDoorOverride(result.Sketch, "U6", BastionSketchDirection.North));
+            Assert.IsFalse(HasDoorOverride(result.Sketch, "U10", BastionSketchDirection.South));
+            Assert.IsFalse(HasDoorOverride(result.Sketch, "U10", BastionSketchDirection.North));
+            Assert.IsTrue(
+                HasSideKind(result.Sketch, "U5", BastionSketchDirection.East, BastionSideKind.Wall),
+                "U5 east sits on S2's closet roof and must be a wall");
+
+            Assert.IsFalse(HasDoorOnlyPath(result.Sketch, "U1", "U6"),
+                "U1–U6 door path would walk over D1");
+            Assert.IsFalse(HasDoorOnlyPath(result.Sketch, "U6", "U10"),
+                "U6–U10 door path would walk over D2");
+            Assert.IsFalse(HasDoorOnlyPath(result.Sketch, "U1", "U10"),
+                "U1–U10 door path would skip D1 and D2");
+            Assert.IsTrue(HasDoorOnlyPath(result.Sketch, "U1", "U5"),
+                "island A must stay internally connected");
+            Assert.IsTrue(HasDoorOnlyPath(result.Sketch, "U6", "U8"),
+                "island B must stay internally connected");
+            Assert.IsTrue(HasDoorOnlyPath(result.Sketch, "U10", "U14"),
+                "island C must stay internally connected");
+        }
+
+        [Test]
+        public void Parse_CoopLayoutFile_EverySpawnReachesHatchRoom()
+        {
+            string text = System.IO.File.ReadAllText(System.IO.Path.GetFullPath(CoopLayoutPath));
+            BastionSketchParseResult result = BastionSketchParser.Parse(text);
+            Assert.IsTrue(result.Success, result.Error);
+
+            int checkedCount = 0;
+            for (int i = 0; i < result.Sketch.Rooms.Count; i++)
+            {
+                BastionSketchRoom room = result.Sketch.Rooms[i];
+                for (int m = 0; m < room.Marks.Count; m++)
+                {
+                    if (room.Marks[m].Kind != BastionSketchMarkKind.Spawn)
+                        continue;
+                    checkedCount++;
+                    Assert.IsTrue(
+                        HasWalkPathIncludingLockedDoors(result.Sketch, room.Id, "R1"),
+                        room.Id + " (" + room.Marks[m].RefId + ") has no walk to R1");
+                }
+            }
+
+            Assert.GreaterOrEqual(checkedCount, 12);
+        }
+
+        [Test]
         public void SeatSpawns_ThreeSeatMarksAreMutedAtTwo()
         {
             Assert.IsTrue(BastionSeatSpawns.IsLive(1, 2));
@@ -408,9 +463,46 @@ namespace GatekeepersProtocol.Tests
 
         static bool HasPassagePath(BastionSketch sketch, string fromId, string toId)
         {
-            if (fromId == toId)
-                return true;
+            return Bfs(BuildAdj(sketch, includeStairs: true, includeLockedDoors: false), fromId, toId);
+        }
 
+        static bool HasDoorOnlyPath(BastionSketch sketch, string fromId, string toId)
+        {
+            return Bfs(BuildAdj(sketch, includeStairs: false, includeLockedDoors: false), fromId, toId);
+        }
+
+        static bool HasWalkPathIncludingLockedDoors(BastionSketch sketch, string fromId, string toId)
+        {
+            return Bfs(BuildAdj(sketch, includeStairs: true, includeLockedDoors: true), fromId, toId);
+        }
+
+        static bool HasDoorOverride(
+            BastionSketch sketch, string roomId, BastionSketchDirection direction)
+        {
+            return HasSideKind(sketch, roomId, direction, BastionSideKind.Door);
+        }
+
+        static bool HasSideKind(
+            BastionSketch sketch,
+            string roomId,
+            BastionSketchDirection direction,
+            BastionSideKind kind)
+        {
+            for (int i = 0; i < sketch.Sides.Count; i++)
+            {
+                BastionSketchSideOverride side = sketch.Sides[i];
+                if (side.RoomId == roomId
+                    && side.Direction == direction
+                    && side.Kind == kind)
+                    return true;
+            }
+
+            return false;
+        }
+
+        static Dictionary<string, List<string>> BuildAdj(
+            BastionSketch sketch, bool includeStairs, bool includeLockedDoors)
+        {
             var adj = new Dictionary<string, List<string>>();
             for (int i = 0; i < sketch.Rooms.Count; i++)
                 adj[sketch.Rooms[i].Id] = new List<string>();
@@ -425,12 +517,42 @@ namespace GatekeepersProtocol.Tests
                 adj[partner].Add(passages[i].RoomId);
             }
 
-            for (int i = 0; i < sketch.Stairs.Count; i++)
+            if (includeLockedDoors)
             {
-                BastionSketchStair stair = sketch.Stairs[i];
-                adj[stair.LowerId].Add(stair.UpperId);
-                adj[stair.UpperId].Add(stair.LowerId);
+                for (int i = 0; i < sketch.Doors.Count; i++)
+                {
+                    BastionSketchDoor door = sketch.Doors[i];
+                    var passage = new BastionSketchPassage
+                    {
+                        RoomId = door.RoomId,
+                        Direction = door.Direction,
+                        Along = door.Along,
+                    };
+                    string partner = PassagePartner(sketch, passage);
+                    if (partner == null)
+                        continue;
+                    adj[door.RoomId].Add(partner);
+                    adj[partner].Add(door.RoomId);
+                }
             }
+
+            if (includeStairs)
+            {
+                for (int i = 0; i < sketch.Stairs.Count; i++)
+                {
+                    BastionSketchStair stair = sketch.Stairs[i];
+                    adj[stair.LowerId].Add(stair.UpperId);
+                    adj[stair.UpperId].Add(stair.LowerId);
+                }
+            }
+
+            return adj;
+        }
+
+        static bool Bfs(Dictionary<string, List<string>> adj, string fromId, string toId)
+        {
+            if (fromId == toId)
+                return true;
 
             var seen = new HashSet<string>();
             var queue = new Queue<string>();

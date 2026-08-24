@@ -35,7 +35,9 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        static void Attach(Transform host, float seconds)
+        /// <summary>Public since the faucet-loop graybox marks its origin terminal with
+        /// the same quad — the host is any Transform, not only a Gatekeeper's.</summary>
+        public static void Attach(Transform host, float seconds)
         {
             // One marker per body: a second pulse refreshes the first rather than stacking.
             var existing = host.GetComponentInChildren<PingMarker>();

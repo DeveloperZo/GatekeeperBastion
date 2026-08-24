@@ -1,10 +1,10 @@
 # M95 — The co-op bastion
 
 <!--
-Status: planned
+Status: planned (built 2026-08-23, unverified)
 Update trigger: when the zone shape changes, when the hatch count changes, when the
 sketch parser gains or loses a mark kind
-Last updated: 2026-08-22
+Last updated: 2026-08-23
 -->
 
 A second kit layout, `Assets/Scenes/Bastion_Coop.unity`, authored so that a party
@@ -66,6 +66,11 @@ Leverage tier (`../../Working-Rules.md`): **#4, self-organisation.**
    `R10 U10`. Parser: `storey=`, `stair`, `S:id:edge:3`.
 5. **Use** the demo door graph on the ground. Three numbered hatch marks on R1.
    Two-seat mute is hatch 2 plus S7–S12.
+6. **Author** the three stairs in the scene. Emit skips a `Stair_*` already under
+   Authored. Pose the dress mesh (yaw 180, local z 10.5, matching R1/R6), destroy
+   walk children, then call `BastionSketchStairs.FitWalkAndWellToDress` so climb
+   defaults to +Z, the foot is buried, the landing is flush with storey 1, and the
+   well is punched from live `Renderer.bounds`. Do not re-emit over those objects.
 
 Rejected: procedurally generating the layout. Nothing else in this project generates a
 bastion at runtime, and a demo needs a known shape to author beats against.
@@ -79,18 +84,26 @@ bastion at runtime, and a demo needs a known shape to author beats against.
 
 ## Verification
 
-- Criteria 1, 5, 6, 8: playthrough. Embark, walk both storeys, time hatch 1 to 3,
-  confirm 20–30 rooms and the three stairs.
-- Criteria 2, 10: read `ProjectSettings/EditorBuildSettings.asset` for the enabled
-  entry, and `git diff` on `Bastion.unity` showing no change.
-- Criteria 3, 4, 7: EditMode test over the parsed sketch — three hatch marks, S7–S12
-  minSeats=3, zone-1 spawns path to R1. Scene emit later.
-- Criterion 9: eyes-on, two editor instances. The net fixture cannot test scene load
-  across MPPM.
+Playthrough is confirmation for remaining seams and for “see hatch 3”. It is not the
+only close for disk or graph criteria. Criterion 9 is eyes-on and does not close the
+milestone. This file stays in planned; co-op demo is phase 2.
+
+| Criterion | Close |
+|---|---|
+| 1 walkable / no hole | PlayMode `BastionCoopStairWalkTests.CharacterController_ReachesStoreyOne_OnEachStair` climbs R1/R6/R10 from live mesh bounds (passed 2026-08-23, 6.86 s). Remaining room seams are playthrough. |
+| 2 build settings | `BastionCoopSceneTests.BuildSettings_ListsCoopSceneEnabled_OnceTheFileExists` |
+| 3 three hatches | Sketch `Parse_CoopLayoutFile_HasThreeNumberedHatchesOnOneRoom`; scene `CoopScene_Exists_HasDemoSpine_AndThreeHatchDoors` fails if Hatch_1..3 are missing |
+| 4 two-seat mute | `SeatSpawns_ThreeSeatMarksAreMutedAtTwo`; `ShipHatchesTests.OpenFor_TwoSeats_OpensTheOuterPair` |
+| 5 hatch 1→3 in 10 s | `Parse_CoopLayoutFile_HatchOneToThreeIsInsideTenWalkSeconds` (28 m / 5 m/s). Seeing hatch 3 is playthrough. |
+| 6 no skip D1/D2/D3 | `Parse_CoopLayoutFile_UpperIslandsDoNotSkipLockedDoors` |
+| 7 spawn→hatch | `Parse_CoopLayoutFile_EverySpawnReachesHatchRoom` |
+| 8 20–30 two storeys | sketch 28 rooms / 13 storey-1; scene segment-guid count in band |
+| 9 guest same state | eyes-on, two editors. Not a close gate. |
+| 10 Bastion.unity | `git diff -- Assets/Scenes/Bastion.unity` empty |
 
 **Playthrough path**: Play, Host, embark from the Ship, arrive in `Bastion_Coop`, walk
-from the middle of the defended room to each of the three hatch positions, then to a
-field terminal and back.
+from the middle of the defended room to each of the three hatch positions, then each
+stair to its gallery and back.
 
 ## Usable, or it did not ship
 

@@ -50,6 +50,12 @@ namespace GatekeepersProtocol.Game
 
         void TickPrepCommands()
         {
+            // The open faucet draft owns E and T until it is confirmed (faucet graybox).
+            if (Sim.FaucetAwaitingDraft)
+            {
+                TickFaucetDraft();
+                return;
+            }
             var looking = _interactor != null ? _interactor.Current : null;
             var lookingTerminal = looking as BastionTerminal;
             var lookingHatch = looking as RepairInteractable;
@@ -71,6 +77,9 @@ namespace GatekeepersProtocol.Game
 
             if (Controls.Down(ControlId.PullDraw))
             {
+                // Prep-gap faucet shutoff: T at the origin between chained Waves.
+                if (TryFaucetPrepShutoff(lookingTerminal))
+                    return;
                 if (hatchStartable)
                 {
                     if (!_armedHatch)
@@ -330,6 +339,8 @@ namespace GatekeepersProtocol.Game
 
             Log.Event("Terminal", terminal.TerminalId + " started wave " + Sim.CurrentWaveIndex
                 + " intensity=" + intensity + " juiced=" + juiced);
+            if (Sim.FaucetCycleLive)
+                _faucetTerminal = terminal; // this slice's off switch is the origin terminal
             return true;
         }
 
@@ -397,6 +408,14 @@ namespace GatekeepersProtocol.Game
                     Log.Event("Demo", "zone terminals complete zone=" + zone);
             }
             ClearPendingTerminal();
+            // Faucet chain: the next chained Wave is this same terminal's — keep recording
+            // clears until the terminal completes or the cycle ends (faucet graybox).
+            if (Sim.FaucetCycleLive && !layout.IsTerminalDone(id))
+            {
+                _pendingTerminalId = id;
+                _pendingWaveIndexAtPull = Sim.CurrentWaveIndex;
+                _pendingLayout = layout;
+            }
         }
 
         /// <summary>True when every terminal the zone table authors is complete in this

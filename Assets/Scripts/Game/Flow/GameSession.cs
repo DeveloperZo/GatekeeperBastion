@@ -35,6 +35,12 @@ namespace GatekeepersProtocol.Game
         /// <summary>Id of the Boarder this session is playing as, or empty.</summary>
         public static string CurrentBoarderId { get; private set; } = "";
 
+        /// <summary>True while the open realm is a BORROWED one — fetched from another
+        /// player's store under the shared-realm lock. Its writes go to the remote working
+        /// copy, never into this machine's own realms directory
+        /// (Docs/Milestones — a realm you can open while its owner is offline).</summary>
+        public static bool CurrentRealmIsRemote { get; private set; }
+
         /// <summary>True once any Dev command has run this play session. A tainted session must
         /// never overwrite a real campaign save — <see cref="Save"/> becomes a no-op.</summary>
         public static bool DevTainted { get; private set; }
@@ -60,6 +66,7 @@ namespace GatekeepersProtocol.Game
             Meta = null;
             CurrentRealmId = "";
             CurrentBoarderId = "";
+            CurrentRealmIsRemote = false;
             DevTainted = false;
             PendingStartWave = 1;
             PendingEscapedLine = false;
@@ -85,6 +92,7 @@ namespace GatekeepersProtocol.Game
                 return;
             CurrentRealmId = "";
             CurrentBoarderId = "";
+            CurrentRealmIsRemote = false;
             Log.Event(Tag, "no realm open — back at the menu");
         }
 
@@ -100,6 +108,9 @@ namespace GatekeepersProtocol.Game
             }
             NotifyDevAction();
             Meta = state;
+            // A constructed state is a local pair by definition — never leave a previous
+            // borrowed-realm session's write routing behind it.
+            CurrentRealmIsRemote = false;
             // The ids name whatever was ENTERED. A constructed state is not on disk under
             // them, so leaving them set would have any later reader pointing at documents
             // this session is not actually playing.
@@ -160,9 +171,35 @@ namespace GatekeepersProtocol.Game
                 return false;
             }
             DevTainted = false;
+            CurrentRealmIsRemote = false;
             Adopt(boarder, realm);
             Log.Event("Ship",
                 $"entered realm \"{realm.Name}\" as \"{boarder.Name}\" — {Meta.BankedSalvage} banked, {LoadoutLog(Meta)}");
+            return true;
+        }
+
+        /// <summary>Take a Boarder into a BORROWED realm — one fetched from another player's
+        /// store, already holding the shared-realm lock. The realm object arrives in memory
+        /// because it has no file of its own here yet; the working copy is written on the
+        /// first save. The last-played pointer is deliberately NOT set: CONTINUE resolves
+        /// against this machine's own realms, and a borrowed world is not one of them.</summary>
+        public static bool EnterRemoteRealm(RealmState realm, string boarderId)
+        {
+            var boarder = SaveService.LoadBoarder(boarderId);
+            if (realm == null || boarder == null)
+            {
+                Log.Warn(Tag, "Could not enter the shared realm — the session was left as it was.");
+                return false;
+            }
+            DevTainted = false;
+            Meta = MetaState.Compose(boarder, realm);
+            CurrentBoarderId = boarder.Id;
+            CurrentRealmId = realm.Id;
+            CurrentRealmIsRemote = true;
+            RealmRegistry.LastBoarderId = boarder.Id;
+            SaveService.SaveRemoteRealm(realm);
+            Log.Event("Ship",
+                $"entered SHARED realm \"{realm.Name}\" as \"{boarder.Name}\" — {Meta.BankedSalvage} banked, {LoadoutLog(Meta)}");
             return true;
         }
 
@@ -329,7 +366,10 @@ namespace GatekeepersProtocol.Game
         {
             try
             {
-                SaveService.SaveRealm(Meta.Realm);
+                // A borrowed realm writes to its working copy, never into this machine's own
+                // realms directory — the chooser lists that directory as "your realms".
+                if (CurrentRealmIsRemote) SaveService.SaveRemoteRealm(Meta.Realm);
+                else SaveService.SaveRealm(Meta.Realm);
                 Log.Info(Tag, $"Saved (banked {Meta.BankedSalvage}, runs {Meta.TotalRuns}).");
             }
             catch (Exception e)

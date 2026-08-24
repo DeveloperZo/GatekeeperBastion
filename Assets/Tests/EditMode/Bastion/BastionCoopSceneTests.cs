@@ -51,12 +51,8 @@ namespace GatekeepersProtocol.Tests
                     hatchDoors++;
             }
 
-            if (hatchDoors < 3)
-            {
-                Assert.Inconclusive(
-                    CoopScenePath + " exists but Hatch_1..3 are not emitted yet");
-                return;
-            }
+            Assert.AreEqual(3, hatchDoors,
+                CoopScenePath + " is the two-storey co-op emit but Hatch_1..3 are missing");
 
             string guid = SegmentGuid();
             int segments = Regex.Matches(yaml, @"guid: " + guid).Count;
@@ -77,7 +73,8 @@ namespace GatekeepersProtocol.Tests
             string[] stairs =
             {
                 "Stair_R1_U1", "Stair_R6_U6", "Stair_R10_U10",
-                "GStairWalk_R1_U1", "GStairWalk_R6_U6", "GStairWalk_R10_U10"
+                "GStairWalk_R1_U1", "GStairWalk_R6_U6", "GStairWalk_R10_U10",
+                "GStairLand_R1_U1", "GStairLand_R6_U6", "GStairLand_R10_U10"
             };
             for (int i = 0; i < stairs.Length; i++)
             {
@@ -140,6 +137,28 @@ namespace GatekeepersProtocol.Tests
                 RegexOptions.Multiline);
             Assert.IsTrue(m.Success,
                 "EditorBuildSettings must list Assets/Scenes/Bastion_Coop.unity with enabled: 1");
+        }
+
+        [Test]
+        public void CoopScene_UsesTheShipCoopSpaceSkybox()
+        {
+            if (!File.Exists(Path.GetFullPath(CoopScenePath)))
+            {
+                Assert.Inconclusive(CoopScenePath + " not on disk yet");
+                return;
+            }
+
+            string shipYaml = Read("Assets/Scenes/Ship - CoOp.unity");
+            Match shipSky = Regex.Match(
+                shipYaml,
+                @"m_SkyboxMaterial: \{fileID: 2100000, guid: ([0-9a-f]+), type: 2\}");
+            Assert.IsTrue(shipSky.Success, "Ship - CoOp has no skybox guid");
+
+            string coopYaml = Read(CoopScenePath);
+            StringAssert.Contains(
+                "m_SkyboxMaterial: {fileID: 2100000, guid: " + shipSky.Groups[1].Value,
+                coopYaml,
+                "Bastion_Coop must use Ship - CoOp's PolygonSciFiSpace skybox");
         }
 
         static string SegmentGuid()

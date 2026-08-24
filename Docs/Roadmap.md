@@ -29,7 +29,8 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**Active (3/3):** `M86` (downed crewmates), `M97` (the ship remembers — activated
+**Active (4/3 — over the cap at Zo's direction, 2026-08-24):** `M63-3` (the Cloaker —
+unparked and built 2026-08-24; Unity verification and Zo's eyes-on owed), `M86` (downed crewmates), `M97` (the ship remembers — activated
 2026-08-24; built and rescued through `M101`, view tests in; eyes-on and two-box owed),
 `M98` (recut 2026-08-24 by Zo: the between-waves seam also owns death — a limited
 per-seat pool prices in-wave respawns, break respawns are unlimited, every one costs
@@ -46,7 +47,6 @@ eyes-on on `M99`).
 on `M99`), `M83` (PlayMode 2/0; two-window confirmation). PRI-C further tuning
 owed outside `M93`.
 
-**Parked 2026-08-22:** `M63-3` — no `GatekeeperKind.Cloaker` yet.
 
 **Folder-completed since 2026-08-20:** `M82`, `M83`, `M84`, `M85`, `M90`, `M91`, `M92`, `M93`, `M94`, `M96`.
 
@@ -63,7 +63,7 @@ with **M72**; remaining friends work is polish and dry-run length.
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
 3. Older play close-outs: `GatekeeperZo Notes/verification.md`.
 
-Active **3** of 3 (`M86`, `M97`, `M98`).
+Active **4** of 3 (`M63-3`, `M86`, `M97`, `M98`) — one over the cap, at Zo's direction.
 
 ## Order
 
@@ -131,7 +131,7 @@ this table — see the change log.
 | M69 | The session has a voice | completed, Aug 2026 | Whispers on Ship/Bastion; fire/reload/footsteps on SFX; no store pack. Gate: `SessionMusicHostTests` 4/0. Criterion 4 slider playthrough open | [`3. completed/M69`](Milestones/3.%20completed/M69-the-session-has-a-voice.md) |
 | M63 | The garrison is a roster | later | Twelve-kind roster + properties + draw rule recorded; `M53`'s Ram exception removed; door-time logged. Criteria 5, 8 and 9 (Ram→Thief, `in_build` filter) shaved off to `M63-3` 2026-08-20 | [`1. planned/M63`](Milestones/1.%20planned/M63-the-garrison-a-roster-with-bodies.md) |
 | M63-2 | The three that walk | completed, Aug 2026 | Default/Hunter/Thief (Ram) Synty meshes + Mixamo melee walk; player capsule mesh removed; Play pages Thief-named. Gate: GatekeeperPresentationTests; silhouette Zo-closed | [`3. completed/M63-2`](Milestones/3.%20completed/M63-2-the-three-that-walk.md) |
-| M63-3 | The one that stops when you look | later (parked 2026-08-22) | Cloaker kind — watch cone + two-material cloak on `SK_Tactical`; carries `M63` Ram→Thief rename and `in_build` filter. Parked: no Cloaker code yet; active slot freed for `M84` play-close | [`1. planned/M63-3`](Milestones/1.%20planned/M63-3-the-one-that-stops-when-you-look.md) |
+| M63-3 | The one that stops when you look | active (unparked 2026-08-24) | Cloaker kind — watch cone + two-material cloak on `SK_Tactical`; carried `M63`'s Ram→Thief rename (landed 2026-08-20) and the `in_build` Compendium filter. Built 2026-08-24; Unity suites + eyes-on owed | [`2. active/M63-3`](Milestones/2.%20active/M63-3-the-one-that-stops-when-you-look.md) |
 | M62 | The Compendium you can open | completed, Aug 2026 | Esc → Compendium; Game dimension + scroll nav; StreamingAssets copy; HUD hidden while open; `CompendiumFormTests` | [`3. completed/M62`](Milestones/3.%20completed/M62-the-compendium-you-can-open.md) |
 | M60 | A join a friend can use | completed, Aug 2026 | Unity Relay join code from Main Menu; join-in-Tethered; clean disconnect; host-quit message; LAN IP fallback. Gate: NetSessionAddressTests + Zo eyes-on criterion 4 | [`3. completed/M60`](Milestones/3.%20completed/M60-a-join-a-friend-can-use.md) |
 | M65 | Three players, and a fight that counts them | completed, Aug 2026 | Three supported, six cheap; waves scale by player count; salvage split to own wallets. Gate: `PlayerWalletTests`, `WavePlayerCountTests`, `NetThreePlayerTests` (cumulative BankCap; `RunSim.Wallets.cs`). Full suite still has unrelated reds | [`3. completed/M65`](Milestones/3.%20completed/M65-three-players-and-a-fight-that-counts-them.md) |
@@ -170,8 +170,9 @@ this table — see the change log.
 | M99 | A range you can fight in | completed, Aug 2026 | `Ship - CoOp` door → `Range.unity`; opens with the whole catalogue unlocked; real Gatekeepers at marked distances; cooldown bypass and respawn; readout. Criterion 8 recut to FORGE's turret 2026-08-23. Played and closed 2026-08-23. Console is the F-key overlay and the doors are graybox — carried, presentation on a dev tool | [`3. completed/M99`](Milestones/3.%20completed/M99-a-range-you-can-fight-in.md) |
 | M98 | Drop in between waves | active (join half built 2026-08-22; recut 2026-08-24) | `RunSeats` splits the seats playing from the seats connected: a late arrival waits on the Ship and follows at a Prep, a departure is held to the next one, and wave composition, the wallet split and the hatch doors all read the roster rather than the connected list. `WaveDirector` untouched. Recut 2026-08-24: one respawn rule replaces the buy-back windows — a per-seat pool prices in-wave returns, break returns are unlimited, cost escalates 150 × uses+1 from the realm pot, and host/solo death becomes a DOWN state when the offer can be honored. Join-half criteria 1, 2, 6 eyes-on owed | [`2. active/M98`](Milestones/2.%20active/M98-drop-in-between-waves.md) |
 | M97 | The ship remembers | active (built 2026-08-22, activated 2026-08-24) | The realm's record on the hull, no menu: twelve clean-exit marks on the deck-2 port wall, the crew's rack in the ARMORY, a plate with survived / lost / deepest wave / hatch armour. Everything reads through `RealmRecordSource` — a guest gets the host's record off `NetRunMirror`, never its own save. View + packing tests pass in EditMode; eyes-on (criteria 1, 2, 6) and two-box criterion 7 owed | [`2. active/M97`](Milestones/2.%20active/M97-the-ship-remembers.md) |
-| M100 | A realm you can open while its owner is offline | planned | Graduates the realm-lock entry from `Brainstorms/realms.md`: the realm document keyed to its owner's ID, an access list held on both sides, and a single-writer lock whose holder hosts. The session stays peer-hosted over Relay — no game server, because what moves off one machine is the document and not the simulation. Written 2026-08-22, and it is the half of `M98`'s first criterion that `M98` never owned | [`1. planned/M100`](Milestones/1.%20planned/M100-a-realm-you-can-open-while-its-owner-is-offline.md) |
+| M100 | A realm you can open while its owner is offline | built 2026-08-24, unverified | A shared realm lives as per-member copies in Cloud Save's public access class (a client writes only its own slot — the single-document premise was corrected against the real store); highest revision is the realm, the lock rides every copy, its heartbeat carries the live body, and stale claims are broken only after a 10 s observation. Playing together over Relay is the invitation: guests are admitted at connect and their chooser lists the realm as a "(shared)" row. Once shared, every open takes the lock, the owner's included. 41 tests (rules offline, flows against a faked store); criteria 1, 2, 9, 10 owed on two machines. Stays planned under the active cap | [`1. planned/M100`](Milestones/1.%20planned/M100-a-realm-you-can-open-while-its-owner-is-offline.md) |
 | M101 | A ship with two decks and a stair | completed, Aug 2026 | Hull rebuilt long and narrow over two decks joined by an open stair; exterior skin, one-owner wall lines, ~80 cells. Merged 2026-08-22 | [`3. completed/M101`](Milestones/3.%20completed/M101-a-ship-with-two-decks-and-a-stair.md) |
+| M102 | The faucet loop, graybox | planned (building 2026-08-24) | Dev-gated graybox of the faucet loop (`Brainstorms/coop-bastion-complexity.md`, graduated by Zo 2026-08-24): field Waves hunt the Hatch, the terminal gains an off verb, holding past the mark grows a modifier draft, confirm teleports to the Hatch and starts the bank with the axis applied. Off by default; shipped loop unchanged with the toggle off. The graybox runs the paradigm's pre-registered kill criteria | [`1. planned/M102`](Milestones/1.%20planned/M102-the-faucet-loop-graybox.md) |
 
 ## Strategy
 

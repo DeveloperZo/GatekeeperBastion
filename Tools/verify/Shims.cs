@@ -48,6 +48,51 @@ namespace UnityEngine
         public static float Lerp(float a, float b, float t) => a + (b - a) * Clamp01(t);
         public static float InverseLerp(float a, float b, float v)
             => Math.Abs(b - a) < 1e-9f ? 0f : Clamp01((v - a) / (b - a));
+        public const float Deg2Rad = (float)(Math.PI / 180.0);
+        public const float Rad2Deg = (float)(180.0 / Math.PI);
+        public static float Sin(float v) => (float)Math.Sin(v);
+        public static float Cos(float v) => (float)Math.Cos(v);
+        public static float Acos(float v) => (float)Math.Acos(v);
+    }
+
+    /// <summary>Only the members Sim/ or the EditMode tests actually reference
+    /// (CloakerWatch and its rule tests). Semantics match UnityEngine.Vector3.</summary>
+    public struct Vector3 : IEquatable<Vector3>
+    {
+        public float x, y, z;
+
+        public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
+
+        public static Vector3 zero => new Vector3(0f, 0f, 0f);
+        public static Vector3 up => new Vector3(0f, 1f, 0f);
+        public static Vector3 down => new Vector3(0f, -1f, 0f);
+        public static Vector3 forward => new Vector3(0f, 0f, 1f);
+
+        public float sqrMagnitude => x * x + y * y + z * z;
+        public float magnitude => (float)Math.Sqrt(sqrMagnitude);
+
+        public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
+        public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
+        public static Vector3 operator *(Vector3 a, float s) => new Vector3(a.x * s, a.y * s, a.z * s);
+        public static Vector3 operator *(float s, Vector3 a) => a * s;
+        public static bool operator ==(Vector3 a, Vector3 b) => a.x == b.x && a.y == b.y && a.z == b.z;
+        public static bool operator !=(Vector3 a, Vector3 b) => !(a == b);
+
+        public static float Dot(Vector3 a, Vector3 b) => a.x * b.x + a.y * b.y + a.z * b.z;
+
+        /// <summary>Unity's semantics: degrees, 0 for a degenerate input.</summary>
+        public static float Angle(Vector3 from, Vector3 to)
+        {
+            float denominator = (float)Math.Sqrt(from.sqrMagnitude * to.sqrMagnitude);
+            if (denominator < 1e-15f) return 0f;
+            float dot = Mathf.Clamp(Dot(from, to) / denominator, -1f, 1f);
+            return Mathf.Acos(dot) * Mathf.Rad2Deg;
+        }
+
+        public bool Equals(Vector3 other) => this == other;
+        public override bool Equals(object obj) => obj is Vector3 other && this == other;
+        public override int GetHashCode() => x.GetHashCode() ^ (y.GetHashCode() << 2) ^ (z.GetHashCode() >> 2);
+        public override string ToString() => $"({x:0.0}, {y:0.0}, {z:0.0})";
     }
 }
 
@@ -276,6 +321,23 @@ namespace NUnit.Framework
                     (string.IsNullOrEmpty(message) ? "" : message + "\n  ") +
                     "Expected string to contain \"" + expected + "\"\n  But was:  " +
                     (actual == null ? "null" : "\"" + actual + "\""));
+        }
+
+        public static void StartsWith(string expected, string actual, string message = null)
+        {
+            if (actual == null || expected == null || !actual.StartsWith(expected, StringComparison.Ordinal))
+                throw new AssertionException(
+                    (string.IsNullOrEmpty(message) ? "" : message + "\n  ") +
+                    "Expected string to start with \"" + expected + "\"\n  But was:  " +
+                    (actual == null ? "null" : "\"" + actual + "\""));
+        }
+
+        public static void DoesNotContain(string expected, string actual, string message = null)
+        {
+            if (actual != null && expected != null && actual.IndexOf(expected, StringComparison.Ordinal) >= 0)
+                throw new AssertionException(
+                    (string.IsNullOrEmpty(message) ? "" : message + "\n  ") +
+                    "Expected string NOT to contain \"" + expected + "\"\n  But was:  \"" + actual + "\"");
         }
     }
 }

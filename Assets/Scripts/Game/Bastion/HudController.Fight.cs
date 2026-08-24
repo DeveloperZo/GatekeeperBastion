@@ -168,7 +168,62 @@ namespace GatekeepersProtocol.Game
 
             PushCrosshair();
             PushPrompt();
+            PushFaucetLine(gc, sim);
             PushVignette();
+        }
+
+        // Faucet-loop status (the dev-gated graybox) on the unused general-message lane.
+        // Change-gated on the whole faucet state tuple; with the toggle off the state is a
+        // constant 0 and the lane is never touched after its one clearing push.
+        long _cacheFaucetState = long.MinValue;
+
+        void PushFaucetLine(GameController gc, RunSim sim)
+        {
+            long state = 0;
+            if (sim.FaucetCycleLive || sim.FaucetAwaitingDraft)
+            {
+                state = 1
+                    + (sim.FaucetAwaitingDraft ? 2L : 0L)
+                    + (sim.FaucetMarked ? 4L : 0L)
+                    + (sim.FaucetWavesEndured * 8L)
+                    + (sim.FaucetDraftSize * 256L)
+                    + (gc.FaucetDraftCursor * 4096L);
+            }
+            if (state == _cacheFaucetState) return;
+            _cacheFaucetState = state;
+
+            if (state == 0)
+            {
+                _view.SetGeneralMessage(null);
+                return;
+            }
+
+            _lineBuf.Clear();
+            if (sim.FaucetAwaitingDraft)
+            {
+                _lineBuf.Append("CHOOSE — [E] cycle  [T] confirm:  ");
+                for (int i = 0; i < sim.FaucetDraftSize; i++)
+                {
+                    if (i > 0) _lineBuf.Append("  ·  ");
+                    bool on = i == gc.FaucetDraftCursor;
+                    if (on) _lineBuf.Append("<b>> ");
+                    _lineBuf.Append(FaucetLoop.AxisName((FaucetAxis)i));
+                    if (on) _lineBuf.Append("</b>");
+                }
+            }
+            else if (sim.FaucetMarked)
+            {
+                _lineBuf.Append("<b>FAUCET MARKED</b> — Terminal ")
+                    .Append(gc.FaucetTerminalId)
+                    .Append("  [T] shut off (draft ")
+                    .Append(FaucetLoop.DraftSize(sim.FaucetWavesEndured)).Append(')');
+            }
+            else
+            {
+                _lineBuf.Append("FAUCET — wave ").Append(sim.FaucetWavesEndured + 1)
+                    .Append("  (off at ").Append(FaucetLoop.MarkAfterWaves).Append(')');
+            }
+            _view.SetGeneralMessage(_lineBuf.ToString());
         }
 
         void PushStamina()

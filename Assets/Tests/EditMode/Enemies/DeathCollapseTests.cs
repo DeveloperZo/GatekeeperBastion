@@ -29,7 +29,13 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("m_ConditionEvent: Die", src);
             StringAssert.Contains("guid: " + DeathGuid, src);
             StringAssert.Contains("guid: " + AttackGuid, src);
-            StringAssert.Contains("guid: " + DeathGuid, Read(DeathMeta));
+            string meta = Read(DeathMeta);
+            StringAssert.Contains("guid: " + DeathGuid, meta);
+            // Bake root into pose: the Animator has applyRootMotion off (locomotion
+            // must not slide), so an unbaked Mixamo fall is discarded and they die standing.
+            StringAssert.Contains("keepOriginalPositionY: 1", meta);
+            StringAssert.Contains("keepOriginalPositionXZ: 1", meta);
+            StringAssert.Contains("loopTime: 0", meta);
         }
 
         [Test]

@@ -120,7 +120,11 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void DevCommands_TableCoversF1ThroughF12()
         {
-            Assert.AreEqual(12, DevCommands.All.Length);
+            // 12 F-keys plus the faucet-loop graybox toggle on Home (the F row is full;
+            // the graybox row leaves with the dev gate when the faucet loop ships or dies).
+            Assert.AreEqual(13, DevCommands.All.Length);
+            Assert.AreEqual(KeyCode.Home, DevCommands.All[12].Key);
+            Assert.AreEqual(DevCommands.Kind.ToggleFaucetLoop, DevCommands.All[12].Action);
             Assert.AreEqual(KeyCode.F1, DevCommands.All[0].Key);
             Assert.AreEqual(KeyCode.F9, DevCommands.All[8].Key);
             Assert.AreEqual(KeyCode.F10, DevCommands.All[9].Key);

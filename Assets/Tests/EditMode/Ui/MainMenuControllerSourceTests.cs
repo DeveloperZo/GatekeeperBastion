@@ -9,13 +9,20 @@ namespace GatekeepersProtocol.Tests
     public class MainMenuControllerSourceTests
     {
         const string Menu = "Assets/Scripts/Game/Flow/MainMenuController.cs";
-        const string Chooser = "Assets/Scripts/Game/Flow/RealmSelectController.cs";
 
         static string Read(string path)
         {
             string full = Path.GetFullPath(path);
             Assert.IsTrue(File.Exists(full), full);
             return File.ReadAllText(full);
+        }
+
+        /// <summary>The chooser is a partial — the screen in one file, the session panel in
+        /// another — and these pins are about the CLASS, so its source is every file of it.</summary>
+        static string ReadChooser()
+        {
+            return Read("Assets/Scripts/Game/Flow/RealmSelectController.cs")
+                + Read("Assets/Scripts/Game/Flow/RealmSelectController.Hosting.cs");
         }
 
         /// <summary>The menu cannot name a realm, so it must not be able to host one. It used
@@ -51,7 +58,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void TheChooser_EntersThePickedRealm_BeforeItStartsHosting()
         {
-            string src = Read(Chooser);
+            string src = ReadChooser();
             int hosting = src.IndexOf("void StartHosting");
             Assert.Greater(hosting, 0, "the chooser must own a StartHosting path");
             int enter = src.IndexOf("GameSession.EnterRealm(realmId, boarderId)", hosting);
@@ -66,7 +73,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void TheChooser_KeepsTheLanFallback()
         {
-            string src = Read(Chooser);
+            string src = ReadChooser();
             StringAssert.Contains("StartHosting(relay: false)", src);
             StringAssert.Contains("session.StartHost()", src);
         }

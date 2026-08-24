@@ -47,6 +47,11 @@ namespace GatekeepersProtocol.Game
         bool FinishClientStart()
         {
             ArmNetwork();
+            // Who is joining, for the shared-realm roster: the signed-in player id (empty on
+            // LAN, where nobody signed in) and a display name. Data for the host's approval
+            // hook — identity, never authorization; admission is decided host-side.
+            _nm.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(
+                JoinIdentityHeader + "\n" + RelayJoin.SignedInPlayerId + "\n" + LocalBoarderName());
             if (!_nm.StartClient())
             {
                 Log.Warn(Tag, "StartClient refused — NetworkManager.StartClient returned false.");
@@ -55,6 +60,14 @@ namespace GatekeepersProtocol.Game
             }
             HookSceneEvents();
             return true;
+        }
+
+        const string JoinIdentityHeader = "gkb-join-1";
+
+        static string LocalBoarderName()
+        {
+            var meta = GameSession.Meta;
+            return meta != null && meta.Boarder != null ? meta.Boarder.Name : "";
         }
 
         void HookSceneEvents()
@@ -138,6 +151,7 @@ namespace GatekeepersProtocol.Game
             RegisterPrefab(_gatekeeperPrefab);
             RegisterPrefab(_hunterPrefab);
             RegisterPrefab(_thiefPrefab);
+            RegisterPrefab(_cloakerPrefab);
             RegisterPrefab(_decoyPrefab);
         }
 
@@ -195,6 +209,12 @@ namespace GatekeepersProtocol.Game
                 Log.Warn(Tag, "StartHost — NetRunMirror prefab has no NetworkObject.");
         }
 
+        /// <summary>Who each pending/connected client says it is, keyed by client id:
+        /// [playerId, boarderName]. Written at approval, consumed at connect, dropped at
+        /// disconnect. Identity only — admission decisions live in RealmShareService.</summary>
+        readonly System.Collections.Generic.Dictionary<ulong, string[]> _joinIdentities =
+            new System.Collections.Generic.Dictionary<ulong, string[]>();
+
         void OnConnectionApproval(
             NetworkManager.ConnectionApprovalRequest request,
             NetworkManager.ConnectionApprovalResponse response)
@@ -206,8 +226,21 @@ namespace GatekeepersProtocol.Game
                 Log.Event(Tag, "join refused — party embark countdown");
                 return;
             }
+            RememberJoinIdentity(request.ClientNetworkId, request.Payload);
             response.Approved = true;
             response.CreatePlayerObject = true;
+        }
+
+        void RememberJoinIdentity(ulong clientId, byte[] payload)
+        {
+            _joinIdentities.Remove(clientId);
+            if (payload == null || payload.Length == 0 || payload.Length > 512) return;
+            string text;
+            try { text = System.Text.Encoding.UTF8.GetString(payload); }
+            catch (System.ArgumentException) { return; }
+            string[] parts = text.Split('\n');
+            if (parts.Length < 3 || parts[0] != JoinIdentityHeader) return;
+            _joinIdentities[clientId] = new[] { parts[1], parts[2] };
         }
 
         void OnClientConnected(ulong clientId)
@@ -240,9 +273,11 @@ namespace GatekeepersProtocol.Game
                     // door and no share of the pot until it follows them in at a break, so
                     // the assignment is deliberately left where it is.
                     Log.Event(Tag, "joined mid-run — waiting on the Ship clientId=" + clientId);
+                    AdmitIdentifiedGuest(clientId);
                     return;
                 }
                 ShipHatchAssignment.Recompute("guest joined");
+                AdmitIdentifiedGuest(clientId);
                 return;
             }
             Log.Event(Tag, "connected clientId=" + clientId
@@ -260,8 +295,19 @@ namespace GatekeepersProtocol.Game
             Log.Event(Tag, "lobby ship clientId=" + clientId);
         }
 
+        /// <summary>A guest that presented a signed-in identity becomes a member of the
+        /// session's shared realm. Quietly nothing for LAN guests and unshared sessions —
+        /// there is no roster for them to be on.</summary>
+        void AdmitIdentifiedGuest(ulong clientId)
+        {
+            if (!_joinIdentities.TryGetValue(clientId, out var who)) return;
+            if (string.IsNullOrEmpty(who[0])) return;
+            RealmShareService.AdmitGuest(who[0], who[1]);
+        }
+
         void OnClientDisconnect(ulong clientId)
         {
+            _joinIdentities.Remove(clientId);
             if (_nm != null && _nm.IsServer)
             {
                 if (_lobby != null)

@@ -1,10 +1,22 @@
 # M94 — Two more protocols
 
 <!--
-Status: planned
+Status: completed, Aug 2026
+Closed on: 2026-08-24 (Zo, having played it: "i tested it out so far and its good
+enough to close").
+The playthrough is the gate for criteria 1, 2, 6 and 7 — three rows at CREW, a
+non-Default claim surviving quit and Continue, each protocol's personal ability
+reading as its own thing rather than the same thing at a different number, and a
+sheet with no empty row. Criteria 3, 4, 5, 8 and 9 close on tests: distinct abilities
+pairwise, the passive table, IsLegalPair over the full enum cross-product, the save
+round-trip including an id this build does not sell, and the two-seat net test.
+Carried, and named rather than left silent: the turret shows no health, so a machine
+about to die looks like one that just stood up; every number is a first guess with a
+single pass behind it; and PARALLEL BAYS is written onto decoys with no reader, which
+the sheet and the Compendium both say in as many words.
 Update trigger: when a protocol is added or retired, when an ability id gains numbers,
 when the legality rule changes, when the CREW sheet layout changes
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 -->
 
 `BoarderProtocolId` grows from one to three. **VEIL** and **FORGE** are authored end to

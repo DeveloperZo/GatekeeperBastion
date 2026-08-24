@@ -58,10 +58,16 @@ not a mapping edit.
 
 **Ancestor** (Zo, 2026-08-17): [Guns 'n Goblins](https://store.steampowered.com/app/881940/Guns_n_Goblins/)
 ([IGN](https://www.ign.com/games/guns-n-goblins)). You ring a bell to call the swarm;
-death still grows you. Beliefs 1 and 4 are those two. This game inverts the Bastion
-(theirs; you board) and refuses the rest of that Steam page: idler, incremental
-character sheet, build-your-fortress, thousands-strong spectacle, single-player as
-the session.
+death still grows you. Beliefs 1 and 4 started as those two. This game keeps the call
+and that a failed trip can still pay. Their bell is one object (start the swarm,
+lose it, night over). Here that splits: a **field terminal** starts the wave; the
+**Hatch** is the GameObject that, destroyed, ends the Run — it is the door to the
+Ship, and the hatch wave is the bank (Salvage becomes safe once converted). Dying
+on a wave **costs Unbanked**; respawn is not immediate (delayed in-Run respawn is
+open). Intensity is not their bell. This game also inverts the Bastion (theirs;
+you board) and refuses the rest of that Steam page: idler, incremental character
+sheet, build-your-fortress, thousands-strong spectacle, single-player as the
+session.
 
 **What the game refuses to be** (confirmed by Zo, 2026-08-08), each refusal paid for by a
 cut already made:

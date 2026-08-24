@@ -260,6 +260,11 @@ namespace GatekeepersProtocol.Game
                     Log.Event(Tag, "checkpoint armed — press 1.."
                         + GameController.DemoCheckpointLabels.Length + " (Esc cancel)");
                     break;
+
+                case DevCommands.Kind.ToggleFaucetLoop:
+                    if (gc != null) gc.ToggleFaucetLoop();
+                    else Log.Warn(Tag, "ToggleFaucetLoop ignored — no GameController.");
+                    break;
             }
         }
 

@@ -1,10 +1,10 @@
 # M97 — The ship remembers
 
 <!--
-Status: planned
+Status: active
 Update trigger: when the realm split changes what is available to display, when a
 display surface is added or cut, when the Ship layout moves
-Last updated: 2026-08-22
+Last updated: 2026-08-24
 -->
 
 The Ship stops being four stations in an empty hull and starts showing what this realm
@@ -72,16 +72,22 @@ without reading.
 
 ## Verification
 
-- Criteria 2, 3, 5, 8: EditMode test that the view's rendered values equal `RealmState`'s
-  after a simulated clear, purchase and deeper run, plus a grep asserting no cached copy.
+- Criteria 2, 3, 5, 8: `Assets/Tests/EditMode/Ship/RealmRecordViewTests.cs` — the view's
+  rendered surfaces (marks lit, mounts filled, plate text) equal `RealmState`'s values after
+  a simulated clear, purchase and deeper run, asserted again after a second mutation.
+  **Replaces the grep this bullet used to ask for**: the built view carries a packed
+  change-detection value that is not a display copy (every paint reads the record fresh),
+  so a no-cache grep would fail the correct design — the mutation-repaint assert is the
+  check that actually catches a surface trusting a stale number.
 - Criteria 1, 4, 6, 9: playthrough. Enter a fresh realm, walk the hull, confirm it reads
   as empty and nothing is broken. Clear a bastion, dock, walk the same route, confirm the
   marks and counts changed.
 - Criterion 7: eyes-on, two editor instances. The net fixture cannot see rendered props.
 
-**Playthrough path**: enter a realm with two bastions cleared and three weapons owned.
-From the Boarder spawn, walk to the ARMORY and count three weapons on the rack, then to
-the record wall and count two marks.
+**Playthrough path**: enter a realm with two clean exits and three weapons owned.
+From the Boarder spawn, walk to the ARMORY on deck 1 starboard and count three weapons
+on the rack (the plate is on the same wall a few metres aft), then take the stair up and
+walk the deck-2 port wall to count two marks.
 
 ## Premises corrected before building, 2026-08-22
 
@@ -125,6 +131,34 @@ guest raise their own realm's hatch armour while standing on someone else's ship
 **Found and NOT fixed**: a guest's shadow sim clamps its start wave and restores doors from its
 own realm, diverging its local bastion layout from the host's. It predates the realm split and
 is run-critical, so it wants two machines and its own change.
+
+## Update 2026-08-24 — activated; the surfaces survived `M101`, and the owed test exists
+
+`M101` rebuilt the hull out from under the authored surfaces: the record was placed at
+fixed world coordinates against the old 117-cell single-deck ship, and the rebuild left
+the marks and the rack metres outside a hull that now ends at x=10. The rescue
+(2026-08-22, on `M101`) re-homed each group whole, keeping this milestone's own spacing:
+the twelve marks now sit on the **deck-2 port wall** (x=-10, z 21.75–38.25, facing
+inboard, 2.2 m above the deck), and the seven-mount rack and the plate sit on the
+**deck-1 starboard wall in the ARMORY space** (z 16–22.5). `Tools/scene-check/
+enclosure.py --decks` is 0/0/0 with every binding row ok on the current scene.
+
+Found against the same wall and fixed here: **the plate's TextMesh was mirrored.** A
+legacy TextMesh reads from its own -Z, and every station label on that wall carries +Z
+outboard for exactly that reason; the plate carried +Z inboard, so its text was
+readable only from inside the wall. One rotation flip (yaw -90 → +90), anchored
+middle-centre so nothing moved.
+
+The EditMode test the Verification section owed is written
+(`RealmRecordViewTests`, six tests) and passes in the Unity runner along with the seven
+packing tests. Full run on this tree, 2026-08-24: **EditMode 728 passed / 14 failed,
+PlayMode 78 / 1.** The fifteen are the recorded pre-existing set plus three that
+predate this work on today's earlier runs (the in-progress `M95` co-op scene gate, a
+Compendium front-matter check, and a second SessionMusic row from the range) — the same
+tree ran 722 / 14 before these changes, and the delta is exactly the six added tests.
+
+Still owed, unchanged: **eyes on the hull** (criteria 1, 2, 6 are glance judgements) and
+**criterion 7 on two machines**.
 
 ## Usable, or it did not ship
 

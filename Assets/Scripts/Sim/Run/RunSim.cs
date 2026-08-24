@@ -335,6 +335,7 @@ namespace GatekeepersProtocol.Sim
                         return;
                     }
                     SnapshotHatchCarry();
+                    ApplyFaucetConvertBonusIfPending();
                 }
                 else if (!_masterHatchMulLocked)
                 {
@@ -365,47 +366,11 @@ namespace GatekeepersProtocol.Sim
             }
 
             Mode = mode;
+            if (mode != WaveMode.HatchBank) BeginFaucetCycleIfEligible();
             Assault = AssaultState.Assault;
             LaunchWave();
             if (_chainActive && CurrentWaveIndex <= _chainUntil)
                 _awaitingDelivery = true;
-        }
-
-        /// <summary>One pull: <see cref="MasterControl.TerminalWaves"/> Terminal Waves then
-        /// <see cref="MasterControl.HatchWaves"/> Hatch-bank windows. Refuses outside
-        /// Tethered+Prep, or when a sequence is already live. Disables deep-start chaining.</summary>
-        public bool StartMasterControl()
-        {
-            if (Phase != RunPhase.Tethered || Assault != AssaultState.Prep)
-            {
-                Log.Info(Tag, "StartMasterControl ignored (phase " + Phase + ", " + Assault + ")");
-                return false;
-            }
-            if (_masterPhase != MasterControlPhase.None)
-            {
-                Log.Info(Tag, "StartMasterControl ignored: sequence already live");
-                return false;
-            }
-            if (SequentialPending)
-            {
-                Log.Info(Tag, "StartMasterControl ignored: sequence already pending");
-                return false;
-            }
-
-            _startWave = 1;
-            ClearChainState();
-            CancelSequentialDraws();
-            _masterPhase = MasterControlPhase.Terminal;
-            _masterLeft = MasterControl.TerminalWaves;
-            _masterHatchMulLocked = false;
-            TriggerDraw(WaveMode.Terminal);
-            if (Assault != AssaultState.Assault)
-            {
-                CancelMasterSequence();
-                Log.Info(Tag, "StartMasterControl ignored: draw did not start");
-                return false;
-            }
-            return true;
         }
 
         /// <summary>Arm this draw plus <paramref name="total"/> − 1 follow-ups after each
@@ -425,21 +390,12 @@ namespace GatekeepersProtocol.Sim
             _followUpTimer = 0f;
         }
 
-        void CancelMasterSequence()
-        {
-            _masterPhase = MasterControlPhase.None;
-            _masterLeft = 0;
-            _masterHatchMulLocked = false;
-        }
-
-        /// <summary>Hatch damage from the Game layer. Field-terminal Waves leave the Hatch
-        /// invulnerable; Hatch-bank is the first mode that applies this.</summary>
+        /// <summary>Hatch damage. Terminal Waves leave the Hatch invulnerable, bar a faucet cycle's.</summary>
         public void DamageHatch(float amount)
         {
             if (amount <= 0f)
                 return;
-            if (Mode == WaveMode.Terminal)
-                return;
+            if (Mode == WaveMode.Terminal && !_faucetCycleLive) return;
             Ship.Hatch.Damage(amount);
             if (Phase != RunPhase.Tethered)
                 return;
@@ -676,6 +632,8 @@ namespace GatekeepersProtocol.Sim
                 return;
             }
 
+            if (FaucetOwnsClear(hatchBank)) return;
+
             if (Phase == RunPhase.Tethered && CurrentWaveIndex >= WaveDirector.MaxWaves
                 && _followUpsLeft <= 0)
             {
@@ -698,37 +656,6 @@ namespace GatekeepersProtocol.Sim
                 Siphon.Level = 0;
                 JuiceSpentThisPull = 0L;
             }
-        }
-
-        void AdvanceMasterControl(bool hatchBank)
-        {
-            _masterLeft--;
-            if (_masterLeft > 0)
-            {
-                if (_masterPhase == MasterControlPhase.Hatch)
-                    Mode = WaveMode.HatchBank;
-                _followUpTimer = WaveDirector.InterWaveGap;
-                return;
-            }
-
-            if (_masterPhase == MasterControlPhase.Terminal)
-            {
-                _masterPhase = MasterControlPhase.Hatch;
-                _masterLeft = MasterControl.HatchWaves;
-                SnapshotHatchCarry();
-                _masterHatchMulLocked = true;
-                Mode = WaveMode.HatchBank;
-                _followUpTimer = WaveDirector.InterWaveGap;
-                var hatchHalf = MasterHatchHalfStarted;
-                if (hatchHalf != null) hatchHalf();
-                Log.Info(Tag, "master-control hatch half — hatchWaves=" + MasterControl.HatchWaves);
-                return;
-            }
-
-            if (hatchBank)
-                DumpUnbanked();
-            CancelMasterSequence();
-            CompleteRun();
         }
 
         /// <summary>
@@ -755,6 +682,8 @@ namespace GatekeepersProtocol.Sim
                 }
                 return;
             }
+
+            if (FaucetChainTick(dt)) return;
 
             if (Assault == AssaultState.Prep && _followUpTimer > 0f)
             {
@@ -797,6 +726,7 @@ namespace GatekeepersProtocol.Sim
             WaveSpec spec = _director.NextWave(idx, Siphon.Level, PlayerCount);
             if (Mode == WaveMode.HatchBank)
                 spec = HatchBank.ApplyHatchComposition(spec, _hatchCarry);
+            spec = ConsumeFaucetAxisIfPending(spec);
             if (Mode == WaveMode.HatchBank && _masterPhase == MasterControlPhase.Hatch)
                 spec = MasterControl.ApplyFinaleElite(spec);
             if (Mode != WaveMode.HatchBank)

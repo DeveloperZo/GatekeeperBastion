@@ -420,6 +420,104 @@ namespace GatekeepersProtocol.Game
             return JsonText.ExtractInt(json, "SaveVersion", 0);
         }
 
+        // ---- Shared realms: the borrowed working copy and the share sidecar ----
+
+        const string RemoteFolder = "remote";
+        const string ShareFolder = "share";
+
+        /// <summary>Working copies of realms opened from ANOTHER player's store. Deliberately
+        /// not <see cref="RealmsDirectory"/>: the chooser lists that directory as "your
+        /// realms", and a borrowed world must never list as one of yours.</summary>
+        public static string RemoteRealmsDirectory { get { return Path.Combine(SaveRoot, RemoteFolder); } }
+
+        /// <summary>Share envelopes, one per shared realm this machine knows: this machine's
+        /// last-known copy of the roster, revision and lock. Presence of a sidecar is what
+        /// marks an OWNED realm as shared.</summary>
+        public static string ShareDirectory { get { return Path.Combine(SaveRoot, ShareFolder); } }
+
+        /// <summary>Write the working copy of a borrowed realm.</summary>
+        public static bool SaveRemoteRealm(RealmState realm)
+        {
+            if (realm == null)
+            {
+                Log.Warn(Tag, "SaveRemoteRealm called with no realm; nothing written.");
+                return false;
+            }
+            if (!IsIdSafe(realm.Id))
+            {
+                Log.Error(Tag, "Remote realm \"" + realm.Name + "\" has no usable id; refusing to write it.");
+                return false;
+            }
+            return WriteDocument(Path.Combine(RemoteRealmsDirectory, realm.Id + ".json"),
+                realm.ToJson(), "Remote realm");
+        }
+
+        /// <summary>Read a borrowed realm's working copy, or null with the reason logged.</summary>
+        public static RealmState LoadRemoteRealm(string id)
+        {
+            if (!IsIdSafe(id)) return null;
+            string path = Path.Combine(RemoteRealmsDirectory, id + ".json");
+            string json = ReadDocument(path, "Remote realm");
+            if (json == null) return null;
+            try
+            {
+                var realm = RealmState.FromJson(json);
+                if (realm == null) { LogRefusal(path, json); return null; }
+                AdoptFileIdentity(ref realm.Id, id, "Remote realm");
+                return realm;
+            }
+            catch (Exception e)
+            {
+                Log.Error(Tag, "Remote realm " + Path.GetFileName(path) + " could not be read ("
+                    + e.GetType().Name + ": " + e.Message + "); it was not loaded.");
+                return null;
+            }
+        }
+
+        /// <summary>Write a realm's share sidecar (the envelope JSON, stored as-is).</summary>
+        public static bool SaveShareSidecar(string realmId, string envelopeJson)
+        {
+            if (!IsIdSafe(realmId) || string.IsNullOrEmpty(envelopeJson)) return false;
+            return WriteDocument(Path.Combine(ShareDirectory, realmId + ".json"),
+                envelopeJson, "Share sidecar");
+        }
+
+        /// <summary>Read a realm's share sidecar, or null when it has none — which is also
+        /// the test for "is this realm shared".</summary>
+        public static string LoadShareSidecar(string realmId)
+        {
+            if (!IsIdSafe(realmId)) return null;
+            string path = Path.Combine(ShareDirectory, realmId + ".json");
+            try
+            {
+                if (!File.Exists(path)) return null;
+                string json = File.ReadAllText(path);
+                return LooksWhole(json) ? json : null;
+            }
+            catch (Exception e)
+            {
+                Log.Warn(Tag, "Could not read share sidecar " + Path.GetFileName(path)
+                    + " (" + e.GetType().Name + ": " + e.Message + ").");
+                return null;
+            }
+        }
+
+        /// <summary>Drop a realm's share sidecar (deleting or un-sharing the realm).</summary>
+        public static void DeleteShareSidecar(string realmId)
+        {
+            if (!IsIdSafe(realmId)) return;
+            try
+            {
+                string path = Path.Combine(ShareDirectory, realmId + ".json");
+                if (File.Exists(path)) File.Delete(path);
+            }
+            catch (Exception e)
+            {
+                Log.Warn(Tag, "Could not delete share sidecar for " + realmId
+                    + " (" + e.GetType().Name + ": " + e.Message + ").");
+            }
+        }
+
         // ---- The campaign from before the split ----
 
         /// <summary>Say once, plainly, that the pre-split save cannot be loaded. The file is left

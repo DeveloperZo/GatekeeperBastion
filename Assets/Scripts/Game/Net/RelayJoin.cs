@@ -113,6 +113,32 @@ namespace GatekeepersProtocol.Game
         }
         #endregion
 
+        /// <summary>Initialize services and sign in anonymously, without touching Relay.
+        /// The shared-realm store needs the same player identity Relay uses, so there is
+        /// exactly one sign-in path and this is it.</summary>
+        public static Task<Result> EnsureServices()
+        {
+            return EnsureSignedIn();
+        }
+
+        /// <summary>The signed-in player id, or empty before <see cref="EnsureServices"/>.</summary>
+        public static string SignedInPlayerId
+        {
+            get
+            {
+                try
+                {
+                    if (UnityServices.State != ServicesInitializationState.Initialized) return "";
+                    var auth = AuthenticationService.Instance;
+                    return auth != null && auth.IsSignedIn ? auth.PlayerId : "";
+                }
+                catch (Exception)
+                {
+                    return "";
+                }
+            }
+        }
+
         #region Private
         static async Task<Result> EnsureSignedIn()
         {

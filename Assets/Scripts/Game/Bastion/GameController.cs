@@ -316,6 +316,14 @@ namespace GatekeepersProtocol.Game
             // defensive Sample() call is then a free frame-guarded read.
             Controls.Sample();
             if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
+            TickFaucetHousekeeping();
+            if (Sim.Assault == AssaultState.Assault)
+            {
+                // Only the faucet has assault-time verbs (shutoff T at the marked origin);
+                // with the toggle off this is a no-op and the frame ends here as before.
+                TickFaucetAssaultCommands();
+                return;
+            }
             if (Sim.Assault != AssaultState.Prep) return;
             TickPrepCommands();
         }

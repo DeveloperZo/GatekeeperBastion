@@ -8,6 +8,77 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-24
 -->
 
+- 2026-08-24: **`M63-3` unparked and built — the one that stops when you look.** The
+  garrison's fourth kind: `GatekeeperKind.Cloaker` on `SK_Tactical` (the pack's last
+  unspent robot), advancing only while unobserved. The rule is a 30° half-angle / 26 m
+  planar watch cone with line of sight, polled at 0.1 s through the new `KindTick` seam
+  on `EnemyGatekeeper` — the one base addition — with an angular Schmitt release band
+  (36° / 28 m) replacing the doc's original 0.35 s time hysteresis, which contradicted
+  its own 0.25 s resume criterion. Watched, both `MayTargetHatch` and `MayTargetPlayer`
+  are false and the agent holds; being shot still latches provocation, and the decoy
+  branch in `Retarget()` now respects `MayTargetPlayer` (behaviour-preserving for the
+  old kinds) so a held Cloaker cannot be walked off by a PHANTOM decoy. Cloak is two
+  committed materials swapped by `CloakerPresentation` (separate from the AI — clones
+  disable the AI), replicated by one server-write `NetworkVariable<bool>` on `NetEnemy`;
+  reveal-on-hit 1.0 s, corpses stay solid. One new number: 45 hp (two MK-1 T0 shots);
+  every other stat is Default's constant. Composition `{0,0,1,2,3}` per Wave, dial-proof,
+  `defaultCount` still the surplus. The `in_build` Compendium flag shipped with it
+  (`CompendiumCatalog.MarkdownIsInBuild`, one parser for copier, pause nav and tests;
+  missing means true) plus the Cloaker's Garrison page. Two test renames, both because
+  the fourth kind falsified the old names: `OnlyTheDefaultKindHasASecondGear` →
+  `SecondGearBelongsToTheKindsThatChangeTheirMind`, `StreamingAssets_StemSetMatchesPlay`
+  → `StreamingAssets_StemSetMatchesPlaysInBuildSet`. Repair found while wiring: all
+  three scenes had re-saved `thiefPrefab`/`_thiefPrefab` as None after the rename —
+  Thieves have been spawning on the Default body — rewired by YAML on its own commit.
+  Persisted save keys: none touched (kind ids never serialize into saves; the Wave
+  tables are code). Offline suite 670/11, the 11 the recorded pre-existing set; Unity
+  suites and Zo's eyes-on owed.
+- 2026-08-24: **`M100` built — a realm you can open while its owner is offline.** The
+  doc's central premise did not survive the store: Cloud Save lets a client write only
+  its OWN player data (the public access class is world-readable, self-writable), so
+  the single shared document the plan assumed is impossible client-side, and Cloud
+  Code — the one way to write another player's slot — is server-side logic the cost
+  model refuses. Rebuilt as per-member copies: every member writes the realm under its
+  key in their own slot, a reader fetches every member's copy and the highest revision
+  is the realm, and the lock rides each copy — a heartbeat carries the live body, so
+  criterion 10's write-back falls out of the lock. Staleness is confirmed by
+  observation (10 s re-read), never by trusting another machine's clock; simultaneous
+  claims resolve by earlier-taken-wins with an id tie-break, run identically on both
+  sides. Admission is playing together: hosting over Relay shares the realm and admits
+  each guest that connects; the guest's Boarder remembers (realm, owner, name) and its
+  chooser lists it as a "(shared)" row. Once shared, every open takes the lock — the
+  owner's solo ENTER included — so a shared realm is an online realm, stated as a cost.
+  Sim rules + envelope in `RealmShare`; store seam `IRealmStore` / `CloudRealmStore`
+  (package `com.unity.services.cloudsave` 3.2.0 added); flows in `RealmShareRemote` /
+  `RealmShareService` / `RealmShareBeacon`; chooser gains `RealmSelectShared`, and the
+  session panel moved to a `GameController`-style partial to hold the line cap.
+  41 tests: rules and Boarder rows in the offline harness, flows against a faked store
+  in Unity. Runner 2026-08-24: EditMode 775/14, PlayMode 80/1 — the recorded
+  pre-existing set, no new failure. Stays in planned under the active cap. Owed:
+  criteria 1, 2, 9, 10 on two machines — the first two-box session is also the first
+  live call against the real store.
+
+- 2026-08-24: **`M102` created — the faucet loop, graybox.** Graduated by Zo's decision
+  from the co-op complexity brainstorm the same day: the loop paradigm (Waves hunt the
+  Hatch, terminals as faucets with an off verb, duration-as-stake, the modifier draft,
+  teleport-to-Hatch bank) is captured in the brainstorm's Decided/Superseded sections
+  and the milestone is the spec record. Ships dev-gated so the shipped loop is
+  unchanged by default; the slice exists to run the paradigm's pre-registered kill
+  criteria solo.
+
+- 2026-08-24: **`M97` activated — the ship remembers.** Built 2026-08-22 but left in
+  planned with no roadmap row; the row now exists and the folder matches the code.
+  The surfaces survived `M101`'s hull rebuild via the rescue commit (marks on the
+  deck-2 port wall, rack and plate on deck-1 starboard in the ARMORY), and the
+  plate's TextMesh was found mirrored against the station-label facing convention
+  and flipped. The owed EditMode view test exists (`RealmRecordViewTests`, six
+  tests) — it replaces the no-cache grep the doc asked for, which the built
+  change-detection design would have failed while being correct. Unity runner
+  2026-08-24: EditMode 728/14, PlayMode 78/1 — the fourteen are the recorded set
+  plus three that pre-date this work on the same day's earlier 722/14 runs. Owed:
+  eyes-on criteria 1, 2, 6, and criterion 7 on two machines. `M101`'s roadmap row
+  also synced to folder-completed while adding `M97`'s.
+
 - 2026-08-24: **`M94` closed — two more protocols.** Played and closed by Zo.
   `BoarderProtocolId` stops being a set of ternaries on Default and becomes a
   catalog of three: VEIL and FORGE beside it, each with a distinct crew ability, a
