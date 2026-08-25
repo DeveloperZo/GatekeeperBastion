@@ -191,13 +191,9 @@ namespace GatekeepersProtocol.Game
 
         static void ApplyBeatZero(MetaState m)
         {
-            m.DemoCapsuleOpened = true;
-            m.DemoNavPowered = true;
-            m.DemoArmoryPowered = true;
-            m.DemoWeaponGranted = true;
-            m.DemoShipFightDone = true;
-            m.SetOwned(WeaponId.Mk1Sidearm, true);
-            m.SetEquipped(WeaponId.Mk1Sidearm);
+            // One definition of "the ship tutorial is behind you", shared with the skip a
+            // player takes. A second copy here is exactly how the two would drift apart.
+            DemoProgress.SkipShipTutorial(m);
         }
 
         static void ApplyZoneOneTerminalsDone(MetaState m)

@@ -231,7 +231,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(hatch.Contains("finish the terminal"), "superseded refuse copy");
             StringAssert.Contains("\"bank window survived zone=\"", hatch);
             string repair = Read("Assets/Scripts/Game/Bastion/RepairInteractable.cs");
-            StringAssert.Contains("Hatch-bank — finish the zone", repair);
+            StringAssert.Contains("Convert — finish the zone", repair);
         }
 
         [Test]

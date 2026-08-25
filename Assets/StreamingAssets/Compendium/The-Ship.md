@@ -2,7 +2,7 @@
 
 ## Game
 
-Between Runs I stand on my own Ship, first person, hands empty until I buy something. This is the only place Salvage is spent and the only way back to the Bastion.
+Between Boardings I stand on my own Ship, first person, hands empty until I buy something. This is the only place Salvage is spent and the only way back to the Bastion.
 
 Three hatch doors down one side. One opens per seat. The party lead owns EMBARK, and every seat shops its own loadout.
 
@@ -16,7 +16,7 @@ The NAV MAP will warn me if I own no weapon and no protocol, and then let me go 
 
 ## Reference
 
-Between runs you are stood in your own ship, in first person. Hands are empty until you buy a weapon at the ARMORY. You cannot fire here either way. This is the only place Salvage gets spent, and the only way back to the Bastion.
+Between boardings you are stood in your own ship, in first person. Hands are empty until you buy a weapon at the ARMORY. You cannot fire here either way. This is the only place Salvage gets spent, and the only way back to the Bastion.
 
 You walk. You look at a console until the prompt appears at the bottom of the screen, you hold interact, and a panel opens: your movement locks, the cursor comes free, and the panel owns the screen until you close it. One panel at a time. Close it and you are walking again. Binding: [Field Manual](Field-Manual.md).
 
@@ -41,7 +41,7 @@ is not here; that is the Repair Rig at FABRICATION.
 
 ### The start-Wave selector
 
-The NAV MAP will let you begin partway in. It does not skip anything — starting deeper delivers every Wave up to that point back to back, with no Prep in between, and then the Run continues normally to the end. You get the same Run with the early half compressed into one shapeless fight. It is a way to stop replaying Wave one, not a shortcut, and the overlap is the price.
+The NAV MAP will let you begin partway in. It does not skip anything — starting deeper delivers every Wave up to that point back to back, with no Prep in between, and then the Boarding continues normally to the end. You get the same Boarding with the early half compressed into one shapeless fight. It is a way to stop replaying Wave one, not a shortcut, and the overlap is the price.
 
 ### Embarking with nothing
 
@@ -57,8 +57,8 @@ first converts through the Hatch. Hatch Armor at FABRICATION is also open from t
 
 **Then whatever killed you.** If the Hatch fell while you were still standing, that is FABRICATION and not you at all.
 
-**Save the big weapon purchase for when you know which fight you want.** A Primary is fixed for the whole Run, and its upgrade wheel does not follow you to the next gun. Buying one is committing to a range and a cadence, not just spending money.
+**Save the big weapon purchase for when you know which fight you want.** A Primary is fixed for the whole Boarding, and its upgrade wheel does not follow you to the next gun. Buying one is committing to a range and a cadence, not just spending money.
 
 ## See also
 
-[Upgrades](Upgrades.md). [Protocols](Protocols.md). [Weapons](Weapons.md). [Realms](Realms.md). [A Run](A-Run.md). [The Hatch](The-Hatch.md).
+[Upgrades](Upgrades.md). [Protocols](Protocols.md). [Weapons](Weapons.md). [Realms](Realms.md). [A Boarding](A-Boarding.md). [The Hatch](The-Hatch.md).

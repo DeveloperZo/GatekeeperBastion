@@ -48,7 +48,7 @@ namespace GatekeepersProtocol.Game
                 // player walked up, pressed, and nothing happened, with the reason in a log they
                 // cannot see. Say it on the crosshair instead.
                 if (NetShipWait.IsActive && !(this is MapStation))
-                    return StationName + " — sealed while the Run is live";
+                    return StationName + " — sealed while the Boarding is live";
                 return "[" + Controls.DisplayOf(ControlId.Interact) + "] " + StationName
                     + " — " + PromptHint;
             }

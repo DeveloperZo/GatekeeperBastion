@@ -20,7 +20,7 @@ Going down puts a seat back on the Ship, waiting, priced. The price comes out of
 
 **Opening.** OPEN TO FRIENDS on the chooser (or HOST ON LAN as the fallback) hands out a join code once the realm allows it — a brand-new realm refuses until its first wheel purchase, or the opening stretch ending. JOIN on the main menu takes the code. The party shares the Ship; each seat shops itself; only the party lead's EMBARK commits the party. Joins during the embark countdown are refused.
 
-**Following.** A seat that joins mid-Run lands on the Ship with a prompt naming the next break. FOLLOW during the party's Prep boards them with the party, and their hatch door opens at that moment. The same control during an Assault refuses with a reason rather than queueing silently. FOLLOW is free — that seat never died.
+**Following.** A seat that joins mid-Boarding lands on the Ship with a prompt naming the next break. FOLLOW during the party's Prep boards them with the party, and their hatch door opens at that moment. The same control during an Assault refuses with a reason rather than queueing silently. FOLLOW is free — that seat never died.
 
 **Scaling.** Wave composition counts the seats playing at the moment the next Wave is composed. No Wave already on the floor changes size, health or composition when a seat joins or leaves. A leaving seat is dropped from the count at the next Wave, and its door seals at the same boundary.
 
@@ -28,7 +28,7 @@ Going down puts a seat back on the Ship, waiting, priced. The price comes out of
 
 ## See also
 
-[Realms](Realms.md). [Going Down](Going-Down.md). [A Run](A-Run.md). [Protocols](Protocols.md). [The Ship](The-Ship.md).
+[Realms](Realms.md). [Going Down](Going-Down.md). [A Boarding](A-Boarding.md). [Protocols](Protocols.md). [The Ship](The-Ship.md).
 
 ## Gaps
 

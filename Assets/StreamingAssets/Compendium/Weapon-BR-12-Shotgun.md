@@ -35,7 +35,7 @@ Its cadence is slow, its clip is small, and its reload is the longest of the thr
 ### What it is bad at
 
 - **Range.** Not merely worse at distance: at distance it is close to useless. There is no visible cue for where falloff starts, so a shot that looks like a hit can do almost nothing.
-- **Thieves.** A Thief is slow, tough, and walking to the Hatch on a Hatch-bank. To hurt it you must be standing next to it — safe on a field Wave where it hunts you without shouting, but with this weapon's clip and reload, killing one takes several full cycles. If the Thief is close to the Hatch when you start, you will not finish in time. This is the shotgun's structural weakness and it gets worse every Wave.
+- **Thieves.** A Thief is slow, tough, and walking to the Hatch on a Convert. To hurt it you must be standing next to it — safe on a field Wave where it hunts you without shouting, but with this weapon's clip and reload, killing one takes several full cycles. If the Thief is close to the Hatch when you start, you will not finish in time. This is the shotgun's structural weakness and it gets worse every Wave.
 - **Lines of Gatekeepers.** No pierce, so a queue in a corridor is one shot per body.
 - **Long defensive holds.** Its reload keeps taking you out of the fight at exactly the moments a crowd is building.
 - **Missing.** With this few trigger pulls per clip, a wasted shot is a large fraction of your ammunition.

@@ -154,7 +154,7 @@ namespace GatekeepersProtocol.Game
                     if (_armedTerminalId != lookingTerminal.TerminalId)
                     {
                         Log.Event("Terminal", lookingTerminal.TerminalId
-                            + " refused — select intensity first");
+                            + " refused — select the Ante first");
                         return;
                     }
                     if (lookingTerminal.Kind == BastionTerminalKind.Master)

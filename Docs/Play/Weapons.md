@@ -28,7 +28,7 @@ third slot, the **Drone** bay. It holds a payload, not a gun. Today that payload
 **Decoy**, bought at FABRICATION.
 
 A weapon belongs to exactly one slot, permanently. Which Secondary and which Primary is
-the shape of the fight. You can run with only the Secondary. If you own no weapon at all,
+the shape of the fight. You can boarding with only the Secondary. If you own no weapon at all,
 you still fire something: the **improvised cutter**, a scratch-built fallback that does a
 fraction of the damage at a fraction of the cadence. Buy the sidearm and it goes away.
 
@@ -38,7 +38,7 @@ Guns happen at the **ARMORY**, and only at the ARMORY. The Decoy is sold at **FA
 
 Pay the Salvage and the weapon is yours **and immediately equipped into its own slot**.
 Ownership is permanent. Once you own more than one Primary, the ARMORY is where you pick
-which fills the slot. The choice is fixed for the whole Run.
+which fills the slot. The choice is fixed for the whole Boarding.
 
 Your first Secondary costs nothing and is still bought at the ARMORY — MK-1 or SEC-D,
 both free. Which Secondary you take is already a build choice.
@@ -68,7 +68,7 @@ mid-reload. SEC-D has none; its Ability spoke cannot be bought.
 - **BR-12 — Concussive Breach.** Shoves Gatekeepers back out of a cone in front of you.
 - **MR-35 — Pin Shot.** Hits charge a meter. The shot that completes it pins whatever is
   still alive under the crosshair. A full meter can also be fired on the ability binding.
-- **MK-1 — Regen Surge.** While it runs, the Secondary's passive clip regeneration runs
+- **MK-1 — Regen Surge.** While it boardings, the Secondary's passive clip regeneration boardings
   faster.
 - **PRI-C — Railshot.** The next shot pierces further, at full damage, then lapses if you
   do not fire.
@@ -94,15 +94,15 @@ The tool: a dry Primary is not a crisis — swap to the sidearm and keep firing.
 swapping away mid-reload and swapping back means you paid the reload twice, unless you
 turned the discard setting off.
 
-You begin a Run on your Primary if you have one, otherwise on the Secondary.
+You begin a Boarding on your Primary if you have one, otherwise on the Secondary.
 
 ### Choosing a Primary
 
 The Bastion asks three questions at once and your Primary answers one of them well.
 
-- **Hunters** run straight at you and die fast. A weapon that hits hard up close answers
+- **Hunters** boarding straight at you and die fast. A weapon that hits hard up close answers
   them.
-- **Thieves** hunt you on a field-terminal Wave and walk to the Hatch on a Hatch-bank. Shooting
+- **Thieves** hunt you on a field-terminal Wave and walk to the Hatch on a Convert. Shooting
   them never shouts. You want reach and damage per shot.
 - **Defaults** march on the Hatch, turn if you hurt them, and line up in corridors, which
   is where a shot that continues through bodies pays.
@@ -111,7 +111,7 @@ The **BR-12 Shotgun** is the answer to things that come to you. The **MR-35 Rifl
 answer to things that do not. The **PRI-C** is the answer to the far half of the room.
 Whichever you take, the other questions get harder.
 
-Gatekeepers get tougher every Wave of a Run while your Tier does not move mid-Run. Plan
+Gatekeepers get tougher every Wave of a Boarding while your Tier does not move mid-Boarding. Plan
 for the late Wave. Crit chance is frozen at nothing. Crits, if they ever rolled, would
 be per pellet.
 
@@ -127,8 +127,8 @@ be per pellet.
 - An upgrade purchase moves several spokes at once. Nothing explains the ring, and nothing tells you that range, spread, pellet count, pierce and falloff are frozen at purchase.
 - FABRICATION sells the Decoy into the Drone bay. Selecting an empty bay still looks identical to an input that failed to register.
 - The improvised cutter is never named; if you skip the free sidearm, you are just holding a weak gun.
-- Equipped weapons cannot be changed once a Run starts. The game does not tell you this before you commit at the NAV MAP.
+- Equipped weapons cannot be changed once a Boarding starts. The game does not tell you this before you commit at the NAV MAP.
 - Firing on an empty clip auto-starts the reload.
-- Gatekeeper health scales up as a Run goes deeper while your weapon does not.
+- Gatekeeper health scales up as a Boarding goes deeper while your weapon does not.
 - Crit chance is frozen at nothing. Pellets would each roll if that ever changed; nothing in the game says so.
 - The crosshair shape is a weapon identity cue, not an accuracy readout.

@@ -95,7 +95,7 @@ namespace GatekeepersProtocol.Game
             new DemoLine(DemoConversationIds.HatchFight, Game, DemoVoiceMode.Subtitle, DemoVoiceScope.Local,
                 "The Wave wants the Hatch now. Hold it — the pile is moving."),
             new DemoLine(DemoConversationIds.FirstHatchDown, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "The Run ended. What dripped home is banked aboard. The rest is gone. " +
+                "The Boarding ended. What dripped home is banked aboard. The rest is gone. " +
                 "Spend it at the ARMORY."),
 
             // Beat 3 — Ship after first loss.
@@ -133,7 +133,7 @@ namespace GatekeepersProtocol.Game
             // by asserting a second one, which the recut forbids. Cause-agnostic from here: a
             // loss that put heavier hardware on the rack, with no count of losses in it.
             new DemoLine(DemoConversationIds.SecondLoss, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "That one took the Run off you. What transferred is aboard — and the rack " +
+                "That one took the Boarding off you. What transferred is aboard — and the rack " +
                 "answers with heavier hardware. The PRIMARY slot is open at the ARMORY."),
 
             // Beats 6-7 — Control Room and finale.

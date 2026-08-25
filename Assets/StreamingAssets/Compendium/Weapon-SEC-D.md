@@ -10,7 +10,7 @@ It dumps a regenerating pool into whatever has already found me. Inside a few me
 
 Swap to it when something is on me, not when something is still coming down the corridor. Empty the pool into the body in front of me, let the quiet refill it. The refill is slow against how fast it empties, and it does not care that I am in a hurry.
 
-Paired with a reach Primary it is the answer to a Hunter in my face. Paired with the BR-12 it commits the whole loadout to knife range — a decision about the entire Run, not about this gun.
+Paired with a reach Primary it is the answer to a Hunter in my face. Paired with the BR-12 it commits the whole loadout to knife range — a decision about the entire Boarding, not about this gun.
 
 Wrong tool for a Thief. Everything is, at this range, for as long as that takes.
 
@@ -40,7 +40,7 @@ for armour.
 
 Ring is FireRate–Ability–Reload–Clip–Damage, strength FireRate, weakness Reload. Ability
 cannot be bought (`AbilityId.None`); the other four spokes can, on the Secondary cost
-curve, after the first lost Run.
+curve, after the first lost Boarding.
 
 ## See also
 

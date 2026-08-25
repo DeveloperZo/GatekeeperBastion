@@ -112,7 +112,7 @@ namespace GatekeepersProtocol.Game
                         s_prompt.Append("  [").Append(key).Append(masterArmed ? "] edit" : "] select");
                         return s_prompt.ToString();
                     case BastionTerminalKind.HatchBank:
-                        return "[" + key + "] Hatch-bank — later";
+                        return "[" + key + "] Convert — later";
                     case BastionTerminalKind.Resource:
                         return "[" + key + "] Resources — later";
                     default:
@@ -233,8 +233,8 @@ namespace GatekeepersProtocol.Game
             if (idx >= WaveDirector.MaxWaves) idx = WaveDirector.MaxWaves - 1;
             if (idx < 0) idx = 0;
             int bodies = s_preview.NextWave(idx, sim.Siphon.Level, sim.PlayerCount).enemyCount;
-            sb.Append("  Intensity ").Append(sim.Siphon.Level)
-                .Append("  juice ").Append(IntensityJuice.CostPerStep)
+            sb.Append("  Ante ").Append(sim.Siphon.Level)
+                .Append("  ante up ").Append(IntensityJuice.CostPerStep)
                 .Append("  unbanked ").Append(sim.TotalUnbanked)
                 .Append("  ").Append(bodies);
             if (gc.Meta != null && gc.Meta.EquippedPassive == BoarderAbilityId.Foresight)

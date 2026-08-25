@@ -64,6 +64,37 @@ namespace GatekeepersProtocol.Game
             return m.DemoZone2BankLost;
         }
 
+        /// <summary>Mark beat 0 — the ship tutorial — consumed, without playing it.
+        ///
+        /// <para>Beat 0 is an ARC: it teaches where the stations are, how an interact works,
+        /// and what firing feels like. An arc is consumed once by a PLAYER, but these flags
+        /// live on the realm, so every new world replays a lesson its owner already had. This
+        /// is the one place that says "consider it taught", so the ship's gates, the dev
+        /// checkpoints and any skip offered to the player cannot drift apart.</para>
+        ///
+        /// <para>It grants the MK-1 because the tutorial's terminal hands it over: skipping the
+        /// lesson must not skip the equipment, or the player embarks with the improvised cutter
+        /// and no way to know why. What it does NOT touch is the rest of the demo — the zones,
+        /// the wheel rungs, the rack that opens on zone 2's loss — because those are the game,
+        /// not the lesson.</para></summary>
+        /// <returns>False when there was nothing to skip.</returns>
+        public static bool SkipShipTutorial(MetaState m)
+        {
+            if (m == null || !m.DemoActive)
+                return false;
+            if (EmbarkRefusal(m) == DemoEmbarkRefusal.None)
+                return false;
+
+            m.DemoCapsuleOpened = true;
+            m.DemoNavPowered = true;
+            m.DemoArmoryPowered = true;
+            m.DemoWeaponGranted = true;
+            m.DemoShipFightDone = true;
+            m.SetOwned(WeaponId.Mk1Sidearm, true);
+            m.SetEquipped(WeaponId.Mk1Sidearm);
+            return true;
+        }
+
         /// <summary>First unmet beat 0 gate, in the refuse table's order. None when the
         /// demo is off or beat 0 is complete.</summary>
         public static DemoEmbarkRefusal EmbarkRefusal(MetaState m)

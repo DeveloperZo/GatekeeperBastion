@@ -32,7 +32,7 @@ namespace GatekeepersProtocol.Game
         /// reachable and says this rather than reading as dead
         /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
         public const string PrimarySealedLine =
-            "Heavier hardware racks here — the Bastion has to take a Run off you first.";
+            "Heavier hardware racks here — the Bastion has to take a Boarding off you first.";
 
         // demo.wheel_cap plays once per Ship visit (instance lifetime is the visit).
         bool _capLinePlayed;

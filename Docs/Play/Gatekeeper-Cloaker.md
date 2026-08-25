@@ -22,7 +22,7 @@ Unwatched, it wants what a Default wants — the Hatch when the Hatch is in the 
 
 A Cloaker advances only while no Boarder is looking at it. Centre one in your view — at anything short of long range, with nothing solid in between — and it stops moving and drops its cloak: fully visible, fully solid, holding position. Look away and it resumes, cloaked, as if you had never been there.
 
-Watched, it does nothing at all: it does not walk, does not swing, does not go after the Hatch or after you. Unobserved, it is a Default in everything but colour — Hatch on a Hatch-bank Wave, you when provoked or near, same swing clock as everything else.
+Watched, it does nothing at all: it does not walk, does not swing, does not go after the Hatch or after you. Unobserved, it is a Default in everything but colour — Hatch on a Convert Wave, you when provoked or near, same swing clock as everything else.
 
 The freeze is shared. One Boarder's gaze holds a Cloaker for the whole crew, so a second player does not double what the garrison loses to it — two people can hold two Cloakers, and the room is still bigger than that.
 

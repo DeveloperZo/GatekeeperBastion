@@ -14,7 +14,7 @@ The sheets are not tiers. They are different answers to one question: what do I 
 
 ## Reference
 
-A **Boarder Protocol** is the class purchase, claimed at **CREW QUARTERS** and worn for the whole Run. One at a time. Swapping is a Ship action; nothing changes it aboard the Bastion.
+A **Boarder Protocol** is the class purchase, claimed at **CREW QUARTERS** and worn for the whole Boarding. One at a time. Swapping is a Ship action; nothing changes it aboard the Bastion.
 
 ### The four rows
 
@@ -50,7 +50,7 @@ Two more sheets are designed and not yet claimable — [AEGIS](Protocol-AEGIS.md
 - It does not change health, sprint, Salvage per kill or crit chance. There are no attribute tracks at CREW QUARTERS; those were refunded and deleted.
 - It does not change any weapon's damage, clip, cadence, reach, spread or pierce. That is the ARMORY's wheel, per weapon.
 - It does not repair the Hatch. That is the Repair Rig at FABRICATION.
-- It is not lost when a Run ends badly. A claim is permanent.
+- It is not lost when a Boarding ends badly. A claim is permanent.
 
 ## See also
 

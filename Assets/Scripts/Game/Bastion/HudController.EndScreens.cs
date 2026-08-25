@@ -24,7 +24,7 @@ namespace GatekeepersProtocol.Game
             _view.SetEndScreen(
                 cause,
                 LoseFraming,
-                "converted this run: " + report.grossEarned,
+                "converted this boarding: " + report.grossEarned,
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
                 "banked total: " + (gc.Meta != null ? gc.Meta.BankedSalvage : 0),
@@ -41,7 +41,7 @@ namespace GatekeepersProtocol.Game
             _view.SetEndScreen(
                 "DOCKED",
                 DockedFraming,
-                "converted this run: " + report.grossEarned,
+                "converted this boarding: " + report.grossEarned,
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
                 "banked total: " + (gc.Meta != null ? gc.Meta.BankedSalvage : 0),
@@ -57,8 +57,8 @@ namespace GatekeepersProtocol.Game
 
             _view.SetEndScreen(
                 "BASTION STRIPPED",
-                ClearFraming + " — Master Control Hatch-bank survived",
-                "converted this run: " + report.grossEarned,
+                ClearFraming + " — Master Control Convert survived",
+                "converted this boarding: " + report.grossEarned,
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
                 "banked total: " + (gc.Meta != null ? gc.Meta.BankedSalvage : 0),
@@ -75,7 +75,7 @@ namespace GatekeepersProtocol.Game
 
         void PushFromSummary(EndSummary s)
         {
-            string earned = "converted this run: " + s.GrossEarned;
+            string earned = "converted this boarding: " + s.GrossEarned;
             string repair = "repair spent: " + s.RepairSpent;
             string net = "net: " + s.Net;
             string banked = "banked total: " + s.Banked;
@@ -85,7 +85,7 @@ namespace GatekeepersProtocol.Game
             {
                 _view.SetEndScreen(
                     "BASTION STRIPPED",
-                    ClearFraming + " — Master Control Hatch-bank survived",
+                    ClearFraming + " — Master Control Convert survived",
                     earned, repair, net, banked, deepest);
             }
             else if (s.Kind == RunEndKind.Docked)

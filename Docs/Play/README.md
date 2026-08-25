@@ -28,15 +28,15 @@ its way; it is short on purpose.
 
 I am the Boarder. The Bastion is held. The Hatch is the way home.
 
-[The Game](The-Game.md) is the shape of the whole thing: what a Run is, why there are
+[The Game](The-Game.md) is the shape of the whole thing: what a Boarding is, why there are
 kinds, what losing costs. [First Time Out](Getting-Started.md) is the first hours in
-order, and the three mistakes that eat early Runs.
+order, and the three mistakes that eat early Boardings.
 
-## II. A Run
+## II. A Boarding
 
-One trip out and back. [A Run](A-Run.md) is embark, Prep, intensity, Assault, Hatch-bank,
+One trip out and back. [A Boarding](A-Boarding.md) is embark, Prep, Ante, Assault, Convert,
 and the four ways it finishes. [Waves](Waves.md) is how the room gets worse.
-[Intensity](Intensity.md) is the only wager on offer and it is an honest one.
+[The Ante](Ante.md) is the only wager on offer and it is an honest one.
 [Salvage](Salvage.md) is the only currency, and it is not mine until it converts —
 [The Other Currencies](Experience-And-Cores.md), Coming Soon, are the two that will join it.
 [Going Down](Going-Down.md) is what a death costs and who pays it.
@@ -46,7 +46,7 @@ makes each one work.
 ## III. The Bastion
 
 The place I hold. [The Hatch](The-Hatch.md) is the umbilical: the only defended thing in the
-Run, the bill I did not plan for, and the way home after a survived bank.
+Boarding, the bill I did not plan for, and the way home after a survived Convert.
 [Destinations](Destinations.md), Coming Soon, is the chart of other places to cut into.
 
 ## IV. The Garrison
@@ -97,9 +97,9 @@ bench.
 
 ## VII. The Hull
 
-Between Runs I walk my own Ship. [The Ship](The-Ship.md) is the hub and the four consoles,
+Between Boardings I walk my own Ship. [The Ship](The-Ship.md) is the hub and the four consoles,
 each owning one subject. [Upgrades](Upgrades.md) is what is permanent, what waits for the
-first convert, and what is actually worth buying.
+first Convert, and what is actually worth buying.
 [Life Aboard](The-Safehouse.md), Coming Soon, is what there will be to do here besides
 leaving.
 

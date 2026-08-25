@@ -1,11 +1,11 @@
 # Gatekeeper's Protocol
 
 <!--
-Purpose: the game explained to someone who has never seen it — what it is, what a Run
+Purpose: the game explained to someone who has never seen it — what it is, what a Boarding
 is, and why the three kinds exist. Hand-written prose; no tables of numbers.
 Every number, key, weapon and Wave lives in Field-Manual.md, which is generated.
 Status: working
-Update trigger: when the loop, the wager, or the Run-ender changes.
+Update trigger: when the loop, the wager, or the Boarding-ender changes.
 Last updated: 2026-08-20
 -->
 
@@ -15,17 +15,17 @@ I cut into a Bastion and strip it. That is the whole job, and nobody makes me do
 
 The Gatekeepers were already here. Here before me, here after me, and in between they come up out of rooms that do not open for me — in groups, on a schedule I pay for. Four frames. I sort them the way you sort anything walking at you: by shape, at distance, early.
 
-Behind me is the Hatch, the umbilical to my Ship, the one way home. If it falls, the Run is over, and nothing buys a door back. If I fall, the realm can pay to stand me up — the price climbs — and when it cannot, the Run is over the old way.
+Behind me is the Hatch, the umbilical to my Ship, the one way home. If it falls, the Boarding is over, and nothing buys a door back. If I fall, the realm can pay to stand me up — the price climbs — and when it cannot, the Boarding is over the old way.
 
-Nothing comes until I call it. That took me longest to trust. Prep is mine and untimed. Intensity is the only bet on offer and it is an honest one: more pay, more of the plainest machine, nothing else moved.
+Nothing comes until I call it. That took me longest to trust. Prep is mine and untimed. Ante is the only bet on offer and it is an honest one: more pay, more of the plainest machine, nothing else moved.
 
-Salvage is not mine until a Hatch-bank converts it. Converted stays with this realm. Unbanked dies with me. What travels between worlds is what I am: weapons, wheel, protocol, equipment.
+Salvage is not mine until a Convert takes it through. Converted stays with this realm. Unbanked dies with me. What travels between worlds is what I am: weapons, wheel, protocol, equipment.
 
-Between Runs I walk my own Ship. Four consoles, four subjects, nothing sold twice.
+Between Boardings I walk my own Ship. Four consoles, four subjects, nothing sold twice.
 
 ## Reference
 
-### What a Run is
+### What a Boarding is
 
 You embark from the Ship (solo hub, or shared Ship when hosting/joining). The NAV MAP states the premise before you leave. You
 arrive already tethered. The Bastion is quiet, and it stays quiet until you use a
@@ -33,20 +33,20 @@ arrive already tethered. The Bastion is quiet, and it stays quiet until you use 
 pick your ground, or stand at a terminal and think.
 
 Then they come — in **groups**, with a gap between them. Kill them and the Salvage sits
-Unbanked until a Hatch-bank. At a field terminal, juice then select then start that
-terminal's next Wave; the same flow at the Hatch starts a Hatch-bank. A Run is a fixed number of
-field Waves. Clear them and the door opens; Unbanked stays until you Hatch-bank. Walk through
-to **Master Control** in the Control Room: survive its Hatch-bank and the Run is **Escaped**.
+Unbanked until a Convert. At a field terminal, ante up then select then start that
+terminal's next Wave; the same flow at the Hatch starts a Convert. A Boarding is a fixed number of
+field Waves. Clear them and the door opens; Unbanked stays until you Convert. Walk through
+to **Master Control** in the Control Room: survive its Convert and the Boarding is **Escaped**.
 Clearing Wave 5 does not. How many: [Field Manual](Field-Manual.md). Bindings: [Field Manual](Field-Manual.md).
 
 ### The wager
 
-Before each Wave you juice **intensity** at the trigger. Higher pays more and sends more bodies.
+Before each Wave you ante up **Ante** at the trigger. Higher pays more and sends more bodies.
 
-Intensity does not make Gatekeepers tougher, does not tighten their spacing, and does not
+Ante does not make Gatekeepers tougher, does not tighten their spacing, and does not
 add a single extra Hunter or Thief — every body it adds is a Default. You are betting
 that you can kill more of the same thing, not that you can survive a different fight.
-Once a Wave is live intensity locks.
+Once a Wave is live Ante locks.
 
 ### The three things that come at you
 
@@ -61,7 +61,7 @@ A **Hunter** will never touch the Hatch. It wants you, it is faster than your wa
 slower than your sprint, and it dies quickly. Lean frame — pick it by silhouette. It is the reason you cannot park in front
 of the Hatch and hold the trigger.
 
-A **Thief** hunts you on a field-terminal Wave; shooting it will not shout. On a Hatch-bank it
+A **Thief** hunts you on a field-terminal Wave; shooting it will not shout. On a Convert it
 walks to the Hatch and never turns. Heavy frame. It takes a serious bite if it arrives. It is
 slow. That slowness is the offer: you have time to deal with it, if you spend that time
 on it.
@@ -70,21 +70,21 @@ The room asks three questions at once, and the answer to each makes the other tw
 
 ### Losing, and what losing costs
 
-There are exactly two ways a Run ends badly: **you die and stay dead, or the Hatch dies.** There is no leave-anytime lever. Death offers a priced respawn out of the realm's banked pot — rationed by shared charges mid-Wave, unrationed at any break, at a price that climbs per respawn this Run — and going down wipes your Unbanked whether or not you come back. When no respawn can be honored (a fresh realm's pot is empty, so at first: always), the Run ends. The Hatch has no such offer at any price. The whole rule: [Going Down](Going-Down.md).
+There are exactly two ways a Boarding ends badly: **you die and stay dead, or the Hatch dies.** There is no leave-anytime lever. Death offers a priced respawn out of the realm's banked pot — rationed by shared charges mid-Wave, unrationed at any break, at a price that climbs per respawn this Boarding — and going down wipes your Unbanked whether or not you come back. When no respawn can be honored (a fresh realm's pot is empty, so at first: always), the Boarding ends. The Hatch has no such offer at any price. The whole rule: [Going Down](Going-Down.md).
 
-Survive a Hatch-bank and you get a third path that is neither Lost nor Escaped: hold interact at the Hatch to **dock** — return to the Ship with what you banked. Fail that bank and the prompt never appears. Start the next Wave and it is gone.
+Survive a Convert and you get a third path that is neither Lost nor Escaped: hold interact at the Hatch to **dock** — return to the Ship with what you banked. Fail that bank and the prompt never appears. Start the next Wave and it is gone.
 
 Losing is cheap for what already made it through the Hatch. **Converted Salvage stays banked.** Unbanked is wiped if you go down or the Hatch falls. Clearing takes nothing extra — Lost and Escaped differ in what the screen says, which counter ticks, and whether your deepest Wave rises (it rises only on a clear). Docked keeps the bank and does not tick a loss.
 
-The Runs are dangerous. The failure is not.
+The Boardings are dangerous. The failure is not.
 
-### Between Runs
+### Between Boardings
 
 You walk your own Ship. Four consoles, each owning one subject.
 
 **ARMORY** owns the weapon in your hands — the weapons themselves, and the upgrade wheel
 for whichever one you are carrying. Upgrades are per weapon. Your Primary is chosen here
-and fixed for the Run.
+and fixed for the Boarding.
 
 **CREW QUARTERS** owns the protocol you embark wearing: how hardware deploys, a field you
 plant for the crew, one hit you chose to eat, and the rule that says how Gatekeepers read
@@ -99,4 +99,4 @@ The first weapon is free, and it is still bought at the ARMORY.
 
 ## See also
 
-[A Run](A-Run.md). [Gatekeepers](Gatekeepers.md). [The Ship](The-Ship.md). [Weapons](Weapons.md). [Realms](Realms.md). [First Time Out](Getting-Started.md). Numbers: [Field Manual](Field-Manual.md).
+[A Boarding](A-Boarding.md). [Gatekeepers](Gatekeepers.md). [The Ship](The-Ship.md). [Weapons](Weapons.md). [Realms](Realms.md). [First Time Out](Getting-Started.md). Numbers: [Field Manual](Field-Manual.md).

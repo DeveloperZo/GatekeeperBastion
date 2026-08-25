@@ -48,7 +48,7 @@ A Gatekeeper that would target you targets your turret instead, whenever both ar
 - **Place for the approach, not for the kill.** Its damage is real but modest. Its value is the aura and the attention. A turret behind you buffs you and absorbs nothing; a turret between you and the entry does both jobs.
 - **Overcharge is spending the machine.** Treat the turret as consumable and the ability as cashing it in. Firing it on a fresh turret at the start of a Wave wastes most of what the turret was for.
 - **Redeploying is free of everything except the cooldown.** A wounded turret is not worth defending. Replace it.
-- **Against Thieves the turret is a clock that runs while you do something else,** which is the closest thing this sheet has to an answer for them.
+- **Against Thieves the turret is a clock that boardings while you do something else,** which is the closest thing this sheet has to an answer for them.
 - **Against a Hunter, the passive is the answer.** It goes for the machine, and the machine can take a few swings you could not.
 
 ## See also

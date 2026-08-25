@@ -4,7 +4,7 @@
 
 Each Wave is bigger than the last, and it grows in four directions at once. More bodies. Tougher bodies. Wider groups. Shorter gaps. I have counted, and the count only ever moves one way.
 
-Intensity adds to the first of those and to nothing else. Checked, rechecked, holds.
+Ante adds to the first of those and to nothing else. Checked, rechecked, holds.
 
 The kinds arrive on a schedule I cannot buy, sell, or argue with. First Wave: Defaults only. Hunters after that. Thieves later still, thickest at the end. Inside a group the mix is shuffled, so there is no clean phase of one problem — sorting what is in front of me is the job, every group, every time.
 
@@ -14,11 +14,11 @@ Starting deep from the Ship does the same thing on purpose — the overlap moves
 
 ## Reference
 
-A Run is a fixed number of Waves, started from field terminals or as a Hatch-bank, each one bigger than the last. The first terminal on the kit bastion is three Waves; each start after a select delivers one. Hatch-bank waits until those three are done. Counts and composition: [Field Manual](Field-Manual.md).
+A Boarding is a fixed number of Waves, started from field terminals or as a Convert, each one bigger than the last. The first terminal on the kit bastion is three Waves; each start after a select delivers one. Convert waits until those three are done. Counts and composition: [Field Manual](Field-Manual.md).
 
 ### Four things escalate, and they escalate together
 
-**More bodies.** Every Wave sends more than the one before it, before intensity is applied at all.
+**More bodies.** Every Wave sends more than the one before it, before Ante is applied at all.
 
 **Tougher bodies.** Each Wave multiplies every Gatekeeper's health — all kinds, the same multiplier. The kind that died to a burst in the first Wave takes noticeably more by the last. This is the axis noticed last and the one that most often makes a familiar weapon stop working.
 
@@ -26,15 +26,15 @@ A Run is a fixed number of Waves, started from field terminals or as a Hatch-ban
 
 **Shorter gaps.** The pause between groups shrinks each Wave. Combined with the wider groups, this is the real escalation: early on you deal with a group and then wait; late on the next group is already inside before you have finished the last.
 
-None of these four are affected by intensity. Intensity adds bodies on top.
+None of these four are affected by Ante. Ante adds bodies on top.
 
 ### Composition: what shows up, and when
 
-The kinds are not tiers. They arrive on a fixed schedule that intensity cannot touch.
+The kinds are not tiers. They arrive on a fixed schedule that Ante cannot touch.
 
-- The **first Wave is all basic Gatekeepers** — the marchers. On a Wave started at a field terminal they hunt you, not the Hatch. On a Hatch-bank they march on the Hatch. Nothing else is in it. It exists to teach you the room.
+- The **first Wave is all basic Gatekeepers** — the marchers. On a Wave started at a field terminal they hunt you, not the Hatch. On a Convert they march on the Hatch. Nothing else is in it. It exists to teach you the room.
 - **Hunters** enter after that, and their count grows every Wave. They never touch the Hatch. They are the reason you cannot stand still and hold the trigger.
-- **Thieves** enter later still, and their count grows fastest at the end. On a field-terminal Wave they hunt you. On a Hatch-bank they go for the door again. Shooting one still does not shout, and it still does not speed up.
+- **Thieves** enter later still, and their count grows fastest at the end. On a field-terminal Wave they hunt you. On a Convert they go for the door again. Shooting one still does not shout, and it still does not speed up.
 
 Within a group the kinds are **shuffled, not blocked** — a group can be all marchers, or a Thief escorted by Hunters. You do not get a clean Hunter phase followed by a clean Thief phase; you get a mix at every door, every time, which is the whole reason there is more than one kind.
 
@@ -47,7 +47,7 @@ Within a group the kinds are **shuffled, not blocked** — a group can be all ma
 | Group | narrow | the widest the game sends |
 | Gap between groups | the longest | the shortest |
 | What kills you | nothing, if you pay attention | being made to answer three problems at once |
-| What the Hatch does | nothing on a field-terminal Wave; the Hatch-bank target on a Hatch-bank | the same split |
+| What the Hatch does | nothing on a field-terminal Wave; the Convert target on a Convert | the same split |
 
 The first Wave asks one question: can you stop a thing walking at you. The last asks three at once — marchers, Hunters, and Thieves that will not turn when shot — and every second you spend on one is a second the other two are unopposed. That is the escalation. It is not that any single Gatekeeper becomes frightening.
 
@@ -59,4 +59,4 @@ This is also exactly what the NAV MAP's deep start does deliberately: it deliver
 
 ## See also
 
-[A Run](A-Run.md). [Gatekeepers](Gatekeepers.md). [Intensity](Intensity.md). [Staying Alive](Staying-Alive.md).
+[A Boarding](A-Boarding.md). [Gatekeepers](Gatekeepers.md). [Ante](Ante.md). [Staying Alive](Staying-Alive.md).

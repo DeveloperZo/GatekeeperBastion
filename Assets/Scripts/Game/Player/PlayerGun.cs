@@ -408,7 +408,7 @@ namespace GatekeepersProtocol.Game
                 return Refuse($"not a combat scene (active '{SceneFlow.ActiveSceneName}') and no GameController present", false);
 
             if (gc != null && gc.RunIsOver)
-                return Refuse("the run is over (terminal phase)", false);
+                return Refuse("the boarding is over (terminal phase)", false);
 
             if (NetShipWait.IsActive)
                 return Refuse("waiting on the Ship", false);

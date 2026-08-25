@@ -6,7 +6,7 @@
 
 The plain frame. Everything else on this hull, I measure against it.
 
-On a field-terminal Wave it walks at me. On a Hatch-bank it walks to the Hatch and will pass me by to get there. It closes and it swings. That is the whole manual.
+On a field-terminal Wave it walks at me. On a Convert it walks to the Hatch and will pass me by to get there. It closes and it swings. That is the whole manual.
 
 Three things put one on me, and I keep the list in order. Shooting it: permanent. Being seen down a clear line at distance: permanent. Standing in its space: wears off when I leave. The permanent two also put it in a hurry — faster than my walk, slower than my sprint — which makes backing away while firing a slow loss dressed as a plan.
 
@@ -14,13 +14,13 @@ Hurt one and it shouts, and everything near it drops what it was doing and joins
 
 At the Hatch it stops negotiating. It hits the door while I shoot it, while I stand beside it, while its friends chase me. A Default is a decision while it walks and a timer once it arrives.
 
-Weakest thing here, one at a time. It has never needed to be strong. It brings count, and every body a raised intensity adds is this one.
+Weakest thing here, one at a time. It has never needed to be strong. It brings count, and every body a raised Ante adds is this one.
 
 ## Reference
 
 ### What it does
 
-It walks to the Hatch and hits it — on a Hatch-bank. On a Wave started at a field terminal the Hatch is out of the fight, so it walks at you from the start.
+It walks to the Hatch and hits it — on a Convert. On a Wave started at a field terminal the Hatch is out of the fight, so it walks at you from the start.
 
 It is also the only kind that can change its mind, and it changes its mind in one direction only: **once it decides you are the problem, it hunts you for the rest of its life.** There is no cooling off, no losing it, no breaking line of sight and having it wander back to what it was doing. It also picks up speed when it flips — a provoked Default is faster than your walk, so backing away from one while shooting it does not create distance. Sprinting does.
 
@@ -49,9 +49,9 @@ Once a Default gets to the Hatch, it is finished negotiating. It will keep hitti
 
 ### Fighting them
 
-They are individually the weakest thing to kill in the game and they win by count. What actually kills you is a Default group that flipped as one and reached you as one — the swing is not large per hit, but several of them in contact at once is a health bar disappearing quickly, and you do not heal during a Run.
+They are individually the weakest thing to kill in the game and they win by count. What actually kills you is a Default group that flipped as one and reached you as one — the swing is not large per hit, but several of them in contact at once is a health bar disappearing quickly, and you do not heal during a Boarding.
 
-Late in a Run they are the same Gatekeeper with substantially more health. Intensity's extra bodies land entirely here, so high intensity is a bet specifically on your ability to chew through more Defaults, not on anything else.
+Late in a Boarding they are the same Gatekeeper with substantially more health. The Ante's extra bodies land entirely here, so a high Ante is a bet specifically on your ability to chew through more Defaults, not on anything else.
 
 ## See also
 

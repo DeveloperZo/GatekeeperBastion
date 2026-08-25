@@ -1,10 +1,10 @@
-<!-- Purpose: the hub between runs — what each console owns, how to use one, and what to buy first. / Status: working / Update trigger: when a station is added, removed, or changes what it sells. / Last updated: 2026-08-20 -->
+<!-- Purpose: the hub between boardings — what each console owns, how to use one, and what to buy first. / Status: working / Update trigger: when a station is added, removed, or changes what it sells. / Last updated: 2026-08-20 -->
 
 # The Ship
 
 ## Game
 
-Between Runs I stand on my own Ship, first person, hands empty until I buy something. This is the only place Salvage is spent and the only way back to the Bastion.
+Between Boardings I stand on my own Ship, first person, hands empty until I buy something. This is the only place Salvage is spent and the only way back to the Bastion.
 
 Three hatch doors down one side. One opens per seat. The party lead owns EMBARK, and every seat shops its own loadout.
 
@@ -18,7 +18,7 @@ The NAV MAP will warn me if I own no weapon and no protocol, and then let me go 
 
 ## Reference
 
-Between runs you are stood in your own ship, in first person. Hands are empty until you buy a weapon at the ARMORY. You cannot fire here either way. This is the only place Salvage gets spent, and the only way back to the Bastion.
+Between boardings you are stood in your own ship, in first person. Hands are empty until you buy a weapon at the ARMORY. You cannot fire here either way. This is the only place Salvage gets spent, and the only way back to the Bastion.
 
 You walk. You look at a console until the prompt appears at the bottom of the screen, you hold interact, and a panel opens: your movement locks, the cursor comes free, and the panel owns the screen until you close it. One panel at a time. Close it and you are walking again. Binding: [Field Manual](Field-Manual.md).
 
@@ -43,7 +43,7 @@ is not here; that is the Repair Rig at FABRICATION.
 
 ### The start-Wave selector
 
-The NAV MAP will let you begin partway in. It does not skip anything — starting deeper delivers every Wave up to that point back to back, with no Prep in between, and then the Run continues normally to the end. You get the same Run with the early half compressed into one shapeless fight. It is a way to stop replaying Wave one, not a shortcut, and the overlap is the price.
+The NAV MAP will let you begin partway in. It does not skip anything — starting deeper delivers every Wave up to that point back to back, with no Prep in between, and then the Boarding continues normally to the end. You get the same Boarding with the early half compressed into one shapeless fight. It is a way to stop replaying Wave one, not a shortcut, and the overlap is the price.
 
 ### Embarking with nothing
 
@@ -59,15 +59,15 @@ first converts through the Hatch. Hatch Armor at FABRICATION is also open from t
 
 **Then whatever killed you.** If the Hatch fell while you were still standing, that is FABRICATION and not you at all.
 
-**Save the big weapon purchase for when you know which fight you want.** A Primary is fixed for the whole Run, and its upgrade wheel does not follow you to the next gun. Buying one is committing to a range and a cadence, not just spending money.
+**Save the big weapon purchase for when you know which fight you want.** A Primary is fixed for the whole Boarding, and its upgrade wheel does not follow you to the next gun. Buying one is committing to a range and a cadence, not just spending money.
 
 ## See also
 
-[Upgrades](Upgrades.md). [Protocols](Protocols.md). [Weapons](Weapons.md). [Realms](Realms.md). [A Run](A-Run.md). [The Hatch](The-Hatch.md).
+[Upgrades](Upgrades.md). [Protocols](Protocols.md). [Weapons](Weapons.md). [Realms](Realms.md). [A Boarding](A-Boarding.md). [The Hatch](The-Hatch.md).
 
 ## Gaps
 
-- Nothing anywhere lays out which purchases are gated behind losing a Run and which are not. There is no one place that shows you the split.
+- Nothing anywhere lays out which purchases are gated behind losing a Boarding and which are not. There is no one place that shows you the split.
 - FABRICATION sells the Decoy into the Drone bay. The slot still looks like a third gun until you own one.
 - The Hatch Armor track has a ceiling and you only learn where by seeing a row read MAX. Nothing shows you the whole ladder in advance.
 - Repairing needs the Repair Rig equipped, and nothing on the Hatch or in the fight says so until you try to repair and nothing happens.

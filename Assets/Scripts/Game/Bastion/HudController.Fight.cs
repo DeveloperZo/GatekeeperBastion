@@ -103,8 +103,8 @@ namespace GatekeepersProtocol.Game
                 _lineBuf.Clear();
                 int shown = wave;
                 if (shown > WaveDirector.MaxWaves) shown = WaveDirector.MaxWaves;
-                _lineBuf.Append("Run ").Append(runSal)
-                    .Append("  ·  Intensity ").Append(siphon)
+                _lineBuf.Append("Boarding ").Append(runSal)
+                    .Append("  ·  Ante ").Append(siphon)
                     .Append("  ·  Wave ").Append(shown).Append('/')
                     .Append(WaveDirector.MaxWaves)
                     .Append("  ·  ");

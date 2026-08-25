@@ -5,7 +5,7 @@ Purpose: the ubiquitous language of Gatekeeper's Protocol. One name per thing, u
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired, or when player-facing voice rules change.
-Last updated: 2026-08-24 (realm row; voice rule 1 mirrored from ../../Story/Voices.md; protocol roster refreshed)
+Last updated: 2026-08-24 (Boarding/Ante/ante up/Convert player-text renames — trap 8; earlier same day: realm row, voice rule 1 mirror, protocol roster refresh)
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in
@@ -67,38 +67,38 @@ everything the game contains.
 
 | Term | Means | Never called |
 |---|---|---|
-| **Run** | One trip from the Ship to the Bastion and back, ending in a clear or a loss. | mission, level, raid, expedition |
-| **the Ship** | The player's own vessel. The hub between Runs. | base, home, hub *(in player-facing text)* |
+| **Boarding** | One trip from the Ship to the Bastion and back, ending in a clear or a loss. Player text says Boarding; code identifiers keep Run (trap 8). | run *(retired for player text 2026-08-24)*, mission, level, raid, expedition |
+| **the Ship** | The player's own vessel. The hub between Boardings. | base, home, hub *(in player-facing text)* |
 | **Bastion** | The fortified vessel the Gatekeepers hold and the player boards. Not a wreck — it is garrisoned, which is why Gatekeepers keep arriving. | derelict *(retired 2026-08-08)*, station, dungeon |
 | **Boarder** | The player. The one who cuts in. | operative, marine, survivor, defender |
 | **the tether** | The line from the Ship to the Bastion. What the siphon runs along, and what the Hatch anchors. | cable, line, connection |
 | **Hatch** | The umbilical junction back to the Ship. The Boarder's way out, and the thing they must hold. | door, gate, objective, junction |
 | **embark** | Leaving the Ship for the Bastion, from the NAV MAP. | deploy, launch, start mission |
-| **Prep** | The quiet state between Waves. Untimed, pays nothing, the only time juice raises intensity. | downtime, intermission, break |
+| **Prep** | The quiet state between Waves. Untimed, pays nothing, the only time anting up raises the Ante. | downtime, intermission, break |
 | **Assault** | The state while a Wave is live. | combat, the fight |
-| **the Siphon Draw** | Retired as the Wave-start verb (M52). Prep `T` starts the selected trigger (Field, Master, Hatch-bank). `T` without a select is a logged refusal. | spawn, trigger, call the wave, the draw *(alone)* |
-| **Wave** | One delivery of Gatekeepers. `+/-` juice, `E` selects, `T` starts at a **field terminal**. A terminal opens its door after its authored count (kit bastion: T1 is 3, the rest 1). Prep `E` then `T` at the Hatch is Hatch-bank. | round, horde |
-| **field terminal** | A bastion console marked **T**. `E` selects intensity; `T` starts one Boarder-hunt Wave. N clears complete it and open its **D**. | station *(alone)*, objective, console *(the Ship's four are stations)* |
-| **cleared** / **stripped** | Survived Master Control's Hatch-bank half. Field Waves beaten is field stripped, not Escaped. | won, completed, extracted |
-| **Escaped** | Terminal, good: Master Control's Hatch-bank half survived. Wave 5 does not Escaped. | won, victory |
-| **Master Control** | Control Room console. `E` then `T` starts 5 terminal Waves (door sealed) then 5 Hatch-bank windows (door open). That Hatch-bank does not spend a mid-Run slot. | win terminal, extract console, D1 *(the door is not the win)* |
+| **the Siphon Draw** | Retired as the Wave-start verb (M52). Prep `T` starts the selected trigger (Field, Master, Convert). `T` without a select is a logged refusal. | spawn, trigger, call the wave, the draw *(alone)* |
+| **Wave** | One delivery of Gatekeepers. `+/-` ante up, `E` selects, `T` starts at a **field terminal**. A terminal opens its door after its authored count (kit bastion: T1 is 3, the rest 1). Prep `E` then `T` at the Hatch is a Convert. | round, horde |
+| **field terminal** | A bastion console marked **T**. `E` selects the Ante; `T` starts one Boarder-hunt Wave. N clears complete it and open its **D**. | station *(alone)*, objective, console *(the Ship's four are stations)* |
+| **cleared** / **stripped** | Survived Master Control's Convert half. Field Waves beaten is field stripped, not Escaped. | won, completed, extracted |
+| **Escaped** | Terminal, good: Master Control's Convert half survived. Wave 5 does not Escaped. | won, victory |
+| **Master Control** | Control Room console. `E` then `T` starts 5 terminal Waves (door sealed) then 5 Convert windows (door open). That Convert does not spend a mid-Boarding slot. | win terminal, extract console, D1 *(the door is not the win)* |
 
-A Run that ends badly is **lost**: the Boarder went down, or the Hatch fell. It is listed
-under Run phases below only because `RunPhase.Lost` is a real enum value the code branches
+A Boarding that ends badly is **lost**: the Boarder went down, or the Hatch fell. It is listed
+under Boarding phases below only because `RunPhase.Lost` is a real enum value the code branches
 on. In prose, treat it as the plain English word it is and do not capitalise it. *Podded is
 retired: struck 2026-08-08.*
 
-### Run phases
+### Boarding phases
 
-`RunPhase` is the code's spine and every value is player-visible somewhere, so all of them
+`RunPhase` is the code's spine (the identifier keeps Run — trap 8) and every value is player-visible somewhere, so all of them
 are named here.
 
 | Term | Means | Never called |
 |---|---|---|
-| **Docked** | Aboard the Ship — the hub between Runs, and the end-cause when you hold interact at the Hatch after a *survived* Hatch-bank and go home by choice (not Lost; banked Salvage stays). | menu, lobby, idle, bail-out *(outside a survived bank, leave-anytime is cut)* |
+| **Docked** | Aboard the Ship — the hub between Boardings, and the end-cause when you hold interact at the Hatch after a *survived* Convert and go home by choice (not Lost; banked Salvage stays). | menu, lobby, idle, bail-out *(outside a survived Convert, leave-anytime is cut)* |
 | **Tethered** | Aboard the Bastion with the tether live. The whole fight happens here. | in-run, active, boarded |
 | **Spooling** | Reserved, unused in v0 — the escape window after the tether is cut. | *(do not use it for anything else)* |
-| **Escaped** | Terminal, good: Master Control's Hatch-bank half survived. Wave 5 does not Escaped. | won, victory |
+| **Escaped** | Terminal, good: Master Control's Convert half survived. Wave 5 does not Escaped. | won, victory |
 | **Lost** | Terminal, bad: the Boarder went down or the Hatch fell. | podded *(retired)*, death, game over, wipe, fail |
 
 ### What comes at you
@@ -120,7 +120,7 @@ are named here.
 |---|---|---|
 | **Primary** | The earned weapon slot. Heavy damage. | main, rifle slot |
 | **Secondary** | The starting weapon slot. Never runs dry. | sidearm slot *(the MK-1 is a sidearm; the slot is the Secondary)*, backup |
-| **Drone** | The third weapon slot. Holds the FABRICATION drone, one payload per Run, player-activated. | Utility *(retired 2026-08-08)*, melee *(no melee slot exists)*, gadget, tool, third slot |
+| **Drone** | The third weapon slot. Holds the FABRICATION drone, one payload per Boarding, player-activated. | Utility *(retired 2026-08-08)*, melee *(no melee slot exists)*, gadget, tool, third slot |
 | **Equipment** | Gear bought at FABRICATION into the equipment slot (unlocked after first loss, bought once). The Repair Rig is the first piece. | payload *(that is the Drone's)*, item, kit, Utility |
 | **Tier** | A step on a weapon's upgrade track. | level, rank, mark, upgrade |
 | **ability** | A weapon's one activated effect, on a cooldown. | special, power, skill, ult |
@@ -146,12 +146,12 @@ mark in the commit that builds it.
 
 | Term | Means | Never called |
 |---|---|---|
-| **Salvage** | The only currency. Kills fill **unbanked**; only a **Hatch-bank** converts it to the ship. | credits, scrap, cash, resources |
-| **unbanked** | Salvage earned this Run that has not gone through the Hatch. Lost on down or Hatch breach. | floating, pending, at-risk |
-| **Hatch-bank** | Prep `E` then `T` while looking at the Hatch: a Wave that converts unbanked to the ship. Capped per Run. | extract, cash-out, deposit |
+| **Salvage** | The only currency. Kills fill **unbanked**; only a **Convert** takes it through to the ship. | credits, scrap, cash, resources |
+| **unbanked** | Salvage earned this Boarding that has not gone through the Hatch. Lost on down or Hatch breach. | floating, pending, at-risk |
+| **Convert** | Prep `E` then `T` while looking at the Hatch: a Wave that takes Unbanked through to the ship. Capped per Boarding. | Hatch-bank *(retired for player text 2026-08-24; code keeps HatchBank/WaveMode.HatchBank — trap 8)*, extract, cash-out, deposit |
 | **banked** | Salvage on the ship that the player can spend. | stored, saved |
-| **intensity** | The per-Wave wager 0–5: more Salvage per Gatekeeper, more Gatekeepers. | siphon dial, difficulty, risk slider, multiplier *(as a name for this)* |
-| **juice** | Paying Unbanked at a trigger to raise intensity. | siphon, buy difficulty, map device |
+| **Ante** | The per-Wave wager 0–5: more Salvage per Gatekeeper, more Gatekeepers. Raised by anting up. | intensity *(retired for player text 2026-08-24; code keeps IntensityJuice/Siphon — trap 8)*, siphon dial, difficulty, risk slider, multiplier *(as a name for this)* |
+| **ante up** | Paying Unbanked at a trigger to raise the Ante. | juice *(retired for player text 2026-08-24)*, siphon, buy difficulty, map device |
 | **track** | A permanent upgrade line at FABRICATION (Hatch Armor). | skill, perk, stat line |
 | **party** | Connected seats in a friends session. | group, team |
 | **party lead** | The host. Owns NAV EMBARK. | leader, captain |
@@ -210,7 +210,7 @@ Test a Play page's Game dimension (skip HTML comments, Reference, and Gaps). One
 | 3 | The first paragraph states a playable rule the HUD does not print. | "Shooting it does not provoke it." | Opening that only restates HP, clip, or a key already on pause. |
 | 4 | Numbers and bindings only by linking Field Manual. | "How many: [Field Manual](Field-Manual.md)." | "The Thief has 180 HP." / "Press F." |
 | 5 | No milestone IDs, "not built", or builder paths in the visible body. | The page describes what ships. | "M23 shipped the Repair Rig." |
-| 6 | No never-called terms from the table above. | Hatch, Gatekeeper, siphon draw. | Codex, encyclopedia, wiki, enemy, aggro, mission. |
+| 6 | No never-called terms from the table above. | Hatch, Gatekeeper, the Ante. | Codex, encyclopedia, wiki, enemy, aggro, mission. |
 | 7 | Humor is the situation's exactness. No pun, slang persona, or pop-culture aside. | "You are scenery." | "Think of it as the tank from every horde game." |
 | 8 | Fiction is a frame, not a plot. No byline, Day N, or origin myth. | "Gatekeepers hold the Bastion." | "Day 12. The garrison still will not yield. — J." |
 | 9 | `## See also` names at least one other Play page. The page is not a glossary stub. | Thief → Hatch, Waves. | "Thief — a large Gatekeeper." as the whole page. |
@@ -284,6 +284,17 @@ fiction noun.
 `WaveSpec.thiefCount`, the generated Field Manual, the Play pages, this table and the
 Compendium all say Thief. `Ram` survives only in shipped milestone files, the Changelog
 and Zo's play records, where it is a record of what was true then.
+
+
+**8. Run, intensity/juice and Hatch-bank were renamed for player text only (Zo,
+2026-08-24): Boarding, Ante / ante up, Convert.** The code keeps the old identifiers —
+`RunSim`, `RunPhase`, `RunSeats`, `TotalRuns`, `IntensityJuice`, `TetherSiphon`,
+`JuiceSpentThisPull`, `HatchBank`, `WaveMode.HatchBank` — the same shape as
+`EngineeringStation.cs` being FABRICATION. Log lines keep the old words too:
+`Tools/wave-report` parses them, and logs are builder-facing. Renaming the identifiers is
+a future one-commit sweep, not a per-file cleanup. The machine lint cannot carry `run`,
+`intensity` or `juice` as retired terms (common-word false positives, same note as
+boarder-for-enemy); this table and the Compendium form tests are the enforcement.
 
 ## Adding a term
 

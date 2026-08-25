@@ -100,17 +100,17 @@ namespace GatekeepersProtocol.Game
                     if (prep && unbanked > 0L)
                     {
                         if (gc.HatchBankStartBlocked)
-                            return "Hatch-bank — finish the zone";
+                            return "Convert — finish the zone";
                         string e = Controls.DisplayOf(ControlId.Interact);
                         bool armed = gc != null && gc.IsHatchBankArmed;
                         s_prompt.Clear();
                         if (armed)
                             s_prompt.Append('[').Append(Controls.DisplayOf(ControlId.PullDraw))
-                                .Append("] Hatch-bank");
+                                .Append("] Convert");
                         else
                             s_prompt.Append('[').Append(Controls.DisplayOf(ControlId.DialUp))
                                 .Append('/').Append(Controls.DisplayOf(ControlId.DialDown))
-                                .Append("] Hatch-bank");
+                                .Append("] Convert");
                         AppendStake(s_prompt, gc, unbanked);
                         s_prompt.Append("  [").Append(e).Append(armed ? "] edit" : "] select");
                         return s_prompt.ToString();

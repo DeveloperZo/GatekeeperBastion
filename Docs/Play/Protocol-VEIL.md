@@ -12,7 +12,7 @@ The crew burst is the loud one. For the window, every Gatekeeper renders through
 
 The personal burst takes me off every targeting list outright. Anything mid-swing finishes the swing. Firing puts me back on instantly, so it is a way to leave, never a way to win. The room forgets me exactly as long as I give it nothing to remember.
 
-The passive is standing: they notice me closer in than they otherwise would. Not silence, not stillness — just less reach on being seen. Standing still was never the requirement. It took me three Runs to stop believing it was.
+The passive is standing: they notice me closer in than they otherwise would. Not silence, not stillness — just less reach on being seen. Standing still was never the requirement. It took me three Boardings to stop believing it was.
 
 ## Reference
 

@@ -95,7 +95,7 @@ loss 1, so the wheel key stays `PodEjections >= 1`.
 |---|---|
 | **Goal** | The loss reads as “some came home.” Hand off to beat 3. |
 | **Player** | Dismiss end screen; Ship loads. |
-| **Game** | `demo.first_hatch_down` · Lock · Local · Game. **The Run ended. What dripped home is banked aboard. The rest is gone. Spend it at the ARMORY.** (Copy re-stamped cause-agnostic, Zo 2026-08-17 — the trigger also fires on a host-down loss, so the copy no longer claims the Hatch fell.) |
+| **Game** | `demo.first_hatch_down` · Lock · Local · Game. **The Boarding ended. What dripped home is banked aboard. The rest is gone. Spend it at the ARMORY.** (Copy re-stamped cause-agnostic, Zo 2026-08-17 — the trigger also fires on a host-down loss, so the copy no longer claims the Hatch fell.) |
 | **Standing** | Spend Salvage at the ARMORY |
 | **Log** | existing `[Ship] aboard the ship — <n> banked, 1 run(s) lost, 0 cleared` |
 | **Have** | End-screen persist + `GameSession.Save()`; return log `returning to the ship — <n> banked`. |

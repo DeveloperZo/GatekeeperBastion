@@ -10,7 +10,7 @@ The cadence is slow, and a miss is real time gone. It rewards a steady hand and 
 
 Thieves are what it is for. Their walk is the entire budget I get, and this is the only weapon that spends it from across the room.
 
-The weak spot is a Hunter already inside my range. One is fine. Several, arriving between shots, is how Runs end. That is the price of taking this over the BR-12, and the price is real.
+The weak spot is a Hunter already inside my range. One is fine. Several, arriving between shots, is how Boardings end. That is the price of taking this over the BR-12, and the price is real.
 
 A Damage focus compounds here better than anywhere else. A Thief dropped one shot sooner is worth more than the step looks on the panel.
 
@@ -34,14 +34,14 @@ Its cadence is slow. The clip is moderate and the reload is not short. You get a
 
 ### What it is bad at
 
-- **A Hunter at contact range.** Hunters are fast, come straight at you, and get inside the distance where a slow deliberate shot is comfortable. One is fine. Several arriving at once, while you are between shots or mid-reload, is how a Run ends. This is the price of taking the rifle over the shotgun.
+- **A Hunter at contact range.** Hunters are fast, come straight at you, and get inside the distance where a slow deliberate shot is comfortable. One is fine. Several arriving at once, while you are between shots or mid-reload, is how a Boarding ends. This is the price of taking the rifle over the shotgun.
 - **Crowds that are not lined up.** Pierce does nothing for a scattered group.
 - **Missing.** No spread means no forgiveness — a shot that is slightly off is a shot that did nothing at all.
 - **Panic.** It rewards a steady hand and punishes a spray. If you find yourself holding the trigger, you are firing the wrong weapon for that moment.
 
 ### Which Gatekeeper it answers
 
-- **Thief — yes, this is the answer.** A Thief has by far the most health in the game, hits the Hatch hard on a Hatch-bank, ignores provoke, and cannot be pulled off course. Nothing you do influences a Thief except damage, so the only variable is how early you start and how much each shot does. Both are this weapon's strengths. Kill Thieves from range while they walk, and you buy back the seconds you would otherwise spend standing next to one.
+- **Thief — yes, this is the answer.** A Thief has by far the most health in the game, hits the Hatch hard on a Convert, ignores provoke, and cannot be pulled off course. Nothing you do influences a Thief except damage, so the only variable is how early you start and how much each shot does. Both are this weapon's strengths. Kill Thieves from range while they walk, and you buy back the seconds you would otherwise spend standing next to one.
 - **Default — yes, in numbers.** Defaults are the bulk of every Wave and they march toward the Hatch, which naturally strings them into lines down corridors. That is exactly where pierce turns one trigger pull into several kills. Be deliberate about the shout: hurting one Default pulls its nearby group onto you, and with this weapon you would usually rather they kept walking in a line than turned and spread out.
 - **Hunter — the weak spot.** They will reach you. Answer them with distance if you have any, with the sidearm if you do not, and with the CREW QUARTERS tracks if it keeps killing you.
 

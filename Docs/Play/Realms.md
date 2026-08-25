@@ -18,9 +18,9 @@ Deleting a realm deletes a world. The Boarders that walked it lose nothing of th
 
 ## Reference
 
-A realm is the persistent world half of a save; a Boarder is the traveling half. The chooser (REALMS) lists both and ENTER opens the selected realm with the selected Boarder, onto that realm's Ship. The return from a Run lands there too.
+A realm is the persistent world half of a save; a Boarder is the traveling half. The chooser (REALMS) lists both and ENTER opens the selected realm with the selected Boarder, onto that realm's Ship. The return from a Boarding lands there too.
 
-**Realm-side**: banked Salvage and the lifetime ledger, Hatch Armor, hatch conversions, completed terminals and open doors, the deepest Wave cleared, the run counters, and the first-time gates. **Boarder-side**: weapons owned, each weapon's wheel, the protocol claimed, equipment and payloads.
+**Realm-side**: banked Salvage and the lifetime ledger, Hatch Armor, hatch conversions, completed terminals and open doors, the deepest Wave cleared, the boarding counters, and the first-time gates. **Boarder-side**: weapons owned, each weapon's wheel, the protocol claimed, equipment and payloads.
 
 **The pot is the world's.** Every seat in a session banks into the realm being played. Spending is the mirror: purchases debit that realm's pot even when the thing bought is Boarder-side and leaves with the buyer. Respawns are debited from the same pot ([Going Down](Going-Down.md)).
 

@@ -128,7 +128,7 @@ namespace GatekeepersProtocol.Game
                 else if (m.PayloadLoadoutLocked)
                 {
                     row.Bind(def.displayName, "", "", effect, "EQUIP", null, false,
-                        "OWNED — locked mid-Run");
+                        "OWNED — locked mid-Boarding");
                 }
                 else
                 {

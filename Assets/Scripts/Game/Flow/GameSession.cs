@@ -264,6 +264,16 @@ namespace GatekeepersProtocol.Game
             CurrentRealmId = realm.Id;
             RealmRegistry.LastBoarderId = boarder.Id;
             RealmRegistry.LastRealmId = realm.Id;
+
+            // The ship tutorial is a lesson, and a lesson is learned by the PLAYER once — but
+            // its flags live on the realm, so without this every new world would teach it
+            // again. The preference is set the first time it is finished; from then on any
+            // world opens with it behind you. Untick it in options to be taught again.
+            if (Settings.GetBool(SettingId.SkipShipTutorial)
+                && DemoProgress.SkipShipTutorial(Meta))
+            {
+                Log.Event(Tag, "ship tutorial skipped — already learned on this machine");
+            }
         }
 
         /// <summary>Load the persisted campaign into Meta. Falls back to a fresh session on failure.</summary>

@@ -52,5 +52,5 @@ prices: [Field Manual](Field-Manual.md).
 
 ## Gaps
 
-- Playthrough still needs a logged Run standing at the Hatch vs the same shots on the MR-35.
+- Playthrough still needs a logged Boarding standing at the Hatch vs the same shots on the MR-35.
 - Codename until identity is solid.

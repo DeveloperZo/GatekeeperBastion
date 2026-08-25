@@ -132,7 +132,7 @@ namespace GatekeepersProtocol.Game
                 _lineBuf.Clear();
                 if (deepest < 1) deepest = 1;
                 _lineBuf.Append("cleared ").Append(deepest)
-                    .Append("  ·  ").Append(runs).Append(" runs");
+                    .Append("  ·  ").Append(runs).Append(" boardings");
                 _view.SetScore(salvage, _lineBuf.ToString());
 
                 AppendLoadout(_view, m);

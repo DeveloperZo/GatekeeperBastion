@@ -68,11 +68,11 @@ namespace GatekeepersProtocol.Game
             if (_net != null && _net.IsClientOnly)
                 return HatchBankRefuse("client cannot start a Wave");
             if (Sim == null || RunIsOver)
-                return HatchBankRefuse("run not live");
+                return HatchBankRefuse("no boarding live");
             if (Sim.Phase != RunPhase.Tethered || Sim.Assault != AssaultState.Prep)
                 return HatchBankRefuse("not in Prep");
             if (!_armedHatch)
-                return HatchBankRefuse("select intensity first");
+                return HatchBankRefuse("select the Ante first");
             if (HatchBankStartBlocked)
             {
                 Log.Event("Demo", "bank refused — zone incomplete");

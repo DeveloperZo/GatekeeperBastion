@@ -7,7 +7,7 @@ Coming Soon.
 
 A sheet about where the money goes. Salvage as position: payouts that walk toward me, piles that sit where something died for them, a way home that costs everything Unbanked and leaves it lying in the field. Claimable, in both senses.
 
-Not on the panel yet. One rule will hold whatever else changes: Unbanked converts through a Hatch-bank or not at all.
+Not on the panel yet. One rule will hold whatever else changes: Unbanked converts through a Convert or not at all.
 
 ## Reference
 

@@ -6,7 +6,7 @@ They are not defending a wreck. They are home, and I am the thing that got in.
 
 Four frames, four machines, not four paints — I can sort a group by silhouette before it is close enough to matter. None swings faster than another. None has a weak point. None resists anything. What separates them is what each one refuses to do, and each refusal tells me exactly what ignoring it costs.
 
-One question sorts the whole room: can this be moved off what it is doing? A Default can, at a price. A Hunter is already on me and cannot be moved anywhere. A Thief hunts me on a field-terminal Wave, hunts the Hatch on a Hatch-bank, and will not be shouted at in either direction. A Cloaker moves only where nobody's eyes are, so moving it is free and holding it still is what costs.
+One question sorts the whole room: can this be moved off what it is doing? A Default can, at a price. A Hunter is already on me and cannot be moved anywhere. A Thief hunts me on a field-terminal Wave, hunts the Hatch on a Convert, and will not be shouted at in either direction. A Cloaker moves only where nobody's eyes are, so moving it is free and holding it still is what costs.
 
 They arrive in groups, a whole group through one spawn point, the next group somewhere else. The point rotates. I cannot hold a direction here. I can only cover what I can turn to in time.
 
@@ -68,18 +68,18 @@ The first Wave you start is Defaults only. Hunters start appearing after that an
 
 Two rules about composition are worth carrying in your head:
 
-- **Hunters and Thieves are fixed per Wave.** Intensity does not add a single one of either. Every extra body intensity buys is a Default.
+- **Hunters and Thieves are fixed per Wave.** The Ante does not add a single one of either. Every extra body the Ante buys is a Default.
 - **Later Waves make everything tougher at once.** One health multiplier is applied to all three kinds, so a late Thief is not just a Thief that arrived later — it is meaningfully more shooting, and so is everything escorting it.
 
 Later Waves also send wider groups with less time between them. The Wave gets harder in three directions — more bodies, tougher bodies, denser delivery — and only the first of those is something you chose.
 
-If you start a Run at a deeper Wave from the Ship, your first Wave after selecting at a terminal delivers every Wave up to that one back to back, with no Prep in between. The overlap is intentional: you get the later Wave's composition on top of the earlier Wave's leftovers.
+If you start a Boarding at a deeper Wave from the Ship, your first Wave after selecting at a terminal delivers every Wave up to that one back to back, with no Prep in between. The overlap is intentional: you get the later Wave's composition on top of the earlier Wave's leftovers.
 
 ### What killing them is for
 
-A Gatekeeper is worth Salvage only while a Wave is live, and that Salvage is Unbanked until a Hatch-bank. Nothing pays during Prep, and nothing pays for surviving.
+A Gatekeeper is worth Salvage only while a Wave is live, and that Salvage is Unbanked until a Convert. Nothing pays during Prep, and nothing pays for surviving.
 
-Being Lost ends the Run, and so does losing the Hatch. Both keep everything already converted. Unbanked is gone.
+Being Lost ends the Boarding, and so does losing the Hatch. Both keep everything already converted. Unbanked is gone.
 
 ## See also
 

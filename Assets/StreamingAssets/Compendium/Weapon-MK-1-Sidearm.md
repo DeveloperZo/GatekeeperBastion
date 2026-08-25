@@ -8,9 +8,9 @@ Early, it is the whole loadout if I picked reach. Later, it is the bridge: what 
 
 One accurate round per pull. No scatter, no pierce. A miss is a whole round of nothing, so it rewards a planted stance and a placed shot more than either Primary does. Its best work is finishing bodies that are nearly done, which saves the Primary's clip for something that needs all of it.
 
-Poor at volume. Small clip, modest damage, and everything on this hull gets tougher every Wave while this does not. Deep in a Run, the same body takes visibly more pulls.
+Poor at volume. Small clip, modest damage, and everything on this hull gets tougher every Wave while this does not. Deep in a Boarding, the same body takes visibly more pulls.
 
-Wrong tool for a Thief. Emptying this into one, reload by reload, is usually slower than its walk to the Hatch. I have run that race. The Thief won.
+Wrong tool for a Thief. Emptying this into one, reload by reload, is usually slower than its walk to the Hatch. I have boarding that race. The Thief won.
 
 ## Reference
 
@@ -31,7 +31,7 @@ Two jobs, and they are different jobs.
 
 ### What it is bad at
 
-- **Volume.** Small clip, modest damage, and Gatekeeper health climbs every Wave of a Run. Deep in a Run it takes visibly more trigger pulls per body than it did on the first Wave, and against a big group it simply cannot keep up.
+- **Volume.** Small clip, modest damage, and Gatekeeper health climbs every Wave of a Boarding. Deep in a Boarding it takes visibly more trigger pulls per body than it did on the first Wave, and against a big group it simply cannot keep up.
 - **Anything armoured.** It has no pierce, so every shot stops on the first body. A queue of Gatekeepers in a doorway takes one shot each, in order.
 - **Thieves.** A Thief has far more health than anything else in the game and does not care that you are shooting it. Emptying the sidearm into one repeatedly, with a reload between each clip, is usually slower than the Thief's walk to the Hatch.
 - **Being your only weapon past the first couple of Waves.** It is a fine opener and a poor finisher.
@@ -39,14 +39,14 @@ Two jobs, and they are different jobs.
 ### Which Gatekeeper it answers
 
 - **Default** — well enough, early. One at a time, at range, before it reaches the Hatch. Remember that hurting one shouts and pulls its neighbours onto you, so with only the sidearm in hand, do not start a fight you cannot finish.
-- **Hunter** — workable, because a Hunter runs straight at you and gets easier to hit the closer it gets, and it is the least healthy thing in the Bastion. It is also faster than your walk, so you will not reliably back away from one.
+- **Hunter** — workable, because a Hunter boardings straight at you and gets easier to hit the closer it gets, and it is the least healthy thing in the Bastion. It is also faster than your walk, so you will not reliably back away from one.
 - **Thief** — no. This is the wrong tool. If a Thief is on the Bastion and the sidearm is all you have, you are trading the Hatch for time.
 
 ### Tiering it
 
 The MK-1 has an upgrade ring (strength Reload, weakness Damage). Purchases cost
 150 + 150 × times you have centred that spoke on the Secondary curve, and unlock after
-the first lost Run.
+the first lost Boarding.
 
 ## See also
 

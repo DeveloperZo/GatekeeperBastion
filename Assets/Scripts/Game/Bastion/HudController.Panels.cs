@@ -85,7 +85,7 @@ namespace GatekeepersProtocol.Game
                 if (shown < 1) shown = 1;
                 if (shown > n) shown = n;
                 _lineBuf.Append("Master Control  ");
-                _lineBuf.Append(hatchHalf ? "Hatch-bank " : "terminal ");
+                _lineBuf.Append(hatchHalf ? "Convert " : "terminal ");
                 _lineBuf.Append(shown).Append('/').Append(n);
             }
             else
@@ -118,13 +118,13 @@ namespace GatekeepersProtocol.Game
 
             _lineBuf.Clear();
             if (sim.MasterPhase == MasterControlPhase.Hatch || (stripped && unbanked > 0L))
-                _lineBuf.Append(here).Append(" gatekeepers on a Hatch-bank");
+                _lineBuf.Append(here).Append(" gatekeepers on a Convert");
             else
                 _lineBuf.Append(here).Append(" gatekeepers on the next terminal Wave");
             if (lvl < TetherSiphon.MaxLevel)
             {
                 int nextCount = _waves.NextWave(specIndex, lvl + 1, sim.PlayerCount).enemyCount;
-                _lineBuf.Append("  ·  +/- raise Intensity ").Append(lvl + 1)
+                _lineBuf.Append("  ·  +/- raise Ante ").Append(lvl + 1)
                     .Append(" → ").Append(nextCount);
             }
             _view.SetPrepLine(2, _lineBuf.ToString());
@@ -132,7 +132,7 @@ namespace GatekeepersProtocol.Game
             if (unbanked > 0L && (_game == null || !_game.HatchBankStartBlocked))
             {
                 _lineBuf.Clear();
-                _lineBuf.Append("<b>Hatch-bank — T at the Hatch</b>  (")
+                _lineBuf.Append("<b>Convert — T at the Hatch</b>  (")
                     .Append(unbanked).Append(" unbanked)");
                 _view.SetPrepLine(3, _lineBuf.ToString());
             }
@@ -162,7 +162,7 @@ namespace GatekeepersProtocol.Game
                 if (shown < 1) shown = 1;
                 if (shown > n) shown = n;
                 if (hatchHalf)
-                    _lineBuf.Append("HATCH-BANK — Master Control ").Append(shown)
+                    _lineBuf.Append("CONVERT — Master Control ").Append(shown)
                         .Append('/').Append(n).Append(" — ").Append(bankSec).Append("s");
                 else
                     _lineBuf.Append("ASSAULT — Master Control ").Append(shown)
@@ -171,7 +171,7 @@ namespace GatekeepersProtocol.Game
             }
             else if (hatchBank)
             {
-                _lineBuf.Append("HATCH-BANK — ").Append(bankSec).Append("s")
+                _lineBuf.Append("CONVERT — ").Append(bankSec).Append("s")
                     .Append("   |   enemies remaining: ").Append(remaining);
             }
             else
