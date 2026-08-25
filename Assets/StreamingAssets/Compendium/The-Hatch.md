@@ -28,11 +28,13 @@ It starts every Boarding whole. Whatever happened to it last time did not carry 
 
 ### What damages it
 
-Only two of the three things that come aboard will touch it.
+Only the Hunter refuses the door outright. The other three all reach it.
 
 A **Default** walks at the Hatch and hits it. It will ignore you entirely unless you hurt it, at which point it comes for you instead — which is the trade: you can pull one off the door, and pulling it means it is now your problem.
 
 A **Thief** hunts you on a field-terminal Wave and walks to the Hatch on a Convert. On that Convert it will not turn on you, will not defend itself, and will keep walking while you empty a clip into its back. When it arrives it takes a serious bite. It is slow, and that slowness is the offer — you have time to deal with it if you spend the time on it.
+
+A **Cloaker** reaches it the way a Default does — but only while nobody is looking at it. Every second someone holds it in view is a second it is not walking at the door, which makes it the one kind you can stop without shooting.
 
 A **Hunter** never touches the Hatch. It only wants you.
 

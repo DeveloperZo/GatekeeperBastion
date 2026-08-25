@@ -31,8 +31,7 @@ does. These are rules in code, not tuning values, so no balance pass can soften 
 **The weapon is the build.** Progression is a weapon and its upgrade wheel, not a stat sheet.
 CREW QUARTERS equips a Boarder Protocol, not buyable attributes.
 
-**Death is the only thing that ends a Run early.** There is no bail-out and no respawn
-for the Boarder who owns the Run (solo or host), and losing takes nothing back. A second
+**Death is what ends a Run early — unless the realm buys the seat back.** Every dead seat, host and solo included, is offered a respawn priced from the realm’s banked pot and climbing with each one taken this Run; mid-Assault it also burns a shared charge. A realm with nothing banked cannot pay, and there the first loss still ends it. Losing takes nothing back. A second
 Boarder going down waits on the Ship (`M57`) and does not end the host's Run (`M49`).
 
 The session is for **Fellowship, Expression, and Fantasy** (`Design/1-Experience.md` §1.2).

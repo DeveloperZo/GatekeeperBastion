@@ -8,6 +8,10 @@ namespace GatekeepersProtocol.Sim
         readonly long[] _unbanked = new long[WaveDirector.PlayerCapacity];
         readonly int[] _deepest = new int[WaveDirector.PlayerCapacity];
         readonly long[] _takeBuf = new long[WaveDirector.PlayerCapacity];
+        // A down seat's pile is FROZEN: it is the purse that seat's respawn is bought
+        // with, so no conversion may drain it while its owner cannot act (the ruling
+        // that made \"the remainder survives the death\" true through a Convert).
+        readonly bool[] _down = new bool[WaveDirector.PlayerCapacity];
         int _count = 1;
 
         public PlayerWallets()
@@ -47,6 +51,23 @@ namespace GatekeepersProtocol.Sim
             if (count < 1) count = 1;
             if (count > WaveDirector.PlayerCapacity) count = WaveDirector.PlayerCapacity;
             _count = count;
+        }
+
+        /// <summary>Mark a seat's pile frozen (its owner is down) or live again.</summary>
+        public void SetDown(int slot, bool down)
+        {
+            if (slot < 0 || slot >= _down.Length) return;
+            _down[slot] = down;
+        }
+
+        public bool IsDown(int slot) =>
+            slot >= 0 && slot < _down.Length && _down[slot];
+
+        /// <summary>All seats live — a fresh run starts with nothing frozen.</summary>
+        public void ClearDown()
+        {
+            for (int i = 0; i < _down.Length; i++)
+                _down[i] = false;
         }
 
         public void Set(int slot, long value)
@@ -102,14 +123,19 @@ namespace GatekeepersProtocol.Sim
             for (int i = 0; i < _takeBuf.Length; i++)
                 _takeBuf[i] = 0L;
             if (units <= 0L) return _takeBuf;
-            long total = Total;
+            // Down seats do not participate: their pile is the purse their respawn is
+            // bought with, and a Convert that drained it would strand them for good.
+            long total = 0L;
+            for (int i = 0; i < _count; i++)
+                if (!_down[i]) total += _unbanked[i];
             if (total <= 0L) return _takeBuf;
             if (units > total) units = total;
 
             long assigned = 0L;
             for (int i = 0; i < _count; i++)
             {
-                long share = total == 0L ? 0L : units * _unbanked[i] / total;
+                if (_down[i]) continue;
+                long share = units * _unbanked[i] / total;
                 if (share > _unbanked[i]) share = _unbanked[i];
                 _unbanked[i] -= share;
                 _takeBuf[i] = share;
@@ -118,9 +144,14 @@ namespace GatekeepersProtocol.Sim
             long leftover = units - assigned;
             if (leftover > 0L)
             {
-                if (leftover > _unbanked[0]) leftover = _unbanked[0];
-                _unbanked[0] -= leftover;
-                _takeBuf[0] += leftover;
+                for (int i = 0; i < _count && leftover > 0L; i++)
+                {
+                    if (_down[i]) continue;
+                    long take = leftover > _unbanked[i] ? _unbanked[i] : leftover;
+                    _unbanked[i] -= take;
+                    _takeBuf[i] += take;
+                    leftover -= take;
+                }
             }
             return _takeBuf;
         }

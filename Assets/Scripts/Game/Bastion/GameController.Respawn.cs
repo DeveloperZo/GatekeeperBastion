@@ -4,16 +4,16 @@ namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): guest respawn gate. Split so
     /// GameController.cs stays under cap. The rule and the debit live sim-side
-    /// (RunSim.TryRespawn) — the pot is the realm's, which in co-op is the host's
-    /// (Docs/Milestones — the realm and the Boarder); this file is only the seat checks
+    /// (RunSim.TryRespawn) — a seat pays out of its OWN Unbanked, so the guest's slot is
+    /// the purse and the realm's bank is never touched; this file is only the seat checks
     /// no sim type can see.</summary>
     public sealed partial class GameController
     {
         #region Public API
-        /// <summary>Server: may this waiting guest pay and rejoin. True debits the realm's
-        /// pot and counts the respawn; false leaves everything unchanged with the refusal
-        /// logged. The host's own seat never comes through here — it respawns at the DOWN
-        /// overlay — and a late arrival follows the party for free instead.</summary>
+        /// <summary>Server: may this waiting guest pay and rejoin. True debits that guest's
+        /// own Unbanked and counts the respawn; false leaves everything unchanged with the
+        /// refusal logged. The host's own seat never comes through here — it respawns at the
+        /// DOWN overlay — and a late arrival follows the party for free instead.</summary>
         public bool TryNetRespawn(NetPlayerAvatar from, out long cost)
         {
             cost = 0L;
@@ -38,7 +38,7 @@ namespace GatekeepersProtocol.Game
                 Log.Event("Demo", "respawn refused — follow the party instead");
                 return false;
             }
-            return Sim.TryRespawn(out cost);
+            return Sim.TryRespawn(from.Slot.Value, out cost);
         }
         #endregion
     }

@@ -71,7 +71,7 @@ live right now, so this table is a reference, not something you have to memorise
 ## Weapons
 
 You carry one **Primary** and one **Secondary** at once. The Drone bay holds a payload — today the **Decoy**, sold at FABRICATION.
-The Primary is chosen at the ARMORY before you embark and is fixed for the run;
+The Primary is chosen at the ARMORY before you embark and is fixed for the Boarding;
 switching in the bastion swaps between the slots you already carry, never between
 owned weapons. Each slot keeps its own clip, so switching is not a free reload.
 
@@ -108,7 +108,7 @@ the same 0.7 s clock — they differ in what they hit, never in how often.
 |---|---|---|---|---|---|
 | **Default** | 30 | 6 | 4 | 3.2 → 5.6 m/s when provoked | nothing — it will march, and it will turn on you if you hurt it |
 | **Hunter** | 20 | 6 | — | 6.5 m/s | to touch the hatch; it only ever wants you |
-| **Thief** | 120 | — | 20 | 2.2 m/s | to turn when shot; Hatch-bank it marches the Hatch, field-terminal it hunts you — it never hurts you |
+| **Thief** | 120 | — | 20 | 2.2 m/s | to turn when shot; on a Convert it marches the Hatch, field-terminal it hunts you — it never hurts you |
 | **Cloaker** | 45 | 6 | 4 | 3.2 → 5.6 m/s when provoked | to advance while watched — any Boarder's gaze stops it dead, and it fades and closes the moment every eye is elsewhere |
 
 HP above is the base line. Later waves multiply it (see the wave table).
@@ -117,7 +117,7 @@ HP above is the base line. Later waves multiply it (see the wave table).
 
 **5 waves to a run**, and none of them start until you use a
 field terminal. `+/-` juice, `E` selects, `T` starts one Wave. A terminal opens its door after
-its authored count (T1 is 5). Prep after a clear lasts as long as you want — Hatch-bank is legal there.
+its authored count (T1 is 5). Prep after a clear lasts as long as you want — starting a Convert is legal there.
 Gatekeepers arrive in groups, not a stream.
 
 At intensity 0:
@@ -132,14 +132,14 @@ At intensity 0:
 
 Hunters, Thieves and Cloakers are on a fixed schedule — intensity never adds more of them.
 
-## Intensity — the wager
+## The Ante — the wager
 
 Juice at a field terminal, Master Control, or the Hatch (`+/-`), then `E` to select and `T` to start. Locked once a
 wave is live. It pays more and sends more, and the extra bodies are **all Defaults** —
 it cannot conjure a sixth Thief. It changes nothing else: no extra health, no tighter
 spacing, no larger groups. Juice costs `100` unbanked per step.
 
-| Intensity | You earn | Wave 1 sends | Wave 5 sends |
+| Ante | You earn | Wave 1 sends | Wave 5 sends |
 |---|---|---|---|
 | 0 | ×1.00 | 18 | 66 |
 | 1 | ×1.10 | 20 | 73 |
@@ -150,20 +150,19 @@ spacing, no larger groups. Juice costs `100` unbanked per step.
 
 ## Salvage
 
-**Gatekeepers are worth Salvage, and that Salvage sits unbanked until a Hatch-bank.**
+**Gatekeepers are worth Salvage, and that Salvage sits unbanked until a Convert.**
 A kill does not credit the ship. Prep `E` then `T` at the Hatch starts the convert Wave:
 drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A fatter pile
 converts at a higher multiplier. Dying keeps what already made it through the Hatch.
 
 A kill pays `25`, then multiplied by intensity.
-Nothing pays per second except Hatch-bank drip (`8` unbanked/s), and the quiet between waves earns nothing at all.
+Nothing pays per second except the Convert drip (`8` unbanked/s), and the quiet between waves earns nothing at all.
 
 The hatch is what you are defending: **300 HP** at Hatch Armor 0, up to **375**. Hold `E` near it to repair.
-If it falls, the run ends — whatever is banked. If you fall, the realm can buy you back:
-a respawn costs `150 × (respawns taken + 1)` from the banked pot, and mid-Assault it
-also burns a shared charge (1 seeded per seat; at a break, no charge is needed).
-Death always wipes your Unbanked. No charges left, a pot that cannot pay, nobody still
-standing — that is a run that ends.
+If it falls, the Boarding ends — whatever is banked. If you fall, you buy yourself back out
+of the Unbanked you are carrying: `150 × (respawns taken + 1)`, and the rest of that
+pile stands up with you. Nothing else pays — not the bank, not a teammate. Carry less
+than the price and that death ends the Boarding, which is the other edge of banking early.
 
 ## The ship — where salvage goes
 

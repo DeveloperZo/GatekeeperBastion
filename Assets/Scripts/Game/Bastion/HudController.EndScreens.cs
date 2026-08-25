@@ -18,7 +18,7 @@ namespace GatekeepersProtocol.Game
             var report = sim.LastRunReport;
             string cause = report.cause == "player" ? "YOU DIED"
                          : report.cause == "hatch" ? "HATCH DESTROYED"
-                         : Player != null && Player.IsDead ? "YOU DIED" : "RUN ENDED";
+                         : Player != null && Player.IsDead ? "YOU DIED" : "BOARDING ENDED";
             long net = report.grossEarned - report.repairSpent;
 
             _view.SetEndScreen(
@@ -133,7 +133,7 @@ namespace GatekeepersProtocol.Game
 
         void PushEmergencyExit()
         {
-            _view.SetEmergencyText("RUN LOST (HUD error — see the log)");
+            _view.SetEmergencyText("BOARDING LOST (HUD error — see the log)");
             _view.ShowEmergency();
             PushEndScreenShortcut();
         }

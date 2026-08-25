@@ -152,7 +152,8 @@ namespace GatekeepersProtocol.Game
             }
             _loggedRange = false;
             float rate = EquipmentCatalog.Def(EquipmentId.RepairRig).repairPerSecond;
-            gc.RepairHatchFromNet(rate * dt);
+            var seat = GetComponent<NetPlayerAvatar>();
+            gc.RepairHatchFromNet(rate * dt, seat != null ? seat.Slot.Value : 0);
         }
 
         bool InRepairRange()

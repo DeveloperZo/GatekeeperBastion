@@ -41,14 +41,14 @@ add a single extra Hunter or Thief — every body it adds is a Default. You are 
 that you can kill more of the same thing, not that you can survive a different fight.
 Once a Wave is live Ante locks.
 
-### The three things that come at you
+### The four things that come at you
 
 They are not tiers of the same Gatekeeper. Each one is defined by something it
 **refuses** to do.
 
 A **Default** marches on the Hatch and ignores you — until you hurt it, and then it comes
 for you instead. It is the only kind you can pull off the Hatch, and pulling it is a
-choice with a cost. It is the plain machine the other two are measured against.
+choice with a cost. It is the plain machine the other three are measured against.
 
 A **Hunter** will never touch the Hatch. It wants you, it is faster than your walk and
 slower than your sprint, and it dies quickly. Lean frame — pick it by silhouette. It is the reason you cannot park in front
@@ -59,11 +59,16 @@ walks to the Hatch and never turns. Heavy frame. It takes a serious bite if it a
 slow. That slowness is the offer: you have time to deal with it, if you spend that time
 on it.
 
-The room asks three questions at once, and the answer to each makes the other two harder.
+A **Cloaker** advances only while nobody is looking at it. Put it in the centre of your
+view and it stops dead and drops its cloak — solid, visible, going nowhere. Look away and
+it moves again. Unwatched it wants what a Default wants. Watched it wants nothing, and the
+cost is not the holding: it is every direction you are not holding while you do.
+
+The room asks four questions at once, and the answer to each makes the other three harder.
 
 ### Losing, and what losing costs
 
-There are exactly two ways a Boarding ends badly: **you die and stay dead, or the Hatch dies.** There is no leave-anytime lever. Death offers a priced respawn out of the realm's banked pot — rationed by shared charges mid-Wave, unrationed at any break, at a price that climbs per respawn this Boarding — and going down wipes your Unbanked whether or not you come back. When no respawn can be honored (a fresh realm's pot is empty, so at first: always), the Boarding ends. The Hatch has no such offer at any price. The whole rule: [Going Down](Going-Down.md).
+There are exactly two ways a Boarding ends badly: **you die and stay dead, or the Hatch dies.** There is no leave-anytime lever. Death offers a priced respawn paid out of the Unbanked you are carrying, at a price that climbs per respawn this Boarding; the rest of that pile comes back with you. Nothing else can pay for it. When you are carrying less than the price and no seat still fights, the Boarding ends. The Hatch has no such offer at any price. The whole rule: [Going Down](Going-Down.md).
 
 Survive a Convert and you get a third path that is neither Lost nor Escaped: hold interact at the Hatch to **dock** — return to the Ship with what you banked. Fail that bank and the prompt never appears. Start the next Wave and it is gone.
 

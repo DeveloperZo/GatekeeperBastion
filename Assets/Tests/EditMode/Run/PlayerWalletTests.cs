@@ -14,6 +14,40 @@ namespace GatekeepersProtocol.Tests
             return sim;
         }
 
+
+        [Test]
+        public void TakeTotal_SkipsADownSeat_EntirelyAndForLeftover()
+        {
+            var w = new PlayerWallets();
+            w.SetCount(2);
+            w.Add(0, 100L);
+            w.Add(1, 400L);
+            w.SetDown(1, true);
+
+            // Ask for more than the live pile holds: slot 1 must not be touched, even by
+            // the leftover pass — its pile is the purse its respawn is bought with.
+            var taken = w.TakeTotal(300L);
+            Assert.AreEqual(100L, taken[0], "the live seat gave its whole pile");
+            Assert.AreEqual(0L, taken[1], "the down seat gave nothing");
+            Assert.AreEqual(0L, w.Of(0));
+            Assert.AreEqual(400L, w.Of(1), "the frozen pile is intact");
+        }
+
+        [Test]
+        public void TakeTotal_ThawedSeatParticipatesAgain()
+        {
+            var w = new PlayerWallets();
+            w.SetCount(2);
+            w.Add(0, 100L);
+            w.Add(1, 100L);
+            w.SetDown(1, true);
+            w.SetDown(1, false);
+
+            var taken = w.TakeTotal(100L);
+            Assert.AreEqual(50L, taken[0]);
+            Assert.AreEqual(50L, taken[1], "a thawed pile converts like any other");
+        }
+
         [Test]
         public void AwardKill_Solo_CreditsSlot0_TwentyFive()
         {

@@ -68,8 +68,6 @@ namespace GatekeepersProtocol.Game
         public Action onLan;
         public Action onSessionBack;
 
-        /// <summary>The alternate way in: the first-Bastion demo, on its own ship.</summary>
-        public Action onDemo;
         public Action<int> onPickRealm;
         public Action<int> onPickBoarder;
 
@@ -95,7 +93,9 @@ namespace GatekeepersProtocol.Game
             Wire(_createBtn, () => { if (onCreate != null) onCreate.Invoke(); });
             Wire(_enterBtn, () => { if (onEnter != null) onEnter.Invoke(); });
             Wire(_backBtn, () => { if (onBack != null) onBack.Invoke(); });
-            Wire(_demoBtn, () => { if (onDemo != null) onDemo.Invoke(); });
+            // No Wire for _demoBtn: the demo no longer has a ship of its own, so that row
+            // retired with the scene pair. The button is deactivated in RealmSelect.unity;
+            // the field stays only so the scene's reference still resolves.
             Wire(_newBoarderBtn, () => { if (onNewBoarder != null) onNewBoarder.Invoke(); });
             Wire(_deleteRealmBtn, () => { if (onDeleteRealm != null) onDeleteRealm.Invoke(); });
             Wire(_deleteBoarderBtn, () => { if (onDeleteBoarder != null) onDeleteBoarder.Invoke(); });
@@ -132,7 +132,6 @@ namespace GatekeepersProtocol.Game
             Require(_createBtn, "_createBtn");
             Require(_enterBtn, "_enterBtn");
             Require(_backBtn, "_backBtn");
-            Require(_demoBtn, "_demoBtn");
             Require(_newBoarderBtn, "_newBoarderBtn");
             Require(_deleteRealmBtn, "_deleteRealmBtn");
             Require(_deleteBoarderBtn, "_deleteBoarderBtn");

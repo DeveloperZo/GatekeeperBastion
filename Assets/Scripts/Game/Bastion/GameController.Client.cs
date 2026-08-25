@@ -14,13 +14,19 @@ namespace GatekeepersProtocol.Game
         /// <summary>Client-requested hatch repair. Spends the host wallet at the catalog
         /// rate; does not require the host to have the rig equipped. The requester already
         /// gated on their own <see cref="RepairInteractable.Configure"/>.</summary>
-        public float RepairHatchFromNet(float requestedHp)
+        public float RepairHatchFromNet(float requestedHp) =>
+            RepairHatchFromNet(requestedHp, 0);
+
+        /// <summary>Slot-aware: a withdraw at the full hatch lands in the OPERATING
+        /// seat's pile (symmetry ruling — the pot pre-funds whoever holds the verb,
+        /// never implicitly the host).</summary>
+        public float RepairHatchFromNet(float requestedHp, int slot)
         {
             if (Sim == null || RunIsOver) return 0f;
             var hatch = Sim.Ship.Hatch;
             if (hatch.Hp >= hatch.MaxHp - 0.01f)
             {
-                TryWithdrawFromHpRequest(requestedHp);
+                TryWithdrawFromHpRequest(requestedHp, slot);
                 return 0f;
             }
             float applied = Sim.RepairHatch(requestedHp);
@@ -29,12 +35,12 @@ namespace GatekeepersProtocol.Game
             return applied;
         }
 
-        void TryWithdrawFromHpRequest(float requestedHp)
+        void TryWithdrawFromHpRequest(float requestedHp, int slot = 0)
         {
             if (Sim == null) return;
             float rate = EquipmentCatalog.Def(EquipmentId.RepairRig).repairPerSecond;
             if (rate <= 0f) return;
-            Sim.Withdraw(requestedHp / rate);
+            Sim.Withdraw(requestedHp / rate, slot);
         }
 
         void BindProtocol(PlayerHealth local)

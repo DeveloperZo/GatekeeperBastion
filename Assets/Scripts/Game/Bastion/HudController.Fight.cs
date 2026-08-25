@@ -81,10 +81,13 @@ namespace GatekeepersProtocol.Game
                     unbanked = mirror.Unbanked.Value;
             }
 
+            // The carry is also what buys this seat back after a death, so the price rides
+            // the same readout and the gate has to move when the price escalates.
+            long respawnCost = sim.NextRespawnCost;
             if (elapsed != _cacheElapsed || wave != _cacheWave
                 || siphon != _cacheSiphon || kill != _cacheKill
                 || runSal != _cacheRunSalvage || banked != _cacheBanked
-                || unbanked != _cacheUnbanked)
+                || unbanked != _cacheUnbanked || respawnCost != _cacheRespawnCost)
             {
                 _cacheElapsed = elapsed;
                 _cacheWave = wave;
@@ -93,12 +96,18 @@ namespace GatekeepersProtocol.Game
                 _cacheRunSalvage = runSal;
                 _cacheBanked = banked;
                 _cacheUnbanked = unbanked;
+                _cacheRespawnCost = respawnCost;
 
                 _view.SetProfile(BastionHudView.ProfileRank, null);
 
                 _lineBuf.Clear();
-                _lineBuf.Append("Unbanked ").Append(unbanked)
-                    .Append("  ·  Banked ").Append(banked);
+                _lineBuf.Append("Unbanked ").Append(unbanked);
+                // Silent while the seat can afford its own return; loud the moment it
+                // cannot. Naming the shortfall only when it bites is what teaches the rule
+                // without spending a line of the readout on it every frame.
+                if (unbanked < respawnCost)
+                    _lineBuf.Append(" (respawn needs ").Append(respawnCost).Append(')');
+                _lineBuf.Append("  ·  Banked ").Append(banked);
                 string salvage = _lineBuf.ToString();
                 _lineBuf.Clear();
                 int shown = wave;
@@ -386,7 +395,9 @@ namespace GatekeepersProtocol.Game
 
         // Cache key for the DOWN overlay line — rebuilt only when the offer changes, so the
         // per-frame vignette push stays allocation-free like every other push here.
+        long _cacheRespawnCost = long.MinValue;
         long _cacheDownCost = long.MinValue;
+        long _cacheDownCarry = long.MinValue;
         string _cacheDownReason;
         string _cacheDownText;
 
@@ -402,15 +413,20 @@ namespace GatekeepersProtocol.Game
                 || (net != null && net.IsClientOnly))
                 return "YOU ARE DOWN";
 
-            string reason = sim.RespawnRefuse();
+            string reason = sim.RespawnRefuse(0);
             long cost = sim.NextRespawnCost;
-            if (cost != _cacheDownCost || reason != _cacheDownReason)
+            long carry = sim.UnbankedOf(0);
+            if (cost != _cacheDownCost || reason != _cacheDownReason || carry != _cacheDownCarry)
             {
                 _cacheDownCost = cost;
                 _cacheDownReason = reason;
+                _cacheDownCarry = carry;
+                // Name the purse as well as the price: the fee comes out of the pile the
+                // player is carrying and the rest of it survives, which is the whole rule
+                // and is not guessable from a bare number.
                 _cacheDownText = reason == null
-                    ? "YOU ARE DOWN — ENTER: RESPAWN (" + cost + ")"
-                    : "YOU ARE DOWN — " + reason;
+                    ? "YOU ARE DOWN — ENTER: RESPAWN (" + cost + " of your " + carry + " unbanked)"
+                    : "YOU ARE DOWN — " + reason + " (" + cost + " needed, carrying " + carry + ")";
             }
             return _cacheDownText;
         }

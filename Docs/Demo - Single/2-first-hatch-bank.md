@@ -81,8 +81,8 @@ loss 1, so the wheel key stays `PodEjections >= 1`.
 
 | | |
 |---|---|
-| **Goal** | Lose **some**: leftover Unbanked wipes, dripped Salvage is already aboard. |
-| **Player** | The Hatch falls — or the seat does (`M49`); either ends the Run Lost. Hatch cause: lose screen cause **HATCH DESTROYED**, framing *thrown off the Bastion*, converted / repair spent / net / banked total / DEEPEST WAVE lines. `ENTER` returns. |
+| **Goal** | Lose **some**: leftover Unbanked wipes when the Boarding ends, dripped Salvage is already aboard. |
+| **Player** | The Hatch falls. (A seat going down no longer ends the Boarding on its own: since the respawn re-cut it buys itself back out of its own Unbanked, so a Boarder carrying the price stands up instead. This beat therefore lands on the **Hatch**, which has no such offer at any price — and a seat that has just converted its whole pile is carrying nothing, which is the other way in.) Hatch cause: lose screen cause **HATCH DESTROYED**, framing *thrown off the Bastion*, converted / repair spent / net / banked total / DEEPEST WAVE lines. `ENTER` returns. |
 | **Game** | — (end screen is the reader) |
 | **Standing** | — |
 | **Log** | `[Hatch] HATCH BREACHED — the run is over` then always-on `[Run] RUN OVER after …s … banked now …`. (`[RunSim] Run ended (hatch\|player)` is verbose-only — do not gate verification on it. Cause tokens are `hatch` / `player`, not `down`.) |

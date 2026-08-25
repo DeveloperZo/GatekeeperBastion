@@ -90,6 +90,12 @@ namespace GatekeepersProtocol.Game
 
         void Update()
         {
+            // The wait label prices against the seat's replicated carry and the run's
+            // respawn counter, both of which move while the menu sits open.
+            if (IsSettingsOpen && _embarkPauseButton != null
+                && _embarkPauseButton.activeSelf && NetShipWait.IsActive)
+                LabelWaitRejoin(_embarkPauseButton);
+
             if (Controls.Down(ControlId.FreeCursor))
                 HandleEscape();
 
@@ -184,8 +190,8 @@ namespace GatekeepersProtocol.Game
             if (button == null) button = buttonGo.GetComponentInChildren<Button>(true);
             if (button == null) return;
             AssaultState assault;
-            int stock, taken;
-            ReadWaitWindow(out assault, out stock, out taken);
+            int taken;
+            ReadWaitWindow(out assault, out taken);
             var avatar = NetPlayerAvatar.LocalOwner;
             if (avatar != null && avatar.AwaitingFollow.Value)
             {
@@ -197,28 +203,24 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             long cost = Respawns.CostFor(taken);
-            // Affordability is priced against the pot the respawn actually spends from: the
-            // HOST realm's bank (the mirror carries it for the whole run), never the guest's
-            // own save, which it cannot spend from here.
-            long banked = RealmRecordSource.Banked();
+            // Affordability is priced against the purse the respawn actually spends from:
+            // this seat's OWN Unbanked, replicated on its avatar. Never the realm's bank,
+            // which no longer pays for anyone's return.
+            long carry = avatar != null ? avatar.Unbanked.Value : 0L;
             string label = "RESPAWN (" + cost + ")";
-            if (assault == AssaultState.Assault && stock <= 0)
-                label = "RESPAWN - no charges until the break";
-            else if (banked < cost)
-                label = "RESPAWN (" + cost + ") - can't afford";
+            if (carry < cost)
+                label = "RESPAWN (" + cost + ") - only " + carry + " unbanked";
             UiBind.SetButtonLabel(button, label);
         }
 
-        static void ReadWaitWindow(out AssaultState assault, out int stock, out int taken)
+        static void ReadWaitWindow(out AssaultState assault, out int taken)
         {
             assault = AssaultState.Prep;
-            stock = 0;
             taken = 0;
             var session = NetSession.FindLive();
             var mirror = session != null ? session.Mirror : null;
             if (mirror == null) return;
             assault = (AssaultState)mirror.Phase.Value;
-            stock = mirror.RespawnStock.Value;
             taken = mirror.RespawnsTaken.Value;
         }
 

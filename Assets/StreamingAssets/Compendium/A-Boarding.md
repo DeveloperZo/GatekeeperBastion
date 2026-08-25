@@ -66,7 +66,7 @@ A Convert Wave hunts the Hatch. It is one step heavier than the last field Wave.
 
 Four things end a Boarding.
 
-**You die and stay dead.** Your health does not come back while you stand — there is no healing, no regeneration, no pickup. What you take, you keep until you go down. Going down wipes your Unbanked and offers a **priced respawn** from the realm's banked pot: rationed by a shared stock of charges mid-Wave, unrationed at any break, at a price that climbs with every respawn this Boarding, whoever took it. Solo and host wait behind a DOWN overlay that names the price; a guest waits on the Ship. When no respawn can be honored and nobody else still fights — on a fresh realm's empty pot, always — the Boarding is over. The whole rule: [Going Down](Going-Down.md).
+**You die and stay dead.** Your health does not come back while you stand — there is no healing, no regeneration, no pickup. What you take, you keep until you go down. Going down offers a **priced respawn** paid out of the Unbanked you are carrying — nothing else pays — at a price that climbs with every respawn this Boarding, whoever took it. What the fee does not take comes back with you. Solo and host wait behind a DOWN overlay that names the price and the pile; a guest waits on the Ship. Carry less than the price and, if nobody else still fights, the Boarding is over. The whole rule: [Going Down](Going-Down.md).
 
 **The Hatch falls.** The Hatch is the umbilical junction back to your Ship. When its health reaches zero the Boarding ends on the spot, whatever else was happening, and it cannot be repaired back from zero.
 

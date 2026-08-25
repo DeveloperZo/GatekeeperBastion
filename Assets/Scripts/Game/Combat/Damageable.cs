@@ -48,11 +48,10 @@ namespace GatekeepersProtocol.Game
         Renderer _renderer;
         MaterialPropertyBlock _mpb;
         Color _baseColor;
-        bool _hasBaseColor;
-        // False when the material exposes no colour at all (a bought pack's Shader Graph is the
-        // case that found this). Flashing such a renderer writes a property the shader ignores,
-        // so the hit reads as no feedback at all rather than as a red flash.
-        bool _hasTint;
+        // The colour property this material actually exposes, or null when it exposes none.
+        // One field rather than a bool pair, because the pair could disagree and one of the
+        // ways it could disagree is the defect recorded on the probe below.
+        string _tintProp;
         Coroutine _flash;
 
         void Awake()
@@ -68,17 +67,17 @@ namespace GatekeepersProtocol.Game
                 // _BaseColor as a TEXTURE passed the guard and GetColor then threw once per
                 // spawn (SG_SciFiRobotMat, 32 errors in one session, 2026-08-18). HasColor is
                 // the type-checked question and the only one worth asking.
-                if (mat != null && mat.HasColor("_BaseColor"))
-                {
-                    _baseColor = mat.GetColor("_BaseColor");
-                    _hasBaseColor = true;
-                    _hasTint = true;
-                }
-                else if (mat != null && mat.HasColor("_Color"))
-                {
-                    _baseColor = mat.GetColor("_Color");
-                    _hasTint = true;
-                }
+                //
+                // _EmissiveColor is last in the list and is the one that answers for every
+                // body that actually ships: SG_SciFiRobotMat declares _BaseColor as a texture
+                // and has no _Color at all, so both earlier candidates fail and the flash
+                // quietly disabled itself on all four Gatekeeper kinds AND on the Boarder —
+                // every shot landed with no confirmation. Emissive is also the honest channel
+                // for these bodies: it drives their lit seams, so a hit flares the machine
+                // instead of repainting it.
+                _tintProp = FirstColorProperty(mat, "_BaseColor", "_Color", "_EmissiveColor");
+                if (_tintProp != null)
+                    _baseColor = mat.GetColor(_tintProp);
             }
         }
 
@@ -164,7 +163,7 @@ namespace GatekeepersProtocol.Game
         void FlashHit()
         {
             if (_renderer == null || _mpb == null || !isActiveAndEnabled) return;
-            if (!_hasTint) return; // no colour to drive; a write here would be silently discarded
+            if (_tintProp == null) return; // no colour to drive; a write would be discarded
             if (_flash != null) StopCoroutine(_flash);
             _flash = StartCoroutine(FlashRoutine());
         }
@@ -180,10 +179,20 @@ namespace GatekeepersProtocol.Game
         void SetColor(Color c)
         {
             if (_renderer == null || _mpb == null) return; // guard: renderer destroyed mid-flash
-            string prop = _hasBaseColor ? "_BaseColor" : "_Color";
             _renderer.GetPropertyBlock(_mpb);
-            _mpb.SetColor(prop, c);
+            _mpb.SetColor(_tintProp, c);
             _renderer.SetPropertyBlock(_mpb);
+        }
+
+        /// <summary>First candidate the material exposes as a COLOUR, or null. Type-checked:
+        /// a texture-typed property of the same name is not an answer, which is the whole
+        /// reason this asks HasColor rather than HasProperty.</summary>
+        static string FirstColorProperty(Material mat, params string[] candidates)
+        {
+            if (mat == null) return null;
+            for (int i = 0; i < candidates.Length; i++)
+                if (mat.HasColor(candidates[i])) return candidates[i];
+            return null;
         }
 
         void ClearColor()

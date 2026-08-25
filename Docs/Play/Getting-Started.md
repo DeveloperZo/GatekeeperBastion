@@ -71,7 +71,7 @@ Then spend it. That's the loop.
 
 #### Mistake 1: assuming you will heal
 
-You will not. There is no healing in a Boarding — no regeneration, no pickup, no medkit. Health refills only at a spawn, and a respawn is bought from the realm's banked pot at a price that climbs ([Going Down](Going-Down.md)). On a fresh realm the pot is empty, so your first Boardings really are one life each. In co-op, a downed Boarder waits on the Ship with that same priced way back in; the Boarding holds while any seat still fights or a respawn can be honored.
+You will not. There is no healing in a Boarding — no regeneration, no pickup, no medkit. Health refills only at a spawn, and a respawn is bought out of the Salvage you are carrying, at a price that climbs ([Going Down](Going-Down.md)). Kill nothing and you cannot afford to come back — and converting your whole pile at the Hatch leaves you in exactly that state until you earn again. In co-op, a downed Boarder waits on the Ship with that same priced way back in; the Boarding holds while any seat still fights or a respawn can be honored.
 
 This changes how you should play from the very first Gatekeeper: taking a swing is not a cost you pay and recover from, it is a permanent bite out of the Boarding. Avoid damage you could have avoided even when you are winning comfortably.
 

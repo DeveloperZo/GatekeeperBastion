@@ -71,7 +71,7 @@ The first Wave you start is Defaults only. Hunters start appearing after that an
 Two rules about composition are worth carrying in your head:
 
 - **Hunters and Thieves are fixed per Wave.** The Ante does not add a single one of either. Every extra body the Ante buys is a Default.
-- **Later Waves make everything tougher at once.** One health multiplier is applied to all three kinds, so a late Thief is not just a Thief that arrived later — it is meaningfully more shooting, and so is everything escorting it.
+- **Later Waves make everything tougher at once.** One health multiplier is applied to all four kinds, so a late Thief is not just a Thief that arrived later — it is meaningfully more shooting, and so is everything escorting it.
 
 Later Waves also send wider groups with less time between them. The Wave gets harder in three directions — more bodies, tougher bodies, denser delivery — and only the first of those is something you chose.
 

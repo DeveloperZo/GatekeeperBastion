@@ -109,8 +109,20 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("\"ladder rung=2 opened — primary + 2 buys\"", src);
             StringAssert.Contains("m.DemoRungTwoBuysLeft = 2", src);
             StringAssert.Contains("m.DemoRungTwoOpened = true", src);
-            Assert.IsFalse(src.Contains("PodEjections"),
-                "the resolve is keyed on DemoZone2BankLost, never on an ejection count");
+            // The ban is scoped to the RUNG-TWO resolve: that gate is DemoZone2BankLost and
+            // never an ejection count. The FIRST-LOSS resolve in the same file legitimately
+            // keys on PodEjections — its authored trigger IS the first Lost Boarding
+            // (Docs/Demo - Single/2-first-hatch-bank.md), so a file-wide token ban would
+            // outlaw the beat's own spec.
+            int rungBody = src.IndexOf("void ResolveRungTwo", System.StringComparison.Ordinal);
+            Assert.Greater(rungBody, -1);
+            int rungEnd = src.IndexOf("private ", rungBody, System.StringComparison.Ordinal);
+            if (rungEnd < 0) rungEnd = src.Length;
+            string rungSrc = src.Substring(rungBody, rungEnd - rungBody);
+            int close = rungSrc.IndexOf("\n        }\n", System.StringComparison.Ordinal);
+            if (close > 0) rungSrc = rungSrc.Substring(0, close);
+            Assert.IsFalse(rungSrc.Contains("PodEjections"),
+                "the rung-two resolve is keyed on DemoZone2BankLost, never on an ejection count");
         }
 
         /// <summary>The restamped line must not assert a second ejection — this may be the

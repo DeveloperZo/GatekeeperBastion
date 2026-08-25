@@ -82,6 +82,49 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(DemoProgress.SkipShipTutorial(null), "and null is not a session");
         }
 
+        /// <summary>The preference that carries the lesson between worlds. It defaults OFF so
+        /// a first-time player is still taught — the whole design depends on that default,
+        /// because the flag is switched on automatically and can never be switched back by
+        /// anything except the player.</summary>
+        [Test]
+        public void TheSkipPreference_DefaultsOff_SoAFirstPlayerIsStillTaught()
+        {
+            Settings.Unbind(); // no store: every read answers the declared default
+            Assert.IsFalse(Settings.GetBool(SettingId.SkipShipTutorial),
+                "a machine that has never finished the tutorial must still be taught it");
+
+            SettingDecl decl = Settings.DeclarationOf(SettingId.SkipShipTutorial);
+            Assert.IsNotNull(decl, "the preference must be declared to be readable");
+            Assert.AreEqual(SettingCategory.Gameplay, decl.Category,
+                "it belongs with the other things a player chooses about play");
+            Assert.IsFalse(string.IsNullOrEmpty(decl.PrefKey),
+                "it must persist, or the lesson is re-taught every launch");
+        }
+
+        /// <summary>The completed tutorial writes the preference, and opening any later realm
+        /// reads it. These are the two halves that make the lesson consumed once per PLAYER
+        /// while its flags stay per-realm.</summary>
+        [Test]
+        public void TheSkipPreference_TurnsOn_AndThenSkipsAFreshRealm()
+        {
+            Settings.Unbind();
+            Settings.SetBool(SettingId.SkipShipTutorial, true);
+            Assert.IsTrue(Settings.GetBool(SettingId.SkipShipTutorial),
+                "finishing the ship fight sets this");
+
+            // What GameSession.Adopt does with it on the next world.
+            var next = MetaState.CreateNew();
+            Assert.AreEqual(DemoEmbarkRefusal.ShipTerminal, DemoProgress.EmbarkRefusal(next),
+                "the fresh realm still starts gated — the realm knows nothing");
+            if (Settings.GetBool(SettingId.SkipShipTutorial))
+                DemoProgress.SkipShipTutorial(next);
+            Assert.AreEqual(DemoEmbarkRefusal.None, DemoProgress.EmbarkRefusal(next),
+                "but a player who has already learned it opens straight into the world");
+
+            Settings.SetBool(SettingId.SkipShipTutorial, false);
+            Settings.Unbind();
+        }
+
         /// <summary>The dev checkpoints' beat 0 and the player's skip are the same operation.
         /// They were two copies of the same five flags until this was shared; a test that
         /// only checked one of them is how they would drift apart again.</summary>

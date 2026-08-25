@@ -36,6 +36,13 @@ namespace GatekeepersProtocol.Game
                 "Compendium lists Coming Soon entries", SettingCategory.Gameplay,
                 defaultBool: true,
                 prefKey: "gkb_show_coming_soon"),
+            // Defaults FALSE so a first-time player is still taught; finishing that tutorial
+            // once turns it on, and every realm opened afterwards starts past it.
+            new SettingDecl(
+                SettingId.SkipShipTutorial,
+                "Skip the ship tutorial on new realms", SettingCategory.Gameplay,
+                defaultBool: false,
+                prefKey: "gkb_skip_ship_tutorial"),
         };
 
         static ISettingsStore _store;

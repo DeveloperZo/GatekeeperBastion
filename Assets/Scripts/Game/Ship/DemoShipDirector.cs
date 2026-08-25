@@ -130,9 +130,17 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
-            if (m.HatchConversions >= 1)
+            // The first-loss line keys on the LOSS, any cause, per the authored beat
+            // (Docs/Demo - Single/2-first-hatch-bank.md: "first Docked after this save's
+            // first Lost Run"). Keyed on conversions it missed a first loss that converted
+            // nothing — the respawn recut's common case — and played loss copy over a
+            // first VICTORY dock, where "the rest is gone" is simply false.
+            if (m.PodEjections >= 1 || m.HatchConversions >= 1)
             {
-                ResolveFirstReturn(m);
+                if (m.PodEjections >= 1)
+                    ResolveFirstReturn(m);
+                else
+                    DemoShipStanding.Reevaluate();
                 ResolveRungTwo(m);
                 return;
             }
@@ -140,8 +148,8 @@ namespace GatekeepersProtocol.Game
             DemoShipFight.SetStanding("EMBARK from the NAV MAP");
         }
 
-        /// <summary>Docked with salvage banked (whether that Run ended Lost or Returned).
-        /// The first such Docked plays the first-loss line, queues the CREW line behind it
+        /// <summary>The first Ship arrival after this save's first Lost Boarding, any cause.
+        /// Plays the first-loss line, queues the CREW line behind it
         /// (DemoVoice's stated same-frame order), and writes the CREW menu unlock — the
         /// flag write is what makes both once-per-save. The standing is state-keyed from
         /// here on (DemoShipStanding).</summary>

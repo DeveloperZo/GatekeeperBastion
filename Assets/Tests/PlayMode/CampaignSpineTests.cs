@@ -28,7 +28,7 @@ namespace GatekeepersProtocol.PlayTests
     ///     needs a cursor lock an unfocused editor will not hold. The gate that skip lifts
     ///     is asserted on both sides, so the skip is proven, not assumed.
     /// </summary>
-    public class CampaignSpinePlayModeTests
+    public class CampaignSpineTests
     {
         const string RealmName = "SPINE";
 

@@ -82,7 +82,7 @@ namespace GatekeepersProtocol.Game
                 "A field terminal. E selects it. T starts a Wave. " +
                 "The Wave hunts you — the Hatch is not its target."),
             new DemoLine(DemoConversationIds.JuiceTeach, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "Kills paid you Unbanked Salvage. + and - spend it on Intensity: the next Wave " +
+                "Kills paid you Unbanked Salvage. + and - spend it on the Ante: the next Wave " +
                 "brings more Gatekeepers and pays more. Spending nothing is also a bet."),
             new DemoLine(DemoConversationIds.AfterTerminal, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
                 "The terminals are done. Your Salvage is still Unbanked. Go to the Hatch and " +

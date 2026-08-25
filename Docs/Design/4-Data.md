@@ -261,10 +261,10 @@ is leverage **#5**; the numbers are **#12**.
 <!-- GKB:GEN respawns — Respawns.PoolPerSeat, BaseCost, CostFor -->
 | | |
 |---|---|
-| pool | 1 charge/seat, gates mid-Assault returns only |
-| cost | 150 × (taken + 1), from the realm pot |
+| paid from | the dead seat's own Unbanked; the rest of that carry survives |
+| cost | 150 × (taken + 1) |
 | first three | 150 / 300 / 450 |
-| at the break | unlimited, paid, no charge burned |
+| refused when | that seat carries less than the price — the Boarding ends |
 <!-- GKB:END respawns -->
 
 Master Control is 5 terminal Waves then 1 Hatch-bank window. Gap is `WaveDirector.InterWaveGap`.

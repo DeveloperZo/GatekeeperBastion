@@ -26,5 +26,11 @@ namespace GatekeepersProtocol.Game
         /// pages for designed-but-unshipped things. When false the reader shows only what
         /// is playable today.</summary>
         ShowComingSoonEntries = 6,
+        /// <summary>When true, a realm opens with the ship tutorial already behind it. Set
+        /// automatically the first time that tutorial is finished: it teaches where the
+        /// stations are, what an interact does and how firing feels, and a player needs that
+        /// once — but its flags live on the realm, so every new world would otherwise teach
+        /// it again. Untick to be taught again on the next realm.</summary>
+        SkipShipTutorial = 7,
     }
 }

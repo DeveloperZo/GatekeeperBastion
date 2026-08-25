@@ -61,7 +61,7 @@ namespace GatekeepersProtocol.Tests
 
             var juice = _rows.Where(r => r.Key == "+ -").ToList();
             Assert.AreEqual(1, juice.Count, "The two juice bindings must merge into '+ -'.");
-            Assert.AreEqual("Intensity 2", juice[0].Description);
+            Assert.AreEqual("Ante 2", juice[0].Description);
         }
 
         [Test]

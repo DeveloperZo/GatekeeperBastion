@@ -143,7 +143,7 @@ namespace GatekeepersProtocol.Game
             string deepest = deepestWave < 1 ? "1" : deepestWave.ToString();
             string ver = string.IsNullOrEmpty(version) ? Application.version : version;
             UiBind.SetText(_campaignLine,
-                $"{banked} banked  —  {runs} run(s)  —  deepest Wave {deepest}  —  v{ver}");
+                $"{banked} banked  —  {runs} boarding(s)  —  deepest Wave {deepest}  —  v{ver}");
         }
 
         public void SetContinueVisible(bool visible) => UiBind.Show(_continueButton, visible);

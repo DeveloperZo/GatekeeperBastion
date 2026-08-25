@@ -189,6 +189,13 @@ namespace GatekeepersProtocol.Game
                 _registered = false;
                 Log.Event(Tag, "avatar unregistered clientId=" + OwnerClientId);
             }
+            // A leaving seat thaws its slot (the freeze belongs to the seat, not the slot
+            // number) and may have been the last one able to fight or pay — re-check.
+            if (IsServer && _game != null && _game.Sim != null)
+            {
+                _game.Sim.SetSeatDown(Slot.Value, false);
+                _game.NotifySeatWentDown();
+            }
             base.OnNetworkDespawn();
         }
 
@@ -313,8 +320,15 @@ namespace GatekeepersProtocol.Game
             if (WaitingOnShip.Value) return;
             if (IsOwner) return;
             WaitingOnShip.Value = true;
+            // No wipe: this seat's Unbanked is exactly what it must pay to come back
+            // (RunSim.TryRespawn debits it), and the remainder survives with it. The
+            // pile freezes instead, and the crew's viability is re-checked — the last
+            // fighter going down must never leave the run open with nobody able to pay.
             if (_game != null && _game.Sim != null)
-                _game.Sim.WipeUnbankedSlot(Slot.Value);
+            {
+                _game.Sim.SetSeatDown(Slot.Value, true);
+                _game.NotifySeatWentDown();
+            }
             Log.Event(Tag, "client down → ship clientId=" + OwnerClientId);
         }
 

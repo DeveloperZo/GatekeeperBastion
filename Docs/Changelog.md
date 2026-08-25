@@ -8,6 +8,29 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-24
 -->
 
+- 2026-08-24: **The spine: fresh save to the end of a bastion and home, in one test —
+  and a tutorial you only sit through once.** `Tests/PlayMode/CampaignSpineTests`
+  creates a realm that did not exist when the test started, opens it, clears the ship's
+  embark gate, embarks through the real NAV MAP (`MapStation.TryEmbark`), runs the whole
+  bastion — T1+T2 → D1, the T3 composite → D2, T4+T5 → D3, then Master Control's five
+  Terminal Waves and the survived finale — comes home to the ship, and **re-opens the
+  realm from disk** to prove the run counted: the pot, the clean exit, five terminals,
+  three doors, and the MK-1 still on the Boarder. Every other PlayMode fixture proves one
+  joint of that; this is the first that proves they are connected. The drive vocabulary
+  the chain and the spine share moved into `BastionRunDrive` rather than being copied.
+  Two seams are stated in the fixture, not hidden: Waves are stripped rather than fought,
+  and the ship tutorial is skipped rather than played.
+  <br>That skip is now a real thing a player has, not a test convenience.
+  `DemoProgress.SkipShipTutorial` is the single definition of "beat 0 is behind you" —
+  the dev checkpoints' `ApplyBeatZero` defers to it instead of re-listing five flags. It
+  grants the MK-1 (skipping the lesson must not embark you unarmed) and deliberately
+  touches nothing else: the zones, the wheel ladder and the rack that opens on zone 2's
+  loss are the game, not the lesson. The tutorial is an ARC — consumed once by a PLAYER —
+  but its flags live on the realm, so every new world used to teach it again. Finishing
+  the ship fight now sets `Settings.SkipShipTutorial`, and `GameSession.Adopt` reads it,
+  so any later realm opens past it. It defaults OFF, which is what keeps a first-time
+  player taught, and it sits in the options table as "Skip the ship tutorial on new
+  realms" so it can be turned back off deliberately.
 - 2026-08-24: **The stair check learns the thing that actually breaks a stair.**
   `StairwellGeometryTests` verified a ramp and its landing were consistent with each
   other and with the two storeys — and passed a stair whose climb ended in solid

@@ -55,7 +55,7 @@ public static class WaveReport
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     static readonly Regex KillRe = new Regex(
-        @"^killed\s+a\s+(Gatekeeper|Hunter|Thief|Ram|Boarder|boarder|gatekeeper|hunter|thief|ram)\b",
+        @"^killed\s+a\s+(Gatekeeper|Hunter|Thief|Cloaker|Ram|Boarder|boarder|gatekeeper|hunter|thief|cloaker|ram)\b",
         RegexOptions.Compiled);
 
     static readonly Regex HatchDistRe = new Regex(
@@ -71,7 +71,7 @@ public static class WaveReport
     const double FarWallMetres = 25.0;
 
     static readonly Regex KindCountRe = new Regex(
-        @"(\d+)\s+(Gatekeepers?|Hunters?|Thie(?:f|ves)|Rams?|boarders?|gatekeepers?)\b",
+        @"(\d+)\s+(Gatekeepers?|Hunters?|Thie(?:f|ves)|Cloakers?|Rams?|boarders?|gatekeepers?)\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     static readonly Regex TrackRe = new Regex(

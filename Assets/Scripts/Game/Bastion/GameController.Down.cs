@@ -6,10 +6,10 @@ namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): the local seat's DOWN state. Death
     /// used to end the run outright; now it holds the run open while a respawn can be
-    /// honored — immediately when the sim allows one, or at the next break while any
-    /// other seat still fights, since their banking can refill the pot and the hatch is
-    /// the backstop either way (Docs/Milestones — drop in between waves). Split so
-    /// GameController.cs stays under cap; the guest path is GameController.Respawn.cs.</summary>
+    /// honored — immediately when this seat's own carry covers the price, or while any
+    /// other seat still fights, since their kills split into every pile including this
+    /// one. The frozen pile is the purse; nothing else pays. Split so GameController.cs
+    /// stays under cap; the guest path is GameController.Respawn.cs.</summary>
     public sealed partial class GameController
     {
         #region State
@@ -35,9 +35,10 @@ namespace GatekeepersProtocol.Game
         #region Public API
         /// <summary>Command from PlayerHealth: the player is dead. While a respawn can be
         /// honored the run holds open behind the DOWN overlay; otherwise the run ends
-        /// exactly like a hatch loss. Unbanked is wiped either way; already-converted ship
-        /// Salvage is kept. Only meaningful while Tethered. The bare overload is a death
-        /// with no body to put back — it always ends the run.</summary>
+        /// exactly like a hatch loss and the seat's carry dies with it. On the respawn
+        /// path the carry is the purse and its remainder survives. Only meaningful while
+        /// Tethered. The bare overload is a death with no body to put back — it always
+        /// ends the run.</summary>
         public void PlayerDied()
         {
             PlayerDied(null);
@@ -60,6 +61,11 @@ namespace GatekeepersProtocol.Game
             }
             if (body != null && TryEnterLocalDown(body))
                 return;
+            // No respawn can be honored, so this death is final for the seat: the carry it
+            // was holding goes with it. On the respawn path the fee is taken out of this
+            // same pile instead and the remainder survives, so the wipe belongs here and
+            // nowhere else.
+            Sim.WipeUnbankedSlot(0);
             Sim.NotifyPlayerDown();
         }
 
@@ -70,7 +76,7 @@ namespace GatekeepersProtocol.Game
             if (Sim == null || Sim.Phase != RunPhase.Tethered) return false;
             var rig = _downBody;
             if (rig == null || !rig.IsDead) return false;
-            if (!Sim.TryRespawn(out long cost)) return false;
+            if (!Sim.TryRespawn(0, out long cost)) return false;
             rig.ResetToSpawn();
             // ResetToSpawn alone leaves MovementLocked set from Die(); HealToFull clears it.
             rig.HealToFull();
@@ -86,18 +92,22 @@ namespace GatekeepersProtocol.Game
         /// exactly as every death did before the recut.</summary>
         bool TryEnterLocalDown(PlayerHealth body)
         {
-            string reason = Sim.RespawnRefuse();
+            string reason = Sim.RespawnRefuse(0);
             if (reason != null && !AnyRemoteSeatFighting())
             {
                 Log.Event("Demo", "no respawn — " + reason);
                 return false;
             }
             _downBody = body;
-            // Dying wipes the seat's pile whether or not a respawn follows.
-            Sim.WipeUnbankedSlot(0);
+            // Freeze the pile: it is the purse this seat's respawn buys from, and the
+            // crew's next Convert must not drain it while its owner cannot act.
+            Sim.SetSeatDown(0, true);
+            // No wipe here: the pile is the purse the respawn is bought WITH, so taking it
+            // away would price every death at infinity. The fee comes out of it in
+            // RunSim.TryRespawn; a death that buys nothing loses it in PlayerDied instead.
             Log.Event("Demo", reason == null
                 ? "down — respawn offered at " + Sim.NextRespawnCost
-                : "down — waiting for the break (" + reason + ")");
+                : "down — cannot buy back (" + reason + "), crew still standing");
             return true;
         }
 
@@ -114,8 +124,40 @@ namespace GatekeepersProtocol.Game
             TryLocalRespawn();
         }
 
-        /// <summary>Any remote seat alive in the bastion — the seats whose fight keeps a
-        /// down host's break coming.</summary>
+        /// <summary>A seat just went down or left. If the local seat is down, nobody
+        /// remote is still fighting, and no dead seat can afford its own return, the
+        /// run can never advance — end it now instead of holding a dead room open
+        /// forever. Piles are frozen while down, so affordability cannot change on
+        /// its own once the last fighter falls.</summary>
+        public void NotifySeatWentDown()
+        {
+            if (Sim == null || Sim.Phase != RunPhase.Tethered) return;
+            if (!LocalDownActive) return;
+            if (AnyRemoteSeatFighting()) return;
+            if (Sim.RespawnRefuse(0) == null) return;
+            if (AnyWaitingSeatCanPay()) return;
+            Log.Event("Demo", "no seat can stand — the Boarding ends");
+            Sim.WipeUnbankedSlot(0);
+            Sim.NotifyPlayerDown();
+        }
+
+        bool AnyWaitingSeatCanPay()
+        {
+            var nm = NetworkManager.Singleton;
+            if (nm == null || !nm.IsServer || !nm.IsListening) return false;
+            var clients = nm.ConnectedClientsList;
+            for (int i = 0; i < clients.Count; i++)
+            {
+                var po = clients[i].PlayerObject;
+                if (po == null) continue;
+                var avatar = po.GetComponent<NetPlayerAvatar>();
+                if (avatar == null || avatar.IsOwner) continue;
+                if (!avatar.WaitingOnShip.Value) continue;
+                if (Sim.RespawnRefuse(avatar.Slot.Value) == null) return true;
+            }
+            return false;
+        }
+
         bool AnyRemoteSeatFighting()
         {
             var nm = NetworkManager.Singleton;

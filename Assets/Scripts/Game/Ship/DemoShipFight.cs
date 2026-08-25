@@ -228,6 +228,10 @@ namespace GatekeepersProtocol.Game
                 m.DemoShipFightDone = true;
                 GameSession.Save();
             }
+            // The last beat of the ship tutorial just landed, so the lesson is learned — by
+            // the player, not by this realm. Remembering it here is what stops the next world
+            // teaching it again (Settings.SkipShipTutorial; untick in options to see it once more).
+            Settings.SetBool(SettingId.SkipShipTutorial, true);
             Log.Event(Tag, "ship clear");
             DemoVoice.Play(DemoConversationIds.ShipClear, DemoVoiceMode.Lock);
 

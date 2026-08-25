@@ -173,6 +173,14 @@ retired. Host and solo death enters a DOWN state while the offer can be honored;
 otherwise Lost exactly as before — a fresh realm's pot is 0, so the demo's first loss
 is unchanged. The old host-death open question is closed by this: the host respawns
 from the DOWN overlay, and host migration stays unbuilt.
+**Amended 2026-08-24 (Zo, same day, superseding the purse and the pool):** a respawn is
+paid out of the **dying seat's own Unbanked**, not the realm's pot, and **the remainder
+of that carry survives the death with it** — the fee is the whole price. The shared
+charge pool is retired with it (`Respawns.PoolPerSeat`, `RunSim.RespawnStock`): the carry
+is the ration, so a mid-wave return and a break return price identically. Nothing else
+may pay — not the bank, not another seat — so a seat carrying less than the price dies
+for good, and banking everything is what makes you mortal. Death still wipes the pile on
+the path where no respawn is bought.
 
 ## Locked — Bastion kit geometry (Zo, 2026-08-13)
 

@@ -55,6 +55,23 @@ namespace GatekeepersProtocol.PlayTests
             _avatarPrefab.SetActive(true);
         }
 
+        /// <summary>Fill a seat's own pile the way the game does — kills during an
+        /// Assault, split across the seats — so these fixtures break if the earning path
+        /// stops feeding the purse the respawn rule spends. Leaves the run in Prep.</summary>
+        void FundSeat(int slot, long atLeast)
+        {
+            if (_gc.Sim.Assault != AssaultState.Assault) _gc.Sim.TriggerDraw();
+            int guard = 0;
+            while (_gc.Sim.UnbankedOf(slot) < atLeast && guard++ < 2000) _gc.Sim.AwardKill();
+            Assert.GreaterOrEqual(_gc.Sim.UnbankedOf(slot), atLeast,
+                "could not fund seat " + slot + " to " + atLeast);
+        }
+
+        void ToPrep()
+        {
+            if (_gc.Sim.Assault == AssaultState.Assault) _gc.Sim.NotifyAssaultCleared();
+        }
+
         [UnityTest]
         public IEnumerator DownWait_PaidRespawnAtAnyPrep_EscalatesCost()
         {
@@ -77,16 +94,19 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreSame(dummyHealth, PlayerRegistry.NearestAlive(Vector3.zero),
                 "dead waiter is skipped by NearestAlive");
 
-            // Terminal Prep, pot empty: the window is open but nobody can pay.
-            LogAssert.Expect(LogType.Log, "[RunSim] respawn refused — cannot afford");
+            // Carrying nothing: the offer stands but this seat cannot take it.
+            int slot = serverAvatar.Slot.Value;
+            LogAssert.Expect(LogType.Log, "[RunSim] respawn refused — not enough unbanked");
             clientAvatar.RequestRespawn();
             yield return WaitForTicks(m_ServerNetworkManager, 8);
             Assert.IsTrue(serverAvatar.WaitingOnShip.Value, "unaffordable respawn is refused");
-            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage, "refuse must not debit");
+            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage,
+                "a refusal does not reach the realm's bank either");
 
-            // Fund exactly the first respawn: any Prep is a window now, Hatch-bank or not.
-            GameSession.Meta.BankedSalvage = Respawns.CostFor(0);
-            int stockBefore = _gc.Sim.RespawnStock;
+            // Fund the SEAT, not the realm. Any Prep is a window, Hatch-bank or not.
+            FundSeat(slot, Respawns.CostFor(0));
+            ToPrep();
+            long carryBefore = _gc.Sim.UnbankedOf(slot);
             LogAssert.Expect(LogType.Log,
                 "[Demo] respawn seat=" + serverAvatar.Slot.Value + " cost=" + Respawns.CostFor(0));
             clientAvatar.RequestRespawn();
@@ -95,89 +115,35 @@ namespace GatekeepersProtocol.PlayTests
                 && !serverHealth.IsDead
                 && serverHealth.Hp >= serverHealth.MaxHp - 0.01f);
             AssertOnTimeout("Terminal Prep respawn did not restore HP");
-            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage, "the pot paid the cost");
-            Assert.AreEqual(stockBefore, _gc.Sim.RespawnStock,
-                "a break respawn never burns a pool charge");
+            Assert.AreEqual(carryBefore - Respawns.CostFor(0), _gc.Sim.UnbankedOf(slot),
+                "the fee came out of the seat's own carry and the rest survived");
+            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage, "the realm's bank is untouched");
             Assert.AreEqual(1, _gc.Sim.RespawnsTaken);
             Assert.AreSame(serverHealth, PlayerRegistry.NearestAlive(Vector3.zero),
                 "revived avatar is huntable again");
 
             // The second respawn costs double — the counter is the run's.
             yield return DownGuest(serverAvatar, clientAvatar);
-            GameSession.Meta.BankedSalvage = Respawns.CostFor(1);
+            FundSeat(slot, Respawns.CostFor(1));
+            ToPrep();
+            long carryBeforeSecond = _gc.Sim.UnbankedOf(slot);
             LogAssert.Expect(LogType.Log,
                 "[Demo] respawn seat=" + serverAvatar.Slot.Value + " cost=" + Respawns.CostFor(1));
             clientAvatar.RequestRespawn();
             yield return WaitForConditionOrTimeOut(() => !serverAvatar.WaitingOnShip.Value);
             AssertOnTimeout("second respawn did not land");
-            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage, "the escalated cost was paid");
+            Assert.AreEqual(carryBeforeSecond - Respawns.CostFor(1), _gc.Sim.UnbankedOf(slot),
+                "the escalated cost came out of the carry too");
             Assert.AreEqual(2, _gc.Sim.RespawnsTaken);
 
             GameSession.Meta.BankedSalvage = bankSnap;
         }
 
         [UnityTest]
-        public IEnumerator DownWait_MidAssaultDrawsOnPool_RefusesWhenDry()
+        public IEnumerator DownWait_MidAssaultAndBreakPriceIdentically()
         {
-            _dummy = new GameObject("HostStandIn");
-            _dummy.transform.position = new Vector3(80f, 0f, 0f);
-            _dummy.AddComponent<PlayerHealth>();
-
-            yield return BootHostRun();
-            long bankSnap = GameSession.Meta.BankedSalvage;
-
-            yield return SpawnGuestAvatar();
-            var serverAvatar = _guestServer;
-            var clientAvatar = _guestClient;
-            var serverHealth = serverAvatar.Body;
-
-            _gc.Sim.TriggerDraw();
-            Assert.AreEqual(AssaultState.Assault, _gc.Sim.Assault);
-
-            // Burn the pool down mid-wave, one funded respawn per charge.
-            int guard = 0;
-            while (_gc.Sim.RespawnStock > 0 && guard++ < 8)
-            {
-                yield return DownGuest(serverAvatar, clientAvatar);
-                int stock = _gc.Sim.RespawnStock;
-                GameSession.Meta.BankedSalvage = _gc.Sim.NextRespawnCost;
-                clientAvatar.RequestRespawn();
-                yield return WaitForConditionOrTimeOut(() => !serverAvatar.WaitingOnShip.Value);
-                AssertOnTimeout("mid-Assault respawn did not land with stock=" + stock);
-                Assert.AreEqual(stock - 1, _gc.Sim.RespawnStock,
-                    "a mid-wave respawn burns exactly one charge");
-            }
-            Assert.AreEqual(0, _gc.Sim.RespawnStock, "the pool drained");
-
-            // Dry pool, funded pot: mid-wave is refused named; the break is not.
-            yield return DownGuest(serverAvatar, clientAvatar);
-            GameSession.Meta.BankedSalvage = _gc.Sim.NextRespawnCost;
-            long potBefore = GameSession.Meta.BankedSalvage;
-            LogAssert.Expect(LogType.Log, "[RunSim] respawn refused — no charges until the break");
-            clientAvatar.RequestRespawn();
-            yield return WaitForTicks(m_ServerNetworkManager, 8);
-            Assert.IsTrue(serverAvatar.WaitingOnShip.Value, "dry-pool mid-wave respawn is refused");
-            Assert.AreEqual(potBefore, GameSession.Meta.BankedSalvage, "refuse must not debit");
-
-            _gc.Sim.AwardKill();
-            _gc.Sim.NotifyAssaultCleared();
-            Assert.AreEqual(AssaultState.Prep, _gc.Sim.Assault);
-            clientAvatar.RequestRespawn();
-            yield return WaitForConditionOrTimeOut(() =>
-                !serverAvatar.WaitingOnShip.Value && !serverHealth.IsDead);
-            AssertOnTimeout("the break respawn did not land after the dry-pool refusal");
-            Assert.AreEqual(0, _gc.Sim.RespawnStock, "the break tier spent no charge it did not have");
-
-            GameSession.Meta.BankedSalvage = bankSnap;
-        }
-
-        [UnityTest]
-        public IEnumerator Respawn_PaidByRealmPot_NeverTheFieldPile()
-        {
-            _dummy = new GameObject("HostStandIn");
-            _dummy.transform.position = new Vector3(80f, 0f, 0f);
-            _dummy.AddComponent<PlayerHealth>();
-
+            // The charge pool is retired: the carry is the only ration, so a mid-wave return
+            // and a return at a break differ in nothing at all.
             yield return BootHostRun();
             long bankSnap = GameSession.Meta.BankedSalvage;
             GameSession.Meta.BankedSalvage = 0L;
@@ -185,40 +151,80 @@ namespace GatekeepersProtocol.PlayTests
             yield return SpawnGuestAvatar();
             var serverAvatar = _guestServer;
             var clientAvatar = _guestClient;
+            int slot = serverAvatar.Slot.Value;
+
+            FundSeat(slot, Respawns.CostFor(0) + Respawns.CostFor(1) + 200L);
+            Assert.AreEqual(AssaultState.Assault, _gc.Sim.Assault);
+
+            // Mid-Assault.
+            yield return DownGuest(serverAvatar, clientAvatar);
+            long carry = _gc.Sim.UnbankedOf(slot);
+            LogAssert.Expect(LogType.Log,
+                "[Demo] respawn seat=" + slot + " cost=" + Respawns.CostFor(0));
+            clientAvatar.RequestRespawn();
+            yield return WaitForConditionOrTimeOut(() => !serverAvatar.WaitingOnShip.Value);
+            AssertOnTimeout("mid-Assault respawn did not land");
+            Assert.AreEqual(carry - Respawns.CostFor(0), _gc.Sim.UnbankedOf(slot),
+                "mid-wave charges the price and nothing else");
+
+            // Same run, at the break: same rule, only the counter has moved.
+            ToPrep();
+            Assert.AreEqual(AssaultState.Prep, _gc.Sim.Assault);
+            yield return DownGuest(serverAvatar, clientAvatar);
+            carry = _gc.Sim.UnbankedOf(slot);
+            LogAssert.Expect(LogType.Log,
+                "[Demo] respawn seat=" + slot + " cost=" + Respawns.CostFor(1));
+            clientAvatar.RequestRespawn();
+            yield return WaitForConditionOrTimeOut(() => !serverAvatar.WaitingOnShip.Value);
+            AssertOnTimeout("break respawn did not land");
+            Assert.AreEqual(carry - Respawns.CostFor(1), _gc.Sim.UnbankedOf(slot),
+                "the break charges the same way, at the escalated price");
+            Assert.AreEqual(2, _gc.Sim.RespawnsTaken);
+            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage,
+                "neither return touched the realm's bank");
+
+            GameSession.Meta.BankedSalvage = bankSnap;
+        }
+
+        [UnityTest]
+        public IEnumerator Respawn_PaidByTheSeatsOwnPile_NeverTheRealmPot()
+        {
+            _dummy = new GameObject("HostStandIn");
+            _dummy.transform.position = new Vector3(80f, 0f, 0f);
+            _dummy.AddComponent<PlayerHealth>();
+
+            yield return BootHostRun();
+            long bankSnap = GameSession.Meta.BankedSalvage;
+
+            yield return SpawnGuestAvatar();
+            var serverAvatar = _guestServer;
+            var clientAvatar = _guestClient;
             var serverHealth = serverAvatar.Body;
+            int slot = serverAvatar.Slot.Value;
+
+            FundSeat(slot, Respawns.CostFor(0) + 200L);
+            ToPrep();
+
+            // A bank fat enough to pay many times over must still pay nothing: the purse
+            // moved to the seat, and a rich realm may not rescue anybody.
+            GameSession.Meta.BankedSalvage = Respawns.CostFor(0) * 10L;
+            long potBefore = GameSession.Meta.BankedSalvage;
+            long carryBefore = _gc.Sim.UnbankedOf(slot);
+            long cost = _gc.Sim.NextRespawnCost;
 
             yield return DownGuest(serverAvatar, clientAvatar);
-
-            // A Hatch-bank Assault with a live drip: every pile number is moving, which is
-            // exactly why the claim has to be bracketed — the respawn must be paid by the
-            // pot, and the field pile may only ever fall by conversion.
-            _gc.Sim.SeedBankPile(100L, 1);
-            _gc.Sim.TriggerDraw(WaveMode.HatchBank);
-            Assert.AreEqual(AssaultState.Assault, _gc.Sim.Assault);
-            Assert.Greater(_gc.Sim.RespawnStock, 0, "the seeded pool covers one mid-wave return");
-
-            long cost = _gc.Sim.NextRespawnCost;
-            GameSession.Meta.BankedSalvage = cost;
-            long unbankedBeforeRejoin = _gc.Sim.UnbankedOf(serverAvatar.Slot.Value);
-            long potBeforeRejoin = GameSession.Meta.BankedSalvage;
-
-            LogAssert.Expect(LogType.Log,
-                "[Demo] respawn seat=" + serverAvatar.Slot.Value + " cost=" + cost);
+            LogAssert.Expect(LogType.Log, "[Demo] respawn seat=" + slot + " cost=" + cost);
             clientAvatar.RequestRespawn();
             yield return WaitForConditionOrTimeOut(() =>
                 !serverAvatar.WaitingOnShip.Value
                 && !serverHealth.IsDead
                 && serverHealth.Hp >= serverHealth.MaxHp - 0.01f);
-            AssertOnTimeout("Hatch-bank Assault respawn did not restore HP");
+            AssertOnTimeout("respawn did not restore HP");
 
-            long tookFromThePile = unbankedBeforeRejoin - _gc.Sim.UnbankedOf(serverAvatar.Slot.Value);
-            Assert.Less(tookFromThePile, cost,
-                "the respawn is paid by the realm, never out of the field pile");
-            long dripAdded = GameSession.Meta.BankedSalvage - (potBeforeRejoin - cost);
-            Assert.GreaterOrEqual(dripAdded, 0L,
-                "the realm's pot cannot have paid more than the respawn cost");
-            Assert.Less(dripAdded, cost,
-                "the realm's pot paid for the rejoin — what is left of it is conversion");
+            Assert.AreEqual(carryBefore - cost, _gc.Sim.UnbankedOf(slot),
+                "the seat's own pile paid exactly the price");
+            Assert.AreEqual(potBefore, GameSession.Meta.BankedSalvage,
+                "the realm's bank did not move a single unit");
 
             GameSession.Meta.BankedSalvage = bankSnap;
         }
@@ -235,8 +241,8 @@ namespace GatekeepersProtocol.PlayTests
 
             var serverAvatar = serverGo.GetComponent<NetPlayerAvatar>();
             serverAvatar.Bind(_gc);
-            if (GameSession.Meta != null)
-                GameSession.Meta.BankedSalvage = Respawns.CostFor(0);
+            // Funded or not, the seat check fires first: this refusal is about WHO asked.
+            FundSeat(0, Respawns.CostFor(0));
 
             LogAssert.Expect(LogType.Log,
                 "[Demo] respawn refused — the host respawns at the DOWN overlay");
@@ -268,7 +274,9 @@ namespace GatekeepersProtocol.PlayTests
             serverAvatar.Bind(_gc);
             Assert.IsTrue(serverAvatar.IsOwner, "server-owned body is the host");
 
-            LogAssert.Expect(LogType.Log, "[Demo] no respawn — cannot afford");
+            // Carrying nothing is what makes this death final now.
+            Assert.AreEqual(0L, _gc.Sim.UnbankedOf(0), "the host seat carries nothing");
+            LogAssert.Expect(LogType.Log, "[Demo] no respawn — not enough unbanked");
             serverHealth.TakeDamage(serverHealth.Hp + 1f);
             yield return WaitForTicks(m_ServerNetworkManager, 4);
 
@@ -287,16 +295,14 @@ namespace GatekeepersProtocol.PlayTests
             yield return BootHostRun();
             Assert.IsNotNull(GameSession.Meta, "respawn needs a Meta purse");
             long bankSnap = GameSession.Meta.BankedSalvage;
-            GameSession.Meta.BankedSalvage = Respawns.CostFor(0);
+            GameSession.Meta.BankedSalvage = 0L;
 
             _dummy = new GameObject("HostRig");
             var rig = _dummy.AddComponent<PlayerHealth>();
             rig.Bind(_gc);
-            // Kills only pay during an Assault, and the pile has to exist to prove the
-            // down entry wipes it.
-            _gc.Sim.TriggerDraw();
-            _gc.Sim.AwardKill();
-            Assert.Greater(_gc.Sim.UnbankedOf(0), 0L, "there is a pile to wipe");
+            // The carry is the purse now, so it has to exist for the offer to stand at all.
+            FundSeat(0, Respawns.CostFor(0) + 100L);
+            ToPrep();
             yield return null;
 
             LogAssert.Expect(LogType.Log,
@@ -306,14 +312,18 @@ namespace GatekeepersProtocol.PlayTests
 
             Assert.IsTrue(rig.IsDead);
             Assert.AreEqual(RunPhase.Tethered, _gc.Sim.Phase,
-                "a funded pot holds the run open behind the DOWN overlay");
-            Assert.AreEqual(0L, _gc.Sim.UnbankedOf(0), "dying wiped the seat's pile");
+                "a carry that covers the price holds the run open behind the DOWN overlay");
+            long carryWhileDown = _gc.Sim.UnbankedOf(0);
+            Assert.Greater(carryWhileDown, 0L,
+                "going down must NOT wipe the pile — it is the purse the respawn buys from");
 
             LogAssert.Expect(LogType.Log, "[Demo] respawn seat=0 cost=" + Respawns.CostFor(0));
             Assert.IsTrue(_gc.TryLocalRespawn(), "the funded respawn is granted");
             Assert.IsFalse(rig.IsDead);
             Assert.AreEqual(rig.MaxHp, rig.Hp, 0.01f);
-            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage, "the pot paid the cost");
+            Assert.AreEqual(carryWhileDown - Respawns.CostFor(0), _gc.Sim.UnbankedOf(0),
+                "the fee came out of the carry and the remainder stood up with the Boarder");
+            Assert.AreEqual(0L, GameSession.Meta.BankedSalvage, "the realm's bank never paid");
             Assert.AreEqual(RunPhase.Tethered, _gc.Sim.Phase);
 
             GameSession.Meta.BankedSalvage = bankSnap;

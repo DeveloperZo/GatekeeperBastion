@@ -596,11 +596,11 @@ public static class Docgen
         var sb = new StringBuilder();
         sb.AppendLine("| | |");
         sb.AppendLine("|---|---|");
-        sb.AppendLine("| pool | " + Respawns.PoolPerSeat + " charge/seat, gates mid-Assault returns only |");
-        sb.AppendLine("| cost | " + Respawns.BaseCost + " × (taken + 1), from the realm pot |");
+        sb.AppendLine("| paid from | the dead seat's own Unbanked; the rest of that carry survives |");
+        sb.AppendLine("| cost | " + Respawns.BaseCost + " × (taken + 1) |");
         sb.AppendLine("| first three | " + Respawns.CostFor(0) + " / " + Respawns.CostFor(1) +
                       " / " + Respawns.CostFor(2) + " |");
-        sb.AppendLine("| at the break | unlimited, paid, no charge burned |");
+        sb.AppendLine("| refused when | that seat carries less than the price — the Boarding ends |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
 
@@ -765,7 +765,7 @@ public static class Docgen
         sb.AppendLine("## Weapons");
         sb.AppendLine();
         sb.AppendLine("You carry one **Primary** and one **Secondary** at once. The Drone bay holds a payload — today the **Decoy**, sold at FABRICATION.");
-        sb.AppendLine("The Primary is chosen at the ARMORY before you embark and is fixed for the run;");
+        sb.AppendLine("The Primary is chosen at the ARMORY before you embark and is fixed for the Boarding;");
         sb.AppendLine("switching in the bastion swaps between the slots you already carry, never between");
         sb.AppendLine("owned weapons. Each slot keeps its own clip, so switching is not a free reload.");
         sb.AppendLine();
@@ -850,7 +850,7 @@ public static class Docgen
         AppendManualGk(sb, GatekeeperKind.Hunter, "Hunter",
             "to touch the hatch; it only ever wants you");
         AppendManualGk(sb, GatekeeperKind.Thief, "Thief",
-            "to turn when shot; Hatch-bank it marches the Hatch, field-terminal it hunts you — it never hurts you");
+            "to turn when shot; on a Convert it marches the Hatch, field-terminal it hunts you — it never hurts you");
         AppendManualGk(sb, GatekeeperKind.Cloaker, "Cloaker",
             "to advance while watched — any Boarder's gaze stops it dead, and it fades and closes the moment every eye is elsewhere");
         sb.AppendLine();
@@ -877,7 +877,7 @@ public static class Docgen
         sb.AppendLine();
         sb.AppendLine("**" + WaveDirector.MaxWaves + " waves to a run**, and none of them start until you use a");
         sb.AppendLine("field terminal. `+/-` juice, `E` selects, `T` starts one Wave. A terminal opens its door after");
-        sb.AppendLine("its authored count (T1 is 5). Prep after a clear lasts as long as you want — Hatch-bank is legal there.");
+        sb.AppendLine("its authored count (T1 is 5). Prep after a clear lasts as long as you want — starting a Convert is legal there.");
         sb.AppendLine("Gatekeepers arrive in groups, not a stream.");
         sb.AppendLine();
         sb.AppendLine("At intensity 0:");
@@ -899,7 +899,7 @@ public static class Docgen
 
     static void Dial(StringBuilder sb)
     {
-        sb.AppendLine("## Intensity — the wager");
+        sb.AppendLine("## The Ante — the wager");
         sb.AppendLine();
         sb.AppendLine("Juice at a field terminal, Master Control, or the Hatch (`+/-`), then `E` to select and `T` to start. Locked once a");
         sb.AppendLine("wave is live. It pays more and sends more, and the extra bodies are **all Defaults** —");
@@ -907,7 +907,7 @@ public static class Docgen
         sb.AppendLine("spacing, no larger groups. Juice costs `" + IntensityJuice.CostPerStep +
                       "` unbanked per step.");
         sb.AppendLine();
-        sb.AppendLine("| Intensity | You earn | Wave 1 sends | Wave " + WaveDirector.MaxWaves + " sends |");
+        sb.AppendLine("| Ante | You earn | Wave 1 sends | Wave " + WaveDirector.MaxWaves + " sends |");
         sb.AppendLine("|---|---|---|---|");
         var wd = new WaveDirector();
         for (int lvl = TetherSiphon.MinLevel; lvl <= TetherSiphon.MaxLevel; lvl++)
@@ -924,23 +924,22 @@ public static class Docgen
     {
         sb.AppendLine("## Salvage");
         sb.AppendLine();
-        sb.AppendLine("**Gatekeepers are worth Salvage, and that Salvage sits unbanked until a Hatch-bank.**");
+        sb.AppendLine("**Gatekeepers are worth Salvage, and that Salvage sits unbanked until a Convert.**");
         sb.AppendLine("A kill does not credit the ship. Prep `E` then `T` at the Hatch starts the convert Wave:");
         sb.AppendLine("drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A fatter pile");
         sb.AppendLine("converts at a higher multiplier. Dying keeps what already made it through the Hatch.");
         sb.AppendLine();
         sb.AppendLine("A kill pays `" + N(MetaUpgrades.SalvagePerKill()) + "`, then multiplied by intensity.");
-        sb.AppendLine("Nothing pays per second except Hatch-bank drip (`" + N(HatchBank.DripPerSecond) +
+        sb.AppendLine("Nothing pays per second except the Convert drip (`" + N(HatchBank.DripPerSecond) +
                       "` unbanked/s), and the quiet between waves earns nothing at all.");
         sb.AppendLine();
         sb.AppendLine("The hatch is what you are defending: **" + N(ShipSystems.HatchMaxHp) +
                       " HP** at Hatch Armor 0, up to **" + N(MetaUpgrades.HatchHp(MetaUpgrades.MaxLevel)) +
                       "**. Hold `E` near it to repair.");
-        sb.AppendLine("If it falls, the run ends — whatever is banked. If you fall, the realm can buy you back:");
-        sb.AppendLine("a respawn costs `" + N(Respawns.BaseCost) + " × (respawns taken + 1)` from the banked pot, and mid-Assault it");
-        sb.AppendLine("also burns a shared charge (" + Respawns.PoolPerSeat + " seeded per seat; at a break, no charge is needed).");
-        sb.AppendLine("Death always wipes your Unbanked. No charges left, a pot that cannot pay, nobody still");
-        sb.AppendLine("standing — that is a run that ends.");
+        sb.AppendLine("If it falls, the Boarding ends — whatever is banked. If you fall, you buy yourself back out");
+        sb.AppendLine("of the Unbanked you are carrying: `" + N(Respawns.BaseCost) + " × (respawns taken + 1)`, and the rest of that");
+        sb.AppendLine("pile stands up with you. Nothing else pays — not the bank, not a teammate. Carry less");
+        sb.AppendLine("than the price and that death ends the Boarding, which is the other edge of banking early.");
         sb.AppendLine();
     }
 

@@ -540,7 +540,13 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Move ship bank into Unbanked at <see cref="HatchBank.WithdrawPerSecond"/>.
         /// Prep and Hatch full. Returns units moved. Game starts the hold only when Unbanked is
         /// 0; once held, further ticks may run with Unbanked already raised.</summary>
-        public long Withdraw(float dt)
+        public long Withdraw(float dt) => Withdraw(dt, 0);
+
+        /// <summary>Slot-aware withdraw: the pot's units land in the OPERATING seat's
+        /// pile, whoever holds the verb — never implicitly slot 0. Symmetry ruling
+        /// (Docs/Decisions.md): the pot may pre-fund any living seat's pocket in Prep,
+        /// and rescues nobody in particular.</summary>
+        public long Withdraw(float dt, int slot)
         {
             if (dt <= 0f) return 0L;
             if (Phase != RunPhase.Tethered || Assault != AssaultState.Prep) return 0L;
@@ -554,7 +560,7 @@ namespace GatekeepersProtocol.Sim
             if (want > bank) want = bank;
             if (want <= 0L) return 0L;
             if (!_meta.SpendSalvage(want)) return 0L;
-            Unbanked += want;
+            _wallets.Add(slot, want);
             return want;
         }
 

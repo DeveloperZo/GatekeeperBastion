@@ -6,7 +6,7 @@ Each Wave is bigger than the last, and it grows in four directions at once. More
 
 Ante adds to the first of those and to nothing else. Checked, rechecked, holds.
 
-The kinds arrive on a schedule I cannot buy, sell, or argue with. First Wave: Defaults only. Hunters after that. Thieves later still, thickest at the end. Inside a group the mix is shuffled, so there is no clean phase of one problem — sorting what is in front of me is the job, every group, every time.
+The kinds arrive on a schedule I cannot buy, sell, or argue with. First Wave: Defaults only. Hunters after that. Thieves and Cloakers later still, thickest at the end. Inside a group the mix is shuffled, so there is no clean phase of one problem — sorting what is in front of me is the job, every group, every time.
 
 The difficulty was never any single machine. It is overlap: how much of the Wave stands in the room at once. Early, I finish a group and wait. Late, the next group is inside before the last one is down.
 
@@ -42,14 +42,14 @@ Within a group the kinds are **shuffled, not blocked** — a group can be all ma
 
 | | First Wave | Last Wave |
 |---|---|---|
-| What's in it | marchers only | marchers, Hunters and Thieves together |
+| What's in it | marchers only | marchers, Hunters, Thieves and Cloakers together |
 | Health | baseline | multiplied substantially |
 | Group | narrow | the widest the game sends |
 | Gap between groups | the longest | the shortest |
-| What kills you | nothing, if you pay attention | being made to answer three problems at once |
+| What kills you | nothing, if you pay attention | being made to answer four problems at once |
 | What the Hatch does | nothing on a field-terminal Wave; the Convert target on a Convert | the same split |
 
-The first Wave asks one question: can you stop a thing walking at you. The last asks three at once — marchers, Hunters, and Thieves that will not turn when shot — and every second you spend on one is a second the other two are unopposed. That is the escalation. It is not that any single Gatekeeper becomes frightening.
+The first Wave asks one question: can you stop a thing walking at you. The last asks four at once — marchers, Hunters, Thieves that will not turn when shot, and Cloakers that move only where nobody is looking — and every second you spend on one is a second the other three are unopposed. That is the escalation. It is not that any single Gatekeeper becomes frightening.
 
 ### Where the difficulty actually comes from
 

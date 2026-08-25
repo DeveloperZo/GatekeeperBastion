@@ -106,7 +106,7 @@ namespace GatekeepersProtocol.Game
 
                 string description = b.Label;
                 if (b.Label == "juice" && dialLevel >= 0)
-                    description = "Intensity " + dialLevel;
+                    description = "Ante " + dialLevel;
 
                 rows.Add(new ShortcutRow(key, description, b.Section));
             }
@@ -235,7 +235,7 @@ namespace GatekeepersProtocol.Game
                     {
                         AppendGroupedDisplays(rows, section, b.Label);
                         if (b.Label == "juice" && dialLevel >= 0)
-                            LineBuf.Append(" Intensity ").Append(dialLevel);
+                            LineBuf.Append(" Ante ").Append(dialLevel);
                         else
                             LineBuf.Append(' ').Append(b.Label);
                     }

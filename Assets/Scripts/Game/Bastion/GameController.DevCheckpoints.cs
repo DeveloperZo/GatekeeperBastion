@@ -34,12 +34,12 @@ namespace GatekeepersProtocol.Game
             {
                 "A  start — beat 0 done, first EMBARK next",
                 "B  post zone-1 terminals — Hatch, " + zoneOne + " unbanked",
-                "C  post first Hatch-bank — Ship, wheel opens",
+                "C  post first Convert — Ship, wheel opens",
                 "D  post zone-2 terminals — Hatch, " + zoneTwo + " unbanked",
-                "E  post second Hatch-bank — D2 open, Primary, zone 3 next",
+                "E  post second Convert — D2 open, Primary, zone 3 next",
                 "F  post zone-3 terminals — Hatch, " + zoneThree + " unbanked, D3 next",
                 "G  Master Control — Control Room, pull ready",
-                "H  finale Hatch-bank — elite window, " + master + " unbanked",
+                "H  finale Convert — elite window, " + master + " unbanked",
                 "I  stock realm record + Boarder kit (in place, no reload)",
                 "J  reset terminals + doors (live Bastion run)",
             };

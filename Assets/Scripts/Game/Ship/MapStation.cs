@@ -22,11 +22,15 @@ namespace GatekeepersProtocol.Game
             get
             {
                 var m = GameSession.Meta;
-                if (m == null) return "embark on the run";
+                if (m == null) return "embark on the Boarding";
+                // The demo hides FABRICATION (the rig) and gates CREW (the protocol), so
+                // warning about them names problems the player cannot see or fix — the
+                // panel already suppresses the same warnings (ShowWarnings). One rule.
+                if (m.DemoActive) return "embark on the Boarding";
                 bool noWeapon = !m.OwnsAnyWeapon;
                 bool noRig = !m.HasRepairRigEquipped;
                 bool noProtocol = m.EquippedProtocol == BoarderProtocolId.None;
-                if (!noWeapon && !noRig && !noProtocol) return "embark on the run";
+                if (!noWeapon && !noRig && !noProtocol) return "embark on the Boarding";
                 if (noWeapon && !noRig && !noProtocol) return "EMBARK — but you have NO WEAPON yet";
                 if (!noWeapon && noRig && !noProtocol) return "EMBARK — no repair rig";
                 if (!noWeapon && !noRig && noProtocol) return "EMBARK — no protocol";
@@ -273,8 +277,8 @@ namespace GatekeepersProtocol.Game
         void BindWaitRejoin(MetaState m)
         {
             AssaultState assault;
-            int stock, taken;
-            ReadWaitWindow(out assault, out stock, out taken);
+            int taken;
+            ReadWaitWindow(out assault, out taken);
             var late = NetPlayerAvatar.LocalOwner;
             if (late != null && late.AwaitingFollow.Value)
             {
@@ -287,14 +291,13 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             long cost = Respawns.CostFor(taken);
-            // The pot belongs to the realm being played, not to this machine's save — the
-            // same read ShipController's pause label makes (RealmRecordSource).
-            long banked = RealmRecordSource.Banked();
+            // Priced against this seat's OWN carry, which is what the respawn spends —
+            // the realm's bank pays for nobody's return. Same read as ShipController's
+            // pause label.
+            long carry = late != null ? late.Unbanked.Value : 0L;
             string label = "RESPAWN (" + cost + ")";
-            if (assault == AssaultState.Assault && stock <= 0)
-                label = "RESPAWN - no charges until the break";
-            else if (banked < cost)
-                label = "RESPAWN (" + cost + ") - can't afford";
+            if (carry < cost)
+                label = "RESPAWN (" + cost + ") - only " + carry + " unbanked";
             _body.BindEmbark(label, TryWaitRejoin);
         }
 
@@ -314,25 +317,25 @@ namespace GatekeepersProtocol.Game
             avatar.RequestRespawn();
         }
 
-        static void ReadWaitWindow(out AssaultState assault, out int stock, out int taken)
+        static void ReadWaitWindow(out AssaultState assault, out int taken)
         {
             assault = AssaultState.Prep;
-            stock = 0;
             taken = 0;
             var session = NetSession.FindLive();
             var mirror = session != null ? session.Mirror : null;
             if (mirror == null) return;
             assault = (AssaultState)mirror.Phase.Value;
-            stock = mirror.RespawnStock.Value;
             taken = mirror.RespawnsTaken.Value;
         }
 
         static int WaitWindowHash()
         {
             AssaultState assault;
-            int stock, taken;
-            ReadWaitWindow(out assault, out stock, out taken);
-            return ((int)assault << 20) ^ (stock << 8) ^ taken;
+            int taken;
+            ReadWaitWindow(out assault, out taken);
+            var seat = NetPlayerAvatar.LocalOwner;
+            long carry = seat != null ? seat.Unbanked.Value : 0L;
+            return ((int)assault << 20) ^ (taken << 8) ^ carry.GetHashCode();
         }
 
         void TryPartyEmbark(MetaState m, NetSession session)

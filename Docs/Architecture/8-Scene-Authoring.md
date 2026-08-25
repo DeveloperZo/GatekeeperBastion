@@ -7,9 +7,9 @@ Update trigger: when a scene root is added or renamed, when UI moves out of a ga
 Last updated: 2026-08-22
 -->
 
-Current Ship hubs: **`Ship - Demo.unity`** (solo / transitional) and **`Ship - CoOp.unity`**
-(destination hub). Historical notes below that say `Ship.unity` mean the pre-rename hub;
-the authoring rules still apply to whichever hub you edit.
+The Ship hub is **`Ship - CoOp.unity`** — one hub, solo and party alike. Historical notes
+below that say `Ship.unity` or `Ship - Demo.unity` mean hubs that no longer exist (the
+scene pair consolidated onto the co-op hull); the authoring rules still apply.
 
 ## Why this file exists
 
