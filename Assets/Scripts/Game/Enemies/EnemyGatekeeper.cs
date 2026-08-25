@@ -86,10 +86,6 @@ namespace GatekeepersProtocol.Game
         static readonly int AnimSpeed = Animator.StringToHash("Speed");
         static readonly int AnimAttack = Animator.StringToHash("Attack");
         static readonly int AnimHitReact = Animator.StringToHash("HitReact");
-        static readonly int AnimDie = Animator.StringToHash("Die");
-        /// <summary>Destroy-tail delay for the wired falling-back clip (Mixamo take is 3.63s /
-        /// 109 frames at 30fps). Ledger removal is immediate; only the GameObject lasts this long.</summary>
-        const float CorpseSeconds = 3.7f;
 
         NavMeshAgent _agent;
         Damageable _damageable;
@@ -251,6 +247,9 @@ namespace GatekeepersProtocol.Game
 
         void Start()
         {
+            // A clone's Start only fires when BeginDeathPresentation re-enables the component
+            // (it spawns disabled); a corpse must not derive a target.
+            if (_presentationDead) return;
             Retarget();
         }
 
@@ -260,6 +259,11 @@ namespace GatekeepersProtocol.Game
             // reads elsewhere in this class are diagnostics (logs/readouts), not sim state.
             float dt = Time.deltaTime;
 
+            // Presentation-death latch FIRST, and permanent — not the transient _collapsing flag.
+            // The IsDead guard below is false forever on a clone (damage is host-side), so the
+            // moment the 0.9s collapse cleared _collapsing, full AI used to resume on a corpse
+            // whose agent is disabled (SetDestination on a disabled agent errors every frame).
+            if (_presentationDead) return;
             if (_damageable == null || _damageable.IsDead) return;
 
             // Terminal phase (player down / hatch lost) or scene teardown: stop, permanently.
@@ -484,6 +488,14 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
+            // The decoy takes the same structural blow. Without this swing it is an
+            // invulnerable lure a gatekeeper stands beside forever, doing nothing.
+            if (_chasingDecoy && _decoyTarget != null && _decoyTarget.IsAlive)
+            {
+                _decoyTarget.ApplyDamage(hatchDamage);
+                return;
+            }
+
             // Re-test the hatch here, not just at retarget: it may have been destroyed since, and
             // hatch.transform on a destroyed HatchStation is a NullReferenceException.
             var hatch = _hatchTarget;
@@ -500,50 +512,7 @@ namespace GatekeepersProtocol.Game
             Effects.HatchDamageSparks(hatch.transform.position + Vector3.up * 1.2f);
         }
 
-        /// <summary>Inert corpse: Die trigger, agent off, colliders off. Host fires this
-        /// from onDeath; clones fire it from NetEnemy's death Rpc. Burst stays host-side.
-        /// Root motion is on for this clip only — locomotion leaves it off so walk does not
-        /// slide. Agent must be off first or it fights the fall.</summary>
-        public void BeginDeathPresentation()
-        {
-            StopAgent();
-            if (_agent != null) _agent.enabled = false;
-            if (_animator != null)
-            {
-                _animator.applyRootMotion = true;
-                _animator.SetTrigger(AnimDie);
-            }
-            var cols = GetComponentsInChildren<Collider>(true);
-            for (int i = 0; i < cols.Length; i++)
-                if (cols[i] != null) cols[i].enabled = false;
-        }
-
-        void OnDeath()
-        {
-            // The kill LINE belongs to WaveSpawner: it owns the alive count this death changes,
-            // and its listener closes over this gatekeeper's kind. So does the DESTROY —
-            // Despawn is the one path that removes a spawned actor from the ledger and the
-            // scene. A hand-placed actor has no spawner and cleans up after itself.
-            BeginDeathPresentation();
-            SpawnDeathBurst();
-            var spawner = _spawner;
-            if (spawner != null) spawner.Despawn(this, CorpseSeconds);
-            else Destroy(gameObject);
-        }
-
-        /// <summary>Kill-confirm particle explosion so deaths read as an event, not a vanish. The
-        /// tint comes off the renderer, so each kind's burst is its own colour for free.</summary>
-        void SpawnDeathBurst()
-        {
-            var myRenderer = GetComponentInChildren<Renderer>();
-            Color tint = FxColors.EnemyAlert;
-            var mat = myRenderer != null ? myRenderer.sharedMaterial : null;
-            if (mat != null)
-            {
-                if (mat.HasProperty("_Color")) tint = mat.color;
-                else if (mat.HasProperty("_BaseColor")) tint = mat.GetColor("_BaseColor");
-            }
-            Effects.DeathExplosion(transform.position, tint);
-        }
+        // Death presentation — BeginDeathPresentation, the LateUpdate floor clamp, OnDeath and
+        // the burst — lives in EnemyGatekeeper.Death.cs. This file never outlives the latch.
     }
 }

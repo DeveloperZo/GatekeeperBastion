@@ -74,6 +74,7 @@ declare -A EXCLUDED=(
   ["EditModeSaveFixture.cs"]="assembly-level [SetUpFixture]; needs GatekeepersProtocol.Game (SaveService.SaveRoot), UnityEngine.PlayerPrefs and NUnit SetUpFixture"
   ["Dev/DevSessionTests.cs"]="needs GatekeepersProtocol.Game (SaveService) and a real filesystem save"
   ["Dev/DevCheckpointTests.cs"]="needs GameController (MonoBehaviour) for BuildDemoCheckpoint"
+  ["Dev/CheckpointConfigTaintTests.cs"]="needs GameController (MonoBehaviour) for BuildDemoCheckpoint and the config-taint rule"
   ["Weapons/ReloadSwapTests.cs"]="needs PlayerGun MonoBehaviour, GameObject, and UnityEngine.TestTools.LogAssert"
   ["ControlsTests.cs"]="needs GatekeepersProtocol.Game (Controls) and UnityEngine.Input/KeyCode"
   ["Flow/RealmShareServiceTests.cs"]="needs GatekeepersProtocol.Game (RealmShareService, GameSession) and async Task tests"
@@ -93,6 +94,7 @@ declare -A EXCLUDED=(
   ["Bastion/SpawnRoomPrefabTests.cs"]="needs SpawnRoom prefab load and UnityEngine"
   ["Net/RunSeatsTests.cs"]="needs GatekeepersProtocol.Game (RunSeats) and Unity.Netcode"
   ["Run/RespawnQueueTests.cs"]="needs GatekeepersProtocol.Game (RespawnQueue lives in Game/Range)"
+  ["Ui/HudVisibilityMatrixTests.cs"]="needs BastionHudView MonoBehaviour, TMPro and UnityEngine.UI; ProtocolHudSourceTests keeps the same rule offline"
 )
 
 if ! command -v mcs >/dev/null 2>&1 || ! command -v mono >/dev/null 2>&1; then

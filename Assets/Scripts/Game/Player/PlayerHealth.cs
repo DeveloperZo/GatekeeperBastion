@@ -47,6 +47,7 @@ namespace GatekeepersProtocol.Game
         GameController _game;
         Transform _lastAttacker; // death log only: who was on us, and how close
         float _lastAttackerTime;
+        string _lastAttackerKind; // resolved at hit time; outlives the 5s distance window
 
         void Awake()
         {
@@ -111,6 +112,10 @@ namespace GatekeepersProtocol.Game
             {
                 _lastAttacker = source;
                 _lastAttackerTime = Time.time;
+                var attacker = source.GetComponent<EnemyGatekeeper>();
+                _lastAttackerKind = attacker != null
+                    ? attacker.Kind.ToString().ToLowerInvariant()
+                    : null;
             }
             float taken = Mathf.Min(amount, Hp); // overkill is not damage taken
             Hp -= amount;
@@ -211,6 +216,7 @@ namespace GatekeepersProtocol.Game
             IsDead = false;
             Invulnerable = false;
             _lastAttacker = null;
+            _lastAttackerKind = null;
             Log.Info(Tag, "Player reset to spawn at full HP.");
         }
 
@@ -243,10 +249,13 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
-            string killer = "unknown";
+            // The kind names the killer even when the blow was not melee-fresh; the distance
+            // flourish keeps the 5s window (a stale position reads as where they were, not
+            // where they got you).
+            string killer = _lastAttackerKind != null ? _lastAttackerKind : "unknown";
             if (_lastAttacker != null && Time.time - _lastAttackerTime < 5f)
-                killer = $"gatekeeper at {Vector3.Distance(transform.position, _lastAttacker.position):0.0}m";
-            else if (replicatedHp)
+                killer += $" at {Vector3.Distance(transform.position, _lastAttacker.position):0.0}m";
+            else if (killer == "unknown" && replicatedHp)
                 killer = "gatekeeper";
 
             var gc = _game;

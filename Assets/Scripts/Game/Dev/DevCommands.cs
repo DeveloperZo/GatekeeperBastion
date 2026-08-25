@@ -23,6 +23,7 @@ namespace GatekeepersProtocol.Game
             StartCoopClient,
             ArmDemoCheckpoint,
             ToggleFaucetLoop,
+            ArmCoopCheckpoint,
         }
 
         public readonly struct Binding
@@ -54,10 +55,13 @@ namespace GatekeepersProtocol.Game
             new Binding(KeyCode.F9, "toggle gatekeeper-state readout", Kind.ToggleGatekeeperReadout),
 #if UNITY_EDITOR
             new Binding(KeyCode.F10, "host co-op session", Kind.StartCoopHost),
-            new Binding(KeyCode.F11, "join 127.0.0.1", Kind.StartCoopClient),
 #endif
+            new Binding(KeyCode.F11, "co-op checkpoint (then letter)", Kind.ArmCoopCheckpoint),
             new Binding(KeyCode.F12, "demo checkpoint (then letter)", Kind.ArmDemoCheckpoint),
             new Binding(KeyCode.Home, "toggle faucet loop (graybox)", Kind.ToggleFaucetLoop),
+#if UNITY_EDITOR
+            new Binding(KeyCode.End, "join 127.0.0.1", Kind.StartCoopClient),
+#endif
         };
 
         /// <summary>Compact panel token for the shortcut strip (e.g. "F2 replay"). Kept here so
@@ -86,6 +90,7 @@ namespace GatekeepersProtocol.Game
                 case Kind.StartCoopClient: return "join";
                 case Kind.ArmDemoCheckpoint: return "demo";
                 case Kind.ToggleFaucetLoop: return "faucet";
+                case Kind.ArmCoopCheckpoint: return "co-op";
                 default: return "";
             }
         }

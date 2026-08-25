@@ -206,7 +206,7 @@ namespace GatekeepersProtocol.EditorTools
             RebuildBastionGeometry();
             RegisterBuildScenes();
             AssetDatabase.SaveAssets();
-            Debug.Log("[SceneBuilder] In-place geometry rebuild done; EditorBuildSettings.scenes leads with Splash, MainMenu, RealmSelect, Ship - Demo, Ship - CoOp, Bastion, Bastion_Coop.");
+            Debug.Log("[SceneBuilder] In-place geometry rebuild done; EditorBuildSettings.scenes leads with Splash, MainMenu, RealmSelect, Ship - CoOp, Bastion_Coop.");
         }
 
         // Build All Scenes is the only entry point. A Bastion-only item existed until
@@ -260,11 +260,13 @@ namespace GatekeepersProtocol.EditorTools
             public SceneEntry(string path, bool enabled) { Path = path; Enabled = enabled; }
         }
 
-        /// <summary>Boot order. These lead the build list and are always enabled.</summary>
+        /// <summary>Boot order. These lead the build list and are always enabled. One scene
+        /// pair since the consolidation — the old demo ship and solo bastion rows retired;
+        /// MergeBuildScenes drops their rows once the files are deleted.</summary>
         public static readonly string[] BootScenes =
         {
             SplashScenePath, MainMenuScenePath, RealmSelectScenePath,
-            ShipScenePath, ShipCoopScenePath, ScenePath, BastionCoopScenePath
+            ShipCoopScenePath, BastionCoopScenePath
         };
 
         /// <summary>Pins <paramref name="bootOrder"/> at the head of the build list and KEEPS

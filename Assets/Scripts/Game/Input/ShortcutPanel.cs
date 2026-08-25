@@ -66,10 +66,12 @@ namespace GatekeepersProtocol.Game
 #endif
         }
 
-        /// <summary>F1–F9 and F12 are editor-only cheats. Player builds must neither list nor
-        /// bind them; F10/F11 stay for the dev-build net smoke.</summary>
+        /// <summary>F1–F9 and the checkpoint surfaces F11/F12 are editor-only cheats. Player
+        /// builds must neither list nor bind them; F10 (with End) stays for the dev-build
+        /// net smoke.</summary>
         public static bool IsEditorOnlyDevKey(KeyCode key) =>
-            (key >= KeyCode.F1 && key <= KeyCode.F9) || key == KeyCode.F12;
+            (key >= KeyCode.F1 && key <= KeyCode.F9)
+            || key == KeyCode.F11 || key == KeyCode.F12;
 
         /// <summary>Fills <paramref name="rows"/> with one structured row per distinct binding
         /// label, in <see cref="Controls"/> order: grouped labels ("weapons", "juice",

@@ -397,6 +397,22 @@ namespace GatekeepersProtocol.Game
                 Object.Destroy(colliders[i]);
             }
 
+            // Pack Animators stripped for the same reason as the colliders: the window piece
+            // ships one with no controller, which costs a per-frame update on every generated
+            // face and reads as broken wiring to anything auditing the scene.
+            Animator[] animators = go.GetComponentsInChildren<Animator>(true);
+            for (int i = 0; i < animators.Length; i++)
+            {
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    Object.DestroyImmediate(animators[i]);
+                    continue;
+                }
+#endif
+                Object.Destroy(animators[i]);
+            }
+
             ShadowCastingMode mode = castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
             Renderer[] renderers = go.GetComponentsInChildren<Renderer>(true);
             for (int i = 0; i < renderers.Length; i++)

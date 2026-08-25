@@ -359,6 +359,32 @@ Cause: weapon-feel and hit-feedback gates (`M82`, `M84`, `M93`, later `M85` /
 `M99` is the slice that unlocks those stamps — not an optional convenience after
 them.
 
+## Locked — dev-assisted runs are play data; context divergence is the taint (Zo, 2026-08-24)
+
+**Rescinds the play-data exclusion in the 2026-08-20 ruling above.** A Run that used dev
+tools is **dev-assisted**, not disqualified: the owner rarely plays the raw game, so
+excluding assisted Runs from tuning and balance readings excluded nearly all the data
+there is. What invalidates a Run as a measurement is **context divergence** — completing
+a beat with materially more resources, kit or progression than the beat calls for — not
+the fact that a dev tool was touched.
+
+The rules that replace the exclusion:
+
+- **A Run's context is stamped, not guessed.** A Run launched through an F12 beat
+  (optionally with a loadout configuration) starts context-exact by construction — the
+  checkpoint *is* the context-constraint button, and testing snippets without re-earning
+  progression is its purpose. The log records which beat and configuration.
+- **Dev commands split into context-preserving and context-breaking.** Loading a beat,
+  the live reset, and read-only overlays preserve context. Granting salvage, swapping
+  loadout mid-Run, invulnerability, clearing gatekeepers, and refills **break** it; the
+  first such command marks the Run's data context-broken in the log, and a
+  context-broken Run is what "dev-tainted" now means for data.
+- **Measurements segment by stamp.** Playthrough-derived bounds (kill rate, reload
+  cadence, miss rate) read dev-assisted context-exact Runs freely and group them by
+  beat + configuration — like-for-like — while context-broken stretches are dropped.
+- Unchanged: taint still suppresses saving, a gate close still states what it rode on,
+  and "is this fun" is still decided by playing, not by the numbers.
+
 ## Locked — the save refuses what it cannot honestly read (Zo, 2026-08-21)
 
 From save version 13, a document written by an older build **does not load**. The game says

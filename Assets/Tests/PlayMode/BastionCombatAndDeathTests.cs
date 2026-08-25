@@ -51,11 +51,11 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator Firing_DamagesAnEnemy_WhenWeaponOwned_AndNoWeaponBehaviourIsStated()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Bastion);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
 
             using (var logs = new PlayTestUtil.ErrorLogCapture())
             {
-                yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
+                yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
                 yield return PlayTestUtil.WaitUntil(
                     () =>
                     {
@@ -170,11 +170,11 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator SlotClip_SurvivesSwitchAwayAndBack()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Bastion);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
 
             using (var logs = new PlayTestUtil.ErrorLogCapture())
             {
-                yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
+                yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
                 yield return PlayTestUtil.WaitUntil(
                     () =>
                     {
@@ -246,20 +246,20 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator PlayerDeath_LoseScreen_ReturnToShip_NeverThrowsAndReachesTheShip()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Bastion);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
 
             // Not a skip: if Bastion is playable but Ship is not registered, the ONLY exit from
             // the lose screen throws and the player is stranded. That is the shipped bug.
             Assert.IsTrue(PlayTestUtil.IsSceneInBuild(SceneFlow.ShipCoop),
                 $"DEAD END: scene '{SceneFlow.ShipCoop}' is not in Build Settings (registered: " +
-                $"{PlayTestUtil.RegisteredScenes()}), but GameController.ReturnToShip() -> SceneFlow.LoadShip() " +
+                $"{PlayTestUtil.RegisteredScenes()}), but GameController.ReturnToShip() -> SceneFlow.LoadShipCoop() " +
                 "is the lose screen's only exit. Pressing RETURN TO SHIP would throw and strand the player. " +
                 "Register all four flow scenes (GatekeepersProtocol/Build/All Scenes).");
 
             using (var logs = new PlayTestUtil.ErrorLogCapture())
             {
                 // ---- enter the Bastion ----
-                yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
+                yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
                 yield return PlayTestUtil.WaitUntil(
                     () =>
                     {

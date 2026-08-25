@@ -150,3 +150,30 @@ the same trap.
 ## Depends on / Unblocks
 
 Independent. M81's Mixamo path is accepted and is not this clip's source.
+
+## Correction — 2026-08-24
+
+No flinch was visible in play (Range, multiple sessions) while `HitReactTests`
+stayed green — that suite greps disk and cannot see motion. Everything it pins
+was in fact correct: layer weight 1 Additive with the mask, Any State → Flinch
+on the HitReact layer's own state machine, the clip's muscle bindings, frame 0
+all-neutral with the peak at 0.06s, and the `SetTrigger` hook live (the same
+handler visibly provokes on being shot).
+
+Root cause: the clip's additive reference pose was left implicit
+(`m_HasAdditiveReferencePose: 0`). For an editor-authored `.anim` on an
+additive layer that reference does not resolve the way the docs read for
+imported clips, and the humanoid muscle delta never applied — the layer was
+structurally perfect and a runtime no-op, which is why amplifying the peaks
+changed nothing. Fix: pin the reference explicitly to the clip's own frame 0
+(`m_HasAdditiveReferencePose: 1`, `m_AdditiveReferencePoseClip` = itself,
+time 0) in `Anim_flinch.anim`, and author the same in
+`SceneBuilder.EnsureHitReactLayer` — which now also patches an existing clip
+missing the flag, so a stale asset converges instead of keeping the defect.
+
+New gate: `HitReactMotionTests` (PlayMode) instantiates the shipped prefab,
+fires `HitReact`, and asserts the Head/Chest bone swings more than 2° over the
+measured idle noise within 0.25s. That is a criterion an unchanged build
+fails; the grep suite alone may no longer close a motion claim here. Eyes-on
+in a live Range session remains the final confirmation and has not happened
+since this fix.

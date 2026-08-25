@@ -111,7 +111,7 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator ZoneTwo_RefusesTheBank_RunsOneComposite_ThenTheFallenBankWritesTheGate()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Bastion);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
 
             int zone = CompositeZone;
             Assert.Greater(zone, 0,
@@ -256,7 +256,7 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator ZoneTwo_SurvivingTheBankWindow_OpensTheDoor_AndLeavesTheGateShut()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Bastion);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
 
             int zone = CompositeZone;
             Assert.Greater(zone, 0, "DemoZones authors no composite zone.");
@@ -320,7 +320,7 @@ namespace GatekeepersProtocol.PlayTests
             // make the composite below unreadable. This beat is a plain embark.
             GameSession.PendingStartWave = 1;
 
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
             yield return PlayTestUtil.WaitUntil(
                 () =>
                 {

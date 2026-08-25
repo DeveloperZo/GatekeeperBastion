@@ -39,8 +39,8 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator ShipScene_HasPlayerRig_PromptHud_AndThreeReachableStations()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
 
             // ---- player rig ----
             yield return PlayTestUtil.WaitUntil(() => PlayerRegistry.Local != null, 5f);
@@ -146,13 +146,13 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator ShipScene_WalkMode_LocksTheCursor_OtherwiseInteractorIsDeadCode()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
 
             bool lockSupported = false;
             yield return PlayTestUtil.ProbeCursorLockSupport(supported => lockSupported = supported);
             // The probe left the cursor FREE on purpose: whatever locks it now is the scene.
 
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
             yield return PlayTestUtil.WaitUntil(() => Cursor.lockState == CursorLockMode.Locked, 3f);
 
             if (Cursor.lockState == CursorLockMode.Locked) yield break; // contract satisfied
@@ -178,8 +178,8 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator ShipScene_Interact_AtConsole_OpensThatStationPanel()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
             yield return PlayTestUtil.WaitUntil(() => PlayerRegistry.Local != null, 5f);
 
             var ship = UnityEngine.Object.FindFirstObjectByType<ShipController>();
@@ -225,8 +225,8 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator ShipScene_Escape_OpensPause_WithoutArmoryPanel()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
             yield return PlayTestUtil.WaitUntil(() => PlayerRegistry.Local != null, 5f);
 
             var ship = UnityEngine.Object.FindFirstObjectByType<ShipController>();
@@ -259,7 +259,7 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator ShipScene_OpeningStationPanel_FreesTheCursor_AndClosingRelocksIt()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
 
             bool lockSupported = false;
             yield return PlayTestUtil.ProbeCursorLockSupport(supported => lockSupported = supported);
@@ -269,7 +269,7 @@ namespace GatekeepersProtocol.PlayTests
                                     "cursor free/lock transitions cannot be verified.");
             }
 
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
             yield return PlayTestUtil.WaitUntil(() => Cursor.lockState == CursorLockMode.Locked, 3f);
 
             var armories = PlayTestUtil.FindAll<ArmoryStation>();
@@ -311,8 +311,8 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator StationLabels_AreReadableFromThePlayerSide_NotMirrored()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
             // Give any runtime billboard component a few Update/LateUpdate passes to orient itself.
             yield return PlayTestUtil.Frames(5);
 
@@ -412,8 +412,11 @@ namespace GatekeepersProtocol.PlayTests
             const float standOff = 2.5f;
             const float eyeHeight = 1.7f;
 
+            // Eye height is measured from the console's OWN deck, not from world zero: the ship
+            // is two decks, and a world-space 1.7 m stands the probe under deck 2's floor, where
+            // every ray at a deck-2 console hits that floor before the console.
             Vector3 origin = new Vector3(t.position.x, 0f, t.position.z) + t.forward * standOff;
-            origin.y = eyeHeight;
+            origin.y = t.position.y + eyeHeight;
             Vector3 target = bounds.center;
             Vector3 dir = target - origin;
             float distance = dir.magnitude;

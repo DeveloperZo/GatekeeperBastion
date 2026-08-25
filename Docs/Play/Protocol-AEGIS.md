@@ -1,4 +1,4 @@
-<!-- Purpose: Coming Soon marker for the AEGIS Protocol. / Status: teaser; the sheet is designed and not yet claimable. / in_build: true / Update trigger: replace this page when AEGIS ships. / Last updated: 2026-08-24 -->
+<!-- Purpose: Coming Soon marker for the AEGIS Protocol. / Status: teaser; the sheet is designed and not yet claimable. / in_build: true / coming_soon: true / Update trigger: replace this page when AEGIS ships. / Last updated: 2026-08-24 -->
 
 # AEGIS — Coming Soon
 

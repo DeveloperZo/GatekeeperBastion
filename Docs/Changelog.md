@@ -8,6 +8,57 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-24
 -->
 
+- 2026-08-24: **The stair check learns the thing that actually breaks a stair.**
+  `StairwellGeometryTests` verified a ramp and its landing were consistent with each
+  other and with the two storeys — and passed a stair whose climb ended in solid
+  ceiling, because the deck-2 well opening is a separate fact it never read. R10's
+  stair was turned 180° and moved ~8 m north (a needed authoring fix); the punched
+  opening stayed behind at z ≤ 77.23 while the climb now tops out at z 79.07, inside
+  `Gen_FloorWell_N`. The test now reads the upper room's active floor colliders —
+  tiles are visual only, the slabs are the floor — and fails when the head sits under
+  one, naming the slab and its span. It also stopped assuming which end of the ramp
+  is the top: the head is whichever end is higher, so a flipped ramp is still read
+  correctly. This is a PlayMode `BastionCoopStairWalkTests` failure (a
+  CharacterController that cannot reach storey one) now reproduced offline in 91 ms.
+  The scene defect was real and is now closed: the fit pass was re-run on the stair's
+  current pose, and R10's opening is once again the same shape as R1's and R6's — same
+  x span, same 0.30 m clearance past the head. All three stairs pass.
+- 2026-08-24: **The win leg is walked end to end — both exits of a Run now have journeys.**
+  `BastionCoopChainPlayModeTests.MasterControl_WinsTheRun_BanksThePot_AndShipsHome`
+  drives the real `Bastion_Coop` from the Master pull through all five Terminal Waves,
+  the automatic roll into the Hatch half, and the survived finale window, then asserts
+  Escaped, the full pot dump (nothing stranded unbanked, the clean exit recorded), and
+  RETURN landing in `Ship - CoOp` with the pot intact — the mirror of the death
+  journey in `BastionCombatAndDeathTests`, so a green suite now means a Run can be
+  both won and lost through the real scenes. One rule learned the hard way and now
+  written into the test: a Hatch window is SURVIVED, not kill-cleared —
+  `NotifyAssaultCleared` is refused while its timer runs, so the drive strips the
+  bodies and lets the window expire (the first draft kill-cleared it and the run
+  ended `lost cause=hatch`). Verified: run summary `result=stripped cause=cleared`,
+  1500 banked, ship reached.
+- 2026-08-24: **Closet wiring, and the HUD's visibility matrix in one place.**
+  `Tests/EditMode/Bastion/BastionSpawnClosetTests` pins spawn-closet wiring from scene
+  YAML against the coop sketch: one `S_<id>` per mark, serialized minSeats mirroring
+  the `:n` suffix, and a structural start-state rule with no hardcoded id list — a
+  closet is inactive exactly when one unlocker owns it (a door's sealedSpawns or the
+  master terminal's unlockedSpawns), active exactly when none does, and every
+  live-at-start closet sits in a room reachable with the gates shut. (It first carried
+  a reduced pin for the solo `Bastion.unity`, whose closets sat inside prefab instances
+  YAML cannot resolve into; that scene was retired the same day and the pin moved to
+  the co-op hull.) `Tests/EditMode/Ui/HudVisibilityMatrixTests`
+  aggregates the basic what-shows-together checks: BastionHudView's mode calls driven
+  on a reflection rig under an inactive root — fight chrome raises every corner card
+  plus the protocol bar and crosshair, HideChrome drops all of it, end/emergency swap
+  the chrome and open the drawer, the shortcut panel rides the drawer, and slot
+  content follows the running/cooling tells. The load-bearing rule — protocol bar
+  and line are ALWAYS visible with the fight HUD; an empty loadout changes their
+  content, never their visibility — is pinned twice: in the matrix, and in
+  `ProtocolHudSourceTests` so the offline harness keeps it (the matrix needs Unity).
+  Wave pacing was audited rather than re-covered: the curve, composition rows, sum
+  invariant and stat lines are already pinned; the one gap is WaveSpawner's group
+  delivery contract (one group per interval, cap-hold, overshoot discard), which
+  needs a seam before it can be tested deterministically. All proven by seeded
+  violations; offline suite 695/8 after.
 - 2026-08-24: **Mission contiguity is now a test the sketch documents answer to.**
   `Tests/EditMode/Bastion/BastionMissionProgressionTests` parses BOTH committed layout
   files from disk (the first tests to do so — a syntax error in either now fails the
@@ -17,9 +68,10 @@ Last updated: 2026-08-24
   reachable set (a gallery or stair bypassing D1–D3 fails here), the control room
   stays sealed until the control door and holds the M mark, and with the level fully
   open the control room and every spawn closet reach the hatch room where the final
-  hatch wave is fought. Scene-binding halves pin `Bastion.unity` and
-  `Bastion_Coop.unity` to the sketch: every `T_*` terminal present, every `D_*` door
-  locked with exactly the sketch's `unlock=` wiring, exactly one control door.
+  hatch wave is fought. A scene-binding half pins the emitted hull to the sketch:
+  every `T_*` terminal present, every `D_*` door locked with exactly the sketch's
+  `unlock=` wiring, exactly one control door. (Written against both hulls; the solo
+  `Bastion.unity` was retired the same day and its half went with it.)
   Proven against three seeded violations (progression deadlock, D1 bypass passage,
   unlock-wiring drift) — each caught by name. Adjacency is read from footprints via
   `BastionKit`, so the checks run offline; 685/11 offline after.

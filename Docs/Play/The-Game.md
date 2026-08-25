@@ -99,4 +99,4 @@ The first weapon is free, and it is still bought at the ARMORY.
 
 ## See also
 
-[A Run](A-Run.md). [Gatekeepers](Gatekeepers.md). [The Ship](The-Ship.md). [Weapons](Weapons.md). [Realms](Realms.md). [Getting Started](Getting-Started.md). Numbers: [Field Manual](Field-Manual.md).
+[A Run](A-Run.md). [Gatekeepers](Gatekeepers.md). [The Ship](The-Ship.md). [Weapons](Weapons.md). [Realms](Realms.md). [First Time Out](Getting-Started.md). Numbers: [Field Manual](Field-Manual.md).

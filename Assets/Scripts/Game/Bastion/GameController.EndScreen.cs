@@ -80,6 +80,7 @@ namespace GatekeepersProtocol.Game
                 Log.Event("Run", $"RUN OVER after {Sim.RunElapsed:0}s on wave {Sim.CurrentWaveIndex} — " +
                     $"gross {r.grossEarned}, repair {r.repairSpent}, net {net}, banked now {Meta.BankedSalvage}");
             }
+            LogRunMetric(ResultWord(phase), r.cause, r.grossEarned, r.repairSpent);
             GameSession.Save();
             // A run end is the other moment the record moves (clean exit, lost run, a deeper
             // wave). Push before the end screen so a guest's ship shows the realm it just
@@ -88,6 +89,55 @@ namespace GatekeepersProtocol.Game
 
             if (_net != null && _net.Mirror != null)
                 _net.Mirror.ServerShowEnd(BuildEndSummary(phase, r, net));
+        }
+
+        static string ResultWord(RunPhase phase) =>
+            phase == RunPhase.Escaped ? "stripped"
+            : phase == RunPhase.Returned ? "docked"
+            : "lost";
+
+        /// <summary>The Run's machine-readable summary — one Metric line beside the prose,
+        /// read by Docs/dashboard.html and Tools/wave-report (schema in
+        /// Docs/Design/4-Data.md, wave-report section). Facts only, no judgements: which
+        /// rows count as clean play data is the reader's arithmetic, per the standing
+        /// the-log-carries-events decision. Kills and deaths are likewise NOT summed here —
+        /// the per-kill and death event lines already carry them.</summary>
+        void LogRunMetric(string result, string cause, long gross, long repair)
+        {
+            long net = gross - repair;
+            long banked = Meta != null ? Meta.BankedSalvage : 0;
+            string scene = SceneFlow.CombatDisplayName.Replace(' ', '_');
+            Log.Metric("Run", "summary schema=1"
+                + " result=" + result
+                + " cause=" + (string.IsNullOrEmpty(cause) ? "none" : cause)
+                + " wave=" + Sim.CurrentWaveIndex
+                + " startWave=" + Sim.StartWave
+                + $" duration={Sim.RunElapsed:0}"
+                + " gross=" + gross
+                + " repair=" + repair
+                + " net=" + net
+                + " banked=" + banked
+                + " respawns=" + Sim.RespawnsTaken
+                + " seats=" + Sim.PlayerCount
+                + " dial=" + Sim.Siphon.Level
+                + " checkpoint=" + GameSession.CheckpointBeat
+                + " config=" + GameSession.CheckpointConfig
+                + " configTaint=" + (GameSession.CheckpointConfigTaint ? 1 : 0)
+                + " dev=" + (GameSession.DevTainted ? 1 : 0)
+                + " scene=" + scene
+                + " seed=" + Sim.Seed);
+        }
+
+        /// <summary>A live Run left without a terminal phase — quit to menu, a mid-run scene
+        /// load, or closing the player. Called from OnDestroy; guests skip it (the host owns
+        /// the run and writes the real summary).</summary>
+        void LogAbandonMetricIfLiveRun()
+        {
+            if (Sim == null || Sim.Phase != RunPhase.Tethered) return;
+            if (_net != null && _net.IsClientOnly) return;
+            // Live figures, NOT LastRunReport — that still holds the previous run's numbers
+            // until a terminal phase writes this one's.
+            LogRunMetric("abandoned", "abandoned", Sim.Salvage.RunSalvage, Sim.RepairSalvageSpent);
         }
 
         EndSummary BuildEndSummary(RunPhase phase, RunReport r, long net)
@@ -145,7 +195,7 @@ namespace GatekeepersProtocol.Game
                 _watchdogFired = true;
                 Log.Warn(Tag, $"End-screen watchdog ({Sim.Phase}): {LoseScreenWatchdogSeconds:0}s with no input. " +
                               $"cursor={Cursor.lockState}/visible={Cursor.visible}, " +
-                              $"shipLoadable={SceneFlow.CanLoad(SceneFlow.Ship)}. " +
+                              $"shipLoadable={SceneFlow.CanLoad(SceneFlow.ShipCoop)}. " +
                               "Press ENTER to return to ship.");
             }
         }

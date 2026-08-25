@@ -776,10 +776,11 @@ body.drag {
       </div>
     </details>
     <div class="picker" id="cohorts" style="margin-top:8px">
-      <label class="btn"><input type="checkbox" id="c_playmode" checked> Include PlayMode</label>
+      <label class="btn"><input type="checkbox" id="c_playmode"> Include PlayMode</label>
       <label class="btn"><input type="checkbox" id="c_short" checked> Include short</label>
-      <label class="btn"><input type="checkbox" id="c_devcharts" checked> Dev in charts</label>
-      <span class="hint">Corpus is small — labeled, not dropped. Uncheck to hide a cohort.</span>
+      <label class="btn"><input type="checkbox" id="c_devcharts" checked> Dev/cfg in charts</label>
+      <span class="hint">PlayMode is harness churn, off by default (2026-08-24: 19 of 28 files were
+        harness carrying ~550 synthetic Runs). Everything kept is labeled, never silently dropped.</span>
     </div>
     <div id="status">Waiting for logs.</div>
   </div>
@@ -874,6 +875,70 @@ body.drag {
           </table>
         </div>
       </details>
+    </section>
+
+    <section>
+      <h2>How do Runs end, and what does dying cost?</h2>
+      <p class="hint">Feeds the respawn price curve (Design/4-Data.md, Respawns) and the
+        three-death pacing question. Reads the run-summary Metric line where one exists;
+        older logs fall back to the prose end lines.</p>
+      <div class="duo">
+        <div class="panel-card">
+          <h3>How Runs end</h3>
+          <div class="hbars" id="endBars"></div>
+          <p class="caption" id="endCaption"></p>
+        </div>
+        <div class="panel-card">
+          <h3>Who lands the kill</h3>
+          <div class="hbars" id="killerBars"></div>
+          <p class="caption" id="killerCaption"></p>
+        </div>
+      </div>
+      <details class="panel" style="margin-top:12px">
+        <summary>Deaths and respawns per Run</summary>
+        <div class="body">
+          <table>
+            <thead>
+              <tr>
+                <th>Log</th><th class="num">#</th>
+                <th>End</th><th>Killer</th>
+                <th class="num">Deaths</th>
+                <th class="num">Respawns</th>
+                <th class="num">Respawn spend</th>
+                <th class="num">Seats</th>
+                <th class="num">Dial</th>
+                <th>Checkpoint</th>
+              </tr>
+            </thead>
+            <tbody id="endRows"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <section>
+      <h2>Checkpoint configurations</h2>
+      <p class="hint">Every (beat, config) cell the sample has Runs for. The game stamps each
+        Run's verdict at load time (beat-relative rule — a config is valid once its beat could
+        have earned it; <code>GameController.CheckpointConfigTainted</code>). Override a cell
+        here to retune without recompiling: overrides live in this browser, apply on the spot,
+        and re-classify those Runs across every panel above.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Cell</th>
+            <th class="num">Runs</th>
+            <th>Game verdict</th>
+            <th>Override</th>
+            <th>Counting as</th>
+          </tr>
+        </thead>
+        <tbody id="cfgCells"></tbody>
+      </table>
+      <p class="caption" id="cfgCaption"></p>
+      <div class="picker" style="margin-top:8px">
+        <button type="button" class="btn" id="cfgClear">Clear overrides</button>
+      </div>
     </section>
 
     <section>
@@ -1033,10 +1098,25 @@ body.drag {
       ARRIVAL_WEIGHT: num('t_ARRIVAL_WEIGHT', 1),
       CLUSTER_MS: num('t_CLUSTER_MS', 100),
       EFFICIENCY_SCALE: num('t_EFFICIENCY_SCALE', 1),
-      INCLUDE_PLAYMODE: chk('c_playmode', true),
+      INCLUDE_PLAYMODE: chk('c_playmode', false),
       INCLUDE_SHORT: chk('c_short', true),
       DEV_IN_CHARTS: chk('c_devcharts', true)
     };
+  }
+
+  // Per-cell (beat, config) taint overrides — the tuning surface for the beat-relative
+  // rule. Browser-local, applied at finalize over the game's own verdicts; "rule" means
+  // no override. Cleared as one key.
+  var CFG_OV_KEY = 'gkb_cfg_taint_overrides_v1';
+  function cfgOverrides() {
+    try { return JSON.parse(localStorage.getItem(CFG_OV_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function setCfgOverride(cell, mode) {
+    var ov = cfgOverrides();
+    if (mode === 'rule') delete ov[cell];
+    else ov[cell] = mode;
+    try { localStorage.setItem(CFG_OV_KEY, JSON.stringify(ov)); } catch (e) {}
   }
 
   function chk(id, fallback) {
@@ -1337,7 +1417,13 @@ body.drag {
         juiceSpent: 0,
         hatchBanks: 0,
         netSeen: false,
-        protocolSeen: false
+        protocolSeen: false,
+        deaths: 0,
+        respawns: 0,
+        respawnSpend: 0,
+        killer: '',
+        metric: null,
+        configTaint: false
       };
       runs.push(run);
     }
@@ -1386,6 +1472,22 @@ body.drag {
 
       if (tagL === 'run' && /^pulled the siphon draw/i.test(msg)) {
         run.sawDraw = true;
+        continue;
+      }
+
+      // Machine summary (schema 1) — one line per Run end, facts only. When present it is
+      // authoritative for result/cause and carries what the prose never did: respawns,
+      // seats, dial, checkpoint provenance and the config-taint flag.
+      if (tagL === 'run' && /^summary schema=/i.test(msg)) {
+        var metric = {};
+        msg.split(/\s+/).forEach(function (tok) {
+          var eq = tok.indexOf('=');
+          if (eq <= 0) return;
+          var v = tok.slice(eq + 1);
+          metric[tok.slice(0, eq)] = /^-?\d+$/.test(v) ? parseInt(v, 10) : v;
+        });
+        run.metric = metric;
+        if (metric.configTaint === 1) run.configTaint = true;
         continue;
       }
 
@@ -1439,7 +1541,7 @@ body.drag {
           continue;
         }
 
-        if (/^RUN OVER/i.test(msg) || /^BASTION STRIPPED/i.test(msg)) {
+        if (/^RUN OVER/i.test(msg) || /^BASTION STRIPPED/i.test(msg) || /^DOCKED\b/i.test(msg)) {
           var lost = /^RUN OVER/i.test(msg);
           if (run.current && run.current.open) closeSeg(t, lost, null);
           var endSal = parseEndSalvage(msg);
@@ -1493,8 +1595,22 @@ body.drag {
         continue;
       }
 
+      if (tagL === 'player' && /^YOU DIED/i.test(msg)) {
+        run.deaths++;
+        var km = /killed by ([a-z]+)/i.exec(msg);
+        if (km) run.killer = km[1].toLowerCase();
+        continue;
+      }
+
       if (tagL === 'player' && PLAYER_DMG.test(msg)) {
         run.playerDamageHits++;
+        continue;
+      }
+
+      if (tagL === 'runsim' && /^respawn taken/i.test(msg)) {
+        run.respawns++;
+        var rcost = /cost=(\d+)/i.exec(msg);
+        if (rcost) run.respawnSpend += parseInt(rcost[1], 10);
         continue;
       }
 
@@ -1525,6 +1641,7 @@ body.drag {
       if (playMode) r.playMode = true;
       r.segments.forEach(function (s) {
         s.dev = r.dev || s.dev;
+        s.cfg = r.configTaint;
         s.seconds = Math.max(0, s.endSec - s.startSec);
         s.meanLive = s.seconds > 0 ? s.integral / s.seconds : 0;
         s.meanLife = (s.bodies > 0 && s.seconds > 0)
@@ -1579,13 +1696,26 @@ body.drag {
   }
 
   function finalize(allRuns, T) {
-    var exclPlay = 0, exclShort = 0, labeledDev = 0;
+    var exclPlay = 0, exclShort = 0, labeledDev = 0, labeledCfg = 0;
+    var OV = cfgOverrides();
     var kept = [];
     allRuns.forEach(function (r) {
+      // The game's parse-time verdict is the immutable base; the effective verdict is
+      // recomputed from it every finalize so overrides apply and un-apply cleanly
+      // across re-renders of the same cached parse.
+      if (r.configTaintRule === undefined) r.configTaintRule = r.configTaint;
+      r.cfgCell = (r.metric && r.metric.checkpoint > 0)
+        ? 'b' + r.metric.checkpoint + 'c' + (r.metric.config || 0) : null;
+      r.cfgOverride = (r.cfgCell && OV[r.cfgCell]) || null;
+      r.configTaint = r.cfgOverride === 'clean' ? false
+        : r.cfgOverride === 'tainted' ? true
+        : r.configTaintRule;
+
       var isShort = r.duration < T.MIN_RUN_SEC;
       if (r.playMode) exclPlay++;
       else if (isShort) exclShort++;
       if (r.dev) labeledDev++;
+      if (r.configTaint) labeledCfg++;
       r.cohort = r.playMode ? 'playmode' : (isShort ? 'short' : 'session');
       if (r.playMode && !T.INCLUDE_PLAYMODE) return;
       if (isShort && !T.INCLUDE_SHORT) return;
@@ -1615,6 +1745,7 @@ body.drag {
           hatch: s.hatch || '',
           lost: s.lost,
           dev: s.dev,
+          cfg: r.configTaint,
           parseFailed: s.parseFailed
         });
       });
@@ -1720,6 +1851,7 @@ body.drag {
         playmode: exclPlay,
         short: exclShort,
         dev: labeledDev,
+        cfg: labeledCfg,
         shortRule: 'duration < ' + T.MIN_RUN_SEC + 's'
       },
       runs: kept,
@@ -1772,6 +1904,12 @@ body.drag {
 
   function abilityDead(r) {
     return r.abilityCredit === 0 && r.totalKills >= 20;
+  }
+
+  // Beat digits are keyed A.. in the F12/F11 prompt; the letter is the key cap.
+  function beatLetter(digit) {
+    if (digit < 1 || digit > 26) return String(digit);
+    return String.fromCharCode(64 + digit);
   }
 
   function buildFindings(D, runs, fileCount) {
@@ -1952,7 +2090,9 @@ body.drag {
     var segs = D.segments;
     var cleanSegs = segs.filter(function (s) {
       if (s.parseFailed) return false;
-      if (s.dev && !(D.tunables && D.tunables.DEV_IN_CHARTS)) return false;
+      // Config-tainted Runs (a checkpoint loadout row marked tainted at the source) ride
+      // the same chart gate as Dev: labeled always, charted only while the toggle says so.
+      if ((s.dev || s.cfg) && !(D.tunables && D.tunables.DEV_IN_CHARTS)) return false;
       return true;
     });
     var lostRuns = runs.filter(function (r) { return r.outcome === 'lost'; }).length;
@@ -1963,6 +2103,7 @@ body.drag {
       '<span class="chip lost"><span class="v">' + lostRuns + '</span><span class="k">lost</span></span>' +
       '<span class="chip muted"><span class="v">' + labeled + '</span><span class="k">labeled playmode/short</span></span>' +
       '<span class="chip muted"><span class="v">' + (ex.dev || 0) + '</span><span class="k">dev</span></span>' +
+      '<span class="chip muted"><span class="v">' + (ex.cfg || 0) + '</span><span class="k">cfg-taint</span></span>' +
       '<span class="chip muted"><span class="v">' + cleanSegs.length + '</span><span class="k">chart segs</span></span>' +
       '<span class="chip muted"><span class="v">' + fileCount + '</span><span class="k">files</span></span>' +
       '<span class="chip muted"><span class="k">' + esc(ex.shortRule) +
@@ -2137,6 +2278,110 @@ body.drag {
         '<td class="num">' + esc(r.lastHatchAtClear || '\u2014') + '</td>' +
         '<td class="flags">' + (breached ? 'yes' : '') + '</td></tr>';
     }).join('') || '<tr><td colspan="6" class="empty">No kept Runs.</td></tr>';
+
+    // How Runs end, and what dying costs — Metric line first, prose fallback for old logs
+    var endCounts = {}, killerCounts = {};
+    var respawnsTotal = 0, respawnSpendTotal = 0, deathsTotal = 0;
+    function runEndLabel(r) {
+      if (r.metric && r.metric.result) {
+        if (r.metric.result === 'lost')
+          return 'lost — ' + (r.metric.cause || 'unknown');
+        return r.metric.result;
+      }
+      return r.outcome === 'lost' ? 'lost' : (r.closed ? 'survived' : 'unfinished');
+    }
+    ordered.forEach(function (r) {
+      var end = runEndLabel(r);
+      endCounts[end] = (endCounts[end] || 0) + 1;
+      if (r.killer) killerCounts[r.killer] = (killerCounts[r.killer] || 0) + 1;
+      deathsTotal += r.deaths;
+      respawnsTotal += r.respawns;
+      respawnSpendTotal += r.respawnSpend;
+    });
+    var endKeys = Object.keys(endCounts).sort(function (a, b) { return endCounts[b] - endCounts[a]; });
+    document.getElementById('endBars').innerHTML = endKeys.map(function (k) {
+      return hbarHtml(k + ' ×' + endCounts[k], endCounts[k] / Math.max(1, ordered.length),
+        endCounts[k] + ' of ' + ordered.length + ' Runs');
+    }).join('') || '<p class="hint">No kept Runs.</p>';
+    document.getElementById('endCaption').textContent = ordered.length
+      ? deathsTotal + ' death(s), ' + respawnsTotal + ' respawn(s), ' + respawnSpendTotal +
+        ' Salvage on respawns across ' + ordered.length + ' kept Run(s).'
+      : '';
+    var killerKeys = Object.keys(killerCounts).sort(function (a, b) { return killerCounts[b] - killerCounts[a]; });
+    var killerN = 0;
+    killerKeys.forEach(function (k) { killerN += killerCounts[k]; });
+    document.getElementById('killerBars').innerHTML = killerKeys.map(function (k) {
+      return hbarHtml(k + ' ×' + killerCounts[k], killerCounts[k] / Math.max(1, killerN),
+        killerCounts[k] + ' of ' + killerN + ' attributed deaths');
+    }).join('') || '<p class="hint">No attributed deaths in the sample.</p>';
+    document.getElementById('killerCaption').textContent = killerKeys.length
+      ? 'Last-blow kind from the death line. “unknown” means the log could not say — that is a defect, not a kind.'
+      : '';
+    document.getElementById('endRows').innerHTML = ordered.map(function (r) {
+      var m = r.metric;
+      var cpCell = '—';
+      if (m && m.checkpoint > 0) {
+        cpCell = 'beat ' + beatLetter(m.checkpoint);
+        if (m.config > 0) cpCell += ' cfg ' + m.config;
+        if (r.configTaint) cpCell += ' (tainted)';
+        if (r.cfgOverride) cpCell += ' [override]';
+      }
+      return '<tr class="' + (r.outcome === 'lost' ? 'lost' : '') + ((r.dev || r.configTaint) ? ' dev' : '') + '">' +
+        '<td class="file">' + esc(shortFile(r.file)) + '</td>' +
+        '<td class="num">' + r.index + '</td>' +
+        '<td>' + esc(runEndLabel(r)) + '</td>' +
+        '<td>' + esc(r.killer || '—') + '</td>' +
+        '<td class="num">' + r.deaths + '</td>' +
+        '<td class="num">' + r.respawns + '</td>' +
+        '<td class="num">' + (r.respawnSpend || 0) + '</td>' +
+        '<td class="num">' + (m && m.seats != null ? m.seats : '—') + '</td>' +
+        '<td class="num">' + (m && m.dial != null ? m.dial : (r.intensity != null ? r.intensity : '—')) + '</td>' +
+        '<td>' + esc(cpCell) + '</td></tr>';
+    }).join('') || '<tr><td colspan="10" class="empty">No kept Runs.</td></tr>';
+
+    // Checkpoint configuration cells — observed (beat, config) pairs, the game's
+    // verdicts, and the per-cell override that retunes them from this page.
+    var cellMap = {};
+    ordered.forEach(function (r) {
+      if (!r.cfgCell) return;
+      var c = cellMap[r.cfgCell];
+      if (!c) {
+        c = cellMap[r.cfgCell] = {
+          cell: r.cfgCell,
+          beat: r.metric.checkpoint,
+          config: r.metric.config || 0,
+          runs: 0, ruleTainted: 0, ruleClean: 0,
+          override: r.cfgOverride, effTainted: r.configTaint
+        };
+      }
+      c.runs++;
+      if (r.configTaintRule) c.ruleTainted++; else c.ruleClean++;
+    });
+    var cellKeys = Object.keys(cellMap).sort();
+    var anyMixed = false;
+    document.getElementById('cfgCells').innerHTML = cellKeys.map(function (k) {
+      var c = cellMap[k];
+      var mixed = c.ruleTainted > 0 && c.ruleClean > 0;
+      if (mixed) anyMixed = true;
+      var verdict = mixed
+        ? 'mixed — ' + c.ruleTainted + ' tainted / ' + c.ruleClean + ' clean'
+        : (c.ruleTainted > 0 ? 'tainted' : 'clean');
+      var sel = '<select class="cfg-ov" data-cell="' + esc(c.cell) + '">' +
+        '<option value="rule"' + (!c.override ? ' selected' : '') + '>game rule</option>' +
+        '<option value="clean"' + (c.override === 'clean' ? ' selected' : '') + '>clean</option>' +
+        '<option value="tainted"' + (c.override === 'tainted' ? ' selected' : '') + '>tainted</option>' +
+        '</select>';
+      return '<tr class="' + (c.effTainted ? 'dev' : '') + '">' +
+        '<td>beat ' + esc(beatLetter(c.beat)) +
+          (c.config > 0 ? ' · config ' + c.config : ' · as authored') + '</td>' +
+        '<td class="num">' + c.runs + '</td>' +
+        '<td>' + verdict + '</td>' +
+        '<td>' + sel + '</td>' +
+        '<td>' + (c.effTainted ? 'tainted' : 'clean') + '</td></tr>';
+    }).join('') || '<tr><td colspan="5" class="empty">No checkpoint Runs in the sample yet — play one through F12/F11.</td></tr>';
+    document.getElementById('cfgCaption').textContent =
+      (anyMixed ? 'A mixed verdict means the beat economy changed between those Runs — the game re-judges at every load. ' : '') +
+      'Overrides live in this browser only; the game’s rule is untouched.';
 
     // Ability status
     var zeroN = 0;
@@ -2324,15 +2569,15 @@ body.drag {
         '<td>' + esc(r.primary || '\u2014') + '</td>' +
         '<td class="num">' + r.segments.length + '</td>' +
         '<td class="num">' + Number(r.duration).toFixed(0) + '</td>' +
-        '<td>' + (r.dev ? 'yes' : '') + '</td>' +
+        '<td>' + (r.dev ? 'yes' : '') + (r.configTaint ? ' cfg' : '') + '</td>' +
         '<td class="' + (r.scores.ease ? 'flag-yes' : '') + '">' +
           (r.scores.ease ? 'yes' : 'no') + '</td>' +
         '<td class="outcome">' + esc(r.outcome) + '</td></tr>';
     }).join('');
 
     document.getElementById('rows').innerHTML = segs.map(function (s) {
-      var flags = (s.lost ? 'lost ' : '') + (s.dev ? 'dev ' : '') + (s.parseFailed ? 'PARSE' : '');
-      var cls = (s.dev ? 'dev ' : '') + (s.lost ? 'lost' : '');
+      var flags = (s.lost ? 'lost ' : '') + (s.dev ? 'dev ' : '') + (s.cfg ? 'cfg ' : '') + (s.parseFailed ? 'PARSE' : '');
+      var cls = ((s.dev || s.cfg) ? 'dev ' : '') + (s.lost ? 'lost' : '');
       return '<tr class="' + cls + '">' +
         '<td class="file">' + esc(shortFile(s.file)) + '</td>' +
         '<td class="num">' + s.run + '</td>' +
@@ -2356,6 +2601,7 @@ body.drag {
     status.textContent = 'Loaded ' + LAST_FILE_COUNT + ' file(s) · kept ' +
       data.runs.length + ' Run(s) · labeled playmode ' + data.exclusions.playmode +
       ', short ' + data.exclusions.short + ', dev ' + (data.exclusions.dev || 0) +
+      ', cfg-taint ' + (data.exclusions.cfg || 0) +
       ' · tunables applied.';
     render(data, LAST_FILE_COUNT);
   }
@@ -2402,6 +2648,18 @@ body.drag {
     if (!el) return;
     el.addEventListener('input', rerenderFromCache);
     el.addEventListener('change', rerenderFromCache);
+  });
+
+  // Config-taint tuning: delegated — the tbody survives re-renders, its rows do not.
+  document.getElementById('cfgCells').addEventListener('change', function (e) {
+    var t = e.target;
+    if (!t || !t.classList || !t.classList.contains('cfg-ov')) return;
+    setCfgOverride(t.getAttribute('data-cell'), t.value);
+    rerenderFromCache();
+  });
+  document.getElementById('cfgClear').addEventListener('click', function () {
+    try { localStorage.removeItem(CFG_OV_KEY); } catch (e) { }
+    rerenderFromCache();
   });
 
   document.getElementById('dir').addEventListener('change', function (e) {

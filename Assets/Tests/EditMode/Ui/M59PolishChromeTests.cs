@@ -20,7 +20,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void PauseShortcuts_AreBoundOnHudController()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion_Coop.unity"));
             Assert.IsTrue(yaml.Contains("m_Name: Pause Shortcuts"),
                 "Pause Shortcuts GO missing under Bastion pause canvas");
             var m = PauseBind.Match(yaml);
@@ -31,7 +31,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void StationCategoriesAndPreview_AreInactive()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - Demo.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - CoOp.unity"));
             AssertInactive(yaml, "Categories");
             AssertInactive(yaml, "Preview Image");
         }
@@ -39,7 +39,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void StationBackgroundBlur_AllAlphasAtLeast065()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - Demo.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - CoOp.unity"));
             var alphas = CollectNamedImageAlphas(yaml, "Background Blur");
             Assert.AreEqual(4, alphas.Count, "expected one Background Blur per station");
             for (int i = 0; i < alphas.Count; i++)
@@ -49,7 +49,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void EndScreenScrim_ImageAlphaAtLeast065()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion_Coop.unity"));
             int nameAt = yaml.IndexOf("m_Name: Scrim\n", System.StringComparison.Ordinal);
             if (nameAt < 0)
                 nameAt = yaml.IndexOf("m_Name: Scrim\r\n", System.StringComparison.Ordinal);
@@ -83,7 +83,7 @@ namespace GatekeepersProtocol.Tests
         {
             // Close is a stripped PrefabInstance. Authored gutters: top-anchored
             // Station Title → Purpose → Deal (16 each) and bottom-anchored Station Footer.
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - Demo.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - CoOp.unity"));
             string[] stations = { "ARMORY", "FABRICATION", "CREW QUARTERS", "NAV MAP" };
             for (int i = 0; i < stations.Length; i++)
             {
@@ -209,7 +209,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ShortcutTemplates_HaveFilledCooldownFill()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion_Coop.unity"));
             int templates = 0;
             int bar = 0;
             int idx = 0;
@@ -267,7 +267,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void CrewQuarters_ProtocolSheet_IsBound()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - Demo.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - CoOp.unity"));
             int sheetAt = yaml.IndexOf("m_Name: Protocol Sheet\n", System.StringComparison.Ordinal);
             if (sheetAt < 0)
                 sheetAt = yaml.IndexOf("m_Name: Protocol Sheet\r\n", System.StringComparison.Ordinal);
@@ -304,7 +304,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ProtocolLine_IsBoundOnBastionHud()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion_Coop.unity"));
             Assert.GreaterOrEqual(
                 yaml.IndexOf("m_Name: Protocol Line\n", System.StringComparison.Ordinal), 0,
                 "Protocol Line GO missing");
@@ -321,7 +321,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void RunEconomyCards_StayBoundOnPlayableBastions()
         {
-            string[] scenes = { "Assets/Scenes/Bastion.unity", "Assets/Scenes/Bastion_Coop.unity" };
+            string[] scenes = { "Assets/Scenes/Bastion_Coop.unity", "Assets/Scenes/Bastion_Coop.unity" };
             string[] fields = { "_profileRoot", "_scoreRoot", "_hatchRoot" };
             for (int i = 0; i < scenes.Length; i++)
             {
@@ -341,7 +341,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ProtocolBar_IsBoundOnBastionHud()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion_Coop.unity"));
             Assert.GreaterOrEqual(
                 yaml.IndexOf("m_Name: Protocol Bar\n", System.StringComparison.Ordinal), 0,
                 "Protocol Bar GO missing");
@@ -394,7 +394,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void HudVitals_HostStays400x150()
         {
-            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion.unity"));
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion_Coop.unity"));
             int nameAt = yaml.IndexOf("m_Name: Hud Vitals\n", System.StringComparison.Ordinal);
             if (nameAt < 0)
                 nameAt = yaml.IndexOf("m_Name: Hud Vitals\r\n", System.StringComparison.Ordinal);

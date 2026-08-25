@@ -5,7 +5,7 @@ Status: completed, Aug 2026
 Closed on: 2026-08-22 (disk / harness). Criteria 1, 3, 4 eyes-on wait on `M99`
 (`Decisions.md` 2026-08-22).
 Update trigger: never — shipped milestones are a record. Corrections only.
-Last updated: 2026-08-22
+Last updated: 2026-08-24 (correction appended)
 -->
 
 A killed Gatekeeper drops before it vanishes. The kill-confirm burst stays
@@ -138,3 +138,53 @@ future "the clone vanished instantly" report should look there first.
 Clip source follows M81's Phase 0 result. M84's co-op flinch visibility
 still rides a two-instance session; this milestone's Rpc does not carry
 the flinch.
+
+## Correction — 2026-08-24
+
+Four live plays failed on the clip as first wired, and the root cause was
+the IMPORT, not the clip: root transform channels were left as root
+motion, and with `applyRootMotion` false they were simply discarded — the
+hips dropped while the body stayed upright, the sink seen in play.
+Turning `applyRootMotion` on instead was worse: the Animator sits on the
+child `Default`, whose Hips sit metres off its origin, so root motion
+buried the mesh and kicked it into the storey above.
+
+The fix is in `Anim_death_falling_back.fbx.meta`: every root channel is
+baked into pose — orientation, Y and XZ, all Based Upon Original
+(`loopBlendOrientation/PositionY/PositionXZ: 1`,
+`keepOriginalOrientation/PositionY/PositionXZ: 1`, `loopTime: 0`) — so
+the whole fall plays in body space with zero root motion, retargeted onto
+each kind's avatar. `DeathCollapseTests` pins those import flags on disk.
+
+The death presentation now lives in `EnemyGatekeeper.Death.cs`:
+`BeginDeathPresentation` fires the `Die` trigger (agent off, colliders
+off, and a permanent AI latch — needed because a clone's local Damageable
+never takes damage, so `IsDead` guards nothing there), and a `LateUpdate`
+clamp re-plants the corpse at the death spot each frame and raises it —
+never lowers it — so the mesh rests on the walkable floor plane
+(`transform.y - baseOffset`) instead of inside the slab. A body with no
+controller (fixtures) falls back to a procedural 0.9 s board-tip under
+the same clamp. Criterion 5's Die/Death-state pin is live again exactly
+as written; an interim procedural-only presentation shipped earlier on
+this date while the import defect was undiagnosed.
+`GatekeeperDeathAnimTests` (PlayMode) is the behavioural gate. Everything
+else in this record — the burst, the Rpc carrier, ledger timing, collider
+disable — is unchanged and live.
+
+Deeper still (same date, later): the bake flags alone changed nothing,
+because the import itself had never succeeded. Unlike the attack and walk
+takes, this fbx carries the raw Mixamo skeleton (mixamorig:* — the
+"free retarget path" premise was wrong for this one file), so the
+copy-from-other-avatar rig setting failed to bind ("Transform 'root.x'
+for human bone 'Hips' not found") and no humanoid clip existed at all —
+the root of every "stood, then vanished" report back to the first play.
+The fbx now creates its own avatar with an explicit mixamorig-to-humanoid
+bone mapping written into the meta (empty mappings suppress auto-mapping
+and import a frozen clip). Two verification traps burned hours: the
+Editor keeps serving the STALE runtime clip binding after a reimport
+(states bound a 1 s null-motion default until the editor restarted), and
+SkinnedMeshRenderer bounds stay standing-shaped through an in-pose fall,
+so the PlayMode gate judges body shape on humanoid bone positions, not
+renderer bounds. The float-then-drop of the clip's airborne arc under the
+floor clamp was seen and accepted (Zo, 2026-08-24, "i kinda like it for
+now").

@@ -28,7 +28,7 @@ namespace GatekeepersProtocol.EditorTools
         const string StageSinceKey = "GKB_VERIFY_STAGE_SINCE"; // last progress (stage set / RunStarted / TestStarted)
         const string PlayKickKey = "GKB_VERIFY_PLAY_KICK";   // 0 = RunStarted; 1 = armed; -1 = Execute submitted
         const string PendingKey = "GKB_VERIFY_PENDING";      // sentinel consumed; run starts next idle tick
-        const string BastionScenePath = "Assets/Scenes/Bastion.unity";
+        const string BastionScenePath = "Assets/Scenes/Bastion_Coop.unity";
         // Measured from last progress, not from stage entry: PlayMode suites idle between tests
         // while the editor is out of play, and a 90s-from-start timer aborted live runs.
         const double StuckStageSeconds = 180.0;

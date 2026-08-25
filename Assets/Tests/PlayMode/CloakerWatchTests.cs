@@ -37,11 +37,11 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator Cloaker_StopsWhenCentred_AndWalksWhenLookedAwayFrom()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Bastion);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
 
             using (var logs = new PlayTestUtil.ErrorLogCapture())
             {
-                yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
+                yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
                 yield return PlayTestUtil.WaitUntil(
                     () =>
                     {

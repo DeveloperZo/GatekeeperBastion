@@ -112,6 +112,7 @@ public static class WaveReport
         public bool Open;
         public bool Lost;
         public bool Dev;
+        public bool ConfigTaint;
         public int? HatchAtClear;
         public int HatchMax;
         public bool ParseFailed;
@@ -139,6 +140,10 @@ public static class WaveReport
         public int Index;
         public string File;
         public bool Dev;
+        /// <summary>configTaint=1 on the run-summary Metric line: the Run was played on a
+        /// checkpoint loadout configuration marked tainted at the source
+        /// (GameController.CheckpointConfigs). Labelled like Dev, never silently dropped.</summary>
+        public bool ConfigTaint;
         public bool Closed;
         public bool SawDrawSinceWave;
         public bool HadWave;
@@ -326,6 +331,16 @@ public static class WaveReport
                 continue;
             }
 
+            // Machine summary (schema 1, 2026-08-24). Facts only; the one judgement read off
+            // it is configTaint, which labels like Dev.
+            if (tag.Equals("Run", StringComparison.OrdinalIgnoreCase)
+                && msg.StartsWith("summary schema=", StringComparison.OrdinalIgnoreCase))
+            {
+                if (msg.IndexOf("configTaint=1", StringComparison.OrdinalIgnoreCase) >= 0)
+                    run.ConfigTaint = true;
+                continue;
+            }
+
             if (tag.Equals("Run", StringComparison.OrdinalIgnoreCase))
             {
                 var wm = WaveStartRe.Match(msg);
@@ -426,7 +441,10 @@ public static class WaveReport
         {
             if (filePlayMode) r.PlayMode = true;
             foreach (var s in r.Segments)
+            {
                 s.Dev = r.Dev || s.Dev;
+                s.ConfigTaint = r.ConfigTaint || s.ConfigTaint;
+            }
         }
     }
 
@@ -731,6 +749,7 @@ public static class WaveReport
             string flags = "";
             if (s.Lost) flags += "lost";
             if (s.Dev) flags += (flags.Length > 0 ? "," : "") + "dev";
+            if (s.ConfigTaint) flags += (flags.Length > 0 ? "," : "") + "cfg";
             if (s.ParseFailed) flags += (flags.Length > 0 ? "," : "") + "PARSE";
             Console.WriteLine(string.Format(Inv,
                 "{0,-6} {1,-14} {2,6} {3,8:0.0} {4,10:0.00} {5,9} {6,10:0.00} {7,10} {8}",
@@ -794,7 +813,7 @@ public static class WaveReport
 
     static void PrintSummary(List<Segment> rows, int runCount)
     {
-        var clean = rows.Where(s => !s.Dev && !s.ParseFailed).ToList();
+        var clean = rows.Where(s => !s.Dev && !s.ConfigTaint && !s.ParseFailed).ToList();
         int cleanRuns = clean.Select(s => s.File + "#" + s.RunIndex).Distinct().Count();
         Console.WriteLine(string.Format(Inv,
             "summary across {0} file-run(s) read; {1} clean Run(s) in mean",

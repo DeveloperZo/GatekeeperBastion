@@ -27,9 +27,9 @@ The tell is the lens. What a hand notices is what its doctrine makes salient.
 
 | Hand | Lens | Entries |
 |---|---|---|
-| STOCK | sequence, counts, what happened in what order | The Game, Getting Started, A Run, Waves, Salvage, The Ship, Protocols, Protocol-Default, Gatekeeper-Default, MK-1, BR-12, Realms, Shared Realms *(CS)* |
-| PHANTOM | attention, who is looking at whom, being noticed | Gatekeepers, Hunter, Cloaker, Staying Alive, SEC-D, Protocol-VEIL, The Crew |
-| PARALLEL BAYS | load, throughput, what a thing is made of and what it takes | The Hatch, Intensity, Thief, Weapons, MR-35, PRI-C, Upgrades, Protocol-FORGE, Going Down, AEGIS *(CS)*, LEDGER *(CS)* |
+| STOCK | sequence, counts, what happened in what order | The Game, First Time Out, A Run, Waves, Salvage, The Ship, Protocols, Protocol-Default, Gatekeeper-Default, MK-1, BR-12, Realms, Shared Realms *(CS)*, The Other Currencies *(CS)*, Destinations *(CS)*, Life Aboard *(CS)* |
+| PHANTOM | attention, who is looking at whom, being noticed | Gatekeepers, Hunter, Cloaker, Staying Alive, SEC-D, Protocol-VEIL, The Crew, and the eight unshipped garrison rows *(all CS)* |
+| PARALLEL BAYS | load, throughput, what a thing is made of and what it takes | The Hatch, Intensity, Thief, Weapons, MR-35, PRI-C, The Drone, Upgrades, Protocol-FORGE, Going Down, AEGIS *(CS)*, LEDGER *(CS)*, Drone Payloads *(CS)* |
 
 Assignment is by relevance, not rotation, so the set reads as three specialists before it
 reads as three people. Each protocol sheet is written by its own hand — the one place the

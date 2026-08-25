@@ -103,6 +103,10 @@ namespace GatekeepersProtocol.PlayTests
             GameSession.EnsureLoaded();
             var hostBoarder = GameSession.Meta.Boarder;
             string hostBefore = hostBoarder.ToJson();
+            // Captured, not assumed false: a demo-active session grants the MK-1 at run
+            // start (GameController.Start), so an ambient boarder booted by an earlier
+            // fixture may legitimately own one before any guest exists.
+            bool hostOwnedMk1 = hostBoarder.Owns(WeaponId.Mk1Sidearm);
 
             // Stand a second Boarder in for the visiting player, BEFORE the run starts. In one
             // process this is the only way two Boarders can exist at once, which is what makes
@@ -129,7 +133,7 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(GameSession.UseBoarder(hostBoarder), "the host takes its seat back");
             Assert.AreEqual(hostBefore, hostBoarder.ToJson(),
                 "nothing the guest earned, spent or bought reached the host's Boarder");
-            Assert.IsFalse(hostBoarder.Owns(WeaponId.Mk1Sidearm),
+            Assert.AreEqual(hostOwnedMk1, hostBoarder.Owns(WeaponId.Mk1Sidearm),
                 "and the guest's purchase in particular did not");
         }
 

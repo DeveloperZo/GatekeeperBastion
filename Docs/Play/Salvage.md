@@ -61,7 +61,7 @@ There is no order that is correct for everyone, but there is a wrong instinct: t
 
 ## See also
 
-[The Hatch](The-Hatch.md). [Intensity](Intensity.md). [Upgrades](Upgrades.md). [Going Down](Going-Down.md). [Realms](Realms.md). [A Run](A-Run.md).
+[The Hatch](The-Hatch.md). [Intensity](Intensity.md). [Upgrades](Upgrades.md). [Going Down](Going-Down.md). [Realms](Realms.md). [The Other Currencies](Experience-And-Cores.md). [A Run](A-Run.md).
 
 ## Gaps
 

@@ -53,17 +53,27 @@ namespace GatekeepersProtocol.Tests
                 Assert.IsTrue(scene.HasBoxCollider(scene.Unique(walkName)), walkName + " has no BoxCollider");
                 Assert.IsTrue(scene.HasBoxCollider(scene.Unique(landName)), landName + " has no BoxCollider");
 
-                // The walk is a tilted box; its long axis is local +z.
+                // The walk is a tilted box whose long axis is local +z. WHICH end is the
+                // head depends on how the stair was turned, so take the higher one rather
+                // than assuming a facing — a ramp flipped 180° is still a ramp.
                 V3 axis = walk.Rot.Rotate(new V3(0, 0, 1));
                 double halfLen = walk.Scale.Z * 0.5;
-                double footY = walk.Pos.Y - Math.Abs(axis.Y) * halfLen;
-                double headY = walk.Pos.Y + Math.Abs(axis.Y) * halfLen;
+                V3 endA = new V3(
+                    walk.Pos.X + axis.X * halfLen,
+                    walk.Pos.Y + axis.Y * halfLen,
+                    walk.Pos.Z + axis.Z * halfLen);
+                V3 endB = new V3(
+                    walk.Pos.X - axis.X * halfLen,
+                    walk.Pos.Y - axis.Y * halfLen,
+                    walk.Pos.Z - axis.Z * halfLen);
+                V3 head = endA.Y >= endB.Y ? endA : endB;
+                V3 foot = endA.Y >= endB.Y ? endB : endA;
 
-                Assert.LessOrEqual(footY, lowerPos.Y - 0.8,
-                    walkName + ": foot ends at y=" + footY.ToString("0.00")
+                Assert.LessOrEqual(foot.Y, lowerPos.Y - 0.8,
+                    walkName + ": foot ends at y=" + foot.Y.ToString("0.00")
                     + " — not buried below the lower floor, so its end-cap walls off the ramp");
-                Assert.GreaterOrEqual(headY, upperPos.Y - 0.4,
-                    walkName + ": head reaches only y=" + headY.ToString("0.00")
+                Assert.GreaterOrEqual(head.Y, upperPos.Y - 0.4,
+                    walkName + ": head reaches only y=" + head.Y.ToString("0.00")
                     + " — short of the upper storey");
                 Assert.GreaterOrEqual(walk.Scale.X, 2.8, walkName + " is narrower than the capsule needs");
                 Assert.AreEqual(0.35, walk.Scale.Y, 0.05, walkName + " thickness drifted");
@@ -76,13 +86,50 @@ namespace GatekeepersProtocol.Tests
                 Assert.GreaterOrEqual(land.Scale.Z, 1.5, landName + " is too shallow to step onto");
 
                 // The landing adjoins the head of the climb rather than floating elsewhere.
-                double headX = walk.Pos.X + axis.X * halfLen;
-                double headZ = walk.Pos.Z + axis.Z * halfLen;
-                double dx = land.Pos.X - headX;
-                double dz = land.Pos.Z - headZ;
+                double dx = land.Pos.X - head.X;
+                double dz = land.Pos.Z - head.Z;
                 double gap = Math.Sqrt(dx * dx + dz * dz);
                 Assert.LessOrEqual(gap, 2.0,
                     landName + " sits " + gap.ToString("0.00") + " m from the walk's head");
+
+                // And the climb has to arrive at an OPENING. The fit pass punches the upper
+                // storey's floor into slabs around the well; the head must fall in the gap
+                // between them. A stair moved or turned without a re-punch climbs into the
+                // underside of that floor — invisible to every check above, because the walk
+                // and the landing stay perfectly consistent with each other while the hole
+                // they need stays behind. Floor tiles are visual only; the collider is the floor.
+                string upperGo = scene.UniqueUnder(RoomsParentName, upperId);
+                List<string> subtree = scene.Subtree(upperGo);
+                int solidFloors = 0;
+                for (int s = 0; s < subtree.Count; s++)
+                {
+                    string solidId = subtree[s];
+                    if (!scene.IsActive(solidId) || !scene.HasBoxCollider(solidId))
+                        continue;
+                    string solidName = scene.NameOf(solidId);
+                    if (!solidName.StartsWith("Gen_Floor", StringComparison.Ordinal))
+                        continue;
+
+                    solidFloors++;
+                    World slab = scene.WorldOf(solidId);
+                    // The punched slabs are emitted axis-aligned, so extents are the box.
+                    double halfX = Math.Abs(slab.Scale.X) * 0.5;
+                    double halfZ = Math.Abs(slab.Scale.Z) * 0.5;
+                    bool covers = head.X >= slab.Pos.X - halfX && head.X <= slab.Pos.X + halfX
+                        && head.Z >= slab.Pos.Z - halfZ && head.Z <= slab.Pos.Z + halfZ;
+                    Assert.IsFalse(covers,
+                        suffix + ": the climb tops out at (" + head.X.ToString("0.00") + ", "
+                        + head.Z.ToString("0.00") + ") under solid floor '" + solidName
+                        + "' x[" + (slab.Pos.X - halfX).ToString("0.00") + ", "
+                        + (slab.Pos.X + halfX).ToString("0.00") + "] z["
+                        + (slab.Pos.Z - halfZ).ToString("0.00") + ", "
+                        + (slab.Pos.Z + halfZ).ToString("0.00")
+                        + "] — the well opening did not follow the stair, so the climb ends "
+                        + "in the ceiling of " + lowerId);
+                }
+                Assert.Greater(solidFloors, 0,
+                    upperId + " has no active floor collider at all — the opening check "
+                    + "proved nothing");
             }
         }
 
@@ -146,6 +193,7 @@ namespace GatekeepersProtocol.Tests
             public Q4 Rot;
             public V3 Scale;
             public string Father;
+            public List<string> Children = new List<string>();
         }
 
         /// <summary>Scene YAML index: GameObjects by name, transforms by id, world-space
@@ -204,7 +252,8 @@ namespace GatekeepersProtocol.Tests
                             Pos = Vec(body, "m_LocalPosition"),
                             Rot = Quat(body),
                             Scale = Vec(body, "m_LocalScale"),
-                            Father = Field(body, @"m_Father: \{fileID: (\d+)\}")
+                            Father = Field(body, @"m_Father: \{fileID: (\d+)\}"),
+                            Children = ChildIds(body)
                         };
                         _nodesByTransformId[id] = node;
                         if (node.GoId != null)
@@ -237,6 +286,56 @@ namespace GatekeepersProtocol.Tests
                 }
                 Assert.IsNotNull(found, name + " with parent " + parentName + " not found in scene");
                 return found;
+            }
+
+            /// <summary>Every GameObject in this one's subtree, itself included.</summary>
+            public List<string> Subtree(string goId)
+            {
+                var found = new List<string>();
+                if (!_transformIdByGoId.TryGetValue(goId, out string root))
+                    return found;
+                var pending = new Stack<string>();
+                pending.Push(root);
+                while (pending.Count > 0)
+                {
+                    string tid = pending.Pop();
+                    if (!_nodesByTransformId.TryGetValue(tid, out Node node))
+                        continue;
+                    if (node.GoId != null)
+                        found.Add(node.GoId);
+                    for (int i = 0; i < node.Children.Count; i++)
+                        pending.Push(node.Children[i]);
+                }
+                return found;
+            }
+
+            /// <summary>The object's own active flag. Its ancestors are the room subtree
+            /// the caller already walked from, so self-active is the whole answer here.</summary>
+            public bool IsActive(string goId)
+            {
+                if (!_goDocsById.TryGetValue(goId, out string body))
+                    return false;
+                Match m = Regex.Match(body, @"^  m_IsActive: (\d)$", RegexOptions.Multiline);
+                return !m.Success || m.Groups[1].Value == "1";
+            }
+
+            public string NameOf(string goId)
+            {
+                if (!_goDocsById.TryGetValue(goId, out string body))
+                    return "?";
+                Match m = Regex.Match(body, @"^  m_Name: (.*?)\r?$", RegexOptions.Multiline);
+                return m.Success ? m.Groups[1].Value.Trim() : "?";
+            }
+
+            static List<string> ChildIds(string body)
+            {
+                var ids = new List<string>();
+                Match block = Regex.Match(body, @"m_Children:((?:\r?\n  - \{fileID: \d+\})*)");
+                if (!block.Success)
+                    return ids;
+                foreach (Match m in Regex.Matches(block.Groups[1].Value, @"fileID: (\d+)"))
+                    ids.Add(m.Groups[1].Value);
+                return ids;
             }
 
             public bool HasBoxCollider(string goId)

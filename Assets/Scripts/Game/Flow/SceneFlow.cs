@@ -34,20 +34,11 @@ namespace GatekeepersProtocol.Game
         /// (Docs/Milestones — the realm and the Boarder).</summary>
         public const string RealmSelect = "RealmSelect";
 
-        /// <summary>The first-Bastion tutorial's ship hub
-        /// (<c>Assets/Scenes/Ship - Demo.unity</c>). No longer the destination of normal play:
-        /// realms open <see cref="ShipCoop"/>. Two things reach it: the realm chooser's DEMO
-        /// button, which is the alternate way in, and the F12 dev checkpoints, which build a
-        /// demo beat directly.</summary>
-        public const string Ship = "Ship - Demo";
-
-        /// <summary>A realm's ship hub (<c>Assets/Scenes/Ship - CoOp.unity</c>). Named for
+        /// <summary>The ship hub (<c>Assets/Scenes/Ship - CoOp.unity</c>). Named for
         /// the party it can hold, but it is where solo play lives too: the party panel and the
-        /// hatch assignment both check for a live session and fall back to a single seat.</summary>
+        /// hatch assignment both check for a live session and fall back to a single seat.
+        /// The old demo hub (Ship - Demo) retired with the scene-pair consolidation.</summary>
         public const string ShipCoop = "Ship - CoOp";
-
-        /// <summary>Solo / demo combat scene (<c>Assets/Scenes/Bastion.unity</c>).</summary>
-        public const string Bastion = "Bastion";
 
         /// <summary>Co-op combat scene (<c>Assets/Scenes/Bastion_Coop.unity</c>).
         /// <see cref="LoadBastion"/> opens this from <see cref="ShipCoop"/>.</summary>
@@ -61,16 +52,15 @@ namespace GatekeepersProtocol.Game
         /// Ship - CoOp reaches it, so today it is entered by opening Range.unity directly.</summary>
         public const string Range = "Range";
 
-        /// <summary>In-fiction name of the solo bastion, for the nav map and the run-start log line.</summary>
+        /// <summary>In-fiction name of the bastion, for the nav map and the run-start log
+        /// line. One bastion, one name: ALPHA-7 carried over when the scene pair
+        /// consolidated onto <see cref="BastionCoop"/> and COOP-1 retired with the old
+        /// solo scene.</summary>
         public const string BastionName = "ALPHA-7";
 
-        /// <summary>In-fiction name of the co-op layout, so run-start / embark logs name
-        /// which combat scene loaded.</summary>
-        public const string BastionCoopName = "COOP-1";
-
-        /// <summary>True when <paramref name="sceneName"/> is either ship hub.</summary>
+        /// <summary>True when <paramref name="sceneName"/> is the ship hub.</summary>
         public static bool IsShipHub(string sceneName) =>
-            sceneName == Ship || sceneName == ShipCoop;
+            sceneName == ShipCoop;
 
         /// <summary>Name of the currently active scene ("" while no scene is valid).</summary>
         public static string ActiveSceneName
@@ -84,30 +74,19 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>True when the active scene is a combat scene (weapons live). The ship hub
         /// is weapons-holstered; PlayerGun gates firing on this.</summary>
-        /// <remarks>Combat destinations are Assets/Scenes/Bastion.unity and
-        /// Assets/Scenes/Bastion_Coop.unity, so the active name is "Bastion" or "Bastion_Coop"
-        /// — including when that scene is opened and played directly in the editor.
-        /// PlayerGun additionally treats "a live GameController is in the scene" as a
-        /// direct-play fallback, so a renamed or duplicated combat scene still fires.</remarks>
-        public static bool InCombatScene =>
-            ActiveSceneName == Bastion || ActiveSceneName == BastionCoop;
+        /// <remarks>The combat destination is Assets/Scenes/Bastion_Coop.unity, so the active
+        /// name is "Bastion_Coop" — including when that scene is opened and played directly in
+        /// the editor. PlayerGun additionally treats "a live GameController is in the scene" as
+        /// a direct-play fallback, so a renamed or duplicated combat scene still fires.</remarks>
+        public static bool InCombatScene => ActiveSceneName == BastionCoop;
 
-        /// <summary>Combat scene <see cref="LoadBastion"/> opens: <see cref="BastionCoop"/>
-        /// from <see cref="ShipCoop"/> — and from inside <see cref="BastionCoop"/> itself, so
-        /// a dev checkpoint reload stays on the hull being tested instead of ejecting to the
-        /// solo Bastion. Otherwise <see cref="Bastion"/>.</summary>
-        public static string CombatScene =>
-            ActiveSceneName == ShipCoop || ActiveSceneName == BastionCoop
-                ? BastionCoop
-                : Bastion;
+        /// <summary>Combat scene <see cref="LoadBastion"/> opens. One bastion:
+        /// <see cref="BastionCoop"/>, whatever hub the embark came from.</summary>
+        public static string CombatScene => BastionCoop;
 
-        /// <summary>Fiction name of the combat scene this embark opens, or of the active
-        /// combat scene. <see cref="BastionCoopName"/> on <see cref="ShipCoop"/> and in
-        /// <see cref="BastionCoop"/>; otherwise <see cref="BastionName"/>.</summary>
-        public static string CombatDisplayName =>
-            ActiveSceneName == ShipCoop || ActiveSceneName == BastionCoop
-                ? BastionCoopName
-                : BastionName;
+        /// <summary>Fiction name of the combat scene: <see cref="BastionName"/> — one
+        /// bastion, one name.</summary>
+        public static string CombatDisplayName => BastionName;
 
         /// <summary>Campaign menu scene — always MainMenu. Never Ship.</summary>
         public static string FrontEndScene => MainMenu;
@@ -134,9 +113,7 @@ namespace GatekeepersProtocol.Game
         /// <summary>Load the solo / demo ship hub. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadRealmSelect() => Load(RealmSelect);
 
-        public static bool LoadShip() => Load(Ship);
-
-        /// <summary>Load the party ship hub. Returns false (and logs an error) if it cannot load.</summary>
+        /// <summary>Load the ship hub. Returns false (and logs an error) if it cannot load.</summary>
         public static bool LoadShipCoop() => Load(ShipCoop);
 
         /// <summary>Load the practice range. Refused while a Run is live:
@@ -161,7 +138,13 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Load the bastion combat scene. Returns false (and logs an error) if it cannot load.
         /// Guests in an active friends session must use party EMBARK — local load is refused.</summary>
-        public static bool LoadBastion()
+        public static bool LoadBastion() => LoadCombat(CombatScene);
+
+        /// <summary>The bastion, explicitly — the checkpoint surface, whatever scene is
+        /// active. The solo variant retired with the scene-pair consolidation.</summary>
+        public static bool LoadBastionCoop() => LoadCombat(BastionCoop);
+
+        static bool LoadCombat(string sceneName)
         {
             var session = NetSession.FindLive();
             if (session != null && session.Active)
@@ -172,7 +155,7 @@ namespace GatekeepersProtocol.Game
                     Log.Event("Net", "embark refused — use party EMBARK");
                 return false;
             }
-            return Load(CombatScene);
+            return Load(sceneName);
         }
 
         /// <summary>Exactly one EventSystem for uGUI. Shift Canvas variants nest one; scenes may

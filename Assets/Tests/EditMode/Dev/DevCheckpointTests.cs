@@ -183,6 +183,54 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void ConfigZero_AndOutOfRange_AreTheBeatAsAuthored()
+        {
+            var plain = GameController.BuildDemoCheckpoint(4);
+            var configured = GameController.BuildDemoCheckpoint(4);
+            GameController.ApplyCheckpointConfig(configured, 0);
+            Assert.AreEqual(plain.ToSnapshotJson(), configured.ToSnapshotJson(),
+                "config 0 must be a byte-for-byte no-op");
+            GameController.ApplyCheckpointConfig(configured, 99);
+            Assert.AreEqual(plain.ToSnapshotJson(), configured.ToSnapshotJson(),
+                "an out-of-range config must be a no-op, not a throw or a mutation");
+        }
+
+        [Test]
+        public void EveryConfig_OnEveryBeat_EquipsItsKit_AndTheLedgerBalances()
+        {
+            for (int beat = 1; beat <= 8; beat++)
+            {
+                for (int c = 1; c <= GameController.CheckpointConfigs.Length; c++)
+                {
+                    var m = GameController.BuildDemoCheckpoint(beat);
+                    GameController.ApplyCheckpointConfig(m, c);
+                    var row = GameController.CheckpointConfigs[c - 1];
+                    string at = "beat " + beat + " config " + c;
+                    if (row.Primary != WeaponId.None)
+                    {
+                        Assert.IsTrue(m.Owns(row.Primary), at + " — primary not owned");
+                        Assert.IsTrue(m.TierOf(row.Primary) >= row.PrimaryTier,
+                            at + " — primary under tier");
+                        Assert.AreEqual(row.Primary, m.EquippedPrimary, at);
+                    }
+                    if (row.Secondary != WeaponId.None)
+                    {
+                        Assert.IsTrue(m.Owns(row.Secondary), at + " — secondary not owned");
+                        Assert.IsTrue(m.TierOf(row.Secondary) >= row.SecondaryTier,
+                            at + " — secondary under tier");
+                        Assert.AreEqual(row.Secondary, m.EquippedSecondary, at);
+                    }
+                    if (row.Protocol != BoarderProtocolId.None)
+                        Assert.AreEqual(row.Protocol, m.EquippedProtocol, at);
+                    Assert.IsTrue(m.SalvageLedgerBalances, at + " — ledger broken");
+                    var back = MetaState.FromSnapshotJson(m.ToSnapshotJson());
+                    Assert.IsFalse(back.SalvageStatsWereRepaired,
+                        at + " — round-trip tripped the repair");
+                }
+            }
+        }
+
+        [Test]
         public void EveryCheckpoint_SurvivesTheSaveRoundTrip_Unrepaired()
         {
             for (int digit = 1; digit <= 8; digit++)

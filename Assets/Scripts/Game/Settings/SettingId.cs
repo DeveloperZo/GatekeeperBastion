@@ -22,5 +22,9 @@ namespace GatekeepersProtocol.Game
         SfxVolume = 4,
         /// <summary>0 = windowed, 1 = fullscreen. Changing it arms a 15s revert.</summary>
         DisplayMode = 5,
+        /// <summary>When true (default), the pause Compendium lists Coming Soon entries —
+        /// pages for designed-but-unshipped things. When false the reader shows only what
+        /// is playable today.</summary>
+        ShowComingSoonEntries = 6,
     }
 }

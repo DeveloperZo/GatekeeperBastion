@@ -187,7 +187,8 @@ namespace GatekeepersProtocol.Game
         {
             if (action != DevCommands.Kind.ArmJumpToWave)
                 _awaitingWaveDigit = false;
-            if (action != DevCommands.Kind.ArmDemoCheckpoint)
+            if (action != DevCommands.Kind.ArmDemoCheckpoint
+                && action != DevCommands.Kind.ArmCoopCheckpoint)
                 _awaitingCheckpointDigit = false;
             if (action != DevCommands.Kind.ArmJumpToWave) _awaitingRangeDigit = false;
 
@@ -269,11 +270,11 @@ namespace GatekeepersProtocol.Game
                     break;
 
                 case DevCommands.Kind.ArmDemoCheckpoint:
-                    _awaitingCheckpointDigit = true;
-                    _overlay = true; // discovery: the overlay lists the checkpoint rows
-                    Log.Event(Tag, "checkpoint armed — press A.."
-                        + (char)('A' + GameController.DemoCheckpointLabels.Length - 1)
-                        + " (Esc cancel)");
+                    ArmCheckpointPrompt(coop: false);
+                    break;
+
+                case DevCommands.Kind.ArmCoopCheckpoint:
+                    ArmCheckpointPrompt(coop: true);
                     break;
 
                 case DevCommands.Kind.ToggleFaucetLoop:

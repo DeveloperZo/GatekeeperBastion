@@ -64,6 +64,16 @@ namespace GatekeepersProtocol.Game
         /// holds the sanctioned GameController handle.</summary>
         public static void LoadDemoCheckpoint(int digit)
         {
+            LoadDemoCheckpoint(digit, 0, coop: false);
+        }
+
+        /// <summary>Beat plus a loadout configuration (0 = the beat as authored; rows in
+        /// <see cref="CheckpointConfigs"/>) plus the hull: F12 forces the solo pair
+        /// (Bastion / Ship), F11 the co-op pair (Bastion_Coop / Ship - CoOp) — never
+        /// resolved from the active scene. The overlay lands before the scene loads, so
+        /// ApplyMetaEffects pushes the configured kit like any other save.</summary>
+        public static void LoadDemoCheckpoint(int digit, int config, bool coop = false)
+        {
             var live = NetSession.FindLive();
             if (live != null && live.Active)
             {
@@ -84,16 +94,32 @@ namespace GatekeepersProtocol.Game
             MetaState state = BuildDemoCheckpoint(digit);
             if (state == null)
             {
-                Log.Event("Dev", $"checkpoint refused — unknown digit {digit}");
+                Log.Event("Dev", $"checkpoint refused — unknown beat {digit}");
                 return;
             }
+            // The taint verdict is judged against the beat AS AUTHORED — before the overlay,
+            // since the overlay is exactly the thing being judged (it mints its own kit into
+            // LifetimeSalvageEarned, which would feed the affordability test its answer).
+            bool configTaint = CheckpointConfigTainted(state, config);
+            ApplyCheckpointConfig(state, config);
             GameSession.AdoptDevState(state);
             bool fight = IsDemoFightCheckpoint(digit);
             GameSession.PendingDemoFight = fight ? digit : 0;
             GameSession.PendingStartWave = 1;
+            // Remembered for the run-summary Metric line: which beat and configuration this
+            // session's state came from, so the dashboard can tell checkpoint play apart.
+            GameSession.CheckpointBeat = digit;
+            GameSession.CheckpointConfig = config;
+            GameSession.CheckpointConfigTaint = configTaint;
+            // One scene pair since the consolidation: solo and co-op checkpoints land the
+            // same hull; the flag only records which surface asked.
             string dest = fight ? "Bastion" : "Ship";
-            Log.Event("Dev", $"demo checkpoint {digit} — {DemoCheckpointLabels[digit - 1]}; loading the {dest}");
-            bool loaded = fight ? SceneFlow.LoadBastion() : SceneFlow.LoadShip();
+            Log.Event("Dev", $"demo checkpoint {digit} config {config} "
+                + (coop ? "coop — " : "solo — ")
+                + $"{DemoCheckpointLabels[digit - 1]}; loading the {dest}");
+            bool loaded = fight
+                ? SceneFlow.LoadBastionCoop()
+                : SceneFlow.LoadShipCoop();
             if (!loaded)
                 Log.Warn(Tag, "checkpoint adopted but the " + dest + " scene failed to load.");
         }

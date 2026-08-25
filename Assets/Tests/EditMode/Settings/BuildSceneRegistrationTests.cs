@@ -14,7 +14,7 @@ namespace GatekeepersProtocol.Tests
     {
         static readonly string[] Boot =
         {
-            "Splash", "MainMenu", "Ship - Demo", "Ship - CoOp", "Bastion"
+            "Splash", "MainMenu", "RealmSelect", "Ship - CoOp", "Bastion_Coop"
         };
 
         static List<SceneBuilder.SceneEntry> Merge(
@@ -74,11 +74,11 @@ namespace GatekeepersProtocol.Tests
         public void Merge_DoesNotDuplicateOrDisableABootSceneAlreadyListed()
         {
             List<SceneBuilder.SceneEntry> r = Merge(
-                Entries(("Bastion", false), ("Bastion", false)), _ => true, out _, out _);
+                Entries(("Bastion_Coop", false), ("Bastion_Coop", false)), _ => true, out _, out _);
 
             Assert.AreEqual(Boot.Length, r.Count, "a boot scene listed twice stays one row");
             Assert.IsTrue(r[Boot.Length - 1].Enabled, "boot scenes are always enabled");
-            Assert.AreEqual("Bastion", r[Boot.Length - 1].Path);
+            Assert.AreEqual("Bastion_Coop", r[Boot.Length - 1].Path);
         }
 
         [Test]

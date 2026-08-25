@@ -15,14 +15,8 @@ EditorBuildSettings:
     path: Assets/Scenes/RealmSelect.unity
     guid: cc9966533f9ebd71b9e8ec90a3de8685
   - enabled: 1
-    path: Assets/Scenes/Ship - Demo.unity
-    guid: 6d1ba57c782d5cf40b96817c2af4d64c
-  - enabled: 1
     path: Assets/Scenes/Ship - CoOp.unity
     guid: 3cfc8ead8553b7948af81bc9b1f2bd3e
-  - enabled: 1
-    path: Assets/Scenes/Bastion.unity
-    guid: e00cbf204aeb650459a8471c7bce4363
   - enabled: 1
     path: Assets/Scenes/Bastion_Coop.unity
     guid: 58aef22ff05c79f4cbb0ddb209277fbd

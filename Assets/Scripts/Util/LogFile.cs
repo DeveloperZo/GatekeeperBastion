@@ -29,8 +29,18 @@ namespace GatekeepersProtocol.Util
         /// MPPM writes one file per process, so this is roughly half as many Play sessions.</summary>
         public const int KeepSessions = 30;
 
+        /// <summary>Harness (PlayMode test) session files retained, in their own folder so a
+        /// day of verification cannot evict real play sessions — on 2026-08-24, 19 of the
+        /// day's 28 files were harness and the human sessions were hours from deletion.</summary>
+        public const int KeepHarnessSessions = 6;
+
+        /// <summary>Subfolder of <see cref="Directory"/> that quarantines harness sessions.
+        /// Readers (Docs/dashboard.html, Tools/wave-report) never look inside it.</summary>
+        public const string HarnessDirName = "harness";
+
         static readonly object Gate = new object();
         static StreamWriter _writer;
+        static bool _harness;
 
         /// <summary>Full path of this session's file, or empty if the sink never opened.</summary>
         public static string CurrentPath { get; private set; }
@@ -55,13 +65,14 @@ namespace GatekeepersProtocol.Util
             lock (Gate)
             {
                 if (_writer != null) return;
+                _harness = false;
 
                 DateTime now = DateTime.Now;
                 try
                 {
                     string dir = Directory;
                     System.IO.Directory.CreateDirectory(dir);
-                    Prune(dir);
+                    Prune(dir, KeepSessions);
 
                     int pid = System.Diagnostics.Process.GetCurrentProcess().Id;
                     string path = Path.Combine(
@@ -99,9 +110,57 @@ namespace GatekeepersProtocol.Util
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void SessionBanner()
         {
+            // Unity Test Framework boots PlayMode into a generated InitTestScene — the one
+            // signal that this session is the harness, not play. Never the IntegrationCheck /
+            // AutoVerify tag, which appears in ordinary session logs (Docs/Design/4-Data.md).
+            if (SceneManager.GetActiveScene().name.StartsWith("InitTestScene", StringComparison.Ordinal))
+                MoveToHarness();
+
             Debug.Log("---------- Game Session Started ----------");
             Debug.Log("Scene: " + SceneManager.GetActiveScene().name);
             Debug.Log("----------------------------------------");
+        }
+
+        /// <summary>Relocate this session's file into the harness folder and keep writing
+        /// there. Close-move-reopen rather than a rename under an open handle; on any IO
+        /// failure the file stays where it is and logging continues at the old path.</summary>
+        static void MoveToHarness()
+        {
+            lock (Gate)
+            {
+                if (_writer == null || _harness) return;
+                _harness = true;
+                string path = CurrentPath;
+                try
+                {
+                    string dir = Path.Combine(Directory, HarnessDirName);
+                    System.IO.Directory.CreateDirectory(dir);
+                    Prune(dir, KeepHarnessSessions);
+                    string dest = Path.Combine(dir, Path.GetFileName(path));
+
+                    _writer.Dispose();
+                    _writer = null;
+                    File.Move(path, dest);
+                    path = dest;
+                }
+                catch { /* fall through: reopen wherever the file ended up */ }
+
+                try
+                {
+                    var stream = new FileStream(path, FileMode.Append, FileAccess.Write,
+                                                FileShare.ReadWrite | FileShare.Delete);
+                    _writer = new StreamWriter(stream) { AutoFlush = true };
+                    CurrentPath = path;
+                }
+                catch
+                {
+                    _writer = null;
+                    CurrentPath = string.Empty;
+                    return;
+                }
+            }
+
+            Debug.Log("[LogFile] harness session - log moved to: " + CurrentPath);
         }
 
         public static void Close()
@@ -149,15 +208,16 @@ namespace GatekeepersProtocol.Util
             }
         }
 
-        // Keep the newest KeepSessions files; delete the rest.
-        static void Prune(string dir)
+        // Keep the newest <paramref name="keep"/> files in this folder; delete the rest.
+        // Non-recursive on purpose: the harness subfolder prunes on its own cap.
+        static void Prune(string dir, int keep)
         {
             try
             {
                 var files = new DirectoryInfo(dir).GetFiles(Product + "_*.log");
-                if (files.Length < KeepSessions) return;
+                if (files.Length < keep) return;
                 Array.Sort(files, (a, b) => b.CreationTimeUtc.CompareTo(a.CreationTimeUtc));
-                for (int i = KeepSessions - 1; i < files.Length; i++)
+                for (int i = keep - 1; i < files.Length; i++)
                 {
                     try { files[i].Delete(); } catch { }
                 }

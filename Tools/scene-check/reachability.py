@@ -65,15 +65,39 @@ def build(docs):
     name = {i: go_name.get(v['go'], '') for i, v in tf.items()}
     return name, tf, box, meshcol
 
-def world(tid, tf):
-    x = y = z = 0.0
-    seen = set()
+def chain_of(tid, tf):
+    """Transform nodes leaf -> root. Cycles guard against a corrupt scene."""
+    chain, seen = [], set()
     while tid in tf and tid not in seen:
         seen.add(tid)
-        p = tf[tid]['pos']
-        x, y, z = x + p[0], y + p[1], z + p[2]
+        chain.append(tf[tid])
         tid = tf[tid]['father']
-    return x, y, z
+    return chain
+
+def to_world(chain, p):
+    """Compose scale -> rotate -> translate up the whole parent chain. The old
+    position-sum shortcut silently misplaced any collider under a scaled or
+    rotated parent (the hand-authored stair boxes sit under a kit prop group)."""
+    for node in chain:
+        s = node['scale']
+        p = (p[0] * s[0], p[1] * s[1], p[2] * s[2])
+        p = qrot(node.get('rot', (0.0, 0.0, 0.0, 1.0)), p)
+        o = node['pos']
+        p = (p[0] + o[0], p[1] + o[1], p[2] + o[2])
+    return p
+
+def world(tid, tf):
+    return to_world(chain_of(tid, tf), (0.0, 0.0, 0.0))
+
+def world_up(tid, tf):
+    """World direction of the local +Y axis, chain rotations and scales applied."""
+    v = (0.0, 1.0, 0.0)
+    for node in chain_of(tid, tf):
+        s = node['scale']
+        v = (v[0] * s[0], v[1] * s[1], v[2] * s[2])
+        v = qrot(node.get('rot', (0.0, 0.0, 0.0, 1.0)), v)
+    l = math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) or 1.0
+    return (v[0] / l, v[1] / l, v[2] / l)
 
 def qrot(q, v):
     x, y, z, w = q
@@ -86,36 +110,39 @@ def qrot(q, v):
             vz + w * tz + (x * ty - y * tx))
 
 def box_aabb(tid, tf, boxes):
-    """World AABB of an enabled BoxCollider. Environment is identity, so local rot is world."""
+    """World AABB of an enabled BoxCollider, full parent chain applied."""
     go = tf[tid]['go']
     b = boxes.get(go)
     if not b or not b[0]:
         return None
-    px, py, pz = world(tid, tf)
-    lsx, lsy, lsz = tf[tid]['scale']
-    rot = tf[tid].get('rot', (0.0, 0.0, 0.0, 1.0))
-    sx, sy, sz = b[1][0] * lsx, b[1][1] * lsy, b[1][2] * lsz
-    cx, cy, cz = b[2][0] * lsx, b[2][1] * lsy, b[2][2] * lsz
-    hx, hy, hz = sx / 2.0, sy / 2.0, sz / 2.0
+    chain = chain_of(tid, tf)
+    hx, hy, hz = b[1][0] / 2.0, b[1][1] / 2.0, b[1][2] / 2.0
+    cx, cy, cz = b[2]
     xs, ys, zs = [], [], []
     for dx in (-hx, hx):
         for dy in (-hy, hy):
             for dz in (-hz, hz):
-                rx, ry, rz = qrot(rot, (cx + dx, cy + dy, cz + dz))
-                xs.append(px + rx)
-                ys.append(py + ry)
-                zs.append(pz + rz)
+                wx, wy, wz = to_world(chain, (cx + dx, cy + dy, cz + dz))
+                xs.append(wx)
+                ys.append(wy)
+                zs.append(wz)
     return (min(xs), max(xs), min(zs), max(zs), min(ys), max(ys))
 
 # CharacterController radius 0.35 / stepOffset 0.3. A 0-width seam at a floor
 # edge is not walkable; require a 0.5 m overlap in XZ and no more than a step in Y.
 WALK_XZ = 0.5
 WALK_Y = 0.3
+# A tilted ramp's world AABB understates where its walk surface actually ends, so a
+# stair-to-stair (or stair-to-floor) join only needs contact, not half a metre: the
+# capsule's stepOffset carries it across a surface seam the boxes physically share.
+STAIR_XZ = 0.1
+# CharacterController slopeLimit on the player rig. A steeper walk face is a wall.
+SLOPE_LIMIT_DEG = 45.0
 
-def walkable_join(a, b):
+def walkable_join(a, b, min_xz=WALK_XZ):
     ox = min(a[1], b[1]) - max(a[0], b[0])
     oz = min(a[3], b[3]) - max(a[2], b[2])
-    if ox < WALK_XZ or oz < WALK_XZ:
+    if ox < min_xz or oz < min_xz:
         return False
     ay0, ay1, by0, by1 = a[4], a[5], b[4], b[5]
     if ay1 < by0:
@@ -129,15 +156,19 @@ def stair_connects_decks(floors, stairs):
 
     The room graph cannot see this: the ramp head sits in the void, and a
     hardcoded (1,-1,5)↔(2,-2,6) edge would pass with no walkable surface.
+    Stair boxes join on contact (STAIR_XZ) rather than WALK_XZ — a tilted
+    ramp's AABB understates its walk surface, and the boxes physically meet.
     """
     if not stairs:
         return False
     nodes = list(floors.items()) + list(stairs.items())
     byname = {n: a for n, a in nodes}
+    stair_names = set(stairs)
     adj = {n: [] for n, _ in nodes}
     for i, (na, aa) in enumerate(nodes):
         for nb, ab in nodes[i + 1:]:
-            if walkable_join(aa, ab):
+            xz = STAIR_XZ if (na in stair_names or nb in stair_names) else WALK_XZ
+            if walkable_join(aa, ab, xz):
                 adj[na].append(nb)
                 adj[nb].append(na)
     starts = [n for n in byname if n.startswith('GFloor_1_')]
@@ -235,7 +266,9 @@ def main():
 
     # Inter-deck: only if graybox colliders actually meet (ramp + head pad, or a
     # ramp that itself overlaps both decks). Do not assume the kit landing exists.
-    stair_boxes, floor_boxes = {}, {}
+    # The walk surface is judged by GEOMETRY, not by name: an earlier version pinned
+    # the generator's 'GStairWalk' and went stale the day the ramp was hand-authored.
+    stair_boxes, stair_tilt, floor_boxes = {}, {}, {}
     for i, n in name.items():
         aabb = box_aabb(i, tf, boxes)
         if aabb is None:
@@ -244,8 +277,11 @@ def main():
             floor_boxes[n] = aabb
         elif n.startswith('GStair'):
             stair_boxes[n] = aabb
-    # Kit stair localBounds (SM_Prop_Stairs_01), scaled. Used when GStairRamp is off —
-    # that box's end-cap is 54 deg and blocks the CharacterController (slopeLimit 45).
+            ux, uy, uz = world_up(i, tf)
+            stair_tilt[n] = math.degrees(math.acos(min(1.0, abs(uy))))
+    # Kit stair localBounds (SM_Prop_Stairs_01), scaled. Fallback when no GStair boxes
+    # exist — that mesh's end-cap is 54 deg and blocks the CharacterController
+    # (slopeLimit 45), so it is recorded at that tilt and never counts as a ramp.
     stair_lc, stair_ls = (1.057, 2.895, 4.000), (2.268, 5.804, 8.042)
     for i, n in name.items():
         if n != 'Stair' or not meshcol.get(tf[i]['go']):
@@ -257,18 +293,37 @@ def main():
         cz = pz + stair_lc[2] * sz
         hx, hy, hz = stair_ls[0] * sx / 2.0, stair_ls[1] * sy / 2.0, stair_ls[2] * sz / 2.0
         stair_boxes['Stair'] = (cx - hx, cx + hx, cz - hz, cz + hz, cy - hy, cy + hy)
+        stair_tilt['Stair'] = 54.0
         break
+    # A real ramp: tilted but within the capsule's slopeLimit, and actually spanning
+    # the two deck planes (foot at/below deck 1 + step, head reaching deck 2 - step).
+    plane1 = max((a[5] for n, a in floor_boxes.items() if n.startswith('GFloor_1_')),
+                 default=0.0)
+    plane2 = max((a[5] for n, a in floor_boxes.items() if n.startswith('GFloor_2_')),
+                 default=5.0)
+    too_steep = sorted(n for n, t in stair_tilt.items() if t > SLOPE_LIMIT_DEG + 0.01)
+    ramps = [n for n, t in stair_tilt.items()
+             if 5.0 < t <= SLOPE_LIMIT_DEG + 0.01
+             and stair_boxes[n][4] <= plane1 + WALK_Y
+             and stair_boxes[n][5] >= plane2 - WALK_Y]
     stair_ok = stair_connects_decks(floor_boxes, stair_boxes)
-    stair_faces = 'GStairWalk' in stair_boxes
-    print("stair walk surface GStairWalk: %s" % ("yes" if stair_faces else "NO"))
+    print("stair ramp within slopeLimit spanning decks: %s  (tilts: %s)"
+          % (", ".join(sorted(ramps)) or "NONE",
+             ", ".join("%s=%.1f" % (n, t) for n, t in sorted(stair_tilt.items()))))
     print("stair collider chain deck1-deck2: %s  (%s)"
           % ("yes" if stair_ok else "NO",
              ", ".join(sorted(stair_boxes)) or "none"))
-    if not stair_faces:
-        print("FAIL: no GStairWalk — a 0.4 m ramp end-cap is a 54 deg wall to the capsule")
+    if too_steep:
+        print("FAIL: stair walk face steeper than slopeLimit %g: %s"
+              % (SLOPE_LIMIT_DEG, ", ".join(too_steep)))
         return 1
-    if stair_ok:
-        add_edge((1, 'room', -1, 5), (2, 'room', -2, 6))
+    if not ramps:
+        print("FAIL: no walkable ramp spans deck 1 to deck 2 — the capsule cannot climb")
+        return 1
+    if not stair_ok:
+        print("FAIL: stair colliders do not chain the decks — a gap the capsule falls into")
+        return 1
+    add_edge((1, 'room', -1, 5), (2, 'room', -2, 6))
 
     start_ix = int(math.floor(player[0] / CELL))
     start_iz = int(math.floor(player[2] / CELL))

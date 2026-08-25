@@ -59,6 +59,21 @@ namespace GatekeepersProtocol.Game
         /// authored Unbanked. 0 = none. Transient: never saved.</summary>
         public static int PendingDemoFight;
 
+        /// <summary>F12 beat digit the CURRENT session state was built from, 0 when this
+        /// session is not a checkpoint session. Read by the run-summary Metric line so the
+        /// dashboard can tell checkpoint play from a played-through save. Transient.</summary>
+        public static int CheckpointBeat;
+
+        /// <summary>Loadout configuration row the checkpoint applied (0 = beat as authored).
+        /// Transient.</summary>
+        public static int CheckpointConfig;
+
+        /// <summary>Verdict of the beat-relative taint rule
+        /// (GameController.CheckpointConfigTainted), judged against the constructed beat
+        /// state before the overlay landed. Carried onto the run-summary Metric line as
+        /// configTaint. Transient.</summary>
+        public static bool CheckpointConfigTaint;
+
         /// <summary>Clears statics at play-mode start (domain-reload-disabled safety).</summary>
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
@@ -71,6 +86,18 @@ namespace GatekeepersProtocol.Game
             PendingStartWave = 1;
             PendingEscapedLine = false;
             PendingDemoFight = 0;
+            CheckpointBeat = 0;
+            CheckpointConfig = 0;
+            CheckpointConfigTaint = false;
+        }
+
+        /// <summary>The current session state is no longer a checkpoint construction —
+        /// every path that adopts a real save pair calls this beside DevTainted = false.</summary>
+        static void ClearCheckpoint()
+        {
+            CheckpointBeat = 0;
+            CheckpointConfig = 0;
+            CheckpointConfigTaint = false;
         }
 
         /// <summary>Mark this play session as Dev-touched. First call logs once; Save is then skipped.</summary>
@@ -144,6 +171,7 @@ namespace GatekeepersProtocol.Game
         public static void StartNew()
         {
             DevTainted = false; // intentional new campaign may persist again
+            ClearCheckpoint();
             bool boarderWritten, realmWritten;
             var boarder = RealmRegistry.CreateBoarder(null, out boarderWritten);
             var realm = RealmRegistry.CreateRealm(null, out realmWritten);
@@ -171,6 +199,7 @@ namespace GatekeepersProtocol.Game
                 return false;
             }
             DevTainted = false;
+            ClearCheckpoint();
             CurrentRealmIsRemote = false;
             Adopt(boarder, realm);
             Log.Event("Ship",
@@ -192,6 +221,7 @@ namespace GatekeepersProtocol.Game
                 return false;
             }
             DevTainted = false;
+            ClearCheckpoint();
             Meta = MetaState.Compose(boarder, realm);
             CurrentBoarderId = boarder.Id;
             CurrentRealmId = realm.Id;
@@ -240,6 +270,7 @@ namespace GatekeepersProtocol.Game
         public static void ContinueGame()
         {
             DevTainted = false; // disk load is a clean slate for save suppression
+            ClearCheckpoint();
             try
             {
                 string realmId, boarderId;
@@ -286,10 +317,13 @@ namespace GatekeepersProtocol.Game
 
             if (!Meta.OwnsAnyWeapon)
             {
-                // Guard trip: no weapon. Survivable only because PlayerGun falls back to the
-                // improvised cutter — flag it so it is not a silent trap. MK-1 costs 0.
-                Log.Warn(Tag, "No weapon owned. Runs will use the improvised salvage cutter " +
-                              "until you take the free MK-1 at the ARMORY.");
+                // Guard trip: no weapon. In the demo this is the intended pre-grant state and
+                // the ARMORY is hidden — pointing there would contradict the flow. Outside it,
+                // the cutter fallback is survivable but worth flagging. MK-1 costs 0.
+                Log.Warn(Tag, Meta.DemoActive
+                    ? "No weapon owned yet — the ship terminal's start grants the MK-1."
+                    : "No weapon owned. Runs will use the improvised salvage cutter " +
+                      "until you take the free MK-1 at the ARMORY.");
             }
         }
 

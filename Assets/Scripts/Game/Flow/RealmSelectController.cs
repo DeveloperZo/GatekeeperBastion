@@ -51,7 +51,6 @@ namespace GatekeepersProtocol.Game
             _view.onCreate = OnCreate;
             _view.onEnter = OnEnter;
             _view.onBack = OnBack;
-            _view.onDemo = OnDemo;
             _view.onNewBoarder = OnNewBoarder;
             _view.onDeleteRealm = OnDeleteRealm;
             _view.onDeleteBoarder = OnDeleteBoarder;
@@ -407,14 +406,5 @@ namespace GatekeepersProtocol.Game
             return null;
         }
 
-        /// <summary>The alternate way in. The first-Bastion demo keeps its own ship and its own
-        /// path: it is a tutorial rather than a world, so it does not belong to a realm and
-        /// entering it does not pick one (Docs/Milestones — the realm and the Boarder).</summary>
-        void OnDemo()
-        {
-            FrontEndMusic.Stop();
-            if (!SceneFlow.LoadShip())
-                Log.Warn(Tag, "demo refused — the demo Ship scene would not load.");
-        }
     }
 }

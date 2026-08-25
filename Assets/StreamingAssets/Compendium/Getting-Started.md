@@ -1,4 +1,4 @@
-# Getting Started
+# First Time Out
 
 ## Game
 

@@ -112,4 +112,4 @@ be per pellet.
 
 ## See also
 
-[MK-1 Sidearm](Weapon-MK-1-Sidearm.md). [SEC-D](Weapon-SEC-D.md). [BR-12 Shotgun](Weapon-BR-12-Shotgun.md). [MR-35 Rifle](Weapon-MR-35-Rifle.md). [PRI-C](Weapon-PRI-C.md). [Upgrades](Upgrades.md).
+[MK-1 Sidearm](Weapon-MK-1-Sidearm.md). [SEC-D](Weapon-SEC-D.md). [BR-12 Shotgun](Weapon-BR-12-Shotgun.md). [MR-35 Rifle](Weapon-MR-35-Rifle.md). [PRI-C](Weapon-PRI-C.md). [The Drone](The-Drone.md). [Upgrades](Upgrades.md).

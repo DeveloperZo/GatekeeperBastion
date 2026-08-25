@@ -120,23 +120,30 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void DevCommands_TableCoversF1ThroughF12()
         {
-            // 12 F-keys plus the faucet-loop graybox toggle on Home (the F row is full;
-            // the graybox row leaves with the dev gate when the faucet loop ships or dies).
-            Assert.AreEqual(13, DevCommands.All.Length);
-            Assert.AreEqual(KeyCode.Home, DevCommands.All[12].Key);
-            Assert.AreEqual(DevCommands.Kind.ToggleFaucetLoop, DevCommands.All[12].Action);
+            // 12 F-keys plus the faucet toggle on Home and the editor net-smoke join on End.
+            // F11 is the co-op checkpoint surface, F12 the solo one; the join it displaced
+            // moved to End inside the editor-only block.
+            Assert.AreEqual(14, DevCommands.All.Length);
             Assert.AreEqual(KeyCode.F1, DevCommands.All[0].Key);
             Assert.AreEqual(KeyCode.F9, DevCommands.All[8].Key);
             Assert.AreEqual(KeyCode.F10, DevCommands.All[9].Key);
             Assert.AreEqual(KeyCode.F11, DevCommands.All[10].Key);
             Assert.AreEqual(KeyCode.F12, DevCommands.All[11].Key);
+            Assert.AreEqual(KeyCode.Home, DevCommands.All[12].Key);
+            Assert.AreEqual(KeyCode.End, DevCommands.All[13].Key);
             Assert.AreEqual(DevCommands.Kind.ArmJumpToWave, DevCommands.All[2].Action);
             Assert.AreEqual(DevCommands.Kind.LoadoutPicker, DevCommands.All[6].Action);
             Assert.AreEqual(DevCommands.Kind.StartCoopHost, DevCommands.All[9].Action);
-            Assert.AreEqual(DevCommands.Kind.StartCoopClient, DevCommands.All[10].Action);
+            Assert.AreEqual(DevCommands.Kind.ArmCoopCheckpoint, DevCommands.All[10].Action);
             Assert.AreEqual(DevCommands.Kind.ArmDemoCheckpoint, DevCommands.All[11].Action);
+            Assert.AreEqual(DevCommands.Kind.ToggleFaucetLoop, DevCommands.All[12].Action);
+            Assert.AreEqual(DevCommands.Kind.StartCoopClient, DevCommands.All[13].Action);
             Assert.IsTrue(ShortcutPanel.IsEditorOnlyDevKey(KeyCode.F12),
                 "the checkpoint jump is a cheat — player and dev builds never bind it");
+            Assert.IsTrue(ShortcutPanel.IsEditorOnlyDevKey(KeyCode.F11),
+                "the co-op checkpoint is the same cheat on the other hull");
+            Assert.IsFalse(ShortcutPanel.IsEditorOnlyDevKey(KeyCode.F10),
+                "the net smoke stays bindable in a dev build");
         }
 #endif
     }

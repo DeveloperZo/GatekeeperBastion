@@ -67,6 +67,11 @@ namespace GatekeepersProtocol.EditorTools
                 if (!GatekeepersProtocol.Game.CompendiumCatalog.MarkdownIsInBuild(raw))
                     continue;
                 string cleaned = StripForPlayer(raw);
+                // The strip removes every comment, but the coming_soon flag must survive
+                // into the runtime copy — the pause nav's optional filter reads it there.
+                // Re-emit it minimally; StripBuilderAudit removes it again before display.
+                if (GatekeepersProtocol.Game.CompendiumCatalog.MarkdownIsComingSoon(raw))
+                    cleaned = "<!-- coming_soon: true -->\n" + cleaned;
                 string outPath = Path.Combine(dest, name);
                 File.WriteAllText(outPath, cleaned);
                 written++;

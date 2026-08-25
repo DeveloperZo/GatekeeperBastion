@@ -92,7 +92,9 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("m_Name: Locomotion", src);
             StringAssert.Contains("m_Name: Fire", src);
             StringAssert.Contains("m_Name: Reload", src);
-            StringAssert.Contains("blendParameter: Speed", src);
+            // Modern controller serialization writes m_BlendParameter; the bare
+            // "blendParameter:" spelling died when the weapons pack re-serialized the asset.
+            StringAssert.Contains("m_BlendParameter: Speed", src);
         }
 
         [Test]
@@ -160,7 +162,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Bastion_HasNoControllerlessAnimator()
         {
-            string src = Read("Assets/Scenes/Bastion.unity");
+            string src = Read("Assets/Scenes/Bastion_Coop.unity");
             Assert.IsFalse(src.Contains("m_Controller: {fileID: 0}"));
         }
     }

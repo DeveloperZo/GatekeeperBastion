@@ -1,6 +1,6 @@
 <!-- Purpose: first-run walkthrough for a new player, in order, plus the mistakes that cost first Runs. / Status: working / Update trigger: when the ship consoles, embark flow, unlock gating, or the first-Wave experience changes. / Last updated: 2026-08-20 -->
 
-# Getting Started
+# First Time Out
 
 ## Game
 

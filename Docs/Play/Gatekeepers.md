@@ -12,7 +12,7 @@ One question sorts the whole room: can this be moved off what it is doing? A Def
 
 They arrive in groups, a whole group through one spawn point, the next group somewhere else. The point rotates. I cannot hold a direction here. I can only cover what I can turn to in time.
 
-That is the entire garrison. Nothing shoots. Nothing heals. Nothing makes another one stronger. There is no larger version of anything.
+That is the entire garrison that walks today. Nothing shoots. Nothing heals. Nothing makes another one stronger. There is no larger version of anything. Every one of those sentences is on the roster's list of things to take from me, and the pages marked Coming Soon say which frame collects.
 
 And the rooms they walk out of do not open for me, which I think about more than I should.
 

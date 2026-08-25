@@ -838,7 +838,7 @@ public static class Docgen
     {
         sb.AppendLine("## What comes aboard");
         sb.AppendLine();
-        sb.AppendLine("Three kinds, and each is defined by what it **refuses** to do. Every kind swings on");
+        sb.AppendLine("Four kinds, and each is defined by what it **refuses** to do. Every kind swings on");
         sb.AppendLine("the same " + N(WaveDirector.GatekeeperAttackInterval) +
                       " s clock — they differ in what they hit, never in how often.");
         sb.AppendLine();
@@ -851,6 +851,8 @@ public static class Docgen
             "to touch the hatch; it only ever wants you");
         AppendManualGk(sb, GatekeeperKind.Thief, "Thief",
             "to turn when shot; Hatch-bank it marches the Hatch, field-terminal it hunts you — it never hurts you");
+        AppendManualGk(sb, GatekeeperKind.Cloaker, "Cloaker",
+            "to advance while watched — any Boarder's gaze stops it dead, and it fades and closes the moment every eye is elsewhere");
         sb.AppendLine();
         sb.AppendLine("HP above is the base line. Later waves multiply it (see the wave table).");
         sb.AppendLine();
@@ -880,18 +882,18 @@ public static class Docgen
         sb.AppendLine();
         sb.AppendLine("At intensity 0:");
         sb.AppendLine();
-        sb.AppendLine("| Wave | Bodies | Default | Hunter | Thief | HP × | Arrive in groups of | Every |");
-        sb.AppendLine("|---|---|---|---|---|---|---|---|");
+        sb.AppendLine("| Wave | Bodies | Default | Hunter | Thief | Cloaker | HP × | Arrive in groups of | Every |");
+        sb.AppendLine("|---|---|---|---|---|---|---|---|---|");
         for (int i = 0; i < WaveDirector.MaxWaves; i++)
         {
             var s = wd.NextWave(i, 0);
             sb.AppendLine("| " + (i + 1) + " | " + s.enemyCount + " | " + s.defaultCount + " | " +
-                          s.hunterCount + " | " + s.thiefCount + " | " +
+                          s.hunterCount + " | " + s.thiefCount + " | " + s.cloakerCount + " | " +
                           N(s.enemyHealthMultiplier) + " | " + s.groupSize + " | " +
                           N(s.spawnInterval) + " s |");
         }
         sb.AppendLine();
-        sb.AppendLine("Hunters and Thieves are on a fixed schedule — intensity never adds more of them.");
+        sb.AppendLine("Hunters, Thieves and Cloakers are on a fixed schedule — intensity never adds more of them.");
         sb.AppendLine();
     }
 
@@ -934,8 +936,11 @@ public static class Docgen
         sb.AppendLine("The hatch is what you are defending: **" + N(ShipSystems.HatchMaxHp) +
                       " HP** at Hatch Armor 0, up to **" + N(MetaUpgrades.HatchHp(MetaUpgrades.MaxLevel)) +
                       "**. Hold `E` near it to repair.");
-        sb.AppendLine("If it falls, the run ends. If you fall, the run ends. There is no other way out —");
-        sb.AppendLine("no bail-out, no escape lever, no respawn.");
+        sb.AppendLine("If it falls, the run ends — whatever is banked. If you fall, the realm can buy you back:");
+        sb.AppendLine("a respawn costs `" + N(Respawns.BaseCost) + " × (respawns taken + 1)` from the banked pot, and mid-Assault it");
+        sb.AppendLine("also burns a shared charge (" + Respawns.PoolPerSeat + " seeded per seat; at a break, no charge is needed).");
+        sb.AppendLine("Death always wipes your Unbanked. No charges left, a pot that cannot pay, nobody still");
+        sb.AppendLine("standing — that is a run that ends.");
         sb.AppendLine();
     }
 
@@ -957,11 +962,26 @@ public static class Docgen
             byStation[st].Add(UpgradeTracks.Label(track));
         }
 
-        string crew = BoarderProtocol.ProtocolName(BoarderProtocolId.Default)
-            + " (" + BoarderProtocol.DoctrineText(BoarderProtocolId.Default)
-            + "; G " + BoarderProtocol.DisplayName(BoarderAbilityId.Barrage)
-            + "; H " + BoarderProtocol.DisplayName(BoarderAbilityId.Rush)
-            + "; claim at CREW, no Passive)";
+        // Enumerated from the shop catalog so a new protocol lands here without an edit —
+        // the hand-written form of this row went stale the day the second protocol shipped.
+        var crewParts = new List<string>();
+        foreach (var pid in BoarderProtocol.ShopProtocols())
+        {
+            // The doctrine word alone — the sheet's full sentence drowns a table cell.
+            string doctrine = BoarderProtocol.DoctrineText(pid);
+            int dash = doctrine.IndexOf(" — ", StringComparison.Ordinal);
+            if (dash > 0) doctrine = doctrine.Substring(0, dash);
+            var part = new StringBuilder();
+            part.Append(BoarderProtocol.ProtocolName(pid));
+            part.Append(" (").Append(doctrine);
+            part.Append("; G ").Append(BoarderProtocol.DisplayName(BoarderProtocol.CrewAbilityOf(pid)));
+            part.Append("; H ").Append(BoarderProtocol.DisplayName(BoarderProtocol.PersonalAbilityOf(pid)));
+            for (int p = 0; p < BoarderProtocol.PassiveCount(pid); p++)
+                part.Append("; ").Append(BoarderProtocol.DisplayName(BoarderProtocol.PassiveAt(pid, p)));
+            part.Append(")");
+            crewParts.Add(part.ToString());
+        }
+        string crew = string.Join(", ", crewParts);
         string fabTracks = byStation.ContainsKey("FABRICATION")
             ? string.Join(", ", byStation["FABRICATION"]) : "";
         string fabSells = fabTracks;
@@ -1000,8 +1020,11 @@ public static class Docgen
         sb.AppendLine("| Decoy — Drone payload | " + decoy.charges + " charges | " +
                       decoy.cost.ToString("N0", Inv) + " salvage |");
         sb.AppendLine();
-        sb.AppendLine("Crit chance is frozen at 0. There is no Luck shop. The Default Protocol is a");
-        sb.AppendLine("0-salvage CREW claim (Barrage G, Rush H). Other protocol names on the panel are Coming Soon.");
+        var shopNames = BoarderProtocol.ShopProtocols()
+            .Select(BoarderProtocol.ProtocolName).ToArray();
+        sb.AppendLine("Crit chance is frozen at 0. There is no Luck shop. Protocols are CREW claims:");
+        sb.AppendLine(string.Join(", ", shopNames) +
+                      " share one panel, Default at 0 salvage. AEGIS and LEDGER are not sold.");
         sb.AppendLine();
         sb.AppendLine("Weapon wheel purchases and the equipment slot unlock after Salvage first converts through the Hatch.");
         sb.AppendLine();

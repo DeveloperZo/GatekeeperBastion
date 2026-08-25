@@ -116,8 +116,6 @@ namespace GatekeepersProtocol.Game
         static void HideBastionView()
         {
             var scene = SceneManager.GetSceneByName(SceneFlow.BastionCoop);
-            if (!scene.IsValid() || !scene.isLoaded)
-                scene = SceneManager.GetSceneByName(SceneFlow.Bastion);
             if (!scene.IsValid() || !scene.isLoaded) return;
 
             var roots = scene.GetRootGameObjects();

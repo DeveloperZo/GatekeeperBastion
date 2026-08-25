@@ -30,13 +30,14 @@ namespace GatekeepersProtocol.PlayTests
         [Test]
         public void EveryFlowScene_IsRegisteredInBuildSettings()
         {
-            // Boot path is Splash → MainMenu → RealmSelect → Ship → Bastion. The chooser sits
-            // between the menu and a ship hub because a session is a Boarder paired with a
-            // realm, and that pair is picked there (Docs/Milestones — the realm and the Boarder).
+            // Boot path is Splash → MainMenu → RealmSelect → Ship - CoOp → Bastion_Coop. The
+            // chooser sits between the menu and the ship hub because a session is a Boarder
+            // paired with a realm, and that pair is picked there. One scene pair since the
+            // consolidation: the demo plays on the co-op hull.
             string[] flow =
             {
-                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.RealmSelect, SceneFlow.Ship,
-                SceneFlow.ShipCoop, SceneFlow.Bastion, SceneFlow.BastionCoop,
+                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.RealmSelect,
+                SceneFlow.ShipCoop, SceneFlow.BastionCoop,
                 // Registered by the range builder and kept by RegisterBuildScenes. Non-boot: it
                 // sits after the flow scenes and must not displace them (M99 criterion 11).
                 SceneFlow.Range
@@ -62,18 +63,18 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsEmpty(missing,
                 $"Scene(s) [{string.Join(", ", missing)}] are missing from Build Settings while " +
                 $"[{string.Join(", ", present)}] are registered. SceneFlow needs Splash, MainMenu, " +
-                "RealmSelect, Ship - Demo, Ship - CoOp, Bastion, Bastion_Coop.");
+                "RealmSelect, Ship - CoOp, Bastion_Coop.");
         }
 
         /// <summary>The build-order smoke assertion that lived in the deleted
-        /// ShiftFrontEndMutate.Smoke, updated for the dual ship hub (2026-08-21).</summary>
+        /// ShiftFrontEndMutate.Smoke; one scene pair since the consolidation.</summary>
         [Test]
-        public void BuildSettings_OrderIs_Splash_MainMenu_RealmSelect_ShipDemo_ShipCoop_Bastion_BastionCoop_Range()
+        public void BuildSettings_OrderIs_Splash_MainMenu_RealmSelect_ShipCoop_BastionCoop_Range()
         {
             string[] expected =
             {
-                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.RealmSelect, SceneFlow.Ship,
-                SceneFlow.ShipCoop, SceneFlow.Bastion, SceneFlow.BastionCoop,
+                SceneFlow.Splash, SceneFlow.MainMenu, SceneFlow.RealmSelect,
+                SceneFlow.ShipCoop, SceneFlow.BastionCoop,
                 // The practice range ships in the list so a dev build can reach it. It has no
                 // door yet, so it is last: nothing loads it by index.
                 SceneFlow.Range
@@ -97,8 +98,7 @@ namespace GatekeepersProtocol.PlayTests
             {
                 Assert.AreEqual(expected[i], names[i],
                     $"Build slot {i} is '{names[i]}'; expected '{expected[i]}'. " +
-                    "Order must be Splash, MainMenu, RealmSelect, Ship - Demo, Ship - CoOp, Bastion, " +
-                    "Bastion_Coop, Range.");
+                    "Order must be Splash, MainMenu, RealmSelect, Ship - CoOp, Bastion_Coop, Range.");
             }
         }
 
@@ -108,13 +108,13 @@ namespace GatekeepersProtocol.PlayTests
             // Splash is deliberately not checked: it has no clickable UI (M35 criterion 2) —
             // the any-key skip polls Input directly, so it needs no EventSystem.
             PlayTestUtil.RequireSceneInBuild(SceneFlow.MainMenu);
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
 
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.MainMenu);
             AssertEventSystemPresent(SceneFlow.MainMenu);
 
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
-            AssertEventSystemPresent(SceneFlow.Ship);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
+            AssertEventSystemPresent(SceneFlow.ShipCoop);
         }
 
         [UnityTest]
@@ -143,7 +143,7 @@ namespace GatekeepersProtocol.PlayTests
         public IEnumerator MainMenu_HostsCampaignMenu_AndLoadsShip()
         {
             PlayTestUtil.RequireSceneInBuild(SceneFlow.MainMenu);
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
 
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.MainMenu);
             var menu = UnityEngine.Object.FindFirstObjectByType<MainMenuController>(
@@ -152,28 +152,28 @@ namespace GatekeepersProtocol.PlayTests
                 "MainMenu must host MainMenuController (campaign Continue/Start/Options).");
 
             Assert.AreEqual(SceneFlow.MainMenu, SceneFlow.FrontEndScene);
-            Assert.IsTrue(SceneFlow.CanLoad(SceneFlow.Ship), "Ship must be in build settings.");
+            Assert.IsTrue(SceneFlow.CanLoad(SceneFlow.ShipCoop), "Ship must be in build settings.");
 
-            bool ok = SceneFlow.LoadShip();
-            Assert.IsTrue(ok, "LoadShip from MainMenu failed.");
+            bool ok = SceneFlow.LoadShipCoop();
+            Assert.IsTrue(ok, "LoadShipCoop from MainMenu failed.");
             yield return null;
             yield return null;
-            Assert.AreEqual(SceneFlow.Ship, SceneFlow.ActiveSceneName,
-                "Continue/Start path must land on Ship.");
+            Assert.AreEqual(SceneFlow.ShipCoop, SceneFlow.ActiveSceneName,
+                "Continue/Start path must land on the ship hub.");
         }
 
         [UnityTest]
         public IEnumerator Ship_CanLoadBastion_EmbarkPath()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Ship);
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Bastion);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
 
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Ship);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
             Assert.IsTrue(SceneFlow.LoadBastion(), "Embark LoadBastion failed.");
             yield return null;
             yield return null;
-            Assert.AreEqual(SceneFlow.Bastion, SceneFlow.ActiveSceneName,
-                "Embark must land on Bastion.");
+            Assert.AreEqual(SceneFlow.BastionCoop, SceneFlow.ActiveSceneName,
+                "Embark must land on the bastion.");
         }
 
         static bool CoopCombatSceneFileExists()

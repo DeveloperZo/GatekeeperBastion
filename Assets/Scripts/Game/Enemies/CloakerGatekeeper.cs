@@ -169,7 +169,11 @@ namespace GatekeepersProtocol.Game
         /// neither component.</summary>
         void PushCloak()
         {
-            bool cloaked = !_observed && _revealRemaining <= 0f
+            // IsPresentationDead as well as IsDead: a clone's Damageable never takes damage, and
+            // BeginDeathPresentation re-enables this component (LateUpdate must tick the
+            // tip-over), which fires OnEnable → PushCloak — without the latch that call
+            // re-cloaked the corpse on a guest's screen.
+            bool cloaked = !_observed && _revealRemaining <= 0f && !IsPresentationDead
                            && (_body == null || !_body.IsDead);
             if (_presentation != null) _presentation.SetCloaked(cloaked);
             if (_net != null) _net.SetCloaked(cloaked);

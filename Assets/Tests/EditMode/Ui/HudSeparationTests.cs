@@ -18,7 +18,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void FightHosts_PairwiseGapAtBothResolutions()
         {
-            var scene = SceneHudYaml.Load("Assets/Scenes/Bastion.unity");
+            var scene = SceneHudYaml.Load("Assets/Scenes/Bastion_Coop.unity");
             string[] hosts =
             {
                 "Hud Profile", "Hud Score", "Hud Hatch", "Hud Vitals", "Hud Weapon"
@@ -35,7 +35,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void FightShortcutPrepAndPrompt_ClearLockedCards()
         {
-            var scene = SceneHudYaml.Load("Assets/Scenes/Bastion.unity");
+            var scene = SceneHudYaml.Load("Assets/Scenes/Bastion_Coop.unity");
             for (int r = 0; r < Widths.Length; r++)
             {
                 int w = Widths[r], h = Heights[r];
@@ -55,7 +55,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ShipHosts_PairwiseGapAndPromptClearsWeapon()
         {
-            var scene = SceneHudYaml.Load("Assets/Scenes/Ship - Demo.unity");
+            var scene = SceneHudYaml.Load("Assets/Scenes/Ship - CoOp.unity");
             string[] hosts = { "Hud Profile", "Hud Score", "Hud Weapon" };
             for (int r = 0; r < Widths.Length; r++)
             {
@@ -72,15 +72,15 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void OverflowTmp_WrapsOrAutoSizes_NotTruncated()
         {
-            AssertOverflow("Assets/Scenes/Bastion.unity", "Canvas - Dynamic");
-            AssertOverflow("Assets/Scenes/Ship - Demo.unity", "Ship HUD");
+            AssertOverflow("Assets/Scenes/Bastion_Coop.unity", "Canvas - Dynamic");
+            AssertOverflow("Assets/Scenes/Ship - CoOp.unity", "Ship HUD");
         }
 
         [Test]
         public void ProfileExp_IsInactive()
         {
-            AssertProfileExpInactive("Assets/Scenes/Bastion.unity", "Canvas - Dynamic");
-            AssertProfileExpInactive("Assets/Scenes/Ship - Demo.unity", "Ship HUD");
+            AssertProfileExpInactive("Assets/Scenes/Bastion_Coop.unity", "Canvas - Dynamic");
+            AssertProfileExpInactive("Assets/Scenes/Ship - CoOp.unity", "Ship HUD");
         }
 
         static void AssertOverflow(string scenePath, string ancestor)
@@ -100,7 +100,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void FightDrawerAndMessages_DoNotTruncate()
         {
-            var scene = SceneHudYaml.Load("Assets/Scenes/Bastion.unity");
+            var scene = SceneHudYaml.Load("Assets/Scenes/Bastion_Coop.unity");
             string[] names =
             {
                 "Drawer Left Header", "Drawer Right Header",
@@ -119,7 +119,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ArmoryCatalogCostAndEffect_DoNotWrap()
         {
-            var scene = SceneHudYaml.Load("Assets/Scenes/Ship - Demo.unity");
+            var scene = SceneHudYaml.Load("Assets/Scenes/Ship - CoOp.unity");
             for (int i = 1; i <= 3; i++)
             {
                 string row = "Catalog Row " + i;

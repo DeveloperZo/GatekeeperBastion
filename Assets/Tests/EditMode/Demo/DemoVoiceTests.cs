@@ -323,10 +323,10 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(guid.Success, "DemoVoiceView.cs.meta has no guid");
             string needle = "guid: " + guid.Groups[1].Value;
             Assert.Greater(Regex.Matches(
-                File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - Demo.unity")), needle).Count, 0,
+                File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - CoOp.unity")), needle).Count, 0,
                 "Ship.unity has no DemoVoiceView");
             Assert.Greater(Regex.Matches(
-                File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion.unity")), needle).Count, 0,
+                File.ReadAllText(Path.GetFullPath("Assets/Scenes/Bastion_Coop.unity")), needle).Count, 0,
                 "Bastion.unity has no DemoVoiceView");
         }
     }

@@ -187,6 +187,45 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void MarkdownIsComingSoon_MissingMeansFalse_AndTitleMarkerAgreesWithFlag()
+        {
+            // The one parser (CompendiumCatalog.MarkdownIsComingSoon) the pause nav's filter
+            // and this test share. Missing means false: an ordinary page is not a teaser.
+            Assert.IsFalse(CompendiumCatalog.MarkdownIsComingSoon("# Page\n\nNo comment.\n"));
+            Assert.IsFalse(CompendiumCatalog.MarkdownIsComingSoon(
+                "<!-- Purpose: x / Status: working -->\n# Page\n"), "comment without the flag");
+            Assert.IsTrue(CompendiumCatalog.MarkdownIsComingSoon(
+                "<!-- Purpose: x / coming_soon: true -->\n# Page\n"));
+            Assert.IsFalse(CompendiumCatalog.MarkdownIsComingSoon(
+                "<!-- Purpose: x / coming_soon: false -->\n# Page\n"));
+            Assert.IsTrue(CompendiumCatalog.MarkdownIsComingSoon(
+                "<!-- coming_soon: TRUE -->\n# Page\n"), "case-insensitive");
+
+            // The human marker (— Coming Soon in the title) and the machine flag must not
+            // drift: a page with one and not the other either hides from the filter or
+            // reads as shipped when it is not.
+            var firstH1 = new Regex(@"^#\s+(.+)$", RegexOptions.Multiline);
+            string folder = ProjectPlayFolder();
+            var mismatched = new List<string>();
+            foreach (string path in Directory.GetFiles(folder, "*.md"))
+            {
+                string name = Path.GetFileName(path);
+                if (string.Equals(name, "README.md", StringComparison.OrdinalIgnoreCase)) continue;
+                if (string.Equals(name, "Field-Manual.md", StringComparison.OrdinalIgnoreCase)) continue;
+
+                string body = File.ReadAllText(path);
+                bool flagged = CompendiumCatalog.MarkdownIsComingSoon(body);
+                var h1 = firstH1.Match(body);
+                bool titled = h1.Success && h1.Groups[1].Value.IndexOf(
+                    "Coming Soon", StringComparison.OrdinalIgnoreCase) >= 0;
+                if (flagged != titled)
+                    mismatched.Add(name + (flagged ? " (flag, no title marker)" : " (title marker, no flag)"));
+            }
+            Assert.IsEmpty(mismatched,
+                "coming_soon flag and title marker disagree: " + string.Join(", ", mismatched));
+        }
+
+        [Test]
         public void ExtractGameView_OmitsReferenceAndGaps()
         {
             const string sample =

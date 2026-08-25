@@ -20,9 +20,9 @@ namespace GatekeepersProtocol.PlayTests
         [UnityTest]
         public IEnumerator RiglessEmbark_CannotRepairHatch()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.Bastion);
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
 
-            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.Bastion);
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
             yield return PlayTestUtil.WaitUntil(
                 () =>
                 {

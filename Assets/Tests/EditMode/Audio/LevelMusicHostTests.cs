@@ -18,7 +18,6 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ShipAndRange_HostHydroShipAsLevelMusic()
         {
-            AssertLevelHost("Assets/Scenes/Ship - Demo.unity", HydroShipGuid);
             AssertLevelHost("Assets/Scenes/Ship - CoOp.unity", HydroShipGuid);
             AssertLevelHost("Assets/Scenes/Range.unity", HydroShipGuid);
         }
@@ -26,7 +25,6 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Bastions_HostHydroCombatAsLevelMusic()
         {
-            AssertLevelHost("Assets/Scenes/Bastion.unity", HydroCombatGuid);
             AssertLevelHost("Assets/Scenes/Bastion_Coop.unity", HydroCombatGuid);
         }
 

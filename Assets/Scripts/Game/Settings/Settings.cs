@@ -31,6 +31,11 @@ namespace GatekeepersProtocol.Game
                 "Discard reload when switching weapons", SettingCategory.Gameplay,
                 defaultBool: true,
                 prefKey: "gkb_discard_reload_on_swap"),
+            new SettingDecl(
+                SettingId.ShowComingSoonEntries,
+                "Compendium lists Coming Soon entries", SettingCategory.Gameplay,
+                defaultBool: true,
+                prefKey: "gkb_show_coming_soon"),
         };
 
         static ISettingsStore _store;

@@ -651,6 +651,26 @@ namespace GatekeepersProtocol.EditorTools
                 dirty = true;
             }
 
+            // An additive layer plays this clip as a DELTA against a reference pose. Left
+            // implicit, that reference resolved to nothing on the humanoid muscle path and the
+            // layer was a silent no-op in play — the flinch never moved a bone (Docs/Milestones
+            // — gatekeepers flinch when shot, 2026-08-24 correction). Pin the
+            // reference to the clip's own frame 0, which is authored all-neutral, so the peak is
+            // the whole delta. Patched on the existing-clip path too: a clip from before this
+            // rule converges instead of staying broken forever.
+            AnimationClipSettings existingSettings = AnimationUtility.GetAnimationClipSettings(clip);
+            if (!existingSettings.hasAdditiveReferencePose
+                || existingSettings.additiveReferencePoseClip != clip
+                || existingSettings.additiveReferencePoseTime != 0f)
+            {
+                existingSettings.hasAdditiveReferencePose = true;
+                existingSettings.additiveReferencePoseClip = clip;
+                existingSettings.additiveReferencePoseTime = 0f;
+                AnimationUtility.SetAnimationClipSettings(clip, existingSettings);
+                EditorUtility.SetDirty(clip);
+                dirty = true;
+            }
+
             AvatarMask mask = AssetDatabase.LoadAssetAtPath<AvatarMask>(UpperBodyMaskPath);
             if (mask == null)
             {
@@ -729,7 +749,13 @@ namespace GatekeepersProtocol.EditorTools
         }
 
         /// <summary>Returns true when the Die parameter or Death state was added.
-        /// No-op when both are already present, so a later Build All does not dirty the asset.</summary>
+        /// No-op when both are already present, so a later Build All does not dirty the asset.
+        /// THIS IS THE LIVE DEATH PATH: EnemyGatekeeper.BeginDeathPresentation fires the Die
+        /// trigger into this state. It only reads right because the take's import bakes every
+        /// root channel into pose (orientation, Y and XZ, Based Upon Original — pinned by
+        /// DeathCollapseTests); channels left as root motion are discarded under
+        /// applyRootMotion=false and the body sinks upright instead of tipping (see the
+        /// correction in Docs/Milestones — the collapse under the burst).</summary>
         static bool EnsureDeathState(AnimatorController controller)
         {
             if (controller == null) return false;

@@ -44,13 +44,14 @@ namespace GatekeepersProtocol.Game
                 Title = "II. A Run",
                 EntryStems = new[]
                 {
-                    "A-Run", "Waves", "Intensity", "Salvage", "Going-Down", "Staying-Alive"
+                    "A-Run", "Waves", "Intensity", "Salvage", "Experience-And-Cores",
+                    "Going-Down", "Staying-Alive"
                 }
             },
             new Volume
             {
                 Title = "III. The Bastion",
-                EntryStems = new[] { "The-Hatch" }
+                EntryStems = new[] { "The-Hatch", "Destinations" }
             },
             new Volume
             {
@@ -58,7 +59,10 @@ namespace GatekeepersProtocol.Game
                 EntryStems = new[]
                 {
                     "Gatekeepers", "Gatekeeper-Default", "Gatekeeper-Hunter", "Gatekeeper-Thief",
-                    "Gatekeeper-Cloaker"
+                    "Gatekeeper-Cloaker", "Gatekeeper-Source", "Gatekeeper-Enabler",
+                    "Gatekeeper-Alarmer", "Gatekeeper-Bypasser", "Gatekeeper-Reclaimer",
+                    "Gatekeeper-Exploder", "Gatekeeper-Standoff-Shooter",
+                    "Gatekeeper-Ailment-Shooter"
                 }
             },
             new Volume
@@ -76,13 +80,13 @@ namespace GatekeepersProtocol.Game
                 EntryStems = new[]
                 {
                     "Weapons", "Weapon-MK-1-Sidearm", "Weapon-SEC-D", "Weapon-BR-12-Shotgun",
-                    "Weapon-MR-35-Rifle", "Weapon-PRI-C"
+                    "Weapon-MR-35-Rifle", "Weapon-PRI-C", "The-Drone", "Drone-Payloads"
                 }
             },
             new Volume
             {
                 Title = "VII. The Hull",
-                EntryStems = new[] { "The-Ship", "Upgrades" }
+                EntryStems = new[] { "The-Ship", "Upgrades", "The-Safehouse" }
             },
             new Volume
             {
@@ -95,6 +99,8 @@ namespace GatekeepersProtocol.Game
             @"<!--.*?-->", RegexOptions.Singleline | RegexOptions.Compiled);
         static readonly Regex InBuildFlag = new Regex(
             @"\bin_build:\s*(true|false)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        static readonly Regex ComingSoonFlag = new Regex(
+            @"\bcoming_soon:\s*(true|false)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         static readonly Regex MdLink = new Regex(
             @"\[([^\]]+)\]\(([^)]+\.md)\)", RegexOptions.Compiled);
         static readonly Regex Bold = new Regex(
@@ -201,6 +207,30 @@ namespace GatekeepersProtocol.Game
             if (path == null || !File.Exists(path)) return true;
             try { return MarkdownIsInBuild(File.ReadAllText(path)); }
             catch (Exception) { return true; }
+        }
+
+        /// <summary>The `coming_soon` flag from a page's opening HTML comment; MISSING MEANS
+        /// FALSE — an ordinary page is not a teaser. The one parser for the flag: the pause
+        /// nav's optional filter and the form tests both call here, so the marker in a page's
+        /// title and the flag cannot drift apart unnoticed.</summary>
+        public static bool MarkdownIsComingSoon(string markdown)
+        {
+            if (string.IsNullOrEmpty(markdown)) return false;
+            var comment = HtmlComment.Match(markdown);
+            if (!comment.Success) return false;
+            var flag = ComingSoonFlag.Match(comment.Value);
+            if (!flag.Success) return false;
+            return string.Equals(flag.Groups[1].Value, "true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>Whether the page behind a stem is a Coming Soon teaser. An unresolvable
+        /// page reads false — absence is its own failure, not a teaser.</summary>
+        public static bool IsComingSoon(string stem)
+        {
+            string path = ResolvePagePath(stem);
+            if (path == null || !File.Exists(path)) return false;
+            try { return MarkdownIsComingSoon(File.ReadAllText(path)); }
+            catch (Exception) { return false; }
         }
 
         /// <summary>Strip HTML comments and ## Gaps. Keeps Game, Reference, See also.</summary>

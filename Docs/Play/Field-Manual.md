@@ -106,7 +106,7 @@ Each Secondary purchase on one spoke costs 150 / 300 / 450 / 600 / 750 / 900 / 1
 
 ## What comes aboard
 
-Three kinds, and each is defined by what it **refuses** to do. Every kind swings on
+Four kinds, and each is defined by what it **refuses** to do. Every kind swings on
 the same 0.7 s clock — they differ in what they hit, never in how often.
 
 | Kind | HP | Hits you for | Hits the hatch for | Speed | Refuses |
@@ -114,6 +114,7 @@ the same 0.7 s clock — they differ in what they hit, never in how often.
 | **Default** | 30 | 6 | 4 | 3.2 → 5.6 m/s when provoked | nothing — it will march, and it will turn on you if you hurt it |
 | **Hunter** | 20 | 6 | — | 6.5 m/s | to touch the hatch; it only ever wants you |
 | **Thief** | 120 | — | 20 | 2.2 m/s | to turn when shot; Hatch-bank it marches the Hatch, field-terminal it hunts you — it never hurts you |
+| **Cloaker** | 45 | 6 | 4 | 3.2 → 5.6 m/s when provoked | to advance while watched — any Boarder's gaze stops it dead, and it fades and closes the moment every eye is elsewhere |
 
 HP above is the base line. Later waves multiply it (see the wave table).
 
@@ -126,15 +127,15 @@ Gatekeepers arrive in groups, not a stream.
 
 At intensity 0:
 
-| Wave | Bodies | Default | Hunter | Thief | HP × | Arrive in groups of | Every |
-|---|---|---|---|---|---|---|---|
-| 1 | 18 | 18 | 0 | 0 | 1 | 3 | 4.2 s |
-| 2 | 30 | 26 | 4 | 0 | 1.4 | 4 | 4 s |
-| 3 | 42 | 34 | 6 | 2 | 1.8 | 5 | 3.8 s |
-| 4 | 54 | 40 | 10 | 4 | 2.2 | 6 | 3.6 s |
-| 5 | 66 | 47 | 12 | 7 | 2.6 | 7 | 3.4 s |
+| Wave | Bodies | Default | Hunter | Thief | Cloaker | HP × | Arrive in groups of | Every |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 18 | 18 | 0 | 0 | 0 | 1 | 3 | 4.2 s |
+| 2 | 30 | 26 | 4 | 0 | 0 | 1.4 | 4 | 4 s |
+| 3 | 42 | 33 | 6 | 2 | 1 | 1.8 | 5 | 3.8 s |
+| 4 | 54 | 38 | 10 | 4 | 2 | 2.2 | 6 | 3.6 s |
+| 5 | 66 | 44 | 12 | 7 | 3 | 2.6 | 7 | 3.4 s |
 
-Hunters and Thieves are on a fixed schedule — intensity never adds more of them.
+Hunters, Thieves and Cloakers are on a fixed schedule — intensity never adds more of them.
 
 ## Intensity — the wager
 
@@ -163,8 +164,11 @@ A kill pays `25`, then multiplied by intensity.
 Nothing pays per second except Hatch-bank drip (`8` unbanked/s), and the quiet between waves earns nothing at all.
 
 The hatch is what you are defending: **300 HP** at Hatch Armor 0, up to **375**. Hold `E` near it to repair.
-If it falls, the run ends. If you fall, the run ends. There is no other way out —
-no bail-out, no escape lever, no respawn.
+If it falls, the run ends — whatever is banked. If you fall, the realm can buy you back:
+a respawn costs `150 × (respawns taken + 1)` from the banked pot, and mid-Assault it
+also burns a shared charge (1 seeded per seat; at a break, no charge is needed).
+Death always wipes your Unbanked. No charges left, a pot that cannot pay, nobody still
+standing — that is a run that ends.
 
 ## The ship — where salvage goes
 
@@ -173,7 +177,7 @@ Between runs you walk your own ship. Four consoles, each owning one subject.
 | Console | Owns | Sells |
 |---|---|---|
 | **ARMORY** | the weapon in your hands | weapons, and wheel purchases for whichever you carry |
-| **CREW QUARTERS** | you | Default (STOCK; G Barrage; H Rush), VEIL (PHANTOM; G Ping; H Cloak; Ghost), FORGE (PARALLEL BAYS; G Field Deploy; H Overcharge; Magnet Hands) |
+| **CREW QUARTERS** | you | Default Protocol (STOCK; G Barrage; H Rush), VEIL Protocol (PHANTOM; G Ping; H Cloak; Ghost), FORGE Protocol (PARALLEL BAYS; G Field Deploy; H Overcharge; Magnet Hands) |
 | **FABRICATION** | the ship | Hatch Armor, Equipment slot, Repair Rig, Decoy |
 | **NAV MAP** | where you go | the destination, and embarking |
 
@@ -186,8 +190,8 @@ Hatch Armor runs 0–5 at +5% a level, costing 200 × 2^level — 200 / 400 / 80
 | Repair Rig — flat repair rate | 8 HP/s | 300 salvage |
 | Decoy — Drone payload | 3 charges | 250 salvage |
 
-Crit chance is frozen at 0. There is no Luck shop. Protocols are CREW claims: Default
-at 0 salvage, VEIL and FORGE claimable on the same panel. AEGIS and LEDGER are not sold.
+Crit chance is frozen at 0. There is no Luck shop. Protocols are CREW claims:
+Default Protocol, VEIL Protocol, FORGE Protocol share one panel, Default at 0 salvage. AEGIS and LEDGER are not sold.
 
 Weapon wheel purchases and the equipment slot unlock after Salvage first converts through the Hatch.
 

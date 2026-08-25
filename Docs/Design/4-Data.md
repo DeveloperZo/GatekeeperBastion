@@ -488,20 +488,55 @@ with exponential smoothing at the stated rate.
 | follow lerp | 6/s |
 <!-- GKB:END ship-camera -->
 
-## Wave-report dashboard (M38)
+## Wave-report dashboard (M38, re-cut by M103)
 
 `Docs/dashboard.html` Session tab parses `GatekeepersProtocol_*.log` (current;
 `GatekeeperBastion_*.log` still parse) in the browser after you
 choose the Logs folder (or drop the files). Focus / Project tabs read
 `Docs/dashboard-data.js` from `Tools/dashboard-data/run.ps1` (milestones, commits, questions,
-rule-based next focus). Sample filters and era cutoffs. Until the corpus is large, Session **labels** PlayMode,
-short, and Dev rather than dropping them from the sample (see `Docs/dashboard.html`).
-wave-report still prints every Run; Dev is soft-excluded from summary means only.
+rule-based next focus). Sample filters and era cutoffs.
+wave-report still prints every Run; Dev and config taint are soft-excluded from summary means only.
+
+**Harness quarantine (M103).** A PlayMode test session writes its log under
+`Logs/harness/` — `LogFile` detects the Unity Test Framework's generated
+`InitTestScene*` first scene, never the `IntegrationCheck`/`AutoVerify` tag. Human
+sessions keep `Logs/` (30 kept); harness keeps 6. Trigger: on 2026-08-24, 19 of the
+day's 28 files were harness carrying ~550 synthetic Runs, and the 30-file prune had
+real sessions hours from deletion. The Session tab's *Include PlayMode* toggle is now
+**off by default** for pre-quarantine files still in `Logs/`; everything kept remains
+labeled, never silently dropped.
+
+**Run summary Metric line (M103, schema 1).** Every Run end also emits one
+machine line beside the prose (`GameController.EndScreen.LogRunMetric`):
+`[Run] summary schema=1 result=<lost|stripped|docked|abandoned> cause=… wave= startWave=
+duration= gross= repair= net= banked= respawns= seats= dial= checkpoint= config=
+configTaint= dev= scene= seed=`. Facts only — kills and deaths stay on their event
+lines and the readers do the arithmetic (the no-counters-in-Assets decision,
+`Decisions.md`). `checkpoint`/`config` name the F12/F11 beat and loadout row the
+session was built from. **`configTaint` is beat-relative** (owner ruling 2026-08-24):
+configurations grow valid as the beats progress — a row granting a Primary is tainted
+before the beat where the Primary rung unlocks, and a kit costing more than the
+progression had earned by that beat is tainted anywhere (a max-upgraded kit always
+is). The rule (`GameController.CheckpointConfigTainted`) reads both facts off the
+constructed beat state (`DemoRungTwoOpened`, `LifetimeSalvageEarned`) **before** the
+overlay lands, so it follows the beat builders with no hardcoded table; pinned by
+`CheckpointConfigTaintTests`. Verdicts today: row 1 (MK-1 T2) valid from beat 3, rows
+2–4 (PRI-C T2 + protocol) valid from beat 5. A checkpoint Run with a valid row counts
+as play data; `dev=1` records only that the session's save is suppressed. Adding a
+field is compatible; renaming or removing one is `schema=2`.
+
+The dashboard's **Checkpoint configurations** panel lists every observed (beat,
+config) cell with the game's verdicts and a per-cell override (clean / tainted /
+game rule) for tuning the classification from the page — overrides are
+browser-local (`localStorage`), re-classify those Runs across every panel on the
+spot, and never touch the game's rule; a *mixed* verdict on one cell means the beat
+economy changed between those Runs.
 
 | Constant | Value | Source |
 |---|---|---|
-| Short Run label | **5 s** | Runs shorter than this are labeled `short` (crashed / aborted / PlayMode harness churn). Measured from `run begins` to `RUN OVER` / `BASTION STRIPPED` / next `run begins`. |
-| PlayMode discriminator | `stage=playmode` in the log | File-level. Not the `IntegrationCheck` tag (`AutoVerify` in logs before 2026-08-12). Labeled `playmode`; not dropped. |
+| Short Run label | **5 s** | Runs shorter than this are labeled `short` (crashed / aborted / PlayMode harness churn). Measured from `run begins` to `RUN OVER` / `BASTION STRIPPED` / `DOCKED` / next `run begins`. |
+| PlayMode discriminator | `stage=playmode` in the log | File-level, for pre-quarantine files; new harness sessions live in `Logs/harness/` and are never read. Labeled `playmode`; excluded from the sample by default, still counted on the page. |
+| Harness quarantine | first scene `InitTestScene*` | `Util/LogFile.SessionBanner` → `Logs/harness/`, keep 6. |
 | Era: pre-weapon | filename date **≤ 2026-08-03** | `Docs/_meta/Logs/` 2026-08-02/03, pre-horde (`2-Dynamics.md`). |
 | Era: horde retune | **2026-08-04 … 2026-08-07** | After M10 / horde body counts; before wheel-era sessions dominate. |
 | Era: weapons and wheel | **2026-08-08 … 2026-08-12** | Primaries + upgrade wheel in session logs. |

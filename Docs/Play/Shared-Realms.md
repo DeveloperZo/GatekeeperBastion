@@ -1,4 +1,4 @@
-<!-- Purpose: Coming Soon marker for shared realms — entering a friend's world without its owner online. / Status: teaser; the feature is designed and awaiting cross-machine verification. / in_build: true / Update trigger: replace this page when shared realms ship. / Last updated: 2026-08-24 -->
+<!-- Purpose: Coming Soon marker for shared realms — entering a friend's world without its owner online. / Status: teaser; the feature is designed and awaiting cross-machine verification. / in_build: true / coming_soon: true / Update trigger: replace this page when shared realms ship. / Last updated: 2026-08-24 -->
 
 # Shared Realms — Coming Soon
 

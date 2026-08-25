@@ -11,7 +11,7 @@ namespace GatekeepersProtocol.Game
     /// never through a static. Client StartRun+EngageTether for local phase/UI; Update skips
     /// Sim.Tick so the host remains the only live sim.</summary>
     /// <remarks>
-    /// Scene flow: the ship hub is now a real scene (SceneFlow.Ship), so entering the Bastion
+    /// Scene flow: the ship hub is now a real scene (SceneFlow.ShipCoop), so entering the Bastion
     /// starts fighting immediately — Start() calls StartRun + EngageTether and Docked is a
     /// transient boot phase. A run now ends TWO ways: death (player death via PlayerDied →
     /// Sim.NotifyPlayerDown, or hatch destruction) lands in Lost, and Master Control's
@@ -185,6 +185,18 @@ namespace GatekeepersProtocol.Game
             if (_net != null && _net.Lobby != null && _net.Lobby.PendingStartWave.Value > 0)
                 startWave = _net.Lobby.PendingStartWave.Value;
             GameSession.PendingStartWave = 1;
+
+            // The demo's rule: the ship terminal's start grants the MK-1 before any embark
+            // (MapStation refuses an unarmed EMBARK). A run that still begins unarmed with
+            // the demo active — a direct scene play, a dev jump — honours the same grant
+            // here: the improvised cutter must never appear inside the demo.
+            if (Meta != null && Meta.DemoActive && !Meta.OwnsAnyWeapon)
+            {
+                Meta.SetOwned(WeaponId.Mk1Sidearm, true);
+                Meta.SetEquipped(WeaponId.Mk1Sidearm);
+                Meta.DemoWeaponGranted = true;
+                Log.Event("Demo", "unarmed demo run — MK-1 granted (the ship terminal's grant, applied late)");
+            }
 
             // Bind FPC/gun before Docked so OnPhaseChanged has a controller. Client still
             // StartRun+EngageTether for local phase/UI; Update skips Sim.Tick (no second live sim).
@@ -593,6 +605,10 @@ namespace GatekeepersProtocol.Game
 
         void OnDestroy()
         {
+            // A teardown while the run is still Tethered is an abandonment — quit to menu,
+            // a mid-run checkpoint reload, or the player closing. Terminal phases already
+            // wrote their summary; this writes the one no terminal phase ever will.
+            LogAbandonMetricIfLiveRun();
             Unsubscribe();
         }
 
