@@ -4,7 +4,7 @@
 
 One door with a pulse, and everything on this hull is arranged around it.
 
-The Hatch is the umbilical back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Boarding on the spot — the one loss no pot buys back. A dead Boarder can be priced back onto the floor. A dead door cannot.
+The Hatch is the umbilical back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Boarding on the spot — the one loss nothing at all buys back. A dead Boarder can be priced back onto the floor out of what they were carrying. A dead door cannot, at any price, out of any purse.
 
 It starts every Boarding whole. Whatever I let happen to it last time did not carry.
 

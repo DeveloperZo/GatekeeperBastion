@@ -98,20 +98,26 @@ namespace GatekeepersProtocol.Game
             Burst(position, Color.white, 14, speed: 3.2f, size: 0.13f, lifetime: 0.22f, gravity: 0f);
         }
 
-        /// <summary>Big kill-confirm explosion where an enemy died.</summary>
+        /// <summary>Big kill-confirm explosion where an enemy died. Sound rides the visual —
+        /// one seam, so a future second caller can never produce a silent death.</summary>
         public static void DeathExplosion(Vector3 position, Color tint)
         {
             Burst(position, tint, 42, speed: 7f, size: 0.14f, lifetime: 0.5f, gravity: 0.4f);
             Burst(position, Color.white, 10, speed: 2.5f, size: 0.09f, lifetime: 0.35f, gravity: 0f);
+            CombatSfx.EnemyDown(position);
         }
 
         /// <summary>Short flash at the muzzle each shot.</summary>
         public static void MuzzleFlash(Vector3 position)
             => Burst(position, FxColors.FxMuzzle, 6, speed: 1.6f, size: 0.05f, lifetime: 0.09f, gravity: 0f);
 
-        /// <summary>Sparks when something hits the hatch — damage you can see across the room.</summary>
+        /// <summary>Sparks when something hits the hatch — damage you can see across the room,
+        /// and (same seam) hear from behind you.</summary>
         public static void HatchDamageSparks(Vector3 position)
-            => Burst(position, FxColors.FxBlood, 20, speed: 4f, size: 0.1f, lifetime: 0.4f, gravity: 0.8f);
+        {
+            Burst(position, FxColors.FxBlood, 20, speed: 4f, size: 0.1f, lifetime: 0.4f, gravity: 0.8f);
+            CombatSfx.HatchStruck(position);
+        }
 
         static void Burst(Vector3 position, Color color, int count, float speed, float size, float lifetime, float gravity)
         {

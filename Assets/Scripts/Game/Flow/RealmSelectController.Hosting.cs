@@ -45,9 +45,9 @@ namespace GatekeepersProtocol.Game
             // player had already copied a code and sent it to a friend who could never use it.
             var picked = SaveService.LoadRealm(_realms[_pickedRealm].Id);
             if (picked != null
-                && !DemoProgress.MultiplayerUnlocked(picked.DemoActive, picked.DemoWheelBuysLeft))
+                && !DemoProgress.MultiplayerUnlocked(picked.DemoActive, picked.DemoWeaponGranted))
             {
-                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                Log.Event("Demo", "multiplayer locked — take the MK-1 first");
                 if (_view != null)
                     _view.SetStatus("\"" + _realms[_pickedRealm].Name
                         + "\" is still in the opening — multiplayer unlocks on your first upgrade.");
@@ -161,7 +161,7 @@ namespace GatekeepersProtocol.Game
             {
                 if (_view != null)
                     _view.SetSessionStatus("Multiplayer unlocks after your first upgrade — play the opening solo.");
-                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                Log.Event("Demo", "multiplayer locked — take the MK-1 first");
                 return;
             }
 

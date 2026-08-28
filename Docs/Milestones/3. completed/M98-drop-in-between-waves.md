@@ -1,7 +1,7 @@
 # M98 — Drop in between waves
 
 <!--
-Status: active
+Status: completed, Aug 2026 (folder-moved 2026-08-25 at Zo's direction; PlayMode leg green 5b0fc52, playthrough unobserved)
 Update trigger: when the between-waves gate moves, when the respawn constants are
 retuned (retune the 4-Data respawns block with them), when the hatch open rule
 changes, when wave composition stops being computed per wave, when M100 changes

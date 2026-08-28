@@ -1,3 +1,4 @@
+using GatekeepersProtocol.Sim;
 using GatekeepersProtocol.Util;
 using UnityEngine;
 
@@ -39,6 +40,10 @@ namespace GatekeepersProtocol.Game
         /// <summary>Dev F6: when true, TakeDamage is a no-op. Cleared on ResetToSpawn.</summary>
         public bool Invulnerable { get; set; }
 
+        // Passive regen. Rule and tunables live in Sim (PlayerRegen); this component only
+        // injects dt and owns the HP the rule returns. Struct, so no per-frame allocation.
+        PlayerRegen _regen;
+
         Vector3 _initialPosition;
         Quaternion _initialRotation;
         CharacterController _cc;
@@ -67,6 +72,37 @@ namespace GatekeepersProtocol.Game
         void OnDisable()
         {
             PlayerRegistry.Unregister(this);
+        }
+
+        /// <summary>Rate passive regen would run at this frame, HP/second — base plus the
+        /// standing kill boost. Read-only; the HUD may want it, nothing else drives from it.</summary>
+        public float RegenRatePerSecond => _regen.RatePerSecond;
+
+        /// <summary>Kill boost currently standing, HP/second. 0 when nothing died recently.</summary>
+        public float RegenKillBoostPerSecond => _regen.KillBoostPerSecond;
+
+        /// <summary>A gatekeeper died: speed this player's regen up.
+        /// Routed from GameController.GatekeeperKilled, the one kill seam in the Game layer.</summary>
+        public void NotifyKill()
+        {
+            _regen.NotifyKill();
+        }
+
+        void Update()
+        {
+            Tick(Time.deltaTime);
+        }
+
+        /// <summary>Advance passive regen. dt is injected — the rule in Sim reads no clock.</summary>
+        /// <remarks>Skipped on a client-only peer: there the server owns HP and pushes it
+        /// through <see cref="ApplyReplicatedHp"/>, so regenerating locally would fight the
+        /// replication and show a number the server never agreed to.</remarks>
+        public void Tick(float dt)
+        {
+            if (IsDead) return;
+            var gc = _game;
+            if (gc != null && gc.Net != null && gc.Net.IsClientOnly) return;
+            Hp = _regen.Tick(dt, Hp, maxHp, IsDead);
         }
 
         /// <summary>Ghost acquisition multiplier. 1 = unbiased. Pushed at spawn, never serialized.</summary>
@@ -118,6 +154,9 @@ namespace GatekeepersProtocol.Game
                     : null;
             }
             float taken = Mathf.Min(amount, Hp); // overkill is not damage taken
+            // Hold passive regen. A negated hit (bulkhead) already returned above, so only a
+            // hit that actually landed pays the delay.
+            _regen.NotifyDamaged();
             Hp -= amount;
             bool fatal = Hp <= 0f;
             if (fatal) Hp = 0f;
@@ -132,6 +171,9 @@ namespace GatekeepersProtocol.Game
 
             // One line per damaging hit, recorded before Die() so the killing blow precedes death.
             Log.Event("Player", $"took {taken:0} damage — HP {Hp:0}/{maxHp:0}");
+            // Hurt sound is first-person only — a networked avatar's health must stay silent here.
+            if (taken > 0f && PlayerRegistry.Local == this)
+                CombatSfx.PlayerHurt();
             if (fatal) Die();
         }
 
@@ -201,6 +243,7 @@ namespace GatekeepersProtocol.Game
             maxHp = Mathf.Max(1f, newMaxHp);
             Hp = maxHp;
             IsDead = false;
+            _regen.Reset(); // run start: no boost carried in from the previous run
             Log.Info(Tag, $"Configured: max HP {maxHp:0} (healed to full).");
         }
 
@@ -215,6 +258,7 @@ namespace GatekeepersProtocol.Game
             Hp = maxHp;
             IsDead = false;
             Invulnerable = false;
+            _regen.Reset();
             _lastAttacker = null;
             _lastAttackerKind = null;
             Log.Info(Tag, "Player reset to spawn at full HP.");
@@ -225,6 +269,7 @@ namespace GatekeepersProtocol.Game
         {
             Hp = maxHp;
             IsDead = false;
+            _regen.Reset();
             if (_fpc == null) _fpc = GetComponent<FirstPersonController>();
             if (_fpc != null) _fpc.MovementLocked = false;
             Log.Info(Tag, $"Healed to full — HP {Hp:0}/{maxHp:0}.");

@@ -31,6 +31,12 @@ namespace GatekeepersProtocol.Sim
             // while the Master Hatch half is live, so EndDemo never has to filter it.
             if (_masterPhase == MasterControlPhase.Hatch) return;
             DockOffered = true;
+            // Zone 2 RESOLVED opens the demo's Primary rack — survived here, or lost
+            // in EndRun's twin write. One flag, either outcome (Zo, 2026-08-25): the
+            // rack rewards having ANSWERED zone 2, not specifically having bled there.
+            if (_meta != null && _meta.DemoActive
+                && DemoZones.WaveIsIn(Zone2, CurrentWaveIndex))
+                _meta.DemoZone2BankLost = true;
             var survived = BankWindowSurvived;
             if (survived != null) survived();
         }

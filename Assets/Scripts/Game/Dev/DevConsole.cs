@@ -252,7 +252,7 @@ namespace GatekeepersProtocol.Game
                 case DevCommands.Kind.StartCoopHost:
                     if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
                     {
-                        Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                        Log.Event("Demo", "multiplayer locked — take the MK-1 first");
                         break;
                     }
                     if (gc != null) gc.StartCoopHost();
@@ -262,7 +262,7 @@ namespace GatekeepersProtocol.Game
                 case DevCommands.Kind.StartCoopClient:
                     if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
                     {
-                        Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                        Log.Event("Demo", "multiplayer locked — take the MK-1 first");
                         break;
                     }
                     if (gc != null) gc.StartCoopClient();
@@ -384,6 +384,7 @@ namespace GatekeepersProtocol.Game
         {
             EnsureStyles();
             float scale = Screen.height / VirtualHeight;
+            if (scale < 0.01f) scale = 1f;
             Matrix4x4 prev = GUI.matrix;
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1f));
             float vw = Screen.width / scale;

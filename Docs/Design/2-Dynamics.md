@@ -28,11 +28,11 @@ Gatekeeper's Protocol's atom, one Wave at a time:
 ```
 model    "I can hold the door if I thin the group before it lands"
   |
-action   juice, E then T at a field terminal / Hatch / Master Control; pick targets; repair; Hatch-bank
+action   juice, T at the Hatch to begin; pick targets; repair; T at the zone's terminal to end it
   |
-feedback hatch HP falling, gatekeepers parked on the door, Unbanked vs Banked, the end screen, the log
+feedback hatch HP falling, gatekeepers parked on the door, the bank climbing per body, the end screen, the log
   |
-model'   "eight parked is already lost" / "Unbanked is not mine until it goes through the Hatch"
+model'   "eight parked is already lost" / "the bodies already paid; the only question is the door"
 ```
 
 **Feedback is the return path, so #6 is a dynamics problem, not a presentation one.** A full
@@ -81,9 +81,10 @@ broken loop you exit immediately** — consumed once, worth less on repeat.
 
 **This game is currently all loop and no arc, and that is a position rather than an
 oversight.** There is no story beat, no unlock sequence, no destination that changes what
-a Run is. The two things that could become arcs are the first death (which unlocks upgrade
-wheel purchases and the equipment slot, and is the only one-time event in the game) and the
-NAV MAP's second destination, which does not exist yet.
+a Run is. The two things that could become arcs are the realm's first earned Salvage (which unlocks
+upgrade wheel purchases and the equipment slot, and is the only one-time event in the game —
+and since 2026-08-25 it fires on the first body, so it is a thinner arc than it was)
+and the NAV MAP's second destination, which does not exist yet.
 
 *Whether a Run needs an arc is unknown and needs play data.* It is the kind of question
 that should be asked after Fellowship is a session a friend can use (`1-Experience.md`
@@ -99,9 +100,10 @@ Two drive, two damp, and the player holds the gain knob on one of them.
 
 ### R1 — kills → Salvage → upgrades → faster kills
 
-The progression loop, and the only reinforcing loop in the meta. `AwardKill` fills
-**Unbanked** (`RunSim`); a Hatch-bank drip/dump is what credits `MetaState.BankedSalvage`.
-Kill value is flat `MetaUpgrades.SalvagePerKill()` × intensity (`TetherSiphon.RewardMultiplier`).
+The progression loop, and the only reinforcing loop in the meta. `AwardKill` credits
+`MetaState.BankedSalvage` directly as each body falls (`RunSim.BankKill`, Zo 2026-08-25) —
+there is no conversion step between a kill and spendable money, and therefore no way to
+fight a Run and bank none of it. Kill value is flat `MetaUpgrades.SalvagePerKill()` × intensity (`TetherSiphon.RewardMultiplier`).
 Banked Salvage buys upgrade wheel purchases (`Sim/Meta/WeaponWheel.cs`) and Hatch Armor.
 CREW QUARTERS does not sell attributes; Default Protocol is equipped, not bought.
 
@@ -138,9 +140,12 @@ step" holds as the best case only; the worst case is a sixth of it, for the same
 closes once per Run and a Run cannot spiral. That is a structural decision, not a tuning
 one, and it is what makes a Run's difficulty a fixed quantity the moment you embark.
 
-**And it does not close at all until you have died once.** Wheel purchases and the equipment
-slot are gated on `MetaUpgrades.UpgradesUnlocked == (PodEjections >= 1)`. A first Run is
-played at whatever the loop's gain was before the loop existed. Buying a weapon is not
+**And it does not close at all until the realm has earned something.** Wheel purchases and
+the equipment slot are gated on `MetaUpgrades.UpgradesUnlocked`, which reads
+`LifetimeSalvageEarned > 0` (re-keyed off `HatchConversions >= 1` on 2026-08-25 by Zo when
+the Convert left the demo; off `PodEjections` before that, `M78`). Lifetime on purpose:
+spending the bank to zero must not re-lock the wheel. A first Run is played at whatever the
+loop's gain was before the loop existed, and exactly one Run is. Buying a weapon is not
 gated. Hatch Armor and the protocol are not gated. Attribute tracks were refunded (save v8).
 
 **Two cost curves in one shop, deliberately.** Weapons are the progression and must stay
@@ -152,8 +157,9 @@ slopes. `UpgradeTrack` is `HatchArmor` only. CREW QUARTERS equips `BoarderProtoc
 ### R2 — intensity: the player's hand on the gain
 
 `Sim/Meta/TetherSiphon.cs` is still the body-count table. The player authors the stake by
-juicing Unbanked at a look-at trigger (`Sim/Run/IntensityJuice.cs`): raise costs, lower is
-free, `E` selects, `T` starts. Raising intensity multiplies reward and body count off the same
+juicing **banked** Salvage at a look-at trigger (`Sim/Run/IntensityJuice.cs`, re-pursed
+2026-08-25): raise costs real take-home progress, lower is free, `T` starts. That is a
+heavier press than it was, deliberately — R2's gain is now bought out of R1's output. Raising intensity multiplies reward and body count off the same
 hand-authored table, so payout and pressure cannot drift apart. They did once, and the
 result was +600% Gatekeeper HP for +50% money.
 
@@ -195,12 +201,32 @@ bodies/s against a measured 0.93 kill rate:
 
 
 M10 shipped `max(0.4, 4.2 − 0.20×wave)`. Earlier softens were not enough after the horde and
-swing-landing fixes.
+swing-landing fixes. **That sign was reversed on 2026-08-27** — the live formula is
+`max(0.4, 4.2 + 0.20×min(wave, MaxWaves−1))`, a gap that WIDENS as the Run escalates. The
+table above is kept because its arithmetic is still how a gap converts to a delivery time,
+but read it as history: the row this section argued toward is no longer the shipped one.
 
-**Kill rate is not constant across a Run.** Measured 1.23 / 1.50 / 1.67 per second on Waves
-3 / 4 / 5 against an earlier band of 0.61–1.08/s. Denser Waves mean less time walking between
-targets, so part of each Wave's escalation is offset by the shooter getting more efficient
-inside it.
+**~~Kill rate is not constant across a Run.~~ FALSIFIED by play data** (2026-08-27). This
+section previously read: *"Measured 1.23 / 1.50 / 1.67 per second on Waves 3 / 4 / 5 against
+an earlier band of 0.61–1.08/s. Denser Waves mean less time walking between targets, so part
+of each Wave's escalation is offset by the shooter getting more efficient inside it."*
+
+A full five-wave playthrough
+(`Logs/GatekeepersProtocol_2026-08-27_03-18-16_p17676.log`) measured **0.72 / 0.95 / 0.73**
+on those same Waves — flat-to-declining, not rising, and roughly half the claimed figures.
+The run ended `result=lost cause=player wave=5` with 103 bodies alive.
+
+This mattered far more than a wrong number, which is why it is recorded rather than deleted:
+the offset it asserted was **the stated justification for compressing delivery as Waves grow**.
+A rising kill rate makes a shrinking gap self-correcting; a flat one makes it compounding, and
+group width was rising 3→7 at the same time. Arrivals climbed 0.86→2.16/s against a player who
+cannot acquire targets faster than about 0.95/s. The 103-body wall was this paragraph's
+consequence.
+
+**The lesson is the method, not the constant.** The claimed rates were never measured against
+a Run that reached Wave 5 — waves 3–5 had no logged data at all when this was written — so a
+band extrapolated from early Waves was used to justify a curve that only bites in late ones.
+Per `Docs/Design/`: measure to find where to look, decide by playing.
 
 ### B2 — Hatch damage → repair spend → slower progression
 
@@ -210,7 +236,7 @@ that spend is gone if you die afterward. Damage taken at the door is paid for ou
 **A Boarder without the Repair Rig cannot repair at any price, so B2 does not exist for that
 loadout.** M23 moved the rig out of the tracks and into Equipment:
 `GameController.RepairHatch` returns 0 unless `MetaState.HasRepairRigEquipped`, which needs
-the equipment slot bought (`EquipmentCatalog.SlotPrice` 300, itself gated on the first loss),
+the equipment slot bought (`EquipmentCatalog.SlotPrice` 300, itself gated on `LifetimeSalvageEarned > 0`),
 the rig owned (`EquipmentCatalog.Def(RepairRig).cost` 300) and the rig equipped;
 `MetaState.RepairMissingStep` names whichever step is missing. Rigless, Hatch damage costs
 nothing and damps nothing, and the Hatch only ever goes down.
@@ -232,15 +258,17 @@ Delays are what make the loops readable, and two of them are load-bearing.
 | ------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Deep breach → Hatch            | unknown — needs measurement (kit rooms, M61-2; graybox 48.5 m is retired) | Structure still dominates stats (`3-Mechanics.md`). The old 30×52 / 48.5 m figure is the graybox floor. |
 | R1 closing                     | once per Run                                  | A Run's difficulty is fixed at embark; no in-Run spiral.                                                                                              |
-| R1 unlocking                   | until the first death                         | Wheel purchases and the equipment slot gated on `MetaUpgrades.UpgradesUnlocked` = `PodEjections >= 1`. Buying a weapon is not. Hatch Armor and protocol are not. |
+| R1 unlocking                   | until the realm's first kill                  | Wheel purchases and the equipment slot gated on `MetaUpgrades.UpgradesUnlocked` = `LifetimeSalvageEarned > 0`. Buying a weapon is not. Hatch Armor and protocol are not. |
 | Inter-Wave gap on a deep start | 3s                                            | A start-Wave of N chains Waves 1..N back to back.                                                                                                     |
 | Reload                         | per weapon: MK-1 1.4s, BR-12 2.6s, MR-35 2.4s | A wheel spoke (`ReloadPerPoint = 0.98035`), so it shortens with focus.                                                                                |
-| Stamina refill                 | 1s hold + 100/18 = 6.6s                       | Sprint beats the chase and the Hunter, so unlimited sprint would be free kiting.                                                                      |
+| Stamina refill                 | 1s hold + 100/18 = 6.6s                       | Sprint beats every chase; since 2026-08-25 a walk also beats a Default's 4.6, so the reserve is what a Hunter costs.                                   |
 
 
 **The five stamina numbers change together or not at all.** They encode one relationship —
 sprint must outrun a chase for a bounded time — and moving one silently converts kiting from
-a resource into a tactic.
+a resource into a tactic. Since the 2026-08-25 speed cut (Default chase 5.6 → 4.6, under the
+player's 5 m/s walk; Hunter 6.5 → 5.6, now the only kind that outruns a walk) that
+relationship is carried by the Hunter alone, so it is the number to watch.
 
 ---
 
@@ -275,9 +303,10 @@ Damage reach ~436 dps (arithmetic in `4-Data.md`) and a spread buy is **unknown,
 re-derivation**. The pre-wheel seven-Tier record below still uses 7,000 / Tier 7.
 
 Against three failed Runs' earnings at that Wave. **This earnings table is pre-M53 / pre-juice:**
-it assumed a Run dying on Wave N banks the Waves below it plus ~60% of N. After Hatch-bank,
-down/breach wipes Unbanked; only prior convert survives. Do not treat the margins as a current
-constraint without new logs.
+it assumed a Run dying on Wave N banks the Waves below it plus ~60% of N. That assumption is
+closer to true again than it was — since 2026-08-25 a kill banks as it lands, so a Run dying on
+Wave N keeps everything it killed — but the juice curve and the wheel both moved underneath it.
+Do not treat the margins as a current constraint without new logs.
 
 
 | die on | earns/Run | ×3     | needs | margin |
@@ -386,6 +415,15 @@ survives a hatch-bank window may return to the Ship — held interact at the Hat
 until the next Wave is triggered — and the Run ends **Docked**, not Lost; banked Salvage and
 door state persist via the successful-bank snapshot (`../Decisions.md`,
 *Locked — return to Ship at a surviving bank*). Every loss on record above predates that rule.
+
+**Amended again (`M98` recut): a death is not an ender on its own.** A dead seat raises the
+DOWN overlay and may buy itself back anywhere in `RunPhase.Tethered` for
+`Respawns.CostFor(taken)` = `150 × (taken + 1)`, debited from the **realm's bank**
+(`RunSim.TryRespawn` → `SpendBanked`; re-pursed 2026-08-25 with the award path, since the
+carried pile no longer fills on its own). `EndRun("player")` fires only when the bank cannot
+cover the price and no other seat is still fighting (`GameController.PlayerDied`,
+`NotifySeatWentDown`); that death wipes any carry the seat had withdrawn, and the run is over. Nothing above this line was logged under
+the respawn rule.
 
 ---
 

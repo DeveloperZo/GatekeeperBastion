@@ -24,13 +24,18 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Multiplayer_LockedUntilFirstWheelBuy()
+        public void Multiplayer_LockedUntilTheMk1()
         {
+            // Co-op unlocks the moment the ARMORY arms you (Zo, 2026-08-25) — it used to
+            // wait for the first wheel buy, which stranded friends behind a bank.
             var m = DemoMeta();
-            Assert.IsFalse(DemoProgress.MultiplayerUnlocked(m), "buys-left 2 is locked");
+            Assert.IsFalse(DemoProgress.MultiplayerUnlocked(m), "unarmed is locked");
             m.DemoWheelBuysLeft = 1;
-            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "first buy unlocks");
-            m.DemoWheelBuysLeft = 2;
+            Assert.IsFalse(DemoProgress.MultiplayerUnlocked(m),
+                "a wheel buy is no longer the key — only the MK-1 is");
+            m.DemoWeaponGranted = true;
+            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "the MK-1 unlocks");
+            m.DemoWeaponGranted = false;
             m.DemoActive = false;
             Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "demo off never locks");
             Assert.IsTrue(DemoProgress.MultiplayerUnlocked(null), "no meta never locks");
@@ -63,17 +68,21 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Armory_Hidden_UntilTheWheelUnlocks()
+        public void Armory_Hidden_UntilTheTerminalPowersIt()
         {
+            // The armory is the ARMING BEAT (2026-08-25 recut): the terminal routes power
+            // and points here; the rack's free MK-1 readies embark, no ship fight.
             var m = DemoMeta();
             Assert.AreEqual(DemoStationVerdict.Hidden, DemoProgress.ArmoryVerdict(m),
-                "no name, no interaction — the MK-1 comes from the ship terminal");
-            m.DemoArmoryPowered = true; // power alone does not surface it
-            Assert.AreEqual(DemoStationVerdict.Hidden, DemoProgress.ArmoryVerdict(m));
-            m.PodEjections = 1; // a loss alone is no longer the key (re-key 2026-08-18)
-            Assert.AreEqual(DemoStationVerdict.Hidden, DemoProgress.ArmoryVerdict(m));
-            m.HatchConversions = 1; // UpgradesUnlocked — the first bank
+                "no name, no interaction — until the ship terminal routes power");
+            m.DemoArmoryPowered = true; // the terminal's start surfaces the rack
             Assert.AreEqual(DemoStationVerdict.Open, DemoProgress.ArmoryVerdict(m));
+            var late = DemoMeta();
+            // UpgradesUnlocked is the other door in, and since 2026-08-25 (Zo) it asks whether
+            // the realm has EARNED, not whether salvage came through a Convert window — that
+            // window is out of the demo, so HatchConversions can never rise again.
+            late.EarnSalvage(1);
+            Assert.AreEqual(DemoStationVerdict.Open, DemoProgress.ArmoryVerdict(late));
             Assert.AreEqual(DemoStationVerdict.Open, DemoProgress.ArmoryVerdict(CampaignMeta()));
         }
 
@@ -93,15 +102,17 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Fabrication_StaysHiddenForTheWholeDemo()
+        public void Fabrication_StaysLockedPreviewForTheWholeDemo()
         {
+            // Visible-but-locked for the whole demo (ruling 2026-08-25): the console shows
+            // its name and a full-version prompt at every beat, and never opens.
             var m = DemoMeta();
-            Assert.AreEqual(DemoStationVerdict.Hidden, DemoProgress.FabricationVerdict(m));
+            Assert.AreEqual(DemoStationVerdict.LockedPreview, DemoProgress.FabricationVerdict(m));
             m.DemoNavPowered = true;
             m.DemoArmoryPowered = true;
             m.DemoShipFightDone = true;
-            m.HatchConversions = 1;
-            Assert.AreEqual(DemoStationVerdict.Hidden, DemoProgress.FabricationVerdict(m));
+            m.EarnSalvage(1); // every other station's key turned; FAB's never does
+            Assert.AreEqual(DemoStationVerdict.LockedPreview, DemoProgress.FabricationVerdict(m));
             Assert.AreEqual(DemoStationVerdict.Open,
                 DemoProgress.FabricationVerdict(CampaignMeta()));
         }
@@ -111,10 +122,17 @@ namespace GatekeepersProtocol.Tests
         static MetaState FirstReturnMeta(long banked)
         {
             var m = DemoMeta();
-            m.HatchConversions = 1;
+            // The wheel's unlock is LifetimeSalvageEarned since 2026-08-25 (Zo) — the Convert
+            // window that used to raise HatchConversions is out of the demo. Earn a token and
+            // spend it straight back so the realm reads as having earned at ANY bank, zero
+            // included: spending down to empty must never re-lock the wheel. Earning rather
+            // than assigning BankedSalvage also keeps the ledger balanced, which is the state
+            // every one of these rows is really standing in.
+            m.EarnSalvage(1);
+            Assert.IsTrue(m.SpendSalvage(1));
+            m.EarnSalvage(banked);
             m.SetOwned(WeaponId.Mk1Sidearm, true);
             m.EquippedSecondary = WeaponId.Mk1Sidearm;
-            m.BankedSalvage = banked;
             return m;
         }
 
@@ -126,14 +144,36 @@ namespace GatekeepersProtocol.Tests
                 "banked 450, buys-left 2, MK-1 at T0 (150) — spend first");
         }
 
+        /// <summary>Re-keyed from PrimaryRows_StayShutUntilZoneTwosBankFalls (Zo, 2026-08-25):
+        /// the key was DemoZone2BankLost, resolved by a Convert window the demo no longer has,
+        /// so the rack could never have opened again. The bank half of the old test is the half
+        /// worth keeping — salvage still buys nothing here; the DEPTH does.</summary>
         [Test]
-        public void PrimaryRows_StayShutUntilZoneTwosBankFalls()
+        public void PrimaryRows_StayShutUntilZoneOnesLastWaveIsReached()
         {
             var m = FirstReturnMeta(10_000);
             Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m),
-                "a fat bank does not buy a Primary — the loss does");
+                "a fat bank does not buy a Primary — reaching zone 1's end does");
+            m.DeepestWaveEntered = DemoProgress.PrimaryRowsWave - 1;
+            Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m), "one Wave short is short");
+            m.DeepestWaveEntered = DemoProgress.PrimaryRowsWave;
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),
+                "the Wave that proves you need a Primary is the Wave that sells you one");
+            Assert.AreEqual(DemoZones.EndWave(1), DemoProgress.PrimaryRowsWave,
+                "and the Wave is zone 1's end, not a number of its own");
+        }
+
+        /// <summary>The legacy flag is now a COMPATIBILITY read and nothing else: it is never
+        /// written by the demo any more, and it is kept solely so a save from before the
+        /// 2026-08-25 re-key still finds its rack where it left it.</summary>
+        [Test]
+        public void PrimaryRows_HonourTheLegacyFlag_ForSavesWrittenBeforeTheReKey()
+        {
+            var m = FirstReturnMeta(10_000);
+            m.DeepestWaveEntered = 1; // an old save that never recorded depth past the start
             m.DemoZone2BankLost = true;
-            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m), "the bank fell; the rack answers");
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),
+                "a player who already earned the rack must not be sent back for it");
         }
 
         [Test]
@@ -142,11 +182,12 @@ namespace GatekeepersProtocol.Tests
             var m = FirstReturnMeta(10_000);
             m.PodEjections = 5;
             Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m),
-                "counting ejections must never open the rack — a docked zone 1 arrives here at 1");
+                "counting ejections must never open the rack — a docked zone 1 arrives here at 0");
             m.PodEjections = 0;
-            m.DemoZone2BankLost = true;
+            m.DeepestWaveEntered = DemoProgress.PrimaryRowsWave;
             Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),
-                "and the gate holds at zero ejections, which is the recut's whole point");
+                "and the gate opens at zero ejections, which is the recut's whole point:\n"
+                + "the player who docked out of zone 1 alive is owed the same rack");
         }
 
         [Test]
@@ -172,16 +213,22 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void RungTwo_DoesNotDisturbTheMultiplayerKey()
+        public void WheelLadder_DoesNotDisturbTheMultiplayerKey()
         {
+            // Since 2026-08-25 the key is the MK-1, so NEITHER rung can move it in either
+            // direction — the strongest form of the rule this test has always been about.
             var m = FirstReturnMeta(10_000);
+            m.DemoWeaponGranted = true;
             m.DemoWheelBuysLeft = 0;
-            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "rung 1 spent, friends unlocked");
+            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "armed, friends unlocked");
             m.DemoRungTwoBuysLeft = 2;
             Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m),
-                "opening rung 2 must not re-lock multiplayer — that is why it is a second counter");
+                "opening rung 2 must not re-lock multiplayer");
             m.DemoRungTwoBuysLeft = 0;
             Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "and spending it does not either");
+            m.DemoWeaponGranted = false;
+            Assert.IsFalse(DemoProgress.MultiplayerUnlocked(m),
+                "and a spent ladder does not unlock an unarmed Boarder");
         }
 
         [Test]
@@ -207,7 +254,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(DemoProgress.NoBuyableUpgradeRemains(m),
                 "banked below every remaining spoke cost is the other half of the state key");
 
-            m.BankedSalvage = 150;
+            m.EarnSalvage(1); // 150
             Assert.IsFalse(DemoProgress.NoBuyableUpgradeRemains(m),
                 "150 still buys a spoke that has never been centred");
         }
@@ -237,9 +284,14 @@ namespace GatekeepersProtocol.Tests
         {
             var m = DemoMeta();
             m.SetOwned(WeaponId.Mk1Sidearm, true);
+            // Assigned, not earned. Since 2026-08-25 (Zo) the wheel's key is
+            // LifetimeSalvageEarned, so a pile that never came through the ledger — a grant, a
+            // dev write, a loaded file being rebuilt — leaves the wheel exactly as shut as an
+            // empty realm. The gate reads the history, never the pocket.
             m.BankedSalvage = 10_000;
+            Assert.AreEqual(0L, m.LifetimeSalvageEarned);
             Assert.IsTrue(DemoProgress.NoBuyableUpgradeRemains(m),
-                "before the first bank there is no wheel to spend at");
+                "a realm that has earned nothing has no wheel to spend at");
         }
 
         [Test]
@@ -253,7 +305,9 @@ namespace GatekeepersProtocol.Tests
             DemoProgress.EndDemo(m);
             Assert.IsFalse(m.DemoActive);
             Assert.IsTrue(m.DemoFabPowered);
-            Assert.IsTrue(m.DemoZone2BankLost, "the loss record stays");
+            Assert.IsTrue(m.DemoZone2BankLost,
+                "the loss record stays — since 2026-08-25 it is the pre-re-key saves' only\n"
+                + "claim on the rack, so an Escape must not quietly erase it");
             Assert.IsTrue(m.DemoRungTwoOpened);
             Assert.AreEqual(1, m.DemoRungTwoBuysLeft);
             Assert.AreEqual(DemoStationVerdict.Open, DemoProgress.FabricationVerdict(m));
@@ -284,16 +338,22 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void TerminalStart_GrantsBeforeTheIntrudersLine()
+        public void TerminalStart_PointsAtTheArmory_AndNeverArmsOrSpawns()
         {
+            // Armory recut (2026-08-25 — Zo): the terminal routes power and points at the
+            // rack; the grant rides the ARMORY buy and the intruder fight is struck.
             string src = File.ReadAllText(Path.GetFullPath(
                 "Assets/Scripts/Game/Ship/ShipTerminal.cs"));
             int start = src.IndexOf("void StartTerminal");
-            int grant = src.IndexOf("DemoShipFight.GrantWeapon", start);
-            int line = src.IndexOf("DemoConversationIds.Intruders", start);
-            Assert.Greater(grant, start, "the terminal's start hands the MK-1 over");
-            Assert.Greater(line, grant,
-                "the intruders copy says the MK-1 is in hand — grant first");
+            Assert.Greater(start, 0);
+            string body = src.Substring(start);
+            StringAssert.Contains("DemoConversationIds.ArmoryCall", body);
+            Assert.AreEqual(-1, body.IndexOf("DemoShipFight.GrantWeapon"),
+                "the terminal must not grant — the ARMORY rack is the arming beat");
+            Assert.AreEqual(-1, body.IndexOf("DemoConversationIds.Intruders"),
+                "the intruder fight is struck — the terminal never plays its line");
+            Assert.AreEqual(-1, body.IndexOf("ArmRelease"),
+                "nothing spawns from the terminal's start");
         }
 
         [Test]

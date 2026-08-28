@@ -294,15 +294,25 @@ namespace GatekeepersProtocol.PlayTests
                 yield return new WaitForSeconds(0.75f);
                 logs.AssertNoErrors("triggering the siphon draw");
 
-                // ---- a kill pays Unbanked, not the ship bank ----
+                // ---- a kill pays the realm's bank on the spot, and carries nothing ----
+                // INVERTED BY DESIGN (Zo, 2026-08-25 — "it should be impossible for a player to
+                // die with no progress to show for it"). This pair used to read the other way
+                // round: the bank had to stay flat and Unbanked had to rise. The two things
+                // that ever banked — reaching a terminal and surviving a Convert — both sit
+                // past where a starting kit dies, which is exactly the death this test walks,
+                // so AwardKill now credits the realm at face value the moment the body falls
+                // and the carried pile fills only on a deliberate Withdraw at the Hatch.
                 long bankedBeforeKill = meta.BankedSalvage;
                 long unbankedBeforeKill = sim.Unbanked;
                 gc.GatekeeperKilled();
-                Assert.AreEqual(bankedBeforeKill, meta.BankedSalvage,
-                    "A reported kill credited MetaState.BankedSalvage. AwardKill fills Unbanked.");
-                Assert.Greater(sim.Unbanked, unbankedBeforeKill,
-                    $"A reported kill did not raise Unbanked (still {sim.Unbanked}).");
-                logs.AssertNoErrors("crediting a kill to Unbanked");
+                Assert.Greater(meta.BankedSalvage, bankedBeforeKill,
+                    $"A reported kill banked nothing (pot still {meta.BankedSalvage}). " +
+                    "AwardKill credits MetaState.BankedSalvage as the body falls.");
+                Assert.AreEqual(unbankedBeforeKill, sim.Unbanked,
+                    $"A reported kill raised Unbanked to {sim.Unbanked}. Nothing may be put at " +
+                    "risk that the player did not choose to risk through a Withdraw.");
+                long bankedAfterKill = meta.BankedSalvage;
+                logs.AssertNoErrors("banking a kill");
 
                 // ---- kill the player ----
                 PlayerHealth player = PlayerRegistry.Local;
@@ -321,13 +331,21 @@ namespace GatekeepersProtocol.PlayTests
                 Assert.AreEqual(RunPhase.Lost, sim.Phase,
                     "Player death must end the run: PlayerHealth.Die -> GameController.PlayerDied -> " +
                     "RunSim.NotifyPlayerDown -> Lost.");
-                Assert.AreEqual(0L, sim.Unbanked, "player death must wipe Unbanked");
-                Assert.AreEqual(bankedBeforeKill, meta.BankedSalvage,
-                    $"Dying CHANGED banked salvage ({bankedBeforeKill} -> {meta.BankedSalvage}). " +
-                    "Death wipes Unbanked and keeps converted ship Salvage.");
-                Assert.GreaterOrEqual(meta.BankedSalvage, bankedBefore,
-                    $"Banked salvage went BACKWARDS across the run ({bankedBefore} -> " +
-                    $"{meta.BankedSalvage}). A run may never take banked progress away.");
+                Assert.AreEqual(0L, sim.Unbanked, "player death must leave nothing carried");
+                Assert.AreEqual(bankedAfterKill, meta.BankedSalvage,
+                    $"Dying CHANGED banked salvage ({bankedAfterKill} -> {meta.BankedSalvage}). " +
+                    "Death wipes a STAKED pile; it may not reach the bank behind it.");
+                // THE RULING ITSELF, and the reason this whole fixture exists in the shape it
+                // does: this run pulled one draw, killed one thing and died in a starting kit —
+                // it never reached a terminal and never opened a Convert — and it still has to
+                // come home richer than it left. Strictly Greater, not GreaterOrEqual: "not
+                // backwards" was the old bar and it is satisfied by a run that earned nothing.
+                // WHAT THIS CANNOT SEE: nothing was withdrawn here, so the wipe above is the
+                // floor rather than a real loss. The staked-pile wipe is walked by
+                // ZoneTwoLoopPlayModeTests' fallen bank and by CoreLoopPlayModeTests.
+                Assert.Greater(meta.BankedSalvage, bankedBefore,
+                    $"The player died with nothing to show for it ({bankedBefore} -> " +
+                    $"{meta.BankedSalvage}). A landed kill is already the realm's.");
                 RunReportAssertions.AssertShape(sim, "player", null);
                 logs.AssertNoErrors("player death / run end");
 

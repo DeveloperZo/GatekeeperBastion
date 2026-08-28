@@ -1,13 +1,23 @@
 using NUnit.Framework;
+using GatekeepersProtocol.Game;
 using GatekeepersProtocol.Sim;
 
 namespace GatekeepersProtocol.Tests
 {
-    /// <summary>The authored loss that sells the Primary: a Run that ends Lost INSIDE zone 2's
-    /// Hatch-bank window writes the gate flag, and nothing else does — not a loss during that
-    /// zone's field Waves, not zone 1's bank, not a Docked end
-    /// (Docs/Demo - Single/5-repeat-to-control-room.md). These are behaviour tests over RunSim; the
-    /// source-shape pins live in FirstReturnSourceTests.</summary>
+    /// <summary>What puts a Primary on the demo's rack. The class keeps its old name because
+    /// the file does, but the beat it was written for is gone: THE CONVERT / HATCH-BANK WINDOW
+    /// IS OUT OF THE DEMO (Zo, 2026-08-25), and with it both authored-loss beats that used to
+    /// resolve zone 2. The gate moved to the Wave the player REACHED —
+    /// <see cref="DemoProgress.PrimaryRowsWave"/>, zone 1's last — because the 2026-08-25
+    /// playthrough died on Wave 2 holding 227 banked and "no buyable upgrades remain": the only
+    /// kit that could carry zone 1 sat behind clearing zone 1. The run that proves you need a
+    /// Primary is now the run that sells you one.
+    ///
+    /// <para><see cref="MetaState.DemoZone2BankLost"/> survives as a COMPATIBILITY read only —
+    /// a save written before the re-key keeps its rack — so the tests below assert the rack,
+    /// not the flag. The tests that pinned the flag's WRITE are [Ignore]d rather than deleted;
+    /// deletion is the owner's call. These are behaviour tests over RunSim; the source-shape
+    /// pins live in FirstReturnSourceTests.</para></summary>
     public class ZoneTwoBankLossTests
     {
         static RunSim Tethered(out MetaState meta, int seed = 1)
@@ -19,8 +29,9 @@ namespace GatekeepersProtocol.Tests
             return sim;
         }
 
-        /// <summary>Clear field Waves up to and including <paramref name="throughWave"/>, then
-        /// open a Hatch-bank window on the pile they earned.</summary>
+        /// <summary>Clear field Waves up to and including <paramref name="throughWave"/>. One
+        /// draw per Wave rather than the zone's composite, so every Wave lands in
+        /// <see cref="MetaState.DeepestWaveEntered"/> — the figure the rack now reads. ENTERED, not Reached: Reached rises only on a CLEAR because deep start reads it as a permission, so it cannot tell "died on the Wave" from "never drew it".</summary>
         static void ClearFieldThrough(RunSim sim, int throughWave)
         {
             for (int w = 1; w <= throughWave; w++)
@@ -32,20 +43,27 @@ namespace GatekeepersProtocol.Tests
             }
         }
 
-        static void OpenBankWindow(RunSim sim)
+        /// <summary>Open a Hatch-bank window on a pile the player deliberately staked. Kills
+        /// bank as they land now (Zo, 2026-08-25), so a window has nothing to run on until
+        /// salvage is withdrawn back out of the bank — the window is opt-in, not the demo's
+        /// only route home.</summary>
+        static void StakeAndOpenBankWindow(RunSim sim, long stake)
         {
+            RunEconomyFixture.Stake(sim, stake);
             sim.TriggerDraw(WaveMode.HatchBank);
             Assert.AreEqual(AssaultState.Assault, sim.Assault, "the bank window is live");
             Assert.AreEqual(WaveMode.HatchBank, sim.Mode);
         }
 
         [Test]
+        [Ignore("Retired 2026-08-25 (Zo): the demo has no Convert window for a Run to be Lost "
+            + "inside, so this beat cannot be played. Recommend deletion.")]
         public void HatchBreachInsideZoneTwosWindow_WritesTheGate()
         {
             MetaState meta;
             var sim = Tethered(out meta);
             ClearFieldThrough(sim, DemoZones.EndWave(2));
-            OpenBankWindow(sim);
+            StakeAndOpenBankWindow(sim, 50L);
 
             sim.Ship.Hatch.Damage(99999f);
 
@@ -55,12 +73,14 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        [Ignore("Retired 2026-08-25 (Zo): same retired Convert window, reached by player-down "
+            + "instead of a breach. Recommend deletion.")]
         public void PlayerDownInsideZoneTwosWindow_WritesTheGate()
         {
             MetaState meta;
             var sim = Tethered(out meta);
             ClearFieldThrough(sim, DemoZones.EndWave(2));
-            OpenBankWindow(sim);
+            StakeAndOpenBankWindow(sim, 50L);
 
             sim.NotifyPlayerDown();
 
@@ -68,11 +88,17 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(meta.DemoZone2BankLost, "player-down inside the window is the same loss");
         }
 
+        /// <summary>Re-keyed from LossDuringZoneTwosFieldWaves_DoesNotWriteTheGate. INVERTED BY
+        /// DESIGN (Zo, 2026-08-25): a field loss used to be the case that must NOT sell a
+        /// Primary, and is now precisely the case that must — it is the death the ruling was
+        /// written for. What survives unchanged is the rest: the legacy flag stays unwritten,
+        /// and the loss still counts an ending.</summary>
         [Test]
-        public void LossDuringZoneTwosFieldWaves_DoesNotWriteTheGate()
+        public void LossDuringTheFieldWaves_LeavesTheRackOpen()
         {
             MetaState meta;
             var sim = Tethered(out meta);
+            ClearFieldThrough(sim, DemoProgress.PrimaryRowsWave);
             sim.SeekWave(DemoZones.EndWave(2));
             sim.TriggerDraw();
             Assert.AreEqual(WaveMode.Terminal, sim.Mode, "a field Wave, not a bank window");
@@ -80,73 +106,106 @@ namespace GatekeepersProtocol.Tests
             sim.NotifyPlayerDown();
 
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(meta),
+                "the Wave was already reached — dying past it cannot take the rack back");
             Assert.IsFalse(meta.DemoZone2BankLost,
-                "dying to the field is a loss, but it is not the bank falling");
+                "and it opened on the Wave reached, not on the legacy flag");
             Assert.AreEqual(1, meta.PodEjections, "it still counts as an ending");
         }
 
+        /// <summary>Re-keyed from ZoneOnesBankFalling_DoesNotWriteTheGate. INVERTED BY DESIGN
+        /// (Zo, 2026-08-25): zone 1's end used to be the case that pointedly sold nothing, and
+        /// is now the whole key. The stepwise walk is the point — the rack must still be SHUT
+        /// one Wave short, or the gate has stopped gating.</summary>
         [Test]
-        public void ZoneOnesBankFalling_DoesNotWriteTheGate()
+        public void ReachingZoneOnesLastWave_OpensThePrimaryRack()
         {
             MetaState meta;
             var sim = Tethered(out meta);
-            ClearFieldThrough(sim, DemoZones.EndWave(1));
-            OpenBankWindow(sim);
+            Assert.IsFalse(DemoProgress.PrimaryRowsOpen(meta),
+                "a fresh realm has reached nothing");
 
+            ClearFieldThrough(sim, DemoProgress.PrimaryRowsWave - 1);
+            Assert.IsFalse(DemoProgress.PrimaryRowsOpen(meta),
+                "one Wave short of zone 1's end is still short");
+
+            ClearFieldThrough(sim, DemoProgress.PrimaryRowsWave);
+            Assert.AreEqual(DemoProgress.PrimaryRowsWave, meta.DeepestWaveEntered);
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(meta),
+                "reaching zone 1's last Wave is what sells the Primary that carries zone 1");
+
+            sim.Ship.Hatch.Damage(99999f);
+            Assert.AreEqual(RunPhase.Lost, sim.Phase);
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(meta),
+                "THE RULE (Zo, 2026-08-25): nobody dies with no progress to show for it");
+        }
+
+        /// <summary>Re-keyed from BothLossKinds_StillCountAnEnding. The two loss KINDS were the
+        /// Convert window's and the field's, and only one of those is left; the assertion worth
+        /// keeping is the separation itself — PodEjections counts endings and never opens the
+        /// rack, so the gate cannot be reached by dying at it over and over.</summary>
+        [Test]
+        public void ALossShortOfZoneOnesEnd_CountsAnEnding_AndOpensNothing()
+        {
+            // Falling short means never DRAWING zone 1's last Wave. An earlier draft cleared
+            // up to it and then drew it before dying, which under the entered-not-cleared rule
+            // is reaching it — and reaching it is exactly what sells the Primary.
+            MetaState meta;
+            var sim = Tethered(out meta);
+            sim.TriggerDraw();
+            Assert.Less(meta.DeepestWaveEntered, DemoProgress.PrimaryRowsWave,
+                "this Run has to end short of zone 1's last Wave or it proves nothing");
             sim.Ship.Hatch.Damage(99999f);
 
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
-            Assert.IsFalse(meta.DemoZone2BankLost,
-                "zone 1's bank is M76's authored loss and sells nothing on the Primary rack");
-        }
-
-        [Test]
-        public void BothLossKinds_StillCountAnEnding()
-        {
-            MetaState meta;
-            var sim = Tethered(out meta);
-            ClearFieldThrough(sim, DemoZones.EndWave(2));
-            OpenBankWindow(sim);
-
-            sim.Ship.Hatch.Damage(99999f);
-
             Assert.AreEqual(1, meta.PodEjections,
                 "PodEjections is untouched by this milestone — it counts endings either way");
+            Assert.IsFalse(DemoProgress.PrimaryRowsOpen(meta),
+                "an ending is not progress; the Wave reached is");
         }
 
         [Test]
-        public void SurvivingTheWindow_LeavesTheGateShut()
+        [Ignore("Retired 2026-08-25 (Zo): 'zone 2 resolved' is no longer a gate — the rack "
+            + "opens three Waves earlier, on zone 1's end. Recommend deletion.")]
+        public void SurvivingTheWindow_OpensTheGate_ResolvedEitherWay()
         {
             MetaState meta;
             var sim = Tethered(out meta);
             ClearFieldThrough(sim, DemoZones.EndWave(2));
-            OpenBankWindow(sim);
+            StakeAndOpenBankWindow(sim, 50L);
 
             sim.Tick(HatchBank.DurationSeconds);
 
             Assert.AreEqual(AssaultState.Prep, sim.Assault, "the window closed on its timer");
             Assert.AreNotEqual(RunPhase.Lost, sim.Phase);
-            Assert.IsFalse(meta.DemoZone2BankLost,
-                "surviving is the path that opens D2, not the path that sells the Primary");
+            Assert.IsTrue(meta.DemoZone2BankLost,
+                "zone 2 RESOLVED opens the rack — survived or lost, either outcome");
         }
 
+        /// <summary>Re-keyed from DockingOutOfASurvivedWindow_ArrivesWithTheGateOpen. The window
+        /// is out of the demo's spine but is still the only door to a Docked end, and a player
+        /// who withdraws a stake to run one can still walk home through it. Re-keyed is the
+        /// payoff: the rack they dock with was bought by the Waves they reached.</summary>
         [Test]
-        public void DockingOutOfASurvivedWindow_LeavesTheGateShut()
+        public void DockingOutOfAStakedWindow_ArrivesWithTheRackOpen()
         {
             MetaState meta;
             var sim = Tethered(out meta);
-            ClearFieldThrough(sim, DemoZones.EndWave(2));
-            OpenBankWindow(sim);
+            ClearFieldThrough(sim, DemoProgress.PrimaryRowsWave);
+            StakeAndOpenBankWindow(sim, 50L);
             sim.Tick(HatchBank.DurationSeconds);
 
             Assert.IsTrue(sim.DockRun(), "a survived window offers the dock");
 
             Assert.AreEqual(RunPhase.Returned, sim.Phase);
-            Assert.IsFalse(meta.DemoZone2BankLost, "a Returned end is not a loss");
-            Assert.AreEqual(0, meta.PodEjections);
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(meta),
+                "the rack was already earned on the field and the dock does not spend it");
+            Assert.AreEqual(0, meta.PodEjections, "a Returned end is still not an ejection");
         }
 
         [Test]
+        [Ignore("Retired 2026-08-25 (Zo): the finale's window cannot mis-sell a rack the Wave "
+            + "count opened long before it. Recommend deletion.")]
         public void AWaveDeeperThanZoneTwo_DoesNotWriteTheGate()
         {
             MetaState meta;
@@ -170,7 +229,7 @@ namespace GatekeepersProtocol.Tests
             sim.NotifyAssaultCleared();
             Assert.AreEqual(pastTheTable, sim.CurrentWaveIndex,
                 "the Run is now on a Wave the zone table does not author");
-            OpenBankWindow(sim);
+            StakeAndOpenBankWindow(sim, 50L);
 
             sim.Ship.Hatch.Damage(99999f);
 
@@ -180,13 +239,16 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        [Ignore("Retired 2026-08-25 (Zo): the flag this guarded is no longer written by the "
+            + "demo at all, and DemoProgressTests.PrimaryRows_AreOpenOffTheDemo carries the "
+            + "campaign-save half. Recommend deletion.")]
         public void OffTheDemo_TheGateIsNeverWritten()
         {
             MetaState meta;
             var sim = Tethered(out meta);
             meta.DemoActive = false;
             ClearFieldThrough(sim, DemoZones.EndWave(2));
-            OpenBankWindow(sim);
+            StakeAndOpenBankWindow(sim, 50L);
 
             sim.Ship.Hatch.Damage(99999f);
 

@@ -2,31 +2,34 @@
 
 <!--
 Purpose: Master Control is a fight inside a sealed Control Room. It is not the
-win. Juice stays live (taught in beat 1). Send them to the Hatch in beat 7 when
-the door opens.
+win. The Ante stays live (taught in beat 1). Send them to the Hatch in beat 7
+when the door opens.
 Status: demo spec
 Authority: implementable
 Update trigger: when MasterControl.TerminalWaves changes, when the Master fight
 spawn rooms land (M73)
-Last updated: 2026-08-17
+Last updated: 2026-08-25 (HatchWaves is 1 in the tree, not owed; Wave-5 clamp includes
+Cloakers; buy-back row rewritten from Respawns.cs)
 Depends: voice.md, 5-repeat-to-control-room.md, M54 (in tree), M73 (SpawnRoom
 prefabs, active — Master fight spawn rooms)
 -->
 
 ## Why this beat exists
 
-`M54` already runs 5 terminal-mode Waves then the Hatch-bank half (in tree as 5
-windows; ruled to a **single final window** — Zo, 2026-08-17; the retune is beat
-7's). Live prompt is `[+/-] Master Control` with the full juice/stake line.
-Nothing says the room fight is not the haul home. A Boarder who stays in R15
-through the Hatch half is the travel kill already on `M54`.
+`M54` already runs 5 terminal-mode Waves then the Convert half, and that half is
+**one** window in production (`MasterControl.HatchWaves` is 1; the tests pin it
+at 5). Live prompt is `[+/-] Master Control` with the full stake line. Nothing
+says the room fight is not the haul home. A Boarder who stays in R15 through the
+Convert half is the travel kill already on `M54`.
 
 This beat is copy and a seal line. It does **not** add a third win and does
-**not** retune `MasterControl.TerminalWaves = 5`. Do not hide juice.
+**not** retune `MasterControl.TerminalWaves = 5`. Do not hide the stake line.
 
 ## Functional storyboard
 
-Continues from beat 5: D3 opens when T4 and T5 are done. Standing arrives as
+Continues from beat 5: D3 opens when T4 and T5 are done — those two ids and
+`D3` are the Control Room approach, not a zone, and are deliberately absent
+from the `DemoZones` table (which stops at zone 2). Standing arrives as
 **Enter the Control Room**.
 
 ### 0 — D3 opens (merged line)
@@ -46,12 +49,12 @@ Continues from beat 5: D3 opens when T4 and T5 are done. Standing arrives as
 | | |
 |---|---|
 | **Goal** | Start the sequence deliberately, with the bet available. |
-| **Player** | Look at Master (sketch mark `M`, component id `Master`): `demo.master_control` Lock. May juice first (Unbanked from the Run). `E` arms, `T` starts. |
+| **Player** | Look at Master (sketch mark `M`, component id `Master`): `demo.master_control` Lock. May ante up first (Unbanked from the Boarding). `E` arms, `T` starts. |
 | **Game** | `demo.master_control` · Lock · Party · Game. **Master Control. Five Waves in a sealed room, then the door opens. E, then T, when you are ready.** |
 | **Standing** | Survive the room |
-| **Prompt** | Live: unarmed `[+/-] Master Control` + stake + ` [E] select`; armed `[T] Master Control` + ` [E] edit`. Keep both — juice on the Master prompt is correct. |
-| **Log** | `[Terminal] master-control started terminalWaves=5 hatchWaves=1 intensity=… juiced=…` (in tree; `hatchWaves` reads 1 after beat 7's `HatchWaves` retune — Zo, 2026-08-17) plus `[Demo] master-control room fight` (build) |
-| **Have** | `E` then `T` (live; `M54` c2's "Interact starts" is superseded). Host-only start, Prep-only, armed id. Seal: `BastionLayout.SetControlRoomSealed(true)` — forces the control door shut and **mutes layout spawns**. Deep-start chain cleared on this pull. `CurrentWaveIndex` is not zeroed: composition clamps at the Wave-5 table (66 bodies, 12 Hunters, 7 Thieves, ×2.60, ×`playerCount`). |
+| **Prompt** | Live: unarmed `[+/-] Master Control` + stake + ` [E] select`; armed `[T] Master Control` + ` [E] edit` (`BastionTerminal.Prompt`, Master branch). Keep both — the stake on the Master prompt is correct. |
+| **Log** | `[Terminal] master-control started terminalWaves=5 hatchWaves=1 intensity=… juiced=…` (in tree; log lines keep the code's words — trap 8) plus `[Demo] master-control room fight` (build) |
+| **Have** | `E` then `T` (live; `M54` c2's "Interact starts" is superseded). Host-only start, Prep-only, armed id. Seal: `BastionLayout.SetControlRoomSealed(true)` — forces the control door shut and **mutes layout spawns**. Deep-start chain cleared on this pull. `CurrentWaveIndex` is not zeroed: composition clamps at the Wave-5 table — 66 bodies at dial 0, of which 12 Hunters, 7 Thieves, 3 Cloakers and 44 Defaults, ×2.60 health, ×`playerCount`. |
 | **Build** | The two lines; the log. |
 
 ### 2 — Five room Waves (Assault ×5, 3 s gaps)
@@ -71,11 +74,11 @@ Continues from beat 5: D3 opens when T4 and T5 are done. Standing arrives as
 | | |
 |---|---|
 | **Goal** | The flip to the Hatch half is beat 7's cue, not a win. |
-| **Player** | Fifth clear → `MasterHatchHalfStarted`: door unseals, Hatch-bank spawns activate. |
+| **Player** | Fifth clear → `MasterHatchHalfStarted`: door unseals, the Convert's spawns activate. |
 | **Game** | beat 7's `demo.hatch_finale` (Subtitle) plays here. |
 | **Standing** | Defend the Hatch (beat 7) |
-| **Log** | `master-control hatch half — hatchWaves=1` (after beat 7's retune) — **verbose-only** (`Log.Info`); the event, door state, and beat 7's send log are the always-on evidence |
-| **Have** | `AdvanceMasterControl`: after 5 Terminal clears → phase Hatch, `_masterLeft = HatchWaves` (1 after beat 7's retune — Zo, 2026-08-17), convert mul snapshotted, event raised; `SetControlRoomSealed(false)` + `ActivateHatchBankSpawns()`. |
+| **Log** | `master-control hatch half — hatchWaves=1` — **verbose-only** (`Log.Info`); the event, door state, and beat 7's send log are the always-on evidence |
+| **Have** | `AdvanceMasterControl`: after 5 Terminal clears → phase Hatch, `_masterLeft = MasterControl.HatchWaves` (**1**), convert mul snapshotted, event raised; `SetControlRoomSealed(false)` + `ActivateHatchBankSpawns()`. |
 | **Build** | Nothing here. |
 
 ## Have vs build (inventory)
@@ -84,9 +87,9 @@ Continues from beat 5: D3 opens when T4 and T5 are done. Standing arrives as
 |---|---|---|---|
 | E-then-T Master start, host, Prep | yes | `GameController.MasterControl` | Have |
 | Seal (door + mute spawns) | yes | `BastionLayout.SetControlRoomSealed` | Have |
-| 5+5 sequence, 3 s gaps | yes | `MasterControl.TerminalWaves/HatchWaves`, `RunSim` | Have — `HatchWaves` retunes 5 → 1 in beat 7 (Zo, 2026-08-17) |
+| 5-then-1 sequence, 3 s gaps | yes | `MasterControl.TerminalWaves` (5) / `HatchWaves` (1), `RunSim` | Have |
 | Hatch untouchable in room half | yes | `DamageHatch` no-op in Terminal mode | Have |
-| Juice/stake on Master prompt | yes | `BastionTerminal` Master branch | Have — a demo hide is a defect |
+| Stake on the Master prompt | yes | `BastionTerminal` Master branch | Have — a demo hide is a defect |
 | Master fight spawns in the kit | planned (Zo, 2026-08-17) | sketch marks `S:ControlW:W` `S:ControlE:E` on R15; author with `M73`'s SpawnRoom prefab work; wire `T_Master` UnlockedSpawns | Build |
 | Voice ids / merge rule / demo log | no | — | Build |
 
@@ -94,7 +97,7 @@ Continues from beat 5: D3 opens when T4 and T5 are done. Standing arrives as
 
 | File | Change |
 |---|---|
-| `BastionTerminal` Master `Prompt` | Unchanged live juice/stake |
+| `BastionTerminal` Master `Prompt` | Unchanged live stake line |
 | `GameController` Master start | Add `[Demo] master-control room fight` + voice on look-at |
 | Door D3 open | `demo.control_room` instead of `demo.door_d3` |
 | Sketch / emitter | Control Room closets on R15 west/east, wired to Master — authored with `M73`'s SpawnRoom prefab work (Zo, 2026-08-17) |
@@ -109,8 +112,8 @@ Nothing. Do not delete the Hatch half. Do not delete the travel-kill criterion.
 |---|---|---|
 | Terminal half | 5 Waves | `MasterControl.TerminalWaves` |
 | Gap | 3 s | `WaveDirector.InterWaveGap` |
-| Clamp composition | Wave-5 table: 66 bodies, 12 Hunters, 7 Thieves, ×2.60 | index `MaxWaves−1` (`MaxWaves` is a per-trigger cap, not per-Run — Zo, 2026-08-17) |
-| Juice | live | beat 1 teach |
+| Clamp composition | Wave-5 table at dial 0: 66 bodies — 12 Hunters, 7 Thieves, 3 Cloakers, 44 Defaults — ×2.60 health | index `MaxWaves−1`; `WaveDirector.MaxWaves` is **5** and is an absolute end-Wave ceiling |
+| Ante | live | beat 1 teach |
 
 Do not retune for the demo. If 5 room Waves is too long for a first session,
 that is a later `#12` change with play data.
@@ -122,7 +125,7 @@ that is a later `#12` change with play data.
 | Master `E` | Host sim, any seat at the terminal (live). One sequence |
 | Seal | Host door, all seats |
 | Voice | Party Lock Prep |
-| Guest down during room half | `M57` wait. Host continues. No buy-back here — buy-back needs a live bank window (beat 7; Zo, 2026-08-17) |
+| Guest down during room half | `M57` wait, and the priced respawn is available here too — it is not gated to a Convert window. A seat carrying **150** × (taken + 1) buys itself back; one that is not is refused. Unbanked grows all through this half, so most seats can pay |
 | Scale | `playerCount` on each Wave |
 
 If the lead never enters R15 and a guest pulls Master: allowed (live). Voice
@@ -140,8 +143,8 @@ Assault during the 5 Waves: no lines.
 ## Driven / Shown / Reads-back
 
 - **Driven by** `E` then `T` at Master Control (`M54`).
-- **Shown** door shut; Hatch not taking damage; Unbanked rising; juice/stake on
-  the Master prompt.
+- **Shown** door shut; Hatch not taking damage; Unbanked rising; the stake line
+  on the Master prompt.
 - **Reads-back** `[Terminal] master-control started …` (in tree),
   `[Demo] master-control room fight` (build).
 
@@ -150,15 +153,15 @@ Assault during the 5 Waves: no lines.
 | Event | Line | Status |
 |---|---|---|
 | Room copy | `[Demo] master-control room fight` | build |
-| Sequence | `[Terminal] master-control started terminalWaves=5 hatchWaves=1 …` | in tree (`hatchWaves` reads 1 after beat 7's retune) |
+| Sequence | `[Terminal] master-control started terminalWaves=5 hatchWaves=1 …` | in tree |
 | Half flip | `master-control hatch half — hatchWaves=1` | in tree, **verbose-only** — do not gate a test on it |
-| Juice | spend line from beat 1's build | build (beat 1) |
+| Ante spend | one Event line from beat 1's build | build (beat 1) |
 
 ## Traps
 
 - Adding `Escaped` at the end of the Terminal half. Forbidden.
 - Starting the Hatch half without unsealing (`M54` c4). Do not recut.
-- Hiding juice on the Master prompt. Taught in beat 1; live is correct.
+- Hiding the stake on the Master prompt. Taught in beat 1; live is correct.
 - Locking input during the 5 Assaults.
 - Gating verification on the half-flip log — it is `Log.Info`. Use the event /
   door state.
@@ -166,7 +169,8 @@ Assault during the 5 Waves: no lines.
   are planned authoring with `M73`'s SpawnRoom prefab work (Zo, 2026-08-17) —
   resolved as planned work, not open design. Verify wired before cutting.
 - `timeScale = 0` "cinematic" seal.
-- Spending a mid-Run Hatch-bank slot on this half (Terminal mode does not).
+- Reintroducing a per-Boarding Convert slot to spend on this half. Slots are
+  gone from the tree.
 
 ## Depends / Unblocks
 
@@ -176,10 +180,9 @@ Unblocks: beat 7 on `MasterHatchHalfStarted`.
 
 ## Verification
 
-1. `MasterControlTests` still green (5 Terminal then the single Hatch window —
-   `HatchWaves` 1, beat 7's retune; no slot spend on the Hatch window, Escaped
-   only after it).
-2. Master prompt still contains juice/Intensity. A demo hide is a defect.
+1. `MasterControlTests` still green (5 Terminal then the single Convert window
+   at `HatchWaves` 1; no slot spend on it, Escaped only after it).
+2. Master prompt still contains the stake line. A demo hide is a defect.
 3. Log `master-control room fight` then the existing started line.
 4. Hatch HP unchanged during the Terminal half (regression).
 5. Kit scene: five room Waves actually spawn inside/at R15 (spawn rooms from

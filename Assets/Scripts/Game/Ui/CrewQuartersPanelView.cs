@@ -17,6 +17,12 @@ namespace GatekeepersProtocol.Game
         [SerializeField] GameObject _catalogHeading;
         [SerializeField] ProtocolSheetView _sheet;
 
+        /// <summary>The three-card pick, authored by SceneBuilder's Build/Protocol Bar row.
+        /// Optional so a scene that has not been through that row still binds cleanly and the
+        /// station falls back to the catalog it has always shown — the cards are a better
+        /// first choice, not a load-bearing one.</summary>
+        [SerializeField, OptionalBinding] ProtocolCardDeckView _cardDeck;
+
         bool _bindingsChecked;
 
         /// <summary>How many catalog rows this panel can draw. The station fills them from
@@ -24,6 +30,9 @@ namespace GatekeepersProtocol.Game
         public const int RowCount = 4;
 
         public ProtocolSheetView Sheet => _sheet;
+
+        /// <summary>Null until the deck has been authored into this scene.</summary>
+        public ProtocolCardDeckView CardDeck => _cardDeck;
 
         /// <summary>Catalog row by position. The serialized field names are the old upgrade
         /// tracks and stay that way so the Ship.unity bindings survive; position is what the
@@ -67,6 +76,11 @@ namespace GatekeepersProtocol.Game
         }
 
         public void ShowSheet(bool visible) => UiBind.Show(_sheet, visible);
+
+        /// <summary>Show or hide the pick deck. Change-gated by UiBind, which matters here:
+        /// the deck replays its entrance on every activation, so an ungated SetActive on each
+        /// repaint would restart the animation while the player is reading.</summary>
+        public void ShowCardDeck(bool visible) => UiBind.Show(_cardDeck, visible);
 
         void Require(string field, UnityEngine.Object value)
         {

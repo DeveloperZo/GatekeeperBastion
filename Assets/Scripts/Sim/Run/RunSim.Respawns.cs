@@ -5,8 +5,12 @@ namespace GatekeepersProtocol.Sim
     /// <summary>Respawn counter for the live run (partial of RunSim, same split as
     /// Wallets/Dock: one concern per file). The rule itself is <see cref="Respawns"/>; this
     /// is the state it adjudicates over and the one mutation path. The purse debited is the
-    /// DYING SEAT'S OWN Unbanked — never the realm's bank and never another seat's pile — so
-    /// the affordability test and the spend cannot drift apart.</summary>
+    /// REALM'S BANK (Zo, 2026-08-25) — never a seat's staked pile — so the affordability test
+    /// and the spend cannot drift apart.
+    /// <para>It was the dying seat's own carry until kills began banking on landing. Charging
+    /// the carry now would tax the seat that chose to gamble, spare the one that did not, and
+    /// price a never-gambling seat's return at infinity — which is the no-progress death the
+    /// ruling forbids.</para></summary>
     public sealed partial class RunSim
     {
         /// <summary>Respawns taken this run, every seat together. Prices the next one.</summary>
@@ -19,7 +23,9 @@ namespace GatekeepersProtocol.Sim
         /// otherwise.</summary>
         public string RespawnRefuse(int slot)
         {
-            return Respawns.Refuse(Phase, NextRespawnCost, UnbankedOf(slot));
+            // The fee comes out of the BANK now that kills bank on landing — the carried
+            // pile a seat used to buy its way back with no longer fills on its own.
+            return Respawns.Refuse(Phase, NextRespawnCost, BankedSalvage);
         }
 
         /// <summary>Take a respawn for <paramref name="slot"/>: adjudicate, debit that seat's
@@ -36,12 +42,16 @@ namespace GatekeepersProtocol.Sim
                 Log.Event(Tag, "respawn refused — " + reason);
                 return false;
             }
-            long carry = UnbankedOf(slot);
-            _wallets.Set(slot, carry - cost);
+            long bank = BankedSalvage;
+            if (!SpendBanked(cost))
+            {
+                Log.Event(Tag, "respawn refused — bank=" + bank + " cost=" + cost);
+                return false;
+            }
             _wallets.SetDown(slot, false);
             RespawnsTaken++;
             Log.Event(Tag, "respawn taken — slot=" + slot + " cost=" + cost
-                + " carry " + carry + "->" + UnbankedOf(slot)
+                + " bank " + bank + "->" + BankedSalvage
                 + " taken=" + RespawnsTaken);
             return true;
         }

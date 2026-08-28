@@ -59,6 +59,7 @@ Thumbs.db
 # evidence for one session, not project history — the session log in Logs/ is
 # the record, and it is already ignored above.
 # ---------------------------------------------------------------------------
+/Captures/
 /gkb_*.log
 /gkb_*.json
 /gkb_*.txt

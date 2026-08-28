@@ -10,9 +10,11 @@ namespace GatekeepersProtocol.Game
     /// Mouse sensitivity is read from <see cref="Settings"/> every frame so options take effect live.</summary>
     /// <remarks>
     /// WHY SPRINT IS RATIONED — this is the load-bearing part, do not "simplify" it away:
-    /// a provoked gatekeeper chases at 5.6 m/s (EnemyGatekeeper.chaseSpeed), which is deliberately
-    /// FASTER than the 5 m/s walk so that backing away while shooting is not a free win. Sprint
-    /// at 7.5 m/s is faster than the chase, so an UNLIMITED sprint would hand the player exactly
+    /// a Hunter chases at 5.6 m/s (WaveDirector.StatsFor), which is deliberately FASTER than the
+    /// 5 m/s walk so that backing away while shooting is not a free win against the one kind
+    /// built to catch you. (The Default's 4.6 m/s chase is deliberately under the walk since the
+    /// spine, 2026-08-25 — the corridor is the pressure there, not the footspeed.) Sprint
+    /// at 7.5 m/s is faster than either, so an UNLIMITED sprint would hand the player exactly
     /// the kiting exploit the enemy-AI work just closed: outrun the pack forever, plink at it,
     /// never take a swing, never risk the hatch. Stamina is the price. The pool exists so sprint
     /// is a BURST for repositioning — break contact, cross the bore, get back to the hatch —
@@ -139,6 +141,18 @@ namespace GatekeepersProtocol.Game
                 cameraTransform.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
         }
 
+        // Serialized so the saved prefab carries them (prefab freeze); Reset() keeps the code
+        // defaults from diverging silently. moveSpeed/sprintSpeed feed the kiting-vs-chase math
+        // in the class remarks above — if they change here, change the remarks' arithmetic too.
+        void Reset()
+        {
+            moveSpeed = 5f;
+            sprintSpeed = 7.5f;
+            gravity = -20f;
+            pitchLimit = 85f;
+            staminaMax = 100f;
+        }
+
         void Awake()
         {
             _cc = GetComponent<CharacterController>();
@@ -186,10 +200,31 @@ namespace GatekeepersProtocol.Game
             Tick(Time.deltaTime);
         }
 
+        /// <summary>True when focus loss — not the player — is what freed the cursor. Alt-tab
+        /// must not cost a shot.</summary>
+        bool _cursorWasLockedBeforeFocusLoss;
+
         void OnApplicationFocus(bool hasFocus)
         {
             if (!hasFocus)
+            {
+                _cursorWasLockedBeforeFocusLoss = Cursor.lockState == CursorLockMode.Locked;
                 SetCursorLocked(false);
+                return;
+            }
+
+            // GIVE THE CAPTURE BACK. This only ever unlocked, so every focus blip left the
+            // cursor free and the player's next click was spent RE-CAPTURING instead of firing:
+            // "Fire refused: the cursor is not captured", eight times mid-fight in the 23:36
+            // playtest. DemoVoiceView already solved the same problem for Lock-mode demo lines
+            // and this is that fix applied to the other cause.
+            //
+            // Only restores what focus loss took. A cursor the player freed with Escape, or one
+            // a menu owns, stays free — MovementLocked and the voice lock are exactly the states
+            // where re-locking would fight whoever opened the menu.
+            if (_cursorWasLockedBeforeFocusLoss && !MovementLocked && !DemoVoice.LocksInput)
+                SetCursorLocked(true);
+            _cursorWasLockedBeforeFocusLoss = false;
         }
 
         /// <summary>Locomotion: cursor lock, look, sprint and the CharacterController move.</summary>

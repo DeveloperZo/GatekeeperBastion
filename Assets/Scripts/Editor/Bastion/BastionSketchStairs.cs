@@ -362,11 +362,22 @@ namespace GatekeepersProtocol.EditorTools
                     continue;
                 if (r.gameObject.name.IndexOf(nameContains, System.StringComparison.Ordinal) < 0)
                     continue;
-                if (!r.bounds.Intersects(well))
+                // A graze must not cost a whole tile: a sliver of overlap still SEALS the
+                // deck visually, and killing the tile leaves metres of walkable unrendered
+                // hole (the stair audit found 5.3 m holes bought by 0.02-0.25 m grazes).
+                // Only a bite deep enough to collide with the stair itself takes it out.
+                Bounds b = r.bounds;
+                float biteX = Mathf.Min(b.max.x, well.max.x) - Mathf.Max(b.min.x, well.min.x);
+                float biteZ = Mathf.Min(b.max.z, well.max.z) - Mathf.Max(b.min.z, well.min.z);
+                if (biteX < MinTileBite || biteZ < MinTileBite)
                     continue;
                 r.gameObject.SetActive(false);
             }
         }
+
+        /// <summary>Minimum XZ overlap (metres, both axes) between the padded well and a
+        /// tile before the tile is deactivated. Below this the stair dress hides the graze.</summary>
+        const float MinTileBite = 0.5f;
 
         static void PunchPhysicsFloor(GameObject upper, Bounds well)
         {

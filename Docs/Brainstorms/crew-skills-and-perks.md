@@ -5,7 +5,7 @@ Purpose: The CREW QUARTERS console — the player beyond weapon and ship. The bu
 system graduated to M70; the RPG attribute tracks and the unbuilt 5-skill pairing are parked.
 Status: brainstorm
 Update trigger: when a parked entry is revived or a remaining entry graduates.
-Last updated: 2026-08-17
+Last updated: 2026-08-25 (M70 closed and M94 added VEIL and FORGE; save v13, not v8; the deleted Scavenging term named)
 -->
 
 ## What this covers
@@ -18,10 +18,16 @@ question, and perks as run modifiers.
 
 ## Where it stands
 
-`Game/Ship/CrewQuartersStation.cs` equips a Boarder Protocol (`BoarderProtocol`, save v8).
-Vitality, Stamina, Scavenging and Luck were refunded and deleted. Hatch Armor remains at
-FABRICATION on the `200 * 2^level` curve. Crit chance is frozen at 0. `M70` is in tree and
-not closed (PlayMode / HUD / play criteria still owed).
+`Game/Ship/CrewQuartersStation.cs` equips a Boarder Protocol (`BoarderProtocol`; the save is
+v13 since `M96` split it, and refuses older documents outright). Vitality, Stamina, Scavenging
+and Luck were refunded and deleted — `UpgradeTrack` has one member left, `HatchArmor`, and
+`MetaUpgrades.SalvagePerKill()` is a flat 25 with no term to scale. Hatch Armor remains at
+FABRICATION on the `200 * 2^level` curve. Crit chance is frozen at 0.
+
+**`M70` closed, and CREW has since sold two more sheets.** `M94` shipped VEIL and FORGE beside
+the Default claim (closed 2026-08-24), so `BoarderProtocolId` is a catalog of three and AEGIS
+and LEDGER are the Coming Soon rows. `boarder-protocols.md` is the spec of record for all of
+them; nothing about the protocol system is decided in this file any more.
 
 The 5-skill system in `../Design/3-Mechanics.md` §3.2 is unbuilt and parked (see below).
 

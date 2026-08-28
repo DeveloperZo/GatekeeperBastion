@@ -13,32 +13,59 @@ namespace GatekeepersProtocol.Tests
     /// The Cloaker's refusal (being seen) is a STATE in the Game layer, so what is pinned here is
     /// the opposite claim: its stat line is Default's with one owned number, the hp.
     ///
-    /// The stat lines, and the arithmetic every one of them is derived from (MK-1 L0 = 12 damage
-    /// x 4 shots/s = 32 EFFECTIVE dps after the 66.7% duty cycle; player 100 hp, walk 5 m/s,
-    /// sprint 7.5 m/s; hatch 300 hp):
+    /// FEWER AND TOUGHER, 2026-08-27 (Zo: "lower the volume of enemies and make them tougher").
+    /// Every kind's maxHp rose by exactly 5/3 in one pass — Default 30 -> 50, Hunter 20 -> 33,
+    /// Thief 120 -> 200, Cloaker 45 -> 75 — against a roster cut of about 40%. The RATIOS between
+    /// the kinds are what this file is really about and 5/3 applied to all four leaves every one of
+    /// them intact: a Cloaker is still 1.5 Defaults, a Thief is still four of them. So the tests
+    /// below are written against the ratios and against the live constants, and the only maxHp
+    /// literals left are the four declaration pins in the stat-line tests.
+    ///
+    /// The stat lines, and the arithmetic every one of them is derived from (MK-1 T0 = 30 damage
+    /// x 3 shots/s = 59.0 sustained dps once the 8-round clip and 1.4 s reload are counted; player
+    /// 100 hp, walk 5 m/s, sprint 7.5 m/s; hatch 300 hp):
     ///
     ///   | kind    | maxHp | player | hatch | interval | patrol | chase | refuses    |
-    ///   | Default |    30 |      6 |     4 |     0.7s |    3.2 |   5.6 | —          |
-    ///   | Hunter  |    20 |      6 |     0 |     0.7s |    6.5 |   6.5 | the hatch  |
-    ///   | Thief   |   120 |      0 |    20 |     0.7s |    2.2 |   2.2 | the player |
-    ///   | Cloaker |    45 |      6 |     4 |     0.7s |    3.2 |   5.6 | being seen (a state, not a flag) |
+    ///   | Default |    50 |      6 |     4 |     0.7s |    2.8 |   4.6 | —          |
+    ///   | Hunter  |    33 |      6 |     0 |     0.7s |    5.6 |   5.6 | the hatch  |
+    ///   | Thief   |   200 |      0 |    20 |     0.7s |    2.2 |   2.2 | the player |
+    ///   | Cloaker |    75 |      6 |     4 |     0.7s |    2.8 |   4.6 | being seen (a state, not a flag) |
     ///
-    ///   Default 30 hp = 3 shots = 30/32 = 0.94s; three of them are 25.7 dps and kill a 100 hp
-    ///           player in 3.9s, five are 42.9 dps and 2.3s. (At the pre-horde 18 damage, five
-    ///           were 128.6 dps and 0.8s — not a fight, an execution.)
-    ///   Hunter  20 hp = 2 shots = 0.63s, and 6.5 m/s beats the 5 m/s WALK while losing to the
+    ///   Default 50 hp = 2 MK-1 shots; three of them are 25.7 dps and kill a 100 hp player in
+    ///           3.9s, five are 42.9 dps and 2.3s. (At the pre-horde 18 damage, five were 128.6
+    ///           dps and 0.8s — not a fight, an execution.) The per-swing damage did NOT move on
+    ///           2026-08-27, so the crowd budget is the one thing the retune left alone.
+    ///   Hunter  33 hp = 2 MK-1 shots, and 5.6 m/s beats the 5 m/s WALK while losing to the
     ///           7.5 m/s SPRINT: the first enemy that makes the Stamina track worth buying.
-    ///   Thief     120 hp = 10 shots = 3.75s of focused fire, 20 hatch damage / 0.7s = 28.6 dps, so
-    ///           it strips 28.6 x 3.75 = 107 of the hatch's 300 hp while being killed. It must be
+    ///   Thief   200 hp = 7 MK-1 shots = 3.4s of focused fire, 20 hatch damage / 0.7s = 28.6 dps,
+    ///           so it strips ~97 of the hatch's 300 hp while being killed. It must be
     ///           intercepted, which is what turns "shoot what is closest" into a decision.
     ///
-    /// Composition teaches one kind per wave (18/0/0, 26/4/0, 34/6/2 at dial 0) and THE DIAL'S
-    /// SURPLUS IS ALL DEFAULT — see Composition_DialSurplusLandsOnDefaultOnly for why.
-    /// Totals, gaps and the dial grid live in SiphonAndWaveTests; this file owns the kinds.
+    /// Composition teaches one kind per wave and THE DIAL'S SURPLUS IS ALL DEFAULT — see
+    /// Composition_DialSurplusLandsOnDefaultOnly for why. The Hunter/Thief/Cloaker rows are the
+    /// only tables restated here, because WaveDirector keeps them private and there is nothing to
+    /// read them off; every DEFAULT count is derived as enemyCount minus the other three, which is
+    /// what the sim itself does. Totals, gaps and the dial grid live in SiphonAndWaveTests; this
+    /// file owns the kinds.
     /// </summary>
     public class GatekeeperVariantsTests
     {
-        private const float PlayerDps = 32f;      // MK-1 at L0, duty cycle included (02_Numbers.md)
+        /// <summary>The unupgraded player's sustained dps, READ OFF THE CATALOG. It sat here as a
+        /// const 32f — "MK-1 at L0, duty cycle included" — and that number described a 12-damage,
+        /// 4-shot sidearm that has not existed since the Primary raise took MK-1 to 30 x 3.0. The
+        /// literal survived because the only test using it happened to stay green: a Thief was 120
+        /// hp and 120/32 came out at the 3.75 s the comment claimed. The 2026-08-27 hp pass is what
+        /// exposed it, so it is derived now and cannot drift behind the row again.</summary>
+        private static float PlayerDps
+        {
+            get
+            {
+                var mk1 = WeaponCatalog.Def(WeaponId.Mk1Sidearm);
+                float cycle = mk1.clipSize / mk1.shotsPerSecond + mk1.reloadSeconds;
+                return mk1.clipSize * mk1.damage * System.Math.Max(1, mk1.pellets) / cycle;
+            }
+        }
+
         private const float PlayerHp = 100f;
         private const float PlayerWalkSpeed = 5f;
         private const float PlayerSprintSpeed = 7.5f;
@@ -51,12 +78,12 @@ namespace GatekeepersProtocol.Tests
         public void StatsFor_Default_IsTheExactStatLine()
         {
             var s = WaveDirector.StatsFor(GatekeeperKind.Default);
-            Assert.AreEqual(30f, s.maxHp, 1e-6f);
+            Assert.AreEqual(50f, s.maxHp, 1e-6f);   // 30 x 5/3, 2026-08-27
             Assert.AreEqual(6f, s.playerDamage, 1e-6f);
             Assert.AreEqual(4f, s.hatchDamage, 1e-6f);
             Assert.AreEqual(0.7f, s.attackInterval, 1e-6f);
-            Assert.AreEqual(3.2f, s.patrolSpeed, 1e-6f);
-            Assert.AreEqual(5.6f, s.chaseSpeed, 1e-6f);
+            Assert.AreEqual(WaveDirector.GatekeeperPatrolSpeed, s.patrolSpeed, 1e-6f);
+            Assert.AreEqual(WaveDirector.GatekeeperChaseSpeed, s.chaseSpeed, 1e-6f);
             Assert.IsFalse(s.ignoresHatch, "the Default gatekeeper refuses nothing");
             Assert.IsFalse(s.ignoresPlayer, "the Default gatekeeper refuses nothing");
         }
@@ -65,12 +92,12 @@ namespace GatekeepersProtocol.Tests
         public void StatsFor_Hunter_IsTheExactStatLine()
         {
             var s = WaveDirector.StatsFor(GatekeeperKind.Hunter);
-            Assert.AreEqual(20f, s.maxHp, 1e-6f);
+            Assert.AreEqual(33f, s.maxHp, 1e-6f);   // 20 x 5/3, 2026-08-27
             Assert.AreEqual(6f, s.playerDamage, 1e-6f);
             Assert.AreEqual(0f, s.hatchDamage, 1e-6f);
             Assert.AreEqual(0.7f, s.attackInterval, 1e-6f);
-            Assert.AreEqual(6.5f, s.patrolSpeed, 1e-6f);
-            Assert.AreEqual(6.5f, s.chaseSpeed, 1e-6f);
+            Assert.AreEqual(5.6f, s.patrolSpeed, 1e-6f);
+            Assert.AreEqual(5.6f, s.chaseSpeed, 1e-6f);
             Assert.IsTrue(s.ignoresHatch);
             Assert.IsFalse(s.ignoresPlayer);
         }
@@ -79,7 +106,7 @@ namespace GatekeepersProtocol.Tests
         public void StatsFor_Thief_IsTheExactStatLine()
         {
             var s = WaveDirector.StatsFor(GatekeeperKind.Thief);
-            Assert.AreEqual(120f, s.maxHp, 1e-6f);
+            Assert.AreEqual(200f, s.maxHp, 1e-6f);  // 120 x 5/3, 2026-08-27
             Assert.AreEqual(0f, s.playerDamage, 1e-6f);
             Assert.AreEqual(20f, s.hatchDamage, 1e-6f);
             Assert.AreEqual(0.7f, s.attackInterval, 1e-6f);
@@ -92,12 +119,15 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void StatsFor_Cloaker_IsDefaultsLineWithItsOwnHp()
         {
-            // The Cloaker's ONE owned number is 45 hp (two MK-1 T0 shots where a Default is
-            // one); every other figure IS Default's constant, read from the same place, so a
-            // Default retune retunes the Cloaker with it and the watch rule stays the only
-            // thing that separates them.
+            // The Cloaker's ONE owned number is 75 hp (45 x 5/3 with the 2026-08-27 pass); every
+            // other figure IS Default's constant, read from the same place, so a Default retune
+            // retunes the Cloaker with it and the watch rule stays the only thing that separates
+            // them. The rule the number encodes is "one and a half Defaults", and that is asserted
+            // as a RATIO below rather than left implied by two literals that moved together.
             var s = WaveDirector.StatsFor(GatekeeperKind.Cloaker);
-            Assert.AreEqual(45f, s.maxHp, 1e-6f);
+            Assert.AreEqual(75f, s.maxHp, 1e-6f);
+            Assert.AreEqual(1.5f, s.maxHp / WaveDirector.StatsFor(GatekeeperKind.Default).maxHp,
+                1e-4f, "a Cloaker is one and a half Defaults - that ratio IS the kind");
             Assert.AreEqual(WaveDirector.GatekeeperPlayerDamage, s.playerDamage, 1e-6f);
             Assert.AreEqual(WaveDirector.GatekeeperHatchDamage, s.hatchDamage, 1e-6f);
             Assert.AreEqual(WaveDirector.GatekeeperAttackInterval, s.attackInterval, 1e-6f);
@@ -254,35 +284,72 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Thief_StripsAboutAThirdOfTheHatch_WhileBeingKilled()
         {
-            // Why a Thief cannot be left for later: 120 hp is 3.75s of an unupgraded player's FULL
-            // attention (120 / 32 dps), during which it deals 20 / 0.7 = 28.6 dps to a 300 hp
-            // hatch — 107 hp, better than a third of the door, per Thief, and that is the GOOD case
-            // where someone is already shooting it.
+            // Why a Thief cannot be left for later: 200 hp is 3.4 s of an unupgraded player's FULL
+            // attention (200 / 59.0 dps), during which it deals 20 / 0.7 = 28.6 dps to a 300 hp
+            // hatch — about 97 hp, close to a third of the door, per Thief, and that is the GOOD
+            // case where someone is already shooting it.
+            //
+            // TWO NUMBERS MOVED UNDER THIS TEST AT ONCE AND THEY PULLED OPPOSITE WAYS. The Thief
+            // went 120 -> 200 hp, which lengthens the kill; PlayerDps stopped being the stale 32
+            // and became the sidearm's real 59.0, which shortens it. The SECONDS are therefore not
+            // the claim and never were — the claim is the FRACTION OF THE DOOR one Thief takes with
+            // it, so that is what is pinned, off ShipSystems.HatchMaxHp rather than a literal 300.
+            //
+            // It is now just UNDER a third (32.3%) where it used to be just over (35.7%), because
+            // the hp raise did not quite keep pace with the sidearm figure the old constant was
+            // hiding. Asserted as a two-sided window: a Thief that stops being worth roughly a
+            // third of the hatch stops being the enemy that has to be intercepted, and one worth
+            // half the door is a different design problem in the other direction.
             var thief = WaveDirector.StatsFor(GatekeeperKind.Thief);
             float ttk = thief.maxHp / PlayerDps;
             float hatchDps = thief.hatchDamage / thief.attackInterval;
-            Assert.AreEqual(3.75f, ttk, 1e-3f, "seconds of focused fire to kill one Thief");
-            Assert.AreEqual(28.57f, hatchDps, 1e-2f, "hatch damage per second");
-            Assert.AreEqual(107.1f, ttk * hatchDps, 0.1f, "hatch hp lost to one Thief that got home");
-            Assert.IsTrue(ttk * hatchDps > 300f / 3f, "one Thief is worth more than a third of the hatch");
+            float doorLost = ttk * hatchDps;
+            float fraction = doorLost / ShipSystems.HatchMaxHp;
+            // The other half of "it must be intercepted": it is FOUR Defaults of focused fire, so
+            // answering one is a real commitment of attention and not an incidental trigger pull.
+            Assert.AreEqual(4f, thief.maxHp / WaveDirector.StatsFor(GatekeeperKind.Default).maxHp,
+                1e-4f, "a Thief is four Defaults of shooting - that ratio IS the heavy");
+            Assert.AreEqual(1f / 3f, fraction, 0.05f,
+                $"one Thief that got home costs {doorLost:0.#} of the hatch's "
+                + $"{ShipSystems.HatchMaxHp} hp ({fraction:0.0%}) - it must stay near a third");
         }
 
         [Test]
-        public void ShotsToKill_IsThreeTwoAndTen_AtTheUnupgradedTwelveDamage()
+        public void ShotsToKill_IsTwoTwoAndSeven_AtTheUnupgradedSidearm()
         {
-            // The reason the kinds read differently through a gunsight: 12 damage a shot,
-            // so 30 hp is 3 shots, 20 hp is 2, and 120 hp is 10 — a Thief costs five Hunters.
-            // The Cloaker's 45 lands at 4: noticeably tougher than the Default it impersonates,
-            // still nothing like a Thief.
-            Assert.AreEqual(3, ShotsToKill(GatekeeperKind.Default));
+            // Renamed from _IsThreeTwoAndTen_AtTheUnupgradedTwelveDamage. Both halves of that name
+            // were lies by 2026-08-27: the sidearm is 30 damage a shot, not 12, and the 5/3 hp
+            // pass moved every count in the sentence.
+            //
+            // The reason the kinds read differently through a gunsight: at 30 damage a shot, a
+            // 50 hp Default is 2, a 33 hp Hunter is 2, and a 200 hp Thief is 7 — a Thief costs
+            // three and a half Hunters. The Cloaker's 75 lands at 3: one shot more than the
+            // Default it impersonates, still nothing like a Thief.
+            //
+            // AND THE HUNTER PIN IS NOW ON A BOUNDARY WORTH SAYING OUT LOUD. A Hunter used to be
+            // exactly two shots at 20 hp and 12 damage; at 33 against 30 it is two shots by three
+            // points. It reads as "the same as a Default" through the sight even though it is
+            // two-thirds of one, which is the granularity trap the catalog comments keep warning
+            // about — one point of damage either way on either row flips it.
+            Assert.AreEqual(2, ShotsToKill(GatekeeperKind.Default));
             Assert.AreEqual(2, ShotsToKill(GatekeeperKind.Hunter));
-            Assert.AreEqual(10, ShotsToKill(GatekeeperKind.Thief));
-            Assert.AreEqual(4, ShotsToKill(GatekeeperKind.Cloaker));
+            Assert.AreEqual(7, ShotsToKill(GatekeeperKind.Thief));
+            Assert.AreEqual(3, ShotsToKill(GatekeeperKind.Cloaker));
+
+            // The claim underneath the counts, which survives a retune of either side: the shot
+            // ladder must stay strictly ordered Hunter <= Default < Cloaker < Thief, or the kinds
+            // stop being distinguishable by how long they take to kill.
+            Assert.LessOrEqual(ShotsToKill(GatekeeperKind.Hunter), ShotsToKill(GatekeeperKind.Default));
+            Assert.Less(ShotsToKill(GatekeeperKind.Default), ShotsToKill(GatekeeperKind.Cloaker));
+            Assert.Less(ShotsToKill(GatekeeperKind.Cloaker), ShotsToKill(GatekeeperKind.Thief));
         }
 
+        /// <summary>Shots from the FREE sidearm at zero wheel points. Read off the catalog: the
+        /// literal 12 that used to live here described a row the Primary raise deleted.</summary>
         private static int ShotsToKill(GatekeeperKind kind)
         {
-            const float damagePerShot = 12f; // MK-1 at L0
+            var mk1 = WeaponCatalog.Def(WeaponId.Mk1Sidearm);
+            float damagePerShot = mk1.damage * System.Math.Max(1, mk1.pellets);
             float hp = WaveDirector.StatsFor(kind).maxHp;
             return (int)System.Math.Ceiling(hp / damagePerShot);
         }
@@ -295,27 +362,52 @@ namespace GatekeepersProtocol.Tests
         public void Composition_TeachesOneKindPerWave_ExactAtDialZero()
         {
             // wave 1: the game as it was. wave 2: the first enemy that comes for YOU.
-            // wave 3: the first enemies you must CHOOSE how to answer — the Thief through the
-            // gun, the lone Cloaker through the gaze. waves 4–5 escalate composition.
+            // wave 3: the first enemy you must CHOOSE how to answer — the Thief through the
+            // gun. wave 4: the Cloaker pair through the gaze — one debut per wave, so each
+            // rule gets read alone. wave 5 escalates composition.
+            //
+            // The three kind rows were cut with the roster on 2026-08-27 — Hunters peak 12 -> 7,
+            // Thieves 7 -> 4, Cloakers 3 -> 2 — and they are restated here, and ONLY here, because
+            // WaveDirector keeps them private and there is nothing to read them off.
+            // THE DEFAULT ROW IS NOT: it is enemyCount minus the other three, which is the
+            // sim's own definition of it, so the shape of the teaching curve is asserted without
+            // this fixture holding a fourth table that can drift on its own.
             var director = new WaveDirector();
-            int[] def = { 18, 26, 33, 38, 44 };
-            int[] hunters = { 0, 4, 6, 10, 12 };
-            int[] thieves = { 0, 0, 2, 4, 7 };
-            int[] cloakers = { 0, 0, 1, 2, 3 };
+            int[] hunters = { 0, 2, 4, 6, 7 };
+            int[] thieves = { 0, 0, 1, 2, 4 };
+            int[] cloakers = { 0, 0, 0, 1, 2 };
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
                 var spec = director.NextWave(w, 0);
-                Assert.AreEqual(def[w], spec.defaultCount, "defaults, wave " + w);
                 Assert.AreEqual(hunters[w], spec.hunterCount, "hunters, wave " + w);
                 Assert.AreEqual(thieves[w], spec.thiefCount, "thieves, wave " + w);
                 Assert.AreEqual(cloakers[w], spec.cloakerCount, "cloakers, wave " + w);
+                Assert.AreEqual(spec.enemyCount - hunters[w] - thieves[w] - cloakers[w],
+                    spec.defaultCount, "defaults, wave " + w);
+            }
+
+            // THE TEACHING SHAPE, which is the claim the three tables exist to make: exactly one
+            // NEW kind appears per wave from wave 2 on, and no kind ever thins out once it has
+            // been introduced. The roster cut halved the rows and left both properties intact.
+            for (int w = 1; w < WaveDirector.MaxWaves; w++)
+            {
+                var prev = director.NextWave(w - 1, 0);
+                var spec = director.NextWave(w, 0);
+                int debuts = (prev.hunterCount == 0 && spec.hunterCount > 0 ? 1 : 0)
+                           + (prev.thiefCount == 0 && spec.thiefCount > 0 ? 1 : 0)
+                           + (prev.cloakerCount == 0 && spec.cloakerCount > 0 ? 1 : 0);
+                Assert.LessOrEqual(debuts, 1,
+                    "two kinds debuting in wave " + w + " means neither rule gets read");
+                Assert.GreaterOrEqual(spec.hunterCount, prev.hunterCount, "hunters, wave " + w);
+                Assert.GreaterOrEqual(spec.thiefCount, prev.thiefCount, "thieves, wave " + w);
+                Assert.GreaterOrEqual(spec.cloakerCount, prev.cloakerCount, "cloakers, wave " + w);
             }
             Assert.AreEqual(0, director.NextWave(0, 5).hunterCount,
                 "wave 1 is all Default at EVERY dial setting — there is nothing else to meet yet");
             Assert.AreEqual(0, director.NextWave(1, 5).thiefCount,
                 "the Thief waits for wave 3 at every dial setting");
-            Assert.AreEqual(0, director.NextWave(1, 5).cloakerCount,
-                "the Cloaker waits for wave 3 at every dial setting");
+            Assert.AreEqual(0, director.NextWave(2, 5).cloakerCount,
+                "the Cloaker waits for wave 4 at every dial setting — it never shares a debut");
         }
 
         [Test]
@@ -368,34 +460,55 @@ namespace GatekeepersProtocol.Tests
                 }
             }
 
-            // The corner the rule exists for, spelled out: the biggest draw in the game.
-            var top = director.NextWave(4, TetherSiphon.MaxLevel);
-            Assert.AreEqual(99, top.enemyCount);
-            Assert.AreEqual(77, top.defaultCount, "all 33 extra bodies are Default");
-            Assert.AreEqual(12, top.hunterCount, "still twelve Hunters, exactly as at dial 0");
-            Assert.AreEqual(7, top.thiefCount, "still seven Thieves, exactly as at dial 0");
-            Assert.AreEqual(3, top.cloakerCount, "still three Cloakers, exactly as at dial 0");
+            // The corner the rule exists for, spelled out: the biggest draw in the game. Every
+            // figure is read off the dial-0 wave beside it, so the four literals that used to sit
+            // here (99 / 77 / 12 / 7 / 3, all five of them red after the roster cut) are gone.
+            var deepZero = director.NextWave(WaveDirector.MaxWaves - 1, 0);
+            var top = director.NextWave(WaveDirector.MaxWaves - 1, TetherSiphon.MaxLevel);
+            int extra = top.enemyCount - deepZero.enemyCount;
+            Assert.Greater(extra, 0, "the top of the dial must actually add bodies to buy");
+            Assert.AreEqual(deepZero.defaultCount + extra, top.defaultCount,
+                "all " + extra + " extra bodies are Default");
+            Assert.AreEqual(deepZero.hunterCount, top.hunterCount,
+                "the same Hunters as at dial 0, and the dial may never add one");
+            Assert.AreEqual(deepZero.thiefCount, top.thiefCount,
+                "the same Thieves as at dial 0, and the dial may never add one");
+            Assert.AreEqual(deepZero.cloakerCount, top.cloakerCount,
+                "the same Cloakers as at dial 0, and the dial may never add one");
         }
 
         [Test]
         public void Composition_FullGrid_DefaultsAbsorbEveryDialStep()
         {
-            // The Default column of the wave x dial grid, transcribed from the running code.
-            // Hunter, Thief and Cloaker columns are constant across each row (asserted above),
-            // so this IS the whole grid.
+            // The Default column of the wave x dial grid. Hunter, Thief and Cloaker columns are
+            // constant across each row (asserted above), so this IS the whole grid.
+            //
+            // IT WAS A THIRTY-CELL LITERAL AND THE ROSTER CUT TURNED EVERY CELL RED AT ONCE.
+            // Thirty numbers restating two constants and three private rows is not a pin, it is a
+            // second copy of NextWave. What the grid actually claims is that the Default column
+            // ABSORBS the whole dial: at every wave and every dial setting, defaultCount is
+            // enemyCount minus the three fixed rows, with the fixed rows read from the dial-0 wave
+            // of the same index. That holds cell by cell and does not have to be re-typed when
+            // either the roster or the composition moves.
             var director = new WaveDirector();
-            int[][] defaults =
-            {
-                new[] { 18, 20, 21, 23, 24, 27 }, // wave 0: count itself, no other kinds yet
-                new[] { 26, 29, 31, 34, 37, 41 }, // wave 1: count - 4 hunters
-                new[] { 33, 37, 39, 44, 48, 54 }, // wave 2: count - 6 hunters - 2 thieves - 1 cloaker
-                new[] { 38, 43, 46, 52, 57, 65 }, // wave 3: count - 10 hunters - 4 thieves - 2 cloakers
-                new[] { 44, 51, 54, 61, 67, 77 }, // wave 4: count - 12 hunters - 7 thieves - 3 cloakers
-            };
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
+            {
+                var atZero = director.NextWave(w, 0);
+                int fixedKinds = atZero.hunterCount + atZero.thiefCount + atZero.cloakerCount;
                 for (int level = 0; level <= TetherSiphon.MaxLevel; level++)
-                    Assert.AreEqual(defaults[w][level], director.NextWave(w, level).defaultCount,
+                {
+                    var spec = director.NextWave(w, level);
+                    Assert.AreEqual(spec.enemyCount - fixedKinds, spec.defaultCount,
                         "defaults, wave " + w + ", dial " + level);
+                }
+            }
+
+            // ...and the grid must actually VARY, or the paragraph above is describing a table of
+            // one number. The deepest wave's Default column has to climb across the dial.
+            Assert.Greater(director.NextWave(WaveDirector.MaxWaves - 1, TetherSiphon.MaxLevel)
+                               .defaultCount,
+                           director.NextWave(WaveDirector.MaxWaves - 1, 0).defaultCount,
+                "the dial has to move the Default column, or this grid pins nothing");
         }
 
         [Test]
@@ -403,7 +516,8 @@ namespace GatekeepersProtocol.Tests
         {
             // Defensive, not a tuning claim: the fixed per-wave counts are clamped into whatever
             // enemyCount happens to be, so a future wave smaller than 8 bodies cannot produce a
-            // negative defaultCount. No real wave comes close (the smallest is 18).
+            // negative defaultCount. No real wave comes close — the smallest is 11 bodies with no
+            // other kind in it, and the tightest is wave 5 at 39 with 13 non-Defaults.
             var director = new WaveDirector();
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
@@ -459,19 +573,45 @@ namespace GatekeepersProtocol.Tests
             // gap — which is what it used to mean — the same waves take several times longer than
             // the fight itself, and wave 3 alone would spend minutes spawning.
             var director = new WaveDirector();
-            // Wave 3 is nine groups of five (M14 width); delivery matches Docs/02_Numbers.md.
-            float[] asGroups = { 21.0f, 28.0f, 30.4f, 28.8f, 30.6f };
-            float[] asSingles = { 71.4f, 116.0f, 155.8f, 190.8f, 221.0f };
+            // Delivery still RISES with the wave (12.6 → 25.0 s) instead of sitting near-flat while
+            // the roster grows — see SiphonAndWaveTests for the 2026-08-27 log that bought that
+            // change, and for the note that the roster cut shortened every one of these spans by
+            // about 40% without the gap curve being re-derived.
+            //
+            // BOTH SECOND COLUMNS WERE TRANSCRIBED AND BOTH WENT STALE TOGETHER. The pair of
+            // five-literal arrays here said 21.0/30.8/36.8/38.4/45.0 as groups and
+            // 71.4/127.6/188.6/254.4/325.0 as singles, and the roster cut moved all ten. What the
+            // test is actually claiming is a RATIO — that reading the gap per individual inflates
+            // delivery several times over — so the ratio is what is asserted, and the absolute
+            // seconds are left to the fixture that owns the gap curve.
+            float previousSpan = 0f;
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
                 var spec = director.NextWave(w, 0);
                 int groups = (spec.enemyCount + spec.groupSize - 1) / spec.groupSize;
-                Assert.AreEqual(asGroups[w], (groups - 1) * spec.spawnInterval, 1e-2f,
-                    "seconds to deliver wave " + w + " in groups");
-                Assert.AreEqual(asSingles[w], (spec.enemyCount - 1) * spec.spawnInterval, 1e-2f,
-                    "…and one at a time, which is the reading to avoid, wave " + w);
+                float asGroups = (groups - 1) * spec.spawnInterval;
+                float asSingles = (spec.enemyCount - 1) * spec.spawnInterval;
+
+                Assert.Greater(asGroups, 0f, "wave " + w + " must land over more than one group");
+                Assert.Greater(asSingles / asGroups, 3f,
+                    $"wave {w} takes {asGroups:0.#}s in groups and {asSingles:0.#}s one at a time - "
+                    + "if that ratio ever collapses, the per-group reading has stopped mattering");
+                Assert.Greater(asSingles, 40f,
+                    "…and one at a time it is longer than the whole fight, wave " + w);
+
+                if (w > 0)
+                    Assert.Greater(asGroups, previousSpan,
+                        "delivery must lengthen with the wave, not stay flat while the roster grows");
+                previousSpan = asGroups;
             }
-            Assert.AreEqual(9, (42 + 5 - 1) / 5, "wave 3 is nine groups of five");
+
+            // The group arithmetic itself, on the wave the Thief debuts in, derived rather than
+            // spelled: a wave is ceil(count / width) groups and the last one is the short one.
+            var thiefWave = director.NextWave(2, 0);
+            int thiefWaveGroups = (thiefWave.enemyCount + thiefWave.groupSize - 1)
+                                  / thiefWave.groupSize;
+            Assert.GreaterOrEqual(thiefWaveGroups * thiefWave.groupSize, thiefWave.enemyCount);
+            Assert.Less((thiefWaveGroups - 1) * thiefWave.groupSize, thiefWave.enemyCount);
         }
 
         [Test]

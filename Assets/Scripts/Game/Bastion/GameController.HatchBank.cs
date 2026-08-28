@@ -136,29 +136,15 @@ namespace GatekeepersProtocol.Game
                 DemoConversationIds.HatchFinale, DemoVoiceMode.Subtitle);
         }
 
-        /// <summary>A Hatch-bank window was survived (RunSim.BankWindowSurvived). This is the
-        /// only door-opening path in the game: the graph opens every eligible door, the ids are
-        /// snapshotted so a Docked return finds them open, and the door line is spoken with the
-        /// dock offer queued behind it. A breached window ends the Run before this fires.</summary>
+        /// <summary>A Hatch-bank window was survived (RunSim.BankWindowSurvived). One of TWO
+        /// door-opening paths now — the terminal shutoff is the other, and the one the demo
+        /// actually walks (Zo, 2026-08-25). Both go through OpenDoorsFor so they cannot drift.
+        /// A breached window ends the Run before this fires.</summary>
         void OnBankWindowSurvived()
         {
             Log.Event("Demo", "bank window survived zone="
                 + FirstTerminal.ZoneOfWave(Sim != null ? Sim.CurrentWaveIndex : 1));
-            BastionLayout layout = _layout;
-            if (layout == null && _masterTerminal != null)
-                layout = _masterTerminal.Layout;
-            if (layout == null) return;
-
-            if (layout.RecordBankSurvived(out string[] opened))
-            {
-                for (int i = 0; i < opened.Length; i++)
-                    Log.Event("Demo", "door open " + opened[i] + " cause=bank");
-                if (Meta != null)
-                    Meta.SetOpenDoorIds(layout.CopyOpenDoorIds());
-                if (opened.Length > 0 && Meta != null && Meta.DemoActive)
-                    DemoVoice.PlayLocalAndBroadcast(
-                        DoorLineFor(opened[0]), DemoVoiceMode.Lock);
-            }
+            OpenDoorsFor("bank");
 
             if (Meta != null && Meta.DemoActive)
                 DemoVoice.PlayLocalAndBroadcast(

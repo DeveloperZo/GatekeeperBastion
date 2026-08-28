@@ -94,6 +94,14 @@ namespace GatekeepersProtocol.Game
 
         readonly List<WaveEmit> _active = new List<WaveEmit>();
 
+        /// <summary>Drip clock for the hold-until-shutoff trickle. See FieldTrickle.</summary>
+        float _trickleAccrued;
+
+        /// <summary>The spec a trickle body is built from — latched from the last field wave
+        /// that launched, so the drip is that wave's Default arriving late rather than a second
+        /// stat line that can drift away from it.</summary>
+        WaveSpec _trickleSpec;
+
         /// <summary>Every gatekeeper this spawner Instantiated and has not yet seen die or
         /// despawn. Entries can be fake-null (destroyed elsewhere) — iterate with == null checks.</summary>
         readonly List<EnemyGatekeeper> _live = new List<EnemyGatekeeper>();
@@ -177,6 +185,12 @@ namespace GatekeepersProtocol.Game
                 Log.Warn(Tag, "Wave start ignored: spawner is not active.");
                 return;
             }
+
+            // Latch the spec the drip will copy, and clear any drip left over from a previous
+            // zone: a fresh wave owns the lane until ITS roster runs dry.
+            _trickleSpec = spec;
+            _trickleAccrued = 0f;
+            if (_sim != null) _sim.SetFieldTrickle(false);
 
             var emit = new WaveEmit { Spec = spec, BornFrame = Time.frameCount };
             BuildRoster(emit, spec);
@@ -282,7 +296,14 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Assault dead = every active wave finished spawning, every spawned gatekeeper
-        /// is down, and the sim is not still chaining more waves → tell the sim.</summary>
+        /// is down, and the sim is not still chaining more waves → tell the sim.
+        ///
+        /// <para>EXCEPT while the zone still owes a shutoff (Zo, 2026-08-26). A field wave ENDS
+        /// AT A TERMINAL, so running the roster dry is not the end of it: the lane keeps
+        /// dripping (<see cref="TickFieldTrickle"/>) and the Assault stays live until the
+        /// player walks up and turns it off. Clearing here is what let a player hold the Hatch,
+        /// kill all 48 authored bodies and then stroll an empty corridor to press a button —
+        /// the objective was positional and the pressure was not.</para></summary>
         void CheckAssaultCleared()
         {
             if (_teardown) return; // guard: never call into the sim from a terminal/teardown state
@@ -290,10 +311,45 @@ namespace GatekeepersProtocol.Game
             if (_sim.Assault != AssaultState.Assault) return;
             if (_sim.ChainPending) return;
             if (_active.Count > 0) return; // at least one wave still delivering
+            // AFTER the alive check, never before: the flag zeroes CurrentKillAward, so
+            // raising it while authored bodies are still on the field would quietly stop
+            // paying for the wave the player is still fighting.
             if (AliveCount > 0) return;
+            if (_game != null && _game.FieldWaveAwaitsShutoff)
+            {
+                // The roster is spent and the field is empty, but the wave is not over. Hand
+                // the rest of it to the drip and hold the Assault open.
+                _sim.SetFieldTrickle(true);
+                return;
+            }
             // The "wave N cleared" line is GameController's (on AssaultEnded)
             // — it has the duration, salvage and hatch HP this call site does not.
             _sim.NotifyAssaultCleared();
+        }
+
+        /// <summary>One tick of the drip that holds a field wave open until its terminal is shut
+        /// off. Emits at most one body per tick, from the same weighted rotation the wave used,
+        /// so the trickle arrives up the lane where the player is heading rather than behind
+        /// them. Silent by design: <see cref="FieldTrickle"/> bodies pay nothing and a line per
+        /// body would bury the wave's own log.</summary>
+        void TickFieldTrickle(float dt)
+        {
+            if (_teardown) return;
+            if (_sim == null || _sim.Phase != RunPhase.Tethered) return;
+            if (_sim.Assault != AssaultState.Assault) return;
+            if (_active.Count > 0) return;          // the authored roster still has bodies owed
+            if (_game == null || !_game.FieldWaveAwaitsShutoff)
+            {
+                _trickleAccrued = 0f;
+                return;
+            }
+            if (_game.Net != null && _game.Net.IsClientOnly) return;
+            if (!FieldTrickle.DueIn(dt, AliveCount, ref _trickleAccrued)) return;
+            if (AliveCount >= WaveDirector.MaxEnemyCount) return;
+
+            Transform point = PickSpawnPoint();
+            if (point == null) return;
+            SpawnTrickleBody(point);
         }
 
         /// <summary>Dev/replay: stop spawning and destroy every live gatekeeper WITHOUT awarding
@@ -395,10 +451,31 @@ namespace GatekeepersProtocol.Game
             }
             var all = SpawnPoint.All;
             if (all == null || all.Count == 0) return null;
-            for (int attempt = 0; attempt < all.Count; attempt++)
+
+            // WEIGHTED round-robin (Zo, 2026-08-25): a flat rotation put an equal share
+            // through every door, so the closet at the far end of the lane — the one whose
+            // enemies have to walk the whole approach the player is holding — delivered no
+            // more than the one at his elbow. Each closet now takes Weight consecutive
+            // slots in the rotation, so "most of the wave arrives from the far end" is a
+            // number on the closet rather than a hand-placed extra door.
+            int total = 0;
+            for (int i = 0; i < all.Count; i++)
             {
-                var bp = all[_spawnCursor++ % all.Count];
-                if (bp != null && bp.gameObject.activeInHierarchy) return bp.transform;
+                var sp = all[i];
+                if (sp != null && sp.gameObject.activeInHierarchy) total += sp.Weight;
+            }
+            if (total <= 0) return null;
+
+            for (int attempt = 0; attempt < total; attempt++)
+            {
+                int slot = _spawnCursor++ % total;
+                for (int i = 0; i < all.Count; i++)
+                {
+                    var sp = all[i];
+                    if (sp == null || !sp.gameObject.activeInHierarchy) continue;
+                    slot -= sp.Weight;
+                    if (slot < 0) return sp.transform;
+                }
             }
             return null;
         }

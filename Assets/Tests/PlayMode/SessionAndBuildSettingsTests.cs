@@ -207,9 +207,19 @@ namespace GatekeepersProtocol.PlayTests
                     "SKIPPED: GameSession.StartNew()/ContinueGame() are not both reachable.");
             }
 
+            // A machine where the developer finished the ship tutorial carries the
+            // machine-wide SkipShipTutorial preference, which makes Adopt arm every new
+            // campaign — clear it so this test sees the virgin flow, and restore after.
+            bool skipPref = Settings.GetBool(SettingId.SkipShipTutorial);
+            Settings.SetBool(SettingId.SkipShipTutorial, false);
+            try
+            {
+
             startNew.Invoke(null, null);
             MetaState fresh = GameSession.Meta;
             Assert.IsNotNull(fresh, "GameSession.StartNew() left Meta null.");
+            // ARMORY recut (Zo, 2026-08-25): a fresh campaign starts unarmed; the ARMORY
+            // rack's free MK-1 buy is the arming beat, and it alone readies embark.
             Assert.IsFalse(fresh.OwnsAnyWeapon,
                 "A brand-new campaign must start WITHOUT the MK-1 — it is bought (free) at the ARMORY.");
             Assert.AreEqual(0L, fresh.BankedSalvage, "Fresh save starts at 0 banked.");
@@ -238,6 +248,8 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(fresh.Owns(WeaponId.Mk1Sidearm), "BuyWeapon did not set ownership.");
             Assert.AreEqual(WeaponId.Mk1Sidearm, fresh.EquippedSecondary);
             Assert.AreEqual(bankedBefore, fresh.BankedSalvage, "Free MK-1 must not debit salvage.");
+            Assert.IsTrue(fresh.DemoWeaponGranted && fresh.DemoShipFightDone,
+                "The rack's MK-1 buy is the arming beat — it readies embark with no ship fight.");
 
             GameSession.Save();
 
@@ -247,6 +259,12 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(reloaded.Owns(WeaponId.Mk1Sidearm),
                 "MK-1 ownership did NOT survive save + reload.");
             Assert.AreEqual(fresh.BankedSalvage, reloaded.BankedSalvage);
+
+            }
+            finally
+            {
+                Settings.SetBool(SettingId.SkipShipTutorial, skipPref);
+            }
         }
 
         static MethodInfo StaticNoArgMethod(Type type, string name)

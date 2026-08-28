@@ -33,6 +33,10 @@ namespace GatekeepersProtocol.Game
         [SerializeField, OptionalBinding] TMP_Text[] _detailLabels;
         [SerializeField, OptionalBinding] StaggerEntrance _statsStagger;
 
+        [SerializeField, OptionalBinding, Tooltip("Demo thanks/wishlist line; shown only when Present is handed CTA copy.")]
+        TMP_Text _ctaLabel;
+
+        bool _hasCta;
         bool _wired;
         bool _sequenceComplete;
         bool _awaitingProceed;
@@ -79,7 +83,8 @@ namespace GatekeepersProtocol.Game
             string[] primaryStats,
             float salvageValue,
             string salvageCaption,
-            string[] detailStats)
+            string[] detailStats,
+            string cta = null)
         {
             EnsureBuilt();
             string key = verdict + "|" + headline + "|" + salvageValue;
@@ -90,10 +95,12 @@ namespace GatekeepersProtocol.Game
             _sequenceComplete = false;
             _awaitingProceed = false;
             _detailsOpen = false;
+            _hasCta = !string.IsNullOrEmpty(cta);
 
             UiBind.SetText(_verdict, verdict != null ? verdict : "");
             UiBind.SetText(_headline, headline != null ? headline : "");
             UiBind.SetText(_salvageCaption, salvageCaption != null ? salvageCaption : "");
+            if (_hasCta) UiBind.SetText(_ctaLabel, cta);
 
             ApplyStatTexts(_statLabels, primaryStats);
             ApplyStatTexts(_detailLabels, detailStats);
@@ -186,6 +193,7 @@ namespace GatekeepersProtocol.Game
                     SetActive(_statRows[i], false);
             if (_salvageCount != null) _salvageCount.gameObject.SetActive(false);
             if (_salvageCaption != null) _salvageCaption.gameObject.SetActive(false);
+            if (_ctaLabel != null) _ctaLabel.gameObject.SetActive(false);
             if (_actionsRoot != null) _actionsRoot.SetActive(false);
         }
 
@@ -223,6 +231,9 @@ namespace GatekeepersProtocol.Game
 
         void ShowActions()
         {
+            // The thanks/wishlist line lands with the button — the run's numbers first,
+            // the ask only once the player is free to leave.
+            if (_ctaLabel != null && _hasCta) _ctaLabel.gameObject.SetActive(true);
             if (_actionsRoot != null) _actionsRoot.SetActive(true);
         }
 

@@ -26,6 +26,16 @@ namespace GatekeepersProtocol.Tests
             for (int i = 0; i < count; i++) sim.AwardKill();
         }
 
+        /// <summary>What one body is worth at <paramref name="siphonLevel"/>, and what the bank
+        /// actually sees for it once AwardKill floors per body. DERIVED: SalvagePerKill moved
+        /// 25 -> 42 on 2026-08-27 and every literal in this fixture's economy section moved with
+        /// it, including three that were in test names.</summary>
+        private static float KillValue(int siphonLevel) =>
+            MetaUpgrades.SalvagePerKill() * TetherSiphon.RewardMultiplierFor(siphonLevel);
+
+        private static long Banked(int siphonLevel, int kills) =>
+            kills * (long)KillValue(siphonLevel);
+
         [Test]
         public void StartRun_EntersDocked_AndCountsRun()
         {
@@ -173,41 +183,57 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void AwardKill_BanksIntoMetaStateImmediately_25AtSiphonZero_31AtSiphonThree()
+        public void AwardKill_BanksIntoMetaStateImmediately_42AtSiphonZero_52AtSiphonThree()
         {
+            // Renamed FROM _25AtSiphonZero_31AtSiphonThree: SalvagePerKill 25 -> 42 took both
+            // halves of the name with it, and 42 x 1.25 floors to 52 rather than 31.
             // Enemy dies → currency added. Not at run end, not conditionally: right now.
             MetaState meta;
             var sim = NewSim(out meta);
             sim.StartRun();
             sim.EngageTether();
             sim.TriggerDraw();
-            Assert.AreEqual(25f, sim.CurrentKillValue, 1e-5f, "level 0: 25 per kill");
+            Assert.AreEqual(KillValue(0), sim.CurrentKillValue, 1e-5f,
+                "level 0 is the flat price of a kill, no dial in the way");
             Assert.AreEqual(0L, meta.BankedSalvage, "nothing banked before the first kill");
 
+            // Re-key 2026-08-25: this used to prove the award landed in the AT-RISK pile and
+            // left the bank alone. The ruling inverted it — a body that falls is progress the
+            // player keeps — so the same kill now proves the opposite pair, and the carried
+            // pile reading 0 is the load-bearing half: nothing is staked unless it was
+            // deliberately withdrawn.
             sim.AwardKill();
-            Assert.AreEqual(25L, sim.Unbanked, "one kill at siphon 0 goes to unbanked");
-            Assert.AreEqual(0L, meta.BankedSalvage, "ship bank is untouched");
-            Assert.AreEqual(0L, sim.Salvage.RunSalvage, "tally is converted, not kill awards");
+            Assert.AreEqual(Banked(0, 1), meta.BankedSalvage, "one kill at siphon 0 banks as it lands");
+            Assert.AreEqual(0L, sim.Unbanked, "and stakes nothing — only a Withdraw fills the pile");
+            Assert.AreEqual(Banked(0, 1), sim.Salvage.RunSalvage, "a banked kill is this run's take");
 
-            // Dial up in prep, then a kill is worth 25 * 1.25 = 31.25 — floored once to 31.
+            // Dial up in prep, then a kill is worth SalvagePerKill x 1.25 — 52.5 today, floored
+            // once to 52. Face value: the carry multiplier is a Convert-window reward and nothing
+            // was carried.
             sim.NotifyAssaultCleared();
             sim.SetSiphonLevel(3);
             sim.TriggerDraw();
-            Assert.AreEqual(31.25f, sim.CurrentKillValue, 1e-5f);
+            Assert.AreEqual(KillValue(3), sim.CurrentKillValue, 1e-5f);
             sim.AwardKill();
-            Assert.AreEqual(56L, sim.Unbanked, "one kill at siphon 3 adds 31 more unbanked");
-            Assert.AreEqual(0L, meta.BankedSalvage);
+            Assert.AreEqual(Banked(0, 1) + Banked(3, 1), meta.BankedSalvage,
+                "one kill at siphon 3 banks the dialled award on top of the first");
+            Assert.Greater(Banked(3, 1), Banked(0, 1), "dialling up has to actually pay more");
+            Assert.AreEqual(0L, sim.Unbanked);
         }
 
         [Test]
-        public void AwardKill_BanksTheFullSiphonRange_25To37_TheHandAuthoredCurve()
+        public void AwardKill_BanksTheFullSiphonRange_42To63_TheHandAuthoredCurve()
         {
-            // The dial's curve on kill value at Scavenging 0: 25 x (1, 1.1, 1.15, 1.25, 1.35,
-            // 1.5) = 25 / 27.5 / 28.75 / 31.25 / 33.75 / 37.5, and AwardKill banks
-            // (long)Math.Floor of that, so the BANK sees 25 / 27 / 28 / 31 / 33 / 37.
-            // The top of the dial is 37, not the old 800.
-            float[] expectedValue = { 25f, 27.5f, 28.75f, 31.25f, 33.75f, 37.5f };
-            long[] expectedPerKill = { 25L, 27L, 28L, 31L, 33L, 37L };
+            // Renamed FROM _25To37: SalvagePerKill 25 -> 42 moved both ends of the range. The
+            // dial's curve on kill value at Scavenging 0 is SalvagePerKill x (1, 1.1, 1.15, 1.25,
+            // 1.35, 1.5) = 42 / 46.2 / 48.3 / 52.5 / 56.7 / 63, and AwardKill banks
+            // (long)Math.Floor of that, so the BANK sees 42 / 46 / 48 / 52 / 56 / 63.
+            //
+            // THE TWO ARRAYS THAT USED TO SIT HERE ARE GONE. They were the same six numbers
+            // written twice — once as the value, once as its floor — and the price raise turned
+            // all twelve red. What the fixture is claiming is that CurrentKillValue is the flat
+            // price times the dial, and that the bank sees the FLOOR of it, per body. Both are
+            // now computed from the two constants that decide them.
             for (int level = 0; level <= TetherSiphon.MaxLevel; level++)
             {
                 MetaState meta;
@@ -216,28 +242,49 @@ namespace GatekeepersProtocol.Tests
                 sim.EngageTether();
                 sim.SetSiphonLevel(level);
                 sim.TriggerDraw();
-                Assert.AreEqual(expectedValue[level], sim.CurrentKillValue, 1e-4f,
+                Assert.AreEqual(KillValue(level), sim.CurrentKillValue, 1e-4f,
                     "CurrentKillValue at siphon level " + level);
                 sim.AwardKill();
-                Assert.AreEqual(expectedPerKill[level], sim.Unbanked, "siphon level " + level);
-                Assert.AreEqual(0L, meta.BankedSalvage, "siphon level " + level + " ship bank");
+                // Re-key 2026-08-25: the curve's SHAPE is unchanged, but it is read off the BANK,
+                // which is where the comment above already said the floor lands.
+                Assert.AreEqual(Banked(level, 1), meta.BankedSalvage, "siphon level " + level);
+                Assert.AreEqual(0L, sim.Unbanked, "siphon level " + level + " stakes nothing");
+                if (level > 0)
+                    Assert.Greater(Banked(level, 1), Banked(level - 1, 1),
+                        "every step of the dial must be worth taking, level " + level);
             }
+
+            // AND THE FLOOR MUST ACTUALLY BITE SOMEWHERE, or "floored per body" is untested. At
+            // 42 the fractional levels are 46.2 / 48.3 / 52.5 / 56.7; if a future price makes
+            // every level whole, this pin has quietly stopped watching the rounding.
+            int fractional = 0;
+            for (int level = 0; level <= TetherSiphon.MaxLevel; level++)
+                if (KillValue(level) > (long)KillValue(level)) fractional++;
+            Assert.Greater(fractional, 0,
+                "no siphon level produces a fractional award, so the per-body floor is untested");
         }
 
         [Test]
-        public void AwardKill_WaveOneAtLevelZero_EighteenKillsIsFourFiftyExact()
+        public void AwardKill_WaveOneAtLevelZero_ElevenKillsIsFourSixtyTwoExact()
         {
-            // The whole payout of a cleared wave 1 with no upgrades and the dial at rest.
+            // Renamed FROM _EighteenKillsIsFourFiftyExact. BOTH numbers moved on 2026-08-27 and
+            // they moved in opposite directions on purpose: the roster cut took wave 1 from 18
+            // bodies to 11, and SalvagePerKill rose 25 -> 42 to stop that cutting run income by
+            // 40%. 18 x 25 = 450 became 11 x 42 = 462 — the wave pays what it used to, within 3%,
+            // which is the whole claim of the pass and the reason this pin is worth keeping.
             MetaState meta;
             var sim = NewSim(out meta);
             sim.StartRun();
             sim.EngageTether();
             sim.TriggerDraw();
-            Assert.AreEqual(18, new WaveDirector().NextWave(0, 0).enemyCount);
-            Kill(sim, 18);
-            Assert.AreEqual(450L, sim.Unbanked); // 18 * 25
-            Assert.AreEqual(0L, meta.BankedSalvage);
-            Assert.AreEqual(0L, sim.Salvage.RunSalvage);
+            int waveOne = new WaveDirector().NextWave(0, 0).enemyCount;
+            Assert.AreEqual(WaveDirector.BaseEnemyCount, waveOne);
+            Kill(sim, waveOne);
+            // Re-key 2026-08-25: the arithmetic's destination is the bank — salvage a death
+            // cannot take back, which is the whole point of that ruling.
+            Assert.AreEqual(Banked(0, waveOne), meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Unbanked);
+            Assert.AreEqual(Banked(0, waveOne), sim.Salvage.RunSalvage);
         }
 
         [Test]
@@ -247,30 +294,35 @@ namespace GatekeepersProtocol.Tests
             var sim = NewSim(out meta);
             sim.StartRun();
 
+            // Re-key 2026-08-25: the phase gate is the subject and it did not move, but the
+            // meter that shows whether a kill paid did — a refused kill is now one that leaves
+            // the BANK flat.
             sim.AwardKill(); // Docked
-            Assert.AreEqual(0L, sim.Unbanked);
             Assert.AreEqual(0L, meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Unbanked);
 
             sim.EngageTether();
             sim.AwardKill(); // Prep — nothing is spawned to kill
-            Assert.AreEqual(0L, sim.Unbanked);
             Assert.AreEqual(0L, meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Unbanked);
 
             sim.TriggerDraw();
             sim.AwardKill(); // legal
-            Assert.AreEqual(25L, sim.Unbanked);
-            Assert.AreEqual(0L, meta.BankedSalvage);
+            Assert.AreEqual(Banked(0, 1), meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Unbanked);
 
             sim.NotifyAssaultCleared();
             sim.AwardKill(); // back in Prep
-            Assert.AreEqual(25L, sim.Unbanked);
-            Assert.AreEqual(0L, meta.BankedSalvage);
+            Assert.AreEqual(Banked(0, 1), meta.BankedSalvage, "prep pays nothing — still the one kill");
+            Assert.AreEqual(0L, sim.Unbanked);
 
             sim.TriggerDraw();
             sim.NotifyPlayerDown(); // terminal
             sim.AwardKill();
-            Assert.AreEqual(0L, sim.Unbanked, "kills after the run ends pay nothing; down wiped the pile");
-            Assert.AreEqual(0L, meta.BankedSalvage, "never converted");
+            Assert.AreEqual(Banked(0, 1), meta.BankedSalvage,
+                "kills after the run ends pay nothing, and the death cannot reach behind them "
+                + "for the award that already banked");
+            Assert.AreEqual(0L, sim.Unbanked, "nothing was staked, so the wipe had nothing to take");
         }
 
         [Test]
@@ -283,7 +335,7 @@ namespace GatekeepersProtocol.Tests
             sim.StartRun();
             sim.EngageTether();
             sim.TriggerDraw();
-            Kill(sim, 2); // 50 salvage at level 0
+            Kill(sim, 2); // two bodies at level 0
 
             sim.NotifyAssaultCleared();
             Assert.AreEqual(AssaultState.Prep, sim.Assault);
@@ -292,9 +344,12 @@ namespace GatekeepersProtocol.Tests
 
             TickFor(sim, 30f);
             Kill(sim, 3); // rejected in Prep
-            Assert.AreEqual(50L, sim.Unbanked);
-            Assert.AreEqual(0L, meta.BankedSalvage);
-            Assert.AreEqual(0L, sim.Salvage.RunSalvage);
+            // Re-key 2026-08-25: "kills stop paying" is still the claim; the ledger it is read
+            // off is the bank, which stays at the two assault kills and gains nothing from the
+            // three prep ones.
+            Assert.AreEqual(Banked(0, 2), meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Unbanked);
+            Assert.AreEqual(Banked(0, 2), sim.Salvage.RunSalvage);
         }
 
         [Test]
@@ -349,17 +404,20 @@ namespace GatekeepersProtocol.Tests
             sim.StartRun();
             sim.EngageTether();
             sim.TriggerDraw();
-            Kill(sim, 2);      // 50 unbanked at level 0
-            Assert.AreEqual(50L, sim.Unbanked);
-            Assert.AreEqual(0L, meta.BankedSalvage);
+            Kill(sim, 2);      // 50 banked at level 0
+            Assert.AreEqual(Banked(0, 2), meta.BankedSalvage);
+            Assert.AreEqual(0L, sim.Unbanked, "nothing staked — the pile needs a Withdraw");
             sim.Ship.Hatch.Damage(99999f);
 
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
-            Assert.AreEqual(0L, sim.Unbanked, "breach wipes unbanked");
-            Assert.AreEqual(0L, meta.BankedSalvage, "never converted");
+            Assert.AreEqual(0L, sim.Unbanked, "breach wipes unbanked — there was none to wipe");
+            // Re-key 2026-08-25: "takes no salvage back" used to mean the breach found an empty
+            // bank. It now means the stronger thing the name always promised — the breach walks
+            // past 50 banked units and cannot touch one of them.
+            Assert.AreEqual(Banked(0, 2), meta.BankedSalvage, "the breach cannot claw back banked kills");
             Assert.AreEqual(1, meta.PodEjections);
             Assert.AreEqual("hatch", sim.LastRunReport.cause);
-            Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
+            Assert.AreEqual(Banked(0, 2), sim.LastRunReport.grossEarned, "the pod leaves with the take");
         }
 
         [Test]
@@ -448,9 +506,13 @@ namespace GatekeepersProtocol.Tests
             TickFor(sim, 20f);
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual(elapsed, sim.RunElapsed, 1e-5f);
-            Assert.AreEqual(0L, sim.Salvage.RunSalvage, "never converted");
-            Assert.AreEqual(banked, meta.BankedSalvage);
-            Assert.AreEqual(0L, banked);
+            // Re-key 2026-08-25: the subject is that a terminal phase is inert, so the snapshot
+            // taken before the ticks is what has to hold. It is a more honest witness now that
+            // the two kills put a real 50 in the bank — a frozen zero could have been frozen by
+            // accident, a frozen 50 could not.
+            Assert.AreEqual(Banked(0, 2), banked, "two kills banked before the hatch fell");
+            Assert.AreEqual(banked, meta.BankedSalvage, "twenty dead seconds move nothing");
+            Assert.AreEqual(Banked(0, 2), sim.Salvage.RunSalvage, "and the run tally is equally frozen");
         }
 
         [Test]

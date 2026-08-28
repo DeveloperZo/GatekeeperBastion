@@ -236,6 +236,7 @@ namespace GatekeepersProtocol.Game
         {
             if (!DevTaintBanner.IsVisible) return;
             float scale = Screen.height / VirtualHudHeight;
+            if (scale < 0.01f) scale = 1f;
             Matrix4x4 prev = GUI.matrix;
             GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1f));
             DevTaintBanner.Draw(Screen.width / scale);
@@ -417,7 +418,7 @@ namespace GatekeepersProtocol.Game
             var meta = GameSession.Meta;
             if (meta == null || !meta.DemoActive || !meta.DemoShipFightDone) return;
             if (meta.TotalRuns > 1 || meta.PodEjections > 0) return;
-            DemoVoice.Play(DemoConversationIds.EmbarkFirst, DemoVoiceMode.Lock);
+            DemoVoice.Play(DemoConversationIds.EmbarkFirst, DemoVoiceMode.Subtitle);
         }
     }
 }

@@ -2,7 +2,9 @@ using GatekeepersProtocol.Util;
 
 namespace GatekeepersProtocol.Sim
 {
-    /// <summary>Paid intensity steps. Cost is Unbanked; lowering does not refund.</summary>
+    /// <summary>Paid intensity steps. Cost is BANKED salvage — kills bank as they land
+    /// (Zo, 2026-08-25), so the carried pile is empty unless the player deliberately
+    /// Withdrew. Lowering does not refund.</summary>
     public static class IntensityJuice
     {
         public const int CostPerStep = 100;
@@ -31,12 +33,12 @@ namespace GatekeepersProtocol.Sim
             int steps = System.Math.Min(delta, MaxLevel - sim.Siphon.Level);
             if (steps < 1) return false;
             int cost = steps * CostPerStep;
-            if (sim.Unbanked < cost)
+            if (!sim.SpendBanked(cost))
             {
-                Log.Info("RunSim", "juice refused — unbanked=" + sim.Unbanked + " cost=" + cost);
+                Log.Info("RunSim", "juice refused — banked=" + sim.BankedSalvage
+                    + " cost=" + cost);
                 return false;
             }
-            sim.Unbanked -= cost;
             sim.JuiceSpentThisPull += cost;
             sim.Siphon.Level += steps;
             return true;

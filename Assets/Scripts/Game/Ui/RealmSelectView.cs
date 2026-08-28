@@ -211,6 +211,34 @@ namespace GatekeepersProtocol.Game
 
         // ---- Painting ----
 
+        /// <summary>The one line a row shows: the document's name, then the badges for facts
+        /// the name cannot carry — co-op, and whether this build can open it at all. Static and
+        /// pure so the wording is pinned by a test rather than by looking at the screen.</summary>
+        /// <remarks>
+        /// ASCII on purpose. Every label on this screen draws in <c>LiberationSans SDF</c>,
+        /// whose atlas is STATIC over 32-126, 160-255, 8192-8303, 8364, 8482, 9633 — a
+        /// codepoint outside that set is a blank or a box, which is worse than no badge. This
+        /// is the same trap that made <c>HudController.Weapon</c> give up U+25B8 for a plain
+        /// '>' at three sites, and none of the glyphs a designer would reach for here (linked
+        /// arrows, a pair of figures, a handshake) exist in the source font either. A drawn
+        /// icon on the row template is the real fix and it needs the editor, not code.
+        ///
+        /// The two co-op badges differ because the rows do: DELETE on an owned realm destroys
+        /// the document, DELETE on a friend's only forgets the memory of it. One mark on both
+        /// would invite the unrecoverable mistake. Neither badge claims the realm is FREE —
+        /// whether another machine holds the lock is not knowable from this disk, so it stays
+        /// where it is discovered honestly, in the status line on ENTER.
+        /// </remarks>
+        public static string LabelFor(RealmRegistry.SaveRow row)
+        {
+            string text = row.Name;
+            if (row.Coop == RealmRegistry.CoopRole.Owned) text += "  [co-op]";
+            else if (row.Coop == RealmRegistry.CoopRole.Guest) text += "  [friend's]";
+            // Last, because it is the one badge that changes what the button will do.
+            if (!row.Loadable) text += "  (cannot be opened)";
+            return text;
+        }
+
         public void SetRealms(RealmRegistry.SaveRow[] rows, int picked)
         {
             Paint(_realmRows, _realmRowsRoot, _realmRowTemplate, rows, picked, onPickRealm);
@@ -245,7 +273,7 @@ namespace GatekeepersProtocol.Game
                 var label = go.GetComponentInChildren<TextMeshProUGUI>(true);
                 if (label != null)
                 {
-                    label.text = row.Loadable ? row.Name : row.Name + "  (cannot be opened)";
+                    label.text = LabelFor(row);
                     label.color = !row.Loadable ? Refused : (i == picked ? Picked : Normal);
                 }
 

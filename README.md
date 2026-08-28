@@ -2,9 +2,9 @@
 
 Sci-fi wave-defense FPS. Unity 6, PC/Steam, first-person. You are the **Boarder**:
 your Ship cuts into a garrisoned **Bastion**, you hold the **Hatch** (the umbilical
-home), and **Gatekeepers** come to take it back. Intensity is a wager you juice before
-a Wave; Unbanked Salvage converts on a Hatch-bank. Solo is playable; host-client co-op
-exists (Relay join code or LAN).
+home), and **Gatekeepers** come to take it back. The **Ante** is a wager you ante up
+before a Wave; unbanked Salvage only reaches the ship on a **Convert**. Solo is
+playable; host-client co-op exists (Relay join code or LAN).
 
 **Start here for the game and the docs:** [`Docs/README.md`](Docs/README.md).  
 **Start here if you are an agent:** [`AGENTS.md`](AGENTS.md) (skills in `.claude/skills/`
@@ -23,9 +23,10 @@ outrank that file when they apply).
 │   ├── Scripts/Sim/          Pure C# sim assembly — no MonoBehaviour / scene / Time
 │   ├── Scripts/Game/         MonoBehaviour views and hosts
 │   ├── Scripts/Editor/       SceneBuilder, IntegrationCheck, bake/validate tools
+│   ├── Scripts/Util/         LogFile — one log file per session
 │   ├── Tests/                EditMode + PlayMode
-│   └── Scenes/               Splash, MainMenu, RealmSelect, Ship - Demo,
-│                             Ship - CoOp, Bastion
+│   └── Scenes/               Splash, MainMenu, RealmSelect, Ship - CoOp,
+│                             Bastion_Coop, Explore - Kit, Range
 ├── Tools/                    Headless verify, lints, docgen, dashboard-data, release
 ├── Packages/                 UPM manifest (+ PackageCache locally)
 └── ProjectSettings/          Unity project settings
@@ -34,7 +35,8 @@ outrank that file when they apply).
 Tracked at the root: `README.md`, `AGENTS.md`, `CLAUDE.md`, `.gitignore`,
 `.gitattributes`, `.vsconfig`, `.cursorignore`. Unity regenerates `*.csproj` /
 `*.slnx` here on open — gitignored and hidden in the editor tree; delete anytime.
-Local staging only: `Builds/`, `Recordings/`, `_to_delete/`, `_backup/` (gitignored).
+Local staging only: `Builds/`, `Recordings/`, `_backup/`, and `_to_delete/` at the root
+and under `Docs/` (all gitignored).
 
 ### Docs shelves (summary)
 
@@ -68,8 +70,9 @@ Local staging only: `Builds/`, `Recordings/`, `_to_delete/`, `_backup/` (gitigno
 1. In Unity Hub, create a **Unity 6 (6000.x)** project from the **Universal 3D**
    template. Open once, then close.
 2. Copy this repo's `Assets/` and `Packages/manifest.json` over the generated ones.
-3. Reopen. Menu **GatekeepersProtocol > Build > All Scenes** (registers Splash,
-   MainMenu, Ship - Demo, Ship - CoOp, Bastion, and keeps other build scenes).
+3. Reopen. Menu **GatekeepersProtocol > Build > All Scenes** (pins Splash, MainMenu,
+   RealmSelect, Ship - CoOp, Bastion_Coop at the head of the build list, and keeps
+   other build scenes after them).
 4. Press Play from Splash. Main menu → choose a realm → **START NEW** → you wake on
    the Ship. Buy the MK-1 at the ARMORY, then EMBARK from the NAV MAP.
 

@@ -7,16 +7,19 @@ the implementable specs — plus voice.md. Milestones cut 2026-08-17: M74–M80.
 Status: demo spec
 Authority: implementable — table “Treat as spec” is locked until Zo overrides a row
 Update trigger: when a stamp is overridden, when a beat ships, when M72 closes
-Last updated: 2026-08-19
+Last updated: 2026-08-25 (MaxWaves is an absolute ceiling, not a per-trigger cap; the
+priced respawn replaced the co-op buy-back rule and closed the dead-host question; the
+finale elite is specced in code; Carry3ExtraThief)
 -->
 
 The player is walked from a dead Ship to **Escaped** on the first Bastion. The
 loop unit (Zo, 2026-08-17): a zone's terminal Waves, then that zone's
-Hatch-bank Wave. Surviving the bank's timer window unlocks the zone's door; a
-failed bank **never** unlocks it; the bank is locked until the zone's terminals
-are complete. `MaxWaves` caps **consecutive Waves per terminal trigger**, not
-per Run. The finale is a 5-consecutive-Wave terminal battle, then **one** final
-bank window with the first boss/elite; the haul home is the Hatch. Intensity is
+Convert. Surviving the Convert's timer window unlocks the zone's door; a
+failed Convert **never** unlocks it; the Convert is locked until the zone's
+terminals are complete. `MaxWaves` is **5**, an absolute end-Wave ceiling for
+the Boarding — the per-trigger re-key ruled below was an intent and never
+landed, and the authored zones fit under the ceiling as written. The finale is a 5-consecutive-Wave terminal battle, then **one** final
+Convert window with the finale elite; the haul home is the Hatch. The Ante is
 taught on the first terminal cycle (once Unbanked > 0) and stays live.
 **Multiplayer is locked until that save's first wheel purchase (beat 3)** —
 every seat solos beats 0–3 by construction.
@@ -29,24 +32,24 @@ This folder is what an implementer reads. The first-session brainstorm that poin
 |---|---|---|
 | Convert-then-fight | **Overturned** (2026-08-16 play). Live drip; overrun wipes remainder | Beat 2 |
 | Loop unit | Zone terminal Waves → Hatch-bank Wave (Zo, 2026-08-17). Surviving the bank's timer window unlocks the zone's door; a failed bank **never** unlocks; the bank is locked until the zone's terminals are complete | Beats 1–7 |
-| MaxWaves | Caps **consecutive Waves per terminal trigger**, not per Run (Zo, 2026-08-17). Zone 1 triggers are 1 Wave; zone 2's terminal 3; the finale terminal 5 | Beats 1, 5–7 |
-| Demo shape | Zone 1 = **2** terminals × **1** Wave each + bank → D1; zone 2 = **1** terminal × **3** consecutive Waves + heavier bank → D2; finale = **5**-consecutive-Wave terminal battle then **one** final bank window with the first boss/elite (Zo, 2026-08-17). Finale kit mapping `[unconfirmed]` | Beats 1–7. Loss 2 and the finale are another editor's files |
+| MaxWaves | **Not what this row ruled.** `WaveDirector.MaxWaves` is **5** and is an absolute end-Wave ceiling; the per-trigger re-key was an intent, not the tree. Zone 1 triggers run 1 Wave, zone 2's terminal 3 (Waves 3–5), the finale terminal 5 — all under the ceiling, so nothing needed the re-key | Beats 1, 5–7 |
+| Demo shape | Zone 1 = **2** terminals × **1** Wave each + Convert → D1; zone 2 = **1** terminal × **3** consecutive Waves + heavier Convert → D2; finale = **5**-consecutive-Wave terminal battle then **one** final Convert window with the finale elite (Zo, 2026-08-17). The zone table itself ships in `DemoZones` (T1/T2 → D1, T3 → D2); T4/T5 → D3 is the Control Room approach and is not a zone. Finale kit mapping `[unconfirmed]` | Beats 1–7. Loss 2 and the finale are another editor's files |
 | First terminal | Re-ruled (Zo, 2026-08-17): zone 1 = two 1-Wave terminals, untimed Prep, juice taught once Unbanked > 0, bank after both | Beat 1 |
 | NAV after that Hatch-bank | **Dead** (Zo, 2026-08-17). No NAV skip; refight-avoidance lives at the terminal: post-loss the zone's **deepest terminal retriggers the composite** by default, partial start electable | Beat 4. v9 skip fields re-key or die (Shared flags) |
 | Starting weapon | **MK-1** off the bare ARMORY rack, mid beat-0 fight, no panel. SEC-D stays a 0-salvage buy when the panel unlocks | Beats 0 and 3 |
 | Beat 0 fight | Ship terminal (E/T, Bastion pattern) powers ARMORY + spawns **2** weak Gatekeepers; gated Lock for the pickup (intruder release gated on the line's Continue — **no** `timeScale = 0`; Zo, 2026-08-17); HP floor **1**; CREW heals on interact, **no menu** | Beat 0. First menu of the demo is NAV's picker |
 | Two authored losses | The unlock spine (Zo, 2026-08-17; **zone-2 recut 2026-08-19**). Loss 1 = zone 1's first bank: authored overwhelm vs the no-upgrade kit ceiling (aim ~2k Unbanked at start, ~500 banked when the Hatch falls; tunable) → wheel + Secondary buys + multiplayer on first purchase. Zone 2's **field Waves are survivable** on the secondary kit; zone 2's **bank** is the authored loss that **sells** the Primary + 2 upgrades outside the count — that ejection may be the save's first or its second. `PodEjections` is not the Primary gate. Zone 2's bank remains **unclearable** on the secondary kit | Beats 2–3 + beat 5 |
 | Ship return after a survived bank | Held interact at the Hatch, available until the next Wave is triggered; ends the Run **Docked**, not Lost; banked + door state persist via the successful-bank snapshot (Zo, 2026-08-17). Zone 2's bank remains an unclearable window on the secondary kit, so return-to-Ship cannot skip the Primary gate. Wheel key is the first bank — `HatchConversions >= 1` (Zo, 2026-08-18; `Decisions.md`, *the wheel opens on the first bank*). Primary key is zone 2's bank falling (Zo, 2026-08-19; `M79`) | Beats 2, 5+. |
-| Co-op buy-back | A dead player may buy back in **only while a bank window is live**, rejoining at the Hatch, paying from their **own** banked salvage (cost tunable) (Zo, 2026-08-17) | Beats 4+. Open: dead-host vs `M49` (Gaps) |
-| Doors | Unlock on **zone bank success** (Zo, 2026-08-17): D1 = zone 1's bank, D2 = zone 2's, then the finale's single final bank | Beats 2, 5–7 |
-| Default Protocol | CREW **menu** unlocks on **first Docked after first loss** (re-keyed off Wave-2-seen; Zo, 2026-08-17); CREW heals on interact from beat 0 | Beats 3–4. `M70` is the claim |
+| Buy-back | **Superseded by what shipped.** Any dead seat — host, guest, solo — is offered a respawn while the Boarding is Tethered, with no Convert-window gate. Price is `Respawns.CostFor`: **150** × (respawns taken this Boarding + 1). The purse is that seat's **own Unbanked**, frozen at the down and debited on the buy, with the remainder surviving; the realm's bank and other seats can never pay. A seat carrying less than the price does not get the offer | Beats 4+. Closes the dead-host question |
+| Doors | Unlock on a **survived zone Convert** (Zo, 2026-08-17): D1 = zone 1's, D2 = zone 2's, then the finale's single final Convert. `DemoZones.DoorId` is the table | Beats 2, 5–7 |
+| Default Protocol | CREW **menu** unlocks on the **first Docked after the first Convert** (`HatchConversions >= 1`, re-keyed with the wheel key — Zo, 2026-08-18; the Wave-2-seen key it replaced never shipped); CREW heals on interact from beat 0. Default, VEIL and FORGE are all claimable; AEGIS and LEDGER are Coming Soon | Beats 3–4. `M70` is the claim |
 | Multiplayer gate | **Locked until that save's first wheel purchase** (`DemoWheelBuysLeft < 2 \|\| !DemoActive`). F10/F11 and lobby entry refuse with a named log. Beats 0–3 are solo for every save | Every beat. Kills guest capsule-skip rules |
 | Voice audience | Host starts a **line id**; every seat plays it locally. No player replies. Assault: subtitles, no input lock | `voice.md` |
 | Wheel during demo | A **ladder** (Zo, 2026-08-17; Primary gate recut 2026-08-19): at most **2** Secondary purchases while `DemoActive` after the first bank; when zone 2's bank falls a **Primary + 2 upgrades are sold outside that count** (not granted; not keyed on a second ejection). The loss-1 aim (~500 banked, tunable) funds both secondary buys | Beat 3 + beat 5. Do not gift Salvage |
 | Beat 3 exit standing | Fires when **no buyable upgrades remain** (state-keyed; replaces the third-refuse trigger) (Zo, 2026-08-17) | Beat 3 |
 | Juice | **Taught** after first Wave 1. Live after that, including the finale | Beat 1. Withhold stamp overturned |
 | FABRICATION | Dark while `DemoActive` | Beats 0, 3, 5 |
-| First Hatch-bank fail | Hatch 0 or host down — authored loss 1 either way; the first-loss line's copy is cause-agnostic (beat 2). `M49`/`M57` apply (any-seat-down overturned) | Beat 2 |
+| First Convert fail | Hatch 0 or the seat going down with less than **150** Unbanked — authored loss 1 either way; the first-loss line's copy is cause-agnostic (beat 2). A seat that can pay stands up instead, so the authored window has to land on the **Hatch** to be reliable | Beat 2 |
 
 ## Files
 
@@ -112,7 +115,7 @@ pain is TTK and transfer rate.
 | 2 | `HatchBank.DripPerSecond` 20 → **8** | #12 | They named transfer rate. Do not cut `DurationSeconds` unless a log shows they always last 45 s at Hatch 300 | **shipped** — `HatchBank.cs` |
 | 3 | Zone terminal shape + juice teach | #6 | Sequencer, not a constant | partial — `FirstTerminal.cs` in tree is the old 3-Wave T1 (re-spec to zone 1's 2×1-Wave, beat 1; needs `DemoActive` gate); juice teach is voice, unbuilt |
 
-Carry-3 extra Thief is in tree (`HatchBank.Carry3ExtraRam`) — keyed to the old
+Carry-3 extra Thief is in tree (`HatchBank.Carry3ExtraThief`) — keyed to the old
 3-Wave shape; the loss-1 window is now authored overwhelm (beat 2, tunable).
 Kill observation re-aimed (Zo, 2026-08-17): a 0-upgrade MK-1 log of this window
 reaching `NotifyAssaultCleared` with Hatch > 0 is now a **tuning defect**, not
@@ -163,11 +166,11 @@ shared state is the lobby’s existing start-wave commit.
 - Personal wallets (`M65`). After beat 4, `BankCap` keys the re-keyed per-zone
   deepest (or the terminal’s derivation) or guests bank a Wave they have not
   converted.
-- Guest down waits on Ship (`M57`); host/solo down ends the Run (`M49`). First
-  Hatch-bank does not override that. Buy-back (Zo, 2026-08-17): a dead player
-  may buy back in **only while a bank window is live**, rejoining at the Hatch,
-  paying from their **own** banked salvage (cost tunable). Open (Gaps):
-  dead-**host** rejoin vs `M49`.
+- A dead seat is offered a priced respawn at **150** × (respawns taken + 1) out of
+  its own frozen Unbanked, for as long as the Boarding is Tethered. The host and
+  solo seat take it at the DOWN overlay; a waiting guest asks for it over
+  `NetPlayerAvatar.RequestRespawn`. `M49` now bites only when the dying seat
+  cannot pay and no other seat is still fighting.
 - Voice: `voice.md`. Game + at most a few guides. Player does not reply. No vendor net.
 
 `M72` closed 2026-08-17 (Relay `KPRMPR`, `13-24-37`). A friends close of this demo
@@ -181,8 +184,9 @@ still needs a five-Wave both-participating Run.
 
 ## Gaps / parked
 
-- **Open** (Zo, 2026-08-17, record not resolve): dead-host rejoin during a live
-  bank window vs the `M49` host-death-ends-run rule.
+- **Closed by what shipped**: the dead-host rejoin question. The host seat takes
+  the same priced respawn every other seat does, and `M49` reduces to the case
+  where nobody left can pay.
 - **Closed at cut** (Zo, 2026-08-17): composite retrigger source is per-zone
   `DemoZoneDeepestWave` (beat 4's stamp; Shared flags row above corrected).
 - **Parked intent, not spec** (Zo, 2026-08-17): early Ship return loses/reduces
@@ -215,4 +219,52 @@ Wave 1: 18 Defaults, HP mul 1.0. MK-1 damage **30**.
 Salvage 25/kill. Secondary wheel 150 then 300 on the same spoke. Hatch-bank window 45 s, drip **8**/s.
 Slots 3. Player 100 HP. Swing 0.7 s. Hatch 300 HP.
 
-Kit graph: `bastion-defense-layout.txt` lines 6–8 and 70–73.
+Kit graph: `Tools/bastion-sketch/bastion-defense-layout.txt`.
+
+## The Bastion spine and its loop (Zo, 2026-08-25)
+
+The sprawl is gone. `Tools/bastion-sketch/bastion-coop-layout.txt` now authors ONE straight
+spine on storey 0: **R1 OpenArea** (the hold, three hatches on its south wall) → **R2/R3 Half**
+(T2 in R3) → **R4 OpenArea** → **R5–R8 Half** (T5 in R7) → **R9 ControlRoom** (Master).
+Two open areas, six halfs, one control room, R1 through R9, no galleries and no stairs.
+
+**Why.** The shipped layout put zone 1's two spawn closets 84 m apart on opposite flanks;
+measured from the hatch their approaches were 91 degrees apart, widening to 149 as the player
+pushed up. At a 60-degree FOV no position held both streams on screen, so movement was spent
+time-slicing two fronts that damage could never answer from one place. Every spawn now feeds
+the same corridor: the spread is 0 degrees.
+
+**The loop.** A wave BEGINS at the Hatch and ENDS at a terminal.
+* `[T]` at the Hatch starts the next zone's whole trigger
+  (`GameController.StartZoneWaveFromHatch`). It used to read "Convert — finish the zone".
+* **The terminal REFUSES to start one** — `CanSelectTerminal` returns false for a field
+  terminal while `HatchOffersWaveStart`, so the local look-at and `TryNetStartTerminal` (the
+  co-op host entry) are both covered, its prompt reads *"start the wave at the Hatch"*, and
+  the demo voice points there. Master Control is exempt: the control room is its own start
+  line. **Two start lines is what the 2026-08-25 playthrough actually hit** — the Hatch was
+  offering the start AND T2 was offering its retrigger, and `demo.terminal_look` pointed at
+  the terminal.
+* The retrigger's election (composite vs partial, beat 4) is NOT lost: `E` and `+/-` still
+  work at the terminal, and `StartZoneWaveFromHatch` honours whatever is armed.
+* The Hatch's start prompt is checked ahead of Convert/Withdraw, because a terminal shutoff
+  leaves nothing unbanked and the Convert branch would otherwise swallow it.
+* `StartZoneWaveFromHatch` arms the terminal it answers at before calling `StartTerminalWave`
+  — that method's "select the Ante first" check is the Ante's, and the first build tripped
+  over it: it logged a start and then refused to draw.
+* Most of the wave breaches at the FAR closet — `SpawnPoint.Weight`, drawn by a weighted
+  rotation in `WaveSpawner`. Zone 1 answers at S1 (R3, 66 m, weight 3), zone 2 at S6
+  (R7, 156 m, weight 3); every other door is 1.
+* `[T]` at the zone's terminal while the wave runs shuts it off
+  (`GameController.ShutOffTerminal` → `RunSim.ShutOffFieldWave`). The terminal completes
+  outright — the objective is positional, so fighting all the way up the lane finishes the
+  zone whether or not the last body fell. A Convert window has no off switch.
+* **The shutoff banks everything unbanked** (Zo, 2026-08-25). Reaching the terminal is the
+  walk's payoff, so the pile is credited there at `HatchBank.MultLow` (face value, no carry
+  bonus) rather than waiting on a second trip back to the Hatch. Pinned by
+  `HatchBankTests.ShutOffFieldWave_*`. The Hatch Convert survives only where it still has a
+  stake on it: the bank window, which refuses the off switch.
+* The door still opens only on a survived Convert, exactly as before.
+
+**Zones.** One terminal each: zone 1 = T2 → D1 (waves 1–2), zone 2 = T5 → D3 (waves 3–5).
+T1, T3, T4 and D2 no longer exist. `DemoZones` is the single source of truth and the dev
+checkpoints read it rather than naming ids, which is how "T4" outlived the terminal.

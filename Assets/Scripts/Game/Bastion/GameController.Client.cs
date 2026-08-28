@@ -172,7 +172,7 @@ namespace GatekeepersProtocol.Game
                 if (Sim.TotalUnbanked > 0L)
                     Log.Event("Hatch", "hatch-bank refused — look at the Hatch");
                 else
-                    Log.Event("Run", "draw refused — Waves start at a terminal");
+                    Log.Event("Run", "draw refused — Waves start at the Hatch");
                 return;
             }
 

@@ -109,14 +109,28 @@ namespace GatekeepersProtocol.Tests
             sim.RepairHatch(50f); // 100 salvage
             Assert.AreEqual(100L, sim.RepairSalvageSpent);
 
-            // One kill at dial 0 / scavenging 0 = 25 unbanked, then die — never converted.
+            // One kill at dial 0 / scavenging 0, then die. Re-keyed 2026-08-25 (Zo): that kill
+            // banks on landing rather than dying in an unconverted carry, so earned is a whole
+            // kill and the two columns finally hold different numbers — which is what makes the
+            // subtraction worth pinning at all.
+            //
+            // THE SHORTFALL IS THE CLAIM, NOT ITS SIZE. It read -75 (25 earned against 100
+            // repaired); SalvagePerKill 25 -> 42 on 2026-08-27 makes it -58. A single kill still
+            // cannot pay for 50 hp of Hatch, which is the thing worth being able to see, so that
+            // is asserted as an inequality beside the derived arithmetic.
+            long oneKill = (long)MetaUpgrades.SalvagePerKill();
             sim.TriggerDraw();
             sim.AwardKill();
             sim.NotifyPlayerDown();
 
             Assert.AreEqual(100L, sim.LastRunReport.repairSpent);
-            Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
-            Assert.AreEqual(0L - 100L, sim.LastRunReport.grossEarned - sim.LastRunReport.repairSpent);
+            Assert.AreEqual(oneKill, sim.LastRunReport.grossEarned);
+            Assert.AreEqual(oneKill - 100L,
+                sim.LastRunReport.grossEarned - sim.LastRunReport.repairSpent,
+                "a run that repaired more than it killed for still reports the shortfall");
+            Assert.Less(sim.LastRunReport.grossEarned, sim.LastRunReport.repairSpent,
+                "one kill has to stay short of a 50 hp repair, or this fixture is watching a "
+                + "surplus and the word 'shortfall' above is a lie");
         }
 
         [Test]

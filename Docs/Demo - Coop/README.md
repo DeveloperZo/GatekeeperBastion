@@ -9,8 +9,10 @@ Status: demo spec
 Authority: proposed. Rows marked Ruled are Zo's; rows marked Stamped are mine and
 await his override.
 Update trigger: when a stamp is overridden, when a beat ships, when M92 lands, when
-juice or persistence come back
-Last updated: 2026-08-22
+the Ante or persistence come back
+Last updated: 2026-08-25 (the retired wreck-word struck from the hull row;
+thiefCount/cloakerCount identifiers; the down state and priced respawn now ship;
+relay cap already at 2)
 Depends: ../Demo - Single/README.md (the verbs, already taught), ../Decisions.md
 -->
 
@@ -44,9 +46,9 @@ that there is more door than there are people.
 
 **The hatch replaces the player-count multiplier; it does not stack on it.**
 `WaveDirector.NextWave` today multiplies `enemyCount` by `playerCount` and pushes the
-surplus through the same mouths as Default gatekeepers (`WaveDirector.cs:114-120`;
-`hunterCount` and `ramCount` are fixed table rows and never see `playerCount`, nor do
-health, group size or spawn interval at `:123-126`). Keeping both counts the second
+surplus through the same mouths as Default gatekeepers. `hunterCount`, `thiefCount`
+and `cloakerCount` are fixed table rows that never see `playerCount`, and neither do
+health, group size or spawn interval. Keeping both counts the second
 player twice. Per-player body count stays where it is; what changes is that those
 bodies now have more than one door to choose from.
 
@@ -57,7 +59,7 @@ bodies now have more than one door to choose from.
 | **M-A** | **A fight that needs two** | Beats 1, 3, 5 | Covered by the hatch rule. The delta is `WaveDirector` target selection plus multi-door support. |
 | **M-B** | **Shared stakes** | Beats 0, 4 | **Now the crew pot, not the bank.** What one of you buys, the other cannot. Station buys are not net-routed at all today: every station mutates that seat's local `GameSession.Meta` with no server check, so the pot is the first validated buy in the project. |
 | **M-C** | **Seeing your teammate** | Beat 4 | `NetPlayerAvatar` replicates position, **yaw only**, HP, slot, protocol, flags. Not replicated: pitch, weapon id, firing, name. Remote animation is derived from transform delta into one `Speed` float (`:355-379`). |
-| **M-D** | **Downed and revive** | Beat 2 | **Revive does not exist.** A repo-wide grep returns seven prose comments and no type, method, field, RPC or binding. M57's ship-wait is a guest-only self-serve respawn with no cost, no timer and no teammate (`:301-310, 381-411`). |
+| **M-D** | **Downed and revive** | Beat 2 | **Revive does not exist.** A repo-wide grep for `revive` over `Assets/Scripts/` returns nothing — no type, method, field, RPC or binding. What ships instead is a down state and a priced self-respawn: `RunSim.SetSeatDown` freezes the dead seat's pile and `RunSim.TryRespawn` debits `Respawns.CostFor` — **150** × (respawns taken this Boarding + 1) — from that seat's **own Unbanked**. No teammate is involved at any point, which is why it still does not sell co-op. |
 
 M-B was per-seat conversion caps at the bank in an earlier draft. Deferring persistence
 and adopting one pot removed that entirely, and the shared stake moved to the shop,
@@ -70,7 +72,7 @@ where it is more visible and costs no new systems.
 | [`0-the-invite.md`](0-the-invite.md) | Code, join, both shop one pot for a kit, hatch doors open by seat count, embark. | M-B |
 | [`1-two-doors-to-hold.md`](1-two-doors-to-hold.md) | Zone 1's terminal with two doors open. Bodies pick whichever is weaker, so one player cannot hold both. | M-A |
 | [`2-picking-each-other-up.md`](2-picking-each-other-up.md) | Authored down. Bleed-out timer, teammate revives, cost is exposure. A downed host does not end the run. | M-D |
-| [`3-the-bank-and-what-it-costs.md`](3-the-bank-and-what-it-costs.md) | The bank window with more than one door. Pile drips into the crew pot; the remainder is lost when the doors fall. Authored loss 1. | M-A |
+| [`3-the-bank-and-what-it-costs.md`](3-the-bank-and-what-it-costs.md) | The Convert window with more than one door. Pile drips into the crew pot; the remainder is lost when the doors fall. Authored loss 1. | M-A |
 | [`4-restock-and-go-back.md`](4-restock-and-go-back.md) | The loop. Spend the pot together, see what your teammate is carrying, embark and get further. Repeats. | M-B, M-C |
 | [`5-deeper-until-the-boss.md`](5-deeper-until-the-boss.md) | Incremental progress across trips until the kit reaches the boss. Escaped ends the demo. | M-A |
 | [`voice-coop.md`](voice-coop.md) | Line ids, speakers, audience rule for a party. Extends the solo runner. | |
@@ -82,7 +84,7 @@ where it is more visible and costs no new systems.
 | Decision | Ruling |
 |---|---|
 | M89 | **Killed.** First person is chosen, not inherited. The isometric probe never runs. |
-| The hull | One ship. A bigger Ship on the Normandy SR-2 profile, doubling as the safehouse. The player-owned-bastion idea is struck; "Bastion" means only the derelict you board. |
+| The hull | One ship. A bigger Ship on the Normandy SR-2 profile, doubling as the safehouse. The player-owned-bastion idea is struck; "Bastion" means only the garrisoned vessel you board. |
 | What a hatch is | A **door from the bastion to your ship**. Gatekeepers attack the door. Hatches spawn nothing. |
 | Hatch count | Three on a side. Open count follows seat count: middle for one, 1 and 3 for two, all three for three. |
 | Hatch ownership | **None.** Assignment of responsibility does not help gameplay. No owner strings, no claiming, no swapping. |
@@ -102,11 +104,11 @@ where it is more visible and costs no new systems.
 | Enemy target selection | A body from a spawn room targets whichever open door is banking or weakest, re-evaluated on door HP change rather than per frame. Spawn rooms are untouched. Hunters ignore doors and are unaffected | Beats 1, 3, 5. Blocking M-A |
 | Hatch HP | Split the existing pool across open doors, do not duplicate it. Otherwise a third player buys durability | Beats 3, 5 |
 | One door of several falling | Slows the drip; the window ends when the **last** open door falls, not the first | Beat 3 |
-| Multiplayer gate | `DemoProgress.MultiplayerUnlocked` returns `m.DemoWheelBuysLeft < 2` (`DemoProgress.cs:39-44`), which refuses Host and Join on a fresh co-op save (`MainMenuController.cs:180, 292, 330`). Must read *solo demo active* | Beat 0. Blocking |
+| Multiplayer gate | `DemoProgress.MultiplayerUnlocked` now takes `(demoActive, wheelBuysLeft)` and answers true whenever the demo is off, so a save outside the solo demo hosts freely. It still refuses a save with `DemoActive` true and two buys left, which is what a fresh co-op save would look like until the co-op entry sets its own flag. Callers: `MainMenuController`, `RealmSelectController.Hosting`, and the two editor dev keys | Beat 0. Blocking |
 | Shop gating | `DemoProgress.PrimaryRowsOpen(m)` hides Primary rows in the ARMORY (`ArmoryStation.cs:246`) and refuses the buy (`ShipCommands.Weapons.cs:44`). It is solo-demo progression and must be **inert under `DemoCoopActive`**, or the no-restrictions ruling does not survive contact with the tree | Beats 0, 4. Blocking |
-| Party size | Three seats, three doors. `RelayJoin.MaxGuestConnections = 3` allows four seats; drop it to 2 (`M92` step 8) | Every beat |
+| Party size | Three seats, three doors. **Landed** — `RelayJoin.MaxGuestConnections` is **2**, so the session tops out at three seats | Every beat |
 | Revive | A teammate verb, not a self-serve respawn. Immobile at 0 HP for a bleed-out window; any living seat holds Interact to bring them up at partial HP. M57's `WaitingOnShip` stays as the fallback on bleed-out. Cost is exposure | Beat 2. Blocking M-D |
-| Unbanked on down | Not wiped on down. Today a downed guest's pile is zeroed at 0 HP (`NetPlayerAvatar.cs:307-308`), which would make a revive worthless the moment it lands. With the crew pot there may be nothing per-seat left to wipe; confirm when the pot lands | Beat 2 |
+| Unbanked on down | **Landed, and by a different route than this row asked for.** A downed seat's pile is no longer zeroed at 0 HP; `NetPlayerAvatar.TryMarkWaiting` freezes it instead, because that pile is the purse the respawn is bought with. With the crew pot there may be nothing per-seat left to freeze, and the respawn then has nothing to charge; confirm when the pot lands | Beat 2 |
 | Teammate presence | Pitch, weapon id, a fire event, a name label. Four adds to `NetPlayerAvatar`. Not replicated: reload, crouch, sprint, ADS, voice, ping wheel | Beat 4. Blocking M-C |
 | Scope fence | The Ship expansion adds doors and the space they need, not new stations. **Overridden 2026-08-22:** co-op bastion is another kit spine (same as the solo demo), three hatches on R1 — not one zone plus the boss stretch. No second destination, no new resource | Every beat |
 
@@ -133,7 +135,11 @@ one without counting.
 3. **The crew pot's starting figure, and its fill rate against the number of trips**
    before the boss is reachable. Too few trips and the loop does not read; too many and
    it is a grind.
-4. **The boss.** Stats and composition unspecced, same as the solo demo.
+4. **The boss.** Stats and composition unspecced. No boss kind ships: `GatekeeperKind` is
+   Default, Hunter, Thief and Cloaker. The nearest shipped thing is the solo finale's
+   elite — `MasterControl.ApplyFinaleElite` puts one Thief at **240** HP pre-multiplier
+   and **1.5×** body scale in the last Convert window, no escorts — and whether that is
+   the co-op boss or a placeholder for one is Zo's call.
 
 ## Kill criterion for the hatch rule
 
@@ -147,7 +153,7 @@ position logging against door positions, which does not exist today.
 
 ## In-tree facts these beats assume
 
-Verified against code 2026-08-20, not against docs.
+Verified against code, not against docs. Rows re-read 2026-08-25.
 
 - **Transport**: Unity Relay is wired (`RelayJoin.cs`), project linked. No Unity Lobby
   service and none wanted. Join is a 6-char code on MainMenu with a LAN fallback.
@@ -165,17 +171,23 @@ Verified against code 2026-08-20, not against docs.
 - **Primaries**: three shippable, not four. `VK-7` is disabled in `WeaponCatalog.cs` and
   excluded from `IsAvailable` and `ShopWeapons`. The set is BR-12 (900), MR-35 (1200),
   PRI-C (1500), each with an implemented ability.
-- **`RequestBulkheadServerRpc`** is an empty handler with a live call site
-  (`NetVerbs.cs:232-236`, from `PlayerProtocolAbilities.cs:166`). Do not build on it.
-- **Test fixture**: 11 PlayMode net suites against `NetcodeIntegrationTest`. The fixture
-  cannot test MPPM, transports or the join surface, which stay eyes-on.
+- **`RequestBulkheadServerRpc`** is an empty handler in `NetVerbs.cs` with a live call
+  site. Do not build on it.
+- **Down and respawn**: a seat at 0 HP is marked down, its Unbanked is frozen rather
+  than wiped, and it may buy itself back at **150** × (respawns taken this Boarding + 1)
+  out of that same frozen pile. The remainder survives the death. Nothing else can pay —
+  not the realm's bank, not another seat — so a seat that has just Converted its whole
+  pile cannot stand up (`Respawns.cs`, `RunSim.Respawns.cs`, `GameController.Down.cs`).
+- **Test fixture**: 14 PlayMode suites, the net ones against `NetcodeIntegrationTest`.
+  The fixture cannot test MPPM, transports or the join surface, which stay eyes-on.
 
 ## Rejected, do not rebuild
 
 Teaching beats. A co-op wake or capsule. Granted kit. Purchase caps, buy ladders, or
 any progression gate on what the shop will sell. Hatch ownership, claiming or
-swapping. Per-seat wallets or conversion caps in this demo. Buy-back at a live window,
-which depended on per-seat banked salvage. A player-owned bastion separate from the
+swapping. Per-seat wallets or conversion caps in this demo. Buy-back priced from banked
+salvage and gated to a live Convert window — the shipped rule charges the dead seat's own
+Unbanked and is not window-gated, so re-adding the old shape would fork the rule. A player-owned bastion separate from the
 Ship. A dock ring of per-player ships. A sealed-room finale separate from the climb.
 Unity Lobby service. Voice chat. Ping wheel. Host migration. A second destination.
 Player reply trees. `Time.timeScale = 0` for any line.

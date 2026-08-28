@@ -17,13 +17,13 @@ metadata:
 - **Call offline/static analysis "verified."** Parsed scene YAML, hand-computed collider
   geometry, a capsule-sweep done in Python against extracted transforms — none of it is
   verification, no matter how much math is behind it. Reserve "verified" for a check that
-  actually ran (AutoVerify, a compiled test) — the ship hull's stair sequence (2026-08-22)
-  called "76/76 reachable" and "empirically confirmed" verified before AutoVerify had run
+  actually ran (IntegrationCheck, a compiled test) — the ship hull's stair sequence (2026-08-22)
+  called "76/76 reachable" and "empirically confirmed" verified before IntegrationCheck had run
   once, on analysis that could not see a MeshCollider's step geometry or a
   CharacterController's skin width — the two things that actually broke it.
 - **Write a test whose expected value is a literal that could coincidentally match a broken
   implementation.** `ShipCoopStairWalkTests` hardcoded its start position as a number that
-  happened to equal wherever the (wrong) ramp collider already was. Two real, run AutoVerify
+  happened to equal wherever the (wrong) ramp collider already was. Two real, run IntegrationCheck
   passes proved nothing, because the test and the bug shared the same unverified assumption
   — moving the ramp anywhere and updating the literal to match would have kept it green.
   Rewritten to read the live mesh's `Renderer.bounds` every run and assert the collider sits
@@ -40,10 +40,13 @@ metadata:
   offline check said "fixed" and a human found it broken, the next claim needs a *different*
   kind of evidence, not a second offline check. If a run PlayMode test said "fixed" and it
   broke again in live play, the same test passing again is not new evidence — get a screenshot
-  or log of the actual failure before touching the scene again. (Open as of 2026-08-22: the
-  co-op ship stair failed a third time, in live play, after two independently-run AutoVerify
-  passes on two different fixes both said it worked. Root cause not yet found — this bullet
-  exists because guessing a fourth time was about to happen anyway.)
+  or log of the actual failure before touching the scene again. (The case: the co-op ship
+  stair failed a third time, in live play, after two independently-run IntegrationCheck passes
+  on two different fixes both said it worked. Closed 2026-08-24 — the root cause was a fact no
+  check read, the deck-2 well opening, so a climb could top out inside `Gen_FloorWell_N`.
+  `StairwellGeometryTests` now reads the upper room's active floor colliders and reproduces the
+  PlayMode failure offline in 91 ms. The pattern is the lesson: three passes came from three
+  checks that could not see the broken thing.)
 - **Close a gate with a tainted log.** A session log carrying a `[Dev]` tag cannot support
   a claim. F10/F11 host/join log `[Net]` and do not taint. Neither can a stale log: before
   a log speaks for current code, the
@@ -59,10 +62,10 @@ metadata:
 - **Add a second menu root.** There is one, `GatekeepersProtocol/`, with five folders
   (Record, Logs, Build, Bake, Validate). Members are named in
   `Docs/Architecture/README.md` `menu_rows` and `Tools/lint-arch/run.sh` checks both
-  directions. `Gatekeeper/HUD/` appeared from two one-shot migration tools
-  (`Editor/Tools/PullBastionHudToShip.cs`, `Editor/Tools/RestoreShiftArmorHealth.cs`, ~220 lines
-  each) that should not have been in the tracked tree at all — the sprawl arrives as a menu, but
-  it starts as a script nobody deleted.
+  directions. A second root, `Gatekeeper/HUD/`, existed until 2026-08-11: it came from two
+  one-shot migration tools of ~220 lines each that should not have been in the tracked tree at
+  all, and both were deleted with it. The sprawl arrives as a menu, but it starts as a script
+  nobody deleted.
 - **Leave generated output where it lands.** Ignoring is not cleaning.
 - **Write a criterion an unchanged build would pass.** A negative grep is not a gate — that
   exact mistake shipped a UI milestone that satisfied every criterion and failed on sight.
@@ -70,7 +73,9 @@ metadata:
 
 ## Always
 
-- **Run the offline harness first.** Seconds, and the fastest signal on any sim or tuning change.
+- **Run the offline harness first.** Seconds, and the fastest signal on any sim or tuning
+  change — where its toolchain exists. Read its exit code: 2 means it could not run, which is
+  not a pass.
 - **Read the skipped lines.** A file the harness could not compile is coverage you did not get.
 - **State the limits of the check you ran**, including its false negatives.
 - **Prove a check twice**: it reproduces a known state on the real tree, *and* it catches a
@@ -80,10 +85,25 @@ metadata:
 
 ## The paths, in increasing cost
 
-1. **`Tools/verify/run.sh`** — compiles `Assets/Scripts/Sim/`, `Assets/Scripts/Util/Log.cs` and
-   the EditMode tests outside Unity with `mcs`, and runs them in seconds. Use it on every sim or
-   tuning change before claiming anything. `--filter <substring>` narrows, `--verbose` shows
-   passing names and game log lines. **It cannot see MonoBehaviours, scenes or the save file.**
+1. **`Tools/verify/run.sh`** — runs the language, architecture and vendor lints, compiles
+   `Assets/Scripts/Sim/` (which contains `Sim/Util/Log.cs`) alone against `Tools/verify/Shims.cs`,
+   then the EditMode tests plus `Game/Settings/` and `Game/Demo/`, and finishes on the docgen and
+   release-gate checks. Use it on every sim or tuning change before claiming anything.
+   `--filter <substring>` narrows, `--verbose` shows passing names and game log lines. **It cannot
+   see MonoBehaviours, scenes or the save file.**
+   **The lints gate the compile, and they read the whole tree**, so a retired term in one
+   markdown file anywhere in `Docs/` fails the run before a single test is compiled. Path 1 is
+   not green by default, a red run is not evidence your change broke something, and a
+   documentation edit by another session can turn it red without touching code. Read which
+   stage failed before you read anything into it. The language lint can be run alone —
+   `Tools/lint-language/run.sh`, ripgrep only, no mono — which is the cheapest way to tell a
+   prose failure from a code one.
+   **It compiles with `mcs` and runs with `mono`, and neither is installed on the Windows
+   development machine** — there it exits 2 at the toolchain guard and no test runs, so a green
+   claim on path 1 from that machine is a claim nothing checked. What does run there is
+   `dotnet build "<Assembly>.csproj" -nologo -v q -t:Rebuild -p:BuildProjectReferences=false`
+   against the Unity-generated csproj at the repository root, and that is a compile check only —
+   it executes no test. `Tools/lint-language/run.sh` runs on its own (it needs ripgrep, not mono).
 2. **`Tools/wave-report/run.sh`** — offline reader over session logs, and the authority on what
    happened in a Run. `Docs/dashboard.html` shows the same numbers in a page.
 3. **The integration-check file bridge** (formerly AutoVerify) — write `gkb_verify_request.txt`

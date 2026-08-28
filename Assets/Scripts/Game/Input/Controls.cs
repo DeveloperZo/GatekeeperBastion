@@ -112,10 +112,10 @@ namespace GatekeepersProtocol.Game
             new(ControlId.CrewAbility, KeyCode.G, KeyCode.None, "G", "crew", "FIGHT", FightAlways),
             new(ControlId.PersonalAbility, KeyCode.H, KeyCode.None, "H", "self", "FIGHT", FightAlways),
 
-            new(ControlId.PullDraw, KeyCode.T, KeyCode.None, "T", "start", "RUN", ControlContext.Prep),
-            new(ControlId.DialUp, KeyCode.Equals, KeyCode.KeypadPlus, "+", "juice", "RUN", ControlContext.Prep),
-            new(ControlId.DialDown, KeyCode.Minus, KeyCode.KeypadMinus, "-", "juice", "RUN", ControlContext.Prep),
-            // Same keys, Ship-only — Prep juice and ARMORY wheel never share a live context.
+            new(ControlId.PullDraw, KeyCode.T, KeyCode.None, "T", "start", "BOARDING", ControlContext.Prep),
+            new(ControlId.DialUp, KeyCode.Equals, KeyCode.KeypadPlus, "+", "ante up", "BOARDING", ControlContext.Prep),
+            new(ControlId.DialDown, KeyCode.Minus, KeyCode.KeypadMinus, "-", "ante up", "BOARDING", ControlContext.Prep),
+            // Same keys, Ship-only — Prep ante up and ARMORY wheel never share a live context.
             new(ControlId.WheelRotatePrev, KeyCode.LeftBracket, KeyCode.None, "[", "wheel", "ARMORY",
                 ControlContext.Ship),
             new(ControlId.WheelRotateNext, KeyCode.RightBracket, KeyCode.None, "]", "wheel", "ARMORY",
@@ -135,18 +135,18 @@ namespace GatekeepersProtocol.Game
             new(ControlId.FreeCursor, KeyCode.Escape, KeyCode.None, "ESC", "settings", "SHIP",
                 ControlContext.Ship),
 
-            new(ControlId.Confirm, KeyCode.Return, KeyCode.KeypadEnter, "ENTER", "return", "RUN",
+            new(ControlId.Confirm, KeyCode.Return, KeyCode.KeypadEnter, "ENTER", "return", "BOARDING",
                 ControlContext.EndScreen),
-            new(ControlId.Confirm, KeyCode.Space, KeyCode.None, "SPACE", "return", "RUN",
+            new(ControlId.Confirm, KeyCode.Space, KeyCode.None, "SPACE", "return", "BOARDING",
                 ControlContext.EndScreen),
-            new(ControlId.Confirm, KeyCode.Escape, KeyCode.None, "ESC", "return", "RUN",
+            new(ControlId.Confirm, KeyCode.Escape, KeyCode.None, "ESC", "return", "BOARDING",
                 ControlContext.EndScreen),
 
             // Left-edge controls drawer (Bastion) / strip collapse (Ship). Omitted from the list.
             new(ControlId.TogglePanel, KeyCode.Backspace, KeyCode.None, "BKSP", "controls", "MOVE",
                 FightAlways | ControlContext.Ship | ControlContext.EndScreen, showOnPanel: false),
             // Right-edge mission drawer — Bastion fight only.
-            new(ControlId.ToggleMissionDrawer, KeyCode.Tab, KeyCode.None, "TAB", "mission", "RUN",
+            new(ControlId.ToggleMissionDrawer, KeyCode.Tab, KeyCode.None, "TAB", "mission", "BOARDING",
                 FightAlways, showOnPanel: false),
         };
 

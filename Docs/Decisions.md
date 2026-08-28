@@ -41,8 +41,10 @@ re-litigating a cut costs more than the cut saved.
   superseded. Do not rebuild free-pick pools.
 - **CREW QUARTERS first-loss lock.** Narrowed 2026-08-15, recut 2026-08-16: Default
   is a **0-salvage CREW claim** (Mk1 shape), not auto-owned. First-loss still does
-  not lock CREW; FABRICATION's equipment slot (and ARMORY Tiers) remain the
-  first-loss gate. Do not re-lock CREW behind a death.
+  not lock CREW. Do not re-lock CREW behind a death. **The gate on FABRICATION's
+  equipment slot and ARMORY Tiers is no longer a loss** — *Locked — the wheel opens on the
+  first bank* (2026-08-18) re-keyed it to `MetaState.HatchConversions >= 1`, and
+  `MetaUpgrades.UpgradesUnlocked` reads that. The 2026-08-16 wording above predates it.
 - **Windowed fire-rate as a protocol verb.** Exception 2026-08-16 (M70 recut):
   Default's Barrage / Rush multiply `PlayerGun.EffectiveFireRate` for a window.
   The M21 wheel still owns baseline fire rate; this is not a spoke and not an
@@ -71,7 +73,8 @@ re-litigating a cut costs more than the cut saved.
 - **Asset Store vendor dumps in git.** The pack tree is not project history; the wrappers
   that reference it are. `Assets/Synty/` is gitignored (260 MB / 6728 files on disk,
   2026-08-14). Project wrappers that resolve Synty GUIDs live under `Assets/Packs/`
-  (weapons, Boarder) and the dressed Ship hubs (`Ship - Demo.unity`, `Ship - CoOp.unity`).
+  (weapons, Boarder) and the dressed Ship hub `Ship - CoOp.unity` (`Ship - Demo.unity` was
+  folded into it and no longer exists).
   After clone, import
   [POLYGON Sci-Fi Space](https://assetstore.unity.com/packages/3d/environments/sci-fi/polygon-sci-fi-space-pack-art-by-synty-138857)
   SKU **138857**, **v1.14.0**, to `Assets/Synty/PolygonSciFiSpace/` so those GUIDs resolve.
@@ -191,10 +194,11 @@ and hand authoring compose rooms; Soft-lock doors stay parked.
 
 ## Locked — Bastion fight HUD corner starting point (Zo, 2026-08-10)
 
-The four always-on fight cards in `Bastion.unity` under `Canvas - Dynamic` are the
+The four always-on fight cards under `Canvas - Dynamic` are the
 baseline, plus the top-centre Hatch host added by M36. Agents extend these hosts; they do
 not replace them with homemade bars or ghost Shadow chrome. Shift package rows (Icon Border
-+ Slider + Text) stay intact.
++ Slider + Text) stay intact. The scene was `Bastion.unity`, deleted 2026-08-24; the hosts
+live in `Bastion_Coop.unity` and `Range.unity` now.
 
 | Host | Corner | Size (canvas) | Contents |
 |---|---|---|---|
@@ -210,9 +214,12 @@ Tethered; the left-drawer Armor/Hatch bar is retired.
 
 ## Locked — Ship HUD corners and station terminals (Zo, 2026-08-10)
 
-**Ship always-on HUD** = Bastion fight corner hosts **minus `Hud Vitals`**, pulled with
-`Gatekeeper/HUD/Pull Bastion Corners Into Ship` (`Object.Instantiate` from
-`Bastion.unity` — not YAML theatre). No always-on shortcut strip. The old text strip
+**Ship always-on HUD** = Bastion fight corner hosts **minus `Hud Vitals`**, pulled by
+`Object.Instantiate` from the fight scene, not by hand-cloned YAML. The one-shot that did
+it (`Gatekeeper/HUD/Pull Bastion Corners Into Ship`) and its whole menu root were deleted
+on 2026-08-11 — see `Architecture/README.md` — and `Bastion.unity` went with the scene set
+on 2026-08-24; what is locked here is the layout, not a tool to re-run. No always-on
+shortcut strip. The old text strip
 (`Title` / `Salvage` / `Objective` / `Directory` / `Shortcut Keys`) is not the baseline.
 
 | Host | Corner | Size (canvas) | Ship contents |
@@ -233,12 +240,17 @@ that station's full-screen menu — `TryOpenStationFromInteract` →
 camera ray picks which console (Interactor still drives the HUD prompt only).
 Cloned from **Main Menu (Desktop) Settings** (`Assets/Shift - Complete Sci-Fi
 UI/Scenes/Main Menu/Main Menu (Desktop).unity`) — Background + Top/Bottom chrome
-kept; Categories / Preview / top Button List stripped via
-`Gatekeeper/HUD/Strip Settings Shell Onto Stations`. Only that menu takes input.
-Esc or Close returns to walk. Body rows clone from each panel's inactive
-`Templates` under the Settings `List` — that host must survive `ClearBody`.
-Panel copy stays at the basic use case (NAV: wave + EMBARK; CREW: Default claim + Coming Soon stubs;
-FAB: hatch / equipment / payload; ARMORY: slot + wheel + catalog).
+kept; Categories / Preview / top Button List stripped. The one-shot that stripped them
+(`Gatekeeper/HUD/Strip Settings Shell Onto Stations`) died with that menu root on
+2026-08-11; the stripped shell is what is locked. Only that menu takes input.
+Esc or Close returns to walk. **Body rows no longer clone.** Panels are authored, the
+`Templates` folders were deleted with the runtime body, and `StationSceneGate` now fails a
+scene where one survives — a leftover `Templates` means an unfinished migration that would
+still be cloned from.
+Panel copy stays at the basic use case (NAV: wave + EMBARK, plus READY and the countdown in a
+party; CREW: the Default, VEIL and FORGE claims, with AEGIS and LEDGER as Coming Soon stubs —
+`M94` shipped the two specialists; FAB: hatch / equipment / payload; ARMORY: slot + wheel +
+catalog).
 
 ## Locked — title (Zo, 2026-08-16)
 
@@ -282,9 +294,12 @@ bank window down and breach remain the only enders.
   stays on Hatch-bank Prep. Guest wallet is report-and-ask (client-authoritative):
   friends-only (`../Marketing/gtm.md`). Banked Salvage does not move into the sim.
   Door state stays HOST-ONLY; `M95` criterion 9 owns replicating it. **Owned by `M90`.**
-  **Superseded 2026-08-24 by the `M98` recut** — see the amendment under *Locked —
-  co-op down* above: one escalating-cost respawn rule at the between-waves seam, pool
-  charges for in-wave returns, realm pot pays, solo and host included.
+  **Superseded 2026-08-24 by the `M98` recut** — see the amendments under *Locked — co-op
+  down* above, and read the second one: one escalating-cost respawn rule for every dead
+  seat, solo and host included, paid out of **that seat's own Unbanked** with the remainder
+  surviving the death. The realm pot and the shared charge pool were the first version of
+  the recut and were retired the same day; `Respawns.Refuse` and `RunSim.TryRespawn` carry
+  the shipped rule.
 - **Open — needs Zo's call, recorded not resolved:** a dead HOST rejoining collides
   with host-death-ends-the-run (`M49`), which is architecture-driven. **Closed
   2026-08-24 by the `M98` recut:** the host respawns from the DOWN overlay while the
@@ -454,13 +469,21 @@ more: it is the record of why keys are spelled the way they are.
   bring their own loadout and inherit nothing. **The principle: co-op gets you
   further, not richer** — salvage per player per hour stays roughly flat as
   players are added, and what co-op buys is depth. Zo, 2026-08-14; `M65`.
+  **Built, and no longer the deferred half of this row:** `RunSim.AwardKill` calls
+  `PlayerWallets.AwardSplit`, which divides the award across the connected seat count and
+  gives slot 0 the remainder; `RunSim.SetSlotDeepest` carries each guest's own progress for
+  the banking cap, and `WipeUnbankedSlot` is the per-seat loss on a down. What is still
+  deferred here is the seat count above three and the tuning pass on it.
 - **Shared Ship lobby (Zo, 2026-08-15).** Friends session: Ship is a shared lobby;
   party lead (host) is ship owner for NAV / EMBARK; each player still owns their
   own resources (above). Party-wide scene loads (ready-up + declared countdown).
   NGO `EnableSceneManagement` on for that topology — expires M58/M60's
   "both load Bastion themselves" rule for the friends path. M64's solo-Ship stamp
   failed play. `M72`. M57 additive Ship remains down-wait only, not the party lobby.
-  Landed: DDOL `NetSession` from menu Host/Join; `ConnectTimeoutMs` 10000.
+  Landed: DDOL `NetSession`; `ConnectTimeoutMs` 10000. **The entry point moved on
+  2026-08-22** — hosting is REALMS *OPEN TO FRIENDS*, not a menu HOST; see *Locked — you
+  host a realm, not a session* below. JOIN is still on the menu. Ready-up and the countdown
+  are `NetPartyLobby`; the lead's EMBARK and the guest's READY are both `MapStation`.
 - **Ship subsystems** (Reactor, TetherCore, Engines, LifeSupport) return with the
   bastion outfitting layer. `ShipSystems` stays the aggregate so the wiring keeps
   its shape.
@@ -501,6 +524,15 @@ rulemaking authority lives there.
   so arrivals no longer outrun the Hatch budget on Wave 2. Earlier softens (`-0.13/wave`
   from `-0.55`, then dropping the dial's gap term) were not enough after the horde and
   swing-landing fixes.
+  **SUPERSEDED 2026-08-27 — the sign is now positive.** `max(0.4, 4.2 + 0.20*min(wave,
+  MaxWaves-1))` — 4.2 / 4.4 / 4.6 / 4.8 / 5.0. M10's name was accurate for Wave 2 and
+  misleading beyond it: the gap shrank as the Run escalated, so delivery time stayed near
+  30 s while the roster grew 18 → 66 and arrivals climbed 0.86 → 2.16/s. Group width was
+  rising 3 → 7 over the same span, so the two compounded rather than offsetting. A logged
+  five-wave run ended `lost` at Wave 5 with 103 bodies alive. M10's intent — arrivals must
+  not outrun what the player can answer — relocates here intact; only its sign was wrong,
+  and it was wrong because it rested on a kill-rate claim that later play data falsified
+  (see `Docs/Design/2-Dynamics.md`, B1).
 
 ## Locked — you host a realm, not a session (Zo, 2026-08-22)
 
@@ -525,3 +557,49 @@ joining — went with hosting, since no code is allocated on the menu any more.
 dies with it, so "a code is for a realm, and a player admitted once keeps a slot they can
 return to at their leisure" is not what this builds. That needs the realm to have an identity
 and an access list that outlive the session, which is `M100`.
+
+**`M100` built it (2026-08-24).** `RealmShareEnvelope` carries `RealmId`, `OwnerId` and a
+`MemberIds` / `MemberNames` admission list, with a heartbeat lock so one machine holds a
+realm open at a time; `CloudRealmStore` is where a copy lives between sessions. The Relay
+code stays per-session — a code still opens a door rather than being one — but admission
+now outlives it. Playthrough not yet stamped.
+
+## Locked — kills bank as they land, and the Convert leaves the demo (Zo, 2026-08-25)
+
+**The rule: it must be impossible to die with no progress to show for it.**
+
+The 2026-08-25 playthrough is the evidence. A fresh realm on an MK-1 T0 cleared Wave 1 outright
+— 18 of 18 — died twice on Wave 2, and the Run summary read `gross 0, repair 0, net 0`. Thirty-
+four bodies and a cleared Wave, and the realm ended exactly where it started. The two things
+that banked salvage — reaching a terminal, and surviving a Convert window — both sat past the
+point where a starting kit dies, so the whole Run was a bet the player could only lose.
+
+**A kill is credited the moment the body falls**, at face value, into the realm's bank. The
+carried pile still exists, but it fills only by a deliberate Withdraw at the Hatch: nothing is
+at risk that the player did not choose to put at risk. Death still wipes a staked pile, which
+is what keeps a Withdraw a real bet, and can no longer reach the bank behind it.
+
+**The Ante and the respawn fee charge the bank.** There is one pot now and everything costs
+from it, so raising the Ante spends real take-home progress rather than money that was never
+safe. That is a heavier decision than it was, deliberately.
+
+**The Convert window leaves the demo.** With nothing unbanked by default it could not start, and
+it was the demo's engine for two authored losses. It survives in code because Master Control's
+finale runs on it, but no demo beat and no gate depends on it any more.
+
+**So both gates it fed were re-homed**, and this is the part that actually answers the
+playthrough:
+
+* The wheel and the equipment slot were gated on `HatchConversions >= 1` — a counter only a
+  Convert raised. Now `LifetimeSalvageEarned > 0`. Lifetime on purpose: spending down to zero
+  must not re-lock the wheel.
+* The Primary rack was gated on `DemoZone2BankLost`, resolved by zone 2's Convert. Now the
+  Wave **reached**: `DeepestWaveReached >= DemoZones.EndWave(1)`. Reached, not survived — the
+  player above died on Wave 2 holding 227 banked and was told "no buyable upgrades remain",
+  because the only kit that could carry zone 1 sat behind clearing zone 1. **The Run that
+  proves you need a Primary is now the Run that sells you one.** The legacy flag still opens
+  the rack so existing saves keep theirs.
+
+**Not settled here.** Whether the Convert should come back as an opt-in bet on withdrawn
+salvage — the machinery is intact and the Hatch already prompts a Withdraw — or be cut from the
+code entirely. Left standing, unused by the demo, until a playthrough asks for it.

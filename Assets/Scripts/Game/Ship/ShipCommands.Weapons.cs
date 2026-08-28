@@ -66,7 +66,22 @@ namespace GatekeepersProtocol.Game
 
             m.SetOwned(id, true);
             m.SetEquipped(id);
+            // Beat 0's arming beat (2026-08-25 recut — Zo): the ARMORY rack hands over the
+            // MK-1 and that alone readies embark — the ship intruder fight is struck.
+            bool armingBeat = m.DemoActive && id == WeaponId.Mk1Sidearm && !m.DemoWeaponGranted;
+            if (armingBeat)
+            {
+                m.DemoWeaponGranted = true;
+                m.DemoShipFightDone = true;
+            }
             GameSession.Save();
+            if (armingBeat)
+            {
+                DemoShipFight.NotifyWeaponGranted();
+                // Armed is the multiplayer key now — say so once, here.
+                Log.Event("Demo", "multiplayer unlocked");
+                DemoVoice.Play(DemoConversationIds.MpUnlocked, DemoVoiceMode.Subtitle);
+            }
             Log.Event("Ship",
                 $"bought {def.displayName} for {cost} — equipped {def.slot}, banked {m.BankedSalvage} left track=weapon");
             DemoShipStanding.Reevaluate();
@@ -120,7 +135,7 @@ namespace GatekeepersProtocol.Game
             if (!MetaUpgrades.UpgradesUnlocked(m))
             {
                 Log.Event("Ship",
-                    $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — locked until salvage banks through the Hatch");
+                    $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — locked until this realm has earned salvage");
                 return false;
             }
             // Wheel ladder, two rungs on two counters: rung 1's two demo purchases are spent
@@ -162,7 +177,6 @@ namespace GatekeepersProtocol.Game
             }
 
             m.AwardWheel(id, centre);
-            bool firstDemoBuy = false;
             if (m.DemoActive)
             {
                 // Rung 1 first, rung 2 only once rung 1 is exhausted. The two counters stay
@@ -171,10 +185,6 @@ namespace GatekeepersProtocol.Game
                 if (m.DemoWheelBuysLeft > 0)
                 {
                     m.DemoWheelBuysLeft--;
-                    // 2 → 1 is that save's first wheel purchase: the multiplayer key
-                    // (DemoProgress.MultiplayerUnlocked), once per save by construction.
-                    // Rung 2 cannot re-fire it — it never touches this counter.
-                    firstDemoBuy = m.DemoWheelBuysLeft == 1;
                 }
                 else if (m.DemoRungTwoBuysLeft > 0)
                 {
@@ -204,11 +214,6 @@ namespace GatekeepersProtocol.Game
                 $"bought {WeaponCatalog.Def(id).displayName} focus {WeaponWheel.AttrLabel(centre)} " +
                 $"(+{WeaponWheel.AttrLabel(n0)}, +{WeaponWheel.AttrLabel(n1)}) for {price} — " +
                 $"T{m.TierOf(id)}, banked {m.BankedSalvage} left track=weapon{demoSuffix}");
-            if (firstDemoBuy)
-            {
-                Log.Event("Demo", "multiplayer unlocked");
-                DemoVoice.Play(DemoConversationIds.MpUnlocked, DemoVoiceMode.Lock);
-            }
             DemoShipStanding.Reevaluate();
             return true;
         }

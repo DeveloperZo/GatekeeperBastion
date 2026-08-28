@@ -88,9 +88,11 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(DemoVoice.IsLive);
             Assert.IsFalse(DemoVoice.LocksInput, "a Subtitle must leave fight input live");
 
+            // Dwell scales with line length now, so tick the floor first (must still be
+            // live), then past the ceiling (must have advanced itself).
             DemoVoice.Tick(DemoVoice.SubtitleSeconds - 0.1f);
             Assert.IsTrue(DemoVoice.IsLive, "still inside the dwell");
-            DemoVoice.Tick(0.2f);
+            DemoVoice.Tick(DemoVoice.MaxDwellSeconds);
             Assert.IsFalse(DemoVoice.IsLive, "auto-advance at the dwell");
         }
 

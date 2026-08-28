@@ -210,19 +210,35 @@ namespace GatekeepersProtocol.Tests
         {
             var sim = FaucetOn(out _);
             sim.TriggerDraw();
-            Kill(sim, 4);
+            long earned = RunEconomyFixture.KillAndStake(sim, 4);
+            sim.NotifyAssaultCleared();
+            // Attrition needs a pile to bite. Since 2026-08-25 one exists only where the
+            // player deliberately withdrew it, so the bet is placed at the full Hatch first
+            // and the Hatch is hit after — which is the order the rule is really about.
+            RunEconomyFixture.Stake(sim, earned);
+
             long before = sim.Unbanked;
+            Assert.Greater(before, 0L, "there is a stake for the attrition to take from");
             float hpBefore = sim.Ship.Hatch.Hp;
             sim.DamageHatch(10f);
             Assert.Less(sim.Ship.Hatch.Hp, hpBefore);
             Assert.Less(sim.Unbanked, before);
 
-            // The shipped rule stands with the toggle off: field Waves leave it invulnerable.
+            // 2026-08-27: the toggle no longer decides this. A plain field Wave damages the
+            // Hatch too, so what the faucet still owns is TARGETING (FaucetHatchHunt suppresses
+            // sight-provoke so the stream stays on the Hatch), not invulnerability. Asserted
+            // rather than deleted: this line used to be the only pin distinguishing the two,
+            // and a silent deletion would leave the faucet's actual remaining difference
+            // untested.
             var plain = Tethered(out _);
             plain.TriggerDraw();
             float plainBefore = plain.Ship.Hatch.Hp;
             plain.DamageHatch(10f);
-            Assert.AreEqual(plainBefore, plain.Ship.Hatch.Hp, 1e-5f);
+            Assert.AreEqual(plainBefore - 10f * HatchBank.FieldWaveDamageScale,
+                plain.Ship.Hatch.Hp, 1e-5f,
+                "a plain field Wave left the Hatch invulnerable");
+            Assert.IsFalse(plain.FaucetHatchHunt,
+                "the plain sim is running the faucet hunt, so this proves nothing about it");
         }
 
         [Test]
@@ -234,11 +250,6 @@ namespace GatekeepersProtocol.Tests
             sim.NotifyPlayerDown();
             Assert.IsFalse(sim.FaucetCycleLive);
             Assert.IsFalse(sim.FaucetAwaitingDraft);
-        }
-
-        static void Kill(RunSim sim, int count)
-        {
-            for (int i = 0; i < count; i++) sim.AwardKill();
         }
     }
 }

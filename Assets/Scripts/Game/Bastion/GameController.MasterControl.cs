@@ -99,7 +99,7 @@ namespace GatekeepersProtocol.Game
             if (meta == null || !meta.DemoActive) return;
             _masterLookPlayed = true;
             DemoVoice.PlayLocalAndBroadcast(
-                DemoConversationIds.MasterControl, DemoVoiceMode.Lock);
+                DemoConversationIds.MasterControl, DemoVoiceMode.Subtitle);
         }
     }
 }

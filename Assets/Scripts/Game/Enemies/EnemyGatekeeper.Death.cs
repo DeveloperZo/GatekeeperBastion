@@ -160,8 +160,12 @@ namespace GatekeepersProtocol.Game
             var mat = myRenderer != null ? myRenderer.sharedMaterial : null;
             if (mat != null)
             {
-                if (mat.HasProperty("_Color")) tint = mat.color;
-                else if (mat.HasProperty("_BaseColor")) tint = mat.GetColor("_BaseColor");
+                // HasProperty answers for a property of ANY type: SG_SciFiRobotMat declares
+                // _BaseColor as a TEXTURE, so the old probe threw a Unity error on EVERY
+                // death — 124 of them in one playtest session (2026-08-25). HasColor is the
+                // type-checked question; the shared helper asks it.
+                string prop = Damageable.FirstColorProperty(mat, "_Color", "_BaseColor", "_EmissiveColor");
+                if (prop != null) tint = mat.GetColor(prop);
             }
             Effects.DeathExplosion(transform.position, tint);
         }

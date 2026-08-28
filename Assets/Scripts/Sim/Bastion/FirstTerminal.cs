@@ -83,7 +83,15 @@ namespace GatekeepersProtocol.Sim
         {
             if (!demoActive)
                 return false;
+            // The spine (Zo, 2026-08-25) gives every zone ONE terminal, so zone 1 has no
+            // second id to sequence and this rule has nothing to say. It must also never
+            // answer for a LATER zone's terminal — that terminal is behind a locked door,
+            // which is the real gate; blocking it here would be a second, invisible one.
+            if (ZoneTerminalCount < 2)
+                return false;
             if (string.IsNullOrEmpty(terminalId) || terminalId == Id)
+                return false;
+            if (!IsZoneOne(terminalId))
                 return false;
             if (!firstExists)
                 return false;

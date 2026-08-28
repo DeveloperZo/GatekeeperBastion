@@ -192,7 +192,7 @@ namespace GatekeepersProtocol.Game
             if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
             {
                 _loading = false;
-                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                Log.Event("Demo", "multiplayer locked — take the MK-1 first");
                 if (_view != null)
                     _view.SetJoinRefusal("Multiplayer unlocks after your first upgrade — play the opening solo.");
                 return;
@@ -230,7 +230,7 @@ namespace GatekeepersProtocol.Game
             if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
             {
                 _loading = false;
-                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                Log.Event("Demo", "multiplayer locked — take the MK-1 first");
                 if (_view != null)
                     _view.SetJoinRefusal("Multiplayer unlocks after your first upgrade — play the opening solo.");
                 return;

@@ -9,11 +9,14 @@ unlock model, the growth levers, the five protocol sheets (the Default plus four
 specialists), the candidate axes toward the 8–10 roster, and the doctrine matrix. It
 spans the crew-skills and fabrication brainstorm areas, which is why it has its own
 file.
-Status: Default shipped (`M70`); VEIL and FORGE claimable in CREW (`M94` play-close
-owed). AEGIS and LEDGER remain brainstorm-only.
+Status: Default shipped (`M70`); VEIL and FORGE shipped and claimable in CREW (`M94`,
+closed by Zo 2026-08-24). AEGIS and LEDGER remain brainstorm-only. Their sheets below
+are the spec of record; the three shipped sheets are not — `Sim/Meta/BoarderSheets.cs`
+and `M94` are.
 Update trigger: when Zo vetoes or accepts a row, doctrine or structure call; when a gate
 named on an expansion row ships; when a candidate axis earns or loses a sheet.
-Last updated: 2026-08-22
+Last updated: 2026-08-25 (M94 closed; VEIL and FORGE recorded in Graduation and their
+sheets marked against what shipped — FORGE's two verbs were recut on the way)
 -->
 
 ## What this is
@@ -184,8 +187,16 @@ scarce clause created the healer role by itself).
 Working names on the codename rule (`../Decisions.md`) — renameable when play earns a
 fiction noun. Each sheet: a Crew ability and a Personal ability, each with **one twist
 slot (pick 1 of 2)**, and two Passives (pick 1). Default (M70 recut 2026-08-16) has
-no Passive pick and no twist slots. This file is the spec of record for every
-specialist row — designed, not built. Under each ability, the **parked pair** is the
+no Passive pick and no twist slots.
+
+**Three of the five sheets have since shipped and left this file's authority.** Default,
+VEIL and FORGE are in `Sim/Meta/BoarderSheets.cs` and the milestones are the record: `M70`
+for Default, `M94` for the other two. Read the shipped copy there, not the sheets below.
+Only AEGIS and LEDGER are still spec of record here, and the shipped three are kept in place
+because the twist tables under them are the parked pairs the growth lever draws from. Where a
+shipped sheet and this file disagree, this file is the older draft.
+
+Under each ability, the **parked pair** is the
 recorded candidate for its future second twist slot (growth lever), and the alternates
 record keeps the cuts and the wall each one hit. Live pairs were selected 2026-08-15
 under the twist-pair law: solo-strong on both sides, unflagged, clearest axis; every
@@ -213,6 +224,10 @@ Sightline), FORGE (Foresight, beside Magnet Hands). The 2026-08-15 move onto
 Default is overturned.
 
 ### VEIL — who notices you, and what you know
+
+**Shipped by `M94` largely as authored**: PHANTOM doctrine, Ping on `G`, Cloak on `H`, and
+Ghost as the Passive rather than the Sightline this sheet names. No twist slot shipped with
+it, so both twist tables below are still parked pairs.
 
 The Assassin translated. The precision half (crits, weakspots, executes) is banned
 damage vocabulary, so it stays in the weapon catalog; the protocol carries the
@@ -369,6 +384,14 @@ pile has no one to reclaim it — Testament only means anything in co-op, where 
 down-wait keeps the Run alive. Effectively co-op-only; the panel must say so.**]
 
 ### FORGE — serviceable hardware
+
+**Shipped by `M94` with both verbs recut, so this sheet is the draft, not the build.**
+FORGE ships as PARALLEL BAYS (two live decoys, not yet active), **Field Deploy** on `G` — a
+turret that acquires and fires on its own to 18 m and hastens nearby Boarders — **Overcharge**
+on `H`, and **Magnet Hands** as the Passive. The two abilities below did not survive review:
+Field Rearm and Redeploy turned out to be the same shape twice, and `M94` built the turret
+here rather than waiting on `UTL-H`. Their `BoarderAbilityId` values were reused rather than
+retired, because neither ever reached a save.
 
 The Engineer. Its doctrine keeps the turret a gun; its abilities make hardware
 something you tend rather than fire-and-forget. Two Forges diverge as: the
@@ -795,8 +818,18 @@ per proc (`Doctrine` tag).
 Graduated by direction (Zo, 2026-08-15): **`M70` is the Default Protocol**. Recut
 2026-08-16 (Zo): Default is a CREW claim, Barrage/Rush replace Anchor/Bulkhead/Ghost/
 Foresight on that sheet, Coming Soon stubs stand in for specialists, Fight shortcut
-is the G/H readout. Specialist slices unchanged (VEIL carries the unlock spine;
-AEGIS last).
+is the G/H readout.
+
+**VEIL and FORGE graduated to `M94`, closed 2026-08-24.** `BoarderProtocolId` became a
+catalog of three, all four new abilities replicate, and every open window telegraphs on
+screen. The recut inside that milestone is the part worth carrying back: FORGE's authored
+pair, Field Rearm and Redeploy, was one shape written twice, and the turret was built there
+instead of waiting on `UTL-H` (`fabrication.md`). VEIL's Passive shipped as Ghost, not the
+Sightline its sheet names. Turret health readout, number tuning and PARALLEL BAYS are
+carried on `M94`.
+
+AEGIS and LEDGER are what is left to graduate, and the ordering is unchanged: VEIL carried
+the unlock spine, AEGIS last.
 
 ## Open questions
 

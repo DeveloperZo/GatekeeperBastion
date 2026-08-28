@@ -8,7 +8,10 @@ Status: demo spec
 Authority: implementable
 Update trigger: when a speaker is named, when a line id is added, when
 input-lock rules change
-Last updated: 2026-08-20
+Last updated: 2026-08-26 (demo.ship_lost re-keyed to the one-deck hull — the nudge points at
+the NAV MAP, not at a stair. Earlier: 2026-08-25 (the pipe and the copy shipped;
+Convert/Ante/Boarding in the intents — language.md trap 8; zone_retrigger and dock_option
+added to the registry))
 -->
 
 There is no VO in the tree and none is required for this demo. Pause does not
@@ -24,7 +27,7 @@ UI.
 ## Player-visible change
 
 The game tells the Boarder what the current job is, as text. Repairing NAV,
-looking at a terminal, starting a Hatch-bank — each fires a **line id**. Ship
+looking at a terminal, starting a Convert — each fires a **line id**. Ship
 and Bastion Prep may lock move/look so they can read (same lock as an open
 station). Assault shows the line as a subtitle only — look, move, and fire stay
 live.
@@ -55,10 +58,10 @@ mission drawer. No second HUD family. No `GUILayout` in the Bastion HUD
 
 | Path | Role |
 |---|---|
-| `Assets/Scripts/Game/Demo/DemoLines.cs` | ScriptableObject or static table: id → speaker, mode, text. Placeholder `TODO: demo.wake` legal |
-| `Assets/Scripts/Game/Demo/DemoVoice.cs` | LOCAL-OWNER runner. `Play(id, mode)`. Owns input-lock policy. No vendor types |
-| `Assets/Scripts/Game/Demo/DemoConversationIds.cs` | `const string` ids. Game + EditMode tests |
-| `Assets/Scripts/Game/Net/NetSession` (partial or existing) | Server RPC `StartDemoLine(string id)` → ClientRpc all seats |
+| `Assets/Scripts/Game/Demo/DemoLines.cs` | **Shipped**, as static code rather than an asset: id → speaker, mode, scope, copy, with one author and nothing per-instance to drift |
+| `Assets/Scripts/Game/Demo/DemoVoice.cs` | **Shipped**. LOCAL-OWNER runner. `Play(id, mode)` and `PlayLocalAndBroadcast(id, mode)`. Owns input-lock policy. No vendor types |
+| `Assets/Scripts/Game/Demo/DemoConversationIds.cs` | **Shipped**. `const string` ids plus an `All` array the harness audits `DemoLines` against |
+| `NetRunMirror.DemoLineClientRpc` | **Shipped**, and it is the broadcast leg — not a `NetSession` partial. The starting seat has already played locally |
 
 `GatekeepersProtocol.Sim` must not reference UI or line assets (`Architecture.md`).
 
@@ -111,7 +114,7 @@ Multiplayer is locked until a save's first wheel purchase (beat 3,
 `Party` scope only matters from `demo.mp_unlocked` on.
 
 Host is the only seat that **decides** a line starts (repair completed, Wave
-cleared, door opened, Hatch-bank started). Host-side
+cleared, door opened, Convert started). Host-side
 `DemoVoice.PlayLocalAndBroadcast(id, mode)`.
 
 | Seat | What happens |
@@ -126,39 +129,45 @@ Conversation state is an id + mode, not a synced node pointer. No vendor net.
 
 Personal beats (weapon grant, wheel cap, protocol claim) play **local only**.
 Ship-wide beats from beat 4 on (retrigger embark, door open, finale battle,
-final bank) broadcast.
+final Convert) broadcast.
 
 Ids mark `Local` vs `Party` in the table below.
 
 ## Line ids
 
-`DemoConversationIds` mirrors these strings. Text lives in `DemoLines`, not in
-this file.
+`DemoConversationIds` mirrors these strings and `DemoLines` carries the copy;
+neither is a placeholder any more, so a row here that disagrees with those two
+is this file being wrong. Every row below is in `DemoConversationIds.All`.
 
 | Id | Mode | Scope | Beat | Intent |
 |---|---|---|---|---|
 | `demo.wake_stir` | Lock | Local | 0 | Fade finished, still sealed. Text before the unlock prompt |
 | `demo.wake` | Lock | Local | 0 | Lid open. Dead Ship. Find NAV, hold Interact to repair |
+| `demo.ship_lost` | Subtitle | Local | 0 | Lost-player net (2026-08-25): 45 quiet s before the first NAV repair. Its job is to point them at the NAV MAP, forward on the port bow bulkhead. Re-keyed 2026-08-26 with the one-deck collapse — there is no stair and no upper deck to route them through, so the nudge is a bearing along one floor |
 | `demo.nav_repair` | Lock | Local | 0 | NAV live. Route power from the ship terminal — select, then start |
-| `demo.intruders` | Lock | Local | 0 | Two Gatekeepers aboard (release gated on Continue). Take the MK-1 from the ARMORY rack |
-| `demo.weapon_grant` | Subtitle | Local | 0 | Loaded. Put them down |
+| `demo.armory_call` | Lock | Local | 0 | Armory recut (2026-08-25): terminal start points at the rack — power routed, ARMORY live, take the MK-1 |
+| `demo.mp_unlocked` | Lock | Local | 0 | MOVED here from beat 3 (2026-08-25): the ARMORY's MK-1 is the multiplayer key — armed, and the Ship answers hails |
+| `demo.intruders` | Lock | Local | 0 | Retired at the armory recut (2026-08-25): the ship fight is struck — no caller; row survives so the registry stays whole |
+| `demo.weapon_grant` | Subtitle | Local | 0 | Retired at the terminal-grant cut (2026-08-18) and has no caller; the row survives so the registry stays whole |
 | `demo.ship_clear` | Lock | Local | 0 | Clear. CREW heals; then NAV, EMBARK |
 | `demo.embark_blocked` | Lock | Local | 0 | Named refuse: terminal not started / no weapon / intruders alive |
 | `demo.embark_first` | Lock | Local | 0→1 | Quiet Hatch. Find a terminal. Wake the place |
 | `demo.explore` | Subtitle | Local | 1 | Optional, Prep, once, if they have not looked at a Field terminal in 45 s |
-| `demo.terminal_look` | Lock | Local | 1 | Field terminal. `E` select, `T` start. `+/-` is the multiplier |
-| `demo.juice_teach` | Lock | Local | 1 | Once Unbanked > 0 (second terminal look): juice spends Unbanked; more bodies, more Salvage |
-| `demo.after_terminal` | Lock | Local | 1 | Zone terminals done. Hatch-bank next. Pile transfers while you hold |
-| `demo.hatch_bank_teach` | Lock | Local | 2 | Drip; if the Hatch falls, what has not moved is gone |
-| `demo.hatch_fight` | Subtitle | Local | 2 | Assault start of first Hatch-bank |
-| `demo.first_hatch_down` | Lock | Local | 2 | First loss's Docked (any cause — copy is cause-agnostic): what dripped is aboard. Spend it at the ARMORY |
+| `demo.terminal_look` | Lock | Local | 1 | Field terminal. `E` selects, `T` starts a Wave, and that Wave hunts the Boarder rather than the Hatch |
+| `demo.juice_teach` | Lock | Local | 1 | Once Unbanked > 0 (second terminal look): `+/-` ante up out of Unbanked; more bodies, more Salvage; spending nothing is also a bet. Id keeps the code's word |
+| `demo.after_terminal` | Lock | Local | 1 | Zone terminals done. Convert next. Pile transfers while you hold |
+| `demo.hatch_bank_teach` | Lock | Local | 2 | Drip; if the Hatch falls, what has not moved is gone. Id keeps the code's word |
+| `demo.hatch_fight` | Subtitle | Local | 2 | Assault start of the first Convert |
+| `demo.first_hatch_down` | Lock | Local | 2 | First lost Boarding's Docked (any cause — copy is cause-agnostic): what dripped is aboard. Spend it at the ARMORY |
 | `demo.mp_unlocked` | Lock | Local | 3 | First wheel purchase made. Friends can join now |
 | `demo.wheel_cap` | Lock | Local | 3 | Cap refuse on a third-buy attempt (also a prompt string). Exit standing is state-keyed (no buyable upgrades remain), not this line |
-| `demo.crew_ready` | Lock | Local | 4 | CREW menu is open now (unlocked since first Docked after first loss — re-keyed 2026-08-17). Protocol waits |
+| `demo.crew_ready` | Lock | Local | 4 | CREW menu is open now (unlocked on the first Docked after the first Convert — re-keyed 2026-08-18 with the wheel key). Protocol waits |
 | `demo.crew_claim` | Lock | Local | 4 | Claim Default. `G` Barrage, `H` Rush |
-| `demo.embark_wave2` | Lock | Party | 4 | Post-loss EMBARK: no wave skip — the zone's deepest terminal retriggers the composite (partial start electable). Lead still commits |
-| `demo.repeat_unit` | Lock | Party | 5 | Same verbs. Next zone's terminals, then its bank |
-| `demo.second_loss` | Lock | Local | 5 | Docked after zone 2's bank fell: what transferred is aboard, and the rack has heavier hardware now. **Trigger is that bank falling, never `PodEjections >= 2`** (recut 2026-08-19). Copy restamp owed — the shipped line opens "Thrown off again", which asserts a second ejection the recut forbids |
+| `demo.embark_wave2` | Lock | Party | 4 | Post-loss EMBARK: no wave skip — the zone's deepest terminal retriggers the composite (partial start electable). Lead still commits. Id is stale to its content; rename is Zo's (beat 4, Gaps) |
+| `demo.zone_retrigger` | Lock | Party | 4–5 | First retrigger offer per zone: run the whole zone again, or start deeper and finish what is left |
+| `demo.dock_option` | Subtitle | Party | 4–5 | After a survived Convert window: hold at the Hatch to go home Docked, or push on |
+| `demo.repeat_unit` | Lock | Party | 5 | Same verbs. Next zone's terminals, then its Convert; the door opens when that Convert survives |
+| `demo.second_loss` | Lock | Local | 5 | Docked after zone 2's Convert **resolves** — held or lost (Zo, 2026-08-25): what transferred is aboard, and the rack has heavier hardware now. **Trigger is `DemoZone2BankLost`, never `PodEjections >= 2`** (recut 2026-08-19). The owed copy restamp landed; the shipped line opens "Zone 2 is settled" and asserts no ejection count |
 | `demo.door_d1` / `demo.door_d2` | Lock in Prep | Party | 5 | That door is open. One string serves both |
 | `demo.door_d3` | — | — | 5 | Never plays: D3 open fires `demo.control_room` instead (beat 6 merge) |
 | `demo.control_room` | Lock | Party | 6 | This room seals. The fight is inside. Not extract |
@@ -166,10 +175,14 @@ this file.
 | `demo.hatch_finale` | Subtitle | Party | 7 | Door open: get the pile to the Hatch |
 | `demo.escaped` | Lock | Party | 7 | Docked after Escaped. DemoActive ends |
 
+`demo.door_d3` is deliberately absent from `DemoConversationIds`: D3 open fires
+`demo.control_room` instead, and a dead id in that class would read as a line
+somebody should wire.
+
 Copy for every beat is stamped in that beat's file (0–7); this table is the id
-registry, not the copy source. `DemoLines` is the runtime table. Beats 6–7 rows
-above are cross-references only — those files are another editor's and carry
-their own re-ruled shape.
+registry, not the copy source. `DemoLines` is the runtime table and now carries
+real copy for every row. Beats 6–7 rows above are cross-references only — those
+files are another editor's and carry their own re-ruled shape.
 
 ## Driven / Shown / Reads-back
 

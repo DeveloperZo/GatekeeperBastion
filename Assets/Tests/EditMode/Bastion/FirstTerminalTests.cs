@@ -13,9 +13,11 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void WavesFor_ZoneOneIsOneWavePerTrigger_ZoneTwoIsThree()
         {
-            Assert.AreEqual(1, FirstTerminal.WavesFor("T1"));
-            Assert.AreEqual(1, FirstTerminal.WavesFor("T2"));
-            Assert.AreEqual(3, FirstTerminal.WavesFor("T3"),
+            Assert.AreEqual(1, FirstTerminal.WavesFor("T1"),
+                "an unauthored id falls back to the plain one-wave trigger");
+            Assert.AreEqual(2, FirstTerminal.WavesFor("T2"),
+                "zone 1 is one terminal running both of its Waves per trigger");
+            Assert.AreEqual(3, FirstTerminal.WavesFor("T5"),
                 "zone 2 is one terminal running three consecutive Waves per trigger");
             Assert.AreEqual(1, FirstTerminal.WavesFor("T4"),
                 "an id the table does not author still answers the terminal default");
@@ -24,10 +26,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ZoneOf_IsZeroForAnUnauthoredId()
         {
-            Assert.AreEqual(1, DemoZones.ZoneOf("T1"));
+            Assert.AreEqual(0, DemoZones.ZoneOf("T1"), "removed with the sprawl");
             Assert.AreEqual(1, DemoZones.ZoneOf("T2"));
-            Assert.AreEqual(2, DemoZones.ZoneOf("T3"));
-            Assert.AreEqual(0, DemoZones.ZoneOf("T4"));
+            Assert.AreEqual(2, DemoZones.ZoneOf("T5"));
+            Assert.AreEqual(0, DemoZones.ZoneOf("T4"), "removed with the sprawl");
             Assert.AreEqual(0, DemoZones.ZoneOf("Master"),
                 "Master Control is its own beat, not a zone with terminals and a door");
             Assert.AreEqual(0, DemoZones.ZoneOf(null));
@@ -54,9 +56,9 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(3, DemoZones.WavesPerTrigger(2),
                 "one trigger runs the whole span — no Prep between them");
             Assert.AreEqual(1, DemoZones.TerminalCount(2));
-            Assert.AreEqual("T3", DemoZones.DeepestTerminalId(2),
+            Assert.AreEqual("T5", DemoZones.DeepestTerminalId(2),
                 "the zone's only terminal is also its deepest — it carries the retrigger");
-            Assert.AreEqual("D2", DemoZones.DoorId(2));
+            Assert.AreEqual("D3", DemoZones.DoorId(2)); // D2 removed with the spine
         }
 
         [Test]
@@ -75,11 +77,12 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void IsZoneOne_IsT1AndT2Only()
+        public void IsZoneOne_IsT2Only()
         {
-            Assert.IsTrue(FirstTerminal.IsZoneOne("T1"));
+            // Spine (Zo, 2026-08-25): one terminal per zone. T1 and T3 are gone.
+            Assert.IsFalse(FirstTerminal.IsZoneOne("T1"));
             Assert.IsTrue(FirstTerminal.IsZoneOne("T2"));
-            Assert.IsFalse(FirstTerminal.IsZoneOne("T3"));
+            Assert.IsFalse(FirstTerminal.IsZoneOne("T5"));
             Assert.IsFalse(FirstTerminal.IsZoneOne(null));
         }
 
@@ -101,12 +104,16 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void OtherField_BlockedUntilFirstClears_NotUntilABankStarts()
+        public void OtherField_HasNothingToSequence_OnAOneTerminalZone()
         {
-            Assert.IsFalse(FirstTerminal.OtherFieldBlocked("T1", true, true, false));
-            Assert.IsTrue(FirstTerminal.OtherFieldBlocked("T2", true, true, false));
-            Assert.IsFalse(FirstTerminal.OtherFieldBlocked("T2", true, true, true),
-                "the zone's bank comes after both terminals, so no bank-started clause");
+            // The rule existed because zone 1 had TWO terminals and one had to be first.
+            // The spine gives every zone one, so nothing can be blocked by this rule — and
+            // it must never answer for a later zone's terminal, which a locked door gates.
+            Assert.AreEqual(1, FirstTerminal.ZoneTerminalCount,
+                "if a zone regrows a second terminal, the sequencing rule must come back with it");
+            Assert.IsFalse(FirstTerminal.OtherFieldBlocked("T2", true, true, false));
+            Assert.IsFalse(FirstTerminal.OtherFieldBlocked("T5", true, true, false),
+                "zone 2's terminal is gated by D1, not by a zone-1 sequencing rule");
             Assert.IsFalse(FirstTerminal.OtherFieldBlocked("T2", true, false, false));
         }
 

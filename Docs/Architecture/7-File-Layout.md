@@ -5,7 +5,7 @@ Purpose: The region order every C# file in Assets/Scripts follows, and the rules
 Status: working
 Authority: MANDATORY — the order is fixed; which regions appear is not.
 Update trigger: when a region is added to or removed from either order, or when the checker's rules change.
-Last updated: 2026-08-12
+Last updated: 2026-08-25 (counted-line unit now names all three caps; over-cap example re-measured)
 -->
 
 Adopted from InfinityQube's `03-file-standards.md` (`6-InfinityQube-Precedence.md`).
@@ -52,7 +52,7 @@ is a seam violation and `1-Boundaries.md` §1 is the rule it breaks.
 
 ## Rules
 
-**Regions do not count toward the line cap.** Sim ≤ 600, Game ≤ 400
+**Regions do not count toward the line cap.** Sim ≤ 600, Game ≤ 400, Editor ≤ 800
 (`Docs/Architecture.md`), measured as non-blank, non-comment, non-directive lines.
 
 The sentence above is the project's one statement of the counted-line unit.
@@ -84,11 +84,12 @@ Not for beauty. Two reasons, both mechanical:
 runtime data. Today both are "a private field near the top", and `1-Boundaries.md`'s wiring
 rules cannot be checked against that.
 
-**It gives the size cap somewhere to point.** `Docs/Architecture.md` says split at 400 lines
-and `PlayerGun.cs` is 471. "Split it" is an unanswerable instruction; "extract the `Firing`
-region" is an answerable one. InfinityQube's caps failed precisely because the rule said what
-the number was and never said where the seam went — twelve files over, and the largest at
-2,083 lines against 600 (`6-InfinityQube-Precedence.md`).
+**It gives the size cap somewhere to point.** `Docs/Architecture.md` says split at 800 lines
+in `Editor/` and `BastionSketchEmitter.cs` is 976 (counted 2026-08-25). "Split it" is an
+unanswerable instruction; "extract the region" is an answerable one. InfinityQube's caps
+failed precisely because the rule said what the number was and never said where the seam
+went — twelve files over, and the largest at 2,083 lines against 600
+(`6-InfinityQube-Precedence.md`).
 
 ## The check, not the convention
 

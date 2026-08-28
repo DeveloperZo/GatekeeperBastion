@@ -19,8 +19,26 @@ namespace GatekeepersProtocol.Game
     {
         const string Tag = "Demo";
 
-        /// <summary>Auto-advance dwell for a Subtitle line with no duration of its own.</summary>
+        /// <summary>Auto-advance floor for a line with no duration of its own. Real dwell is
+        /// <see cref="DwellFor"/> — 4 s reads a short line but clips a long one, and a clipped
+        /// teach is worse than a slow one.</summary>
         public const float SubtitleSeconds = 4f;
+
+        /// <summary>Longest a line dwells before it advances itself.</summary>
+        public const float MaxDwellSeconds = 11f;
+
+        /// <summary>Reading pace, seconds per character, on top of <see cref="SubtitleSeconds"/>.
+        /// ~200 wpm at five characters a word is 0.03 s/char; this is deliberately slower.</summary>
+        const float SecondsPerChar = 0.045f;
+
+        /// <summary>A Lock line eats input, so it must never be able to hold forever — it
+        /// advances itself on the same dwell a Subtitle uses (playtest 2026-08-25: the demo
+        /// "felt frozen"). Continue still ends it early.</summary>
+        static float DwellFor(string text)
+        {
+            float t = SubtitleSeconds + (text != null ? text.Length : 0) * SecondsPerChar;
+            return t > MaxDwellSeconds ? MaxDwellSeconds : t;
+        }
 
         static bool _live;
         static DemoLine _current;
@@ -162,7 +180,9 @@ namespace GatekeepersProtocol.Game
         public static void Tick(float dt)
         {
             _frameToken++;
-            if (!_live || _mode != DemoVoiceMode.Subtitle) return;
+            if (!_live) return;
+            // Both modes run the clock now: a Lock line that is never acknowledged used to
+            // hold move and look indefinitely, which is what read as frozen.
             _subtitleLeft -= dt;
             if (_subtitleLeft <= 0f)
                 EndCurrent(startQueued: true);
@@ -218,7 +238,7 @@ namespace GatekeepersProtocol.Game
             _mode = mode;
             _text = text;
             _currentStartToken = _frameToken;
-            if (mode == DemoVoiceMode.Subtitle) _subtitleLeft = SubtitleSeconds;
+            _subtitleLeft = DwellFor(text);
             Log.Event(Tag, StartLogPayload(row, mode));
         }
 

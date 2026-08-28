@@ -4,12 +4,18 @@
 Purpose: The Friends Alpha send checklist. Which failures block a send, which are recorded and sent anyway, and which eyes or machine answer each.
 Status: working
 Update trigger: when an M64 gate item is added or retired, or when a friends session finds a failure the gate did not catch
-Last updated: 2026-08-19
+Last updated: 2026-08-25 (the six shipped scenes named; item 19 rewritten for the realm chooser now that the menu HOST is gone)
 -->
 
 Friends Alpha send checklist. Red blocks the send. Amber is recorded and sent anyway.
 Machine red items: `Tools/release-gate/run.sh` (also from `Tools/verify/run.sh`).
 Human items: eyes and a second machine. Send copy: `Release-Send.md`.
+
+**Six scenes ship**, and "every scene" below means these:
+`ProjectSettings/EditorBuildSettings.asset` lists `Splash`, `MainMenu`, `RealmSelect`,
+`Ship - CoOp`, `Bastion_Coop`, `Range`. `Bastion.unity` was deleted on 2026-08-24 and
+`Explore - Kit.unity` is an authoring scene that is not in the build. Read the asset before
+a send rather than this line — the set moves.
 
 | # | Colour | Check | Player sees when it fails | Who |
 |---|---|---|---|---|
@@ -28,7 +34,7 @@ Human items: eyes and a second machine. Send copy: `Release-Send.md`.
 | 16 | red | Audio on another machine, including device change after launch | Silent build; no way to know fight SFX landed | human |
 | 17 | red | `Tools/release/run-windowed.bat` ships beside the exe | No escape hatch for bad display/GPU | human (template in repo; machine can prove file exists) |
 | 18 | red | Dual-box chrome: normal window (no `-popupwindow`) | Eyes-on session has no title bar / min-max | human |
-| 19 | red | Host and Join: shared Ship; party lead EMBARK | No co-presence; guest local embark; hang | human |
+| 19 | red | REALMS OPEN TO FRIENDS → code → TO SHIP, guest JOINs from the menu; shared Ship; guests READY, party lead EMBARKs | No co-presence; guest local embark; hang | human |
 | 20 | red | ARMORY change on that Ship is the gun in Bastion (both seats) | Wrong loadout; CREW/FAB feel broken | human |
 | 21 | red | Client prep verbs once, server-side (`E` / `+/-` / `T`) | Client cannot start a Wave or juice | human (+ PlayMode) |
 | 22 | red | M51 verbs in a player build (repair, decoy, ability) | Client can move/shoot only | human |

@@ -124,7 +124,13 @@ namespace GatekeepersProtocol.Game
                 UiBind.Show(_readyButton, showReady);
                 if (showReady)
                 {
-                    UiBind.SetButtonLabel(_readyButton, readyOn ? "READY ✓" : "READY");
+                    // ASCII checkbox, not U+2713. LiberationSans (the atlas every
+                    // RealmSelect/ship label binds) is STATIC over 32-126, 160-255 and a
+                    // handful above; the tick is in none of the project's fonts, so this
+                    // drew a blank box on the party lobby. Same class as the U+25B8 the
+                    // weapon HUD gave up on — and this file already says so, two methods
+                    // up, about the stepper arrows.
+                    UiBind.SetButtonLabel(_readyButton, readyOn ? "[X] READY" : "[ ] READY");
                     WireButton(_readyButton, onReady, onReady != null);
                 }
             }

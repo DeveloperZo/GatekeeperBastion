@@ -8,7 +8,7 @@ I cut into a Bastion and strip it. That is the whole job, and nobody makes me do
 
 The Gatekeepers were already here. Here before me, here after me, and in between they come up out of rooms that do not open for me — in groups, on a schedule I pay for. Four frames. I sort them the way you sort anything walking at you: by shape, at distance, early.
 
-Behind me is the Hatch, the umbilical to my Ship, the one way home. If it falls, the Boarding is over, and nothing buys a door back. If I fall, the realm can pay to stand me up — the price climbs — and when it cannot, the Boarding is over the old way.
+Behind me is the Hatch, the umbilical to my Ship, the one way home. If it falls, the Boarding is over, and nothing buys a door back. If I fall, the pile I am carrying can stand me up — the price climbs with every seat bought back — and when I am carrying less than the price, the Boarding is over the old way.
 
 Nothing comes until I call it. That took me longest to trust. Prep is mine and untimed. Ante is the only bet on offer and it is an honest one: more pay, more of the plainest machine, nothing else moved.
 

@@ -6,14 +6,18 @@ assumptions this folder made in the meantime so work could continue.
 Status: draft. Two open, several assumed.
 Update trigger: when a ruling lands (move it into the file it governs and strike it here),
 or when a new open question appears.
-Last updated: 2026-08-22
+Last updated: 2026-08-25 (the respawn purse is the dead seat's own carry, not the realm's
+pot; the break ending's second exit re-read against the shipped Docked end)
 -->
 
 ## Open
 
 ### The break ending
 
-Beat 7's second exit does not exist. Escaped is the only terminal good ending in the build.
+Beat 7's second exit does not exist. Escaped is still the only terminal good ending that
+ends a realm. The Docked end shipped in the meantime (`RunSim.Dock.cs`, cause `docked`) and
+is not it: docking is leaving with what you moved, and the realm keeps every counter, which
+is the loop continuing rather than a second exit from it.
 
 Recommendation: do not author it yet. Beats 1 through 6 cost almost nothing because they ride
 on systems already built or already being written. The second exit needs an end state, a
@@ -28,9 +32,11 @@ merits.
 Several Boarders stand on one Ship in one realm at the same time. Under this premise that is
 either a hole or the loudest evidence in the game.
 
-Recommendation: the latter, and nothing is said about it by anyone. A downed guest already
-buys back from the realm's pot and rejoins at the Hatch, which is the process visibly paying
-to put a version of a Boarder back in the room. Do not comment on it, do not have a Boarder
+Recommendation: the latter, and nothing is said about it by anyone. A downed seat already
+buys back and rejoins at the Hatch, and the purse is the Unbanked that seat was carrying
+when it died (`RunSim.TryRespawn`) — the Boarder pays for its own replacement out of what
+it had stripped, which is the process visibly putting a version of a Boarder back in the
+room. Do not comment on it, do not have a Boarder
 react to it, and let it stay a mechanic that happens to be the thesis.
 
 ## Assumed, pending correction
@@ -42,7 +48,8 @@ Each of these was assumed to lay the foundation, and each is cheap to reverse.
 - **The Bastion is infrastructure with an owner, and the owner is never named.** No faction,
   no empire, no war. The garrison is a standing order, not a grudge.
 - **Salvage is what a Gatekeeper is made of.** It becomes money by travelling the tether,
-  which is why Unbanked dies with you.
+  which is why Unbanked dies with you — and why a piece of it is what buys you back before
+  it does.
 - **The realm is the continuity and the Boarder is the replaceable part.** This is the
   fiction of the persistence split as built, not a new idea.
 - **The Boarder has no name, face, history or lines.** Anything that would characterise the

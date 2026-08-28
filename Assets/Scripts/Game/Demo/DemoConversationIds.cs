@@ -9,7 +9,11 @@ namespace GatekeepersProtocol.Game
     {
         public const string WakeStir = "demo.wake_stir";
         public const string Wake = "demo.wake";
+        /// <summary>Lost-player nudge: 45 quiet seconds before the first NAV repair.</summary>
+        public const string ShipLost = "demo.ship_lost";
         public const string NavRepair = "demo.nav_repair";
+        /// <summary>Terminal started: points at the ARMORY rack (the arming beat).</summary>
+        public const string ArmoryCall = "demo.armory_call";
         public const string Intruders = "demo.intruders";
         public const string WeaponGrant = "demo.weapon_grant";
         public const string ShipClear = "demo.ship_clear";
@@ -41,7 +45,7 @@ namespace GatekeepersProtocol.Game
         /// <summary>Every id above, for uniqueness/coverage tests and table audits.</summary>
         public static readonly string[] All =
         {
-            WakeStir, Wake, NavRepair, Intruders, WeaponGrant, ShipClear,
+            WakeStir, Wake, ShipLost, NavRepair, ArmoryCall, Intruders, WeaponGrant, ShipClear,
             EmbarkBlocked, EmbarkFirst,
             Explore, TerminalLook, JuiceTeach, AfterTerminal,
             HatchBankTeach, HatchFight, FirstHatchDown,

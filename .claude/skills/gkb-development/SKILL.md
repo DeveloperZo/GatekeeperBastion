@@ -25,8 +25,8 @@ metadata:
   in `Docs/Architecture/README.md` in the same change.
 - **Put `MonoBehaviour`, `GameObject`, a scene lookup, `Time` or `UnityEngine.Random` in
   `Sim/`.** *A seeded generator the sim owns and is handed is required, not forbidden.*
-- **Use `?.`, `??`, `??=` or `is null` on a `UnityEngine.Object`.** *Scoped: see below. In `Sim/`
-  they are correct.*
+- **Use `?.`, `??`, `??=`, `is null` or `ReferenceEquals` on a `UnityEngine.Object`.** *Scoped:
+  see below. In `Sim/` they are correct.*
 - **Allocate in a per-frame path** — no boxing, no capturing closure, no LINQ, no interpolated
   string, no array-valued property such as `mesh.vertices` inside a loop. *Editor tooling, load,
   and once-per-Wave code are exempt.*
@@ -40,7 +40,9 @@ metadata:
 - **Inject dt.** `Sim/` never reads `Time`.
 - **Say why a command was refused**, in the log at minimum.
 - **Mark unfinished work `// POC:`** with what is unfinished and why.
-- **Run `Tools/verify/run.sh` before claiming a sim or tuning change works.**
+- **Run `Tools/verify/run.sh` before claiming a sim or tuning change works** — and read its exit
+  code, because it needs `mcs` and `mono` and exits 2 where they are absent. gkb-verification
+  carries what to run instead there.
 
 ---
 
@@ -63,15 +65,19 @@ cannot silently depend on frame order.
 
 A destroyed `UnityEngine.Object` leaves a live C# wrapper. Unity's overloaded `==` reports that
 state; `?.` and `??` use the runtime null check and bypass it, so `Instance?.Method()` can call
-into a destroyed object.
+into a destroyed object. Only `== null`, `!= null` and `if (x)` respect the lifetime check.
 
 **This applies only where `UnityEngine.Object` values exist.** In `Sim/` there are none, so `?.`
 is correct there. Treating it as a global ban is why a large backlog of flagged sites exists
 that were never wrong.
 
-**`ReferenceEquals` is the exception to its own rule**: it is the correct idiom when you
-deliberately want the C# reference, such as telling "never assigned" apart from "destroyed".
-Use it on purpose and say so in a comment.
+**`ReferenceEquals` is not an exception, it is one of the banned forms.** Unity's own
+documentation says not to use it for this, and `Architecture/3-Unity-Runtime.md` §3 states the
+rule with no exceptions. `Tools/lint-arch/run.sh` reads `fakenull_pattern` out of that file and
+enforces zero occurrences of `?.`, `??`, `is null` and `ReferenceEquals` in `Game/`, comment
+lines excluded — so writing one fails the verify run, whatever the intent behind it. Telling
+"never assigned" apart from "destroyed" is not a licence to reach for it; if a call site needs
+that distinction, carry the fact in a field rather than in a null check.
 
 ## Serialized data outranks code defaults
 
@@ -119,8 +125,9 @@ Cheapest rung first:
    Setting a field, swapping a reference or renaming an object is a text edit — the diff is the
    review and `git checkout` is the undo. Stops being safe when new GUIDs or fileIDs are needed.
 2. **A gitignored scratch folder**, for anything needing the AssetDatabase. Unity compiles it, a
-   committed `[MenuItem]` runs it, the folder is emptied after. *M41 creates this folder and the
-   check that fails the verify run while it is dirty. Until then, the emptying is yours to do.*
+   committed `[MenuItem]` runs it, the folder is emptied after. The folder is `Assets/_Scratch/`
+   and `Tools/verify/run.sh` fails the run while anything but `.gitkeep` and `.meta` files sit in
+   it, so the emptying is enforced rather than remembered.
 3. **A committed tool**, only once the operation has served more than one session and more than
    one question.
 
@@ -142,9 +149,10 @@ gkb-verification.
 
 Every scene, prefab and asset is YAML that `grep` reads in milliseconds; a domain reload plus a
 scene open is tens of seconds. **Writing code needs no editor at all** — `Sim/` and the EditMode
-tests compile and run under `Tools/verify/run.sh` in seconds, and `Game/` compile errors are
-written to `Library/Bee/CachedNodeOutput` (generated, not committed) rather than being something
-to ask the editor about.
+tests compile and run under `Tools/verify/run.sh` in seconds where mono is installed, a
+`dotnet build` on the Unity-generated csproj at the repository root compiles in under a second
+where it is not, and `Game/` compile errors are written to `Library/Bee/CachedNodeOutput`
+(generated, not committed) rather than being something to ask the editor about.
 
 ## Rejected by name, so they are not re-proposed
 

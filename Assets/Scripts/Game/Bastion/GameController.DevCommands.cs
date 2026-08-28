@@ -136,7 +136,7 @@ namespace GatekeepersProtocol.Game
         {
             if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
             {
-                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                Log.Event("Demo", "multiplayer locked — take the MK-1 first");
                 return;
             }
             EnsureNetForDevSmoke();
@@ -154,7 +154,7 @@ namespace GatekeepersProtocol.Game
         {
             if (!DemoProgress.MultiplayerUnlocked(GameSession.Meta))
             {
-                Log.Event("Demo", "multiplayer locked — buy an upgrade first");
+                Log.Event("Demo", "multiplayer locked — take the MK-1 first");
                 return;
             }
             EnsureNetForDevSmoke();

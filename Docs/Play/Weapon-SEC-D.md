@@ -4,7 +4,7 @@
 Purpose: how SEC-D wants to be used, and when it stops being enough.
 Status: working
 Update trigger: when SEC-D's catalog row, ability, or ring changes.
-Last updated: 2026-08-15
+Last updated: 2026-08-25 (wheel unlocks on the first Convert, not on a loss)
 -->
 
 ## Game
@@ -44,8 +44,9 @@ for armour.
 ### Tiering it
 
 Ring is FireRate–Ability–Reload–Clip–Damage, strength FireRate, weakness Reload. Ability
-cannot be bought (`AbilityId.None`); the other four spokes can, on the Secondary cost
-curve, after the first lost Boarding.
+carries nothing and cannot be bought; the other four spokes can, on the Secondary cost
+curve, once Salvage has converted through the Hatch once. Award and prices:
+[Field Manual](Field-Manual.md).
 
 ## See also
 

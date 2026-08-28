@@ -1,3 +1,4 @@
+using System.Text;
 using GatekeepersProtocol.Sim;
 using GatekeepersProtocol.Util;
 using Michsky.UI.Shift;
@@ -36,6 +37,8 @@ namespace GatekeepersProtocol.Game
 
         public bool IsOpen => _ship != null && _ship.OpenStation == this;
 
+        static readonly StringBuilder s_prompt = new StringBuilder(160);
+
         public string Prompt
         {
             get
@@ -49,8 +52,10 @@ namespace GatekeepersProtocol.Game
                 // cannot see. Say it on the crosshair instead.
                 if (NetShipWait.IsActive && !(this is MapStation))
                     return StationName + " — sealed while the Boarding is live";
-                return "[" + Controls.DisplayOf(ControlId.Interact) + "] " + StationName
-                    + " — " + PromptHint;
+                s_prompt.Clear();
+                s_prompt.Append('[').Append(Controls.DisplayOf(ControlId.Interact)).Append("] ")
+                    .Append(StationName).Append(" — ").Append(PromptHint);
+                return s_prompt.ToString();
             }
         }
 
@@ -348,7 +353,7 @@ namespace GatekeepersProtocol.Game
             int level = ShipCommands.LevelOf(track);
             bool maxed = level >= MetaUpgrades.MaxLevel;
             string now = effect(level);
-            string effectLine = maxed ? now : now + " → " + effect(level + 1);
+            string effectLine = maxed ? now : now + " -> " + effect(level + 1);
             string levelLine = level + "/" + MetaUpgrades.MaxLevel;
 
             if (lockedLabel != null)

@@ -1,9 +1,10 @@
 # 4 — Data
 
 <!-- GENERATED BLOCKS — DO NOT EDIT INSIDE GKB:GEN … GKB:END MARKERS.
-     Tools/docgen/run.sh splices these sixteen blocks from Sim/: mk1-base, wheel, rings,
+     Tools/docgen/run.sh splices these seventeen blocks from Sim/ (the list is
+     Program.cs's KnownBlockIds): mk1-base, wheel, rings,
      tier-cost, abilities, gatekeepers, waves, dial, player-count, intensity-juice, hatch, hatch-bank,
-     master-control, tracks, bastion-mesh, ship-camera. Prose outside the
+     respawns, master-control, tracks, bastion-mesh, ship-camera. Prose outside the
      markers is hand-written and preserved byte-for-byte on regenerate. Run
      Tools/docgen/run.sh after any Sim/ change that owns a block; --check fails on drift. -->
 
@@ -53,7 +54,7 @@ duty cycle is not fixed across a campaign. MK-1 T0 damage 30 one-shots a Wave-1 
 first-session fodder TTK is the demand (2026-08-16). The SEC-D's fire-rate-centred build
 stays under focused Primaries (`SecDFireRateFocus_NeverRivalsFocusedPrimaries`). Secondaries
 price on their own curve — the tier-cost block below — and the first two MK-1 purchases
-(150 + 300) equal the 450 a wave-1 Hatch-bank can convert at kill-value 25 and intensity 0
+(150 + 300) equal the 450 Wave 1 pays outright at kill-value 25 and intensity 0
 (`FirstWheelPurchase_AffordableOffOneWaveOneClear`).
 
 **Crit** (`PlayerGun.RollCrit`, `CritDamageMultiplier = 2`): `MetaUpgrades.CritChance()` is
@@ -69,7 +70,7 @@ clip 8 → `96 / 6.73 = 14.3 dps`. A hard Run, not a dead end.
 - Walk 5 m/s, sprint 7.5 m/s. No jump.
 - Stamina 100 (frozen; Stamina track deleted), drain 25/s, regen 18/s after a 1s delay →
   **4.0s of sprint = 30 m**; a full refill costs `1 + 100/18 = 6.6s`. Sprint beats the
-  5.6 m/s chase and the Hunter's 6.5, so unlimited sprint would be a free kiting
+  4.6 m/s chase and the Hunter's 5.6, so unlimited sprint would be a free kiting
   exploit. Change the five stamina numbers together or not at all.
 - Interact (hold-E) range 3.2 m.
 
@@ -83,10 +84,10 @@ old 6 x 90) — a redistribution, not an inflation.
 <!-- GKB:GEN gatekeepers — WaveDirector.StatsFor, GatekeeperAttackInterval -->
 | kind | HP | player dmg | Hatch dmg | patrol | chase | refuses |
 |---|---|---|---|---|---|---|
-| Default | 30 | 6 | 4 | 3.2 | 5.6 | — |
-| Hunter | 20 | 6 | **0** | 6.5 | 6.5 | the Hatch (`ignoresHatch`) |
-| Thief | 120 | **0** | 20 | 2.2 | 2.2 | the player (`ignoresPlayer`; never provoked) |
-| Cloaker | 45 | 6 | 4 | 3.2 | 5.6 | being seen (watch cone; a state in `CloakerGatekeeper`, not a flag) |
+| Default | 50 | 6 | 4 | 2.8 | 4.6 | — |
+| Hunter | 33 | 6 | **0** | 5.6 | 5.6 | the Hatch (`ignoresHatch`) |
+| Thief | 200 | **0** | 20 | 2.2 | 2.2 | the player (`ignoresPlayer`; never provoked) |
+| Cloaker | 75 | 6 | 4 | 2.8 | 4.6 | being seen (watch cone; a state in `CloakerGatekeeper`, not a flag) |
 <!-- GKB:END gatekeepers -->
 
 GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game override
@@ -96,9 +97,17 @@ GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game ov
   each: three on you kill a 100 HP player in **3.9s**, five in **2.3s** (at the old
   18 dmg, five were 128.6 dps and **0.8s** — why damage fell as bodies tripled).
   Hatch 4/0.7s = 5.7 dps: one leaker needs 52s, so leaks are a crowd problem now.
-- **Hunter** 20 HP = **1 shot**. 6.5 m/s beats the 5 m/s walk and loses to the
+- **Hunter** 20 HP = **1 shot**. 5.6 m/s beats the 5 m/s walk and loses to the
   7.5 m/s sprint — the first Gatekeeper that makes **sprint** load-bearing. Zero Hatch
   damage: it cannot be answered by standing on the Hatch.
+- **Speeds fell on the spine (Zo, 2026-08-25).** Default chase went `5.6 → 4.6` and the
+  Hunter `6.5 → 5.6`, because the single-storey spine replaced one open room with a 227 m
+  corridor. In the old room a chase slower than the 5 m/s walk meant a player could
+  outrun everything forever; on the spine the walk back to a terminal *is* the pressure,
+  and a horde faster than the player made repositioning impossible rather than costly. The
+  Hunter keeps the one relationship that was ever load-bearing — faster than walk, slower
+  than sprint — and is now the ONLY kind that outruns a walking player, which is what it
+  was for.
 - **Thief** 120 HP = **4 shots** = `120/59 = 2.03s` of focused fire while dealing
   `20/0.7 = 28.6` dps → `28.6 x 2.03 = 58` HP of the 300 HP door, per Thief that
   got home *while being shot*. Intercepting it turns "shoot the closest" into "shoot the
@@ -122,26 +131,44 @@ hand-authored table, never a formula — `TetherSiphon.RewardMultiplierFor` =
 
 ```
 dial                  = TetherSiphon.RewardMultiplierFor(siphonLevel)
-enemyCount            = min(120, round((18 + 12*waveIndex) * dial))
-hunterCount           = {0,4,6,10,12}[waveIndex]  thiefCount = {0,0,2,4,7}[waveIndex]  (dial-proof)
-cloakerCount          = {0,0,1,2,3}[waveIndex]                                         (dial-proof)
+enemyCount            = min(120, round((11 + 7*waveIndex) * dial))
+hunterCount           = {0,2,4,6,7}[waveIndex]   thiefCount = {0,0,1,2,4}[waveIndex]  (dial-proof)
+cloakerCount          = {0,0,0,1,2}[waveIndex]                                         (dial-proof)
 defaultCount          = enemyCount - hunterCount - thiefCount - cloakerCount  (takes the whole surplus)
 enemyHealthMultiplier = 1 + 0.40*waveIndex                       (x each kind's HP)
 groupSize             = min(3 + waveIndex, 7, enemyCount)        (3 / 4 / 5 / 6 / 7)
-spawnInterval         = max(0.4, 4.2 - 0.20*waveIndex)   SECONDS BETWEEN GROUPS
-gatekeepers, wave 1..5   L0 18/30/42/54/66
+spawnInterval         = max(0.4, 7.3 + 0.40*min(waveIndex, MaxWaves-1))  SECONDS BETWEEN GROUPS
+gatekeepers, wave 1..5   L0 11/18/25/32/39
 ```
 
 **`spawnInterval` is a GROUP gap now — the name did not change with it.** A Wave
-lands in `(ceil(count/groupSize) - 1) * gap` = **21.0 / 28.0 / 30.4 / 28.8 / 30.6s**; read as a
-per-individual gap the same Waves take 44 / 72 / 96s and no fight ever starts. First
-field to check if a Wave feels empty. **The dial's surplus is all Default** (Hunter, Thief
-and Cloaker counts are fixed per Wave), so L5 Wave 3 is 54 D + 6 H + 2 T + 1 C: a bigger
-fight, not a different one, and the dial cannot multiply the scariest Gatekeeper — nor
-multiply Cloakers into frozen free salvage.
+lands in `(ceil(count/groupSize) - 1) * gap` = **21.9 / 30.8 / 32.4 / 42.5 / 44.5s**; read as a
+per-individual gap the same Waves take far longer and no fight ever starts.
 
-**`TerminalChainGap = 8s`** (`WaveDirector`). Unused by the field loop: `T` after `E`
-starts one Wave, Prep after the clear is untimed, Hatch-bank is legal there. The constant stays
+**THE ROSTER AND THE GAP ARE ONE LEVER** (2026-08-27). A Wave lands in `ceil(count/groupSize)`
+groups, so the ~40% roster cut shortened every window by about 40% while group width stayed at
+3/4/5/6/7 — delivery collapsed to 12.6 / 17.6 / 18.4 / 24.0 / 25.0 s. Body ARRIVALS barely moved,
+so nothing in a bodies-per-second reading showed it, but each body now carries 5/3 the HP: **HP
+pressure per second rose by that factor, Wave 5 from 114 to 203 HP/s**, silently undoing the
+widening bought hours earlier to stop bodies stacking. The gap was re-solved to `7.3 + 0.40*w` to
+hold HP/s at the pre-cut figures (25.1 / 40.9 / 69.4 / 82.8 / 113.9 against 25.7 / 40.9 / 61.6 /
+92.8 / 114.4). Waves 3 and 4 sit ~12% off in opposite directions because `ceil()` is a step
+function and a linear gap cannot follow it.
+
+**The gap WIDENS with the wave; it used to narrow** (2026-08-27). Delivery time was near
+constant at ~30 s while the roster grew 18 to 66, so arrivals climbed 0.86 to 2.16/s against a
+player who cannot acquire targets faster than about 0.95/s — the 103-body wall at Wave 5. Group
+width was already rising 3 to 7, so the old shrinking gap compounded with it instead of
+offsetting it. The clamp holds probe indices at the last authored gap, matching `Row()`. First
+field to check if a Wave feels empty. **The dial's surplus is all Default** (Hunter, Thief
+and Cloaker counts are fixed per Wave), so a dialled Wave 3 is all extra Defaults and **no
+Cloaker at all** — Wave 3 is the Thief's debut and the Cloaker's is Wave 4, one wave later, so that
+two new rules never land together. A bigger fight, not a different one: the dial cannot
+multiply the scariest Gatekeeper, nor multiply Cloakers into frozen free salvage.
+
+**`TerminalChainGap = 8s`** (`WaveDirector`). Unused by the field loop: `T` at the Hatch
+starts one Wave (Zo, 2026-08-25), `T` at the zone's terminal ends it, and Prep afterwards is
+untimed. The constant stays
 because `ArmSequentialDraws` still exists for later terminals that re-lock banking. Not
 `InterWaveGap` (3 s after *delivery* during a deep-start overlap). Do not retune
 `InterWaveGap` to steal this job.
@@ -155,22 +182,22 @@ baseline** every table below rests on:
 <!-- GKB:GEN waves — WaveDirector.NextWave(i, 0) -->
 | Wave | Bodies | Default | Hunter | Thief | Cloaker | HP × | groups of | Every |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 18 | 18 | 0 | 0 | 0 | 1 | 3 | 4.2 s |
-| 2 | 30 | 26 | 4 | 0 | 0 | 1.4 | 4 | 4 s |
-| 3 | 42 | 33 | 6 | 2 | 1 | 1.8 | 5 | 3.8 s |
-| 4 | 54 | 38 | 10 | 4 | 2 | 2.2 | 6 | 3.6 s |
-| 5 | 66 | 44 | 12 | 7 | 3 | 2.6 | 7 | 3.4 s |
+| 1 | 11 | 11 | 0 | 0 | 0 | 1 | 3 | 7.3 s |
+| 2 | 18 | 16 | 2 | 0 | 0 | 1.4 | 4 | 7.7 s |
+| 3 | 25 | 20 | 4 | 1 | 0 | 1.8 | 5 | 8.1 s |
+| 4 | 32 | 23 | 6 | 2 | 1 | 2.2 | 6 | 8.5 s |
+| 5 | 39 | 26 | 7 | 4 | 2 | 2.6 | 7 | 8.9 s |
 <!-- GKB:END waves -->
 
 <!-- GKB:GEN dial — TetherSiphon.RewardMultiplierFor, NextWave body counts -->
 | Dial | You earn | Wave 1 sends | Wave 5 sends |
 |---|---|---|---|
-| 0 | ×1.00 | 18 | 66 |
-| 1 | ×1.10 | 20 | 73 |
-| 2 | ×1.15 | 21 | 76 |
-| 3 | ×1.25 | 23 | 83 |
-| 4 | ×1.35 | 24 | 89 |
-| 5 | ×1.50 | 27 | 99 |
+| 0 | ×1.00 | 11 | 39 |
+| 1 | ×1.10 | 12 | 43 |
+| 2 | ×1.15 | 13 | 45 |
+| 3 | ×1.25 | 14 | 49 |
+| 4 | ×1.35 | 15 | 53 |
+| 5 | ×1.50 | 17 | 59 |
 <!-- GKB:END dial -->
 
 Body count scales linearly with connected players: `min(120 × n, round((18 + 12×i) × dial) × n)`.
@@ -183,15 +210,15 @@ scavenging 0, and applies only when `n > 1`.
 |---|---|
 | supported | 3 (host plus two) |
 | capacity | 6 |
-| wave 1 bodies ×1 / ×3 | 18 / 54 |
-| bank cap deepest 1 | 450 |
-| bank cap deepest 2 | 1200 |
+| wave 1 bodies ×1 / ×3 | 11 / 33 |
+| bank cap deepest 1 | 462 |
+| bank cap deepest 2 | 1218 |
 <!-- GKB:END player-count -->
 
 <!-- GKB:GEN intensity-juice — IntensityJuice.CostPerStep -->
 | | |
 |---|---|
-| juice per step | 100 unbanked |
+| juice per step | 100 banked |
 <!-- GKB:END intensity-juice -->
 
 ## Hatch
@@ -206,13 +233,14 @@ create; the share-of-gross table and three-death pacing interaction live in
 `../Milestones/3. completed/M19-repair-costs-salvage.md`. Whether 2/HP is the right rate is
 *unknown, needs play data*.
 
-**Repair requires the Repair Rig (M23).** The equipment slot unlocks when salvage first
-converts through the Hatch (`HatchConversions >= 1` — re-keyed with the wheel, `M78`) and
-costs Salvage once; the rig is bought on top and equipping it is
+**Repair requires the Repair Rig (M23).** The equipment slot unlocks once the realm has
+earned any salvage (`LifetimeSalvageEarned > 0` — re-keyed with the wheel on 2026-08-25 when
+the Convert left the demo; `HatchConversions >= 1` before that, `M78`) and costs Salvage once; the rig is bought on top and equipping it is
 automatic (one piece). Without the rig equipped, repair is refused and the Hatch prompt
 names the next missing step. FABRICATION's old `RepairRigLevel` track and CREW QUARTERS'
-`EngineeringLevel` are deleted; saves that owned either load with the slot and rig granted
-free.
+`EngineeringLevel` are deleted, and so is the migration that used to grant the slot and rig
+free: schema 13 split the save into a Boarder and a realm and ended migration outright, so a
+document below `SaveFormat.CurrentVersion` is refused by name rather than reshaped.
 
 <!-- GKB:GEN hatch — ShipSystems, MetaUpgrades.HatchHp, EquipmentCatalog -->
 | cost | value |
@@ -226,44 +254,52 @@ free.
 
 ## Hatch-bank (M53)
 
-Kills fill `RunSim.Unbanked`. Only a Hatch-bank converts to the ship. Convert and Hatch
-composition both read field Waves cleared since the last Hatch-bank (snapshotted at
-start). The window is `DurationSeconds`; Unbanked hitting 0 does not end it. Leftover
-dumps when the timer ends.
+**Out of the demo's critical path since 2026-08-25** (`Decisions.md`, *Locked — kills bank as
+they land*): kills credit `MetaState.BankedSalvage` directly, so the carried pile is 0 unless
+the player deliberately ran `RunSim.Withdraw` at the Hatch, and the window cannot start on a
+pile the player did not choose to build. It stays in code because Master Control's finale runs
+on it. Convert and Hatch composition both read field Waves cleared since the last Hatch-bank
+(snapshotted at start). The window is `DurationSeconds`; the pile hitting 0 does not end it.
+Leftover dumps when the timer ends.
 
 <!-- GKB:GEN hatch-bank — HatchBank.DripPerSecond, DurationSeconds, CarryConvert, CarryWaveIndex, WithdrawPerSecond -->
 | | |
 |---|---|
-| drip | 8 unbanked/s |
+| drip | 8 staked/s |
 | duration | 45 s |
 | withdraw | 16 salvage/s |
-| returned keeps | 10% of leftover unbanked (Lost wipes it all) |
+| returned keeps | 10% of a leftover stake (Lost wipes the stake, never the bank) |
 
 | Waves carried | convert | Hatch Wave | bodies at intensity 0 |
 |---|---|---|---|
-| 1 | ×1.00 | 1 | 18 |
-| 2 | ×1.10 | 2 | 30 |
-| 3 | ×1.25 | 3 | 43 |
-| 4 | ×1.35 | 4 | 54 |
-| 5 | ×1.50 | 5 | 66 |
+| 1 | ×1.00 | 1 | 11 |
+| 2 | ×1.10 | 2 | 18 |
+| 3 | ×1.25 | 3 | 26 |
+| 4 | ×1.35 | 4 | 32 |
+| 5 | ×1.50 | 5 | 39 |
 <!-- GKB:END hatch-bank -->
 
 ## Respawns (M98 recut)
 
-One rule prices every dead seat's way back into a live run — guest, host, solo alike.
-The pool gates only *when* (mid-Assault); the cost is what every respawn pays, and it
-climbs with each one taken this run. The pot debited is the realm's bank. The old pair —
-free embark on Hatch-bank Prep, flat 450 buy-back on Hatch-bank Assault — is retired
-(`Decisions.md`, *Locked — co-op down*, amended 2026-08-24). `BaseCost` = 150 is one
-Secondary MK-1 purchase, so the first death is affordable off one banked wave. The rule
-is leverage **#5**; the numbers are **#12**.
+One rule prices every dead seat's way back into a live run — guest, host, solo alike, at any
+point in `RunPhase.Tethered`. **The purse is the realm's bank** (`RunSim.TryRespawn` →
+`SpendBanked`, re-pursed 2026-08-25 with the award path): the carried pile it used to bill no
+longer fills on its own, and one pot is the point — a death now competes directly with a Tier,
+and a crew is solvent together or not at all. Affordability rises with every body, because
+every body banks. There is no charge pool and no mid-Assault gate. The counter is the run's
+rather than the seat's, so a party that keeps dying prices itself out together. The old pair — free embark on
+Hatch-bank Prep, flat 450 buy-back on Hatch-bank Assault — is retired (`Decisions.md`,
+*Locked — co-op down*). `BaseCost` = 150 is one Secondary MK-1 purchase, so the first death
+is affordable off one good push and the third is not casual. The rule is leverage **#5**; the
+numbers are **#12**.
 
-<!-- GKB:GEN respawns — Respawns.PoolPerSeat, BaseCost, CostFor -->
+<!-- GKB:GEN respawns — Respawns.BaseCost, CostFor, Refuse -->
 | | |
 |---|---|
-| paid from | the dead seat's own Unbanked; the rest of that carry survives |
-| cost | 150 × (taken + 1) |
+| paid from | the realm's bank; a staked pile is never touched |
+| cost | 150 × min(taken + 1, 3) |
 | first three | 150 / 300 / 450 |
+| climbs to | 450 and stops — every later death is the same price |
 | refused when | that seat carries less than the price — the Boarding ends |
 <!-- GKB:END respawns -->
 
@@ -317,13 +353,13 @@ side of M23 are not comparable on anything involving the door. *Whether the rig 
 feeling compulsory rather than chosen is unknown and needs play data* — M23 carries the
 fallback if it does.
 
-**Kill awards floor once (M22).** `AwardKill` takes `floor(CurrentKillValue)` into
-`RunSim.Unbanked`. Hatch-bank drip and dump credit that converted integer to both
-`MetaState.BankedSalvage` and `SalvageLedger.RunSalvage`. Pre-M22 logs
+**Kill awards floor once (M22).** `AwardKill` takes `floor(CurrentKillValue)` straight into
+`MetaState.BankedSalvage` and `SalvageLedger.RunSalvage` (`BankKill`). Pre-M22 logs
 that quote an end-of-Run `earned` figure are not comparable to post-M22 `gross` / `net`
 lines: the old tally kept fractional kill value and floored once at report time, so a
 fractional dial overstated the take by about `0.25 × kills` at dial 3 (measured 19 and 21
-Salvage of drift on 2026-08-04 Runs). Instant kill-into-bank ended with M53.
+Salvage of drift on 2026-08-04 Runs). Instant kill-into-bank ended with M53 and came back on
+2026-08-25 — logs between those two dates are the only ones where a kill was not money.
 
 ## Upgrade tracks
 
@@ -406,33 +442,86 @@ array (`WeaponWheel.EffectiveDps`) and cannot be tabulated against derived Tier.
 | MK-1 Sidearm | 30 | 1 | 3.0 | 8 | 1.4s | 45 m, falloff from 12 m | — | 59.0 |
 | SEC-D | 18 | 1 | 6.0 | 4 | 2.2s | 8 m, falloff from 3 m | — | 25.1 |
 | VK-7 Rifle *(disabled)* | 10 | 1 | 5.5 | 25 | 2.1s | 60 m | — | 37.6 |
-| BR-12 Shotgun | 6 | 7 | 1.2 | 6 | 2.6s | 14 m, falloff from 8 m | — | 33.2 |
-| MR-35 Rifle | 32 | 1 | 1.6 | 10 | 2.4s | 60 m, falloff from 25 m | 2 bodies ×0.26 after first | 37.0 |
-| PRI-C | 90 | 1 | 0.6 | 4 | 3.2s | 90 m, falloff from 55 m | 3 bodies ×0.75 after first | 36.5 |
+| BR-12 Shotgun | 19 | 7 | 1.2 | 6 | 2.6s | 14 m, falloff from 8 m | — | 105.0 |
+| MR-35 Rifle | 16 | 1 | 8.0 | 27 | 2.463s | 60 m, falloff from 25 m | 2 bodies ×0.26 after first | 74.0 |
+| PRI-C | 180 | 1 | 0.6 | 4 | 3.2s | 90 m, falloff from 55 m | 3 bodies ×0.75 after first | 73.0 |
+
+**THE PRIMARY TIER WAS RAISED ~2x BECAUSE THE FREE SECONDARY OUT-KILLED IT** (2026-08-27,
+Zo's ruling: "It is the rifle. We should push the primary damage up"). BR-12 6 → 12/pellet,
+MR-35 8 → 16, PRI-C 90 → 180. `EnemyHealthPerWave` was restored 0.30 → 0.40 in the same pass
+("can scale health on later waves"), putting the Default ladder back to 30/42/54/66/78.
+
+The MK-1 Sidearm sustains **59.0 dps at cost 0** against Primaries that cost 900-1500 Salvage
+and sat at 33.2 / 37.0 / 36.5. It is not offset by ammo starvation, which was the obvious
+defence and is wrong: the Secondary's `0.4 rounds/s` regen
+(`WeaponAbility.SecondaryRegenPerSecond`) is a never-dry FLOOR, not a throttle —
+`PlayerGun.TickSecondaryRegen` returns early while `reloadTimer > 0`, so a manual 1.4 s reload
+still owns the clip and the full 59.0 is genuinely sustainable.
+
+**Judge this ladder on kills/s against the HP table, never on the dps column.** Duty-cycle dps
+ignores overkill, and at 30 damage a 42 HP body costs the sidearm two whole shots. Measured at
+EQUAL TIER (T0) against the restored ladder, the sidearm led the old rifle by 6% at Wave 2 and
+70% at Wave 4 — not the flat 60% the dps column implies. The granularity is the whole reason
+the gap swings that far, and it is why an argument from dps alone reached the wrong answer
+twice while this was being tuned. After the raise the MR-35 leads on every wave of the ladder.
+
+BR-12 and PRI-C read LOW on single-target kills/s (0.789 and 0.405 at T0) and that is not a
+defect: their value is multi-body — 7 pellets and a 3-body pierce — which a single-target
+metric cannot see. Do not "fix" those two by reading that column.
+
+**FEWER AND TOUGHER, 2026-08-27** (Zo: "lower the volume of enemies and make them tougher...
+reducing volume by at least 40%"). The roster went `18+12i` → `11+7i` (39-41% down on every
+Wave) and every kind's `maxHp` rose by 5/3 — Default 30 → 50, Hunter 20 → 33, Thief 120 → 200,
+Cloaker 45 → 75. The total HP pool per Wave lands within 2% of what it was, so this is a
+LEGIBILITY change, not a difficulty cut: the same work arrives as fewer, longer-lived targets
+in a corridor whose firing angles were widened in the same pass.
+
+Two things moved with it that are easy to miss, and both were side effects rather than intent:
+
+- **`SalvagePerKill` 25 → 42.** A kill is priced FLAT and never reads the body's HP, so cutting
+  the roster 40% cut run income 40%. Every price in the game is denominated in kills — respawns,
+  Primaries, tracks — so the roster silently re-prices the whole shop unless this moves with it.
+  Held to the decimal: a five-Wave run paid 5,250 before and pays 5,250 now.
+- **BR-12 damage 12 → 19/pellet.** Buys no power. It one-shot every body in the table before and
+  one-shots every body now (7 × 19 = 133 against a deepest Default of 130), so its kills/s is
+  unchanged at 0.789 flat. Without it the raised ladder would have pushed a Wave-3 body past the
+  volley and HALVED the weapon — a cliff introduced by an enemy change, in a weapon nobody was
+  retuning. Its dps column now reads 105 and that number is overkill, not power.
 
 Base dps is the duty-cycle formula with pellets folded into the pull:
 
 ```
 dps    = clip * damage * pellets / (clip/rate + reload)
-BR-12  = 6 * 6 * 7 / (6/1.2 + 2.6)   = 252 / 7.60 = 33.2
-MR-35  = 10 * 32   / (10/1.6 + 2.4)  = 320 / 8.65 = 37.0
-PRI-C  = 4 * 90    / (4/0.6 + 3.2)   = 360 / 9.87 = 36.5
+BR-12  = 6 * 19 * 7 / (6/1.2 + 2.6)    = 798 / 7.60 = 105.0
+MR-35  = 27 * 16    / (27/8.0 + 2.463) = 432 / 5.84 = 74.0
+PRI-C  = 4 * 180    / (4/0.6 + 3.2)    = 720 / 9.87 = 73.0
 ```
 
 **What a full damage focus buys** (ten purchases, 13,000 Salvage, `WeaponTier.Cost`). BR-12
 centres Damage, so Damage takes 50 points and its ring neighbours Clip and Ability take 30
-each, while Reload and FireRate take none: damage `6 x 9.30 = 55.8`, clip
-`round(6 x 2.31) = 14`, cycle `14/1.2 + 2.6 = 14.27s` → `14 x 55.8 x 7 / 14.27 =` **383 dps**.
-MR-35 centres Damage between Reload and Clip: damage `32 x 9.30 = 297.6`, clip
-`round(10 x 2.31) = 23`, reload `2.4 x 0.55 = 1.32s` → **436 dps**. The first single purchase
-on that line is worth **+31%** (BR-12 `33.2 → 43.6`), which is the number the noise floor
-below is measured against. Whether Wave 5 still clears against a 383/436 ceiling is
-**unknown — needs play data** (old sizing assumed ~187/214 at seven purchases).
+each, while Reload and FireRate take none: damage `12 x 9.30 = 111.6`, clip
+`round(6 x 2.31) = 14`, cycle `14/1.2 + 2.6 = 14.27s` → `14 x 111.6 x 7 / 14.27 =` **767 dps**.
+MR-35 centres Damage between Reload and Clip: damage `16 x 9.30 = 148.8`, clip
+`round(27 x 2.31) = 62`, reload `2.463 x 0.55 = 1.355s` → **1013 dps**. The first single
+purchase on that line is worth **+31%** (BR-12 `66.3 → 86.9`), which is the number the noise
+floor below is measured against. Whether Wave 5 still clears against a 767/1013 ceiling is
+**unknown — needs play data**.
+
+**A rate-for-damage swap is never ceiling-neutral, even when it is base-neutral**
+(2026-08-27). The MR-35 was first recut `32/1.6/10` → `8/8.0/27` purely for the assault-rifle
+fantasy, with the reload solved to hold base dps at exactly 37.0 — and that same swap still
+moved its focus ceiling 436 → 507. Reload is a FIXED cost amortised over `clip/rate` seconds,
+so the wheel's clip multiplier buys more from a long firing window than a short one. Any weapon
+re-expressed at a higher rate for feel gains ceiling for free unless its reload is re-solved at
+focus rather than at base. The subsequent damage raise compounds it: the ceiling is now 1013.
+Treat that as arithmetic, not a measurement — this file's own rule is that the ceiling question
+is answered by play data.
 
 **Hatch Armor** (`Sim/Meta/UpgradeTracks` + `MetaUpgrades.cs`) — `base * (1 + 0.05 * level)`,
 exactly +25% at level 5. Crit chance is frozen at 0; there is no Luck shop. Engineering and
-`RepairRigLevel` are off the enum entirely; they survive only as legacy save fields, which
-`MetaState.MigrateLegacyRepairTracks` converts into a free equipment slot and Repair Rig.
+`RepairRigLevel` are off the enum entirely, and off the save with it — the schema-13 split
+ended migration, so nothing converts an old track into a free equipment slot any more
+(`Sim/Meta/SaveFormat.cs`).
 
 <!-- GKB:GEN tracks — UpgradeTracks.All, MetaUpgrades.NextCost -->
 Cost `200 * 2^currentLevel` = 200/400/800/1,600/3,200, **6,200** to max a track.

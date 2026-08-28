@@ -4,7 +4,7 @@
 Purpose: What currencies exist, what each is for, and the Gatekeeper roster as something the player buys rather than something the game hands out.
 Status: brainstorm
 Update trigger: when a currency gains or loses a sink, when the roster scope moves, or when Experience income is first measured.
-Last updated: 2026-08-20
+Last updated: 2026-08-25 (M96 made MetaState a facade; the priced respawn is Unbanked's second sink; the Cloaker counted)
 -->
 
 ## What this covers
@@ -17,21 +17,32 @@ category that governs juicing — is settled and lives in `../Design/3-Mechanics
 
 ## Where it stands
 
-**One currency exists.** `MetaState` holds `BankedSalvage`, `LifetimeSalvageEarned`,
-`LifetimeSalvageSpent` and nothing else; there is no Experience field anywhere in `Sim/`,
-and `BuyProtocol` charges 0. Two stakes are shipped and multiply Salvage: the intensity
-dial (`IntensityJuice`, `TetherSiphon`) and carry depth (`HatchBank.CarryConvert`).
+**One currency exists.** `BankedSalvage`, `LifetimeSalvageEarned` and `LifetimeSalvageSpent`
+are the whole of it; there is no Experience field anywhere in `Sim/`, and `BuyProtocol` charges
+0. `MetaState` is no longer where they live — `M96` split the save into a `BoarderState` that
+travels with the player and a `RealmState` that stays with the world, and `MetaState` is now a
+facade forwarding to both. The salvage ledger is the realm's half. Two stakes are shipped and
+multiply Salvage: the intensity dial (`IntensityJuice`, `TetherSiphon`) and carry depth
+(`HatchBank.CarryConvert`).
 
-**Three facts the build already supplies, which the ideas below depend on:**
+**Four facts the build already supplies, which the ideas below depend on:**
 
 - The Hatch-bank window pays nothing — `CurrentKillAward` returns 0 in `WaveMode.HatchBank`.
   The window's reward slot is empty by design, not by oversight.
 - Kind introduction is wave-indexed and resets every Run (`WaveDirector.HunterPerWave`,
-  `ThiefPerWave`; the `GatekeeperKind` doc comments read *"introduced in wave 2 / 3"*). Five
-  Waves cannot introduce twelve kinds, so the roster of twelve needs a second axis whatever
-  else is decided.
-- Salvage value is flat per kill (`MetaUpgrades.SalvagePerKill`, 25 + 5×Scavenging) and does
-  not vary by kind.
+  `ThiefPerWave`; the `GatekeeperKind` doc comments read *"introduced in wave 2 / 3"*, and the
+  Cloaker joined at wave 3 with `M63-3`). Five Waves cannot introduce twelve kinds, so the
+  roster of twelve needs a second axis whatever else is decided.
+- Salvage value is flat per kill and does not vary by kind — `MetaUpgrades.SalvagePerKill()`
+  now takes no argument and returns 25. The Scavenging term this line used to carry is gone
+  with the attribute tracks; `UpgradeTrack` has one member left, `HatchArmor`. So per-kind
+  value has nothing to replace or multiply, which sharpens the Open question below rather
+  than answering it.
+- **Unbanked gained a second sink** with the `M98` recut (`Sim/Run/Respawns.cs`): a dead seat
+  buys its way back with the Unbanked it is carrying at `150 × (taken + 1)`, the counter the
+  Run's rather than the seat's, and the remainder of the carry survives the death. Nothing else
+  can pay — not the realm's bank, not another seat. So carry depth now prices mortality as well
+  as convert value, and any Core or stake idea below lands on a lever that already has two jobs.
 
 ## Graduation test
 
@@ -94,7 +105,7 @@ without X, and that gap is measured rather than patched (see Constraints).
 |---|---|---|
 | Who configures the roster in co-op? | Fellowship is rank 1 and this is the only place the design touches it; a guest fighting a roster they had no say in is a regression. The house pattern is party lead (`M72`). | Zo |
 | What does a Run pay in Experience, against what a roster costs? | The graduation test. Cheap Experience means you leave, re-board and rebuy, and the Bastion scope is cosmetic. | the milestone that first pays Experience |
-| Does per-kind Salvage value replace `MetaUpgrades.SalvagePerKill` or multiply it? | Scavenging currently *is* the base value; rewards riding the body make it vary. | Zo |
+| Does per-kind Salvage value replace `MetaUpgrades.SalvagePerKill` or multiply it? | The question got simpler when Scavenging was deleted: the base is now a flat 25 with nothing scaling it, so per-kind value would be the only thing making it vary. | Zo |
 
 ## Constraints
 

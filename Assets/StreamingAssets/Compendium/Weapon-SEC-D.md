@@ -39,8 +39,9 @@ for armour.
 ### Tiering it
 
 Ring is FireRate–Ability–Reload–Clip–Damage, strength FireRate, weakness Reload. Ability
-cannot be bought (`AbilityId.None`); the other four spokes can, on the Secondary cost
-curve, after the first lost Boarding.
+carries nothing and cannot be bought; the other four spokes can, on the Secondary cost
+curve, once Salvage has converted through the Hatch once. Award and prices:
+[Field Manual](Field-Manual.md).
 
 ## See also
 

@@ -16,14 +16,16 @@ My Primary answers one of the room's three questions well and makes the other tw
 
 ## Reference
 
-### Two slots
+### The slots
 
-You carry a **Primary** and a **Secondary**. That is the loadout you can fill. There is a
-third slot, the **Drone** bay. It holds a payload, not a gun. Today that payload is the
-**Decoy**, bought at FABRICATION.
+You carry a **Primary** and a **Secondary**. Those are the two gun slots — the Primary is
+the one you earn, the Secondary is the one you start with and it never runs dry. The third
+slot is the **Drone** bay, and it holds a payload rather than a gun: today the **Decoy**,
+bought at FABRICATION. **Equipment** is none of the three. It has its own slot, also
+FABRICATION's, and the Repair Rig that fills it is not a weapon.
 
 A weapon belongs to exactly one slot, permanently. Which Secondary and which Primary is
-the shape of the fight. You can boarding with only the Secondary. If you own no weapon at all,
+the shape of the fight. You can embark with only the Secondary. If you own no weapon at all,
 you still fire something: the **improvised cutter**, a scratch-built fallback that does a
 fraction of the damage at a fraction of the cadence. Buy the sidearm and it goes away.
 
@@ -50,8 +52,8 @@ A purchase never changes range, falloff, pellet count, spread, pierce, slot, or 
 weapon you own. **Upgrade wheels are per weapon and never transfer.**
 
 Weapon upgrades are **locked until Salvage first converts through the Hatch**. Buying the weapons
-themselves is not. If the buttons read locked, a death is the key. SEC-D's Ability spoke
-cannot be bought; rotate off it.
+themselves is not. If the buttons read locked, a Convert is the key — and it counts whether
+the Boarding then ended well or badly. SEC-D's Ability spoke cannot be bought; rotate off it.
 
 ### Abilities
 
@@ -63,7 +65,7 @@ mid-reload. SEC-D has none; its Ability spoke cannot be bought.
 - **BR-12 — Concussive Breach.** Shoves Gatekeepers back out of a cone in front of you.
 - **MR-35 — Pin Shot.** Hits charge a meter. The shot that completes it pins whatever is
   still alive under the crosshair. A full meter can also be fired on the ability binding.
-- **MK-1 — Regen Surge.** While it boardings, the Secondary's passive clip regeneration boardings
+- **MK-1 — Regen Surge.** While it runs, the Secondary's passive clip regeneration runs
   faster.
 - **PRI-C — Railshot.** The next shot pierces further, at full damage, then lapses if you
   do not fire.
@@ -95,7 +97,7 @@ You begin a Boarding on your Primary if you have one, otherwise on the Secondary
 
 The Bastion asks three questions at once and your Primary answers one of them well.
 
-- **Hunters** boarding straight at you and die fast. A weapon that hits hard up close answers
+- **Hunters** run straight at you and die fast. A weapon that hits hard up close answers
   them.
 - **Thieves** hunt you on a field-terminal Wave and walk to the Hatch on a Convert. Shooting
   them never shouts. You want reach and damage per shot.

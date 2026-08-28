@@ -8,7 +8,9 @@ If antivirus deletes or quarantines the exe, whitelist the extract folder (or re
 
 **Firewall:** when Windows asks, allow on **Private and Public**. A host that ticks only Private is unreachable for many friends.
 
-**Host EMBARKs first** (Ship → NAV → EMBARK) so the session is listening. The joiner EMBARKs after.
+**Opening a world.** One of you hosts. On **REALMS**, pick or name a realm, press **OPEN TO FRIENDS**, and the join code appears with **COPY** beside it — send that code, then press **TO SHIP**. Nothing is started until you press it. If the code will not connect, **HOST ON LAN** is the fallback. Everyone else presses **JOIN** on the main menu and types the code.
+
+**Going out together.** You all stand on the same Ship. At the **NAV MAP**, guests press **READY**; the party lead presses **EMBARK**, and a countdown takes the whole party across at once. Do not wait for a second EMBARK — there is only the one.
 
 If something breaks, send a short note of what you did and attach:
 

@@ -55,7 +55,7 @@ namespace GatekeepersProtocol.Sim
             switch (id)
             {
                 case AbilityId.Br12Concussive:
-                    // 3.5 m → 10.5 m. Walk-back at 3.2 m/s: ~1.1 s → ~3.3 s per body.
+                    // 3.5 m → 10.5 m. Walk-back at 2.8 m/s: ~1.3 s → ~3.8 s per body.
                     return 3.5f + 7f * t;
                 case AbilityId.Mr35Pin:
                     // 1.5 s → 6.0 s held.

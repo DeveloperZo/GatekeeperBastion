@@ -5,8 +5,44 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 -->
+
+- 2026-08-25: **Six milestones moved to completed, and a documentation sweep that found
+  the docs describing a respawn rule the code had already deleted.** `M63-3`, `M95`,
+  `M97`, `M98`, `M100` and `M102` moved to `3. completed/` at Zo's direction. None was
+  moved by a closed gate: every one still carried an Owed block, so each file's
+  frontmatter now records the observation that is still missing — `M63-3` Zo's eyes-on,
+  `M95` the co-op demo leg, `M97` eyes-on and the two-box run, `M98` the playthrough,
+  `M100` a run on two machines it has never had, `M102` the playthrough that is the
+  experiment itself. Active falls to 1 of 3 (`M86`) and `1. planned/` holds `M103` alone.
+  <br>The sweep behind it read every shelf under `Docs/` against the tree rather than
+  against other docs, and the thing it kept finding was one rule stated three ways. The
+  respawn recut `51e8f74` landed while `Roadmap.md`, `Docs/README.md`, `Decisions.md`,
+  six Compendium pages and a doc comment in `NetPlayerAvatar.Respawn.cs` still described
+  the superseded design — a per-seat charge pool paying out of the realm's pot. The
+  shipped rule is that the dead seat pays `150 × (taken + 1)` from the Unbanked it is
+  carrying, the remainder survives with it, and nothing else may pay. `Respawns.PoolPerSeat`
+  and `RunSim.RespawnStock` do not exist. The doc comment is why the wrong version kept
+  being re-derived, which is the failure `AGENTS.md` section 2 exists to prevent.
+  <br>Trap 8's rename reached the last surfaces it had missed. `Controls.cs` labelled
+  `+`/`-` as "juice" and grouped them under `RUN`; `RepairInteractable` printed
+  "Intensity" and "juice" to the Boarder; `BoarderSheets.DoctrineVeil` shipped "aggro",
+  a word the table marks builder-only, to the CREW QUARTERS panel. All four now read
+  Ante, ante up, BOARDING and attention.
+  <br>`Tools/docgen/Program.cs` was itself a source of drift: its Field-Manual prose was
+  never renamed, and it hardcoded "T1 is 5" as a string literal, which is why `--check`
+  could never catch it while `DemoZones.WavesPerTriggerByZone` said `{ 1, 3 }`. That
+  sentence now derives from `DemoZones.WavesPerTrigger()`. The manual was regenerated
+  under `dotnet` — `mono` is absent on this machine, and the harness was validated by
+  reproducing the committed file byte-for-byte before it was trusted to write.
+  <br>`language.md` was corrected on eight rows it had wrong: the Equipment slot unlocks
+  on the first Convert and not on a death, Master Control runs one Convert window and not
+  five, the per-Boarding Convert cap does not exist, zone 1 runs 1 Wave per trigger rather
+  than 3, `RunPhase.Returned` was missing, rule 4 contradicted trap 8, the Compendium has
+  eight volumes rather than six, and `arrivals x dwell` is defined in `2-Dynamics.md`.
+  `Tools/lint-language/run.sh` passes clean, and the last broken cross-reference under
+  `Docs/` is gone.
 
 - 2026-08-24: **The spine: fresh save to the end of a bastion and home, in one test —
   and a tutorial you only sit through once.** `Tests/PlayMode/CampaignSpineTests`
@@ -1177,27 +1213,27 @@ Last updated: 2026-08-24
   before the unlock prompt, hold-E on the lid, then every Game line / prompt /
   standing string through EMBARK. Working assumptions A1–A14 (poses, timings,
   first-person, no VO). New ids `demo.wake_stir`, flag `DemoCapsuleOpened`.
-  [`Demo/0-wake-on-a-dead-ship.md`](Demo/0-wake-on-a-dead-ship.md).
+  [`Demo/0-wake-on-a-dead-ship.md`](Demo%20-%20Single/0-wake-on-a-dead-ship.md).
 - 2026-08-17: **Beat 0 recut; multiplayer gated on first purchase.** Ship
   terminal (E/T) powers ARMORY and spawns 2 weak Gatekeepers; paused Lock for
   the MK-1 pickup off the bare rack (the one sanctioned `timeScale = 0`, Ship
   only); HP floor 1; CREW heals on interact, menu waits for beat 4. Multiplayer
   locked until that save's first wheel buy — beats 0–3 solo by construction;
   beat 3 loses its ARMORY repair and gains `demo.mp_unlocked`.
-  [`Demo/0-wake-on-a-dead-ship.md`](Demo/0-wake-on-a-dead-ship.md),
-  [`Demo/README.md`](Demo/README.md).
+  [`Demo/0-wake-on-a-dead-ship.md`](Demo%20-%20Single/0-wake-on-a-dead-ship.md),
+  [`Demo/README.md`](Demo%20-%20Single/README.md).
 - 2026-08-17: **Demo beats 1–7 storyboarded.** Same shape as beat 0; copy for
   all ids stamped in the beat files; `voice.md` is the id registry only. Code
   facts folded: drip 8/s and MK-1 30 shipped; deepest is 3 after the first loss
   (skip still needed); CREW claim path in tree; `demo.door_d3` merged into
   `demo.control_room`; sketch never wires Master fight spawns (resolve before
-  cutting 6+7). [`Demo/README.md`](Demo/README.md).
+  cutting 6+7). [`Demo/README.md`](Demo%20-%20Single/README.md).
 - 2026-08-17: **Demo 0 storyboard.** Player steps, stamped Game copy, Have vs
   Build. Capsule is `SM_Prop_CryoBed_01` (pack in tree, not in scene). Open-on-Down
-  blocks the NAV hold. [`Demo/0-wake-on-a-dead-ship.md`](Demo/0-wake-on-a-dead-ship.md).
+  blocks the NAV hold. [`Demo/0-wake-on-a-dead-ship.md`](Demo%20-%20Single/0-wake-on-a-dead-ship.md).
 - 2026-08-17: **Demo dialogue is mission text, not VO.** Player does not
   reply. Speakers: the game, at most a few guides. No Pixel Crushers.
-  [`Demo/voice.md`](Demo/voice.md).
+  [`Demo/voice.md`](Demo%20-%20Single/voice.md).
 - 2026-08-17: **M70 Protocol Sheet headings.** Template labels Protocol Title /
   Protocol Description / Crew Ability / Personal Ability / Passive Ability;
   injected values only. M70 stays planned.
@@ -1263,7 +1299,7 @@ Last updated: 2026-08-24
   Overrun wipes leftover Unbanked; drip 20→8 and MK-1 14→30 are #12 levers
   (separate commits). Play entry
   [`GatekeeperZo Notes/playthrough.md`](GatekeeperZo%20Notes/playthrough.md)
-  2026-08-16 `[unconfirmed]`. [`Demo/README.md`](Demo/README.md).
+  2026-08-16 `[unconfirmed]`. [`Demo/README.md`](Demo%20-%20Single/README.md).
 - 2026-08-16: **Title rename to Gatekeeper's Protocol.** Identifier
   `GatekeepersProtocol`. Unity cloud project id kept. Historical
   `GatekeeperBastion_*.log` citations unchanged.
@@ -1275,7 +1311,7 @@ Last updated: 2026-08-24
   beats 0–7 (dead Ship through Hatch finale), each implementable: in-tree facts,
   Create/Change/Delete, multiplayer, logs, traps, Verification. Treat-as-spec
   table (convert-then-fight once, NAV skip, MK-1 grant, three kit doors, Protocol
-  after Wave 2). [`Demo/README.md`](Demo/README.md). Brainstorm is a pointer
+  after Wave 2). [`Demo/README.md`](Demo%20-%20Single/README.md). Brainstorm is a pointer
   (the first-session brainstorm, since retired). Milestones
   not cut yet.
 - 2026-08-16: **First-session brainstorm is the demo path plus gaps.** Voice pipe

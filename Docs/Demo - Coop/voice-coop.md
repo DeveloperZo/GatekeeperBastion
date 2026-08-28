@@ -6,7 +6,7 @@ runner; does not fork it. Low line count by design — there is nothing to teach
 Status: demo spec
 Authority: implementable
 Update trigger: when a line id is added or cut, when the audience rule changes
-Last updated: 2026-08-20
+Last updated: 2026-08-25 (player lines say Convert and Boarding — language.md trap 8)
 Depends: ../Demo - Single/voice.md
 -->
 
@@ -56,7 +56,7 @@ no guides in this demo.
 | `demo.coop.crew_pot` | 0 | Lock | Party | One pot for the crew. What they spend, you do not have. |
 | `demo.coop.hatches` | 0 | Subtitle | Party | Two hatch doors open with two of you. Both are ways in. |
 | `demo.coop.first_terminal` | 1 | Lock | Party | Two hatch doors open, and they will go for whichever is weaker. They will not split evenly. |
-| `demo.coop.after_terminal` | 1 | Subtitle | Party | Wave down. The Hatch-bank moves salvage home through those same doors. |
+| `demo.coop.after_terminal` | 1 | Subtitle | Party | Wave down. A Convert moves salvage home through those same doors. |
 | `demo.coop.you_are_down` | 2 | Subtitle | Local | You are down. They can bring you up. |
 | `demo.coop.they_are_down` | 2 | Subtitle | Local | \<name\> is down. |
 | `demo.coop.up` | 2 | Subtitle | Local | Up. Get back on a door. |
@@ -92,7 +92,11 @@ does.
 
 - `demo.coop.see_them` is a stamp and may read as hand-holding once the weapon is
   actually visible in their hands. Cheapest fix is to cut it.
-- Juice is deferred, so `demo.coop.juice_proposed` is cut rather than written. It comes
-  back with juice.
+- The Ante is deferred, so `demo.coop.juice_proposed` is cut rather than written. The id
+  keeps the code's word; the line comes back when anting up does.
+- `demo.coop.bled_out` promises the seat comes back at the next dock, which the shipped
+  rule contradicts: a dead seat is offered a priced respawn mid-Boarding out of its own
+  frozen Unbanked (`RunSim.TryRespawn`). Either the co-op bleed-out overrides that rule
+  or the copy does — Zo's call, and the line is left as stamped until it is made.
 - Whether the standing objective should differ per seat is not specced. Stamped: one
   shared standing objective, since nobody owns a door.

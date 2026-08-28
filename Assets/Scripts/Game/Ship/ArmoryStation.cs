@@ -234,7 +234,7 @@ namespace GatekeepersProtocol.Game
             if (!bought && atCap && !_capLinePlayed)
             {
                 _capLinePlayed = true;
-                DemoVoice.Play(DemoConversationIds.WheelCap, DemoVoiceMode.Lock);
+                DemoVoice.Play(DemoConversationIds.WheelCap, DemoVoiceMode.Subtitle);
             }
             _wheelDirty = true;
         }

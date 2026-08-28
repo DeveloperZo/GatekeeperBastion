@@ -8,7 +8,7 @@ Status: demo spec
 Authority: implementable
 Update trigger: when the multiplayer gate moves, when the crew pot's starting figure
 moves, when the seat-count open rule changes, when the relay guest cap changes
-Last updated: 2026-08-20
+Last updated: 2026-08-25 (relay cap already 2; gate signature re-read against the tree)
 Depends: voice-coop.md, README.md
 -->
 
@@ -39,7 +39,7 @@ Copy stamped here until `DemoCoopLines` exists. Speaker is **Game**
 | **Prompt** | Live MainMenu host flow; code panel with copy. |
 | **Log** | existing relay host line, plus `[Demo] co-op demo begins host=<code> seats=1/3` (build) |
 | **Have** | `RelayJoin.TryHost`, code display, LAN fallback button on relay failure, code re-shows in the pause strip. |
-| **Build** | **Gate fix (blocking).** `DemoProgress.MultiplayerUnlocked` returns `m.DemoWheelBuysLeft < 2` (`DemoProgress.cs:39-44`), read at `MainMenuController.cs:180, 292, 330`. It must key on the **solo** demo being active, not on `DemoActive` generally, or a fresh co-op save cannot Host. **Cap fix.** `RelayJoin.MaxGuestConnections` 3 → 2 (`M92` step 8). |
+| **Build** | **Gate fix (blocking).** `DemoProgress.MultiplayerUnlocked` now takes `(demoActive, wheelBuysLeft)` and passes any save with the demo off, so the refusal only bites while `DemoActive` is true with two buys left. It must key on the **solo** demo specifically, or the co-op entry has to clear `DemoActive` on its own save to get past it. Callers are `MainMenuController` and `RealmSelectController.Hosting`. **Cap fix: done** — `RelayJoin.MaxGuestConnections` is **2**. |
 
 ### 1 — Guest joins
 
@@ -65,7 +65,7 @@ Copy stamped here until `DemoCoopLines` exists. Speaker is **Game**
 | **Prompt** | Live ARMORY string. Panel header shows the **crew pot** balance, not a personal one. |
 | **Log** | `[Shop] slot=<n> bought <weapon> cost=<n> pot=<n>` (build) |
 | **Have** | ARMORY panel, wheel, weapon catalog, `Meta.BankedSalvage`. Station buys are not net-routed at all today: each seat mutates its own local `GameSession.Meta` with no validation. |
-| **Build** | **The crew pot.** One salvage balance the party shops from, host-owned, mutated only through a `GameController` command reached from a guest via `NetVerbs` (R1, R2, R3). **No purchase restrictions** (Zo, 2026-08-20): every catalog row is on sale from the first visit, and a player buys anything they can afford. The only refusal is insufficient balance, which is arithmetic and not a gate. `DemoProgress.PrimaryRowsOpen(m)` must be **inert under `DemoCoopActive`** — it hides Primary rows at `ArmoryStation.cs:246` and refuses the buy at `ShipCommands.Weapons.cs:44`. The run starts with enough for two Primaries and change; tunable, and it lives with the other `#12` constants. **Kit is bought, not granted.** |
+| **Build** | **The crew pot.** One salvage balance the party shops from, host-owned, mutated only through a `GameController` command reached from a guest via `NetVerbs` (R1, R2, R3). **No purchase restrictions** (Zo, 2026-08-20): every catalog row is on sale from the first visit, and a player buys anything they can afford. The only refusal is insufficient balance, which is arithmetic and not a gate. `DemoProgress.PrimaryRowsOpen(m)` must be **inert under `DemoCoopActive`** (a flag that does not exist yet) — it hides Primary rows in `ArmoryStation` and refuses the buy in `ShipCommands.Weapons`, keyed on `DemoZone2BankLost`. The run starts with enough for two Primaries and change; tunable, and it lives with the other `#12` constants. **Kit is bought, not granted.** |
 
 ### 3 — Hatches open
 

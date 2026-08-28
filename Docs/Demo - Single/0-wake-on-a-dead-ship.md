@@ -1,7 +1,7 @@
 # 0 — Wake on a dead Ship
 
 <!--
-Purpose: Teleporter wake (starboard crew alcove) → repair NAV → ship terminal start
+Purpose: Teleporter wake (forward, port side) → repair NAV → ship terminal start
 routes power, hands the MK-1 over, and spawns two weak Gatekeepers → gated
 Lock (intruder release on Continue) → kill them → CREW heal (no menu) →
 EMBARK. Only NAV shows a name or interaction before it has a function
@@ -12,7 +12,27 @@ Status: demo spec
 Authority: implementable
 Update trigger: when spawn furniture changes, when the ship-fight spec changes,
 when stamped line copy changes, when the multiplayer gate moves
-Last updated: 2026-08-20
+Last updated: 2026-08-26 (ONE DECK — Zo: the interior collapses to a single deck at y=0.
+The stair, the upper deck and the double-height void are gone; everything that was upstairs
+came down keeping its x and z. Every coordinate in this file is re-measured against that
+hull: NAV MAP (-7.5, 0, 50) forward on the port bow bulkhead, Ship Terminal (-4, 0, 21)
+amidships to port, Hatch_1/2/3 at x 9.65 / z 17.5, 32.5, 47.5 on the starboard hull,
+Spawn_Nav (0, 0, 42.5), Spawn_Intruder_1/2 (7.5, 0, 17.5) and (7.5, 0, 47.5). demo.ship_lost
+is the 45-second lost-player nudge toward the NAV MAP — there are no stairs to name.
+Earlier: 2026-08-25 (ARMORY RECUT supersedes the ARMED-START revision below —
+Zo: a fresh campaign starts unarmed again; the ship terminal routes power and points at
+the ARMORY (demo.armory_call); the rack's free MK-1 buy is the arming beat and alone
+readies embark (DemoWeaponGranted + DemoShipFightDone ride the buy); the intruder fight
+is STRUCK from the demo (demo.intruders retired, no spawn, no gated release). Last updated: 2026-08-25 (TERMINAL MOVED + rulings — Zo: the ship terminal moved out of the
+stern closet into the open port hall, visible from NAV (A8's sightline restored); the
+glassless window bays carry CanopyGlass panes; demo.ship_lost is the 45-second lost-player
+subtitle. Last updated: 2026-08-25 (ARMED-START revision — Zo: a fresh campaign now starts with
+the MK-1 owned and equipped and DemoShipFightDone pre-set (GameSession.StartNew), so no
+shooting is required on the Ship and time-to-gun is zero. The ship terminal still routes
+power but no longer spawns intruders or hands the weapon on a fresh save; demo.intruders
+and the gated release are unreachable on the standard path. CREW's tap-heal surfaces from
+the start. The NAV/terminal power chores still gate EMBARK. Earlier: the Ship hub is
+Ship - CoOp; the demo lines shipped; the NAV picker is suppressed while DemoActive)
 Depends: voice.md
 -->
 
@@ -28,7 +48,7 @@ the player: no world label, no prompt, no interaction (2026-08-18 revision) —
 each surfaces the moment it gains one (CREW after the fight, ARMORY at the
 wheel unlock, FABRICATION when the demo ends).
 
-Solo: multiplayer is locked until this save's first wheel purchase
+Solo until the rack: multiplayer is locked until this save takes the MK-1
 ([`README.md`](README.md)). Speaker is **Game**. The player does not reply
 ([`voice.md`](voice.md)).
 
@@ -56,13 +76,13 @@ is set, that string is the idle prompt.
 | A4 | Stir text plays **after** the fade, **before** the unlock prompt. One Lock line, then the prompt. | Text-then-verb. Not a prompt on black. |
 | A5 | Capsule unlock is hold Interact **1.0 s**. Lid lifts over **0.8 s**. Then they can stand and walk. | Same hold family as NAV (1.5 s). Shorter because it is the first hold. |
 | A6 | Dead hull: Directional Light intensity **0.15** (live is 0.8). Ceiling panel emissives stay; they read as cold glow, not working lights. No new light API. | One Directional exists. |
-| A7 | Capsule sits at the **starboard crew bunk** — it replaces that bed (`ShipDress/CrewStarboard/Bed` inactive), world **(7.5, 0, 6.2)**, facing the corridor side (2026-08-18 revision — Zo; was the port alcove at (-3, 1, 8)). Deck exit `Spawn_Capsule` at **(7.5, 1.1, 7.6)**. | They wake in a crew bunk like the rest of the crew would. Exact pose is art. |
-| A8 | Ship terminal is a new console mid-deck between NAV and ARMORY, working pose **(6.0, 0, 22.0)**. Visible from NAV after the repair line points at it. | Object does not exist. Not a `BastionTerminal` component. |
-| A9 | Intruders spawn at `Spawn_Intruder_1` **(2.5, 0, -8)** (FAB side of the corridor) and `Spawn_Intruder_2` **(2.5, 0, 0)** (mid-corridor), and walk toward the player / ARMORY. | Two bodies, in sight of the ARMORY rack. |
+| A7 | The wake is on the **Demo Teleporter**, forward on the **port** side of the one deck — world **x −7.5, y 0, z 41–42.5**, with the deck exit a step off the pad at **y 1.1** in the same band. CREW QUARTERS is across the spine at (10, 0, 42.5) and the NAV MAP is 7.5 m further forward on the same port line. (2026-08-18 revision put the wake in a crew bunk; the teleporter pad replaced it, and the one-deck collapse of 2026-08-26 fixed the coordinates.) | They wake where the ship puts people down. Exact pose is art. |
+| A8 | Ship terminal is a new console **amidships on the port side**, working pose **(−4.0, 0, 21.0)** — a clear run down the port side from the NAV MAP at (−7.5, 0, 50), and roughly level with FABRICATION at (−10, 0, 17.5). Visible from NAV after the repair line points at it. | Object does not exist. Not a `BastionTerminal` component. |
+| A9 | Intruders spawn at `Spawn_Intruder_1` **(7.5, 0, 17.5)** (aft, starboard, at the ARMORY end) and `Spawn_Intruder_2` **(7.5, 0, 47.5)** (forward, starboard, near the wake), and walk toward the player / ARMORY. Both sit inboard of a hatch door. | Two bodies, in sight of the ARMORY rack. Struck from the demo at the 2026-08-25 armory recut; the spawn objects and their poses survive. |
 | A10 | Ship fight uses the live first-person gun and `PlayerHealth`. Ship HUD has **no vitals today** — the demo shows a minimal HP readout while the fight is live or the player is hurt. Scene check restamped (2026-08-17 review): the live Ship YAML has **no PlayerGun** and **no NavMesh** (`NavMeshSettings.m_NavMeshData` fileID 0). Scratch authors the gun on the rig camera. Intruders straight-walk when off-mesh (`ShipIntruder`). | Resolved — was `unknown — needs scene check`. |
 | A11 | `demo.intruders` never writes `timeScale`. The pause is **gated execution**: `T` fires the line and arms the intruder **release**; the release executes on the line's Continue — and on unload/reload, so the gate cannot stick. Sim-safe. | Zo 2026-08-17 — the earlier `timeScale = 0` exception is withdrawn. |
 | A12 | No music stinger. Existing Ship bed / silence. No new audio pack this beat. | Keep the grain on verbs and copy. |
-| A13 | First menu of the demo is the NAV picker at EMBARK. ARMORY / CREW / FABRICATION are **hidden** this beat — no label, no prompt, no interaction (CREW surfaces after the fight for the tap-heal). | Beat 3 / 4 own those menus. |
+| A13 | First menu of the demo is NAV at EMBARK, and while `DemoActive` it is a plain commit rather than a wave picker (beat 4). ARMORY / CREW / FABRICATION are **hidden** this beat — no label, no prompt, no interaction (CREW surfaces after the fight for the tap-heal). | Beat 3 / 4 own those menus. |
 | A14 | Continue / new save from the main menu loads Ship with `DemoActive`. Main-menu chrome is unchanged. | Beat 0 starts on the first Ship frame, not on the menu. |
 
 Hold Interact already reaches `IInteractable.Interact(dt)` (`Interactor.Tick`,
@@ -74,7 +94,8 @@ forbids.
 
 ### 0 — Load (black)
 
-The main menu Start New (or Continue on a fresh demo save) loads `Ship.unity`.
+The main menu Start New (or Continue on a fresh demo save) reaches the ship hub
+through the REALMS chooser and loads `Ship - CoOp.unity`, the one hub scene.
 The first Ship frame is **black**. No prompt. No standing objective. Move and
 look locked. Camera is already inside the closed glass (A3).
 
@@ -144,7 +165,7 @@ wait for now that the wake is already upright), the Shift box opens again.
 
 | | |
 |---|---|
-| **See** | Dead midships from the starboard crew room (A7). NAV MAP is forward along the hull `(2.5, 0, 28.2)`. Ship terminal is not obvious yet (mid-deck, A8). The only station world-label visible is **MAP** — ARMORY / CREW QUARTERS / FABRICATION are hidden until they have a function (A13). |
+| **See** | The dead hull from the teleporter pad, forward and to port (A7). NAV MAP is ahead on the port bow bulkhead at `(-7.5, 0, 50)` — the same side, a short walk forward. Ship terminal is not obvious yet: it is amidships to port, `(-4, 0, 21)`, most of the hull aft of them (A8). The only station world-label visible is **MAP** — ARMORY / CREW QUARTERS / FABRICATION are hidden until they have a function (A13). |
 | **Game** | `demo.wake` · Lock · Game. **Capsule open. Ship power is dead. Find the NAV MAP — hold Interact to repair it.** |
 | **Continue** | **Continue** |
 | **Prompt** | Hidden during Lock. |
@@ -188,7 +209,8 @@ At NAV. Hold Interact **1.5 s**. Release resets. No bar — text only.
 
 ### 7 — Ship terminal: look, select, start
 
-They walk from NAV toward mid-deck. The ship terminal sits there (A8).
+They walk aft from NAV down the port side. The ship terminal sits amidships (A8),
+about 30 m astern of the map — the longest walk the beat asks for.
 No extra line on look-at — `demo.nav_repair` already taught select-then-start.
 
 | | |
@@ -303,8 +325,8 @@ Ship visit:
 | Condition | Spawn | What they see / hear |
 |---|---|---|
 | Capsule still sealed (`!DemoCapsuleOpened`) | inside capsule, black → fade | `demo.wake_stir` then unlock then `demo.wake` |
-| Capsule opened, NAV dark | `Spawn_Capsule` (deck beside the starboard bunk) | lid open, no reseal, no stir; standing **Repair the NAV MAP** |
-| NAV powered, terminal not started | `Spawn_Nav` (deck at `(2.5, 1.1, 12.5)` until art moves it) | no stir; standing **Start the ship terminal** |
+| Capsule opened, NAV dark | `Spawn_Capsule` (deck beside the port teleporter pad, A7) | lid open, no reseal, no stir; standing **Repair the NAV MAP** |
+| NAV powered, terminal not started | `Spawn_Nav` (forward-centre, `(0, 0, 42.5)`) | no stir; standing **Start the ship terminal** |
 | Terminal started, fight not done | `Spawn_Nav` | both intruders release immediately, no line replay; standing **Kill the Gatekeepers** (a pre-revision save without the grant gets it on load, and hears `demo.intruders` gated on its Continue) |
 | `DemoShipFightDone` | `Spawn_Nav` | beat 0 over; standing **EMBARK from the NAV MAP** |
 | `DemoActive` false | live Ship pose | this beat is a no-op |
@@ -332,7 +354,7 @@ string, listed in the play-through. Those are not voice ids.
 
 | Object | Exists? | Where | Beat 0 |
 |---|---|---|---|
-| `Player` + FPC + `PlayerHealth` | yes | `Ship.unity` `(2.5, 1.1, 12.5)` | Have. `spawnPoint` unset |
+| `Player` + FPC + `PlayerHealth` | yes | `Ship - CoOp.unity`, forward and to port beside the teleporter (`x −7.5`, `y ≈1.1`, `z` 41–42.5) — the hub consolidated onto one scene and `Ship - Demo` retired | Have. `spawnPoint` unset |
 | Fade-from-black overlay | yes | `Demo Fade` on Ship HUD | Authored 2026-08-17 |
 | Closed capsule + lid + in-bed camera | yes | `Demo Capsule` graybox at A7 | Authored 2026-08-17 |
 | `PlayerGun` / Ship NavMesh / damage | gun yes, NavMesh no | PlayerGun on Ship camera; no `Ship-NavMesh` asset | A10. Intruders straight-walk |
@@ -351,13 +373,13 @@ string, listed in the play-through. Those are not voice ids.
 
 | Path | Role |
 |---|---|
-| `DemoProgress.cs` | `CanOpenStation`, `CanEmbark`, `MultiplayerUnlocked`. No UnityEngine |
+| `DemoProgress.cs` | **Shipped**: `EmbarkRefusal`, the four station verdicts, `MultiplayerUnlocked`, `SkipShipTutorial`. Engine-free |
 | `SaveData` / `MetaState` | v9 fields + `DemoCapsuleOpened` |
 | `DemoStationGate.cs` | Dark / hold / grant / heal routing before `OpenStationPanel` |
 | `ShipTerminal.cs` | E arm / T start → route power, grant the MK-1, arm the gated spawn |
 | `ShipCapsule.cs` | In-bed camera, lid hold, fade hook |
 | `ShipSpawn.cs` | Capsule vs NAV vs mid-fight respawn |
-| Scene | Cryo bed, spawns, ship terminal, NavMesh if missing, fade overlay on Ship HUD |
+| Scene | Cryo bed, spawns, ship terminal, NavMesh if missing, fade overlay on the Ship HUD — all in `Ship - CoOp.unity`, the one hub scene |
 
 ## Change
 
@@ -422,7 +444,7 @@ None this beat. Gate: `DemoActive && DemoWheelBuysLeft == 2`. F10/F11 log
 - HP floor that misses fall / self damage.
 - Serializing live intruders.
 - Dragging `BastionTerminal` onto the Ship.
-- Teaching juice here.
+- Teaching the Ante here.
 - A companion who opens the lid.
 
 ## Depends / Unblocks
@@ -434,7 +456,7 @@ beat 1 EMBARK. Beat 3 reads `DemoArmoryPowered` already true.
 
 1. EditMode: v9 round-trip; `DemoCapsuleOpened` false on fresh; pre-v9 with
    `CleanExits >= 1` → `DemoActive false`.
-2. EditMode: `CanEmbark` matrix; `MultiplayerUnlocked` false at buys-left 2.
+2. EditMode: `CanEmbark` matrix; `MultiplayerUnlocked` false until `DemoWeaponGranted`.
 3. PlayMode, watch the tape: black 0.4 s → fade 1.5 s → `wake_stir` copy →
    Continue → **[E] release** → hold 1.0 s → glass down → `wake` copy → walk →
    hidden ARMORY shows nothing (no label, no prompt, E consumed) → NAV hold →

@@ -83,8 +83,27 @@ namespace GatekeepersProtocol.EditorTools
 
         const int GalleryIx = 3;
 
+        /// <summary>RETIRED 2026-08-26 — kept readable, made unable to fire.
+        ///
+        /// <para>This builds the PRE-M101 hull: one deck, a starboard gallery at ix=3, and the
+        /// three hatch doors at y=0 on z 27.5 / 12.5 / −17.5. None of those objects are in the
+        /// live scene — the hull has been authored offline by Tools/ship-hull/build_hull.py
+        /// since M101, and the ship's shape lives in that script's layout tables.</para>
+        ///
+        /// <para>It was still wired into Build All Scenes, so one click wiped Environment and
+        /// relocated every hatch. M101 and Docs/Working-Rules.md both said "do not run it";
+        /// a sentence in a document is not a guard, and after the 2026-08-26 collapse to one
+        /// deck this file's single-deck shape would have started to look plausible again —
+        /// the trap getting harder to see, not easier. Deleting the file outright is the
+        /// owner's call; refusing is the part that could not wait.</para></summary>
         static void RebuildShipGeometry()
         {
+            Debug.LogError("[SceneBuilder] RebuildShipGeometry is retired and refuses to run. "
+                + "The Ship hull is authored by Tools/ship-hull/build_hull.py; this method "
+                + "builds the pre-M101 graybox and would wipe Environment and move the hatch "
+                + "doors. Nothing calls it — if you got here, something re-wired it.");
+            return;
+#pragma warning disable 162 // unreachable: kept so the old hull's shape stays readable
             Scene scene = EditorSceneManager.OpenScene(Ship1ScenePath, OpenSceneMode.Single);
             // ShipDress used to skip this rebuild wholesale; it is a skeleton of empty
             // per-room containers, and the owned-roots wipe never touches it, so the
@@ -96,6 +115,7 @@ namespace GatekeepersProtocol.EditorTools
             RefreshShipHatches(pal);
             EditorSceneManager.SaveScene(scene, Ship1ScenePath);
             Debug.Log($"[SceneBuilder] Rebuilt {Ship1ScenePath} in place: Environment + Directional Light + {HatchesRootName}.");
+#pragma warning restore 162
         }
 
         static ShipPalette CreateShipPalette()

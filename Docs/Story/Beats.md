@@ -6,7 +6,8 @@ one and what it costs to build.
 Status: draft. Refined 2026-08-22; beat 7's second exit is unruled.
 Update trigger: when a beat gains or loses a carrier, when a carrier ships or is cut, or
 when the break ending is ruled on.
-Last updated: 2026-08-22
+Last updated: 2026-08-25 (A Boarding volume name; Master Control's second half is one
+Convert window, not five)
 -->
 
 Beats 1 through 6 are shippable now and none of them needs new content. Beat 7 has an open
@@ -24,7 +25,7 @@ that competence feels good. You are not a chosen anything. You are somebody who 
 The first time you dock with a full bank you understand the whole game.
 
 **Carrier.** `../Play/Getting-Started.md`, which is pure sequence and reads as one person
-explaining a job to the next person who will do it. The Situation and A Run volumes
+explaining a job to the next person who will do it. The Situation and A Boarding volumes
 generally.
 
 **Cost.** Nothing. This is the current state of the docs.
@@ -117,8 +118,8 @@ Both are fine outcomes and the game must be equally good in both.
 
 ## 7. Repeat, or break
 
-**In the chair.** Master Control is the ending: five sealed Waves, five bank windows,
-BASTION STRIPPED. It is the best thing that can happen to a Run and, read against the five
+**In the chair.** Master Control is the ending: five sealed Waves, then one Convert
+window with an elite in it, then BASTION STRIPPED. It is the best thing that can happen to a Run and, read against the five
 beats before it, it is the process completing exactly as designed. Winning is repeating.
 
 The other exit is unbuilt. The shape that fits what exists: breaking the process costs the

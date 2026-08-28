@@ -62,10 +62,17 @@ namespace GatekeepersProtocol.Game
                 "repair spent: " + report.repairSpent,
                 "net: " + net,
                 "banked total: " + (gc.Meta != null ? gc.Meta.BankedSalvage : 0),
-                "DEEPEST WAVE " + DeepestShown(gc));
+                "DEEPEST WAVE " + DeepestShown(gc),
+                DemoClearCta);
 
             PushEndScreenShortcut();
         }
+
+        // The demo's best moment must not just stop. Text-only until Steamworks lands —
+        // then this pairs with an overlay wishlist button. Shown on BASTION STRIPPED only.
+        const string DemoClearCta =
+            "Thanks for playing the demo — wishlist GATEKEEPER BASTION on Steam.\n" +
+            "The full game: more bastions · the Primary tier · crew protocols · co-op boarding parties";
 
         static int DeepestShown(GameController gc)
         {
@@ -86,7 +93,8 @@ namespace GatekeepersProtocol.Game
                 _view.SetEndScreen(
                     "BASTION STRIPPED",
                     ClearFraming + " — Master Control Convert survived",
-                    earned, repair, net, banked, deepest);
+                    earned, repair, net, banked, deepest,
+                    DemoClearCta);
             }
             else if (s.Kind == RunEndKind.Docked)
             {

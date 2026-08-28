@@ -1,7 +1,7 @@
 # M100 — A realm you can open while its owner is offline
 
 <!--
-Status: planned (active work 2026-08-24; the active folder is at its cap)
+Status: completed, Aug 2026 (folder-moved 2026-08-25 at Zo's direction; 41 tests offline, never run on two machines)
 Update trigger: when the realm document stops living in one machine's save directory,
 when the access list gains a role beyond member, when the lock's holder stops being the
 host, when accounts stop being anonymous

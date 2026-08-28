@@ -6,7 +6,7 @@ underneath the arc, and the standing rules that keep all of it small.
 Status: draft. Zo's premise, written up and refined 2026-08-22.
 Update trigger: when the fantasy statement changes, when a world definition is added or
 corrected, or when a standing rule is added or struck.
-Last updated: 2026-08-22
+Last updated: 2026-08-25 (four frames, not three — the Cloaker shipped)
 -->
 
 ## The fantasy
@@ -44,7 +44,7 @@ authority at `../_meta/_definitions/language.md`; this is the fiction under thos
 resupplying it. The spawn rooms do not open for you because they are not yours. It should
 read as infrastructure with a purpose you were not told.
 
-**The Gatekeepers.** Machines. Three frames, not three paints. They are not defending
+**The Gatekeepers.** Machines. Four frames, not four paints. They are not defending
 themselves and they are not angry. They are executing a standing order about intrusion, and
 the order is older than you are.
 

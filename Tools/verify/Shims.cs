@@ -102,6 +102,12 @@ namespace NUnit.Framework
     [AttributeUsage(AttributeTargets.Method)] public sealed class TestAttribute : Attribute { }
     [AttributeUsage(AttributeTargets.Method)] public sealed class SetUpAttribute : Attribute { }
     [AttributeUsage(AttributeTargets.Method)] public sealed class TearDownAttribute : Attribute { }
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+    public sealed class IgnoreAttribute : Attribute
+    {
+        public IgnoreAttribute(string reason) { Reason = reason; }
+        public string Reason { get; private set; }
+    }
     [AttributeUsage(AttributeTargets.Method)] public sealed class OneTimeSetUpAttribute : Attribute { }
     [AttributeUsage(AttributeTargets.Method)] public sealed class OneTimeTearDownAttribute : Attribute { }
 

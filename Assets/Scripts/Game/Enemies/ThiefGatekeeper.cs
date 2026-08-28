@@ -3,8 +3,8 @@ using UnityEngine.AI;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>HOST-ONLY: the gatekeeper that walks to the Hatch — except on field-terminal
-    /// Waves, where it hunts the Boarder (dated break, 2026-08-13). Shooting still does not provoke it.</summary>
+    /// <summary>HOST-ONLY: the gatekeeper that walks to the Hatch, on every Wave mode.
+    /// Shooting does not provoke it.</summary>
     /// <remarks>
     /// Two refusals, both hardened here rather than trusted from the pushed flags:
     /// <see cref="MayTargetPlayer"/> is false on Hatch-bank Waves, so aggro radius, line-of-sight
@@ -20,9 +20,14 @@ namespace GatekeepersProtocol.Game
     {
         public override GatekeeperKind Kind => GatekeeperKind.Thief;
 
-        /// <summary>True on field-terminal Waves only (2026-08-13). Hatch-bank keeps the old rule.</summary>
-        protected override bool MayTargetPlayer =>
-            _game != null && _game.Sim != null && _game.Sim.Mode == WaveMode.Terminal;
+        /// <summary>Never. THE 2026-08-13 BREAK IS REVERTED (Zo, 2026-08-27): this returned true
+        /// on field-terminal Waves so a Thief had something to do while the Hatch was out of the
+        /// fight — but a Thief's playerDamage is 0, so "hunting" the player meant walking at them
+        /// harmlessly. It could not hurt the player and could not hurt the Hatch, which made it
+        /// pure ballast: 12 of 13 survived a logged run, each soaking a full magazine at Wave 5
+        /// for nothing. The Hatch is damageable on both modes now, so the original rule stands and
+        /// the Thief has its job back.</summary>
+        protected override bool MayTargetPlayer => false;
 
         /// <summary>Never — stated separately from <see cref="MayTargetPlayer"/> so that "shooting
         /// it does nothing" is a written rule and not a side effect of one.</summary>

@@ -14,25 +14,26 @@ Roadmap alpha sentence and is not that file.
 
 Your ship cuts into a **Bastion** — a garrisoned alien vessel — and siphons it for Salvage.
 You are the **Boarder**. You fight inside it, holding the **Hatch**, the umbilical back to
-your ship, while the **Gatekeepers** who hold the Bastion come to take it back. You juice
-**intensity** at a trigger: more Salvage, more Gatekeepers. **You cannot leave a Run at will.**
+your ship, while the **Gatekeepers** who hold the Bastion come to take it back. You **ante
+up** at a trigger to raise the **Ante**: more Salvage, more Gatekeepers. **You cannot leave a
+Boarding at will.**
 
 ## The pillars
 
 **The player sets both the pace and the stake, and the game supplies neither.** Nothing
-starts until you juice, select with `E`, and press `T` at a field terminal, Master Control,
-or the Hatch. The clock never pays. Juice is a bet you place at the trigger before you see
+starts until you ante up, select with `E`, and press `T` at a field terminal, Master Control,
+or the Hatch. The clock never pays. The Ante is a bet you place at the trigger before you see
 what you bought.
 
 **Every Gatekeeper kind is defined by what it refuses to do.** A Hunter can never hurt the Hatch.
-A Thief never turns when shot. On a Hatch-bank it never hunts you; on a field-terminal Wave it
+A Thief never turns when shot. On a Convert it never hunts you; on a field-terminal Wave it
 does. These are rules in code, not tuning values, so no balance pass can soften one by accident.
 
 **The weapon is the build.** Progression is a weapon and its upgrade wheel, not a stat sheet.
 CREW QUARTERS equips a Boarder Protocol, not buyable attributes.
 
-**Death is what ends a Run early — unless the realm buys the seat back.** Every dead seat, host and solo included, is offered a respawn priced from the realm’s banked pot and climbing with each one taken this Run; mid-Assault it also burns a shared charge. A realm with nothing banked cannot pay, and there the first loss still ends it. Losing takes nothing back. A second
-Boarder going down waits on the Ship (`M57`) and does not end the host's Run (`M49`).
+**Death is what ends a Boarding early — unless the seat can buy itself back.** Every dead seat, host and solo included, is offered a respawn priced at `150 × (taken + 1)`, climbing with each one taken this Boarding, and it is paid out of the Unbanked that seat is carrying. Nothing else may pay: not the realm's bank, not another seat. Whatever is left of the carry survives the death with it. A Boarder who has just Converted is broke and dies for good, so when to Convert is also a choice about how mortal to be (`Respawns.cs`). Losing takes nothing back. A second
+Boarder going down waits on the Ship (`M57`) and does not end the host's Boarding (`M49`).
 
 The session is for **Fellowship, Expression, and Fantasy** (`Design/1-Experience.md` §1.2).
 The pillars above are the Boarder's contract; restamp this line when the rank table moves.
@@ -40,36 +41,36 @@ The pillars above are the Boarder's contract; restamp this line when the rank ta
 ## The loop
 
 ```
-                 SHIP                                    BASTION
-   ┌───────────────────────────────┐        ┌──────────────────────────────────┐
-   │  ARMORY      weapon + wheel   │        │   PREP    quiet. no income.      │
-   │  CREW Q.     protocol         │        │           repair, reposition,    │
-   │  FABRICATION hatch + rig      │───────▶│           juice intensity        │
-   │  NAV MAP     where, how deep  │ embark │              │ E then T          │
-   └───────────────────────────────┘        │              ▼                   │
-                   ▲                        │   ASSAULT gatekeepers walk in from  │
-                   │                        │           spawn pts. kills pay     │
-                   │  RETURN TO SHIP        │           Unbanked; intensity locked│
-                   │  (died, or Master      │              │                   │
-                   │   Control survived)    │              ▼                   │
-                   └────────────────────────┤   wave clear ──▶ PREP  (xN)      │
-                       Hatch-bank converts  │   Master Control Hatch-bank ──▶ Escaped│
-                       Unbanked to the ship │   hatch breached ──▶ run over    │
-                                            │   you die        ──▶ run over    │
-                                            └──────────────────────────────────┘
+                 SHIP                                       BASTION
+   ┌───────────────────────────────┐        ┌──────────────────────────────────────┐
+   │  ARMORY      weapon + wheel   │        │   PREP    quiet. no income.          │
+   │  CREW Q.     protocol         │        │           repair, reposition,        │
+   │  FABRICATION hatch + rig      │───────▶│           ante up (+/-)              │
+   │  NAV MAP     where, how deep  │ embark │              │ E then T              │
+   └───────────────────────────────┘        │              ▼                       │
+                   ▲                        │   ASSAULT gatekeepers walk in from   │
+                   │                        │           spawn pts. kills pay       │
+                   │  RETURN TO SHIP        │           Unbanked; Ante locked      │
+                   │  (died, or Master      │              │                       │
+                   │   Control survived)    │              ▼                       │
+                   └────────────────────────┤   wave clear ──▶ PREP  (xN)          │
+                       Convert takes        │   Master Control Convert ──▶ Escaped │
+                       Unbanked to the ship │   hatch breached ──▶ boarding lost   │
+                                            │   you die        ──▶ boarding lost   │
+                                            └──────────────────────────────────────┘
 ```
 
 The reinforcing loop is kills → Salvage → upgrades → faster kills, and **it closes once per
-Run, in the Ship** — so a Run cannot spiral, and its difficulty is fixed the moment you
-embark. The balancing loop is your kill rate against the arrival rate, and it is weaker than
+Boarding, in the Ship** — so a Boarding cannot spiral, and its difficulty is fixed the moment
+you embark. The balancing loop is your kill rate against the arrival rate, and it is weaker than
 it looks: killing faster cuts each gatekeeper's time at the door but raises how many arrive, and
 the two nearly cancel.
 
-## What a good Run is
+## What a good Boarding is
 
 **Open, and it is the most valuable unanswered question in the project.** The two constraints
-that exist are an economy one — no Wave should cost more than three failed Runs' earnings to
-buy past — and a curve target on Hatch remaining. The second does not work: Hatch remaining
+that exist are an economy one — no Wave should cost more than three failed Boardings' earnings
+to buy past — and a curve target on Hatch remaining. The second does not work: Hatch remaining
 measures leakage, not effort, and reads 100% for a skilled player whether the Wave was
 trivial or desperate. `Design/1-Experience.md`, section 1.3. Mean live grades Challenge;
 Fellowship and Fantasy stay play-reported.
@@ -119,6 +120,10 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `_meta/_definitions/` | `milestone.md`, `brainstorm.md`, `hygiene.md`, `animation-sidecar.md`, and `language.md` — the ubiquitous language every doc, log line and player-facing string uses. |
 | `Play/` | The **Compendium** — volumes of related entries. Each hand-written page holds `## Game` (what pause shows) and `## Reference` (fuller brief). Folder path is `Play/` (language lint); player-facing name is Compendium. In-game reader shipped (M62, Esc → Compendium). |
 
+Everything under `Docs/` that is not in that table or the Design one is not a shelf:
+`_to_delete/` is gitignored staging, `_meta/Logs/` is the gitignored log archive the
+dashboard can also read, and `_meta/unity.env` holds local credentials the docs never use.
+
 **Cold start:** this page, then `Design/` 1 → 4, then `Architecture.md` and
 `Working-Rules.md` before touching anything, then `Decisions.md` before proposing a feature
 and `Roadmap.md` before starting work. **If you have never played it**, start instead with the Compendium:
@@ -128,10 +133,12 @@ and `Roadmap.md` before starting work. **If you have never played it**, start in
 [`dashboard-data.js`](dashboard-data.js) (regen with `Tools/dashboard-data/run.ps1`) —
 lane caps, milestones, hygiene passes, commits, outstanding questions, rule-based next
 focus. Both panels warn when the committed data file is older than HEAD or 36 hours.
-**Session** chooses the `Logs` folder (or drop `GatekeepersProtocol_*.log`;
-`GatekeeperBastion_*.log` still parse) and parses in
-the browser: mean live by era (hatch-bank loop ≥ 2026-08-13), kills, spend/SKU, hatch
-pressure, intensity, Hatch-bank starts, ability credit. PlayMode / short / Dev are
+**Session** chooses the `Logs` folder, optionally the archive in `Docs/_meta/Logs`, or
+dropped files (`GatekeepersProtocol_*.log` is current; `GatekeeperBastion_*.log` still
+parse), and parses in the browser: mean live by era (its label is `hatch-bank loop ≥
+2026-08-13`), kills, spend/SKU, hatch pressure, intensity, Hatch-bank starts, ability
+credit — the log's own words, which the 2026-08-24 rename deliberately left alone.
+PlayMode is **off** by default (2026-08-24: harness churn); short and Dev stay on and
 **labeled**, not dropped, until the corpus is large. Far-wall / `hatchDist` is on the
 kill line; `wave-report` prints median and far-wall share per kind.
 
@@ -140,8 +147,8 @@ kill line; `wave-report` prints median and far-wall share per kind.
 **Countable is generated; arguable is written.** `Tools/docgen/run.sh` writes
 `Play/Field-Manual.md` and splices the countable blocks in `Design/4-Data.md` by calling the
 same code the game runs, and `--check` exits non-zero on drift (also from
-`Tools/verify/run.sh`). A hand edit inside a generated region is lost on the next Run, on
-purpose; prose outside `4-Data.md`'s `GKB` markers is preserved. **Do not restate a countable
+`Tools/verify/run.sh`). A hand edit inside a generated region is lost the next time docgen
+runs, on purpose; prose outside `4-Data.md`'s `GKB` markers is preserved. **Do not restate a countable
 fact anywhere else** — link to the manual or the block. On 2026-08-04 three documents
 described three different games and none was the one in the repo; each had been correct when
 written.

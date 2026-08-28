@@ -24,6 +24,15 @@ namespace GatekeepersProtocol.Tests
             for (int i = 0; i < count; i++) sim.AwardKill();
         }
 
+        /// <summary>What the bank sees for <paramref name="kills"/> bodies at
+        /// <paramref name="siphonLevel"/>, floored per body as AwardKill does. DERIVED, because
+        /// SalvagePerKill moved 25 -> 42 on 2026-08-27 and every figure in this fixture is a
+        /// multiple of it — including a six-entry per-level table that was written out by
+        /// hand.</summary>
+        private static long Banked(int siphonLevel, int kills) =>
+            kills * (long)(MetaUpgrades.SalvagePerKill()
+                           * TetherSiphon.RewardMultiplierFor(siphonLevel));
+
         // ---- NotifyPlayerDown: the death path (bookkeeping only) ----
 
         [Test]
@@ -33,16 +42,22 @@ namespace GatekeepersProtocol.Tests
             var sim = NewTetheredSim(out meta);
             sim.TriggerDraw();
             Kill(sim, 2);
-            Assert.AreEqual(50L, sim.Unbanked, "unbanked while still alive");
-            Assert.AreEqual(0L, meta.BankedSalvage);
+            // Re-keyed 2026-08-25 (Zo): the name was always the claim, and now it is literal.
+            // Two kills used to leave their pay in an at-risk carry that this very death then
+            // wiped; they bank on landing, so the run that ends here ends with something to show.
+            Assert.AreEqual(Banked(0, 2), meta.BankedSalvage, "the kills banked as they landed");
+            Assert.AreEqual(0L, sim.Unbanked, "and nothing was carried into the death");
 
             sim.NotifyPlayerDown();
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual(0L, sim.Unbanked, "down wipes unbanked");
-            Assert.AreEqual(0L, meta.BankedSalvage);
+            Assert.AreEqual(Banked(0, 2), meta.BankedSalvage,
+                "death cannot reach the bank behind it");
             Assert.AreEqual(1, meta.PodEjections);
             Assert.AreEqual("player", sim.LastRunReport.cause);
-            Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
+            Assert.AreEqual(Banked(0, 2), sim.LastRunReport.grossEarned);
+            Assert.Greater(sim.LastRunReport.grossEarned, 0L,
+                "a run with kills in it must never report nothing - that is the whole ruling");
         }
 
         [Test]
@@ -61,7 +76,9 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Dying_NeverReducesBankedSalvage_AtAnySiphonLevel()
         {
-            long[] bankedPerKill = { 25L, 27L, 28L, 31L, 33L, 37L };
+            // The per-level table used to be written out here as six literals — 25 / 27 / 28 /
+            // 31 / 33 / 37 — and SalvagePerKill 25 -> 42 turned every one of them red. It is
+            // derived now; RunSimTests owns the pin on the curve itself.
             for (int level = 0; level <= TetherSiphon.MaxLevel; level++)
             {
                 MetaState meta;
@@ -71,8 +88,12 @@ namespace GatekeepersProtocol.Tests
                 sim.TriggerDraw();
                 Kill(sim, 4);
                 long before = meta.BankedSalvage;
-                Assert.AreEqual(1000L, before, "level " + level + " ship bank unchanged by kills");
-                Assert.AreEqual(4L * bankedPerKill[level], sim.Unbanked, "level " + level + " unbanked");
+                // Re-keyed 2026-08-25: kills now RAISE this number instead of leaving it be,
+                // which only sharpens the pin — the bank is what the death is measured
+                // against, so it has to be a figure the run actually put there.
+                Assert.AreEqual(1000L + Banked(level, 4), before,
+                    "level " + level + " kills banked at face value");
+                Assert.AreEqual(0L, sim.Unbanked, "level " + level + " carried nothing");
 
                 sim.NotifyPlayerDown();
                 Assert.AreEqual(before, meta.BankedSalvage, "death took currency at level " + level);
@@ -151,9 +172,17 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(RunPhase.Lost, simHatch.Phase);
             Assert.AreEqual(RunPhase.Lost, simPlayer.Phase);
             Assert.AreEqual(metaHatch.BankedSalvage, metaPlayer.BankedSalvage, "same bank");
-            Assert.AreEqual(0L, metaPlayer.BankedSalvage);
+            // Re-keyed 2026-08-25: three kills at dial 2 bank a real figure now (84 then, 144
+            // since the 2026-08-27 price raise), so parity is a
+            // shared non-zero figure rather than a shared nothing — which is the stronger
+            // reading, since two ways of dying that both banked nothing would look identical
+            // however differently they were bookkept.
+            Assert.AreEqual(Banked(2, 3), metaPlayer.BankedSalvage);
             Assert.AreEqual(simHatch.LastRunReport.grossEarned, simPlayer.LastRunReport.grossEarned);
-            Assert.AreEqual(0L, simPlayer.LastRunReport.grossEarned, "neither converted");
+            Assert.AreEqual(Banked(2, 3), simPlayer.LastRunReport.grossEarned,
+                "both banked what they killed and neither converted anything on top");
+            Assert.Greater(Banked(2, 3), 0L,
+                "parity between two ways of banking NOTHING would prove nothing");
             Assert.AreEqual(metaHatch.PodEjections, metaPlayer.PodEjections);
             Assert.AreEqual("hatch", simHatch.LastRunReport.cause);
             Assert.AreEqual("player", simPlayer.LastRunReport.cause);
@@ -215,34 +244,45 @@ namespace GatekeepersProtocol.Tests
         // salvage home first — the DEATH is no longer the key, the CONVERT is.
 
         [Test]
-        public void UpgradesUnlocked_FalseAtZeroConversions_TrueFromTheFirstBank()
+        public void UpgradesUnlocked_FalseOnAFreshRealm_TrueFromTheFirstSalvageEarned()
         {
+            // Re-keyed 2026-08-25: the gate was HatchConversions, raised only by a Convert
+            // window, and the Convert is out of the demo. Kills bank as they land, so the
+            // question is simply whether this realm has ever earned anything.
             var m = MetaState.CreateNew();
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m), "fresh save: gate closed");
             m.PodEjections = 7;
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m),
                 "losses alone open nothing — a player who banked nothing has nothing to spend");
-            m.HatchConversions = 1;
-            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m), "the first bank opens the shop");
             m.HatchConversions = 7;
-            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m), "stays open");
+            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(m),
+                "Convert windows are no longer the key — a counter alone must not open it");
+            m.EarnSalvage(25L);
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m), "the first kill opens the shop");
+            m.SpendSalvage(25L);
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m),
+                "spending back to zero must not re-lock the wheel — the figure is lifetime");
         }
 
         [Test]
-        public void UpgradesUnlocked_OpensViaTheConvertPath_NotThePlayerDownPath()
+        public void UpgradesUnlocked_OpensOnTheFirstBankedKill_NotThePlayerDownPath()
         {
+            // Re-keyed 2026-08-25: the sim-level half of the gate. It used to have to reach a
+            // Convert window to open, which is the reachability problem Zo's rule change was
+            // about — a starting kit dies before it gets there. One kill now opens it, and the
+            // pin is kept at the sim level so the wiring from AwardKill to LifetimeSalvage-
+            // Earned stays covered, not just the MetaState predicate above.
             var meta = MetaState.CreateNew();
             Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(meta));
             var sim = new RunSim(meta, 7);
             sim.StartRun();
             sim.EngageTether();
             sim.TriggerDraw();
-            for (int i = 0; i < 24; i++) sim.AwardKill();
-            sim.NotifyAssaultCleared();
-            sim.TriggerDraw(WaveMode.HatchBank);
-            sim.Tick(2f); // a few drip units convert
+            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(meta),
+                "drawing a wave is not earning anything");
+            sim.AwardKill();
             Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta),
-                "salvage through the Hatch is the unlock");
+                "the first body through the Hatch is the unlock");
             sim.NotifyPlayerDown();
             Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(meta),
                 "the loss that follows changes nothing about it");

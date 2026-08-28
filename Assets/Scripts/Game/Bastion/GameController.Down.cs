@@ -6,10 +6,11 @@ namespace GatekeepersProtocol.Game
 {
     /// <summary>HOST-ONLY (partial of GameController): the local seat's DOWN state. Death
     /// used to end the run outright; now it holds the run open while a respawn can be
-    /// honored — immediately when this seat's own carry covers the price, or while any
-    /// other seat still fights, since their kills split into every pile including this
-    /// one. The frozen pile is the purse; nothing else pays. Split so GameController.cs
-    /// stays under cap; the guest path is GameController.Respawn.cs.</summary>
+    /// honored — immediately when the realm's bank covers the price, or while any other seat
+    /// still fights, since every seat's kills bank into that one pot (Zo, 2026-08-25). The
+    /// BANK is the purse; a seat's staked pile is never touched, so choosing to gamble can
+    /// never price your own return out of reach. Split so GameController.cs stays under cap;
+    /// the guest path is GameController.Respawn.cs.</summary>
     public sealed partial class GameController
     {
         #region State

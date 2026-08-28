@@ -1,4 +1,4 @@
-<!-- Purpose: the Gatekeeper roster as a player meets it — what each kind is, and the one thing each refuses to do. / Status: working / Update trigger: when a kind is added, renamed, or its refusal changes. / Last updated: 2026-08-20 -->
+<!-- Purpose: the Gatekeeper roster as a player meets it — what each kind is, and the one thing each refuses to do. / Status: working / Update trigger: when a kind is added, renamed, or its refusal changes. / Last updated: 2026-08-25 (kills bank as they land; the Convert leaves the demo) -->
 
 # Gatekeepers
 
@@ -79,17 +79,17 @@ If you start a Boarding at a deeper Wave from the Ship, your first Wave after se
 
 ### What killing them is for
 
-A Gatekeeper is worth Salvage only while a Wave is live, and that Salvage is Unbanked until a Convert. Nothing pays during Prep, and nothing pays for surviving.
+A Gatekeeper is worth Salvage only while a Wave is live, and it is worth it immediately: the pay lands in the realm's bank the moment the body does. Nothing pays during Prep, and nothing pays for surviving. A Gatekeeper killed inside a Convert window pays nothing either — that window moves money you are already carrying.
 
-Being Lost ends the Boarding, and so does losing the Hatch. Both keep everything already converted. Unbanked is gone.
+Being Lost ends the Boarding, and so does losing the Hatch. Neither takes a unit of it back. Every body you dropped on the way is already paid for, which is why a Boarding you lose is still a Boarding that bought you something.
 
 ## See also
 
-[Default](Gatekeeper-Default.md). [Hunter](Gatekeeper-Hunter.md). [Thief](Gatekeeper-Thief.md). [Waves](Waves.md). [The Hatch](The-Hatch.md).
+[Default](Gatekeeper-Default.md). [Hunter](Gatekeeper-Hunter.md). [Thief](Gatekeeper-Thief.md). [Cloaker](Gatekeeper-Cloaker.md). [Waves](Waves.md). [The Hatch](The-Hatch.md).
 
 ## Gaps
 
-- The decided roster is twelve kinds, recorded in `Docs/Brainstorms/gatekeepers-and-waves.md`. This volume still describes the three in the build. Unbuilt kinds do not get Game pages until they exist (`M63` criterion 9).
+- The decided roster is twelve kinds, recorded in `Docs/Brainstorms/gatekeepers-and-waves.md`. Four are in the build. The other eight carry Coming Soon marker pages that name only what each will take; none gets a full Game entry until it ships.
 - Nothing on screen ever breaks the remaining count down by kind. The Assault panel gives you one total, so "eleven left" could be eleven Defaults or eight Defaults and three Thieves, and you cannot check.
 - Nothing tells you a Wave's composition *before* you start it. Prep tells you how many bodies are coming, not how many of them are Hunters or Thieves.
 - The shout is invisible and silent. Nothing indicates that shooting one Gatekeeper just flipped four others onto you.

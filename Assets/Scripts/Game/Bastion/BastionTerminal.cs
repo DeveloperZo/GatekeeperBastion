@@ -125,15 +125,44 @@ namespace GatekeepersProtocol.Game
                     return FaucetPrompt(_game);
                 if (_layout != null && _layout.IsTerminalDone(terminalId))
                 {
-                    // No "[E] Open door" branch: a completed terminal no longer opens anything.
-                    // Doors open on a survived Hatch-bank window (BastionUnlockGraph).
-                    return "Terminal " + terminalId + " — complete";
+                    // No "[E] Open door" branch: the door opened with the zone. Shutting this
+                    // terminal off is what opened it (GameController.OpenDoorsFor).
+                    s_prompt.Clear();
+                    s_prompt.Append("Terminal ").Append(terminalId).Append(" — complete");
+                    return s_prompt.ToString();
                 }
                 var gc = _game;
+                // THE LOOP (Zo, 2026-08-25, enforced 2026-08-26): the wave began at the Hatch
+                // and this is its off switch — in Assault while bodies are still coming, and
+                // in Prep once the player has killed them all and walked up anyway. The zone
+                // is not finished until this is pressed, so the prompt must say so in both.
+                if (gc != null && gc.Sim != null && gc.Sim.Mode != WaveMode.HatchBank
+                    && DemoZones.ZoneOf(terminalId) > 0 && gc.CanShutOffTerminal(terminalId))
+                {
+                    s_prompt.Clear();
+                    s_prompt.Append('[').Append(startKey).Append("] shut it down");
+                    return s_prompt.ToString();
+                }
                 if (gc != null && gc.Sim != null && gc.Sim.Assault == AssaultState.Assault)
-                    return "Terminal " + terminalId + " — wave live";
+                {
+                    // A Convert window has no off switch — that one really is just live.
+                    s_prompt.Clear();
+                    s_prompt.Append("Terminal ").Append(terminalId).Append(" — wave live");
+                    return s_prompt.ToString();
+                }
                 if (gc != null && gc.Sim != null && gc.Sim.SequentialPending)
-                    return "Terminal " + terminalId + " — next Wave incoming";
+                {
+                    s_prompt.Clear();
+                    s_prompt.Append("Terminal ").Append(terminalId).Append(" — next Wave incoming");
+                    return s_prompt.ToString();
+                }
+                if (gc != null && gc.HatchOffersWaveStart && DemoZones.ZoneOf(terminalId) > 0)
+                {
+                    s_prompt.Clear();
+                    s_prompt.Append("Terminal ").Append(terminalId)
+                        .Append(" — start the wave at the Hatch");
+                    return s_prompt.ToString();
+                }
                 if (gc != null)
                 {
                     // The zone's deepest terminal remembers the zone: composite by default,
@@ -145,7 +174,11 @@ namespace GatekeepersProtocol.Game
                 }
                 string blocked = gc != null ? gc.FieldStartBlockReason(terminalId) : null;
                 if (blocked != null)
-                    return "Terminal " + terminalId + " — " + blocked;
+                {
+                    s_prompt.Clear();
+                    s_prompt.Append("Terminal ").Append(terminalId).Append(" — ").Append(blocked);
+                    return s_prompt.ToString();
+                }
                 int k = 0;
                 int n = WavesToComplete;
                 if (_layout != null)

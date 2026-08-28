@@ -6,7 +6,9 @@ afford. Press and Steam pages are the evidence, not wishful shelves.
 Status: working
 Update trigger: when Guns 'n Goblins or a named comparable changes public
 positioning, or when we pick Steam tags.
-Last updated: 2026-08-17
+Last updated: 2026-08-26 (Aliens: Fireteam Elite added to the take-vs-refuse table); previously
+2026-08-25 (impression lists renamed to the player's words; VEIL and FORGE
+moved off the failed list; the co-op shelf row gains M98's join and buy-back)
 -->
 
 ## Ancestor (public)
@@ -46,7 +48,7 @@ real; the shelf is fatal if we land on Idler / Incremental / Bullet Heaven.
 |---|---|---|
 | **Bullet Heaven** | Steam tag, May 2026: auto-attack hordes + upgrades ([Tweaktown](https://www.tweaktown.com/news/111680/steam-has-finally-given-vampire-survivors-and-similar-games-its-own-genre-tag/index.html)) | **Hurt.** We aim. We do not auto-fire a build. |
 | **Horde survivor FPS** | GnG press; "thousands of units" | **Hurt** if we use their numbers. Dial-0 **solo** is 18–66; co-op ×n, cap 120×n (`../Design/4-Data.md`). |
-| **Co-op wave FPS** | [Killing Floor 2](https://store.steampowered.com/app/232090/Killing_Floor_2/); [Left 4 Dead 2](https://store.steampowered.com/app/550/Left_4_Dead_2/) | **Help:** friends, Waves, specials with jobs. **Hurt:** gore grind, linear campaign, Trader loop, no Ship bank. |
+| **Co-op wave FPS** | [Killing Floor 2](https://store.steampowered.com/app/232090/Killing_Floor_2/); [Left 4 Dead 2](https://store.steampowered.com/app/550/Left_4_Dead_2/) | **Help:** friends, Waves, specials with jobs, and since `M98` a friend who joins mid-Boarding at a break and a dead seat that can buy back. **Hurt:** gore grind, linear campaign, Trader loop, no Ship bank. |
 | **Board a hostile complex** | [GTFO](https://store.steampowered.com/app/493520/GTFO/) | **Help:** you do not own the map; gear before the drop. **Hurt:** stealth horror, four-player required. Solo is complete here. |
 | **Co-op extract + class** | [Deep Rock Galactic](https://store.steampowered.com/app/548430/Deep_Rock_Galactic/) | **Help:** job on a hostile rock, friend optional. **Hurt:** procgen caves, 50 kinds, seasons. One dressed Bastion. |
 | **Comedy scrape-loot** | Lethal Company | **Hurt.** Small-crew boarding is real; quota comedy is the wrong fantasy. |
@@ -74,13 +76,14 @@ a siphon; a tower-defense FPS.
 | Mass Effect Soldier / AW Andy | Default = unmodified assault baseline | Specialist as the day-one class |
 | Kingdom Rush | 1-of-2 twists change the job, not the number | Deleting dead branches (Alliance backlash). Flat-number hammers are Hades, not KR |
 | Boss Room | Readable 4p NGO lobby / host scene | FishNet / Fusion / Quantum; Boss Room as a sim mandate |
+| Aliens: Fireteam Elite | Distinct-verb ability spread per class (turret / heal-buff / detection / AoE / squad-buff), never four flavors of one thing; a symmetric, legible risk card (flat +50% dealt and taken) reads clean | Randomized card draw over player-authored choice; a stakes system players report as "doesn't matter" below the top difficulty tier; a numeric aggregate power score (Combat Rating) summed across gear |
 
 ## Accurate vs failed impression
 
 **Accurate:** sci-fi FPS; you are the Boarder; they hold the Bastion; quiet
-until you juice and start; banked Salvage survives a loss; a friend is the
+until you ante up and start; banked Salvage survives a loss; a friend is the
 aim of the roadmap.
 
 **Failed:** incremental; idler; bullet heaven; castle defense; thousands on
-screen; you rebuild **your** Bastion; specialist Protocols in the trailer;
-plural destinations.
+screen; you rebuild **your** Bastion; AEGIS or LEDGER in the trailer (VEIL and
+FORGE ship and may appear); plural destinations.

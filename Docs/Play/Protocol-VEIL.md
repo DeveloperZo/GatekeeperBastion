@@ -1,4 +1,4 @@
-<!-- Purpose: the VEIL Protocol — PHANTOM doctrine, Ping, Cloak, Ghost, and the trade of taking attention deliberately. / Status: working / Update trigger: when VEIL's doctrine, abilities, twists or cost change. / Last updated: 2026-08-22 -->
+<!-- Purpose: the VEIL Protocol — PHANTOM doctrine, Ping, Cloak, Ghost, and the trade of taking attention deliberately. / Status: working / Update trigger: when VEIL's doctrine, abilities, twists or cost change. / Last updated: 2026-08-25 (PHANTOM's doctrine restated in player words — the builder-only shorthand is gone) -->
 
 # VEIL Protocol
 
@@ -20,7 +20,7 @@ Claimed at CREW QUARTERS, on the same panel as Default.
 
 ### Doctrine: PHANTOM
 
-A decoy you place spawns holding the aggro you are currently carrying, rather than pulling neutrally. The payload's own live count is unchanged; this is about what the decoy inherits, not how many stand.
+A decoy you place spawns holding the attention you are currently carrying — everything already provoked onto you — rather than pulling neutrally. The payload's own live count is unchanged; this is about what the decoy inherits, not how many stand.
 
 ### Crew: Ping
 
@@ -57,5 +57,5 @@ Gatekeepers notice you at a reduced fraction of their normal acquisition range. 
 - Ping's pull is not distinguished on screen from its render. Players read the through-walls effect as the whole ability and are surprised by the arrival.
 - Nothing indicates you are cloaked to the garrison rather than merely unnoticed, and nothing warns that firing ends it.
 - Ghost has no readout at all. A permanently reduced acquisition range is invisible and is the sheet's most valuable row.
-- That a PHANTOM decoy inherits your aggro is never stated. It looks like an ordinary decoy that happened to work well.
+- That a PHANTOM decoy inherits what is already provoked onto you is never stated. It looks like an ordinary decoy that happened to work well.
 - Ping does not exclude Thieves in its description, so players expect it to move them.

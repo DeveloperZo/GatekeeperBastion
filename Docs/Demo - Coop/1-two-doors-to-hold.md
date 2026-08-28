@@ -8,7 +8,8 @@ Status: demo spec
 Authority: implementable
 Update trigger: when the routing stamp is overridden, when the WaveDirector player
 scaling changes, when the zone shape changes
-Last updated: 2026-08-20
+Last updated: 2026-08-25 (thiefCount/cloakerCount identifiers; the quoted line and the
+standing say Convert)
 Depends: voice-coop.md, 0-the-invite.md
 -->
 
@@ -37,10 +38,10 @@ what decides which.
 Stated plainly because it is the one code delta that carries the beat.
 
 Today `NextWave` multiplies `enemyCount` by `playerCount` and clamps the fixed
-`hunterCount` and `ramCount` table rows against the scaled total
-(`WaveDirector.cs:114-120`). Health multiplier, group size and spawn interval never
-see `playerCount` (`:123-126`). The result is proportionally more Default gatekeepers
-arriving from the same spawn rooms at the same single door.
+`hunterCount`, `thiefCount` and `cloakerCount` table rows against the scaled total.
+Health multiplier, group size and spawn interval never see `playerCount`. The result
+is proportionally more Default gatekeepers arriving from the same spawn rooms at the
+same single door, since the surplus is entirely Default by construction.
 
 **The hatch replaces that multiplier. It does not stack on it.** Per-seat body count
 stays where it is; those bodies now divide across the open doors instead of massing
@@ -96,8 +97,8 @@ Continues from beat 0 step 5. Standing arrives as **Find a field terminal**.
 |---|---|
 | **Goal** | Bank the lesson before the bank window asks for it. |
 | **Player** | Last body drops. |
-| **Game** | `demo.coop.after_terminal` · Subtitle · Party · Game, on clear. **Wave down. The Hatch-bank moves salvage home through those same doors.** |
-| **Standing** | Hatch-bank at a hatch |
+| **Game** | `demo.coop.after_terminal` · Subtitle · Party · Game, on clear. **Wave down. A Convert moves salvage home through those same doors.** |
+| **Standing** | Convert at a hatch |
 | **Log** | existing wave-clear line |
 | **Have** | Wave clear, `DemoZoneDeepestWave` write on field-Wave clear (per-seat). |
 | **Build** | The line. Write deepest per seat from the same rule as solo, for every seat including guests. |

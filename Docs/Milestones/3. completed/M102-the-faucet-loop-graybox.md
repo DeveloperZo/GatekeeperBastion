@@ -1,10 +1,10 @@
 # M102 — The faucet loop, graybox
 
 <!--
-Status: planned (built 2026-08-24, dev-gated; harness green, playthrough owed)
+Status: completed, Aug 2026 (folder-moved 2026-08-25 at Zo's direction; harness green, the playthrough experiment unobserved)
 Update trigger: when the faucet rules change, when the draft semantics are decided by
 play, or when the slice graduates from dev-gated to shipped.
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 -->
 
 A dev-gated graybox of the faucet loop from `../../Brainstorms/coop-bastion-complexity.md`:
@@ -131,6 +131,12 @@ Sim first, Game after; every faucet path is inert while `FaucetActive` is false.
    `FaucetLoopTests` pass, and every failure is the recorded pre-existing set plus two
    casualties of concurrent M95 / M63-3 sessions (`CoopScene_Exists…` stair land,
    `CatalogVolumes…` Play page). No failure is this milestone's.**
+   **Re-ran 2026-08-25 against the tree after the Convert rename and the slot-aware
+   GameController refactor landed on top: EditMode 842/6, PlayMode 92/1 — all 13
+   `FaucetLoopTests` still pass, every failure the recorded pre-existing set
+   (BastionDoorAperture, HudSeparation ×2, M59Polish ×2, TwoRunIsolation/HatchWaves;
+   PlayMode's one is the cursor-capture environmental gate). The faucet slice survived
+   both refactors untouched.**
 2. Criteria 3–9 — `FaucetLoopTests` assertions per criterion where the rule is sim-side
    (chain, bonus, mark, draft size, refusal, axis application).
 3. Playthrough path — from Play: solo, embark, dev console → faucet toggle, `E`+`T` at

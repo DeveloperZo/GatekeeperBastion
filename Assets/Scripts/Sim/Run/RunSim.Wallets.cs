@@ -6,7 +6,8 @@ namespace GatekeepersProtocol.Sim
     /// so drip ticks cannot each credit up to BankCap.</summary>
     public sealed partial class RunSim
     {
-        /// <summary>How many piles AwardKill splits across, and the n in NextWave. 1 in solo.</summary>
+        /// <summary>How many seats hold a staked pile, and the n in NextWave. 1 in solo.
+        /// AwardKill no longer splits across these — it banks whole (Zo, 2026-08-25).</summary>
         public void SetPlayerCount(int count)
         {
             _wallets.SetCount(count);
@@ -15,10 +16,11 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Guest progress for the banking cap. Slot 0 reads host Meta instead.</summary>
         public void SetSlotDeepest(int slot, int deepest) => _wallets.SetDeepest(slot, deepest);
 
-        /// <summary>A seat went down for good: wipe that slot's unbanked. Call this ONLY on
-        /// the path where no respawn was bought — a bought respawn already paid its fee out
-        /// of this pile and the remainder survives with the seat
-        /// (<see cref="TryRespawn"/>).</summary>
+        /// <summary>A seat went down for good: wipe that slot's staked pile. Call this ONLY
+        /// on the path where no respawn was bought. The respawn fee comes out of the realm's
+        /// BANK now (Zo, 2026-08-25), so a bought respawn leaves the staked pile whole
+        /// (<see cref="TryRespawn"/>) — what a Withdraw put at risk stays at risk either
+        /// way.</summary>
         public void WipeUnbankedSlot(int slot) => _wallets.Wipe(slot);
 
         void ResetConvertedThisBank()

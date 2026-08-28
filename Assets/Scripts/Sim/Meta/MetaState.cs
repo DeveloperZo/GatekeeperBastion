@@ -113,10 +113,27 @@ namespace GatekeepersProtocol.Sim
             set { Realm.HatchConversions = value; }
         }
 
+        /// <summary>Deepest field Wave CLEARED. Setting it also raises
+        /// <see cref="DeepestWaveEntered"/>, because a Wave cannot have been cleared without
+        /// being entered — the invariant lives here so no seeding site (dev checkpoints, the
+        /// dev realm, a migrated save) can set one and forget the other.</summary>
         public int DeepestWaveReached
         {
             get { return Realm.DeepestWaveReached; }
-            set { Realm.DeepestWaveReached = value; }
+            set
+            {
+                Realm.DeepestWaveReached = value;
+                if (value > Realm.DeepestWaveEntered) Realm.DeepestWaveEntered = value;
+            }
+        }
+
+        /// <summary>Deepest field Wave ever drawn this campaign, cleared or not. See
+        /// <see cref="RealmState.DeepestWaveEntered"/> for why this is separate from
+        /// <see cref="DeepestWaveReached"/>.</summary>
+        public int DeepestWaveEntered
+        {
+            get { return Realm.DeepestWaveEntered; }
+            set { Realm.DeepestWaveEntered = value; }
         }
 
         public int HatchArmorLevel
@@ -136,6 +153,12 @@ namespace GatekeepersProtocol.Sim
         // ---- Realm: the first-Bastion demo. The demo is a world, so it stays with one ----
 
         public const int DemoZoneCount = RealmState.DemoZoneCount;
+
+        public bool DemoJuiceTaught
+        {
+            get { return Realm.DemoJuiceTaught; }
+            set { Realm.DemoJuiceTaught = value; }
+        }
 
         public bool DemoActive
         {
@@ -328,12 +351,17 @@ namespace GatekeepersProtocol.Sim
         // ---- The rules that genuinely need both halves ----
 
         /// <summary>Null when repair is available; otherwise the next missing step for prompts.
-        /// This reads across both documents on purpose — the gate is the realm's (salvage has
-        /// to have come through that world's Hatch) but the rig is the Boarder's kit.</summary>
+        /// This reads across both documents on purpose — the gate is the realm's (it has to
+        /// have earned something) but the rig is the Boarder's kit.
+        /// <para>The first step MUST read the same key as
+        /// <see cref="MetaUpgrades.UpgradesUnlocked"/>, or the prompt becomes a second vote on
+        /// a rule it only exists to explain. It gated on HatchConversions until 2026-08-25;
+        /// with the Convert window out of the demo that counter can never rise, so every demo
+        /// player was told the slot was locked while it was genuinely buyable.</para></summary>
         public string RepairMissingStep()
         {
-            if (Realm.HatchConversions < 1)
-                return "equipment slot locked until salvage banks through the Hatch";
+            if (!MetaUpgrades.UpgradesUnlocked(this))
+                return "equipment slot locked until this realm has earned salvage";
             if (!Boarder.EquipmentSlotPurchased)
                 return "equipment slot not purchased — buy it at FABRICATION";
             if (!Boarder.OwnsEquipment(EquipmentId.RepairRig))

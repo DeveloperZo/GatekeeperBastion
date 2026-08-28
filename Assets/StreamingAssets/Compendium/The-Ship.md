@@ -4,7 +4,9 @@
 
 Between Boardings I stand on my own Ship, first person, hands empty until I buy something. This is the only place Salvage is spent and the only way back to the Bastion.
 
-Three hatch doors down one side. One opens per seat. The party lead owns EMBARK, and every seat shops its own loadout.
+She is long and narrow and she is one deck, stern to bow. I come to forward, on the port side, with the NAV MAP a few paces ahead of me on the bow bulkhead and the hatch doors spaced down the starboard hull — one opening per seat, which is how I know how many of us there are before anyone speaks. CREW QUARTERS is across the spine from where I wake. Everything else that costs money is at the far end of the ship.
+
+So the walk is the shape of a visit. The map is at my elbow and the guns are the whole hull away: the ARMORY sits aft to starboard and FABRICATION aft to port, and getting to either means walking the length of her, past all three hatches, the beam opening out amidships and closing again toward the stern. No loading, no prompt, nothing to hold — just distance, and enough of it that I have settled what I want before I arrive. Then the same walk forward again to leave, which is the part that feels like going. The party lead owns EMBARK, and every seat shops its own loadout.
 
 Four consoles, four subjects, and nothing is sold in two places. Weapons and their wheels at the ARMORY. The protocol I wear at CREW QUARTERS. The Hatch, the Rig, the equipment slot and the Decoy at FABRICATION. Where I go, and the button that commits me, at the NAV MAP.
 
@@ -16,13 +18,15 @@ The NAV MAP will warn me if I own no weapon and no protocol, and then let me go 
 
 ## Reference
 
-Between boardings you are stood in your own ship, in first person. Hands are empty until you buy a weapon at the ARMORY. You cannot fire here either way. This is the only place Salvage gets spent, and the only way back to the Bastion.
+Between Boardings you are stood in your own ship, in first person. Hands are empty until you buy a weapon at the ARMORY. You cannot fire here either way. This is the only place Salvage gets spent, and the only way back to the Bastion.
+
+The hull is a single deck of a long, narrow vessel — about 60 m stern to bow, 20 m across amidships and half that at either end. Bow is the direction the NAV MAP faces. You spawn forward and to port; the NAV MAP is ahead of you on the bow bulkhead, on the same side. The three hatch doors are spaced down the starboard hull, one forward, one amidships, one aft. CREW QUARTERS is to starboard, level with where you spawn, but the ARMORY and FABRICATION are both at the stern end — ARMORY to starboard, FABRICATION to port — so a weapon or a Hatch upgrade is a walk the length of the ship and back. That traverse is geometry and nothing else: no loading screen, no trigger to step into.
 
 You walk. You look at a console until the prompt appears at the bottom of the screen, you hold interact, and a panel opens: your movement locks, the cursor comes free, and the panel owns the screen until you close it. One panel at a time. Close it and you are walking again. Binding: [Field Manual](Field-Manual.md).
 
 Every panel, whichever console it belongs to, shows your banked Salvage at the top. A row you cannot afford does not grey out — it tells you exactly how much more you need. That is deliberate: buying something you cannot pay for is not a silent refusal.
 
-The header in the corner of the screen lists which direction each console is in. If you are lost, read it.
+Each console carries its own name on a label that stands in the air beside it and turns to face you from across the room. That is the whole of the wayfinding — the corners of the screen carry your profile, your record and your loadout, and nothing that points anywhere. If you are lost, look for a name, not a heading.
 
 ### What each console is for
 

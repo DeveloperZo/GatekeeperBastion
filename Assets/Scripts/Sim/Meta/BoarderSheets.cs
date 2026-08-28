@@ -12,7 +12,7 @@ namespace GatekeepersProtocol.Sim
 
         public const string DoctrineDefault = "STOCK — hardware as sold";
         public const string DoctrineVeil =
-            "PHANTOM — a decoy you place spawns holding the aggro you are carrying, instead of "
+            "PHANTOM — a decoy you place spawns holding the attention you are carrying, instead of "
             + "pulling neutrally.";
         public const string DoctrineForge =
             "PARALLEL BAYS — two of your decoys may stand live at once. Not yet active: the bay still holds one.";

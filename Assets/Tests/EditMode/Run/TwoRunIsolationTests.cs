@@ -162,8 +162,21 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(AssaultState.Prep, a.Sim.Assault);
             Assert.AreEqual(3, a.Sim.CurrentWaveIndex);
             Assert.AreEqual(3, a.Meta.DeepestWaveReached);
-            Assert.AreEqual(100L, a.Sim.Unbanked, "4 kills x 25 at Scavenging 0, siphon 0");
-            Assert.AreEqual(0L, a.Meta.BankedSalvage);
+            // Re-keyed 2026-08-25 (Zo, kills bank as they land): the takings moved from the
+            // carry into each context's OWN MetaState, which is the better place for an
+            // isolation pin to read them — a leak across contexts now shows up in the bank
+            // that persists, not in a pile the run was about to wipe anyway.
+            //
+            // The two figures below were the literals 100 and 62, which were 25-per-kill
+            // arithmetic; SalvagePerKill 25 -> 42 on 2026-08-27 moved both. They are derived off
+            // the live price now — what this fixture is watching is that A's four kills and B's
+            // two land in DIFFERENT banks, not what either is worth.
+            long perKill = (long)MetaUpgrades.SalvagePerKill();
+            long perKillAtThree = (long)(MetaUpgrades.SalvagePerKill()
+                                         * TetherSiphon.RewardMultiplierFor(3));
+            Assert.AreEqual(4L * perKill, a.Meta.BankedSalvage,
+                "4 kills at Scavenging 0, siphon 0");
+            Assert.AreEqual(0L, a.Sim.Unbanked, "A never withdrew");
             Assert.AreEqual(a.Sim.Ship.Hatch.MaxHp - 40f, a.Sim.Ship.Hatch.Hp, 1e-4f);
             Assert.IsTrue(a.Decoy.IsLive);
 
@@ -172,8 +185,11 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(AssaultState.Assault, b.Sim.Assault);
             Assert.AreEqual(1, b.Sim.CurrentWaveIndex);
             Assert.AreEqual(1, b.Meta.DeepestWaveReached, "B never cleared anything");
-            Assert.AreEqual(62L, b.Sim.Unbanked, "2 kills x floor(25 x 1.25 siphon-3) = 2 x 31");
-            Assert.AreEqual(0L, b.Meta.BankedSalvage);
+            Assert.AreEqual(2L * perKillAtThree, b.Meta.BankedSalvage,
+                "2 kills x floor(SalvagePerKill x 1.25 siphon-3)");
+            Assert.AreNotEqual(a.Meta.BankedSalvage, b.Meta.BankedSalvage,
+                "the two banks must hold different figures, or a leak between them is invisible");
+            Assert.AreEqual(0L, b.Sim.Unbanked, "B never withdrew either");
             Assert.AreEqual(b.Sim.Ship.Hatch.MaxHp - 90f, b.Sim.Ship.Hatch.Hp, 1e-4f);
             Assert.IsFalse(b.Decoy.IsLive, "B never armed a decoy");
 
@@ -182,7 +198,8 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1, b.Meta.TotalRuns);
             Assert.AreNotEqual(a.Sim.CurrentWaveIndex, b.Sim.CurrentWaveIndex);
             Assert.AreNotEqual(a.Sim.Assault, b.Sim.Assault);
-            Assert.AreNotEqual(a.Sim.Unbanked, b.Sim.Unbanked);
+            Assert.AreNotEqual(a.Meta.BankedSalvage, b.Meta.BankedSalvage,
+                "two banks that had drifted into one would read the same total here");
         }
 
         [Test]

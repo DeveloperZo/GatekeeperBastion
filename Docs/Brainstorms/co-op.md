@@ -4,7 +4,7 @@
 Purpose: Everything co-op that is not yet a milestone — the open questions and the filed slices, with the decided ground left in Decisions.md rather than re-argued.
 Status: brainstorm
 Update trigger: when a co-op slice ships or is filed, or when a decided point is reopened.
-Last updated: 2026-08-19
+Last updated: 2026-08-25 (six co-op milestones since M72 recorded; the avatar is a rigged, animated body, not a capsule)
 -->
 
 ## What this covers
@@ -36,8 +36,17 @@ and endings on the client. M51 shipped (2026-08-13, fixture close): client repai
 decoy and world-acting abilities apply once, server-side. M57 shipped 2026-08-15
 (get-up: Ship wait, Hatch-bank Prep embark). M58 shipped 2026-08-15 (player build).
 M60 shipped 2026-08-15 (Relay join; Zo eyes-on). M72 shipped 2026-08-17 (shared Ship
-lobby; host close log `13-24-37` / Relay `KPRMPR`). Remaining co-op surface is polish
-in this file. The epic's testability story is the `NetcodeIntegrationTest` fixture —
+lobby; host close log `13-24-37` / Relay `KPRMPR`).
+
+**Co-op stopped being polish-only after 2026-08-17, and none of it graduated from this
+file** — the surface below has not tracked it. `M92` and `M101` rebuilt the hull into a
+three-hatch, two-deck ship; `M95` built the 28-room co-op bastion; `M96` split the save so
+a Boarder travels and a realm stays; `M97` put the realm's record on the hull; `M98` split
+the seats playing from the seats connected and gave every dead seat one priced way back;
+`M100` made a realm reachable while its owner is offline. Those milestones are the record.
+What is still open here is presence and the questions below.
+
+The epic's testability story is the `NetcodeIntegrationTest` fixture —
 every slice writes its gate against it and closes headless in the integration check —
 the single-developer constraint (Zo, 2026-08-12) makes that non-negotiable, so **a slice
 whose gate cannot be phrased against the fixture is not ready to graduate.**
@@ -77,10 +86,14 @@ a deep run needs a floor, and whether being carried should raise the banking cap
 
 ### Second-player presence beyond a capsule
 
-The avatar is deliberately a puppet capsule (M48's rejected-alternatives). A visible
-character rig, name label, third-person animations, a ping wheel, voice — each is real
-design work and none is needed for the loopback epic. Get-up after down is
-`[M57](../Milestones/3.%20completed/M57-the-downed-player-waits-on-the-ship.md)`.
+The avatar stopped being a puppet capsule. `NetPlayerAvatar` drives a real `Animator` off
+replicated state — a `Speed` blend against the same thresholds the first-person view model
+uses, and a `Dead` bool — so a crewmate walks, runs and fires on camera (`M83`) and looks
+downed when they are (`M86`, active; `Anim_Down.fbx` is unsourced so `Down` has no motion
+yet). Get-up after down is `M57`, and the priced return is `M98`.
+
+What is still unbuilt of this entry: name labels, a ping wheel, and voice. Voice is rejected
+in `M66` and parked below.
 
 **Graduation test:** co-op sessions are actually being played — presence polish before
 then is paint on a room with no door.

@@ -10,10 +10,12 @@ namespace GatekeepersProtocol.Game
     public sealed partial class GameController
     {
         #region Public API
-        /// <summary>Server: may this waiting guest pay and rejoin. True debits that guest's
-        /// own Unbanked and counts the respawn; false leaves everything unchanged with the
-        /// refusal logged. The host's own seat never comes through here — it respawns at the
-        /// DOWN overlay — and a late arrival follows the party for free instead.</summary>
+        /// <summary>Server: may this waiting guest pay and rejoin. True debits the REALM'S
+        /// BANK (Zo, 2026-08-25 — one pot, and a seat that never staked anything must still
+        /// be able to come back) and counts the respawn; false leaves everything unchanged
+        /// with the refusal logged. The host's own seat never comes through here — it
+        /// respawns at the DOWN overlay — and a late arrival follows the party for
+        /// free instead.</summary>
         public bool TryNetRespawn(NetPlayerAvatar from, out long cost)
         {
             cost = 0L;

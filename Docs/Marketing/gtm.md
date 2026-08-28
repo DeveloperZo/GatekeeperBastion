@@ -5,7 +5,8 @@ Purpose: The first real market is a friend with a zip, not a Steam page.
 Status: working
 Update trigger: when a friends five-Wave dry-run closes, when Release-Gate #19–25 change,
 or when a friends send is actually made.
-Last updated: 2026-08-17
+Last updated: 2026-08-25 (the send may now promise a priced respawn and two more Protocols;
+"host death ends the Run" withdrawn; trailer beats renamed to the player's words)
 -->
 
 ## First market
@@ -51,7 +52,13 @@ or Ready. That is `../Play/Getting-Started.md`.
 
 - A shooter they can finish solo if Join fails.
 - Host/Join by Relay code or typed IPv4 (`M60`).
-- Personal wallets (`M65`); guest down waits (`M57`); host death ends the Run (`M49`).
+- Personal wallets (`M65`); a guest who goes down waits on the Ship (`M57`).
+- **One priced way back for any dead seat, host and solo included** (`M98` recut,
+  2026-08-24): it pays from the Unbanked it is carrying, `150 × (taken + 1)` with the
+  counter the Boarding's, and the remainder of the carry survives the death
+  (`Sim/Run/Respawns.cs`). This row previously read "host death ends the Boarding
+  (`M49`)", which stopped being true on that date.
+- Two more Protocols to claim in CREW — VEIL and FORGE (`M94`).
 
 ## What this send may not promise
 
@@ -61,7 +68,9 @@ or Ready. That is `../Play/Getting-Started.md`.
 - Mid-Run healing, weapon Tiers, or a Repair Rig on a fresh save (first Lost
   unlocks Tiers **and** the FAB equipment slot; the Rig is then a purchase —
   `../Play/Getting-Started.md`).
-- Specialist Protocols, a second Bastion, or Steam features (achievements, cards).
+- AEGIS or LEDGER, a second Bastion, or Steam features (achievements, cards).
+- A realm a friend opens while they are offline (`M100` is built and has never run on
+  two machines).
 - An easy first session (play 2026-08-16: starting solo too hard, `[unconfirmed]`).
 - That Play's shared-Ship prose is the build they have tonight.
 - Nameplates or remote-gun VFX (`M66`). Voice is rejected in `M66` and parked
@@ -71,5 +80,5 @@ or Ready. That is `../Play/Getting-Started.md`.
 
 Only after friends-alpha: a wider zip, then a Steam page whose printable
 sentences are the **true** rows in `pitch.md`. Trailer proof should be: quiet
-Prep, a juice, a start, a Hatch-bank, two people on a Ship — not a body-count
+Prep, an ante up, a start, a Convert, two people on a Ship — not a body-count
 flex. Strategy for tags: `strategy.md`.

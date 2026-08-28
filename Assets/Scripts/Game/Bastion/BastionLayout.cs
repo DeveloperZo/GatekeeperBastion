@@ -142,7 +142,7 @@ namespace GatekeepersProtocol.Game
                 BastionTerminal terminal = _terminals[i];
                 if (terminal == null) continue;
                 if (terminal.Kind != BastionTerminalKind.Field) continue;
-                if (terminal.TerminalId == "T1" || IsTerminalDone(terminal.TerminalId))
+                if (terminal.TerminalId == FirstTerminal.Id || IsTerminalDone(terminal.TerminalId))
                     terminal.SetUnlockedSpawnsActive(true);
             }
         }
@@ -207,15 +207,19 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        /// <summary>A Hatch-bank window was survived: open every eligible door and hand back the
-        /// ids that opened on this call. This is the ONLY runtime path that opens a locked door —
-        /// completing a terminal no longer does.</summary>
-        public bool RecordBankSurvived(out string[] openedDoorIds)
+        /// <summary>Open every door whose required terminals are now done, and hand back the
+        /// ids that opened on this call.
+        /// <para>Two callers: a survived Convert window, and a terminal shutoff completing a
+        /// zone (Zo, 2026-08-25). It was named RecordBankSurvived while the Convert was the
+        /// only trigger — and when the Convert left the demo that made the spine impassable,
+        /// because nothing else could open D1. The rule underneath never changed: a door
+        /// opens when its terminals are done.</para></summary>
+        public bool OpenEligibleDoors(out string[] openedDoorIds)
         {
             openedDoorIds = System.Array.Empty<string>();
             if (_graph == null)
                 return false;
-            if (!_graph.RecordBankSurvived(out openedDoorIds))
+            if (!_graph.OpenEligibleDoors(out openedDoorIds))
                 return false;
             RefreshDoorStates();
             RefreshTerminalStates();

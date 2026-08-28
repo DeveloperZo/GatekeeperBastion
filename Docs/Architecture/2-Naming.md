@@ -5,7 +5,7 @@ Purpose: How things are named in this codebase, and how to read a bad name as a 
 Status: working
 Authority: MANDATORY — deviations need a reason in writing.
 Update trigger: when a casing rule, a banned name shape, or the comment policy changes.
-Last updated: 2026-08-09
+Last updated: 2026-08-25 (three more *IfNeeded since the audit; Cloaker added to the subclass hazard)
 -->
 
 ## 1. Casing
@@ -47,7 +47,7 @@ Unity states this one explicitly and it is the rule most often broken by generat
    being called — no compiler error. Declared `private`, they also break inheritance: Unity
    calls only the derived one. Any MonoBehaviour intended to be subclassed declares its
    messages `protected virtual`. This is live for `EnemyGatekeeper` → `HunterGatekeeper` /
-   `ThiefGatekeeper`. ([source](https://kybernetik.com.au/cs-unity/docs/introduction/methods/messages))
+   `ThiefGatekeeper` / `CloakerGatekeeper`. ([source](https://kybernetik.com.au/cs-unity/docs/introduction/methods/messages))
 2. **`OnX` already means three things**: a Unity message (`OnEnable`), an event *raiser*
    (`OnDoorOpened()` invoking `DoorOpened`), and a hand-wired *handler* (`OnWaveStarted`).
    This codebase uses all three. **Rule: `OnX` is reserved for Unity messages and for
@@ -59,13 +59,18 @@ A bad method name is not a cosmetic problem. It is the method admitting somethin
 signature will not say, and the admission is usually accurate.
 
 **The worked example is this codebase's own.** `PlayerGun.Firing.RegisterPinHitIfNeeded` was
-the name that prompted this folder. Audited 2026-08-09: it is the **only** `*IfNeeded` in
-`Assets/Scripts`, and there is no `*Manager`, `*Helper` or `*Utils` class anywhere in the
-tree. So the name was not evidence of a pattern — but it was evidence of a bug. `IfNeeded`
-means *the method has two behaviours and the caller cannot see which it gets*, and here the
-hidden branch was that it fired once per damaged body in a pierce line, resetting a build
-counter that needed three hits on one target. **The name predicted the defect. That is the
-argument for the table below.**
+the name that prompted this folder, and it was the only `*IfNeeded` in `Assets/Scripts` when
+the 2026-08-09 audit found it. `IfNeeded` means *the method has two behaviours and the caller
+cannot see which it gets*, and here the hidden branch was that it fired once per damaged body
+in a pierce line, resetting a build counter that needed three hits on one target. **The name
+predicted the defect. That is the argument for the table below.**
+
+Three more have arrived since, counted 2026-08-25. `PlayerGun.BindAvatarIfNeeded` and
+`RangeReadout.BindGunIfNeeded` are idempotent binds and are the benign form the table's
+`Ensure` note covers. `OptionsScreen.ApplyAudioIfNeeded(SettingId)` is not: it guards on
+`id` being one of three volume settings, which is a predicate the caller already knows and
+the row below says to hoist. There is still no `*Manager`, `*Helper` or `*Utils` class
+anywhere in the tree.
 
 | Shape | What it is admitting | Refactor | Where it is correct |
 |---|---|---|---|

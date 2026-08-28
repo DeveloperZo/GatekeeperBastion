@@ -5,7 +5,7 @@ Purpose: the ubiquitous language of Gatekeeper's Protocol. One name per thing, u
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired, or when player-facing voice rules change.
-Last updated: 2026-08-24 (Boarding/Ante/ante up/Convert player-text renames — trap 8; earlier same day: realm row, voice rule 1 mirror, protocol roster refresh)
+Last updated: 2026-08-25 (Master Control is one Convert window not five, the per-Boarding Convert cap struck as nonexistent, zone Waves-per-trigger un-inverted, RunPhase.Returned row added, arrivals x dwell recited to 2-Dynamics; Equipment unlock corrected to the first Convert, Thief row's Hatch-bank noun, rule 4's trap 8 carve-out, Compendium row named to the eight volumes on disk, dead Field-Manual link in voice rule 4, trap 4 restated for the folder/remote split; 2026-08-24: Boarding/Ante/ante up/Convert player-text renames — trap 8, realm row, voice rule 1 mirror, protocol roster refresh)
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in
@@ -38,9 +38,10 @@ as though it were agreed is the failure this file exists to stop. Say the plain 
 that compresses it. If a term genuinely earns its keep, it earns a row here first.
 
 **3. Analysis vocabulary is builder-only and never appears in player docs.**
-`gatekeeper-seconds`, `arrivals x dwell`, `mean live` and `mean lifetime` are defined in
+`gatekeeper-seconds`, `mean live` and `mean lifetime` are defined in
 `../../Design/3-Mechanics.md` (and mean live also in `../../Design/1-Experience.md`,
-section 1.3); `realization` is used in `../../Design/2-Dynamics.md`; `hatchDist` and
+section 1.3); `arrivals x dwell` is `../../Design/2-Dynamics.md` section 2.3, loop B1;
+`realization` is used in `../../Design/2-Dynamics.md`; `hatchDist` and
 `spawnDist` are kill-line metres read by `Tools/wave-report`. **Pity timer**,
 **escalating weights**, and **pre-determination** are chance-fairness patterns in
 `../../Design/3-Mechanics.md` section 3.1. A player has no way
@@ -50,8 +51,14 @@ to the Play ban 2026-08-16. Store sentences in `../../Marketing/` follow the sam
 Hunicke names and milestone IDs stay in builder notes, never in the copy block.
 
 **4. Code casing follows the code's own conventions; the *word* stays the same.**
-`GatekeeperKind`, `RunPhase.Tethered`, `MetaState.BankedSalvage` — the identifier can be
-`PascalCase`, but it is never a different noun from the one below.
+`GatekeeperKind`, `MetaState.BankedSalvage` — the identifier can be `PascalCase`, but it is
+never a different noun from the one below.
+
+**The exception is a dated player-text rename, and trap 8 is the whole list of them.**
+`RunPhase`, `IntensityJuice` and `WaveMode.HatchBank` are deliberately different nouns from
+Boarding, Ante and Convert, because those three were renamed for what a player reads and
+the identifiers were left alone in one recorded decision. Read trap 8 before concluding an
+identifier is wrong: outside that list, a different noun is still a defect.
 
 **5. A rename is one commit, everywhere.** Code, `Docs/`, `Docs/Play/`, and this table
 together. A half-done rename is worse than the old name.
@@ -77,11 +84,11 @@ everything the game contains.
 | **Prep** | The quiet state between Waves. Untimed, pays nothing, the only time anting up raises the Ante. | downtime, intermission, break |
 | **Assault** | The state while a Wave is live. | combat, the fight |
 | **the Siphon Draw** | Retired as the Wave-start verb (M52). Prep `T` starts the selected trigger (Field, Master, Convert). `T` without a select is a logged refusal. | spawn, trigger, call the wave, the draw *(alone)* |
-| **Wave** | One delivery of Gatekeepers. `+/-` ante up, `E` selects, `T` starts at a **field terminal**. A terminal opens its door after its authored count (kit bastion: T1 is 3, the rest 1). Prep `E` then `T` at the Hatch is a Convert. | round, horde |
-| **field terminal** | A bastion console marked **T**. `E` selects the Ante; `T` starts one Boarder-hunt Wave. N clears complete it and open its **D**. | station *(alone)*, objective, console *(the Ship's four are stations)* |
+| **Wave** | One delivery of Gatekeepers. `+/-` ante up, `E` selects, `T` starts at a **field terminal**. How many a trigger runs is the **zone's**, not the terminal's — `DemoZones.WavesPerTriggerByZone` is `{ 1, 3 }`, so zone 1 (T1, T2) runs **1** per trigger and zone 2 (T3) runs **3** back to back. Prep `E` then `T` at the Hatch is a Convert. | round, horde |
+| **field terminal** | A bastion console marked **T**. `E` selects the Ante; `T` starts that zone's Boarder-hunt Waves. The **D** belongs to the zone, not the terminal: `DemoZones.HatchBankBlocked` holds the Convert shut until **every** terminal in the zone is complete, and the zone's survived Convert is what opens its door. | station *(alone)*, objective, console *(the Ship's four are stations)* |
 | **cleared** / **stripped** | Survived Master Control's Convert half. Field Waves beaten is field stripped, not Escaped. | won, completed, extracted |
 | **Escaped** | Terminal, good: Master Control's Convert half survived. Wave 5 does not Escaped. | won, victory |
-| **Master Control** | Control Room console. `E` then `T` starts 5 terminal Waves (door sealed) then 5 Convert windows (door open). That Convert does not spend a mid-Boarding slot. | win terminal, extract console, D1 *(the door is not the win)* |
+| **Master Control** | Control Room console. `E` then `T` starts 5 terminal Waves (door sealed) then **one** Convert window (door open) — `MasterControl.TerminalWaves` is 5, `HatchWaves` is 1. `HatchWaves` is a static int only so tests can pin the multi-window machinery; production never writes it. | win terminal, extract console, D1 *(the door is not the win)* |
 
 A Boarding that ends badly is **lost**: the Boarder went down, or the Hatch fell. It is listed
 under Boarding phases below only because `RunPhase.Lost` is a real enum value the code branches
@@ -100,6 +107,7 @@ are named here.
 | **Spooling** | Reserved, unused in v0 — the escape window after the tether is cut. | *(do not use it for anything else)* |
 | **Escaped** | Terminal, good: Master Control's Convert half survived. Wave 5 does not Escaped. | won, victory |
 | **Lost** | Terminal, bad: the Boarder went down or the Hatch fell. | podded *(retired)*, death, game over, wipe, fail |
+| **Returned** | Terminal, good: held Interact at the Hatch after surviving a Convert and went home by choice. `PodEjections` does not move. Named Returned only because `Docked` (0) already means aboard-the-ship-before-boarding — **the player-facing word for this phase is still Docked**, which is why the Docked row above carries both meanings. | bail-out, quit, abandoned *(it is a good ending)* |
 
 ### What comes at you
 
@@ -108,7 +116,7 @@ are named here.
 | **Gatekeeper** | Any enemy. They hold the Bastion; you are the intruder. | enemy, mob, creature, hostile, boarder *(that is the player now)* |
 | **Default** | The Gatekeeper that marches on the Hatch and can be provoked onto the Boarder. | grunt, basic, marcher *(descriptive prose may say "marcher"; the kind's name is Default)* |
 | **Hunter** | The Gatekeeper that only ever wants the Boarder. | chaser, stalker |
-| **Thief** | The Gatekeeper that hunts the Boarder on a field-terminal Wave and the Hatch on a Hatch-bank Wave; shooting it never shouts. | brute, tank, charger, Ram *(the code identifier until `M63-3`, 2026-08-20; not a synonym to reintroduce)* |
+| **Thief** | The Gatekeeper that hunts the Boarder on a field-terminal Wave and the Hatch on a Convert; shooting it never shouts. `ThiefGatekeeper.MayTargetPlayer` is true only on `WaveMode.Terminal` — the code keeps the Hatch-bank noun (trap 8), the row does not. | brute, tank, charger, Ram *(the code identifier until `M63-3`, 2026-08-20; not a synonym to reintroduce)* |
 | **spawn point** | Where a group of Gatekeepers enters the fight. They garrison the Bastion; they do not breach it. | breach point *(retired 2026-08-08: the Boarder is the one who breaches)*, muster point *(coined and struck the same day; do not reintroduce)*, portal, door |
 | **group** | The unit Gatekeepers arrive in — one spawn point, several bodies, at once. | pack, squad, cluster |
 | **provoke** | To make a Default target the Boarder. Permanent for that Gatekeeper's life. | aggro *(builder shorthand only, never player-facing)* |
@@ -121,7 +129,7 @@ are named here.
 | **Primary** | The earned weapon slot. Heavy damage. | main, rifle slot |
 | **Secondary** | The starting weapon slot. Never runs dry. | sidearm slot *(the MK-1 is a sidearm; the slot is the Secondary)*, backup |
 | **Drone** | The third weapon slot. Holds the FABRICATION drone, one payload per Boarding, player-activated. | Utility *(retired 2026-08-08)*, melee *(no melee slot exists)*, gadget, tool, third slot |
-| **Equipment** | Gear bought at FABRICATION into the equipment slot (unlocked after first loss, bought once). The Repair Rig is the first piece. | payload *(that is the Drone's)*, item, kit, Utility |
+| **Equipment** | Gear bought at FABRICATION into the equipment slot (unlocked by the first Convert, bought once). The Repair Rig is the first piece. | payload *(that is the Drone's)*, item, kit, Utility |
 | **Tier** | A step on a weapon's upgrade track. | level, rank, mark, upgrade |
 | **ability** | A weapon's one activated effect, on a cooldown. | special, power, skill, ult |
 | **Boarder Protocol** | The named sheet CREW QUARTERS sells: one doctrine, one Crew ability, one Personal ability, a Passive where the sheet has one. Default (0-salvage claim), VEIL and FORGE ship; unshipped specialists are marked Coming Soon (in the Compendium's Doctrine volume). | archetype, class, kit, loadout *(loadout is weapons)* |
@@ -148,7 +156,7 @@ mark in the commit that builds it.
 |---|---|---|
 | **Salvage** | The only currency. Kills fill **unbanked**; only a **Convert** takes it through to the ship. | credits, scrap, cash, resources |
 | **unbanked** | Salvage earned this Boarding that has not gone through the Hatch. Lost on down or Hatch breach. | floating, pending, at-risk |
-| **Convert** | Prep `E` then `T` while looking at the Hatch: a Wave that takes Unbanked through to the ship. Capped per Boarding. | Hatch-bank *(retired for player text 2026-08-24; code keeps HatchBank/WaveMode.HatchBank — trap 8)*, extract, cash-out, deposit |
+| **Convert** | Prep `E` then `T` while looking at the Hatch: a Wave that takes Unbanked through to the ship. **There is no per-Boarding cap.** `RunSim.TriggerDraw` refuses one on three grounds only — not Tethered, not Prep, or `TotalUnbanked` at 0 (`hatch-bank refused — unbanked=0`); a Convert also does not consume a field Wave. | Hatch-bank *(retired for player text 2026-08-24; code keeps HatchBank/WaveMode.HatchBank — trap 8)*, extract, cash-out, deposit |
 | **banked** | Salvage on the ship that the player can spend. | stored, saved |
 | **Ante** | The per-Wave wager 0–5: more Salvage per Gatekeeper, more Gatekeepers. Raised by anting up. | intensity *(retired for player text 2026-08-24; code keeps IntensityJuice/Siphon — trap 8)*, siphon dial, difficulty, risk slider, multiplier *(as a name for this)* |
 | **ante up** | Paying Unbanked at a trigger to raise the Ante. | juice *(retired for player text 2026-08-24)*, siphon, buy difficulty, map device |
@@ -178,7 +186,7 @@ Written in caps in player-facing text, matching what the player reads on the con
 | **CREW QUARTERS** | The Boarder's protocol — doctrine, Crew and Personal abilities. Default, VEIL and FORGE are claims; AEGIS and LEDGER are Coming Soon. | barracks, skills, attributes |
 | **FABRICATION** | The Ship's gear and the Hatch. | workshop |
 | **NAV MAP** | Where you go, and going there. | map, bridge, terminal |
-| **Compendium** | The Boarder's working knowledge of the game: volumes of related entries (situation, Run, Bastion, garrison, arms, hull), not a glossary of terms. Markdown lives in `Docs/Play/` (M28 language lint). In-game reader shipped (`M62`, Esc → Compendium). | Codex, encyclopedia, wiki, lore bible, Hyrule Compendium, Persona Compendium |
+| **Compendium** | The Boarder's working knowledge of the game: eight volumes of related entries — situation, a Boarding, Bastion, garrison, doctrine, arms, hull, realm — not a glossary of terms. `CompendiumCatalog.Volumes` and `Docs/Play/README.md` carry the same list and change together. Markdown lives in `Docs/Play/` (M28 language lint). In-game reader shipped (`M62`, Esc → Compendium). | Codex, encyclopedia, wiki, lore bible, Hyrule Compendium, Persona Compendium |
 
 ## Player-facing voice
 
@@ -208,7 +216,7 @@ Test a Play page's Game dimension (skip HTML comments, Reference, and Gaps). One
 | 1 | The `## Game` block is first-person Boarder — the hands of `../../Story/Voices.md` (one hand per protocol, never revealed; ruled 2026-08-22, mirrored here 2026-08-24). No named diarist, no "the player". Reference blocks may address *you*. | "I cut in. They are already home." | "Day 12 — J." / "The player should…" |
 | 2 | Sentence one is a situating fact in this world. | "The Thief is walking to the Hatch." | "A first-person Wave-defense game…" |
 | 3 | The first paragraph states a playable rule the HUD does not print. | "Shooting it does not provoke it." | Opening that only restates HP, clip, or a key already on pause. |
-| 4 | Numbers and bindings only by linking Field Manual. | "How many: [Field Manual](Field-Manual.md)." | "The Thief has 180 HP." / "Press F." |
+| 4 | Numbers and bindings only by linking Field Manual. | `How many: [Field Manual](Field-Manual.md).` — the path is a Play page's, and the file is `../../Play/Field-Manual.md` from here. | "The Thief has 180 HP." / "Press F." |
 | 5 | No milestone IDs, "not built", or builder paths in the visible body. | The page describes what ships. | "M23 shipped the Repair Rig." |
 | 6 | No never-called terms from the table above. | Hatch, Gatekeeper, the Ante. | Codex, encyclopedia, wiki, enemy, aggro, mission. |
 | 7 | Humor is the situation's exactness. No pun, slang persona, or pop-culture aside. | "You are scenery." | "Think of it as the tank from every horde game." |
@@ -264,10 +272,20 @@ name survived being wrong through three separate renames.
 measure melee range, meaning how close a Gatekeeper must be to strike. That is builder
 vocabulary about geometry, not a slot name, and it stays.
 
-**4. `grep Gatekeeper` still hits the project identifier (2026-08-16).** The title is
-Gatekeeper's Protocol; the identifier is `GatekeepersProtocol`. `grep Gatekeeper` matches
-the namespace, asmdef, menu root and log prefix plus enemy types. `grep Bastion` no longer
-hits the project identifier. For enemies, grep `GatekeeperKind` or `EnemyGatekeeper`.
+**4. `grep Gatekeeper` still hits the project identifier (2026-08-16, restated
+2026-08-25).** The title is Gatekeeper's Protocol, `ProjectSettings/ProjectSettings.asset`
+carries `productName: Gatekeeper's Protocol` under `companyName: Gatekeeper`, and the
+identifier is `GatekeepersProtocol`. `grep Gatekeeper` matches the namespace, asmdef, menu
+root and log prefix plus enemy types. For enemies, grep `GatekeeperKind` or
+`EnemyGatekeeper`.
+
+Inside `Assets/` and `ProjectSettings/`, `grep Bastion` hits only the place —
+`BastionSegment`, `BastionTerminal`, `Bastion_Coop.unity` — and one historical log filename
+in a `WaveDirector.cs` comment. **The name survives outside the tree, in three places a
+grep of paths or remotes still finds it:** the working folder is `Gatekeeper Bastion`, the
+GitHub remote is `GatekeeperBastion` (kept deliberately — see `Decisions.md`, *Locked —
+title*), and old session logs are `GatekeeperBastion_*.log`, which the dashboard still
+parses. Title, identifier and checkout are three different strings and always have been.
 
 **5. "Boarder" reversed meaning on 2026-08-08.** It used to mean the enemy. It now means the
 player. Anything predating that date reads plausibly and means the opposite — this is the
@@ -295,6 +313,11 @@ and Zo's play records, where it is a record of what was true then.
 a future one-commit sweep, not a per-file cleanup. The machine lint cannot carry `run`,
 `intensity` or `juice` as retired terms (common-word false positives, same note as
 boarder-for-enemy); this table and the Compendium form tests are the enforcement.
+
+**The player half already shipped**, so this is not a pending rename: `HudController.EndScreens.cs`
+prints `BOARDING ENDED` and `converted this boarding`, and the Compendium's second volume is
+`II. A Boarding`. A page or a table row still saying Run, intensity, juice or Hatch-bank in
+player-facing prose is behind the build, not ahead of it.
 
 ## Adding a term
 

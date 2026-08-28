@@ -1,4 +1,4 @@
-# 4 — Embark after first Hatch-bank
+# 4 — Embark after the first Convert
 
 <!--
 Purpose: Plain re-embark after loss 1 (Zo, 2026-08-17: NAV skip is dead —
@@ -9,18 +9,21 @@ New death direction: after a survived bank window the player may dock at the
 Hatch — Run ends Docked, not Lost. CREW menu + Default claim unchanged.
 Status: demo spec
 Authority: implementable
-Update trigger: when the composite-retrigger or door-on-bank-survival ruling
+Update trigger: when the composite-retrigger or door-on-Convert-survival ruling
 is overridden, when the dock-at-Hatch rule moves, when Protocol beat is moved
-Last updated: 2026-08-17
+Last updated: 2026-08-25 (CREW key is the first Convert, not DemoWave2Seen, which does
+not exist; MaxWaves is an absolute ceiling; retrigger and dock shipped; VEIL and FORGE
+are claims, not Coming Soon; buy-back row rewritten from Respawns.cs)
 Depends: voice.md, 2-first-hatch-bank.md, 3-ship-after-first-loss.md (same grain)
 -->
 
 ## Why this beat exists
 
 The old text of this beat encoded a NAV **skip** to `DemoNavUnlockWave` with a
-per-Run wave budget behind it. Both are dead (Zo, 2026-08-17): `MaxWaves` caps
-**consecutive waves per terminal trigger**, not per Run, so there is no per-Run
-ladder to skip past and no picker. NAV embark is **plain** — lead commits,
+per-Run wave budget behind it. Both are dead (Zo, 2026-08-17). The `MaxWaves`
+re-key that ruling leaned on never landed — `WaveDirector.MaxWaves` is **5** and
+is an absolute end-Wave ceiling — but the conclusion holds anyway: the authored
+zones run Waves 1–2 and 3–5, so there is nothing for a picker to skip past. NAV embark is **plain** — lead commits,
 guests Ready, countdown, no wave choice. Refight-avoidance moved to the
 terminal: after a loss, the zone's **deepest** terminal retriggers the zone
 composite (all its waves consecutively) by default, and the player may elect a
@@ -69,21 +72,21 @@ prompt + Subtitle, never Lock, by construction).
 
 | | |
 |---|---|
-| **Goal** | Notice CREW has more than bandages now. Wave 2 started during beat 1, so `DemoWave2Seen` is already true on this first Docked. |
+| **Goal** | Notice CREW has more than bandages now. Beat 2's window dripped salvage through the Hatch, so `HatchConversions` is 1 by this first Docked. |
 | **Player** | Walk past CREW (or be told once). |
-| **Game** | `demo.crew_ready` · Lock · Local · Game. **CREW QUARTERS has more than a bunk now. Your protocol waits there.** Once, on first Docked with `DemoWave2Seen` and the menu still locked — queued after `demo.first_hatch_down` (order above). |
+| **Game** | `demo.crew_ready` · Lock · Local · Game. **CREW QUARTERS has more than a bunk now. Your protocol waits there.** Once, on the first Docked after the first Convert with the menu still locked — queued after `demo.first_hatch_down` (order above). |
 | **Standing** | Claim the Default Protocol (produced by `demo.crew_ready`; optional before EMBARK — NAV never requires one) |
 | **Prompt** | `[E] CREW QUARTERS — protocols` |
-| **Log** | `[Demo] wave2 seen` (written at the Wave 2 start in beat 1) |
-| **Have** | Wave-start hook exists (host sim); CREW station + panel live; heal-on-interact from beat 0. Needs code verification. |
-| **Build** | `DemoWave2Seen` (v9) set on any Wave 2 assault start; guests set their own flag from the replicated wave start. `DemoCrewMenuUnlocked` flips on the first CREW open with `DemoWave2Seen`. |
+| **Log** | `[Demo] CREW menu unlocked` on the flip |
+| **Have** | `MetaState.DemoCrewMenuUnlocked` and `HatchConversions`; CREW station + panel live; heal-on-interact from beat 0. |
+| **Build** | Flip `DemoCrewMenuUnlocked` on the first Docked with `HatchConversions >= 1`. **`DemoWave2Seen` does not exist and must not be added** — it was deleted with the 2026-08-18 re-key that moved the wheel and the CREW menu onto the first Convert. |
 
 ### 1 — Open CREW, claim the Default
 
 | | |
 |---|---|
 | **Goal** | Own a protocol: Barrage on `G`, Rush on `H`. |
-| **Player** | Interact Down on CREW. Panel opens (heal still applies on the visit): catalog rows (Default Protocol + VEIL / AEGIS / LEDGER as Coming Soon). SELECT → Protocol Sheet → BUY (0 salvage). |
+| **Player** | Interact Down on CREW. Panel opens (heal still applies on the visit): catalog rows — Default, VEIL and FORGE are all claimable (`BoarderProtocolId`), AEGIS and LEDGER are Coming Soon. SELECT → Protocol Sheet → BUY (0 salvage for the Default). |
 | **Game** | `demo.crew_claim` · Lock · Local · Game. **This is your protocol. Claim the Default — Barrage on G, Rush on H. It costs nothing.** |
 | **Standing** | Claim the Default Protocol → on claim success, flips to **EMBARK from the NAV MAP** (producing event: the claim itself, existing `claimed Default Protocol track=crew` log — no new line) |
 | **Prompt / panel** | Live: sheet headings Protocol Title / Description / Crew / Personal / Passive; Default doctrine `STOCK — hardware as sold`; button BUY → EQUIPPED. |
@@ -114,8 +117,8 @@ prompt + Subtitle, never Lock, by construction).
 | **Standing** | Clear zone 1 and bank at the Hatch (produced by `demo.zone_retrigger`) |
 | **Prompt** | Offer panel: `RESTART ZONE — {k} waves` (default) / `START AT WAVE {j}` election rows. Copy draft — Zo. |
 | **Log** | `[Demo] zone retrigger zone=1 start=1 waves=2 mode=composite` or `[Demo] zone retrigger zone=1 start=2 waves=1 mode=partial` |
-| **Have** | Terminals, Prep-only start, host-sim start gate. `FirstTerminal` 3-wave cycle and `wavesToComplete` exist in tree but encode the old shape — needs code verification. `MaxWaves` in `RunSim` was a per-Run clamp — **re-keyed** (Zo, 2026-08-17) to cap consecutive waves per terminal trigger; needs code verification of every current reader of `MaxWaves` / `ClampStartWave`. |
-| **Build** | Retrigger offer on the zone's deepest terminal when the zone has cleared waves and no surviving bank: default composite, partial election reading `DemoZoneDeepestWave` (v9). Consecutive launch under the re-keyed `MaxWaves`. The two logs. |
+| **Have** | Shipped. `GameController.Retrigger.cs` builds the offer, `RunSim.TriggerCompositeDraw` runs the elected waves consecutively, and `DemoZones.DeepestTerminalId` picks the terminal that carries it. `MaxWaves` stayed a **5**-Wave absolute ceiling and did not need re-keying: zone 2 runs Waves 3–5 under it. |
+| **Build** | The two logs. |
 
 ### 4 — The bank holds: D1 opens on window survival
 
@@ -125,7 +128,7 @@ prompt + Subtitle, never Lock, by construction).
 | **Player** | Zone complete → Hatch `E` arms, `T` starts (beat 2's surface, unchanged). Loss 1's ~500 bought upgrades (beat 3) — this time the 45 s window holds. Dump on survive; **D1 opens**. |
 | **Game** | `demo.door_d1` · Lock (Prep; Subtitle if somehow Assault) · Party · Game — id kept from the old beat 5, **trigger changed** (Zo, 2026-08-17): D1 `SetOpen(true)` driven by zone 1 bank-window survival, not by terminal completions. **That door is open. The next terminals are behind it.** (existing string; serves D1 and D2) |
 | **Standing** | Zone 2 is behind D1 (hand-off to beat 5; produced by `demo.door_d1`) |
-| **Prompt** | Bank refuse while zone incomplete: `Hatch-bank — finish the zone` (copy draft — Zo). |
+| **Prompt** | Convert refuse while the zone is incomplete: `Convert — finish the zone` (live string, `RepairInteractable`). |
 | **Log** | existing `[Hatch] hatch-bank started …`; `[Demo] bank window survived zone=1`; `[Demo] door open D1 cause=bank` |
 | **Have** | Drip 8/s, no dump on start, dump on survive, 45 s window, attrition — beat 2 facts, in tree. `BastionUnlockGraph.TryOpenDoors` AND on terminal completions — **superseded reader** (key code delta above); needs code verification of what the graph listens to today. |
 | **Build** | Bank locked until the zone's terminals are complete (refuse + log). Door open keyed to bank-window survival; a failed bank never unlocks (Zo, 2026-08-17). The successful-bank snapshot now carries **banked + door state** (see step 5); needs code verification of what the snapshot stores today. |
@@ -140,8 +143,8 @@ prompt + Subtitle, never Lock, by construction).
 | **Standing** | unchanged (Zone 2 is behind D1) — Docked-and-return re-produces it via the snapshot restore log, so the standing has a producer on the dock path too |
 | **Prompt** | `[hold E] Dock — return to Ship` while available; hidden once the next wave is triggered. |
 | **Log** | `[Demo] docked at hatch — run Docked banked=<n> doors=D1`; on next embark `[Demo] snapshot restored doors=D1` |
-| **Have** | Nothing — no non-loss run ender exists. `EndRun` causes are `hatch` / `player` (beat 2); needs code verification. |
-| **Build** | `EndRun("docked")` path: not Lost, no `PodEjections++`, phase Docked; held-interact window from bank survival until next wave trigger; snapshot write (banked + door state) and restore. Consistency (Zo, 2026-08-17): docking requires a **survived** window, so a window the kit cannot clear (beat 5's loss 2) cannot be skipped by docking. |
+| **Have** | Shipped. `RunSim.Dock.cs` carries `DockedCause = "docked"`, `DockOffered`, the `BankWindowSurvived` event and `DockRun()`; the offer is refused into the finale rather than left unguarded. |
+| **Build** | The two logs, and the snapshot's door-state contents if they are not there yet. Consistency (Zo, 2026-08-17): docking requires a **survived** window, so a window the kit cannot clear (beat 5's loss 2) cannot be skipped by docking. |
 
 ## Have vs build (inventory)
 
@@ -149,17 +152,18 @@ prompt + Subtitle, never Lock, by construction).
 |---|---|---|---|
 | Plain lead commit + Ready + countdown | yes | `M72` c4–c6 lobby | Have (needs code verification) |
 | NAV picker / stepper / `PendingStartWave` wave choice | yes | `MapStation`, `NavMapPanelView` | Superseded surface — suppress while `DemoActive`; do not build the skip |
-| Chain on deep start / `ClampStartWave` per-Run clamp | yes | `RunSim` | Superseded reader of the old `MaxWaves` meaning — needs code verification (re-key, Zo 2026-08-17) |
-| Composite retrigger at deepest terminal | **no** | — | Build |
-| Partial-start election | **no** | — | Build |
+| Chain on deep start / `ClampStartWave` | yes | `RunSim` | Have — `MaxWaves` stayed an absolute ceiling, so the clamp is still the right reader |
+| Composite retrigger at deepest terminal | **yes** | `GameController.Retrigger.cs`, `RunSim.TriggerCompositeDraw` | Have |
+| Partial-start election | **yes** | `DemoRetriggerOffer` + `DemoZoneDeepestWave` | Have |
 | Door open on terminal completions | yes | `BastionUnlockGraph.TryOpenDoors` → `SetOpen` (M52/M53 lineage) | **Superseded** — re-key to bank-window survival; needs code verification |
 | Bank locked until zone terminals complete | partial | old T1-done start gate (`GameController.HatchBank`) | Build (generalize per zone; needs code verification) |
-| Dock at Hatch (Run ends Docked) | **no** | — | Build |
+| Dock at Hatch (Boarding ends Docked) | **yes** | `RunSim.Dock.cs` | Have |
 | Successful-bank snapshot | yes | restore path in `RunSim` | Re-key contents to banked + door state — needs code verification |
 | CREW select→sheet→claim | yes | `CrewQuartersStation`, `ProtocolSheetView`, `BuyProtocol` (M70 in-tree work) | Have — needs code verification |
 | `G`/`H` refuse without protocol | yes | `crew/self refused — no protocol` | Have (needs code verification) |
-| `DemoWave2Seen` / `DemoCrewMenuUnlocked` | no | v9 | Build |
-| `DemoZoneDeepestWave` (per zone) | no | v9 — re-key of `DemoNavUnlockWave`/`DemoBankCapWave` (Zo, 2026-08-17) | Build |
+| `DemoCrewMenuUnlocked` | yes | `MetaState` / `RealmState` | Have — the write on the first Docked after the first Convert is this beat's |
+| `DemoWave2Seen` | **deleted** | — | None. Do not add it; the CREW key is `HatchConversions >= 1` |
+| `DemoZoneDeepestWave` (per zone) | yes | `MetaState.SetZoneDeepest` / `DemoZoneCount` | Have |
 | Voice ids | no | [`voice.md`](voice.md) | Build |
 
 ## Create
@@ -176,13 +180,12 @@ prompt + Subtitle, never Lock, by construction).
 | File | Change |
 |---|---|
 | `MapStation.BuildPanel` | Plain EMBARK while `DemoActive` — no picker, no default wave |
-| `RunSim` | `MaxWaves` re-key: cap per terminal trigger, not per Run (Zo, 2026-08-17); retire the per-Run clamp reader while `DemoActive`; needs code verification of all readers |
-| `RunSim.TriggerDraw(Terminal)` | Composite launch: elected start..zone end, consecutively |
+| `RunSim` | Nothing for `MaxWaves` — it stayed **5** and absolute, and every authored Wave fits under it |
+| `RunSim.TriggerCompositeDraw` | Shipped: elected start..zone end, consecutively |
 | `BastionUnlockGraph` / `BastionDoor.SetOpen` | Door keyed to bank-window survival, not terminal AND (key code delta; needs code verification of the current listener) |
 | `GameController.HatchBank` | Zone-complete gate replaces the T1-done gate; refuse + log |
-| `RunSim.EndRun` | `"docked"` cause; snapshot banked + door state |
-| `GameController` / wave-start hook | Set `DemoWave2Seen` |
-| `CrewQuartersStation` | Heal-only until `DemoCrewMenuUnlocked` (first open with `DemoWave2Seen`); panel after |
+| `RunSim.EndRun` | Shipped — cause `docked`. Owed: the snapshot carrying door state |
+| `CrewQuartersStation` | Heal-only until `DemoCrewMenuUnlocked`; panel after |
 | `Play/The-Ship.md` | One **Gaps** line: plain embark while `DemoActive`; picker/chain return after first Escaped is that file's question |
 
 `DeepStartTests`: the demo-skip cases from the old text of this beat are dead —
@@ -206,7 +209,7 @@ do not add them. Live chain tests stay untouched for `!DemoActive`.
 | Drip | 8/s | tunable | `HatchBank.DripPerSecond` (in tree, lever 2 shipped) |
 | Countdown | 5 s | — | `NetPartyLobby.CountdownSeconds` |
 | Default claim cost | 0 | — | `TryClaim` |
-| `MaxWaves` | cap per terminal trigger; ≥ zone 2's 3 | tunable | re-key (Zo, 2026-08-17); old per-Run value 5 no longer the meaning |
+| `MaxWaves` | **5**, an absolute end-Wave ceiling | tunable | `WaveDirector.MaxWaves`. The per-trigger re-key was an intent, not the tree; zone 2 runs Waves 3–5 under the ceiling |
 | Zone 1 wave rosters | existing wave-table indices as placeholder | tunable — mapping to zone waves is Zo's | in-tree `NextWave` tables |
 
 No dial-0 Wave-4 roster and no BankCap(3) arithmetic here — those were the
@@ -221,10 +224,10 @@ skip's numbers; dead with it.
 | Guest BankCap | Guest's own `DemoZoneDeepestWave` (re-key, Zo 2026-08-17); needs code verification of the wallet-deepest path it replaces |
 | Door open | Host, on bank-window survival; replicated |
 | Dock at Hatch | Ends the Run as Docked for the party; which seat's held interact commits it is **not ruled** — see Gaps |
-| Dead-player buy-back | Only while a bank window is live; rejoins at the Hatch; pays from **their own** banked salvage (cost tunable) (Zo, 2026-08-17). Dead-host case vs `M49` host-death-ends-run: **OPEN — recorded, not resolved** |
+| Dead-seat buy-back | Shipped, and wider than the 2026-08-17 stamp: any dead seat is offered a respawn for as long as the Boarding is Tethered, with no Convert-window gate. Price is **150** × (respawns taken this Boarding + 1), paid from that seat's **own Unbanked**, remainder surviving; nothing else can pay. The dead-host case closed with it — the host takes the same offer at the DOWN overlay |
 | Ready / countdown / join refuse | Unchanged `M72` |
 | `demo.embark_wave2` | Party, lead opened NAV |
-| CREW menu / claim | Local. `DemoWave2Seen` set per seat from the replicated wave start; a seat on `NetShipWait` still gets it |
+| CREW menu / claim | Local. Each seat reads its own `HatchConversions`; a seat on `NetShipWait` still gets it |
 
 Lead disconnect: session ends.
 
@@ -232,7 +235,7 @@ Lead disconnect: session ends.
 
 | Id | Mode | Scope | Trigger | Standing after |
 |---|---|---|---|---|
-| `demo.crew_ready` | Lock | Local | first Docked with `DemoWave2Seen`, menu locked — queued after `demo.first_hatch_down` (stated order) | Claim the Default Protocol |
+| `demo.crew_ready` | Lock | Local | first Docked with `HatchConversions >= 1`, menu locked — queued after `demo.first_hatch_down` (stated order) | Claim the Default Protocol |
 | `demo.crew_claim` | Lock | Local | first CREW panel open | Claim the Default Protocol |
 | `demo.embark_wave2` | Lock | Party | **changed**: first powered-NAV open while Docked after a loss (was: unlock ≥ 2 skip) — id stale, see Gaps | EMBARK from the NAV MAP |
 | `demo.zone_retrigger` | Lock (Prep) | Party | **new**: first retrigger offer opened per zone | Clear zone 1 and bank at the Hatch |
@@ -250,14 +253,13 @@ No extra Assault line for Protocol.
   window held; D1 opening on survival; dock prompt until the next wave.
 - **Reads-back** `[Demo] embark plain`, `[Demo] zone retrigger zone=1 …`,
   `[Demo] bank window survived zone=1`, `[Demo] door open D1 cause=bank`,
-  `[Demo] docked at hatch — run Docked …`, `[Demo] wave2 seen`,
-  `[Demo] CREW menu unlocked`, existing `claimed Default Protocol track=crew`.
+  `[Demo] docked at hatch — run Docked …`, `[Demo] CREW menu unlocked`,
+  existing `claimed Default Protocol track=crew`.
 
 ## Logs
 
 | Event | Line | Status |
 |---|---|---|
-| Wave 2 seen | `[Demo] wave2 seen` | build |
 | CREW | `[Demo] CREW menu unlocked` | build |
 | Claim | `claimed Default Protocol track=crew` | in tree (needs code verification) |
 | Plain embark | `[Demo] embark plain` | build |
@@ -280,8 +282,9 @@ No extra Assault line for Protocol.
   writes on field-wave **clear**.
 - Leaving the dock interact live after the next wave is triggered — the
   window is survival-to-next-trigger only.
-- Counting a Docked end as a loss (`PodEjections++`, Lost screen, wheel
-  unlock side effects). Docked is its own cause.
+- Counting a Docked end as a loss (`PodEjections++`, Lost screen). Docked is its
+  own cause. It does still open the wheel, because the wheel key is the Convert
+  that happened, not the death that did not.
 - Two Locks on the survival frame — `demo.dock_option` is Subtitle by
   construction; do not promote it.
 - Requiring Ready on CREW claim. Auto-owning Default when the menu unlocks —
@@ -299,10 +302,10 @@ Unblocks: beat 5 (zone 2 behind D1; dock/buy-back rules carry forward).
 
 ## Verification
 
-1. EditMode: zone 1 with `DemoZoneDeepestWave=2`, failed bank → retrigger at
+1. EditMode: zone 1 with `DemoZoneDeepestWave=2`, failed Convert → retrigger at
    T2 defaults to composite; log `[Demo] zone retrigger zone=1 start=1 waves=2
-   mode=composite`; both waves launch consecutively under the re-keyed
-   `MaxWaves`.
+   mode=composite`; both waves launch consecutively, inside the **5**-Wave
+   ceiling.
 2. EditMode: partial election → log `… start=2 waves=1 mode=partial`; only
    wave 2 launches; bank re-arms after it clears.
 3. EditMode: bank start refused before zone complete — log `[Demo] bank
@@ -317,9 +320,9 @@ Unblocks: beat 5 (zone 2 behind D1; dock/buy-back rules carry forward).
    snapshot restored doors=D1` and D1 is open.
 7. PlayMode: trigger the next wave first → dock prompt gone; held `E` does
    nothing.
-8. CREW menu opens this Ship visit (`DemoWave2Seen` from beat 1); heal still
-   fires; Lock order on Docked is `demo.first_hatch_down` then
-   `demo.crew_ready`.
+8. CREW menu opens this Ship visit (`HatchConversions >= 1` from beat 2's
+   window); heal still fires; Lock order on Docked is `demo.first_hatch_down`
+   then `demo.crew_ready`.
 9. Existing live tests stay green for `!DemoActive`.
 10. No `[Dev]`.
 
@@ -341,12 +344,10 @@ Unblocks: beat 5 (zone 2 behind D1; dock/buy-back rules carry forward).
   needs code verification.
 - Dock commit seat in co-op (who holds `E` to end the party's Run) — not
   ruled.
-- Dead-host buy-back vs `M49` — **OPEN**, recorded in Multiplayer, not
-  resolved (Zo, 2026-08-17).
-- Upstream files (beats 1–2, README Shared flags/Treat-as-spec rows) still
-  carry the 3-wave first terminal, the bank-start checkpoint, and
-  `DemoNavUnlockWave`/`DemoBankCapWave` — superseded by this spec; those
-  edits belong to their editors.
+- Dead-host buy-back vs `M49` — closed by what shipped. Every seat takes the
+  same priced respawn, and `M49` reduces to the case where no seat left can pay.
+- The `demo.embark_wave2` id and this file's name both still say "wave 2" and
+  nothing here embarks at one. Rename is Zo's — see the first Gap.
 
 ## Rejected
 

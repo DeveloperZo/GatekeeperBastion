@@ -1,14 +1,14 @@
-# 3 — The bank, and what it costs
+# 3 — The Convert, and what it costs
 
 <!--
-Purpose: The zone's Hatch-bank with more than one door open. Hold them all while the
+Purpose: The zone's Convert with more than one door open. Hold them all while the
 pile drips into the crew pot; whatever has not moved when a door falls is gone.
-Authored loss 1. No juice, no per-seat caps.
+Authored loss 1. No anting up, no per-seat caps.
 Status: demo spec
 Authority: implementable
 Update trigger: when the drip rate or window length moves, when the authored-loss aim
-moves, when juice comes back
-Last updated: 2026-08-20
+moves, when the Ante comes back
+Last updated: 2026-08-25 (player-facing strings say Convert — language.md trap 8)
 Depends: voice-coop.md, 2-picking-each-other-up.md
 -->
 
@@ -18,7 +18,7 @@ Everything before this has been the party spending. This is the party earning, a
 is the first time the doors matter for a reason other than survival: the pile moves
 home through them.
 
-**Juice is deferred** (Zo, 2026-08-20). The bet is not in a dial this time, it is in
+**The Ante is deferred** (Zo, 2026-08-20). The bet is not in a dial this time, it is in
 how long you hold. **There are no per-seat conversion caps and no per-seat wallets**:
 persistence is deferred, the crew pot is one balance, and what drips belongs to the
 party.
@@ -28,20 +28,20 @@ When a door falls the transfer stops and the remainder is gone.
 
 ## Functional storyboard
 
-Continues from beat 2. Standing arrives as **Hatch-bank at a hatch**.
+Continues from beat 2. Standing arrives as **Convert at a hatch**.
 
-### 0 — Arm the bank
+### 0 — Arm the Convert
 
 | | |
 |---|---|
 | **Goal** | Know the transfer and the stake before starting it. |
 | **Player** | At any open hatch: `E` arms. `T` starts. Either seat may arm; the lead starts. |
 | **Game** | `demo.coop.bank_teach` · Lock (Prep) · Party · Game. **The pile moves into the crew pot while you hold the doors. Whatever has not moved when a door falls is gone. T when ready.** |
-| **Standing** | Start the Hatch-bank |
-| **Prompt** | Unarmed: `[+/-] Hatch-bank` + unbanked + carry + doors open + ` [E] select`. Armed: `[T] Hatch-bank` + ` [E] edit`. **No juice row** (deferred). |
-| **Log** | existing `[Hatch] hatch-bank started wave … carry=<k> convert=<x> unbanked=<n>`, extended with `doors=<n>` (build) |
-| **Have** | Start gate in `GameController.HatchBank`: host, Tethered+Prep, armed, Unbanked > 0, zone terminals complete. `TriggerDraw(HatchBank)` snapshots carry, timer 45 s, no dump. Prompts in `RepairInteractable`. |
-| **Build** | The teach line, the `doors` field on the existing log, and removing the juice row from the prompt while it is deferred. Do not delete the juice code; gate it. |
+| **Standing** | Start the Convert |
+| **Prompt** | Unarmed: `[+/-] Convert` + unbanked + carry + doors open + ` [E] select`. Armed: `[T] Convert` + ` [E] edit`. **No Ante row** (deferred). The verb is `Convert` in `RepairInteractable` today; the stake fields it appends still print `Intensity` and `juice`, which trap 8 has not swept yet. |
+| **Log** | existing `[Hatch] hatch-bank started wave … carry=<k> convert=<x> unbanked=<n> intensity=<n> juiced=<n>` (log lines keep the code's words — trap 8), extended with `doors=<n>` (build) |
+| **Have** | Start gate in `GameController.HatchBank`: host, Tethered+Prep, armed, Unbanked > 0, zone terminals complete. `TriggerDraw(HatchBank)` snapshots carry, timer 45 s, no dump. There is no per-Boarding slot budget any more. Prompts in `RepairInteractable`. |
+| **Build** | The teach line, the `doors` field on the existing log, and removing the Ante row from the prompt while it is deferred. Do not delete `IntensityJuice`; gate it. |
 
 ### 1 — The window
 
@@ -51,7 +51,7 @@ Continues from beat 2. Standing arrives as **Hatch-bank at a hatch**.
 | **Player** | Fight. Bodies come from the spawn rooms and pick whichever door is weaker, so neither can be abandoned for long. |
 | **Game** | — |
 | **Standing** | Hold the doors |
-| **Prompt / HUD** | `HATCH-BANK — {s}s`, the crew pot rising, and per-door HP. `MsgPlayer` `HATCH UNDER ATTACK` names which door. |
+| **Prompt / HUD** | `CONVERT — {s}s` (live string), the crew pot rising, and per-door HP. `MsgPlayer` `HATCH UNDER ATTACK` names which door. |
 | **Log** | existing drip and damage lines |
 | **Have** | `HatchBank.DripPerSecond = 8f`, `DurationSeconds = 45f`, `CarryConvert`, live drip with no dump on start, `EndRun` wiping the remainder. |
 | **Build** | The window runs while **any** open door stands. Drip is into the crew pot, one balance, no split and no cap. Per-door HP readout on the HUD. |
@@ -70,7 +70,7 @@ Continues from beat 2. Standing arrives as **Hatch-bank at a hatch**.
 
 ## Acceptance shape
 
-Player action: two players start a Hatch-bank with two doors open, hold for part of the
+Player action: two players start a Convert with two doors open, hold for part of the
 window, and lose the remainder when the doors fall. Reads back: the crew pot rose
 during the window and stopped rising when the last door fell, and the bank-ended log
 names how much moved and how much was lost.
@@ -83,8 +83,8 @@ than arbitrary is eyes-on and is the thing the fixture cannot see.
 
 ## Gaps
 
-- **Juice is deferred, not deleted.** The prompt row and the propose-and-commit question
-  come back with it. Nothing here should make that harder to re-enable.
+- **The Ante is deferred, not deleted.** The prompt row and the propose-and-commit
+  question come back with it. Nothing here should make that harder to re-enable.
 - The authored-loss figures are absent, not invented. They are a tune after a played
   run, and the ordering is what this beat specs.
 - Whether losing one door of two should end the window early or only slow the drip is

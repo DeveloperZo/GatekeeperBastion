@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace GatekeepersProtocol.Sim
 {
     /// <summary>Doors open on a SURVIVED Hatch-bank window, not on terminal completion.
-    /// Completing the required terminals (AND) only makes a door eligible; RecordBankSurvived
+    /// Completing the required terminals (AND) only makes a door eligible; OpenEligibleDoors
     /// is what turns eligibility into an open door, so a failed bank never unlocks anything.
     /// Control gate last.</summary>
     public sealed class BastionUnlockGraph
@@ -154,7 +154,7 @@ namespace GatekeepersProtocol.Sim
         /// <summary>A Hatch-bank window was survived: every eligible door opens. Returns true when
         /// at least one door opened, and hands back the ids that opened on THIS call so the caller
         /// can log and voice them. A failed bank never reaches here, so it never unlocks.</summary>
-        public bool RecordBankSurvived(out string[] openedDoorIds)
+        public bool OpenEligibleDoors(out string[] openedDoorIds)
         {
             int before = _openDoors.Count;
             TryOpenDoors();

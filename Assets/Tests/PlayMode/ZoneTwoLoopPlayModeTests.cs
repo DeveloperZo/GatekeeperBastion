@@ -52,7 +52,11 @@ namespace GatekeepersProtocol.PlayTests
         {
             get
             {
-                for (int zone = 1; zone <= DemoZones.ZoneCount; zone++)
+                // The LAST composite zone, not the first. Zone 1 became a composite too when
+                // the spine gave every zone one terminal running its whole span (2026-08-25),
+                // and this fixture is about the zone whose bank writes the Primary gate —
+                // which is the deepest one, with a zone behind it.
+                for (int zone = DemoZones.ZoneCount; zone >= 1; zone--)
                 {
                     if (DemoZones.WavesPerTrigger(zone) > 1) return zone;
                 }
@@ -64,8 +68,9 @@ namespace GatekeepersProtocol.PlayTests
         /// another milestone's contract and must not be what decides these assertions.</summary>
         const float ReachMetres = 1000f;
 
-        /// <summary>Kills awarded per field Wave, so the bank window has a pile to convert and
-        /// the refuse under test can never be mistaken for "unbanked=0".</summary>
+        /// <summary>Kills awarded per field Wave, so the realm's pot is funded well enough that
+        /// the Withdraw each bank window is staked from can never be what runs short. They feed
+        /// the pot rather than a pocket since 2026-08-25; the exact figure is not read.</summary>
         const int KillsPerWave = 8;
 
         string _campaignJson;
@@ -156,11 +161,11 @@ namespace GatekeepersProtocol.PlayTests
                 "the Bastion scene has no terminal " + terminalId + " — zone " + zone
                 + " is unreachable.");
 
-            // TryNetStartTerminal is the host-side entry: it selects the terminal and makes
-            // exactly one StartTerminalWave call through the same CanSelectTerminal gate the
-            // solo E-then-T path uses. Preferred over reaching into the private select field.
-            Assert.IsTrue(gc.TryNetStartTerminal(terminalId, terminal.transform.position, ReachMetres),
-                terminalId + " refused its trigger.");
+            // The Hatch is the start line (Zo, 2026-08-25) — the terminal REFUSES a start
+            // now, and HatchStartLinePlayModeTests is where that refusal is pinned. This is
+            // the host-side start verb, the same one the solo T-at-the-Hatch path calls.
+            Assert.IsTrue(gc.StartZoneWaveFromHatch(),
+                "the Hatch refused to start zone " + zone + "'s composite at " + terminalId + ".");
 
             Assert.AreEqual(AssaultState.Assault, sim.Assault, "the trigger did not start a Wave.");
             Assert.AreEqual(WaveMode.Terminal, sim.Mode, "a field trigger drew something else.");
@@ -215,19 +220,39 @@ namespace GatekeepersProtocol.PlayTests
                 "carry into the bank must be the zone's whole Wave span — that is what makes "
                 + "this bank heavier than the previous zone's.");
 
-            // ---- criterion 3: the zone completes and the bank unblocks ----------------------
-            Assert.IsTrue(layout.IsTerminalDone(terminalId),
-                terminalId + " did not complete on the composite's clear, so zone " + zone
-                + " never closes and the bank stays refused forever.");
+            // ---- criterion 3: the WALK completes the zone, and the bank unblocks ------------
+            Assert.IsFalse(layout.IsTerminalDone(terminalId),
+                terminalId + " completed on the composite's clear alone — surviving the Waves "
+                + "is not the objective, reaching the terminal is.");
+            Assert.IsTrue(gc.HatchBankStartBlocked,
+                "the Hatch-bank unblocked before the zone was closed at its terminal.");
+
+            BastionRunDrive.WalkUpAndShutOff(gc, layout, terminalId);
+
             Assert.IsFalse(gc.HatchBankStartBlocked,
-                "the Hatch-bank is still refused after zone " + zone + " completed.");
-            Assert.IsFalse(layout.IsDoorOpen(doorId),
-                doorId + " opened on terminal completion — only a survived bank may open a door.");
+                "the Hatch-bank is still refused after zone " + zone + " was shut off.");
+            Assert.IsTrue(layout.IsDoorOpen(doorId),
+                doorId + " did not open when the zone closed — the shutoff is what opens it "
+                + "now that the Convert is out of the demo (Docs/Design/0-Gameplay.md).");
 
             // ---- criterion 4: the bank falls, the gate is written, the door stays shut ------
-            Assert.Greater(sim.TotalUnbanked, 0L,
-                "the field Waves banked nothing, so the window below would refuse on unbanked=0 "
-                + "rather than on anything this test is about.");
+            // THE PILE IS STAKED, NOT EARNED (Zo, 2026-08-25 — "it should be impossible for a
+            // player to die with no progress to show for it"). The composite's kills went into
+            // the realm's pot as the bodies fell, so a Convert window opened now would refuse
+            // on unbanked=0 rather than on anything this test is about. HALF the pot goes back
+            // out through the real Withdraw and half stays behind it, which is what lets the
+            // loss below prove the fourth clause of the ruling as well as the gate: a death
+            // wipes what was staked and can no longer reach the bank underneath it.
+            long potAfterComposite = sim.BankedSalvage;
+            Assert.Greater(potAfterComposite, 1L,
+                "the composite's kills paid the realm nothing, so there is nothing to stake and "
+                + "the window below would refuse for the wrong reason.");
+            long staked = BastionRunDrive.Stake(sim, potAfterComposite / 2L);
+            long potBehindTheStake = sim.BankedSalvage;
+            Assert.Greater(staked, 0L, "the Hatch paid out nothing to carry into the window.");
+            Assert.Greater(potBehindTheStake, 0L,
+                "the whole pot went out with the stake, so the loss below could not tell "
+                + "'the bank survived' apart from 'there was no bank'.");
             Assert.IsFalse(meta.DemoZone2BankLost,
                 "the gate was already written before this Run's bank was ever opened.");
 
@@ -238,6 +263,7 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreEqual(WaveMode.HatchBank, sim.Mode, "the window is not a Hatch-bank.");
 
             int podsBefore = meta.PodEjections;
+            bool doorBefore = layout.IsDoorOpen(doorId);
             sim.Ship.Hatch.Damage(99999f); // the Hatch is breached inside the live window
             yield return null;
 
@@ -245,16 +271,32 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(meta.DemoZone2BankLost,
                 "the bank that fell in zone " + zone + " is the loss that puts a Primary on the "
                 + "rack; without this flag nothing opens the rung.");
-            Assert.IsFalse(layout.IsDoorOpen(doorId),
-                doorId + " opened on a bank that FELL. A failed bank must never unlock.");
+            // The claim is unchanged — a failed bank unlocks nothing — but the door is no
+            // longer the Convert's to open (Zo, 2026-08-26): the zone's shutoff already did
+            // that. So the honest test is that the FALL moved nothing, not that the door is
+            // shut, which it has every right to be by now.
+            Assert.AreEqual(doorBefore, layout.IsDoorOpen(doorId),
+                doorId + " changed state on a bank that FELL. A failed bank must never "
+                + "unlock, and must never close what the zone already opened.");
             Assert.AreEqual(podsBefore + 1, meta.PodEjections,
                 "the ejection count is untouched by the zone gate and must still move.");
+            Assert.AreEqual(0L, sim.TotalUnbanked,
+                "the fallen window left the " + staked + " staked pile carried — losing what "
+                + "was withdrawn is the whole reason a Withdraw is a bet.");
+            // The other half of the same clause, and the half the ruling exists for: whatever
+            // the player did NOT put at risk is untouchable. GreaterOrEqual, not AreEqual, only
+            // because the window's drip may have converted a little of the stake back in the
+            // frame between the breach and the phase change.
+            Assert.GreaterOrEqual(meta.BankedSalvage, potBehindTheStake,
+                "dying reached past the stake and into the realm's pot (" + potBehindTheStake
+                + " -> " + meta.BankedSalvage + "). A death may take what was staked and "
+                + "nothing more (Zo, 2026-08-25).");
         }
 
         // ------------------------------------------------------------------ criterion 5
 
         [UnityTest]
-        public IEnumerator ZoneTwo_SurvivingTheBankWindow_OpensTheDoor_AndLeavesTheGateShut()
+        public IEnumerator ZoneTwo_SurvivingTheBankWindow_OpensTheDoor_AndTheRack()
         {
             PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
 
@@ -273,6 +315,14 @@ namespace GatekeepersProtocol.PlayTests
 
             yield return RunZoneComposite(gc, zone);
 
+            // Withdraw the composite's take back out before opening the window: kills bank as
+            // they land now (Zo, 2026-08-25), so there is no pile to convert until the player
+            // stakes one, and TriggerDraw(HatchBank) refuses outright on unbanked=0. What this
+            // test is about — that SURVIVING the window opens the door — is downstream of the
+            // window existing at all.
+            long staked = BastionRunDrive.StakeTheBank(sim);
+            long potBefore = sim.BankedSalvage;
+
             Assert.IsTrue(StartBankWindow(gc), "the bank refused after the zone completed.");
             Assert.AreEqual(WaveMode.HatchBank, sim.Mode);
             Assert.AreEqual(AssaultState.Assault, sim.Assault);
@@ -287,12 +337,19 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsTrue(layout.IsDoorOpen(doorId),
                 doorId + " did not open on a survived zone-" + zone + " bank. Surviving the bank "
                 + "is the only path that opens it.");
-            Assert.IsFalse(meta.DemoZone2BankLost,
-                "surviving the window is the path that opens the door, not the path that sells "
-                + "the Primary.");
+            Assert.IsTrue(meta.DemoZone2BankLost,
+                "a resolved zone-2 window opens the rack either way (Zo, 2026-08-25) — "
+                + "holding it earns the Primary the same as bleeding for it.");
             Assert.Contains(doorId, meta.OpenDoorIds,
                 doorId + " opened in the layout but was not snapshotted to the save, so a Docked "
                 + "return would find it shut again.");
+            // Surviving is also what gives the stake back, at the carry multiplier. Nothing
+            // pays inside a Hatch window, so the whole rise is the drip and the dump.
+            Assert.AreEqual(0L, sim.TotalUnbanked,
+                "the survived window left the " + staked + " staked pile carried.");
+            Assert.Greater(meta.BankedSalvage, potBefore,
+                "the survived window opened the door but converted nothing of the " + staked
+                + " staked into it — holding the Hatch has to pay as well as unlock.");
         }
 
         // ------------------------------------------------------------------ arrange
@@ -378,13 +435,14 @@ namespace GatekeepersProtocol.PlayTests
         static IEnumerator RunZoneComposite(GameController gc, int zone)
         {
             RunSim sim = gc.Sim;
+            long potBefore = sim.BankedSalvage;
             BastionLayout layout = Object.FindFirstObjectByType<BastionLayout>();
             string terminalId = DemoZones.TerminalIdAt(zone, 0);
             BastionTerminal terminal = layout.FindTerminal(terminalId);
             Assert.IsNotNull(terminal, "the Bastion scene has no terminal " + terminalId + ".");
 
-            Assert.IsTrue(gc.TryNetStartTerminal(terminalId, terminal.transform.position, ReachMetres),
-                terminalId + " refused its trigger.");
+            Assert.IsTrue(gc.StartZoneWaveFromHatch(),
+                "the Hatch refused to start zone " + zone + "'s composite at " + terminalId + ".");
 
             int endWave = DemoZones.EndWave(zone);
             for (int wave = DemoZones.FirstWave(zone); wave < endWave; wave++)
@@ -402,8 +460,12 @@ namespace GatekeepersProtocol.PlayTests
             sim.NotifyAssaultCleared();
 
             Assert.AreEqual(AssaultState.Prep, sim.Assault, "the composite did not clear.");
+            BastionRunDrive.WalkUpAndShutOff(gc, layout, terminalId);
             Assert.IsTrue(layout.IsTerminalDone(terminalId), terminalId + " did not complete.");
-            Assert.Greater(sim.TotalUnbanked, 0L, "the field Waves banked nothing.");
+            // Re-pointed from the carried pile onto the pot: since 2026-08-25 the composite's
+            // kills land in the realm as they fall, so THIS is where "the field Waves paid"
+            // reads now. The pile the caller's window needs is withdrawn back out afterwards.
+            Assert.Greater(sim.BankedSalvage, potBefore, "the field Waves banked nothing.");
         }
 
         /// <summary>
@@ -420,8 +482,9 @@ namespace GatekeepersProtocol.PlayTests
             sim.NotifyDeliveryComplete();
         }
 
-        /// <summary>Pay the Run a pile through the real command, so the bank window has
-        /// something to convert.</summary>
+        /// <summary>Pay the realm through the real command. The award lands in the pot the
+        /// moment the body falls (Zo, 2026-08-25), so what this funds is the Withdraw a bank
+        /// window is staked from, not the window itself.</summary>
         static void AwardKills(GameController gc)
         {
             for (int i = 0; i < KillsPerWave; i++) gc.GatekeeperKilled();

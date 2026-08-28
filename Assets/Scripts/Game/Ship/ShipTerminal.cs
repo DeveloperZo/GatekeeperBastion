@@ -75,16 +75,14 @@ namespace GatekeepersProtocol.Game
 
         void StartTerminal(Sim.MetaState m)
         {
+            // The arming moved to the ARMORY rack and the intruder fight is struck
+            // (2026-08-25 recut — Zo): the terminal teaches the select/start contract,
+            // routes power, and points at the rack. Nothing spawns, nothing is granted here.
             m.DemoArmoryPowered = true;
             Log.Event(Tag, "ship terminal started");
-            // Grant first (saves both flags together), then the line: the copy says the
-            // MK-1 is already in hand, so it must be.
-            DemoShipFight.GrantWeapon(m);
-            // The line arms the intruder release; Continue executes it (gated execution —
-            // the sim ticks, timeScale is never written).
-            DemoVoice.Play(DemoConversationIds.Intruders, DemoVoiceMode.Lock);
-            DemoShipFight.ArmRelease();
-            DemoShipFight.SetStanding("Kill the Gatekeepers");
+            GameSession.Save();
+            DemoVoice.Play(DemoConversationIds.ArmoryCall, DemoVoiceMode.Subtitle);
+            DemoShipFight.SetStanding("Take the MK-1 from the ARMORY");
         }
     }
 }

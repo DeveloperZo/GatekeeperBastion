@@ -4,7 +4,7 @@
 Purpose: The FABRICATION console — the drone and its payloads, equipment, and the ship-systems shelf.
 Status: brainstorm
 Update trigger: when a payload row changes state, a drone control question in Open is answered, or the Hatch loss model changes.
-Last updated: 2026-08-15
+Last updated: 2026-08-25 (M94 shipped the turret as FORGE's ability without the ammo siphon; UTL-H and the Graduated table restated against that)
 -->
 
 ## What this covers
@@ -113,10 +113,12 @@ ammo, it does not create it**. It also holds the ammo variable still, which is w
 the row's open question answerable — total rounds per Run stays flat and only their
 distribution moves, so a change in outcome is attributable to the second firing position
 rather than to added dps. Graduated to `M56`, folded into `M70` (the turret is an ability
-— Zo, 2026-08-14), then moved out of `M70` to the future FORGE/turret slice
-(2026-08-15): the siphon spends an ammo reserve `PlayerGun` does not have, and that
-reserve is a weapons-lane decision made at the turret's own milestone
-(`boarder-protocols.md`, mechanics bill 4).
+— Zo, 2026-08-14), then moved out of `M70` to the future FORGE slice (2026-08-15) because
+the siphon spends an ammo reserve `PlayerGun` does not have. **`M94` then shipped the turret
+without the siphon** (closed 2026-08-24) — `BoarderProtocol` gives it its own `TurretMaxHp`
+and range, so its life is health and time rather than your reserve. The siphon is therefore
+an unbuilt idea again, and the ammo reserve it needs is still a weapons-lane decision nobody
+has made.
 
 ### Equipment is the second category (Zo, 2026-08-08, superseding rig-as-payload from earlier the same day)
 
@@ -155,7 +157,15 @@ Link, never restate. If a detail below matters, it lives in the milestone.
 | What | Milestone |
 |---|---|
 | The drone bay, the ghost-placement pattern, the charge model, and the decoy | `M30 — Something to pull them off the door` |
-| `UTL-H`, the turret, and the ammo-siphon cost model | The FORGE/turret slice (was `M56`, folded into `M70` 2026-08-14, moved out 2026-08-15 behind the ammo-reserve decision) |
+| The turret | `M94 — Two more protocols`, closed 2026-08-24 |
+
+**The turret left this file as a protocol ability, not as `UTL-H`.** `M94` built FORGE's turret
+rather than waiting on the payload, and recut its verbs while doing it — the sheet shipped as
+Field Deploy, Overcharge and Magnet Hands, and the Field Rearm / Redeploy pair that
+`boarder-protocols.md` had authored against decoys turned out to be the same shape twice. What
+that costs this file: the ammo-siphon cost model below was the reason `UTL-H` waited, and the
+shipped turret does not use it, so the row is a payload proposal again rather than a queued
+build. Turret health readout and number tuning are carried on `M94`.
 
 ## The payload roster
 
@@ -169,7 +179,7 @@ refusal grammar carried over from `closed/armory-and-weapons.md` (migrated 2026-
 | UTL-E | small targets | Mine; arms only under a crowd, so it pays for letting one form. | candidate |
 | UTL-F | killing | Yanks one body off the Hatch. | candidate |
 | UTL-G | fighting at all | Preloaded ammo box, placed; gone when drained. | picked (Zo, 2026-08-08 — see *Decided*) |
-| UTL-H | downtime | Turret; fires while you reload, walk or repair, on a modest onboard magazine and then on your reserve. | picked (Zo, 2026-08-13), waits at the FORGE/turret slice (was `M56`, then `M70`) |
+| UTL-H | downtime | Turret; fires while you reload, walk or repair, on a modest onboard magazine and then on your reserve. | overtaken — `M94` shipped a turret as FORGE's ability instead. A payload turret is now a second one, and needs a reason to exist beside it |
 
 **Ship order for the picked rows**, if the goal is play data rather than coverage: the
 control payload graduated first (`M30`), and `UTL-C` is the damage half that follows — the

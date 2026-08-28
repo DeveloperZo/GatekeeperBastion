@@ -31,10 +31,12 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void FirstBuy_UnlocksMultiplayer_OncePerSaveByConstruction()
+        public void TheMk1_UnlocksMultiplayer_OncePerSaveByConstruction()
         {
+            // Re-keyed 2026-08-25 (Zo): the ARMORY's MK-1 is the key, and `armingBeat` is
+            // false once DemoWeaponGranted is set — so the line cannot fire twice.
             string src = Read("Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs");
-            StringAssert.Contains("m.DemoWheelBuysLeft == 1", src);
+            StringAssert.Contains("!m.DemoWeaponGranted", src);
             StringAssert.Contains("\"multiplayer unlocked\"", src);
             StringAssert.Contains("DemoConversationIds.MpUnlocked", src);
             Assert.IsFalse(src.Contains("DemoWheelBuysLeft = 2"),
@@ -178,7 +180,10 @@ namespace GatekeepersProtocol.Tests
             Assert.Greater(loss, -1);
             Assert.Greater(crew, loss, "the first-loss line wins the frame; CREW queues");
             Assert.Greater(flag, crew, "the flag write is what makes both once-per-save");
-            StringAssert.Contains("HatchConversions >= 1", src);
+            // Re-keyed 2026-08-25: the beat fires on the realm having earned anything, not on
+            // a Convert window's counter — the Convert is out of the demo, so HatchConversions
+            // can never rise and this branch would have been unreachable.
+            StringAssert.Contains("LifetimeSalvageEarned > 0L", src);
             StringAssert.Contains("\"CREW menu unlocked\"", src);
         }
 
@@ -213,15 +218,28 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Retrigger_LogsItsElection_AndCompletesTheZone()
+        public void Retrigger_LogsItsElection_ButNeverCompletesTheZone()
         {
+            // Re-keyed 2026-08-26 (Zo; Docs/Design/0-Gameplay.md). This asserted that the
+            // composite's clear logs "zone complete" — and that completion is exactly what
+            // made the walk up the lane optional: killing the last body finished the zone from
+            // wherever the player was standing. A wave ENDS AT A TERMINAL, so the clear now
+            // records depth and nothing else, and GameController.ShutOffTerminal owns the
+            // completion. The negative is the point of the test.
             string src = Read("Assets/Scripts/Game/Bastion/GameController.Retrigger.cs");
             StringAssert.Contains("\"zone retrigger zone=\"", src);
             StringAssert.Contains("mode=", src);
             StringAssert.Contains("TriggerCompositeDraw", src);
-            StringAssert.Contains("\"zone complete zone=\"", src);
             StringAssert.Contains("DemoConversationIds.ZoneRetrigger", src);
             StringAssert.Contains("SetZoneDeepest", src);
+            Assert.IsFalse(src.Contains("TryCompleteTerminal"),
+                "the composite's clear completes a terminal again — surviving a Wave is not "
+                + "the objective, reaching the terminal is");
+
+            // ...and the completion lives with the shutoff, which is the verb that earns it.
+            string owner = Read("Assets/Scripts/Game/Bastion/GameController.Terminals.cs");
+            StringAssert.Contains("public bool ShutOffTerminal(", owner);
+            StringAssert.Contains("OpenDoorsFor(\"shutoff\")", owner);
         }
 
         [Test]
@@ -242,8 +260,12 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("\"bank refused — zone incomplete\"", hatch);
             Assert.IsFalse(hatch.Contains("finish the terminal"), "superseded refuse copy");
             StringAssert.Contains("\"bank window survived zone=\"", hatch);
+            // The Hatch no longer REFUSES while the zone is unfinished — that is where the
+            // wave now begins (Zo, 2026-08-25), so the prompt offers the start instead. The
+            // sim-side refuse above is still the authority, and still names the zone.
             string repair = Read("Assets/Scripts/Game/Bastion/RepairInteractable.cs");
-            StringAssert.Contains("Convert — finish the zone", repair);
+            StringAssert.Contains("start the wave", repair);
+            Assert.IsFalse(repair.Contains("finish the terminal"), "superseded refuse copy");
         }
 
         [Test]

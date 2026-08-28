@@ -544,7 +544,7 @@ public static class Docgen
         var sb = new StringBuilder();
         sb.AppendLine("| | |");
         sb.AppendLine("|---|---|");
-        sb.AppendLine("| juice per step | " + IntensityJuice.CostPerStep + " unbanked |");
+        sb.AppendLine("| juice per step | " + IntensityJuice.CostPerStep + " banked |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
 
@@ -572,11 +572,11 @@ public static class Docgen
         var sb = new StringBuilder();
         sb.AppendLine("| | |");
         sb.AppendLine("|---|---|");
-        sb.AppendLine("| drip | " + N(HatchBank.DripPerSecond) + " unbanked/s |");
+        sb.AppendLine("| drip | " + N(HatchBank.DripPerSecond) + " staked/s |");
         sb.AppendLine("| duration | " + N(HatchBank.DurationSeconds) + " s |");
         sb.AppendLine("| withdraw | " + N(HatchBank.WithdrawPerSecond) + " salvage/s |");
         sb.AppendLine("| returned keeps | " + N(HatchBank.ReturnedKeepShare * 100f) +
-                      "% of leftover unbanked (Lost wipes it all) |");
+                      "% of a leftover stake (Lost wipes the stake, never the bank) |");
         sb.AppendLine();
         sb.AppendLine("| Waves carried | convert | Hatch Wave | bodies at intensity 0 |");
         sb.AppendLine("|---|---|---|---|");
@@ -596,10 +596,15 @@ public static class Docgen
         var sb = new StringBuilder();
         sb.AppendLine("| | |");
         sb.AppendLine("|---|---|");
-        sb.AppendLine("| paid from | the dead seat's own Unbanked; the rest of that carry survives |");
-        sb.AppendLine("| cost | " + Respawns.BaseCost + " × (taken + 1) |");
+        sb.AppendLine("| paid from | the realm's bank; a staked pile is never touched |");
+        // Read the cap off Respawns rather than restating the shape: the climb was uncapped
+        // until 2026-08-27 and this line said so in hardcoded text, which is exactly how a
+        // generated block starts lying about the code it is generated from.
+        sb.AppendLine("| cost | " + Respawns.BaseCost + " × min(taken + 1, " + Respawns.MaxSteps + ") |");
         sb.AppendLine("| first three | " + Respawns.CostFor(0) + " / " + Respawns.CostFor(1) +
                       " / " + Respawns.CostFor(2) + " |");
+        sb.AppendLine("| climbs to | " + Respawns.CostFor(Respawns.MaxSteps - 1) +
+                      " and stops — every later death is the same price |");
         sb.AppendLine("| refused when | that seat carries less than the price — the Boarding ends |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
@@ -796,7 +801,7 @@ public static class Docgen
                       WeaponWheel.PointsPerPurchase + " points). Tier is derived as" +
                       " total / " + WeaponWheel.PointsPerPurchase + ". Cadence still reads as the");
         sb.AppendLine("weapon: fire-rate points exist, but a purchase chooses a spoke. Purchases unlock");
-        sb.AppendLine("after Salvage first converts through the Hatch. Full focus on one spoke is **" +
+        sb.AppendLine("once this realm has earned any Salvage at all. Full focus on one spoke is **" +
                       WeaponWheel.FocusAtMax + "** points; each neighbour reaches **" +
                       WeaponWheel.NeighbourAtMax + "**.");
         sb.AppendLine();
@@ -870,17 +875,28 @@ public static class Docgen
                       speed + " | " + refuses + " |");
     }
 
+    /// <summary>"1 wave" / "2 waves" — the counts are read from DemoZones, so a table edit
+    /// must not be able to print "2 wave".</summary>
+    static string Plural(int n, string noun)
+    {
+        return n + " " + noun + (n == 1 ? "" : "s");
+    }
+
     static void Waves(StringBuilder sb)
     {
         var wd = new WaveDirector();
         sb.AppendLine("## The waves");
         sb.AppendLine();
-        sb.AppendLine("**" + WaveDirector.MaxWaves + " waves to a run**, and none of them start until you use a");
-        sb.AppendLine("field terminal. `+/-` juice, `E` selects, `T` starts one Wave. A terminal opens its door after");
-        sb.AppendLine("its authored count (T1 is 5). Prep after a clear lasts as long as you want — starting a Convert is legal there.");
+        sb.AppendLine("**" + WaveDirector.MaxWaves + " waves to a Boarding**, and none of them start until you press");
+        sb.AppendLine("`T` at the Hatch. A wave BEGINS at the Hatch and ENDS at a terminal: press `T` at the zone's");
+        sb.AppendLine("terminal while the wave runs and it shuts off, completing the zone and banking everything you");
+        sb.AppendLine("are carrying. Each zone runs its whole span back to back (zone 1 = " +
+                      Plural(DemoZones.WavesPerTrigger(1), "wave") + ", the deeper zone = " +
+                      Plural(DemoZones.WavesPerTrigger(2), "wave") +
+                      "). Prep after a clear lasts as long as you want — starting a Convert is legal there.");
         sb.AppendLine("Gatekeepers arrive in groups, not a stream.");
         sb.AppendLine();
-        sb.AppendLine("At intensity 0:");
+        sb.AppendLine("At Ante 0:");
         sb.AppendLine();
         sb.AppendLine("| Wave | Bodies | Default | Hunter | Thief | Cloaker | HP × | Arrive in groups of | Every |");
         sb.AppendLine("|---|---|---|---|---|---|---|---|---|");
@@ -893,7 +909,7 @@ public static class Docgen
                           N(s.spawnInterval) + " s |");
         }
         sb.AppendLine();
-        sb.AppendLine("Hunters, Thieves and Cloakers are on a fixed schedule — intensity never adds more of them.");
+        sb.AppendLine("Hunters, Thieves and Cloakers are on a fixed schedule — the Ante never adds more of them.");
         sb.AppendLine();
     }
 
@@ -901,11 +917,11 @@ public static class Docgen
     {
         sb.AppendLine("## The Ante — the wager");
         sb.AppendLine();
-        sb.AppendLine("Juice at a field terminal, Master Control, or the Hatch (`+/-`), then `E` to select and `T` to start. Locked once a");
+        sb.AppendLine("Ante up at a field terminal, Master Control, or the Hatch (`+/-`), then `E` to select and `T` to start. Locked once a");
         sb.AppendLine("wave is live. It pays more and sends more, and the extra bodies are **all Defaults** —");
         sb.AppendLine("it cannot conjure a sixth Thief. It changes nothing else: no extra health, no tighter");
-        sb.AppendLine("spacing, no larger groups. Juice costs `" + IntensityJuice.CostPerStep +
-                      "` unbanked per step.");
+        sb.AppendLine("spacing, no larger groups. Anteing up costs `" + IntensityJuice.CostPerStep +
+                      "` banked Salvage per step — money you would otherwise take home.");
         sb.AppendLine();
         sb.AppendLine("| Ante | You earn | Wave 1 sends | Wave " + WaveDirector.MaxWaves + " sends |");
         sb.AppendLine("|---|---|---|---|");
@@ -924,22 +940,27 @@ public static class Docgen
     {
         sb.AppendLine("## Salvage");
         sb.AppendLine();
-        sb.AppendLine("**Gatekeepers are worth Salvage, and that Salvage sits unbanked until a Convert.**");
-        sb.AppendLine("A kill does not credit the ship. Prep `E` then `T` at the Hatch starts the convert Wave:");
-        sb.AppendLine("drip while it is live, dump when the timer ends, wipe on down or Hatch breach. A fatter pile");
-        sb.AppendLine("converts at a higher multiplier. Dying keeps what already made it through the Hatch.");
+        sb.AppendLine("**Gatekeepers are worth Salvage, and it is yours the moment the body falls.**");
+        sb.AppendLine("A kill banks straight to the realm at face value — no Convert stands between you and it,");
+        sb.AppendLine("and no ending can take it back. Nothing you have banked is ever at risk.");
         sb.AppendLine();
-        sb.AppendLine("A kill pays `" + N(MetaUpgrades.SalvagePerKill()) + "`, then multiplied by intensity.");
+        sb.AppendLine("If you want more than face value you have to put some of it back on the table: hold `E`");
+        sb.AppendLine("at a full Hatch to **Withdraw**, then run a Convert Wave to bring it home multiplied.");
+        sb.AppendLine("That pile — and only that pile — is what a death or a Hatch breach can take.");
+        sb.AppendLine();
+        sb.AppendLine("A kill pays `" + N(MetaUpgrades.SalvagePerKill()) + "`, then multiplied by the Ante.");
         sb.AppendLine("Nothing pays per second except the Convert drip (`" + N(HatchBank.DripPerSecond) +
-                      "` unbanked/s), and the quiet between waves earns nothing at all.");
+                      "`/s), and the quiet between waves earns nothing at all.");
         sb.AppendLine();
         sb.AppendLine("The hatch is what you are defending: **" + N(ShipSystems.HatchMaxHp) +
                       " HP** at Hatch Armor 0, up to **" + N(MetaUpgrades.HatchHp(MetaUpgrades.MaxLevel)) +
                       "**. Hold `E` near it to repair.");
-        sb.AppendLine("If it falls, the Boarding ends — whatever is banked. If you fall, you buy yourself back out");
-        sb.AppendLine("of the Unbanked you are carrying: `" + N(Respawns.BaseCost) + " × (respawns taken + 1)`, and the rest of that");
-        sb.AppendLine("pile stands up with you. Nothing else pays — not the bank, not a teammate. Carry less");
-        sb.AppendLine("than the price and that death ends the Boarding, which is the other edge of banking early.");
+        sb.AppendLine("If it falls, the Boarding ends — whatever is banked stays banked. If you fall, you buy");
+        sb.AppendLine("yourself back out of the realm's bank: `" + N(Respawns.BaseCost) +
+                      " × min(respawns taken + 1, " + Respawns.MaxSteps + ")` — it climbs to " +
+                      N(Respawns.CostFor(Respawns.MaxSteps - 1)) + " and stops. Anything you");
+        sb.AppendLine("staked on a Withdraw stands up with you untouched. There is one pot, and repair, the Ante");
+        sb.AppendLine("and your own returns all come out of it — which is what makes each of them a decision.");
         sb.AppendLine();
     }
 
@@ -1010,7 +1031,7 @@ public static class Docgen
                           FormatTrackValue(track, aM) + " |");
         }
         var rig = EquipmentCatalog.Def(EquipmentId.RepairRig);
-        sb.AppendLine("| Equipment slot (once, after first Hatch conversion) | — | " +
+        sb.AppendLine("| Equipment slot (once, after this realm earns anything) | — | " +
                       EquipmentCatalog.SlotPrice.ToString("N0", Inv) + " salvage |");
         sb.AppendLine("| Repair Rig — flat repair rate | " +
                       N(rig.repairPerSecond) + " HP/s | " +
@@ -1025,7 +1046,7 @@ public static class Docgen
         sb.AppendLine(string.Join(", ", shopNames) +
                       " share one panel, Default at 0 salvage. AEGIS and LEDGER are not sold.");
         sb.AppendLine();
-        sb.AppendLine("Weapon wheel purchases and the equipment slot unlock after Salvage first converts through the Hatch.");
+        sb.AppendLine("Weapon wheel purchases and the equipment slot unlock once this realm has earned any Salvage.");
         sb.AppendLine();
     }
 

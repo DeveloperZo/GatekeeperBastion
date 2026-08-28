@@ -44,7 +44,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(graph.IsDoorOpen("D1"),
                 "both terminals done is eligibility, not an unlock");
 
-            Assert.IsTrue(graph.RecordBankSurvived(out string[] opened));
+            Assert.IsTrue(graph.OpenEligibleDoors(out string[] opened));
             Assert.IsTrue(graph.IsDoorOpen("D1"));
             Assert.AreEqual(1, opened.Length);
             Assert.AreEqual("D1", opened[0]);
@@ -55,7 +55,7 @@ namespace GatekeepersProtocol.Tests
         {
             var graph = SampleGraph();
 
-            Assert.IsFalse(graph.RecordBankSurvived(out string[] opened),
+            Assert.IsFalse(graph.OpenEligibleDoors(out string[] opened),
                 "a bank survived before any terminal is done unlocks nothing");
             Assert.AreEqual(0, opened.Length);
             Assert.IsFalse(graph.IsDoorOpen("D1"));
@@ -68,10 +68,10 @@ namespace GatekeepersProtocol.Tests
             graph.TryCompleteTerminal("T1", out _);
             graph.TryCompleteTerminal("T2", out _);
 
-            Assert.IsTrue(graph.RecordBankSurvived(out string[] first));
+            Assert.IsTrue(graph.OpenEligibleDoors(out string[] first));
             Assert.AreEqual(1, first.Length);
 
-            Assert.IsFalse(graph.RecordBankSurvived(out string[] second),
+            Assert.IsFalse(graph.OpenEligibleDoors(out string[] second),
                 "an already-open door is not re-reported, so the door line plays once");
             Assert.AreEqual(0, second.Length);
             Assert.IsTrue(graph.IsDoorOpen("D1"));
@@ -83,7 +83,7 @@ namespace GatekeepersProtocol.Tests
             var graph = SampleGraph();
             graph.TryCompleteTerminal("T1", out _);
             graph.TryCompleteTerminal("T2", out _);
-            graph.RecordBankSurvived(out _);
+            graph.OpenEligibleDoors(out _);
 
             string[] ids = graph.CopyOpenDoorIds();
             Assert.AreEqual(1, ids.Length);
@@ -115,7 +115,7 @@ namespace GatekeepersProtocol.Tests
             var graph = SampleGraph();
             graph.TryCompleteTerminal("T1", out _);
             graph.TryCompleteTerminal("T2", out _);
-            graph.RecordBankSurvived(out _);
+            graph.OpenEligibleDoors(out _);
 
             Assert.IsTrue(graph.IsDoorOpen("D1"));
             Assert.IsFalse(graph.IsDoorOpen("D_control"));
@@ -124,7 +124,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(graph.TryCompleteTerminal("T_control", out _));
             Assert.IsFalse(graph.IsDoorOpen("D_control"),
                 "the control gate is survival-keyed too — completing it is not enough");
-            graph.RecordBankSurvived(out _);
+            graph.OpenEligibleDoors(out _);
             Assert.IsTrue(graph.IsDoorOpen("D_control"));
             Assert.IsTrue(graph.ControlRoomReachable);
             Assert.IsTrue(graph.IsFullyUnlocked);

@@ -1,7 +1,7 @@
 # M95 — The co-op bastion
 
 <!--
-Status: planned (built 2026-08-23, unverified)
+Status: completed, Aug 2026 (folder-moved 2026-08-25 at Zo's direction; built 2026-08-23, co-op demo leg unobserved)
 Update trigger: when the zone shape changes, when the hatch count changes, when the
 sketch parser gains or loses a mark kind
 Last updated: 2026-08-23
@@ -14,7 +14,7 @@ is three galleries that do not skip D1/D2/D3. Three hatches on R1.
 
 ## Story
 
-As a party arriving on a derelict, I want a place built around the fact that there are
+As a party arriving on a Bastion, I want a place built around the fact that there are
 several of us, so that the layout itself is the reason we cannot stand in one doorway.
 
 ## Why it matters
@@ -77,7 +77,7 @@ bastion at runtime, and a demo needs a known shape to author beats against.
 
 ## Open questions
 
-- **Whether the derelict is a distinct hull fiction or the same hull re-cut.**
+- **Whether the Bastion is a distinct hull fiction or the same hull re-cut.**
   *Unknown, and nothing below depends on it.* Art and marketing direction.
 - Room counts and terminal counts are **tunable**; the shape is spec. Expect them to
   move once the beats are played.

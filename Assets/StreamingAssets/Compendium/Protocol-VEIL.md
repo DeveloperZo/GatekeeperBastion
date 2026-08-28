@@ -18,7 +18,7 @@ Claimed at CREW QUARTERS, on the same panel as Default.
 
 ### Doctrine: PHANTOM
 
-A decoy you place spawns holding the aggro you are currently carrying, rather than pulling neutrally. The payload's own live count is unchanged; this is about what the decoy inherits, not how many stand.
+A decoy you place spawns holding the attention you are currently carrying — everything already provoked onto you — rather than pulling neutrally. The payload's own live count is unchanged; this is about what the decoy inherits, not how many stand.
 
 ### Crew: Ping
 

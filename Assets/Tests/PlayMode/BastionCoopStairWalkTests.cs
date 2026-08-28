@@ -62,29 +62,18 @@ namespace GatekeepersProtocol.PlayTests
 
         [UnityTest]
         [Timeout(180000)]
-        public IEnumerator CharacterController_ReachesStoreyOne_OnEachStair()
+        public IEnumerator NoStairsAuthored_TheBastionIsSingleStorey()
         {
-            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
+            // Storey 1 was dropped in the spine restructure (Zo, 2026-08-25): the bastion is
+            // single-storey, so there are no stairs to walk. The invariant that replaces the
+            // walk is simply that none are authored — if a stair comes back, this fails and
+            // the walk test must come back with it.
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
-
-            yield return PlayTestUtil.WaitUntil(() => PlayerRegistry.Local != null, 5f);
-            var player = PlayerRegistry.Local;
-            if (player == null)
+            foreach (string id in DressNames)
             {
-                var go = GameObject.Find("Player");
-                Assert.IsNotNull(go, "Bastion_Coop has no PlayerRegistry.Local and no Player object.");
-                player = go.GetComponent<PlayerHealth>();
+                Assert.IsNull(GameObject.Find(id),
+                    id + " exists again — restore the storey-one walk test with it.");
             }
-
-            Assert.IsNotNull(player, "Bastion_Coop has no PlayerHealth to walk.");
-            var fpc = player.GetComponent<FirstPersonController>();
-            var cc = player.GetComponent<CharacterController>();
-            Assert.IsNotNull(cc, "Player has no CharacterController.");
-            if (fpc != null)
-                fpc.enabled = false;
-
-            for (int s = 0; s < DressNames.Length; s++)
-                yield return ClimbOne(DressNames[s], WalkNames[s], player, cc);
         }
 
         static IEnumerator ClimbOne(

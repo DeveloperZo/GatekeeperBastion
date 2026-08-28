@@ -25,14 +25,18 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Re-read the state key and set the standing. No-op off the Ship, off the
-        /// demo, or before the first bank. The flip to EMBARK is logged once per flip; the
-        /// key is state, so a new buyable upgrade (an owned SEC-D's wheel coming into
-        /// budget) honestly re-opens the ARMORY standing and re-arms the flip log.</summary>
+        /// demo, or before the realm has earned anything. The flip to EMBARK is logged once
+        /// per flip; the key is state, so a new buyable upgrade (an owned SEC-D's wheel
+        /// coming into budget) honestly re-opens the ARMORY standing and re-arms the flip
+        /// log.</summary>
         public static void Reevaluate()
         {
             var m = GameSession.Meta;
             if (m == null || !m.DemoActive) return;
-            if (m.HatchConversions < 1) return;
+            // Was HatchConversions >= 1, which only a Convert window raised; the Convert is
+            // out of the demo (Zo, 2026-08-25) and kills bank on landing, so this gate would
+            // never have opened again.
+            if (m.LifetimeSalvageEarned <= 0L) return;
             // Either hub — the tutorial runs on the co-op hull for a fresh realm, and the
             // post-first-bank objective never appeared there.
             if (!SceneFlow.IsShipHub(SceneFlow.ActiveSceneName)) return;

@@ -4,7 +4,7 @@
 Purpose: The authoring contract for a hygiene pass — the unit that settles owed items. Sits beside _definitions/milestone.md and borrows its shape deliberately.
 Status: working
 Update trigger: when the pass lifecycle, the id rule, or the admission bar changes.
-Last updated: 2026-08-19
+Last updated: 2026-08-25 (AutoVerify renamed to IntegrationCheck throughout, including the copy-this frontmatter)
 -->
 
 A **hygiene pass** is one sitting that settles a group of owed items. It is what a
@@ -12,8 +12,8 @@ milestone is to a feature: a named thing with a list, a close condition, and a f
 that says where it stands.
 
 The ledger it replaces recorded items. That was the wrong unit. Six rows that all close
-with the same AutoVerify run are not six things to track, they are one thing to schedule,
-and a table cannot say so.
+with the same IntegrationCheck run are not six things to track, they are one thing to
+schedule, and a table cannot say so.
 
 ## The bar — what a pass may contain
 
@@ -73,8 +73,8 @@ is one line in `Changelog.md` like any other state transition.
 ## Required sections
 
 **Frontmatter comment** — status, update trigger, last updated, and **who can close it**,
-because most passes need either Zo's hands or the AutoVerify file bridge and that is the
-scheduling constraint.
+because most passes need either Zo's hands or the IntegrationCheck file bridge and that is
+the scheduling constraint.
 
 **One line on what the sitting is.** "Survive a window, dock, spend, re-embark, read the
 log."
@@ -89,7 +89,8 @@ went. Cheap, and it stops the pass growing on contact.
 ## Rules
 
 - **Authority for anything touching a MonoBehaviour, a scene or the save file is the
-  AutoVerify file bridge.** A green offline harness does not settle those items
+  IntegrationCheck file bridge** (`Assets/Scripts/Editor/Tools/IntegrationCheck.cs`,
+  renamed from AutoVerify). A green offline harness does not settle those items
   (`Working-Rules.md`, Verification).
 - **A pass settles by observation, not by argument.** "It must work, the test passes" does
   not close an item that says the test cannot see it.
@@ -106,7 +107,7 @@ went. Cheap, and it stops the pass growing on contact.
 
 <!--
 Status: open
-Closable by: Zo at the keyboard / the AutoVerify file bridge / either
+Closable by: Zo at the keyboard / the IntegrationCheck file bridge / either
 Update trigger: when an item is added, settled or evicted
 Last updated: YYYY-MM-DD
 -->

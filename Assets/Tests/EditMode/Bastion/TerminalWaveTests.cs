@@ -18,16 +18,33 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void DamageHatch_NoOpInTerminalMode()
+        public void DamageHatch_LandsInTerminalMode_BecauseTheFieldWaveHasAStake()
         {
+            // REVERSED 2026-08-27 (Zo). This pinned the opposite: a field Wave left the Hatch
+            // invulnerable. That made every body which reached the Hatch inert — most sharply
+            // the Thief, whose ONLY weapon is hatchDamage, so on a field Wave it could affect
+            // nothing at all and 12 of 13 walked a logged run untouched.
+            //
+            // Pinned as an inequality against the damage dealt rather than a fixed HP, so the
+            // Hatch's own max can move without dragging this with it.
             var meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed: 1);
             sim.StartRun(1);
             sim.EngageTether();
             sim.TriggerDraw();
+            Assert.AreEqual(WaveMode.Terminal, sim.Mode,
+                "this fixture is meaningless if the draw did not put us on a field Wave");
             float hp = sim.Ship.Hatch.Hp;
             sim.DamageHatch(25f);
-            Assert.AreEqual(hp, sim.Ship.Hatch.Hp);
+            // Derived from the constant, never restated: a field Wave's hit is scaled because
+            // the Hatch is shut while the player is up the lane. Pinning 3.75 here would make
+            // the one dial that is expected to move read as a regression when it does.
+            Assert.AreEqual(hp - 25f * HatchBank.FieldWaveDamageScale, sim.Ship.Hatch.Hp, 0.01f,
+                "a field Wave cannot hurt the Hatch — the objective is back to being scenery");
+            Assert.Less(HatchBank.FieldWaveDamageScale, 1f,
+                "the field scale is not a scale; the Hatch is as soft as it is on a bank Wave");
+            Assert.Greater(HatchBank.FieldWaveDamageScale, 0f,
+                "the field scale is zero, which is invulnerability wearing a constant's name");
         }
 
         [Test]
@@ -85,7 +102,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsNull(r2);
             Assert.IsTrue(graph.IsTerminalDone("T1"));
             Assert.IsFalse(graph.IsDoorOpen("D1"), "completion is eligibility, not an unlock");
-            graph.RecordBankSurvived(out _);
+            graph.OpenEligibleDoors(out _);
             Assert.IsTrue(graph.IsDoorOpen("D1"));
             Assert.AreEqual(2, graph.ClearedWaves("T1"));
         }
@@ -97,7 +114,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(graph.RecordWaveCleared("T1", 1, out _));
             Assert.IsTrue(graph.IsTerminalDone("T1"));
             Assert.IsFalse(graph.IsDoorOpen("D1"), "completion is eligibility, not an unlock");
-            graph.RecordBankSurvived(out _);
+            graph.OpenEligibleDoors(out _);
             Assert.IsTrue(graph.IsDoorOpen("D1"));
         }
 
@@ -114,7 +131,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(5, graph.ClearedWaves("T1"));
             Assert.IsTrue(graph.IsTerminalDone("T1"));
             Assert.IsFalse(graph.IsDoorOpen("D1"), "completion is eligibility, not an unlock");
-            graph.RecordBankSurvived(out _);
+            graph.OpenEligibleDoors(out _);
             Assert.IsTrue(graph.IsDoorOpen("D1"));
         }
 
@@ -169,10 +186,14 @@ namespace GatekeepersProtocol.Tests
             sim.StartRun(1);
             sim.EngageTether();
             sim.TriggerDraw();
-            sim.AwardKill();
+            long earned = RunEconomyFixture.KillAndStake(sim, 1);
             sim.NotifyAssaultCleared();
             Assert.IsFalse(sim.SequentialPending);
             Assert.AreEqual(AssaultState.Prep, sim.Assault);
+            // The bank window still refuses on an empty carry, and since 2026-08-25 kills no
+            // longer fill one — so the withdraw at the full Hatch is what makes this untimed
+            // Prep a break the player can actually open the door from.
+            RunEconomyFixture.Stake(sim, earned);
             Assert.Greater(sim.Unbanked, 0L);
             sim.TriggerDraw(WaveMode.HatchBank);
             Assert.AreEqual(WaveMode.HatchBank, sim.Mode);
@@ -223,8 +244,8 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(graph.IsDoorOpen("D1"));
 
             // The failed-bank case is this same assertion: a breached window ends the Run
-            // before RecordBankSurvived is ever reached, so the door is still shut here.
-            Assert.IsTrue(graph.RecordBankSurvived(out _));
+            // before OpenEligibleDoors is ever reached, so the door is still shut here.
+            Assert.IsTrue(graph.OpenEligibleDoors(out _));
             Assert.IsTrue(graph.IsDoorOpen("D1"));
         }
     }

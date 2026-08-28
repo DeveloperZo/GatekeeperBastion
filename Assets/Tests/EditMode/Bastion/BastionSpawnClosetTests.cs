@@ -94,11 +94,11 @@ namespace GatekeepersProtocol.Tests
         {
             string yaml = File.ReadAllText(Path.GetFullPath(CoopScene)).Replace("\r\n", "\n");
             Match seal = Regex.Match(yaml,
-                @"^  doorId: D2\n[\s\S]*?^  sealedSpawns:((?:\n  - \{fileID: \d+\})*)",
+                @"^  doorId: D1\n[\s\S]*?^  sealedSpawns:((?:\n  - \{fileID: \d+\})*)",
                 RegexOptions.Multiline);
-            Assert.IsTrue(seal.Success, CoopScene + " has no D2 door document");
+            Assert.IsTrue(seal.Success, CoopScene + " has no D1 door document");
             Assert.Greater(Regex.Matches(seal.Groups[1].Value, @"fileID: [1-9]").Count, 0,
-                CoopScene + " D2 seals nothing — the locked-wing wiring is gone");
+                CoopScene + " D1 seals nothing — the locked-wing wiring is gone");
             Match master = Regex.Match(yaml,
                 @"^  terminalId: Master\n[\s\S]*?^  unlockedSpawns:((?:\n  - \{fileID: \d+\})*)",
                 RegexOptions.Multiline);

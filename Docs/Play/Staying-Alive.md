@@ -1,4 +1,4 @@
-<!-- Purpose: tactics that follow from verified mechanics — how the AI, sprint, repair and weapon systems actually behave. / Status: working / Update trigger: when gatekeeper targeting, provocation, sprint/stamina, repair costs or weapon slot handling change. / Last updated: 2026-08-16 -->
+<!-- Purpose: tactics that follow from verified mechanics — how the AI, sprint, repair and weapon systems actually behave. / Status: working / Update trigger: when gatekeeper targeting, provocation, movement speeds, sprint/stamina, repair costs or weapon slot handling change. / Last updated: 2026-08-25 (kills bank as they land; the Convert leaves the demo) -->
 
 # Staying Alive
 
@@ -6,7 +6,7 @@
 
 Everything in this room runs on attention, and the room never forgets a face.
 
-Two pools end a Boarding and neither refills for free. Mine refills only by going down and letting the realm buy me back — the price climbs, and everything Unbanked burns with it. The Hatch's refills only while I stand at it with the Rig, spending the bank. Every habit below is one habit: pay less of those two per body killed.
+Two pools end a Boarding and neither refills for free. Mine refills only by going down and buying myself back out of the bank, at a price that climbs. The Hatch's refills only while I stand at it with the Rig, spending that same bank. Every habit below is one habit: pay less of those two per body killed, because both of them are billed to the money I came here to keep.
 
 Hurt a Default on its way in and it is mine for the rest of its life. It does not cool off, does not go home, does not lose me. But there is a deadline: close enough to the Hatch, it stops listening for good, and after that my fire changes nothing but its health. On the approach they are a choice. At the door they are a job.
 
@@ -14,17 +14,17 @@ I can be noticed without firing. A clear sightline at distance is enough, and be
 
 One shot pulls one group and no further — the ones it pulls do not pull their own neighbours. It is the most useful bound I know, and there is no way to see it. Only to trust it.
 
-Walking away from something that wants me does not work; it closes the whole way. Sprinting works until the tank is empty, and the tank stays locked longer than the bar admits.
+Walking away from a marcher buys me a sliver — it is a shade slower than I am, so giving ground is a real move now and not a slow loss. It is a sliver, though. Every second I stand still to fire or reload hands the whole thing back, and the lane runs toward my own door. A Hunter is the exception: it is faster than my walk and nothing but a sprint opens that gap. Sprinting works until the tank is empty, and the tank stays locked longer than the bar admits.
 
-Triage by refusals. Hunters only ever cost blood. Thieves never do. Defaults are the only kind I can steer, and only on a Convert.
+Triage by refusals. Hunters only ever cost blood. Thieves never do. Defaults are the only kind I can steer, and only on a Convert. Cloakers are the only kind I can stop without firing, and holding one still is a direction I am not covering.
 
 And repair in the quiet. Repairing in a live Wave is standing still, unarmed, at the exact point everything is walking toward.
 
 ## Reference
 
-Every tactic here is a rule the room already boardings. Bindings and numbers are in the [Field Manual](Field-Manual.md).
+Every tactic here is a rule the room already runs on. Bindings and numbers are in the [Field Manual](Field-Manual.md).
 
-The two things that end a Boarding are your health and the Hatch's, and neither comes back for free. Your health does not come back **while you stand** — the only refill is a respawn priced from the realm's pot, which also costs everything Unbanked ([Going Down](Going-Down.md)). The Hatch's comes back only when you stand at it with the Repair Rig equipped and spend banked Salvage. So every tactic below is really about the same thing: spending as little of those two pools as possible per Gatekeeper killed.
+The two things that end a Boarding are your health and the Hatch's, and neither comes back for free. Your health does not come back **while you stand** — the only refill is a respawn bought out of the realm's bank, at a price that climbs ([Going Down](Going-Down.md)). The Hatch's comes back only when you stand at it with the Repair Rig equipped and spend that same banked Salvage. Both refills are billed to one pot, and it is the pot you shop with, so every tactic below is really about the same thing: spending as little of those two pools as possible per Gatekeeper killed.
 
 ### Pull them off the door on a Convert, because a pull is permanent
 
@@ -50,12 +50,13 @@ An un-provoked Gatekeeper that has a clear line of sight to you at a distance wi
 
 So standing in a long open sightline is a decision, not a neutral position. Fighting from a spot with cover between you and the spawn points means you choose when the pull happens instead of the geometry choosing for you.
 
-### Sprint outruns a chase; walking does not
+### A walk holds ground against everything but a Hunter; a sprint breaks anything
 
-A provoked Gatekeeper chases faster than you walk and slower than you sprint. That is deliberate and it means:
+A provoked Default or Cloaker chases at just under your walking speed, deliberately, so that giving ground buys you a moment instead of nothing. A Hunter is the one kind that is faster than a walking Boarder, and a sprint outruns even that. Exact speeds: [Field Manual](Field-Manual.md).
 
-- **Backing away while shooting does not work.** They close on you the whole time. It is not a stalemate, it is a slow loss.
-- **Sprinting does work, until the stamina boardings out.** Sprint is for breaking contact, crossing the room, or getting back to the Hatch — not for kiting indefinitely.
+- **Backing away while shooting is a real move, and a thin one.** You open ground on a marcher only while you are actually moving — every pause to fire or reload hands the distance straight back, and the lane you are retreating down runs toward your own Hatch with the far spawn point still feeding it. Retreat to reposition, not to kite forever.
+- **A Hunter on your back cannot be walked off.** It closes whatever you do at walking pace. Sprint or kill it.
+- **Sprinting works on everything, until the stamina runs out.** Sprint is for breaking contact, crossing the room, or getting back to the Hatch — not for kiting indefinitely.
 
 Three details about the stamina that are not shown to you:
 
@@ -70,6 +71,7 @@ Each kind is defined by something it will not do, and that refusal tells you wha
 - **Hunters never touch the Hatch.** Ignoring one costs you health and nothing else. If the door is the emergency, a Hunter on your back is the cheaper problem — right up until your health is the emergency instead.
 - **Thieves hunt you on a field-terminal Wave and cannot be provoked.** Shooting one in the back changes nothing about it: not its speed, and it does not shout. It never hurts you. On a Convert, ignoring one costs the door a slow, heavy bite.
 - **Marchers are the only kind you can steer**, per the pull rule above — and only on a Convert.
+- **Cloakers refuse to move while you look at them.** Centre one in your view and it stops dead and drops its cloak; look away and it walks again, wanting what a marcher wants. It is the only kind you can stop without spending a round, and the price is paid in the directions you are not watching while you hold it.
 
 The practical read: when everything arrives at once on a Convert, the Thieves are on a clock against the door and the Hunters are on a clock against you. You almost always have more slack against the Hunters, because your health can absorb a swing and the Hatch's absorbs the bite badly. On a field-terminal Wave the Hatch is invulnerable; the clock is only yours.
 
@@ -79,7 +81,7 @@ Repairing means standing still at the Hatch holding repair — which is exactly 
 
 Repairing during an Assault is sometimes right, but understand what you are paying: you are stationary, at the convergence point, with no way to shoot, while Gatekeepers are walking to your position specifically.
 
-It needs the Repair Rig equipped — without it, holding repair does nothing — and it costs banked Salvage per point of health, from the same purse you buy upgrades with. It will spend the bank down to exactly zero if you hold long enough. The trade is usually worth it — a lost boarding stops all income — but make it a decision.
+It needs the Repair Rig equipped — without it, holding repair does nothing — and it costs banked Salvage per point of health, from the same purse you buy upgrades with. It will spend the bank down to exactly zero if you hold long enough. The trade is usually worth it — a lost Boarding stops all income — but make it a decision.
 
 ### Weapon handling that follows from the slot rules
 
@@ -105,8 +107,8 @@ Tactics on this page that only work because of behaviour the game never tells yo
 - **The shout not relaying.** Nothing states that alerted Gatekeepers do not alert others. The "one shot pulls one clump" tactic depends entirely on this bound and there is no way to observe it except by inference.
 - **Line-of-sight noticing.** Nothing tells you that an un-provoked Gatekeeper can spot you at range through a clear sightline. Being pulled without firing reads as random.
 - **The exhaustion latch.** The stamina bar refills visibly while sprint is still locked out. Nothing on screen distinguishes "recovering" from "usable", so the sprint you were counting on can simply not engage.
-- **The stamina regeneration delay**, and that it boardings even while a panel is open. Neither is shown.
-- **That sprint outruns a chase and walking does not.** The relationship between your speeds and theirs is the single most important combat fact in the game and it appears nowhere on the Bastion.
+- **The stamina regeneration delay**, and that it runs even while a panel is open. Neither is shown.
+- **Where your walk sits against each kind's chase.** A marcher is a shade slower than you and a Hunter is a shade faster; that relationship is the single most important combat fact in the game and it appears nowhere on the Bastion. It is also small enough on both sides that it reads as noise until somebody tells you.
 - **That ammo is unlimited.** Never stated, so players ration for no reason.
 - **That Thieves cannot be provoked at all.** The HUD gives no feedback distinguishing "this thing is ignoring me" from "I am not doing enough damage", so players empty clips into Thieves expecting them to turn.
 - **That repair drains the bank to zero if held.** The prompt shows the rate and the running total, but there is no warning at the point the purse is about to empty.

@@ -5,7 +5,7 @@ Purpose: Summary and id register over Docs/Hygiene/. Which passes exist, what ea
 Status: living index
 Authority: none over design or code. A pass records a debt and the observation that settles it; it does not gate anything.
 Update trigger: when a pass is created, moves folder, or when an id is issued, settled or evicted.
-Last updated: 2026-08-24
+Last updated: 2026-08-25 (AutoVerify renamed to IntegrationCheck in the authority line and HP-1's row)
 -->
 
 Owed items live here as **hygiene passes** — one file per sitting, folder as status. The
@@ -19,7 +19,8 @@ Nothing here is a claim that something is broken, and nothing here is a claim th
 works. An item says only that it was not observed.
 
 **Authority for settling any item that touches a MonoBehaviour, a scene or the save file is the
-AutoVerify file bridge**: write `gkb_verify_request.txt` at the project root with the editor
+IntegrationCheck file bridge** (renamed from AutoVerify; an older pass saying AutoVerify means
+this): write `gkb_verify_request.txt` at the project root with the editor
 open and read `gkb_verify_report.json`. The offline harness `Tools/verify/run.sh` cannot see
 those, so a green harness run does not settle those items
 ([`../Working-Rules.md`](../Working-Rules.md), Verification).
@@ -28,7 +29,7 @@ those, so a green harness run does not settle those items
 
 | id | Pass | Status | Closable by | Items |
 |---|---|---|---|---|
-| HP-1 | [Beat zero, observed](1.%20open/HP-1-beat-zero-observed.md) | open | AutoVerify (pre-v9 save staged), plus one play pass for the refuse strings and three quit-and-reload cycles | TH-1 … TH-6 |
+| HP-1 | [Beat zero, observed](1.%20open/HP-1-beat-zero-observed.md) | open | IntegrationCheck (pre-v9 save staged), plus one play pass for the refuse strings and three quit-and-reload cycles | TH-1 … TH-6 |
 | HP-2 | [The dock round trip](2.%20settled/HP-2-the-dock-round-trip.md) | settled, 2026-08-20 (Zo; M78 `Returned`) | — | TH-10, TH-12, TH-14, TH-17 … TH-20 |
 | HP-3 | [Hands only Zo has](2.%20settled/HP-3-hands-only-zo-has.md) | settled, 2026-08-22 | — | TH-7 |
 | HP-4 | [The lost endings hold](1.%20open/HP-4-the-lost-endings-hold.md) | open | Zo, two runs plus one demo-off run | TH-13 |

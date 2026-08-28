@@ -15,7 +15,7 @@ Neither has earned its name yet. Until they land, everything the [Salvage](Salva
 
 ## Reference
 
-The three-currency split is decided (Experience the world, Salvage the kit, Cores the self); Experience is a spendable wallet and never a rank; Cores buy protocol unlock and upgrade plus Boarding multipliers; the roster-as-purchase is scoped per Bastion, set at first boarding and cleared when Master Control falls. Nothing is built and no numbers exist. Names are working names.
+The three-currency split is decided (Experience the world, Salvage the kit, Cores the self); Experience is a spendable wallet and never a rank; Cores buy protocol unlock and upgrade plus Boarding multipliers; the roster-as-purchase is scoped per Bastion, set at the first Boarding and cleared when Master Control falls. Nothing is built and no numbers exist. Names are working names.
 
 ## See also
 

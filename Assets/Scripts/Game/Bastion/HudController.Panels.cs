@@ -76,7 +76,7 @@ namespace GatekeepersProtocol.Game
             int specIndex = stripped ? WaveDirector.MaxWaves - 1 : wave;
             int here = _waves.NextWave(specIndex, lvl, sim.PlayerCount).enemyCount;
             _lineBuf.Clear();
-            _lineBuf.Append("<b>PREP</b>  ·  ");
+            _lineBuf.Append("<b>PREP</b>  -  ");
             if (sim.MasterSequenceLive)
             {
                 bool hatchHalf = sim.MasterPhase == MasterControlPhase.Hatch;
@@ -97,7 +97,7 @@ namespace GatekeepersProtocol.Game
                     _lineBuf.Append(wave + 1);
                 _lineBuf.Append('/').Append(WaveDirector.MaxWaves);
                 if (stripped)
-                    _lineBuf.Append(" — field stripped");
+                    _lineBuf.Append(" -- field stripped");
             }
             if (sim.SequentialFollowUpRemaining > 0f)
             {
@@ -112,8 +112,8 @@ namespace GatekeepersProtocol.Game
             _lineBuf.Clear();
             _lineBuf.Append("HATCH ").Append(hatchHp.ToString("0")).Append('/')
                 .Append(hatchMax.ToString("0"));
-            if (damaged) _lineBuf.Append("  ·  damaged — repair at hatch");
-            else _lineBuf.Append("  ·  sealed");
+            if (damaged) _lineBuf.Append("  -  damaged -- repair at hatch");
+            else _lineBuf.Append("  -  sealed");
             _view.SetPrepLine(1, _lineBuf.ToString());
 
             _lineBuf.Clear();
@@ -125,7 +125,7 @@ namespace GatekeepersProtocol.Game
             {
                 int nextCount = _waves.NextWave(specIndex, lvl + 1, sim.PlayerCount).enemyCount;
                 _lineBuf.Append("  ·  +/- raise Ante ").Append(lvl + 1)
-                    .Append(" → ").Append(nextCount);
+                    .Append(" -> ").Append(nextCount);
             }
             _view.SetPrepLine(2, _lineBuf.ToString());
 
@@ -163,7 +163,7 @@ namespace GatekeepersProtocol.Game
                 if (shown > n) shown = n;
                 if (hatchHalf)
                     _lineBuf.Append("CONVERT — Master Control ").Append(shown)
-                        .Append('/').Append(n).Append(" — ").Append(bankSec).Append("s");
+                        .Append('/').Append(n).Append(" -- ").Append(bankSec).Append("s");
                 else
                     _lineBuf.Append("ASSAULT — Master Control ").Append(shown)
                         .Append('/').Append(n);
@@ -171,14 +171,14 @@ namespace GatekeepersProtocol.Game
             }
             else if (hatchBank)
             {
-                _lineBuf.Append("CONVERT — ").Append(bankSec).Append("s")
+                _lineBuf.Append("CONVERT -- ").Append(bankSec).Append("s")
                     .Append("   |   enemies remaining: ").Append(remaining);
             }
             else
             {
                 int shown = wave;
                 if (shown > WaveDirector.MaxWaves) shown = WaveDirector.MaxWaves;
-                _lineBuf.Append("ASSAULT — wave ").Append(shown).Append('/')
+                _lineBuf.Append("ASSAULT -- wave ").Append(shown).Append('/')
                     .Append(WaveDirector.MaxWaves).Append("   |   enemies remaining: ")
                     .Append(remaining);
             }

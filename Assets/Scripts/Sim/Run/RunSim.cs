@@ -46,19 +46,23 @@ namespace GatekeepersProtocol.Sim
     /// wave's *delivery* finishes, with no Prep between them. Overlap in the room is the point.
     /// After that chain clears, the run continues normally through wave MaxWaves.
     ///
-    /// ECONOMY: AwardKill() splits Unbanked equally among PlayerCount slots (slot 0 is solo /
-    /// host). Hatch-bank drip/dump converts each slot, and every slot EarnSalvage into the
-    /// realm's pot — a guest plays in somebody else's world and it is that world's salvage
-    /// that fills. Down of one guest wipes that slot; host down / hatch breach wipe leftover
-    /// Unbanked without converting.
-    /// Terminal Wave-5 clear keeps Unbanked; Hatch-bank after the field is stripped converts
-    /// and stays Prep. RepairHatch spends from the ship bank only.
+    /// ECONOMY (re-keyed 2026-08-25, Zo — "it must be impossible to die with no progress to
+    /// show for it"): AwardKill() banks the floored award straight into the realm's pot at
+    /// face value. A guest plays in somebody else's world and it is that world's salvage that
+    /// fills, so the award is not split across seats — the whole thing lands in the one pot,
+    /// which is the same total the split used to produce.
+    /// Unbanked still exists but fills ONLY on a deliberate Withdraw at the Hatch, so nothing
+    /// is at risk that the player did not choose to risk. A down seat's staked pile FREEZES;
+    /// a death with no respawn, and the run's end, wipe leftover Unbanked — the bank behind it
+    /// survives both. The Ante and the respawn fee spend the BANK (SpendBanked), as does
+    /// RepairHatch. Hatch-bank drip/dump converts a staked pile back at a carry multiplier.
     /// </summary>
         public sealed partial class RunSim
         {
         private const string Tag = "RunSim";
 
-        /// <summary>The demo zone whose lost bank window is the authored Primary gate.</summary>
+        /// <summary>The demo zone whose RESOLVED bank window — survived or lost — is the
+        /// authored Primary gate (Zo, 2026-08-25).</summary>
         private const int Zone2 = 2;
 
         private readonly MetaState _meta;
@@ -111,13 +115,17 @@ namespace GatekeepersProtocol.Sim
         /// <summary>The defended objective (the Hatch back to your ship).</summary>
         public ShipSystems Ship { get; private set; }
 
-        /// <summary>Per-run converted tally (drip + dump). Unbanked kills are not this number.
-        /// Resets with each new run (each run gets a fresh RunSim and therefore a fresh ledger).</summary>
+        /// <summary>Per-run tally of what this Run put in the realm's bank: kills as they
+        /// land, plus a Convert's multiplied return, minus anything withdrawn back out and
+        /// still at risk. Resets with each new run (each run gets a fresh RunSim and therefore
+        /// a fresh ledger).</summary>
         public SalvageLedger Salvage { get; private set; }
 
-        /// <summary>Kill awards this Run that have not yet converted, for slot 0 (solo / host).
-        /// Juice and bank-withdraw still spend this pile. Hatch-bank start looks at
-        /// <see cref="TotalUnbanked"/>. Converted only by Hatch-bank drip/dump.</summary>
+        /// <summary>Slot 0's STAKED pile (solo / host) — salvage the player deliberately
+        /// withdrew from the bank and put back at risk. Kills do not fill it (they bank on
+        /// landing, 2026-08-25); only <see cref="Withdraw(float, int)"/> does. A death wipes
+        /// it. Hatch-bank start looks at <see cref="TotalUnbanked"/>, and a Convert is the
+        /// only thing that turns it back into banked salvage, multiplied.</summary>
         public long Unbanked
         {
             get { return _wallets.Of(0); }
@@ -204,8 +212,28 @@ namespace GatekeepersProtocol.Sim
 
         public float CurrentKillValue => KillValueAt(Siphon.Level);
 
+        /// <summary>True while the zone's authored bodies are spent and the field is dripping
+        /// until the player reaches the terminal (<see cref="FieldTrickle"/>). Set by the Game
+        /// layer, which is the half that knows about terminals.</summary>
+        public bool FieldTrickleLive { get; private set; }
+
+        /// <summary>Game layer: the field has run dry / has been shut off. Idempotent.</summary>
+        public void SetFieldTrickle(bool live)
+        {
+            if (FieldTrickleLive == live) return;
+            FieldTrickleLive = live;
+            Log.Event(Tag, live
+                ? "field trickle on — the lane holds until the terminal is shut off"
+                : "field trickle off");
+        }
+
+        /// <summary>What one body pays right now. Zero inside a Convert window (the stake is
+        /// the pay there), and zero for a TRICKLE body — those are a clock, not an income, and
+        /// paying for them would turn walking the lane into farming it (Zo, 2026-08-26).</summary>
         public long CurrentKillAward =>
-            Mode == WaveMode.HatchBank ? 0L : (long)Math.Floor((double)CurrentKillValue);
+            Mode == WaveMode.HatchBank || FieldTrickleLive
+                ? 0L
+                : (long)Math.Floor((double)CurrentKillValue);
 
         /// <summary>Seconds left on the Hatch-bank convert window. 0 outside Hatch-bank Assault.</summary>
         public float HatchBankRemaining => _hatchBankTimer;
@@ -390,12 +418,22 @@ namespace GatekeepersProtocol.Sim
             _followUpTimer = 0f;
         }
 
-        /// <summary>Hatch damage. Terminal Waves leave the Hatch invulnerable, bar a faucet cycle's.</summary>
+        /// <summary>Hatch damage, on BOTH Wave modes (Zo, 2026-08-27: the field Wave gets a
+        /// stake). Terminal Waves used to leave the Hatch invulnerable, which made every body
+        /// that reached it inert — most visibly the Thief, whose only weapon is hatchDamage and
+        /// which therefore could affect nothing at all on a field Wave: 12 of 13 walked the
+        /// whole run untouched and unthreatening. An objective nobody can act on is not an
+        /// objective. THIS ADDS A SECOND WAY TO LOSE A FIELD WAVE (cause "hatch") while the
+        /// player is 66-156 m up the spine at a terminal — that is the intended cost, and it is
+        /// what makes leaving the Hatch a decision rather than a formality.</summary>
         public void DamageHatch(float amount)
         {
             if (amount <= 0f)
                 return;
-            if (Mode == WaveMode.Terminal && !_faucetCycleLive) return;
+            // Scaled BEFORE the hatch and the attrition both read it, so a field Wave cannot
+            // bleed the carried stake at a rate the Hatch itself is armoured against.
+            if (Mode == WaveMode.Terminal && !_faucetCycleLive)
+                amount *= HatchBank.FieldWaveDamageScale;
             Ship.Hatch.Damage(amount);
             if (Phase != RunPhase.Tethered)
                 return;
@@ -463,9 +501,11 @@ namespace GatekeepersProtocol.Sim
         }
 
         /// <summary>
-        /// Game layer reports one gatekeeper killed. Splits the floored kill award equally
-        /// across <see cref="PlayerCount"/> piles. Does not touch the ship bank. Valid only
-        /// while Tethered + Assault.
+        /// Game layer reports one gatekeeper killed. BANKS the floored kill award into the
+        /// realm's pot at face value, the moment the body falls (Zo, 2026-08-25) — see
+        /// <see cref="BankKill"/>. It does not touch the carried pile and is not split across
+        /// <see cref="PlayerCount"/>: every seat banks into the one pot, which is the same
+        /// total the old per-seat split produced. Valid only while Tethered + Assault.
         /// </summary>
         public void AwardKill()
         {
@@ -476,8 +516,35 @@ namespace GatekeepersProtocol.Sim
             }
             long award = CurrentKillAward;
             if (award <= 0L) return;
-            _wallets.AwardSplit(award);
+            BankKill(award);
         }
+
+        /// <summary>KILLS BANK AS THEY LAND (Zo, 2026-08-25). A Run must never end with
+        /// nothing to show for it, and the only two things that used to bank — reaching a
+        /// terminal and surviving a Convert — both sit past where a starting kit dies. So a
+        /// field kill is credited to the realm the moment the body falls, at face value:
+        /// there is no carry multiplier on it, because nothing was carried.
+        /// <para>The carried pile does not disappear — <see cref="TotalUnbanked"/> is now
+        /// filled only by a deliberate Withdraw at the Hatch, which is what turns the Convert
+        /// window from a toll into an opt-in bet.</para></summary>
+        void BankKill(long award)
+        {
+            if (award <= 0L) return;
+            _meta.EarnSalvage(award);
+            Salvage.Earn(award);
+        }
+
+        /// <summary>Spend from the realm's bank — the Ante and the respawn fee both charge
+        /// here now that kills bank on landing. False leaves the bank untouched.</summary>
+        internal bool SpendBanked(long units)
+        {
+            if (units <= 0L) return true;
+            if (_meta == null || _meta.BankedSalvage < units) return false;
+            return _meta.SpendSalvage(units);
+        }
+
+        /// <summary>The realm's bank, read by the verbs that used to read the carried pile.</summary>
+        public long BankedSalvage => _meta == null ? 0L : _meta.BankedSalvage;
 
         /// <summary>
         /// Heal the hatch by up to <paramref name="requestedHp"/>, charging
@@ -554,12 +621,26 @@ namespace GatekeepersProtocol.Sim
             if (hatch.IsDestroyed) return 0L;
             if (hatch.MaxHp - hatch.Hp > 0.01f) return 0L;
 
+            // Check the destination BEFORE touching the bank. PlayerWallets.Add silently
+            // returns for a slot the sim is not counting, so debiting first would take the
+            // salvage out of the bank AND out of the tally and hand it to nobody — an
+            // unlogged destruction, reachable in the window where a seat has joined but
+            // RefreshPlayerCount has not caught up.
+            if (slot < 0 || slot >= PlayerCount)
+            {
+                Log.Info(Tag, "withdraw refused: slot " + slot + " is outside "
+                    + PlayerCount + " counted seat(s)");
+                return 0L;
+            }
             long want = HatchBank.WithdrawUnits(dt, ref _withdrawAcc);
             if (want <= 0L) return 0L;
             long bank = _meta.BankedSalvage;
             if (want > bank) want = bank;
             if (want <= 0L) return 0L;
             if (!_meta.SpendSalvage(want)) return 0L;
+            // Out of the bank means out of the Run's banked tally, or the same salvage is
+            // counted twice when it converts back through CreditSlot. See SalvageLedger.Unearn.
+            Salvage.Unearn(want);
             _wallets.Add(slot, want);
             return want;
         }
@@ -575,6 +656,39 @@ namespace GatekeepersProtocol.Sim
                 return;
             }
             EndRun("player");
+        }
+
+        /// <summary>The player reached the zone's terminal and shut it off. THE LOOP
+        /// (Zo, 2026-08-25): a wave begins at the Hatch and ends at a terminal — it does not
+        /// have to be killed to the last body. Cancels the rest of the zone's chained draws
+        /// so the whole trigger ends here, then completes exactly as a cleared wave does, so
+        /// deepest-wave bookkeeping, the terminal's own completion and the door all run
+        /// through one path. Refuses during a Hatch-bank window: a Convert is not a field
+        /// wave and has no off switch.</summary>
+        public bool ShutOffFieldWave()
+        {
+            if (Phase != RunPhase.Tethered || Assault != AssaultState.Assault)
+            {
+                Log.Info(Tag, "ShutOffFieldWave ignored (phase " + Phase + ", " + Assault + ")");
+                return false;
+            }
+            if (Mode == WaveMode.HatchBank)
+            {
+                Log.Info(Tag, "ShutOffFieldWave refused: a Hatch-bank window has no off switch");
+                return false;
+            }
+            CancelSequentialDraws();
+            ClearChainState();
+            // Reaching the switch IS the payout: the whole carried pile banks here, so the
+            // walk up the lane is what secures it and the trip home is not a second toll.
+            long carried = TotalUnbanked;
+            if (carried > 0L)
+            {
+                DumpUnbanked();
+                Log.Event(Tag, "terminal shutoff banked " + carried);
+            }
+            NotifyAssaultCleared();
+            return Assault == AssaultState.Prep;
         }
 
         /// <summary>
@@ -739,6 +853,13 @@ namespace GatekeepersProtocol.Sim
             {
                 CurrentWaveIndex++;
                 WavesSinceBank++;
+                // Seeing a wave is not beating one: this is the "got this far" record, raised
+                // on the draw, and it is deliberately NOT DeepestWaveReached — that one is a
+                // permission (deep start reads it) and must stay clear-only.
+                int entered = CurrentWaveIndex > WaveDirector.MaxWaves
+                    ? WaveDirector.MaxWaves : CurrentWaveIndex;
+                if (_meta != null && entered > _meta.DeepestWaveEntered)
+                    _meta.DeepestWaveEntered = entered;
             }
             var handler = WaveStarted;
             if (handler != null) handler(spec);
@@ -773,7 +894,19 @@ namespace GatekeepersProtocol.Sim
         private int ClampStartWave(int startWave)
         {
             if (startWave < 1) startWave = 1;
-            int deepest = _meta.DeepestWaveReached;
+            // ENTERED, NOT REACHED (Zo, 2026-08-27: "Replay didnt let me start at the latest").
+            // This read DeepestWaveReached — cleared-only — on the argument that a death must
+            // never buy a deeper start. That argument does not survive what a deep start
+            // actually does: TriggerDraw chains waves 1..N into the FIRST assault, so choosing
+            // wave 5 is fighting one through five back to back with no Prep between them. It
+            // buys more fighting, not less, so there is nothing to exploit by dying — the
+            // "exploit" costs the exploiter a harder run.
+            //
+            // The live save is the case: DeepestWaveEntered 5, DeepestWaveReached 2. The player
+            // had met wave 5 twice and was offered wave 2, which reads as the game forgetting
+            // the run rather than as a rule.
+            int deepest = _meta.DeepestWaveEntered;
+            if (deepest < _meta.DeepestWaveReached) deepest = _meta.DeepestWaveReached;
             if (deepest < 1) deepest = 1;
             if (deepest > WaveDirector.MaxWaves) deepest = WaveDirector.MaxWaves;
             if (startWave > deepest) startWave = deepest;
@@ -796,6 +929,7 @@ namespace GatekeepersProtocol.Sim
         private void EndRun(string cause)
         {
             bool docked = cause == DockedCause;
+            FieldTrickleLive = false;   // no drip outlives the Run it was holding open
             ClearChainState();
             CancelSequentialDraws();
             CancelMasterSequence();
@@ -815,6 +949,8 @@ namespace GatekeepersProtocol.Sim
             // onto that zone, and both the Master Control terminal half and the terminals
             // past the table's end draw past it — so a floored read credited the finale's
             // lost window to zone 2's bank.
+            // The LOST half of "zone 2 resolved"; the survived half is
+            // OfferDockIfBankSurvived's twin write (one flag, either outcome).
             if (!docked && _meta != null && _meta.DemoActive
                 && Mode == WaveMode.HatchBank && Assault == AssaultState.Assault
                 && DemoZones.WaveIsIn(Zone2, CurrentWaveIndex))

@@ -5,7 +5,7 @@ Purpose: The measured, Unity-6-current rules for code that runs in the engine. S
 Status: working
 Authority: CRITICAL — correctness against the engine, and measured cost.
 Update trigger: when Unity's guidance changes, when a rule here is measured against this project, or when a "stale" entry turns out to still bite.
-Last updated: 2026-08-19
+Last updated: 2026-08-25 (every §1/§2/§7 citation re-counted against the tree; §9 carries what the current lint run reports)
 -->
 
 Everything here is `[documented]` or `[measured]` and is **not** outrankable by convention.
@@ -52,8 +52,9 @@ copy), or when it holds reference-type fields.
 
 **Live in this codebase:** `new WaitForSeconds(...)` allocates on every call.
 `WaveSpawner.Groups.cs` used to construct one per group inside its spawn loop with a
-per-wave-constant interval; since 2026-08-11 it allocates the wait once before the loop
-and reuses it. `Damageable.cs` allocates one per hit flash outside any loop. Cache a
+per-wave-constant interval; it was hoisted out of the loop on 2026-08-11 and the file no
+longer constructs one at all. That leaves exactly one site in the tree as of 2026-08-25:
+`Game/Combat/Damageable.cs:174`, one per hit flash, outside any loop. Cache a
 `static readonly WaitForSeconds` per distinct duration, or per wave. Also: `yield return
 null` is free; `yield return 0` boxes.
 
@@ -66,15 +67,17 @@ collection ([Incremental GC](https://docs.unity3d.com/6000.1/Documentation/Manua
 
 **Cache `GetComponent` results in `Awake`.** Unity's documented rule
 ([programming-best-practices](https://docs.unity3d.com/6000.5/Documentation/Manual/programming-best-practices.html)).
-This project already does it; the pattern to keep is `PlayerGun.cs:264-265`.
+This project already does it; the pattern to keep is `PlayerGun.cs:286-289`.
 
 **Use `TryGetComponent<T>` when the component may be absent.** `GetComponent` returning null
 allocates in the Editor for its diagnostic machinery; `TryGetComponent` does not
 ([TryGetComponent](https://docs.unity3d.com/ScriptReference/Component.TryGetComponent.html)).
-Editor-only, but the Editor is where you profile. **Audited 2026-08-09: 39 `GetComponent<>`
-call sites, 0 `TryGetComponent`.** Most are `Awake`-cached and fine; the probing ones
-(`PlayerGun.Firing`'s `GetComponentInParent<EnemyGatekeeper>` on every damaged body) are the
-ones worth converting.
+Editor-only, but the Editor is where you profile. **Counted 2026-08-25: 371 `GetComponent*<>`
+call sites under `Assets/Scripts` (285 of them in `Game/`), against 2 `TryGetComponent`
+(`IsometricBodyPresentation.cs:56`, `NetShipWait.cs:145`).** The 2026-08-09 audit found 39
+and 0, so the ratio has not moved with the tree's growth. Most are `Awake`-cached and fine;
+the probing ones (`PlayerGun.Firing`'s `GetComponentInParent<EnemyGatekeeper>` on every
+damaged body) are the ones worth converting.
 
 **`GetComponentsInChildren(List<T> results)` over the array-returning overload** — the array
 version allocates a fresh array per call.
@@ -83,9 +86,11 @@ version allocates a fresh array per call.
 (fastest, no ordering guarantee — the common case), `FindFirstObjectByType<T>()`
 (deterministic, slower), `FindObjectsByType<T>(FindObjectsSortMode.None)` — "not sorting saves
 time" ([docs](https://docs.unity3d.com/6000.1/Documentation/ScriptReference/Object.FindObjectOfType.html)).
-**This project is already on the new API** (`ShipHud.cs:55`, `:64`). One note: it uses
-`FindFirstObjectByType` where any instance would do; `FindAnyObjectByType` is the cheaper
-form and there is only one `ShipController` in the scene.
+**This project is already on the new API.** Counted 2026-08-25: **20** scene-lookup sites in
+`Game/`, every one a `Find*ByType` form, and all but `GameController.Wallets.cs:51` named on
+§9's allowlist. The two spawned-network lookups use the cheapest form
+(`NetPlayerAvatar.cs:165`, `NetRunMirror.cs:86` — `FindAnyObjectByType`); the rest use
+`FindFirstObjectByType` or `FindObjectsByType(FindObjectsSortMode.None)`.
 
 **`Camera.main` is no longer catastrophic.** Unity 2020.2 added an internal cache; a
 contrived 50,000-object test measured a 21,000×–51,000× improvement
@@ -94,7 +99,9 @@ Current docs put it at "comparable to calling `GameObject.GetComponent`"
 ([Camera.main](https://docs.unity3d.com/ScriptReference/Camera-main.html)). Cache it in a hot
 path; do not build a camera-service singleton to solve it. The remaining hazard is
 **correctness, not speed** — it returns the first *enabled* MainCamera-tagged camera, and
-null when that camera is disabled. `FirstPersonController.cs:95-96` guards correctly.
+null when that camera is disabled. This project sidesteps it entirely: `Camera.main` appears
+nowhere under `Assets/Scripts` as of 2026-08-25, and `FirstPersonController` takes its camera
+from a serialized child transform (`cameraTransform`, wired by `SceneBuilder`).
 
 ## 3. Null checks on `UnityEngine.Object` — the rule with no exceptions
 
@@ -212,7 +219,13 @@ call sites interpolate.** Under C# 9 each of those builds an `object[]`, boxes e
 value-type hole, formats the string, prepends the tag with `Line()`, resolves a stack trace,
 and writes to the platform log — in a shipped build, whether or not anything reads it. 15 of
 those sites are in the combat and spawn paths, which fire per kill, per group and per reload.
-A further **47 interpolations sit inside `OnGUI` files**, which run at least twice per frame.
+A further **47 interpolations sat inside `OnGUI` files**, which run at least twice per frame.
+
+**Re-counted 2026-08-25: still not `[Conditional]`, and the call sites have tripled.** 428
+`Log.Event` / `Log.Metric` sites now, out of 742 `Log.*` sites in total, at least 47 of them
+interpolating — a floor, because the count reads one line at a time and misses calls broken
+across lines. The one figure that improved is the `OnGUI` files: 9 interpolations across
+`HudController`, `ShipHud` and `DevConsole` together, down from 47.
 
 **Rule: `Log.Event` and `Log.Metric` become `[Conditional("GKB_LOG")]`, with `GKB_LOG` defined
 in Editor and development builds and absent in release. `Warn` and `Error` stay unconditional
@@ -241,7 +254,7 @@ reading a 2018 blog post does not re-propose it.
 | "Structs are always faster, they don't allocate" | Wrong for large structs, mutable structs behind properties, and dictionary keys without `IEquatable<T>` |
 | "Use `ReferenceEquals` instead of `== null` for speed" | Unity's docs say don't — it skips the destroyed-object check |
 | "Wrap logs in `if (Debug.isDebugBuild)`" | Does not stop the string building or the boxing. `[Conditional]` does |
-| "Build an update manager" | Unity: "not a one-size-fits-all"; the threshold is hundreds to thousands. This project has 8 |
+| "Build an update manager" | Unity: "not a one-size-fits-all"; the threshold is hundreds to thousands. This project has 33 (counted 2026-08-25) |
 
 ## 8. Claims with no modern measurement — treat with suspicion
 
@@ -279,6 +292,18 @@ with `rg` over `Assets/Scripts` using the patterns in the fence.
 The scan is textual — a construct inside a string or comment counts, which is
 deliberate for the milestone-ID text row and a cheap over-approximation for the rest.
 A row narrowed until its count reaches zero is a failed row, not a passing one.
+
+**The run is not clean today.** `Tools/lint-arch/run.sh` on 2026-08-25 reports 6 violations:
+the four over-cap files listed in `../Architecture.md`, the count exceeding that fence's
+baseline of 0, and one scene lookup outside this fence's allowlist —
+`Game/Bastion/GameController.Wallets.cs:51`, a `FindObjectsByType<SpawnRoom>` in the seat-mute
+pass. Adding it to `scenelookup_allow` would silence the row and pre-approve every future
+lookup in that file, so the fence is left alone until the lookup is either wired or
+deliberately exempted. One fence entry is also pre-approving nothing:
+`waitforseconds_nonloop_allow` still names `Game/Enemies/WaveSpawner.Groups.cs`, which no
+longer constructs a `WaitForSeconds` — the same shape as the `initializeonload_allow` entries
+trimmed on 2026-08-19, except that this file still exists, so removing the name is a
+tightening rather than a correction and is left for the change that wants it.
 
 ```arch-lint
 fakenull_pattern=^(?![ \t]*//).*?(\?\.|\?\?|\bis[ \t]+null\b|\bReferenceEquals\b)

@@ -39,7 +39,8 @@ public static class HarnessRunner
             return 2;
         }
 
-        int passed = 0, failed = 0, skipped = 0;
+        int passed = 0, failed = 0, skipped = 0, ignored = 0;
+        var ignoredNames = new List<string>();
         var failures = new List<string>();
         var sw = Stopwatch.StartNew();
 
@@ -59,6 +60,14 @@ public static class HarnessRunner
                 if (only != null && name.IndexOf(only, StringComparison.OrdinalIgnoreCase) < 0)
                 {
                     skipped++;
+                    continue;
+                }
+
+                var ignore = test.GetCustomAttribute<IgnoreAttribute>();
+                if (ignore != null)
+                {
+                    ignored++;
+                    ignoredNames.Add(name + " — " + ignore.Reason);
                     continue;
                 }
 
@@ -109,9 +118,19 @@ public static class HarnessRunner
             foreach (var f in failures) { Console.WriteLine(f); Console.WriteLine(); }
         }
 
+        if (ignoredNames.Count > 0)
+        {
+            Console.WriteLine();
+            Console.WriteLine("IGNORED");
+            Console.WriteLine("-------");
+            foreach (var i in ignoredNames) Console.WriteLine("  " + i);
+            Console.WriteLine();
+        }
+
         Console.WriteLine(
             (failed == 0 ? "PASS" : "FAIL") +
             "  " + passed + " passed, " + failed + " failed" +
+            (ignored > 0 ? ", " + ignored + " ignored" : "") +
             (skipped > 0 ? ", " + skipped + " filtered out" : "") +
             "  (" + fixtures.Count + " fixtures, " + sw.ElapsedMilliseconds + " ms)");
 

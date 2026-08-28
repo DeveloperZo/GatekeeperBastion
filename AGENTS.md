@@ -139,16 +139,21 @@ and saying why a higher tier is wrong.
 
 ## 4. Architecture
 
-Full detail in `Docs/Architecture.md`. The three that break builds:
+`Docs/Architecture.md` is what this codebase is — the code map and the gotchas.
+`Docs/Architecture/` is the rules subtree behind it, and its `README.md` declares itself
+the master reference for how code is written. The three that break builds:
 
 - **`Assets/Scripts/Sim/` is its own assembly with a one-directional dependency.** No
-  `MonoBehaviour`, no scene lookup, no `Time`, no ambient `Random`, no static mutable
-  state; CoreModule value types (`Vector3`, `Mathf`) are permitted. The reason is
-  testability, not engine purity.
+  `MonoBehaviour`, no `GameObject`, no scene lookup, no `Time`, no ambient `Random`, no
+  `SerializeField`, no `UnityEditor`, no static mutable state; CoreModule value types
+  (`Vector3`, `Mathf`) are permitted. The reason is testability, not engine purity
+  (`Architecture/1-Boundaries.md` section 1).
 - **Prefabs freeze `[SerializeField]` values at creation.** Push tunables at spawn;
-  never serialize and hope. This has eaten one full tuning pass already.
+  never serialize and hope. This has eaten one full tuning pass already
+  (`Architecture.md` gotcha 1).
 - **No `GUILayout` in the Bastion HUD.** An exception between `BeginArea` and `EndArea`
-  corrupts IMGUI for the rest of the session.
+  corrupts IMGUI for the rest of the session. Ship station panels may use it
+  (`Architecture.md` gotcha 3).
 
 `SceneBuilder` owns Environment, SpawnPoints, Directional Light and NavMesh only.
 UI canvases and gameplay hosts are authored scene content and survive Build All.
@@ -157,14 +162,16 @@ UI canvases and gameplay hosts are authored scene content and survive Build All.
 
 ## 5. Verification
 
-- **Unity Test Runner**, or `gkb_verify_request.txt` → IntegrationCheck (formerly
-  AutoVerify) → `gkb_verify_report.json` for the full suite headless. The report's `message` field
-  carries the failure reason; `status:"precheck"` means a test assembly did not compile
-  and nothing ran.
+- **Unity Test Runner**, or `gkb_verify_request.txt` / menu **GatekeepersProtocol >
+  Validate > Integration Check** → `gkb_verify_report.json` for the full suite headless.
+  Renamed from AutoVerify on 2026-08-12 (`IntegrationCheck.cs`) with the sentinel
+  filenames kept; 34 files under `Docs/` still say the old name. The report's `message`
+  field carries the failure reason; `status:"precheck"` means a test assembly did not
+  compile and nothing ran.
 - **`Tools/verify/run.sh`** compiles `Assets/Scripts/Sim/` plus `Assets/Tests/EditMode/`
-  outside Unity with mcs + mono and runs the tests, language lint, arch lint and docgen
-  checks in seconds. Fastest signal for sim-only changes. It cannot see MonoBehaviours,
-  scenes or the save file — those need the AutoVerify bridge above.
+  outside Unity with mcs + mono and runs the tests, language lint, arch lint, vendor lint
+  and docgen checks in seconds. Fastest signal for sim-only changes. It cannot see
+  MonoBehaviours, scenes or the save file — those need the IntegrationCheck bridge above.
 - A log containing `[Dev]` is tainted and cannot close a gate. F10/F11 host/join log
   `[Net]` and do not taint — they start a session, they do not mutate one.
 
@@ -183,9 +190,9 @@ MDA — Aesthetics, Dynamics, Mechanics — which is Meadows' leverage ladder re
 `4-Data.md` (#11–#12, last on purpose). A proposal made low in that order has to be argued
 against everything above it.
 
-**`Docs/Architecture.md`, `Working-Rules.md`, `Decisions.md` and `Roadmap.md` are how the
-game gets made** and are deliberately off that ladder and unnumbered. `Docs/Story/` is
-fiction draft — also off the ladder.
+**`Docs/Architecture.md`, `Architecture/`, `Working-Rules.md`, `Decisions.md` and
+`Roadmap.md` are how the game gets made** and are deliberately off that ladder and
+unnumbered. `Docs/Story/` is fiction draft — also off the ladder.
 
 `Docs/README.md` is the game on one page. Root `README.md` is the repository map. Read both.
 

@@ -1,4 +1,4 @@
-<!-- Purpose: the currency — where it comes from, why Unbanked is at risk until a Convert, and what competes for it. / Status: working / Update trigger: when the award path, Convert convert, the repair charge, or the Boarding-end settlement changes. / Last updated: 2026-08-16 -->
+<!-- Purpose: the currency — where it comes from, why a kill is safe the moment it lands, what a Withdraw puts back at risk, and what competes for it. / Status: working / Update trigger: when the award path, the Withdraw, the repair charge, or the Boarding-end settlement changes. / Last updated: 2026-08-25 (kills bank as they land; the Convert leaves the demo) -->
 
 # Salvage
 
@@ -6,15 +6,15 @@
 
 Salvage is the only currency. There is no second resource, and nothing here to collect but the pay.
 
-The sequence never changes: kills fill Unbanked, a Convert takes it through, converted lands with the realm. Prep pays nothing. Walking pays nothing. Surviving pays nothing. Stripping the place pays no bonus. Killing, during a live Wave. That is the entire payroll.
+The sequence is one step long. A Gatekeeper drops and the money is the realm's, that instant, at face value. It waits on no door, no window and no walk home. Prep pays nothing. Walking pays nothing. Surviving pays nothing. Stripping the place pays no bonus. Killing, during a live Wave. That is the entire payroll.
 
-Unbanked is wiped if I go down or the Hatch falls. Converted stays, whatever happens after. A Boarding that fell apart early paid exactly what made it through, and not one unit more.
+So a Boarding cannot end with nothing to show for it. I can die on the Wave that beat me and still come off the Bastion richer than I went on, because everything behind me was paid for as it fell. The Boarding that proves I am underequipped is the Boarding that buys the fix.
 
-Two things move the money backwards: repairing, and standing dead crew back up. Both bill the bank I shop with — repair as the healing lands, respawns at a price that climbs per death this Boarding. A Boarding where the door takes a beating costs twice: once at the door, once at the console I walk back to and cannot afford. A dying crew runs the same arithmetic faster.
+Nothing is at risk unless I put it there. There is a hold at the Hatch that pulls money back out of the bank and into my pocket, and a pocket is a thing a death can empty. I never have to touch it. When I do it is because I meant to bet, not because the room charged me a toll for standing in it.
 
-A Boarding holds a limited count of Converts. When they are spent, the Hatch refuses, politely and permanently.
+Everything bills the same pot, and that is where the tension went. The Ante I raise before a Wave. The repair I hold at the door. The seat I buy back off the floor. The weapon, the Tiers, the Hatch Armor, the Rig, the Decoy. Raising the Ante now spends money I had already taken home, which is a heavier press than it was, and is meant to be.
 
-Everything competes for one pile — weapons, Tiers, Hatch Armor, the Rig, the Decoy, the repairs I did not plan for, the deaths I did not plan for. The bank is not a score. It is not banked so I can look at it.
+A Boarding where the door takes a beating still costs me twice: once at the door, once at the console I walk back to and cannot afford. The bank is not a score. It is not banked so I can look at it.
 
 ## Reference
 
@@ -22,27 +22,35 @@ Salvage is the only currency in the game. There is nothing else to collect, no s
 
 ### How you earn it
 
-**By killing Gatekeepers, and by nothing else — until you Convert.** A kill fills Unbanked. Prep select then start at the Hatch starts a Convert Wave: drip while it is live, dump on clear. That convert is what credits the ship. The quiet of Prep earns nothing. Walking the room earns nothing. Clearing the Bastion pays no completion bonus.
+**By killing Gatekeepers, and by nothing else.** A kill credits the realm's bank the moment the body falls, at face value. It is banked from that instant — spendable on the Ship when the Boarding ends, however it ends. The quiet of Prep earns nothing. Walking the room earns nothing. Clearing the Bastion pays no completion bonus.
 
-What one body is worth is a flat kill payout multiplied by wherever you left the Ante. Those two multiply against each other. More field Waves before the Convert at a higher multiplier, and the Convert fight is the Wave equal to how many you carried.
+Only a live Assault pays, and a Gatekeeper killed inside a Convert window pays nothing at all: that window moves money you are already carrying rather than earning more.
 
-### Why it is at risk
+What one body is worth is a flat kill payout multiplied by wherever you left the Ante. The rate: [Field Manual](Field-Manual.md).
 
-**A Gatekeeper's Salvage sits Unbanked until a Convert.** Not in your shop purse the moment it drops. Down, or Hatch to zero, wipes what you have not converted. What already dripped or dumped stays on the ship.
+### Why it is safe
 
-A Boarding has a limited number of Converts. How many: [Field Manual](Field-Manual.md). When they are gone, looking at the Hatch and starting refuses. Ante up also spends Unbanked, so a raise you cannot convert is a raise you never banked.
+**Nothing that happens on the Bastion can take banked Salvage off you.** Going down does not. The Hatch falling does not. Lost, Docked and Escaped all keep every unit the realm earned, and there is no named forfeit anywhere in the game.
 
-This is why leaving the Hatch is an economy, not just a door. Being Lost keeps converted Salvage. Losing the Hatch keeps converted Salvage. There is no named forfeit. A Boarding that fell apart early paid you only for what made it through a Convert.
+That is a rule rather than a side effect: it must be impossible to die with no progress to show for it. A Boarding that fell apart on the Wave you were not equipped for still paid for every body you put down on the way, which is what turns the Wave that beat you into the Wave that funds beating it.
 
-A Boarding you convert through a Convert and a Boarding you lose differ in whether leftover Unbanked survives. Converted Salvage stays either way. Wave 5 does not convert leftover and does not wipe it. See [A Boarding](A-Boarding.md).
+### What you can put at risk, if you want to
 
-### The two things that take it back
+The carried pile still exists — it simply does not fill on its own any more. Look at the Hatch in Prep, with the door at full health, and the prompt offers **Withdraw — hold E**: banked Salvage flows back out into the pile you are carrying for as long as you hold. That carried pile is what a Convert window converts, and it is the only thing a death can take.
 
-**Repairing the Hatch.** Repair is charged out of your banked Salvage as the healing lands — the same bank you were saving, spent from inside the Boarding. See [The Hatch](The-Hatch.md).
+Nothing else puts Salvage there. A Withdraw is the only way to be carrying anything, which makes it the only way to lose anything. The game never stakes money on your behalf.
 
-**Respawns.** A dead seat buys its way back from the same bank, at a price that climbs with every respawn taken this Boarding. See [Going Down](Going-Down.md).
+If you do carry, know what you are carrying against: the pile is gone on a death that ends the Boarding and gone if the Hatch falls. A Docked return keeps a small stated share of it. See [A Boarding](A-Boarding.md).
 
-This is the one place where the game can move your money in the wrong direction, and it is worth understanding as a cost rather than an action. **A Boarding where the Hatch takes a beating is a Boarding that costs you twice:** once in the Salvage that went into the door, and again in the purchase you walked back to the Ship unable to make.
+### The three things that take it back
+
+**Repairing the Hatch.** Repair is charged out of your banked Salvage as the healing lands — the same bank you were saving, spent from inside the Boarding, and it will run the bank to exactly zero if you hold long enough. See [The Hatch](The-Hatch.md).
+
+**Standing a dead seat up.** A respawn is bought from the realm's bank, at a price that climbs with every respawn taken this Boarding, whoever took it. See [Going Down](Going-Down.md).
+
+**Anting up.** Every step of the Ante spends banked Salvage before the Wave that is meant to earn it back. See [Ante](Ante.md).
+
+There is one pot and all three read from it, which is the part worth internalising: a raise, a repair and a respawn are direct competitors with the weapon you were saving for, not side-charges against some other purse. **A Boarding where the Hatch takes a beating is a Boarding that costs you twice:** once in the Salvage that went into the door, and again in the purchase you walked back to the Ship unable to make.
 
 ### What competes for it
 
@@ -51,8 +59,9 @@ Everything wants the same pile:
 - **A weapon** at the ARMORY. The largest single decision, and the one that fixes what kind of fight you are good at.
 - **Weapon Tiers**, also at the ARMORY, per weapon. The deepest sink in the game and the least transferable — the money goes into one gun and stays there.
 - **The Hatch** at FABRICATION: a bigger pool (Hatch Armor), the Repair Rig that makes repairing possible at all, and the Decoy.
-- **Repairs, mid-Boarding.** The bill you did not plan for.
-- **Respawns, mid-Boarding.** The other one, and it climbs.
+- **Repairs, respawns and the Ante, mid-Boarding.** The bills you did not plan for, charged to the pile you were shopping with.
+
+Nothing is exempt. There is no second purse that quietly funds the mid-Boarding costs, which is why the door you let get chewed and the Ante you raised on a Wave you could not finish both show up later as a Tier you cannot buy.
 
 CREW QUARTERS spends nothing on Default (cost 0, same as the free sidearm). VEIL and
 FORGE are claimable there too.
@@ -65,11 +74,12 @@ There is no order that is correct for everyone, but there is a wrong instinct: t
 
 ## Gaps
 
-- The HUD shows Unbanked and Banked separately. Kills move Unbanked; Banked moves during a Convert.
-- It never tells you that a Gatekeeper killed outside a live Wave pays nothing.
-- Every station panel shows lifetime earned and lifetime spent. Neither is explained anywhere, neither is a resource, and neither can be used for anything.
+- The HUD still shows Unbanked and Banked separately, and Unbanked now reads 0 for most of a Boarding. Nothing says that line only moves if you Withdraw.
+- Nothing at the Hatch explains what a Withdraw is *for*, or that the pile it creates is the only thing a death can take.
+- It never tells you that a Gatekeeper killed outside a live Wave pays nothing, or that one killed inside a Convert window pays nothing either.
+- Every station panel shows lifetime earned and lifetime spent. Neither is explained anywhere, and nothing says that lifetime earned is the figure the weapon Tiers and the equipment slot are waiting on.
 - If a save is old or damaged, those lifetime figures are silently rebuilt from what you own. Your bank is always the truth; the lifetime lines may be a reconstruction.
 - There is no way to sell anything back or refund a purchase, and nothing tells you that before you spend.
-- The Convert slot count is in the Field Manual. Nothing on the Hatch names how many you have left until a start is refused.
+- The Ante, a repair and a respawn all bill the same bank as the consoles do, and no prompt says so. Each one reads as its own small charge rather than as money off the next purchase.
 
 *Rates, costs and multipliers: [Field Manual](Field-Manual.md).*

@@ -267,6 +267,18 @@ namespace GatekeepersProtocol.Game
             _previousSlot = WeaponSlot.Secondary;
         }
 
+        // Serialized so the saved prefab carries them (prefab freeze); Reset() keeps the code
+        // defaults from diverging silently. Both are overwritten by Configure at run start.
+        void Reset()
+        {
+            damage = 14f;
+            shotsPerSecond = 3f;
+            clipSize = 8f;
+            reloadSeconds = 1.4f;
+            range = 45f;
+            tracerWidth = 0.030f;
+        }
+
         void Awake()
         {
             var shader = Shader.Find("Universal Render Pipeline/Unlit");

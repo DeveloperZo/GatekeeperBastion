@@ -176,7 +176,7 @@ gameplay script.
 Bastion Scale 1 / fight HUD / station chrome / player-build keys:
 [`M59`](M59-the-polish-pass-1.md). Music and gun/foot SFX: [`M69`](M69-the-session-has-a-voice.md).
 Hit confirm, name labels, and player colour:
-[`M66`](../1.%20planned/M66-polish-pass-3.md) — the body is here; who-is-who is there.
+[`M66`](../4.%20deferred/M66-polish-pass-3.md) — the body is here; who-is-who is there.
 
 ## Verification
 

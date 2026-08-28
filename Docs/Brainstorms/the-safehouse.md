@@ -4,7 +4,7 @@
 Purpose: The Ship as a hub friends occupy between Runs — what there is to do there, and what those activities are allowed to pay.
 Status: brainstorm
 Update trigger: when an activity graduates, when the Ship gains or loses a station, or when session persistence for guests is answered.
-Last updated: 2026-08-20
+Last updated: 2026-08-25 (Ship - Demo retired and removed from every claim here; M99's range door shipped; M101 hull recount; M100 answers the offline-contribution half)
 -->
 
 ## What this covers
@@ -20,9 +20,11 @@ damage — is `missions-and-destinations.md`. What the four existing stations se
 
 ## Where it stands
 
-**The hub scene is authored.** `Ship - CoOp.unity` — roughly 2,700 GameObjects, generated on the
+**The hub scene is authored, and it is the only hub.** `Ship - CoOp.unity` — **2,784**
+GameObjects measured 2026-08-25, after `M101` rebuilt the hull over two decks — generated on the
 grid convention (`Floor_x_y`, `GW_<dir>_x_y`, `GS_*`, `GB_*`) and then dressed, per the
-generate-then-author paradigm. It holds:
+generate-then-author paradigm. Its shape is `ship-hull-and-interior.md`, not this file. It
+holds:
 
 - **Four stations**, each a full fixture rather than a menu hook: `Station_Armory`,
   `Station_Fabrication`, `Station_Map`, `Station_CrewQuarters`, each with `Desk`, `Screen`,
@@ -46,26 +48,27 @@ generate-then-author paradigm. It holds:
 It shares the Bastion's look — several hundred references to the Synty atlas material — so
 the 2026-08-20 repaint reaches it.
 
-`Ship - Demo.unity` is the separate beat-0 scene — 1,170 GameObjects, 187 prefab
-instances, and the only one carrying a baked reflection probe.
-
 **So the hub is a place with fixtures in it, and the gap is narrower than "build a hub".**
 `M72` supplied the raw capability — a party over Relay, party-wide scene changes, the lead
 calling EMBARK — and the scene supplies the room. What is missing is that **every one of
 the four stations is still a shop or a launcher**: something you open, transact at, and
 close. Nothing in the Ship is an *activity*.
 
-**Wired 2026-08-21, corrected 2026-08-22:** `SceneFlow.Ship` is `"Ship - Demo"`,
-`SceneFlow.ShipCoop` is `"Ship - CoOp"`. Both are in Build Settings. **Every ordinary way in
-now lands on CoOp** — CONTINUE, the realm chooser's ENTER, party Host/Join, the additive
-ship-wait, and return-to-ship at the end of a Run. `Ship - Demo` is reached by exactly two
-things: the chooser's DEMO button and the F12 dev checkpoints. The earlier claim here — that
-solo paths load Demo — stopped being true when `M96` made a realm's ship the co-op hull.
+**Wired 2026-08-21, corrected 2026-08-22, closed 2026-08-25:** the scene pair is gone.
+`SceneFlow.ShipCoop` is `"Ship - CoOp"` and there is no `SceneFlow.Ship` — the demo hub
+retired with the scene-pair consolidation, so `Ship - Demo.unity` is not on disk and nothing
+loads it. Every way in lands on the one hull: CONTINUE, the realm chooser's ENTER, party
+Host/Join, the additive ship-wait, return-to-ship at the end of a Run, and the F12 dev
+checkpoints alike. The claims this paragraph carried before — first that solo paths load
+Demo, then that the DEMO button and the checkpoints still reach it — both expired.
 
 **A consequence worth naming**: a fresh realm is `DemoActive`, so the first-Bastion tutorial
-now plays out on the hull, and until 2026-08-22 two of its safety systems still tested for
-the demo scene — the 1-HP damage floor did not apply here, and a tutorial death on the Ship
-had no lose screen to land on.
+plays out on the hull, and until 2026-08-22 two of its safety systems still tested for the
+demo scene — the 1-HP damage floor did not apply here, and a tutorial death on the Ship had
+no lose screen to land on. The tutorial is an arc consumed once by a player while its flags
+live on the realm, so every new world used to teach it again; `Settings.SkipShipTutorial`
+(2026-08-24) is the opt-out, set by finishing the ship fight, read by `GameSession.Adopt`, and
+defaulting off so a first-time player is still taught.
 
 ## Graduation test
 
@@ -87,15 +90,15 @@ wanted to.
 
 ### A lobby of doors and a room of props
 The hub splits by weight. Anything needing a live Gatekeeper, a NavMesh or a
-`GameController` is **a door** to its own scene, the way `M99`'s range will be — that range
-is active and its code seams exist, but `Range.unity`, the door and the build registration do
-not yet (checked 2026-08-22) — the machinery
-stays out of the one scene deliberately free of Run machinery, and the fiction still reads
-as your hideout because you walk there. Anything that is a prop and an animation is
-**furniture in the Ship**. That split decides where each idea below lands before it is
-designed, and it keeps the hub scene — most of whose object count is already UI under
-`Canvas` — from absorbing every new feature. (This paragraph named `Ship.unity` until
-2026-08-22; there is no such file. The hubs are `Ship - CoOp.unity` and `Ship - Demo.unity`.)
+`GameController` is **a door** to its own scene, and `M99` proved the shape rather than
+predicting it: `Range.unity` exists, it is registered in Build Settings, and a `Range Door`
+in `Ship - CoOp` opens it (closed 2026-08-23). The machinery stays out of the one scene
+deliberately free of Run machinery, and the fiction still reads as your hideout because you
+walk there. Anything that is a prop and an animation is **furniture in the Ship**. That split
+decides where each idea below lands before it is designed, and it keeps the hub scene — most
+of whose object count is already UI under `Canvas` — from absorbing every new feature. (This
+paragraph named `Ship.unity` until 2026-08-22; there is no such file, and there is now only
+one hub, `Ship - CoOp.unity`.)
 
 ### Calibration (the Garrus nod)
 A bench where a weapon is calibrated: a deliberate action, a short animation, a small
@@ -140,7 +143,7 @@ people can see they have brought three of the same thing.
 
 | Question | Why it matters | Owner |
 |---|---|---|
-| **Can a contribution be made alone?** | `M96` settles where it lives; it does not make offline work possible. A realm is still a local save on its owner's machine, so a guest can only contribute while co-present in the host's session. The 2am-chest shape needs a contributor working *by themselves*, which is the half still missing — and the answer is either "co-presence is required and asynchrony means they see it later", or real backing with real cost. | Zo |
+| **Can a contribution be made alone?** | Answered in principle by `M100` (built 2026-08-24, two-machine criteria owed): a realm is no longer only a local save, it lives as per-member copies in Cloud Save with a single-writer lock, so a member can open the owner's realm while the owner is offline. What is not answered is whether anything in the hub is worth doing while alone in someone else's Ship — that is the graduation test, not a storage question. | Zo |
 | Per-Run or persistent effects? | A per-Run bonus is a ritual before embarking. A persistent one is progression, and progression that only exists in the hub makes the hub mandatory — which the *in lieu of* rule forbids. | Zo |
 | How many activities before the hub reads as a place rather than a menu? | Unknown, and the graduation test is what answers it. *needs play data* | — |
 

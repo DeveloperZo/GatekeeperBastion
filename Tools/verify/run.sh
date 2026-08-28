@@ -31,6 +31,20 @@ if ! bash "$LINT_LANG"; then
   exit 1
 fi
 
+# Glyph coverage. A character no shipping font atlas can draw compiles, tests green, and
+# is a blank or a box on screen — four have shipped, and nothing else in the tree looks.
+# The allowed set is derived from the font assets, not listed here. Fail before compile,
+# like the other lints, so the codepoint is named rather than buried under mcs noise.
+LINT_GLYPHS="$ROOT/Tools/lint-glyphs/run.sh"
+if [[ ! -f "$LINT_GLYPHS" ]]; then
+  echo "verify: expected $LINT_GLYPHS" >&2
+  exit 2
+fi
+if ! bash "$LINT_GLYPHS"; then
+  echo "verify: glyph check failed (Tools/lint-glyphs/run.sh)" >&2
+  exit 1
+fi
+
 # M41 — architecture rules. Fail before compile so a violation is not buried under mcs noise.
 LINT_ARCH="$ROOT/Tools/lint-arch/run.sh"
 if [[ ! -f "$LINT_ARCH" ]]; then
@@ -52,6 +66,22 @@ if [[ ! -f "$LINT_VENDOR" ]]; then
 fi
 if ! bash "$LINT_VENDOR"; then
   echo "verify: vendor pack check failed (Tools/lint-vendor/run.sh)" >&2
+  exit 1
+fi
+
+# The hand-written counterpart to the `Tools/docgen/run.sh --check` further down: docgen
+# proves the GENERATED blocks of a countable doc, this proves the prose and comments that
+# restate the same arrays. Both halves of Docs/Design/4-Data.md drifted on 2026-08-26 and
+# only the generated half went red. Runs up here with the other fence-reading lints because
+# it is text over the tree — it needs python3, not mono, so it still reports on a machine
+# where the harness itself cannot start.
+LINT_CONST="$ROOT/Tools/lint-constants/run.sh"
+if [[ ! -f "$LINT_CONST" ]]; then
+  echo "verify: expected $LINT_CONST" >&2
+  exit 2
+fi
+if ! bash "$LINT_CONST"; then
+  echo "verify: restated-constant check failed (Tools/lint-constants/run.sh)" >&2
   exit 1
 fi
 

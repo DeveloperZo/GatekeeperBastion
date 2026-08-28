@@ -9,7 +9,11 @@ using UnityEngine.UI;
 namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Authors the protocol readout into a Bastion HUD: the bottom-centre ability bar
-    /// (Passive, Personal, Crew) and the protocol line above it.
+    /// (Passive, Personal, Crew) and the protocol line above it — and, since 2026-08-26, the
+    /// three-card pick into the Ship's CREW QUARTERS panel (SceneBuilder.ProtocolCards.cs).
+    /// One row for the protocol UI: the menu list in Docs/Architecture/README.md is fenced and
+    /// permission-gated, and a second row for the same subject is exactly the sprawl that
+    /// fence exists to stop.
     ///
     /// Both are referenced by shipped code that has never had anything to talk to.
     /// <c>BastionHudView</c> holds <c>_protocolLine</c> and <c>_protocolBar</c> as optional
@@ -29,6 +33,11 @@ namespace GatekeepersProtocol.EditorTools
         const string FrameSpritePath =
             "Assets/Shift - Complete Sci-Fi UI/Textures/Border/Cut/Cut Frame Filled.png";
 
+        /// <summary>Radial360 needs a sprite to paint its wedge — a sprite-less Filled Image
+        /// renders the full quad and ignores fillAmount. The chrome test names this sprite.</summary>
+        const string FillSpritePath =
+            "Assets/Shift - Complete Sci-Fi UI/Textures/Border/Rounded/Rounded Circle (250ppu).png";
+
         [MenuItem("GatekeepersProtocol/Build/Protocol Bar", false, 63)]
         public static void BuildProtocolBarMenu()
         {
@@ -36,7 +45,10 @@ namespace GatekeepersProtocol.EditorTools
             BuildProtocolBarInPlace();
         }
 
-        /// <summary>Author the bar into every Bastion-shaped scene that has a HUD.</summary>
+        /// <summary>Author the bar into every Bastion-shaped scene that has a HUD, then the
+        /// pick deck into the Ship hub. Each pass opens its own scene Single, so the Ship pass
+        /// runs last and leaves the hub open — which is the scene somebody wants to look at
+        /// after running this.</summary>
         public static void BuildProtocolBarInPlace()
         {
             Scene open = SceneManager.GetActiveScene();
@@ -47,9 +59,15 @@ namespace GatekeepersProtocol.EditorTools
                 return;
             }
 
-            AuthorProtocolBarInto(ScenePath);
+            // ScenePath is Bastion.unity, which retired with the solo scene pair. OpenScene
+            // THROWS on a missing path, so an unguarded call here took the whole row down
+            // with it — including the co-op pass below, which is the one that still matters.
+            if (System.IO.File.Exists(ScenePath))
+                AuthorProtocolBarInto(ScenePath);
             if (System.IO.File.Exists(BastionCoopScenePathForBar))
                 AuthorProtocolBarInto(BastionCoopScenePathForBar);
+            if (System.IO.File.Exists(ShipScenePathForCards))
+                AuthorProtocolCardsInto(ShipScenePathForCards);
         }
 
         static void AuthorProtocolBarInto(string scenePath)
@@ -208,10 +226,13 @@ namespace GatekeepersProtocol.EditorTools
             // fraction (BoarderProtocol.OverlayFill), so fillAmount is that number directly and
             // the wedge empties on its own — nothing here inverts or animates it.
             fill.color = new Color(0.02f, 0.03f, 0.06f, 0.80f);
+            fill.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(FillSpritePath);
+            if (fill.sprite == null)
+                Debug.LogWarning("[SceneBuilder] Protocol bar: no fill sprite at " + FillSpritePath);
             fill.type = Image.Type.Filled;
             fill.fillMethod = Image.FillMethod.Radial360;
             fill.fillOrigin = (int)Image.Origin360.Top;
-            fill.fillClockwise = true;
+            fill.fillClockwise = false; // wipes counterclockwise from twelve (chrome test)
             fill.fillAmount = 0f;    // ready. The view shows this object only while cooling.
             fill.raycastTarget = false;
             Stretch(fillGo);

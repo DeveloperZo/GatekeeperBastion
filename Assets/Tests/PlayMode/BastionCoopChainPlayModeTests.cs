@@ -76,36 +76,28 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreEqual(RunPhase.Tethered, sim.Phase, "entering the Bastion auto-boards.");
             Assert.AreEqual(AssaultState.Prep, sim.Assault, "boarding lands in Prep.");
 
-            // ---- zone 1: D1's multiplicity — one terminal is not enough -----------------
-            yield return BastionRunDrive.RunSingleTerminal(gc, sim, layout, "T1");
-            Assert.IsFalse(layout.IsTerminalDone("T2"), "T2 reads done before it was played.");
+            // ---- zone 1: start at the Hatch, walk it down, and the shutoff opens D1 ----
+            string zoneOneId = DemoZones.TerminalIdAt(1, 0);
             Assert.IsTrue(gc.HatchBankStartBlocked,
-                "the bank must refuse while T2 is unfinished — D1 requires BOTH terminals.");
-            Assert.IsFalse(layout.IsDoorOpen("D1"), "D1 opened off a single terminal.");
+                "the bank must refuse while zone 1's terminal is unfinished.");
+            Assert.IsFalse(layout.IsDoorOpen("D1"), "D1 is open before zone 1 was played.");
+            yield return BastionRunDrive.RunZoneComposite(gc, sim, layout, 1);
+            Assert.IsTrue(layout.IsTerminalDone(zoneOneId),
+                zoneOneId + " did not read done after its composite and shutoff.");
+            Assert.IsTrue(layout.IsDoorOpen("D1"),
+                "closing zone 1 at its terminal must open D1. It used to take a survived "
+                + "Convert, and when the Convert left the demo that made D1 unopenable and "
+                + "the spine impassable (Docs/Design/0-Gameplay.md).");
 
-            yield return BastionRunDrive.RunSingleTerminal(gc, sim, layout, "T2");
-            Assert.IsFalse(layout.IsDoorOpen("D1"),
-                "D1 opened on terminal completion — only a survived bank may open a door.");
-            yield return BastionRunDrive.SurviveBank(gc, sim);
-            Assert.IsTrue(layout.IsDoorOpen("D1"), "T1+T2 plus a survived bank must open D1.");
-
-            // ---- zone 2: T3 is one composite trigger (3 Waves), then the second bank ----
+            // ---- zone 2: the same loop again, and its shutoff opens the control door ----
             Assert.IsTrue(gc.HatchBankStartBlocked,
-                "the bank must refuse while zone 2's terminal T3 is unfinished.");
+                "the bank must refuse while zone 2's terminal is unfinished.");
+            Assert.IsFalse(layout.IsDoorOpen("D3"), "the control door opened before its zone.");
             yield return BastionRunDrive.RunZoneComposite(gc, sim, layout, 2);
-            Assert.IsFalse(layout.IsDoorOpen("D2"), "D2 opened before its bank.");
-            yield return BastionRunDrive.SurviveBank(gc, sim);
-            Assert.IsTrue(layout.IsDoorOpen("D2"), "T3 plus a survived bank must open D2.");
-
-            // ---- zone 3: D3's multiplicity — T4 AND T5, then the third bank -------------
-            yield return BastionRunDrive.RunSingleTerminal(gc, sim, layout, "T4");
-            Assert.IsFalse(layout.IsDoorOpen("D3"), "D3 opened off a single terminal.");
-            yield return BastionRunDrive.RunSingleTerminal(gc, sim, layout, "T5");
-            Assert.IsFalse(layout.IsDoorOpen("D3"),
-                "D3 opened on terminal completion — only a survived bank may open a door.");
-            yield return BastionRunDrive.SurviveBank(gc, sim);
             Assert.IsTrue(layout.IsDoorOpen("D3"),
-                "T4+T5 plus a survived bank must open the Control Room door.");
+                "closing zone 2 at its terminal must open the control door.");
+
+            // There is no third zone on the spine — zone 2's bank IS the control door.
             Assert.IsNotNull(layout.FindMaster(), "the Control Room has no Master terminal.");
         }
 

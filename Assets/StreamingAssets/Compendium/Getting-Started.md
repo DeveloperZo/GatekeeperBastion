@@ -6,15 +6,15 @@ First time out, in order. The order matters more than the aim.
 
 Buy the free Secondary. It costs nothing and it is still bought, at the ARMORY, because the first lesson this place teaches is where things come from. Walk the other three consoles so you know what each one owns. Then embark.
 
-I arrive already tethered, near the Hatch, and nothing happens. Nothing keeps happening for as long as I allow it. The first Wave is Defaults only, and called from a field terminal they come for me, not the door. It is the gentlest thing this place will ever send, and it is still a Wave.
+I arrive already tethered, near the Hatch, and nothing happens. Nothing keeps happening for as long as I allow it. When I do start it, I start it here at the door, and the Wave ends when I walk it down to the terminal and shut it off. The first one is Defaults only and they come for me, not the door. It is the gentlest thing this place will ever send, and it is still a Wave.
 
-Three lessons were billed to my first Boardings.
+Four lessons were billed to my first Boardings, and the first one is the one that keeps the rest survivable.
 
-Health does not come back while I stand, and a fresh realm cannot afford to stand me up either — the pot that buys a respawn starts empty. What the first Wave takes off me, the last Wave collects.
+Every body I put down is already banked. The realm keeps it whatever happens next, so a Boarding that ends badly is still a Boarding that paid. There is no version of this where I fight for an hour and come home with nothing.
 
-The Hatch does not heal itself. It comes back only if I stand at it and hold, only with the Repair Rig, and it bills the bank per point. A fresh realm has banked nothing, so at first the door stays exactly as broken as I let it get.
+Health does not come back while I stand, and standing back up is bought out of that same bank at a price that climbs. On the first Wave of a fresh realm I have not killed anything yet, so I cannot afford a single death — and the fix is entirely in my hands, because it is the same act. Kill things and I can afford to fall.
 
-Weapon Tiers and the equipment slot stay shut until Salvage first converts through the Hatch. Nothing on the panel says so. Now something somewhere does.
+The Hatch does not heal itself either. It comes back only if I stand at it and hold, only with the Repair Rig, and it bills that same bank per point. Everything I spend on the door is a Tier I do not buy.
 
 Ammunition is not a resource here. I rationed it for two Boardings before I noticed nothing ever ran out.
 
@@ -49,19 +49,23 @@ You will load into the Bastion already tethered, standing near the Hatch. It is 
 
 Spend the first Prep looking around: find the Hatch, find the doors, notice how far the room reaches. This is free.
 
-### 4. Walk to a field terminal
+### 4. Start the Wave at the Hatch
 
-The first Wave is all basic Gatekeepers. On a Wave you start at a field terminal they come for you, not the Hatch. No Hunters, no Thieves. It is the gentlest thing the game will ever send you and it exists to teach you the room.
+The Wave begins where you are standing. Look at the Hatch in Prep, ante up if you want, and start — that is the whole ritual. While the zone you are in still has a terminal to finish, the field terminals themselves refuse to start anything: they are the objective, not the trigger. Bindings: [Field Manual](Field-Manual.md).
 
-Look at the terminal. Ante up if you want. Select — including Ante 0 — then start **one** Wave. On the kit bastion the first terminal takes three of those to open its door; the others take one. After each clear, Prep lasts as long as you want. At the Hatch the same flow: select, then Convert. You can bank after Wave 1. Bindings: [Field Manual](Field-Manual.md).
+The first Wave is all basic Gatekeepers, and they come for you rather than for the door. No Hunters, no Thieves. It is the gentlest thing the game will ever send you and it exists to teach you the room.
 
-### 5. Fight, then choose
+### 5. Walk it down to the terminal and shut it off
 
-Kill the Wave. Prep. Convert if you want the Salvage on the ship, or walk back to the terminal and pull the next. Survive a Convert and, until you start the next Wave, hold interact at the Hatch to dock home. The door for that zone opens on a survived Convert, not on finishing the terminal. A Boarding has a limited number of Converts; when they are gone the Hatch refuses. How many: [Field Manual](Field-Manual.md).
+The Wave ends at the zone's field terminal. Get there, press the start key at it, and the Wave stops — the zone completes and whatever you happen to be carrying banks on the spot. You do not have to kill the last body to finish; killing them all ends it too, but the terminal is the shorter road and the one the room is built around.
 
-### 6. Strip the field, then Convert
+That walk is the fight. Between the Hatch and the terminal is every group the Wave sends, and the whole point of starting at the door is that you have to cross the room with them in it. After it ends, Prep lasts as long as you want.
 
-Clear the field Waves for that door and walk through when it opens. You can Convert after any Wave, not only then. Unbanked stays until you do. Survive a Convert and leftover converts. You are still aboard — or you dock. Walk through to **Master Control** in the Control Room. Ante up once at the console — it covers the sequence — then select and start. The door seals for five Boarder-hunt Waves, then opens for five Convert windows. Survive that and the Boarding is **Escaped**. Go down instead and leftover is gone.
+### 6. Bank what you earn, then push on
+
+You do not have to do anything to keep your Salvage. Every kill is already the realm's, so the walk home is not a toll and there is no window to survive before the money counts. Clear the field Waves for a zone and its door opens on a survived Convert at the Hatch. Until you start the next Wave, holding interact at the Hatch docks you home.
+
+Walk through to **Master Control** in the Control Room. Ante up once at the console — it covers the whole sequence — then select and start. The door seals for a run of Boarder-hunt Waves, then opens for one last Convert window against a single oversized Thief. Survive that and the Boarding is **Escaped**. How many Waves in each half: [Field Manual](Field-Manual.md).
 
 Then spend it. That's the loop.
 
@@ -69,7 +73,7 @@ Then spend it. That's the loop.
 
 #### Mistake 1: assuming you will heal
 
-You will not. There is no healing in a Boarding — no regeneration, no pickup, no medkit. Health refills only at a spawn, and a respawn is bought out of the Salvage you are carrying, at a price that climbs ([Going Down](Going-Down.md)). Kill nothing and you cannot afford to come back — and converting your whole pile at the Hatch leaves you in exactly that state until you earn again. In co-op, a downed Boarder waits on the Ship with that same priced way back in; the Boarding holds while any seat still fights or a respawn can be honored.
+You will not. There is no healing in a Boarding — no regeneration, no pickup, no medkit. Health refills only at a spawn, and a respawn is bought out of the realm's bank at a price that climbs ([Going Down](Going-Down.md)). On a fresh realm you have banked nothing until you have killed something, so the first hit of your first Boarding really can be the whole Boarding — and every body you put down after that is another death you can afford. In co-op, a downed Boarder waits on the Ship with that same priced way back in; the Boarding holds while any seat still fights or a respawn can be honored.
 
 This changes how you should play from the very first Gatekeeper: taking a swing is not a cost you pay and recover from, it is a permanent bite out of the Boarding. Avoid damage you could have avoided even when you are winning comfortably.
 
@@ -80,25 +84,25 @@ Both of the two things that end a Boarding are permanent, and one of them is a d
 Three things to internalise:
 
 - The Hatch does not repair itself. It only comes back when you stand at it and hold the repair — and only with the **Repair Rig** equipped. Without the Rig, holding repair does nothing at any price.
-- Repairing **costs banked Salvage per point of health** — the same purse you buy upgrades with. It is not free, and the game will happily drain your bank to zero doing it. That is usually the right trade, because a lost boarding stops the income entirely, but decide it rather than discovering it.
-- With an empty bank you cannot repair at all. On your very first Boarding you have nothing banked until a Convert takes something through, so the door is genuinely unfixable until then.
+- Repairing **costs banked Salvage per point of health** — the same purse you buy upgrades with. It is not free, and the game will happily drain your bank to zero doing it. That is usually the right trade, because a lost Boarding stops the income entirely, but decide it rather than discovering it.
+- With an empty bank you cannot repair at all. On your very first Boarding that means the door is unfixable until you have killed something — the bank fills with the bodies, so the fix and the fight are the same act.
 
 Fix it during Prep, when nothing is hitting you. Fixing it during an Assault means standing still at the exact spot everything is walking toward.
 
-#### Mistake 3: expecting to upgrade your weapon before you have banked
+#### Mistake 3: expecting to upgrade your weapon before you have earned anything
 
-Weapon **Tiers at the ARMORY and the equipment slot at FABRICATION are locked until
-Salvage first converts through the Hatch.** Docked or Lost after that does not matter —
-the conversion is the key. The protocol at CREW QUARTERS and Hatch Armor at FABRICATION
-are never locked.
+Weapon **Tiers at the ARMORY and the equipment slot at FABRICATION are locked until the
+realm has earned Salvage at all.** One kill is the key, and it is a lifetime figure, so
+spending the bank back down to zero never re-locks them. The protocol at CREW QUARTERS
+and Hatch Armor at FABRICATION are never locked.
 
-So on a fresh save, banking nothing and going to the ARMORY to make your gun stronger
-does not work. Spend early Salvage on Hatch Armor, or hold it. After the first convert,
-the weapon tracks open up.
+So the only save those rows are shut on is one that has never been out. Embark, kill
+anything, and the weapon tracks are open when you get back — whether you came back
+Docked, Lost, or Escaped.
 
-### Also worth knowing on boarding one
+### Also worth knowing on your first Boarding
 
-- **Ante starts at 0. Confirm it.** You can leave it there while you learn. Anting up spends Unbanked and only ever adds Defaults.
+- **Ante starts at 0. Confirm it.** You can leave it there while you learn. Anting up spends banked Salvage — real money, off the same pile the ARMORY charges — and only ever adds Defaults.
 - **Freeing the cursor stops you firing.** If you free the cursor and then wonder why firing does nothing, click once to recapture it. Binding: [Field Manual](Field-Manual.md).
 - **Ammo is unlimited.** You have no reserve to run out of; reloading always refills the clip. Reload whenever you have a spare second.
 

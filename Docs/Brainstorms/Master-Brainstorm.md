@@ -6,7 +6,8 @@ observations after they have been grilled against the code and the logs, until e
 leaves for a topic brainstorm, a milestone, or the bin.
 Status: working — content cycles
 Update trigger: every session that produces a play report or a directive worth holding
-Last updated: 2026-08-12
+Last updated: 2026-08-25 (the M29 entry cycled off, the stamina falsifier re-aimed at M102,
+the swing-concurrency and silent-refusal entries re-checked against the tree and still true)
 -->
 
 ## What this is
@@ -44,6 +45,11 @@ Source: Zo's play report, 2026-08-08, and session log
 `Logs/GatekeeperBastion_2026-08-08_17-00-15.log`. Zo's verdict on the whole: **fun, not
 tuned.**
 
+**These three have sat far longer than the three sessions this file calls a signal
+(checked 2026-08-25).** By the file's own rule that means the door is unclear, not that
+they need more thinking. Each was re-checked against the tree on that date and each is
+still true; what has changed is written into the entry.
+
 ### Stamina has no destination
 
 *Zo: sprinting isn't necessary so stamina is useless.*
@@ -53,13 +59,18 @@ Bastion gives the player nowhere to be except the Hatch — Zo's earlier note, "
 to move away from the hatch", is already recorded in `../Design/1-Experience.md`. Today's
 second Run took 24 Hatch arrivals across 210 bodies, which is a player standing at the
 door. Sprint is a cost with no errand. **M30 shipped** (drone bay + decoy); the decoy pulls
-bodies off the door, it does not give the player an errand away from it. The console
-restructure in `missions-and-destinations.md` and M47's composed bastion are the remaining
-attempts at the errand. If those ship and sprint still has no use, delete the track.
+bodies off the door, it does not give the player an errand away from it.
 
-**Exit: topic brainstorm `crew-skills-and-perks.md`,** filed against M30 as the thing that
-would falsify it. If M30 ships and sprint still has no use, the answer is to delete the
-track rather than tune it.
+**The errand now exists, and this entry is finally testable.** `M47` composed the bastion,
+`M95` built 28 rooms over two storeys, and `M102` puts all trip risk on an on-foot outbound
+leg to a terminal, so travel is the graybox's central decision rather than an absent one.
+Nothing has been played through them, so whether sprint earns its track is still unknown and
+needs a Run.
+
+**Exit: topic brainstorm `crew-skills-and-perks.md`.** The original filing was against M30,
+which has since proved to be the wrong falsifier — a decoy moves bodies, not the player. The
+falsifier is `M102`'s playthrough: if a player travels under fire and sprint still has no
+use, delete the track rather than tune it.
 
 ### A health buffer cannot absorb the way damage actually arrives
 
@@ -74,26 +85,11 @@ Zo's conclusion follows from the arithmetic: at this arrival concentration no pu
 buffer changes the outcome, so the lever is how many Gatekeepers can be swinging at once,
 not how much HP absorbs them.
 
-**Exit: milestone,** and it is the strongest candidate on this page. The criterion can
-already be written against a swing-concurrency cap or a per-Gatekeeper swing cooldown, and
-the log gives the before figure.
-
-### More bodies and more HP is one lever too many, and it feeds the pierce
-
-*Zo: we should up the amount and increase the health.*
-
-Two objections, one procedural and one directional. `../Working-Rules.md` requires **one
-lever per logged Run** — the 2026-08-03 sessions moved weapon level and siphon dial
-together and are on record as unable to attribute the result. More substantially, **raising
-count works against the entry above it**: more bodies in the room is more Gatekeepers able
-to swing at once, which is the mechanism that took 84 HP in 7.4 seconds. It also makes a
-pierce-2 rifle better, because bodies in a line is exactly what pierce is paid in. Raising
-HP alone is the cleaner half — it lengthens time-to-kill without changing arrival
-concentration — and it is *unknown whether it is enough; needs play data*, which is what
-M29 is for.
-
-**Exit: M29 shipped** (`Tools/wave-report`). Grade curve changes against mean live; Hatch
-remaining does not provide an effort reading (`../Milestones/3. completed/M16-a-difficulty-curve.md`).
+**Exit: milestone, unwritten as of 2026-08-25,** and it is the strongest candidate on this
+page. The criterion can already be written against a swing-concurrency cap or a
+per-Gatekeeper swing cooldown, and the log gives the before figure. Neither exists in the
+tree — `M81` and `M85` gave the swing and the collapse their animation, not a concurrency
+rule — so nothing has taken this door in seventeen days.
 
 ### Pressing a key and getting nothing back
 
@@ -107,8 +103,13 @@ whether the ability is on cooldown, not yet armed, or broken, and the developer 
 log afterwards cannot either. That is the same class of problem M22 was written for: the
 game not saying what it did.
 
+**Still true, re-checked 2026-08-25.** `PlayerAbility.TryActivate` logs only the
+no-ability-on-this-weapon case; `if (_cooldown > 0f) return;` is still silent, and so is the
+`fired` path below it.
+
 **Exit: milestone.** The criterion is that every refusal path says why, in the log and on
-the HUD, and it is worth writing against all three abilities rather than just the pin.
+the HUD, and it is worth writing against every ability rather than just the pin — there are
+now protocol abilities on `G` and `H` as well as the weapon's `F`.
 
 ---
 
@@ -127,6 +128,7 @@ Rules any milestone leaving this page respects.
 
 | Entry | Date | Door | Where it went |
 |---|---|---|---|
+| More bodies and more HP is one lever too many, and it feeds the pierce | 2026-08-25 | Already true | **M29 shipped** the instrument (`Tools/wave-report` prints mean live). The two objections stand as recorded: `../Working-Rules.md` requires one lever per logged Run, and raising count works against the swing-concurrency entry above, because more bodies in the room is more Gatekeepers able to swing at once. Raising HP alone is the cleaner half. Grade curve changes against mean live; Hatch remaining gives no effort reading (`M16`) |
 | Crew Quarters cannot compete with the weapon on price | 2026-08-12 | Topic brainstorm | **Answered:** tracks had no job. CREW sells Crew abilities (burst, long cooldown) — `crew-skills-and-perks.md`. Tracks and 5-skill parked. |
 | Loss / XP / hatch tools / specialization (Zo 2026-08-12) | 2026-08-12 | Topic brainstorm | `missions-and-destinations.md` (pile vs ship bank; two triggers), `fabrication.md` (hatch defenses cut), `crew-skills-and-perks.md` (Crew abilities) |
 | The Primary's ability has never fired | 2026-08-08 | Milestone | **Fixed in M31 Path 1.** `RegisterPinHitIfNeeded` ran once per damaged body; `PinBuildState.RegisterHit` zeroed `Hits` on target change. M31 gates the pin to the first damaged body. Playthrough criterion still open on the M31 file. |

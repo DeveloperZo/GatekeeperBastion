@@ -4,12 +4,43 @@
 Purpose: How scenes are structured so an agent can work on one part without breaking the rest, and what a scene edit must assert.
 Status: working
 Update trigger: when a scene root is added or renamed, when UI moves out of a gameplay scene, or when a swap rule changes.
-Last updated: 2026-08-22
+Last updated: 2026-08-26 (rule 3's ownership statement corrected — the Ship hull comes from
+Tools/ship-hull/build_hull.py, not from SceneBuilder.Ship, which is a footgun; the hull
+measurements re-dated to the two-deck scene they were taken on, which the one-deck collapse
+supersedes)
 -->
 
 The Ship hub is **`Ship - CoOp.unity`** — one hub, solo and party alike. Historical notes
 below that say `Ship.unity` or `Ship - Demo.unity` mean hubs that no longer exist (the
 scene pair consolidated onto the co-op hull); the authoring rules still apply.
+
+Seven scenes are on disk as of 2026-08-25, all under `Assets/Scenes/`. Six are registered in
+build settings, in this order: `Splash`, `MainMenu`, `RealmSelect`, `Ship - CoOp`,
+`Bastion_Coop`, `Range`. The play chain runs `Splash → MainMenu → RealmSelect → Ship - CoOp
+→ Bastion_Coop → Ship - CoOp`. `Bastion.unity` and `Ship - Demo.unity` are gone with the
+rest of the solo pair.
+
+**`Explore - Kit.unity` is the seventh and nothing declares what it is for.** It is in
+neither `SceneFlow` nor build settings, its scripts live in `Assets/_Scratch/`, and no doc
+names it. Treat it as scratch until Zo says otherwise; do not wire it into anything on the
+assumption that it was meant to be wired.
+
+## What SceneBuilder owns
+
+**Build All owns three roots and one asset, and nothing else.** `OwnedRootNames` is
+`Environment`, `SpawnPoints` and `Directional Light`; the NavMesh asset is the fourth owned
+thing. Stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem` and every
+UI canvas are authored content it never touches. The one wipe exemption is an owned root that
+still holds `SpawnRoom` instances — Build All logs a warning and skips it, because spawn
+closets parented under `SpawnPoints` by mistake used to be deleted with it.
+
+**It pins five scenes and keeps the rest.** `SceneBuilder.BootScenes` is Splash, MainMenu,
+RealmSelect, Ship - CoOp, Bastion_Coop, and `MergeBuildScenes` puts those at the head of the
+build list while keeping every other registered row after them with its enabled flag intact —
+which is why `Range` survives a Build All it is not named in. The only rows it removes are
+ones whose file is gone, so the list self-heals after a scene is deleted, and both the kept
+and dropped counts are logged. `SceneBuilder.cs`'s own class comment still describes the
+older behaviour and names two deleted scenes; read the code, not the comment.
 
 ## Why this file exists
 
@@ -24,7 +55,8 @@ file, which is the actual problem this file addresses.
 
 ## The measurement that explains it
 
-`Ship.unity`, as measured 2026-08-14:
+`Ship.unity`, as measured 2026-08-14 — the scene the M61 break happened in, kept here
+because it is the evidence for the rules below:
 
 | | count |
 |---|---|
@@ -37,6 +69,16 @@ file, which is the actual problem this file addresses.
 **The ship is 6% of its own scene.** An agent asked to change a console is navigating a file
 where fifteen out of every sixteen objects are UI chrome it must not touch. That is not an
 agent limitation to work around; it is a layout problem to fix.
+
+**The hull made it worse.** `Ship - CoOp.unity` measured **8.0 MB** and **2,784**
+GameObjects against 3,119 MonoBehaviours, 1,023 MeshRenderers and three `Canvas` roots on
+2026-08-25 — about three times the object count of the scene measured above.
+`Bastion_Coop.unity` is 12 MB and 4,103 GameObjects. Those Ship figures are of the two-deck
+hull; the interior collapsed to one deck on 2026-08-26 and nobody has re-counted, so treat
+them as an upper bound rather than a reading. The direction is what matters and it does not
+change: the hub is an order of magnitude past the size an agent can hold. The
+UI-versus-ship split is not measured here either; counting it needs a hierarchy walk, not a
+grep.
 
 ## Rules
 
@@ -53,11 +95,12 @@ Rebuild skips `Authored/` so a re-stamp cannot replace hand edits.
 
 ### 2. UI does not live in a gameplay scene
 
-844 of `Ship.unity`'s 958 objects are the four station panels. Those belong in prefabs
-instantiated at bind, or in a UI scene loaded additively. **Target: `Ship.unity` under 100
-objects**, small enough for an agent to hold entirely.
+844 of `Ship.unity`'s 958 objects were the four station panels. Those belong in prefabs
+instantiated at bind, or in a UI scene loaded additively. **Target: the Ship hub under 100
+objects**, small enough for an agent to hold entirely. `Ship - CoOp.unity` was at 2,784 when
+it was last counted, so the target is further away than when it was written, not closer.
 
-Until that lands, treat the `Canvas` subtree as off-limits for any task whose subject is the
+Until that lands, treat the `Canvas` subtrees as off-limits for any task whose subject is the
 ship itself, and say so in the task.
 
 ### 3. One subtree, one task, one commit
@@ -68,15 +111,41 @@ a task. "Replace the four `Stations/Station_*/Desk` meshes" is.
 The existing hierarchy is already segmented correctly and should be preserved rather than
 redesigned:
 
+`Ship - CoOp.unity`'s roots, read off the scene 2026-08-25. The one-deck collapse of
+2026-08-26 changed what is inside `Environment` and `ShipDress`; the root set is the same:
+
 ```
-Environment/     Floor_Common, Floor_{N,S,E,W}, Wall_{side}_{relation}ODoor, Alcove_{side}_{dir}
-Stations/        Station_{Armory,CrewQuarters,Fabrication,Map}/{Desk,Screen,Interact,Label}
-ShipDress/       Alcove_{North,South,East,West}, CommonRoom
-Player/          PlayerCamera
+Environment/       the hull graybox on an ix/iz grid: GFloor_*, GW_*, F_*, W_*, C_*.
+                   Renderers disabled — this root is where collision comes from
+Hatches/           Hatch_1..3, on the starboard hull
+Directional Light  the scene's only Light
+Stations/          Station_{Armory,CrewQuarters,Fabrication,Map}/{Desk,Screen,Interact,Label}
+ShipDress/         the visible Synty geometry in per-room containers; colliders disabled
+Player/            PlayerCamera
+Canvas/            the station panels — off-limits under rule 2
 ```
 
-Names are unique, compass-anchored and path-addressable. That is what makes a subtree
+Station and dress names are unique and path-addressable, which is what makes a subtree
 instruction possible. Do not rename toward generic names.
+
+**`Environment` and `ShipDress` belong to `Tools/ship-hull/build_hull.py`, not to
+SceneBuilder.** This is the correction that matters most on this page. The earlier wording
+here called those names SceneBuilder-generated and told the reader to address the subtree
+through the builder, which points an agent at the one tool that would destroy the ship:
+`SceneBuilder.Ship` still compiles and still has a menu row, it produced the twenty wall
+seams and the missing exterior skin that `M101` was cut to fix, and re-running it wipes the
+authored hull. `Docs/Milestones/3. completed/M101-a-ship-with-two-decks-and-a-stair.md` and
+`Docs/Working-Rules.md` both say do not run it. Do not run **Build/All Scenes** against the
+dressed Ship either — the `ShipDress` root makes Build All skip the geometry wipe, but the
+habit belongs to the old graybox.
+
+`build_hull.py` is destructive by design too. It deletes every child of `Environment` and
+`ShipDress` and re-emits the hull from its layout table, and it rehomes `Hatch_1..3`, the
+four stations, the `Ship Terminal`, the teleporter, the `Spawn_*` objects and the
+realm-record groups on the way past. That is the right tool and still not a chore: the diff
+it makes is ~386k lines and cannot be read, so any hand pass landed since its last run has
+to be folded back into the script first or it disappears silently. Address those two
+subtrees by editing that script; address everything else by name.
 
 ### 4. A swap asserts the arrival, not the departure
 
@@ -87,6 +156,10 @@ deleted*. It was satisfied. Nothing said a console must be *present*.
 general form: after removing X, assert Y renders. The specific one owed here: **every
 `Stations/Station_*` root has at least one enabled renderer among its descendants.** One
 assertion in `ShipSceneContractTests`, and this class of break cannot survive a suite run.
+
+**Still owed as of 2026-08-25.** `ShipSceneContractTests` asserts one of each station type,
+an enabled `Collider` under each, a live player rig, and something that draws the interaction
+prompt. It asserts nothing about renderers, so the exact M61 break would still pass.
 
 This is the same shape as two other defects on record: M52 plus M53 gated a run on two player
 outcomes and asserted neither's failure branch, and M61 criterion 8 asserts five animation

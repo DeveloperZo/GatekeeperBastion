@@ -1,132 +1,63 @@
-# Co-op bastion — demo spine on storey 0, galleries on storey 1.
-# 28 rooms (15 ground + 13 upper). Target band 20–30, two floors.
+# Bastion SPINE layout — Zo's restructure, 2026-08-25. DRAFT, not yet emitted.
+#
+# WHY: the shipped layout put zone 1's two spawn closets 84 m apart on opposite
+# flanks. Measured from the hatch their approaches are 91 degrees apart, and it
+# WIDENS as the player pushes up (106 at 10 m, 126 at 20 m, 149 at 30 m). At a
+# 60 degree FOV no position holds both streams on screen, so movement was spent
+# time-slicing two fronts instead of being a choice. One spine fixes that: every
+# spawn feeds the SAME corridor.
+#
+# THE LOOP (Zo, 2026-08-25): a wave BEGINS at the hatch and ENDS at a terminal.
+# Most of the wave spawns at the far end of the open space, so the enemies walk
+# the whole lane at the player while the player pushes up it to the off switch.
+#   loop 1  start at the Hatch -> fight up the tunnel -> T2 in R3 -> D1 opens
+#   loop 2  start at the Hatch -> fight the full spine -> T5 in R7 -> D3 opens
+#   loop 3  start at the Hatch -> Master Control in R9
+# T1, T3 and T4 are gone; D2 is gone. Storey 1 is dropped for now — no
+# galleries, no stairs, no wells.
+#
 # Kit scaler 2: Half 16 m, Full 26 m, OpenArea 42 m, ControlRoom 94x47 m.
-# StoreyHeight 5. North = +Z, East = +X.
-#
-# Ground progression matches Bastion.unity: T1+T2 open D1; T3 opens D2;
-# T4+T5 open control D3. Upper islands sit on the same XZ and do not
-# skip those gates: no gallery crosses D1, D2 or D3.
-#
-# Three stairs, one per island: R1–U1 (always), R6–U6 (behind D1),
-# R10–U10 (behind D2).
-#
-# Hatches H:1 H:2 H:3 on R1 south wall (along -14, 0, +14).
-# S1/S2 live from the start. S7/S8 (upper zone 1) live from the start
-# at three seats; muted at two (S:id:edge:3). S3–S6 and S9–S12 wait on D2.
+# North = +Z, East = +X. Hatches dock on R1's south wall (world z = -61).
 
-# --- Ground: south block (pre-D1) -------------------------------------------
+# --- Loop 1: the hold, and the tunnel the wave walks down -------------------
 room R1 OpenArea 0 -40 H:1 H:2 H:3
-room R2 Full -34 -40 T:T1
-room R3 Full 34 -40 T:T2
-room R4 Half -34 -19 S:S1:W
-room R5 Half 34 -19 S:S2:E
+room R2 Half 0 -11 S:S2:W
+room R3 Half 0 5 T:T2 S:S1:E
 
-# --- Ground: hub (behind D1) ------------------------------------------------
-room R6 OpenArea 0 2
-room R7 Half -29 2 S:S3:W
-room R8 Half 29 2 S:S4:E
+# --- Loop 2: the long tunnel (behind D1) ------------------------------------
+room R4 OpenArea 0 34 S:S3:W
+room R5 Half 0 63 S:S4:E
+room R6 Half 0 79 S:S5:W
+room R7 Half 0 95 T:T5 S:S6:E
+room R8 Half 0 111
 
-# --- Ground: spine ----------------------------------------------------------
-room R9 Full 0 36 T:T3
+# --- Loop 3: the control room -----------------------------------------------
+room R9 ControlRoom 0 142.5 M S:ControlW:W S:ControlE:E
 
-# --- Ground: staging (behind D2) --------------------------------------------
-room R10 OpenArea 0 70
-room R11 Full -34 62 T:T4
-room R12 Full 34 62 T:T5
-room R13 Half -29 83 S:S5:N
-room R14 Half 29 83 S:S6:N
-
-# --- Ground: control --------------------------------------------------------
-room R15 ControlRoom 0 114.5 M S:ControlW:W S:ControlE:E
-
-# --- Upper island A — over zone 1 -------------------------------------------
-room U1 OpenArea 0 -40 storey=1
-room U2 Full -34 -40 storey=1
-room U3 Full 34 -40 storey=1
-room U4 Half -34 -19 storey=1 S:S7:W:3
-room U5 Half 34 -19 storey=1 S:S8:N:3
-
-# --- Upper island B — over hub ----------------------------------------------
-room U6 OpenArea 0 2 storey=1
-room U7 Half -29 2 storey=1 S:S9:W:3
-room U8 Half 29 2 storey=1 S:S10:E:3
-
-# --- Upper island C — over staging ------------------------------------------
-room U10 OpenArea 0 70 storey=1
-room U11 Full -34 62 storey=1
-room U12 Full 34 62 storey=1
-room U13 Half -29 83 storey=1 S:S11:N:3
-room U14 Half 29 83 storey=1 S:S12:N:3
-
-# --- Ground passages --------------------------------------------------------
-side R2 E Door
-side R1 W Door
-side R3 W Door
-side R1 E Door
-side R4 S Door
+# --- Open passages: both faces carry a Door side ----------------------------
+side R1 N Door
+side R2 S Door
 side R2 N Door
-side R5 S Door
+side R3 S Door
 side R3 N Door
+side R4 S Door
+side R4 N Door
+side R5 S Door
+side R5 N Door
 side R6 S Door
-side R7 E Door
-side R6 W Door
-side R8 W Door
-side R6 E Door
 side R6 N Door
+side R7 S Door
+side R7 N Door
+side R8 S Door
+side R8 N Door
 side R9 S Door
-side R10 S Door
-side R11 E Door
-side R10 W Door along=-8
-side R12 W Door
-side R10 E Door along=-8
-side R13 S Door
-side R11 N Door along=5
-side R14 S Door
-side R12 N Door along=-5
-side R10 N Door
 
-# --- Upper island A passages (U1 north is Wall — D1 stays on the ground) ----
-side U2 E Door
-side U1 W Door
-side U3 W Door
-side U1 E Door
-side U4 S Door
-side U2 N Door
-side U5 S Door
-side U3 N Door
-side U1 S Window
-# U5 east sits on S2's closet roof — wall, do not punch a door onto it.
-# S8 hangs north instead.
-side U5 E Wall
-
-# --- Upper island B passages (U6 south/north Wall — no skip over D1/D2) -----
-side U7 E Door
-side U6 W Door
-side U8 W Door
-side U6 E Door
-
-# --- Upper island C passages (U10 south/north Wall — no skip over D2/D3) ----
-side U11 E Door
-side U10 W Door along=-8
-side U12 W Door
-side U10 E Door along=-8
-side U13 S Door
-side U11 N Door along=5
-side U14 S Door
-side U12 N Door along=-5
-
-# --- Ground windows ---------------------------------------------------------
+# --- Windows to space (exterior faces only) ---------------------------------
 side R1 S Window
-side R9 E Window
-side R9 W Window
-side R15 N Window
+side R4 E Window
+side R4 W Window
+side R9 N Window
 
-# --- Locked doors (ground only) ---------------------------------------------
-door D1 R1 N unlock=T1,T2
-door D2 R9 N unlock=T3
-door D3 R15 S unlock=T4,T5 control
-
-# --- Stairs -----------------------------------------------------------------
-stair R1 U1
-stair R6 U6
-stair R10 U10
+# --- Locked doors -----------------------------------------------------------
+door D1 R3 N unlock=T2
+door D3 R8 N unlock=T5 control

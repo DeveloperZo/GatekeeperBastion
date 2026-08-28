@@ -77,10 +77,10 @@ If you start a Boarding at a deeper Wave from the Ship, your first Wave after se
 
 ### What killing them is for
 
-A Gatekeeper is worth Salvage only while a Wave is live, and that Salvage is Unbanked until a Convert. Nothing pays during Prep, and nothing pays for surviving.
+A Gatekeeper is worth Salvage only while a Wave is live, and it is worth it immediately: the pay lands in the realm's bank the moment the body does. Nothing pays during Prep, and nothing pays for surviving. A Gatekeeper killed inside a Convert window pays nothing either — that window moves money you are already carrying.
 
-Being Lost ends the Boarding, and so does losing the Hatch. Both keep everything already converted. Unbanked is gone.
+Being Lost ends the Boarding, and so does losing the Hatch. Neither takes a unit of it back. Every body you dropped on the way is already paid for, which is why a Boarding you lose is still a Boarding that bought you something.
 
 ## See also
 
-[Default](Gatekeeper-Default.md). [Hunter](Gatekeeper-Hunter.md). [Thief](Gatekeeper-Thief.md). [Waves](Waves.md). [The Hatch](The-Hatch.md).
+[Default](Gatekeeper-Default.md). [Hunter](Gatekeeper-Hunter.md). [Thief](Gatekeeper-Thief.md). [Cloaker](Gatekeeper-Cloaker.md). [Waves](Waves.md). [The Hatch](The-Hatch.md).

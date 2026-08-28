@@ -1,4 +1,4 @@
-<!-- Purpose: the FORGE Protocol — PARALLEL BAYS doctrine, Field Deploy, Overcharge, Magnet Hands, and the turret as a mortal object. / Status: working / Update trigger: when FORGE's doctrine, abilities, twists, turret behaviour or cost change. / Last updated: 2026-08-22 -->
+<!-- Purpose: the FORGE Protocol — PARALLEL BAYS doctrine, Field Deploy, Overcharge, Magnet Hands, and the turret as a mortal object. / Status: working / Update trigger: when FORGE's doctrine, abilities, twists, turret behaviour or cost change. / Last updated: 2026-08-25 (repaired a sentence a rename sweep had broken; Gaps no longer claims PARALLEL BAYS raises the live count) -->
 
 # FORGE Protocol
 
@@ -48,7 +48,7 @@ A Gatekeeper that would target you targets your turret instead, whenever both ar
 - **Place for the approach, not for the kill.** Its damage is real but modest. Its value is the aura and the attention. A turret behind you buffs you and absorbs nothing; a turret between you and the entry does both jobs.
 - **Overcharge is spending the machine.** Treat the turret as consumable and the ability as cashing it in. Firing it on a fresh turret at the start of a Wave wastes most of what the turret was for.
 - **Redeploying is free of everything except the cooldown.** A wounded turret is not worth defending. Replace it.
-- **Against Thieves the turret is a clock that boardings while you do something else,** which is the closest thing this sheet has to an answer for them.
+- **Against Thieves the turret is a clock that runs while you do something else,** which is the closest thing this sheet has to an answer for them.
 - **Against a Hunter, the passive is the answer.** It goes for the machine, and the machine can take a few swings you could not.
 
 ## See also
@@ -61,4 +61,4 @@ A Gatekeeper that would target you targets your turret instead, whenever both ar
 - The turret has no visible health, so there is no way to judge whether Overcharge will burn it out.
 - The aura radius is not drawn. You cannot tell whether you or a teammate is inside it.
 - Overcharge refusing with no turret standing is silent in play.
-- PARALLEL BAYS raises the live decoy count and nothing on the Drone bay reflects that the limit changed.
+- PARALLEL BAYS is written onto every decoy placed and nothing reads it, so the doctrine row on the sheet promises a second bay the Drone bay does not give.

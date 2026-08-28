@@ -12,10 +12,18 @@ namespace GatekeepersProtocol.Tests
         const string CoopScenePath = "Assets/Scenes/Bastion_Coop.unity";
         const string BuildSettingsPath = "ProjectSettings/EditorBuildSettings.asset";
 
+        /// <summary>The spine, end to end (Zo, 2026-08-25): R1 OpenArea carrying the three
+        /// hatches, R2..R8 the lane, R9 the Control Room. Every room is named rather than
+        /// sampled — a missing middle room is exactly what a spot check walks past.</summary>
         static readonly string[] CoopRoomNames =
         {
-            "R1", "R6", "R10", "R15", "U1", "U6", "U10"
+            "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9"
         };
+
+        /// <summary>One segment per room. Pinned exact rather than banded: the spine is
+        /// authored in Tools/bastion-sketch/bastion-coop-layout.txt and its room count is a
+        /// design decision, so a scene that grew or lost one should fail here and be read.</summary>
+        const int SpineSegments = 9;
 
         [Test]
         public void Emitter_SavesTheOpenedScene_NotAHardcodedBastionPath()
@@ -35,13 +43,15 @@ namespace GatekeepersProtocol.Tests
                 return;
             }
 
+            // THE OPT-OUT THAT ATE THIS TEST. It used to bail Inconclusive unless the scene
+            // still held the two-storey emit's U-rooms — so the moment the Bastion became a
+            // single-storey spine (Zo, 2026-08-25) the whole scene contract stopped running,
+            // and reported itself "inconclusive" in every gate for a day while the spine, the
+            // hatches and the room count went unchecked. A guard that turns a broken contract
+            // into a quiet skip is worse than no guard: nothing is red, and nothing is covered.
             string yaml = File.ReadAllText(Path.GetFullPath(CoopScenePath));
-            if (!Regex.IsMatch(yaml, @"^  m_Name: R1\s*$", RegexOptions.Multiline)
-                || !Regex.IsMatch(yaml, @"^  m_Name: U1\s*$", RegexOptions.Multiline))
-            {
-                Assert.Inconclusive(CoopScenePath + " has not been re-emitted to the two-storey sketch");
-                return;
-            }
+            Assert.IsTrue(Regex.IsMatch(yaml, @"^  m_Name: R1\s*$", RegexOptions.Multiline),
+                CoopScenePath + " has no R1 — the sketch has never been emitted into it.");
             int hatchDoors = 0;
             for (int id = 1; id <= 3; id++)
             {
@@ -52,14 +62,14 @@ namespace GatekeepersProtocol.Tests
             }
 
             Assert.AreEqual(3, hatchDoors,
-                CoopScenePath + " is the two-storey co-op emit but Hatch_1..3 are missing");
+                CoopScenePath + " has lost one of Hatch_1..3 — every wave begins at the Hatch "
+                + "(Docs/Design/0-Gameplay.md), so this is the start line itself.");
 
             string guid = SegmentGuid();
             int segments = Regex.Matches(yaml, @"guid: " + guid).Count;
-            Assert.GreaterOrEqual(segments, 20,
-                "co-op room count must be in the 20–30 band");
-            Assert.LessOrEqual(segments, 30,
-                "co-op room count must be in the 20–30 band");
+            Assert.AreEqual(SpineSegments, segments,
+                "the spine is " + SpineSegments + " rooms, R1 through R9. The 20-30 band this "
+                + "once allowed belonged to the sprawl the spine replaced.");
 
             for (int i = 0; i < CoopRoomNames.Length; i++)
             {
@@ -70,31 +80,19 @@ namespace GatekeepersProtocol.Tests
                 Assert.GreaterOrEqual(names, 1, CoopRoomNames[i] + " missing");
             }
 
-            string[] stairs =
+            // NO STAIRS. The Bastion is a single-storey spine and the walk up the LANE is the
+            // pressure (Docs/Design/0-Gameplay.md), so a flight appearing here would be a
+            // second storey arriving by accident. Checked against the YAML rather than the
+            // live scene so it holds even for a stair authored inactive — the same invariant
+            // BastionCoopStairWalkTests pins from the other side.
+            foreach (Match sm in Regex.Matches(yaml, @"^  m_Name: (\S+)\s*$", RegexOptions.Multiline))
             {
-                "Stair_R1_U1", "Stair_R6_U6", "Stair_R10_U10",
-                "GStairWalk_R1_U1", "GStairWalk_R6_U6", "GStairWalk_R10_U10",
-                "GStairLand_R1_U1", "GStairLand_R6_U6", "GStairLand_R10_U10"
-            };
-            for (int i = 0; i < stairs.Length; i++)
-            {
-                int names = Regex.Matches(
-                    yaml,
-                    @"^  m_Name: " + stairs[i] + @"\s*$",
-                    RegexOptions.Multiline).Count;
-                Assert.GreaterOrEqual(names, 1, stairs[i] + " missing");
+                string nm = sm.Groups[1].Value;
+                Assert.IsFalse(
+                    nm.StartsWith("Stair_") || nm.StartsWith("GStairWalk_")
+                        || nm.StartsWith("GStairLand_"),
+                    nm + " is a stair, and the Bastion is single-storey (Zo, 2026-08-25).");
             }
-
-            string stairsCs = Read("Assets/Scripts/Editor/Bastion/BastionSketchStairs.cs");
-            Match guidM = Regex.Match(stairsCs, @"StairMeshGuid = ""([0-9a-f]+)""");
-            Assert.IsTrue(guidM.Success, "BastionSketchStairs has no StairMeshGuid");
-            string hull = Read("Tools/ship-hull/build_hull.py");
-            StringAssert.Contains(guidM.Groups[1].Value, hull,
-                "StairMeshGuid must be the ship kit Stairs guid");
-            Assert.GreaterOrEqual(
-                Regex.Matches(yaml, @"guid: " + guidM.Groups[1].Value).Count,
-                3,
-                "each Stair_* must reference SM_Prop_Stairs_01");
 
             Assert.IsTrue(
                 TransformChildrenEmpty(yaml, "Generated"),

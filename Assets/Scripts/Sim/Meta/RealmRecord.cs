@@ -56,7 +56,17 @@ namespace GatekeepersProtocol.Sim
             if (realm == null) return Fresh();
             r.CleanExits = Clamp(realm.CleanExits);
             r.RunsLost = Clamp(realm.PodEjections);
-            r.DeepestWave = Clamp(realm.DeepestWaveReached < 1 ? 1 : realm.DeepestWaveReached);
+            // ENTERED, NOT REACHED — and this is the half that actually gates the picker.
+            // RunSim.ClampStartWave was moved to Entered on 2026-08-27, but MapStation caps the
+            // START-WAVE PICKER on this field, so the sim would happily have accepted wave 5
+            // while the UI never offered anything past 2. The 23:36 log is the proof: a save
+            // reading Entered 5 / Reached 2 still embarked "starting at wave 1".
+            //
+            // Both halves have to agree or the fix is invisible. Max() rather than a straight
+            // swap so the record can never read LOWER than what has been beaten.
+            int deepest = realm.DeepestWaveEntered;
+            if (deepest < realm.DeepestWaveReached) deepest = realm.DeepestWaveReached;
+            r.DeepestWave = Clamp(deepest < 1 ? 1 : deepest);
             r.HatchArmor = Clamp(realm.HatchArmorLevel);
             return r;
         }

@@ -33,6 +33,7 @@ namespace GatekeepersProtocol.PlayTests
         const string RealmName = "SPINE";
 
         string _snapshot;
+        bool _skipPref;
 
         [SetUp]
         public void CaptureTheDevelopersSession()
@@ -40,11 +41,17 @@ namespace GatekeepersProtocol.PlayTests
             // Snapshot only a session that already exists — never EnsureLoaded, which would
             // pull the developer's campaign into the suite and leave it there.
             _snapshot = GameSession.Meta != null ? GameSession.Meta.ToSnapshotJson() : null;
+            // The spine drives beat 0 from a virgin state. On a machine where the developer
+            // has finished the ship tutorial, the machine-wide SkipShipTutorial preference
+            // makes Adopt pre-pass every gate and grant the MK-1 — clear it for the test.
+            _skipPref = Settings.GetBool(SettingId.SkipShipTutorial);
+            Settings.SetBool(SettingId.SkipShipTutorial, false);
         }
 
         [TearDown]
         public void RestoreTheDevelopersSession()
         {
+            Settings.SetBool(SettingId.SkipShipTutorial, _skipPref);
             if (_snapshot == null) return;
             MetaState back = MetaState.FromSnapshotJson(_snapshot);
             if (back != null) GameSession.AdoptDevState(back);
@@ -121,22 +128,22 @@ namespace GatekeepersProtocol.PlayTests
             RunSim sim = gc.Sim;
             Assert.AreEqual(RunPhase.Tethered, sim.Phase, "arriving at the bastion auto-boards");
 
-            // zone 1 — two terminals and a survived bank open D1
-            yield return BastionRunDrive.RunSingleTerminal(gc, sim, layout, "T1");
-            yield return BastionRunDrive.RunSingleTerminal(gc, sim, layout, "T2");
-            yield return BastionRunDrive.SurviveBank(gc, sim);
-            Assert.IsTrue(layout.IsDoorOpen("D1"), "T1+T2 plus a survived bank must open D1");
+            // The spine (Zo, 2026-08-25) gives each zone ONE terminal running that zone's
+            // whole wave span, so both zones are composites and there is no third zone. The
+            // loop is Hatch -> lane -> terminal (Zo, 2026-08-26; Docs/Design/0-Gameplay.md):
+            // RunZoneComposite starts at the Hatch and walks it down, and the shutoff is what
+            // opens the door. No Convert window stands between the zones any more — the
+            // Convert left the demo, and once a zone's door opens the Hatch-bank is correctly
+            // refused again because the NEXT zone's terminal is unfinished.
+            // zone 1 — one composite, closed at T2, which opens D1
+            yield return BastionRunDrive.RunZoneComposite(gc, sim, layout, 1);
+            Assert.IsTrue(layout.IsDoorOpen("D1"),
+                "closing zone 1 at its terminal must open D1");
 
-            // zone 2 — one composite trigger, then the second bank
+            // zone 2 — the same loop again, and its shutoff opens the control door
             yield return BastionRunDrive.RunZoneComposite(gc, sim, layout, 2);
-            yield return BastionRunDrive.SurviveBank(gc, sim);
-            Assert.IsTrue(layout.IsDoorOpen("D2"), "T3 plus a survived bank must open D2");
-
-            // zone 3 — two more terminals, then the door onto the Control Room
-            yield return BastionRunDrive.RunSingleTerminal(gc, sim, layout, "T4");
-            yield return BastionRunDrive.RunSingleTerminal(gc, sim, layout, "T5");
-            yield return BastionRunDrive.SurviveBank(gc, sim);
-            Assert.IsTrue(layout.IsDoorOpen("D3"), "T4+T5 plus a survived bank must open D3");
+            Assert.IsTrue(layout.IsDoorOpen("D3"),
+                "closing zone 2 at its terminal must open the control door");
 
             // Master Control — the win
             long bankedBefore = meta.BankedSalvage;
@@ -170,14 +177,96 @@ namespace GatekeepersProtocol.PlayTests
                 "the banked pot did not survive the trip to disk");
             Assert.AreEqual(cleanBefore + 1, reloaded.CleanExits,
                 "the clean exit did not survive the trip to disk");
-            Assert.GreaterOrEqual(reloaded.CompletedTerminalIds.Length, 5,
-                "the five terminals cleared this run are not recorded on the realm");
-            Assert.GreaterOrEqual(reloaded.OpenDoorIds.Length, 3,
-                "the three doors opened this run are not recorded on the realm");
+            // The spine runs two field terminals and two doors (D1, then the control door).
+            Assert.GreaterOrEqual(reloaded.CompletedTerminalIds.Length, 2,
+                "the terminals cleared this run are not recorded on the realm");
+            Assert.GreaterOrEqual(reloaded.OpenDoorIds.Length, 2,
+                "the doors opened this run are not recorded on the realm");
             Assert.IsTrue(reloaded.Owns(WeaponId.Mk1Sidearm),
                 "the MK-1 the ship granted did not travel with the Boarder");
 
             yield return PlayTestUtil.ReturnToBlankScene();
+        }
+
+        /// <summary>Beat 0's LAST gate, driven through the real panel the player clicks: the
+        /// ARMORY rack sells the free MK-1, and that one purchase is what arms the Boarder,
+        /// clears EMBARK and opens co-op (2026-08-25 recut). The spine test above SKIPS the
+        /// ship tutorial, so without this nothing proves a player can actually get a weapon —
+        /// and an unarmed player cannot embark, which would soft-lock the demo at its start.</summary>
+        [UnityTest]
+        [Timeout(180000)]
+        public IEnumerator Beat0_ArmoryRack_SellsTheFreeMk1_ArmsTheBoarder_AndOpensCoop()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
+
+            // A Boarder minted for this test: weapons live on the BOARDER, so reusing the
+            // machine's existing one would arrive already armed and prove nothing.
+            BoarderState boarder = RealmRegistry.CreateBoarder("ARMORY BOARDER");
+            Assert.IsNotNull(boarder, "could not mint a Boarder");
+            RealmState realm = RealmRegistry.CreateRealm("ARMORY");
+            Assert.IsTrue(GameSession.EnterRealm(realm.Id, boarder.Id), "a fresh realm must open");
+            MetaState meta = GameSession.Meta;
+            Assert.IsNotNull(meta, "entering a realm left no session");
+
+            // Stand exactly where the ship terminal leaves the player: power routed, unarmed.
+            meta.DemoNavPowered = true;
+            meta.DemoArmoryPowered = true;
+            Assert.IsFalse(meta.OwnsAnyWeapon, "the recut leaves beat 0 unarmed until the rack");
+            Assert.AreEqual(DemoEmbarkRefusal.NoWeapon, DemoProgress.EmbarkRefusal(meta),
+                "the weapon is the only gate the terminal leaves behind");
+            Assert.IsFalse(DemoProgress.MultiplayerUnlocked(meta), "co-op waits for the MK-1");
+
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
+            yield return PlayTestUtil.WaitUntil(() => PlayerRegistry.Local != null, 10f);
+
+            var armory = Object.FindFirstObjectByType<ArmoryStation>(FindObjectsInactive.Include);
+            Assert.IsNotNull(armory, "the ARMORY station is authored in the ship");
+            Assert.AreEqual(DemoStationVerdict.Open, DemoProgress.ArmoryVerdict(meta),
+                "the terminal's power must surface the rack");
+            Assert.IsFalse(DemoStationGate.TryHandleInteractDown(armory),
+                "the demo gate must not swallow the interact — the panel has to open");
+
+            var ship = Object.FindFirstObjectByType<ShipController>();
+            Assert.IsNotNull(ship, "no ShipController in the ship scene");
+            Assert.IsTrue(ship.TryOpenStationFromInteract(armory), "the rack refused to open");
+            yield return null;
+            yield return null;
+
+            var view = Object.FindFirstObjectByType<ArmoryPanelView>(FindObjectsInactive.Include);
+            Assert.IsNotNull(view, "no ArmoryPanelView is bound to the rack");
+
+            UnityEngine.UI.Button buy = null;
+            for (int i = 0; i < view.CatalogRowCount; i++)
+            {
+                PanelRowView row = view.CatalogRow(i);
+                if (row == null || !row.gameObject.activeInHierarchy) continue;
+                bool isMk1 = false;
+                foreach (TMPro.TMP_Text t in row.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                {
+                    if (t != null && t.text != null && t.text.Contains("MK-1")) { isMk1 = true; break; }
+                }
+                if (!isMk1) continue;
+                foreach (var b in row.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+                {
+                    if (b != null && b.gameObject.activeInHierarchy) { buy = b; break; }
+                }
+                break;
+            }
+            Assert.IsNotNull(buy,
+                "the MK-1 has no live buy button on the rack — beat 0 would soft-lock here");
+            Assert.IsTrue(buy.interactable, "the MK-1's buy button is not clickable");
+
+            buy.onClick.Invoke();
+            yield return null;
+
+            Assert.IsTrue(meta.Owns(WeaponId.Mk1Sidearm), "clicking BUY did not hand over the MK-1");
+            Assert.AreEqual(WeaponId.Mk1Sidearm, meta.EquippedSecondary, "and it must be equipped");
+            Assert.IsTrue(meta.DemoWeaponGranted && meta.DemoShipFightDone,
+                "the rack's buy IS the arming beat — both remaining gates ride it");
+            Assert.AreEqual(DemoEmbarkRefusal.None, DemoProgress.EmbarkRefusal(meta),
+                "EMBARK must be clear the moment the player is armed");
+            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(meta),
+                "co-op unlocks at the MK-1 (Zo, 2026-08-25)");
         }
 
         /// <summary>A Boarder to take in. The chooser mints one on a machine that has none;

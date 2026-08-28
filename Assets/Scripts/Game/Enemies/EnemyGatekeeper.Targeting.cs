@@ -127,13 +127,21 @@ namespace GatekeepersProtocol.Game
             var hatch = HatchStation.Instance;
             // MayTargetHatch folds straight into "is there a hatch for me": a Hunter simply lives
             // in a world with no hatch in it, so every hatch branch below is closed to it without
-            // a single kind test in the flow. Field-terminal Waves leave Hatch out of the fight.
-            // Faucet field Waves (the dev-gated faucet graybox) borrow Hatch-bank targeting:
-            // the Wave hunts the Hatch, and only damage or proximity puts a body on a Boarder.
+            // a single kind test in the flow.
+            //
+            // THE HATCH IS IN THE FIGHT ON BOTH MODES (Zo, 2026-08-27). Field-terminal Waves used
+            // to remove it from targeting entirely, and that is a far bigger rule than it looks:
+            // `!hatchAvailable` is a term in the _chasingPlayer line below, so removing the Hatch
+            // did not merely leave bodies without a second option — it forced EVERY body onto the
+            // player unconditionally, for life, from anywhere on the spine. A Wave 5 field Wave is
+            // 66 bodies, and a logged run died to that six times. What differs between the modes
+            // is now only which end of the spine the player is standing at.
+            //
+            // Faucet field Waves (the dev-gated faucet graybox) still suppress sight-provoke
+            // below: the Wave hunts the Hatch, and only damage or proximity puts a body on a
+            // Boarder.
             bool faucetField = _game != null && _game.Sim != null && _game.Sim.FaucetHatchHunt;
-            bool hatchMode = faucetField || (_game != null && _game.Sim != null
-                && _game.Sim.Mode == WaveMode.HatchBank);
-            bool hatchAvailable = MayTargetHatch && hatchMode && hatch != null && !hatch.IsDestroyed;
+            bool hatchAvailable = MayTargetHatch && hatch != null && !hatch.IsDestroyed;
             bool playerNear = MayTargetPlayer && _player != null &&
                               Vector3.Distance(transform.position, _player.transform.position) <= AggroRadiusFor(_player);
 

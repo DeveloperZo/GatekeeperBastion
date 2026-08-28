@@ -39,6 +39,16 @@ namespace GatekeepersProtocol.Game
         float _retryTimer;
         float _hullLive = -1f;
 
+        // Lost-player nudge: 45 quiet seconds before the first NAV repair replays the way to
+        // the NAV MAP. Still earns its keep on one deck (2026-08-26) — the capsule faces AFT
+        // and the map is at the far bow end, so a player who misses the "turn around" in the
+        // wake line can walk the whole hull with their back to it. Instance state on purpose
+        // — a player who quits and returns still lost hears it again next visit; anyone past
+        // the repair never does.
+        const float LostNudgeSeconds = 45f;
+        float _lostNudgeTimer;
+        bool _lostNudged;
+
         void OnEnable()
         {
             DemoShipFight.BindScene(_intruderPrefab, _spawnIntruder1, _spawnIntruder2);
@@ -61,6 +71,18 @@ namespace GatekeepersProtocol.Game
                 }
             }
             DemoShipFight.Tick();
+            TickLostNudge();
+        }
+
+        void TickLostNudge()
+        {
+            if (_lostNudged) return;
+            var m = GameSession.Meta;
+            if (m == null || !m.DemoActive || m.DemoNavPowered) return;
+            _lostNudgeTimer += Time.deltaTime;
+            if (_lostNudgeTimer < LostNudgeSeconds) return;
+            _lostNudged = true;
+            DemoVoice.Play(DemoConversationIds.ShipLost, DemoVoiceMode.Subtitle);
         }
 
         /// <summary>Beat 0 reload matrix. Runs once, as soon as the rig has registered.</summary>
@@ -135,7 +157,7 @@ namespace GatekeepersProtocol.Game
             // first Lost Run"). Keyed on conversions it missed a first loss that converted
             // nothing — the respawn recut's common case — and played loss copy over a
             // first VICTORY dock, where "the rest is gone" is simply false.
-            if (m.PodEjections >= 1 || m.HatchConversions >= 1)
+            if (m.PodEjections >= 1 || m.LifetimeSalvageEarned > 0L)
             {
                 if (m.PodEjections >= 1)
                     ResolveFirstReturn(m);
@@ -158,7 +180,7 @@ namespace GatekeepersProtocol.Game
             if (!m.DemoCrewMenuUnlocked)
             {
                 DemoVoice.Play(DemoConversationIds.FirstHatchDown, DemoVoiceMode.Lock);
-                DemoVoice.Play(DemoConversationIds.CrewReady, DemoVoiceMode.Lock);
+                DemoVoice.Play(DemoConversationIds.CrewReady, DemoVoiceMode.Subtitle);
                 m.DemoCrewMenuUnlocked = true;
                 GameSession.Save();
                 Log.Event(Tag, "CREW menu unlocked");
@@ -197,12 +219,17 @@ namespace GatekeepersProtocol.Game
             if (player == null || pose == null) return;
             var cc = player.GetComponent<CharacterController>();
             if (cc != null) cc.enabled = false;
-            // XZ from the marker; Y stays the rig's own authored height. The deck is one
-            // flat level, and a marker Y below the rig's pivot height starts the
-            // CharacterController inside the floor — fall-through on the first physics
-            // step (2026-08-18 defect, same class as the bed pose).
+            // XZ from the marker. Y: markers are authored at inconsistent heights (pad-pivot
+            // vs floor level), so resolve the floor under the marker and stand on it — a pivot
+            // below floor level is the 2026-08-18 fall-through defect, and keeping the rig's
+            // own Y carries whatever height the player happened to load at into the pose.
             Vector3 at = pose.position;
-            at.y = player.transform.position.y;
+            RaycastHit floorHit;
+            if (Physics.Raycast(pose.position + Vector3.up * 2f, Vector3.down, out floorHit,
+                    12f, ~0, QueryTriggerInteraction.Ignore))
+                at.y = floorHit.point.y + 1.0f; // capsule half height + skin: feet on the floor
+            else
+                at.y = player.transform.position.y;
             // YAW ONLY on the body: FirstPersonController owns pitch on the camera, and a
             // marker rotation with pitch tilts the yaw axis and skews mouse look
             // (2026-08-18 orientation defect).

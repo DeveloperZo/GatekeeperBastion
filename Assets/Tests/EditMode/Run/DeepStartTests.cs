@@ -113,10 +113,15 @@ namespace GatekeepersProtocol.Tests
             sim.WaveStarted += w => specs.Add(w);
             sim.AssaultEnded += () => ended++;
 
+            // The four body counts below were 18 / 30 / 42 / 54 and the 2026-08-27 roster cut
+            // moved all four. They are read off the director now: what this fixture claims is
+            // that a deep start replays waves 1..N IN ORDER, not what any of them contains.
+            var director = new WaveDirector();
+
             sim.TriggerDraw();
             Assert.AreEqual(AssaultState.Assault, sim.Assault);
             Assert.AreEqual(1, specs.Count);
-            Assert.AreEqual(18, specs[0].enemyCount);
+            Assert.AreEqual(director.NextWave(0, 0).enemyCount, specs[0].enemyCount);
             Assert.AreEqual(1, sim.CurrentWaveIndex);
             Assert.IsTrue(sim.ChainPending);
 
@@ -127,13 +132,13 @@ namespace GatekeepersProtocol.Tests
 
             DeliverAndChainNext(sim);
             Assert.AreEqual(2, specs.Count);
-            Assert.AreEqual(30, specs[1].enemyCount);
+            Assert.AreEqual(director.NextWave(1, 0).enemyCount, specs[1].enemyCount);
             Assert.AreEqual(2, sim.CurrentWaveIndex);
             Assert.AreEqual(AssaultState.Assault, sim.Assault, "no Prep between chained waves");
 
             DeliverAndChainNext(sim);
             Assert.AreEqual(3, specs.Count);
-            Assert.AreEqual(42, specs[2].enemyCount);
+            Assert.AreEqual(director.NextWave(2, 0).enemyCount, specs[2].enemyCount);
             Assert.AreEqual(3, sim.CurrentWaveIndex);
             Assert.IsFalse(sim.ChainPending, "last chained wave is live; no more auto-launches");
 
@@ -147,7 +152,10 @@ namespace GatekeepersProtocol.Tests
             // After the chain, the next draw is wave 4 — normal single assault.
             sim.TriggerDraw();
             Assert.AreEqual(4, specs.Count);
-            Assert.AreEqual(54, specs[3].enemyCount);
+            Assert.AreEqual(director.NextWave(3, 0).enemyCount, specs[3].enemyCount);
+            for (int i = 1; i < specs.Count; i++)
+                Assert.Greater(specs[i].enemyCount, specs[i - 1].enemyCount,
+                    "the chain must replay the waves in ORDER, wave " + i);
             Assert.IsFalse(sim.ChainPending);
         }
 
@@ -191,7 +199,8 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(vNormal, vDeep, 1e-6f);
             Assert.AreEqual(normal.Unbanked, deep.Unbanked);
             Assert.AreEqual(a.BankedSalvage, b.BankedSalvage);
-            Assert.AreEqual(25f, vNormal, 1e-5f, "dial 0 scavenging 0 baseline");
+            Assert.AreEqual(MetaUpgrades.SalvagePerKill(), vNormal, 1e-5f,
+                "dial 0 scavenging 0 baseline is the flat price of a kill, start wave or not");
         }
 
         [Test]
@@ -220,9 +229,28 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void DeepStart_ChainedDeliverySpan_AtWave3_IsAboutEightyFiveSeconds()
+        public void DeepStart_ChainedDeliverySpan_AtWave3_IsAboutNinetyOneSeconds()
         {
-            // Criterion 7 arithmetic: delivery times 21 + 28 + 30.4 plus two 3s gaps = 85.4s.
+            // Third name for this pin in one day, and the walk is the whole story:
+            //   94.6 s  — roster 18+12i, gap 4.2 + 0.20i
+            //   54.6 s  — roster cut to 11+7i, gap untouched. A wave is delivered in
+            //             ceil(count/groupSize) groups, so a ~40% smaller roster at unchanged
+            //             group width (3/4/5/6/7) shortened every window by ~40%. Body arrivals
+            //             barely moved, so nothing in a bodies-per-second reading showed it —
+            //             but bodies carry 5/3 the HP now, so the chain was landing the SAME
+            //             total HP in 58% of the wall clock. That is the exact stacking the
+            //             03:18 widening had been bought to stop, undone by a change to a
+            //             different constant.
+            //   91.1 s  — gap re-derived to 7.3 + 0.40i to hold HP-per-second at the pre-cut
+            //             figures. Above the 85.4 s that preceded the widening, which is the
+            //             direction that was intended all along.
+            //
+            // Criterion 7 arithmetic: three delivery windows plus two 3 s inter-wave gaps —
+            // 21.9 + 3 + 30.8 + 3 + 32.4 = 91.1 s.
+            //
+            // THE ROSTER AND THE GAP ARE ONE LEVER. This pin exists so that moving either one
+            // alone cannot happen quietly again.
+            //
             // This pins the sim-side schedule; the play log is the gate for the real spawn path.
             var director = new WaveDirector();
             float span = 0f;
@@ -233,7 +261,7 @@ namespace GatekeepersProtocol.Tests
                 span += (groups - 1) * spec.spawnInterval;
                 if (w < 2) span += WaveDirector.InterWaveGap;
             }
-            Assert.AreEqual(85.4f, span, 0.05f);
+            Assert.AreEqual(91.1f, span, 0.05f);
         }
     }
 }

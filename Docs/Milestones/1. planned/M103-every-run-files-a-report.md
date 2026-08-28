@@ -1,7 +1,7 @@
 # M103 — Every Run files a report
 
 <!--
-Status: later (building 2026-08-24)
+Status: planned (built 2026-08-24; offline-verified, Unity leg + playthrough owed)
 Update trigger: when the Metric line schema changes, when the harness log location changes, or when a checkpoint configuration's taint flag flips
 Last updated: 2026-08-24
 -->

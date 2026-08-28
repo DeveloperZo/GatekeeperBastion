@@ -59,7 +59,6 @@ namespace GatekeepersProtocol.Game
             if (realm.DeepestWaveReached < DevDeepestWave)
                 realm.DeepestWaveReached = DevDeepestWave;
             realm.HatchArmorLevel = DevHatchArmor;
-            if (realm.HatchConversions < 1) realm.HatchConversions = 1;
             realm.EarnSalvage(5000L);
         }
 

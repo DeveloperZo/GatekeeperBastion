@@ -5,16 +5,21 @@ Purpose: Which tier a test belongs in, what the offline harness can and cannot p
 Status: working
 Authority: MANDATORY — a gate closed on Path 1 alone is not closed.
 Update trigger: when the harness changes, when a PlayMode test is added, or when a determinism requirement changes (lockstep would rewrite §3).
-Last updated: 2026-08-09
+Last updated: 2026-08-25 (tier table re-read against verify/run.sh and the newest report; save fixtures named)
 -->
 
 ## 1. Three tiers, and what each is for
 
 | Tier | Runs | Proves | Cost |
 |---|---|---|---|
-| `Tools/verify/run.sh` (mcs + mono) | Sim + `Log.cs` + EditMode tests, no Unity | The rules | seconds |
+| `Tools/verify/run.sh` (mcs + mono) | The language, arch and vendor lints, then Sim + `Log.cs` + EditMode tests with no Unity, then docgen `--check` | The rules | seconds |
 | EditMode (Unity Test Runner) | Same tests, Unity's compiler and NUnit | That the above did not diverge from Unity | ~18 s for the same suite |
 | PlayMode | In the player loop | Engine-mediated facts only | domain reload per run |
+
+The lints run **before** the compile so a violation is not buried under mcs noise, and any
+one of them failing stops the harness. Tier 2 and 3 land together in
+`gkb_verify_report.json` at the repo root, which carries `status`, `stage`, `message` and a
+per-tier `{passed, failed, skipped, tests}` — read it rather than counting tests from a doc.
 
 The Unity Test Framework classifies a test by **its assembly's references**, not by an
 attribute: EditMode assemblies declare `"includePlatforms": ["Editor"]`; PlayMode assemblies
@@ -55,7 +60,9 @@ worst first — this is the section that matters, because a green harness is not
 **Rule: the EditMode mirror run is not optional.** The harness is the inner loop; a Unity
 EditMode run of the same tests is the outer loop, and it exists to catch the rows above. This
 is what IntegrationCheck's Path 1 / Path 2 split already encodes — the rule here is that a
-milestone gate citing only Path 1 has not been verified.
+milestone gate citing only Path 1 has not been verified. Path 2 is driven either from
+**GatekeepersProtocol → Validate → Integration Check** or by dropping
+`gkb_verify_request.txt` at the repo root; both write `gkb_verify_report.json` beside it.
 
 ## 3. Determinism
 
@@ -113,6 +120,10 @@ This project has already been bitten: before M17, a test run polluted the real c
 +112 salvage, +1 run and +1 death. The fix was `PlayTestUtil.SaveFileGuard` driven by a
 `[SetUpFixture]` declared **outside any namespace** so it wraps the whole PlayTests assembly
 ([NUnit SetUpFixture](https://docs.nunit.org/articles/nunit/writing-tests/attributes/setupfixture.html)).
+That fixture is `Assets/Tests/PlayMode/PlayModeSaveFixture.cs`, with
+`Assets/Tests/EditMode/EditModeSaveFixture.cs` doing the same for the other assembly. Do not
+nest a second `SaveFileGuard` inside a test: it overwrites `.playtestbackup` and leaves the
+fixture unable to restore.
 
 **Ranked, best first:**
 

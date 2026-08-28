@@ -8,7 +8,9 @@ both. Sourced from No Rest for the Wicked (Zo, 2026-08-20) and deliberately simp
 Status: brainstorm
 Update trigger: when an item moves across the character/realm line, when a remaining
 idea graduates, or when the farm-valve watch turns into a decision.
-Last updated: 2026-08-24
+Last updated: 2026-08-25 (graduated M100 entry deleted, its cost and trust records kept in
+Where it stands; M96/M97/M98 links replaced by bare ids; M98 recut and the retired Ship - Demo
+scene recorded)
 -->
 
 ## What this covers
@@ -31,11 +33,13 @@ this file until it ships.
 
 ## Where it stands
 
-**Was "nothing here is built"; corrected 2026-08-22.** `M96` shipped the split and `M98`
-shipped the mid-run join, so most of the list below described the world before them. Each
-entry now says what is actually true. The reachable realm itself was built 2026-08-24
-(`M100` — per-member copies in the store, the lock riding each copy; two-machine
-criteria owed), so what remains unproven is a real second machine.
+**Was "nothing here is built"; corrected 2026-08-22, restamped 2026-08-25.** `M96` shipped the
+split and `M98` built the mid-run join, so most of the list below described the world before
+them. Each entry now says what is actually true. The reachable realm itself was built
+2026-08-24 (`M100` — per-member copies in the store, the lock riding each copy; two-machine
+criteria owed), so what remains unproven is a real second machine. Milestones are cited here by
+bare id: the folder is the status, so a path written into this file dies at the next status
+change, and `../Roadmap.md` is the addressable index.
 
 - ~~**One save, one balance.**~~ **Built (`M96`).** There are two documents:
   `BoarderState` travels with the player, `RealmState` stays with the world, and `MetaState`
@@ -45,15 +49,28 @@ criteria owed), so what remains unproven is a real second machine.
   mutates that seat's local `GameSession.Meta` with no server check. `ShipCommands.BuyUpgrade`
   is the exception and it is a client-side REFUSAL, not a route: a visitor is told the hatch is
   not theirs to upgrade. Any shared balance still forces the first server-validated buy in the
-  project.
+  project. **Trust is accepted, not solved**, and `M100` gave the gap a named edge rather than
+  closing it: a guest can no longer write hatch armour to your realm, but every other purchase
+  silently writes to the guest's OWN realm while the Ship HUD and the wall plate beside them
+  show the host's numbers. Two salvage figures on one screen, and a buy that lands somewhere
+  the player is not looking. Stated cost of a friends game.
+- **The backing store is free at this scale, checked 2026-08-21.** Cloud Save's free tier is
+  5 GiB/month storage, 1,000,000 writes and 1,000,000 reads; Authentication is free outright, so
+  account linking is a code task rather than a bill. Against a realm that is one save file's
+  worth of JSON and a group writing tens of times a session, neither axis binds. Verify before
+  relying on it: `unity.com/products/gaming-services/pricing`.
 - **Joins are refused during the embark countdown** (`M72`), and a guest still cannot dock
   the Run (`DockRun` has no net route). ~~There is no mid-run join surface of any kind.~~
   **`M98` built one**: a late arrival lands on the Ship, waits, and follows the party in at a
-  Prep boundary — `RunSeats`, `AwaitingFollow` / `RequestFollow`, and the FOLLOW labels.
+  Prep boundary — `RunSeats`, `AwaitingFollow` / `RequestFollow`, and the FOLLOW labels. `M98`
+  was recut 2026-08-24 so the same seam owns death: one priced respawn rule replaced the
+  buy-back windows, and the seat pays out of the Unbanked it is carrying (`Sim/Run/Respawns.cs`
+  — `150 × uses+1`, the counter the Run's). Eyes-on criteria on the join half are still owed.
 - ~~**The Ship has no display objects.**~~ **`M97` built one**: the `Realm Record` root on
   `Ship - CoOp` carries twelve marks, a seven-mount weapon rack and a record plate. `M92`
   excluded trophies; the record is not one — it displays the realm, not the player. (This entry
-  cited `Ship.unity`, which does not exist; the hubs are `Ship - CoOp` and `Ship - Demo`.)
+  cited `Ship.unity`, which does not exist. There is one hub, `Ship - CoOp`; `Ship - Demo`
+  retired with the scene-pair consolidation and `SceneFlow` no longer names it.)
 - **The crew pot** (`../Demo - Coop/0-the-invite.md`) is one salvage balance the party
   shops from, with persistence deferred. It is realm-side salvage with the character
   half switched off, which is why it does not have to be thrown away later.
@@ -75,12 +92,8 @@ rule ruled, before any milestone can be written from this file.
 **Satisfied 2026-08-20 (Zo)** for the entries that have since graduated. He approved the
 initial split with the note that **play testing will dictate the specifics**, and ruled
 the join rule as **between waves, never during waves**, reasoning from how quickly the
-game can scale for an arriving player. Graduated to
-[`M96`](../Milestones/1.%20planned/M96-the-realm-and-the-boarder.md) (the split and the
-save restructure),
-[`M97`](../Milestones/1.%20planned/M97-the-ship-remembers.md) (the Ship shows the
-realm's record) and
-[`M98`](../Milestones/1.%20planned/M98-drop-in-between-waves.md) (drop-in and the
+game can scale for an arriving player. Graduated to `M96` (the split and the save
+restructure), `M97` (the Ship shows the realm's record) and `M98` (drop-in and the
 between-waves join). Those milestones are now the record; the entries are gone from this
 file rather than duplicated.
 
@@ -94,30 +107,6 @@ carry one character across all of them. Correctness for two realms is a criterio
 armed two-press confirm and a soft delete that retires the document rather than unlinking it.
 **Renaming still does not exist** and does not need to until someone has more realms than fit on a
 screen.
-
-### A realm a friend can open while you are offline
-
-The 2am-chest shape needs exactly one thing that does not exist: **a friend able to enter
-your realm when you are not there.** Nothing else about it is asynchronous, and it does not
-need a game server — the session stays peer-hosted over Relay as it is today, and what
-moves off one machine is the realm *document*, not the simulation. Three parts: the realm
-stored against the owner's player ID, an access list, and **a single-writer lock**
-(`lockedBy` plus a heartbeat; opening takes it, a stale one can be broken, the holder
-hosts). The Boarder stays personal — only the realm has to be reachable. **Graduated to
-`M100` on 2026-08-22**, with the three parts intact and the roster held on both sides.
-
-**Cost, checked 2026-08-21.** Cloud Save's free tier is 5 GiB/month storage, 1,000,000
-writes and 1,000,000 reads; Authentication is free outright, so account linking is a code
-task rather than a bill. Against a realm that is one save file's worth of JSON and a group
-writing tens of times a session, neither axis binds — this is free at the scale it is for.
-Verify before relying on it: `unity.com/products/gaming-services/pricing`.
-
-**Trust is accepted, not solved.** Station buys are not net-routed (above). The shape has
-changed rather than closed: a guest can no longer write hatch armour to your realm — that one is
-refused — but every other purchase silently writes to the guest's OWN realm instead, while the
-Ship HUD and the wall plate beside them show the host's numbers. Two salvage figures on one
-screen, and a buy that lands somewhere the player is not looking. Stated cost of a friends game,
-now with a named edge.
 
 ### What a realm is worth naming after
 

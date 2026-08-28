@@ -1,4 +1,4 @@
-<!-- Purpose: Coming Soon marker for the two designed currencies beyond Salvage — Experience (owns the world) and Cores (own the Boarder); working names stay builder-side until Zo stamps fiction names. / Status: teaser; the three-currency split is decided, nothing is built. / in_build: true / coming_soon: true / Update trigger: replace this page when either currency first pays out. / Last updated: 2026-08-24 -->
+<!-- Purpose: Coming Soon marker for the two designed currencies beyond Salvage — Experience (owns the world) and Cores (own the Boarder); working names stay builder-side until Zo stamps fiction names. / Status: teaser; the three-currency split is decided, nothing is built. / in_build: true / coming_soon: true / Update trigger: replace this page when either currency first pays out. / Last updated: 2026-08-25 (Boarding capitalised in the Reference block) -->
 
 # The Other Currencies — Coming Soon
 
@@ -16,7 +16,7 @@ Neither has earned its name yet. Until they land, everything the [Salvage](Salva
 
 ## Reference
 
-The three-currency split is decided (Experience the world, Salvage the kit, Cores the self); Experience is a spendable wallet and never a rank; Cores buy protocol unlock and upgrade plus Boarding multipliers; the roster-as-purchase is scoped per Bastion, set at first boarding and cleared when Master Control falls. Nothing is built and no numbers exist. Names are working names.
+The three-currency split is decided (Experience the world, Salvage the kit, Cores the self); Experience is a spendable wallet and never a rank; Cores buy protocol unlock and upgrade plus Boarding multipliers; the roster-as-purchase is scoped per Bastion, set at the first Boarding and cleared when Master Control falls. Nothing is built and no numbers exist. Names are working names.
 
 ## See also
 

@@ -15,6 +15,12 @@ namespace GatekeepersProtocol.Game
         public const string StubSheet = "Coming Soon — no sheet yet";
         public const string SelectLabel = "SELECT";
 
+        /// <summary>Deck copy. It says free and it says reversible on purpose: a first-time
+        /// player shown three unfamiliar sheets will stall on a choice they think is
+        /// permanent, and at this station it is neither.</summary>
+        public const string PickHeading =
+            "CHOOSE YOUR PROTOCOL — costs nothing, and you can swap it here between Boardings";
+
         /// <summary>Protocols the roster names but no slice has authored yet. They pad the
         /// catalog after the sold ones; a protocol leaves this list by entering
         /// <see cref="BoarderProtocol.ShopProtocols"/>, never by being edited in two places.</summary>
@@ -27,6 +33,14 @@ namespace GatekeepersProtocol.Game
         // demo.crew_claim plays on the first panel open of a visit while the Default is
         // unclaimed (instance lifetime is the visit; the claim itself retires the line).
         bool _claimLinePlayed;
+
+        // With nothing equipped the catalog's job is not to be browsed, it is to be chosen
+        // from once, so the panel opens on the deck instead. _browsing is the way back to the
+        // list (the Coming Soon rows are only reachable there) and resets on every open, so
+        // the deck is what an unequipped Boarder meets each visit without the deck ever being
+        // a wall — CLOSE works from it exactly as it does from the catalog.
+        bool _browsing;
+        readonly BoarderProtocolId[] _offer = new BoarderProtocolId[ProtocolOffer.CardCount];
 
         public override string StationName => "CREW QUARTERS";
         public const string PurposeLine = "you";
@@ -45,6 +59,7 @@ namespace GatekeepersProtocol.Game
         {
             _showingSheet = false;
             _selected = 0;
+            _browsing = false;
             if (meta == null || !meta.DemoActive) return;
             // The menu unlocking folds the beat 0 heal in — CREW keeps restoring health
             // on a visit for the rest of the demo (beat 4, Traps).
@@ -52,15 +67,35 @@ namespace GatekeepersProtocol.Game
             if (!_claimLinePlayed && meta.EquippedProtocol == BoarderProtocolId.None)
             {
                 _claimLinePlayed = true;
-                DemoVoice.Play(DemoConversationIds.CrewClaim, DemoVoiceMode.Lock);
+                DemoVoice.Play(DemoConversationIds.CrewClaim, DemoVoiceMode.Subtitle);
             }
         }
 
         public override bool TryBack()
         {
-            if (!_showingSheet) return false;
-            _showingSheet = false;
-            return true;
+            if (_showingSheet)
+            {
+                _showingSheet = false;
+                return true;
+            }
+            // The catalog was reached FROM the deck, so Esc walks back to the deck rather
+            // than out of the station — the same one-step-back the sheet already gets.
+            if (_browsing && DeckAvailable(GameSession.Meta))
+            {
+                _browsing = false;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>True when this scene has an authored deck and the save is in a state
+        /// where a pick can actually be committed. Both halves are required: a deck the
+        /// scene does not have cannot be shown, and a deck whose cards would all refuse is
+        /// a worse read than the catalog, which at least labels what it is showing.</summary>
+        bool DeckAvailable(MetaState m)
+        {
+            if (_body == null || _body.CardDeck == null) return false;
+            return ProtocolOffer.IsPickPending(m);
         }
 
         protected override int ContentHash(MetaState m)
@@ -71,17 +106,66 @@ namespace GatekeepersProtocol.Game
                     ^ (int)m.EquippedProtocol * 17
                     ^ (int)m.EquippedPassive * 31
                     ^ _selected * 13
-                    ^ (_showingSheet ? 1 : 0);
+                    ^ (_showingSheet ? 1 : 0)
+                    ^ (_browsing ? 1 << 8 : 0);
             }
         }
 
         protected override void BuildPanel(StationPanelView view, MetaState m)
         {
             if (_body == null) return;
+            bool picking = !_browsing && DeckAvailable(m);
+            _body.ShowCardDeck(picking);
+            if (picking)
+            {
+                BuildPickMode(view, m);
+                return;
+            }
             if (_showingSheet)
                 BuildSheetMode(view, m);
             else
                 BuildCatalogMode(view, m);
+        }
+
+        /// <summary>Three cards, dealt by the Sim rule and committed through the same
+        /// <see cref="ShipCommands.BuyProtocol"/> the catalog's BUY uses — the claim is 0
+        /// salvage, so this is a pick and the card says CHOOSE rather than BUY. A card the
+        /// command would refuse is painted with the reason instead of being lit and dead.
+        /// </summary>
+        void BuildPickMode(StationPanelView view, MetaState m)
+        {
+            var deck = _body.CardDeck;
+            if (deck == null) return;
+            _body.SetCatalogVisible(false);
+            _body.ShowSheet(false);
+            view.SetOnClose(() => Close());
+            view.SetCloseLabel("CLOSE  (" + Controls.DisplayOf(ControlId.FreeCursor) + ")");
+            deck.SetHeading(PickHeading);
+
+            int dealt = ProtocolOffer.Deal(m, _offer);
+            for (int i = 0; i < deck.CardCount; i++)
+            {
+                var card = deck.CardAt(i);
+                if (card == null) continue;
+                if (i >= dealt)
+                {
+                    UiBind.Show(card, false);
+                    continue;
+                }
+                var id = _offer[i];
+                string refusal = ProtocolOffer.RefuseReason(m, id);
+                bool canPick = refusal == null;
+                var chosen = id;
+                UiBind.Show(card, true);
+                card.Bind(
+                    BoarderProtocol.SheetOf(id),
+                    ProtocolCardView.PickLabel,
+                    canPick ? (Action)(() => ShipCommands.BuyProtocol(chosen)) : null,
+                    canPick,
+                    refusal);
+            }
+
+            deck.BindBrowse(ProtocolCardDeckView.BrowseLabel, () => _browsing = true);
         }
 
         void BuildCatalogMode(StationPanelView view, MetaState m)

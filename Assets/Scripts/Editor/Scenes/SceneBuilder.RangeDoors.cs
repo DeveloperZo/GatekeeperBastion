@@ -18,9 +18,10 @@ namespace GatekeepersProtocol.EditorTools
         const string ShipCoopScenePathForDoor = "Assets/Scenes/Ship - CoOp.unity";
         const string RangeDoorName = "Range Door";
 
-        /// <summary>Port side of deck 1, forward of the Fabrication station at z 17.5 and well
-        /// clear of the stair well (x -5..-3, z 25..35), so a hull regen that opens the stair
-        /// hole does not land on top of it.</summary>
+        /// <summary>Port side, forward of the Fabrication station at z 17.5. It was also placed
+        /// to stay clear of the midship stair well; the ship went to one deck on 2026-08-26 and
+        /// the well is gone, so the Fabrication clearance is the whole of what now holds this
+        /// coordinate in place.</summary>
         static readonly Vector3 ShipDoorPos = new Vector3(-9.2f, 1.15f, 7.5f);
 
         /// <summary>Behind the firing line at x -44, facing back down the lane, so the player

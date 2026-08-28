@@ -1,4 +1,4 @@
-<!-- Purpose: how the MK-1 Sidearm actually wants to be used, and when it stops being enough. / Status: working / Update trigger: when the MK-1's catalog row changes, when a second Secondary becomes available, or when the free-purchase rule changes. / Last updated: 2026-08-15 -->
+<!-- Purpose: how the MK-1 Sidearm actually wants to be used, and when it stops being enough. / Status: working / Update trigger: when the MK-1's catalog row changes, when a second Secondary becomes available, or when the free-purchase rule changes. / Last updated: 2026-08-25 (wheel unlocks on the first Convert, not on a loss; prices now link the manual; repaired two sentences a rename sweep had broken) -->
 
 # MK-1 Sidearm
 
@@ -12,7 +12,7 @@ One accurate round per pull. No scatter, no pierce. A miss is a whole round of n
 
 Poor at volume. Small clip, modest damage, and everything on this hull gets tougher every Wave while this does not. Deep in a Boarding, the same body takes visibly more pulls.
 
-Wrong tool for a Thief. Emptying this into one, reload by reload, is usually slower than its walk to the Hatch. I have boarding that race. The Thief won.
+Wrong tool for a Thief. Emptying this into one, reload by reload, is usually slower than its walk to the Hatch. I have run that race. The Thief won.
 
 ## Reference
 
@@ -41,14 +41,14 @@ Two jobs, and they are different jobs.
 ### Which Gatekeeper it answers
 
 - **Default** — well enough, early. One at a time, at range, before it reaches the Hatch. Remember that hurting one shouts and pulls its neighbours onto you, so with only the sidearm in hand, do not start a fight you cannot finish.
-- **Hunter** — workable, because a Hunter boardings straight at you and gets easier to hit the closer it gets, and it is the least healthy thing in the Bastion. It is also faster than your walk, so you will not reliably back away from one.
+- **Hunter** — workable, because a Hunter runs straight at you and gets easier to hit the closer it gets, and it is the least healthy thing in the Bastion. It is also faster than your walk, so you will not reliably back away from one.
 - **Thief** — no. This is the wrong tool. If a Thief is on the Bastion and the sidearm is all you have, you are trading the Hatch for time.
 
 ### Tiering it
 
-The MK-1 has an upgrade ring (strength Reload, weakness Damage). Purchases cost
-150 + 150 × times you have centred that spoke on the Secondary curve, and unlock after
-the first lost Boarding.
+The MK-1 has an upgrade ring (strength Reload, weakness Damage). Purchases ride the
+Secondary cost curve and unlock once Salvage has converted through the Hatch once. Award
+and prices: [Field Manual](Field-Manual.md).
 
 ## See also
 
@@ -59,4 +59,4 @@ the first lost Boarding.
 - It is free but must still be bought. A new campaign that never opens the ARMORY fights the entire Bastion with the improvised cutter for no stated reason.
 - Its main long-term value is as a swap target during your Primary's reload. Nothing in the game suggests using the Secondary this way.
 - Swapping to it mid-reload cancels the Primary's reload progress permanently, so the swap is only free if you were not already reloading.
-- Falloff starts at 12 m; past maximum range it does nothing, with no visible cue where that line is.
+- Falloff starts well inside its reach and past maximum range it does nothing, with no visible cue where either line is. Where they fall: [Field Manual](Field-Manual.md).

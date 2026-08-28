@@ -33,6 +33,7 @@ namespace GatekeepersProtocol.Game
 
         string _shownId;
         bool _shownLock;
+        bool _cursorWasLocked;
         bool _warnedUnbound;
 
         void Awake()
@@ -72,8 +73,18 @@ namespace GatekeepersProtocol.Game
             // and FirstPersonController both yield their cursor writes while LocksInput.
             if (lockLive && Cursor.lockState == CursorLockMode.Locked)
             {
+                _cursorWasLocked = true;
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
+            }
+            // ...and give it back when the line ends. Without this the next click was spent
+            // re-capturing instead of firing — "Fire refused: the cursor is not captured",
+            // 11 times in the 2026-08-25 playtest, every one of them mid-fight.
+            else if (!lockLive && _cursorWasLocked)
+            {
+                _cursorWasLocked = false;
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
             }
 
             string id = DemoVoice.CurrentId;

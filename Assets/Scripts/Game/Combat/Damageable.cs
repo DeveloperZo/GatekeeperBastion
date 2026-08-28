@@ -54,6 +54,15 @@ namespace GatekeepersProtocol.Game
         string _tintProp;
         Coroutine _flash;
 
+        // Serialized so the saved prefab carries them (prefab freeze); Reset() keeps the code
+        // defaults from diverging silently. WaveSpawner overrides maxHp per spawn regardless.
+        void Reset()
+        {
+            maxHp = 30f;
+            hitFlashColor = new Color(1f, 0.15f, 0.1f);
+            hitFlashSeconds = 0.09f;
+        }
+
         void Awake()
         {
             Hp = maxHp;
@@ -187,7 +196,7 @@ namespace GatekeepersProtocol.Game
         /// <summary>First candidate the material exposes as a COLOUR, or null. Type-checked:
         /// a texture-typed property of the same name is not an answer, which is the whole
         /// reason this asks HasColor rather than HasProperty.</summary>
-        static string FirstColorProperty(Material mat, params string[] candidates)
+        internal static string FirstColorProperty(Material mat, params string[] candidates)
         {
             if (mat == null) return null;
             for (int i = 0; i < candidates.Length; i++)

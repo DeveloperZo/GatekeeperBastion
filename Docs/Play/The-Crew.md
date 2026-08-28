@@ -1,4 +1,4 @@
-<!-- Purpose: playing a realm together — opening it, joining, following in at the break, and what the room does about more of us. / Status: working / Update trigger: when the join rule, seat scaling, hatch doors, or the session surfaces change. / Last updated: 2026-08-24 -->
+<!-- Purpose: playing a realm together — opening it, joining, following in at the break, and what the room does about more of us. / Status: working / Update trigger: when the join rule, seat scaling, hatch doors, or the session surfaces change. / Last updated: 2026-08-25 (there is no charge pool: each seat pays its own way back, the price counter is the party's) -->
 
 # The Crew
 
@@ -14,7 +14,9 @@ The garrison answers the number of us standing, and it answers at the break, nev
 
 More eyes is the real change. Two of us can hold two Cloakers. A crew burst has a crew to land on. Every Default that flips is flipping onto somebody — attention becomes a thing we pass between us, and passing it well is most of what a good crew is.
 
-Going down puts a seat back on the Ship, waiting, priced. The price comes out of the world's pot, so the cheapest crew is the one that does not die.
+Going down puts a seat back on the Ship, waiting, priced. Each of us pays our own way back out of what we were carrying, and the price is the crew's — it climbs with every seat bought back, whoever bought it.
+
+Which is why the ones still standing matter to a Boarder who cannot afford the fee yet. Kills split into every pile, the dead one included, so a crew that keeps fighting is earning the price of its own dead back. When the last of us falls, that stops, and so does the Boarding.
 
 ## Reference
 
@@ -24,7 +26,7 @@ Going down puts a seat back on the Ship, waiting, priced. The price comes out of
 
 **Scaling.** Wave composition counts the seats playing at the moment the next Wave is composed. No Wave already on the floor changes size, health or composition when a seat joins or leaves. A leaving seat is dropped from the count at the next Wave, and its door seals at the same boundary.
 
-**Dying.** A downed guest waits on the Ship; the wait surface and the NAV MAP price the way back in. The rule, its charge pool and its climbing price: [Going Down](Going-Down.md).
+**Dying.** A downed guest waits on the Ship; the wait surface and the NAV MAP price the way back in. Each seat pays out of its own Unbanked and no other seat can pay for it, but the counter that sets the price belongs to the party. A down seat's pile is frozen while it waits, so a Convert by the seats still fighting cannot drain the purse the respawn is bought with — while their kills still split into it. The rule and its climbing price: [Going Down](Going-Down.md).
 
 ## See also
 

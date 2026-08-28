@@ -212,8 +212,12 @@ namespace GatekeepersProtocol.Game
                         Log.Event("Combat", $"CRITICAL HIT — {dmg:0} damage (x{CritDamageMultiplier:0.#})");
                     // Pin charge is once per shot on the first damaged body only. Pierce
                     // bodies must not each RegisterHit or a single ray spends the whole threshold.
+                    // The hit-confirm tick shares the gate: one tick per shot, however deep it pierces.
                     if (firstDamaged)
+                    {
                         RegisterPinHitIfNeeded(damageable);
+                        CombatSfx.HitConfirm();
+                    }
                 }
                 if (crit) Effects.CritSparks(hit.point);
                 else Effects.ImpactSparks(hit.point);

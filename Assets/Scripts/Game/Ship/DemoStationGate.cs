@@ -56,13 +56,23 @@ namespace GatekeepersProtocol.Game
                     Log.Event(Tag, "station hidden CREW QUARTERS");
                     return true;
                 }
+                // Heal-on-tap first, exactly as before — the heal is CREW's first function and
+                // a Boarder walking in hurt should not lose it to the claim.
                 Heal(m);
+                // ...then the one door the gate still opens: a Boarder with no Protocol. The
+                // menu stays shut for everything else until the first Docked return.
+                if (DemoProgress.CrewOpensForProtocolClaim(m))
+                {
+                    Log.Event(Tag, "CREW opened early for the Protocol claim");
+                    return false;
+                }
                 return true;
             }
 
             if (station is EngineeringStation)
             {
-                Log.Event(Tag, "station hidden FABRICATION");
+                // Visible but locked: the prompt sells the breadth instead of hiding the rig.
+                Log.Event(Tag, "station locked FABRICATION (full version)");
                 return true;
             }
 
@@ -108,6 +118,13 @@ namespace GatekeepersProtocol.Game
                 {
                     var player = PlayerRegistry.Local;
                     bool hurt = player != null && player.Hp < player.MaxHp - 0.5f;
+                    // The claim outranks the rest line: a Boarder with no Protocol needs to be
+                    // told there is something here to take, and "crew is rested" reads as a
+                    // door with nothing behind it.
+                    if (DemoProgress.CrewOpensForProtocolClaim(m))
+                        return hurt
+                            ? "[E] CREW QUARTERS — restore health, choose a Protocol"
+                            : "[E] CREW QUARTERS — choose a Protocol";
                     return hurt
                         ? "[E] CREW QUARTERS — restore health"
                         : "[E] CREW QUARTERS — crew is rested";
@@ -116,7 +133,7 @@ namespace GatekeepersProtocol.Game
             }
 
             if (station is EngineeringStation)
-                return "";
+                return "FABRICATION — FULL VERSION";
 
             return null;
         }
@@ -138,8 +155,10 @@ namespace GatekeepersProtocol.Game
             _navHold = 0f;
             m.DemoNavPowered = true;
             GameSession.Save();
+            var map = station as MapStation;
+            if (map != null) map.ShowPoweredLook();
             Log.Event(Tag, "NAV powered");
-            DemoVoice.Play(DemoConversationIds.NavRepair, DemoVoiceMode.Lock);
+            DemoVoice.Play(DemoConversationIds.NavRepair, DemoVoiceMode.Subtitle);
             DemoShipFight.SetStanding("Start the ship terminal");
         }
 
@@ -162,7 +181,7 @@ namespace GatekeepersProtocol.Game
                 + player.MaxHp.ToString("0"));
             // Post-first-bank the standing is state-keyed (DemoShipStanding); only the
             // beat 0 visit answers a heal with the EMBARK standing directly.
-            if (m.DemoShipFightDone && m.HatchConversions < 1)
+            if (m.DemoShipFightDone && m.LifetimeSalvageEarned <= 0L)
                 DemoShipFight.SetStanding("EMBARK from the NAV MAP");
         }
     }

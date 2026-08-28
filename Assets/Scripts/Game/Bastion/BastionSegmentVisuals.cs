@@ -11,6 +11,13 @@ namespace GatekeepersProtocol.Game
     /// Load-time code — allocation is acceptable, there is no per-frame path.</summary>
     internal static partial class BastionSegmentVisuals
     {
+        /// <summary>Extra metres of wall/pillar/frame DRESS above the collision wall top.
+        /// Collision tops out exactly at wallHeight, flush with the ceiling mesh's min — but
+        /// the ceiling piece's edge profile is recessed between its ribs, so dress that stops
+        /// at the same line leaves a skybox sliver along the perimeter at glancing angles.
+        /// The dress alone overshoots into the ceiling's border zone; collision is untouched.</summary>
+        const float DressOverlap = 0.35f;
+
         internal static void Build(
             BastionSegment segment,
             Transform geomRoot,
@@ -119,7 +126,7 @@ namespace GatekeepersProtocol.Game
             float span = alongX ? width : depth;
             float edgeOffset = alongX ? depth * 0.5f + thickness * 0.5f : width * 0.5f + thickness * 0.5f;
             float step = BastionPackTiling.Step(wallB.size.x);
-            float wallScaleY = wallHeight / Mathf.Max(wallB.max.y, 0.01f);
+            float wallScaleY = (wallHeight + DressOverlap) / Mathf.Max(wallB.max.y, 0.01f);
             int index = 0;
 
             if (kind == BastionSideKind.Wall)
@@ -150,7 +157,7 @@ namespace GatekeepersProtocol.Game
             // Frame/window scaled along the run to exactly one module (doorframe measures ~4.57)
             // and Y-scaled like walls.
             float pieceScaleAlong = step / Mathf.Max(pieceB.size.x, 0.01f);
-            float pieceScaleY = wallHeight / Mathf.Max(pieceB.max.y, 0.01f);
+            float pieceScaleY = (wallHeight + DressOverlap) / Mathf.Max(pieceB.max.y, 0.01f);
             GameObject spawned = SpawnFacePiece(
                 geomRoot,
                 piece,
@@ -256,7 +263,7 @@ namespace GatekeepersProtocol.Game
         {
             float halfW = width * 0.5f;
             float halfD = depth * 0.5f;
-            float scaleY = wallHeight / Mathf.Max(cornerB.max.y, 0.01f);
+            float scaleY = (wallHeight + DressOverlap) / Mathf.Max(cornerB.max.y, 0.01f);
             int index = 0;
 
             // One pillar per footprint corner where both adjacent sides exist.

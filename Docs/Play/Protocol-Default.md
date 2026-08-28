@@ -1,4 +1,4 @@
-<!-- Purpose: the Default Protocol — STOCK doctrine, Barrage, Rush, and what a sheet with no passive is for. / Status: working / Update trigger: when Default's doctrine, abilities, twists or cost change. / Last updated: 2026-08-22 -->
+<!-- Purpose: the Default Protocol — STOCK doctrine, Barrage, Rush, and what a sheet with no passive is for. / Status: working / Update trigger: when Default's doctrine, abilities, twists or cost change. / Last updated: 2026-08-25 (repaired two sentences a rename sweep had broken) -->
 
 # Default Protocol
 
@@ -8,13 +8,13 @@ The sheet everything else is measured against. It costs nothing and it is claima
 
 Its doctrine is that there is no doctrine. Hardware behaves exactly as FABRICATION sold it. Nothing I place is quietly different from the panel's description, and I have learned to price that honesty.
 
-The crew burst is a plant. I put it down, I am rooted while it boardings, and my gun and every Boarder standing near me dump fire for the window. I can pull it up early. The root is the entire price: the fastest I will ever shoot, from a spot I chose before the group arrived — or a spot I will die in, because I chose late.
+The crew burst is a plant. I put it down, I am rooted while it runs, and my gun and every Boarder standing near me dump fire for the window. I can pull it up early. The root is the entire price: the fastest I will ever shoot, from a spot I chose before the group arrived — or a spot I will die in, because I chose late.
 
 The personal burst keeps me moving and speeds only my own gun. Less, for a shorter window, on a longer wait — but on my feet.
 
 No passive. Nothing standing, nothing conditional, nothing to remember at the wrong moment.
 
-It is not the beginner sheet. It is the sheet that adds output and moves nothing else. The room keeps looking wherever it was looking. It just boardings out of bodies sooner.
+It is not the beginner sheet. It is the sheet that adds output and moves nothing else. The room keeps looking wherever it was looking. It just runs out of bodies sooner.
 
 ## Reference
 

@@ -4,7 +4,7 @@
 Purpose: The NAV MAP console, run structure inside a bastion, and having more than one place to go.
 Status: brainstorm
 Update trigger: when a remaining entry graduates, or when a second destination exists.
-Last updated: 2026-08-20
+Last updated: 2026-08-25 (Demo folder paths corrected; the restated T1 wave count replaced by its source, which four documents disagreed about)
 -->
 
 ## What this covers
@@ -16,17 +16,18 @@ has graduated (table below).
 ## Where it stands
 
 **M47 completed 2026-08-13** (kit bastion, unlock graph). Field loop shipped: **M52** terminal
-Waves, **M53** Hatch-bank, **M54** Master Control, **M55** intensity juice. One destination.
-Cold-start recut of T1's door and the Hatch-bank checkpoint for the **first
-Bastion demo** lives in `../Demo/` (the first-session brainstorm was retired
-2026-08-19); do not restamp
-those here as campaign rules.
+Waves, **M53** Hatch-bank, **M54** Master Control, **M55** intensity juice. One destination —
+`SceneFlow.BastionName` is still ALPHA-7 and `SceneFlow.CombatScene` is still the single
+`Bastion_Coop`, which the co-op hull (`M95`) replaced the old solo scene with rather than
+adding to. Cold-start recut of T1's door and the Hatch-bank checkpoint for the **first
+Bastion demo** lives in `../Demo - Single/` and `../Demo - Coop/` (the first-session brainstorm
+was retired 2026-08-19); do not restamp those here as campaign rules.
 
 ### Terminal roles (Zo, 2026-08-13)
 
 | Role | Does | Status |
 |---|---|---|
-| **Field / progression terminal** | Interact starts one Boarder-hunt Wave; T1 opens its **`D`** on the 5th clear; Open-door Interact if the slab is still up. Hatch-bank is legal in the untimed Prep after each clear | M52 |
+| **Field / progression terminal** | Interact starts one Boarder-hunt Wave; a terminal opens its **`D`** after its authored count, which is `DemoZones.WavesPerTrigger` and is not restated here (this row said "the 5th clear" until 2026-08-25 and the code has moved twice since); Open-door Interact if the slab is still up. Hatch-bank is legal in the untimed Prep after each clear | M52 |
 | **Hatch-bank** | Starts Hatch-bank Wave; converts unbanked → banked | M53 (Hatch look-at + `T`, or console — same loop) |
 | **Resource terminal** | Resources / boosts | Parked until the two Wave roles have play data |
 | **Master Control** | Win sequence | M54 |
@@ -45,7 +46,7 @@ Link, never restate.
 
 | What | Milestone |
 |---|---|
-| Field terminal starts one Boarder-hunt Wave; T1 door on 5th clear; Hatch invulnerable during Terminal; Hatch-bank legal after each clear | [`M52`](../Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
+| Field terminal starts one Boarder-hunt Wave; a door opens on its authored count; Hatch invulnerable during Terminal; Hatch-bank legal after each clear | [`M52`](../Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | Unbanked pile; Hatch-bank drip / attrition / dump; 3 slots; convert multiplier | [`M53`](../Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | Master Control two-phase sequence is the win | [`M54`](../Milestones/3.%20completed/M54-master-control-is-the-win.md) |
 | Visible intensity; pay-to-juice; siphon dial retired | [`M55`](../Milestones/3.%20completed/M55-pay-for-intensity.md) |

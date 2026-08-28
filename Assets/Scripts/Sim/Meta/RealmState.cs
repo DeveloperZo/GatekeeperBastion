@@ -43,8 +43,25 @@ namespace GatekeepersProtocol.Sim
         public int HatchConversions;
 
         /// <summary>Highest 1-based wave the player has cleared this campaign. Starts at 1,
-        /// rises only on clear (never on reach), never lowers. Caps the MAP start-wave selector.</summary>
+        /// rises only on clear (never on reach), never lowers. Caps the MAP start-wave selector.
+        /// <para>NO LONGER CAPS THE START-WAVE SELECTOR (2026-08-27). It read "clear-only is
+        /// load-bearing: deep start may only offer a Wave the player has actually beaten." The
+        /// rule was guarding against an exploit that does not exist — a deep start CHAINS waves
+        /// 1..N into one assault, so a deeper choice is a longer, harder run, and dying to buy
+        /// one buys the player nothing. <see cref="DeepestWaveEntered"/> caps it now. This value
+        /// is still the honest record of what has been BEATEN and is still worth keeping
+        /// separate; it simply is not a permission any more.</para></summary>
         public int DeepestWaveReached = 1;
+
+        /// <summary>Highest 1-based FIELD wave this campaign has ever had on the table, cleared
+        /// or not. Rises the moment the wave is drawn, never lowers, and gates nothing the
+        /// player could exploit by dying — unlike <see cref="DeepestWaveReached"/> it is not a
+        /// permission, it is a record of what has been seen.
+        /// <para>Added 2026-08-25 (Zo) for the Primary rack. The rack has to open for the
+        /// player who MET the wall, and the 2026-08-25 playthrough died on Wave 2 holding 227
+        /// banked with nothing to buy — a state DeepestWaveReached cannot distinguish from
+        /// never having drawn Wave 2 at all.</para></summary>
+        public int DeepestWaveEntered = 1;
 
         public int HatchArmorLevel;
 
@@ -93,6 +110,11 @@ namespace GatekeepersProtocol.Sim
         public bool DemoWeaponGranted;
         public bool DemoShipFightDone;
         public bool DemoCrewMenuUnlocked;
+
+        /// <summary>demo.juice_teach played — once per save, on the first field-terminal
+        /// look with Unbanked to spend (beat 1). Additive JSON key: an older v13 document
+        /// simply replays the line once, which is the harmless direction.</summary>
+        public bool DemoJuiceTaught;
         public bool DemoFabPowered;
         /// <summary>Wheel ladder rung 1: Secondary buys remaining while DemoActive. The
         /// multiplayer gate reads it — the first buy (2 → 1) unlocks friends.</summary>
@@ -103,6 +125,10 @@ namespace GatekeepersProtocol.Sim
         /// PodEjections and must never be re-keyed to it: a save that docked through zone 1
         /// arrives here on its first ejection and must still be offered the rack
         /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        /// <summary>Zone 2 RESOLVED — a zone-2 Convert window survived OR the run was
+        /// lost during one. Opens the demo's Primary rack either way (Zo, 2026-08-25).
+        /// The name keeps its original loss-only spelling because it is a save v13 JSON
+        /// key; renaming it is a save-version bump for a word.</summary>
         public bool DemoZone2BankLost;
 
         /// <summary>Once-per-save latch for the rung-2 Docked resolve: the demo.second_loss
@@ -112,11 +138,10 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>Wheel ladder rung 2: buys remaining, set to 2 when rung 2 opens and
         /// counted SEPARATELY from <see cref="DemoWheelBuysLeft"/>. It is a second counter
-        /// rather than a raise of the first because the first one's absolute value is
-        /// load-bearing for another feature: DemoProgress.MultiplayerUnlocked is
-        /// <c>DemoWheelBuysLeft &lt; 2</c>, and the once-per-save multiplayer line keys on
-        /// that counter passing exactly 1. Raising it for rung 2 would re-lock multiplayer
-        /// mid-demo and replay the line. Do not merge the two counters
+        /// rather than a raise of the first because the two rungs are priced and refused
+        /// separately and their remaining counts are read independently. (Until 2026-08-25
+        /// the first counter was ALSO the multiplayer key; co-op now unlocks on the ARMORY's
+        /// MK-1 — DemoProgress.MultiplayerUnlocked reads DemoWeaponGranted.) Do not merge the two counters
         /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
         public int DemoRungTwoBuysLeft;
 
@@ -251,6 +276,8 @@ namespace GatekeepersProtocol.Sim
             JsonText.AppendLong(sb, "HatchConversions", HatchConversions, true);
             JsonText.AppendLong(sb, "DeepestWaveReached",
                 DeepestWaveReached < 1 ? 1 : DeepestWaveReached, true);
+            JsonText.AppendLong(sb, "DeepestWaveEntered",
+                DeepestWaveEntered < 1 ? 1 : DeepestWaveEntered, true);
             JsonText.AppendLong(sb, "HatchArmorLevel", HatchArmorLevel, true);
             JsonText.AppendStringArray(sb, "CompletedTerminalIds", CompletedTerminalIds);
             JsonText.AppendStringArray(sb, "OpenDoorIds", OpenDoorIds);
@@ -261,6 +288,7 @@ namespace GatekeepersProtocol.Sim
             JsonText.AppendBool(sb, "DemoWeaponGranted", DemoWeaponGranted, true);
             JsonText.AppendBool(sb, "DemoShipFightDone", DemoShipFightDone, true);
             JsonText.AppendBool(sb, "DemoCrewMenuUnlocked", DemoCrewMenuUnlocked, true);
+            JsonText.AppendBool(sb, "DemoJuiceTaught", DemoJuiceTaught, true);
             JsonText.AppendBool(sb, "DemoFabPowered", DemoFabPowered, true);
             JsonText.AppendLong(sb, "DemoWheelBuysLeft", DemoWheelBuysLeft, true);
             JsonText.AppendBool(sb, "DemoZone2BankLost", DemoZone2BankLost, true);
@@ -293,6 +321,10 @@ namespace GatekeepersProtocol.Sim
             r.HatchConversions = JsonText.ExtractInt(json, "HatchConversions", 0);
             int deepest = JsonText.ExtractInt(json, "DeepestWaveReached", 1);
             r.DeepestWaveReached = deepest < 1 ? 1 : deepest;
+            // A save written before the field existed has entered at least what it cleared,
+            // so the cleared figure is the honest floor rather than 1.
+            int entered = JsonText.ExtractInt(json, "DeepestWaveEntered", r.DeepestWaveReached);
+            r.DeepestWaveEntered = entered < r.DeepestWaveReached ? r.DeepestWaveReached : entered;
             r.HatchArmorLevel = JsonText.ExtractInt(json, "HatchArmorLevel", 0);
 
             r.SetCompletedTerminalIds(JsonText.ExtractStringArray(json, "CompletedTerminalIds"));
@@ -305,6 +337,7 @@ namespace GatekeepersProtocol.Sim
             r.DemoWeaponGranted = JsonText.ExtractBool(json, "DemoWeaponGranted", false);
             r.DemoShipFightDone = JsonText.ExtractBool(json, "DemoShipFightDone", false);
             r.DemoCrewMenuUnlocked = JsonText.ExtractBool(json, "DemoCrewMenuUnlocked", false);
+            r.DemoJuiceTaught = JsonText.ExtractBool(json, "DemoJuiceTaught", false);
             r.DemoFabPowered = JsonText.ExtractBool(json, "DemoFabPowered", false);
             r.DemoWheelBuysLeft = JsonText.ExtractInt(json, "DemoWheelBuysLeft", 0);
             r.DemoZone2BankLost = JsonText.ExtractBool(json, "DemoZone2BankLost", false);

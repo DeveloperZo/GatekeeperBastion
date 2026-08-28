@@ -6,7 +6,7 @@ The lean one. I get its silhouette, and that is all I get — the Hatch alarm ne
 
 It chose me the moment it arrived. Not provoked, not lured, not confused about anything: it walks straight at me, at full pace, for life. It has no second gear because it never needed one.
 
-The Hatch does not exist in whatever it uses for a world. It will not swing at the door while standing on it. So holding the door answers two of the four kinds and answers this one not at all — it just delivers it to the worst place in the room to be found.
+The Hatch does not exist in whatever it uses for a world. It will not swing at the door while standing on it. So holding the door answers the three kinds that want the door and answers this one not at all — it just delivers it to the worst place in the room to be found.
 
 It is the fastest thing coming and the easiest to kill, and both of those are the same instruction. There is no positioning answer. The answer is the gun, and it gets the gun first.
 
@@ -24,7 +24,7 @@ It is fast, faster than you can walk away from, and fragile. It dies to very lit
 
 A Hunter is not merely uninterested in the Hatch — the Hatch does not exist in its world. It will not attack it while standing on top of it. It will not be pulled toward it by proximity the way a Default is. There is no distance from the Hatch at which a Hunter stops caring about you.
 
-This is precisely why you cannot park in front of the Hatch and hold the trigger down. Standing on the objective is a good answer to Defaults and Thieves and no answer at all to a Hunter — it just brings the Hunter to the place you least want a fight, in the middle of the crowd already there.
+This is precisely why you cannot park in front of the Hatch and hold the trigger down. Standing at the Hatch is a good answer to Defaults, Thieves and Cloakers and no answer at all to a Hunter — it just brings the Hunter to the place you least want a fight, in the middle of the crowd already there.
 
 ### Shooting one has a side effect
 

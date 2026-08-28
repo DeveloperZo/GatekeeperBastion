@@ -6,6 +6,10 @@
 Builds an adjacency graph from GRAYBOX colliders only (they are gameplay truth here:
 dress is cosmetic, Environment blocks movement) and BFS's from the Player spawn.
 
+The ship is ONE deck. There is no stair, no void and no inter-deck edge: every room is
+reached by walking the single floor plane, so a cell that cannot be reached is a real
+hole in the layout and never "you needed the stair for that one".
+
 The ship's rooms are NOT one node per 5 m cell: the 2.5 m spine corridor is a sliver
 straddling the ix=-1/ix=0 boundary, never touched by a partition along its length, and
 a room only connects to it at the specific rows that carry a door. A per-cell-center
@@ -18,6 +22,21 @@ import re, sys, math, collections
 
 CELL = 5.0
 DOOR_ROWS = {1, 3, 4, 8, 11}          # must match Tools/ship-hull/build_hull.py
+
+# Height the corridor/room blocking probe is fired at: chest height on the one floor
+# plane. It used to be picked per deck (0.9 or 5.9); with a single deck it is one
+# number, but it is still a NAMED one, because it is the reason a partition counts as
+# a partition. Graybox wall boxes span floor..floor+4, so any probe inside that band
+# reads the same - 0.9 is kept so the numbers stay comparable with older runs.
+PROBE_Y = 0.9
+
+# CharacterController stepOffset 0.3. Used as the slack when judging whether a surface
+# or a pivot sits at the floor plane rather than somewhere else entirely.
+WALK_Y = 0.3
+# The Player capsule's pivot sits 1.10 m above the floor it stands on. A pivot may be
+# up to this far above the plane and still be standing on it; a whole deck height above
+# (5 m, the old upper plane) is an object the collapse forgot to bring down.
+PIVOT_ABOVE = 2.0
 
 def load(path):
     txt = open(path, encoding='utf-8', errors='replace').read()
@@ -34,7 +53,6 @@ def load(path):
 def build(docs):
     go_name, tf = {}, {}
     box = {}
-    meshcol = {}
     for i, cls, t in docs:
         if cls == 1:
             mm = re.search(r'^  m_Name: (.*)$', t, re.M)
@@ -57,13 +75,8 @@ def build(docs):
             ce = re.search(r'm_Center: \{x: (-?[\d.eE+-]+), y: (-?[\d.eE+-]+), z: (-?[\d.eE+-]+)\}', t)
             box[int(gg.group(1))] = (en.group(1) == '1', tuple(float(v) for v in sz.groups()),
                                      tuple(float(v) for v in ce.groups()))
-        elif cls == 64:
-            gg = re.search(r'm_GameObject: \{fileID: (\d+)\}', t)
-            en = re.search(r'm_Enabled: (\d)', t)
-            if gg:
-                meshcol[int(gg.group(1))] = en is None or en.group(1) == '1'
     name = {i: go_name.get(v['go'], '') for i, v in tf.items()}
-    return name, tf, box, meshcol
+    return name, tf, box
 
 def chain_of(tid, tf):
     """Transform nodes leaf -> root. Cycles guard against a corrupt scene."""
@@ -76,8 +89,9 @@ def chain_of(tid, tf):
 
 def to_world(chain, p):
     """Compose scale -> rotate -> translate up the whole parent chain. The old
-    position-sum shortcut silently misplaced any collider under a scaled or
-    rotated parent (the hand-authored stair boxes sit under a kit prop group)."""
+    position-sum shortcut silently misplaced any collider under a scaled or rotated
+    parent, and this scene has ~490 non-unit-scale transforms, so the shortcut is not
+    safe to reintroduce even now that the rotated stair prop is gone."""
     for node in chain:
         s = node['scale']
         p = (p[0] * s[0], p[1] * s[1], p[2] * s[2])
@@ -88,16 +102,6 @@ def to_world(chain, p):
 
 def world(tid, tf):
     return to_world(chain_of(tid, tf), (0.0, 0.0, 0.0))
-
-def world_up(tid, tf):
-    """World direction of the local +Y axis, chain rotations and scales applied."""
-    v = (0.0, 1.0, 0.0)
-    for node in chain_of(tid, tf):
-        s = node['scale']
-        v = (v[0] * s[0], v[1] * s[1], v[2] * s[2])
-        v = qrot(node.get('rot', (0.0, 0.0, 0.0, 1.0)), v)
-    l = math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) or 1.0
-    return (v[0] / l, v[1] / l, v[2] / l)
 
 def qrot(q, v):
     x, y, z, w = q
@@ -128,80 +132,28 @@ def box_aabb(tid, tf, boxes):
                 zs.append(wz)
     return (min(xs), max(xs), min(zs), max(zs), min(ys), max(ys))
 
-# CharacterController radius 0.35 / stepOffset 0.3. A 0-width seam at a floor
-# edge is not walkable; require a 0.5 m overlap in XZ and no more than a step in Y.
-WALK_XZ = 0.5
-WALK_Y = 0.3
-# A tilted ramp's world AABB understates where its walk surface actually ends, so a
-# stair-to-stair (or stair-to-floor) join only needs contact, not half a metre: the
-# capsule's stepOffset carries it across a surface seam the boxes physically share.
-STAIR_XZ = 0.1
-# CharacterController slopeLimit on the player rig. A steeper walk face is a wall.
-SLOPE_LIMIT_DEG = 45.0
-
-def walkable_join(a, b, min_xz=WALK_XZ):
-    ox = min(a[1], b[1]) - max(a[0], b[0])
-    oz = min(a[3], b[3]) - max(a[2], b[2])
-    if ox < min_xz or oz < min_xz:
-        return False
-    ay0, ay1, by0, by1 = a[4], a[5], b[4], b[5]
-    if ay1 < by0:
-        return (by0 - ay1) <= WALK_Y
-    if by1 < ay0:
-        return (ay0 - by1) <= WALK_Y
-    return True
-
-def stair_connects_decks(floors, stairs):
-    """True when graybox colliders chain a deck-1 floor to a deck-2 floor.
-
-    The room graph cannot see this: the ramp head sits in the void, and a
-    hardcoded (1,-1,5)↔(2,-2,6) edge would pass with no walkable surface.
-    Stair boxes join on contact (STAIR_XZ) rather than WALK_XZ — a tilted
-    ramp's AABB understates its walk surface, and the boxes physically meet.
-    """
-    if not stairs:
-        return False
-    nodes = list(floors.items()) + list(stairs.items())
-    byname = {n: a for n, a in nodes}
-    stair_names = set(stairs)
-    adj = {n: [] for n, _ in nodes}
-    for i, (na, aa) in enumerate(nodes):
-        for nb, ab in nodes[i + 1:]:
-            xz = STAIR_XZ if (na in stair_names or nb in stair_names) else WALK_XZ
-            if walkable_join(aa, ab, xz):
-                adj[na].append(nb)
-                adj[nb].append(na)
-    starts = [n for n in byname if n.startswith('GFloor_1_')]
-    goals = {n for n in byname if n.startswith('GFloor_2_')}
-    if not starts or not goals:
-        return False
-    seen = set(starts)
-    q = collections.deque(starts)
-    while q:
-        cur = q.popleft()
-        if cur in goals:
-            return True
-        for nb in adj[cur]:
-            if nb not in seen:
-                seen.add(nb)
-                q.append(nb)
-    return False
-
 def main():
     scene = next((a for a in sys.argv[1:] if not a.startswith('--')),
                  'Assets/Scenes/Ship - CoOp.unity')
     docs = load(scene)
-    name, tf, boxes, meshcol = build(docs)
+    name, tf, boxes = build(docs)
 
-    floor_cells = collections.defaultdict(set)
+    floor_cells = set()
+    floor_tops = collections.Counter()   # walk-surface y -> how many graybox tiles
+    decks_seen = collections.Counter()
     blockers = []
     player = None
     for i, n in name.items():
         m = re.match(r'^GFloor_(\d)_(-?\d+)_(-?\d+)$', n)
         if m:
-            floor_cells[int(m.group(1))].add((int(m.group(2)), int(m.group(3))))
-            continue
-        if n.startswith('GStair'):
+            # Deck-BLIND on purpose: one deck means the token carries no information.
+            # It is counted so a leftover second deck is at least visible here; the
+            # hard failure on that lives in enclosure.py, which owns the inventory.
+            decks_seen[m.group(1)] += 1
+            floor_cells.add((int(m.group(2)), int(m.group(3))))
+            aabb = box_aabb(i, tf, boxes)
+            if aabb is not None:
+                floor_tops[round(aabb[5], 3)] += 1
             continue
         go = tf[i]['go']
         b = boxes.get(go)
@@ -214,10 +166,32 @@ def main():
         if n == 'Player':
             player = world(i, tf)
 
-    def blocked_between(a, b, deck):
+    if not floor_cells:
+        print("FAIL: no GFloor_* graybox tiles in %s" % scene)
+        return 1
+    if len(decks_seen) != 1:
+        print("WARNING: floor names carry %d different deck tokens (%s) - this ship is"
+              " meant to have one deck; run enclosure.py, which fails on it"
+              % (len(decks_seen), ", ".join(sorted(decks_seen))))
+
+    # The one floor plane, measured from the graybox tops rather than assumed to be 0
+    # so the whole ship can still be moved in Y. Disagreement is fatal: with the stair
+    # gone there is nothing that can carry the capsule between two heights, so a tile
+    # at a different height is an unreachable island the room graph would not notice
+    # (the graph joins cells by index, not by geometry).
+    plane = max(floor_tops) if floor_tops else 0.0
+    print("floor plane y=%g  (graybox tile tops: %s)"
+          % (plane, ", ".join("%g x%d" % (y, c) for y, c in sorted(floor_tops.items()))))
+    if len(floor_tops) != 1:
+        print("FAIL: graybox floor tiles sit at %d different heights - one deck has one"
+              " plane, and nothing here can climb between them" % len(floor_tops))
+        return 1
+
+    def blocked_between(a, b):
+        """Name of the first graybox box the straight walk a->b passes through."""
         ax, az = a; bx, bz = b
         n = max(4, int(math.hypot(bx - ax, bz - az) / 0.2))
-        y = 0.9 if deck == 1 else 5.9
+        y = plane + PROBE_Y
         for k in range(1, n):
             t = k / n
             px, pz = ax + (bx - ax) * t, az + (bz - az) * t
@@ -227,8 +201,7 @@ def main():
                     return bn
         return None
 
-    all_cells = {(d, c) for d, cs in floor_cells.items() for c in cs}
-    rows = sorted(set(iz for (d, (ix, iz)) in all_cells))
+    rows = sorted(set(iz for (ix, iz) in floor_cells))
 
     ROOM_X_OF = lambda ix: (5 * ix + 2.5)
     adj = collections.defaultdict(list)
@@ -237,100 +210,49 @@ def main():
         adj[a].append(b)
         adj[b].append(a)
 
-    for deck in floor_cells:
-        for iz in rows:
-            has_corridor = any((ix, iz) in floor_cells[deck] for ix in (-1, 0))
-            if not has_corridor:
-                continue
-            nxt = iz + 1
-            if nxt in rows and any((ix, nxt) in floor_cells[deck] for ix in (-1, 0)):
-                add_edge((deck, 'corridor', iz), (deck, 'corridor', nxt))
-            if iz in DOOR_ROWS:
-                for ix in (-2, -1, 0, 1):
-                    if (ix, iz) in floor_cells[deck]:
-                        add_edge((deck, 'corridor', iz), (deck, 'room', ix, iz))
-        for (ix, iz) in sorted(floor_cells[deck]):
-            nb = (ix, iz + 1)
-            if nb in floor_cells[deck]:
-                cx = ROOM_X_OF(ix)
-                hit = blocked_between((cx, 5 * iz + 2.5), (cx, 5 * nb[1] + 2.5), deck)
-                if hit is None:
-                    add_edge((deck, 'room', ix, iz), (deck, 'room', ix, nb[1]))
-            nb2 = (ix + 1, iz)
-            # every ix boundary is a plain grid line with no wall, EXCEPT ix=-1/ix=0:
-            # the room parts of those two columns are separated by the corridor sliver
-            # itself (room x[-5,-1.25] and x[1.25,5] don't touch - a 2.5 m gap sits
-            # between them), so that one crossing must route through the corridor node.
-            if nb2 in floor_cells[deck] and not (ix == -1 and nb2[0] == 0):
-                add_edge((deck, 'room', ix, iz), (deck, 'room', nb2[0], iz))
-
-    # Inter-deck: only if graybox colliders actually meet (ramp + head pad, or a
-    # ramp that itself overlaps both decks). Do not assume the kit landing exists.
-    # The walk surface is judged by GEOMETRY, not by name: an earlier version pinned
-    # the generator's 'GStairWalk' and went stale the day the ramp was hand-authored.
-    stair_boxes, stair_tilt, floor_boxes = {}, {}, {}
-    for i, n in name.items():
-        aabb = box_aabb(i, tf, boxes)
-        if aabb is None:
+    for iz in rows:
+        has_corridor = any((ix, iz) in floor_cells for ix in (-1, 0))
+        if not has_corridor:
             continue
-        if n.startswith('GFloor_'):
-            floor_boxes[n] = aabb
-        elif n.startswith('GStair'):
-            stair_boxes[n] = aabb
-            ux, uy, uz = world_up(i, tf)
-            stair_tilt[n] = math.degrees(math.acos(min(1.0, abs(uy))))
-    # Kit stair localBounds (SM_Prop_Stairs_01), scaled. Fallback when no GStair boxes
-    # exist — that mesh's end-cap is 54 deg and blocks the CharacterController
-    # (slopeLimit 45), so it is recorded at that tilt and never counts as a ramp.
-    stair_lc, stair_ls = (1.057, 2.895, 4.000), (2.268, 5.804, 8.042)
-    for i, n in name.items():
-        if n != 'Stair' or not meshcol.get(tf[i]['go']):
-            continue
-        px, py, pz = world(i, tf)
-        sx, sy, sz = tf[i]['scale']
-        cx = px + stair_lc[0] * sx
-        cy = py + stair_lc[1] * sy
-        cz = pz + stair_lc[2] * sz
-        hx, hy, hz = stair_ls[0] * sx / 2.0, stair_ls[1] * sy / 2.0, stair_ls[2] * sz / 2.0
-        stair_boxes['Stair'] = (cx - hx, cx + hx, cz - hz, cz + hz, cy - hy, cy + hy)
-        stair_tilt['Stair'] = 54.0
-        break
-    # A real ramp: tilted but within the capsule's slopeLimit, and actually spanning
-    # the two deck planes (foot at/below deck 1 + step, head reaching deck 2 - step).
-    plane1 = max((a[5] for n, a in floor_boxes.items() if n.startswith('GFloor_1_')),
-                 default=0.0)
-    plane2 = max((a[5] for n, a in floor_boxes.items() if n.startswith('GFloor_2_')),
-                 default=5.0)
-    too_steep = sorted(n for n, t in stair_tilt.items() if t > SLOPE_LIMIT_DEG + 0.01)
-    ramps = [n for n, t in stair_tilt.items()
-             if 5.0 < t <= SLOPE_LIMIT_DEG + 0.01
-             and stair_boxes[n][4] <= plane1 + WALK_Y
-             and stair_boxes[n][5] >= plane2 - WALK_Y]
-    stair_ok = stair_connects_decks(floor_boxes, stair_boxes)
-    print("stair ramp within slopeLimit spanning decks: %s  (tilts: %s)"
-          % (", ".join(sorted(ramps)) or "NONE",
-             ", ".join("%s=%.1f" % (n, t) for n, t in sorted(stair_tilt.items()))))
-    print("stair collider chain deck1-deck2: %s  (%s)"
-          % ("yes" if stair_ok else "NO",
-             ", ".join(sorted(stair_boxes)) or "none"))
-    if too_steep:
-        print("FAIL: stair walk face steeper than slopeLimit %g: %s"
-              % (SLOPE_LIMIT_DEG, ", ".join(too_steep)))
-        return 1
-    if not ramps:
-        print("FAIL: no walkable ramp spans deck 1 to deck 2 — the capsule cannot climb")
-        return 1
-    if not stair_ok:
-        print("FAIL: stair colliders do not chain the decks — a gap the capsule falls into")
-        return 1
-    add_edge((1, 'room', -1, 5), (2, 'room', -2, 6))
+        nxt = iz + 1
+        if nxt in rows and any((ix, nxt) in floor_cells for ix in (-1, 0)):
+            add_edge(('corridor', iz), ('corridor', nxt))
+        if iz in DOOR_ROWS:
+            for ix in (-2, -1, 0, 1):
+                if (ix, iz) in floor_cells:
+                    add_edge(('corridor', iz), ('room', ix, iz))
+    for (ix, iz) in sorted(floor_cells):
+        nb = (ix, iz + 1)
+        if nb in floor_cells:
+            cx = ROOM_X_OF(ix)
+            hit = blocked_between((cx, 5 * iz + 2.5), (cx, 5 * nb[1] + 2.5))
+            if hit is None:
+                add_edge(('room', ix, iz), ('room', ix, nb[1]))
+        nb2 = (ix + 1, iz)
+        # every ix boundary is a plain grid line with no wall, EXCEPT ix=-1/ix=0:
+        # the room parts of those two columns are separated by the corridor sliver
+        # itself (room x[-5,-1.25] and x[1.25,5] don't touch - a 2.5 m gap sits
+        # between them), so that one crossing must route through the corridor node.
+        if nb2 in floor_cells and not (ix == -1 and nb2[0] == 0):
+            add_edge(('room', ix, iz), ('room', nb2[0], iz))
 
+    if player is None:
+        print("FAIL: no Player object in %s" % scene)
+        return 1
     start_ix = int(math.floor(player[0] / CELL))
     start_iz = int(math.floor(player[2] / CELL))
-    start_deck = 1 if player[1] < 2.5 else 2
-    start = (start_deck, 'room', start_ix, start_iz)
-    if (start_ix, start_iz) not in floor_cells[start_deck]:
+    start = ('room', start_ix, start_iz)
+    if (start_ix, start_iz) not in floor_cells:
         print("FAIL: player spawn %s is not on a floor cell" % (player,))
+        return 1
+    # The deck the spawn belonged to used to be inferred from its height. There is one
+    # deck now, so that inference is gone - but the height itself still has to be
+    # checked. A Player left at the old upper plane sits over a valid cell in XZ, so
+    # the BFS below would happily report every room reachable from a spawn point
+    # hanging 5 m in the air.
+    if not (plane - WALK_Y <= player[1] <= plane + PIVOT_ABOVE):
+        print("FAIL: player spawn y=%g is not on the floor plane y=%g (allowed %g..%g)"
+              % (player[1], plane, plane - WALK_Y, plane + PIVOT_ABOVE))
         return 1
 
     seen = {start}
@@ -342,15 +264,11 @@ def main():
                 seen.add(nb)
                 q.append(nb)
 
-    all_room_nodes = {(d, 'room', ix, iz) for d, cs in floor_cells.items() for (ix, iz) in cs}
+    all_room_nodes = {('room', ix, iz) for (ix, iz) in floor_cells}
     unreached = sorted(all_room_nodes - seen)
-    print("player spawn: deck %d cell (%d,%d)" % (start_deck, start_ix, start_iz))
+    print("player spawn: cell (%d,%d) at y=%g" % (start_ix, start_iz, player[1]))
     print("total floor cells: %d   reached: %d   unreached: %d"
           % (len(all_room_nodes), len(all_room_nodes) - len(unreached), len(unreached)))
-    for d in sorted(floor_cells):
-        total = len(floor_cells[d])
-        r = sum(1 for (ix, iz) in floor_cells[d] if (d, 'room', ix, iz) in seen)
-        print("  deck %d: %d/%d reached" % (d, r, total))
     if unreached:
         print("UNREACHED cells:")
         for u in unreached[:20]:

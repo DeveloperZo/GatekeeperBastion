@@ -240,7 +240,7 @@ namespace GatekeepersProtocol.Tests
             BastionSketchParseResult solo = BastionSketchParser.Parse(defaultText);
             Assert.IsTrue(solo.Success, solo.Error);
             Assert.AreEqual(15, solo.Sketch.Rooms.Count);
-            Assert.GreaterOrEqual(coop.Sketch.Rooms.Count, 20);
+            Assert.GreaterOrEqual(coop.Sketch.Rooms.Count, 9); // spine: 2 OpenArea + 6 Half + control
             Assert.LessOrEqual(coop.Sketch.Rooms.Count, 30);
 
             var ids = new HashSet<string>();
@@ -265,7 +265,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(3, hatchCount);
             Assert.AreEqual("R1", hatchRoomId);
             CollectionAssert.AreEquivalent(new[] { "1", "2", "3" }, ids);
-            Assert.AreEqual(28, coop.Sketch.Rooms.Count);
+            Assert.AreEqual(9, coop.Sketch.Rooms.Count); // spine (2 OpenArea, 6 Half, control)
 
             int storey1 = 0;
             int muted = 0;
@@ -282,9 +282,9 @@ namespace GatekeepersProtocol.Tests
                 }
             }
 
-            Assert.AreEqual(13, storey1);
-            Assert.AreEqual(3, coop.Sketch.Stairs.Count);
-            Assert.AreEqual(6, muted);
+            Assert.AreEqual(0, storey1); // single-storey since the spine restructure
+            Assert.AreEqual(0, coop.Sketch.Stairs.Count); // single-storey spine
+            Assert.AreEqual(0, muted); // no seat-scaled closets on the spine yet
         }
 
         [Test]
@@ -310,7 +310,8 @@ namespace GatekeepersProtocol.Tests
             BastionSketchParseResult result = BastionSketchParser.Parse(text);
             Assert.IsTrue(result.Success, result.Error);
 
-            var zoneOne = new HashSet<string> { "S1", "S2", "S7", "S8" };
+            // Spine zone 1 is R2/R3 only — the upper galleries (S7/S8) are gone.
+            var zoneOne = new HashSet<string> { "S1", "S2" };
             int checkedCount = 0;
             for (int i = 0; i < result.Sketch.Rooms.Count; i++)
             {
@@ -329,37 +330,24 @@ namespace GatekeepersProtocol.Tests
                 }
             }
 
-            Assert.AreEqual(4, checkedCount);
+            Assert.AreEqual(2, checkedCount);
         }
 
         [Test]
-        public void Parse_CoopLayoutFile_UpperIslandsDoNotSkipLockedDoors()
+        public void Parse_CoopLayoutFile_IsSingleStorey()
         {
+            // Storey 1 was dropped in the spine restructure (Zo, 2026-08-25): no galleries,
+            // no stairs, no wells. The gallery-vs-locked-door analysis this test used to run
+            // has no subject any more, so the invariant becomes "there is nothing up there".
             string text = System.IO.File.ReadAllText(System.IO.Path.GetFullPath(CoopLayoutPath));
             BastionSketchParseResult result = BastionSketchParser.Parse(text);
             Assert.IsTrue(result.Success, result.Error);
-
-            Assert.IsFalse(HasDoorOverride(result.Sketch, "U1", BastionSketchDirection.North));
-            Assert.IsFalse(HasDoorOverride(result.Sketch, "U6", BastionSketchDirection.South));
-            Assert.IsFalse(HasDoorOverride(result.Sketch, "U6", BastionSketchDirection.North));
-            Assert.IsFalse(HasDoorOverride(result.Sketch, "U10", BastionSketchDirection.South));
-            Assert.IsFalse(HasDoorOverride(result.Sketch, "U10", BastionSketchDirection.North));
-            Assert.IsTrue(
-                HasSideKind(result.Sketch, "U5", BastionSketchDirection.East, BastionSideKind.Wall),
-                "U5 east sits on S2's closet roof and must be a wall");
-
-            Assert.IsFalse(HasDoorOnlyPath(result.Sketch, "U1", "U6"),
-                "U1–U6 door path would walk over D1");
-            Assert.IsFalse(HasDoorOnlyPath(result.Sketch, "U6", "U10"),
-                "U6–U10 door path would walk over D2");
-            Assert.IsFalse(HasDoorOnlyPath(result.Sketch, "U1", "U10"),
-                "U1–U10 door path would skip D1 and D2");
-            Assert.IsTrue(HasDoorOnlyPath(result.Sketch, "U1", "U5"),
-                "island A must stay internally connected");
-            Assert.IsTrue(HasDoorOnlyPath(result.Sketch, "U6", "U8"),
-                "island B must stay internally connected");
-            Assert.IsTrue(HasDoorOnlyPath(result.Sketch, "U10", "U14"),
-                "island C must stay internally connected");
+            for (int i = 0; i < result.Sketch.Rooms.Count; i++)
+            {
+                Assert.AreEqual(0, result.Sketch.Rooms[i].Storey,
+                    result.Sketch.Rooms[i].Id + " is on storey 1 — the bastion is single-storey now");
+            }
+            Assert.AreEqual(0, result.Sketch.Stairs.Count, "a single-storey bastion declares no stairs");
         }
 
         [Test]
@@ -384,7 +372,7 @@ namespace GatekeepersProtocol.Tests
                 }
             }
 
-            Assert.GreaterOrEqual(checkedCount, 12);
+            Assert.GreaterOrEqual(checkedCount, 6); // spine declares six closets
         }
 
         [Test]

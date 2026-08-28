@@ -7,6 +7,19 @@ station between decks.
 Last updated: 2026-08-22
 -->
 
+> **Superseded 2026-08-26 — the interior is one deck again (Zo).** Deck 2, the open stair
+> and the double-height void are gone; everything that was upstairs came down to `y = 0`
+> keeping its `x` and `z`, leaving the 40 cells of deck 1. Criteria 1, 2, 3 and 6 and the
+> whole deck-2 column of the layout table describe a ship that no longer exists. What
+> survives and is still the record: the footprint and its row-by-row beam, the hatch `z`
+> stations, the geometry rules (one wall line one owner, 2.5 m corridors, ceilings by piece
+> not by scale, the octagonal section, the exterior skin), the `build_hull.py` /
+> `enclosure.py` tooling, and **do not run `SceneBuilder.Ship`**. The exterior is
+> deliberately *not* being reprofiled with the interior — the ship's outside is to be
+> presented as an image, so it keeps the proportions this milestone gave it. Current state
+> is `Docs/Brainstorms/ship-hull-and-interior.md`. Nothing below is rewritten; it is the
+> record of what was built.
+
 Rebuilds the hull of `Ship - CoOp` as a long, narrow, two-deck vessel joined by an open
 stair through a double-height void. Replaces the 117-cell single-deck plan. Geometry only:
 lighting, dressing registers and the hero window stay in
@@ -163,8 +176,15 @@ rooms named in the layout table are labels, not enclosures.
 
 ## Verification
 
+> **The `--decks` flag retired 2026-08-26** with the second deck. `enclosure.py` is now
+> unconditional and single-deck, so the commands below are a record of how this milestone was
+> checked, not instructions that still run. Re-running them against today's ship reports the
+> one-deck hull.
+
 - **Criteria 1, 6, 7** — `python Tools/scene-check/enclosure.py --decks` prints the floor
-  cell count per deck (expect `40 / 40`), the `y` of each deck plane (`0.0`, `5.0`), the
+  cell count per deck (expect `40 / 36` — the `40 / 40` written here was a doc slip; deck 2 is
+  four cells short because of the void, exactly as criterion 1 says), the `y` of each deck
+  plane (`0.0`, `5.0`), the
   three hatch `z` stations, and a reachability check listing every station, terminal,
   teleporter and spawn with the cell it stands on. Passing output names no object as
   `off-floor` or `unreachable`.

@@ -112,7 +112,7 @@ namespace GatekeepersProtocol.Game
         public static void ResumeArmed(bool replayLine)
         {
             if (replayLine)
-                DemoVoice.Play(DemoConversationIds.Intruders, DemoVoiceMode.Lock);
+                DemoVoice.Play(DemoConversationIds.Intruders, DemoVoiceMode.Subtitle);
             _armed = true;
         }
 
@@ -143,7 +143,10 @@ namespace GatekeepersProtocol.Game
         {
             var m = GameSession.Meta;
             var player = PlayerRegistry.Local;
-            var gun = player != null ? player.GetComponentInChildren<PlayerGun>(true) : null;
+            // No local player at all = the grant landed off-ship (menu shop, tests) —
+            // nothing to re-rig, and not an authoring error.
+            if (player == null) return;
+            var gun = player.GetComponentInChildren<PlayerGun>(true);
             if (gun == null)
             {
                 Log.Error(Tag, "MK-1 granted but no PlayerGun on the Ship rig — author it "
@@ -233,7 +236,7 @@ namespace GatekeepersProtocol.Game
             // teaching it again (Settings.SkipShipTutorial; untick in options to see it once more).
             Settings.SetBool(SettingId.SkipShipTutorial, true);
             Log.Event(Tag, "ship clear");
-            DemoVoice.Play(DemoConversationIds.ShipClear, DemoVoiceMode.Lock);
+            DemoVoice.Play(DemoConversationIds.ShipClear, DemoVoiceMode.Subtitle);
 
             var player = PlayerRegistry.Local;
             bool hurt = player != null && player.Hp < player.MaxHp - 0.5f;

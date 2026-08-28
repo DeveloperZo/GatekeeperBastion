@@ -1,7 +1,7 @@
 # 3 — Ship after first loss
 
 <!--
-Purpose: First ARMORY panel open (wheel unlocked by loss 1), at most two
+Purpose: First ARMORY panel open (wheel unlocked by the first Convert), at most two
 Secondary wheel purchases — ladder rung 1 — multiplayer unlocks on the first
 purchase. Exit standing is state-keyed (no buyable upgrades remain). CREW menu
 unlock lands on this Docked (re-key); FAB stays dark.
@@ -9,7 +9,8 @@ Status: demo spec
 Authority: implementable
 Update trigger: when the wheel ladder or the multiplayer gate moves, when SEC-D
 grant is overridden, when the exit-standing state key changes
-Last updated: 2026-08-17
+Last updated: 2026-08-25 (wheel key is HatchConversions >= 1, not PodEjections; shipped
+lock and cap-refuse strings; the survive branch re-read against the re-key)
 Depends: voice.md, 0-wake-on-a-dead-ship.md (ARMORY powered there),
 2-first-hatch-bank.md
 -->
@@ -17,8 +18,10 @@ Depends: voice.md, 0-wake-on-a-dead-ship.md (ARMORY powered there),
 ## Why this beat exists
 
 ARMORY was powered in beat 0 (ship terminal) and has already handed over the
-MK-1 — but its panel has never opened. The wheel unlocks on first loss
-(`UpgradesUnlocked = PodEjections >= 1`) with ten tiers and no cap. This beat
+MK-1 — but its panel has never opened. The wheel unlocks on the first Convert
+(`MetaUpgrades.UpgradesUnlocked` is `m.HatchConversions >= 1`, re-keyed 2026-08-18
+off `PodEjections >= 1`, which never fired for a player who banks and docks) with
+ten tiers and no cap. This beat
 opens the shop, caps it at two purchases — rung 1 of the wheel ladder (Zo,
 2026-08-17): **2 Secondary buys after the first bank.** Zone 2's bank falling
 **sells** a Primary + 2 upgrades outside that count (`M79`, recut 2026-08-19
@@ -43,9 +46,9 @@ authored aim is **~500** banked (tunable, beat 2), which funds both buys
 | **Player** | Walk to ARMORY. |
 | **Game** | — (`demo.first_hatch_down` already carried the instruction) |
 | **Standing** | Spend Salvage at the ARMORY |
-| **Prompt** | ARMORY, wheel unlocked: `[E] ARMORY — equip and focus-upgrade the weapon in your hands` (live string). CREW: `[E] CREW QUARTERS — restore health`; the CREW **menu** is unlocked from this Docked (`DemoCrewMenuUnlocked` re-keyed to first Docked after first loss, Zo 2026-08-17 — replaces the Wave-2-seen key); its panel spec and lines stay beat 4's. FAB: `[E] FABRICATION — unpowered`. |
+| **Prompt** | ARMORY, wheel unlocked: `[E] ARMORY — equip and focus-upgrade the weapon in your hands` (live string). CREW: `[E] CREW QUARTERS — restore health`; the CREW **menu** is unlocked from this Docked (`DemoCrewMenuUnlocked`, re-keyed with the wheel key to the first Docked after the first Convert — Zo 2026-08-18; the Wave-2-seen key it replaced never shipped and `DemoWave2Seen` does not exist); its panel spec and lines stay beat 4's. FAB: `[E] FABRICATION — unpowered`. |
 | **Log** | existing `[Ship] aboard the ship — <n> banked, 1 run(s) lost, 0 cleared` |
-| **Have** | `UpgradesUnlocked = PodEjections >= 1` is now true. `DemoArmoryPowered` true since beat 0. |
+| **Have** | `UpgradesUnlocked` is now true — beat 2's window dripped salvage through the Hatch, so `HatchConversions` is 1 whether that Boarding then ended Lost or Docked. `DemoArmoryPowered` true since beat 0. |
 | **Build** | Write `DemoCrewMenuUnlocked` on this Docked (re-key — v9, README Shared flags). Nothing else this step. |
 
 ### 1 — Open the ARMORY panel (first menu after NAV)
@@ -67,7 +70,7 @@ authored aim is **~500** banked (tunable, beat 2), which funds both buys
 |---|---|
 | **Goal** | Buy once; the Ship can take a crew now. |
 | **Player** | Focus a spoke, buy (150). |
-| **Game** | `demo.mp_unlocked` · Lock · Local · Game. **The upgrade stays on the weapon in your hands. And the Ship answers hails now — friends can join you.** Once per save, on the first successful wheel buy. |
+| **Game** | `demo.mp_unlocked` · Lock · Local · Game. **MK-1 in your hands — you are a Boarder now. And the Ship answers hails: friends can join you.** Once per save. MOVED 2026-08-25 (Zo) to beat 0's ARMORY buy — co-op no longer waits for a wheel purchase, so this line no longer belongs to this beat. |
 | **Standing** | Spend Salvage at the ARMORY — unless the buy leaves no affordable upgrade (state key, step 3), then **EMBARK from the NAV MAP** |
 | **Log** | existing wheel success line + `demoBuysLeft=1` then `[Demo] multiplayer unlocked` |
 | **Have** | `BuyWheelUpgrade` gate chain (owned → ring → `UpgradesUnlocked` → tier < 10 → bank); success awards centre +5, neighbours +3, Save. Costs `150 + 150×centres` on that spoke. A second buy on a different spoke stays 150. |
@@ -82,7 +85,7 @@ authored aim is **~500** banked (tunable, beat 2), which funds both buys
 | **Game** | On a third-buy attempt: `demo.wheel_cap` · Lock · Local · Game. **Two purchases is the cap for now. The NAV MAP is ready when you are.** Once per Ship visit. The line no longer produces the standing. |
 | **Standing** | **State-keyed** (Zo, 2026-08-17 — replaces the third-refuse trigger): flips to **EMBARK from the NAV MAP** when **no buyable upgrades remain** — `DemoWheelBuysLeft == 0`, or banked below the next buy's cost — evaluated on Docked and after every buy / refuse / spend. Until then it stays **Spend Salvage at the ARMORY**. |
 | **Prompt / panel** | Cap refuse is named, not the salvage-short line. Panel copy `two purchases this demo — NAV is ready`. |
-| **Log** | `[Demo] wheel refused — demo cap`; on the flip, `[Demo] exit standing set — no buyable upgrades remain` (build) |
+| **Log** | `[Demo] wheel refused — ladder rung spent` (in tree, `ShipCommands.Weapons`); on the flip, `[Demo] exit standing set — no buyable upgrades remain` (in tree, `DemoShipStanding`) |
 | **Have** | Existing named refuses in `ShipCommands` to pattern-match; salvage-short refuse if banked < cost. |
 | **Build** | Cap refuse before `SpendSalvage`; the line; both logs; the state-keyed standing evaluator. |
 
@@ -109,13 +112,13 @@ chain. This file specifies ARMORY only.
 | Piece | Exists? | Where | Beat 3 |
 |---|---|---|---|
 | ARMORY powered | yes (after beat 0) | `DemoArmoryPowered` from the ship terminal | Have |
-| Wheel unlock on first loss | yes | `UpgradesUnlocked` (`PodEjections >= 1`) | Have — also the panel-vs-grant switch |
+| Wheel unlock on the first Convert | yes | `MetaUpgrades.UpgradesUnlocked` (`HatchConversions >= 1`) | Have — also the panel-vs-grant switch |
 | `BuyWheelUpgrade` gates + logs | yes | `ShipCommands` | Have |
 | Wheel award / costs | yes | centre +5, neighbours +3; 150 then 300 on the same spoke | Have |
-| Wheel lock copy | yes | `LOCKED — survive a death first` | Have (survive branch) |
+| Wheel lock copy | yes | `LOCKED — bank salvage through the Hatch first` (`ArmoryStation`) | Have — the copy tracks the re-key; the old *survive a death first* string is gone |
 | SEC-D free row | yes | `BuyWeapon`, cost 0 | Have |
 | CREW heal-on-interact / FAB dark | spec | beat 0 gates | Have (built in beat 0's milestone) |
-| CREW menu unlock re-key | no | v9 `DemoCrewMenuUnlocked` (README) | Build — write on this Docked (Zo, 2026-08-17); panel spec stays beat 4's |
+| CREW menu unlock re-key | field exists | `MetaState.DemoCrewMenuUnlocked` (v9) | Build — write it on this Docked; panel spec stays beat 4's |
 | `DemoWheelBuysLeft` | no | v9 | Build |
 | State-keyed exit standing | no | — | Build (Zo, 2026-08-17) |
 | Multiplayer gate + unlock line | no | F10/F11 + lobby path | Build |
@@ -145,10 +148,10 @@ chain. This file specifies ARMORY only.
 
 | File | Change |
 |---|---|
-| `ShipCommands.BuyWheelUpgrade` | After existing gates: `DemoActive && DemoWheelBuysLeft <= 0` → named cap refuse. On success decrement; first decrement fires `demo.mp_unlocked` + log |
+| `ShipCommands.BuyWheelUpgrade` | After existing gates: `DemoActive && DemoWheelBuysLeft <= 0` → named cap refuse. On success decrement. (The first decrement no longer fires `demo.mp_unlocked` — 2026-08-25: the MK-1 is the multiplayer key.) |
 | `DemoStationGate` | Armory: panel when `UpgradesUnlocked`, grant path before. CREW: menu when `DemoCrewMenuUnlocked` (re-key) |
 | `ArmoryStation` | Wheel rows show remaining buys |
-| Demo runner / `DemoProgress` | State-keyed exit standing (no buyable upgrades remain); `DemoCrewMenuUnlocked` write on first Docked after first loss |
+| Demo runner / `DemoProgress` | State-keyed exit standing (no buyable upgrades remain); `DemoCrewMenuUnlocked` write on the first Docked after the first Convert |
 
 ## Delete
 
@@ -164,7 +167,7 @@ Nothing.
 | MaxTier | 10 | live wheel; gated to 2 buys |
 | Wheel award | +5 centre, +3 neighbours | `MetaState.AwardWheel` |
 | Multiplayer unlock | first successful wheel buy | this spec |
-| Ladder rung 2 | Primary + 2 upgrades granted at loss 2, **outside** the 2-buy count | Zo, 2026-08-17 — another editor's beat |
+| Ladder rung 2 | Primary rows + 2 upgrade buys **sold** on their own counter (`DemoRungTwoBuysLeft`), outside the 2-buy count, opened when zone 2's Convert resolves either way (`DemoZone2BankLost`) | Zo, 2026-08-25 — beat 5 |
 
 At the ~500 aim both buys land (same-spoke 150+300, or a different spoke at 150) and a
 third click meets the cap refuse. If the tune lands short (e.g. banked 300): first buy
@@ -183,7 +186,7 @@ beats 0–3 first — their save carries the same gate.
 
 | Id | Mode | Scope | Trigger | Standing after |
 |---|---|---|---|---|
-| `demo.mp_unlocked` | Lock | Local | first successful wheel buy, once per save | per the state key |
+| `demo.mp_unlocked` | Lock | Local | MOVED to beat 0: the ARMORY's MK-1 buy, once per save | per the state key |
 | `demo.wheel_cap` | Lock | Local | third-buy attempt at cap, once per visit | — (standing is state-keyed, not line-produced) |
 
 No party PA "everyone shop."
@@ -195,7 +198,7 @@ No party PA "everyone shop."
 - **Shown** the wheel; remaining buys; the standing flip; F10 refuse before the
   buy, lobby after.
 - **Reads-back** existing wheel success line + `demoBuysLeft=<n>`,
-  `[Demo] multiplayer unlocked`, `[Demo] wheel refused — demo cap`,
+  `[Demo] multiplayer unlocked`, `[Demo] wheel refused — ladder rung spent`,
   `[Demo] exit standing set — no buyable upgrades remain`.
 
 ## Logs
@@ -205,8 +208,8 @@ No party PA "everyone shop."
 | Wheel ok | existing line + `demoBuysLeft=<n>` | build suffix |
 | MP unlock | `[Demo] multiplayer unlocked` | build |
 | MP still locked | `[Demo] multiplayer locked — buy an upgrade first` | build (beat 0 gate) |
-| Cap | `[Demo] wheel refused — demo cap` | build |
-| Exit standing | `[Demo] exit standing set — no buyable upgrades remain` | build |
+| Cap | `[Demo] wheel refused — ladder rung spent` | in tree |
+| Exit standing | `[Demo] exit standing set — no buyable upgrades remain` | in tree |
 
 ## Traps
 
@@ -222,15 +225,15 @@ No party PA "everyone shop."
   ladder rung 2 is outside the count.
 - Re-locking the CREW menu until beat 4 — the unlock re-keyed to this Docked
   (Zo, 2026-08-17); the claim flow and lines are still beat 4's spec.
-- Unlocking FAB "so Hatch Armor matches the designed Hatch-bank." FAB stays dark.
-- Granting a Primary this beat. They hold a Secondary; the Primary is loss 2's
-  grant (another editor's beat).
+- Unlocking FAB "so Hatch Armor matches the designed Convert." FAB stays dark.
+- Granting a Primary this beat. They hold a Secondary; the Primary goes on sale
+  when zone 2's Convert resolves (beat 5). It is sold, never granted.
 
 ## Depends / Unblocks
 
-Depends: beat 0 (`DemoArmoryPowered`, MP gate built), beat 2 authored loss +
-Lost (`PodEjections >= 1`). Banked is dripped remainder — authored aim ~500
-(tunable), not a guaranteed 450. Unblocks: beat 4 EMBARK + composite retrigger
+Depends: beat 0 (`DemoArmoryPowered`, MP gate built), beat 2's authored window
+having dripped at all (`HatchConversions >= 1`). Banked is dripped remainder —
+authored aim ~500 (tunable), not a guaranteed 450. Unblocks: beat 4 EMBARK + composite retrigger
 (same milestone); multiplayer for the rest of the demo.
 
 ## Verification
@@ -251,16 +254,18 @@ Lost (`PodEjections >= 1`). Banked is dripped remainder — authored aim ~500
 
 ## Survive branch from beat 2
 
-The first window is **authored unclearable** (Zo, 2026-08-17), so this branch
-is a tuning-defect guard, not a path. If `first-hatch survived` ever logs with
-`PodEjections == 0`: ARMORY Down still takes the grant path —
-`UpgradesUnlocked` is false and the wheel copy `LOCKED — survive a death
-first` applies at the panel gate; multiplayer stays locked (no purchase is
-possible). A survived-bank **Ship return** (beat 2) ends the Run **Docked**
-with `PodEjections` still 0 — the same locked state, by design: return-to-Ship
-never skips the unlock deaths, and the wheel key stays `PodEjections >= 1`
-because the demo's first ship return is necessarily loss 1. Do not force a
-death; retune the overwhelm (beat 2).
+The first window is **authored unclearable** (Zo, 2026-08-17), so a survive
+there is a tuning defect. It is no longer a *locked-shop* branch, though: the
+2026-08-18 re-key made the wheel open on salvage reaching the ship, not on a
+death. Any window that dripped at all leaves `HatchConversions >= 1`, so a
+survived window, a Docked return and a Hatch breach all arrive at this beat
+with the panel open and the two buys available. The only state that still
+takes the beat-0 grant path is a Boarding that converted nothing.
+
+That is the point of the re-key: return-to-Ship no longer has to be walled off
+to protect the unlock. If `first-hatch survived` logs on this window, retune
+the overwhelm (beat 2) because the window is meant to be unclearable — not
+because the shop would open early.
 
 ## Rejected
 

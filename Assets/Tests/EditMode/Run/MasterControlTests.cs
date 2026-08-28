@@ -77,9 +77,17 @@ namespace GatekeepersProtocol.Tests
             MetaState meta;
             var sim = Tethered(out meta);
             sim.TriggerDraw();
-            for (int i = 0; i < 8; i++) sim.AwardKill();
+            // Kills bank as they land (Zo, 2026-08-25), so the finale needs a pile PUT there:
+            // the run stakes back exactly what the Wave paid, by the route the player now takes.
+            // The figure used to be written as the literal 200 (eight kills at 25); SalvagePerKill
+            // 25 -> 42 makes it 336, and the claim was only ever "whatever the wave paid is what
+            // goes on the table".
+            long expected = 8L * (long)MetaUpgrades.SalvagePerKill();
+            long earned = RunEconomyFixture.KillAndStake(sim, 8);
             sim.NotifyAssaultCleared();
-            Assert.AreEqual(200L, sim.Unbanked);
+            Assert.AreEqual(expected, earned);
+            RunEconomyFixture.Stake(sim, earned);
+            Assert.AreEqual(expected, sim.Unbanked);
             long bankBefore = meta.BankedSalvage;
 
             bool hatchHalf = false;
@@ -103,8 +111,11 @@ namespace GatekeepersProtocol.Tests
             MetaState meta;
             var sim = Tethered(out meta);
             sim.TriggerDraw();
-            for (int i = 0; i < 40; i++) sim.AwardKill();
+            // Staked back out of the bank: the finale's drip has nothing to meter otherwise,
+            // because kills no longer leave a carried pile behind (Zo, 2026-08-25).
+            long earned = RunEconomyFixture.KillAndStake(sim, 40);
             sim.NotifyAssaultCleared();
+            RunEconomyFixture.Stake(sim, earned);
             Assert.IsTrue(sim.StartMasterControl());
             for (int i = 0; i < MasterControl.TerminalWaves; i++)
             {
@@ -131,8 +142,11 @@ namespace GatekeepersProtocol.Tests
             MetaState meta;
             var sim = Tethered(out meta);
             sim.TriggerDraw();
-            for (int i = 0; i < 24; i++) sim.AwardKill();
+            // The whole point of this test is a pile that is AT RISK when the Hatch goes, and
+            // since 2026-08-25 (Zo) the only pile at risk is one the player staked.
+            long earned = RunEconomyFixture.KillAndStake(sim, 24);
             sim.NotifyAssaultCleared();
+            RunEconomyFixture.Stake(sim, earned);
             Assert.IsTrue(sim.StartMasterControl());
             for (int i = 0; i < MasterControl.TerminalWaves; i++)
             {
@@ -246,7 +260,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(restored.IsDoorOpen("D1"),
                 "terminal progress no longer implies an open door");
 
-            graph.RecordBankSurvived(out _);
+            graph.OpenEligibleDoors(out _);
             restored.RestoreOpenDoors(graph.CopyOpenDoorIds());
             Assert.IsTrue(restored.IsDoorOpen("D1"));
             Assert.IsFalse(restored.IsDoorOpen("D_control"));

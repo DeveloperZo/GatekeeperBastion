@@ -974,13 +974,20 @@ namespace GatekeepersProtocol.EditorTools
                     lockedWingSpawns.Add(pair.Value);
             }
 
-            // Lowest door id after D1 owns the sealed list for graybox — FindObjectsByType
-            // order is undefined, so pick deterministically or the control door can win.
+            // Lowest door id owns the sealed list for graybox — FindObjectsByType order is
+            // undefined, so pick deterministically or the control door can win.
+            //
+            // D1 used to be skipped here: in the old sprawl, zone 1 sat in FRONT of D1 and
+            // the sealed wing began behind D2, so D1 legitimately sealed nothing. The spine
+            // (Zo, 2026-08-25) removed D2 and made D1 the wing gate itself — skipping it left
+            // every closet north of R3 live behind a locked door, which spawns a wave the
+            // player cannot reach. The rule is simply "the first locked door in front of the
+            // wing", and on a linear spine that is the lowest id.
             BastionDoor owner = null;
             for (int i = 0; i < doors.Length; i++)
             {
                 BastionDoor d = doors[i];
-                if (d == null || string.IsNullOrEmpty(d.DoorId) || d.DoorId == "D1")
+                if (d == null || string.IsNullOrEmpty(d.DoorId))
                     continue;
                 if (d.OpensFor == BastionDoorOpensFor.Enemies)
                     continue;

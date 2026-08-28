@@ -1,8 +1,8 @@
 <!--
-Purpose: Ante — ante up Unbanked at a trigger to raise the per-Wave wager; what it changes; when it locks.
+Purpose: Ante — ante up banked Salvage at a trigger to raise the per-Wave wager; what it changes; when it locks.
 Status: working
-Update trigger: when ante up cost, the Ante readout, what Ante scales, or when it can be set changes.
-Last updated: 2026-08-15
+Update trigger: when ante up cost, the purse it spends, the Ante readout, what Ante scales, or when it can be set changes.
+Last updated: 2026-08-25 (kills bank as they land; the Convert leaves the demo)
 -->
 
 # The Ante
@@ -17,13 +17,15 @@ It toughens nothing. It tightens nothing. Every extra body is a Default — neve
 
 Set it in Prep, at the trigger, before the select. Once Assault begins it is locked. Turning it down is free and refunds nothing.
 
-Three lines of the ledger before I raise it. Can I kill the surplus before it reaches me. What is my health afterwards, given it does not come back while I stand. And is the door already hurt — because repair is billed from the same bank the extra pay lands in. The Ante pays gross. The Hatch charges net.
+It costs money I already own. Every step comes out of the bank — the same bank the weapons come out of, the same bank the door and the dead seats come out of. That is not a stake skimmed off something that was never mine; it is take-home progress, spent forward on a Wave I have not fought yet.
+
+Three lines of the ledger before I raise it. Can I kill the surplus before it reaches me. What is my health afterwards, given it does not come back while I stand. And is the door already hurt — because the repair, the raise and the extra pay all meet in one pot. The Ante pays gross. The Hatch charges net.
 
 Start deep and one ante governs the whole chain. I learned that at full price.
 
 ## Reference
 
-Look at a field terminal, Master Control, or the Hatch. Anting up raises the Ante — each step spends Unbanked. How much: [Field Manual](Field-Manual.md). Select the value, including Ante 0, then start the Wave. Select again unlocks anting up. Without a select the Wave does not start. Bindings: [Field Manual](Field-Manual.md).
+Look at a field terminal, Master Control, or the Hatch, in Prep. Anting up raises the Ante — each step spends **banked Salvage**, and a step the bank cannot cover is refused by name. How much: [Field Manual](Field-Manual.md). Selecting arms the start and locks anting up; select again to unlock it. A zone Wave begun at the Hatch runs at whatever the Ante reads when you press start. Bindings: [Field Manual](Field-Manual.md).
 
 Lowering is free. Nothing comes back. Locked during Assault. One ante at Master Control covers the whole sequence.
 
@@ -53,11 +55,11 @@ Ask three questions, in this order.
 
 **1. Can you kill the surplus before it reaches you?** Extra bodies hunt you on a field-terminal Wave. Your ceiling is how much you can put out between a group spawning and that group closing. If you are already finishing Waves hurt, more bodies means more chip.
 
-**2. What is your health going to look like afterwards?** Health does not come back while you stand, and the refill that exists is a priced respawn that also eats your Unbanked. A bigger Wave is more swings, and that damage carries into every Wave after it. The Ante's cost is paid across the rest of the Boarding, not just this Wave.
+**2. What is your health going to look like afterwards?** Health does not come back while you stand, and the refill that exists is a respawn bought from the bank. Anting up spends from that same bank, so every step you raise is a step off your own way back. A bigger Wave is more swings, and that damage carries into every Wave after it. The Ante's cost is paid across the rest of the Boarding, not just this Wave.
 
-**3. Is the Hatch already hurt?** Repairing costs banked Salvage. If you raise the Ante and the door takes more damage, some of the extra income goes straight back out through the repair. The Ante pays gross; the door charges net.
+**3. Is the Hatch already hurt?** Repairing costs banked Salvage too. If you raise the Ante and the door takes more damage, some of the extra income goes straight back out through the repair. The Ante pays gross; the door charges net.
 
-Anting up spends Unbanked you have not yet taken through a Convert.
+All three questions land in one place, because there is only one pot. A raise is not a stake taken off money that was never yours — it is spent progress, the same units the ARMORY charges, gone before the Wave that is supposed to earn them back has started.
 
 Some practical shapes:
 

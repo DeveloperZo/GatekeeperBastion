@@ -10,12 +10,18 @@ namespace GatekeepersProtocol.PlayTests
     /// <summary>
     /// In-editor Play-mode proof of the scene-flow loop against the REAL MonoBehaviour layer:
     /// entering the Bastion auto-boards (StartRun + EngageTether — the ship menu is its own
-    /// scene now), and the CURRENCY MODEL holds end to end — an enemy dies, Unbanked rises,
-    /// BankedSalvage does not. Player death ends the run (PlayerDied → Lost), wipes Unbanked,
-    /// and keeps already-converted ship Salvage. GameSession supplies the
-    /// meta via its direct-play fallback. Runs in an empty scene it populates itself; tolerant
-    /// of a pre-existing save/session (asserts deltas, not absolutes). Does NOT press RETURN TO
-    /// SHIP — that loads the Ship scene, which isn't available to the test harness.
+    /// scene now), and the CURRENCY MODEL holds end to end.
+    ///
+    /// THAT MODEL INVERTED ON 2026-08-25 (Zo — "it should be impossible for a player to die
+    /// with no progress to show for it"). It used to be "an enemy dies, Unbanked rises,
+    /// BankedSalvage does not"; it is now "an enemy dies, BankedSalvage rises at face value,
+    /// and the carried pile does not move at all". A pile exists only where the player
+    /// deliberately Withdrew one back out at the Hatch, and that pile — and only that pile —
+    /// is what a death takes. Player death still ends the run (PlayerDied → Lost) and still
+    /// leaves the bank alone. GameSession supplies the meta via its direct-play fallback.
+    /// Runs in an empty scene it populates itself; tolerant of a pre-existing save/session
+    /// (asserts deltas, not absolutes). Does NOT press RETURN TO SHIP — that loads the Ship
+    /// scene, which isn't available to the test harness.
     /// </summary>
     public class CoreLoopPlayModeTests
     {
@@ -45,7 +51,7 @@ namespace GatekeepersProtocol.PlayTests
         }
 
         [UnityTest]
-        public IEnumerator CoreLoop_AutoBoard_KillsCreditUnbanked_DeathWipesUnbanked()
+        public IEnumerator CoreLoop_AutoBoard_KillsBankOnLanding_DeathWipesOnlyTheStake()
         {
             // --- Boot: bootstrap the real controller in an empty scene ---
             _gcObject = new GameObject("GameController");
@@ -72,7 +78,7 @@ namespace GatekeepersProtocol.PlayTests
             gc.Sim.TriggerDraw();     // the draw is the bell: assault starts, kills pay
             Assert.AreEqual(AssaultState.Assault, gc.Sim.Assault);
 
-            // Kills credit Unbanked only. Time passing must not add salvage — the old
+            // Income is per-kill and nothing else. Time passing must not add salvage — the old
             // per-second siphon drip is gone, and Hatch-bank drip is off in Terminal mode.
             long idleBefore = gc.Sim.Salvage.RunSalvage;
             long idleBankedBefore = gc.Meta.BankedSalvage;
@@ -97,26 +103,37 @@ namespace GatekeepersProtocol.PlayTests
 
             gc.GatekeeperKilled();
 
-            Assert.AreEqual(runBeforeKill, gc.Sim.Salvage.RunSalvage,
-                "A kill must not add to converted RunSalvage — that tally is Hatch-bank drip/dump.");
-            Assert.AreEqual(bankedBeforeKill, gc.Meta.BankedSalvage,
-                "A kill must not credit MetaState.BankedSalvage. AwardKill fills Unbanked.");
-            long unbankedDelta = gc.Sim.Unbanked - unbankedBeforeKill;
-            Assert.Greater(unbankedDelta, 0L,
-                $"A kill worth {killValue:0} did NOT raise Unbanked (still {gc.Sim.Unbanked}).");
-            Assert.GreaterOrEqual(unbankedDelta, (long)Mathf.Floor(killValue),
-                $"A kill worth {killValue:0} credited only {unbankedDelta} unbanked.");
-            Assert.LessOrEqual(unbankedDelta, (long)Mathf.Ceil(killValue),
-                $"A kill worth {killValue:0} credited {unbankedDelta} — more than one kill's value.");
+            // INVERTED BY DESIGN (Zo, 2026-08-25 — "it should be impossible for a player to die
+            // with no progress to show for it"). Both of the first two assertions used to read
+            // the other way round: RunSalvage was a converted-only tally and the bank was not
+            // allowed to move on a Terminal kill. Neither survives the ruling. RunSalvage is now
+            // the Run's BANKED tally and a kill Earns into it as the body falls; the realm's pot
+            // takes the same award at face value in the same breath. The carried pile is what
+            // must not move — it fills only on a deliberate Withdraw at the Hatch.
+            long runDelta = gc.Sim.Salvage.RunSalvage - runBeforeKill;
+            long bankedDelta = gc.Meta.BankedSalvage - bankedBeforeKill;
+            Assert.AreEqual(bankedDelta, runDelta,
+                $"A kill moved the run tally by {runDelta} and the pot by {bankedDelta}. " +
+                "BankKill writes both, with the same units, in one call.");
+            Assert.Greater(bankedDelta, 0L,
+                $"A kill worth {killValue:0} did NOT credit MetaState.BankedSalvage " +
+                $"(still {gc.Meta.BankedSalvage}).");
+            Assert.GreaterOrEqual(bankedDelta, (long)Mathf.Floor(killValue),
+                $"A kill worth {killValue:0} banked only {bankedDelta}.");
+            Assert.LessOrEqual(bankedDelta, (long)Mathf.Ceil(killValue),
+                $"A kill worth {killValue:0} banked {bankedDelta} — more than one kill's value.");
+            Assert.AreEqual(unbankedBeforeKill, gc.Sim.Unbanked,
+                $"A kill raised Unbanked to {gc.Sim.Unbanked}. Nothing may be put at risk that " +
+                "the player did not choose to risk.");
 
             for (int i = 0; i < 3; i++)
             {
-                long before = gc.Sim.Unbanked;
+                long before = gc.Meta.BankedSalvage;
                 gc.GatekeeperKilled();
-                Assert.Greater(gc.Sim.Unbanked, before,
-                    $"Kill #{i + 2} did not raise Unbanked (stuck at {before}).");
-                Assert.AreEqual(bankedBeforeKill, gc.Meta.BankedSalvage,
-                    $"Kill #{i + 2} credited the ship bank.");
+                Assert.Greater(gc.Meta.BankedSalvage, before,
+                    $"Kill #{i + 2} did not raise the ship bank (stuck at {before}).");
+                Assert.AreEqual(unbankedBeforeKill, gc.Sim.Unbanked,
+                    $"Kill #{i + 2} credited the carried pile.");
             }
 
             Assert.AreEqual(WaveMode.Terminal, gc.Sim.Mode);
@@ -125,35 +142,64 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreEqual(hpBefore, hatch.Hp, 0.01f,
                 "HatchStation routed ApplyDamage; Terminal mode left hatch HP unchanged");
 
-            long bankedAtDeath = gc.Meta.BankedSalvage;
-            long unbankedAtDeath = gc.Sim.Unbanked;
-            Assert.Greater(unbankedAtDeath, 0L, "the run had unbanked before the player died");
             long flooredPerKill = (long)Mathf.Floor(killValue);
-            Assert.AreEqual(unbankedBeforeKill + flooredPerKill * 4L, unbankedAtDeath,
-                "Unbanked is missing floored kill payouts.");
-            Assert.AreEqual(banked0, bankedAtDeath, "ship bank must not move on Terminal kills");
+            long bankedAfterKills = gc.Meta.BankedSalvage;
+            Assert.AreEqual(banked0 + flooredPerKill * 4L, bankedAfterKills,
+                "The pot is missing floored kill payouts.");
+
+            // --- Stake: the only way a pile exists to lose ---
+            // The wave has to end first, because Withdraw is Prep-only and a full Hatch is the
+            // other half of its gate — which is exactly the shape of the bet the ruling built:
+            // the money is safe until the player walks to the Hatch in a quiet moment and takes
+            // it back out on purpose. Half of what the kills paid goes out; half stays behind,
+            // so the death below can tell "the stake was wiped" apart from "the pot was raided".
+            gc.Sim.NotifyAssaultCleared();
+            Assert.AreEqual(AssaultState.Prep, gc.Sim.Assault,
+                "stripping the wave must hand the Run back to Prep, or the Hatch cannot pay out.");
+            long stakeAsk = (bankedAfterKills - banked0) / 2L;
+            Assert.Greater(stakeAsk, 0L, "four kills paid too little to split into a stake.");
+            long staked = BastionRunDrive.Stake(gc.Sim, stakeAsk);
+            Assert.GreaterOrEqual(staked, stakeAsk, "the Hatch paid out short of the ask.");
+            Assert.AreEqual(bankedAfterKills - staked, gc.Meta.BankedSalvage,
+                "the withdrawn stake did not leave the pot.");
+            // A Withdraw UNEARNS from the run tally as the money leaves the bank, or a pile that
+            // converts back through a window would be counted twice (SalvageLedger.Unearn).
+            Assert.AreEqual(runBeforeKill + flooredPerKill * 4L - staked, gc.Sim.Salvage.RunSalvage,
+                "the run tally still counts salvage that has left the bank.");
+
+            long bankedAtDeath = gc.Meta.BankedSalvage;
+            long grossAtDeath = gc.Sim.Salvage.RunSalvage;
+            Assert.AreEqual(staked, gc.Sim.Unbanked, "the stake is not in the seat's pocket.");
 
             gc.PlayerDied();
             Assert.AreEqual(RunPhase.Lost, gc.Sim.Phase, "player death ends the run");
-            Assert.AreEqual(0L, gc.Sim.Unbanked, "dying must wipe Unbanked");
+            Assert.AreEqual(0L, gc.Sim.Unbanked,
+                $"dying must wipe the {staked} staked pile — that is what makes a Withdraw a bet");
             Assert.AreEqual(bankedAtDeath, gc.Meta.BankedSalvage,
                 $"DYING CHANGED THE SHIP BANK: {bankedAtDeath} -> {gc.Meta.BankedSalvage}. " +
-                "Converted Salvage is kept; only Unbanked is wiped.");
-            Assert.GreaterOrEqual(gc.Meta.BankedSalvage, banked0,
-                "Banked salvage ended the run below where it started.");
+                "Death takes what was staked and cannot reach the bank behind it.");
+            Assert.Greater(gc.Meta.BankedSalvage, banked0,
+                "The player died with nothing to show for it. Half of what four kills paid was " +
+                "never staked, and the ruling says that half is already the realm's.");
             Assert.AreEqual(pods0 + 1, gc.Meta.PodEjections);
             // Dying does NOT open the wheel. It used to — the gate was PodEjections >= 1 —
             // and this assertion was left behind when save v11 re-keyed it onto
-            // HatchConversions (Docs/Decisions.md, the wheel opens on the first bank). This
-            // run kills at a Terminal and dies without ever banking, so nothing has come
-            // through the Hatch and the rows stay shut. Pinning the current rule instead of
-            // the retired one, which is also what stops this failing every run.
+            // HatchConversions (Docs/Decisions.md, the wheel opens on the first bank). The
+            // Nothing came through a Hatch WINDOW — no Convert ran — so the conversion counter
+            // stays at zero. The wheel opens anyway, and that is the point: the 2026-08-25
+            // ruling moved that gate off HatchConversions and onto LifetimeSalvageEarned,
+            // because the Convert left the demo and a counter nothing can raise is a shop that
+            // never opens. Four banked kills are the whole key now.
             Assert.AreEqual(0, gc.Meta.HatchConversions, "nothing converted through the Hatch");
-            Assert.IsFalse(MetaUpgrades.UpgradesUnlocked(gc.Meta),
-                "a loss alone does not open the Armory rows — the first bank does");
+            Assert.Greater(gc.Meta.LifetimeSalvageEarned, 0L, "four kills earned nothing");
+            Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(gc.Meta),
+                "the Run banked, and banking is what opens the Armory rows — a save that can "
+                + "only unlock through a Convert can never unlock at all");
 
-            // Report shape (cause/grossEarned/repairSpent, and no stake members).
-            RunReportAssertions.AssertShape(gc.Sim, "player", 0L);
+            // Report shape (cause/grossEarned/repairSpent, and no stake members). Gross was 0
+            // when the tally only counted conversions; it is the Run's banked take now, net of
+            // what was withdrawn back out and lost, which is what the lose screen must print.
+            RunReportAssertions.AssertShape(gc.Sim, "player", grossAtDeath);
 
             yield return null; // let phase-change side effects (save, locks) run a frame
 

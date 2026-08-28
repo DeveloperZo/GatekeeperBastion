@@ -114,7 +114,7 @@ namespace GatekeepersProtocol.Tests
         public void Offer_DefaultsToComposite_WithPartialElectable()
         {
             var offer = DemoRun.RetriggerOffer(
-                PostLossMeta(), FirstTerminal.SecondId,
+                PostLossMeta(), FirstTerminal.Id,
                 zoneWavesClearedThisRun: 0, doorOpen: false);
             Assert.IsTrue(offer.Available);
             Assert.AreEqual(FirstTerminal.ZoneOneNumber, offer.Zone);
@@ -134,7 +134,7 @@ namespace GatekeepersProtocol.Tests
             var shallow = MetaState.CreateNew();
             shallow.HatchConversions = 1;
             shallow.SetZoneDeepest(FirstTerminal.ZoneOneNumber, 1);
-            var offer = DemoRun.RetriggerOffer(shallow, FirstTerminal.SecondId, 0, false);
+            var offer = DemoRun.RetriggerOffer(shallow, FirstTerminal.Id, 0, false);
             Assert.IsTrue(offer.Available);
             Assert.IsFalse(offer.PartialAvailable,
                 "a partial equal to the composite is no election");
@@ -144,10 +144,12 @@ namespace GatekeepersProtocol.Tests
         public void Offer_OnlyAtTheZonesDeepestTerminal()
         {
             var m = PostLossMeta();
-            Assert.IsFalse(DemoRun.RetriggerOffer(m, FirstTerminal.Id, 0, false).Available,
-                "T1 keeps its plain start — the retrigger lives at the deepest terminal");
+            // The spine gives zone 1 ONE terminal, so its only terminal IS the deepest and
+            // the offer lives there. An id outside the table still gets a plain start.
+            Assert.IsTrue(DemoRun.RetriggerOffer(m, FirstTerminal.Id, 0, false).Available,
+                "the zone's single terminal is its deepest — the retrigger lives there");
             Assert.IsFalse(DemoRun.RetriggerOffer(m, "T9", 0, false).Available);
-            Assert.IsFalse(DemoRun.RetriggerOffer(null, FirstTerminal.SecondId, 0, false)
+            Assert.IsFalse(DemoRun.RetriggerOffer(null, FirstTerminal.Id, 0, false)
                 .Available);
         }
 
@@ -155,10 +157,10 @@ namespace GatekeepersProtocol.Tests
         public void Offer_Withdrawn_WhenTheDoorIsOpen_OrTheZoneIsDoneThisRun()
         {
             var m = PostLossMeta();
-            Assert.IsFalse(DemoRun.RetriggerOffer(m, FirstTerminal.SecondId, 0, true).Available,
+            Assert.IsFalse(DemoRun.RetriggerOffer(m, FirstTerminal.Id, 0, true).Available,
                 "a surviving bank opened the door — nothing to resume");
             Assert.IsFalse(DemoRun.RetriggerOffer(
-                    m, FirstTerminal.SecondId, FirstTerminal.ZoneOneEndWave, false).Available,
+                    m, FirstTerminal.Id, FirstTerminal.ZoneOneEndWave, false).Available,
                 "zone complete this Run — the bank is the next step, not a refight");
         }
 
@@ -166,17 +168,17 @@ namespace GatekeepersProtocol.Tests
         public void Offer_NeverDuringTheFirstAttempt_OrOffTheDemo()
         {
             var first = MetaState.CreateNew();
-            Assert.IsFalse(DemoRun.RetriggerOffer(first, FirstTerminal.SecondId, 0, false)
+            Assert.IsFalse(DemoRun.RetriggerOffer(first, FirstTerminal.Id, 0, false)
                 .Available, "nothing cleared yet — nothing to retrigger");
 
             var midFirstRun = MetaState.CreateNew();
             midFirstRun.SetZoneDeepest(FirstTerminal.ZoneOneNumber, 1);
-            Assert.IsFalse(DemoRun.RetriggerOffer(midFirstRun, FirstTerminal.SecondId, 1, false)
+            Assert.IsFalse(DemoRun.RetriggerOffer(midFirstRun, FirstTerminal.Id, 1, false)
                 .Available, "deepest written THIS Run is progress, not a loss to resume");
 
             var live = PostLossMeta();
             live.DemoActive = false;
-            Assert.IsFalse(DemoRun.RetriggerOffer(live, FirstTerminal.SecondId, 0, false)
+            Assert.IsFalse(DemoRun.RetriggerOffer(live, FirstTerminal.Id, 0, false)
                 .Available, "the campaign keeps its live terminals untouched");
         }
 

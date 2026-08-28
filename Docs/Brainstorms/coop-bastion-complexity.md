@@ -7,7 +7,8 @@ guns into the same trickle.
 Status: brainstorm — not a milestone
 Update trigger: when the faucet loop shape, player-count wave scaling, enemy
 health, extra terminals, cores, or run-loss rules change
-Last updated: 2026-08-24
+Last updated: 2026-08-25 (M102 build state recorded, M98's priced respawn
+replaces the buy-back gap, retired Bastion.unity fence removed)
 Audience: another agent. Do not require the chat log.
 -->
 
@@ -93,7 +94,10 @@ Leaving the first room is this rotation. It is already in the game.
 ## The faucet loop (graduated to `M102`)
 
 Decided this thread (all Zo, 2026-08-24), spec and criteria in the
-milestone — the milestone is the record:
+milestone — the milestone is the record. **Built 2026-08-24 and dev-gated off
+by default; harness green and re-verified 2026-08-25 after the Convert rename
+landed on top (13 `FaucetLoopTests` pass). Zo's playthrough, which is the
+experiment itself, is owed** — so nothing below has play evidence yet:
 
 - **Waves hunt the Hatch.** A Gatekeeper is provoked onto a Boarder near its
   path. Hunt-the-Boarder stops being the field grammar. This retires the
@@ -155,16 +159,21 @@ cannot die, so three mouths in R1 do not occupy extra guns. During a
 **hatch** wave terminals are idle, so T1/T2 in the next rooms do not
 occupy extra guns on that fight.
 
-Do not recut `Bastion.unity` (range). Do not SceneBuilder Build All over
-authored stairs.
+Do not SceneBuilder Build All over authored stairs. (`Bastion.unity`, the
+old solo scene this line used to fence off, was retired 2026-08-24; the
+combat scene is `Bastion_Coop` and the practice range is `Range.unity`.)
 
 ## Build vs this pattern (gap)
 
-Shipped: solo/host down on a **field** wave still ends the Run. Guest
-waits on the Ship; buy-back only during a hatch-bank window
-(`Decisions.md`). The pattern above says Lost is Hatch destroyed / bank
-failed. That gap is unresolved. Do not “fix” host-death as a side effect
-of a layout pass.
+Narrowed by the `M98` recut (2026-08-24). One priced respawn rule replaced
+the buy-back windows: a dead seat — host and solo included — pays out of the
+Unbanked it is carrying at `150 × uses+1` (`Sim/Run/Respawns.cs`, the
+counter the Run's, not the seat's), and host/solo death becomes a DOWN state
+whenever that offer can be honored. A seat carrying nothing cannot pay, and
+there the first loss still ends the Run. So the gap is now a narrow one: the
+pattern above says Lost is Hatch destroyed / bank failed, and the build still
+ends a Run on a field-wave death that cannot buy itself back. Do not “fix”
+host-death as a side effect of a layout pass.
 
 ## Refusals this thread
 
@@ -235,16 +244,19 @@ are parked, not open: revisit only if the paradigm dies.
 - Does the shipped juice dial survive beside the draft, or fold into it.
 - The language table's **field terminal** row is recut when the faucet
   loop ships for real (not for the graybox).
-- Lost / respawn rules — Zo is working these separately; do not fix in
-  passing.
+- Lost rules — the respawn half landed with the `M98` recut (above); what a
+  field-wave death should mean when nothing can pay is still Zo's, worked
+  separately. Do not fix in passing.
 - Recut R1 only if the one-doorway kill fires in the graybox.
 
 ## Pointers
 
+Milestones are cited by bare id — the folder is the status, and
+`Docs/Roadmap.md` is the addressable index.
+
 - Layout: `Tools/bastion-sketch/bastion-coop-layout.txt`
 - Faucet loop milestone: `M102` (the record for the graduated loop)
-- Milestone: `Docs/Milestones/1. planned/M95-the-coop-bastion.md` (built,
-  unverified, stays planned)
+- Co-op hull milestone: `M95` (28 rooms, built, playthrough seams owed)
 - Ancestor: `Docs/Design/1-Experience.md` §1.1
 - Cores/currencies: `Docs/Brainstorms/economy.md`
 - Co-op salvage: `Docs/Decisions.md` M65

@@ -198,6 +198,11 @@ namespace GatekeepersProtocol.Game
                 Log.Event("Demo", "unarmed demo run — MK-1 granted (the ship terminal's grant, applied late)");
             }
 
+            // The in-Bastion teaching lines (beats 1/2/5) ride their own poller — authored
+            // long ago, wired 2026-08-25 (Docs/demo-readiness.md E1). Demo runs only.
+            if (Meta != null && Meta.DemoActive)
+                gameObject.AddComponent<DemoTeach>().Bind(this);
+
             // Bind FPC/gun before Docked so OnPhaseChanged has a controller. Client still
             // StartRun+EngageTether for local phase/UI; Update skips Sim.Tick (no second live sim).
             ApplyMetaEffects();
@@ -341,7 +346,8 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Command from WaveSpawner: one gatekeeper is down. Credits Unbanked; the
-        /// ship bank does not move until a Hatch-bank converts.</summary>
+        /// ship bank does not move until a Hatch-bank converts. Also speeds the local player's
+        /// passive health regen — see <see cref="Sim.PlayerRegen"/> for why kills drive it.</summary>
         public void GatekeeperKilled()
         {
             if (Sim == null)
@@ -356,6 +362,20 @@ namespace GatekeepersProtocol.Game
                 return;
             }
             Sim.AwardKill();
+
+            // Regen boost rides the same seam as the payout so "a body died" has exactly one
+            // place in the Game layer. Not per-frame, so the registry read is free.
+            //
+            // A TRICKLE BODY HEALS NOTHING (2026-08-26). FieldTrickle's whole rule is that the
+            // drip is "a clock, not an income", and CurrentKillAward already returns 0 while it
+            // runs — but zeroing the PAYOUT was only half of it. This call was unconditional,
+            // so the drip fed the regen boost and the walk up the lane became a healing
+            // station: modelled at +21 HP net across zone 1's 66 m, i.e. the player arrived at
+            // the terminal healthier than they left the Hatch. A body that pays nothing must
+            // also mend nothing, or "free kills" is just a slower way of saying "free health".
+            if (Sim.FieldTrickleLive) return;
+            var local = PlayerRegistry.Local;
+            if (local != null) local.NotifyKill();
         }
 
         /// <summary>Command from HatchStation: damage the authoritative sim Hatch.

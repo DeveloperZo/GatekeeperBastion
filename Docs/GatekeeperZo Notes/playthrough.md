@@ -260,3 +260,98 @@ Played: solo, starting loadout (no session log attached). Comparative read: othe
 
 A stacked-Primary session on 2026-08-09 (MR-35 T9, Wave 3 “easy”, Hatch 300/300) does not contradict this. That was not the starting weapon.
 
+## 2026-08-25 — first spine run: the overwhelm point, and the loadout it was met with
+
+Played: solo, `Bastion_Coop.unity` on the new spine, returning save in realm "ok". Run clean —
+no `[Dev]` lines in the file.
+
+Log: `Logs/GatekeepersProtocol_2026-08-25_19-28-58_p63308.log`. Seed 200441750, ALPHA-7,
+`result=lost cause=player wave=2 duration=108 respawns=2 banked=227`.
+
+### What the Boarder had
+
+Everything, and it was not much:
+
+| | |
+|---|---|
+| Primary | **none** |
+| Secondary | **MK-1 Sidearm T2** — 30 dmg, 3.0 shots/s, clip 9 (T2), reload 1.4 s, range 45 m, **falloff from 12 m** |
+| Repair rig | none |
+| Salvage | **227 banked** |
+| Ante | 0, never raised |
+| Abilities | Regen Surge available; `wave 1 gatekeeper-seconds removed: 0` — never used |
+| Record | 2 runs lost, 0 cleared |
+
+The Ship said `exit standing set — no buyable upgrades remain` before the embark. **This is a
+soft-lock, not a choice.** The cheapest Primary is 900 (BR-12) and the rack that sells it is
+gated behind a zone-2 bank the player has never reached; with 227 banked there is nothing on
+any shelf. The only kit that could clear the composite is behind the composite.
+
+### The overwhelm point
+
+**Wave 2, 19:30:13.4 — group 3 lands and the live count hits 18.** It never came back down:
+22 → 25, and for the remaining 61 s of the Run it never dropped below 21. Everything after
+that timestamp is the Run being over slowly.
+
+The arithmetic that produced it, per wave:
+
+| | wave 1 | wave 2 |
+|---|---|---|
+| bodies | 18 | 30 |
+| spawn window | 21.0 s | 28.0 s |
+| **spawn rate** | **0.86 /s** | **1.07 /s** |
+| **realised kill rate** | **0.66 /s** | 1.09 /s, but only across a 10.1 s burst |
+| peak live | 8 | **25** |
+| kills at (median) | 65.3 m from Hatch, 13.9 m from the closet | 12.3 m from Hatch, 48.9 m from the closet |
+| died | t+23.8 s, 6 still alive | t+29.2 s and t+68.7 s, **25 still alive** both times |
+
+**Wave 1 is where it was lost.** Kill rate 0.66/s against a spawn rate of 0.86/s is a deficit
+of 0.20 bodies per second sustained for the whole wave — the field cannot empty, by
+construction. Waves 1 and 2 are one composite with no Prep between them (wave 2 drew 0.2 s
+after wave 1 ended), so the deficit carries straight into a wave that spawns 24% faster again.
+
+**The weapon was not the ceiling.** MK-1 T2 at point blank is 9 rounds / (9/3 + 1.4 s) =
+**2.05 kills/s**, and one round kills a 30 HP Default outright inside 12 m. The player
+realised **32%** of that in wave 1 and 53% in the wave-2 burst. What ate the rest is time
+not shooting: acquisition across the lane, walking, and reloads landing while a group breached.
+
+**Incoming damage tells the same story from the other side.** Time from first hit to death:
+16.0 s in wave 1, then **7.2 s** and **8.0 s** in wave 2 — every death was 17 hits of 6, so
+the halving is purely how many bodies were in contact at once. At 25 live the player is taking
+~14 dps and cannot buy the 1.4 s the reload costs.
+
+**Respawns fed it.** 150, then 300, then `no respawn — not enough unbanked`. Each respawn put
+the Boarder back into a 25-body field with the same weapon and no ground gained.
+
+### The two positions the player tried
+
+Both are visible in the kill distances, and both failed for different reasons:
+
+* **Wave 1 — pushed to the closet** (65 m up the lane, killing at 14 m from the spawn). Kills
+  land at full damage, but there is no backstop: groups breach behind the push.
+* **Wave 2 — held the Hatch** (killing at 12 m, bodies having walked 49 m). This is the corridor
+  working as designed — one lane, 0° of spread — and it still lost, because 1.07 bodies/s
+  arriving beats 0.66 killed/s regardless of how good the firing angle is.
+
+That is the finding: **the spine fixed the geometry problem and exposed an arithmetic one.**
+The old complaint ("I have to run in circles, I can't hold ground") is gone — he held ground
+at the Hatch for wave 2. What is left is that holding ground is not survivable on the kit the
+demo hands you.
+
+### Assessment `[unconfirmed]` — pending Zo's verdict
+
+Three claims, each falsifiable from the next log:
+
+1. **Zone 1's composite is unwinnable on MK-1 T2 with no Primary.** *(#12/#10 — wave counts and
+   spawn cadence.)* 48 bodies continuous against a realised 0.66 kills/s. Falsified by any clean
+   log that clears zone 1 on the starting kit. The levers are the composite (2 waves back to
+   back may be one too many at the very start), the spawn cadence, and the body count.
+2. **The economy is soft-locked at this point.** *(#6 — a gate, not a number.)* 227 banked,
+   nothing buyable, and the rack that would sell a Primary is behind the wave that needs one.
+   Falsified by showing a purchase reachable from this state.
+3. **The respawn ladder accelerates the loss rather than answering it.** *(#12.)* Both post-
+   respawn deaths took ~7.5 s. Falsified by a log where a respawn recovers a wave.
+
+**Not yet acted on.** These are the level/economy dials, and the session's three shipped changes
+(the Hatch as the sole start line, enemy speeds down, terminals banking) were the ones Zo named.
+

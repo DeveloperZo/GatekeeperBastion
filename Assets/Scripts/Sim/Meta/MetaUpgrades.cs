@@ -57,15 +57,20 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>
         /// True once weapon Tier purchases and the equipment slot are unlocked — gated until
-        /// salvage first converts through the Hatch. The wheel spends salvage that came
-        /// through the Hatch, so it opens on that event, whether the Run then ended Lost or
-        /// Returned (re-key 2026-08-18 Zo — was PodEjections >= 1, which never fired for a
-        /// player who banks and docks; Docs/Decisions.md). Buying a weapon itself is NOT gated.
+        /// the realm has EARNED anything at all.
+        ///
+        /// <para>Re-keyed 2026-08-25 (Zo): this was <c>HatchConversions >= 1</c>, and the
+        /// Convert window that raised that counter is out of the demo. Kills bank as they
+        /// land now, so the honest question is no longer "did salvage come through the
+        /// Hatch" — every kill does — but "has this realm earned anything to spend". It is a
+        /// LIFETIME figure on purpose: spending down to zero must not re-lock the wheel.
+        /// It was <c>PodEjections >= 1</c> before that, which never fired for a player who
+        /// banked and docked (Docs/Decisions.md). Buying a weapon itself is NOT gated.</para>
         /// </summary>
         public static bool UpgradesUnlocked(MetaState m)
         {
             if (m == null) throw new ArgumentNullException("m");
-            return m.HatchConversions >= 1;
+            return m.LifetimeSalvageEarned > 0L;
         }
 
         // ---- FABRICATION ----
@@ -98,10 +103,19 @@ namespace GatekeepersProtocol.Sim
             return 0f;
         }
 
-        /// <summary>Base salvage for one downed gatekeeper, BEFORE the siphon multiplier.</summary>
+        /// <summary>Base salvage for one downed gatekeeper, BEFORE the siphon multiplier.
+        /// <para>25 -> 42 WITH THE ~40% ROSTER CUT (2026-08-27). A kill is priced FLAT — it does
+        /// not read the body's HP — so cutting the roster 18+12i -> 11+7i cut run income by the
+        /// same 40% as a side effect nobody asked for. 5/3 is the same factor every kind's maxHp
+        /// rose by, so a wave pays what it used to: wave 5 was 66 x 25 = 1650 and is now
+        /// 39 x 42 = 1638.</para>
+        /// <para>THE FLATNESS IS THE TRAP. Every price in the game — respawns at 150, Primaries
+        /// at 900-1500, tracks at 200 x 2^level — is denominated in kills, so any change to the
+        /// number of bodies in a wave silently re-prices all of them. Move this WITH the roster
+        /// or the shop moves without anyone deciding it should.</para></summary>
         public static float SalvagePerKill()
         {
-            return 25f;
+            return 42f;
         }
     }
 }

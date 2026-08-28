@@ -20,16 +20,20 @@ namespace GatekeepersProtocol.Sim
         // run out exactly at the director's absolute ceiling, so every Wave this table names
         // is drawable and no zone is left half-reachable. Raising a zone's span past that
         // ceiling is a WaveDirector change, not a table change.
+        // SPINE (Zo, 2026-08-25): one terminal per zone, at the FAR end of that zone's
+        // tunnel. T1, T3 and T4 were removed with the sprawl, and D2 with them — zone 2 now
+        // opens the control door. The wave spans are unchanged, so one trigger simply runs
+        // the whole zone: 2 waves in zone 1, 3 in zone 2.
         static readonly string[][] TerminalIdsByZone =
         {
-            new[] { "T1", "T2" },
-            new[] { "T3" },
+            new[] { "T2" },
+            new[] { "T5" },
         };
 
-        static readonly int[] WavesPerTriggerByZone = { 1, 3 };
+        static readonly int[] WavesPerTriggerByZone = { 2, 3 };
         static readonly int[] FirstWaveByZone = { 1, 3 };
         static readonly int[] EndWaveByZone = { 2, 5 };
-        static readonly string[] DoorIdByZone = { "D1", "D2" };
+        static readonly string[] DoorIdByZone = { "D1", "D3" };
 
         static bool Authored(int zone)
         {

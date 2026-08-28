@@ -191,7 +191,10 @@ namespace GatekeepersProtocol.Tests
         {
             Assert.AreEqual(100f, MetaUpgrades.PlayerMaxHp(), 1e-5f);
             Assert.AreEqual(100f, MetaUpgrades.StaminaMax(), 1e-5f);
-            Assert.AreEqual(25f, MetaUpgrades.SalvagePerKill(), 1e-5f);
+            // 25 -> 42 on 2026-08-27. "Level zero" means no TRACK moves this, not that it never
+            // retunes: the roster was cut ~40% and a kill is priced flat, so the price of a kill
+            // had to rise by the same 5/3 or a run's income would have fallen with the bodies.
+            Assert.AreEqual(42f, MetaUpgrades.SalvagePerKill(), 1e-5f);
             Assert.AreEqual(0f, MetaUpgrades.CritChance(), 1e-5f);
         }
 

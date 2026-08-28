@@ -1,4 +1,4 @@
-<!-- Purpose: the defended objective — what threatens it, how repair works, dock after a survived Convert, and what repair costs. / Status: working / Update trigger: when the damage sources, the repair charge, the dock window, or the loss condition change. / Last updated: 2026-08-20 -->
+<!-- Purpose: the defended objective — what threatens it, how repair works, dock after a survived Convert, and what repair costs. / Status: working / Update trigger: when the damage sources, the repair charge, the dock window, or the loss condition change. / Last updated: 2026-08-25 (a respawn is bought from the carry, not a pot) -->
 
 # The Hatch
 
@@ -6,7 +6,7 @@
 
 One door with a pulse, and everything on this hull is arranged around it.
 
-The Hatch is the umbilical back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Boarding on the spot — the one loss no pot buys back. A dead Boarder can be priced back onto the floor. A dead door cannot.
+The Hatch is the umbilical back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Boarding on the spot — the one loss nothing at all buys back. A dead Boarder can be priced back onto the floor out of what they were carrying. A dead door cannot, at any price, out of any purse.
 
 It starts every Boarding whole. Whatever I let happen to it last time did not carry.
 

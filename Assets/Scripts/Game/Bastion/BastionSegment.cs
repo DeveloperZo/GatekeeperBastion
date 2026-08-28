@@ -21,8 +21,23 @@ namespace GatekeepersProtocol.Game
         const string GeomRootName = "_geom";
         public const string GenPrefix = "Gen_";
         public const string AuthoredParentName = "Authored";
-        const float DoorOpeningWidth = 3f;
-        const float DoorOpeningHeight = 3.5f;
+        /// <summary>Clear width of a doorway. 3 -> 6 (Zo, 2026-08-27: "widen the doorways...
+        /// that will give more consistent firing angles"). A 3 m gap in a one-lane corridor is
+        /// narrower than the fight happening in it: the player could only ever engage what was
+        /// squarely in the gap, so holding a line meant standing in the doorway rather than
+        /// choosing where to stand. The clamp below (shortSide * 0.4) never bound at 3 and does
+        /// not bind at 6 for the two block kinds the Bastion actually uses — Half is 16 m and
+        /// OpenArea 42 m, so their limits are 6.4 and 16.8. A Quarter block would still clamp to
+        /// 4, which is the clamp doing its job rather than this number being ignored.</summary>
+        const float DoorOpeningWidth = 6f;
+
+        /// <summary>Clear height of a doorway: the FULL wall, floor slab to ceiling, so no
+        /// lintel is emitted (BuildDoorWall skips it at lintelHeight 0). Was a hardcoded 3.5
+        /// against a 4.5 m wall, which hung a metre of geometry across every opening — invisible
+        /// to a floor-plan check and directly in the path of a shot. BastionDoorApertureTests
+        /// has asserted this equality since before the constant disagreed with it; the test was
+        /// right and had been failing for it.</summary>
+        const float DoorOpeningHeight = BastionKit.StoreyHeight - BastionKit.FloorSlabThickness;
         const float WindowSillHeight = 1.1f;
         const float WindowLintelHeight = 0.5f;
         const float WindowWalkBlockHeight = 0.5f;

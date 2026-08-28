@@ -114,9 +114,9 @@ namespace GatekeepersProtocol.Game
                 if (shown > WaveDirector.MaxWaves) shown = WaveDirector.MaxWaves;
                 _lineBuf.Append("Boarding ").Append(runSal)
                     .Append("  ·  Ante ").Append(siphon)
-                    .Append("  ·  Wave ").Append(shown).Append('/')
+                    .Append("  -  Wave ").Append(shown).Append('/')
                     .Append(WaveDirector.MaxWaves)
-                    .Append("  ·  ");
+                    .Append("  -  ");
                 _lineBuf.Append(elapsed / 60).Append(':');
                 int sec = elapsed % 60;
                 if (sec < 10) _lineBuf.Append('0');
@@ -135,7 +135,9 @@ namespace GatekeepersProtocol.Game
                 _cacheHatchMax = hatchMaxI;
 
                 _lineBuf.Clear();
-                if (alarm) _lineBuf.Append("<b>HATCH — UNDER ATTACK</b>");
+                // Label stays one word: the label TMP no longer wraps, and the full
+                // "HATCH UNDER ATTACK" already runs on the player-message lane below.
+                if (alarm) _lineBuf.Append("<b>HATCH!</b>");
                 else _lineBuf.Append("HATCH");
                 string hatchLabel = _lineBuf.ToString();
 
@@ -156,7 +158,7 @@ namespace GatekeepersProtocol.Game
                 if (dead != _cachePlayerDead)
                 {
                     _cachePlayerDead = dead;
-                    _view.SetPlayerLabel(dead ? "<b>HEALTH (DOWN)</b>" : "HEALTH");
+                    _view.SetPlayerLabel(dead ? "<b>DOWN</b>" : "HEALTH");
                 }
                 if (php != _cachePlayerHp)
                 {
@@ -171,7 +173,8 @@ namespace GatekeepersProtocol.Game
             if (leftOpen || IsPauseOpen) PushShortcutPanel(sim);
 
             if (assault == AssaultState.Prep)
-                PushPrepPanel(sim, wave, hatchHp, hatchMax, sim.TotalUnbanked);
+                PushPrepPanel(sim, wave, hatchHp, hatchMax,
+                    sim.TotalUnbanked > 0L ? sim.TotalUnbanked : sim.BankedSalvage);
             else
                 PushAssaultPanel(sim, wave, alive);
 
@@ -213,7 +216,7 @@ namespace GatekeepersProtocol.Game
                 _lineBuf.Append("CHOOSE — [E] cycle  [T] confirm:  ");
                 for (int i = 0; i < sim.FaucetDraftSize; i++)
                 {
-                    if (i > 0) _lineBuf.Append("  ·  ");
+                    if (i > 0) _lineBuf.Append("  -  ");
                     bool on = i == gc.FaucetDraftCursor;
                     if (on) _lineBuf.Append("<b>> ");
                     _lineBuf.Append(FaucetLoop.AxisName((FaucetAxis)i));
@@ -229,7 +232,7 @@ namespace GatekeepersProtocol.Game
             }
             else
             {
-                _lineBuf.Append("FAUCET — wave ").Append(sim.FaucetWavesEndured + 1)
+                _lineBuf.Append("FAUCET -- wave ").Append(sim.FaucetWavesEndured + 1)
                     .Append("  (off at ").Append(FaucetLoop.MarkAfterWaves).Append(')');
             }
             _view.SetGeneralMessage(_lineBuf.ToString());
@@ -312,9 +315,9 @@ namespace GatekeepersProtocol.Game
             {
                 _view.SetProtocolLine("NO PROTOCOL");
                 _view.SetProtocolAbilities(
-                    "—", 0f, "",
-                    Controls.DisplayOf(ControlId.PersonalAbility), "—", 0f, "", false,
-                    Controls.DisplayOf(ControlId.CrewAbility), "—", 0f, "", false);
+                    "--", 0f, "",
+                    Controls.DisplayOf(ControlId.PersonalAbility), "--", 0f, "", false,
+                    Controls.DisplayOf(ControlId.CrewAbility), "--", 0f, "", false);
                 return;
             }
 
@@ -322,7 +325,7 @@ namespace GatekeepersProtocol.Game
             _view.SetProtocolLine(string.IsNullOrEmpty(proto) ? "NO PROTOCOL" : proto);
             string passive = _protocol.PassiveName;
             _view.SetProtocolAbilities(
-                string.IsNullOrEmpty(passive) ? "—" : passive, 0f, "",
+                string.IsNullOrEmpty(passive) ? "--" : passive, 0f, "",
                 Controls.DisplayOf(ControlId.PersonalAbility),
                 _protocol.PersonalName,
                 BoarderProtocol.OverlayFill(_protocol.PersonalWindow, _protocol.PersonalCooldown,
@@ -415,18 +418,19 @@ namespace GatekeepersProtocol.Game
 
             string reason = sim.RespawnRefuse(0);
             long cost = sim.NextRespawnCost;
-            long carry = sim.UnbankedOf(0);
+            long carry = sim.BankedSalvage;
             if (cost != _cacheDownCost || reason != _cacheDownReason || carry != _cacheDownCarry)
             {
                 _cacheDownCost = cost;
                 _cacheDownReason = reason;
                 _cacheDownCarry = carry;
-                // Name the purse as well as the price: the fee comes out of the pile the
-                // player is carrying and the rest of it survives, which is the whole rule
-                // and is not guessable from a bare number.
+                // Name the purse as well as the price: the fee comes out of the BANK and the
+                // rest of it survives, which is the whole rule and is not guessable from a
+                // bare number. Kills bank as they land, so this is also the running total of
+                // what the Run has already secured — the answer to "is dying here worth it".
                 _cacheDownText = reason == null
-                    ? "YOU ARE DOWN — ENTER: RESPAWN (" + cost + " of your " + carry + " unbanked)"
-                    : "YOU ARE DOWN — " + reason + " (" + cost + " needed, carrying " + carry + ")";
+                    ? "YOU ARE DOWN -- ENTER: RESPAWN (" + cost + " of your " + carry + " banked)"
+                    : "YOU ARE DOWN -- " + reason + " (" + cost + " needed, banked " + carry + ")";
             }
             return _cacheDownText;
         }

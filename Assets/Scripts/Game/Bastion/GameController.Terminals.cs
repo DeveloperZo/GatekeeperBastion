@@ -80,6 +80,31 @@ namespace GatekeepersProtocol.Game
                 // Prep-gap faucet shutoff: T at the origin between chained Waves.
                 if (TryFaucetPrepShutoff(lookingTerminal))
                     return;
+
+                // THE LOOP (Zo, 2026-08-25). A wave BEGINS at the Hatch and ENDS at a
+                // terminal, so T means opposite things at the two ends of the lane:
+                //   * at a terminal while the wave runs — shut it off, the zone is done;
+                //   * at the Hatch while the zone is unfinished — start that zone's wave.
+                // Both are checked before the older Convert/retrigger branches, which own T
+                // once the zone IS finished.
+                // T at a zone terminal is the shutoff, in Assault OR in Prep: the field may
+                // already be empty when the player gets here, and the walk is still the
+                // objective (Zo, 2026-08-26). ShutOffTerminal owns the refusals.
+                if (lookingTerminal != null && Sim != null
+                    && Sim.Mode != WaveMode.HatchBank
+                    && !_layout.IsTerminalDone(lookingTerminal.TerminalId)
+                    && DemoZones.ZoneOf(lookingTerminal.TerminalId) > 0
+                    && ZoneWavesHaveRun(lookingTerminal.TerminalId))
+                {
+                    ShutOffTerminal(lookingTerminal);
+                    return;
+                }
+                if (lookingHatch != null && Sim != null
+                    && Sim.Assault == AssaultState.Prep && HatchOffersWaveStart)
+                {
+                    StartZoneWaveFromHatch();
+                    return;
+                }
                 if (hatchStartable)
                 {
                     if (!_armedHatch)
@@ -92,6 +117,12 @@ namespace GatekeepersProtocol.Game
                 }
                 if (retriggerOffer.Available)
                 {
+                    if (HatchOffersWaveStart)
+                    {
+                        Log.Event("Terminal", lookingTerminal.TerminalId
+                            + " refused — the wave starts at the Hatch");
+                        return;
+                    }
                     if (!_armedRetrigger || _armedTerminalId != lookingTerminal.TerminalId)
                     {
                         Log.Event("Terminal", lookingTerminal.TerminalId
@@ -118,7 +149,7 @@ namespace GatekeepersProtocol.Game
                 if (Sim.TotalUnbanked > 0L)
                     Log.Event("Hatch", "hatch-bank refused — look at the Hatch");
                 else
-                    Log.Event("Run", "draw refused — Waves start at a terminal");
+                    Log.Event("Run", "draw refused — Waves start at the Hatch");
                 return;
             }
 
@@ -176,6 +207,12 @@ namespace GatekeepersProtocol.Game
             BastionLayout layout = terminal.Layout;
             if (layout != null && layout.IsTerminalDone(terminal.TerminalId))
                 return false;
+            // THE LOOP (Zo, 2026-08-25): the wave BEGINS at the Hatch. While the Hatch is the
+            // start line a field terminal is an OBJECTIVE, not a trigger — the 2026-08-25
+            // playthrough started at the terminal because the terminal let it, and the walk
+            // back down the lane never happened. StartZoneWaveFromHatch reaches
+            // StartTerminalWave directly and so is deliberately not gated by this.
+            if (HatchOffersWaveStart) return false;
             return FieldStartBlockReason(terminal.TerminalId) == null;
         }
 
@@ -216,6 +253,27 @@ namespace GatekeepersProtocol.Game
                 ? "hatch-bank prep intensity=" + Sim.Siphon.Level + " juice=" + Sim.JuiceSpentThisPull
                     + " bodies=" + PreviewBodies() + " — selected"
                 : "intensity unlocked");
+        }
+
+        /// <summary>Open any door the just-completed terminals have earned, snapshot the ids
+        /// onto Meta so a Docked return finds them open, and speak the door line. Shared by
+        /// the terminal shutoff and the Convert window, so the two cannot drift.</summary>
+        void OpenDoorsFor(string cause)
+        {
+            BastionLayout layout = _layout;
+            // The Hatch is a scene root, so the parent walk that fills _layout misses it on the
+            // finale's Master Control path; the terminal's own reference is the fallback.
+            // Unity fake-null: ==, not is.
+            if (layout == null && _masterTerminal != null) layout = _masterTerminal.Layout;
+            if (layout == null) return;
+            if (!layout.OpenEligibleDoors(out string[] opened)) return;
+            for (int i = 0; i < opened.Length; i++)
+                Log.Event("Demo", "door open " + opened[i] + " cause=" + cause);
+            if (Meta != null)
+                Meta.SetOpenDoorIds(layout.CopyOpenDoorIds());
+            if (opened.Length > 0 && Meta != null && Meta.DemoActive)
+                DemoVoice.PlayLocalAndBroadcast(
+                    DoorLineFor(opened[0]), DemoVoiceMode.Subtitle);
         }
 
         void ClearPendingTerminal()
@@ -366,6 +424,186 @@ namespace GatekeepersProtocol.Game
             _pendingCompositeEnd = end;
             Log.Event("Demo", "zone start zone=" + zone + " waves=" + wavesPerTrigger
                 + " mode=composite");
+            return true;
+        }
+
+        /// <summary>Is the Hatch the start line right now? Exactly while the current zone
+        /// still has a terminal to run — which is also precisely when the zone's terminal
+        /// must NOT offer a start of its own (see the retrigger dispatcher). One verb, one
+        /// place. A save with every terminal done has every door open, and an open door
+        /// retires the retrigger too, so there is deliberately nothing to fall through
+        /// to: that save's next verb is Master Control, not another field wave.</summary>
+        public bool HatchOffersWaveStart
+        {
+            get
+            {
+                if (Sim == null || _layout == null || Sim.Assault != AssaultState.Prep)
+                    return false;
+                return HatchBankStartBlocked;
+            }
+        }
+
+        /// <summary>The loop's start line: T at the Hatch runs the current zone's whole
+        /// trigger. The wave is still owned by that zone's terminal — the same pending
+        /// bookkeeping a terminal start used — so the far spawns, the door and the
+        /// completion all behave exactly as before; only the place the player stands to
+        /// begin has moved to the Hatch (Zo, 2026-08-25).</summary>
+        public bool StartZoneWaveFromHatch()
+        {
+            if (Sim == null || _layout == null) return false;
+            if (Sim.Assault != AssaultState.Prep) return false;
+
+            if (_armedRetrigger && !string.IsNullOrEmpty(_armedTerminalId))
+            {
+                BastionTerminal elected = FindTerminalById(_armedTerminalId);
+                if (elected != null && RetriggerOfferFor(elected).Available)
+                {
+                    Log.Event("Hatch", "wave started from the Hatch — the retrigger elected "
+                        + "at " + elected.TerminalId);
+                    return StartZoneRetrigger(elected);
+                }
+            }
+
+            for (int zone = 1; zone <= DemoZones.ZoneCount; zone++)
+            {
+                if (ZoneTerminalsAllDone(_layout, zone)) continue;
+                for (int i = 0; i < DemoZones.TerminalCount(zone); i++)
+                {
+                    string id = DemoZones.TerminalIdAt(zone, i);
+                    if (string.IsNullOrEmpty(id) || _layout.IsTerminalDone(id)) continue;
+                    BastionTerminal terminal = FindTerminalById(id);
+                    if (terminal == null) continue;
+                    // StartTerminalWave still demands its terminal be armed — that check is
+                    // the Ante's, and the Ante is elected before the start wherever the start
+                    // is pressed. Arming here is what makes the Hatch a real start line
+                    // rather than one that logs a start and then refuses to draw.
+                    _armedTerminalId = id;
+                    Log.Event("Hatch", "wave started from the Hatch — zone " + zone
+                        + " answers at " + id);
+                    if (StartTerminalWave(terminal)) return true;
+                    _armedTerminalId = null;
+                    return false;
+                }
+            }
+            Log.Event("Hatch", "no zone left to start — every field terminal is done");
+            return false;
+        }
+
+        /// <summary>THE LOOP (Zo, 2026-08-25, enforced 2026-08-26): the wave began at the
+        /// Hatch; reaching this terminal is what ENDS it, and this is the ONLY thing that
+        /// completes a zone. Completing the terminal outright — rather than crediting only
+        /// the waves that happened to run — is the point: the objective is positional, so a
+        /// player who fights all the way up the lane finishes the zone whether or not the
+        /// last body fell. The pending-terminal bookkeeping is cleared first so the
+        /// AssaultEnded handler does not record the same terminal twice.
+        ///
+        /// <para>PREP IS LEGAL HERE. A player who holds the Hatch and kills every body
+        /// arrives to an empty lane, and the zone is still unfinished — the walk is the
+        /// objective, not a consolation for failing to kill. Refusing outside Assault is what
+        /// left the 2026-08-26 playthrough pressing T at a dead prop three times.</para></summary>
+        /// <summary>Has this terminal's zone actually been run at? The shutoff is the END of a
+        /// wave that began at the Hatch, so it may not be walked up to and pressed on a zone
+        /// nobody has started — that would let a player skip the lane entirely. Read from the
+        /// Run rather than the layout: CurrentWaveIndex is the last field Wave launched, and
+        /// the zone's span is what the Hatch would have drawn.</summary>
+        bool ZoneWavesHaveRun(string terminalId)
+        {
+            int zone = DemoZones.ZoneOf(terminalId);
+            if (zone <= 0) return true;   // off the table: no zone rule to enforce
+            return Sim != null && Sim.CurrentWaveIndex >= DemoZones.FirstWave(zone);
+        }
+
+        /// <summary>Is a field wave waiting on a shutoff that has not happened yet? True once
+        /// the current zone's terminal can be shut off — which is exactly when the lane should
+        /// keep dripping (<see cref="FieldTrickle"/>), because the walk up to that terminal is
+        /// the rest of the wave. Read every frame by the spawner, so it allocates nothing.</summary>
+        public bool FieldWaveAwaitsShutoff
+        {
+            get
+            {
+                if (Sim == null || _layout == null || RunIsOver) return false;
+                if (Sim.Phase != RunPhase.Tethered) return false;
+                if (Sim.Mode == WaveMode.HatchBank) return false;
+                if (Sim.MasterSequenceLive) return false;
+                int zone = CurrentDemoZone;
+                int count = DemoZones.TerminalCount(zone);
+                for (int i = 0; i < count; i++)
+                {
+                    string id = DemoZones.TerminalIdAt(zone, i);
+                    if (!string.IsNullOrEmpty(id) && CanShutOffTerminal(id)) return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>Is the shutoff on offer at this terminal right now? The prompt's question,
+        /// answered by the same rules ShutOffTerminal enforces so the two cannot disagree.</summary>
+        public bool CanShutOffTerminal(string terminalId)
+        {
+            if (Sim == null || _layout == null || RunIsOver) return false;
+            if (Sim.Phase != RunPhase.Tethered) return false;
+            if (Sim.Mode == WaveMode.HatchBank) return false;
+            if (string.IsNullOrEmpty(terminalId)) return false;
+            if (DemoZones.ZoneOf(terminalId) <= 0) return false;
+            if (_layout.IsTerminalDone(terminalId)) return false;
+            return ZoneWavesHaveRun(terminalId);
+        }
+
+        public bool ShutOffTerminal(BastionTerminal terminal)
+        {
+            if (terminal == null || Sim == null || _layout == null) return false;
+            string id = terminal.TerminalId;
+            if (string.IsNullOrEmpty(id)) return false;
+            if (Sim.Phase != RunPhase.Tethered || RunIsOver)
+            {
+                Log.Event("Terminal", id + " shutoff refused — no boarding live");
+                return false;
+            }
+            if (Sim.Assault == AssaultState.Prep && !ZoneWavesHaveRun(id))
+            {
+                Log.Event("Terminal", id + " shutoff refused — start the wave at the Hatch first");
+                return false;
+            }
+            if (Sim.Assault != AssaultState.Assault && Sim.Assault != AssaultState.Prep)
+            {
+                Log.Event("Terminal", id + " shutoff refused — no wave is running");
+                return false;
+            }
+            if (Sim.Mode == WaveMode.HatchBank)
+            {
+                Log.Event("Terminal", id + " shutoff refused — a Convert window has no off switch");
+                return false;
+            }
+
+            BastionLayout layout = _layout;
+            int guard = 0;
+            while (!layout.IsTerminalDone(id) && guard++ < 16)
+            {
+                if (layout.RecordWaveCleared(id, 1, out int _, out int _, out string why))
+                    continue;
+                Log.Event("Terminal", id + " shutoff refused — " + why);
+                return false;
+            }
+
+            OpenDoorsFor("shutoff");
+            ClearPendingTerminal();
+            Sim.SetFieldTrickle(false);   // the lane stops dripping here — that is the point
+            Sim.CancelSequentialDraws();
+            // Ending the wave is only half of this verb, and only when there IS one. A player
+            // who killed the field empty and then walked up arrives in Prep with nothing to
+            // end — the zone still closes here, because the walk is the objective. Refusing on
+            // ShutOffFieldWave's Assault-only rule left the terminal completed and the call
+            // reporting failure, which is the worst of both.
+            if (Sim.Assault == AssaultState.Assault && !Sim.ShutOffFieldWave())
+            {
+                Log.Warn(Tag, id + " shut off but the sim would not leave Assault");
+                return false;
+            }
+            Log.Event("Terminal", id + " shut down — "
+                + (Sim.Assault == AssaultState.Prep ? "the zone closes here" : "the wave ends here"));
+            int zone = DemoZones.ZoneOf(id);
+            if (zone > 0 && ZoneTerminalsAllDone(layout, zone))
+                Log.Event("Demo", "zone terminals complete zone=" + zone);
             return true;
         }
 

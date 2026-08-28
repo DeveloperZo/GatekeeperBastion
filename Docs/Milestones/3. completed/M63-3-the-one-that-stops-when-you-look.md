@@ -1,7 +1,7 @@
 # M63-3 — The one that stops when you look
 
 <!--
-Status: active — unparked 2026-08-24 at Zo's direction (Active runs 4/3 with it; flagged)
+Status: completed, Aug 2026 (folder-moved 2026-08-25 at Zo's direction; Unity suites green, Zo's eyes-on unobserved)
 Update trigger: when the Cloaker's watch rule, its cone, its body or its Wave counts
 change, or when a fifth kind ships
 Last updated: 2026-08-24 — premise check against the tree; five corrections, marked

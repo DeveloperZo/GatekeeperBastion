@@ -222,6 +222,23 @@ namespace GatekeepersProtocol.Game
             Retarget();
         }
 
+        // Serialized so the saved prefab carries them (prefab freeze); Reset() keeps the code
+        // defaults from diverging silently — see CloakerGatekeeper's watchRange for the pattern.
+        void Reset()
+        {
+            attackRange = 2.4f;
+            hatchAttackRange = 3.5f;
+            attackInterval = 0.7f;
+            hatchDamage = 6f;
+            playerDamage = 18f;
+            aggroRadius = 8f;
+            retargetInterval = 0.75f;
+            hatchCommitRadius = 8f;
+            noticeRange = 26f;
+            alertRadius = 12f;
+            chaseSpeed = 5.6f;
+        }
+
         void Awake()
         {
             _agent = GetComponent<NavMeshAgent>();
@@ -368,12 +385,32 @@ namespace GatekeepersProtocol.Game
         {
             if (_animator == null) return;
             float speed = 0f;
+            float playback = 1f;
             if (_agent != null && _agent.isOnNavMesh && !_agent.isStopped)
             {
                 float v = _agent.velocity.magnitude;
                 if (v > 0.15f)
-                    speed = v >= chaseSpeed * 0.85f ? 1f : 0.5f;
+                {
+                    // Continuous, not the old 0 / 0.5 / 1 snap: the blend tree's thresholds
+                    // ARE 0/0.5/1, so a quantised drive skipped every in-between pose and the
+                    // body changed gear in one frame.
+                    speed = v <= _patrolSpeed
+                        ? Mathf.Lerp(0f, 0.5f, _patrolSpeed <= 0.01f ? 1f : v / _patrolSpeed)
+                        : Mathf.Lerp(0.5f, 1f,
+                            Mathf.InverseLerp(_patrolSpeed, Mathf.Max(chaseSpeed, _patrolSpeed + 0.01f), v));
+
+                    // FOOT SLIDE — the "quicksand" report (playtest 2026-08-25). A clip plays
+                    // at 1x however fast the body is actually travelling, and an agent in a
+                    // crowd is constantly slowed by avoidance: 30 bodies funnelling through two
+                    // doors spend most of their walk below nominal speed, striding at full rate
+                    // over ground they are not covering. Scale playback by how far actual
+                    // velocity falls short of the gear's nominal speed so the stride matches.
+                    float nominal = v <= _patrolSpeed ? _patrolSpeed : chaseSpeed;
+                    if (nominal > 0.01f)
+                        playback = Mathf.Clamp(v / nominal, 0.35f, 1.6f);
+                }
             }
+            _animator.speed = playback;
             _animator.SetFloat(AnimSpeed, speed, SpeedDampSeconds, Time.deltaTime);
         }
 

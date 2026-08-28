@@ -31,31 +31,46 @@ namespace GatekeepersProtocol.Tests
         public void OnlyTheLayoutOpensADoorAtRuntime()
         {
             string src = Read("Assets/Scripts/Game/Bastion/BastionLayout.cs");
-            StringAssert.Contains("RecordBankSurvived", src);
+            StringAssert.Contains("OpenEligibleDoors", src);
             StringAssert.Contains("RestoreOpenDoors", src);
             StringAssert.Contains("CopyOpenDoorIds", src);
         }
 
         [Test]
-        public void BankSurvival_LogsTheDoorWithItsCause_AndSnapshotsIt()
+        public void ADoorOpening_LogsItsCause_AndSnapshotsIt()
         {
-            string src = Read("Assets/Scripts/Game/Bastion/GameController.HatchBank.cs");
-            StringAssert.Contains("OnBankWindowSurvived", src);
-            StringAssert.Contains("\"door open \"", src);
-            StringAssert.Contains("\" cause=bank\"", src);
-            StringAssert.Contains("Meta.SetOpenDoorIds(", src);
+            // One helper, two causes (Zo, 2026-08-25): the terminal shutoff that completes a
+            // zone, and a survived Convert. They shared nothing before, and when the Convert
+            // left the demo it took the game's ONLY door-opening path with it.
+            string shared = Read("Assets/Scripts/Game/Bastion/GameController.Terminals.cs");
+            StringAssert.Contains("void OpenDoorsFor(string cause)", shared);
+            StringAssert.Contains("\"door open \"", shared);
+            StringAssert.Contains("Meta.SetOpenDoorIds(", shared);
+            StringAssert.Contains("OpenDoorsFor(\"shutoff\")", shared);
+
+            string bank = Read("Assets/Scripts/Game/Bastion/GameController.HatchBank.cs");
+            StringAssert.Contains("OnBankWindowSurvived", bank);
+            StringAssert.Contains("OpenDoorsFor(\"bank\")", bank);
         }
 
         [Test]
         public void DoorLine_ThenDockOffer_InThatOrder()
         {
             string src = Read("Assets/Scripts/Game/Bastion/GameController.HatchBank.cs");
-            int door = src.IndexOf("DoorLineFor(opened[0])", System.StringComparison.Ordinal);
+            // The door line moved into OpenDoorsFor with the rest of the opening; the order
+            // that matters here is still that the dock offer comes after it, and the call
+            // that raises it is what precedes DockOption now.
+            int door = src.IndexOf("OpenDoorsFor(", System.StringComparison.Ordinal);
             int dock = src.IndexOf("DemoConversationIds.DockOption", System.StringComparison.Ordinal);
             Assert.Greater(door, -1, "the door line must be raised on survival");
             Assert.Greater(dock, door, "the dock offer follows the door line, never precedes it");
-            StringAssert.Contains("DemoVoiceMode.Lock", src);
+            StringAssert.Contains("DoorLineFor(opened[0])",
+                Read("Assets/Scripts/Game/Bastion/GameController.Terminals.cs"));
+            // Both are Subtitles since 2026-08-25: every line that fires mid-run leaves
+            // move/look/fire live (playtest: Lock lines "made the game feel frozen").
             StringAssert.Contains("DemoVoiceMode.Subtitle", src);
+            Assert.IsFalse(src.Contains("DemoVoiceMode.Lock"),
+                "nothing raised during a live run may lock input");
         }
 
         [Test]

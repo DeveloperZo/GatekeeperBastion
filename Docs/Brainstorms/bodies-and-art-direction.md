@@ -18,14 +18,17 @@ them. Not clip sourcing — that is `../Architecture/asset-audit-2026-08-18.md` 
 
 ## Where it stands
 
-Verified in code 2026-08-18, not from docs.
+Verified in code 2026-08-25, not from docs.
 
-Gatekeeper bodies are already three distinct Synty prefabs, wired in
-`Editor/Scenes/SceneBuilder.Enemies.cs` (lines 47–52): Default is
-`SM_Chr_RobotFemale_01`, Hunter is `SM_Chr_SpaceSoldier_HelmetArmor_Male_01`, Thief is
-`SM_Chr_BR_War_Robot_01`. Two of the three are already robots. The audit's
-"stats+tint variants" line describes **behavior**, not mesh, and has been read the wrong
-way at least once.
+**The Gatekeepers are no longer Synty.** `M87` bought the first body and `M88` finished the
+swap, and `Editor/Scenes/SceneBuilder.Enemies.cs` now wires one FaxLab3D robot per kind out of
+`Assets/FaxLab3D/SciFiRobotCharactersPack/`: Default is `SK_UtilityBot`, Hunter is `SK_Hunter`,
+Thief is `SK_Exterminator`, and the Cloaker — the fourth kind, `M63-3`, 2026-08-24 — is
+`SK_Tactical`. Silhouette is what tells the kinds apart now, at a per-kind body scale of
+1 : 0.85 : 1.4 under a shared `BodyScale` of **0.75**; before the swap they were three Synty
+humanoids separated by an emission tint, which asked the player to read a colour on a body they
+had already learned. The Cloaker is deliberately identical to Default in footprint and agent
+metrics so the fourth kind changed no navmesh assumption.
 
 The Boarder is not Synty. It is the Mixamo astronaut carried over from Infinity Qube,
 with a `mixamorig` skeleton, and the guns are meshes hand-parented to
@@ -33,14 +36,18 @@ with a `mixamorig` skeleton, and the guns are meshes hand-parented to
 four Synty meshes until 2026-08-19; the five guns now carry their own FaxLab3D
 shooter-pack mesh and only Cutter is still Synty, so no two share a silhouette.
 
-Of 3,395 Synty assets on disk, 33 are referenced anywhere. The Bastion environment is
+Of 3,395 Synty assets on disk, 33 were referenced anywhere (counted 2026-08-18, not
+recounted since the body swap, which can only have lowered it). The Bastion environment is
 Synty and stays Synty under every idea below.
 
 ## Graduation test
 
-Whether a non-Synty character or weapon reads as **deliberate** rather than mismatched
-when it stands in the Bastion — which no listing page, screenshot or argument can answer,
-only one imported body in the scene.
+**Satisfied 2026-08-18 (Zo), and shipped since.** The test was whether a non-Synty character
+or weapon reads as deliberate rather than mismatched when it stands in the Bastion, which no
+listing page, screenshot or argument could answer — only one imported body in the scene. The
+Utility Bot answered it, `M87` and `M88` swapped every Gatekeeper across, and the guns went
+the same way. What is left in this file is the boss body, which is blocked on composition
+rather than on coherence, and the lighting question in Open.
 
 ## Constraints
 
@@ -48,9 +55,10 @@ Any milestone from this file respects these:
 
 - **The Boarder skeleton does not change.** Guns hang off `mixamorig:RightHand`; a body
   swap there breaks weapon attachment for every weapon at once.
-- **Body paths are code.** `SceneBuilder.Enemies.cs` hard-codes the three source prefabs,
-  both Synty character FBXs and the avatar loader. A swap is a code change plus a prefab
-  rebuild, not a drag and drop.
+- **Body paths are code.** `SceneBuilder.Enemies.cs` hard-codes one source fbx, one pack
+  prefab and one body scale per kind, plus the shared controller and the avatar loader. A
+  swap is a code change plus a prefab rebuild, not a drag and drop — and a fifth kind is
+  four more constants there before it is anything else.
 - **The project is Built-in Render Pipeline.** No URP or HDRP package in
   `Packages/manifest.json`; `GraphicsSettings.asset` has
   `m_CustomRenderPipeline: {fileID: 0}`. Any bought pack shipping URP/HDRP
@@ -67,25 +75,9 @@ Any milestone from this file respects these:
 
 | Question | Owner | Note |
 |---|---|---|
-| Is the robot's darkness the material or the scene? | Zo | Discriminator, no opinion needed: stand a Synty Gatekeeper in the same spot. Both dark = the Bastion/Ship lighting. Only the robot dark = the pack's albedo range, which is dark painted metal by design. The pack was authored under a studio HDRI that was deliberately not imported. Tuning-class either way until a body swap is real. |
+| Is the robot's darkness the material or the scene? | Zo | Open, and the swap is done, so the original discriminator — stand a Synty Gatekeeper beside one — no longer exists in the build. The remaining cheap one is a Synty prop in the same spot: both dark means the Bastion/Ship lighting, only the robot dark means the pack's albedo range, which is dark painted metal by design and was authored under a studio HDRI that was deliberately not imported. `ship-hull-and-interior.md` records that exactly one `Light` exists in the hull, which is the likelier half. |
 
 ## Ideas
-
-### Android Gatekeepers
-
-Replace the Synty Gatekeeper bodies with a bought android set (candidate: FaxLab3D's
-Sci-Fi Humanoid Robots, four bodies, UE5 Manny rig, 12k–20k tris, 4K PBR). The stated
-motive is that Synty humanoids do not read as androids. Two of the three current bodies
-are already robots, so the gain is fidelity and specificity of the android read, not
-robot-versus-human. The pack's own animations are six static poses and fill nothing;
-this is a body purchase only.
-
-**Graduation test PASSED 2026-08-18 (Zo).** The Utility Bot was imported and placed in
-the Ship scene: *"looks amazing as a gatekeeper."* The feared fidelity clash against
-flat-shaded Synty did not materialise. The pack's Shader Graph carries a `BuiltInTarget`
-and compiled on this project's Built-in pipeline with no conversion, no repack and no
-script (`M87`). One open question rides out of the test and is **not** part of it: the
-body reads a little dark in scene lighting.
 
 ### The alien as a boss body
 
@@ -96,17 +88,14 @@ possession rule and the voice, not the silhouette; the voice pipe exists (`M74`)
 rule does not. Blocked on the same input `M80` names absent: boss and elite composition.
 A body cannot answer that, so this entry cannot graduate ahead of it.
 
-### Distinct weapon silhouettes
+### Distinct weapon silhouettes — done, kept for the caveat
 
-Six weapons on four meshes means two of them are visually indistinguishable from another
-weapon in the hand. A bought weapon set (candidate: FaxLab3D's Shooter Weapons Pack,
-15 static meshes) would give each of the six its own. Caveats: the pack has no melee
-mesh, so Cutter still needs the Synty sword and the mix persists; its grenades and scopes
-fill nothing, since neither mechanic exists; and at 5k–50k tris LOD0 it puts the highest-
-fidelity object in the game directly in front of the camera, where the coherence question
-is least forgiving. `M82` hand-keys the viewmodel clips against whatever mesh is there,
-so the two are independent. **Built 2026-08-19** (commit `0ddc531`, no milestone —
-"wire the prefabs" is a chore per `../_meta/_definitions/milestone.md`): the five guns
-nest their fbx from `Assets/Packs/weapon_source/`, Cutter keeps the Synty sword, and the
-grenades/scopes sit unused in the folder. The LOD0 coherence caveat is now answerable in
-play and has not been answered.
+**Built 2026-08-19** (commit `0ddc531`, no milestone — "wire the prefabs" is a chore per
+`../_meta/_definitions/milestone.md`), and `M93` has since made the three Primaries read as
+three guns in play as well as in the hand. The five guns nest their fbx from
+`Assets/Packs/weapon_source/`, Cutter keeps the Synty sword because the pack has no melee
+mesh, and the grenades and scopes sit unused in the folder since neither mechanic exists.
+
+The one caveat that survives the build: at 5k–50k tris LOD0 this puts the highest-fidelity
+object in the game directly in front of the camera, where the coherence question is least
+forgiving. **Answerable in play and still unanswered.**

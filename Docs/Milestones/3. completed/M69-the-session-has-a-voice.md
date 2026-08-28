@@ -78,7 +78,7 @@ Rejected: Sound Design Starter Kit **276617**. Rejected: FMOD. Rejected: M66 tel
 
 UI / terminals / keys: [`M59`](M59-the-polish-pass-1.md). View-models and zoom:
 [`M61`](M61-the-polish-pass-2.md). Hit confirm and per-kind tells:
-[`M66`](../1.%20planned/M66-polish-pass-3.md).
+[`M66`](../4.%20deferred/M66-polish-pass-3.md).
 
 ## Verification
 

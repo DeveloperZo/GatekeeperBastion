@@ -15,9 +15,24 @@ namespace GatekeepersProtocol.Game
     /// <see cref="HatchBank.MasterTerminalUnbanked"/>, not authored aims.</summary>
     public sealed partial class GameController
     {
-        const string TerminalFourId = "T4";
         const string TerminalFiveId = "T5";
-        const string DoorThreeId = "D3";
+
+        /// <summary>Every authored zone terminal up to and including <paramref name="throughZone"/>,
+        /// read from <see cref="DemoZones"/>. Checkpoints used to name ids literally, which is
+        /// how "T4" survived the spine restructure that deleted it (2026-08-25).</summary>
+        static string[] ZoneTerminalsThrough(int throughZone)
+        {
+            var ids = new System.Collections.Generic.List<string>();
+            for (int zone = 1; zone <= throughZone && zone <= DemoZones.ZoneCount; zone++)
+            {
+                for (int i = 0; i < DemoZones.TerminalCount(zone); i++)
+                {
+                    string id = DemoZones.TerminalIdAt(zone, i);
+                    if (!string.IsNullOrEmpty(id)) ids.Add(id);
+                }
+            }
+            return ids.ToArray();
+        }
 
         /// <summary>Overlay rows for the F12 letter prompt — DevConsole draws exactly these
         /// and derives the key range (A..) from the array length. Last row is the live
@@ -156,25 +171,8 @@ namespace GatekeepersProtocol.Game
             ApplyDoorTwoOpen(m);
             if (digit == 5) return m;
 
-            if (digit == 6)
-            {
-                ApplyZoneThreeTerminalsDone(m);
-                return m;
-            }
-
             ApplyControlRoomReady(m);
             return m; // 7 and 8 share meta; the finale's elite pile is Unbanked on the Run
-        }
-
-        /// <summary>T4 and T5 done, D3 still shut: standing at the mouth of the third bank.</summary>
-        static void ApplyZoneThreeTerminalsDone(MetaState m)
-        {
-            int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
-            m.SetCompletedTerminalIds(new[]
-            {
-                FirstTerminal.Id, FirstTerminal.SecondId, DemoZones.TerminalIdAt(zoneTwo, 0),
-                TerminalFourId, TerminalFiveId,
-            });
         }
 
         /// <summary>D1 open, shop spent, zone 2's terminal still live. PlayMode uses this
@@ -198,16 +196,16 @@ namespace GatekeepersProtocol.Game
 
         static void ApplyZoneOneTerminalsDone(MetaState m)
         {
+            m.DemoJuiceTaught = true; // beat 1's teach played before its terminals were done
             m.DeepestWaveReached = FirstTerminal.ZoneOneEndWave;
             m.SetZoneDeepest(FirstTerminal.ZoneOneNumber, FirstTerminal.ZoneOneEndWave);
-            m.SetCompletedTerminalIds(new[] { FirstTerminal.Id, FirstTerminal.SecondId });
+            m.SetCompletedTerminalIds(ZoneTerminalsThrough(FirstTerminal.ZoneOneNumber));
         }
 
         static void ApplyFirstReturn(MetaState m)
         {
             m.TotalRuns = 1;
             m.PodEjections = 1;
-            m.HatchConversions = 1;
             m.EarnSalvage(500);
             m.DeepestWaveReached = FirstTerminal.ZoneOneEndWave;
             m.SetZoneDeepest(FirstTerminal.ZoneOneNumber, FirstTerminal.ZoneOneEndWave);
@@ -223,9 +221,8 @@ namespace GatekeepersProtocol.Game
             m.SpendSalvage(wheelSpend);
             BoarderProtocol.TryClaim(m, BoarderProtocolId.Default);
             m.TotalRuns = 2;
-            m.HatchConversions = 2;
             m.EarnSalvage(350);
-            m.SetCompletedTerminalIds(new[] { FirstTerminal.Id, FirstTerminal.SecondId });
+            m.SetCompletedTerminalIds(ZoneTerminalsThrough(FirstTerminal.ZoneOneNumber));
             m.SetOpenDoorIds(new[] { "D1" });
         }
 
@@ -234,10 +231,7 @@ namespace GatekeepersProtocol.Game
             int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
             m.DeepestWaveReached = WaveDirector.MaxWaves;
             m.SetZoneDeepest(zoneTwo, WaveDirector.MaxWaves);
-            m.SetCompletedTerminalIds(new[]
-            {
-                FirstTerminal.Id, FirstTerminal.SecondId, DemoZones.TerminalIdAt(zoneTwo, 0),
-            });
+            m.SetCompletedTerminalIds(ZoneTerminalsThrough(zoneTwo));
         }
 
         static void ApplyDoorTwoOpen(MetaState m)
@@ -245,7 +239,6 @@ namespace GatekeepersProtocol.Game
             int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
             m.TotalRuns = 3;
             m.PodEjections = 2;
-            m.HatchConversions = 3;
             m.DeepestWaveReached = WaveDirector.MaxWaves;
             m.SetZoneDeepest(zoneTwo, WaveDirector.MaxWaves);
             m.DemoZone2BankLost = true;
@@ -258,26 +251,19 @@ namespace GatekeepersProtocol.Game
             m.SetEquipped(WeaponId.PriC);
             m.DemoRungTwoBuysLeft = 1;
             m.EarnSalvage(400);
-            m.SetCompletedTerminalIds(new[]
-            {
-                FirstTerminal.Id, FirstTerminal.SecondId, DemoZones.TerminalIdAt(zoneTwo, 0),
-            });
+            m.SetCompletedTerminalIds(ZoneTerminalsThrough(zoneTwo));
             m.SetOpenDoorIds(new[] { DemoZones.DoorId(FirstTerminal.ZoneOneNumber), DemoZones.DoorId(zoneTwo) });
         }
 
         static void ApplyControlRoomReady(MetaState m)
         {
             int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
-            m.SetCompletedTerminalIds(new[]
-            {
-                FirstTerminal.Id, FirstTerminal.SecondId, DemoZones.TerminalIdAt(zoneTwo, 0),
-                TerminalFourId, TerminalFiveId,
-            });
+            m.SetCompletedTerminalIds(ZoneTerminalsThrough(zoneTwo));
+            // Zone 2's door IS the control door on the spine — no third id to add.
             m.SetOpenDoorIds(new[]
             {
                 DemoZones.DoorId(FirstTerminal.ZoneOneNumber),
                 DemoZones.DoorId(zoneTwo),
-                DoorThreeId,
             });
         }
 

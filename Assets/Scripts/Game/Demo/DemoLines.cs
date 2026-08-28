@@ -53,13 +53,39 @@ namespace GatekeepersProtocol.Game
             // Beat 0 — wake on a dead Ship.
             new DemoLine(DemoConversationIds.WakeStir, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
                 "You wake in a sealed capsule. The ship is dark. Nothing answers."),
+            // Directions restamped 2026-08-26: the hull is ONE deck — deck 2, the stair and the
+            // void are struck, and every station dropped to y=0 keeping its X/Z. No line may
+            // name a stair; there is none to find. Bearings below are walked from the pose the
+            // line is spoken at, in ship terms: bow is +z, port is -x, starboard is +x.
+            // Wake speaks at the capsule (-7.5, 41.0) facing 180 deg — i.e. facing AFT, with
+            // the NAV MAP (-7.5, 50.0) 9 m directly BEHIND the player at the bow end, port
+            // side. "Turn around" is the whole instruction; anything else sends them sternward.
             new DemoLine(DemoConversationIds.Wake, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "Capsule open. Ship power is dead. Find the NAV MAP — hold Interact to repair it."),
+                "Capsule open. Ship power is dead. Find the NAV MAP — turn around, it is at the " +
+                "bow end of the deck, port side. Hold Interact to repair it."),
+            // The lost-player net: fires from anywhere, so the bearing has to be absolute
+            // rather than relative to a pose. One deck means the port wall runs unbroken from
+            // stern to the NAV MAP, so "follow it forward" always arrives.
+            new DemoLine(DemoConversationIds.ShipLost, Game, DemoVoiceMode.Subtitle, DemoVoiceScope.Local,
+                "The NAV MAP is right forward, port side. Find the port wall and follow it to the bow."),
             // Restamped 2026-08-18 (draft — Zo): the terminal grants the MK-1; the other
             // stations are hidden until they have a function, so no line names them early.
+            // Spoken at the NAV MAP (-7.5, 50.0), facing it — so the player is facing the bow
+            // and the ship terminal (-4.0, 21.0) is 29 m behind them, amidships and on the same
+            // port side. Aft is the bearing that matters; the 3.5 m to starboard is not worth
+            // a word.
             new DemoLine(DemoConversationIds.NavRepair, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "NAV MAP is live. Now the ship terminal — select it, then start it. " +
-                "That is how every terminal works."),
+                "NAV MAP is live. Now the ship terminal — back down the deck toward the stern, " +
+                "amidships, same port side. Select it, then start it. That is how every terminal works."),
+            // The terminal's start points at the rack (2026-08-25 recut — the arming beat
+            // moved to the ARMORY, the intruder fight is struck). Spoken at the terminal
+            // (-4.0, 21.0); the ARMORY (10.0, 12.5) is 14 m to starboard and 8.5 m further
+            // aft, so it is a crossing of the deck, not a walk along it.
+            new DemoLine(DemoConversationIds.ArmoryCall, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
+                "Power routed. The ARMORY rack is live — cross to starboard and a little further " +
+                "aft. Take the MK-1."),
+            // Retired at the armory recut (2026-08-25): the intruder fight is struck from
+            // the demo — no caller. Row kept so the id registry stays whole.
             new DemoLine(DemoConversationIds.Intruders, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
                 "Gatekeepers aboard. The terminal armed you — MK-1 Sidearm, loaded. Put them down."),
             // Retired at the terminal-grant cut (2026-08-18): no caller — the intruders
@@ -73,35 +99,43 @@ namespace GatekeepersProtocol.Game
             new DemoLine(DemoConversationIds.EmbarkBlocked, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
                 "The Ship is not ready to EMBARK yet."),
             new DemoLine(DemoConversationIds.EmbarkFirst, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "Quiet Hatch. Find a field terminal. Select it, then start — wake the place."),
+                "Quiet Hatch. Start the Wave here, then push up the lane to the terminal."),
 
             // Beat 1 — first terminals.
             new DemoLine(DemoConversationIds.Explore, Game, DemoVoiceMode.Subtitle, DemoVoiceScope.Local,
-                "The Bastion is dormant. Field terminals wear a T. Find one."),
+                "The Bastion is dormant. Wake it at the Hatch — the terminal up the lane " +
+                "wears a T, and that is where the Wave ends."),
             new DemoLine(DemoConversationIds.TerminalLook, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "A field terminal. E selects it. T starts a Wave. " +
-                "The Wave hunts you — the Hatch is not its target."),
+                "This terminal is the far end of the run, not the start. Begin at the Hatch, " +
+                "fight up, then T here to shut the Wave down and bank what you are carrying."),
             new DemoLine(DemoConversationIds.JuiceTeach, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
                 "Kills paid you Unbanked Salvage. + and - spend it on the Ante: the next Wave " +
                 "brings more Gatekeepers and pays more. Spending nothing is also a bet."),
             new DemoLine(DemoConversationIds.AfterTerminal, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "The terminals are done. Your Salvage is still Unbanked. Go to the Hatch and " +
-                "hold it — the pile transfers home while you defend. E, then T."),
+                "Zone clear and the pile is banked. Back to the Hatch — that is where the " +
+                "next one starts, and where you can ante up before it does."),
 
-            // Beat 2 — first Hatch-bank.
+            // Beat 2 — the Hatch. The Convert window left the demo (Zo, 2026-08-25): kills
+            // bank as they land, so there is no pile waiting at the Hatch to teach. The
+            // HatchBankTeach row stays because the id registry must stay whole, and because
+            // the mechanic still exists for anyone who Withdraws deliberately — nothing in
+            // the demo plays it.
             new DemoLine(DemoConversationIds.HatchBankTeach, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "Hold the Hatch and the pile transfers home while you defend. " +
-                "If the Hatch falls, whatever has not moved is gone. T when ready."),
+                "Withdraw at the Hatch and that salvage is on the table again — hold the "
+                + "Hatch while it converts and it comes back worth more. If the Hatch falls, "
+                + "it is gone."),
+            // Still played, but only by Master Control's Hatch phase now.
             new DemoLine(DemoConversationIds.HatchFight, Game, DemoVoiceMode.Subtitle, DemoVoiceScope.Local,
-                "The Wave wants the Hatch now. Hold it — the pile is moving."),
+                "The Wave wants the Hatch now. Hold it."),
             new DemoLine(DemoConversationIds.FirstHatchDown, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "The Boarding ended. What dripped home is banked aboard. The rest is gone. " +
+                "The Boarding ended. Everything you killed for is already banked aboard. " +
                 "Spend it at the ARMORY."),
 
             // Beat 3 — Ship after first loss.
+            // Re-keyed 2026-08-25 (Zo): fires on the ARMORY's MK-1, not the first wheel buy.
             new DemoLine(DemoConversationIds.MpUnlocked, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "The upgrade stays on the weapon in your hands. " +
-                "And the Ship answers hails now — friends can join you."),
+                "MK-1 in your hands — you are a Boarder now. " +
+                "And the Ship answers hails: friends can join you."),
             new DemoLine(DemoConversationIds.WheelCap, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
                 "Two purchases is the cap for now. The NAV MAP is ready when you are."),
 
@@ -133,8 +167,9 @@ namespace GatekeepersProtocol.Game
             // by asserting a second one, which the recut forbids. Cause-agnostic from here: a
             // loss that put heavier hardware on the rack, with no count of losses in it.
             new DemoLine(DemoConversationIds.SecondLoss, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "That one took the Boarding off you. What transferred is aboard — and the rack " +
-                "answers with heavier hardware. The PRIMARY slot is open at the ARMORY."),
+                "Zone 2 is settled — held or lost, the Bastion has your measure now. What " +
+                "transferred is aboard — and the rack answers with heavier hardware. " +
+                "The PRIMARY slot is open at the ARMORY."),
 
             // Beats 6-7 — Control Room and finale.
             new DemoLine(DemoConversationIds.ControlRoom, Game, DemoVoiceMode.Lock, DemoVoiceScope.Party,

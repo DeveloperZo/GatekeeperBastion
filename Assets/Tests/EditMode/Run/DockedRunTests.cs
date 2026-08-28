@@ -22,12 +22,16 @@ namespace GatekeepersProtocol.Tests
             for (int i = 0; i < count; i++) sim.AwardKill();
         }
 
-        /// <summary>Clear a field wave, then run a full Hatch-bank window to its timer.</summary>
+        /// <summary>Clear a field wave, STAKE what it paid, then run a full Hatch-bank window
+        /// to its timer. Kills bank as they land (Zo, 2026-08-25), so the window's pile is
+        /// withdrawn back out through the real Hatch verb — the Convert is an opt-in bet on
+        /// money you already own, not a toll on money you have not collected yet.</summary>
         static void SurviveABankWindow(RunSim sim, int kills = 24)
         {
             sim.TriggerDraw();
-            Kill(sim, kills);
+            long earned = RunEconomyFixture.KillAndStake(sim, kills);
             sim.NotifyAssaultCleared();
+            RunEconomyFixture.Stake(sim, earned);
             sim.TriggerDraw(WaveMode.HatchBank);
             sim.Tick(HatchBank.DurationSeconds);
         }
@@ -71,9 +75,14 @@ namespace GatekeepersProtocol.Tests
             int survived = 0;
             sim.BankWindowSurvived += () => survived++;
 
+            // Re-key 2026-08-25: kills no longer leave a pile, so the bare Kill+TriggerDraw here
+            // was silently refused and the window never opened — DamageHatch is a no-op outside
+            // one, and the "breach" quietly did nothing. Staking through the real Withdraw is
+            // what puts an actual window on the board to breach.
             sim.TriggerDraw();
-            Kill(sim, 24);
+            long earned = RunEconomyFixture.KillAndStake(sim, 24);
             sim.NotifyAssaultCleared();
+            RunEconomyFixture.Stake(sim, earned);
             sim.TriggerDraw(WaveMode.HatchBank);
             sim.Tick(5f);
             sim.DamageHatch(99999f);
@@ -184,13 +193,19 @@ namespace GatekeepersProtocol.Tests
         {
             MetaState meta;
             var sim = Tethered(out meta);
+            // Re-key 2026-08-25: same refused-window trap as the test above. Staking the whole
+            // take also empties the bank first, so the figure the drip puts back is the ONLY
+            // thing in it — which is what makes "what dripped through still counts" readable.
             sim.TriggerDraw();
-            Kill(sim, 24);
+            long earned = RunEconomyFixture.KillAndStake(sim, 24);
             sim.NotifyAssaultCleared();
+            RunEconomyFixture.Stake(sim, earned);
+            Assert.AreEqual(0L, meta.BankedSalvage, "the whole take is out on the table");
             sim.TriggerDraw(WaveMode.HatchBank);
-            sim.Tick(5f); // ~40 units dripped home before the breach
+            sim.Tick(5f); // some of it dripped home before the breach
             long banked = meta.BankedSalvage;
             Assert.Greater(banked, 0L);
+            Assert.Less(banked, earned, "the breach catches the window mid-drip");
 
             sim.DamageHatch(99999f);
 
@@ -208,8 +223,15 @@ namespace GatekeepersProtocol.Tests
             sim.TriggerDraw();
             Kill(sim, 4);
             sim.NotifyPlayerDown();
+            // Re-key 2026-08-25: HatchConversions counts WINDOWS, and this Run never opened one,
+            // so the counter is still the subject and still 0. What changed is the companion
+            // claim: those four kills banked, so this player does have something to spend. The
+            // two facts have come apart, and the wheel now follows the money (UpgradesUnlocked
+            // is LifetimeSalvageEarned, not HatchConversions).
             Assert.AreEqual(0, meta.HatchConversions,
-                "a player who banked nothing has nothing to spend — and no wheel");
+                "no salvage came through the Hatch — no Convert window was ever opened");
+            Assert.AreEqual(4L * (long)MetaUpgrades.SalvagePerKill(), meta.BankedSalvage,
+                "the four kills are still the player's");
         }
 
         [Test]

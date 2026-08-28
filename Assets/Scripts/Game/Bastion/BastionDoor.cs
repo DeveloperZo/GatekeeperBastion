@@ -319,7 +319,17 @@ namespace GatekeepersProtocol.Game
             if (!Application.isPlaying || !_blockersReady || _slab == null)
                 return;
 
-            if (_unlocked && Time.time >= _nextPoll)
+            // OPENS ONCE, THEN STAYS OPEN (Zo, 2026-08-27: "remove doors for now"). This read
+            // `_leafOpen = AnyoneNear()` every poll, so an unlocked leaf slid SHUT again the
+            // moment nothing stood within ProximityRange — dropping a slab between the player
+            // and the corridor they were shooting down, mid-fight, on a 0.15 s timer. The
+            // doorway is the firing angle; it cannot be allowed to close itself.
+            //
+            // Locked doors are untouched and still gate progression: this branch is behind
+            // _unlocked, so a door the unlock graph has not opened never polls at all. The
+            // proximity check is kept rather than replaced with `true` so the leaf still plays
+            // its rise the first time somebody walks up to it.
+            if (_unlocked && !_leafOpen && Time.time >= _nextPoll)
             {
                 _nextPoll = Time.time + PollInterval;
                 _leafOpen = AnyoneNear();

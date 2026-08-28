@@ -85,7 +85,7 @@ namespace GatekeepersProtocol.Game
             {
                 s_retriggerLineByZone[offer.Zone] = true;
                 DemoVoice.PlayLocalAndBroadcast(
-                    DemoConversationIds.ZoneRetrigger, DemoVoiceMode.Lock);
+                    DemoConversationIds.ZoneRetrigger, DemoVoiceMode.Subtitle);
             }
             Log.Event("Terminal", terminal.TerminalId + (on
                 ? " retrigger prep zone=" + offer.Zone + " mode=composite — selected"
@@ -169,9 +169,14 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>A composite chain cleared (AssaultEnded fires once, after the last elected
-        /// Wave): every terminal of the zone completes — on a retrigger the skipped Waves were
-        /// cleared before the loss, which is the refight-avoidance; on a first trigger the
-        /// chain just ran all of them — and the bank re-arms.</summary>
+        /// Wave). It records how deep the zone was run and NOTHING ELSE.
+        ///
+        /// <para>THE ZONE IS NOT COMPLETE (Zo, 2026-08-26). Completing its terminals here is
+        /// what made the walk optional: the 2026-08-26 playthrough held the Hatch, killed all
+        /// 48 bodies of zone 1's composite, and watched "zone complete" fire from 16 m away —
+        /// then walked to T2 and was refused three times at a prop that had nothing left to
+        /// do. Surviving the Wave is not the objective. REACHING THE TERMINAL IS, and
+        /// GameController.ShutOffTerminal is the only thing that completes a zone.</para></summary>
         void RecordCompositeClear()
         {
             if (_pendingCompositeZone < 0) return;
@@ -182,15 +187,8 @@ namespace GatekeepersProtocol.Game
 
             if (Meta != null && Meta.DemoActive)
                 Meta.SetZoneDeepest(zone, end);
-            int count = DemoZones.TerminalCount(zone);
-            for (int i = 0; i < count; i++)
-            {
-                string id = DemoZones.TerminalIdAt(zone, i);
-                if (string.IsNullOrEmpty(id) || _layout.IsTerminalDone(id)) continue;
-                if (!_layout.TryCompleteTerminal(id, out string refuse))
-                    Log.Event("Terminal", id + " complete refused — " + refuse);
-            }
-            Log.Event("Demo", "zone complete zone=" + zone);
+            Log.Event("Demo", "zone waves cleared zone=" + zone
+                + " — the terminal is still the objective");
         }
 
         /// <summary>A terminal phase drops any half-run composite — the next Run re-offers.</summary>

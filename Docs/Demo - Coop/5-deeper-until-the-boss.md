@@ -8,7 +8,8 @@ Status: demo spec
 Authority: implementable
 Update trigger: when the boss is specced, when the incremental-progress rule changes,
 when the number of return trips is tuned
-Last updated: 2026-08-20
+Last updated: 2026-08-25 (no boss kind ships; the solo finale's elite named; buy-back row
+rewritten against the shipped respawn rule)
 Depends: voice-coop.md, 4-restock-and-go-back.md
 -->
 
@@ -35,12 +36,12 @@ starts.
 | | |
 |---|---|
 | **Goal** | Feel the run extending: a terminal further, a door further, a wave longer. |
-| **Player** | Embark, retrigger the deepest terminal, clear more than last time, bank, come home. Repeat. |
+| **Player** | Embark, retrigger the deepest terminal, clear more than last time, Convert, come home. Repeat. |
 | **Game** | — |
 | **Standing** | Get past where you stopped |
 | **Prompt / HUD** | Existing terminal and bank prompts. |
-| **Log** | existing wave and bank lines, plus `[Demo] deepest reached=<n> attempt=<n>` (build) |
-| **Have** | The deepest-terminal composite retrigger with partial start electable, from the solo demo. Doors unlock on bank success. |
+| **Log** | existing wave and Convert lines, plus `[Demo] deepest reached=<n> attempt=<n>` (build) |
+| **Have** | The deepest-terminal composite retrigger with partial start electable, from the solo demo (`GameController.Retrigger.cs`, `RunSim.TriggerCompositeDraw`). Doors unlock on Convert success. |
 | **Build** | The progress log, so a played session can be read back afterwards. Nothing about the loop itself is new; this step is beats 3 and 4 running again. |
 
 ### 1 — The last stretch opens
@@ -52,8 +53,8 @@ starts.
 | **Game** | `demo.coop.boss_ahead` · Lock (Prep) · Party · Game. **Whatever is through there is the last of it. This is the kit you are taking in.** |
 | **Standing** | Take the boss |
 | **Log** | `[Demo] boss stretch open` (build) |
-| **Have** | Door unlock on bank-window survival. |
-| **Build** | The line and the log, and the door keyed to the last bank rather than to a terminal AND. |
+| **Have** | Door unlock on Convert-window survival. |
+| **Build** | The line and the log, and the door keyed to the last Convert rather than to a terminal AND. |
 
 ### 2 — The boss
 
@@ -66,14 +67,14 @@ starts.
 | **Prompt / HUD** | `MsgPlayer` `HATCH UNDER ATTACK` still names a door if one is taking damage. |
 | **Log** | boss spawn and death lines (build, with the boss) |
 | **Have** | Nothing. |
-| **Build** | **Absent, not invented.** The boss's stats, abilities and composition are unspecced here exactly as they are in the solo demo. What this beat specs is only the frame: the boss is fought while the doors are still live, so the party cannot give it their whole attention, and it is reachable only after the restock loop has run. The creature is another file. |
+| **Build** | **Absent, not invented.** No boss kind ships: `GatekeeperKind` is Default, Hunter, Thief and Cloaker, and nothing in `Assets/Scripts/Sim/` spawns anything else. The solo demo's finale is not a boss either — `MasterControl.ApplyFinaleElite` swaps the last Convert window for one Thief at **240** HP pre-multiplier and **1.5×** body scale, no escorts — so a boss with its own behaviour is unbuilt in both demos. What this beat specs is only the frame: the boss is fought while the doors are still live, so the party cannot give it their whole attention, and it is reachable only after the restock loop has run. The creature is another file. |
 
 ### 3 — Escaped
 
 | | |
 |---|---|
 | **Goal** | End as a party. |
-| **Player** | Boss down, final bank window held, remainder dumps. Escaped. |
+| **Player** | Boss down, final Convert window held, remainder dumps. Escaped. |
 | **Game** | `demo.coop.escaped` · Lock (Docked) · Party · Game. **Clear. You both got out with what you moved.** |
 | **Standing** | — (demo ends) |
 | **Log** | existing `CompleteRun` → Escaped, `CleanExits++`; plus `[Demo] co-op demo complete seats=<n> attempts=<n>` (build) |
@@ -89,19 +90,22 @@ log naming the attempt count.
 
 ## Verification
 
-The net fixture can hold: the final door keys on bank success, Escaped fires with a
-seat on the ship, the Run does not end when one of several doors falls. Whether the
+The net fixture can hold: the final door keys on Convert success, Escaped fires with a
+seat on the ship, the Boarding does not end when one of several doors falls. Whether the
 incremental climb feels like progress rather than repetition is eyes-on, and it is the
 main thing this beat could get wrong.
 
 ## Gaps
 
-- **The boss is unspecced.** Absent, not invented. This beat cannot close without it.
+- **The boss is unspecced, and this beat is speculative until it is.** No boss kind ships. The nearest shipped thing is the solo finale's elite, which is a scaled Thief with no behaviour of its own. This beat cannot close without a real spec.
 - **How many trips before the boss is reachable is not specced.** It is a tune against
   the crew pot's fill rate. Too few and the loop does not read; too many and it is a
   grind. Needs a played run, not an argument.
-- Buy-back at a live window is **cut from this demo**. It depended on per-seat banked
-  salvage, which the crew pot and deferred persistence remove. `M90` is unaffected and
-  stays planned for whenever wallets come back.
+- Buy-back priced from banked salvage and gated to a live Convert window is **cut from
+  this demo**: it depended on per-seat banked salvage, which the crew pot and deferred
+  persistence remove. A different buy-back shipped in the meantime and is not window-gated
+  — a dead seat pays **150** × (respawns taken this Boarding + 1) out of its own frozen
+  Unbanked. Under one crew pot there is no per-seat Unbanked for it to charge, so what that
+  rule does in this demo is unruled and is Zo's.
 - Three-seat behaviour is untested by construction: this demo authors for two and the
   rules must not break at three.

@@ -1,4 +1,4 @@
-<!-- Purpose: the permanent upgrade tracks — what each changes about play, what is gated, and what is worth buying. / Status: working / Update trigger: when a track is added, removed, regated, or changes what it affects. / Last updated: 2026-08-20 -->
+<!-- Purpose: the permanent upgrade tracks — what each changes about play, what is gated, and what is worth buying. / Status: working / Update trigger: when a track is added, removed, regated, or changes what it affects. / Last updated: 2026-08-25 (dropped a buying recommendation for a passive no shipped sheet grants) -->
 
 # Upgrades
 
@@ -32,7 +32,7 @@ You claim a **Boarder Protocol** at this console. Default costs 0. **VEIL** and
 **Default — STOCK.** Decoys place as sold. **Barrage** (`G`): plant, rooted, your gun
 and nearby Boarders dump fire. **Rush** (`H`): your gun only, you still move. No Passive.
 
-**VEIL — PHANTOM.** A decoy you place holds the aggro you are carrying. **Ping** (`G`):
+**VEIL — PHANTOM.** A decoy you place holds the attention you are carrying. **Ping** (`G`):
 the room marks Gatekeepers for the crew and pulls Defaults and Hunters onto you.
 **Cloak** (`H`): off targeting lists until you fire. Passive **Ghost**: they notice you
 closer in.
@@ -53,7 +53,7 @@ AEGIS and LEDGER are not on the panel.
 
 ### What is gated behind a Convert, and what is not
 
-**Weapon Tiers at the ARMORY and the equipment slot at FABRICATION are both locked until Salvage first converts through the Hatch** — a Convert drip or dump that credits the bank. Docked or Lost after that does not matter; the conversion is the key. Everything else is buyable from the first minute.
+**Weapon Tiers at the ARMORY and the equipment slot at FABRICATION are both locked until Salvage first converts through the Hatch** — a Convert drip or dump that lands in the bank. Docked or Lost after that does not matter; the conversion is the key, and dying is not one. Everything else is buyable from the first minute.
 
 The protocol at CREW QUARTERS, Hatch Armor at FABRICATION, the Decoy, and buying the weapons themselves are all available from the first minute of a fresh campaign. Gear that waits until you have banked once is the wheel and the Rig's slot — until then you do not yet know what you need.
 
@@ -65,7 +65,7 @@ The protocol at CREW QUARTERS, Hatch Armor at FABRICATION, the Decoy, and buying
 
 **The Decoy if you need something to pull them off the Hatch** during a Convert. It is one payload per Boarding.
 
-**Ghost if they keep spotting you down a corridor.** Foresight if you want the mix named before you ante up.
+**VEIL if they keep spotting you down a corridor** — Ghost comes with the sheet and there is no way to buy it on its own. **FORGE if the door is what keeps failing**, because a turret holds ground you are not standing on.
 
 **Weapon upgrades are the deepest hole in the game and the money does not come back out.** An upgrade wheel belongs to one weapon. Take a gun a long way and then decide you wanted the other one, and you start from nothing. Only commit once you know which Primary you actually want to be carrying.
 

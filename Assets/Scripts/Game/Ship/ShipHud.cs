@@ -68,7 +68,7 @@ namespace GatekeepersProtocol.Game
                 // Same Profile slots as Bastion until a real level/XP model exists.
                 _view.SetProfile(ShipHudView.ProfileRank, null);
                 _view.SetScore("", "");
-                _view.SetWeapon("—", "—");
+                _view.SetWeapon("--", "--");
                 _view.SetCrosshairVisible(true);
             }
         }
@@ -132,7 +132,7 @@ namespace GatekeepersProtocol.Game
                 _lineBuf.Clear();
                 if (deepest < 1) deepest = 1;
                 _lineBuf.Append("cleared ").Append(deepest)
-                    .Append("  ·  ").Append(runs).Append(" boardings");
+                    .Append("  -  ").Append(runs).Append(" boardings");
                 _view.SetScore(salvage, _lineBuf.ToString());
 
                 AppendLoadout(_view, m);
@@ -255,15 +255,15 @@ namespace GatekeepersProtocol.Game
         {
             if (!m.OwnsAnyWeapon)
             {
-                view.SetWeapon("—", "—");
+                view.SetWeapon("--", "--");
                 return;
             }
             string primary = m.EquippedPrimary != WeaponId.None
                 ? WeaponCatalog.Def(m.EquippedPrimary).displayName
-                : "—";
+                : "--";
             string secondary = m.EquippedSecondary != WeaponId.None
                 ? WeaponCatalog.Def(m.EquippedSecondary).displayName
-                : "—";
+                : "--";
             view.SetWeapon(primary, secondary);
         }
 

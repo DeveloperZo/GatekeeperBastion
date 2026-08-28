@@ -9,9 +9,10 @@ Retrigger, clear, bank with Primary + 1 → D2 opens on window survival.
 Finale is beats 6–7.
 Status: demo spec
 Authority: implementable
-Update trigger: when the zone shape, the bank-loss Primary gate, the ladder
-rungs, or the buy-back / dead-host rule is overridden
-Last updated: 2026-08-20
+Update trigger: when the zone shape, the Convert-resolve Primary gate, the ladder
+rungs, or the respawn rule is overridden
+Last updated: 2026-08-25 (slot bookkeeping is gone from the tree; buy-back superseded by
+the priced respawn and the dead-host gap closed; MaxWaves stated once, as the ceiling)
 Depends: voice.md, 4-embark-at-wave-2.md
 -->
 
@@ -19,12 +20,13 @@ Depends: voice.md, 4-embark-at-wave-2.md
 
 The old text of this beat encoded a door AND-graph keyed to terminal
 completions (D1=T1+T2, D2=T3, D3=T4+T5), a nearest-shut-door allow list, a
-one-Field-completion-per-bank-start rule, and 3-per-Run bank slots. All dead
-(Zo, 2026-08-17). The ruled loop unit: a zone's terminal waves, then the
-hatch-bank wave; surviving the bank's timer window unlocks the zone's door; a
-failed bank never unlocks; the bank is locked until the zone's terminals are
-complete. `MaxWaves` caps consecutive waves **per terminal trigger**, not per
-Run — there is no slot budget and no per-Run wave ladder.
+one-Field-completion-per-bank-start rule, and 3-per-Run Convert slots. All dead
+(Zo, 2026-08-17), and the slots are now gone from the tree as well. The ruled
+loop unit: a zone's terminal waves, then the zone's Convert; surviving the
+Convert's timer window unlocks the zone's door; a failed Convert never unlocks;
+the Convert is locked until the zone's terminals are complete. `MaxWaves` is
+**5** and is an absolute end-Wave ceiling, not a per-trigger cap — see Numbers.
+There is no slot budget and no per-Run wave ladder.
 
 Demo zone 2 (Zo, 2026-08-17; recut 2026-08-19): **1 terminal × 3 consecutive
 waves + a heavier bank → D2** (counts tunable; shape is spec). The 3 field
@@ -79,10 +81,10 @@ producer).
 | | |
 |---|---|
 | **Goal** | One trigger, three waves, no Ship between them. Barely survivable on the secondary kit — by design. |
-| **Player** | `E`/`T` zone 2's terminal (behind D1). The trigger launches **3 consecutive waves** (under the re-keyed `MaxWaves` per-trigger cap). Juice stays live — taught in beat 1, no second lecture. |
+| **Player** | `E`/`T` zone 2's terminal (behind D1). The trigger launches **3 consecutive waves** — Waves 3, 4 and 5, which sit under the **5**-Wave ceiling. The Ante stays live — taught in beat 1, no second lecture. |
 | **Game** | — (the consecutive launch is the reader; `demo.zone_retrigger` is for post-loss offers, not first triggers) |
 | **Standing** | Clear zone 2's terminal → on composite clear, flips to **Bank at the Hatch** (producing event: zone-complete, log below) |
-| **Prompt** | Live terminal prompt. Bank while zone incomplete: `Hatch-bank — finish the zone` (beat 4 string, copy draft — Zo). |
+| **Prompt** | Live terminal prompt. Convert while the zone is incomplete: `Convert — finish the zone` (live string, `RepairInteractable`). |
 | **Log** | `[Demo] zone start zone=2 waves=3 mode=composite` · `[Demo] zone complete zone=2` (build) |
 | **Have** | Terminals, Prep-only start, host-sim gate. Verified 2026-08-20: `wavesToComplete` does **not** drive a consecutive launch — N there means N separate triggers with Prep between. The consecutive primitive is `RunSim.TriggerCompositeDraw`, which is zone-agnostic and reusable. There is no old `FirstTerminal` 3-wave cycle — `FirstTerminal.Waves == 1`; nothing to retire. |
 | **Build** | Zone 2 terminal config (3 waves, consecutive); `DemoZoneDeepestWave[2]` written on each field-wave clear; the two logs. |
@@ -97,7 +99,7 @@ producer).
 | **Standing** | Bank at the Hatch (unchanged through the loss; the Docked standing is step 3's) |
 | **Log** | existing `[Hatch] hatch-bank started …`, `[Hatch] HATCH BREACHED — the run is over`, `[Run] RUN OVER after …s … banked now …` (in tree, needs code verification — cause tokens `hatch`/`player`, not `down`) |
 | **Have** | Drip 8/s, no dump on start, wipe on `EndRun`, attrition — beat 2 facts, in tree. `EndRun("hatch")` → Lost, `PodEjections++`. |
-| **Build** | Heavier window composition for zone 2 (numbers tunable; the ordering above is the spec). Write `DemoZone2BankLost` (or the implemented flag) on Lost **during this window** (`hatch` or player-down). A Lost during the 3 field Waves does not write it. Do not call `Die()`. Do not script the loss. |
+| **Build** | Heavier window composition for zone 2 (numbers tunable; the ordering above is the spec). Write `DemoZone2BankLost` (or the implemented flag) when this window **resolves either way** — Lost during it (`hatch` or player-down), or survived (amended Zo 2026-08-25: the rack rewards having answered zone 2, not specifically having bled there; the loss-only original under-rewarded the player who held). A Lost during the 3 field Waves still does not write it. Do not call `Die()`. Do not script the loss. |
 
 ### 3 — Docked after this bank falls: the Primary is for sale
 
@@ -105,7 +107,7 @@ producer).
 |---|---|
 | **Goal** | This bank falling reads on Docked: a standing is produced, and the rack sells a Primary — whether this ejection is the save's first or its second. |
 | **Player** | Dismiss end screen; Ship loads. ARMORY now offers the **Primary** row plus **2 upgrade buys outside the secondary 2-cap** (rung 2 of the ladder). Buy Primary + at least 1 upgrade (this bank's pile funds it; numbers tunable). CREW heal still live; FAB stays dark. |
-| **Game** | `demo.second_loss` · Lock · Local · Game — **id kept** (historical name; trigger recut 2026-08-19). **What transferred is aboard — and the rack has heavier hardware now.** (copy draft — Zo; must not require this to have been a second ejection). Trigger: Docked after `DemoZone2BankLost`, at `PodEjections == 1` or `== 2`. Not `PodEjections >= 2` alone. No same-frame Lock partner exists on this Docked (`demo.crew_ready` latched in beat 4); if a future line lands here, order must be stated then. |
+| **Game** | `demo.second_loss` · Lock · Local · Game — **id kept** (historical name; trigger recut 2026-08-19). **What transferred is aboard — and the rack has heavier hardware now.** (copy draft — Zo; must not require this to have been a second ejection). Trigger: Docked after `DemoZone2BankLost`, at any ejection count — `== 0` is now reachable (a held zone-2 window sets the flag since the 2026-08-25 resolve-either-way amendment) and the line's copy was restamped outcome-agnostic for it. Not `PodEjections >= 2` alone. No same-frame Lock partner exists on this Docked (`demo.crew_ready` latched in beat 4); if a future line lands here, order must be stated then. |
 | **Standing** | Re-equip at the ARMORY (produced by `demo.second_loss`) → on Primary purchase, flips to **EMBARK from the NAV MAP** (producing event: the buy, existing wheel/weapon success log — no new line) |
 | **Prompt / panel** | ARMORY rows: Primary + remaining rung-2 buys. Refuse past the rung: named ladder refuse (copy draft — Zo), not the salvage-short line. |
 | **Log** | `[Demo] ladder rung=2 opened — primary + 2 buys` · existing buy success lines · `[Demo] wheel refused — ladder rung spent` (build) |
@@ -143,14 +145,14 @@ introduce them.
 | Door open on terminal AND | yes | `BastionUnlockGraph.TryOpenDoors` → `SetOpen` (M52/M53 lineage) | **Done in tree** (verified 2026-08-20) — `RecordBankSurvived` is the only path to `TryOpenDoors`; the AND survives as *eligibility* and is **not** deletable, D2 reads T3 through it |
 | Manual `[E] Open door` on done terminal | **no** | removed | **Done in tree** (verified 2026-08-20) — the branch is gone with a retirement comment; nothing owed |
 | Door prompts on the door itself | **no** | doors are not `IInteractable` | None — do not add |
-| 3-consecutive-wave terminal trigger | **no** | `wavesToComplete` default 1 | Build (under re-keyed `MaxWaves`; needs code verification) |
+| 3-consecutive-wave terminal trigger | **primitive yes, wiring no** | `RunSim.TriggerCompositeDraw` is zone-agnostic and shipped | Build: zone 2's terminal config only. No `MaxWaves` change — Waves 3–5 fit the ceiling |
 | Bank locked until zone complete | partial | old T1-done gate | Beat 4 build, reused |
 | Retrigger offer + partial election | no | — | Beat 4 build, reused for zone 2 |
-| Bank slots 3 per Run | yes | `HatchBank.SlotsPerRun`, initialised in the `RunSim` **constructor** (not `StartRun`) | **Dead** (Zo, 2026-08-17) — see Delete. Reader sweep done 2026-08-20: 16 live sites, incl. two player-visible strings (HUD prep line, Hatch prompt), two refuse branch selectors needing a replacement condition, and `Tools/docgen/Program.cs` (a compile dependency) |
+| Convert slots per Boarding | **gone** | `HatchBank.SlotsPerRun` and every reader are removed from the tree | Done — nothing owed |
 | Ladder rung 2 (Primary + 2 buys) | **no** | beat 3's `DemoWheelBuysLeft` is rung 1 | Build |
 | Dock at Hatch / Docked cause | no | — | Beat 4 build, reused |
-| Buy-back during live window | **no** | — | **Moved to `M90`** 2026-08-20 — per-seat banked Salvage does not exist (a guest's `Banked` is written only for slot 0 from the host's save and never reported back); blocked on Zo's wallet ruling |
-| Survive / down rules | yes | `M49`/`M57` | Have — dead-host buy-back case OPEN (Gaps) |
+| Buy-back | **shipped, in a different shape** | `Respawns.cs`, `RunSim.Respawns.cs`, `GameController.Down.cs` | Have. Not window-gated and not paid from banked Salvage: any dead seat pays **150** × (respawns taken this Boarding + 1) out of its **own Unbanked** while the Boarding is Tethered |
+| Survive / down rules | yes | `M49`/`M57`, plus the down state above | Have — the dead-host case closed with the priced respawn |
 | Door voice / logs | no | — | Build |
 
 ## Create
@@ -160,19 +162,17 @@ introduce them.
 | Zone 2 terminal config | 1 terminal × 3 consecutive waves (counts tunable; shape is spec) |
 | Zone 2 bank composition | heavier window (tunable) satisfying: secondary ceiling < requirement < Primary+1 |
 | Ladder rung 2 | Primary row + 2 buys outside the secondary 2-cap, opened by zone 2's bank falling |
-| Buy-back interact | dead seat, live bank window only, rejoin at Hatch, pays own banked (cost tunable) |
 | Tests | 3-wave composite per trigger; bank refuse before zone complete; loss at bank leaves D2 shut; retrigger composite/partial; survival opens D2; rung refuse past ladder; buy-back refused outside a live window |
 
 ## Change
 
 | File | Change |
 |---|---|
-| `RunSim` | Zone 2 composite launch per trigger (re-keyed `MaxWaves`); retire per-Run slot bookkeeping (see Delete) |
+| `RunSim` | Nothing. `TriggerCompositeDraw` is in tree and the slot bookkeeping is already gone |
 | `GameController.HatchBank` | Zone-complete gate (beat 4); heavier zone 2 window spec |
 | `BastionUnlockGraph` / `BastionDoor.SetOpen` | Bank-survival keying (beat 4 change; D2 wired here) |
 | `ShipCommands` | Ladder rung counter; Primary row unlock on `DemoZone2BankLost`; named rung refuse. Do not read `PodEjections >= 2` |
 | `BastionTerminal.Prompt` | Zone-incomplete bank string; retrigger offer rows (beat 4 surface) |
-| Hatch (net) | Buy-back interact for dead seats while a window is live |
 
 Do not rebuild rooms. Do not emit a second kit.
 
@@ -183,7 +183,7 @@ Do not rebuild rooms. Do not emit a second kit.
 | Nearest-shut-door allow list (`DemoRun.AllowedField`) | never built — do not add; zone gating via doors + zone-complete bank lock replaces it (Zo, 2026-08-17) |
 | One-Field-completion-per-bank-start rule | dead (Zo, 2026-08-17) — never built, do not add |
 | Door AND-graph keying (D1=T1+T2 etc.) as this beat's spec | superseded by bank-window survival (Zo, 2026-08-17); the in-tree graph is the superseded reader — removal scope needs code verification |
-| Bank slot bookkeeping (3 per Run) | dead (Zo, 2026-08-17); in tree (`HatchBank.SlotsPerRun`, reset in `RunSim.StartRun`) — removal is a code change; needs code verification of other readers |
+| Convert slot bookkeeping (3 per Boarding) | dead (Zo, 2026-08-17) and now **removed** — `HatchBank.SlotsPerRun` and its readers are gone from the tree. Do not reintroduce it |
 | Multi-terminal zone / D3 = T4+T5 structure | dead **as this beat's spec** (Zo, 2026-08-17); finale structure is beats 6–7's editor's. **Do not delete D3 from the graph** — `BastionUnlockGraph.Validate` requires exactly one `OpensControlRoom` door and fails without it (verified 2026-08-20) |
 | `demo.door_d3` | dead with the above; beats 6–7 own the Control Room line |
 
@@ -195,14 +195,15 @@ Do not rebuild rooms. Do not emit a second kit.
 | Bank-loss ordering | secondary ceiling < zone 2 bank requirement < Primary + 1 upgrade | numbers tunable; **ordering is spec** | Zo, 2026-08-17; recut 2026-08-19: field waves survivable |
 | Ladder rung 2 | Primary + 2 upgrade buys outside the secondary 2-cap | rung contents tunable | Zo, 2026-08-17 |
 | Primary cost | BR-12 900 / MR-35 1,200 / PRI-C 1,500 | tunable | `WeaponCatalog.Def` — already priced; the "not set" stamp was stale (2026-08-20) |
-| Buy-back cost | not set | tunable — Zo | Zo, 2026-08-17 (rule ruled, cost open). **Moved to `M90`** 2026-08-20 |
-| `MaxWaves` | 5, an **absolute end-Wave ceiling** | tunable | `WaveDirector.MaxWaves`. The per-trigger re-key was an intent, not the tree (verified 2026-08-20). Zone 2's Waves are 3..5 and fit under the ceiling, so no re-key is required |
+| Respawn cost | **150** × (respawns taken this Boarding + 1) | tunable | `Respawns.BaseCost` / `Respawns.CostFor`. The counter is the Boarding's, not the seat's, so a party that keeps dying prices itself out together |
+| `MaxWaves` | **5**, an absolute end-Wave ceiling | tunable | `WaveDirector.MaxWaves`. The per-trigger re-key was an intent, not the tree. Zone 2's Waves are 3–5 and fit under the ceiling, so no re-key is required — and this is the row every other file should be corrected against |
 | Window | 45 s base | tunable | `HatchBank.DurationSeconds` (in tree) |
 | Drip | 8/s | tunable | `HatchBank.DripPerSecond` (in tree) |
 | Zone 2 wave rosters | existing wave-table indices as placeholder (bodies `18+12·i`, HP muls, Hunter/Thief tables) | tunable — mapping to zone waves is Zo's | in-tree `NextWave` tables |
 
-No slot arithmetic (slots are dead). No "cannot bank infinitely" clause — the
-zone-complete lock and per-trigger `MaxWaves` bound the loop instead.
+No slot arithmetic (slots are gone from the tree). No "cannot Convert
+infinitely" clause — the zone-complete lock and the **5**-Wave ceiling bound the
+loop instead.
 
 ## Multiplayer
 
@@ -213,8 +214,8 @@ zone-complete lock and per-trigger `MaxWaves` bound the loop instead.
 | Door open | Host, on bank-window survival; replicated |
 | Wave scale | `playerCount` on every `NextWave` |
 | Guest down | `M57` wait; host continues. Converted drip stays on guest wallet |
-| **Buy-back** | A dead player may buy back **only while a bank window is live**, rejoining at the Hatch, paying from **their own** banked salvage (cost tunable) (Zo, 2026-08-17). Host-authoritative; log below |
-| **Dead host** | `M49` says host death ends the Run; a live-window buy-back for the **host** contradicts it — **OPEN, recorded, not resolved** (Zo, 2026-08-17) |
+| **Buy-back** | Shipped, and wider than the 2026-08-17 stamp. Any dead seat is offered a respawn while the Boarding is Tethered — no Convert-window gate — priced at **150** × (respawns taken this Boarding + 1) out of that seat's **own Unbanked**, remainder surviving. Nothing else can pay. Host-authoritative (`RunSim.TryRespawn`) |
+| **Dead host** | Closed. The host seat takes the same offer at the DOWN overlay, and `M49` now bites only when the dying seat cannot pay and no other seat is still fighting |
 | Dock at Hatch | Beat 4 rule; commit-seat question is beat 4's Gap |
 | Voice door lines | Party |
 
@@ -247,7 +248,7 @@ line.
   `[Demo] zone complete zone=2`, `[Demo] bank refused — zone incomplete`,
   `[Demo] ladder rung=2 opened — primary + 2 buys`,
   `[Demo] zone retrigger zone=2 …`, `[Demo] bank window survived zone=2`,
-  `[Demo] door open D2 cause=bank`, `[Demo] buyback seat=<id> cost=<n>`.
+  `[Demo] door open D2 cause=bank`, and the in-tree `respawn taken — slot=<n> cost=<n> carry <a>-><b> taken=<k>`.
 
 ## Logs
 
@@ -262,7 +263,7 @@ line.
 | Retrigger | `[Demo] zone retrigger zone=2 start=<j> waves=<k> mode=composite|partial` | build (beat 4 shape) |
 | Window survived | `[Demo] bank window survived zone=2` | build |
 | Door | `[Demo] door open D2 cause=bank` | build |
-| Buy-back | `[Demo] buyback seat=<id> cost=<n>` · refuse `[Demo] buyback refused — no live window` | build |
+| Buy-back | `respawn taken — slot=<n> cost=<n> carry <a>-><b> taken=<k>` · refuse `respawn refused — not enough unbanked` | in tree (`RunSim.Respawns.cs`) |
 
 ## Traps
 
@@ -280,10 +281,11 @@ line.
   buys; the walk to the rack is the beat.
 - Counting the Primary or SEC-D against the secondary 2-cap, or rung-2 buys
   against rung 1. The cap is a ladder.
-- Letting a dead player buy back between windows, or pay from the party's
-  pile — live window only, own banked only.
-- Resolving the dead-host case in code "while in there" — it is recorded
-  OPEN, not ruled.
+- Letting a dead seat pay from the party's pile, the realm's bank or another
+  seat. `Respawns.Refuse` gates on two things only: the Boarding is Tethered,
+  and the seat's own carry covers the price.
+- Re-gating the respawn to a live Convert window. It is not window-gated, and
+  narrowing it would fork the rule between the two demos.
 - Firing `demo.first_hatch_down` on this bank falling — that id is first-loss
   of the *save* only, and this bank may be the save's first ejection;
   `demo.second_loss` owns Docked after `DemoZone2BankLost`, including when
@@ -326,17 +328,17 @@ editor) when D2 is open.
    run (rung-1 buys only, no Primary) never logs `bank window survived
    zone=2` — the authored ceiling holds. Do not close this beat on
    arithmetic alone.
-8. Loopback: dead guest during a live window buys back → `[Demo] buyback
-   seat=<id> cost=<n>`, rejoins at the Hatch, own banked debited; same
-   attempt after the window ends → `[Demo] buyback refused — no live
-   window`. Door open replicates to both seats.
+8. Loopback: a dead guest carrying at least the price buys back → `respawn
+   taken — slot=<n> cost=<n> …`, rejoins at the Hatch, its own Unbanked
+   debited and the remainder intact; a seat carrying less → `respawn refused
+   — not enough unbanked`. Door open replicates to both seats.
 9. No `[Dev]`.
 
 ## Gaps
 
-- **Dead host vs `M49`** (host-death-ends-run vs live-window buy-back):
-  **OPEN — recorded, not resolved** (Zo, 2026-08-17). Do not build the host
-  branch until ruled.
+- **Dead host vs `M49`**: closed by the priced respawn. The host takes the same
+  offer as every other seat, and `M49` reduces to the case where nobody left can
+  pay.
 - Filename `5-repeat-to-control-room.md` predates the ruled shape (the
   Control Room walk is beats 6–7's, another editor); content is written to
   the ruled spec; rename is Zo's call.
@@ -346,10 +348,10 @@ editor) when D2 is open.
   old nearest-shut-door rule that covered it is dead.
 - Primary cost, buy-back cost, heavier-bank composition, exact wave counts:
   tunable, not set — the orderings above are the spec.
-- Slot-bookkeeping removal scope (`HatchBank.SlotsPerRun` readers) — needs
-  code verification.
-- Upstream files (beats 1–3, README) still carry slots, the terminal-AND
-  door rows, and the old checkpoint fields — superseded; their editors'.
+- Primary cost is set; what is not is the respawn price against this beat's
+  authored window. A Boarder mid-push carries far more than **150**, so the
+  window has to fall on the **Hatch** to be a reliable loss, exactly as zone 1's
+  does.
 
 ## Rejected
 
@@ -358,5 +360,6 @@ The nearest-shut-door allow list and one-completion-per-bank-start rule
 are dead entirely). Auto-opening D2 on terminal completion. Scripted bank
 kill. Gifting the Primary. Keying the Primary on `PodEjections >= 2`.
 Making the 3 field Waves unclearable. A flat wheel cap (it is a ladder).
-Buy-back from the shared pile. Hunter lecture. Siphon. Second destination.
+Buy-back from the shared pile, the realm's bank, or another seat. Hunter
+lecture. Siphon. Second destination.
 Door-mounted prompts.

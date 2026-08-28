@@ -26,8 +26,8 @@ namespace GatekeepersProtocol.Game
                 ResolveRefs();
                 if (_gun == null)
                 {
-                    PushWeaponCard("NO WEAPON", "—", "Buy the MK-1 at the ship's ARMORY.");
-                    _view.SetReloadLabel("—");
+                    PushWeaponCard("NO WEAPON", "--", "Buy the MK-1 at the ship's ARMORY.");
+                    _view.SetReloadLabel("--");
                     _view.SetReloadBar(0f);
                     _view.SetReloadBlockVisible(false);
                     return;
@@ -40,7 +40,7 @@ namespace GatekeepersProtocol.Game
                 _weaponLines.Add(SlotStrip(_gun, bay));
                 PushWeaponCard("DECOY", SlotStrip(_gun, bay), JoinWeaponLines());
                 // The decoy has no clip. Dim the reserved row; keep a label so the slot is not blank.
-                _view.SetReloadLabel("—");
+                _view.SetReloadLabel("--");
                 _view.SetReloadBar(0f);
                 _view.SetReloadBlockVisible(false);
                 return;
@@ -71,7 +71,7 @@ namespace GatekeepersProtocol.Game
             if (_gun.UsingSalvageCutter)
             {
                 _lineBuf.Clear();
-                _lineBuf.Append(_gun.EffectiveDamage.ToString("0")).Append(" dmg  ·  buy MK-1 at ARMORY");
+                _lineBuf.Append(_gun.EffectiveDamage.ToString("0")).Append(" dmg  -  buy MK-1 at ARMORY");
                 PushWeaponCard(name, ammo, _lineBuf.ToString());
                 return;
             }
@@ -124,7 +124,7 @@ namespace GatekeepersProtocol.Game
         {
             if (bay == null || !bay.HasPayload) return;
             _lineBuf.Clear();
-            _lineBuf.Append("DECOY  ").Append(bay.State.ChargesRemaining).Append(" left  ·  ");
+            _lineBuf.Append("DECOY  ").Append(bay.State.ChargesRemaining).Append(" left  -  ");
             if (bay.State.IsLive)
                 _lineBuf.Append("LIVE ").Append(bay.State.Hp.ToString("0")).Append('/')
                     .Append(bay.State.MaxHp.ToString("0"));
@@ -145,13 +145,13 @@ namespace GatekeepersProtocol.Game
             _lineBuf.Clear();
             if (_ability.RegenSurgeActive)
             {
-                _lineBuf.Append("<b>ABILITY ").Append(name).Append(" — SURGING</b>");
+                _lineBuf.Append("<b>ABILITY ").Append(name).Append(" -- SURGING</b>");
             }
             else if (_gun != null && _gun.RailshotArmed)
             {
                 // Cooldown starts on arm, so this must beat the cooldown branch or
                 // the armed window never paints (criterion 5).
-                _lineBuf.Append("<b>ABILITY ").Append(name).Append(" — ARMED</b>");
+                _lineBuf.Append("<b>ABILITY ").Append(name).Append(" -- ARMED</b>");
             }
             else if (_ability.CooldownRemaining > 0.05f)
             {
@@ -179,15 +179,21 @@ namespace GatekeepersProtocol.Game
         static string Mark(PlayerGun gun, DecoyBay bay, WeaponSlot slot, int key)
         {
             bool live = gun.ActiveSlot == slot;
-            string mark = live ? "▸" : "·";
+            // These labels are Rajdhani-Bold SDF: a STATIC atlas of 98 characters with NO
+            // source font and NO fallback — printable ASCII, NBSP, ZWSP and the ellipsis,
+            // and nothing else. U+25B8 was a tofu box here (80 warnings in the 2026-08-25
+            // playtest) and the fix that replaced it reached for U+00B7, which is not in
+            // the atlas either — the comment said "keep to ASCII" and then did not.
+            // Verified 2026-08-26 against the asset's own m_CharacterTable.
+            string mark = live ? ">" : "-";
             if (slot == WeaponSlot.Drone)
             {
                 if (bay == null || !bay.HasPayload)
-                    return key + (live ? " ▸ —" : " — —");
+                    return key + (live ? " > --" : " - --");
                 return key + " " + mark + " Decoy" + (bay.State.IsLive ? " live" : "");
             }
             if (!gun.SlotConfigured(slot))
-                return key + (live ? " ▸ —" : " — —");
+                return key + (live ? " > --" : " - --");
             string name = WeaponCatalog.Def(gun.WeaponInSlot(slot)).displayName;
             int sp = name.IndexOf(' ');
             string shortName = sp > 0 && sp < 6 ? name.Substring(0, sp)

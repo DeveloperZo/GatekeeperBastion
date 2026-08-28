@@ -94,6 +94,8 @@ namespace GatekeepersProtocol.EditorTools
             if (EditorApplication.isCompiling) return;
             // BindingValidator writes its own report; don't block IntegrationCheck.
             TryConsumeBindingsRequest();
+            // SceneCapture writes its own report; edit-mode renders only, never play mode.
+            TryConsumeCaptureRequest();
             // Windows player into Logs/Builds/{version}/ — never runs SceneBuilder / Build All.
             TryConsumePlayerBuildRequest();
             // Sentinel always wins — same rule as OnEditorReady. A stuck StageKey from a
@@ -137,6 +139,35 @@ namespace GatekeepersProtocol.EditorTools
         {
             SessionState.SetString(StageKey, stage);
             SessionState.SetFloat(StageSinceKey, (float)EditorApplication.timeSinceStartup);
+        }
+
+        /// <summary>File bridge for SceneCapture. Agents write <c>gkb_capture_request.txt</c>;
+        /// the report lands in <c>gkb_capture_report.json</c>, PNGs in <c>Captures/</c>.</summary>
+        static void TryConsumeCaptureRequest()
+        {
+            // Captures open scenes — never while a test run is live or pending, or the
+            // suite's own scene setup is yanked out from under it mid-run.
+            if (SessionState.GetString(StageKey, "") != ""
+                || SessionState.GetString(PendingKey, "") != "")
+                return;
+            string path = SceneCapture.RequestPath;
+            if (!File.Exists(path)) return;
+            string text;
+            try
+            {
+                text = File.ReadAllText(path);
+                File.Delete(path);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[IntegrationCheck] Could not consume capture request: " + e.Message);
+                return;
+            }
+            try { SceneCapture.Run(text); }
+            catch (Exception e)
+            {
+                Debug.LogError("[IntegrationCheck] SceneCapture failed: " + e.Message);
+            }
         }
 
         /// <summary>File bridge for BindingValidator. Agents write

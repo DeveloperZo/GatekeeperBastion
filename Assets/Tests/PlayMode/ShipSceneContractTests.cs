@@ -412,9 +412,11 @@ namespace GatekeepersProtocol.PlayTests
             const float standOff = 2.5f;
             const float eyeHeight = 1.7f;
 
-            // Eye height is measured from the console's OWN deck, not from world zero: the ship
-            // is two decks, and a world-space 1.7 m stands the probe under deck 2's floor, where
-            // every ray at a deck-2 console hits that floor before the console.
+            // Eye height is measured from the console's OWN standing plane, not from world zero.
+            // That is what makes a raised or wall-mounted console probe from the height a player
+            // actually looks at it from, instead of from a metre and a half below its pedestal
+            // where the ray hits the mount. On a flat deck (the ship since 2026-08-26) it
+            // degenerates to a plain world-space 1.7 m probe, which is why it can stay as-is.
             Vector3 origin = new Vector3(t.position.x, 0f, t.position.z) + t.forward * standOff;
             origin.y = t.position.y + eyeHeight;
             Vector3 target = bounds.center;

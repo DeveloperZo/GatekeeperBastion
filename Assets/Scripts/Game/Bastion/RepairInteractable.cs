@@ -97,10 +97,20 @@ namespace GatekeepersProtocol.Game
                 if (destroyed) return "Hatch: DESTROYED";
                 if (hp >= maxHp)
                 {
+                    if (gc.HatchOffersWaveStart)
+                    {
+                        // The loop's start line (Zo, 2026-08-25): every wave BEGINS here and
+                        // ends at a terminal. Checked before the Convert/Withdraw branches
+                        // because a terminal shutoff banks the salvage, so the player who
+                        // walks back to start the next wave arrives with nothing unbanked.
+                        s_prompt.Clear();
+                        s_prompt.Append('[')
+                            .Append(Controls.DisplayOf(ControlId.PullDraw))
+                            .Append("] start the wave");
+                        return s_prompt.ToString();
+                    }
                     if (prep && unbanked > 0L)
                     {
-                        if (gc.HatchBankStartBlocked)
-                            return "Convert — finish the zone";
                         string e = Controls.DisplayOf(ControlId.Interact);
                         bool armed = gc != null && gc.IsHatchBankArmed;
                         s_prompt.Clear();
@@ -117,9 +127,14 @@ namespace GatekeepersProtocol.Game
                     }
                     if (prep && unbanked == 0L && bank > 0L)
                     {
+                        s_prompt.Clear();
                         if (_withdrawHold || _sessionWithdrawn > 0L)
-                            return $"Withdrawing {unbanked} unbanked — {bank} banked";
-                        return $"Withdraw — hold E  ({bank} banked → unbanked)";
+                            s_prompt.Append("Withdrawing ").Append(unbanked)
+                                .Append(" unbanked — ").Append(bank).Append(" banked");
+                        else
+                            s_prompt.Append("Withdraw — hold E  (").Append(bank)
+                                .Append(" banked → unbanked)");
+                        return s_prompt.ToString();
                     }
                     return "Hatch: sealed tight";
                 }
@@ -127,23 +142,46 @@ namespace GatekeepersProtocol.Game
                 var meta = gc.Meta;
                 string missing = meta != null ? meta.RepairMissingStep() : "no session";
                 if (missing != null)
-                    return $"Hatch damaged ({hp:0}/{maxHp:0}) — {missing}";
+                {
+                    s_prompt.Clear();
+                    s_prompt.Append("Hatch damaged (").Append(hp.ToString("0")).Append('/')
+                        .Append(maxHp.ToString("0")).Append(") — ").Append(missing);
+                    return s_prompt.ToString();
+                }
 
                 float rate = ShipSystems.RepairSalvagePerHp;
                 if (bank <= 0)
-                    return $"Hatch damaged ({hp:0}/{maxHp:0}) — no salvage to repair";
+                {
+                    s_prompt.Clear();
+                    s_prompt.Append("Hatch damaged (").Append(hp.ToString("0")).Append('/')
+                        .Append(maxHp.ToString("0")).Append(") — no salvage to repair");
+                    return s_prompt.ToString();
+                }
 
                 if (_sessionSpent > 0 || _sessionHp > 0.01f || _holding || _repairRpcOpen)
                 {
+                    s_prompt.Clear();
                     if (_sessionSpent > 0 || _sessionHp > 0.01f)
                     {
-                        return $"Repairing +{_sessionHp:0.#} HP — {_sessionSpent} salvage " +
-                               $"({rate:0}/HP, {bank} banked)";
+                        s_prompt.Append("Repairing +").Append(_sessionHp.ToString("0.#"))
+                            .Append(" HP — ").Append(_sessionSpent).Append(" salvage (")
+                            .Append(rate.ToString("0")).Append("/HP, ").Append(bank)
+                            .Append(" banked)");
                     }
-                    return $"Repairing... ({hp:0}/{maxHp:0}) — {bank} banked";
+                    else
+                    {
+                        s_prompt.Append("Repairing... (").Append(hp.ToString("0")).Append('/')
+                            .Append(maxHp.ToString("0")).Append(") — ").Append(bank)
+                            .Append(" banked");
+                    }
+                    return s_prompt.ToString();
                 }
 
-                return $"Hatch damaged ({hp:0}/{maxHp:0}) — {rate:0} salvage/HP";
+                s_prompt.Clear();
+                s_prompt.Append("Hatch damaged (").Append(hp.ToString("0")).Append('/')
+                    .Append(maxHp.ToString("0")).Append(") — ").Append(rate.ToString("0"))
+                    .Append(" salvage/HP");
+                return s_prompt.ToString();
             }
         }
 
@@ -316,16 +354,16 @@ namespace GatekeepersProtocol.Game
                 int idx = HatchBank.CarryWaveIndex(carry);
                 bodies = HatchBank.ApplyHatchComposition(
                     s_preview.NextWave(idx, level, sim.PlayerCount), carry).enemyCount;
-                sb.Append("  Intensity ").Append(level)
-                    .Append("  juice ").Append(IntensityJuice.CostPerStep)
+                sb.Append("  Ante ").Append(level)
+                    .Append("  ante up ").Append(IntensityJuice.CostPerStep)
                     .Append("  unbanked ").Append(unbanked)
                     .Append("  carry ").Append(carry)
                     .Append("  ×").Append(HatchBank.CarryConvert(carry).ToString("0.00"))
                     .Append("  ").Append(bodies);
                 return;
             }
-            sb.Append("  Intensity ").Append(level)
-                .Append("  juice ").Append(IntensityJuice.CostPerStep)
+            sb.Append("  Ante ").Append(level)
+                .Append("  ante up ").Append(IntensityJuice.CostPerStep)
                 .Append("  unbanked ").Append(unbanked)
                 .Append("  ").Append(bodies);
         }

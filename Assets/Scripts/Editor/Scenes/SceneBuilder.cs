@@ -202,7 +202,12 @@ namespace GatekeepersProtocol.EditorTools
         static void BuildAllCore()
         {
             EnsureFolders();
-            RebuildShipGeometry();     // SceneBuilder.Ship.cs
+            // RebuildShipGeometry() is NOT called (2026-08-26). The Ship's hull has been
+            // authored offline by Tools/ship-hull/build_hull.py since M101; SceneBuilder.Ship
+            // still builds the PRE-M101 single-deck graybox, and running it wipes Environment
+            // and moves all three hatch doors to the wrong deck and z. M101 and Working-Rules
+            // both say "do not run SceneBuilder.Ship" — but a warning in a document is not a
+            // guard, and this menu row was one click from destroying the ship.
             RebuildBastionGeometry();
             RegisterBuildScenes();
             AssetDatabase.SaveAssets();

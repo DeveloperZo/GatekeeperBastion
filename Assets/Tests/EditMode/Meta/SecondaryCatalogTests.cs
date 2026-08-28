@@ -68,16 +68,24 @@ namespace GatekeepersProtocol.Tests
                 {
                     // Unringed Secondaries cannot buy points — equal investment is T0 only.
                     if (!WeaponWheel.HasRing(id) && t > 0) continue;
-                    // 2026-08-15: SEC-D at equal flat damage+clip exceeds BR-12 duty-cycle
-                    // dps from T5 (155 vs 152). Deliberate — the 0.67 s dump is reload-bound,
-                    // so clip+damage points raise it faster than a pellet shotgun, and
-                    // EffectiveDps does not see range. Contact identity is gated by
-                    // SecDAndMk1AreDifferentWeapons; upgraded rivalry by
-                    // SecDFireRateFocus_NeverRivalsFocusedPrimaries.
-                    // 2026-08-16: MK-1 T0 damage 30 so a Wave-1 Default is one shot. Duty-cycle
-                    // dps then exceeds the Secondary band; first-session TTK is the demand.
-                    if (id == WeaponId.Mk1Sidearm) continue;
-                    if (id == WeaponId.SecD && t > 0) continue;
+
+                    // BOTH EXEMPTIONS REMOVED, 2026-08-27, AND THE TEST WAS EMPTY WITHOUT THEM.
+                    // This fixture skipped MK-1 at every tier ("2026-08-16: MK-1 T0 damage 30 so
+                    // a Wave-1 Default is one shot; duty-cycle dps then exceeds the Secondary
+                    // band") and SEC-D above T0 ("2026-08-15: SEC-D exceeds BR-12 duty-cycle dps
+                    // from T5, 155 vs 152"). There are exactly two ringed Secondaries, so between
+                    // them the skips excused every case the loop could have caught above T0 —
+                    // a guard named SecondariesNeverRivalPrimaries that had stopped guarding.
+                    //
+                    // Both exemptions existed for ONE reason: the free MK-1 sustained 59.0 dps
+                    // while every purchasable Primary sat at 33-37, so a Secondary out-damaging
+                    // the Primary floor was the normal state of the catalog and the pin had to be
+                    // hollowed out to stay green. The 2026-08-27 Primary raise (~2x on every
+                    // Primary; Secondaries untouched) is precisely the fix for that inversion, so
+                    // the exemptions are what should have been deleted by it. Measured after the
+                    // raise, across all eleven tiers, MK-1 runs 10-12% under the Primary floor
+                    // and SEC-D 34-62% under it — the claim in the name is true again at every
+                    // rung, so it is asserted again at every rung.
                     float dps = WeaponWheel.EffectiveDps(WeaponCatalog.Def(id), pts);
                     Assert.Less(dps, primaryFloor,
                         $"{id} flat T{t} dps {dps:0.##} must stay below Primary floor {primaryFloor:0.##}");
@@ -85,14 +93,45 @@ namespace GatekeepersProtocol.Tests
             }
         }
 
+        /// <summary>Renamed FROM Mk1_T0_OneShotsWave1Default_TwoShotsWave2 on 2026-08-27, because
+        /// the claim in that name INVERTED. BaseEnemyHp went 30 -> 50 and the sidearm did not move,
+        /// so a wave-1 Default now costs two shots where it cost one, and a wave-2 body costs three
+        /// where it cost two. That is a deliberate consequence of the fewer-and-tougher pass, not a
+        /// regression: the free sidearm out-killed every purchasable Primary on the opening wave
+        /// precisely BECAUSE its one shot was the whole kill, and taking that away is most of what
+        /// the raise was for.</summary>
         [Test]
-        public void Mk1_T0_OneShotsWave1Default_TwoShotsWave2()
+        public void Mk1_T0_TwoShotsWave1Default_ThreeShotsWave2()
         {
-            float dmg = WeaponCatalog.Def(WeaponId.Mk1Sidearm).damage;
-            Assert.GreaterOrEqual(dmg, WaveDirector.BaseEnemyHp);
-            float wave2Hp = WaveDirector.BaseEnemyHp * (1f + WaveDirector.EnemyHealthPerWave);
-            Assert.AreEqual(2, (int)System.Math.Ceiling(wave2Hp / dmg));
+            var mk1 = WeaponCatalog.Def(WeaponId.Mk1Sidearm);
+            float dmg = mk1.damage * System.Math.Max(1, mk1.pellets);
+
+            Assert.AreEqual(2, ShotsToKill(dmg, DefaultHp(0)), "wave-1 Default");
+            Assert.AreEqual(3, ShotsToKill(dmg, DefaultHp(1)), "wave-2 Default");
+
+            // THE CLAIM UNDERNEATH THE TWO COUNTS, and the reason it is worth a pin at all: the
+            // free sidearm must never one-shot the calibration wave again. One shot per kill is
+            // what let it beat a 1200-salvage rifle on wave 1 at equal tier, and it is the exact
+            // shape the 2026-08-27 pass was written to remove.
+            Assert.Greater(ShotsToKill(dmg, DefaultHp(0)), 1,
+                $"the free sidearm deals {dmg} into a {DefaultHp(0)} hp wave-1 body; if that ever "
+                + "becomes one shot again, every Primary loses the opening wave to it");
+
+            // ...and the ladder has to keep costing it more, or the sidearm scales for free.
+            for (int w = 1; w < WaveDirector.MaxWaves; w++)
+                Assert.GreaterOrEqual(ShotsToKill(dmg, DefaultHp(w)),
+                                      ShotsToKill(dmg, DefaultHp(w - 1)),
+                    "wave " + w + " must not be cheaper for the sidearm than the wave before it");
+            Assert.Greater(ShotsToKill(dmg, DefaultHp(WaveDirector.MaxWaves - 1)),
+                           ShotsToKill(dmg, DefaultHp(0)),
+                "the deepest wave must cost the sidearm strictly more shots than the first");
         }
+
+        static float DefaultHp(int waveIndex) =>
+            WaveDirector.BaseEnemyHp * (1f + WaveDirector.EnemyHealthPerWave * waveIndex);
+
+        static int ShotsToKill(float damagePerShot, float hp) =>
+            (int)System.Math.Ceiling(hp / damagePerShot);
 
         [Test]
         public void FirstWheelPurchase_AffordableOffOneWaveOneClear()

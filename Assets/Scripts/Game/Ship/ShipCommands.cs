@@ -32,7 +32,7 @@ namespace GatekeepersProtocol.Game
             if (!MetaUpgrades.UpgradesUnlocked(m))
             {
                 Log.Event("Ship",
-                    "tried to buy equipment slot — locked until salvage banks through the Hatch");
+                    "tried to buy equipment slot — locked until this realm has earned salvage");
                 return false;
             }
 

@@ -177,7 +177,8 @@ namespace GatekeepersProtocol.Game
         {
             HideChrome();
             // Seed before the first PushFightValues so the card never flashes WEAPON/0/0.
-            SetWeapon("—", "—");
+            // Rajdhani-Bold SDF has no U+2014 (98-character static atlas, no fallback).
+            SetWeapon("--", "--");
             SetProtocolLine("NO PROTOCOL");
             SetProfile(ProfileRank, null);
             SetReloadLabel("CLIP");
@@ -457,12 +458,12 @@ namespace GatekeepersProtocol.Game
 
         public void SetEndScreen(
             string cause, string framing, string earned, string repair, string net,
-            string banked, string deepest)
+            string banked, string deepest, string cta = null)
         {
             EnsureBuilt();
             if (_endScreen == null) return;
             var primary = new[] { earned, repair, net, deepest };
-            _endScreen.Present(cause, framing, primary, ParseTrailingNumber(banked), banked, null);
+            _endScreen.Present(cause, framing, primary, ParseTrailingNumber(banked), banked, null, cta);
         }
 
         public void SetEmergencyText(string text) => UiBind.SetText(_emergencyText, text);
@@ -481,6 +482,8 @@ namespace GatekeepersProtocol.Game
                 var group = _vignetteRoot.GetComponent<CanvasGroup>();
                 if (group != null) group.alpha = target;
             }
+            // The crosshair must not sit live under YOU ARE DOWN — you cannot shoot while down.
+            if (downOverlay) SetCrosshairVisible(false);
             UiBind.SetTextOrHide(_downLabel, downOverlay ? downText : null);
         }
 

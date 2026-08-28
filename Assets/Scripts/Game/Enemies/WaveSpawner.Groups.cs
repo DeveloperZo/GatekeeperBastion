@@ -86,6 +86,24 @@ namespace GatekeepersProtocol.Game
                 i--;
                 CheckAssaultCleared();
             }
+
+            // After the authored roster: the drip that holds a field wave open until the player
+            // reaches its terminal (Zo, 2026-08-26; Docs/Design/0-Gameplay.md).
+            TickFieldTrickle(dt);
+        }
+
+        /// <summary>One trickle body, spawned alone at <paramref name="point"/>. It reuses the
+        /// live wave's spec so the body is the same kind of Default the wave was made of — the
+        /// drip is the same enemy arriving late, not a new creature — and it is deliberately a
+        /// Default: a Thief that ignores the player, or a Hunter that outruns them, would change
+        /// what the walk asks for rather than sustaining it.</summary>
+        void SpawnTrickleBody(Transform point)
+        {
+            // A throwaway emit: SpawnOne wants one for its per-wave bookkeeping, and this body
+            // belongs to no roster — it never enters _active, so it can never hold the assault
+            // open by looking like an undelivered wave.
+            var emit = new WaveEmit { Spec = _trickleSpec, Size = 1, BornFrame = Time.frameCount };
+            SpawnOne(_trickleSpec, GatekeeperKind.Default, point, 0, 1, emit);
         }
 
         /// <summary>One tick of one wave's delivery. Returns true when the roster has emptied

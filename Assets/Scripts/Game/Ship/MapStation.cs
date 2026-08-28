@@ -66,9 +66,9 @@ namespace GatekeepersProtocol.Game
         protected override void OnStationOpened(MetaState m)
         {
             if (m == null || !m.DemoActive) return;
-            if (m.HatchConversions < 1 || s_returnLinePlayed) return;
+            if (m.LifetimeSalvageEarned <= 0L || s_returnLinePlayed) return;
             s_returnLinePlayed = true;
-            DemoVoice.PlayLocalAndBroadcast(DemoConversationIds.EmbarkWave2, DemoVoiceMode.Lock);
+            DemoVoice.PlayLocalAndBroadcast(DemoConversationIds.EmbarkWave2, DemoVoiceMode.Subtitle);
         }
 
         protected override void Awake()
@@ -76,6 +76,20 @@ namespace GatekeepersProtocol.Game
             base.Awake();
             if (_body == null)
                 Log.Error(Tag, StationName + ": missing serialized _body.");
+            // The Screen child ships inactive (dead ship). It lights on beat 0's repair —
+            // and stays lit on every later visit, and always outside the demo.
+            var m = GameSession.Meta;
+            if (m != null && (!m.DemoActive || m.DemoNavPowered))
+                ShowPoweredLook();
+        }
+
+        /// <summary>The one visual beat 0's NAV repair changes: the console screen lights.
+        /// Called at the repair moment (DemoStationGate.TickHold) and from Awake for saves
+        /// where the repair already happened.</summary>
+        public void ShowPoweredLook()
+        {
+            var screen = transform.Find("Screen");
+            if (screen != null) screen.gameObject.SetActive(true);
         }
 
         protected override int ContentHash(MetaState m)
@@ -406,19 +420,17 @@ namespace GatekeepersProtocol.Game
                     if (!_refusedTerminal)
                     {
                         _refusedTerminal = true;
-                        DemoVoice.Play(DemoConversationIds.EmbarkBlocked, DemoVoiceMode.Lock,
+                        DemoVoice.Play(DemoConversationIds.EmbarkBlocked, DemoVoiceMode.Subtitle,
                             "You are not ready. Start the ship terminal first.");
                     }
                     return true;
                 case DemoEmbarkRefusal.NoWeapon:
-                    // Unreachable on a post-revision save (the terminal's start grants
-                    // the MK-1 with the same write) — kept for pre-revision saves.
                     Log.Event("Demo", "embark refused — no weapon");
                     if (!_refusedWeapon)
                     {
                         _refusedWeapon = true;
-                        DemoVoice.Play(DemoConversationIds.EmbarkBlocked, DemoVoiceMode.Lock,
-                            "You are unarmed. Start the ship terminal.");
+                        DemoVoice.Play(DemoConversationIds.EmbarkBlocked, DemoVoiceMode.Subtitle,
+                            "You are unarmed. Take the MK-1 from the ARMORY.");
                     }
                     return true;
                 case DemoEmbarkRefusal.Intruders:
@@ -426,7 +438,7 @@ namespace GatekeepersProtocol.Game
                     if (!_refusedIntruders)
                     {
                         _refusedIntruders = true;
-                        DemoVoice.Play(DemoConversationIds.EmbarkBlocked, DemoVoiceMode.Lock,
+                        DemoVoice.Play(DemoConversationIds.EmbarkBlocked, DemoVoiceMode.Subtitle,
                             "Gatekeepers are still aboard. Clear the ship first.");
                     }
                     return true;

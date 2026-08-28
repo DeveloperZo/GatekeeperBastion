@@ -1,4 +1,4 @@
-<!-- Purpose: how the BR-12 Shotgun wants to be played, what it cannot do, and which Gatekeeper it answers. / Status: working / Update trigger: when the BR-12's catalog row changes (pellets, spread, falloff, range), or when Hunter behaviour changes. / Last updated: 2026-08-16 -->
+<!-- Purpose: how the BR-12 Shotgun wants to be played, what it cannot do, and which Gatekeeper it answers. / Status: working / Update trigger: when the BR-12's catalog row changes (pellets, spread, falloff, range), or when Hunter behaviour changes. / Last updated: 2026-08-25 (shortest-reach claim narrowed to Primaries now the SEC-D ships; a purchase moves three spokes, not four) -->
 
 # BR-12 Shotgun
 
@@ -6,7 +6,7 @@
 
 A Primary for things that come to me. One pull throws a cone of pellets, and each pellet is nothing on its own. The shot is strong only when most of them land — which means close, and filling the crosshair.
 
-Damage bleeds off with distance, and at the edge of its reach it does nothing at all. That reach is the shortest I have carried, by a wide margin, and there is no cue for where the falloff starts. A shot that looked like a hit can be a blank.
+Damage bleeds off with distance, and at the edge of its reach it does nothing at all. That reach is the shortest of the three Primaries by a wide margin — only the SEC-D in my other hand works at less — and there is no cue for where the falloff starts. A shot that looked like a hit can be a blank.
 
 Pellets stop on the first thing they touch. The cone does not sweep a group — pellets that land on a second body are pellets that failed to kill the first. Pick one body. Give it everything.
 
@@ -20,7 +20,7 @@ Wrong tool for Thieves and for long corridors. Start on a Thief early, and count
 
 ### What it is
 
-One trigger pull throws a handful of pellets in a cone. Each pellet is weak on its own; the shot is strong only when most of them land, which means it is strong only when the target is close and roughly filling your crosshair. Damage bleeds off with distance — past a certain point each pellet starts doing less, and by the edge of its reach it does nothing at all. Its reach is the shortest in the game by a wide margin.
+One trigger pull throws a handful of pellets in a cone. Each pellet is weak on its own; the shot is strong only when most of them land, which means it is strong only when the target is close and roughly filling your crosshair. Damage bleeds off with distance — past a certain point each pellet starts doing less, and by the edge of its reach it does nothing at all. Its reach is the shortest of any Primary by a wide margin — the SEC-D is the only weapon in the game that works at less.
 
 Pellets do not pierce. Every pellet stops on the first thing it touches, so the shot is spent entirely on the nearest body in the cone.
 
@@ -50,7 +50,7 @@ Its cadence is slow, its clip is small, and its reload is the longest of the thr
 
 ### Tiering it
 
-Damage is raised **per pellet**, and an upgrade purchase moves damage, clip, reload and cadence together, weighted by the spoke you centred — so where you put your upgrade focus decides whether the BR-12 gets a harder shot, more shots, or a shorter wait between clips. Range, spread, pellet count and falloff never move.
+Damage is raised **per pellet**, and an upgrade purchase moves three spokes at once — the one you centred and its two neighbours on the ring, nothing to the two opposite — so where you put your upgrade focus decides whether the BR-12 gets a harder shot, more shots, or a shorter wait between clips. Range, spread, pellet count and falloff never move.
 
 One quiet consequence: critical hits are rolled per pellet, so this weapon would get more crit rolls per trigger pull than a single-shot weapon. Crit chance is frozen at nothing; there is no Luck track to buy.
 
@@ -61,7 +61,7 @@ One quiet consequence: critical hits are rolled per pellet, so this weapon would
 ## Gaps
 
 - Damage falls off with distance and there is no indicator of where that begins or how bad it is. Shots at medium range look identical to shots at point blank.
-- Its reach is far shorter than either other weapon's. Past the edge, pellets do literally nothing — no damage, not reduced damage.
+- Its reach is far shorter than either other Primary's. Past the edge, pellets do literally nothing — no damage, not reduced damage.
 - Pellets do not pierce, so the cone does not spread damage across a crowd the way it looks like it should. Aiming "between" two Gatekeepers wastes the shot.
 - The bracket crosshair is an identity cue for this weapon, not a spread indicator. It does not grow or shrink to show accuracy.
 - Crit chance is rolled per pellet. Chance is frozen at nothing, so the extra rolls currently buy nothing.

@@ -29,6 +29,21 @@ namespace GatekeepersProtocol.Game
         const int IdLength = 12;
         const int MaxNameLength = 24;
 
+        /// <summary>Whose co-op a row is part of. Two states rather than one flag because a
+        /// realm you own and shared and a realm someone shared with you are not the same row:
+        /// the first is a document on this disk that DELETE destroys, the second is a memory
+        /// on the Boarder that DELETE only forgets. One "shared" mark on both would say the
+        /// two are interchangeable, and the wrong one of them is unrecoverable.</summary>
+        public enum CoopRole
+        {
+            /// <summary>Solo — no share sidecar, and not a borrowed row.</summary>
+            None = 0,
+            /// <summary>This machine's realm, opened to friends.</summary>
+            Owned = 1,
+            /// <summary>Someone else's realm this Boarder was admitted to.</summary>
+            Guest = 2
+        }
+
         /// <summary>One line in a chooser: which document it is, and what to call it.</summary>
         public struct SaveRow
         {
@@ -37,12 +52,22 @@ namespace GatekeepersProtocol.Game
             /// <summary>False when this build refuses the document's version. The row still
             /// lists — a realm you cannot enter is better shown with a reason than hidden.</summary>
             public readonly bool Loadable;
+            /// <summary>Whether co-op is on for this row, and from which side. Decided by the
+            /// chooser, never read off the document — a realm's own JSON knows nothing about
+            /// sharing, which lives in a sidecar beside it and on the Boarder.</summary>
+            public readonly CoopRole Coop;
 
             public SaveRow(string id, string name, bool loadable)
+                : this(id, name, loadable, CoopRole.None)
+            {
+            }
+
+            public SaveRow(string id, string name, bool loadable, CoopRole coop)
             {
                 Id = id;
                 Name = name;
                 Loadable = loadable;
+                Coop = coop;
             }
         }
 

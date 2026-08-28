@@ -57,8 +57,11 @@ namespace GatekeepersProtocol.PlayTests
         public IEnumerator Juice_ClientRpc_RaisesHostSiphonOnce()
         {
             yield return BootHostRun();
-            CreditUnbanked(10);
-            long before = _gc.Sim.Unbanked;
+            long bankSnap = _gc.Meta.BankedSalvage;
+            BankKills(10);
+            // The Ante charges the BANK (Zo, 2026-08-25) — kills bank on landing, so the
+            // carried pile this used to read is empty unless somebody deliberately Withdrew.
+            long before = _gc.Sim.BankedSalvage;
             Assert.GreaterOrEqual(before, IntensityJuice.CostPerStep);
             Assert.AreEqual(0, _gc.Sim.Siphon.Level);
 
@@ -67,7 +70,12 @@ namespace GatekeepersProtocol.PlayTests
             yield return WaitForTicks(m_ServerNetworkManager, 4);
 
             Assert.AreEqual(1, _gc.Sim.Siphon.Level);
-            Assert.AreEqual(before - IntensityJuice.CostPerStep, _gc.Sim.Unbanked);
+            Assert.AreEqual(before - IntensityJuice.CostPerStep, _gc.Sim.BankedSalvage);
+            Assert.AreEqual(0L, _gc.Sim.Unbanked,
+                "and never a pile nobody staked — the client's RPC cannot invent one");
+
+            // The realm's pot outlives this fixture; hand it back what the Ante spent.
+            _gc.Meta.BankedSalvage = bankSnap;
         }
 
         [UnityTest]
@@ -108,7 +116,10 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreEqual(AssaultState.Prep, _gc.Sim.Assault);
         }
 
-        void CreditUnbanked(int kills)
+        /// <summary>Earn into the realm's pot the way the game does. Was CreditUnbanked:
+        /// AwardKill banks at face value now (Zo, 2026-08-25) and never touches a pile.
+        /// Ends back in Prep because the Ante is a Prep verb.</summary>
+        void BankKills(int kills)
         {
             _gc.Sim.TriggerDraw();
             for (int i = 0; i < kills; i++)

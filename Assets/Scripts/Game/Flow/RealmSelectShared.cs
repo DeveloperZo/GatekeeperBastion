@@ -27,17 +27,39 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>This machine's realms plus the shared realms the given Boarder remembers,
-        /// marked in the name. The Boarder decides the remote tail because admission travels
-        /// with the player, not the install. Null boarder id — nothing picked — is local only.</summary>
+        /// each stamped with which side of co-op it is. The Boarder decides the remote tail
+        /// because admission travels with the player, not the install. Null boarder id —
+        /// nothing picked — is local only, but the local rows are still stamped: whether your
+        /// own realm is open to friends has nothing to do with which Boarder you are taking in.
+        /// </summary>
+        /// <remarks>
+        /// The co-op mark is a fact on the row, not text in the name. It was text once — the
+        /// remote rows carried "(shared)" glued into <c>Name</c> — and that name then travelled
+        /// into the store's refusals and into the FORGET confirmation, so the player was asked
+        /// to forget a realm called "ORION  (shared)". The view composes the label now.
+        /// </remarks>
         public RealmRegistry.SaveRow[] BuildRows(RealmRegistry.SaveRow[] local, string boarderId)
         {
             _localCount = local.Length;
             _owners = System.Array.Empty<string>();
-            if (string.IsNullOrEmpty(boarderId)) return local;
-            var boarder = SaveService.LoadBoarder(boarderId);
-            if (boarder == null || boarder.KnownRealmCount == 0) return local;
 
-            var rows = new System.Collections.Generic.List<RealmRegistry.SaveRow>(local);
+            // One sidecar probe per owned realm, per rebuild. That is a small read of a small
+            // file and it is the ONLY definition of "shared" there is — a cheaper File.Exists
+            // here would be a second answer to the same question, free to drift from the first.
+            var rows = new System.Collections.Generic.List<RealmRegistry.SaveRow>(local.Length + 4);
+            for (int i = 0; i < local.Length; i++)
+            {
+                var row = local[i];
+                rows.Add(new RealmRegistry.SaveRow(row.Id, row.Name, row.Loadable,
+                    RealmShareService.IsShared(row.Id)
+                        ? RealmRegistry.CoopRole.Owned
+                        : RealmRegistry.CoopRole.None));
+            }
+
+            if (string.IsNullOrEmpty(boarderId)) return rows.ToArray();
+            var boarder = SaveService.LoadBoarder(boarderId);
+            if (boarder == null || boarder.KnownRealmCount == 0) return rows.ToArray();
+
             var owners = new System.Collections.Generic.List<string>();
             for (int i = 0; i < boarder.KnownRealmCount; i++)
             {
@@ -46,8 +68,9 @@ namespace GatekeepersProtocol.Game
                 for (int k = 0; k < local.Length; k++)
                     if (local[k].Id == known.RealmId) { alreadyLocal = true; break; }
                 if (alreadyLocal) continue;
-                string label = (string.IsNullOrEmpty(known.Name) ? "REALM" : known.Name) + "  (shared)";
-                rows.Add(new RealmRegistry.SaveRow(known.RealmId, label, true));
+                rows.Add(new RealmRegistry.SaveRow(known.RealmId,
+                    string.IsNullOrEmpty(known.Name) ? "REALM" : known.Name, true,
+                    RealmRegistry.CoopRole.Guest));
                 owners.Add(known.OwnerId);
             }
             _owners = owners.ToArray();

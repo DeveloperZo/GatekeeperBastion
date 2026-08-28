@@ -9,6 +9,24 @@ namespace GatekeepersProtocol.Sim
     /// attributed.</summary>
     public static class HatchBank
     {
+        /// <summary>What a field Wave's hit on the Hatch is worth, against a Hatch-bank Wave's
+        /// full 1.0. THE HATCH IS SHUT WHILE YOU ARE UP THE LANE — you left through it — and it
+        /// is armoured accordingly.
+        /// <para>Sized, not picked. Hatch HP is 300 and was set for a mode where the player
+        /// STANDS ON IT; the raw per-body rates (Default 4 and Thief 20, both per the 0.7 s
+        /// attack interval) are 5.71 and 28.57 dps. One Thief with three Defaults is therefore
+        /// 45.7 dps raw and would take the Hatch down in 6.6 s — before a player at the near
+        /// terminal could even finish turning around. Wave 5 authors SEVEN Thieves.</para>
+        /// <para>The target is that the same small group gives the player about 45 s: enough
+        /// that the round trip to the near terminal (66 m out and back at 5 m/s is ~26 s) plus
+        /// a fight through is a real choice, and not enough to ignore. 300 / 45 = 6.67 dps,
+        /// against 45.7 raw, is this number. Raising it makes the Hatch a coin flip; dropping
+        /// it makes the stake theatre.</para>
+        /// <para>THIS IS THE FIRST DIAL TO TURN after playing a field Wave (Zo, 2026-08-27).
+        /// It has never been playtested — it is arithmetic against a Wave nobody has run with
+        /// the Hatch in the fight.</para></summary>
+        public const float FieldWaveDamageScale = 0.15f;
+
         public const float DripPerSecond = 8f;
         /// <summary>Hatch-bank convert window. #12 — Wave 6 delivery is ~35 s; 45 s covers
         /// spawn plus a short fight so Unbanked visibly falls (8/s × 45 = 360) before dump.

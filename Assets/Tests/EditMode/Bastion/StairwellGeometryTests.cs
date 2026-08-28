@@ -24,7 +24,9 @@ namespace GatekeepersProtocol.Tests
         public void EveryDeclaredStair_HasBuriedWalk_AndFlushLanding()
         {
             List<string[]> pairs = StairPairs();
-            Assert.Greater(pairs.Count, 0, SketchPath + " declares no 'stair <lower> <upper>' lines");
+            // Single-storey since the spine restructure (Zo, 2026-08-25): no stairs to
+            // check, and that is the intended state rather than a sketch that lost a line.
+            if (pairs.Count == 0) return;
 
             SceneDocs scene = SceneDocs.Load(ScenePath);
 

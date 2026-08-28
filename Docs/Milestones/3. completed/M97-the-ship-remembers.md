@@ -1,7 +1,7 @@
 # M97 — The ship remembers
 
 <!--
-Status: active
+Status: completed, Aug 2026 (folder-moved 2026-08-25 at Zo's direction; view + packing tests pass, eyes-on and two-box unobserved)
 Update trigger: when the realm split changes what is available to display, when a
 display surface is added or cut, when the Ship layout moves
 Last updated: 2026-08-24
@@ -85,9 +85,13 @@ without reading.
 - Criterion 7: eyes-on, two editor instances. The net fixture cannot see rendered props.
 
 **Playthrough path**: enter a realm with two clean exits and three weapons owned.
-From the Boarder spawn, walk to the ARMORY on deck 1 starboard and count three weapons
-on the rack (the plate is on the same wall a few metres aft), then take the stair up and
-walk the deck-2 port wall to count two marks.
+From the Boarder spawn, walk to the ARMORY on the starboard side and count three weapons
+on the rack (the plate is on the same wall a few metres aft), then walk the starboard wall
+aft to count two marks.
+
+> **Route corrected 2026-08-26** — the interior is one deck again, so there is no stair to
+> take and no deck-2 wall to walk. The marks moved to the starboard wall in the z 5-15 band
+> with the collapse; see the note below.
 
 ## Premises corrected before building, 2026-08-22
 
@@ -138,10 +142,15 @@ is run-critical, so it wants two machines and its own change.
 fixed world coordinates against the old 117-cell single-deck ship, and the rebuild left
 the marks and the rack metres outside a hull that now ends at x=10. The rescue
 (2026-08-22, on `M101`) re-homed each group whole, keeping this milestone's own spacing:
-the twelve marks now sit on the **deck-2 port wall** (x=-10, z 21.75–38.25, facing
-inboard, 2.2 m above the deck), and the seven-mount rack and the plate sit on the
-**deck-1 starboard wall in the ARMORY space** (z 16–22.5). `Tools/scene-check/
-enclosure.py --decks` is 0/0/0 with every binding row ok on the current scene.
+the twelve marks sat on the **deck-2 port wall** (x=-10, z 21.75–38.25, facing inboard,
+2.2 m above the deck), and the seven-mount rack and the plate sit on the **starboard wall
+in the ARMORY space** (z 16–22.5).
+
+> **Superseded 2026-08-26** — the one-deck collapse moved the marks again. Dropped straight
+> to y=0 they would have landed inside the port glazing, so they went to the **starboard wall
+> in the z 5–15 band**, moved as a whole so this milestone's spacing survives. The checker is
+> now `python Tools/scene-check/enclosure.py` — the `--decks` flag retired with the second
+> deck, and its checks run unconditionally.
 
 Found against the same wall and fixed here: **the plate's TextMesh was mirrored.** A
 legacy TextMesh reads from its own -Z, and every station label on that wall carries +Z

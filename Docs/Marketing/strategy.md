@@ -6,7 +6,9 @@ market is allowed to hear which sentence.
 Status: working
 Update trigger: when friends-alpha closes, when the locked pitch restamps, or
 when Steam-tag policy for this title is decided.
-Last updated: 2026-08-17
+Last updated: 2026-08-25 (Wave-defense ban scoped to the copy and answered against the root
+README; pillars restated after M70 closed and M94/M93/M101 shipped; Ram and the death claim
+added to what marketing must not do)
 -->
 
 ## Category
@@ -30,7 +32,11 @@ Co-op, Action, Sci-fi, and only add Survival if it means "the Hatch can kill
 the Run," not "survive the night on your fortress."
 
 Do not print the Play-banned phrase **Wave-defense** on a store page
-(`../_meta/_definitions/language.md`).
+(`../_meta/_definitions/language.md`, rule 3: store sentences follow the Play ban).
+**The ban is on the copy, not on the repository.** `Tools/lint-language/run.sh` only scans
+`Docs/Play/` for that list, and the root `README.md` opens "Sci-fi wave-defense FPS" — that
+is a repository map for builders and is not a violation. Builder notes inside these
+Marketing files, including this sentence, may name the banned terms; the copy block may not.
 
 ## Who it is for
 
@@ -54,12 +60,12 @@ Mapped to `../Design/1-Experience.md` §1.2. Do not print the aesthetic names.
 
 | Order | Player-facing proof | Must be true in the build |
 |---|---|---|
-| 1 | Alone or with a friend, one Ship, one Hatch | Shared Ship closed (`M72`); five-Wave dry-run still open |
-| 2 | The gun is the build; a Protocol is who you are on this Run | Default claim is in tree (`M70` remaining: Fight cooldown / play close). "Their" Protocols wait on one diluted Gatekeeper modifier from the same pool |
+| 1 | Alone or with a friend, one Ship, three Hatches | Shared Ship closed (`M72`), and the ship became a two-deck hull with a realm and a record on it (`M101`, `M96`, `M97`). Five-Wave dry-run still open |
+| 2 | The gun is the build; a Protocol is who you are on this Boarding | Three sheets ship — Default's 0-salvage claim (`M70`, closed), VEIL and FORGE (`M94`, closed 2026-08-24) — and three Primaries read as three guns (`M93`). "Their" Protocols still wait on one diluted Gatekeeper modifier from the same pool |
 | 3 | You cut into a vessel **they** still hold | True now (NAV MAP premise, `M27`) |
 
-The fight (juice, Waves, Hatch-bank) is how those three are tested. It is not
-a fourth store pillar. "Fight off waves to defend your Salvage" is the loop
+The fight — anting up, Waves, the Convert — is how those three are tested. It is
+not a fourth store pillar. "Fight off waves to defend your Salvage" is the loop
 sentence, with the Salvage caveat in `pitch.md`.
 
 ## What marketing must not do
@@ -71,15 +77,20 @@ sentence, with the Salvage caveat in `pitch.md`.
 - Promise a career path ("Apprentice to Master"). We have first-loss unlocks
   and a wheel, not a named rise.
 - Use "Bastion" as the player's home. Home is the **Ship**.
-- Cite Field Manual for T1 Wave count or **Ram** (`pitch.md` Do not cite).
+- Cite the Field Manual for the T1 Wave count. Four sources disagree and its
+  sentence is a hardcoded literal rather than a generated one (`gaps.md`).
+- Write **Ram** anywhere. The rename landed 2026-08-20 and the identifier has zero
+  hits in `Assets/Scripts/`; it is Thief in code and in copy alike.
+- Say a single death ends a Boarding. `M98` prices one way back per dead seat, paid
+  from that seat's carried Unbanked. Saying you can always come back is equally wrong.
 
 ## Sequence
 
 | Stage | Market | Printable |
 |---|---|---|
-| Now | Friends send (`gtm.md`) | Alone; defeat Gatekeepers; Hatch-bank Salvage. Not "with friends" as a solved product. Not "their Protocols." |
+| Now | Friends send (`gtm.md`) | Alone; defeat Gatekeepers; Convert your Salvage. Not "with friends" as a solved product. Not "their Protocols." Not a shared realm, which is built and unproven on two machines. |
 | Friends-alpha closed | Same people, then a wider zip | The first pitch sentence in full |
-| `M70` + one diluted Gatekeeper modifier (probe) | Store / trailer | Protocols sentence |
+| One diluted Gatekeeper modifier (probe) | Store / trailer | Protocols sentence. The sheets themselves already ship |
 | Second destination | Store | Bastions, plural |
 | Steam page | Wishlist | Tags and trailer per this file; copy from `pitch.md` only where Accuracy is **true** |
 

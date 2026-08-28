@@ -111,8 +111,12 @@ unable to paint a panel. The rule:
 2. **Destroying a panel GO is forbidden until its replacement is bound** on
    `MainPanelManager.panelObject` and on the console's `_view`.
 3. **Postconditions before SaveScene** (see `StationSceneGate`): Canvas scale ≥ 0.5;
-   each station has `StationPanelView` with non-null `_bodyContent`, `_closeButton`,
-   `_buttonPrefab`, `_labelPrefab`, `_rowPrefab`; a Background/Shadow; MPM entry live.
+   Settings chrome present (Background, Background Blur, Top and Bottom Panel); each
+   station has `StationPanelView` with non-null `_bodyContent` and `_closeButton`, its
+   mapped body view with no null serialized field, and a live MPM entry with a non-null
+   `panelObject`. **A surviving `Templates` folder is a FAIL** — panels are authored now
+   and clone nothing, which is why `_buttonPrefab`, `_labelPrefab` and `_rowPrefab` are
+   gone rather than merely unchecked.
 4. **Do not claim a terminal or HUD works from YAML inspection alone.** Open-path
    evidence is the gate log PASS, a play Interact that shows chrome, or both.
 5. **Prefer `Object.Instantiate` from a working scene/prefab** over hand-cloned YAML
@@ -144,12 +148,13 @@ tool nobody else can run is a script with documentation.
 | `Tools/lint-language/run.sh` | Language table. |
 | `Tools/lint-vendor/run.sh` | A bought pack's Shader Graph keeps the Built-In target this project renders with — the loss of one turned every robot magenta and was invisible in a gitignored dump. Reads the `vendor-lint` fence in `Decisions.md`. |
 | `Tools/docgen/run.sh` | Field Manual + `4-Data.md` countable blocks. |
+| `Tools/lint-constants/run.sh` | The other half of that: prose and XML comments that restate a `Sim/` array. Reads the `constant-lint` fence in this file. `python3`, not mono. |
 | `Tools/release-gate/run.sh` | The machine-red half of `../Docs/Release-Gate.md` (also from `Tools/verify/run.sh`). |
 | `Tools/wave-report/run.sh` | Session-log reader (path 2). |
 | `Tools/dashboard-data/run.ps1` | Regen `Docs/dashboard-data.js`. |
 | `Tools/player-session/` | Dual-box player harness (`run.ps1`, `one-click.cmd`). |
 | `Tools/bastion-sketch/` | Sketch files; emitter is sentinel-only. |
-| `Editor/Tools/IntegrationCheck.cs` | Full EditMode+PlayMode + player-build file bridge. |
+| `Assets/Scripts/Editor/Tools/IntegrationCheck.cs` | Full EditMode+PlayMode + player-build file bridge. Renamed from `AutoVerify.cs`; a doc still saying AutoVerify is stale, not describing a second tool. |
 
 **Menu item.** The highest bar, because the menu is the developer's surface and every
 row costs a scan. It has to **save real time or make a playthrough verifiable more
@@ -170,7 +175,7 @@ is why each row exists. If they disagree, the fence wins.
 |---|---|---|---|
 | **Record/** | 10 | Gameplay/This scene (F9 to stop), Gameplay/Ship, Gameplay/Bastion, Ship Flythrough (22) | Playtest capture. F9 stops. |
 | **Logs/** | 40 | Open Logs Folder, Copy Latest Log Path | The log is the evidence behind every gate. |
-| **Build/** | 60 | All Scenes, Place Bastion Obstacles, Group Bastion Geom In Open Scene, Unpack Bastion Geom In Open Scene | Scene generation and kit authoring (`Architecture.md`, gotcha 4). |
+| **Build/** | 60 | All Scenes (60), Place Bastion Obstacles (61), Range Scene (62), Group Bastion Geom In Open Scene (62), Protocol Bar (63), Unpack Bastion Geom In Open Scene (63), Copy Compendium Pages (64) | Scene generation and kit authoring (`Architecture.md`, gotcha 4), plus the two scene-content emitters and the Compendium page copy the build needs. |
 | **Bake/** | 80 | Bastion NavMesh | Rebake walkable mesh without wiping kit. |
 | **Validate/** | 100 | Integration Check, Scene Bindings | Full suites; missing serialized refs. |
 
@@ -179,7 +184,9 @@ for Zo; sentinels are for agents. Same code path behind both where both exist.
 
 **Adding a row means naming the folder, naming the row it replaces, and updating
 `menu_rows` in the same change.** Seven rows existed on 2026-08-04; four survived that
-question. The count grew since for capture, bake, obstacle seed, and kit geom group/unpack.
+question. Sixteen exist on 2026-08-25 — the count grew for capture, bake, obstacle seed,
+kit geom group/unpack, the Range and Protocol Bar scene emitters, and the Compendium page
+copy.
 
 Cut on 2026-08-04, worth not re-adding: **Build Bastion Scene** (narrower duplicate),
 **Reset Verification State** (a workaround — the sentinel path already self-heals),
@@ -201,7 +208,7 @@ not a temporary compromise.
 | Step | Who | How |
 |---|---|---|
 | Kit prefabs | agent | `gkb_bastion_kit_request.txt` |
-| Segment layout + H/S/T/D + unlock graph | agent | sketch under `Tools/bastion-sketch/`, then `gkb_bastion_sketch_request.txt` (path in file, or empty for default; optional second line is the scene path, default `Assets/Scenes/Bastion.unity`). Emits into that scene under `Environment`. New rooms rebuild in `Generated/` then **settle into `Authored/`** (unpacked, unique scene geometry). Rooms already in `Authored/` are not duplicated. Kit footprint retune of Control Rooms: `gkb_bastion_control_rebuild_request.txt` (scene path, optional sketch path). Settle leftovers: `gkb_bastion_settle_request.txt` (scene path). |
+| Segment layout + H/S/T/D + unlock graph | agent | sketch under `Tools/bastion-sketch/`, then `gkb_bastion_sketch_request.txt` (path in file, or empty for default; second line is the scene path). **Write that second line.** `BastionSketchEmitter.DefaultSceneRelative` is still `Assets/Scenes/Bastion.unity`, and that scene was deleted on 2026-08-24, so an omitted scene path now resolves to nothing — `Bastion_Coop.unity` or `Explore - Kit.unity` is what you mean. Emits into the named scene under `Environment`. New rooms rebuild in `Generated/` then **settle into `Authored/`** (unpacked, unique scene geometry). Rooms already in `Authored/` are not duplicated. Kit footprint retune of Control Rooms: `gkb_bastion_control_rebuild_request.txt` (scene path, optional sketch path). Settle leftovers: `gkb_bastion_settle_request.txt` (scene path). |
 | Obstacle seed | agent | `GatekeepersProtocol/Build/Place Bastion Obstacles` (or `gkb_bastion_obstacles_request.txt`). Names encode intent (`LongLane_*`, `Corner_*`, `Choke_*`, `Mask_*`). Skips hatch bay `02` when already authored. |
 | Field consoles | agent | `gkb_bastion_terminals_request.txt` — Ship Desk/Screen/Label on each `BastionTerminal`; ensures GateSlab on existing `BastionDoor` markers only (does not move gates or change Door/None sides); ensures `BastionLayout` on Environment. |
 | Passages vs gates | author | Segment **Door** with no `D` = passage (always walk). **`D` / `BastionDoor`** = progression gate (starts locked). Soft-lock parked. |
@@ -334,22 +341,33 @@ the editor tree, safe to delete. Do not commit them. The player escape hatch tem
 
 Three paths, in increasing cost:
 
-1. **`Tools/verify/run.sh`** — the `mcs`+`mono` EditMode harness. Compiles
-   `Util/Log.cs`, `Sim/*.cs` and `Tests/EditMode/*.cs` outside Unity and runs them in
-   seconds (183 tests in ~80 ms on 2026-08-04). Fastest signal on any sim or tuning
-   change; run it before claiming anything works. `--filter <substring>` narrows it,
-   `--verbose` shows passing names and game log lines. Needs `mono-devel`. It prints
-   every EditMode file it could not compile out here and why — a `skipped` line is
-   coverage you did not get, so read them.
+1. **`Tools/verify/run.sh`** — the `mcs`+`mono` EditMode harness, and more than the
+   tests. In order: lint-language, lint-arch, lint-vendor, lint-constants, the
+   `Assets/_Scratch/` empty check, then two compile stages, then
+   `Tools/docgen/run.sh --check` and
+   `Tools/release-gate/run.sh`. Stage 1 builds `Assets/Scripts/Sim/` alone — `Log.cs`
+   included, it lives at `Sim/Util/Log.cs` — against `Tools/verify/Shims.cs`, which is
+   the offline enforcement of the Sim boundary. Stage 2 builds
+   `Assets/Tests/EditMode/*.cs` plus `Game/Settings/` and `Game/Demo/` against that dll,
+   the same dependency direction the asmdefs enforce. Seconds end to end (183 tests in
+   ~80 ms on 2026-08-04). Fastest signal on any sim or tuning change; run it before
+   claiming anything works. `--filter <substring>` narrows it, `--verbose` shows passing
+   names and game log lines. Needs `mono-devel`. It prints every EditMode file it could
+   not compile out here and why — a `skipped` line is coverage you did not get, so read
+   them. `Assets/Scripts/Util/` holds only `LogFile.cs` and is not compiled here.
 2. **`Tools/wave-report/run.sh`** — mean live Gatekeepers per Wave from session logs
    (`Design/1-Experience.md`, section 1.3). Offline reader; no band, no verify hook.
-   `--summary`, `--csv`, `--html <out>`. Needs `mono-devel`. Pin:
-   `Logs/GatekeeperBastion_2026-08-07_16-34-30.log`. Interactive page:
-   `Docs/dashboard.html` Session tab (pick Logs/). Focus / Project tabs: regen with
-   `Tools/dashboard-data/run.ps1` → `Docs/dashboard-data.js`.
-3. **Integration-check file bridge** (formerly AutoVerify) — write
-   `<projectRoot>/gkb_verify_request.txt`;
-   with the editor open, `Editor/Tools/IntegrationCheck.cs` runs the full EditMode then
+   `--summary`, `--csv`, `--html <out>`. Needs `mono-devel`. **Do not pin a log by name**
+   — `Logs/` is gitignored and keeps only the newest 30, so a named log is gone within a
+   fortnight and off any clone from the start; the pin that stood here from 2026-08-07
+   already resolved to nothing. Point at the run instead. Both prefixes parse:
+   `GatekeepersProtocol_*` is what `LogFile.Product` writes today,
+   `GatekeeperBastion_*` is the pre-rename name and still the bulk of the corpus.
+   Interactive page: `Docs/dashboard.html` Session tab (pick Logs/). Focus / Project
+   tabs: regen with `Tools/dashboard-data/run.ps1` → `Docs/dashboard-data.js`.
+3. **Integration-check file bridge** (renamed from AutoVerify; a doc still saying
+   AutoVerify means this) — write `<projectRoot>/gkb_verify_request.txt`;
+   with the editor open, `Assets/Scripts/Editor/Tools/IntegrationCheck.cs` runs the full EditMode then
    PlayMode suites and writes `<projectRoot>/gkb_verify_report.json` with
    per-test results. Survives the domain reloads PlayMode causes. Also available
    as menu `GatekeepersProtocol/Validate/Integration Check`. This is the only way to run
@@ -360,6 +378,70 @@ Three paths, in increasing cost:
 
 If you changed only comments, the harness result must be identical. If it isn't,
 you changed code; revert.
+
+### Restated constants
+
+`Tools/docgen/run.sh --check` proves the **derived** half of a countable document. Between
+`GKB:GEN` and `GKB:END` the text is regenerated from `Sim/`, so it cannot be wrong for long.
+It says nothing about the **hand-written** half, and on 2026-08-26 that half drifted in three
+places at once while `--check` stayed green: the prose in `Design/4-Data.md`, the formula
+block a dozen lines above it, and `WaveDirector`'s own XML comment three lines under the
+array it describes all put a **1** in the third slot of `cloakerCount`, where
+`CloakerPerWave` has a **0** — claiming the Cloaker debuts a wave earlier than it does. The
+generated table in that same file was right the whole time.
+
+The failure has a shape: **a number appears in two places and only one of them is the
+source.** `Tools/lint-constants/run.sh` covers one narrow, mechanical case of it — a numeric
+array literal, restated outside its declaration, that *nearly* matches a live `Sim/` array.
+Near is the signal. A restatement that agrees is silent, and a list of unrelated numbers is
+too far away to match, so the check has one thing to say and says it rarely.
+
+**What it cannot catch, and this is most of the surface:**
+
+- **Prose that paraphrases.** "The Cloaker debuts on the fourth wave" carries the same claim
+  with no literal in it. Out of reach, and a clean run is not proof the docs are right.
+- **A restatement written any other way.** `0/0/1/2/3` and "0, 0, 1, 2, 3" in a sentence are
+  both invisible. Slash-separated lists were measured and rejected: they collide with every
+  `1/2` progress counter in `Docs/Demo - Single/` — 52 hits, all noise.
+- **Scalar constants.** A doc naming a `const` and a wrong value beside it was built and
+  measured too, and dropped at 6 hits, every one a false positive: a line may cite
+  `FinaleEliteCount` while discussing HP, and `Build`, `Count` and `Curve` are English words
+  before they are symbols. It would also not have caught the Cloaker drift, which names no
+  symbol. Restating a scalar in prose stays a review problem.
+- **A drift that changes the array's length**, or one that moves more values than
+  `max_distance`. At that distance it is a different array, not a stale copy of this one.
+
+`min_length` is not tuning. Two-value arrays (`FirstWaveByZone`, `EndWaveByZone`) match
+`{1,2}`-shaped set notation in prose and were the only false positive measured on the tree;
+below three values an array is not distinctive enough to be worth comparing. `must_resolve`
+is the tripwire that stops the check being gutted by accident: rename `CloakerPerWave`, or
+write it in a shape the declaration pattern cannot read, and the check goes **exit 2** rather
+than quietly finding nothing to compare and passing. A negative check that can pass by
+seeing nothing is not a gate.
+
+`Tools/lint-constants/run.sh` reads every value below from this fenced block; changing a
+value here changes the check with no script edit. `--selftest` proves the rule still fires,
+`--no-exempt` shows what the exempt list hides.
+
+```constant-lint
+min_length=3
+max_distance=2
+sim_dir=Assets/Scripts/Sim
+doc_dirs=Docs
+code_dirs=Assets/Scripts,Assets/Tests
+must_resolve=CloakerPerWave,HunterPerWave,ThiefPerWave,Curve
+exempt=Docs/Changelog.md,Docs/Milestones/3. completed,Docs/_meta/Logs,Docs/_to_delete,Docs/Brainstorms
+```
+
+The `exempt` list is history, not convenience. `Changelog.md` and a completed milestone
+**record what the value used to be** — `M63-3` states the old `CloakerPerWave` twice as the
+change it was making, and correcting that would be falsifying the record. Brainstorms propose
+numbers that are deliberately not live yet.
+
+One authoring constraint falls out of this: **a document may not spell a drifted array as a
+literal**, including this one, or the check reports itself. Say which slot is wrong instead.
+The alternative was exempting `Working-Rules.md` wholesale the way `lint-language` exempts
+its own rule document, and that would blind the check to every other number on this page.
 
 ## Driving the editor
 

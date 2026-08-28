@@ -28,6 +28,9 @@ namespace GatekeepersProtocol.Game
         HealOnly,
         /// <summary>Powered NAV before the ship fight is done: prompts, no picker.</summary>
         NoPanelYet,
+        /// <summary>Visible and named, selling full-version breadth — never a panel or any
+        /// interaction. Locked content the player should SEE, not wonder about.</summary>
+        LockedPreview,
     }
 
     /// <summary>The demo's pure gate rules over <see cref="MetaState"/>'s v9 flags — engine-free
@@ -35,33 +38,54 @@ namespace GatekeepersProtocol.Game
     /// what) lives in DemoStationGate; this class only answers what is allowed.</summary>
     public static class DemoProgress
     {
-        /// <summary>Friends unlock on the first wheel purchase (buys-left drops below 2),
-        /// or the moment the demo ends. A null meta never blocks a session.</summary>
+        /// <summary>Friends unlock the moment the player is ARMED — the ARMORY's MK-1 is
+        /// beat 0's last gate, and a Boarder with a weapon is one who can be joined
+        /// (Zo, 2026-08-25; was the first wheel purchase, which stranded co-op behind a
+        /// bank). Or the moment the demo ends. A null meta never blocks a session.</summary>
         public static bool MultiplayerUnlocked(MetaState m)
         {
             if (m == null) return true;
-            return MultiplayerUnlocked(m.DemoActive, m.DemoWheelBuysLeft);
+            return MultiplayerUnlocked(m.DemoActive, m.DemoWeaponGranted);
         }
 
         /// <summary>The same rule against a realm that has not been entered, so a chooser can
         /// refuse BEFORE handing out a join code rather than after.</summary>
-        public static bool MultiplayerUnlocked(bool demoActive, int wheelBuysLeft)
+        public static bool MultiplayerUnlocked(bool demoActive, bool weaponGranted)
         {
             if (!demoActive) return true;
-            return wheelBuysLeft < 2;
+            return weaponGranted;
         }
 
-        /// <summary>Primary-slot rows are for sale only once zone 2's bank has fallen — that
-        /// loss is what puts heavier hardware on the rack, and it is the event the player just
-        /// played. Never re-key this to a count of endings: a save that docked through zone 1
-        /// arrives on its first ejection and must still be offered the rack
-        /// (Docs/Demo - Single/5-repeat-to-control-room.md). A null meta or a demo-off session never
-        /// closes the rack — outside the demo the whole catalog is open.</summary>
+        /// <summary>The Wave the player must have REACHED before Primary-slot rows go on the
+        /// rack. Zone 1's last Wave: getting there is the moment the MK-1 stops being
+        /// enough.</summary>
+        public static int PrimaryRowsWave { get { return DemoZones.EndWave(1); } }
+
+        /// <summary>Primary-slot rows are for sale once the player has REACHED the end of
+        /// zone 1's Wave span — whether they cleared it, died on it, or docked out.
+        ///
+        /// <para>Re-keyed 2026-08-25 (Zo). This was <c>DemoZone2BankLost</c>, resolved by
+        /// zone 2's Convert window, and the Convert is out of the demo — so that flag can
+        /// never be written and the rack could never open. Worse, it was already the wrong
+        /// shape: the 2026-08-25 playthrough died on Wave 2 with 227 banked and
+        /// "no buyable upgrades remain", because the only kit that could carry zone 1 sat
+        /// behind clearing zone 1. Gating on the Wave REACHED rather than a Wave survived is
+        /// what makes that impossible — the run that proves you need a Primary is the run
+        /// that sells you one.</para>
+        ///
+        /// <para>Reached, never a count of endings: a save that docked through zone 1 arrives
+        /// on its first ejection and must still be offered the rack
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md). A null meta or a demo-off session
+        /// never closes the rack — outside the demo the whole catalog is open.</para></summary>
         public static bool PrimaryRowsOpen(MetaState m)
         {
             if (m == null) return true;
             if (!m.DemoActive) return true;
-            return m.DemoZone2BankLost;
+            // ENTERED, not Reached: DeepestWaveReached rises only on a CLEAR because deep
+            // start reads it as a permission, so it cannot tell "died on Wave 2" from "never
+            // drew Wave 2" — which is the whole case this gate exists for.
+            // The legacy flag still opens it, so a save written before the re-key keeps its rack.
+            return m.DemoZone2BankLost || m.DeepestWaveEntered >= PrimaryRowsWave;
         }
 
         /// <summary>Mark beat 0 — the ship tutorial — consumed, without playing it.
@@ -115,19 +139,42 @@ namespace GatekeepersProtocol.Game
             return DemoStationVerdict.Open;
         }
 
-        /// <summary>ARMORY: hidden — the MK-1 comes from the ship terminal's start
-        /// (2026-08-18 revision, no rack walk) — until the wheel unlocks on the first bank
-        /// (UpgradesUnlocked re-key; Docs/Decisions.md).</summary>
+        /// <summary>ARMORY: the arming beat (2026-08-25 recut — the terminal routes power
+        /// and points here; the rack's free MK-1 buy readies embark, no ship fight).
+        /// Hidden only until the terminal powers it; open from then on.</summary>
         public static DemoStationVerdict ArmoryVerdict(MetaState m)
         {
             if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
-            if (!MetaUpgrades.UpgradesUnlocked(m)) return DemoStationVerdict.Hidden;
+            if (!m.DemoArmoryPowered && !MetaUpgrades.UpgradesUnlocked(m))
+                return DemoStationVerdict.Hidden;
             return DemoStationVerdict.Open;
+        }
+
+        /// <summary>The one thing the gated CREW still opens for: a Boarder with no Protocol
+        /// claimed (Zo, 2026-08-26).
+        ///
+        /// <para>CREW's menu is gated until the first Docked return, and the 2026-08-27
+        /// playthrough is what that cost: the player embarked <c>[Protocol] embark none</c>,
+        /// ran the whole Boarding without one, and only saw <c>CREW menu unlocked</c> fire on
+        /// the way home. A first-run Boarder is EXACTLY the player who has no Protocol, so the
+        /// gate was shut precisely when the claim was wanted.</para>
+        ///
+        /// <para>This opens the door for the claim and nothing else. Once a Protocol is held
+        /// the station returns to heal-on-tap until the menu unlocks on its own schedule, so
+        /// the demo's pacing is unchanged for every other row — and mid-Boarding it stays shut,
+        /// because <see cref="ProtocolOffer.IsPickPending"/> refuses a locked loadout.</para></summary>
+        public static bool CrewOpensForProtocolClaim(MetaState m)
+        {
+            if (m == null || !m.DemoActive) return false;
+            if (!m.DemoShipFightDone) return false;   // hidden outranks this; no early door
+            if (m.DemoCrewMenuUnlocked) return false; // already open on its own terms
+            return ProtocolOffer.IsPickPending(m);
         }
 
         /// <summary>CREW: hidden until the ship fight is done (its first function is the
         /// post-fight heal); heal-on-tap until its menu unlocks (first Docked after the
-        /// first bank — DemoShipDirector writes that flag).</summary>
+        /// first bank — DemoShipDirector writes that flag), EXCEPT for an unclaimed Protocol —
+        /// see <see cref="CrewOpensForProtocolClaim"/>.</summary>
         public static DemoStationVerdict CrewVerdict(MetaState m)
         {
             if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
@@ -136,11 +183,12 @@ namespace GatekeepersProtocol.Game
             return DemoStationVerdict.Open;
         }
 
-        /// <summary>FABRICATION stays hidden for the whole demo.</summary>
+        /// <summary>FABRICATION is visible-but-locked for the whole demo — the prompt sells
+        /// the full version instead of the console reading as dark or dead.</summary>
         public static DemoStationVerdict FabricationVerdict(MetaState m)
         {
             if (m == null || !m.DemoActive) return DemoStationVerdict.Open;
-            return DemoStationVerdict.Hidden;
+            return DemoStationVerdict.LockedPreview;
         }
 
         /// <summary>Beat 3's exit-standing state key: true when no wheel upgrade can be

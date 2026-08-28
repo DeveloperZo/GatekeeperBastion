@@ -5,7 +5,7 @@ Purpose: Governs how code in this project is structured, named and written. Rule
 Status: working
 Authority: MASTER REFERENCE for how code is written. Docs/Architecture.md remains the reference for what this codebase is.
 Update trigger: when a rule is added, changed or retired, or when a new audit finds a rule nobody follows.
-Last updated: 2026-08-19
+Last updated: 2026-08-25 (08-25 audit indexed and folded into the standings; Build All no longer skips the Ship wipe; RealmShareBeacon named as unruled)
 -->
 
 ## Never do
@@ -18,16 +18,17 @@ Last updated: 2026-08-19
 - **Add a static MonoBehaviour singleton.** One is grandfathered by type —
   `HatchStation`, locator only. `GameController.Instance` was retired 2026-08-12
   (the scene host now owns a `RunContext` and passes or serializes itself to every
-  consumer); `DecoyBay`'s static was retired 2026-08-11. There is no second.
+  consumer); `DecoyBay`'s static was retired 2026-08-11. There is no second named one, and
+  one unnamed one the check cannot see — `RealmShareBeacon`, below.
 - **Add a counter, a rollup or a stats object** (`../Decisions.md`). Emit a log line.
 - **Use `?.`, `??`, `??=`, `is null` or `ReferenceEquals` on a `UnityEngine.Object.`**
   Only `== null`, `!= null`, `if (x)` respect Unity's lifetime check.
 - **Mutate Run state from anywhere but a `GameController` command method.** Meta / save
   mutation is `ShipCommands` only.
-- **Run Build All to refresh a dressed Ship.** A `ShipDress` root skips the Environment
-  wipe (`../Architecture.md` gotcha 4). Bastion kit geometry already persists the same
-  way. Stations, hosts and UI are authored and survive Build All. Without `ShipDress`,
-  collider graybox is still generated.
+- **Assume Build All leaves a dressed Ship alone.** It wipes and regrows `Environment`,
+  `SpawnPoints` and `Directional Light` in `Ship - CoOp.unity`; `ShipDress` survives only
+  because it is not an owned root (`../Architecture.md` gotcha 4). Bastion kit geometry
+  under `Environment` does persist. Stations, hosts and UI are authored and survive.
 - **Allocate in a per-frame path** — no LINQ, no `params`, no capturing closure, no
   interpolated string, no `foreach` over an interface.
 - **Commit a partial method body or an incomplete control structure.** See *Complete unit*.
@@ -46,8 +47,9 @@ Last updated: 2026-08-19
 
 ## The singletons, named
 
-Measured 2026-08-12 (`rg -n "static\s+\w+\s+Instance" Assets/Scripts/Game` for the
-declarations): exactly one `static Instance` declaration exists.
+Measured 2026-08-12 and re-measured 2026-08-25 (`rg -n "static\s+\w+\s+Instance"
+Assets/Scripts` for the declarations): exactly one `static Instance` declaration exists, and
+it is still `HatchStation`'s.
 
 - **`HatchStation`** — grandfathered, **locator only** (a transform / pathing target;
   it holds no Run or player state — its hatch-subsystem access goes through its
@@ -75,6 +77,14 @@ is where two Runs coexist, and it holds no statics at all — enforced by
 A fourth pattern existed when M40 was written (2026-08-09): `StationPanelView.EnsureInstance()`,
 a static factory — the same pattern under another name. It has since been removed
 (confirmed absent 2026-08-11), so its absence is expected, not a mystery to rediscover.
+
+**`RealmShareBeacon` is the shape without the name, and it is unruled.**
+`Game/Flow/RealmShareBeacon.cs:18` holds `static RealmShareBeacon _instance`, lazily
+created, `DontDestroyOnLoad`'d, guarded by `Ensure()` / `Retire()`. The fence below greps
+for a member named `Instance`, so it does not see this and the check passes.
+`5-Audit-2026-08-25.md` raised it: milder than a service locator, since nothing reads
+state through it from outside, so grandfather-and-document may be the right answer rather
+than a refactor. Until Zo rules, it is neither allowed by name nor flagged by the check.
 
 `Tools/lint-arch/run.sh` reads the fenced block below; a `static Instance` declaration
 on any type not named in it fails the run. The owed list has been empty since
@@ -110,9 +120,11 @@ deleted**, which is why this list is checked rather than trusted.
 | `4-Testing-and-Determinism.md` | MANDATORY | EditMode/PlayMode split, the offline harness, determinism, what not to test |
 | `5-Audit-2026-08-09.md` | record | What this codebase does against the rules above, with `file:line` |
 | `5-Audit-2026-08-10.md` | record | Supersedes the 08-09 pass: six lenses, re-derived, 28 surviving findings |
+| `5-Audit-2026-08-25.md` | record | The newest pass, and the one to read first: five lenses against AGENTS.md §4 and `gkb-development`, four findings plus one decision owed |
 | `6-InfinityQube-Precedence.md` | record | What was taken from InfinityQube, what was rejected, and on what evidence |
 | `7-File-Layout.md` | MANDATORY | The region order every file follows, and why the check matters more than the convention |
 | `8-Scene-Authoring.md` | MANDATORY | Scene roots, what an agent may edit, and what a scene edit must assert |
+| `asset-audit-2026-08-18.md` | record | Dated snapshot of what art is on disk against what is referenced; figures drift after its stamp, by its own declaration |
 
 **CRITICAL** means a violation breaks a load-bearing property — the Sim dependency boundary, or
 correctness against the engine. MANDATORY means it is required and a deviation needs a reason
@@ -163,13 +175,16 @@ This is how gray-box code stays honest instead of pretending to be finished.
 
 ## Where this stands today
 
-Audited 2026-08-09 across `Assets/Scripts` (68 files). Detail in `5-Audit`.
+Last audited 2026-08-25 across `Assets/Scripts` (**282** `.cs` files: 70 in `Sim/`, 190 in
+`Game/`, 21 in `Editor/`, 1 in `Util/`). Detail in `5-Audit-2026-08-25.md`; the 08-09 and
+08-10 passes stay as the record of what the rules were written against.
 
 | | Finding |
 |---|---|
-| **Already right** | No LINQ in runtime code. No empty `Update`/`Start` bodies. No `FindObjectOfType` — already on the Unity 6 forms. No `Manager`/`Helper`/`Utils` class anywhere. No fake-null bypass on any `UnityEngine.Object`. `Log.Info` already `[Conditional]`. Allocation rules cover every `Update()`, `OnGUI`, and the firing path. |
-| **The structural gap** | Was: `Sim/` pure by convention, unenforced, sharing an assembly with `Game/`. **Resolved 2026-08-12 (M45):** `GatekeepersProtocol.Sim.asmdef` plus `TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState` enforce it at compile and test time. `1-Boundaries.md` §1. |
-| **The measured cost** | `Log.Event` and `Log.Metric` are not `[Conditional]` and ship in release; 61 of 147 call sites interpolate, which under C# 9 allocates and boxes whether or not anything reads the log. 47 more interpolations sit inside `OnGUI`. `3-Unity-Runtime.md` §6. |
-| **The name that started this** | `RegisterPinHitIfNeeded` is the **only** `*IfNeeded` in the codebase — and it is the one place an audit found a shipped bug. The name predicted the defect. `2-Naming.md` §2. |
+| **Already right** | No LINQ in runtime code — `using System.Linq` does not appear once. No empty `Update`/`Start` bodies. No `FindObjectOfType` — already on the Unity 6 forms. No `Manager`/`Helper`/`Utils` class anywhere. No fake-null bypass on any `UnityEngine.Object`. `Log.Info` already `[Conditional]`. `partial` discipline holds project-wide, including the splits the line cap forced. |
+| **The structural gap** | Was: `Sim/` pure by convention, unenforced, sharing an assembly with `Game/`. **Closed 2026-08-12 (M45)** by `GatekeepersProtocol.Sim.asmdef` plus `TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState`. **Reopened by one field:** `Sim/Run/MasterControl.cs:13` declares `public static int HatchWaves = 1`, and that test is one of the 6 EditMode failures in the newest `gkb_verify_report.json`. `1-Boundaries.md` §1. |
+| **The measured cost** | `Log.Event` and `Log.Metric` are still not `[Conditional]` and ship in release. **428** call sites between them as of 2026-08-25, at least **47** of them interpolating, which under C# 9 allocates and boxes whether or not anything reads the log. `3-Unity-Runtime.md` §6. |
+| **The name that started this** | `RegisterPinHitIfNeeded` was the only `*IfNeeded` when the audit found it, and it is still the one place an audit found a shipped bug the name predicted. Three more have arrived since: `BindGunIfNeeded`, `BindAvatarIfNeeded`, `ApplyAudioIfNeeded`. `2-Naming.md` §2. |
+| **The rules with no fence** | Where enforcement is habit rather than a compile-time boundary, the rule slipped. `Assets/_Scratch/` is tracked with **25** scripts and a `Generated/` tree instead of a `.gitkeep`; three HUD `Prompt` getters allocate every frame the interactable is in view; `Reset()` for serialized tunables exists on 5 MonoBehaviours and not on `EnemyGatekeeper`, `PlayerGun`, `Damageable` or `FirstPersonController`. |
 | **Convention, no check** | InfinityQube's region order is adopted (`7-File-Layout.md`) and governs new files. **M34 cancelled** — no tree-wide sweep, no `Tools/lint-layout` in verify. |
-| **Open for Zo** | Whether to adopt InfinityQube's `Manager`/`Utils`/`Helper` class naming. `6-InfinityQube-Precedence.md`. |
+| **Open for Zo** | Whether to adopt InfinityQube's `Manager`/`Utils`/`Helper` class naming (`6-InfinityQube-Precedence.md`), and how `RealmShareBeacon` is ruled (above). |
