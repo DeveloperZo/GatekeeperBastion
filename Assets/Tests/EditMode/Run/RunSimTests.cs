@@ -537,8 +537,9 @@ namespace GatekeepersProtocol.Tests
             var meta = MetaState.CreateNew();
             meta.HatchArmorLevel = 2;
             var sim = new RunSim(meta, 1);
-            Assert.AreEqual(330f, sim.Ship.Hatch.MaxHp, 1e-5f); // 300 * (1 + 0.05*2)
-            Assert.AreEqual(330f, sim.Ship.Hatch.Hp, 1e-5f);
+            float want = ShipSystems.HatchMaxHp * 1.10f;   // +5% per armor level, level 2
+            Assert.AreEqual(want, sim.Ship.Hatch.MaxHp, 1e-5f);
+            Assert.AreEqual(want, sim.Ship.Hatch.Hp, 1e-5f);
         }
 
         [Test]

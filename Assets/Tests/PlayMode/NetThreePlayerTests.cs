@@ -61,7 +61,11 @@ namespace GatekeepersProtocol.PlayTests
             WaveSpec spec = default;
             _gc.Sim.WaveStarted += s => spec = s;
             _gc.Sim.TriggerDraw();
-            Assert.AreEqual(54, spec.enemyCount);
+            // Derived off the live roster: the 2026-08-27 cut took wave 1 from 18 to 11, so a
+            // three-player table is 33 rather than 54. Pinned as the formula so the next roster
+            // change re-answers it instead of re-breaking it.
+            Assert.AreEqual((WaveDirector.BaseEnemyCount) * 3, spec.enemyCount,
+                "wave 1 at three players is not three solo tables");
 
             long award = _gc.Sim.CurrentKillAward;
             Assert.AreEqual(25L, award,

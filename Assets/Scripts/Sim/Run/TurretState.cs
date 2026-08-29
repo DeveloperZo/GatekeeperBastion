@@ -24,6 +24,24 @@ namespace GatekeepersProtocol.Sim
         /// death" never read as the same event.</summary>
         public float LifeBurned { get; private set; }
 
+        /// <summary>Rounds left in the ordinary magazine. One of the two things that end a
+        /// turret; <see cref="LifeRemaining"/> is the other, and whichever runs out first wins.
+        /// </summary>
+        public int ShotsRemaining { get; private set; }
+
+        /// <summary>Seconds this machine has left to stand. Runs whether or not it is
+        /// shooting, so a turret covering a quiet lane still expires.</summary>
+        public float LifeRemaining { get; private set; }
+
+        /// <summary>Rounds left on the OVERCHARGE belt. Separate from the magazine on purpose:
+        /// redlining used to burn the turret's ordinary life and so charged the player twice
+        /// for one spike.</summary>
+        public int OverchargeShotsRemaining { get; private set; }
+
+        /// <summary>Rounds fired since it was placed — the counterpart to
+        /// <see cref="DamageTaken"/>: what the machine spent rather than what it absorbed.</summary>
+        public int ShotsFired { get; private set; }
+
         public TurretState()
         {
             MaxHp = BoarderProtocol.TurretMaxHp;
@@ -52,6 +70,10 @@ namespace GatekeepersProtocol.Sim
             Overcharged = false;
             DamageTaken = 0f;
             LifeBurned = 0f;
+            ShotsRemaining = BoarderProtocol.TurretShotBudget;
+            LifeRemaining = BoarderProtocol.TurretLifeSeconds;
+            OverchargeShotsRemaining = BoarderProtocol.OverchargeShotBudget;
+            ShotsFired = 0;
             reason = null;
             return true;
         }
@@ -104,6 +126,56 @@ namespace GatekeepersProtocol.Sim
             return true;
         }
 
+        /// <summary>Spend one round. True when THAT round was the last one and the machine is
+        /// now done — the caller reports it as spent, never as destroyed, because running dry
+        /// and being killed are different events and a player must be able to tell them apart.
+        /// <para>Refuses while not live, so a despawning turret cannot fire a farewell shot.</para>
+        /// </summary>
+        public bool SpendShot()
+        {
+            if (!IsLive) return false;
+            ShotsFired++;
+
+            // WHILE REDLINED THE ROUNDS COME OFF THE OVERCHARGE BELT, never the magazine. That
+            // is the whole point of the belt existing: a spike must not shorten the machine's
+            // ordinary life. An overcharge that runs dry drops the turret back to normal fire
+            // rather than killing it — it still has whatever the magazine held.
+            if (Overcharged && OverchargeShotsRemaining > 0)
+            {
+                OverchargeShotsRemaining--;
+                if (OverchargeShotsRemaining <= 0) Overcharged = false;
+                return false;
+            }
+
+            if (ShotsRemaining > 0) ShotsRemaining--;
+            if (ShotsRemaining > 0) return false;
+            return Expire();
+        }
+
+        /// <summary>Run the life clock. True on the tick it expires — the machine's time was
+        /// up, whatever it had left to shoot.</summary>
+        public bool TickLife(float dt)
+        {
+            if (!IsLive || dt <= 0f) return false;
+            LifeRemaining -= dt;
+            if (LifeRemaining > 0f) return false;
+            LifeRemaining = 0f;
+            return Expire();
+        }
+
+        /// <summary>Shut the machine down for a reason that is NOT enemy damage. Kept apart
+        /// from TakeDamage so "it ran out" and "they killed it" stay different events.</summary>
+        bool Expire()
+        {
+            ShotsRemaining = 0;
+            LifeRemaining = 0f;
+            OverchargeShotsRemaining = 0;
+            IsLive = false;
+            Overcharged = false;
+            Hp = 0f;
+            return true;
+        }
+
         /// <summary>Seconds between shots right now — the overcharge multiplier folded in.</summary>
         public float ShotInterval()
         {
@@ -118,6 +190,10 @@ namespace GatekeepersProtocol.Sim
             Hp = 0f;
             PosX = PosY = PosZ = 0f;
             DamageTaken = 0f;
+            ShotsRemaining = 0;
+            LifeRemaining = 0f;
+            OverchargeShotsRemaining = 0;
+            ShotsFired = 0;
             LifeBurned = 0f;
         }
     }

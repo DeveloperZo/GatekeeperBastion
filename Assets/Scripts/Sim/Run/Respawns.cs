@@ -15,9 +15,33 @@ namespace GatekeepersProtocol.Sim
         /// affordable off one good push and the third is not casual.</summary>
         public const long BaseCost = 150L;
 
+        /// <summary>Respawns a run may buy, all seats together (Zo, 2026-08-28: "we should cap
+        /// respawns to 2"). The third death ends the Boarding whatever the bank holds.
+        /// <para>This is a HARD stop, not a price. The escalating fee alone could never end a
+        /// run — a rich player simply paid it, and the 07:17 run carried 12,660 banked, enough
+        /// for eighty-four returns. A cap is the only thing that makes the second death
+        /// frightening.</para></summary>
+        public const int MaxRespawns = 2;
+
+        /// <summary>Seconds a downed seat has to buy its way back before it bleeds out
+        /// (Zo, 2026-08-28: respawn "needs a visible timer to player and needs to be shorter").
+        /// <para>There was no timer at all before this: the DOWN overlay waited on ENTER
+        /// forever, so a death cost the player exactly as long as they felt like taking. A
+        /// countdown is what turns buying back into a decision under pressure, and it is what
+        /// gives <see cref="MaxRespawns"/> its teeth — hesitating can now cost the run outright
+        /// rather than merely costing 150.</para>
+        /// <para>10 s is long enough to read the price and the bank behind it and short enough
+        /// that it is felt. The clock is the SIM's; whether expiry actually ends the Boarding is
+        /// the Game layer's call, because only it knows whether a crewmate is still standing.
+        /// </para></summary>
+        public const float BleedOutSeconds = 10f;
+
         /// <summary>Steps the price climbs before it stops climbing. The escalation exists so
         /// the third death is not casual; past that it was only deciding how much of a lost run
-        /// to erase, which is a different job and not one this rule should be doing.</summary>
+        /// to erase, which is a different job and not one this rule should be doing.
+        /// <para>With <see cref="MaxRespawns"/> at 2 only the first two steps are reachable
+        /// (150, 300). This is left at 3 deliberately: it is the shape of the curve, and
+        /// raising the cap must not also silently flatten the price.</para></summary>
         public const int MaxSteps = 3;
 
         /// <summary>Cost of the next respawn after <paramref name="taken"/> have been
@@ -47,9 +71,10 @@ namespace GatekeepersProtocol.Sim
         /// <paramref name="purse"/> is the REALM'S BANK (Zo, 2026-08-25) — kills bank as they
         /// land, so the carried pile the fee used to come out of no longer fills on its own.
         /// The refusal string is shown to the player, so it must name the purse it read.</summary>
-        public static string Refuse(RunPhase phase, long cost, long purse)
+        public static string Refuse(RunPhase phase, long cost, long purse, int taken)
         {
             if (phase != RunPhase.Tethered) return "no run";
+            if (taken >= MaxRespawns) return "out of respawns";
             if (purse < cost) return "not enough banked";
             return null;
         }

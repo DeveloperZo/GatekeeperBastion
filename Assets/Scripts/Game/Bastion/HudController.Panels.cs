@@ -79,14 +79,23 @@ namespace GatekeepersProtocol.Game
             _lineBuf.Append("<b>PREP</b>  -  ");
             if (sim.MasterSequenceLive)
             {
-                bool hatchHalf = sim.MasterPhase == MasterControlPhase.Hatch;
-                int n = hatchHalf ? MasterControl.HatchWaves : MasterControl.TerminalWaves;
-                int shown = n - sim.MasterWavesLeft + 1;
-                if (shown < 1) shown = 1;
-                if (shown > n) shown = n;
-                _lineBuf.Append("Master Control  ");
-                _lineBuf.Append(hatchHalf ? "Convert " : "terminal ");
-                _lineBuf.Append(shown).Append('/').Append(n);
+                // The second half is the ELITE now, not a Convert window (2026-08-28), so
+                // the readout names the thing on the floor rather than a bank verb the
+                // finale no longer uses.
+                bool elite = sim.MasterPhase == MasterControlPhase.Elite;
+                if (elite)
+                {
+                    _lineBuf.Append("Master Control  the elite");
+                }
+                else
+                {
+                    int n = MasterControl.TerminalWaves;
+                    int shown = n - sim.MasterWavesLeft + 1;
+                    if (shown < 1) shown = 1;
+                    if (shown > n) shown = n;
+                    _lineBuf.Append("Master Control  terminal ");
+                    _lineBuf.Append(shown).Append('/').Append(n);
+                }
             }
             else
             {
@@ -117,7 +126,7 @@ namespace GatekeepersProtocol.Game
             _view.SetPrepLine(1, _lineBuf.ToString());
 
             _lineBuf.Clear();
-            if (sim.MasterPhase == MasterControlPhase.Hatch || (stripped && unbanked > 0L))
+            if (stripped && unbanked > 0L)
                 _lineBuf.Append(here).Append(" gatekeepers on a Convert");
             else
                 _lineBuf.Append(here).Append(" gatekeepers on the next terminal Wave");
@@ -156,17 +165,22 @@ namespace GatekeepersProtocol.Game
             _lineBuf.Clear();
             if (sim.MasterSequenceLive)
             {
-                bool hatchHalf = sim.MasterPhase == MasterControlPhase.Hatch;
-                int n = hatchHalf ? MasterControl.HatchWaves : MasterControl.TerminalWaves;
-                int shown = n - sim.MasterWavesLeft + 1;
-                if (shown < 1) shown = 1;
-                if (shown > n) shown = n;
-                if (hatchHalf)
-                    _lineBuf.Append("CONVERT — Master Control ").Append(shown)
-                        .Append('/').Append(n).Append(" -- ").Append(bankSec).Append("s");
+                if (sim.MasterPhase == MasterControlPhase.Elite)
+                {
+                    // The gate, said plainly: the terminal does not answer until it is down.
+                    _lineBuf.Append(sim.MasterAwaitsShutoff
+                        ? "MASTER CONTROL — the terminal is live, shut it down"
+                        : "MASTER CONTROL — kill the elite to arm the terminal");
+                }
                 else
+                {
+                    int n = MasterControl.TerminalWaves;
+                    int shown = n - sim.MasterWavesLeft + 1;
+                    if (shown < 1) shown = 1;
+                    if (shown > n) shown = n;
                     _lineBuf.Append("ASSAULT — Master Control ").Append(shown)
                         .Append('/').Append(n);
+                }
                 _lineBuf.Append("   |   enemies remaining: ").Append(remaining);
             }
             else if (hatchBank)

@@ -136,11 +136,15 @@ namespace GatekeepersProtocol.PlayTests
                     $"Kill #{i + 2} credited the carried pile.");
             }
 
+            // THE FIELD WAVE HAS A STAKE (Zo, 2026-08-28). This pinned the opposite — a
+            // Terminal-mode wave left the Hatch untouched — which is what made the Thief
+            // meaningless and the corridor consequence-free. The Hatch is armoured while the
+            // player is up the lane rather than invulnerable, so the hit lands SCALED.
             Assert.AreEqual(WaveMode.Terminal, gc.Sim.Mode);
             float hpBefore = hatch.Hp;
             hatch.ApplyDamage(25f);
-            Assert.AreEqual(hpBefore, hatch.Hp, 0.01f,
-                "HatchStation routed ApplyDamage; Terminal mode left hatch HP unchanged");
+            Assert.AreEqual(hpBefore - 25f * HatchBank.FieldWaveDamageScale, hatch.Hp, 0.01f,
+                "a field wave could not hurt the Hatch — the objective is scenery again");
 
             long flooredPerKill = (long)Mathf.Floor(killValue);
             long bankedAfterKills = gc.Meta.BankedSalvage;

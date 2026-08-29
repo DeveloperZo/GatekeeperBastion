@@ -78,7 +78,13 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Hatch max HP. RunSim's constructor reads this.</summary>
         public static float HatchHp(int lvl)
         {
-            return 300f * (1f + 0.05f * lvl);
+            // ONE COPY OF THE POOL. This read a hardcoded 300 — a second copy of
+            // ShipSystems.HatchMaxHp, and the one the live hatch was actually built from. Raising
+            // the constant on 2026-08-28 moved nothing in play until this line was found, because
+            // the number the tests read and the number the game used were different variables
+            // that happened to agree. lint-constants cannot catch this: it compares numeric ARRAY
+            // literals, and a lone scalar restated in another file is invisible to it.
+            return ShipSystems.HatchMaxHp * (1f + 0.05f * lvl);
         }
 
         // ---- BOARDER CONSTANTS (crew tracks deleted) ----

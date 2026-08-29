@@ -223,7 +223,11 @@ namespace GatekeepersProtocol.Tests
         {
             MetaState meta;
             var sim = NewTetheredSim(out meta);
-            MasterControlTests.SurviveSequence(sim, 0);
+            // SURVIVING THE SEQUENCE IS NO LONGER FINISHING IT (Zo, 2026-08-28: "Terminal ends
+            // it but elite death is the gate to terminal end"). The elite's death only arms
+            // the Master terminal; EscapeSequence is the one that throws the switch, which is
+            // what this fixture means by "the player finished".
+            MasterControlTests.EscapeSequence(sim, 0);
 
             Assert.AreEqual("cleared", sim.LastRunReport.cause);
             Assert.AreEqual(0L, sim.LastRunReport.grossEarned);
@@ -281,8 +285,20 @@ namespace GatekeepersProtocol.Tests
         {
             MetaState meta;
             var sim = NewTetheredSim(out meta);
-            MasterControlTests.SurviveSequence(sim, 0);
+            // SURVIVING THE SEQUENCE IS NO LONGER FINISHING IT (Zo, 2026-08-28: "Terminal ends
+            // it but elite death is the gate to terminal end"). The elite's death only arms
+            // the Master terminal; EscapeSequence is the one that throws the switch, which is
+            // what this fixture means by "the player finished".
+            MasterControlTests.EscapeSequence(sim, 0);
             long banked = meta.BankedSalvage;
+            // WHERE THE RUN STOPPED, snapped BEFORE the post-run pokes — that nothing below
+            // moves it is the point. Re-keyed 2026-08-28: this used to read MaxWaves, which
+            // was true only while the sixth beat was a Hatch-bank window (those do not consume
+            // a field Wave). The elite is a sixth TERMINAL wave now, so the figure comes off
+            // the sequence's own shape and moves with it.
+            int endedOn = sim.CurrentWaveIndex;
+            Assert.AreEqual(MasterControl.TerminalWaves + 1, endedOn,
+                "the finale is no longer five Terminal Waves plus the elite");
 
             for (int i = 0; i < 40; i++) sim.Tick(0.5f);
             sim.TriggerDraw();
@@ -292,7 +308,7 @@ namespace GatekeepersProtocol.Tests
             sim.Ship.Hatch.Damage(99999f);
 
             Assert.AreEqual(RunPhase.Escaped, sim.Phase);
-            Assert.AreEqual(WaveDirector.MaxWaves, sim.CurrentWaveIndex);
+            Assert.AreEqual(endedOn, sim.CurrentWaveIndex, "a post-run draw advanced the Run");
             Assert.AreEqual(banked, meta.BankedSalvage, "a post-run kill cannot pay");
             Assert.AreEqual(0L, meta.BankedSalvage);
             Assert.AreEqual(0L, sim.Salvage.RunSalvage);
@@ -447,7 +463,11 @@ namespace GatekeepersProtocol.Tests
         {
             MetaState meta;
             var sim = NewTetheredSim(out meta);
-            MasterControlTests.SurviveSequence(sim, 0);
+            // SURVIVING THE SEQUENCE IS NO LONGER FINISHING IT (Zo, 2026-08-28: "Terminal ends
+            // it but elite death is the gate to terminal end"). The elite's death only arms
+            // the Master terminal; EscapeSequence is the one that throws the switch, which is
+            // what this fixture means by "the player finished".
+            MasterControlTests.EscapeSequence(sim, 0);
 
             var loaded = MetaState.FromSnapshotJson(meta.ToSnapshotJson());
             Assert.AreEqual(1, loaded.CleanExits);
@@ -463,7 +483,11 @@ namespace GatekeepersProtocol.Tests
             // waves is not itself paid, only kills are.
             MetaState meta;
             var sim = NewTetheredSim(out meta);
-            MasterControlTests.SurviveSequence(sim, 0);
+            // SURVIVING THE SEQUENCE IS NO LONGER FINISHING IT (Zo, 2026-08-28: "Terminal ends
+            // it but elite death is the gate to terminal end"). The elite's death only arms
+            // the Master terminal; EscapeSequence is the one that throws the switch, which is
+            // what this fixture means by "the player finished".
+            MasterControlTests.EscapeSequence(sim, 0);
             Assert.AreEqual(RunPhase.Escaped, sim.Phase);
             Assert.AreEqual(0L, meta.BankedSalvage);
             Assert.AreEqual(0L, sim.LastRunReport.grossEarned);

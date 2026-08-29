@@ -5,7 +5,7 @@ Purpose: Which tier a test belongs in, what the offline harness can and cannot p
 Status: working
 Authority: MANDATORY — a gate closed on Path 1 alone is not closed.
 Update trigger: when the harness changes, when a PlayMode test is added, or when a determinism requirement changes (lockstep would rewrite §3).
-Last updated: 2026-08-25 (tier table re-read against verify/run.sh and the newest report; save fixtures named)
+Last updated: 2026-08-28 (§7 added after the field-trickle deadlock: decisions live in Sim, flags own their lifecycle, one protocol test per cross-seam lifecycle)
 -->
 
 ## 1. Three tiers, and what each is for
@@ -154,7 +154,8 @@ prefab has a component, or that a click calls a method.** These restate the wiri
 every scene edit, and produce the maintenance drag that convinces people testing does not work
 in games. The formal name for the discipline is the Humble Object pattern
 ([xunitpatterns](http://xunitpatterns.com/Humble%20Object.html)) — the Sim/Game split *is*
-Humble Object, and the MonoBehaviour is the half you accept as untested.
+Humble Object, and the MonoBehaviour is the half you accept as untested. **Accepted-untested
+is earned only while the shell holds no decisions** — §7 is what it cost when one did.
 
 **What replaces it:**
 
@@ -198,3 +199,58 @@ in the same commit. The optional `with {slot}` segment is M26 kill-share attribu
 **Where metrics genuinely win** and this rule does not reach: shipping analytics for
 retention and funnels, and frame-time histograms for performance telemetry. Neither is a
 simulation concern.
+
+## 7. Decisions live in Sim, or no test can reach them
+
+The 2026-08-28 field-trickle deadlock is this section's reason to exist. The drip's start
+condition (roster spent) and the pay-zero flag's raise condition (field empty) lived in two
+Game-layer methods and disagreed; the drip's own bodies held the flag down forever, so wave 5
+authored 39 bodies, billed 93 kills at full price, and could not be ended. A second gate —
+`if (Assault != Prep) return;` sitting above the handler whose own comment claimed both
+states — dead-ended the shutoff verb silently. Both bugs were synchronous logic; neither was
+reachable by any test, because the deciding conditionals lived in MonoBehaviours. 145 test
+files and the closest one (`FieldTrickleTests`) hand-set the very flag whose raising was the
+bug.
+
+**Rule: a conditional in Game code that raises a sim flag or gates a sim command is a
+decision, and decisions are pure Sim functions the shell calls with plain values.** The
+shell reads scene facts, passes them as arguments, and applies the verdict — nothing else.
+An `if` chain in the shell is drift, not glue
+([Meszaros](http://xunitpatterns.com/Humble%20Object.html),
+[Fowler](https://martinfowler.com/bliki/HumbleObject.html),
+[Unity's own guidance](https://unity.com/blog/technology/unit-testing-part-2-unit-testing-monobehaviours)).
+The shape on file: `FieldTrickle.Resolve` (Hold / StartTrickle / Cleared, called by
+`WaveSpawner.CheckAssaultCleared`) and `FieldShutoff.MayRun` (called by
+`CanShutOffTerminal`). `MayRun` deliberately has no `AssaultState` parameter — availability
+in both states is structural, not asserted.
+
+**Rule: a sim flag's lifecycle is the sim's.** A flag that Game callers must remember to
+clear is a cross-seam contract, and the exit path nobody thought of is the one that leaks
+it (`AbortAssault` did, found by the same audit). Every state exit clears its own flags:
+`FieldTrickleLive` is now dropped at all four Assault exits inside `RunSim`, and the Game
+layer's clears are redundancy, not load-bearing.
+
+**Rule: every cross-seam lifecycle gets one sociable protocol test.** A scripted timeline
+driving the real sim through the whole arc — start, deliver, kill, resolve, flag, shutoff,
+next wave pays again — asserting the invariant at each step and the terminal properties at
+the end. Assert properties ("the flag never survives an Assault exit", "the next wave
+pays"), never full-state snapshots — snapshot tests are characterization, not intent
+([Factorio FFF-60](https://factorio.com/blog/post/fff-60),
+[Rare, GDC 2019](https://gdcvault.com/play/1026366/Automated-Testing-of-Gameplay-Features)).
+The exemplar: `FieldWaveResolutionTests.TheWave5Timeline_DripPaysZero_AndTheShutoffEndsIt`.
+Solitary per-class tests do not add up to this — every half of the deadlock was
+individually correct.
+
+**Parameterization and property testing, scoped to the shim:** `[TestCase]` /
+`[TestCaseSource]` / `[Values]` are plain NUnit and legal in both tiers once `Shims.cs`
+stubs them — extend the shim in the same commit as the first use. FsCheck is rejected: a
+compiled DLL dependency the shim cannot stub, in both environments, for a benefit a
+20-line seeded-loop fuzz (seed printed on failure) already buys. `[UnityTest]` does not
+support `[TestCase]` — one more reason it stays rare (§1).
+
+**The one thing extraction does not buy** ([Fowler](https://martinfowler.com/bliki/HumbleObject.html)):
+it moves risk from logic bugs to wiring bugs. The dead `Assault != Prep` gate *was* a wiring
+bug — an untested shell reordered around a tested handler. The shell's routing is covered by
+the existing PlayMode loop tests, and a routing change is a scene-facing change: it rides
+the same verification as any other Game edit, and the pure predicate is what guarantees the
+rule it routes to cannot also be wrong.

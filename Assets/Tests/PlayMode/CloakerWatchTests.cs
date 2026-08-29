@@ -63,8 +63,18 @@ namespace GatekeepersProtocol.PlayTests
                 CloakerGatekeeper cloaker = SpawnCloaker(gc, spot);
                 yield return null; // Awake/Start, first Retarget
 
-                // Look away first: with no Hatch in the fight an unobserved Cloaker hunts the
-                // player, so it should path and move.
+                // THE PREMISE MOVED (2026-08-28). This read "with no Hatch in the fight an
+                // unobserved Cloaker hunts the player, so it should path and move" — true only
+                // while field waves removed the Hatch from targeting. The Hatch is in the fight
+                // on both modes now, so an unprovoked body at range marches on it instead, and
+                // whether it advances says nothing about the WATCH rule this fixture is for.
+                //
+                // Provoking pins the subject rather than the side effect: a provoked Cloaker
+                // hunts the player for life (EnemyGatekeeper.ChasesPlayer), so any stopping
+                // from here is the freeze and nothing else.
+                cloaker.Provoke(player.transform, shout: false);
+
+                // Look away first: unobserved, it must path and move.
                 FaceAwayFrom(player, cloaker.transform.position);
                 yield return PlayTestUtil.WaitUntil(
                     () => AgentOf(cloaker) != null && !AgentOf(cloaker).isStopped

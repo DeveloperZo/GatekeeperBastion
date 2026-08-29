@@ -28,8 +28,10 @@ namespace GatekeepersProtocol.Sim
             if (!hatchBank) return;
             if (Phase != RunPhase.Tethered) return;
             // Finale access is refused here, not unguarded: a Docked end is unreachable
-            // while the Master Hatch half is live, so EndDemo never has to filter it.
-            if (_masterPhase == MasterControlPhase.Hatch) return;
+            // for as long as ANY part of Master Control is live, so EndDemo never has to
+            // filter it. Widened from the old Hatch-half test when the finale stopped having
+            // halves — walking home mid-finale must not be a way to dodge the elite.
+            if (MasterSequenceLive) return;
             DockOffered = true;
             // Zone 2 RESOLVED opens the demo's Primary rack — survived here, or lost
             // in EndRun's twin write. One flag, either outcome (Zo, 2026-08-25): the
@@ -39,6 +41,30 @@ namespace GatekeepersProtocol.Sim
                 _meta.DemoZone2BankLost = true;
             var survived = BankWindowSurvived;
             if (survived != null) survived();
+        }
+
+        /// <summary>A zone's terminal was shut off: the player may walk home from the Hatch.
+        /// <para>THE DEMO HAD NO WAY HOME (Zo, 2026-08-28: "I didnt notice any call to action at
+        /// hatch to come back to ship after 1st terminal is completed"). There was no call to
+        /// action because there was no action. <see cref="OfferDockIfBankSurvived"/> opens the
+        /// dock only after a surviving HATCH-BANK window, and Convert was struck from the demo
+        /// on 2026-08-25 — so <see cref="DockOffered"/> could never become true and
+        /// RepairInteractable's "[E] Dock — return to Ship" prompt could never be reached. The
+        /// only exits left were dying, abandoning, or running the whole spine to Master Control.
+        /// This is the same shape as the door bug the Convert removal caused: one beat was the
+        /// sole gate on something the beat did not own.</para>
+        /// <para>Completing a zone is the honest trigger. It is the moment the loop already
+        /// treats as a resting point — the carry has just banked in ShutOffFieldWave, the door
+        /// has opened, and the choice is genuinely "press on or go home". LaunchWave still
+        /// clears the offer, so starting the next zone is the push-on answer exactly as it was
+        /// for the bank window.</para></summary>
+        void OfferDockAfterZoneShutoff()
+        {
+            if (Phase != RunPhase.Tethered) return;
+            if (MasterSequenceLive) return;   // the finale ends Escaped, at its own terminal
+            if (DockOffered) return;
+            DockOffered = true;
+            Log.Event(Tag, "dock offered — the zone is closed, the Hatch will take you home");
         }
 
         /// <summary>Triggering a Wave is the push-on answer: the offer is gone from here.</summary>

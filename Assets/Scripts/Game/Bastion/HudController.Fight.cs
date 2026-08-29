@@ -401,8 +401,18 @@ namespace GatekeepersProtocol.Game
         long _cacheRespawnCost = long.MinValue;
         long _cacheDownCost = long.MinValue;
         long _cacheDownCarry = long.MinValue;
+        int _cacheDownSecondsLeft = int.MinValue;
         string _cacheDownReason;
         string _cacheDownText;
+
+        /// <summary>The bleed-out countdown, or empty when nobody is on the clock. Trailing
+        /// space is deliberate — it lets the caller concatenate without a second branch.</summary>
+        static string BleedClock(GameController gc)
+        {
+            var sim = gc != null ? gc.Sim : null;
+            if (sim == null || !sim.BleedOutLive) return string.Empty;
+            return ((int)System.Math.Ceiling(sim.BleedOutRemaining)) + "s -- ";
+        }
 
         /// <summary>DOWN overlay line. Host and solo carry the respawn offer or its refuse
         /// reason (the sim adjudicates); a guest keeps the plain line — its surface is the
@@ -419,18 +429,27 @@ namespace GatekeepersProtocol.Game
             string reason = sim.RespawnRefuse(0);
             long cost = sim.NextRespawnCost;
             long carry = sim.BankedSalvage;
-            if (cost != _cacheDownCost || reason != _cacheDownReason || carry != _cacheDownCarry)
+            // The bleed clock is part of the key: without it the line would be built once and
+            // the countdown would sit frozen on the second it happened to start at. Keyed on
+            // WHOLE seconds, so this still rebuilds ten times a death rather than every frame
+            // and the push stays allocation-free in between.
+            int secondsLeft = (int)System.Math.Ceiling(sim.BleedOutRemaining);
+            if (cost != _cacheDownCost || reason != _cacheDownReason || carry != _cacheDownCarry
+                || secondsLeft != _cacheDownSecondsLeft)
             {
                 _cacheDownCost = cost;
                 _cacheDownReason = reason;
                 _cacheDownCarry = carry;
+                _cacheDownSecondsLeft = secondsLeft;
                 // Name the purse as well as the price: the fee comes out of the BANK and the
                 // rest of it survives, which is the whole rule and is not guessable from a
                 // bare number. Kills bank as they land, so this is also the running total of
                 // what the Run has already secured — the answer to "is dying here worth it".
                 _cacheDownText = reason == null
-                    ? "YOU ARE DOWN -- ENTER: RESPAWN (" + cost + " of your " + carry + " banked)"
-                    : "YOU ARE DOWN -- " + reason + " (" + cost + " needed, banked " + carry + ")";
+                    ? "YOU ARE DOWN -- " + BleedClock(gc) + "ENTER: RESPAWN ("
+                      + cost + " of your " + carry + " banked)"
+                    : "YOU ARE DOWN -- " + BleedClock(gc) + reason
+                      + " (" + cost + " needed, banked " + carry + ")";
             }
             return _cacheDownText;
         }

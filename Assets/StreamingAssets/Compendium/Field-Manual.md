@@ -162,7 +162,7 @@ That pile — and only that pile — is what a death or a Hatch breach can take.
 A kill pays `42`, then multiplied by the Ante.
 Nothing pays per second except the Convert drip (`8`/s), and the quiet between waves earns nothing at all.
 
-The hatch is what you are defending: **300 HP** at Hatch Armor 0, up to **375**. Hold `E` near it to repair.
+The hatch is what you are defending: **600 HP** at Hatch Armor 0, up to **750**. Hold `E` near it to repair.
 If it falls, the Boarding ends — whatever is banked stays banked. If you fall, you buy
 yourself back out of the realm's bank: `150 × min(respawns taken + 1, 3)` — it climbs to 450 and stops. Anything you
 staked on a Withdraw stands up with you untouched. There is one pot, and repair, the Ante
@@ -183,7 +183,7 @@ Hatch Armor runs 0–5 at +5% a level, costing 200 × 2^level — 200 / 400 / 80
 
 | Track | Level 0 | Level 5 |
 |---|---|---|
-| Hatch Armor — hatch HP | 300 HP | 375 HP |
+| Hatch Armor — hatch HP | 600 HP | 750 HP |
 | Equipment slot (once, after this realm earns anything) | — | 300 salvage |
 | Repair Rig — flat repair rate | 8 HP/s | 300 salvage |
 | Decoy — Drone payload | 3 charges | 250 salvage |

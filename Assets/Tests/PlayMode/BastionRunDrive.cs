@@ -209,9 +209,15 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsNotNull(master, "the Control Room has no Master terminal.");
             long potAtPull = sim.BankedSalvage;
 
-            Assert.IsTrue(
+            // THE FINALE STARTS AT THE HATCH (2026-08-28). This drove TryNetStartMaster, which
+            // is now a refusal — the Master terminal was a second start line and both the local
+            // and net paths were closed. Driving the refusal would have proved nothing except
+            // that the refusal works, so the drive was moved to the real entry point.
+            Assert.IsFalse(
                 gc.TryNetStartMaster(master.TerminalId, master.transform.position, ReachMetres),
-                "the Master pull refused.");
+                "the Master terminal started the finale over the net — a second start line.");
+            Assert.IsTrue(gc.StartZoneWaveFromHatch(),
+                "the Hatch refused to start Master Control.");
             Assert.AreEqual(AssaultState.Assault, sim.Assault, "the pull did not start a Wave.");
             Assert.IsTrue(sim.MasterSequenceLive, "the pull did not arm the sequence.");
 
@@ -225,53 +231,58 @@ namespace GatekeepersProtocol.PlayTests
 
                 if (wave == MasterControl.TerminalWaves - 1)
                 {
-                    // THE BET, placed in the last quiet gap before the finale. The finale DUMPS
-                    // a carried pile, and since the 2026-08-25 ruling the only thing that fills
-                    // one is a deliberate Withdraw at the Hatch — the Terminal half's kills are
-                    // already in the realm's pot. This gap is the last Prep the sequence offers
-                    // (AdvanceMasterControl leaves Prep armed with a follow-up timer), and it is
-                    // where a player would stand to place the same bet.
-                    //
-                    // Master Control's Hatch half is the ONE window that draws happily on an
-                    // empty pocket — TriggerDraw skips the unbanked>0 refusal for
-                    // MasterControlPhase.Hatch — so without this the finale would prove the door
-                    // and say nothing at all about the pot.
+                    // THE BET, placed in the last quiet gap before the elite. Kills bank as
+                    // they land (Zo, 2026-08-25), so the only thing that fills a carried pile
+                    // is a deliberate Withdraw at the Hatch — and the finale's switch is what
+                    // pays it back out.
                     Assert.AreEqual(AssaultState.Prep, sim.Assault,
-                        "the Terminal half's last clear did not leave a Prep gap to stake in.");
+                        "the control-room half's last clear did not leave a Prep gap to stake in.");
                     Assert.Greater(sim.BankedSalvage, potAtPull,
-                        "the Terminal half's " + MasterControl.TerminalWaves + " Waves paid the "
-                        + "realm nothing — kills bank as they land (Zo, 2026-08-25), so a flat "
-                        + "pot means AwardKill never reached the Run.");
+                        "the control-room half's " + MasterControl.TerminalWaves + " Waves paid "
+                        + "the realm nothing — kills bank as they land, so a flat pot means "
+                        + "AwardKill never reached the Run.");
                     staked = StakeTheBank(sim);
                 }
 
                 sim.Tick(WaveDirector.InterWaveGap + 0.1f);
             }
 
-            Assert.AreEqual(WaveMode.HatchBank, sim.Mode,
-                "the Terminal half did not roll into the Hatch half.");
-            Assert.AreEqual(AssaultState.Assault, sim.Assault, "the finale window did not draw.");
-            // Re-keyed from "the Terminal half banked nothing": the pile is staked now, so what
-            // has to be true here is that the roll into the finale carried it through intact.
+            // THE ELITE IS A CONTROL-ROOM WAVE (2026-08-28). This drive used to assert
+            // WaveMode.HatchBank here and let a Convert window expire; the finale left
+            // Hatch-bank mode entirely when it was made to end at its own terminal.
+            Assert.AreEqual(MasterControlPhase.Elite, sim.MasterPhase,
+                "the control-room half did not roll into the elite.");
+            Assert.AreEqual(WaveMode.Terminal, sim.Mode,
+                "the elite drew as a Convert window — the finale left the lane again.");
+            Assert.AreEqual(AssaultState.Assault, sim.Assault, "the elite wave did not draw.");
             Assert.AreEqual(staked, sim.TotalUnbanked,
-                "the stake did not reach the finale window intact.");
+                "the stake did not reach the elite intact.");
 
-            // A Hatch window is SURVIVED, not kill-cleared: NotifyAssaultCleared is refused
-            // while its timer runs, so strip the bodies and let the window expire.
-            long potBeforeFinale = sim.BankedSalvage;
+            long potBeforeSwitch = sim.BankedSalvage;
             yield return null;
+            AwardKills(gc);
             StripAndDeliver(sim);
-            sim.Tick(HatchBank.DurationSeconds + 0.1f);
+            sim.NotifyAssaultCleared();
             yield return null;
 
+            // KILLING IT ARMS THE SWITCH, IT DOES NOT THROW IT. A finale cannot end by
+            // attrition any more than a zone can.
+            Assert.IsTrue(sim.MasterAwaitsShutoff,
+                "the elite died and the Master terminal was not armed.");
+            Assert.AreEqual(RunPhase.Tethered, sim.Phase,
+                "the run ended on its own — the player never reached the terminal.");
+            Assert.IsTrue(gc.CanShutOffTerminal(master.TerminalId),
+                "the armed terminal does not offer its shutoff, so the run cannot be finished.");
+
+            Assert.IsTrue(gc.ShutOffTerminal(master),
+                "the Master terminal refused the shutoff that ends the Boarding.");
             Assert.AreEqual(RunPhase.Escaped, sim.Phase,
-                "surviving the finale Hatch wave must complete the Run.");
-            Assert.AreEqual(0L, sim.TotalUnbanked, "the finale left the stake carried.");
-            // Nothing pays inside a Hatch window, so the whole rise is the conversion. This is
-            // the assertion that keeps "banks the pot" about the DUMP rather than about the
-            // Terminal half's kills, which now bank whether the finale runs or not.
-            Assert.Greater(sim.BankedSalvage, potBeforeFinale,
-                "the finale converted none of the " + staked + " staked into it.");
+                "throwing the Master switch must complete the Run.");
+            Assert.AreEqual(0L, sim.TotalUnbanked, "the switch left the stake carried.");
+            // THE SWITCH PAYS, like every other switch (ShutOffFieldWave banks a zone's carry
+            // on the rule that reaching the switch IS the payout). Winning must not confiscate.
+            Assert.Greater(sim.BankedSalvage, potBeforeSwitch,
+                "winning Master Control paid none of the " + staked + " staked into it.");
         }
 
         public static void StripAndDeliver(RunSim sim)

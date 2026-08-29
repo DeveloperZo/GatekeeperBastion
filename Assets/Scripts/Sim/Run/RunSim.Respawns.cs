@@ -25,7 +25,7 @@ namespace GatekeepersProtocol.Sim
         {
             // The fee comes out of the BANK now that kills bank on landing — the carried
             // pile a seat used to buy its way back with no longer fills on its own.
-            return Respawns.Refuse(Phase, NextRespawnCost, BankedSalvage);
+            return Respawns.Refuse(Phase, NextRespawnCost, BankedSalvage, RespawnsTaken);
         }
 
         /// <summary>Take a respawn for <paramref name="slot"/>: adjudicate, debit that seat's
@@ -49,6 +49,8 @@ namespace GatekeepersProtocol.Sim
                 return false;
             }
             _wallets.SetDown(slot, false);
+            BleedOutRemaining = 0f;
+            BleedOutExpired = false;
             RespawnsTaken++;
             Log.Event(Tag, "respawn taken — slot=" + slot + " cost=" + cost
                 + " bank " + bank + "->" + BankedSalvage
@@ -63,13 +65,47 @@ namespace GatekeepersProtocol.Sim
         public void SetSeatDown(int slot, bool down)
         {
             _wallets.SetDown(slot, down);
+            if (down)
+            {
+                // Not restarted for a second seat: the clock belongs to the RUN, so a party
+                // dropping one at a time cannot refill it by taking turns.
+                if (BleedOutRemaining <= 0f) BleedOutRemaining = Respawns.BleedOutSeconds;
+            }
+            else BleedOutRemaining = 0f;
         }
+
+        /// <summary>Seconds left for a downed seat to buy back, 0 when nobody is bleeding.
+        /// Counts down in <see cref="Tick"/>. THE SIM DOES NOT ACT ON EXPIRY — reaching 0 is
+        /// reported, not enforced, because whether the Boarding ends depends on a crewmate
+        /// still fighting and that is not a fact this layer holds.</summary>
+        public float BleedOutRemaining { get; private set; }
+
+        /// <summary>True while a seat is bleeding out. The HUD's cue to draw the countdown.</summary>
+        public bool BleedOutLive => BleedOutRemaining > 0f;
+
+        /// <summary>Advance the bleed clock. True on the frame it reaches zero, once.</summary>
+        bool TickBleedOut(float dt)
+        {
+            if (BleedOutRemaining <= 0f) return false;
+            BleedOutRemaining -= dt;
+            if (BleedOutRemaining > 0f) return false;
+            BleedOutRemaining = 0f;
+            Log.Event(Tag, "bled out — nobody stood up inside "
+                + Respawns.BleedOutSeconds + "s");
+            return true;
+        }
+
+        /// <summary>True once a downed seat has run out of time. Latched at 0 by the clock, so
+        /// the Game layer may read it on any later frame rather than catching one edge.</summary>
+        public bool BleedOutExpired { get; private set; }
 
         /// <summary>Zero the counter and thaw every pile for a fresh run. Called from
         /// EngageTether — the one gate into Tethered.</summary>
         void SeedRespawns()
         {
             RespawnsTaken = 0;
+            BleedOutRemaining = 0f;
+            BleedOutExpired = false;
             _wallets.ClearDown();
         }
     }

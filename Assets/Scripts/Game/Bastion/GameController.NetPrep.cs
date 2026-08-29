@@ -70,7 +70,16 @@ namespace GatekeepersProtocol.Game
             return StartHatchBankWave();
         }
 
-        /// <summary>Server: client Master Control start after range + kind check.</summary>
+        /// <summary>Server: a client asked to start Master Control at its terminal.
+        /// <para>REFUSED SINCE 2026-08-28 — the finale begins at the Hatch like every other
+        /// zone. The local path (TickPrepCommands) was taught to refuse when the start moved,
+        /// and this one was not, so the net verb remained a SECOND START LINE: exactly the
+        /// shape Docs/Design/0-Gameplay.md forbids, reachable by any client walking up to the
+        /// terminal. Its sibling TryNetStartTerminal never had this hole because it gates on
+        /// CanSelectTerminal, which already refuses while the Hatch is the start line.</para>
+        /// <para>Kept rather than deleted: NetPrep still calls it, and a refusal that names
+        /// itself is worth more than a missing method. Range and kind are still checked so the
+        /// refusal is about the RULE and not about a malformed request.</para></summary>
         public bool TryNetStartMaster(string terminalId, Vector3 from, float range)
         {
             if (_net != null && _net.IsClientOnly) return false;
@@ -90,8 +99,9 @@ namespace GatekeepersProtocol.Game
                 Log.Event("Terminal", terminal.TerminalId + " refused — out of range");
                 return false;
             }
-            _armedTerminalId = terminal.TerminalId;
-            return StartMasterControl(terminal);
+            Log.Event("Terminal", terminal.TerminalId
+                + " refused — Master Control starts at the Hatch");
+            return false;
         }
         #endregion
 

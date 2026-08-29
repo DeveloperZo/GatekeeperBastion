@@ -19,7 +19,29 @@ That is the whole rule. Everything below is what it costs to mean it.
 | 1. Start | The Hatch | `T` | Draws the current zone's whole trigger — every wave the zone authors, back to back, no Prep between them. |
 | 2. Push | The lane | movement + fire | Most of the wave breaches at the FAR closet, so the fight travels toward the terminal with you. Once the authored bodies are spent, a **trickle** keeps the lane honest. |
 | 3. End | The zone's terminal | `T` | Shuts the wave off, completes the zone, banks what you carry, opens the zone's door. |
-| 4. Repeat | The Hatch | `T` | The next zone's trigger. Master Control is the last one. |
+| 4. Repeat | The Hatch | `T` | The next zone's trigger. Master Control is the last one — and it is a zone like the others. |
+
+### Master Control obeys the rule too (2026-08-28)
+
+The finale used to break the loop in three places at once, and all three are gone:
+
+- **It started at its own terminal.** That was a SECOND start line, the exact shape this
+  document forbids, and the reason a run could begin anywhere but the Hatch. `T` at the Master
+  terminal now refuses and says the finale starts at the Hatch.
+- **Interacting with it sealed the control room.** The last beat became a box fight — the one
+  place in the Bastion where the lane stopped mattering.
+- **It ended at the Hatch**, in a Convert window, so the game's final wave was the only one that
+  did not end at a terminal.
+
+Now: start at the Hatch, fight the control room, and **the finale elite is the gate**. Killing it
+does not end the run — it ARMS the Master terminal, and throwing that switch is what ends the
+Boarding (`RunSim.ShutOffMasterControl`). A finale cannot end by attrition any more than a zone
+can. The HUD states which half of the gate you are in.
+
+**And the switch pays.** `ShutOffFieldWave` has always banked the carry at a zone terminal —
+"reaching the switch IS the payout" — but removing the finale's Convert window quietly removed
+its payout with it, leaving the Master switch as the one switch in the game that CONFISCATED a
+stake, from the player who had just won. It banks now, like every other switch.
 
 ## What ends a wave — the rule that was missing
 
@@ -88,6 +110,42 @@ and it gives the corridor a direction: the pressure is no longer only in front o
 It does NOT change what completes a zone. Killing the field still does not; the terminal still
 does. The Hatch is a thing you can lose, never a thing you can win at.
 
+### The way home, and the two bugs that hid it (2026-08-28)
+
+**The way home is a portal you can see, and it is where you already are.** `HatchPortal` is a
+pad that stands dark until a zone closes and lights when it does; a held Interact on it ends the
+Boarding Docked. There are three — beside the Hatch at `(4, 0, -59)`, and beside each field
+terminal, T2 at `(2.67, 0, 7.67)` and T5 at `(2.67, 0, 97.67)` (Zo, 2026-08-28: "portals should
+be added next to terminals as well").
+
+The terminal ones are the point. A zone ENDS at its terminal, and T5 is 156 m up the spine — so
+without a portal there, closing the last zone meant walking the whole lane back to the Hatch
+before the run could be ended on purpose. The Master terminal has none: its own switch ends the
+Run, and docking is refused for the whole finale, so a portal there could only ever be dark. It owns no rule — `RunSim.DockOffered` decides whether leaving is legal and
+`RunSim.DockRun` performs it, the same two the Hatch's own prompt reads, so the two surfaces
+cannot disagree. The Hatch prompt stays, for a player who walks to the door rather than the pad.
+The visual is the Ship's wake capsule (Pad, Emitter, Glass) copied into the Bastion.
+
+**Closing a zone offers the Dock.** The Hatch's "[E] Dock — return to Ship" prompt used to open
+only after a surviving Hatch-bank window (`OfferDockIfBankSurvived`), and Convert was struck from
+the demo on 2026-08-25 — so `DockOffered` could never become true and there was no way to end a
+Boarding on purpose. Dying, abandoning, or the whole spine to Master Control were the only exits.
+Completing a zone is the honest trigger: the carry has just banked, the door has just opened, and
+the choice is genuinely press on or go home. Starting the next zone takes the offer back.
+
+**This is the second time removing Convert orphaned something it did not own** — the first was
+the door graph, where `RecordBankSurvived` was the only door-opening path. When a beat is cut,
+search for what was reading it, not just for what called it.
+
+**The drip and the shutoff must agree, or wave 5 is inescapable.** Two rules disagreed and the
+disagreement was self-sustaining: the drip started when the ROSTER was spent, while the flag that
+makes dripped bodies free only rose when the FIELD WAS EMPTY. The drip kept a body alive, so the
+field never emptied, so the flag never rose — every dripped body billed full salvage and the wave
+could never clear. Meanwhile `T` at the terminal, the documented escape, was unreachable during
+Assault because `TickFightInput` returned before calling the branch that handles it. Zone 1 hid
+both: killing the field empty drops the sim to Prep, so the shutoff was always pressed from Prep
+there. The 07:17 run authored 39 bodies in wave 5, killed 93, and had to be abandoned.
+
 **The Hatch is shut while you are up the lane, and armoured for it**
 (`HatchBank.FieldWaveDamageScale`). This is not a softening of the rule above; without it the
 rule is unplayable. Hatch HP is 300 and was sized for a mode where the player stands on it. A
@@ -149,6 +207,10 @@ A build honours the loop when all of these are true:
 - [ ] `T` at a terminal whose zone has not been drawn is refused.
 - [ ] Completing a zone opens its door, banks the carry, and says so.
 - [ ] The Hatch's start prompt outranks Convert and Withdraw.
+- [ ] Closing a zone offers the Dock, so the Hatch is a way home without a Convert window.
+- [ ] The Hatch portal is dark before a zone closes and lit after, and ends the run on a hold.
+- [ ] `T` at a zone terminal ends the wave in **Assault**, not only in Prep.
+- [ ] The drip never outlives the flag that makes its bodies free.
 - [ ] A field wave can target and damage the Hatch, and losing it ends the run.
 - [ ] No body is forced onto the player merely because the Hatch is unavailable.
 - [ ] Every prompt and demo line points at the verb that actually works.

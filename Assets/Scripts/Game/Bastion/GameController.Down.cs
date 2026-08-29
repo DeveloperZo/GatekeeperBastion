@@ -120,6 +120,20 @@ namespace GatekeepersProtocol.Game
         {
             if (!LocalDownActive) return;
             if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
+
+            // BLED OUT. The sim owns the clock but refuses to act on it, because whether this
+            // ends the Boarding depends on a crewmate still standing and that is not a fact
+            // Sim/ holds. Checked before the confirm read so a press on the expiry frame does
+            // not buy a return the player no longer had time for.
+            if (Sim != null && Sim.BleedOutExpired)
+            {
+                if (AnyRemoteSeatFighting()) return;  // the crew can still pick you up
+                Log.Event("Demo", "bled out — the Boarding ends");
+                Sim.WipeUnbankedSlot(0);
+                Sim.NotifyPlayerDown();
+                return;
+            }
+
             var frame = Controls.Sample();
             if (!frame.confirmDown || frame.freeCursorDown) return;
             TryLocalRespawn();

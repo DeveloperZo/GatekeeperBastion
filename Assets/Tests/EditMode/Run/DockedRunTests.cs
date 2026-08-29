@@ -36,6 +36,55 @@ namespace GatekeepersProtocol.Tests
             sim.Tick(HatchBank.DurationSeconds);
         }
 
+        // ================================================================
+        //  Closing a zone is a way home (Zo, 2026-08-28)
+        // ================================================================
+
+        [Test]
+        public void ShuttingOffAZoneTerminal_OffersTheDock_SoTheDemoHasAWayHome()
+        {
+            // THE DEMO HAD NO WAY HOME. OfferDockIfBankSurvived opens the dock only after a
+            // surviving HATCH-BANK window, and Convert was struck from the demo on 2026-08-25,
+            // so DockOffered could never become true and RepairInteractable's
+            // "[E] Dock — return to Ship" prompt was unreachable. The only exits were dying,
+            // abandoning, or running the whole spine to Master Control. Zo played the 07:17
+            // run and reported the missing call to action; there was no action to call for.
+            //
+            // Deliberately asserted through a FIELD wave with no bank window anywhere in it —
+            // that is the whole point, and routing it through SurviveABankWindow would test
+            // the path that already worked.
+            MetaState meta;
+            var sim = Tethered(out meta);
+            sim.TriggerDraw();
+            Assert.AreEqual(WaveMode.Terminal, sim.Mode,
+                "this fixture is meaningless if the draw was not a field wave");
+            Assert.IsFalse(sim.DockOffered, "the dock was open before the zone closed");
+
+            Kill(sim, 4);
+            Assert.IsTrue(sim.ShutOffFieldWave(), "the terminal shutoff did not take");
+            Assert.IsTrue(sim.DockOffered,
+                "closing a zone left the player with no way home — the demo's only exits are "
+                + "dying, abandoning, or the whole spine to Master Control");
+        }
+
+        [Test]
+        public void StartingTheNextZone_TakesTheDockOfferBackAgain()
+        {
+            // Push-on is still the answer, exactly as it was for the bank window: the offer is
+            // a resting point between zones, not a permanent escape hatch the player can hold
+            // in reserve while fighting the next one.
+            MetaState meta;
+            var sim = Tethered(out meta);
+            sim.TriggerDraw();
+            Kill(sim, 4);
+            sim.ShutOffFieldWave();
+            Assert.IsTrue(sim.DockOffered);
+
+            sim.TriggerDraw();
+            Assert.IsFalse(sim.DockOffered,
+                "the way home survived the next wave being started");
+        }
+
         [Test]
         public void NoDockOffer_BeforeAnyBankWindow()
         {

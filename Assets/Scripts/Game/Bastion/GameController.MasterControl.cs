@@ -65,8 +65,12 @@ namespace GatekeepersProtocol.Game
             BastionLayout layout = terminal.Layout;
             if (layout == null)
                 layout = _layout;
-            if (layout != null)
-                layout.SetControlRoomSealed(true);
+            // THE ROOM IS NOT SEALED ANY MORE (Zo, 2026-08-28: "interacting with Master
+            // terminal locked door"). Selecting the finale used to shut the control-room door
+            // behind the player and turn the last beat into a box fight — the one place in the
+            // Bastion where the lane stopped mattering. Every other zone is a fight travelling
+            // up a corridor; the finale reading differently was not a climax, it was the loop
+            // being suspended for its most important beat.
             terminal.SetUnlockedSpawnsActive(true);
 
             int intensity = Sim.Siphon.Level;
@@ -83,7 +87,7 @@ namespace GatekeepersProtocol.Game
 
             Log.Event("Demo", "master-control room fight");
             Log.Event("Terminal", "master-control started terminalWaves=" + MasterControl.TerminalWaves
-                + " hatchWaves=" + MasterControl.HatchWaves
+                + " thenTheElite=1"
                 + " intensity=" + intensity
                 + " juiced=" + juiced);
             return true;

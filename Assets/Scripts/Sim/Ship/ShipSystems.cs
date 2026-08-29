@@ -11,8 +11,18 @@ namespace GatekeepersProtocol.Sim
     /// </summary>
     public sealed class ShipSystems
     {
-        /// <summary>Default hatch HP pool — a simple starting number for the solo dev to tune.</summary>
-        public const float HatchMaxHp = 300f;
+        /// <summary>Default hatch HP pool — a simple starting number for the solo dev to tune.
+        /// <para>300 -> 600 (Zo, 2026-08-28). 300 was sized for Hatch-bank waves, where the
+        /// player STANDS ON IT. Field waves put the Hatch in the fight while the player is
+        /// 66-156 m up the spine, and the 09:24 run lost it: 50 bodies reached it and took the
+        /// last quarter in 2.7 s. Doubling the pool doubles every survival figure derived from
+        /// it — the reference small group of one Thief and three Defaults now gives ~88 s
+        /// instead of ~44, which is a round trip to the near terminal plus a real fight rather
+        /// than a sprint against a clock.</para>
+        /// <para>Read with HatchBank.FieldWaveDamageScale: that is the other half of the same
+        /// sum, and moving either one alone re-times the whole decision to walk away.</para>
+        /// </summary>
+        public const float HatchMaxHp = 600f;
 
         /// <summary>Salvage charged per hit point healed on the hatch. Lives here (not Game) so
         /// the end-of-run report and EditMode tests share one constant with the heal path.</summary>

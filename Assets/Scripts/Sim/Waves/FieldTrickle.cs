@@ -1,5 +1,19 @@
 namespace GatekeepersProtocol.Sim
 {
+    /// <summary>What the spent-roster check should do this tick: nothing yet, hand the wave
+    /// to the drip, or declare it cleared. One value so the spawner cannot act on half a
+    /// decision.</summary>
+    public enum FieldWaveResolution
+    {
+        /// <summary>The wave is still in flight — bodies owed, bodies alive, or no Assault.</summary>
+        Hold,
+        /// <summary>Roster spent, field empty, shutoff still owed: raise the trickle flag and
+        /// keep the Assault open.</summary>
+        StartTrickle,
+        /// <summary>Roster spent, field empty, nothing owed: the wave is cleared.</summary>
+        Cleared,
+    }
+
     /// <summary>The pressure that keeps a field Wave honest after its authored bodies are
     /// spent: a slow drip of gatekeepers that continues until the player reaches the zone's
     /// terminal and shuts it off (Zo, 2026-08-26).</summary>
@@ -39,6 +53,28 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Most trickle bodies alive at once. A stalled player faces a standing cost,
         /// never a growing one.</summary>
         public const int MaxLive = 6;
+
+        /// <summary>Resolve what a spent-roster check does, in one place. The 2026-08-28
+        /// deadlock was two halves of this decision living in two classes and disagreeing:
+        /// the drip started once the roster was spent while the pay-zero flag waited on an
+        /// empty field, so the drip's own bodies kept the flag down forever — every dripped
+        /// body billed the full award and the wave could never clear (wave 5, 07:17 run:
+        /// 39 authored, 93 paid kills, abandoned). Whoever spawns or clears must act on this
+        /// verdict and nothing else.
+        /// <para>Order is load-bearing: <paramref name="aliveCount"/> is checked before
+        /// <paramref name="awaitsShutoff"/> because the flag zeroes
+        /// <see cref="RunSim.CurrentKillAward"/> — raising it with authored bodies still on
+        /// the field would quietly stop paying for the wave the player is fighting.</para></summary>
+        public static FieldWaveResolution Resolve(RunPhase phase, AssaultState assault,
+            bool chainPending, bool rosterDelivering, int aliveCount, bool awaitsShutoff)
+        {
+            if (phase != RunPhase.Tethered) return FieldWaveResolution.Hold;
+            if (assault != AssaultState.Assault) return FieldWaveResolution.Hold;
+            if (chainPending) return FieldWaveResolution.Hold;
+            if (rosterDelivering) return FieldWaveResolution.Hold;
+            if (aliveCount > 0) return FieldWaveResolution.Hold;
+            return awaitsShutoff ? FieldWaveResolution.StartTrickle : FieldWaveResolution.Cleared;
+        }
 
         /// <summary>Advance the drip clock by <paramref name="dt"/> and report whether a body is
         /// due. Consumes exactly one interval per true, so a long frame never dumps a burst —

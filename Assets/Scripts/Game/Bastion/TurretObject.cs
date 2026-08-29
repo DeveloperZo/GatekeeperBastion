@@ -109,6 +109,16 @@ namespace GatekeepersProtocol.Game
             PushTint();
             PushLife();
             if (_presentationOnly) return;
+
+            // The clock runs before the trigger: a machine whose time is up must not squeeze
+            // out one more round on the frame it expires.
+            if (_state.TickLife(Time.deltaTime))
+            {
+                Log.Event(Tag, "turret expired — " + _state.ShotsFired + " rounds fired, "
+                    + _state.DamageTaken.ToString("0") + " damage absorbed");
+                Despawn();
+                return;
+            }
             TickFiring(Time.deltaTime);
         }
 
@@ -138,6 +148,16 @@ namespace GatekeepersProtocol.Game
                 _owner != null ? _owner : transform);
             _shotsFired++;
             Effects.MuzzleFlash(transform.position + transform.forward * 0.6f + Vector3.up * 0.7f);
+
+            // THE MAGAZINE IS THE LIFECYCLE. Spent AFTER the round lands, so the last bullet
+            // still does its damage rather than being swallowed by the machine expiring first.
+            // Reported as spent, never as destroyed: running dry is the operator's own doing
+            // and must not read like the Bastion killed it.
+            if (_state.SpendShot())
+            {
+                Log.Event(Tag, "turret out of ammunition — " + _state.ShotsFired
+                    + " rounds fired, " + _state.DamageTaken.ToString("0") + " damage absorbed");
+            }
         }
 
         /// <summary>Nearest live gatekeeper in range, off the spawner's ledger — the one list.

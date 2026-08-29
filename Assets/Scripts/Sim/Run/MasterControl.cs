@@ -1,9 +1,13 @@
 namespace GatekeepersProtocol.Sim
 {
-    /// <summary>Master Control win sequence. #12 — 5 terminal then <see cref="HatchWaves"/>
-    /// Hatch-bank. Live phase and remaining counts sit on <see cref="RunSim"/>.
-    /// <see cref="HatchWaves"/> is a static int so tests can still pin the multi-window
-    /// machinery; production never writes it.</summary>
+    /// <summary>Master Control win sequence: <see cref="TerminalWaves"/> control-room waves,
+    /// then the finale elite as one more Terminal wave. Killing the elite ARMS the Master
+    /// terminal; throwing that switch is what ends the Run (RunSim.ShutOffMasterControl).
+    /// Live phase and remaining counts sit on <see cref="RunSim"/>.
+    /// <para>2026-08-28: the sequence used to end in a Hatch-bank window back at the door.
+    /// It ends at a terminal now, like every other wave in the game.
+    /// <see cref="HatchWaves"/> is no longer read by the finale and survives only for the
+    /// Hatch-bank fixtures that pin multi-window Convert machinery.</para></summary>
     public static class MasterControl
     {
         public const int TerminalWaves = 5;
@@ -49,11 +53,19 @@ namespace GatekeepersProtocol.Sim
         }
     }
 
-    /// <summary>Which half of the Master Control sequence is live.</summary>
+    /// <summary>Which half of the Master Control sequence is live.
+    /// <para>2026-08-28: <c>Hatch</c> became <c>Elite</c>. The finale used to end with a
+    /// Hatch-bank window back at the door; it now ends where every other wave in the game
+    /// ends — at a terminal — with the elite standing between the player and the switch.
+    /// The member kept its number so an in-flight save reads the same slot.</para></summary>
     public enum MasterControlPhase : byte
     {
         None = 0,
         Terminal = 1,
-        Hatch = 2,
+
+        /// <summary>The elite is on the floor. THE SEQUENCE DOES NOT END ON ITS OWN from here:
+        /// killing it only arms the Master terminal, and the run ends when that is shut off.
+        /// </summary>
+        Elite = 2,
     }
 }

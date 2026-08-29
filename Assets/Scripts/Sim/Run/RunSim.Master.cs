@@ -45,10 +45,47 @@ namespace GatekeepersProtocol.Sim
             return true;
         }
 
+        /// <summary>True once the elite is down and the Master terminal is the only thing
+        /// left between the player and the way out. Read by the Game layer's shutoff gate, so
+        /// the prompt and the verb cannot disagree about when the switch is live.</summary>
+        public bool MasterAwaitsShutoff { get; private set; }
+
+        /// <summary>The player threw the switch. This is the ONLY thing that completes a Run
+        /// through Master Control — the sequence deliberately stalls until it is called, so a
+        /// finale cannot end by attrition any more than a zone can.</summary>
+        public bool ShutOffMasterControl()
+        {
+            if (!MasterAwaitsShutoff)
+            {
+                Log.Info(Tag, "master shutoff refused — the elite is still standing");
+                return false;
+            }
+            MasterAwaitsShutoff = false;
+
+            // THE SWITCH PAYS, HERE AS EVERYWHERE ELSE. ShutOffFieldWave banks the carry at a
+            // zone terminal on the stated rule that "reaching the switch IS the payout", and
+            // CompleteRun ends by wiping whatever is left — so without this the Master switch
+            // was the one switch in the game that CONFISCATED a stake, and it did it to the
+            // player who had just won. That was invisible while the finale ended in a
+            // Hatch-bank window, because the window dumped the pile on its way out; removing
+            // the window removed the payout with it.
+            long carried = TotalUnbanked;
+            if (carried > 0L)
+            {
+                DumpUnbanked();
+                Log.Event(Tag, "master shutoff banked " + carried);
+            }
+
+            CancelMasterSequence();
+            CompleteRun();
+            return true;
+        }
+
         void CancelMasterSequence()
         {
             _masterPhase = MasterControlPhase.None;
             _masterLeft = 0;
+            MasterAwaitsShutoff = false;
             _masterHatchMulLocked = false;
             ResetFaucetCycle("sequence cancel"); // every caller is a cycle-ending moment
         }
@@ -58,30 +95,34 @@ namespace GatekeepersProtocol.Sim
             _masterLeft--;
             if (_masterLeft > 0)
             {
-                if (_masterPhase == MasterControlPhase.Hatch)
-                    Mode = WaveMode.HatchBank;
+                // No mode switch on the way through any more: every wave of the sequence,
+                // the elite included, is a Terminal wave fought in the control room.
                 _followUpTimer = WaveDirector.InterWaveGap;
                 return;
             }
 
             if (_masterPhase == MasterControlPhase.Terminal)
             {
-                _masterPhase = MasterControlPhase.Hatch;
-                _masterLeft = MasterControl.HatchWaves;
-                SnapshotHatchCarry();
-                _masterHatchMulLocked = true;
-                Mode = WaveMode.HatchBank;
+                // THE ELITE IS A CONTROL-ROOM WAVE NOW, not a Hatch-bank window (Zo,
+                // 2026-08-28: "Terminal ends it but elite death is the gate to terminal end").
+                // Mode stays Terminal, so the finale is fought where it is fought and the run
+                // does not send the player back down the lane for its last beat.
+                _masterPhase = MasterControlPhase.Elite;
+                _masterLeft = 1;
                 _followUpTimer = WaveDirector.InterWaveGap;
-                var hatchHalf = MasterHatchHalfStarted;
-                if (hatchHalf != null) hatchHalf();
-                Log.Info(Tag, "master-control hatch half — hatchWaves=" + MasterControl.HatchWaves);
+                var eliteHalf = MasterHatchHalfStarted;
+                if (eliteHalf != null) eliteHalf();
+                Log.Event(Tag, "master-control elite — kill it to arm the terminal");
                 return;
             }
 
-            if (hatchBank)
-                DumpUnbanked();
-            CancelMasterSequence();
-            CompleteRun();
+            // THE ELITE IS DEAD AND THE RUN IS NOT OVER. Every other wave in the game ends at
+            // a terminal and this one does too: killing the elite ARMS the switch, it does not
+            // throw it. CompleteRun moved to ShutOffMasterControl, which is the player's hand
+            // on the terminal rather than the sim deciding the run is finished for them.
+            _masterLeft = 0;
+            MasterAwaitsShutoff = true;
+            Log.Event(Tag, "master-control elite down — the terminal will end the Boarding");
         }
     }
 }

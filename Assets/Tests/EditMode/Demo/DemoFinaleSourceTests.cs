@@ -36,10 +36,19 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void HatchHalf_SendsFinaleSubtitle_BeforeAnyHalfFlipLogGate()
         {
+            // DECOUPLED FROM THE LOG'S WORDING (2026-08-28). This pinned the literal text
+            // "hatch finale send" and broke the moment that line was renamed to describe what
+            // the beat actually is now — the elite on the control-room floor, not a send to the
+            // Hatch. The CLAIM was never about the words: it is that an always-on Log.Event
+            // precedes the voice line, so a muted or gated subtitle still leaves evidence in
+            // the log that the beat fired. Anchored on the handler and the call, not the prose.
             string src = Read("Assets/Scripts/Game/Bastion/GameController.HatchBank.cs");
-            int send = src.IndexOf("hatch finale send", System.StringComparison.Ordinal);
-            int line = src.IndexOf("DemoConversationIds.HatchFinale", System.StringComparison.Ordinal);
-            Assert.Greater(send, 0);
+            int handler = src.IndexOf("void OnMasterHatchHalfStarted()", System.StringComparison.Ordinal);
+            Assert.Greater(handler, 0, "the finale's second-half handler is gone");
+            int send = src.IndexOf("Log.Event(", handler, System.StringComparison.Ordinal);
+            int line = src.IndexOf("DemoConversationIds.HatchFinale", handler, System.StringComparison.Ordinal);
+            Assert.Greater(send, handler, "the handler logs nothing, so a gated subtitle would "
+                + "leave no evidence the beat ever fired");
             Assert.Greater(line, send, "the send log is the always-on evidence; the line follows");
             StringAssert.Contains("DemoVoiceMode.Subtitle", src);
         }
@@ -74,12 +83,40 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("finale elite hp=", src);
         }
 
+        /// <summary>Renamed 2026-08-28 from <c>DockOffer_IsRefusedOnTheFinale</c>. The guard
+        /// used to read <c>_masterPhase == MasterControlPhase.Hatch</c> — the finale's last
+        /// window and nothing else — because that was the only Master beat that could offer a
+        /// dock. The finale has no halves now, so the guard widened to
+        /// <see cref="GatekeepersProtocol.Sim.RunSim.MasterSequenceLive"/> and has to hold at
+        /// BOTH offer sites: the bank window's and the zone-shutoff one added the same day.
+        /// Walking home mid-finale must not be a way to dodge the elite.</summary>
         [Test]
-        public void DockOffer_IsRefusedOnTheFinale()
+        public void DockOffer_IsRefusedForTheWholeMasterSequence()
         {
             string src = Read("Assets/Scripts/Sim/Run/RunSim.Dock.cs");
-            int hatch = src.IndexOf("_masterPhase == MasterControlPhase.Hatch", System.StringComparison.Ordinal);
-            Assert.Greater(hatch, 0, "a Docked end is unreachable on the finale, not unguarded");
+            Assert.IsFalse(src.Contains("MasterControlPhase.Hatch"),
+                "the retired Hatch phase is still named in the dock guard");
+
+            // COUNT THEM. One guard passing is what the narrow old pin proved, and a second
+            // offer site is exactly how the hole would reopen.
+            int guards = 0;
+            for (int i = src.IndexOf("if (MasterSequenceLive) return", System.StringComparison.Ordinal);
+                 i >= 0;
+                 i = src.IndexOf("if (MasterSequenceLive) return", i + 1, System.StringComparison.Ordinal))
+                guards++;
+            Assert.AreEqual(2, guards,
+                "RunSim.Dock.cs has an offer site that does not refuse a live Master sequence");
+
+            // And each guard sits INSIDE an offer method, ahead of the write it protects.
+            foreach (string offer in new[] { "OfferDockIfBankSurvived", "OfferDockAfterZoneShutoff" })
+            {
+                int start = src.IndexOf("void " + offer, System.StringComparison.Ordinal);
+                Assert.Greater(start, 0, offer + " is gone");
+                int guard = src.IndexOf("if (MasterSequenceLive) return", start, System.StringComparison.Ordinal);
+                int write = src.IndexOf("DockOffered = true", start, System.StringComparison.Ordinal);
+                Assert.Greater(guard, start, offer + " does not refuse a live Master sequence");
+                Assert.Greater(write, guard, offer + " offers the dock before it checks");
+            }
         }
     }
 }

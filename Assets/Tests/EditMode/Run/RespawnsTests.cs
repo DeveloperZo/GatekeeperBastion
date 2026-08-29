@@ -81,17 +81,94 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(150L, Respawns.CostFor(-5), "negative taken clamps to the base");
         }
 
+        // ================================================================
+        //  Bleeding out (Zo, 2026-08-28)
+        // ================================================================
+
+        [Test]
+        public void GoingDown_StartsTheBleedClock_AndItExpiresOnce()
+        {
+            // There was no clock at all before this: the DOWN overlay waited on ENTER forever,
+            // so a death cost exactly as long as the player felt like taking. The countdown is
+            // what makes buying back a decision under pressure.
+            MetaState meta;
+            var sim = Tethered(out meta);
+            Assert.IsFalse(sim.BleedOutLive, "the clock was running before anyone went down");
+
+            sim.SetSeatDown(0, true);
+            Assert.IsTrue(sim.BleedOutLive);
+            Assert.AreEqual(Respawns.BleedOutSeconds, sim.BleedOutRemaining, 1e-4f);
+
+            sim.Tick(Respawns.BleedOutSeconds * 0.5f);
+            Assert.IsFalse(sim.BleedOutExpired, "the clock expired at the halfway mark");
+            Assert.Greater(sim.BleedOutRemaining, 0f);
+
+            sim.Tick(Respawns.BleedOutSeconds);
+            Assert.IsTrue(sim.BleedOutExpired, "the clock ran out and nothing noticed");
+            Assert.AreEqual(0f, sim.BleedOutRemaining, 1e-4f,
+                "the clock ran past zero — the HUD would count into negatives");
+        }
+
+        [Test]
+        public void TheSimReportsTheExpiry_ButNeverEndsTheRunItself()
+        {
+            // THE BOUNDARY IS THE POINT. Whether bleeding out ends the Boarding depends on a
+            // crewmate still standing, and that is not a fact Sim/ holds — GameController owns
+            // it (AnyRemoteSeatFighting). If this ever starts ending runs on its own, a co-op
+            // revive becomes unreachable and solo would be the only mode the rule is correct in.
+            MetaState meta;
+            var sim = Tethered(out meta);
+            sim.SetSeatDown(0, true);
+            sim.Tick(Respawns.BleedOutSeconds * 2f);
+
+            Assert.IsTrue(sim.BleedOutExpired);
+            Assert.AreEqual(RunPhase.Tethered, sim.Phase,
+                "the sim ended the run on its own — the Game layer's revive decision is gone");
+        }
+
+        [Test]
+        public void StandingBackUp_StopsTheClock_AndASecondSeatCannotRefillIt()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta, seats: 2);
+            Kills(sim, 20);
+            sim.SetSeatDown(0, true);
+            sim.Tick(Respawns.BleedOutSeconds * 0.5f);
+            float afterFirst = sim.BleedOutRemaining;
+
+            // A party dropping one at a time must not buy fresh time by taking turns.
+            sim.SetSeatDown(1, true);
+            Assert.AreEqual(afterFirst, sim.BleedOutRemaining, 1e-4f,
+                "a second seat going down refilled the clock — the run could bleed forever");
+
+            Assert.IsTrue(sim.TryRespawn(0, out long _));
+            Assert.IsFalse(sim.BleedOutLive, "the clock survived a seat standing back up");
+            Assert.IsFalse(sim.BleedOutExpired, "a stale expiry survived the respawn");
+        }
+
         [Test]
         public void Refuse_NamesEveryDisqualifier()
         {
             // The third argument is the purse, and since 2026-08-25 RunSim passes the bank
-            // into it. The refuse STRING reads "not enough banked" — that is the
-            // sim's wording to change, not this pin's, so it is asserted as it stands.
-            Assert.AreEqual("no run", Respawns.Refuse(RunPhase.Docked, 150L, 1000L));
+            // into it. The fourth is respawns already taken (2026-08-28). The refuse STRING
+            // reads "not enough banked" — that is the sim's wording to change, not this
+            // pin's, so it is asserted as it stands.
+            Assert.AreEqual("no run", Respawns.Refuse(RunPhase.Docked, 150L, 1000L, 0));
             Assert.AreEqual("not enough banked",
-                Respawns.Refuse(RunPhase.Tethered, 150L, 149L));
-            Assert.IsNull(Respawns.Refuse(RunPhase.Tethered, 150L, 150L),
+                Respawns.Refuse(RunPhase.Tethered, 150L, 149L, 0));
+            Assert.IsNull(Respawns.Refuse(RunPhase.Tethered, 150L, 150L, 0),
                 "exactly the price is affordable");
+
+            // THE CAP OUTRANKS THE PURSE. A rich player must still be stopped: the 07:17 run
+            // held 12,660 banked, which is eighty-four returns at the top price, so the fee
+            // alone could never end a Boarding. Asserted with an unlimited purse precisely so
+            // affordability cannot be what produces the refusal.
+            Assert.AreEqual("out of respawns",
+                Respawns.Refuse(RunPhase.Tethered, 150L, long.MaxValue, Respawns.MaxRespawns),
+                "the cap did not stop a seat that could afford the fee");
+            Assert.IsNull(
+                Respawns.Refuse(RunPhase.Tethered, 150L, 150L, Respawns.MaxRespawns - 1),
+                "the last respawn inside the cap was refused");
         }
 
         [Test]

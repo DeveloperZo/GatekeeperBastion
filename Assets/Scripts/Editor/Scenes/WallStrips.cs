@@ -62,6 +62,16 @@ namespace GatekeepersProtocol.EditorTools
         public const float DefaultThickness = 0.18f;
         public const float DefaultDepth = 0.025f;
 
+        static readonly Dictionary<Pattern, int[]> Runs = new Dictionary<Pattern, int[]>
+        {
+            { Pattern.Even,  new[] { 2, 2, 2, 2 } },
+            { Pattern.Long,  new[] { 6, 3 } },
+            { Pattern.Morse, new[] { 1, 3, 1, 2 } },
+            { Pattern.Dense, new[] { 3, 2, 4, 1 } },
+            { Pattern.Ticks, new[] { 1, 1, 1, 1 } },
+            { Pattern.Solid, new[] { 0 } },
+        };
+
         /// <summary>One lit rectangle on a wall: where it sits, how it lies, and how big it is.
         /// Local to the wall piece's own origin, x running along it and z out of it.</summary>
         public struct Dash
@@ -73,23 +83,19 @@ namespace GatekeepersProtocol.EditorTools
             public float length, thickness;
         }
 
-
-
         /// <summary>The Synty module. A strip run is laid out against this rather than against
         /// whatever length a wall happens to be, because the walls tile on it.</summary>
         public const float Module = 5f;
 
-        // The shell is shared across Wall_01 to Wall_06: same module, same chamfer, so the
+        // The shell is shared across the Wall_0x family: same module, same chamfer, so the
         // heights, the 40-degree tilt and the two z offsets carry over from the Wall_01
-        // measurement unchanged. What varies per piece is the rhythm — how many dashes, how
-        // wide the gap, whether a centre block appears.
+        // measurement unchanged. What varies per piece is the rhythm.
         //
-        // Every row below is built by Run or RunSplit, never by hand-written x values. That is
-        // what makes the strips tile: both helpers leave HALF a gap at each end of the module,
-        // so where two modules meet the two halves add up to exactly one internal gap and the
-        // rhythm carries across the seam instead of restarting. Hand numbers cannot hold that
-        // property — the measured Wall_01 placement had a 0.16 internal gap and a 1.39 gap at
-        // the seam, which is what made the repeat announce itself.
+        // Every row is built by Run or RunSplit, never by hand-written x values. That is what
+        // makes the strips tile: both leave HALF a gap at each end of the module, so where two
+        // modules meet the halves add up to one internal gap and the rhythm carries across the
+        // seam instead of restarting. The measured placement had a 0.16 internal gap against a
+        // 1.39 gap at the seam, which is what made the repeat announce itself.
 
         const float LoY = 0.500f, LoZ = 4.950f;    // lower row, flat on the vertical face
         const float HiY = 1.500f, HiZ = 5.100f;    // upper row, laid onto the chamfer
@@ -139,46 +145,12 @@ namespace GatekeepersProtocol.EditorTools
             return all.ToArray();
         }
 
-        /// <summary>Wall_01. Heights, tilt and the block's proportions are the hand placement;
-        /// the x values are the run arithmetic, which is the only change — they had to move for
-        /// the rhythm to survive the seam.</summary>
+        /// <summary>SM_Bld_Wall_01. Heights, tilt and the block's proportions are the hand
+        /// placement; the x values are the run arithmetic, which is the only change — they had
+        /// to move for the rhythm to survive the seam.</summary>
         public static readonly Dash[] Wall01 = Join(
             RunSplit(LoY, LoZ, 0f, LoThick, 0.80f, 0.864f, 0.16f),
             Run(HiY, HiZ, HiTilt, HiThick, 2, 0.75f));
-
-        /// <summary>Wall_02 — busier along the deck, emptier at eye height.</summary>
-        public static readonly Dash[] Wall02 = Join(
-            Run(LoY, LoZ, 0f, LoThick, 3, 0.30f),
-            Run(HiY, HiZ, HiTilt, HiThick, 2, 0.60f));
-
-        /// <summary>Wall_03 — chamfer only, so it can sit behind a console run without the
-        /// strips fighting the silhouette.</summary>
-        public static readonly Dash[] Wall03 =
-            Run(HiY, HiZ, HiTilt, HiThick, 3, 0.45f);
-
-        /// <summary>Wall_04 — a wide centre block with the rows giving way to it, so the piece
-        /// reads as a bay with something in the middle.</summary>
-        public static readonly Dash[] Wall04 = Join(
-            RunSplit(LoY, LoZ, 0f, LoThick, 1.10f, 1.050f, 0.24f),
-            Run(HiY, HiZ, HiTilt, HiThick, 2, 1.20f));
-
-        /// <summary>Wall_04_Alt — the same deck, one long chamfer instead of two. Beside a
-        /// Wall_04 it reads as a related piece rather than the same one twice.</summary>
-        public static readonly Dash[] Wall04Alt = Join(
-            RunSplit(LoY, LoZ, 0f, LoThick, 1.10f, 0.700f, 0.24f),
-            Run(HiY, HiZ, HiTilt, HiThick, 1, 0.90f));
-
-        /// <summary>Wall_05 — a tick rhythm along the deck under one unbroken chamfer. The most
-        /// rhythmic of the set, for a length of corridor you move through.</summary>
-        public static readonly Dash[] Wall05 = Join(
-            Run(LoY, LoZ, 0f, LoThick, 5, 0.40f),
-            Run(HiY, HiZ, HiTilt, HiThick, 1, 0.45f));
-
-        /// <summary>Wall_06 — the inverse of Wall_05, so the two can face each other across a
-        /// room without echoing.</summary>
-        public static readonly Dash[] Wall06 = Join(
-            Run(LoY, LoZ, 0f, LoThick, 1, 0.50f),
-            Run(HiY, HiZ, HiTilt, HiThick, 3, 0.35f));
 
         /// <summary>Which arrangement belongs to which wall piece. A piece is in here only once
         /// somebody has placed dashes on it and those have been measured back; the rest get
@@ -189,12 +161,6 @@ namespace GatekeepersProtocol.EditorTools
         {
             { "SM_Bld_Wall_01",     Wall01 },
             { "SM_Bld_Wall_01_Alt", Wall01 },
-            { "SM_Bld_Wall_02",     Wall02 },
-            { "SM_Bld_Wall_03",     Wall03 },
-            { "SM_Bld_Wall_04",     Wall04 },
-            { "SM_Bld_Wall_04_Alt", Wall04Alt },
-            { "SM_Bld_Wall_05",     Wall05 },
-            { "SM_Bld_Wall_06",     Wall06 },
         };
 
         /// <summary>The arrangement for a wall piece, or an empty one where none is measured
@@ -204,21 +170,9 @@ namespace GatekeepersProtocol.EditorTools
             return ByWall.TryGetValue(wallName, out var d) ? d : System.Array.Empty<Dash>();
         }
 
-        /// <summary>The pieces that still have no arrangement, for a tool that wants to say so.
-        /// </summary>
         public static bool HasArrangement(string wallName) => ByWall.ContainsKey(wallName);
 
-        static readonly Dictionary<Pattern, int[]> Runs = new Dictionary<Pattern, int[]>
-        {
-            { Pattern.Even,  new[] { 2, 2, 2, 2 } },
-            { Pattern.Long,  new[] { 6, 3 } },
-            { Pattern.Morse, new[] { 1, 3, 1, 2 } },
-            { Pattern.Dense, new[] { 3, 2, 4, 1 } },
-            { Pattern.Ticks, new[] { 1, 1, 1, 1 } },
-            { Pattern.Solid, new[] { 0 } },
-        };
-
-        /// <summary>A stable name for the mesh this call produces, so callers can cache the
+        /// <summary>A stable name for the mesh a Build call produces, so callers can cache the
         /// asset without two configurations colliding on one path.</summary>
         public static string NameFor(float length, int row, Pattern pattern, float depth)
         {
@@ -226,8 +180,9 @@ namespace GatekeepersProtocol.EditorTools
                    $"{Mathf.RoundToInt(depth * 1000f)}";
         }
 
-        /// <summary>Two submeshes: 0 is the recess the strip sits in, 1 is the lit dashes. That
-        /// matches the body/glow material pair every caller already assigns.</summary>
+        /// <summary>The generated strip: a recess with lit dashes in it, two submeshes to match
+        /// the body/glow material pair. Still used by the vignette gallery's wall bands; the
+        /// wall board paints BuildDecal instead.</summary>
         public static Mesh Build(float length, int row, Pattern pattern,
                                  float thickness = DefaultThickness, float depth = DefaultDepth)
         {
@@ -240,7 +195,6 @@ namespace GatekeepersProtocol.EditorTools
             float half = Mathf.Max(0.01f, thickness) * 0.5f;
             float d = Mathf.Max(0.001f, depth);
 
-            // the recess, a shade proud of the wall so the strip has something to sit in
             Box(v, n, uv, body, 0f, length, -half - 0.05f, half + 0.05f, 0f, d * 0.6f);
 
             if (pattern == Pattern.Solid)
@@ -252,7 +206,6 @@ namespace GatekeepersProtocol.EditorTools
                 var run = Runs[pattern];
                 float edge = Pitch * 0.5f;
                 float x = edge;
-                // phase by row, so a second strip is not a copy of the first directly above it
                 int i = Mathf.Abs(row);
                 int guard = 0;
                 while (x < length - edge && guard++ < 512)
@@ -273,6 +226,180 @@ namespace GatekeepersProtocol.EditorTools
             mesh.subMeshCount = 2;
             mesh.SetTriangles(body, 0);
             mesh.SetTriangles(glow, 1);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        /// <summary>Where the pack's electronics artwork lives in the atlas, in UV.
+        ///
+        /// Found by flood-filling the lit texels of PolygonSciFiSpace_01_Protocol_Emissive: what
+        /// glows in that map IS the screens, readouts and indicator lights, so the lit regions
+        /// are the artwork without anyone having to identify it by eye. 101 regions; these are
+        /// the three whose proportions suit a strip.
+        ///
+        /// A strip samples one of these rather than carrying its own geometry. The knobs and
+        /// readouts are painted on, the emissive map lights them through the same grey mask the
+        /// walls use, and the accent hue drives them for free.</summary>
+        public struct Art
+        {
+            public Rect uv;
+            /// <summary>Width over height of the source region. A decal repeats the rect along
+            /// its length to hold this, because a stretched readout is as obvious as a
+            /// stretched knob.</summary>
+            public float aspect;
+        }
+
+        // Picked by looking at the albedo, not by matching aspect ratios in the emissive map.
+        // The earlier method chose the radar scope three times running purely because it was
+        // square, and a wall of radar scopes is not an electrical panel.
+        //
+        // Pixel rects, not UVs, because that is what the atlas is measured in and what an image
+        // editor reports. A() does the conversion, including the flip — Unity's UV origin is
+        // bottom-left and every image editor counts from the top.
+
+        const float AtlasPx = 2048f;
+
+        static Art A(int x, int y, int w, int h) => new Art
+        {
+            uv = new Rect(x / AtlasPx, 1f - (y + h) / AtlasPx, w / AtlasPx, h / AtlasPx),
+            aspect = (float)w / h,
+        };
+
+        /// <summary>Long instrument readouts and lit lozenges — anything that wants to run
+        /// along a wall. The first is a segmented readout; the rest are plain lit pills, which
+        /// are the honest choice where a strip should read as a light and not a display.
+        /// </summary>
+        public static readonly Art[] Wide =
+        {
+            A(504, 1912, 532, 104),   // the only wide instrument in the atlas
+        };
+
+        /// <summary>Blank lit lozenges. Kept, but out of the assortment: they carry no
+        /// instrumentation, and a run of them is the white-slab-in-a-recess look rather than an
+        /// electrical panel. Use them where a strip should read as a light.</summary>
+        public static readonly Art[] Pills =
+        {
+            A(152, 424, 180, 52),
+            A(152, 328, 180, 52),
+            A(156, 376, 176, 52),
+        };
+
+        /// <summary>What a long slot is actually built from: small screens and indicator lamps
+        /// laid in a row, which is how the pack's own consoles are put together. The atlas has
+        /// exactly one wide instrument and dozens of small ones, so composing a row is the only
+        /// way to fill a 10:1 slot without stretching something.</summary>
+        public static readonly Art[] Pieces =
+        {
+            A(1060, 376, 60, 48), A(1160, 376, 60, 48), A(1112, 376, 56, 48),
+            A(648, 1236, 56, 52), A(1264, 444, 60, 44), A(1164, 444, 60, 44),
+            A(1064, 444, 60, 44), A(1216, 444, 56, 44), A(1116, 444, 56, 44),
+            A(1464, 1472, 28, 60), A(1292, 760, 28, 60), A(1284, 1176, 32, 60),
+            A(1376, 1228, 28, 56), A(1304, 996, 28, 48), A(1240, 1484, 28, 48),
+            A(1512, 1088, 40, 28), A(1272, 1396, 40, 28), A(1532, 732, 28, 28),
+        };
+
+        /// <summary>A piece for position `i` of a composed row. Deterministic, so a wall
+        /// rebuilds identically.</summary>
+        public static Art PieceAt(int seed)
+        {
+            unchecked
+            {
+                uint h = (uint)seed * 2654435761u;
+                h ^= h >> 15;
+                h *= 2246822519u;
+                h ^= h >> 13;
+                return Pieces[(int)(h % (uint)Pieces.Length)];
+            }
+        }
+
+        /// <summary>Screens and instrument clusters. The first is the big text-and-chart panel;
+        /// the rest are the small lit screens that sit in rows on the pack's own consoles, which
+        /// is exactly the assortment a wall panel wants.</summary>
+        public static readonly Art[] Mid =
+        {
+            A(760,    0, 280, 168),   // text columns with a bar chart
+            A(1060, 376,  60,  48),
+            A(1160, 376,  60,  48),
+            A(1112, 376,  56,  48),
+            A(648, 1236,  56,  52),   // the one with an orange block in it
+            A(1264, 444,  60,  44),
+            A(1164, 444,  60,  44),
+            A(1064, 444,  60,  44),
+            A(1216, 444,  56,  44),
+            A(1116, 444,  56,  44),
+        };
+
+        /// <summary>Single vertical indicator lamps, for punctuating a run rather than filling
+        /// it.</summary>
+        public static readonly Art[] Tall =
+        {
+            A(1464, 1472, 28, 60),
+            A(1292,  760, 28, 60),
+            A(1284, 1176, 32, 60),
+            A(1376, 1228, 28, 56),
+        };
+
+        /// <summary>One piece of artwork for a slot of this shape. The band is chosen by the
+        /// slot's proportions so nothing is badly stretched, and the piece within the band by a
+        /// hash of the slot — deterministic, so a wall rebuilds identically and a station
+        /// matches itself between sessions, but varied enough that a run does not read as one
+        /// panel repeated.</summary>
+        public static Art PickFor(float slotAspect, int seed)
+        {
+            // 0.8, not 1.0: the centre block measures 0.80 x 0.864, which is 0.93:1 and was
+            // falling through to the lamps — the one slot that most wants a screen was getting
+            // a single indicator stretched square.
+            var band = slotAspect >= 3f   ? Wide
+                     : slotAspect >= 0.8f ? Mid
+                                          : Tall;
+            unchecked
+            {
+                uint h = (uint)seed * 2654435761u;
+                h ^= h >> 15;
+                h *= 2246822519u;
+                h ^= h >> 13;
+                return band[(int)(h % (uint)band.Length)];
+            }
+        }
+
+        /// <summary>A single quad carrying one region of the atlas. One face, because this is
+        /// paint on a wall and not a box bolted to it — the sides and back of a 25 mm box are
+        /// never seen and cost four faces each.
+        ///
+        /// The rect repeats along the length however many times keeps the artwork close to its
+        /// own proportions, so a long strip reads as a row of readouts rather than as one
+        /// readout smeared out.</summary>
+        public static Mesh BuildDecal(float length, float height, Art art)
+        {
+            int repeats = Mathf.Max(1, Mathf.RoundToInt((length / Mathf.Max(height, 1e-4f))
+                                                        / Mathf.Max(art.aspect, 1e-4f)));
+
+            var mesh = new Mesh
+            {
+                name = $"Decal_{Mathf.RoundToInt(length * 100f)}x" +
+                       $"{Mathf.RoundToInt(height * 100f)}_{repeats}_" +
+                       $"{Mathf.RoundToInt(art.uv.x * 2048f)}_{Mathf.RoundToInt(art.uv.y * 2048f)}"
+            };
+
+            float half = height * 0.5f;
+            mesh.SetVertices(new List<Vector3>
+            {
+                new Vector3(0f, -half, 0f), new Vector3(length, -half, 0f),
+                new Vector3(length, half, 0f), new Vector3(0f, half, 0f),
+            });
+            mesh.SetNormals(new List<Vector3>
+            {
+                Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward,
+            });
+            var r = art.uv;
+            mesh.SetUVs(0, new List<Vector2>
+            {
+                new Vector2(r.x, r.y),
+                new Vector2(r.x + r.width * repeats, r.y),
+                new Vector2(r.x + r.width * repeats, r.y + r.height),
+                new Vector2(r.x, r.y + r.height),
+            });
+            mesh.SetTriangles(new List<int> { 0, 2, 1, 0, 3, 2 }, 0);
             mesh.RecalculateBounds();
             return mesh;
         }

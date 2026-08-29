@@ -86,18 +86,37 @@ namespace GatekeepersProtocol.Game
                 var gc = _game;
                 if (gc == null || gc.RunIsOver) return null; // no repair prompt once the run is over
 
-                if (DockOffered(gc))
-                    return _dockHold > 0f
-                        ? "[hold " + Controls.DisplayOf(ControlId.Interact) + "] Docking..."
-                        : "[hold " + Controls.DisplayOf(ControlId.Interact)
-                          + "] Dock — return to Ship";
-
+                // DOCKING IS SHOWN, NEVER INSTEAD OF THE START LINE. This branch used to
+                // return here unconditionally, and once closing a zone began offering the dock
+                // (2026-08-28) that swallowed "[T] start the wave" the moment zone 1 finished
+                // — the Hatch told the player to go home and never mentioned the next zone,
+                // which reads exactly like the start being broken. Docs/Design/0-Gameplay.md
+                // says the start prompt outranks Convert and Withdraw; a third verb does not
+                // get to jump that queue either.
+                //
                 ReadRepairView(gc, out float hp, out float maxHp, out long bank, out bool destroyed,
                     out long unbanked, out bool prep);
-                if (destroyed) return "Hatch: DESTROYED";
+
+                // THE ORDER IS SIM'S, NOT THIS METHOD'S (HatchVerbs.Choose). It used to be
+                // whatever these `if`s happened to be in, which is how a Dock offer added above
+                // the start branch silently swallowed "[T] start the wave" the moment zone 1
+                // closed. The rule was already written down and nothing could check it, because
+                // it lived in a MonoBehaviour the offline harness does not compile. Strings,
+                // key names and scene reads stay here; only the decision moved.
+                bool dockOffered = DockOffered(gc);
+                HatchVerb verb = HatchVerbs.Choose(
+                    gc.RunIsOver, destroyed, hp >= maxHp, dockOffered, _dockHold > 0f,
+                    gc.HatchOffersWaveStart, prep, unbanked, bank);
+
+                if (verb == HatchVerb.Docking)
+                    return "[hold " + Controls.DisplayOf(ControlId.Interact) + "] Docking...";
+                if (verb == HatchVerb.Destroyed) return "Hatch: DESTROYED";
+                if (verb == HatchVerb.Dock)
+                    return "[hold " + Controls.DisplayOf(ControlId.Interact)
+                        + "] Dock — return to Ship";
                 if (hp >= maxHp)
                 {
-                    if (gc.HatchOffersWaveStart)
+                    if (verb == HatchVerb.StartWave)
                     {
                         // The loop's start line (Zo, 2026-08-25): every wave BEGINS here and
                         // ends at a terminal. Checked before the Convert/Withdraw branches
@@ -107,9 +126,16 @@ namespace GatekeepersProtocol.Game
                         s_prompt.Append('[')
                             .Append(Controls.DisplayOf(ControlId.PullDraw))
                             .Append("] start the wave");
+                        // Both verbs, both keys, when both are live: T presses on, hold E goes
+                        // home. Saying only one of them is what hid the way home before it was
+                        // fixed, and then hid the start line after.
+                        if (HatchVerbs.ShowsDockAlongside(verb, dockOffered))
+                            s_prompt.Append("   |   [hold ")
+                                .Append(Controls.DisplayOf(ControlId.Interact))
+                                .Append("] Dock — return to Ship");
                         return s_prompt.ToString();
                     }
-                    if (prep && unbanked > 0L)
+                    if (verb == HatchVerb.Convert)
                     {
                         string e = Controls.DisplayOf(ControlId.Interact);
                         bool armed = gc != null && gc.IsHatchBankArmed;
@@ -125,7 +151,7 @@ namespace GatekeepersProtocol.Game
                         s_prompt.Append("  [").Append(e).Append(armed ? "] edit" : "] select");
                         return s_prompt.ToString();
                     }
-                    if (prep && unbanked == 0L && bank > 0L)
+                    if (verb == HatchVerb.Withdraw)
                     {
                         s_prompt.Clear();
                         if (_withdrawHold || _sessionWithdrawn > 0L)

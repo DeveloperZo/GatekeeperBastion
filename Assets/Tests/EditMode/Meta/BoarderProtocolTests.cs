@@ -24,7 +24,22 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(30f, BoarderProtocol.Cooldown(BoarderAbilityId.Barrage), 1e-5f);
             Assert.AreEqual(2f, BoarderProtocol.FireMul(BoarderAbilityId.Barrage), 1e-5f);
             Assert.AreEqual(8f, BoarderProtocol.Radius(BoarderAbilityId.Barrage), 1e-5f);
-            Assert.AreEqual(6f, BoarderProtocol.Window(BoarderAbilityId.Rush), 1e-5f);
+            // RUSH IS 6 s / 40 s and has been since M70 ("Personal H | Rush | ... | 6 s / 40 s").
+            // NOT RE-KEYED ON 2026-08-28. The only window that changed that day is OVERCHARGE's
+            // (6 -> 8, to match its new 40-round belt at the overcharged rate), and Overcharge
+            // was folded into the switch arm Window() already shared with Bulkhead, Rush and
+            // Cloak — so all four moved. Three of them were not meant to. Raising this pin to 8
+            // would bless that, which is the whole reason it is written out rather than derived
+            // from a sibling: a literal cannot drift along with the thing beside it.
+            Assert.AreEqual(6f, BoarderProtocol.Window(BoarderAbilityId.Rush), 1e-5f,
+                "Rush's window moved with Overcharge's - they share a case arm in "
+                + "BoarderProtocol.Window and only Overcharge was meant to go 6 -> 8");
+            Assert.AreEqual(6f, BoarderProtocol.Window(BoarderAbilityId.Bulkhead), 1e-5f,
+                "and Bulkhead moved with it");
+            Assert.AreEqual(6f, BoarderProtocol.Window(BoarderAbilityId.Cloak), 1e-5f,
+                "and Cloak moved with it");
+            Assert.AreEqual(8f, BoarderProtocol.Window(BoarderAbilityId.Overcharge), 1e-5f,
+                "Overcharge is the one window that was meant to move");
             Assert.AreEqual(40f, BoarderProtocol.Cooldown(BoarderAbilityId.Rush), 1e-5f);
             Assert.AreEqual(1.5f, BoarderProtocol.FireMul(BoarderAbilityId.Rush), 1e-5f);
             Assert.AreEqual(0.5f, BoarderProtocol.Magnitude(BoarderAbilityId.Anchor), 1e-5f);

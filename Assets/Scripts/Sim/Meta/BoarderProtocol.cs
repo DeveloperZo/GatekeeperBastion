@@ -61,15 +61,56 @@ namespace GatekeepersProtocol.Sim
         public const float TurretDamagePerShot = 6f;
         public const float TurretShotsPerSecond = 2f;
 
+        /// <summary>Rounds the machine carries — ONE OF TWO LIMITS, with
+        /// <see cref="TurretLifeSeconds"/>, whichever runs out first (Zo, 2026-08-28). This
+        /// briefly read "not damage and not a clock", from the few hours when rounds were the
+        /// only limit; the clock was added the same day and is in practice the one that binds.
+        /// <para>Damage was never going to do it. Before 2026-08-27 nothing could target a
+        /// turret at all without one specific passive; making it mortal helped and did not fix
+        /// the feel, because a machine that only dies when the enemy chooses to shoot it is
+        /// still the player's to keep. FIELD DEPLOY's cooldown is 30 s, so anything that
+        /// outlives 30 s of use is a fixture rather than a deployable.</para>
+        /// <para>60 rounds is 30 s of firing at the base rate, so against a 20 s clock the
+        /// magazine is a CEILING on how much one machine can ever do rather than the thing that
+        /// ends it — a turret in a busy lane dies on the clock with about 20 rounds unspent, and
+        /// one in a quiet lane dies on the clock having spent almost none. OVERCHARGE DOES NOT
+        /// TOUCH THIS: it draws on <see cref="OverchargeShotBudget"/>, its own belt, so a spike
+        /// costs the spike and leaves the machine's ordinary life intact.</para>
+        /// <para>UNTESTED. This is arithmetic against a cooldown, not a measurement; it is the
+        /// first dial to turn after a run with FORGE.</para></summary>
+        public const int TurretShotBudget = 60;
+
+        /// <summary>Seconds a turret stands, regardless of what it has left in the magazine.
+        /// TWO LIMITS, WHICHEVER COMES FIRST (Zo, 2026-08-28: "expire after 60 rounds and 20
+        /// seconds"). Rounds alone let a turret covering a quiet lane stand forever; a clock
+        /// alone let one in a firefight outlive its usefulness. 60 rounds at the base 2/s is
+        /// exactly 30 s of firing, so in a busy lane the CLOCK is what ends it at 20 s with
+        /// rounds to spare, and in a quiet one the clock ends it too. The magazine is the
+        /// ceiling on how much it can ever do; the clock is the floor under how often you
+        /// redeploy.</summary>
+        public const float TurretLifeSeconds = 20f;
+
+        /// <summary>OVERCHARGE FIRES FROM ITS OWN BELT. Redlining used to empty the turret's
+        /// magazine 2.5x faster, which punished the ability with the machine's ordinary
+        /// lifespan — use it and the turret was gone. These rounds are separate, so a spike
+        /// costs the spike and nothing else and the turret is still standing afterwards with
+        /// what it had. 8 s at the overcharged rate (2 x 2.5 = 5/s) is exactly 40.</summary>
+        public const int OverchargeShotBudget = 40;
+
         /// <summary>The aura belongs to the machine, not to a window on the caster: Boarders
         /// near the turret fire faster for as long as it stands.</summary>
         public const float TurretAuraRadius = 8f;
         public const float TurretAuraFireMul = 1.35f;
 
-        /// <summary>OVERCHARGE redlines the machine. The burn is the whole cost — a full window
-        /// on a healthy turret leaves it wounded, and on a wounded one kills it.</summary>
+        /// <summary>OVERCHARGE redlines the machine. The cost is the BELT it draws from
+        /// (<see cref="OverchargeShotBudget"/>) and nothing else — the old per-second life burn
+        /// was retired on 2026-08-28 because it charged the player twice for one spike and made
+        /// using the ability shorten the turret it was meant to make better.</summary>
         public const float OverchargeTurretRateMul = 2.5f;
         public const float OverchargeSelfFireMul = 1.4f;
+        /// <summary>DEAD as of 2026-08-28. <see cref="OverchargeBurnForSeconds"/> returns 0
+        /// and nothing else reads this. Kept for one release so a save or net message carrying
+        /// the old shape still resolves; delete it once nothing deserialises it.</summary>
         public const float OverchargeHpPerSecond = 18f;
 
         /// <summary>PARALLEL BAYS lets a second bay stand live. STOCK and PHANTOM keep the
@@ -204,8 +245,19 @@ namespace GatekeepersProtocol.Sim
                 case BoarderAbilityId.Ping: return 8f;
                 case BoarderAbilityId.Bulkhead:
                 case BoarderAbilityId.Rush:
-                case BoarderAbilityId.Cloak:
-                case BoarderAbilityId.Overcharge: return 6f;
+                case BoarderAbilityId.Cloak: return 6f;
+
+                // OVERCHARGE HAS ITS OWN ARM, and that is the point of it being written out
+                // separately. Its 6 -> 8 was first made by editing the shared arm above, which
+                // moved Bulkhead, Rush and Cloak to 8 s as well — three silent retunes riding
+                // on one intended change, caught only because BoarderProtocolTests pins Rush
+                // at the 6 s M70 authored. A fall-through group is a fine way to say "these
+                // agree"; it is a trap the moment one of them stops agreeing.
+                //
+                // The window and OverchargeShotBudget are one number expressed twice: 8 s at
+                // the overcharged rate (2 x 2.5 = 5 rounds/s) is the 40-round belt exactly.
+                // Move either and re-derive the other.
+                case BoarderAbilityId.Overcharge: return 8f;
                 // FIELD DEPLOY is instant: the turret's life is its uptime, not a window.
                 case BoarderAbilityId.FieldDeploy: return 0f;
                 default: return 0f;
@@ -302,11 +354,15 @@ namespace GatekeepersProtocol.Sim
             return rate <= 0f ? 0f : 1f / rate;
         }
 
-        /// <summary>Turret life OVERCHARGE burns over a span. The machine pays for the spike.</summary>
+        /// <summary>Turret life OVERCHARGE burns over a span. The machine pays for the spike.
+        /// <para>RETIRED 2026-08-28 and kept only so a save or a net message carrying the old
+        /// shape still resolves. Overcharge no longer bills a separate per-second toll: the
+        /// turret's life is its magazine, and the rate multiplier already empties it 2.5x
+        /// faster. Two costs for one spike double-charged it and made the burn read as an
+        /// arbitrary timer bolted onto a machine that had no other clock.</para></summary>
         public static float OverchargeBurnForSeconds(float seconds)
         {
-            if (seconds <= 0f) return 0f;
-            return seconds * OverchargeHpPerSecond;
+            return 0f;
         }
 
         public static string DisplayName(BoarderAbilityId id)

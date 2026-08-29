@@ -354,22 +354,17 @@ namespace GatekeepersProtocol.Sim
             }
             if (mode == WaveMode.HatchBank)
             {
-                bool masterHatch = _masterPhase == MasterControlPhase.Hatch;
-                if (!masterHatch)
+                // The Master finale used to borrow this mode for its last window and needed
+                // an exemption from the unbanked check. It is a Terminal-mode wave now
+                // (2026-08-28), so a Hatch-bank draw is once again only ever a Convert and
+                // the exemption is gone with the thing that needed it.
+                if (TotalUnbanked <= 0L)
                 {
-                    if (TotalUnbanked <= 0L)
-                    {
-                        Log.Info(Tag, "hatch-bank refused — unbanked=0");
-                        return;
-                    }
-                    SnapshotHatchCarry();
-                    ApplyFaucetConvertBonusIfPending();
+                    Log.Info(Tag, "hatch-bank refused — unbanked=0");
+                    return;
                 }
-                else if (!_masterHatchMulLocked)
-                {
-                    SnapshotHatchCarry();
-                    _masterHatchMulLocked = true;
-                }
+                SnapshotHatchCarry();
+                ApplyFaucetConvertBonusIfPending();
                 _dripAcc = 0f;
                 ResetConvertedThisBank();
                 _hatchBankTimer = HatchBank.DurationSeconds;
@@ -474,6 +469,10 @@ namespace GatekeepersProtocol.Sim
             ClearChainState();
             CancelSequentialDraws();
             CancelMasterSequence();
+            // Every Assault exit clears the drip flag, this one included: an abort that left
+            // it set would make the redrawn wave's kills pay zero until the next wave start
+            // happened to reset it.
+            SetFieldTrickle(false);
         }
 
         /// <summary>
@@ -679,6 +678,10 @@ namespace GatekeepersProtocol.Sim
             }
             CancelSequentialDraws();
             ClearChainState();
+            // The sim owns its own flag at every Assault exit: leaving it for the Game layer
+            // to clear is a cross-seam contract, and an exit path that misses it makes the
+            // NEXT wave pay zero until something else resets it.
+            SetFieldTrickle(false);
             // Reaching the switch IS the payout: the whole carried pile banks here, so the
             // walk up the lane is what secures it and the trip home is not a second toll.
             long carried = TotalUnbanked;
@@ -688,6 +691,9 @@ namespace GatekeepersProtocol.Sim
                 Log.Event(Tag, "terminal shutoff banked " + carried);
             }
             NotifyAssaultCleared();
+            // The zone is closed: the Hatch will take the player home from here until they
+            // start the next one. Raised AFTER the clear so the offer outlives the assault.
+            OfferDockAfterZoneShutoff();
             return Assault == AssaultState.Prep;
         }
 
@@ -721,8 +727,9 @@ namespace GatekeepersProtocol.Sim
             if (hatchBank)
             {
                 _hatchBankTimer = 0f;
-                if (_masterPhase != MasterControlPhase.Hatch)
-                    DumpUnbanked();
+                // Unconditional again: the only Hatch-bank window left is a real Convert, and
+                // the finale that used to be exempted here no longer runs in this mode.
+                DumpUnbanked();
             }
 
             // Cleared through CurrentWaveIndex (1-based wave number already launched).
@@ -741,6 +748,10 @@ namespace GatekeepersProtocol.Sim
 
             ClearChainState();
             Assault = AssaultState.Prep;
+            // Invariant: FieldTrickleLive never survives an Assault exit. This, AbortAssault,
+            // ShutOffFieldWave and the run-end sweep are all four exits; each clears it
+            // locally so no Game-layer caller is owed the reset.
+            SetFieldTrickle(false);
             var handler = AssaultEnded;
             if (handler != null) handler();
 
@@ -789,6 +800,10 @@ namespace GatekeepersProtocol.Sim
             if (Phase != RunPhase.Tethered) return;
 
             RunElapsed += dt;
+
+            // Before the Hatch-bank branch below, which returns: a seat bleeds out on the same
+            // clock in every mode.
+            if (TickBleedOut(dt)) BleedOutExpired = true;
 
             if (Assault == AssaultState.Assault && Mode == WaveMode.HatchBank)
             {
@@ -847,7 +862,9 @@ namespace GatekeepersProtocol.Sim
             if (Mode == WaveMode.HatchBank)
                 spec = HatchBank.ApplyHatchComposition(spec, _hatchCarry);
             spec = ConsumeFaucetAxisIfPending(spec);
-            if (Mode == WaveMode.HatchBank && _masterPhase == MasterControlPhase.Hatch)
+            // The elite is the last CONTROL-ROOM wave, so this no longer keys on Hatch-bank
+            // mode — the phase alone says which wave it is.
+            if (_masterPhase == MasterControlPhase.Elite)
                 spec = MasterControl.ApplyFinaleElite(spec);
             if (Mode != WaveMode.HatchBank)
             {
@@ -978,7 +995,7 @@ namespace GatekeepersProtocol.Sim
             LastRunReport = report;
             SetPhase(RunPhase.Escaped);
             long net = report.grossEarned - report.repairSpent;
-            Log.Info(Tag, "Run CLEARED: Master Control Hatch-bank survived. Gross " +
+            Log.Info(Tag, "Run CLEARED: Master Control shut off at its terminal. Gross " +
                           report.grossEarned + ", repair spent " + report.repairSpent +
                           ", net " + net + ".");
         }

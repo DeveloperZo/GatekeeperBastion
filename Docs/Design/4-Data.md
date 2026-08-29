@@ -245,8 +245,8 @@ document below `SaveFormat.CurrentVersion` is refused by name rather than reshap
 <!-- GKB:GEN hatch — ShipSystems, MetaUpgrades.HatchHp, EquipmentCatalog -->
 | cost | value |
 |---|---|
-| Hatch HP (Armor 0) | 300 |
-| Hatch HP (Armor 5) | 375 |
+| Hatch HP (Armor 0) | 600 |
+| Hatch HP (Armor 5) | 750 |
 | per HP healed | 2 Salvage (`ShipSystems.RepairSalvagePerHp`) |
 | equipment slot | **300** Salvage, once, after the first bank |
 | repair rig | **300** Salvage, flat 8 HP/s |
@@ -300,7 +300,9 @@ numbers are **#12**.
 | cost | 150 × min(taken + 1, 3) |
 | first three | 150 / 300 / 450 |
 | climbs to | 450 and stops — every later death is the same price |
-| refused when | that seat carries less than the price — the Boarding ends |
+| cap | 2 per run, all seats together |
+| bleed-out | 10 s to buy back, or the Boarding ends |
+| refused when | the cap is spent, or the bank is short of the price |
 <!-- GKB:END respawns -->
 
 Master Control is 5 terminal Waves then 1 Hatch-bank window. Gap is `WaveDirector.InterWaveGap`.
@@ -312,7 +314,7 @@ stays Hatch-bank; the Wave-5 horde does not spawn with it.
 | | |
 |---|---|
 | terminal Waves | 5 |
-| Hatch-bank Waves | 1 |
+| elite waves | 1, and killing it arms the terminal |
 | finale elite HP | 240 |
 | gap | 3 s |
 <!-- GKB:END master-control -->
@@ -528,7 +530,7 @@ Cost `200 * 2^currentLevel` = 200/400/800/1,600/3,200, **6,200** to max a track.
 
 | Track | Station | Level 0 | Level 5 |
 |---|---|---|---|
-| Hatch Armor | FABRICATION | 300 HP | 375 HP |
+| Hatch Armor | FABRICATION | 600 HP | 750 HP |
 <!-- GKB:END tracks -->
 
 **A Hatch Armor level is smaller than the noise.** The measured three-attempt series is in

@@ -307,24 +307,27 @@ namespace GatekeepersProtocol.Game
         void CheckAssaultCleared()
         {
             if (_teardown) return; // guard: never call into the sim from a terminal/teardown state
-            if (_sim == null || _sim.Phase != RunPhase.Tethered) return;
-            if (_sim.Assault != AssaultState.Assault) return;
-            if (_sim.ChainPending) return;
-            if (_active.Count > 0) return; // at least one wave still delivering
-            // AFTER the alive check, never before: the flag zeroes CurrentKillAward, so
-            // raising it while authored bodies are still on the field would quietly stop
-            // paying for the wave the player is still fighting.
-            if (AliveCount > 0) return;
-            if (_game != null && _game.FieldWaveAwaitsShutoff)
+            if (_sim == null) return;
+            // The DECISION lives in FieldTrickle.Resolve — including the check order that
+            // keeps the pay-zero flag off a field the player is still fighting. This shell
+            // only gathers the values and applies the verdict; putting any condition back
+            // here recreates the 2026-08-28 two-homes deadlock.
+            switch (FieldTrickle.Resolve(_sim.Phase, _sim.Assault, _sim.ChainPending,
+                _active.Count > 0, AliveCount, _game != null && _game.FieldWaveAwaitsShutoff))
             {
-                // The roster is spent and the field is empty, but the wave is not over. Hand
-                // the rest of it to the drip and hold the Assault open.
-                _sim.SetFieldTrickle(true);
-                return;
+                case FieldWaveResolution.StartTrickle:
+                    // Roster spent, field empty, shutoff owed: hand the rest of the wave to
+                    // the drip and hold the Assault open.
+                    _sim.SetFieldTrickle(true);
+                    return;
+                case FieldWaveResolution.Cleared:
+                    // The "wave N cleared" line is GameController's (on AssaultEnded)
+                    // — it has the duration, salvage and hatch HP this call site does not.
+                    _sim.NotifyAssaultCleared();
+                    return;
+                default:
+                    return;
             }
-            // The "wave N cleared" line is GameController's (on AssaultEnded)
-            // — it has the duration, salvage and hatch HP this call site does not.
-            _sim.NotifyAssaultCleared();
         }
 
         /// <summary>One tick of the drip that holds a field wave open until its terminal is shut
@@ -339,6 +342,21 @@ namespace GatekeepersProtocol.Game
             if (_sim.Assault != AssaultState.Assault) return;
             if (_active.Count > 0) return;          // the authored roster still has bodies owed
             if (_game == null || !_game.FieldWaveAwaitsShutoff)
+            {
+                _trickleAccrued = 0f;
+                return;
+            }
+            // THE FLAG IS THE GATE, NOT A LABEL ON IT (2026-08-28). This used to drip as soon
+            // as the ROSTER was spent, while TickWaveCompletion only raises FieldTrickleLive
+            // once the FIELD IS EMPTY. The two conditions disagreed, and the disagreement was
+            // self-sustaining: the drip kept a body alive, so AliveCount never reached zero, so
+            // the flag was never raised, so every dripped body billed the player the full award
+            // and the wave could never clear. The 07:17 run is the evidence — wave 5 authored
+            // 39 bodies and the player killed 93, all of them at +42, and had to abandon.
+            //
+            // Deriving the drip from the flag makes that impossible to reproduce: the one place
+            // that decides the field is empty is the one place that starts the drip.
+            if (!_sim.FieldTrickleLive)
             {
                 _trickleAccrued = 0f;
                 return;

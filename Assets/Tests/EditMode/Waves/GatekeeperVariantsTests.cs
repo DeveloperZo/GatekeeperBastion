@@ -282,7 +282,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void Thief_StripsAboutAThirdOfTheHatch_WhileBeingKilled()
+        public void Thief_StripsASixthOfTheHatch_AndTheDeepestWavesComplementTakesMost()
         {
             // Why a Thief cannot be left for later: 200 hp is 3.4 s of an unupgraded player's FULL
             // attention (200 / 59.0 dps), during which it deals 20 / 0.7 = 28.6 dps to a 300 hp
@@ -309,9 +309,25 @@ namespace GatekeepersProtocol.Tests
             // answering one is a real commitment of attention and not an incidental trigger pull.
             Assert.AreEqual(4f, thief.maxHp / WaveDirector.StatsFor(GatekeeperKind.Default).maxHp,
                 1e-4f, "a Thief is four Defaults of shooting - that ratio IS the heavy");
-            Assert.AreEqual(1f / 3f, fraction, 0.05f,
+            // A SIXTH EACH NOW, AND THAT IS THE POINT OF THE DOOR BEING DOUBLED (2026-08-28).
+            // This pinned a third, against a 300 hp hatch sized for Hatch-bank waves where the
+            // player stands on it. Field waves put the door in the fight from 156 m away, so Zo
+            // doubled the pool — and one Thief's share halved with it, exactly as intended.
+            Assert.AreEqual(1f / 6f, fraction, 0.03f,
                 $"one Thief that got home costs {doorLost:0.#} of the hatch's "
-                + $"{ShipSystems.HatchMaxHp} hp ({fraction:0.0%}) - it must stay near a third");
+                + $"{ShipSystems.HatchMaxHp} hp ({fraction:0.0%})");
+
+            // THE INTERCEPT CLAIM SURVIVES THE RETUNE, and it is the one worth guarding: a
+            // single Thief is a slice, but the wave-5 complement is most of the door. Pinned
+            // against the authored count so it tracks the roster instead of a frozen number —
+            // if either the count or the hatch moves far enough that a full complement stops
+            // threatening the door, Thieves have quietly become ignorable.
+            int deepest = WaveDirector.MaxWaves - 1;
+            int thieves = new WaveDirector().NextWave(deepest, 0).thiefCount;
+            float complement = thieves * doorLost / ShipSystems.HatchMaxHp;
+            Assert.Greater(complement, 0.5f,
+                $"the deepest wave's {thieves} Thieves cost only {complement:0.0%} of the door "
+                + "between them - nothing forces the player to intercept them");
         }
 
         [Test]

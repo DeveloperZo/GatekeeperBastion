@@ -334,11 +334,23 @@ namespace GatekeepersProtocol.Game
             Controls.Sample();
             if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
             TickFaucetHousekeeping();
-            if (Sim.Assault == AssaultState.Assault)
+            // WHICH VERBS ARE LIVE IS SIM'S CALL (BastionVerbs.LiveIn), not this method's.
+            // It used to be the shape of these branches, and that is how the terminal shutoff
+            // came to be unreachable during a live wave: the Prep gate below sat above the
+            // handler that carries it, and for a dripping zone Assault is the only state that
+            // handler is ever reached in. Asserting the dispatch table is now one test.
+            if (BastionVerbs.IsLive(BastionVerb.Shutoff, Sim.Assault)
+                && Sim.Assault == AssaultState.Assault)
             {
-                // Only the faucet has assault-time verbs (shutoff T at the marked origin);
-                // with the toggle off this is a no-op and the frame ends here as before.
                 TickFaucetAssaultCommands();
+                // AND THE ZONE SHUTOFF. TickPrepCommands carries the T-at-a-terminal branch and
+                // its own comment says it works "in Assault OR in Prep" — but this method
+                // returned before ever calling it, so during a live wave T at the terminal did
+                // NOTHING, and did it silently. Zone 1 hid the bug: killing the field empty
+                // drops the sim to Prep, so the player always pressed T from Prep there. Zone 2
+                // keeps dripping by design, never leaves Assault, and the 07:17 run had no way
+                // to end wave 5 at all — the only exit was abandoning the run.
+                TickAssaultShutoffCommand();
                 return;
             }
             if (Sim.Assault != AssaultState.Prep) return;
@@ -579,7 +591,7 @@ namespace GatekeepersProtocol.Game
                 _spawner.DespawnAllLive();
             RecordPendingTerminalClear();
             RecordCompositeClear();
-            if (Sim.MasterPhase == MasterControlPhase.Hatch && Sim.Phase == RunPhase.Tethered)
+            if (Sim.MasterPhase == MasterControlPhase.Elite && Sim.Phase == RunPhase.Tethered)
             {
                 if (_hatchBankLayout != null)
                     _hatchBankLayout.ActivateHatchBankSpawns();

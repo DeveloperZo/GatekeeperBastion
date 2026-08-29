@@ -35,7 +35,7 @@ namespace GatekeepersProtocol.Game
                 : sim.WavesSinceBank;
             WaveSpec raw = s_preview.NextWave(HatchBank.CarryWaveIndex(carry), sim.Siphon.Level, sim.PlayerCount);
             WaveSpec spec = HatchBank.ApplyHatchComposition(raw, carry);
-            if (sim.MasterPhase == MasterControlPhase.Hatch)
+            if (sim.MasterPhase == MasterControlPhase.Elite)
                 spec = MasterControl.ApplyFinaleElite(spec);
             return spec.enemyCount;
         }
@@ -46,6 +46,38 @@ namespace GatekeepersProtocol.Game
             if (idx >= WaveDirector.MaxWaves) idx = WaveDirector.MaxWaves - 1;
             if (idx < 0) idx = 0;
             return s_preview.NextWave(idx, Sim.Siphon.Level, Sim.PlayerCount).enemyCount;
+        }
+
+        /// <summary>T at a zone terminal while the wave is LIVE — the off switch. Prep has the
+        /// same verb inside <see cref="TickPrepCommands"/>; this is the Assault half, which was
+        /// unreachable until 2026-08-28 because TickFightInput returned on Assault before ever
+        /// calling it.
+        /// <para>Deliberately narrow: it is the shutoff and nothing else. Every other Prep verb
+        /// — wave start, Convert, juice, retrigger — stays Prep-only, so widening the Assault
+        /// path cannot smuggle them in. The conditions are the same four ShutOffTerminal
+        /// re-checks, so the two cannot disagree about when the verb is offered, and
+        /// ShutOffTerminal still owns every refusal line.</para></summary>
+        void TickAssaultShutoffCommand()
+        {
+            if (Sim == null || _layout == null || RunIsOver) return;
+            if (!Controls.Down(ControlId.PullDraw)) return;
+            if (Sim.Mode == WaveMode.HatchBank) return;   // a Convert window has no off switch
+
+            var lookingTerminal = (_interactor != null ? _interactor.Current : null)
+                                  as BastionTerminal;
+            if (lookingTerminal == null) return;
+            string id = lookingTerminal.TerminalId;
+            if (string.IsNullOrEmpty(id)) return;
+            if (lookingTerminal.Kind == BastionTerminalKind.Master)
+            {
+                if (Sim.MasterAwaitsShutoff) ShutOffTerminal(lookingTerminal);
+                return;
+            }
+            if (_layout.IsTerminalDone(id)) return;
+            if (DemoZones.ZoneOf(id) <= 0) return;
+            if (!ZoneWavesHaveRun(id)) return;
+
+            ShutOffTerminal(lookingTerminal);
         }
 
         void TickPrepCommands()
@@ -90,6 +122,19 @@ namespace GatekeepersProtocol.Game
                 // T at a zone terminal is the shutoff, in Assault OR in Prep: the field may
                 // already be empty when the player gets here, and the walk is still the
                 // objective (Zo, 2026-08-26). ShutOffTerminal owns the refusals.
+                // THE MASTER SWITCH IS THROWN IN PREP, and this branch could not reach it.
+                // Killing the elite clears the assault, so the player is in PREP when they walk
+                // up — but the zone test below (`ZoneOf > 0`) is false for the Master terminal,
+                // which the zone table does not author, so T there did nothing. The Assault-side
+                // handler covers the other state; without this the finale was armed and
+                // unthrowable, which is the same "verb exists, cannot be reached" shape as the
+                // zone shutoff before it.
+                if (lookingTerminal != null && lookingTerminal.Kind == BastionTerminalKind.Master
+                    && Sim != null && Sim.MasterAwaitsShutoff)
+                {
+                    ShutOffTerminal(lookingTerminal);
+                    return;
+                }
                 if (lookingTerminal != null && Sim != null
                     && Sim.Mode != WaveMode.HatchBank
                     && !_layout.IsTerminalDone(lookingTerminal.TerminalId)
@@ -140,10 +185,16 @@ namespace GatekeepersProtocol.Game
                             + " refused — select the Ante first");
                         return;
                     }
+                    // THE MASTER TERMINAL IS NOT A START LINE. It was, and that made two of
+                    // them — the shape 0-Gameplay.md forbids. The Hatch starts the finale now
+                    // (StartZoneWaveFromHatch) and this terminal is where it ENDS.
                     if (lookingTerminal.Kind == BastionTerminalKind.Master)
-                        StartMasterControl(lookingTerminal);
-                    else
-                        StartTerminalWave(lookingTerminal);
+                    {
+                        Log.Event("Terminal", lookingTerminal.TerminalId
+                            + " refused — Master Control starts at the Hatch");
+                        return;
+                    }
+                    StartTerminalWave(lookingTerminal);
                     return;
                 }
                 if (Sim.TotalUnbanked > 0L)
@@ -439,7 +490,33 @@ namespace GatekeepersProtocol.Game
             {
                 if (Sim == null || _layout == null || Sim.Assault != AssaultState.Prep)
                     return false;
-                return HatchBankStartBlocked;
+                if (HatchBankStartBlocked) return true;
+
+                // AND THE FINALE, which is a zone the zone table does not author. Moving Master
+                // Control's start to the Hatch on 2026-08-28 was only half a change: this getter
+                // is what TickPrepCommands consults before it will call StartZoneWaveFromHatch
+                // at all, and it answers off CurrentDemoZone — which walks PAST DemoZones.
+                // ZoneCount once both doors are open, so HatchBankBlocked refuses an unauthored
+                // zone and this returned false at the control room. With the Master terminal
+                // now refusing to start (correctly — one start line), the finale would have
+                // been unstartable and the demo uncompletable.
+                return MasterControlAwaitsStart;
+            }
+        }
+
+        /// <summary>Is Master Control sitting unstarted at the Hatch? The finale is the last
+        /// zone and begins where every other one does; it is simply not in the zone table, so
+        /// the ordinary zone check cannot see it.</summary>
+        public bool MasterControlAwaitsStart
+        {
+            get
+            {
+                if (Sim == null || _layout == null || RunIsOver) return false;
+                if (Sim.Phase != RunPhase.Tethered) return false;
+                if (Sim.MasterSequenceLive) return false;
+                BastionTerminal master = _layout.FindMaster();
+                if (master == null) return false;
+                return !_layout.IsTerminalDone(master.TerminalId);
             }
         }
 
@@ -485,6 +562,25 @@ namespace GatekeepersProtocol.Game
                     return false;
                 }
             }
+            // THE FINALE STARTS AT THE HATCH TOO (Zo, 2026-08-28: "Master terminal should
+            // still be the same flow. Start at hatch and end at terminal"). Every field
+            // terminal being done used to mean the Hatch had nothing left to offer, and the
+            // only way into Master Control was pressing T at the Master terminal itself — a
+            // SECOND START LINE, which is the exact shape 0-Gameplay.md forbids and which sent
+            // the 2026-08-25 run to a terminal to begin a wave. The finale is a zone like the
+            // others: it begins here.
+            BastionTerminal master = _layout != null ? _layout.FindMaster() : null;
+            if (master != null && Sim.Assault == AssaultState.Prep && !Sim.MasterSequenceLive
+                && (_layout == null || !_layout.IsTerminalDone(master.TerminalId)))
+            {
+                _armedTerminalId = master.TerminalId;
+                Log.Event("Hatch", "wave started from the Hatch — Master Control answers at "
+                    + master.TerminalId);
+                if (StartMasterControl(master)) return true;
+                _armedTerminalId = null;
+                return false;
+            }
+
             Log.Event("Hatch", "no zone left to start — every field terminal is done");
             return false;
         }
@@ -508,9 +604,7 @@ namespace GatekeepersProtocol.Game
         /// the zone's span is what the Hatch would have drawn.</summary>
         bool ZoneWavesHaveRun(string terminalId)
         {
-            int zone = DemoZones.ZoneOf(terminalId);
-            if (zone <= 0) return true;   // off the table: no zone rule to enforce
-            return Sim != null && Sim.CurrentWaveIndex >= DemoZones.FirstWave(zone);
+            return Sim != null && FieldShutoff.WavesHaveRun(terminalId, Sim.CurrentWaveIndex);
         }
 
         /// <summary>Is a field wave waiting on a shutoff that has not happened yet? True once
@@ -537,16 +631,20 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Is the shutoff on offer at this terminal right now? The prompt's question,
-        /// answered by the same rules ShutOffTerminal enforces so the two cannot disagree.</summary>
+        /// answered by the same pure rule (<see cref="FieldShutoff.MayRun"/>) ShutOffTerminal
+        /// enforces, so the two cannot disagree. This shell only supplies the scene-owned
+        /// fact (terminal done) as a value.</summary>
         public bool CanShutOffTerminal(string terminalId)
         {
-            if (Sim == null || _layout == null || RunIsOver) return false;
-            if (Sim.Phase != RunPhase.Tethered) return false;
-            if (Sim.Mode == WaveMode.HatchBank) return false;
-            if (string.IsNullOrEmpty(terminalId)) return false;
-            if (DemoZones.ZoneOf(terminalId) <= 0) return false;
-            if (_layout.IsTerminalDone(terminalId)) return false;
-            return ZoneWavesHaveRun(terminalId);
+            if (Sim == null || _layout == null) return false;
+            // MASTER CONTROL ENDS AT ITS TERMINAL TOO (Zo, 2026-08-28), and the elite is the
+            // gate: killing it arms the switch and the switch ends the Boarding. The finale is
+            // not in the zone table FieldShutoff reads, so it is answered before that.
+            var master = _layout.FindMaster();
+            if (master != null && master.TerminalId == terminalId)
+                return Sim.MasterAwaitsShutoff;
+            return FieldShutoff.MayRun(Sim.Phase, RunIsOver, Sim.Mode, terminalId,
+                _layout.IsTerminalDone(terminalId), Sim.CurrentWaveIndex);
         }
 
         public bool ShutOffTerminal(BastionTerminal terminal)
@@ -573,6 +671,17 @@ namespace GatekeepersProtocol.Game
             {
                 Log.Event("Terminal", id + " shutoff refused — a Convert window has no off switch");
                 return false;
+            }
+
+            if (terminal.Kind == BastionTerminalKind.Master)
+            {
+                if (!Sim.MasterAwaitsShutoff)
+                {
+                    Log.Event("Terminal", id + " shutoff refused — the elite is still standing");
+                    return false;
+                }
+                Log.Event("Terminal", id + " shut down — Master Control ends here");
+                return Sim.ShutOffMasterControl();
             }
 
             BastionLayout layout = _layout;

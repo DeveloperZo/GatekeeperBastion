@@ -49,16 +49,13 @@ namespace GatekeepersProtocol.Sim
             ClearChainState();
             CancelSequentialDraws();
             WavesSinceBank = MasterControl.TerminalWaves;
-            _masterPhase = MasterControlPhase.Hatch;
-            _masterLeft = MasterControl.HatchWaves;
-            SnapshotHatchCarry();
-            _masterHatchMulLocked = true;
+            _masterPhase = MasterControlPhase.Elite;
+            _masterLeft = 1;
             _wallets.Set(0, HatchBank.MasterTerminalUnbanked());
-            Mode = WaveMode.HatchBank;
-            var hatchHalf = MasterHatchHalfStarted;
-            if (hatchHalf != null) hatchHalf();
-            Log.Info(Tag, "master-control hatch half — hatchWaves=" + MasterControl.HatchWaves);
-            TriggerDraw(WaveMode.HatchBank);
+            var eliteHalf = MasterHatchHalfStarted;
+            if (eliteHalf != null) eliteHalf();
+            Log.Info(Tag, "checkpoint — master-control elite, kill it to arm the terminal");
+            TriggerDraw(WaveMode.Terminal);
             return Assault == AssaultState.Assault;
         }
     }

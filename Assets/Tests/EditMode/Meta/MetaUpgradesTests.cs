@@ -85,9 +85,13 @@ namespace GatekeepersProtocol.Tests
         private const float Tol = 1e-5f;
 
         [Test]
-        public void Effect_HatchHp_Exact300Base_Plus5PercentPerLevel()
+        public void Effect_HatchHp_IsTheShipPoolPlus5PercentPerLevel()
         {
-            float[] expected = { 300f, 315f, 330f, 345f, 360f, 375f };
+            // Derived, not restated: the base is ShipSystems.HatchMaxHp (600 since
+            // 2026-08-28) and MetaUpgrades.HatchHp reads the same field, so this pins the
+            // +5%/level SHAPE rather than a pool that is expected to be retuned.
+            float b = ShipSystems.HatchMaxHp;
+            float[] expected = { b, b * 1.05f, b * 1.10f, b * 1.15f, b * 1.20f, b * 1.25f };
             for (int l = 0; l <= 5; l++)
                 Assert.AreEqual(expected[l], MetaUpgrades.HatchHp(l), Tol, "level " + l);
         }
@@ -132,7 +136,7 @@ namespace GatekeepersProtocol.Tests
         public void ShipSystems_DefaultCtor_Keeps300Baseline()
         {
             var ship = new ShipSystems();
-            Assert.AreEqual(300f, ship.Hatch.MaxHp, 1e-5f);
+            Assert.AreEqual(600f, ship.Hatch.MaxHp, 1e-5f);
             Assert.AreEqual(ShipSystems.HatchMaxHp, ship.Hatch.MaxHp, 1e-5f);
         }
 
@@ -142,7 +146,7 @@ namespace GatekeepersProtocol.Tests
             var meta = MetaState.CreateNew();
             meta.HatchArmorLevel = 5;
             var sim = new RunSim(meta, 9);
-            Assert.AreEqual(375f, sim.Ship.Hatch.MaxHp, 1e-5f); // 300 * (1 + 0.05*5)
+            Assert.AreEqual(ShipSystems.HatchMaxHp * 1.25f, sim.Ship.Hatch.MaxHp, 1e-5f);
         }
     }
 }

@@ -178,8 +178,8 @@ namespace GatekeepersProtocol.Game
             //   Thief     — MayTargetPlayer is true on field-terminal Waves (2026-08-13), so it
             //             hunts the Boarder while the Hatch is out of the fight. Hatch-bank
             //             restores MayTargetPlayer false.
-            _chasingPlayer = MayTargetPlayer && !_committedToHatch &&
-                             (_provoked || playerNear || !hatchAvailable);
+            _chasingPlayer = ChasesPlayer(MayTargetPlayer, _committedToHatch, _provoked,
+                                          playerNear, hatchAvailable);
             _hatchTarget = hatchAvailable ? hatch : null;
             _standPoint = _committedToHatch && hatchAvailable ? HatchStandPoint(hatch) : (Vector3?)null;
 
@@ -204,16 +204,28 @@ namespace GatekeepersProtocol.Game
                 }
             }
 
-            // MAGNET HANDS: with the passive worn, a Boarder's own machine outranks the
-            // Boarder whenever both are in reach — which is what "ambiguous" means here. It
-            // is also the only way a turret is ever attacked, so the passive is what makes
-            // FORGE's hardware mortal rather than an invulnerable emplacement.
+            // MAGNET HANDS WIDENS THE PULL; IT NO LONGER GRANTS IT (Zo, 2026-08-28: "it also
+            // appeared as if my turret was borderline invincible"). It was.
+            //
+            // This block used to require the passive before a turret could be targeted AT ALL,
+            // and the old comment said so plainly — the passive was "the only way a turret is
+            // ever attacked". Without it the emplacement was literally invulnerable: 150 HP it
+            // could never lose, 12 dps, and a 1.35x fire-rate aura, standing for the rest of the
+            // run. The 07:17 log is the proof — four deployments, and the only two deaths were
+            // OVERCHARGE burning it out from the inside. Nothing the Bastion sent ever touched
+            // it.
+            //
+            // Hardware is mortal by default now. What the passive buys is REACH: a gatekeeper
+            // wearing it is pulled off the Boarder from anywhere in the turret's aura, while
+            // one without it only swings at a machine already in its face — it is in the way,
+            // so it gets hit. That keeps the passive worth wearing (a 8 m pull against a 3.5 m
+            // one) without it being the difference between mortal and immortal.
             _turretTarget = null;
             _chasingTurret = false;
-            if (_chasingPlayer && _player != null && PrefersHardware(_player))
+            if (_chasingPlayer && _player != null)
             {
-                var machine = TurretObject.NearestAlive(
-                    transform.position, GatekeepersProtocol.Sim.BoarderProtocol.TurretAuraRadius);
+                float reach = TurretPullRadius(PrefersHardware(_player), hatchAttackRange);
+                var machine = TurretObject.NearestAlive(transform.position, reach);
                 if (machine != null)
                 {
                     _turretTarget = machine;
@@ -222,6 +234,41 @@ namespace GatekeepersProtocol.Game
                     _standPoint = null;
                 }
             }
+        }
+
+        /// <summary>WILL THIS GATEKEEPER HUNT THE BOARDER? Static and pure so the decision can
+        /// be executed by a test — the class around it is a NavMesh MonoBehaviour, and this one
+        /// line is the whole of what went wrong on 2026-08-28.
+        ///
+        /// <para><paramref name="hatchAvailable"/> is the trap. It is not merely "one fewer
+        /// option": it is a TERM IN THIS EXPRESSION, so removing the Hatch from targeting
+        /// forces every body onto the player unconditionally and for life, from anywhere on the
+        /// spine. Field waves used to do exactly that, which is 66 bodies hunting one player at
+        /// Wave 5 with nothing else in the world to do — six deaths in one logged run.</para>
+        ///
+        /// <para>Read the clauses as: a kind that may hunt (Hunters and Defaults, never a
+        /// Thief), that has not committed to the Hatch, and that has EITHER been given a reason
+        /// (shot, or the player walked into its aggro radius) OR has nowhere else to go.</para>
+        /// </summary>
+        public static bool ChasesPlayer(bool mayTargetPlayer, bool committedToHatch,
+                                        bool provoked, bool playerNear, bool hatchAvailable)
+        {
+            return mayTargetPlayer && !committedToHatch
+                   && (provoked || playerNear || !hatchAvailable);
+        }
+
+        /// <summary>How far a gatekeeper will divert to hit a turret. MAGNET HANDS widens the
+        /// pull; it does not grant it (Zo, 2026-08-28: "my turret was borderline invincible").
+        /// Without the passive a machine is only struck when it is already in reach — it is in
+        /// the way, so it gets hit — and the passive pulls bodies off the Boarder from anywhere
+        /// in the turret's aura. Static and pure for the same reason as
+        /// <see cref="ChasesPlayer"/>: the surrounding class cannot be executed outside Unity's
+        /// runtime, and this rule can.</summary>
+        public static float TurretPullRadius(bool prefersHardware, float meleeReach)
+        {
+            return prefersHardware
+                ? GatekeepersProtocol.Sim.BoarderProtocol.TurretAuraRadius
+                : meleeReach;
         }
 
         /// <summary>Does this Boarder wear MAGNET HANDS? Read per retarget, not per frame.</summary>

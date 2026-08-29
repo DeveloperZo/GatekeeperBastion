@@ -16,7 +16,7 @@ namespace GatekeepersProtocol.Tests
         public void HatchHp_StillRamps25Percent()
         {
             float atZero = MetaUpgrades.HatchHp(0);
-            Assert.AreEqual(300f, atZero, Tol);
+            Assert.AreEqual(ShipSystems.HatchMaxHp, atZero, Tol);
             Assert.AreEqual(1.25f, MetaUpgrades.HatchHp(MetaUpgrades.MaxLevel) / atZero, Tol);
         }
 

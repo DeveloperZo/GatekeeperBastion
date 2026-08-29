@@ -116,6 +116,15 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
+        /// <summary>The finale's second half began — THE ELITE, in the control room.
+        /// <para>This used to send the fight to the Hatch, because the elite used to be a
+        /// Hatch-bank window there: it switched the control-room closets OFF and the Hatch
+        /// closets ON. The elite became a control-room wave on 2026-08-28 and this handler was
+        /// not moved with it, which would have delivered the boss 156 m from the room the
+        /// player is standing in — or not at all. The room's closets stay armed; the Hatch's
+        /// are not touched.</para>
+        /// <para>The unseal stays: it is idempotent, and the room must be open whatever else
+        /// happens, because the player has to walk out of it to the terminal.</para></summary>
         void OnMasterHatchHalfStarted()
         {
             BastionLayout layout = _layout;
@@ -123,15 +132,14 @@ namespace GatekeepersProtocol.Game
                 layout = _masterTerminal.Layout;
             if (layout != null)
             {
-                if (_masterTerminal != null)
-                    _masterTerminal.SetUnlockedSpawnsActive(false);
+                // The control-room closets keep delivering — the elite arrives where the fight
+                // already is. Deliberately NOT ActivateHatchBankSpawns(): there is no Hatch
+                // half any more, and arming those would open a second front behind the player.
                 layout.SetControlRoomSealed(false);
-                layout.ActivateHatchBankSpawns();
-                _hatchBankLayout = layout;
             }
             else
-                Log.Warn(Tag, "master-control hatch half — no BastionLayout");
-            Log.Event("Demo", "hatch finale send");
+                Log.Warn(Tag, "master-control elite — no BastionLayout");
+            Log.Event("Demo", "the elite is on the floor");
             DemoVoice.PlayLocalAndBroadcast(
                 DemoConversationIds.HatchFinale, DemoVoiceMode.Subtitle);
         }

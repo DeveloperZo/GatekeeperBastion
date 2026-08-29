@@ -261,5 +261,128 @@ namespace GatekeepersProtocol.PlayTests
                 doorId + " opened but was not snapshotted onto Meta — a Docked return would "
                 + "find it shut again.");
         }
+
+        /// <summary>THE FINALE IS A ZONE LIKE THE OTHERS (Zo, 2026-08-28). Master Control used
+        /// to begin at its own terminal — a SECOND start line, the exact thing this fixture
+        /// exists to forbid — and interacting there sealed the control room behind the player.
+        /// Both are checked here rather than by reading the source, because both are facts
+        /// about a live GameController and a real BastionLayout that only exist in a scene.
+        ///
+        /// <para>Checkpoint 6 is the shape: both zones answered, both doors open, the control
+        /// room ready and nothing started.</para></summary>
+        [UnityTest]
+        public IEnumerator AtTheControlRoom_TheHatchStartsTheFinale_AndTheMasterTerminalRefuses()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
+
+            MetaState checkpoint = GameController.BuildDemoCheckpoint(6);
+            Assert.IsNotNull(checkpoint, "digit 6 no longer builds a checkpoint.");
+            GameSession.AdoptDevState(checkpoint);
+            GameSession.PendingStartWave = 1;
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
+            yield return PlayTestUtil.WaitUntil(
+                () =>
+                {
+                    GameController g = Object.FindFirstObjectByType<GameController>();
+                    return g != null && g.Sim != null;
+                }, 10f);
+
+            GameController gc = Object.FindFirstObjectByType<GameController>();
+            Assert.IsNotNull(gc, "the Bastion scene has no GameController.");
+            BastionLayout layout = Object.FindFirstObjectByType<BastionLayout>();
+            Assert.IsNotNull(layout, "the Bastion scene has no BastionLayout.");
+            RunSim sim = gc.Sim;
+            Assert.AreEqual(AssaultState.Prep, sim.Assault, "the control room lands in Prep.");
+
+            BastionTerminal master = layout.FindMaster();
+            Assert.IsNotNull(master, "the Control Room has no Master terminal.");
+
+            // THE REFUSAL. The Master terminal answered T here until 2026-08-28, which is how
+            // a run could begin somewhere that is not the Hatch.
+            Assert.IsFalse(sim.MasterSequenceLive, "the finale is already live before any press.");
+            Assert.IsTrue(
+                gc.TryNetStartMaster(master.TerminalId, master.transform.position, ReachMetres),
+                "the host-side Master verb refused outright — this test can no longer tell a "
+                + "deliberate refusal from a broken call.");
+            Assert.IsFalse(sim.MasterSequenceLive,
+                "the Master TERMINAL started the finale. That is a second start line, and it "
+                + "is the shape this whole fixture exists to forbid.");
+
+            // THE OFFER. Moving the start to the Hatch is only correct if the Hatch can
+            // actually reach the finale; otherwise the last zone is unreachable.
+            Assert.IsTrue(gc.HatchOffersWaveStart,
+                "with both zones answered, the Hatch does not offer the finale — the run has "
+                + "nowhere left to go.");
+            Assert.IsTrue(gc.StartZoneWaveFromHatch(),
+                "the Hatch refused to start Master Control.");
+            Assert.IsTrue(sim.MasterSequenceLive, "the Hatch press did not arm the sequence.");
+            Assert.AreEqual(MasterControlPhase.Terminal, sim.MasterPhase,
+                "the finale did not begin with its control-room waves.");
+
+            // AND THE DOOR STAYS OPEN. Sealing turned the last beat into a box fight — the one
+            // place in the Bastion where the lane stopped mattering.
+            Assert.IsFalse(sim.ControlRoomSealed,
+                "starting the finale sealed the control room. Zo reported this as "
+                + "\"interacting with Master terminal locked door\".");
+        }
+
+        /// <summary>The elite is the gate: killing it ARMS the Master terminal, and throwing
+        /// that switch is what ends the Boarding. A finale must not end by attrition any more
+        /// than a zone can.</summary>
+        [UnityTest]
+        public IEnumerator TheMasterTerminal_IsArmedByTheElite_AndItsSwitchEndsTheRun()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
+
+            MetaState checkpoint = GameController.BuildDemoCheckpoint(6);
+            GameSession.AdoptDevState(checkpoint);
+            GameSession.PendingStartWave = 1;
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
+            yield return PlayTestUtil.WaitUntil(
+                () =>
+                {
+                    GameController g = Object.FindFirstObjectByType<GameController>();
+                    return g != null && g.Sim != null;
+                }, 10f);
+
+            GameController gc = Object.FindFirstObjectByType<GameController>();
+            BastionLayout layout = Object.FindFirstObjectByType<BastionLayout>();
+            RunSim sim = gc.Sim;
+            BastionTerminal master = layout.FindMaster();
+
+            Assert.IsTrue(gc.StartZoneWaveFromHatch(), "the Hatch refused to start the finale.");
+
+            // Walk the control-room waves, then the elite.
+            for (int wave = 0; wave < MasterControl.TerminalWaves; wave++)
+            {
+                yield return null;
+                BastionRunDrive.AwardKills(gc);
+                BastionRunDrive.StripAndDeliver(sim);
+                sim.NotifyAssaultCleared();
+                sim.Tick(WaveDirector.InterWaveGap + 0.1f);
+            }
+
+            Assert.AreEqual(MasterControlPhase.Elite, sim.MasterPhase,
+                "the control-room half did not roll into the elite.");
+            Assert.IsFalse(gc.CanShutOffTerminal(master.TerminalId),
+                "the Master terminal is live while the elite is still standing — the gate is "
+                + "open and the finale can be skipped.");
+
+            yield return null;
+            BastionRunDrive.AwardKills(gc);
+            BastionRunDrive.StripAndDeliver(sim);
+            sim.NotifyAssaultCleared();
+            yield return null;
+
+            Assert.IsTrue(sim.MasterAwaitsShutoff, "the elite died and the switch was not armed.");
+            Assert.AreEqual(RunPhase.Tethered, sim.Phase,
+                "the run ended on its own — a finale must not end by attrition.");
+            Assert.IsTrue(gc.CanShutOffTerminal(master.TerminalId),
+                "the armed terminal does not offer its shutoff, so the run cannot be finished.");
+
+            Assert.IsTrue(gc.ShutOffTerminal(master), "the Master terminal refused the switch.");
+            Assert.AreEqual(RunPhase.Escaped, sim.Phase,
+                "throwing the Master switch must complete the Run.");
+        }
     }
 }

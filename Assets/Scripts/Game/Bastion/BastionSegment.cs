@@ -29,7 +29,7 @@ namespace GatekeepersProtocol.Game
         /// not bind at 6 for the two block kinds the Bastion actually uses — Half is 16 m and
         /// OpenArea 42 m, so their limits are 6.4 and 16.8. A Quarter block would still clamp to
         /// 4, which is the clamp doing its job rather than this number being ignored.</summary>
-        const float DoorOpeningWidth = 6f;
+        public const float DoorOpeningWidth = 6f;
 
         /// <summary>Clear height of a doorway: the FULL wall, floor slab to ceiling, so no
         /// lintel is emitted (BuildDoorWall skips it at lintelHeight 0). Was a hardcoded 3.5
@@ -37,7 +37,7 @@ namespace GatekeepersProtocol.Game
         /// to a floor-plan check and directly in the path of a shot. BastionDoorApertureTests
         /// has asserted this equality since before the constant disagreed with it; the test was
         /// right and had been failing for it.</summary>
-        const float DoorOpeningHeight = BastionKit.StoreyHeight - BastionKit.FloorSlabThickness;
+        public const float DoorOpeningHeight = BastionKit.StoreyHeight - BastionKit.FloorSlabThickness;
         const float WindowSillHeight = 1.1f;
         const float WindowLintelHeight = 0.5f;
         const float WindowWalkBlockHeight = 0.5f;

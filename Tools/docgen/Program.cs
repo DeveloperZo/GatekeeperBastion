@@ -605,7 +605,9 @@ public static class Docgen
                       " / " + Respawns.CostFor(2) + " |");
         sb.AppendLine("| climbs to | " + Respawns.CostFor(Respawns.MaxSteps - 1) +
                       " and stops — every later death is the same price |");
-        sb.AppendLine("| refused when | that seat carries less than the price — the Boarding ends |");
+        sb.AppendLine("| cap | " + Respawns.MaxRespawns + " per run, all seats together |");
+        sb.AppendLine("| bleed-out | " + Respawns.BleedOutSeconds + " s to buy back, or the Boarding ends |");
+        sb.AppendLine("| refused when | the cap is spent, or the bank is short of the price |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
 
@@ -615,7 +617,10 @@ public static class Docgen
         sb.AppendLine("| | |");
         sb.AppendLine("|---|---|");
         sb.AppendLine("| terminal Waves | " + MasterControl.TerminalWaves + " |");
-        sb.AppendLine("| Hatch-bank Waves | " + MasterControl.HatchWaves + " |");
+        // The finale has no Hatch-bank half since 2026-08-28 — it ends at its own terminal
+        // with the elite as the gate. Emitting MasterControl.HatchWaves here documented a
+        // beat the game no longer has.
+        sb.AppendLine("| elite waves | 1, and killing it arms the terminal |");
         sb.AppendLine("| finale elite HP | " + N(MasterControl.FinaleEliteHp) + " |");
         sb.AppendLine("| gap | " + N(WaveDirector.InterWaveGap) + " s |");
         return sb.ToString().TrimEnd('\r', '\n');
