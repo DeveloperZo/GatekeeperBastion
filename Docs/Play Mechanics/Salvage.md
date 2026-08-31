@@ -1,6 +1,23 @@
-<!-- Purpose: the currency — where it comes from, why a kill is safe the moment it lands, what a Withdraw puts back at risk, and what competes for it. / Status: working / Update trigger: when the award path, the Withdraw, the repair charge, or the Boarding-end settlement changes. / Last updated: 2026-08-30 (Ante parked; respawn still bills the bank) -->
+<!--
+Purpose: Current representation of Salvage — the only currency: where it comes from, why a kill is safe the moment it lands, what a Withdraw puts back at risk, and what competes for it.
+Status: working
+Update trigger: when the award path, the Withdraw, the repair charge, or the Boarding-end settlement changes.
+Last updated: 2026-08-31
+Where:
+- Kills bank on landing, face value, Assault-only, whole into the realm's pot — Assets/Scripts/Sim/Run/RunSim.cs (AwardKill, BankKill, CurrentKillAward); Assets/Scripts/Sim/Meta/MetaState.cs (EarnSalvage); Assets/Scripts/Sim/Meta/RealmState.cs (EarnSalvage); Assets/Scripts/Sim/Run/SalvageLedger.cs (Earn)
+- Convert window and trickle pay zero — RunSim.cs (CurrentKillAward returns 0 while WaveMode.HatchBank or FieldTrickleLive)
+- Prep pays nothing — AwardKill refused outside Tethered + Assault
+- Withdraw is the only fill of the carried pile — RunSim.cs (Withdraw); Assets/Scripts/Sim/Run/HatchBank.cs (WithdrawPerSecond, WithdrawUnits)
+- Repair bills the bank — RunSim.cs (RepairHatch, Spend path through bank); Assets/Scripts/Sim/Ship/ShipSystems.cs (RepairSalvagePerHp)
+- Respawn bills the bank — Assets/Scripts/Sim/Run/RunSim.Respawns.cs (TryRespawn → SpendBanked)
+- Ante parked, spends nothing — Assets/Scripts/Sim/Run/IntensityJuice.cs (Ante.Enabled); IntensityJuice.Try refuses while parked
+- Bank survives every ending; leftover carry wiped on Lost, rebated on Returned — RunSim.cs (EndRun); Assets/Scripts/Sim/Run/RunSim.Wallets.cs (WipeUnbankedSlot, KeepReturnedShare); Assets/Scripts/Sim/Run/RunSim.Dock.cs (DockRun)
+- Shops spend the same pot — Assets/Scripts/Sim/Meta/MetaState.cs (SpendSalvage); ARMORY / FABRICATION / CREW QUARTERS
+-->
 
 # Salvage
+
+Salvage is the only currency. A Gatekeeper killed during a live Assault pays the realm's bank at face value the moment it falls, so no ending can take those earnings back. Prep and a Convert window pay nothing. Nothing is at risk unless the Boarder Withdraws it at the Hatch; repair and respawn bill the same bank the shops do. The Ante is parked and spends nothing.
 
 ## Game
 
@@ -16,61 +33,63 @@ Everything bills the same pot, and that is where the tension went. The repair I 
 
 A Boarding where the door takes a beating still costs me twice: once at the door, once at the console I walk back to and cannot afford. The bank is not a score. It is not banked so I can look at it.
 
-## Reference
+## Details
 
-Salvage is the only currency in the game. There is nothing else to collect, no second resource, no crafting material. Everything you will ever buy is bought with this.
+### Structure
 
-### How you earn it
+Salvage is a stock. The mechanics that move it are the earn, the spend, and the one way to put it at risk. There is no second resource and no crafting material. Everything bought is bought with this.
 
-**By killing Gatekeepers, and by nothing else.** A kill credits the realm's bank the moment the body falls, at face value. It is banked from that instant — spendable on the Ship when the Boarding ends, however it ends. The quiet of Prep earns nothing. Walking the room earns nothing. Clearing the Bastion pays no completion bonus.
+### Earn
 
-Only a live Assault pays, and a Gatekeeper killed inside a Convert window pays nothing at all: that window moves money you are already carrying rather than earning more.
+By killing Gatekeepers during a live Assault, and by nothing else. A kill credits the realm's bank the moment the body falls, at face value — spendable on the Ship when the Boarding ends, however it ends. The quiet of Prep earns nothing. Walking the room earns nothing. Clearing the Bastion pays no completion bonus. A Gatekeeper killed inside a Convert window pays nothing at all: that window moves money already carried rather than earning more.
 
-What one body is worth is a flat kill payout. The Ante is parked, so the multiplier sits at 1. The rate: [Field Manual](Field-Manual.md).
+The Ante is parked, so the multiplier sits at 1. The rate: [Field Manual](Field-Manual.md).
 
-### Why it is safe
+### Spend
 
-**Nothing that happens on the Bastion can take banked Salvage off you.** Going down does not. The Hatch falling does not. Lost, Docked and Escaped all keep every unit the realm earned, and there is no named forfeit anywhere in the game.
+Repairing the Hatch charges banked Salvage as the healing lands, and will run the bank to exactly zero if held long enough ([The Hatch](The-Hatch.md) owns that spend). Standing a dead seat up is bought from the same bank, at a price that climbs with every respawn taken this Boarding ([Going Down](Going-Down.md) owns that spend). The Ante is parked and spends nothing.
 
-That is a rule rather than a side effect: it must be impossible to die with no progress to show for it. A Boarding that fell apart on the Wave you were not equipped for still paid for every body you put down on the way, which is what turns the Wave that beat you into the Wave that funds beating it.
+On the Ship the same pot buys a weapon, weapon Tiers, Hatch Armor, the Repair Rig and the Decoy ([Upgrades](Upgrades.md) owns those purchases). CREW QUARTERS spends nothing on Default; VEIL and FORGE are claimable there too.
 
-### What you can put at risk, if you want to
+There is no second purse that quietly funds the mid-Boarding costs. A Boarding where the Hatch takes a beating costs twice: once in the Salvage that went into the door, and again in the purchase walked back to the Ship unable to make. There is no sell-back and no refund.
 
-The carried pile still exists — it simply does not fill on its own any more. Look at the Hatch in Prep, with the door at full health, and the prompt offers **Withdraw — hold E**: banked Salvage flows back out into the pile you are carrying for as long as you hold. That carried pile is what a Convert window converts, and it is the only thing a death can take.
+### Risk
 
-Nothing else puts Salvage there. A Withdraw is the only way to be carrying anything, which makes it the only way to lose anything. The game never stakes money on your behalf.
+The carried pile does not fill on its own. Look at the Hatch in Prep, with the door at full health, and hold Interact: banked Salvage flows back out into the pile being carried. That pile is what a Convert window converts, and it is the only thing a death can take. Withdraw is the only way to be carrying anything, which makes it the only way to lose anything. The game never stakes money on the Boarder's behalf.
 
-If you do carry, know what you are carrying against: the pile is gone on a death that ends the Boarding and gone if the Hatch falls. A Docked return keeps a small stated share of it. See [A Boarding](A-Boarding.md).
+If carried, the pile is gone on a death that ends the Boarding and gone if the Hatch falls. A Docked return keeps a small stated share of it. Lost, Docked and Escaped all keep every unit the realm earned. There is no named forfeit anywhere in the game.
 
-**The two things that take it back**
+### Rules
 
-**Repairing the Hatch.** Repair is charged out of your banked Salvage as the healing lands — the same bank you were saving, spent from inside the Boarding, and it will run the bank to exactly zero if you hold long enough. See [The Hatch](The-Hatch.md).
+Nothing that happens on the Bastion can take banked Salvage off the Boarder. Going down does not. The Hatch falling does not. That is a rule rather than a side effect: it must be impossible to die with no progress to show for it.
 
-**Standing a dead seat up.** A respawn is bought from the realm's bank, at a price that climbs with every respawn taken this Boarding, whoever took it. See [Going Down](Going-Down.md).
+Rates, costs and multipliers: [Field Manual](Field-Manual.md).
 
-The Ante is parked and spends nothing. There is one pot and both remaining bills read from it, which is the part worth internalising: a repair and a respawn are direct competitors with the weapon you were saving for, not side-charges against some other purse. **A Boarding where the Hatch takes a beating is a Boarding that costs you twice:** once in the Salvage that went into the door, and again in the purchase you walked back to the Ship unable to make.
+## Additional Details
 
-### What competes for it
+### Consequences
 
-Everything wants the same pile:
+A kill is safe the moment it lands, so a Boarding that fell apart on the Wave the Boarder was not equipped for still paid for every body put down on the way. That is what turns the Wave that beat them into the Wave that funds beating it.
 
-- **A weapon** at the ARMORY. The largest single decision, and the one that fixes what kind of fight you are good at.
-- **Weapon Tiers**, also at the ARMORY, per weapon. The deepest sink in the game and the least transferable — the money goes into one gun and stays there.
-- **The Hatch** at FABRICATION: a bigger pool (Hatch Armor), the Repair Rig that makes repairing possible at all, and the Decoy.
-- **Repairs and respawns, mid-Boarding.** The bills you did not plan for, charged to the pile you were shopping with.
+Risk is exactly what was chosen: Withdraw is the only way money leaves the bank into a pile a death can empty. Repair and respawn compete with the next purchase because there is one pot. Treating the bank as a score is the wrong instinct — it is not banked so it can be looked at.
 
-Nothing is exempt. There is no second purse that quietly funds the mid-Boarding costs, which is why the door you let get chewed shows up later as a Tier you cannot buy.
+Removal test: without Salvage there is nothing to earn and nothing to spend. Different game.
 
-CREW QUARTERS spends nothing on Default (cost 0, same as the free sidearm). VEIL and
-FORGE are claimable there too.
+### Classification
 
-There is no order that is correct for everyone, but there is a wrong instinct: treating the bank as a score. It is not banked so you can look at it. See [Upgrades](Upgrades.md) for what to do with it.
+Core, loop.
 
-## See also
+### Interacts with
 
-[The Hatch](The-Hatch.md). [Ante](Ante.md). [Upgrades](Upgrades.md). [Going Down](Going-Down.md). [Realms](Realms.md). [The Other Currencies](Experience-And-Cores.md). [A Boarding](A-Boarding.md).
+- [A Boarding](A-Boarding.md) — kills pay on landing into this stock; that page owns the Boarding.
+- [The Hatch](The-Hatch.md) — Withdraw is the only risk, and repair bills this bank; that page owns the withdraw and repair spends.
+- [Going Down](Going-Down.md) — respawn bills this bank; that page owns the respawn spend.
+- [The Ante](Ante.md) — parked, spends nothing; that page owns the ante spend when it returns.
+- [Upgrades](Upgrades.md) — shops spend this bank; that page owns those purchases.
+- [Realms](Realms.md) — the pot is realm-side; that page owns the one pot per realm.
+- [The Other Currencies](Experience-And-Cores.md) — the two that will join this one.
 
-## Gaps
+### Gaps
 
 - The HUD still shows Unbanked and Banked separately, and Unbanked now reads 0 for most of a Boarding. Nothing says that line only moves if you Withdraw.
 - Nothing at the Hatch explains what a Withdraw is *for*, or that the pile it creates is the only thing a death can take.
@@ -79,5 +98,3 @@ There is no order that is correct for everyone, but there is a wrong instinct: t
 - If a save is old or damaged, those lifetime figures are silently rebuilt from what you own. Your bank is always the truth; the lifetime lines may be a reconstruction.
 - There is no way to sell anything back or refund a purchase, and nothing tells you that before you spend.
 - The Ante is parked. A repair and a respawn still bill the same bank as the consoles do, and no prompt says so. Each one reads as its own small charge rather than as money off the next purchase.
-
-*Rates, costs and multipliers: [Field Manual](Field-Manual.md).*

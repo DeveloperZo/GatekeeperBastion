@@ -4,7 +4,11 @@ Status: teaser; named on the garrison roster, behaviour undecided.
 in_build: true
 coming_soon: true
 Update trigger: replace this page when the kind ships and earns its name.
-Last updated: 2026-08-29
+Last updated: 2026-08-31
+Where:
+- Not a kind this build walks — `Assets/Scripts/Sim/Waves/GatekeeperKind.cs` (`GatekeeperKind` ends at Cloaker)
+- The marker page is listed in the garrison Compendium volume — `Assets/Scripts/Game/Ui/CompendiumCatalog.cs` (`EntryStems`)
+- Intended identity, behaviour undecided — `Docs/Brainstorms/gatekeepers-and-waves.md` (Exploder roster row)
 -->
 
 # The Tenth Frame — Coming Soon
@@ -21,8 +25,24 @@ A frame that takes the ground I am standing on. The spot I chose in Prep — the
 
 When it walks, standing still will be a decision with a clock on it.
 
-## Differs
+## Details
 
-- Takes the ground the Boarder stands on — a chosen spot becomes a lease with a clock — *behaviour undecided* (roster row: refusal open, decided per slice).
+### Structure
 
-Not built — the intent is recorded in `../Brainstorms/gatekeepers-and-waves.md`.
+The same three targeting questions as every other kind. None of them are filled in the build.
+
+### Refusals
+
+Takes the ground the Boarder stands on — a chosen spot becomes a lease with a clock — *behaviour undecided* (roster row: refusal open, decided per slice).
+
+### Behaviour
+
+Not built.
+
+### Rules
+
+Not built.
+
+## Additional Details
+
+Replace this page when the kind ships. Do not edit the Coming Soon marker into a live kind.

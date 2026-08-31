@@ -2,7 +2,20 @@
 Purpose: Current representation of Waves as they are in the build — the garrison's delivery: composition per Wave, groups with gaps, per-Wave health scaling, and the field trickle after the roster is spent.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-30
+Last updated: 2026-08-31
+Where:
+- The per-Wave spec: body curve, fixed kind rows (Defaults absorb the remainder), health multiplier per Wave, group width, widening group gap, Ante and seats scaling bodies only — Assets/Scripts/Sim/Waves/WaveDirector.cs (NextWave, HunterPerWave, ThiefPerWave, CloakerPerWave, EnemyHealthPerWave)
+- Group gap widens with the Wave: spawnInterval = max(MinSpawnInterval 0.4, 7.3 + 0.40 * min(waveIndex, MaxWaves-1)) — WaveDirector.cs (NextWave, MinSpawnInterval); it does not shorten
+- One health multiplier applied to every kind's own base at spawn — Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs (SpawnOne, CreateActor — stats.maxHp * multiplier), stats per kind from WaveDirector.cs (StatsFor)
+- Shuffled-not-blocked roster on the run's seeded stream — Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs (BuildRoster)
+- Group delivery: one spawn point per group, one group per gap, cap-held aggregate — Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs (AdvanceWave, EmitGroup)
+- One start runs the zone's whole span back to back — Assets/Scripts/Sim/Bastion/DemoZones.cs (WavesPerTrigger, FirstWave, EndWave, zone tables); Assets/Scripts/Game/Bastion/GameController.Terminals.cs (StartZoneComposite); Assets/Scripts/Sim/Run/RunSim.Composite.cs (TriggerCompositeDraw); WaveDirector.cs (InterWaveGap); Assets/Scripts/Sim/Run/RunSim.cs (ArmSequentialDraws, TerminalChainGap)
+- The spent-roster verdict in one place: hold, start the trickle, or cleared — Assets/Scripts/Sim/Waves/FieldTrickle.cs (Resolve), applied by Assets/Scripts/Game/Enemies/WaveSpawner.cs (CheckAssaultCleared)
+- The drip itself: fixed cadence, live cap, lone Defaults from the same rotation — FieldTrickle.cs (DueIn, SecondsBetweenBodies, MaxLive); WaveSpawner.cs (TickFieldTrickle); WaveSpawner.Groups.cs (SpawnTrickleBody)
+- Trickle bodies pay zero at the source; so does a Convert window — Assets/Scripts/Sim/Run/RunSim.cs (CurrentKillAward returns 0 while FieldTrickleLive or WaveMode.HatchBank; SetFieldTrickle)
+- Trickle bodies feed no regen either — Assets/Scripts/Game/Bastion/GameController.cs (GatekeeperKilled returns on Sim.FieldTrickleLive before PlayerHealth.NotifyKill)
+- Field Waves chip the Hatch at FieldWaveDamageScale; The Hatch owns the HP — Assets/Scripts/Sim/Run/RunSim.cs (DamageHatch); Assets/Scripts/Sim/Run/HatchBank.cs (FieldWaveDamageScale)
+- The shutoff that ends the trickle is the zone terminal's, owed while the zone is unfinished — Assets/Scripts/Sim/Bastion/FieldShutoff.cs (MayRun), surfaced through Assets/Scripts/Game/Bastion/GameController.Terminals.cs (FieldWaveAwaitsShutoff)
 -->
 
 # Waves
@@ -21,19 +34,45 @@ What makes a Wave hard was never any single machine. It is overlap: how much of 
 
 Starting deep from the Ship does the same thing on purpose — the overlap moves between Waves instead of within one. Same content. Less room. No quiet.
 
-## The interaction
+## Details
 
-The garrison invokes this one: a started Wave is delivered onto the field by the spawner, and the delivery — not any single body — is what the Boarder fights. Starting a Wave and shutting it off are [A Boarding](A-Boarding.md)'s pair: a Wave begins at the Hatch and ends at the zone's terminal, and one start runs the zone's whole authored span back to back with no Prep between. What this page owns is what arrives and how.
+### Structure
 
-Each Wave is a deterministic spec of (Wave index, seats): a body count, fixed per-kind counts with Defaults absorbing the remainder, a health multiplier, a group width and a gap between groups. The roster is **shuffled, not blocked** — drawn on the run's seeded stream, so the same seed replays the same roster — and delivered as groups of the Wave's width through **one spawn point per group**, one group per gap, the point rotating group to group. Which kinds exist and what each refuses is [Gatekeepers](Gatekeepers.md)'. The parked Ante would still scale body count only, surplus Defaults ([The Ante](Ante.md)).
+Three parts. The **spec** — body count, fixed per-kind counts with Defaults absorbing the remainder, a health multiplier, a group width and a gap between groups, all from (Wave index, seats). The **groups** — that roster shuffled and delivered one spawn point per group, one group per gap. The **trickle** — lone Defaults after the roster is spent, until the terminal is shut off.
 
-**The field trickle — this page owns it.** A field Wave's roster running dry is not the end of it: once the roster is spent, the field is empty and the zone still owes its shutoff, the Assault stays open and the lane drips lone Defaults on a fixed cadence, capped at a small live count, until the terminal is pressed. The one place that decides the field is empty is the one place that starts the drip.
+Which kinds exist and what each refuses is [Gatekeepers](Gatekeepers.md). Starting a Wave and shutting it off are [A Boarding](A-Boarding.md)'s pair: a Wave begins at the Hatch and ends at the zone's terminal, and one start runs the zone's whole authored span back to back with no Prep between. This page owns what arrives and how.
 
-**Trickle bodies pay nothing and mend nothing** — the kill award reads zero for the whole trickle, at the source, so every payout path is covered, and the kill-fed [Regen](Regen.md) boost is skipped on the same seam, because a body that pays nothing must not be a slower way of saying free health. The same award also reads zero inside a Convert window, where the stake is the pay ([The Hatch](The-Hatch.md)).
+### Delivery
 
-Driven by the sim's Wave start (the Boarder's `T` — [A Boarding](A-Boarding.md)). Shown by groups arriving at spawn points, and by the lane still feeding after the roster on an unfinished zone. Reads back as the `Gatekeepers` group lines — `group 3: 4 Gatekeepers, 1 Hunter breached at S2 (…/…) — 12 live` — and the sim's `field trickle on/off` lines.
+The roster is shuffled, not blocked — drawn on the run's seeded stream, so the same seed replays the same roster — and delivered as groups of the Wave's width through one spawn point per group, one group per gap, the point rotating group to group.
 
-## Consequences
+The parked Ante would still scale body count only, surplus Defaults ([The Ante](Ante.md)). Seat count multiplies bodies the same way ([The Crew](The-Crew.md)).
+
+Once a field Wave's roster is spent, the field is empty and the zone still owes its shutoff, the Assault stays open and the lane drips lone Defaults on a fixed cadence, capped at a small live count, until the terminal is pressed. This page owns that drip.
+
+### Escalation
+
+Four things escalate together, and none of them is the Ante's: more bodies per Wave; tougher bodies — one health multiplier per Wave applied to every kind alike; wider groups; and a gap between groups that **widens** with the Wave, so a later Wave is delivered over a longer window rather than a faster one.
+
+Field Waves can also chip the Hatch at a scaled rate; [The Hatch](The-Hatch.md) owns that HP. Convert-window composition rides the carry's Wave table on that page.
+
+The first Wave is all Defaults. Hunters enter on the second and grow; Thieves on the third; Cloakers on the fourth — one Wave after the Thief — and both stay scarce. Because groups are shuffled, there is never a clean phase of one problem.
+
+Starting deep from the Ship overlaps Waves the same way a late Wave overlaps groups: same content, less room, no quiet ([A Boarding](A-Boarding.md) owns the chain).
+
+### Rules
+
+Trickle bodies pay nothing and mend nothing — the kill award reads zero for the whole trickle, so every payout path is covered, and the kill-fed [Regen](Regen.md) boost is skipped on the same seam. The same award also reads zero inside a Convert window, where the stake is the pay.
+
+The Ante is parked; those terms sit at zero. Health, group width, gap and the Hunter/Thief/Cloaker counts never see the dial.
+
+Counts, composition table, health ladder, group widths and gaps: [Field Manual](Field-Manual.md).
+
+Driven by the sim's Wave start (the Boarder's `T` — [A Boarding](A-Boarding.md)). Shown by groups arriving at spawn points, and by the lane still feeding after the roster on an unfinished zone. Reads back as the Gatekeepers group lines and the sim's field trickle on/off lines.
+
+## Additional Details
+
+### Consequences
 
 Four things escalate together across a Boarding, and none of them is the Ante's: **more bodies** per Wave; **tougher bodies** — one health multiplier per Wave applied to every kind alike, which is the axis that silently makes a familiar weapon stop working; **wider groups**; and a **gap between groups that widens with the Wave**, so a later Wave is delivered over a longer window rather than a faster one.
 
@@ -47,34 +86,19 @@ The trickle removes the empty corridor: holding the Hatch until the roster dies 
 
 Removal test: without the delivery there is no fight between the start and the shutoff — the Boarding collapses into walking between consoles. Different game.
 
-## Classification
+### Classification
 
 Core, loop. Serves Fantasy (`../Design/1-Experience.md` §1.2, 2026-08-16 rank stamp), with Challenge as the vehicle. Fantasy at rank 3: a garrisoned vessel repelling an intrusion.
 
-## Interacts with
+### Interacts with
 
 - [A Boarding](A-Boarding.md) — this page begins where the start line ends; that page owns the Wave start at the Hatch and the terminal shutoff.
 - [Gatekeepers](Gatekeepers.md) — the kinds delivered, each defined by what it refuses, delivery deciding when each kind enters and in what company; that page owns targeting.
 - [The Ante](Ante.md) — the wager multiplies body count only, and its surplus is all Defaults; that page owns the ante spend.
 - [The Crew](The-Crew.md) — the seat count is a term in composition, read at the Wave boundary and never mid-Wave; that page owns the seat roster.
-- [The Hatch](The-Hatch.md) — the Convert window is a Wave-shaped delivery whose kills pay nothing, the stake being the pay; that page owns the window and the withdraw and repair spends.
+- [The Hatch](The-Hatch.md) — Field Waves can chip the Hatch at a scaled rate, and the Convert window is a Wave-shaped delivery whose kills pay nothing; that page owns the HP, the window, and the withdraw and repair spends.
 
-Counts, composition table, health ladder, group widths and gaps: [Field Manual](Field-Manual.md).
-
-## Where
-
-- The per-Wave spec: body curve, fixed kind rows (Defaults absorb the remainder), health multiplier per Wave, group width, widening group gap, Ante and seats scaling bodies only — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`NextWave`, `HunterPerWave`, `ThiefPerWave`, `CloakerPerWave`, `EnemyHealthPerWave`)
-- One health multiplier applied to every kind's own base at spawn — `Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs` (`SpawnOne`, `CreateActor` — `stats.maxHp * multiplier`), stats per kind from `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`StatsFor`)
-- Shuffled-not-blocked roster on the run's seeded stream — `Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs` (`BuildRoster`)
-- Group delivery: one spawn point per group, one group per gap, cap-held aggregate — `Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs` (`AdvanceWave`, `EmitGroup`)
-- One start runs the zone's whole span back to back — `Assets/Scripts/Sim/Bastion/DemoZones.cs` (`WavesPerTrigger`, `FirstWave`, `EndWave`, zone tables); the branch that enforces it — `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`StartZoneComposite`, taken whenever `WavesPerTrigger > 1`), `Assets/Scripts/Sim/Run/RunSim.Composite.cs` (`TriggerCompositeDraw`), chained on the director's gap rather than the Prep gap of the sequential path — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`InterWaveGap`); `Assets/Scripts/Sim/Run/RunSim.cs` (`ArmSequentialDraws`, `TerminalChainGap`)
-- The spent-roster verdict in one place: hold, start the trickle, or cleared — `Assets/Scripts/Sim/Waves/FieldTrickle.cs` (`Resolve`), applied by `Assets/Scripts/Game/Enemies/WaveSpawner.cs` (`CheckAssaultCleared`)
-- The drip itself: fixed cadence, live cap, lone Defaults from the same rotation — `Assets/Scripts/Sim/Waves/FieldTrickle.cs` (`DueIn`, `SecondsBetweenBodies`, `MaxLive`); `Assets/Scripts/Game/Enemies/WaveSpawner.cs` (`TickFieldTrickle`), `Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs` (`SpawnTrickleBody`)
-- Trickle bodies pay zero at the source; so does a Convert window — `Assets/Scripts/Sim/Run/RunSim.cs` (`CurrentKillAward` returns 0 while `FieldTrickleLive` or `WaveMode.HatchBank`; `SetFieldTrickle`)
-- Trickle bodies feed no regen either — `Assets/Scripts/Game/Bastion/GameController.cs` (`GatekeeperKilled` returns on `Sim.FieldTrickleLive` before `PlayerHealth.NotifyKill`)
-- The shutoff that ends the trickle is the zone terminal's, owed while the zone is unfinished — `Assets/Scripts/Sim/Bastion/FieldShutoff.cs` (`MayRun`), surfaced through `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`FieldWaveAwaitsShutoff`)
-
-## Gaps
+### Gaps
 
 - Nothing in the fight tells you Gatekeeper health scales by Wave. The HUD shows your damage and the Gatekeeper's kind, never its health, so the same weapon quietly taking twice as long reads as the weapon being broken.
 - Nothing tells you that group width and the gap between groups change per Wave. These are the two numbers you feel most and the two you are never shown.

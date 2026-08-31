@@ -14,6 +14,12 @@ re-litigating a cut costs more than the cut saved.
 
 ## Cut — do not rebuild
 
+- **Default Barrage plant / root, and Rush as fire-rate personal (2026-08-31).** Recut as
+  **Depot**: Dump is a following fire-rate aura with heavy slow (not rooted); Feed is a
+  **toggle** clip regen at `0.22×` fire rate. Barrage×Rush compose (caster 3.0) is gone.
+  Ability enum ids stay Barrage/Rush (never renumber). Do not restore the planted disc,
+  rooted caster, or a hold-to-Feed without a stated reason this cut was wrong.
+
 - **Independent-roll rewards.** A drop, win, or proc that can starve N attempts or
   clump three in a Wave. When chance is added, it is a pity timer, escalating
   weights, or pre-determination (`Design/3-Mechanics.md` §3.1). Not a gacha shop.

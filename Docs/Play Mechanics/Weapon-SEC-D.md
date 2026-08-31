@@ -1,8 +1,14 @@
 <!--
-Purpose: SEC-D, an instance of Weapons — differences only.
+Purpose: SEC-D, an instance of Weapons — the contact Secondary, no ability.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-31
+Where:
+- Catalog row: Secondary, cost 0, short range with near-muzzle falloff, burst clip, `AbilityId.None` — `Assets/Scripts/Sim/Meta/WeaponCatalog.cs` (`Def`, `WeaponId.SecD`)
+- Centred Ability purchase refused on an empty-ability weapon — `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`SpokePurchasable`)
+- Ability binding refuses on it — `Assets/Scripts/Game/Player/PlayerAbility.cs` (`TryActivate`)
+- Ring order and declared identity (strength FireRate, weakness Reload; Ability seated beside FireRate by design) — `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`RingOf`, `TryIdentity`)
+- The self-refill it leans on is the Secondary slot's, not its own — `Assets/Scripts/Game/Player/PlayerGun.cs` (`TickSecondaryRegen`)
 -->
 
 # SEC-D
@@ -25,32 +31,31 @@ Wrong tool for a Thief. Everything is, at this range, for as long as that takes.
 
 It carries no ability, and the spoke where one would live cannot be bought. The wheel keeps drawing the empty seat. I have stopped asking who it is for.
 
-## Differs
+## Details
 
-- The contact Secondary: the shortest reach of any weapon in the game, with falloff
-  beginning a few strides out, so at the MK-1's working distance it is a dead trigger.
-  Where the lines fall: [Field Manual](Field-Manual.md).
-- A dump-and-refill economy instead of a reload economy: a small clip at a high rate
-  empties in a fraction of the MK-1's burst, its manual reload is the slower of the two
-  Secondaries, and the pool comes back through the Secondary slot's self-refill — which
-  is slow against how fast the pool empties. Figures: [Field Manual](Field-Manual.md).
-- No ability: its catalog row carries `AbilityId.None`, the only shop weapon without one.
-  The ability binding refuses on it, and the upgrade wheel refuses a centred purchase on its
-  Ability spoke — the spoke stays on the ring, and neighbour awards still land there.
-- Its ring runs strength Fire Rate, weakness Reload, with Ability beside Fire Rate — a
-  cadence focus dumps one neighbour award into the unpurchasable spoke — and Clip away
-  from Fire Rate, so rate cannot compound with clip on its burst.
-- Free at the ARMORY (catalog cost 0), and still a purchase.
+### Structure
 
-## Where
+Secondary. Catalog cost 0, and still a purchase. One pellet per pull, no pierce. The shortest reach of any weapon in the shop.
 
-- Catalog row: Secondary, cost 0, short range with near-muzzle falloff, burst clip, `AbilityId.None` — `Assets/Scripts/Sim/Meta/WeaponCatalog.cs` (`Def`, `WeaponId.SecD`)
-- Centred Ability purchase refused on an empty-ability weapon — `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`SpokePurchasable`)
-- Ability binding refuses on it — `Assets/Scripts/Game/Player/PlayerAbility.cs` (`TryActivate`)
-- Ring order and declared identity (strength FireRate, weakness Reload; Ability seated beside FireRate by design) — `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`RingOf`, `TryIdentity`)
-- The self-refill it leans on is the Secondary slot's, not its own — `Assets/Scripts/Game/Player/PlayerGun.cs` (`TickSecondaryRegen`)
+### Fire
 
-## Gaps
+A dump-and-refill economy: a small clip at a high rate empties in a fraction of the MK-1's burst, its manual reload is the slower of the two Secondaries, and the pool comes back through the Secondary slot's self-refill — slow against how fast the pool empties.
+
+Falloff begins a few strides out. At the MK-1's working distance it is a dead trigger. It answers things that have already closed, and nothing else. Wrong tool for a Thief.
+
+Where the lines fall: [Field Manual](Field-Manual.md).
+
+### Ability
+
+None. The ability binding refuses on it. The upgrade wheel refuses a centred purchase on its Ability spoke — the spoke stays on the ring, and neighbour awards still land there.
+
+### Rules
+
+Its ring runs strength Fire Rate, weakness Reload, with Ability beside Fire Rate — a cadence focus dumps one neighbour award into the unpurchasable spoke — and Clip away from Fire Rate, so rate cannot compound with clip on its burst.
+
+## Additional Details
+
+### Gaps
 
 - Ability is blank until authored; the Ability spoke cannot be bought. Without an ability it is a gun with a ring, not a full build.
 - Kill-share vs BR-12 needs a logged Boarding with SEC-D equipped.

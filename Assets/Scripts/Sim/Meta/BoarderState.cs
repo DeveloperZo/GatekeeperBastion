@@ -40,9 +40,9 @@ namespace GatekeepersProtocol.Sim
         public WeaponId EquippedPrimary = WeaponId.None;
         public WeaponId EquippedSecondary = WeaponId.None;
 
-        /// <summary>Equipped protocol. Fresh saves are None until CREW claims Default.</summary>
+        /// <summary>Equipped protocol. Fresh saves are None until CREW claims DEPOT.</summary>
         public BoarderProtocolId EquippedProtocol = BoarderProtocolId.None;
-        /// <summary>Equipped passive. Default has none; specialists may add one later.</summary>
+        /// <summary>Equipped passive. DEPOT has none; specialists may add one later.</summary>
         public BoarderAbilityId EquippedPassive = BoarderAbilityId.None;
 
         // ---- Equipment ----

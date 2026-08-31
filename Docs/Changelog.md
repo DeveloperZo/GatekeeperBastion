@@ -8,6 +8,22 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-30
 -->
 
+- 2026-08-31: **Default → DEPOT.** Player name `DEPOT Protocol`; enum
+  `BoarderProtocolId.Depot` (value 1, saves unchanged); file `Protocol-DEPOT.md`.
+  Gatekeeper kind Default is untouched.
+- 2026-08-31: **Feed is a toggle, not a hold.** Second `H` stands down; regen runs for the
+  window. Sheet copy, Protocol-DEPOT, language, Decisions amended.
+- 2026-08-31: **DEPOT Protocol recut — Dump + Feed.** Crew Dump: fire ×2 aura follows
+  caster, MoveSpeed ×0.35 (not rooted); plant/root cut. Personal Feed: toggle clip regen
+  at 0.22× fire rate (~28% more continuous shots, never outpaces the gun); Rush fire-mul
+  cut. `language.md`, Field Manual, Decisions, BoarderSheets, Compendium sync.
+- 2026-08-30: **`Advice.md` leads with Zo's priorities.** Hands on the gun, Default
+  Protocol rename + tether/drone clip refill, Explore–Kit aesthetics, Bastion tune,
+  UI past amateur polish, higher-quality SFX. Agent send/verify debts sit under that
+  list; Default tether idea parked for brainstorm→milestone before C#.
+- 2026-08-30: **`Advice.md` — post-0.34.2 review next-moves for Zo.** Ranked friends-alpha
+  and play-feel actions from the review fan-out; Decisions table for respawn purse, FX
+  confirm, and M86. Indexed from `Docs/README.md`.
 - 2026-08-30: **0.34** build **2**. Ante parked; Hatch recall pads at Field/Master;
   wordmark off on station/pause; OPEN TO FRIENDS keeps its join code; Boarders get
   their own REALMS name field; Hatch start gated on `ControlRoomReachable`; combat FX

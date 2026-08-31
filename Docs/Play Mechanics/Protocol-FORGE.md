@@ -1,8 +1,17 @@
 <!--
-Purpose: the FORGE Protocol, an instance of Protocols — differences only: charged turret with Overcharge, Outrider with EMP, proximity-gated pairing, passive CLASSIFIED.
+Purpose: the FORGE Protocol, an instance of Protocols — two machines, charge spent into Overcharge and EMP, proximity-gated pairing, passive CLASSIFIED.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-31
+Where:
+- Field Deploy is press versus hold — Assets/Scripts/Game/Player/PlayerProtocolAbilities.cs (Tick); placement Assets/Scripts/Game/Player/PlayerTurretControl.cs; charge kept on live replace TurretState.TryPlace
+- Outrider is press versus hold on the personal binding — PlayerOutriderControl.cs; follow and Boarder-nearest fire OutriderObject.cs; charge and phase OutriderState.cs
+- Charge rises only through SpendShot; specials refuse at zero charge; Special ends Exhausted; Exhausted cannot re-enter Deployed — TurretState, OutriderState
+- Pairing: inside the radius Overcharge lifts the Outrider's rate and EMP converts turret fire; outside, neither does — BoarderProtocol.cs (MachinesPaired, PairedOutriderRateMul, PairedTurretFiresEmp, PairingRadiusMetres)
+- EMP blast and root — OutriderObject.ApplyEmpBlast; EnemyGatekeeper.Root; GatekeeperRoot.MayAdvance / MaySwing
+- Ordinary melee divert onto a standing turret or Outrider — EnemyGatekeeper.Targeting.cs (Retarget machine block)
+- HUD: turret charge on the crew square, Outrider charge on the personal square, pairing on the protocol line — HudController.Protocol.cs
+- Sheet copy — BoarderSheets.cs (CrewForge, PersonalForge, PassiveForge, DoctrineForge)
 -->
 
 # FORGE Protocol
@@ -27,34 +36,55 @@ The passive row reads ** CLASSIFIED **. It stays that way on purpose until the t
 
 Attention and structure are the same subject here. I build the thing they look at, or I take it with me.
 
-## Differs
+## Details
 
-**Crew: Field Deploy.** Stands a turret on the floor the caster is looking at, within reach; looking at a wall or open air puts it a step in front of the caster. The plant is instant — no window, straight to cooldown. It acquires and fires on its own out to its range, and while it fires, every Boarder inside its aura fires faster. Redeploying replaces the standing turret and keeps its charge. Spending charge Overcharges it — refused when the standing turret has none — and redlines the turret (and the caster's own gun) until the earned charge is spent, then Exhausted. Near the Outrider, Overcharge also puts the Outrider at maximum fire rate. The pairing is proximity-gated.
+### Structure
 
-**The turret is mortal three ways.** Gatekeeper damage kills it — hardware is a target in melee of a body already chasing the Boarder, with no protocol passive involved. Overcharge spends it into Exhausted: it stands silent, then despawns without further input. An Exhausted turret can also be cleared off the field. It does not expire on a life clock, and it does not run dry of a magazine.
+Four rows. Doctrine PARALLEL BAYS. Crew Field Deploy. Personal Outrider. Passive ** CLASSIFIED **.
 
-**Personal: Outrider.** Deploys a follower that stays with the Boarder and fires on the Gatekeeper nearest to them, not the one nearest to itself. Redeploying a live Outrider moves it to the Boarder and keeps its charge. Spending charge EMP-blasts — refused without charge by that name — light damage and a root from the Outrider; near the turret, the turret's fire becomes EMP rounds (same damage, plus the root) for the EMP window. EMP ends Exhausted. An Exhausted Outrider is cleared off the field.
+`G` and `H` are press versus hold on this sheet. A tap deploys or moves the machine. A hold spends whatever charge that machine has already earned. There is no timed burst window: each machine's own phase is the duration.
 
-**Both specials end independently**, each on its own charge window.
+### Doctrine
 
-**Passive.** ** CLASSIFIED **. Deliberately so rather than blank — an empty row is the panel reading as broken.
+**PARALLEL BAYS.** The row promises two decoys standing live at once. The Drone bay still holds one. The name is written onto every decoy placed and nothing reads it.
 
-Range, damage, rates, aura, pairing radius, root length, charge dials, and the press-versus-hold bindings: [Field Manual](Field-Manual.md). Charge per shot, charge max, hold threshold, Exhausted window, pairing radius, follow distance, EMP damage and root length are low-end placeholders.
+### Crew
 
-## Where
+**Field Deploy** — `G`.
 
-- Field Deploy is press versus hold — `Assets/Scripts/Game/Player/PlayerProtocolAbilities.cs` (`Tick`); placement — `Assets/Scripts/Game/Player/PlayerTurretControl.cs`; charge kept on live replace — `Assets/Scripts/Sim/Run/TurretState.cs` (`TryPlace`)
-- Outrider is press versus hold on the personal binding — `Assets/Scripts/Game/Player/PlayerOutriderControl.cs`; follow and Boarder-nearest fire — `Assets/Scripts/Game/Bastion/OutriderObject.cs`; charge and phase — `Assets/Scripts/Sim/Run/OutriderState.cs`
-- Charge rises only through `SpendShot`; specials refuse at zero charge by that name; Special ends Exhausted; Exhausted cannot re-enter Deployed — `TurretState`, `OutriderState`
-- Pairing: inside the radius Overcharge lifts the Outrider's rate and EMP converts turret fire; outside, neither does — `Assets/Scripts/Sim/Meta/BoarderProtocol.cs` (`MachinesPaired`, `PairedOutriderRateMul`, `PairedTurretFiresEmp`, `PairingRadiusMetres`)
-- EMP blast and root — `OutriderObject.ApplyEmpBlast`; `EnemyGatekeeper.Root`; `Assets/Scripts/Sim/Run/GatekeeperRoot.cs` (`MayAdvance`, `MaySwing`)
-- Charge dials, hold threshold, pairing, EMP — `Assets/Scripts/Sim/Meta/BoarderProtocol.cs`
-- Ordinary melee divert onto a standing turret or Outrider — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Retarget` machine block)
-- HUD: turret charge on the crew square, Outrider charge on the personal square, pairing on the protocol line — `Assets/Scripts/Game/Bastion/HudController.Protocol.cs`
-- Per-Wave deploy-order line — `Assets/Scripts/Game/Bastion/GameController.cs` (`OnAssaultEnded`); latches — `PlayerProtocolAbilities.WaveMachineLine`
-- Sheet copy — `Assets/Scripts/Sim/Meta/BoarderSheets.cs` (`CrewForge`, `PersonalForge`, `PassiveForge`)
+Output: a turret on the floor the caster is looking at. It holds ground, acquires and fires on its own, and while it fires every Boarder inside its aura fires faster. A second plant moves the live turret and keeps its charge.
 
-## Gaps
+Cost: the caster's `G`. The plant is instant. Spending charge Overcharges the turret — refused at zero charge — and redlines the turret and the caster's own gun until that charge is gone, then Exhausted. Near the Outrider, Overcharge also puts the Outrider at maximum fire rate.
+
+The turret is mortal three ways: Gatekeeper melee (a body already chasing the Boarder will swing at it), Overcharge spending it into Exhausted, or the Boarder clearing an Exhausted body off the field. It does not expire on a life clock and it does not run dry of a magazine.
+
+### Personal
+
+**Outrider** — `H`.
+
+Output: a follower that stays with the Boarder and fires on the Gatekeeper nearest to the Boarder, not the one nearest to itself. A second deploy moves a live Outrider to the Boarder and keeps its charge.
+
+Cost: the presser's `H`. Spending charge EMP-blasts from the follower — light damage and a root, refused at zero charge. Near the turret, the turret's fire becomes EMP rounds (same damage, plus the root) for the EMP window. EMP ends Exhausted. An Exhausted Outrider is cleared off the field.
+
+### Passive
+
+** CLASSIFIED **. Deliberately so rather than blank — an empty row is the panel reading as broken. The garrison reads nothing extra from this sheet.
+
+### Rules
+
+Charge rises only while the machine is firing. An empty room earns nothing.
+
+Each special ends on its own charge window. They do not share a clock.
+
+Pairing is proximity. Inside the radius, spending either machine lifts the other. Outside it, each spend is only itself. Both orders reach the same peak: a max-rate EMP turret beside a max-rate Outrider.
+
+A Gatekeeper already chasing the Boarder will divert onto a nearer live turret or Outrider in melee. Kind refusals still outrank this: a Thief never turns.
+
+Numbers — range, damage, rates, aura, pairing radius, root length, charge dials, hold threshold, Exhausted window, follow distance: [Field Manual](Field-Manual.md). Charge per shot, charge max, and the pairing radius are low-end placeholders.
+
+## Additional Details
+
+### Gaps
 
 - The turret has no visible health, so there is no way to judge how many swings it will take. The Outrider has the same bar the turret does; the tell is still easy to miss in a scrum.
 - The aura radius is not drawn. The pairing radius is the protocol line reading "paired", not a disc on the floor.

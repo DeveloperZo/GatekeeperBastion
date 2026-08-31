@@ -66,7 +66,7 @@ namespace GatekeepersProtocol.Game
             0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         public NetworkVariable<int> ProtocolId = new NetworkVariable<int>(
-            (int)BoarderProtocolId.Default,
+            (int)BoarderProtocolId.Depot,
             NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         public NetworkVariable<int> PassiveId = new NetworkVariable<int>(

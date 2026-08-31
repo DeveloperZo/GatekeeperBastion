@@ -58,7 +58,7 @@ coverage, [the ninth](Gatekeeper-Reclaimer.md) what is left where something died
 The protocol I embark wearing. [Protocols](Protocols.md) is the system: the four rows every
 sheet answers, where it is claimed, and what a protocol never touches.
 
-Then the sheets: [Default](Protocol-Default.md), which adds output and changes nothing else.
+Then the sheets: [Default](Protocol-DEPOT.md), which adds output and changes nothing else.
 [VEIL](Protocol-VEIL.md), which moves attention onto me and then takes me off the list.
 [FORGE](Protocol-FORGE.md), which builds the thing they look at.
 

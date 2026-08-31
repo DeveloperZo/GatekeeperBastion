@@ -2,7 +2,26 @@
 Purpose: Current representation of a Boarding — the core loop end to end: embark, Prep and Assault, the wave started at the Hatch and ended at a terminal, the deep start, kills paying on landing, and the four enders — as it is in the build.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-30
+Last updated: 2026-08-31
+Where:
+- Phase machine Docked → Tethered → Lost / Returned / Escaped — Assets/Scripts/Sim/Run/RunSim.cs (Phase, StartRun, EngageTether, EndRun, CompleteRun); Assets/Scripts/Sim/Run/RunPhase.cs
+- Prep ↔ Assault alternation, draw-triggered — Assets/Scripts/Sim/Run/RunSim.cs (TriggerDraw, NotifyAssaultCleared); Assets/Scripts/Sim/Run/AssaultState.cs
+- The Hatch is the start line while the current zone still has a terminal to run, or for Master Control once the control room is reachable — Assets/Scripts/Game/Bastion/GameController.Terminals.cs (HatchOffersWaveStart = HatchBankStartBlocked || (MasterControlAwaitsStart && ControlRoomReachable), StartZoneWaveFromHatch, CanSelectTerminal refusing every Field terminal while it holds); Assets/Scripts/Game/Bastion/BastionLayout.cs (ControlRoomReachable)
+- A zone's trigger runs its whole span as one composite — Assets/Scripts/Game/Bastion/GameController.Terminals.cs (StartZoneComposite); Assets/Scripts/Sim/Run/RunSim.Composite.cs (TriggerCompositeDraw); Assets/Scripts/Sim/Bastion/DemoZones.cs (WavesPerTrigger, zone tables)
+- The wave ends at the terminal; shutoff banks the carry and completes the zone — Assets/Scripts/Sim/Run/RunSim.cs (ShutOffFieldWave); Assets/Scripts/Game/Bastion/GameController.Terminals.cs (ShutOffTerminal, TickAssaultShutoffCommand)
+- Shutoff availability, Assault and Prep alike, never on an unstarted zone — Assets/Scripts/Sim/Bastion/FieldShutoff.cs (MayRun, WavesHaveRun)
+- Doors open on shutoff or survived bank, persisted to the realm — Assets/Scripts/Game/Bastion/GameController.Terminals.cs (OpenDoorsFor)
+- Trickle after the roster is spent; trickle bodies pay zero — Assets/Scripts/Sim/Waves/FieldTrickle.cs (Resolve, DueIn); Assets/Scripts/Sim/Run/RunSim.cs (SetFieldTrickle, CurrentKillAward)
+- Kills bank on landing, face value, whole into the realm's pot, Assault-only — Assets/Scripts/Sim/Run/RunSim.cs (AwardKill, BankKill)
+- Recall pad beside T2/T5: hold Interact while Tethered, teleport to the Hatch — Assets/Scripts/Game/Bastion/HatchRecallPad.cs; Assets/Scripts/Game/Bastion/GameController.Faucet.cs (TeleportLocalToHatch)
+- A field Wave damages the Hatch at a scaled rate and bleeds the carried stake — Assets/Scripts/Sim/Run/RunSim.cs (DamageHatch); Assets/Scripts/Sim/Run/HatchBank.cs (FieldWaveDamageScale, AttritUnits)
+- Dock offered on zone close and on a survived bank window; refused while Master Control is live — Assets/Scripts/Sim/Run/RunSim.Dock.cs (OfferDockAfterZoneShutoff, OfferDockIfBankSurvived, DockRun)
+- After a zone shutoff, while the control gate is still shut, solo/host T at the Hatch can Convert — Assets/Scripts/Game/Bastion/GameController.Terminals.cs (TickPrepCommands — HatchOffersWaveStart false, then StartHatchBankWave); Assets/Scripts/Game/Bastion/GameController.HatchBank.cs (HatchBankStartBlocked)
+- Deep start chains Waves 1..N into the first Assault — Assets/Scripts/Sim/Run/RunSim.cs (TriggerDraw chain arm, Tick inter-wave timer, NotifyDeliveryComplete)
+- Deep-start ceiling is entered-or-cleared, whichever is higher — Assets/Scripts/Sim/Run/RunSim.cs (ClampStartWave); Assets/Scripts/Sim/Meta/RealmRecord.cs (From)
+- NAV MAP stepper; hidden while the demo runs — Assets/Scripts/Game/Ship/MapStation.cs (start-wave picker wiring, demo branch)
+- Deepest entered rises on the draw, deepest cleared on the clear — Assets/Scripts/Sim/Run/RunSim.cs (LaunchWave, NotifyAssaultCleared)
+- End screens: Lost / DOCKED / BASTION STRIPPED, converted / repair / net / deepest — Assets/Scripts/Game/Bastion/HudController.EndScreens.cs
 -->
 
 # A Boarding
@@ -23,36 +42,56 @@ Every body I put down survives all four. The kills were banked as they fell, so 
 
 The Ship offers to start me deeper. It is not a skip. It is the same content delivered back to back, one Assault, no quiet in the middle. Same Waves. Much less room.
 
-## The interaction
+## Details
 
-The Boarder invokes it — in a friends session, the party lead's EMBARK commits the party — against the Boarding's state machine, `RunSim`. Pressing EMBARK at the NAV MAP loads the Bastion and `EngageTether` moves the phase from Docked to Tethered, landing in Prep: quiet, untimed, nothing arriving until the Boarder starts it. Whatever loadout the seat carries at EMBARK is the loadout for the whole Boarding.
+### Structure
 
-While Tethered the Boarding alternates two states. **Prep** is the only state where Convert, Withdraw and a safe repair are legal; it pays nothing. **Assault** is a live Wave: kills pay only here (`AwardKill` is refused outside Tethered + Assault). The Ante is parked — Waves run at dial 0 ([The Ante](Ante.md)).
+Embark at the NAV MAP loads the Bastion and tethers the seat. Whatever loadout the seat carries at EMBARK is the loadout for the whole Boarding. In a friends session the party lead's EMBARK commits the party.
 
-**A Wave begins at the Hatch and ends at a terminal.** `HatchOffersWaveStart` answers true while the current zone still has a terminal to run (`HatchBankStartBlocked`), and for Master Control only once the control room is reachable (`MasterControlAwaitsStart && ControlRoomReachable`). The Master terminal is never entered into the unlock graph, so it never reads done — that is why the control-room gate is the other half of the start line, not a reason the start line stays on forever.
+While tethered the Boarding alternates two states. **Prep** is quiet, untimed, unpaid — the only state where Convert, Withdraw and a safe repair are legal. **Assault** is a live Wave. The Ante is parked; Waves run at dial 0 ([The Ante](Ante.md)).
 
-`T` at the Hatch starts the current zone's trigger — `StartZoneWaveFromHatch` arms and starts the zone's own terminal, so the far spawns, the door and the completion behave as a terminal start would — and, once every field terminal is done and the control gate is open, the finale ([Master Control](Master-Control.md)). No select is needed at the start line. The zone's field terminals therefore never offer a start of their own, and refuse to be shut off before the zone's Waves have run (`FieldShutoff.WavesHaveRun`).
+Four enders close it: an unbought death, a destroyed Hatch, a dock home, or Master Control's switch.
 
-A zone's trigger runs its **whole authored Wave span as one composite** — consecutive Waves, delivery-gapped, with no Prep between them (`DemoZones.WavesPerTrigger`, `TriggerCompositeDraw`). How many Waves each zone runs: [Field Manual](Field-Manual.md). Delivery — groups, spawn points, pacing — is [Waves](Waves.md).
+### Start and shutoff
 
-**The wave ends at the zone's terminal.** `T` there, in Assault or in Prep, shuts the zone off: the Wave stops, the terminal completes, the zone's door opens (`OpenDoorsFor`, persisted onto the realm so a Docked return finds it open), and **the whole carried pile banks on the spot** (`ShutOffFieldWave` — reaching the switch is the payout). Killing every authored body does not end a field Wave: once the roster is spent the lane **trickles** — a slow drip of Gatekeepers that pays nothing and continues until the shutoff (`FieldTrickle`; trickle kills award zero via `CurrentKillAward`). There is no abort. Hold Interact on the authored pad beside that terminal (`T2 Portal` / `T5 Portal`) teleports the Boarder back to the Hatch while the Boarding is live — the walk home is optional; the walk out is not.
+A Wave begins at the Hatch and ends at a terminal. The Hatch is the start line while the current zone still has a terminal to finish, and for Master Control only once the control room is reachable. No select is needed at the start line. Field terminals never offer a start of their own, and refuse to be shut off before the zone's Waves have run.
 
-A field Wave hunts the Boarder, and — since 2026-08-27 — it can also hurt the Hatch, at a scaled rate; every hit on the Hatch also bleeds the carried pile ([The Hatch](The-Hatch.md) owns the door's rules). A Convert Wave hunts the Hatch and is started, run and settled at the door — the Hatch page owns that window too.
+`T` at the Hatch starts the current zone's trigger — the far spawns, the door and the completion behave as a terminal start would — and, once every field terminal is done and the control gate is open, the finale ([Master Control](Master-Control.md)). A zone's trigger runs its whole authored Wave span as one composite: consecutive Waves, delivery-gapped, with no Prep between them. How many Waves each zone runs: [Field Manual](Field-Manual.md). Delivery is [Waves](Waves.md).
 
-**Kills pay on landing.** `AwardKill` floors the current kill value and `BankKill` credits it straight to the realm's bank at face value the moment the body falls — not split across seats: every seat banks into the one pot ([Realms](Realms.md) owns the pot). Nothing a Boarding earns by killing can be taken back by any ending; the only pile an ending settles is one deliberately withdrawn at the Hatch. Kill value and the Ante curve: [Field Manual](Field-Manual.md).
+`T` at the zone's terminal, in Assault or in Prep, shuts the zone off: the Wave stops, the terminal completes, the zone's door opens (persisted onto the realm so a Docked return finds it open), and the whole carried pile banks on the spot. Killing every authored body does not end a field Wave: once the roster is spent the lane trickles until the shutoff. There is no abort.
 
-**Four enders**, in this order:
+Hold Interact on the authored pad beside that terminal (T2 Portal / T5 Portal) teleports the Boarder back to the Hatch while the Boarding is live. The walk home is optional; the walk out is not.
 
-- A seat goes down and no respawn is bought — priced from the realm's bank, hard-capped per Boarding, on a bleed-out clock ([Going Down](Going-Down.md) owns the respawn spend); with nobody left standing the Boarding ends **Lost** (`EndRun("player")`).
-- The Hatch reaches zero: **Lost** on the spot (`EndRun("hatch")`), nothing buys it back.
-- The Boarder docks. The offer opens when a zone's terminal is shut off, or when a Convert window is survived, and lasts until the next Wave starts. After a zone shutoff, while the control gate is still shut, a solo or host seat can also Convert ([The Hatch](The-Hatch.md) owns that window). A held Interact at the Hatch or at the lit portal pad beside it ends the Boarding **Returned** (screen: DOCKED — a good ending, no loss counter ticks).
-- Master Control: the finale sequence ends when the Boarder throws the armed Master terminal — **Escaped**, screen BASTION STRIPPED ([Master Control](Master-Control.md) owns the sequence).
+After a zone shutoff, while the control gate is still shut, a solo or host seat can Convert at the Hatch ([The Hatch](The-Hatch.md) owns that window).
 
-**Starting deeper.** Off the demo, the NAV MAP carries a start-Wave stepper, hidden while the demo runs — the demo's refight lives at the zone terminal's retrigger instead. Its ceiling is the realm's deepest Wave, the higher of deepest *entered* and deepest *cleared* (re-ruled 2026-08-27; dying in a Wave does open it). A deep start is not a skip: the first `T` delivers Waves 1..N back to back as one Assault, each launching a fixed gap after the previous Wave's delivery finishes, with no Prep between — several Waves' worth of Gatekeepers overlapping in the room, one Ante governing the whole chain.
+Off the demo, the NAV MAP carries a start-Wave stepper, hidden while the demo runs. Its ceiling is the realm's deepest Wave, the higher of deepest entered and deepest cleared. A deep start is not a skip: the first `T` delivers Waves 1..N back to back as one Assault, each launching a fixed gap after the previous Wave's delivery finishes, with no Prep between.
 
-Driven by EMBARK at the NAV MAP, `T` at the Hatch and at terminals, and the interact hold at the Hatch/portal (bindings: [Field Manual](Field-Manual.md)). Shown by the Hatch and terminal prompts, the HUD Wave state, and the door/portal lighting. Reads back as the prompt lines, the banked Salvage readout rising per kill, the terminal-shutoff and door-open log lines, and an end screen — YOU DIED or HATCH DESTROYED for a Lost Boarding, DOCKED for a Returned one, BASTION STRIPPED for Escaped — listing converted, repair spent, net, banked now, deepest Wave, and one button back to the Ship.
+### Kills
 
-## Consequences
+A kill during live Assault credits the realm's bank at face value the moment the body falls — not split across seats: every seat banks into the one pot ([Realms](Realms.md) owns the pot). Nothing a Boarding earns by killing can be taken back by any ending; the only pile an ending settles is one deliberately withdrawn at the Hatch. Trickle bodies pay nothing. Kill value and the Ante curve: [Field Manual](Field-Manual.md).
+
+### Enders
+
+Four ways it finishes, in this order:
+
+- A seat goes down and no respawn is bought — priced from the realm's bank, hard-capped per Boarding, on a bleed-out clock ([Going Down](Going-Down.md) owns the respawn spend); with nobody left standing the Boarding ends Lost.
+- The Hatch reaches zero: Lost on the spot, nothing buys it back.
+- The Boarder docks. The offer opens when a zone's terminal is shut off, or when a Convert window is survived, and lasts until the next Wave starts. A held Interact at the Hatch or at the lit portal pad beside it ends the Boarding Returned (screen: DOCKED — a good ending, no loss counter ticks).
+- Master Control: the finale sequence ends when the Boarder throws the armed Master terminal — Escaped, screen BASTION STRIPPED ([Master Control](Master-Control.md) owns the sequence).
+
+### Rules
+
+Nothing arrives uncalled. Prep pays zero. Field terminals refuse start while the Hatch is the start line. Dock is refused while Master Control is live.
+
+A field Wave hunts the Boarder, and it can also hurt the Hatch at a scaled rate; every hit on the Hatch also bleeds the carried pile ([The Hatch](The-Hatch.md) owns the door's rules). A Convert Wave hunts the Hatch and is started, run and settled at the door.
+
+Driven by EMBARK at the NAV MAP, `T` at the Hatch and at terminals, and the interact hold at the Hatch and portal. Shown by the Hatch and terminal prompts, the HUD Wave state, and the door and portal lighting. Reads back as the prompt lines, the banked Salvage readout rising per kill, the terminal-shutoff and door-open log lines, and an end screen — YOU DIED or HATCH DESTROYED for a Lost Boarding, DOCKED for a Returned one, BASTION STRIPPED for Escaped — listing converted, repair spent, net, banked now, deepest Wave, and one button back to the Ship.
+
+Bindings: [Field Manual](Field-Manual.md).
+
+## Additional Details
+
+### Consequences
 
 The Boarding is the whole risk envelope every other mechanic prices against. The player sets the pace and the stake: nothing arrives uncalled, Prep is unlimited and pays zero, and the distance between the Hatch and the terminal is the fight itself — the trickle exists so the walk cannot be skipped by killing everything first.
 
@@ -60,11 +99,11 @@ Because kills bank as they land, no ending can confiscate earnings. What an endi
 
 Removal test: remove the Boarding and there is no game — this is the core activity every entry in this folder serves.
 
-## Classification
+### Classification
 
 Core, loop. Serves Fellowship, Expression and Fantasy (`../Design/1-Experience.md` §1.2, 2026-08-16 rank stamp), with Challenge as the vehicle.
 
-## Interacts with
+### Interacts with
 
 - [Waves](Waves.md) — what a trigger delivers: composition, groups, the trickle's cadence, the deep-start overlap; that page owns delivery.
 - [The Ante](Ante.md) — parked; Waves run at dial 0. That page owns the ante spend when it returns.
@@ -77,27 +116,7 @@ Core, loop. Serves Fellowship, Expression and Fantasy (`../Design/1-Experience.m
 - [The Crew](The-Crew.md) — party lead owns EMBARK, and seats, waits and follows in a friends session; that page owns the session.
 - [The Ship](The-Ship.md) — the hub the loop returns to, and the loadout fixed at EMBARK; that page owns the hull and its stations.
 
-## Where
-
-- Phase machine Docked → Tethered → Lost / Returned / Escaped — `Assets/Scripts/Sim/Run/RunSim.cs` (`Phase`, `StartRun`, `EngageTether`, `EndRun`, `CompleteRun`); `Assets/Scripts/Sim/Run/RunPhase.cs`
-- Prep ↔ Assault alternation, draw-triggered — `Assets/Scripts/Sim/Run/RunSim.cs` (`TriggerDraw`, `NotifyAssaultCleared`); `Assets/Scripts/Sim/Run/AssaultState.cs`
-- The Hatch is the start line for a zone while its terminals are unfinished, and for Master Control only once the control room is reachable — `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`HatchOffersWaveStart`, `HatchBankStartBlocked`, `MasterControlAwaitsStart`, `StartZoneWaveFromHatch`, `CanSelectTerminal` refusing every Field terminal while it holds); `Assets/Scripts/Game/Bastion/BastionLayout.cs` (`RebuildGraph` — Field terminals only, so the Master id never reads done; `ControlRoomReachable`)
-- A zone's trigger runs its whole span as one composite — `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`StartZoneComposite`); `Assets/Scripts/Sim/Run/RunSim.Composite.cs` (`TriggerCompositeDraw`); `Assets/Scripts/Sim/Bastion/DemoZones.cs` (`WavesPerTrigger`, zone tables)
-- The wave ends at the terminal; shutoff banks the carry and completes the zone — `Assets/Scripts/Sim/Run/RunSim.cs` (`ShutOffFieldWave`); `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`ShutOffTerminal`, `TickAssaultShutoffCommand`)
-- Shutoff availability, Assault and Prep alike, never on an unstarted zone — `Assets/Scripts/Sim/Bastion/FieldShutoff.cs` (`MayRun`, `WavesHaveRun`)
-- Doors open on shutoff or survived bank, persisted to the realm — `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`OpenDoorsFor`)
-- Trickle after the roster is spent; trickle bodies pay zero — `Assets/Scripts/Sim/Waves/FieldTrickle.cs` (`Resolve`, `DueIn`); `Assets/Scripts/Sim/Run/RunSim.cs` (`SetFieldTrickle`, `CurrentKillAward`)
-- Kills bank on landing, face value, whole into the realm's pot, Assault-only — `Assets/Scripts/Sim/Run/RunSim.cs` (`AwardKill`, `BankKill`)
-- Recall pad beside T2/T5: hold Interact 1.5 s while Tethered, teleport to the Hatch — `Assets/Scripts/Game/Bastion/HatchRecallPad.cs`; `Assets/Scripts/Game/Bastion/GameController.Faucet.cs` (`TeleportLocalToHatch`)
-- A field Wave damages the Hatch at a scaled rate and bleeds the carried stake — `Assets/Scripts/Sim/Run/RunSim.cs` (`DamageHatch`); `Assets/Scripts/Sim/Run/HatchBank.cs` (`FieldWaveDamageScale`, `AttritUnits`)
-- Dock offered on zone close and on a survived bank window; refused while Master Control is live — `Assets/Scripts/Sim/Run/RunSim.Dock.cs` (`OfferDockAfterZoneShutoff`, `OfferDockIfBankSurvived`, `DockRun`)
-- Deep start chains Waves 1..N into the first Assault — `Assets/Scripts/Sim/Run/RunSim.cs` (`TriggerDraw` chain arm, `Tick` inter-wave timer, `NotifyDeliveryComplete`)
-- Deep-start ceiling is entered-or-cleared, whichever is higher — `Assets/Scripts/Sim/Run/RunSim.cs` (`ClampStartWave`); `Assets/Scripts/Sim/Meta/RealmRecord.cs` (`From`)
-- NAV MAP stepper; hidden while the demo runs — `Assets/Scripts/Game/Ship/MapStation.cs` (start-wave picker wiring, demo branch)
-- Deepest entered rises on the draw, deepest cleared on the clear — `Assets/Scripts/Sim/Run/RunSim.cs` (`LaunchWave`, `NotifyAssaultCleared`)
-- End screens: Lost / DOCKED / BASTION STRIPPED, converted / repair / net / deepest — `Assets/Scripts/Game/Bastion/HudController.EndScreens.cs`
-
-## Gaps
+### Gaps
 
 - Health climbs between hits ([Regen](Regen.md)). Nothing in the fight names the rate or the hold after a swing.
 - **Repairing the Hatch spends banked Salvage** — the same purse you shop with at the consoles. The prompt quotes the rate, but nothing tells you that the money is coming out of your upgrade budget, or that with an empty bank you cannot repair at all.

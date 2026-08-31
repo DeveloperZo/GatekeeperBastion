@@ -28,7 +28,7 @@ The tell is the lens. What a hand notices is what its doctrine makes salient.
 
 | Hand | Lens | Entries |
 |---|---|---|
-| STOCK | sequence, counts, what happened in what order | The Game, First Time Out, A Boarding, Waves, Salvage, The Ship, Protocols, Protocol-Default, Gatekeeper-Default, MK-1, BR-12, Realms, Shared Realms *(CS)*, The Other Currencies *(CS)*, Destinations *(CS)*, Life Aboard *(CS)* |
+| STOCK | sequence, counts, what happened in what order | The Game, First Time Out, A Boarding, Waves, Salvage, The Ship, Protocols, Protocol-DEPOT, Gatekeeper-Default, MK-1, BR-12, Realms, Shared Realms *(CS)*, The Other Currencies *(CS)*, Destinations *(CS)*, Life Aboard *(CS)* |
 | PHANTOM | attention, who is looking at whom, being noticed | Gatekeepers, Hunter, Cloaker, Staying Alive, SEC-D, Protocol-VEIL, The Crew, and the eight unshipped garrison rows *(all CS)* |
 | PARALLEL BAYS | load, throughput, what a thing is made of and what it takes | The Hatch, The Ante, Thief, Weapons, MR-35, PRI-C, The Drone, Upgrades, Protocol-FORGE, Going Down, AEGIS *(CS)*, LEDGER *(CS)*, Drone Payloads *(CS)* |
 

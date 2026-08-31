@@ -42,9 +42,9 @@ namespace GatekeepersProtocol.Game
         public static readonly CheckpointConfig[] CheckpointConfigs =
         {
             new CheckpointConfig("rung 2 — MK-1 T2, DEFAULT",
-                BoarderProtocolId.Default, WeaponId.None, 0, WeaponId.Mk1Sidearm, 2),
+                BoarderProtocolId.Depot, WeaponId.None, 0, WeaponId.Mk1Sidearm, 2),
             new CheckpointConfig("primary — PRI-C T2, DEFAULT",
-                BoarderProtocolId.Default, WeaponId.PriC, 2, WeaponId.Mk1Sidearm, 2),
+                BoarderProtocolId.Depot, WeaponId.PriC, 2, WeaponId.Mk1Sidearm, 2),
             new CheckpointConfig("primary — PRI-C T2, VEIL",
                 BoarderProtocolId.Veil, WeaponId.PriC, 2, WeaponId.Mk1Sidearm, 2),
             new CheckpointConfig("primary — PRI-C T2, FORGE",

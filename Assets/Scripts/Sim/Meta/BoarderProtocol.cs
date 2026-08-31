@@ -7,7 +7,7 @@ namespace GatekeepersProtocol.Sim
     public enum BoarderProtocolId
     {
         None = 0,
-        Default = 1,
+        Depot = 1,
         Veil = 2,
         Forge = 3,
     }
@@ -47,8 +47,21 @@ namespace GatekeepersProtocol.Sim
     public static class BoarderProtocol
     {
         public const float BarrageFireMul = 2f;
-        public const float RushFireMul = 1.5f;
+        /// <summary>Retired as a fire multiplier 2026-08-31 — Feed regenerates clip instead.
+        /// Constant kept so old compose call sites and tests that named the number still compile
+        /// until they are deleted; <see cref="FireMul"/> returns 1 for Rush.</summary>
+        public const float RushFireMul = 1f;
         const float BarrageMulCap = 2f;
+
+        /// <summary>Dump's foot tax. Not a root — look and fire stay. 0.35 is the first cut;
+        /// unknown, needs play data.</summary>
+        public const float DumpMoveMul = 0.35f;
+
+        /// <summary>Feed restores this fraction of effective fire rate as clip while the
+        /// toggle window is open. Continuous fire yields about 1/(1−k) rounds from the
+        /// magazine (k=0.22 → ~1.28×, ~28% more). Always keep k &lt; 1 so regen cannot
+        /// outpace spending.</summary>
+        public const float FeedRegenOfFireRate = 0.22f;
 
         /// <summary>VEIL. Ghost biases acquisition ranges; Cloak leaves the lists outright and
         /// so has no multiplier to name.</summary>
@@ -131,7 +144,7 @@ namespace GatekeepersProtocol.Sim
 
         static readonly BoarderProtocolId[] Shop =
         {
-            BoarderProtocolId.Default,
+            BoarderProtocolId.Depot,
             BoarderProtocolId.Veil,
             BoarderProtocolId.Forge,
         };
@@ -156,7 +169,7 @@ namespace GatekeepersProtocol.Sim
         {
             switch (id)
             {
-                case BoarderProtocolId.Default: return DoctrineMode.Stock;
+                case BoarderProtocolId.Depot: return DoctrineMode.Stock;
                 case BoarderProtocolId.Veil: return DoctrineMode.Phantom;
                 case BoarderProtocolId.Forge: return DoctrineMode.ParallelBays;
                 default: return DoctrineMode.Stock;
@@ -175,7 +188,7 @@ namespace GatekeepersProtocol.Sim
         {
             switch (id)
             {
-                case BoarderProtocolId.Default: return BoarderAbilityId.Barrage;
+                case BoarderProtocolId.Depot: return BoarderAbilityId.Barrage;
                 case BoarderProtocolId.Veil: return BoarderAbilityId.Ping;
                 case BoarderProtocolId.Forge: return BoarderAbilityId.FieldDeploy;
                 default: return BoarderAbilityId.None;
@@ -186,7 +199,7 @@ namespace GatekeepersProtocol.Sim
         {
             switch (id)
             {
-                case BoarderProtocolId.Default: return BoarderAbilityId.Rush;
+                case BoarderProtocolId.Depot: return BoarderAbilityId.Rush;
                 case BoarderProtocolId.Veil: return BoarderAbilityId.Cloak;
                 case BoarderProtocolId.Forge: return BoarderAbilityId.Emp;
                 default: return BoarderAbilityId.None;
@@ -326,15 +339,27 @@ namespace GatekeepersProtocol.Sim
             switch (id)
             {
                 case BoarderAbilityId.Barrage: return BarrageFireMul;
-                case BoarderAbilityId.Rush: return RushFireMul;
+                // Feed (Rush id): clip regen, not fire rate.
+                case BoarderAbilityId.Rush: return 1f;
                 default: return 1f;
             }
         }
 
+        /// <summary>Rounds per second Feed restores at the given effective fire rate.
+        /// Never returns a value ≥ fire rate.</summary>
+        public static float FeedRegenPerSecond(float effectiveFireRate)
+        {
+            if (effectiveFireRate <= 0f) return 0f;
+            float r = effectiveFireRate * FeedRegenOfFireRate;
+            float cap = effectiveFireRate * 0.99f;
+            if (r > cap) r = cap;
+            return r;
+        }
+
         /// <summary>One self source times one zone source. Zone sources SET rather than stack
         /// (the strongest wins) and are capped; self sources are per-Boarder and exclusive by
-        /// construction, since a Boarder has one protocol. Rush and Overcharge are self;
-        /// Barrage fields and turret auras are zone.</summary>
+        /// construction, since a Boarder has one protocol. Overcharge is self;
+        /// Dump auras and turret auras are zone. Feed does not multiply fire rate.</summary>
         public static float ComposeFireMul(float selfMul, float zoneMul)
         {
             if (selfMul < 1f) selfMul = 1f;
@@ -343,13 +368,15 @@ namespace GatekeepersProtocol.Sim
             return selfMul * zoneMul;
         }
 
-        /// <summary>Rush is protocolMul. Barrage window and live fields SET (cap 2), then
-        /// multiply. Caster in both = 3.0; overlapping plants stay 2.0.</summary>
+        /// <summary>Dump window and live fields SET (cap 2). Feed no longer contributes a
+        /// self fire mul — pass false for the rush flag from new call sites.</summary>
         public static float ComposeFireMul(bool rushOpen, bool barrageWindow, float fieldMul)
         {
             float zone = barrageWindow ? BarrageFireMul : 1f;
             if (fieldMul > zone) zone = fieldMul;
-            return ComposeFireMul(rushOpen ? RushFireMul : 1f, zone);
+            // rushOpen ignored for fire rate (Feed). Kept in the signature so Net/PlayMode
+            // call sites compile until they drop the argument.
+            return ComposeFireMul(1f, zone);
         }
 
         public static float Radius(BoarderAbilityId id)
@@ -421,8 +448,8 @@ namespace GatekeepersProtocol.Sim
                 case BoarderAbilityId.Bulkhead: return "Bulkhead";
                 case BoarderAbilityId.Ghost: return "Ghost";
                 case BoarderAbilityId.Foresight: return "Foresight";
-                case BoarderAbilityId.Barrage: return "Barrage";
-                case BoarderAbilityId.Rush: return "Rush";
+                case BoarderAbilityId.Barrage: return "Dump";
+                case BoarderAbilityId.Rush: return "Feed";
                 case BoarderAbilityId.Ping: return "Ping";
                 case BoarderAbilityId.Cloak: return "Cloak";
                 case BoarderAbilityId.FieldDeploy: return "Field Deploy";

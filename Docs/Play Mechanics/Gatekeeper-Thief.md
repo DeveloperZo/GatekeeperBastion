@@ -2,7 +2,16 @@
 Purpose: Thief, an instance of Gatekeepers — differences only.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-30
+Last updated: 2026-08-31
+Where:
+- Never targets the player, hardened — `Assets/Scripts/Game/Enemies/ThiefGatekeeper.cs` (`MayTargetPlayer => false`, with the 2026-08-27 revert note)
+- `playerDamage` 0 and the pushed flag — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`StatsFor`, Thief case); `Assets/Scripts/Sim/Waves/GatekeeperStats.cs` (`ignoresPlayer`)
+- Never provoked, never shouts, declines the shout — `Assets/Scripts/Game/Enemies/ThiefGatekeeper.cs` (`CanBeProvoked => false`); `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Provoke` refuses before the shout loop; joiner loop counts only real joins)
+- Flinch is presentation only — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`OnDamaged` fires `HitReact` before `Provoke` is refused)
+- Refuses decoys, by kind — `Assets/Scripts/Sim/Run/DecoyState.cs` (`ShouldPull` returns false for `GatekeeperKind.Thief`); `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`TransferInterestTo` kind test)
+- One gear — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`StatsFor`, Thief case: `patrolSpeed` equals `chaseSpeed`)
+- Inverted crowd priority, expensive solver — `Assets/Scripts/Game/Enemies/ThiefGatekeeper.cs` (`AvoidancePriority`, `AvoidanceQuality`)
+- Salvage rule recorded, not built — `Assets/Scripts/Sim/Waves/GatekeeperKind.cs` (Thief doc note)
 -->
 
 # Thief
@@ -25,27 +34,35 @@ It carries the most health of anything here, and it scales with the Wave like ev
 
 In a crowd it is the one safe thing to shoot — the only frame that will not shout the group onto me. Fire through the group into the Thief and the group never learns my name.
 
-## Differs
+## Details
 
-- **Refuses the player, on every Wave mode.** `MayTargetPlayer` is hardened false in the subclass, and its `playerDamage` is 0 — the same rule stated twice. It walks to the Hatch whatever the mode. (The 2026-08-13 field-Wave exception, under which it hunted the Boarder while the Hatch was out of the fight, is reverted — Zo, 2026-08-27: with the Hatch damageable on both modes the Thief has its job back.)
-- **Refuses provocation and the shout.** `CanBeProvoked` is hardened false: a shot changes nothing about it — not target, not speed — and it never shouts; a neighbour's shout is silently declined before the joiner count. The flinch it plays when hit is presentation only.
-- **Refuses decoys.** It is excluded by kind from both decoy paths — the pull radius and the doctrine's interest transfer.
-- **One gear.** Patrol speed equals chase speed; nothing makes it change its mind. Figures: [Field Manual](Field-Manual.md).
-- **Crowd priority inverted.** It outranks every Default and Hunter in avoidance and keeps the expensive solver, so a wall of bodies at the Hatch parts for it instead of stalling it — its whole job is shouldering through its own escort.
-- **Recorded, not built:** the salvage rule — never damages while there is salvage to take (`../Brainstorms/gatekeepers-and-waves.md`, *Thief's rule*). Today it walks the battering errand.
+### Structure
 
-## Where
+May target the Hatch. May not target a player. Cannot be provoked. The player question is the one it answers no.
 
-- Never targets the player, hardened — `Assets/Scripts/Game/Enemies/ThiefGatekeeper.cs` (`MayTargetPlayer => false`, with the 2026-08-27 revert note)
-- `playerDamage` 0 and the pushed flag — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`StatsFor`, Thief case); `Assets/Scripts/Sim/Waves/GatekeeperStats.cs` (`ignoresPlayer`)
-- Never provoked, never shouts, declines the shout — `Assets/Scripts/Game/Enemies/ThiefGatekeeper.cs` (`CanBeProvoked => false`); `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Provoke` refuses before the shout loop; joiner loop counts only real joins)
-- Flinch is presentation only — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`OnDamaged` fires `HitReact` before `Provoke` is refused)
-- Refuses decoys, by kind — `Assets/Scripts/Sim/Run/DecoyState.cs` (`ShouldPull` returns false for `GatekeeperKind.Thief`); `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`TransferInterestTo` kind test)
-- One gear — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`StatsFor`, Thief case: `patrolSpeed` equals `chaseSpeed`)
-- Inverted crowd priority, expensive solver — `Assets/Scripts/Game/Enemies/ThiefGatekeeper.cs` (`AvoidancePriority`, `AvoidanceQuality`)
-- Salvage rule recorded, not built — `Assets/Scripts/Sim/Waves/GatekeeperKind.cs` (Thief doc note)
+### Refusals
 
-## Gaps
+The player, ever, on every Wave mode. Player damage is zero. It does not hunt Boarders on field Waves.
+
+It refuses provocation and the shout: a shot changes nothing about it — not target, not speed — and it never shouts; a neighbour's shout is silently declined. The flinch it plays when hit is presentation only.
+
+It refuses decoys: excluded by kind from the pull and from interest transfer.
+
+### Behaviour
+
+One gear. Patrol speed equals chase speed; nothing makes it change its mind. Slowest thing aboard. Figures: [Field Manual](Field-Manual.md).
+
+Crowd priority inverted. It outranks every Default and Hunter in avoidance and keeps the expensive solver, so a wall of bodies at the Hatch parts for it instead of stalling it.
+
+### Rules
+
+It walks to the Hatch on every Wave mode.
+
+Recorded, not built: the salvage rule — never damages while there is salvage to take. Today it walks the battering errand.
+
+## Additional Details
+
+### Gaps
 
 - That shooting a Thief does nothing to its mind — no provoke, no shout, no slowdown — is never communicated. It reads like the AI is broken.
 - Nothing tells you a Thief is present or how many are left. The Assault count is one number for the whole Wave.

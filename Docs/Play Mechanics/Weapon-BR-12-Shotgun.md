@@ -1,8 +1,15 @@
 <!--
-Purpose: BR-12 Shotgun, an instance of Weapons — differences only.
+Purpose: BR-12 Shotgun, an instance of Weapons — pellet cone Primary, Concussive Breach.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-31
+Where:
+- Catalog row: Primary, pellet cone, no pierce, shortest Primary reach with early falloff — `Assets/Scripts/Sim/Meta/WeaponCatalog.cs` (`Def`, `WeaponId.Br12Shotgun`)
+- Pellets loop per shot; each pellet's ray stops on the first body — `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`Fire`, `FireRay` with `pierceCount` 0)
+- Crit rolled per pellet but unreachable: the chance the roll reads is a hardcoded 0 on the gun (`MetaUpgrades.CritChance()` is frozen at 0 and has no caller) — `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`Fire`, `RollCrit`); `Assets/Scripts/Game/Player/PlayerGun.cs` (`CritChance`)
+- Concussive cone selects, the Hatch sets the push direction, dial buys the metres — `Assets/Scripts/Sim/Meta/WeaponAbility.cs` (`Br12ConeHalfAngleDegrees`, `Magnitude`); `Assets/Scripts/Game/Player/PlayerAbility.cs` (`ActivateConcussive` — cone test on `forward`, delta is `awayFromHatch * metres`)
+- The shove is a NavMesh warp and returns walk-back seconds; no walkable sample, no movement — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Shove`)
+- Ring order and declared identity (strength Damage, weakness Reload) — `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`RingOf`, `TryIdentity`)
 -->
 
 # BR-12 Shotgun
@@ -25,34 +32,33 @@ Let them close. That is the whole weapon. Against Hunters it costs nothing — t
 
 Wrong tool for Thieves and for long corridors. Start on a Thief early, and count the time as spent, because the Hunters will spend it on me.
 
-## Differs
+## Details
 
-- The contact Primary: one pull throws a cone of pellets, each weak alone, the shot
-  strong only when most of them land. The upgrade wheel's Damage spoke raises the per-pellet
-  figure, and a crit — chance is frozen at zero — would roll per pellet. Pellet count
-  and spread: [Field Manual](Field-Manual.md).
-- Pellets never pierce: every pellet stops on the first body it touches, so the cone does
-  not sweep a group — the whole shot spends on the nearest body in it.
-- The shortest reach of the three Primaries, with falloff starting nearest the muzzle;
-  past the edge, pellets do nothing at all. Where the lines fall:
-  [Field Manual](Field-Manual.md).
-- **Concussive Breach**, its ability: a cone in front of the Boarder, out to the weapon's
-  own reach, picks the Gatekeepers — but the shove itself is directed **away from the
-  Hatch**, not away from the Boarder, so every body it catches is pushed down the same
-  line regardless of where it stood in the cone. The Ability spoke buys shove distance,
-  and the push is a NavMesh warp: a body with no walkable ground behind it does not move.
-- Its ring runs strength Damage, weakness Reload, with Ability adjacent to Damage.
+### Structure
 
-## Where
+Primary. One pull throws a cone of pellets. No pierce. The shortest reach of the three Primaries.
 
-- Catalog row: Primary, pellet cone, no pierce, shortest Primary reach with early falloff — `Assets/Scripts/Sim/Meta/WeaponCatalog.cs` (`Def`, `WeaponId.Br12Shotgun`)
-- Pellets loop per shot; each pellet's ray stops on the first body — `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`Fire`, `FireRay` with `pierceCount` 0)
-- Crit rolled per pellet but unreachable: the chance the roll reads is a hardcoded 0 on the gun (`MetaUpgrades.CritChance()` is frozen at 0 and has no caller) — `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`Fire`, `RollCrit`); `Assets/Scripts/Game/Player/PlayerGun.cs` (`CritChance`)
-- Concussive cone selects, the Hatch sets the push direction, dial buys the metres — `Assets/Scripts/Sim/Meta/WeaponAbility.cs` (`Br12ConeHalfAngleDegrees`, `Magnitude`); `Assets/Scripts/Game/Player/PlayerAbility.cs` (`ActivateConcussive` — cone test on `forward`, delta is `awayFromHatch * metres`)
-- The shove is a NavMesh warp and returns walk-back seconds; no walkable sample, no movement — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Shove`)
-- Ring order and declared identity (strength Damage, weakness Reload) — `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`RingOf`, `TryIdentity`)
+### Fire
 
-## Gaps
+Each pellet is weak alone; the shot is strong only when most of them land. Every pellet stops on the first body it touches, so the cone does not sweep a group — the whole shot spends on the nearest body in it. The Damage spoke raises the per-pellet figure.
+
+Falloff starts nearest the muzzle of the three Primaries. Past the edge, pellets do nothing at all.
+
+Wrong tool for Thieves and for long corridors. Let them close.
+
+Where the lines fall: [Field Manual](Field-Manual.md).
+
+### Ability
+
+**Concussive Breach.** A cone in front of the Boarder, out to the weapon's own reach, picks the Gatekeepers — but the shove itself is directed away from the Hatch, not away from the Boarder, so every body it catches is pushed down the same line regardless of where it stood in the cone. The Ability spoke buys shove distance. The push needs walkable ground behind the body; without a sample, the body does not move.
+
+### Rules
+
+Its ring runs strength Damage, weakness Reload, with Ability adjacent to Damage.
+
+## Additional Details
+
+### Gaps
 
 - Damage falls off with distance and there is no indicator of where that begins or how bad it is. Shots at medium range look identical to shots at point blank.
 - Its reach is far shorter than either other Primary's. Past the edge, pellets do literally nothing — no damage, not reduced damage.

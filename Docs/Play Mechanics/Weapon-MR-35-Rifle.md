@@ -1,8 +1,15 @@
 <!--
-Purpose: MR-35 Rifle, an instance of Weapons — differences only.
+Purpose: MR-35 Rifle, an instance of Weapons — held-trigger pierce Primary, Pin Shot.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-30
+Last updated: 2026-08-31
+Where:
+- Catalog row: Primary, held-trigger rate and deep clip (2026-08-27 recut), pierce, far falloff start, second-longest reach, blue tracer — `Assets/Scripts/Sim/Meta/WeaponCatalog.cs` (`Def`, `WeaponId.Mr35Rifle`)
+- Pierce ray: reduced damage per later body, corpses skipped without spending pierce, geometry stops the ray — `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`FireRay`); `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`DamageOnPiercedBody`)
+- Pin charge counts hits only, weapon-scoped, with a decay window — `Assets/Scripts/Sim/Meta/WeaponAbility.cs` (`PinHitThreshold`, `PinBuildDecaySeconds`, `PinBuildState`)
+- One charge per shot, on the first damaged body only — `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`FireRay`, `RegisterPinHitIfNeeded`)
+- Auto-pin on a ready meter held for a living body; manual pin on the binding; dial buys pin seconds — `Assets/Scripts/Game/Player/PlayerAbility.cs` (`RegisterPinHit`, `TryManualPin`); `Assets/Scripts/Sim/Meta/WeaponAbility.cs` (`Magnitude`)
+- Ring order and declared identity (strength Damage, weakness FireRate) — `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`RingOf`, `TryIdentity`)
 -->
 
 # MR-35 Rifle
@@ -25,35 +32,33 @@ The weak spot is a Hunter already inside my range. One is fine. Several, arrivin
 
 A Damage focus compounds here better than anywhere else. A Thief dropped one shot sooner is worth more than the step looks on the panel.
 
-## Differs
+## Details
 
-- The line Primary, recut as an assault rifle (2026-08-27): a held trigger at a high rate
-  from a deep clip — no spread, full damage far down a corridor before falloff begins,
-  out to a reach second only to the PRI-C's. Rate, clip and lines:
-  [Field Manual](Field-Manual.md).
-- It pierces: a shot continues through a body into the ones behind it, at a reduced cut
-  per later body. Walls stop it, corpses do not soak it, and each body takes one ray
-  once. Depth and the per-body cut: [Field Manual](Field-Manual.md).
-- **Pin Shot**, its ability: hits — never damage — charge a meter on the rifle,
-  weapon-scoped across targets, decaying when the hits stop. Each shot charges once, on
-  the first body it damages. A ready meter pins the next living body hit automatically,
-  or fires on the ability binding; the Ability spoke buys pin seconds.
-- Pale-blue tracer — its identity cue, and the at-a-glance answer to who is firing what
-  in a co-op fight.
-- Its ring runs strength Damage, weakness Fire Rate, with Ability adjacent to Fire Rate;
-  Clip and Reload sit in the opposite order to the PRI-C's, so the same focus buys a
-  different gun.
+### Structure
 
-## Where
+Primary. Held-trigger assault at the catalog rate, from a deep clip — not one heavy shot. No spread. It pierces.
 
-- Catalog row: Primary, held-trigger rate and deep clip (2026-08-27 recut), pierce, far falloff start, second-longest reach, blue tracer — `Assets/Scripts/Sim/Meta/WeaponCatalog.cs` (`Def`, `WeaponId.Mr35Rifle`)
-- Pierce ray: reduced damage per later body, corpses skipped without spending pierce, geometry stops the ray — `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`FireRay`); `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`DamageOnPiercedBody`)
-- Pin charge counts hits only, weapon-scoped, with a decay window — `Assets/Scripts/Sim/Meta/WeaponAbility.cs` (`PinHitThreshold`, `PinBuildDecaySeconds`, `PinBuildState`)
-- One charge per shot, on the first damaged body only — `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`FireRay`, `RegisterPinHitIfNeeded`)
-- Auto-pin on a ready meter held for a living body; manual pin on the binding; dial buys pin seconds — `Assets/Scripts/Game/Player/PlayerAbility.cs` (`RegisterPinHit`, `TryManualPin`); `Assets/Scripts/Sim/Meta/WeaponAbility.cs` (`Magnitude`)
-- Ring order and declared identity (strength Damage, weakness FireRate) — `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`RingOf`, `TryIdentity`)
+### Fire
 
-## Gaps
+Hold the trigger. Full damage far down a corridor before falloff begins, out to a reach second only to the PRI-C's. A shot continues through a body into the ones behind it, at a reduced cut per later body. Walls stop it; corpses do not soak it; each body takes one ray once.
+
+The trick pays when bodies queue. A group abreast is one hit; the same group in file is several. Weak against a Hunter already inside its range — several, arriving in the clip, especially.
+
+Rate, clip, depth, the per-body cut, and where the lines fall: [Field Manual](Field-Manual.md).
+
+### Ability
+
+**Pin Shot.** Hits — never damage — charge a meter on the rifle, weapon-scoped across targets, decaying when the hits stop. Each shot charges once, on the first body it damages. A ready meter pins the next living body hit automatically, or fires on the ability binding. The Ability spoke buys pin seconds.
+
+### Rules
+
+Pale-blue tracer — its identity cue, and the at-a-glance answer to who is firing what in a co-op fight.
+
+Its ring runs strength Damage, weakness Fire Rate, with Ability adjacent to Fire Rate. Clip and Reload sit in the opposite order to the PRI-C's, so the same focus buys a different gun.
+
+## Additional Details
+
+### Gaps
 
 - Pierce is never explained in play. Nothing tells you a shot continues through bodies, so most players never deliberately line targets up — which is the weapon's best trick.
 - Pierce is limited to a set number of bodies past the first, stops on solid geometry, and is not consumed by corpses. None of this is visible.

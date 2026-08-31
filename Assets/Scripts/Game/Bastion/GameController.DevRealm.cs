@@ -80,7 +80,7 @@ namespace GatekeepersProtocol.Game
             boarder.SetEquipmentOwned(EquipmentId.RepairRig, true);
             boarder.SetEquippedEquipment(EquipmentId.RepairRig);
             if (boarder.EquippedProtocol == BoarderProtocolId.None)
-                BoarderProtocol.TryClaim(GameSession.Meta, BoarderProtocolId.Default);
+                BoarderProtocol.TryClaim(GameSession.Meta, BoarderProtocolId.Depot);
         }
     }
 }

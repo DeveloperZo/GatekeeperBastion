@@ -93,7 +93,7 @@ namespace GatekeepersProtocol.Tests
             var ids = new[]
             {
                 BoarderProtocolId.None,
-                BoarderProtocolId.Default,
+                BoarderProtocolId.Depot,
                 BoarderProtocolId.Veil,
                 BoarderProtocolId.Forge,
                 (BoarderProtocolId)99,
@@ -101,7 +101,7 @@ namespace GatekeepersProtocol.Tests
             var held = new[]
             {
                 BoarderProtocolId.None,
-                BoarderProtocolId.Default,
+                BoarderProtocolId.Depot,
                 BoarderProtocolId.Veil,
             };
 
@@ -188,7 +188,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(DemoStationVerdict.HealOnly, DemoProgress.CrewVerdict(m),
                 "the early door must not promote the whole menu — only the claim comes through");
 
-            Assert.IsTrue(BoarderProtocol.TryClaim(m, BoarderProtocolId.Default),
+            Assert.IsTrue(BoarderProtocol.TryClaim(m, BoarderProtocolId.Depot),
                 "the claim this door exists for was refused");
             Assert.IsFalse(DemoProgress.CrewOpensForProtocolClaim(m),
                 "the door stayed open after the claim — the demo's pacing is gone for every "

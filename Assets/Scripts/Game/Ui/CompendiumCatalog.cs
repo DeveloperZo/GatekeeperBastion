@@ -74,7 +74,7 @@ namespace GatekeepersProtocol.Game
                 Title = "V. Doctrine",
                 EntryStems = new[]
                 {
-                    "Protocols", "Protocol-Default", "Protocol-VEIL", "Protocol-FORGE",
+                    "Protocols", "Protocol-DEPOT", "Protocol-VEIL", "Protocol-FORGE",
                     "Protocol-AEGIS", "Protocol-LEDGER"
                 }
             },

@@ -113,7 +113,7 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `Architecture/` | The rules subtree behind `Architecture.md` — boundaries, naming, Unity runtime, testing, and the dated audits. [`Architecture/README.md`](Architecture/README.md) declares itself the master reference for how code is written. |
 | `Animation-Inventory.md` | Clip tracker: what is on disk, what code fires that has no clip, and the rulings behind each. |
 | `Release-Gate.md` | The pre-send checklist, and [`Release-Send.md`](Release-Send.md) the copy that goes with a build. |
-| `GatekeeperZo Notes/` | Zo's own files — `verification.md` is the Next-Run list the dashboard reads; `playthrough.md` is raw session notes. |
+| `GatekeeperZo Notes/` | Zo's own files — `Advice.md` is the post-review next-moves list; `verification.md` is the Next-Run list the dashboard reads; `playthrough.md` is raw session notes. |
 | [`Architecture/asset-audit-2026-08-18.md`](Architecture/asset-audit-2026-08-18.md) | Dated snapshot of what art is on disk against what is referenced. Figures drift after its stamp, by its own declaration. |
 | `Brainstorms/` | Ideas before they graduate. |
 | `Demo - Single/`, `Demo - Coop/` | Solo demo beat specs; friends-session storyboard of the live alpha (`Demo - Coop/`, restamped 2026-08-30). Cut milestones from these; do not duplicate them into a brainstorm. Play Mechanics outrank Demo-Coop for the rules. |

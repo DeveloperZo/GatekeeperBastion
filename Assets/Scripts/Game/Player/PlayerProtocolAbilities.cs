@@ -7,8 +7,8 @@ namespace GatekeepersProtocol.Game
     /// <summary>LOCAL-OWNER: the equipped protocol's actives on G/H. Ids pushed at Bind — never
     /// serialized (gotcha 1). This type owns the two windows, the input and the log lines;
         /// the effects that hold state of their own live in their own types
-        /// (<see cref="TurretObject"/> and <see cref="OutriderObject"/> for FORGE). Cooldowns run here; Barrage plants go
-    /// server-side via NetVerbs when a session is listening.</summary>
+        /// (<see cref="TurretObject"/> and <see cref="OutriderObject"/> for FORGE). Cooldowns run here; Dump auras go
+        /// server-side via NetVerbs when a session is listening.</summary>
     public sealed class PlayerProtocolAbilities : MonoBehaviour
     {
         const string Tag = "Protocol";
@@ -16,6 +16,7 @@ namespace GatekeepersProtocol.Game
         GameController _game;
         FirstPersonController _fpc;
         PlayerHealth _health;
+        PlayerGun _gun;
         PlayerTurretControl _turretControl;
         PlayerOutriderControl _outriderControl;
         BoarderProtocolId _protocol = BoarderProtocolId.None;
@@ -37,12 +38,13 @@ namespace GatekeepersProtocol.Game
         public BoarderAbilityId CrewAbility => BoarderProtocol.CrewAbilityOf(_protocol);
         public BoarderAbilityId PersonalAbility => BoarderProtocol.PersonalAbilityOf(_protocol);
 
-        /// <summary>Barrage's zone belongs to Default alone. Gated on the ability id, not on
+        /// <summary>Dump's zone belongs to Depot alone. Gated on the ability id, not on
         /// the window: Cloak and Overcharge open the same slots and must not hand anyone
-        /// Barrage's or Rush's multiplier.</summary>
+        /// Dump's multiplier.</summary>
         public bool BarrageWindowOpen =>
             CrewAbility == BoarderAbilityId.Barrage && _crew.WindowOpen;
 
+        /// <summary>Feed window open (hold ammo regen).</summary>
         public bool RushOpen =>
             PersonalAbility == BoarderAbilityId.Rush && _personal.WindowOpen;
 
@@ -63,7 +65,7 @@ namespace GatekeepersProtocol.Game
         {
             get
             {
-                if (RushOpen) return BoarderProtocol.RushFireMul;
+                // Feed (Rush id) regenerates clip — it does not multiply fire rate.
                 if (OverchargeOpen) return BoarderProtocol.OverchargeSelfFireMul;
                 return 1f;
             }
@@ -239,6 +241,7 @@ namespace GatekeepersProtocol.Game
             _passive = BoarderProtocol.OwnsPassive(_protocol, passive) ? passive : BoarderAbilityId.None;
             if (_fpc == null) _fpc = GetComponent<FirstPersonController>();
             if (_health == null) _health = GetComponent<PlayerHealth>();
+            if (_gun == null) _gun = GetComponent<PlayerGun>();
             if (_turretControl == null) _turretControl = GetComponent<PlayerTurretControl>();
             if (_turretControl == null) _turretControl = gameObject.AddComponent<PlayerTurretControl>();
             _turretControl.Bind(game, _fpc);
@@ -297,6 +300,12 @@ namespace GatekeepersProtocol.Game
                 _outriderControl.TickPersonalBinding(dt, paused, ref _personal);
             else if (!paused && Controls.Down(ControlId.PersonalAbility))
                 OnPersonal();
+
+            if (!paused && RushOpen)
+            {
+                if (_gun == null) _gun = GetComponent<PlayerGun>();
+                if (_gun != null) _gun.TickFeedRegen(dt);
+            }
         }
 
         public void NotifyDeath()
@@ -308,9 +317,8 @@ namespace GatekeepersProtocol.Game
             }
             else if (CrewAbility == BoarderAbilityId.Barrage)
             {
-                // Belt and braces on the one ability that leaves a thing in the world.
-                // Only Barrage plants, so only Barrage needs the unconditional uproot.
-                Unplant();
+                // Dump leaves an aura on the caster; clear it if death skipped the window path.
+                EndDump();
             }
             if (_personal.WindowOpen)
             {
@@ -355,8 +363,8 @@ namespace GatekeepersProtocol.Game
 
             if (_crew.WindowOpen)
             {
-                // Barrage is a rooted hold: pressing again is how you leave. Ping is a pulse
-                // already spent. Field Deploy never opens a window at all.
+                // Dump: pressing again stands the aura down. Ping is a pulse already spent.
+                // Field Deploy never opens a window at all.
                 if (id != BoarderAbilityId.Barrage)
                 {
                     Log.Event(Tag, "crew refused — " + BoarderProtocol.DisplayName(id)
@@ -385,8 +393,8 @@ namespace GatekeepersProtocol.Game
             switch (id)
             {
                 case BoarderAbilityId.Barrage:
-                    Plant();
-                    Log.Event(Tag, "crew Barrage sat-ready=" + ready.ToString("0.##"));
+                    BeginDump();
+                    Log.Event(Tag, "crew Dump sat-ready=" + ready.ToString("0.##"));
                     break;
                 case BoarderAbilityId.Ping:
                     PulsePing(ready);
@@ -400,7 +408,7 @@ namespace GatekeepersProtocol.Game
             switch (id)
             {
                 case BoarderAbilityId.Barrage:
-                    Unplant();
+                    EndDump();
                     break;
             }
             if (expired && _loggedCrewExpiry)
@@ -466,7 +474,16 @@ namespace GatekeepersProtocol.Game
 
             if (_personal.WindowOpen)
             {
-                Log.Event(Tag, "self refused — window open");
+                // Feed is a toggle: press again to stand down early. Cloak refuses a second press.
+                if (id != BoarderAbilityId.Rush)
+                {
+                    Log.Event(Tag, "self refused — window open");
+                    return;
+                }
+                float sat = _personal.SecondsSatReady;
+                _personal.EndWindowEarly();
+                ClosePersonalEffect(false);
+                Log.Event(Tag, "self Feed stood down sat-ready=" + sat.ToString("0.##"));
                 return;
             }
             if (!_personal.IsReady)
@@ -483,7 +500,7 @@ namespace GatekeepersProtocol.Game
             switch (id)
             {
                 case BoarderAbilityId.Rush:
-                    Log.Event(Tag, "self Rush sat-ready=" + ready.ToString("0.##"));
+                    Log.Event(Tag, "self Feed sat-ready=" + ready.ToString("0.##"));
                     break;
                 case BoarderAbilityId.Cloak:
                     SetCloaked(true);
@@ -507,22 +524,22 @@ namespace GatekeepersProtocol.Game
             _loggedPersonalExpiry = false;
         }
 
-        // ---------- Barrage plant ----------
+        // ---------- Dump aura ----------
 
-        void Plant()
+        void BeginDump()
         {
-            Unplant();
-            if (_fpc != null) _fpc.Rooted = true;
+            EndDump();
+            if (_fpc != null) _fpc.MoveSpeedMul = BoarderProtocol.DumpMoveMul;
             var verbs = LocalVerbs();
             if (verbs != null)
                 verbs.RequestAnchor(transform.position, true);
             else
-                _planted = BarrageField.Plant(transform.position);
+                _planted = BarrageField.Plant(transform);
         }
 
-        void Unplant()
+        void EndDump()
         {
-            if (_fpc != null) _fpc.Rooted = false;
+            if (_fpc != null) _fpc.MoveSpeedMul = 1f;
             var verbs = LocalVerbs();
             if (verbs != null)
             {

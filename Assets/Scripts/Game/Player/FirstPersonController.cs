@@ -82,9 +82,14 @@ namespace GatekeepersProtocol.Game
         const float ReengageFraction = 0.2f;
 
         /// <summary>When true (menu/lose screen, dead/respawning) look and movement input are ignored.</summary>
-        /// <summary>Anchor plant: WASD off, look and fire stay. Distinct from
-        /// <see cref="MovementLocked"/> (pause / death / fighting gate).</summary>
+        /// <summary>Dump plant: WASD off, look and fire stay. Distinct from
+        /// <see cref="MovementLocked"/> (pause / death / fighting gate). Depot Dump uses
+        /// <see cref="MoveSpeedMul"/> instead — Rooted is kept for any leftover callers.</summary>
         public bool Rooted { get; set; }
+
+        /// <summary>Planar speed scale. Dump sets this below 1; everything else leaves 1.
+        /// Multiplies walk and sprint the same so the tax is one number.</summary>
+        public float MoveSpeedMul { get; set; } = 1f;
 
         public bool MovementLocked { get; set; }
 
@@ -277,7 +282,7 @@ namespace GatekeepersProtocol.Game
                 Vector3 world = isoDriven
                     ? IsoMoveBasis * input
                     : transform.TransformDirection(input);
-                planar = world * TickSprint(IsMoving, dt);
+                planar = world * TickSprint(IsMoving, dt) * MoveSpeedMul;
             }
             else
             {

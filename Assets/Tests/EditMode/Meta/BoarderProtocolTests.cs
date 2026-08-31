@@ -10,14 +10,14 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Catalog_DefaultSheet_Pins()
         {
-            Assert.AreEqual(BoarderProtocolId.Default, BoarderProtocol.ShopProtocols()[0]);
+            Assert.AreEqual(BoarderProtocolId.Depot, BoarderProtocol.ShopProtocols()[0]);
             Assert.AreEqual(3, BoarderProtocol.ShopProtocols().Length);
-            Assert.AreEqual(DoctrineMode.Stock, BoarderProtocol.DoctrineOf(BoarderProtocolId.Default));
+            Assert.AreEqual(DoctrineMode.Stock, BoarderProtocol.DoctrineOf(BoarderProtocolId.Depot));
             Assert.AreEqual(0, (int)DoctrineMode.Stock);
-            Assert.AreEqual(BoarderAbilityId.Barrage, BoarderProtocol.CrewAbilityOf(BoarderProtocolId.Default));
-            Assert.AreEqual(BoarderAbilityId.Rush, BoarderProtocol.PersonalAbilityOf(BoarderProtocolId.Default));
-            Assert.AreEqual(0, BoarderProtocol.PassiveCount(BoarderProtocolId.Default));
-            Assert.AreEqual(BoarderAbilityId.None, BoarderProtocol.PassiveAt(BoarderProtocolId.Default, 0));
+            Assert.AreEqual(BoarderAbilityId.Barrage, BoarderProtocol.CrewAbilityOf(BoarderProtocolId.Depot));
+            Assert.AreEqual(BoarderAbilityId.Rush, BoarderProtocol.PersonalAbilityOf(BoarderProtocolId.Depot));
+            Assert.AreEqual(0, BoarderProtocol.PassiveCount(BoarderProtocolId.Depot));
+            Assert.AreEqual(BoarderAbilityId.None, BoarderProtocol.PassiveAt(BoarderProtocolId.Depot, 0));
             Assert.AreEqual(5, (int)BoarderAbilityId.Barrage);
             Assert.AreEqual(6, (int)BoarderAbilityId.Rush);
             Assert.AreEqual(8f, BoarderProtocol.Window(BoarderAbilityId.Barrage), 1e-5f);
@@ -41,19 +41,27 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(8f, BoarderProtocol.Window(BoarderAbilityId.Overcharge), 1e-5f,
                 "Overcharge is the one window that was meant to move");
             Assert.AreEqual(40f, BoarderProtocol.Cooldown(BoarderAbilityId.Rush), 1e-5f);
-            Assert.AreEqual(1.5f, BoarderProtocol.FireMul(BoarderAbilityId.Rush), 1e-5f);
+            Assert.AreEqual(1f, BoarderProtocol.FireMul(BoarderAbilityId.Rush), 1e-5f,
+                "Feed (Rush id) regenerates clip — fire mul stays 1");
+            Assert.AreEqual(0.22f, BoarderProtocol.FeedRegenOfFireRate, 1e-5f);
+            Assert.AreEqual(0.35f, BoarderProtocol.DumpMoveMul, 1e-5f);
+            Assert.AreEqual(2.2f, BoarderProtocol.FeedRegenPerSecond(10f), 1e-5f);
+            Assert.Less(BoarderProtocol.FeedRegenPerSecond(10f), 10f);
+            Assert.AreEqual("DEPOT Protocol", BoarderProtocol.ProtocolName(BoarderProtocolId.Depot));
+            Assert.AreEqual("Dump", BoarderProtocol.DisplayName(BoarderAbilityId.Barrage));
+            Assert.AreEqual("Feed", BoarderProtocol.DisplayName(BoarderAbilityId.Rush));
             Assert.AreEqual(0.5f, BoarderProtocol.Magnitude(BoarderAbilityId.Anchor), 1e-5f);
             Assert.AreEqual(0.70f, BoarderProtocol.Magnitude(BoarderAbilityId.Ghost), 1e-5f);
-            Assert.IsTrue(BoarderProtocol.IsLegalPair(BoarderProtocolId.Default, BoarderAbilityId.None));
-            Assert.IsFalse(BoarderProtocol.IsLegalPair(BoarderProtocolId.Default, BoarderAbilityId.Ghost));
+            Assert.IsTrue(BoarderProtocol.IsLegalPair(BoarderProtocolId.Depot, BoarderAbilityId.None));
+            Assert.IsFalse(BoarderProtocol.IsLegalPair(BoarderProtocolId.Depot, BoarderAbilityId.Ghost));
             Assert.IsFalse(BoarderProtocol.IsLegalPair(BoarderProtocolId.None, BoarderAbilityId.None));
-            Assert.AreEqual(BoarderProtocol.CrewSheetDefault, BoarderProtocol.CrewSheet(BoarderProtocolId.Default));
-            Assert.AreEqual(BoarderProtocol.PersonalSheetDefault, BoarderProtocol.PersonalSheet(BoarderProtocolId.Default));
-            Assert.AreEqual(BoarderProtocol.PassiveSheetDefault, BoarderProtocol.PassiveSheet(BoarderProtocolId.Default));
+            Assert.AreEqual(BoarderProtocol.CrewSheetDefault, BoarderProtocol.CrewSheet(BoarderProtocolId.Depot));
+            Assert.AreEqual(BoarderProtocol.PersonalSheetDefault, BoarderProtocol.PersonalSheet(BoarderProtocolId.Depot));
+            Assert.AreEqual(BoarderProtocol.PassiveSheetDefault, BoarderProtocol.PassiveSheet(BoarderProtocolId.Depot));
             Assert.AreEqual("", BoarderProtocol.CrewSheet(BoarderProtocolId.None));
-            var sheet = BoarderProtocol.SheetOf(BoarderProtocolId.Default);
-            Assert.AreEqual(BoarderProtocol.ProtocolName(BoarderProtocolId.Default), sheet.Name);
-            Assert.AreEqual(BoarderProtocol.DoctrineText(BoarderProtocolId.Default), sheet.Doctrine);
+            var sheet = BoarderProtocol.SheetOf(BoarderProtocolId.Depot);
+            Assert.AreEqual(BoarderProtocol.ProtocolName(BoarderProtocolId.Depot), sheet.Name);
+            Assert.AreEqual(BoarderProtocol.DoctrineText(BoarderProtocolId.Depot), sheet.Doctrine);
             Assert.AreEqual(BoarderProtocol.CrewSheetDefault, sheet.Crew);
             Assert.AreEqual(BoarderProtocol.PersonalSheetDefault, sheet.Personal);
             Assert.AreEqual(BoarderProtocol.PassiveSheetDefault, sheet.Passive);
@@ -91,9 +99,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void ComposeFireMul_SetThenProduct()
         {
+            // Feed no longer contributes a self fire mul — rushOpen is ignored.
             Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(false, true, 1f), 1e-5f);
-            Assert.AreEqual(1.5f, BoarderProtocol.ComposeFireMul(true, false, 1f), 1e-5f);
-            Assert.AreEqual(3f, BoarderProtocol.ComposeFireMul(true, true, 2f), 1e-5f);
+            Assert.AreEqual(1f, BoarderProtocol.ComposeFireMul(true, false, 1f), 1e-5f);
+            Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(true, true, 2f), 1e-5f);
             Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(false, false, 2f), 1e-5f);
             Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(false, true, 2f), 1e-5f);
             Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(false, false, 4f), 1e-5f);
@@ -138,15 +147,15 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
             // v9 landed with the demo flags; the pin follows the schema, not a literal.
             Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
-            Assert.IsTrue(BoarderProtocol.TryClaim(m, BoarderProtocolId.Default));
-            Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
+            Assert.IsTrue(BoarderProtocol.TryClaim(m, BoarderProtocolId.Depot));
+            Assert.AreEqual(BoarderProtocolId.Depot, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
-            Assert.IsFalse(BoarderProtocol.TryClaim(m, BoarderProtocolId.Default));
+            Assert.IsFalse(BoarderProtocol.TryClaim(m, BoarderProtocolId.Depot));
             Assert.IsFalse(BoarderProtocol.TryClaim(m, BoarderProtocolId.None));
             m.PayloadLoadoutLocked = true;
             var locked = MetaState.CreateNew();
             locked.PayloadLoadoutLocked = true;
-            Assert.IsFalse(BoarderProtocol.TryClaim(locked, BoarderProtocolId.Default));
+            Assert.IsFalse(BoarderProtocol.TryClaim(locked, BoarderProtocolId.Depot));
         }
 
         [Test]
@@ -155,7 +164,7 @@ namespace GatekeepersProtocol.Tests
             var m = MetaState.CreateNew();
             Assert.IsFalse(m.SetEquippedPassive(BoarderAbilityId.Ghost));
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
-            BoarderProtocol.TryClaim(m, BoarderProtocolId.Default);
+            BoarderProtocol.TryClaim(m, BoarderProtocolId.Depot);
             Assert.IsFalse(m.SetEquippedPassive(BoarderAbilityId.Foresight));
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
         }
@@ -168,7 +177,7 @@ namespace GatekeepersProtocol.Tests
                 "{\"SaveVersion\":13,\"EquippedProtocol\":1,\"EquippedPassive\":3}";
             var m = BoarderState.FromJson(json);
             Assert.IsNotNull(m, "a current-version Boarder document loads");
-            Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
+            Assert.AreEqual(BoarderProtocolId.Depot, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
         }
 

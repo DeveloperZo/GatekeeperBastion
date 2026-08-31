@@ -32,7 +32,7 @@ namespace GatekeepersProtocol.Game
 
         static readonly BoarderProtocolId[] RangeProtocols =
         {
-            BoarderProtocolId.Default, BoarderProtocolId.Veil, BoarderProtocolId.Forge
+            BoarderProtocolId.Depot, BoarderProtocolId.Veil, BoarderProtocolId.Forge
         };
 
         /// <summary>Digits past the five distances.</summary>

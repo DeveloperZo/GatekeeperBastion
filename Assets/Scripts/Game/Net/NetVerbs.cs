@@ -345,7 +345,8 @@ namespace GatekeepersProtocol.Game
                 _barrage = null;
             }
             if (!planting) return;
-            _barrage = BarrageField.Plant(position);
+            // Dump aura follows this avatar (NetVerbs lives on the player object).
+            _barrage = BarrageField.Plant(transform);
         }
 
         [Rpc(SendTo.Server)]

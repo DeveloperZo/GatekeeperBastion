@@ -36,7 +36,7 @@ shut, Convert / Withdraw can answer (`../Play Mechanics/The-Hatch.md`).
 | Salvage is loot-on-kill | A kill credits the realm's bank at face value the moment the body falls. No ending takes it back. Withdraw at the Hatch is the only way to put money at risk | `../Play Mechanics/Salvage.md`; `RunSim.AwardKill` |
 | Kinds refuse | Hunter never Hatch; Thief never turns when shot and never hurts you; the Cloaker will not advance while you are looking at it | `../Play Mechanics/Gatekeepers.md`, `../Play Mechanics/Gatekeeper-Cloaker.md` |
 | The weapon is the build | Per-weapon wheel after the first lifetime Salvage; five shop rows, three of them Primaries that read as three different guns since `M93` | `../Play Mechanics/Weapons.md`; unlock is `MetaUpgrades.UpgradesUnlocked` → `LifetimeSalvageEarned > 0` |
-| Protocol | Default claim 0 Salvage: Barrage `G`, Rush `H`. VEIL and FORGE claimable since `M94`; FORGE stands a charged turret and an Outrider. AEGIS and LEDGER Coming Soon | `../Play Mechanics/Protocols.md`, `../Play Mechanics/Protocol-FORGE.md` |
+| Protocol | DEPOT claim 0 Salvage: Dump `G`, Feed `H` (toggle). VEIL and FORGE claimable since `M94`; FORGE stands a charged turret and an Outrider. AEGIS and LEDGER Coming Soon | `../Play Mechanics/Protocols.md`, `../Play Mechanics/Protocol-DEPOT.md` |
 | Death has a price, a cap, and a clock | A dead seat buys back from the **realm's bank**, `150 × min(taken + 1, 3)`, at most **2** respawns this Boarding, **10 s** to confirm. Carrying nothing is no longer what ends it — a spent bank, or the third death, is | `../Play Mechanics/Going-Down.md`; `Respawns.cs` |
 
 The Ante (per-Wave wager) is **parked** in this build (`Ante.Enabled = false`,

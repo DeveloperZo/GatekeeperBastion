@@ -4,8 +4,9 @@ using UnityEngine;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>Planted Barrage zone. Static live list; owner guns read
-    /// <see cref="FireMulAt"/>. Does not slow Gatekeepers.</summary>
+    /// <summary>Dump aura (Depot crew). Follows the caster; guns read
+    /// <see cref="FireMulAt"/>. Does not slow Gatekeepers — the caster's
+    /// <see cref="FirstPersonController.MoveSpeedMul"/> is the foot tax.</summary>
     public sealed class BarrageField : MonoBehaviour
     {
         static readonly List<BarrageField> Live = new List<BarrageField>();
@@ -13,6 +14,7 @@ namespace GatekeepersProtocol.Game
         Vector3 _origin;
         float _radiusSq;
         float _fireMul = 1f;
+        Transform _follow;
 
         public static float FireMulAt(Vector3 position)
         {
@@ -29,11 +31,31 @@ namespace GatekeepersProtocol.Game
             return mul;
         }
 
+        /// <summary>Aura parented to the caster so Dump moves with them.</summary>
+        public static BarrageField Plant(Transform host)
+        {
+            var go = new GameObject("DumpAura");
+            if (host != null) go.transform.SetParent(host, false);
+            else go.transform.position = Vector3.zero;
+            var field = go.AddComponent<BarrageField>();
+            field._follow = host;
+            field._origin = host != null ? host.position : Vector3.zero;
+            float r = BoarderProtocol.Radius(BoarderAbilityId.Barrage);
+            field._radiusSq = r * r;
+            field._fireMul = BoarderProtocol.FireMul(BoarderAbilityId.Barrage);
+            Live.Add(field);
+            AttachDisc(go.transform);
+            return field;
+        }
+
+        /// <summary>World-point plant for net scenery that has no host transform yet.
+        /// Prefer <see cref="Plant(Transform)"/> on the caster.</summary>
         public static BarrageField Plant(Vector3 origin)
         {
-            var go = new GameObject("BarrageField");
+            var go = new GameObject("DumpAura");
             go.transform.position = origin;
             var field = go.AddComponent<BarrageField>();
+            field._follow = null;
             field._origin = origin;
             float r = BoarderProtocol.Radius(BoarderAbilityId.Barrage);
             field._radiusSq = r * r;
@@ -50,10 +72,16 @@ namespace GatekeepersProtocol.Game
             Object.Destroy(field.gameObject);
         }
 
+        void LateUpdate()
+        {
+            if (_follow != null)
+                _origin = _follow.position;
+        }
+
         static void AttachDisc(Transform parent)
         {
             var disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            disc.name = "BarrageDisc";
+            disc.name = "DumpDisc";
             disc.transform.SetParent(parent, false);
             disc.transform.localPosition = new Vector3(0f, 0.01f, 0f);
             disc.transform.localScale = new Vector3(0.2f, 0.01f, 0.2f);
@@ -63,10 +91,11 @@ namespace GatekeepersProtocol.Game
             if (ignore >= 0) disc.layer = ignore;
             var rend = disc.GetComponent<Renderer>();
             if (rend == null) return;
-            var shader = Shader.Find("Unlit/Color");
-            if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
+            var shader = Shader.Find("GKB/FxSolid");
+            if (shader == null) shader = Shader.Find("Unlit/Color");
             if (shader == null) return;
-            rend.sharedMaterial = new Material(shader) { color = new Color(1f, 0.55f, 0.15f, 1f) };
+            var mat = new Material(shader) { color = new Color(1f, 0.55f, 0.15f, 0.35f) };
+            rend.sharedMaterial = mat;
         }
 
         void OnDisable()

@@ -1,6 +1,15 @@
-<!-- Purpose: Coming Soon marker for Ship activities — the hub as a place with things to do beyond embarking (builder name: the safehouse). / Status: teaser; activities decided as a direction, none built. / in_build: true / coming_soon: true / Update trigger: replace this page when the first activity ships. / Last updated: 2026-08-24 -->
+<!--
+Purpose: Coming Soon marker for Ship activities — the hub as a place with things to do beyond embarking (builder name: the safehouse).
+Status: teaser; activities decided as a direction, none built.
+in_build: true
+coming_soon: true
+Update trigger: replace this page when the first activity ships.
+Last updated: 2026-08-31
+-->
 
 # Life Aboard — Coming Soon
+
+Meant to be things to do on the Ship that are not embarking, but none of it is built.
 
 ## Game
 
@@ -10,10 +19,22 @@ The Ship is a hub with four shops in it, and shops are not a life. What is comin
 
 None of it will ever be the efficient path. That rule is already written down. The Ship stays the exhale.
 
-## Reference
+## Details
 
-From the safehouse brainstorm: activities live on the Ship or behind a door from it; doable prior to or in lieu of core gameplay, never a prerequisite; bonuses stay small; the point is asynchronous contribution with attribution. Pay for an action, never for elapsed time. Nothing is built.
+### Structure
 
-## See also
+Not built. The Ship is a hub with four shops in it.
 
-[The Ship](The-Ship.md). [Realms](Realms.md). [The Crew](The-Crew.md).
+### Rules
+
+Not built. What is coming is things to do that are not embarking.
+
+## Additional Details
+
+### Interacts with
+
+- [The Ship](The-Ship.md) — activities would live on the hull or behind a door from it; that page owns the hull and its stations.
+- [Realms](Realms.md) — work that outlives the session would land in a world; that page owns the split and the pot.
+- [The Crew](The-Crew.md) — a board where the crew sees what everyone is bringing is a session surface; that page owns the session.
+
+Replace this page when the first activity ships. Do not edit the Coming Soon marker into a live sheet.

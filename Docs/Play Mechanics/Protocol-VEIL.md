@@ -1,8 +1,16 @@
 <!--
-Purpose: the VEIL Protocol, an instance of Protocols — differences only: PHANTOM doctrine, Ping, Cloak, Ghost.
+Purpose: the VEIL Protocol, an instance of Protocols — PHANTOM doctrine, Ping, Cloak, Ghost.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-31
+Where:
+- PHANTOM's inheritance at placement — DecoyBay.cs (ApplyPhantom, gated on State.Mode == DoctrineMode.Phantom)
+- The transfer rule and its refusals (Thief, hatch-committed, not currently chasing the player) — EnemyGatekeeper.Targeting.cs (TransferInterestTo)
+- The re-derive that limits it: the transfer's last statement is Retarget(), which zeroes the decoy target and re-runs ShouldPull against the pull radius — EnemyGatekeeper.Targeting.cs (Retarget); DecoyState.ShouldPull
+- Ping's provoke-per-body pulse and its render window — PlayerProtocolAbilities.cs (PulsePing, PingWindowOpen); markers PingMarker.ShowAll
+- The pull is the standing provoke rule, kind refusals included — EnemyGatekeeper.Targeting.cs (Provoke, CanBeProvoked)
+- Cloak sets the rig off the target registry; firing collapses it — PlayerProtocolAbilities.cs (SetCloaked, NotifyFired); PlayerHealth.Cloaked; PlayerRegistry.NearestAlive skips Cloaked
+- Ghost's acquisition bias, applied at bind and read per retarget — BoarderProtocol.GhostAcquisitionMul; PlayerProtocolAbilities.ApplyPassive; PlayerHealth.ConfigureAcquisition; EnemyGatekeeper.Targeting.cs (NoticeRangeFor, AggroRadiusFor)
 -->
 
 # VEIL Protocol
@@ -23,31 +31,51 @@ Then I go dark. Off every targeting list. Anything mid-swing finishes the swing.
 
 Standing under all of that: they notice me closer in than they otherwise would. Not silence, not stillness — just less reach on being seen. Standing still was never the requirement. It took me three Boardings to stop believing it was.
 
-## Differs
+## Details
 
-**Doctrine: PHANTOM.** A decoy the Boarder places is offered the attention that Boarder is currently carrying — at placement, every live Gatekeeper already chasing that Boarder is walked through a transfer. It is a transfer, never a creation: a Thief declines, a Gatekeeper committed to the Hatch keeps its commitment, and the payload's own live count is unchanged.
+### Structure
 
-**What the transfer buys today is an early tick, not extra reach.** The transfer writes the decoy onto the Gatekeeper and then re-runs the standing retarget on it; that method clears the decoy target it was just given and re-derives one from the ordinary pull test — inside the payload's pull radius, not a Thief, not hatch-committed. So the bodies PHANTOM leaves on the decoy are the bodies the ordinary pull would have taken on the next retarget anyway. A chaser outside the pull radius is transferred and handed straight back, while the placement line still counts and logs it as inherited.
+Four rows. Doctrine PHANTOM. Crew Ping. Personal Cloak. Passive Ghost.
 
-**Crew: Ping.** For the window, every Gatekeeper renders through walls, for every Boarder. The same burst provokes every Gatekeeper that can be provoked onto the caster — the pull is the standing provoke rule, so each kind refusal (a Thief walks on) is honoured without Ping knowing which kinds those are, and the provoked do not shout. Solo, the caster gets the render and the pull with nobody to hand the map to: a deliberate mass-provoke.
+`G` is a pulse: the crew gets the map, the caster gets the room. `H` drops the wearer off every targeting list until they fire.
 
-**Personal: Cloak.** Off every targeting list for the window — the registry the garrison picks targets from skips a cloaked Boarder outright. Gatekeepers already swinging finish the swing. Firing exits it instantly; it is the only window the gun collapses.
+### Doctrine
 
-**Passive: Ghost.** Gatekeepers notice and acquire the wearer at a reduced fraction of their normal ranges — both the sight range and the proximity radius are scaled. It applies always, moving or still, and is rewritten at bind so a protocol swap cannot leave it on the rig.
+**PHANTOM.** A decoy the Boarder places is offered the attention that Boarder is currently carrying — at placement, every live Gatekeeper already chasing that Boarder is walked through a transfer. It is a transfer, never a creation: a Thief declines, a Gatekeeper committed to the Hatch keeps its commitment, and the payload's own live count is unchanged.
 
-Windows, cooldowns, the Ghost fraction, and the ability bindings: [Field Manual](Field-Manual.md).
+What the transfer buys today is an early tick, not extra reach. After the hand-off the body re-derives its target from the ordinary pull test, so the bodies that stay on the decoy are the bodies the ordinary pull would have taken next anyway. A chaser outside the pull radius is transferred and handed straight back.
 
-## Where
+### Crew
 
-- PHANTOM's inheritance at placement, count of transfers logged — `Assets/Scripts/Game/Bastion/DecoyBay.cs` (`ApplyPhantom`, gated on `State.Mode == DoctrineMode.Phantom`)
-- The transfer rule and its refusals (Thief, hatch-committed, not currently chasing the player) — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`TransferInterestTo`)
-- The re-derive that limits it: the transfer's last statement is `Retarget()`, which zeroes `_decoyTarget` / `_chasingDecoy` and re-runs `DecoyState.ShouldPull` against the pull radius — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Retarget`, the decoy-pull block); `Assets/Scripts/Sim/Run/DecoyState.cs` (`ShouldPull`)
-- Ping's provoke-per-body pulse and its render window — `Assets/Scripts/Game/Player/PlayerProtocolAbilities.cs` (`PulsePing`, `PingWindowOpen`); markers drawn by `Assets/Scripts/Game/Enemies/PingMarker.cs` (`ShowAll`)
-- The pull is the standing provoke rule, kind refusals included — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Provoke`, `CanBeProvoked`)
-- Cloak sets the rig off the target registry; firing collapses it — `Assets/Scripts/Game/Player/PlayerProtocolAbilities.cs` (`SetCloaked`, `NotifyFired`); `Assets/Scripts/Game/Player/PlayerHealth.cs` (`Cloaked`); `Assets/Scripts/Game/Player/PlayerRegistry.cs` (`NearestAlive` skips `Cloaked`)
-- Ghost's acquisition bias, applied at bind and read per retarget — `Assets/Scripts/Sim/Meta/BoarderProtocol.cs` (`GhostAcquisitionMul`, `Magnitude`); `Assets/Scripts/Game/Player/PlayerProtocolAbilities.cs` (`ApplyPassive`); `Assets/Scripts/Game/Player/PlayerHealth.cs` (`ConfigureAcquisition`, `AcquisitionMul`); `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`NoticeRangeFor`, `AggroRadiusFor`)
+**Ping** — `G`.
 
-## Gaps
+Output: every Gatekeeper renders through walls, for every Boarder, for the window.
+
+Cost: the same burst provokes every Gatekeeper that can be provoked onto the caster. The pull is the standing provoke rule, so each kind refusal is honoured without Ping knowing which kinds those are, and the provoked do not shout. A Thief walks on. Solo, the caster gets the render and the pull with nobody to hand the map to.
+
+### Personal
+
+**Cloak** — `H`.
+
+Output: off every targeting list for the window. The garrison's target picker skips a cloaked Boarder outright. Gatekeepers already swinging finish the swing.
+
+Cost: the presser's `H`. Firing exits it instantly. It is the only window the gun collapses. A way to leave, never a way to win.
+
+### Passive
+
+**Ghost.** Gatekeepers notice and acquire the wearer at a reduced fraction of their normal ranges — both the sight range and the proximity radius. It applies always, moving or still, and is rewritten at bind so a protocol swap cannot leave it on the rig.
+
+### Rules
+
+The loop on this sheet is take the eyes, hand them to a decoy, go dark. Ping puts the room on the caster. PHANTOM offers that room to the next decoy placed. Cloak drops the caster off the list. Ghost is the standing discount on being seen, not a stealth condition.
+
+Kind refusals outrank every row: a Thief is never pulled, never handed to a decoy, never cloaked off a list it was never on.
+
+Windows, cooldowns, the Ghost fraction: [Field Manual](Field-Manual.md).
+
+## Additional Details
+
+### Gaps
 
 - Ping's pull is not distinguished on screen from its render. Players read the through-walls effect as the whole ability and are surprised by the arrival.
 - Nothing indicates you are cloaked to the garrison rather than merely unnoticed, and nothing warns that firing ends it.

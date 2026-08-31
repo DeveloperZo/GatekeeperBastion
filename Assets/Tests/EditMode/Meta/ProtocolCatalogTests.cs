@@ -16,7 +16,7 @@ namespace GatekeepersProtocol.Tests
         {
             Assert.AreEqual(3, Sold.Length);
             Assert.AreEqual(0, (int)BoarderProtocolId.None);
-            Assert.AreEqual(1, (int)BoarderProtocolId.Default);
+            Assert.AreEqual(1, (int)BoarderProtocolId.Depot);
             Assert.AreEqual(2, (int)BoarderProtocolId.Veil);
             Assert.AreEqual(3, (int)BoarderProtocolId.Forge);
             // Doctrine appends after Stock; Stock stays 0 or every placed decoy re-reads.
@@ -61,9 +61,9 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void NewProtocols_OwnAPassive_AndDefaultStillOwnsNone()
         {
-            Assert.AreEqual(0, BoarderProtocol.PassiveCount(BoarderProtocolId.Default));
+            Assert.AreEqual(0, BoarderProtocol.PassiveCount(BoarderProtocolId.Depot));
             Assert.AreEqual(BoarderAbilityId.None,
-                BoarderProtocol.PassiveAt(BoarderProtocolId.Default, 0));
+                BoarderProtocol.PassiveAt(BoarderProtocolId.Depot, 0));
 
             Assert.AreEqual(1, BoarderProtocol.PassiveCount(BoarderProtocolId.Veil));
             Assert.AreEqual(BoarderAbilityId.Ghost,
@@ -195,7 +195,7 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void DoctrineAndWindows_AreDistinctPerProtocol()
         {
-            Assert.AreEqual(DoctrineMode.Stock, BoarderProtocol.DoctrineOf(BoarderProtocolId.Default));
+            Assert.AreEqual(DoctrineMode.Stock, BoarderProtocol.DoctrineOf(BoarderProtocolId.Depot));
             Assert.AreEqual(DoctrineMode.Phantom, BoarderProtocol.DoctrineOf(BoarderProtocolId.Veil));
             Assert.AreEqual(DoctrineMode.ParallelBays, BoarderProtocol.DoctrineOf(BoarderProtocolId.Forge));
 
@@ -225,13 +225,13 @@ namespace GatekeepersProtocol.Tests
             }
         }
 
-        /// <summary>Only Default's rows multiply fire rate. A Cloak or Redeploy window opens
-        /// the same slot Rush does and must buy nothing at the gun.</summary>
+        /// <summary>Only Dump (Barrage id) multiplies fire rate on Depot. Feed regenerates
+        /// clip instead. Cloak / Field Deploy / etc. buy nothing at the gun.</summary>
         [Test]
         public void FireMultipliersBelongToDefaultAlone()
         {
             Assert.AreEqual(2f, BoarderProtocol.FireMul(BoarderAbilityId.Barrage), 1e-5f);
-            Assert.AreEqual(1.5f, BoarderProtocol.FireMul(BoarderAbilityId.Rush), 1e-5f);
+            Assert.AreEqual(1f, BoarderProtocol.FireMul(BoarderAbilityId.Rush), 1e-5f);
             foreach (var ability in new[]
             {
                 BoarderAbilityId.Ping, BoarderAbilityId.Cloak,

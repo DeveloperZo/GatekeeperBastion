@@ -1,10 +1,13 @@
 <!--
-Purpose: Coming Soon marker for the AEGIS Protocol, an instance of Protocols — differences only.
+Purpose: Coming Soon marker for the AEGIS Protocol, an instance of Protocols.
 Status: teaser; the sheet is designed and not yet claimable.
 in_build: true
 coming_soon: true
 Update trigger: replace this page when AEGIS ships.
-Last updated: 2026-08-29
+Last updated: 2026-08-31
+Where:
+- Not in the catalog this build sells — BoarderProtocol.cs (BoarderProtocolId ends at Forge; Shop deals Default, Veil, Forge)
+- The only AEGIS in the build is a display string: a Coming Soon row padding the CREW QUARTERS catalog, whose sheet is the stub and whose claim callback is null — CrewQuartersStation.cs (StubAegis, ComingSoonNames, BuildCatalogMode, the stub branch of BuildSheetMode)
 -->
 
 # AEGIS — Coming Soon
@@ -21,11 +24,32 @@ There is a fourth answer to what the room should look at, and it is the ground i
 
 Not on the panel yet. When it is claimable, this page will earn its ink.
 
-## Differs
+## Details
 
-AEGIS is the holding-ground identity — the sheet whose answer to "what is this room looking at" is the ground the Boarder refuses to give, with behaviour undecided where the brainstorm says so. Designed, not built — the design is recorded in `../Brainstorms/boarder-protocols.md`. What exists in the build is a display row that binds no claim control, so it is not claimable by any path, and no behaviour of any kind carries the name.
+### Structure
 
-## Where
+The same four rows as every other sheet. None of them are filled in the build. CREW QUARTERS shows a Coming Soon row that opens a stub and never a claim.
 
-- Not in the catalog this build sells — `Assets/Scripts/Sim/Meta/BoarderProtocol.cs` (`BoarderProtocolId` ends at `Forge`; the `Shop` array deals Default, Veil, Forge and no more, so `IsCatalogued`, `DoctrineOf`, `CrewAbilityOf`, `PersonalAbilityOf` and `PassiveAt` have no arm for it, and `ValidateEquip` would sanitise an id that is not on that list back to `None`)
-- The only AEGIS in the build is a display string: a Coming Soon row padding the CREW QUARTERS catalog, whose sheet is the stub and whose claim callback is null — `Assets/Scripts/Game/Ship/CrewQuartersStation.cs` (`StubAegis`, `ComingSoonNames`, `BuildCatalogMode`, the stub branch of `BuildSheetMode`)
+### Doctrine
+
+Not built. The design is recorded in `../Brainstorms/boarder-protocols.md`.
+
+### Crew
+
+Not built. Nothing binds to `G` under this name.
+
+### Personal
+
+Not built. Nothing binds to `H` under this name.
+
+### Passive
+
+Not built.
+
+### Rules
+
+Designed, not built — the holding-ground identity, with behaviour undecided where the brainstorm says so. No behaviour of any kind carries the name.
+
+## Additional Details
+
+Replace this page when the sheet ships. Do not edit the Coming Soon marker into a live sheet.

@@ -180,7 +180,7 @@ Between runs you walk your own ship. Four consoles, each owning one subject.
 | Console | Owns | Sells |
 |---|---|---|
 | **ARMORY** | the weapon in your hands | weapons, and wheel purchases for whichever you carry |
-| **CREW QUARTERS** | you | Default Protocol (STOCK; G Barrage; H Rush), VEIL Protocol (PHANTOM; G Ping; H Cloak; Ghost), FORGE Protocol (PARALLEL BAYS; G Field Deploy; H Outrider) |
+| **CREW QUARTERS** | you | DEPOT Protocol (STOCK; G Dump; H Feed), VEIL Protocol (PHANTOM; G Ping; H Cloak; Ghost), FORGE Protocol (PARALLEL BAYS; G Field Deploy; H Outrider) |
 | **FABRICATION** | the ship | Hatch Armor, Equipment slot, Repair Rig, Decoy |
 | **NAV MAP** | where you go | the destination, and embarking |
 
@@ -194,7 +194,7 @@ Hatch Armor runs 0–5 at +5% a level, costing 200 × 2^level — 200 / 400 / 80
 | Decoy — Drone payload | 3 charges | 250 salvage |
 
 Crit chance is frozen at 0. There is no Luck shop. Protocols are CREW claims:
-Default Protocol, VEIL Protocol, FORGE Protocol share one panel, Default at 0 salvage. AEGIS and LEDGER are not sold.
+DEPOT Protocol, VEIL Protocol, FORGE Protocol share one panel, DEPOT at 0 salvage. AEGIS and LEDGER are not sold.
 
 Weapon wheel purchases and the equipment slot unlock once this realm has earned any Salvage.
 

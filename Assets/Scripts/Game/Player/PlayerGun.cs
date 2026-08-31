@@ -73,6 +73,7 @@ namespace GatekeepersProtocol.Game
         readonly RaycastHit[] _pierceHits = new RaycastHit[32];
         readonly List<Damageable> _pierceScratch = new List<Damageable>(8);
         float _secondaryRegenAcc;
+        float _feedRegenAcc;
 
         /// <summary>Bodies the next shot pierces at full damage while Railshot is armed. 0 = idle.</summary>
         int _railshotPierceBodies;
@@ -387,6 +388,35 @@ namespace GatekeepersProtocol.Game
             int gained = s.clipRemaining - before;
             if (gained > 0 && mult > 1.01f && _ability != null)
                 _ability.CreditRegenRound(gained * (mult - 1f) / mult);
+        }
+
+        /// <summary>Depot Feed: restore clip while the Feed toggle window is open. Rate is a
+        /// fraction of <see cref="EffectiveFireRate"/> so it cannot outpace spending. Skips
+        /// during a reload that owns the magazine.</summary>
+        public void TickFeedRegen(float dt)
+        {
+            if (_activeSlot == WeaponSlot.Drone) return;
+            ref var s = ref _slots[(int)_activeSlot];
+            if (!s.configured || s.id == WeaponId.None) return;
+            if (s.reloadTimer > 0f) return;
+
+            int cap = MagazineCapacity;
+            if (s.clipRemaining >= cap)
+            {
+                _feedRegenAcc = 0f;
+                return;
+            }
+
+            float rate = BoarderProtocol.FeedRegenPerSecond(EffectiveFireRate);
+            if (rate <= 0f) return;
+
+            _feedRegenAcc += rate * dt;
+            while (_feedRegenAcc >= 1f && s.clipRemaining < cap)
+            {
+                _feedRegenAcc -= 1f;
+                s.clipRemaining++;
+            }
+            if (s.clipRemaining >= cap) _feedRegenAcc = 0f;
         }
 
         public bool TryFire()

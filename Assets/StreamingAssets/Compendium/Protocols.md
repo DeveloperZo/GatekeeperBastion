@@ -1,4 +1,26 @@
+<!--
+Purpose: Current representation of Boarder Protocols as they are in the build — the mechanic page; instances fill the four-row sheet.
+Status: working
+Update trigger: any milestone that touches this mechanic, in the same change.
+Last updated: 2026-08-31 (DEPOT Protocol — enum Depot)
+Where:
+- Protocol ids, doctrine/crew/personal/passive mapping, windows, cooldowns, and the 0-cost claim — Assets/Scripts/Sim/Meta/BoarderProtocol.cs (BoarderProtocolId, DoctrineOf, CrewAbilityOf, PersonalAbilityOf, PassiveAt, Window, Cooldown, TryClaim)
+- The offer rule: it stands only while no protocol is worn, deals in catalog order and never deals the held one — Assets/Scripts/Sim/Meta/ProtocolOffer.cs (IsPickPending, Deal, RefuseReason, CardCount)
+- Deck mode versus catalog mode, and the two unbuilt sheets padding the catalog as Coming Soon rows — Assets/Scripts/Game/Ship/CrewQuartersStation.cs (DeckAvailable, BuildPickMode, BuildCatalogMode, BuildSheetMode, ComingSoonNames)
+- Authored sheet copy, one row set per protocol — Assets/Scripts/Sim/Meta/BoarderSheets.cs
+- Claim command and its save — Assets/Scripts/Game/Ship/ShipCommands.cs (BuyProtocol); Ship-only passive re-pick (PickPassive)
+- Equipped pair persists on the traveling half of the save — Assets/Scripts/Sim/Meta/BoarderState.cs (EquippedProtocol, EquippedPassive); sanitised by BoarderProtocol.ValidateEquip
+- G/H input, both windows and cooldowns, no-protocol refusals — Assets/Scripts/Game/Player/PlayerProtocolAbilities.cs (OnCrew, OnPersonal, Tick); bindings Controls.cs (ControlId.CrewAbility = G, ControlId.PersonalAbility = H)
+- Embark binds the equipped pair onto the rig — Assets/Scripts/Game/Bastion/GameController.Client.cs (proto.Bind)
+- NAV MAP warns EMBARK — no protocol and still embarks — Assets/Scripts/Game/Ship/MapStation.cs (PromptHint)
+- Doctrine written at decoy placement, from the placer's equipped protocol — Assets/Scripts/Game/Bastion/DecoyBay.cs (PlaceMode, TryPlace); Assets/Scripts/Sim/Run/DecoyState.cs (TryPlace)
+- Fire multipliers compose as one self source times one capped zone source onto the gun — Assets/Scripts/Game/Player/PlayerGun.Slots.cs; BoarderProtocol.ComposeFireMul
+- HUD overlay fill — BoarderProtocol.OverlayFill, drawn by Assets/Scripts/Game/Ui/ProtocolAbilityBarView.cs
+-->
+
 # Protocols
+
+A protocol is the identity a Boarder embarks wearing, claimed at CREW QUARTERS on the Ship and fixed for the whole Boarding. A claim costs nothing and is never lost to a bad Boarding, but only one is worn at a time and it cannot be swapped aboard the Bastion. In the fight it gives the Boarder two keys: a burst whose effect lands on the crew and whose cost lands on the caster, and a burst for the caster alone. The sheets differ in the four rows each one answers, and two of the named sheets are designed but not yet sold.
 
 ## Game
 
@@ -6,52 +28,76 @@ A protocol is the identity I embark wearing, and it is the only thing on the Shi
 
 Every sheet answers the same four rows, in the same order. A doctrine, always on, changing what my hardware does in my hands without changing what the hardware is. A crew burst, whose output belongs to whoever is near and whose cost belongs to me. A personal burst, mine alone. And a passive, where the sheet has one.
 
-The plainest sheet costs nothing, same as the free Secondary, and for the same reason: the claiming is the lesson. Two more are claimable beside it, and the roster is not finished — two further sheets are named and not yet sold.
+The plainest sheet is **DEPOT**. It costs nothing, same as the free Secondary, and for the same reason: the claiming is the lesson. Two more are claimable beside it, and the roster is not finished — two further sheets are named and not yet sold.
 
 One protocol at a time, fixed the moment I embark. The bursts refuse if I embarked wearing nothing, and the NAV MAP will let me do exactly that.
 
 The sheets are not tiers. They are different answers to one question: what do I want this room looking at.
 
-## Reference
+## Details
 
-A **Boarder Protocol** is the class purchase, claimed at **CREW QUARTERS** and worn for the whole Boarding. One at a time. Swapping is a Ship action; nothing changes it aboard the Bastion.
+### Structure
 
-### The four rows
+Every sheet is four rows. The rows are the mechanic. The instances only fill them.
 
-Every protocol answers all four. An empty row on a sheet is the panel reading as broken.
+- **Crew ability** — a burst whose output lands on the crew and whose cost lands on the caster. Key `G`.
+- **Personal ability** — a burst on the presser alone. Key `H`.
+- **Doctrine** — written onto every decoy at the moment of placement. Placement, not repair. It changes what the hardware already in the Boarder's hands does, without changing what the hardware is.
+- **Passive** — where the sheet has one, configured onto the rig at bind and read by the garrison's target selection. Always on. Nothing to press.
 
-- **Doctrine.** Always on, never bought separately. It changes what the FABRICATION hardware does in your hands. It never changes what the hardware costs or what it is.
-- **Crew ability**, on the same binding for every protocol. The output belongs to the crew; the cost belongs to the caster. Solo, the crew degrades to you and the Hatch: the output shrinks, the cost does not.
-- **Personal ability**, on its own binding. It acts on the Boarder pressing the key.
-- **Passive.** A standing rule, never a number. Not every sheet has one.
+Wearing nothing, both keys refuse. The NAV MAP warns and embarks anyway.
 
-Bindings and every window, radius and multiplier: [Field Manual](Field-Manual.md).
+### Rules
 
-### Claiming one
+Claim at CREW QUARTERS. While none is worn the station deals a pick deck; after that a swap is a catalog claim, still costing nothing. Two named sheets pad that list as Coming Soon and cannot be claimed. Claiming equips it — a sheet that owns a passive arrives wearing its first — and is refused mid-Boarding, so swapping is a Ship action.
 
-Default costs nothing and is claimable from the first minute of a fresh campaign, for the same reason the first Secondary is sold rather than given. VEIL and FORGE are on the same panel. Nothing about protocols is gated behind the first Hatch conversion; weapon Tiers and the equipment slot are.
+One protocol at a time. Embark binds the equipped protocol and passive onto the rig for the whole Boarding.
 
-The NAV MAP warns if you own no protocol and then lets you embark anyway. With none worn, both ability bindings refuse.
+Solo, the crew half degrades: the output shrinks to the caster (and their hardware), the cost does not.
 
-### The three sheets
+What a protocol never moves: health, sprint, Salvage per kill, crit, or any weapon's own numbers. Fire-rate bursts compose onto whatever gun is in hand as one self source times one zone source, capped. That is the entire overlap with the ARMORY.
 
-| | Doctrine | Crew | Personal | Passive |
-|---|---|---|---|---|
-| [Default](Protocol-Default.md) | STOCK: decoys place as sold | Barrage: plant, rooted, you and nearby Boarders fire faster | Rush: your gun only, you still move | none |
-| [VEIL](Protocol-VEIL.md) | PHANTOM: a placed decoy holds the attention you are carrying | Ping: the room marks Gatekeepers for the crew and pulls Defaults and Hunters onto you | Cloak: off targeting lists until you fire | Ghost: they notice you closer in |
-| [FORGE](Protocol-FORGE.md) | PARALLEL BAYS: two decoys may stand live (not yet active) | Field Deploy: stand a turret where you look | Outrider: follower with hold-EMP | TODO: unfilled |
+Kind refusals outrank every protocol effect. A Thief is never pulled, never provoked, never handed to a decoy.
 
-Read the column that matters: **who the room is looking at.** Default does not change it and buys output instead. VEIL moves attention onto you on purpose and then takes you off the list. FORGE puts a machine in the room for the garrison to look at.
+Windows, cooldowns, radii and multipliers: [Field Manual](Field-Manual.md). Each instance page names the four rows that sheet fills.
 
-Two more sheets are designed and not yet claimable — [AEGIS](Protocol-AEGIS.md) and [LEDGER](Protocol-LEDGER.md), both marked Coming Soon.
+## Additional Details
 
-### What a protocol does not do
+### Consequences
 
-- It does not change health, sprint, Salvage per kill or crit chance. There are no attribute tracks at CREW QUARTERS; those were refunded and deleted.
-- It does not change any weapon's damage, clip, cadence, reach, spread or pierce. That is the ARMORY's wheel, per weapon.
-- It does not repair the Hatch. That is the Repair Rig at FABRICATION.
-- It is not lost when a Boarding ends badly. A claim is permanent.
+A protocol changes what the room is looking at, and what pressing one of two keys buys in the next few seconds — a plant, a pull, a machine, a disappearance. The choice is made on the Ship and cannot be revisited aboard, so it is a Prep-of-Preps decision the whole Boarding answers for.
 
-## See also
+A claim spends nothing and is never lost to a bad Boarding.
 
-[Default](Protocol-Default.md). [VEIL](Protocol-VEIL.md). [FORGE](Protocol-FORGE.md). [AEGIS](Protocol-AEGIS.md). [LEDGER](Protocol-LEDGER.md). [Upgrades](Upgrades.md). [The Ship](The-Ship.md).
+Removal test: without protocols there is no `G`/`H`, no doctrine layer on the decoy, and no passive rule — every decision about where to stand for a burst, when to hand attention away, and what the garrison targets first disappears. Different game; the entry stands.
+
+### Classification
+
+Primary, loop. Serves Expression and Fellowship (`../Design/1-Experience.md` §1.2, 2026-08-16 rank stamp), with Challenge as the vehicle. Expression is rank 2 and Fellowship rank 1; the crew half of every sheet exists for a crew.
+
+### Interacts with
+
+- [The Drone](The-Drone.md) — doctrine is written onto the decoy at placement; that page owns the bay, its charges and its live count.
+- [Gatekeepers](Gatekeepers.md) — every kind refusal outranks every protocol effect; that page owns targeting.
+- [Weapons](Weapons.md) — the bursts multiply the equipped gun's fire rate and never touch its damage, clip or spread; that page owns the guns and the upgrade wheel.
+- [The Crew](The-Crew.md) — the Crew ability's output belongs to whoever is near; that page owns the session.
+- [The Ship](The-Ship.md) — claiming and swapping are Ship actions; that page owns the hull and its stations.
+
+### Instances
+
+Instances vary on the four rows: doctrine, Crew ability, Personal ability, Passive. No instance may vary the bindings (`G`/`H` for every sheet), the one-protocol-at-a-time rule, the caster-pays cost shape, or any weapon's own numbers — those are rules (`../Design/3-Mechanics.md` §3.1).
+
+| Instance | Differs in | State | Page |
+|---|---|---|---|
+| DEPOT | STOCK doctrine; Dump crew fire-rate + heavy slow (aura follows caster); Feed toggle ammo regen; no passive. Save id `Depot` (1). | in build | [DEPOT Protocol](Protocol-DEPOT.md) |
+| VEIL | take the eyes (through-walls + pull onto the caster), hand them to a PHANTOM decoy, go dark; Ghost shortens notice | in build | [VEIL Protocol](Protocol-VEIL.md) |
+| FORGE | crew turret with charge-spent Overcharge, personal Outrider with EMP, proximity-gated pairing, passive ** CLASSIFIED ** | in build | [FORGE Protocol](Protocol-FORGE.md) |
+| AEGIS | the holding-ground identity — designed, not built | Coming Soon | [AEGIS — Coming Soon](Protocol-AEGIS.md) |
+| LEDGER | the salvage-as-position identity — designed, not built | Coming Soon | [LEDGER — Coming Soon](Protocol-LEDGER.md) |
+
+### Gaps
+
+- Fight HUD names the sheet top-left. The doctrine layer is still invisible: a decoy placed under PHANTOM and one placed under STOCK look identical.
+- Embarking with no protocol is allowed and both bindings then refuse silently in play; the warning is only on the NAV MAP.
+- Nothing explains that the Crew ability's cost lands on the caster alone. Solo players read the crew half as missing rather than degraded.
+- The AEGIS and LEDGER sheets exist in the design and are not sold. Nothing on the panel indicates the roster is unfinished.

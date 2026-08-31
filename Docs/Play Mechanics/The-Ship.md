@@ -1,6 +1,20 @@
-<!-- Purpose: the hub between Boardings — what each console owns, how to use one, and what to buy first. / Status: working / Update trigger: when a station is added, removed, changes what it sells, or moves along the hull. / Last updated: 2026-08-30 (lock is lifetime Salvage earned, not Convert) -->
+<!--
+Purpose: Current representation of the Ship as it is in the build — the hub between Boardings, what each console owns, and how a visit works.
+Status: working
+Update trigger: when a station is added, removed, changes what it sells, or moves along the hull.
+Last updated: 2026-08-31
+Where:
+- Station open on Interact Down against the console under the ray — Assets/Scripts/Game/Ship/ShipController.cs (Update Interact Down, ResolveTargetedStation, TryOpenStationFromInteract, ApplyWalkMode); Assets/Scripts/Game/Ship/StationTerminal.cs (Interact, Prompt)
+- ARMORY buy and equip — Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs (BuyWeapon, EquipWeapon, BuyWheelUpgrade)
+- CREW QUARTERS claim — Assets/Scripts/Game/Ship/CrewQuartersStation.cs; Assets/Scripts/Game/Ship/ShipCommands.cs (BuyProtocol)
+- FABRICATION rows and the opening gate — Assets/Scripts/Game/Ship/EngineeringStation.cs; Assets/Scripts/Game/Ship/DemoStationGate.cs
+- NAV MAP embark, start-Wave selector, FOLLOW/RESPAWN wait — Assets/Scripts/Game/Ship/MapStation.cs
+- Tiers and equipment wait on lifetime Salvage earned — Assets/Scripts/Sim/Meta/MetaUpgrades.cs (UpgradesUnlocked)
+-->
 
 # The Ship
+
+Between Boardings the Boarder stands on their own Ship, first person, hands empty until they buy a weapon. This is the only place Salvage is spent and the only way back to the Bastion. Four consoles, four subjects: weapons at the ARMORY, the protocol at CREW QUARTERS, the Hatch and its kit at FABRICATION, where to go and EMBARK at the NAV MAP. Weapon Tiers and the equipment slot wait until the realm has earned any Salvage; FABRICATION itself stays shut until the opening ends.
 
 ## Game
 
@@ -18,58 +32,61 @@ Weapon Tiers and the equipment slot stay shut until this realm has earned any Sa
 
 The NAV MAP will warn me if I own no weapon and no protocol, and then let me go anyway. It is willing to watch me make a bad bet. Everything on this Ship is.
 
-## Reference
+## Details
 
-Between Boardings you are stood in your own ship, in first person. Hands are empty until you buy a weapon at the ARMORY. You cannot fire here either way. This is the only place Salvage gets spent, and the only way back to the Bastion.
+### Structure
 
-The hull is a single deck of a long, narrow vessel — about 60 m stern to bow, 20 m across amidships and half that at either end. Bow is the direction the NAV MAP faces. You spawn forward and to port; the NAV MAP is ahead of you on the bow bulkhead, on the same side. The three hatch doors are spaced down the starboard hull, one forward, one amidships, one aft. CREW QUARTERS is to starboard, level with where you spawn, but the ARMORY and FABRICATION are both at the stern end — ARMORY to starboard, FABRICATION to port — so a weapon or a Hatch upgrade is a walk the length of the ship and back. That traverse is geometry and nothing else: no loading screen, no trigger to step into.
+Four consoles, each owning one subject. Nothing is sold in two places.
 
-You walk. You look at a console until the prompt appears at the bottom of the screen, you hold interact, and a panel opens: your movement locks, the cursor comes free, and the panel owns the screen until you close it. One panel at a time. Close it and you are walking again. Binding: [Field Manual](Field-Manual.md).
+- **ARMORY** — the weapon in the Boarder's hands: weapons, and the upgrade wheel for a weapon already owned. The only place that decides which owned weapon fills Primary and which fills Secondary.
+- **CREW QUARTERS** — the protocol worn at embark.
+- **FABRICATION** — Hatch Armor, the equipment slot, the Repair Rig, and the Decoy.
+- **NAV MAP** — where to go, and going there.
 
-Every panel, whichever console it belongs to, shows your banked Salvage at the top. A row you cannot afford does not grey out — it tells you exactly how much more you need. That is deliberate: buying something you cannot pay for is not a silent refusal.
+One deck, long and narrow, stern to bow. Spawn forward and to port; the NAV MAP ahead on the bow bulkhead, same side. Three hatch doors spaced down the starboard hull. CREW QUARTERS to starboard, level with spawn. ARMORY and FABRICATION at the stern — ARMORY starboard, FABRICATION port — so a weapon or a Hatch buy is a walk the length of the ship and back. That traverse is geometry: no loading screen, no trigger to step into.
 
-Each console carries its own name on a label that stands in the air beside it and turns to face you from across the room. That is the whole of the wayfinding — the corners of the screen carry your profile, your record and your loadout, and nothing that points anywhere. If you are lost, look for a name, not a heading.
+### Stations
 
-### What each console is for
+**ARMORY.** Buying a weapon equips it into its own slot at once. Upgrades are per weapon, so Salvage poured into one gun stays in that gun — a different Primary starts its wheel at nothing. In the Bastion the weapon keys only swap the slots already carried, never between things owned.
 
-Each console owns exactly one subject. Nothing is sold in two places.
+**CREW QUARTERS.** Claim Default at no cost, or claim VEIL or FORGE. AEGIS and LEDGER are not sold. Repairing the Hatch is not here.
 
-**ARMORY — the weapon in your hands.** Weapons, and the upgrade wheel for a weapon you already own. This is also the only place you decide which owned weapon fills your Primary slot and which fills your Secondary; in the Bastion the weapon keys only swap between the slots you are already carrying, never between things you own. Buying a weapon equips it into its own slot straight away. Upgrades are bought per weapon, so Salvage poured into one gun stays in that gun — buy a different Primary and its upgrade wheel starts at nothing.
+**FABRICATION.** What it buys applies from the next embark, not retroactively. The console stays shut until the opening ends.
 
-**CREW QUARTERS — you.** The protocol you embark wearing: doctrine, Crew ability on
-`G`, Personal on `H`, and a passive where the sheet has one. Claim Default at cost 0,
-or claim **VEIL** or **FORGE**. AEGIS and LEDGER are not sold. Repairing the Hatch
-is not here; that is the Repair Rig at FABRICATION.
+**NAV MAP.** One destination. A selector for which Wave to start on, capped by the higher of deepest Wave entered and deepest Wave cleared. EMBARK is the point of no return: once the Bastion loads, the only exits are clearing it and losing. On a friends session only the party lead's EMBARK commits the party. While the party fights without you — arrived late, or dead — the NAV MAP is the wait surface: FOLLOW at the next break, or a priced RESPAWN ([Going Down](Going-Down.md)).
 
-**FABRICATION — the Hatch.** How much the door can take before it falls, plus the equipment slot, the Repair Rig, and the Decoy that fills the Drone bay. What it buys applies from your next embark onward, not retroactively.
+The start-Wave selector does not skip. Starting deeper delivers every Wave up to that point back to back, with no Prep in between, and then the Boarding continues to the end. The overlap is the price.
 
-**NAV MAP — where you go, and going there.** One destination. A selector for which Wave you start on, capped by the higher of deepest Wave entered and deepest Wave cleared. And the EMBARK button, which is the point of no return: once the Bastion loads, the only exits are clearing it and losing. On a friends session only the party lead's EMBARK commits the party. While the party fights without you — arrived late, or dead — the NAV MAP is also the wait surface: FOLLOW at the next break, or a priced RESPAWN ([Going Down](Going-Down.md)).
+The NAV MAP warns if you own no weapon or no protocol, then lets you go. No weapon is the improvised cutter. No protocol means `G` and `H` refuse.
 
-### The start-Wave selector
+### Rules
 
-The NAV MAP will let you begin partway in. It does not skip anything — starting deeper delivers every Wave up to that point back to back, with no Prep in between, and then the Boarding continues normally to the end. You get the same Boarding with the early half compressed into one shapeless fight. It is a way to stop replaying Wave one, not a shortcut, and the overlap is the price.
+Walk. Look at a console until the prompt appears, interact, and a panel opens: movement locks, the cursor comes free, and the panel owns the screen until you close it. One panel at a time. Close it and you are walking again. Binding: [Field Manual](Field-Manual.md).
 
-### Embarking with nothing
+Every panel shows banked Salvage at the top. A row you cannot afford names how much more you need.
 
-The NAV MAP will warn you loudly if you own no weapon or no protocol and then let you go anyway. You are not blocked. No weapon means the improvised cutter. No protocol means `G` and `H` refuse. The game is willing to let you make a bad bet; that is consistent with everything else in it.
+Each console carries its name on a label in the air beside it that turns to face you. That is the whole of the wayfinding — the corners of the screen carry profile, record and loadout, and nothing that points anywhere.
 
-### What to buy first
+Weapon Tiers and the equipment slot stay locked until this realm has earned any Salvage. A protocol claim never waits. Hatch Armor waits until the opening ends, because FABRICATION is shut until then.
 
-**The free sidearm at the ARMORY, before anything.** It costs nothing, and the only reason it is sold rather than given is so that the first thing you learn is that weapons come from that console.
+First visit: the free Secondary at the ARMORY, then a protocol at CREW QUARTERS, then look at the other two. Save a Primary until you know which fight you want — it is fixed for the whole Boarding, and its wheel does not follow you to the next gun.
 
-**Then CREW QUARTERS.** Claim Default — it costs nothing, same reason the sidearm is
-sold rather than given. Weapon upgrades and the equipment slot are locked until this
-realm has earned any Salvage. Hatch Armor at FABRICATION waits until the opening ends.
+## Additional Details
 
-**Then whatever killed you.** If the Hatch fell while you were still standing, that is FABRICATION and not you at all.
+### Classification
 
-**Save the big weapon purchase for when you know which fight you want.** A Primary is fixed for the whole Boarding, and its upgrade wheel does not follow you to the next gun. Buying one is committing to a range and a cadence, not just spending money.
+Core, loop. Removing the hub removes the only place Salvage is spent and the only way back to the Bastion.
 
-## See also
+### Interacts with
 
-[Upgrades](Upgrades.md). [Protocols](Protocols.md). [Weapons](Weapons.md). [Realms](Realms.md). [A Boarding](A-Boarding.md). [The Hatch](The-Hatch.md).
+- [Upgrades](Upgrades.md) — Hatch Armor, the equipment slot, the Repair Rig and the Decoy are FABRICATION rows; that page owns those purchases.
+- [Protocols](Protocols.md) — claiming is a Ship action; that page owns the sheets.
+- [Weapons](Weapons.md) — the ARMORY sells the guns and their wheels; that page owns the guns.
+- [Realms](Realms.md) — every spend here debits the realm's pot; that page owns the split and the pot.
+- [A Boarding](A-Boarding.md) — EMBARK is the point of no return onto that page's loop; that page owns the Boarding.
+- [The Hatch](The-Hatch.md) — Hatch Armor bought here sizes the door; that page owns the door.
 
-## Gaps
+### Gaps
 
 - Nothing anywhere lays out which purchases wait on the first Salvage earned and which wait on the opening ending. There is no one place that shows you the split, and the ARMORY's LOCKED row reads as though dying were what opens it.
 - FABRICATION sells the Decoy into the Drone bay. The slot still looks like a third gun until you own one.
@@ -77,5 +94,3 @@ realm has earned any Salvage. Hatch Armor at FABRICATION waits until the opening
 - Repairing needs the Repair Rig equipped, and nothing on the Hatch or in the fight says so until you try to repair and nothing happens.
 - An older weapon exists in the code and can still sit in an old save. It is not sold, cannot be equipped, and will not reach your hands.
 - If a developer command has been used in a play session, nothing saves for the rest of that session. The hub gives you no visible sign — everything looks bought, and none of it is there next time.
-
-*Numbers, costs and keys: [Field Manual](Field-Manual.md).*

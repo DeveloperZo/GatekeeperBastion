@@ -18,7 +18,7 @@ namespace GatekeepersProtocol.Tests
             b.SetEquipped(WeaponId.Mk1Sidearm);
             b.AwardWheel(WeaponId.Br12Shotgun, WheelAttr.Damage);
             b.AwardWheel(WeaponId.Br12Shotgun, WheelAttr.Clip);
-            b.EquippedProtocol = BoarderProtocolId.Default;
+            b.EquippedProtocol = BoarderProtocolId.Depot;
             b.EquipmentSlotPurchased = true;
             b.SetEquipmentOwned(EquipmentId.RepairRig, true);
             b.SetEquippedEquipment(EquipmentId.RepairRig);
@@ -49,7 +49,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(back.Owns(WeaponId.Br12Shotgun));
             Assert.AreEqual(WeaponId.Br12Shotgun, back.EquippedPrimary);
             Assert.AreEqual(WeaponId.Mk1Sidearm, back.EquippedSecondary);
-            Assert.AreEqual(BoarderProtocolId.Default, back.EquippedProtocol);
+            Assert.AreEqual(BoarderProtocolId.Depot, back.EquippedProtocol);
             Assert.IsTrue(back.EquipmentSlotPurchased);
             Assert.IsTrue(back.OwnsEquipment(EquipmentId.RepairRig));
             Assert.Greater(WeaponWheel.TotalPoints(back.PointsOf(WeaponId.Br12Shotgun)), 0,
@@ -96,7 +96,7 @@ namespace GatekeepersProtocol.Tests
 
             Assert.IsTrue(session.Owns(WeaponId.Br12Shotgun), "the weapon came with the player");
             Assert.AreEqual(WeaponId.Br12Shotgun, session.EquippedPrimary);
-            Assert.AreEqual(BoarderProtocolId.Default, session.EquippedProtocol);
+            Assert.AreEqual(BoarderProtocolId.Depot, session.EquippedProtocol);
             Assert.Greater(WeaponWheel.TotalPoints(session.PointsOf(WeaponId.Br12Shotgun)), 0);
         }
 

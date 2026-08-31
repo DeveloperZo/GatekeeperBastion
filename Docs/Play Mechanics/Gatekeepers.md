@@ -2,7 +2,20 @@
 Purpose: Current representation of Gatekeepers — garrison-invoked targeting — as it is in the build: the mechanic page; the kinds are its instances.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-30
+Last updated: 2026-08-31
+Where:
+- The kind seam: three targeting virtuals, one refusal each — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`MayTargetHatch` / `MayTargetPlayer` / `CanBeProvoked`)
+- Provoke-on-damage, permanent for life — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`OnDamaged` → `Provoke`; the `_provoked` latch never clears)
+- The shout pulls one group, not a relay — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Provoke`'s alertRadius loop over the spawner's live ledger; joiners called with `shout: false`)
+- Gaze-noticing provokes at range; proximity is transient — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`CanSeePlayer`; `Retarget`'s sight-provoke call, guarded by `!playerNear`; `Retarget` re-derives `playerNear` every tick and passes it to `ChasesPlayer` instead of latching it)
+- Sight-provoke suppressed on faucet field Waves — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`faucetField` guard in `Retarget`); `Assets/Scripts/Sim/Run/RunSim.Faucet.cs` (`FaucetHatchHunt`)
+- The Hatch is targetable on both Wave modes; commit latches inside the radius — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Retarget`, 2026-08-27 note; `_committedToHatch`, `hatchCommitRadius`); shove/pin do not clear it — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Shove`, `Pin`, `IsCommittedToHatch`)
+- Root holds position without cancelling an in-reach swing — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Root`, `IsRooted`); the close/swing split — `Assets/Scripts/Sim/Run/GatekeeperRoot.cs` (`MayAdvance`, `MaySwing`)
+- The Cloaker watch, pure half (cone, range, Schmitt band) — `Assets/Scripts/Sim/Waves/CloakerWatch.cs` (`Watched`); state and line-of-sight half — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`AnyoneWatching`)
+- Groups enter whole at one spawn point, weighted rotation, ringed slots — `Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs` (`EmitGroup`, `GroupSlot`); `Assets/Scripts/Game/Enemies/WaveSpawner.cs` (`PickSpawnPoint`, once per group); `Assets/Scripts/Game/Enemies/SpawnPoint.cs` (`All`, `Weight`)
+- One swing clock, pushed onto every kind — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`GatekeeperAttackInterval`; `StatsFor` writes it first, before any kind branch); `Assets/Scripts/Sim/Waves/GatekeeperStats.cs` (`attackInterval`)
+- Refusals pushed from the sim at spawn, hardened per kind — `Assets/Scripts/Sim/Waves/GatekeeperStats.cs` (`ignoresHatch` / `ignoresPlayer`); `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Configure`)
+- Kind identity — `Assets/Scripts/Sim/Waves/GatekeeperKind.cs` (`GatekeeperKind`)
 -->
 
 # Gatekeepers
@@ -29,21 +42,51 @@ That is the entire garrison that walks today. Nothing shoots. Nothing heals. Not
 
 And the rooms they walk out of do not open for me, which I think about more than I should.
 
-## The interaction
+## Details
 
-The garrison invokes this one, not a Boarder seat — it is the entry the definition's agent clause names. Every Gatekeeper runs one shared targeting rule against the Boarding's state, and a kind is exactly the set of three questions it answers differently: may it target the Hatch, may it target a player, can it be provoked (`Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` is that seam).
+### Structure
 
-- **Targeting.** Each body re-derives its target on a fixed tick: the Hatch, when its kind allows one and the Hatch stands, or the nearest live Boarder. The Hatch is targetable on both Wave modes (Zo, 2026-08-27 — field Waves no longer remove it, which had forced every body onto the player unconditionally); what differs between modes is where the player is standing. Inside the commit radius a Hatch-seeker latches onto the Hatch and holds that latch for as long as the Hatch is still a target for it — shooting it, standing beside it, shoving and pinning it do not clear it; only the Hatch leaving that body's world does.
-- **Provoke-on-damage.** Being shot flips a provokable Gatekeeper onto the player permanently and shifts it to its chase gear. There is no cooling off.
-- **The shout.** The body whose provocation just landed alerts every Gatekeeper within the alert radius; joiners are provoked without shouting again, so one shot pulls one group, never the Bastion by relay. Kinds that refuse provocation silently decline the shout.
-- **Gaze-noticing.** Clear line of sight to a player who is inside notice range and *outside* the aggro radius provokes, exactly as permanently as being shot; the sight branch is skipped for a player already close enough to divert the body by proximity. Proximity inside the aggro radius diverts a body only while the player stays close — the one transient trigger. (Sight-provoke is suppressed on faucet field Waves, a dev-gated graybox mode; damage and proximity still work there.)
-- **The Cloaker watch.** One kind's refusal is a state rather than a flag: watched — planar gaze cone, in range, clear line of sight, with a Schmitt release band so the edge cannot strobe — it refuses every target and holds position.
-- **Root.** A body can be rooted. It holds position and keeps its target; if it is already in reach it still finishes the swing. This is the garrison's first status. It is not a speed change.
-- **Group arrival.** A Wave is delivered as groups, and every Gatekeeper in a group enters at the same spawn point, picked once per group on a weighted rotation, ringed around it so nobody lands inside anybody. [Waves](Waves.md) owns the schedule; this page owns what a body does after it arrives.
+Every body runs one targeting rule. The three questions are the mechanic. A kind is the answers it gives; the instances only fill them.
+
+- **May it target the Hatch**
+- **May it target a player**
+- **Can it be provoked**
+
+The garrison invokes this, not a Boarder seat. Four of twelve kinds are in the build.
+
+### Targeting
+
+Each body re-derives its target on a fixed tick: the Hatch, when its kind allows one and the Hatch stands, or the nearest live Boarder. Field Waves still have a Hatch; what differs between modes is where the player is standing.
+
+Inside the commit radius a Hatch-seeker latches onto the Hatch and holds that latch for as long as the Hatch is still a target for it. Shooting it, standing beside it, shoving and pinning do not clear it. Only the Hatch leaving that body's world does.
+
+### Provoke
+
+A shot flips a provokable Gatekeeper onto the player permanently and shifts it to its chase gear. There is no cooling off.
+
+The body whose provocation just landed alerts every Gatekeeper within the alert radius. Joiners are provoked without shouting again, so one shot pulls one group, never the Bastion by relay. Kinds that refuse provocation silently decline the shout.
+
+Clear line of sight to a player who is inside notice range and outside the aggro radius provokes, exactly as permanently as being shot. The sight branch is skipped for a player already close enough to divert the body by proximity. Proximity inside the aggro radius diverts a body only while the player stays close — the one transient trigger.
+
+The Cloaker watch is a state-refusal, not a flag: planar gaze cone, in range, clear line of sight, with a Schmitt release band so the edge cannot strobe. Watched, it refuses every target and holds position.
+
+Sight-provoke is suppressed on faucet field Waves, a dev-gated graybox mode. Damage and proximity still work there.
+
+### Rules
+
+A body can be rooted. It holds position and keeps its target; if it is already in reach it still finishes the swing. This is the garrison's first status. It is not a speed change.
+
+A Wave is delivered as groups, and every Gatekeeper in a group enters at the same spawn point, picked once per group on a weighted rotation, ringed around it so nobody lands inside anybody. [Waves](Waves.md) owns the schedule; this page owns what a body does after it arrives.
+
+No instance may vary the shared swing clock. All kinds swing on one cadence.
 
 Driven by no input of the garrison's own — the Boarder's fire, position and gaze are what it answers. Shown by the body's path and pace, the group breaching at a spawn point, and the Assault count. Reads back as log lines: `gatekeeper provoked — N nearby joined the hunt`, `group N: … breached at <point> — N live`, `gatekeeper reached the hatch — attacking home`.
 
-## Consequences
+Radii, notice ranges and speeds: [Field Manual](Field-Manual.md). Each instance page names which of the three questions that kind answers.
+
+## Additional Details
+
+### Consequences
 
 Every shot is also a targeting decision: it buys the target's permanent attention and, through the shout, its group's — deliberately (a group pulled off the Hatch onto ground the Boarder chose) or by accident (a stray hit mid-crowd). Every sightline held is a silent provocation, so long corridors hand out pulls for free.
 
@@ -51,11 +94,11 @@ A Hatch-seeker inside the commit radius has stopped being a decision and become 
 
 Removal test: take garrison-invoked targeting out and nothing contests the Hatch or the Boarder — no Wave is a fight, the Ante prices nothing, kills cannot pay, and every Boarding ends the same. A different game; core.
 
-## Classification
+### Classification
 
 Core, loop. Serves Fantasy (`../Design/1-Experience.md` §1.2, 2026-08-16 rank stamp), with Challenge as the vehicle. The Fantasy served is that each kind is an identity defined by its refusal.
 
-## Interacts with
+### Interacts with
 
 - [Waves](Waves.md) — which kinds a Wave sends, group width, gaps, health scaling and kind debuts, none of which this page restates; that page owns delivery and composition.
 - [A Boarding](A-Boarding.md) — a Gatekeeper's death banks Salvage the moment the body falls, only while an Assault is live; that page owns kills-pay-on-landing.
@@ -63,7 +106,7 @@ Core, loop. Serves Fantasy (`../Design/1-Experience.md` §1.2, 2026-08-16 rank s
 - [The Ante](Ante.md) — every extra body the wager buys is a Default, and the fixed kinds never see the dial; that page owns the ante spend.
 - [Going Down](Going-Down.md) — garrison hits to the Boarder are what force the priced return; that page owns the respawn spend.
 
-## Instances
+### Instances
 
 Instances vary on the three targeting questions (Hatch, player, provocation — each kind is what it refuses), on their stat lines ([Field Manual](Field-Manual.md)), and on crowd behaviour (avoidance priority and solver quality). No instance may vary the shared swing clock — all kinds swing on one cadence, `GatekeeperAttackInterval`; the rule is `../Design/3-Mechanics.md` §3.1, *All four kinds share one swing clock* — and a variant that differs only in numbers is a Field Manual row, not an instance.
 
@@ -86,22 +129,7 @@ This table is the canonical roster of Gatekeeper instances, anywhere in Docs.
 
 The eight Coming Soon rows come from the twelve-kind roster (`../Brainstorms/gatekeepers-and-waves.md`, named 2026-08-13, Zo — twelve is a target, not a promise).
 
-## Where
-
-- The kind seam: three targeting virtuals, one refusal each — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`MayTargetHatch` / `MayTargetPlayer` / `CanBeProvoked`)
-- Provoke-on-damage, permanent for life — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`OnDamaged` → `Provoke`; the `_provoked` latch never clears)
-- The shout pulls one group, not a relay — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Provoke`'s alertRadius loop over the spawner's live ledger; joiners called with `shout: false`)
-- Gaze-noticing provokes at range; proximity is transient — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`CanSeePlayer`; `Retarget`'s sight-provoke call, guarded by `!playerNear`; `Retarget` re-derives `playerNear` every tick and passes it to `ChasesPlayer` instead of latching it)
-- Sight-provoke suppressed on faucet field Waves — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`faucetField` guard in `Retarget`); `Assets/Scripts/Sim/Run/RunSim.Faucet.cs` (`FaucetHatchHunt`)
-- The Hatch is targetable on both Wave modes; commit latches inside the radius — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Retarget`, 2026-08-27 note; `_committedToHatch`, `hatchCommitRadius`); shove/pin do not clear it — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Shove`, `Pin`, `IsCommittedToHatch`)
-- Root holds position without cancelling an in-reach swing — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Root`, `IsRooted`); the close/swing split — `Assets/Scripts/Sim/Run/GatekeeperRoot.cs` (`MayAdvance`, `MaySwing`)
-- The Cloaker watch, pure half (cone, range, Schmitt band) — `Assets/Scripts/Sim/Waves/CloakerWatch.cs` (`Watched`); state and line-of-sight half — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`AnyoneWatching`)
-- Groups enter whole at one spawn point, weighted rotation, ringed slots — `Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs` (`EmitGroup`, `GroupSlot`); `Assets/Scripts/Game/Enemies/WaveSpawner.cs` (`PickSpawnPoint`, once per group); `Assets/Scripts/Game/Enemies/SpawnPoint.cs` (`All`, `Weight`)
-- One swing clock, pushed onto every kind — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`GatekeeperAttackInterval`; `StatsFor` writes it first, before any kind branch); `Assets/Scripts/Sim/Waves/GatekeeperStats.cs` (`attackInterval`)
-- Refusals pushed from the sim at spawn, hardened per kind — `Assets/Scripts/Sim/Waves/GatekeeperStats.cs` (`ignoresHatch` / `ignoresPlayer`); `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Configure`)
-- Kind identity — `Assets/Scripts/Sim/Waves/GatekeeperKind.cs` (`GatekeeperKind`)
-
-## Gaps
+### Gaps
 
 - The decided roster is twelve kinds, recorded in `Docs/Brainstorms/gatekeepers-and-waves.md`. Four are in the build. The other eight carry Coming Soon marker pages that name only what each will take; none gets a full Game entry until it ships.
 - Nothing on screen ever breaks the remaining count down by kind. The Assault panel gives you one total, so "eleven left" could be eleven Defaults or eight Defaults and three Thieves, and you cannot check.

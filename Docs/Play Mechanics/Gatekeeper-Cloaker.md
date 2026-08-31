@@ -3,7 +3,17 @@ Purpose: Cloaker, an instance of Gatekeepers — differences only.
 Status: working
 in_build: true
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-31
+Where:
+- Gaze-gated refusals; unobserved = Default — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`MayTargetHatch` / `MayTargetPlayer` gate on `_observed`)
+- Cone, range and Schmitt release band (pure half) — `Assets/Scripts/Sim/Waves/CloakerWatch.cs` (`Watched`; `ReleaseAngleSlackDegrees`, `ReleaseRangeSlackMetres`)
+- Line of sight, all live seats, global freeze — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`AnyoneWatching` over `PlayerRegistry.All`; `ClearLineFrom`)
+- Fast poll, same-frame retarget on flip — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`KindTick`, `WatchRefresh`, the `Retarget` call)
+- Grudge not gated on the gaze; the shout still fires — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`CanBeProvoked => !ignoresPlayer`); `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`OnDamaged` → `Provoke(shout: true)`)
+- Reveal on hit; corpse stays visible — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`OnRevealHit`, `RevealOnHitSeconds`; `PushCloak`'s dead-body clause)
+- Watched refuses decoys — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (decoy branch gated on `MayTargetPlayer`)
+- The gaze releases the commit latch — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Retarget`: `if (!hatchAvailable) _committedToHatch = false;`, and `hatchAvailable` reads the gaze-gated `MayTargetHatch`)
+- Owns only its HP; the rest is Default's constants — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`StatsFor`, Cloaker case; neither refusal flag set — the state lives in the Game layer)
 -->
 
 # Cloaker
@@ -26,30 +36,39 @@ While it moves it is a shimmer with lit seams, hardest to find exactly when nobo
 
 Unwatched, it wants what a Default wants — the Hatch when the Hatch is in the fight, me when I get close or make it personal. Watched, it wants nothing at all. That is the part I mind most.
 
-## Differs
+## Details
 
-- **Refuses every target while watched — and the refusal is a state, not a pushed flag.** Watched, both targeting questions answer no and it holds position; unobserved, it targets exactly as a Default does, on Default's own constants. The state lives in the Game layer subclass, not in the stat struct.
-- **The watch test:** inside a planar gaze cone of any live Boarder, within watch range, with clear line of sight. Release uses a Schmitt band — a few degrees and metres of slack — so mouse jitter can never strobe the edge, while a deliberate look-away frees it in one poll. Polled faster than the shared retarget tick, and it re-derives its target the frame the state flips.
-- **The freeze is global.** Any one watcher — remote seats included — holds it for the whole crew; a second gaze adds nothing to one already held.
-- **Shots land the grudge through the freeze.** `CanBeProvoked` deliberately does not gate on the gaze: a hit on a held Cloaker latches the provocation (and, unrefused, still shouts its neighbours); the Cloaker itself stays frozen while watched and comes for the shooter the moment the gaze leaves it.
-- **Any hit forces it solid.** A connecting hit drops the cloak for a moment, gaze or no gaze — a blind shot into a doorway is a real question and the flash is the answer. The killing blow leaves the corpse visible for good.
-- **A watched Cloaker refuses decoys too.** The decoy pull is gated on its player-targeting answer, so the freeze cannot be bypassed by a lure.
-- **It is the one kind whose Hatch commit is not for life.** The commit latch clears whenever the Hatch stops being a target for that body, and for a Cloaker the gaze is what does that — a look releases the latch and the freeze holds it in place. Looking away re-commits it on the next tick, so this buys a pause, not a rescue.
-- **The one number it owns is its HP** — about one and a half Defaults; every other figure is read from Default's constants so the watch rule stays the kind's only question. Figures: [Field Manual](Field-Manual.md).
+### Structure
 
-## Where
+The watch is a state, not an answer given at spawn. Watched, both targeting questions answer no and it holds. Unwatched, it fills them as a Default does.
 
-- Gaze-gated refusals; unobserved = Default — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`MayTargetHatch` / `MayTargetPlayer` gate on `_observed`)
-- Cone, range and Schmitt release band (pure half) — `Assets/Scripts/Sim/Waves/CloakerWatch.cs` (`Watched`; `ReleaseAngleSlackDegrees`, `ReleaseRangeSlackMetres`)
-- Line of sight, all live seats, global freeze — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`AnyoneWatching` over `PlayerRegistry.All`; `ClearLineFrom`)
-- Fast poll, same-frame retarget on flip — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`KindTick`, `WatchRefresh`, the `Retarget` call)
-- Grudge not gated on the gaze; the shout still fires — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`CanBeProvoked => !ignoresPlayer`); `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`OnDamaged` → `Provoke(shout: true)`)
-- Reveal on hit; corpse stays visible — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`OnRevealHit`, `RevealOnHitSeconds`; `PushCloak`'s dead-body clause)
-- Watched refuses decoys — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (decoy branch gated on `MayTargetPlayer`)
-- The gaze releases the commit latch — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Retarget`: `if (!hatchAvailable) _committedToHatch = false;`, and `hatchAvailable` reads the gaze-gated `MayTargetHatch`)
-- Owns only its HP; the rest is Default's constants — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`StatsFor`, Cloaker case; neither refusal flag set — the state lives in the Game layer)
+### Refusals
 
-## Gaps
+Watched. While any Boarder watches it, it refuses every target and stands still.
+
+### Behaviour
+
+Unwatched, it targets as a Default, on Default's own constants — two gears, Hatch when the Hatch is in the fight. Figures: [Field Manual](Field-Manual.md).
+
+A hit still shouts. A watched Cloaker refuses decoys: the pull is gated on its player-targeting answer, so the freeze cannot be bypassed by a lure.
+
+It owns only its health; every other figure is Default's so the watch rule stays the kind's only question.
+
+### Rules
+
+The watch test: inside a planar gaze cone of any live Boarder, within watch range, with clear line of sight. Release uses a Schmitt band so mouse jitter can never strobe the edge, while a deliberate look-away frees it in one poll. Polled faster than the shared retarget tick, and it re-derives its target the frame the state flips.
+
+The freeze is global. Any one watcher — remote seats included — holds it for the whole crew; a second gaze adds nothing to one already held.
+
+Shots land the grudge through the freeze. Provocation is not gated on the gaze: a hit on a held Cloaker latches the provocation and still shouts its neighbours; the Cloaker itself stays frozen while watched and comes for the shooter the moment the gaze leaves it.
+
+Any connecting hit drops the cloak for a moment, gaze or no gaze. The killing blow leaves the corpse visible for good.
+
+This is the one kind whose Hatch commit is not for life. The commit latch clears whenever the Hatch stops being a target for that body, and for a Cloaker the gaze is what does that — a look releases the latch and the freeze holds it in place. Looking away re-commits it on the next tick, so this buys a pause, not a rescue.
+
+## Additional Details
+
+### Gaps
 
 - Nothing tells you a Cloaker is in the Wave until you happen to see the shimmer or take a swing from something you never saw. The group arrival line names it; nothing on screen does.
 - The freeze has no confirm beyond the body stopping — no sound, no stagger, nothing that says "you are holding it". At range, a stopped cloaked machine and a walking one read the same until it drops the cloak.

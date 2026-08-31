@@ -1,6 +1,15 @@
-<!-- Purpose: Coming Soon marker for the two designed currencies beyond Salvage — Experience (owns the world) and Cores (own the Boarder); working names stay builder-side until Zo stamps fiction names. / Status: teaser; the three-currency split is decided, nothing is built. / in_build: true / coming_soon: true / Update trigger: replace this page when either currency first pays out. / Last updated: 2026-08-25 (Boarding capitalised in the Reference block) -->
+<!--
+Purpose: Coming Soon marker for the two designed currencies beyond Salvage — Experience (owns the world) and Cores (own the Boarder); working names stay builder-side until Zo stamps fiction names.
+Status: teaser; the three-currency split is decided, nothing is built.
+in_build: true
+coming_soon: true
+Update trigger: replace this page when either currency first pays out.
+Last updated: 2026-08-31
+-->
 
 # The Other Currencies — Coming Soon
+
+Meant to be two currencies beside Salvage — one owning the world, one owning the Boarder — but neither is built, and neither has earned its name.
 
 ## Game
 
@@ -14,10 +23,22 @@ My own currency comes out of the survived Convert — the one moment this place 
 
 Neither has earned its name yet. Until they land, everything the [Salvage](Salvage.md) page says stays true: one currency, one pile, everything competing for it.
 
-## Reference
+## Details
 
-The three-currency split is decided (Experience the world, Salvage the kit, Cores the self); Experience is a spendable wallet and never a rank; Cores buy protocol unlock and upgrade plus Boarding multipliers; the roster-as-purchase is scoped per Bastion, set at the first Boarding and cleared when Master Control falls. Nothing is built and no numbers exist. Names are working names.
+### Structure
 
-## See also
+Not built. Salvage owns the kit; one of the others would own the world, and the last would own the Boarder.
 
-[Salvage](Salvage.md). [Ante](Ante.md). [Protocols](Protocols.md).
+### Rules
+
+Not built. Two more currencies beside Salvage, split that way.
+
+## Additional Details
+
+### Interacts with
+
+- [Salvage](Salvage.md) — until these land, that page's one currency, one pile stays true; that page owns what a kill is worth.
+- [Ante](Ante.md) — a world-owned spend on opposition is a different lever from anting the Wave; that page owns the ante spend.
+- [Protocols](Protocols.md) — a Boarder-owned spend would land on the sheet worn; that page owns the claim and the sheets.
+
+Replace this page when either currency first pays out. Do not edit the Coming Soon marker into a live sheet.

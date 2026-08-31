@@ -4,7 +4,7 @@
 Purpose: Definition of a play mechanic, and the authoring contract for entries under Docs/Play Mechanics/ — what an entry is, how one is added, and its format. The format is derived from the definition, not inherited from the previous Compendium entry shape. The code blocks near the bottom are what you copy.
 Status: working
 Update trigger: when the definition, the entry bar, the mechanic/instance split, or the entry format changes.
-Last updated: 2026-08-30 (parked status admitted — Ante is the exemplar)
+Last updated: 2026-08-31 (house format: Details + Additional Details; Where in the header comment)
 -->
 
 ## What a play mechanic is
@@ -91,54 +91,57 @@ the mechanic stated once, plainly, and the rest of the page is the evidence.
 An instance page's summary is one or two sentences: what this one does differently,
 in the same plain language.
 
-Each section below exists because a clause of the definition demands it, and a
-section that cannot be written is a finding, not a blank to fill:
+The visible page is the same four beats on every entry. Subsections under Details
+are unique to the mechanic class; the beats are not.
 
-| Section | Earned by | Cannot be written means |
+| Beat | Holds | Cannot be written means |
 |---|---|---|
-| `## The interaction` | "a named way an agent interacts with state, under the rules" | You do not understand the mechanic yet |
-| `## Consequences` | "creates consequences the player must account for" | It fails the removal test — fluff, no entry |
-| `## Classification` | tiers, loop or arc, aesthetics served | The pricing argument has not happened |
-| `## Interacts with` | "interlocking pieces interact meaningfully" | It sits beside the game instead of in it — a known kill signal |
-| `## Instances` | the mechanic-first deviation | Single-shape mechanic — omit the section |
-| `## Where` | currency — the representation must be auditable against code | Not built — the entry is marked Coming Soon |
+| Summary | the mechanic in four sentences | two mechanics, or not yet understood |
+| `## Game` | the Boarder's notes | voice work still open; new entries may omit |
+| `## Details` | how it is structured and what the rules are | you do not understand the mechanic yet |
+| `## Additional Details` | Gaps, and on mechanic pages the consequence / class / coupling / roster | a finding, not a blank |
 
-**`## The interaction`** — who invokes it (which seat, the garrison, both), doing
-what, on what state, when it is available. Ends with the three answers the milestone
-contract already demands: driven by what input, shown where in play, reads back as
-what.
+**`## Details`** — who invokes it, doing what, on what state, when it is available,
+organised as the class's components. Always opens with **Structure** (the parts,
+named) and closes with **Rules** (what is allowed, refused, and invariant). Between
+those, the headings are that class's — the same headings on every sibling. Driven
+by what input, shown where in play, and reads back as what: fold those three into
+Rules, not a trailing dump. No code paths, no file names.
 
-**`## Consequences`** — what changes that the player must account for: what it
-moves, what it forecloses, what it makes possible — and what the removal test says.
-This section is the entry's reason to exist.
+**`## Additional Details`** — everything that is true and not the sheet:
 
-**`## Classification`** — one line. **Core**: removing it makes this a different
-game. **Primary**: readily available and directly solves the challenge. **Secondary**:
-works occasionally or in combination (Sicart's tests, the core form by removal).
-Then `<loop | arc>`, and the aesthetics served (`Design/1-Experience.md` §1.2 —
-restamp when the rank table moves).
+- **Consequences** (mechanic pages) — what the player must account for, and what
+  the removal test says. This is the entry's reason to exist. Cannot be written
+  means it fails the removal test — fluff, no entry.
+- **Classification** — one line. **Core**: removing it makes this a different
+  game. **Primary**: readily available and directly solves the challenge.
+  **Secondary**: works occasionally or in combination. Then `<loop | arc>`, and
+  the aesthetics served (`Design/1-Experience.md` §1.2).
+- **Interacts with** — the other mechanics this one meaningfully touches, each
+  coupling named in plain words, linked. Two entries never both own the same
+  coupling — the mechanic that spends writes it; the other links back.
+- **Instances** — mechanic page only, and only when the class has them. Axes
+  instances may vary on; things no instance may vary (those are rules). Then the
+  one canonical roster table — name, what it differs in, state (`in build` /
+  `Coming Soon` / `parked` / `cut` with the Decisions link), link to its page.
+  **Parked** means the mechanic stays in the tree behind a flag, deliberately off
+  for players; cite `Decisions.md` and the flag in the header `Where:`. Ante
+  (`Ante.md`, `Ante.Enabled`) is the exemplar.
+- **Gaps** — the build's legibility debt on this mechanic.
 
-**`## Interacts with`** — the other mechanics this one meaningfully touches, each
-with the coupling named in plain words (the one pot, the Wave counter, the door's
-HP), linked. Two entries never both own the same coupling — the mechanic that
-spends writes it; the other links back.
+**`Where:` in the opening HTML comment** — the code map: one row per load-bearing
+claim, naming the file (and member where it matters). A claim that cannot name its
+code is wrong or not built. The reader strips the comment. Do not restamp it as a
+visible `## Where`.
 
-**`## Instances`** — mechanic page only. First the axes instances may vary on and
-the things no instance may vary (those are rules — link them). Then **the roster:
-the one canonical table of instances** — name, what it differs in, state
-(`in build` / `Coming Soon` / `parked` / `cut` with the Decisions link), link to its page.
-**Parked** means the mechanic stays in the tree behind a flag (or equivalent),
-deliberately off for players; the entry is kept so restore has a home. Cite
-`Decisions.md` and the flag in `## Where`. Ante (`Ante.md`, `Ante.Enabled`) is the
-exemplar.
+An instance page's first line names and links its mechanic page. Its Details
+headings are the class's, filled with what this one refuses, pays, or changes —
+nothing shared restated as if it were unique. Coming Soon instances keep the same
+headings and write "Not built" (or the one intended identity clause) rather than
+inventing play.
 
-**`## Where`** — the code map: one row per load-bearing claim made above, naming
-the file (and member where it matters) that makes it true. A claim that cannot name
-its code is wrong or not built; fix the claim or mark the page Coming Soon.
-
-An instance page carries only `## Differs` (what this one refuses, pays, or
-changes — nothing shared) and `## Where` (its own rows). Its first line names and
-links its mechanic page.
+**Do not use `## Differs`, `## The interaction`, or a visible `## Where`.** Those
+are the previous shape. Protocol pages are the exemplar.
 
 ## The player-facing dimension on standardized entries
 
@@ -147,9 +150,9 @@ voice-governed by `Story/Voices.md` — and the shipped reader consumes it. **A
 standardized entry keeps its `## Game` block, unchanged, above the builder
 sections**, and may keep `## Gaps` (the build's legibility debt on this mechanic)
 below them. The old `## Reference` and `## See also` do not survive as sections —
-their material is absorbed into The interaction, Consequences, Interacts with and
-Where. Voice rules govern `## Game` only; the builder sections are precise and
-code-naming by design. Where the player-facing surface ultimately lives, and what
+their material is absorbed into Details, Additional Details, and the header
+`Where:`. Voice rules govern `## Game` only; Details is the structure of play,
+not a code dump. Where the player-facing surface ultimately lives, and what
 the reader parses, stays an open ruling; until it lands, `## Game` is preserved so
 nothing shipped breaks and nothing authored is lost.
 
@@ -195,15 +198,16 @@ stating, because a later session will otherwise harden them into gates:
 2. **Mechanic before instance.** An instance page without a mechanic page is not
    addable; write the mechanic page first, even if thin.
 3. Classify before any pricing or tuning argument is written into the entry.
-4. Verify every `## Where` row against the code at write time — audit direction is
-   code → entry, and when they disagree the code is what is true.
+4. Verify every header `Where:` row against the code at write time — audit direction
+   is code → entry, and when they disagree the code is what is true.
 5. The entry lands in the same change as the milestone that ships the mechanic; a
    designed mechanic without a build is Coming Soon in the title, same marker rules
    as before.
 
 ## Formatting rules
 
-- House header comment on every file: Purpose, Status, Update trigger, Last updated.
+- House header comment on every file: Purpose, Status, Update trigger, Last
+  updated, and `Where:` (one row per load-bearing claim). The reader strips it.
 - Terms from `language.md`, nothing coined.
 - **Link, never copy**: numbers to the Field Manual (generated), decisions to
   `Decisions.md`, rules to `Design/3-Mechanics.md` §3.1.
@@ -224,6 +228,8 @@ Purpose: Current representation of <mechanic> as it is in the build.
 Status: <working | Coming Soon | parked>
 Update trigger: any milestone that touches this mechanic, in the same change.
 Last updated: YYYY-MM-DD
+Where:
+- <claim> — `path` (member)
 -->
 
 <Two to four sentences of plain language: what this is, what the player does, what it
@@ -234,34 +240,42 @@ costs or pays, and whether it is wholly in the build. No code, no links, no jarg
 <Preserved Boarder-voice block on standardized entries; new entries may omit until
 the player-facing ruling lands.>
 
-## The interaction
+## Details
 
-<Who invokes it, doing what, on what state, when.>
-Driven by <input>. Shown by <surface>. Reads back as <value, log line, visible change>.
+### Structure
+<The parts of this mechanic, named. The instances only fill them.>
 
-## Consequences
+### Rules
+<What is allowed, refused, and invariant. Driven by / shown by / reads back as, folded in.>
+
+## Additional Details
+
+### Consequences
 
 <What changes that the player must account for. What removal would change.>
 
-## Classification
+### Classification
 
 <core | primary | secondary>, <loop | arc>. Serves <aesthetics> (`../Design/1-Experience.md` §1.2).
 
-## Interacts with
+### Interacts with
 
 - [<Mechanic>](<file>.md) — <the coupling, plain words>.
 
-## Instances
+### Instances
 
 Instances vary on <axes>. No instance may vary <invariants — link the rules>.
 
 | Instance | Differs in | State | Page |
 |---|---|---|---|
 
-## Where
+### Gaps
 
-- <claim, shortened> — `path` (member)
+<Legibility debt on this mechanic.>
 ```
+
+Headings between Structure and Rules are the class's — copy them from a sibling,
+do not invent a new set for one page.
 
 ## Starting structure — instance page (copy this)
 
@@ -269,10 +283,12 @@ Instances vary on <axes>. No instance may vary <invariants — link the rules>.
 # <Instance>
 
 <!--
-Purpose: <Instance>, an instance of [<Mechanic>](<Mechanic>.md) — differences only.
+Purpose: <Instance>, an instance of [<Mechanic>](<Mechanic>.md).
 Status: <working | Coming Soon | parked>
 Update trigger: any milestone that touches this instance, in the same change.
 Last updated: YYYY-MM-DD
+Where:
+- <claim> — `path` (member)
 -->
 
 Instance of [<Mechanic>](<Mechanic>.md).
@@ -283,17 +299,85 @@ Instance of [<Mechanic>](<Mechanic>.md).
 
 <Preserved Boarder-voice block on standardized entries.>
 
-## Differs
+## Details
 
-<What this one refuses, pays, or changes. Nothing shared with siblings.>
+### Structure
+<Which of the class's parts this one fills, and how.>
 
-## Where
+### Rules
+<This instance's own grammar. Nothing shared restated as unique.>
 
-- <claim, shortened> — `path` (member)
+## Additional Details
+
+### Gaps
+
+<Legibility debt on this instance.>
+```
+
+Class-specific headings sit between Structure and Rules. Protocol instances:
+Doctrine, Crew, Personal, Passive. Gatekeeper instances: Refusals, Behaviour.
+Weapon instances: Fire, Ability. Coming Soon keeps the same headings and writes
+"Not built."
+
+## Starting structure — protocol instance (copy this)
+
+```markdown
+# <Protocol>
+
+<!--
+Purpose: <Protocol>, an instance of [Protocols](Protocols.md).
+Status: <working | Coming Soon>
+Update trigger: any milestone that touches this instance, in the same change.
+Last updated: YYYY-MM-DD
+Where:
+- <claim> — `path` (member)
+-->
+
+Instance of [Protocols](Protocols.md).
+
+<One or two sentences: what this sheet does differently.>
+
+## Game
+
+<Preserved Boarder-voice block.>
+
+## Details
+
+### Structure
+<Which four rows this sheet answers, and how the two keys work on it.>
+
+### Doctrine
+<What placement writes onto hardware.>
+
+### Crew
+<Name, key, output, cost.>
+
+### Personal
+<Name, key, who it hits.>
+
+### Passive
+<Name, or none, and what the garrison reads.>
+
+### Rules
+<Charge, pairing, refusals, composition — the sheet's own grammar.>
+
+## Additional Details
+
+### Gaps
+
+<Legibility debt on this sheet.>
 ```
 
 ## Changelog
 
+- 2026-08-31: House format is summary, Game, Details, Additional Details. Where
+  lives in the header comment. Differs, The interaction, and a visible Where are
+  the previous shape. Cause: the folder read as audits and dumps; Zo asked for the
+  structure of each mechanic class, unique headings per class, shared organisation.
+- 2026-08-31: Protocol instances replace Differs with Details (Structure, Doctrine,
+  Crew, Personal, Passive, Rules) and park Where in the header comment. Cause: the
+  four-row sheet was buried in The interaction and a code map, and each instance
+  restated the class as a Differs dump instead of showing its components.
 - 2026-08-29: Recorded the stance behind the pipeline (Zo): these are guardrails, not
   perfect rules — a targeted change that moves no mechanic is labelled overhead rather
   than forbidden, and drift from freestyle sessions is expected and caught by periodic

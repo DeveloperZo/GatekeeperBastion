@@ -213,7 +213,7 @@ namespace GatekeepersProtocol.Game
             long wheelSpend = WeaponTier.SpentToReach(2);
             m.EarnSalvage(wheelSpend - 450);
             m.SpendSalvage(wheelSpend);
-            BoarderProtocol.TryClaim(m, BoarderProtocolId.Default);
+            BoarderProtocol.TryClaim(m, BoarderProtocolId.Depot);
             m.TotalRuns = 2;
             m.EarnSalvage(350);
             m.SetCompletedTerminalIds(ZoneTerminalsThrough(FirstTerminal.ZoneOneNumber));

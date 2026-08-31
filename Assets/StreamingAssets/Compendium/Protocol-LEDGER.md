@@ -15,4 +15,4 @@ Designed in the protocols brainstorm — the Writ / Recall sheet, the salvage-ec
 
 ## See also
 
-[Protocols](Protocols.md). [Default](Protocol-Default.md). [Salvage](Salvage.md). [The Hatch](The-Hatch.md).
+[Protocols](Protocols.md). [Default](Protocol-DEPOT.md). [Salvage](Salvage.md). [The Hatch](The-Hatch.md).

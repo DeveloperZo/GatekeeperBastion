@@ -135,7 +135,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0, m.DemoWheelBuysLeft);
             Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m));
             Assert.AreEqual(2, m.TierOf(WeaponId.Mk1Sidearm), "both Secondary buys landed");
-            Assert.AreEqual(BoarderProtocolId.Default, m.EquippedProtocol);
+            Assert.AreEqual(BoarderProtocolId.Depot, m.EquippedProtocol);
             Assert.IsTrue(m.DemoCrewMenuUnlocked);
             Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m),
                 "standing at zone 2's mouth means zone 1 paid for something");

@@ -133,13 +133,14 @@ are named here.
 | **Equipment** | Gear bought at FABRICATION into the equipment slot (unlocked by the first Convert, bought once). The Repair Rig is the first piece. | payload *(that is the Drone's)*, item, kit, Utility |
 | **Tier** | A step on a weapon's upgrade track. | level, rank, mark, upgrade |
 | **ability** | A weapon's one activated effect, on a cooldown. | special, power, skill, ult |
-| **Boarder Protocol** | The named sheet CREW QUARTERS sells: one doctrine, one Crew ability, one Personal ability, a Passive where the sheet has one. Default (0-salvage claim), VEIL and FORGE ship; unshipped specialists are marked Coming Soon (in the Compendium's Doctrine volume). | archetype, class, kit, loadout *(loadout is weapons)* |
+| **Boarder Protocol** | The named sheet CREW QUARTERS sells: one doctrine, one Crew ability, one Personal ability, a Passive where the sheet has one. DEPOT (0-salvage claim; save id Depot = 1), VEIL and FORGE ship; unshipped specialists are marked Coming Soon (in the Compendium's Doctrine volume). | archetype, class, kit, loadout *(loadout is weapons)*, Default Protocol *(retired player name 2026-08-31)* |
+| **DEPOT** | The plain protocol sheet: STOCK doctrine, Dump (`G` fire-rate + heavy slow), Feed (`H` toggle clip regen), no passive. Save id `BoarderProtocolId.Depot`. | Default Protocol *(player text retired 2026-08-31)*, Depot *(title-case retired)*, Barrage *(player text)*, Rush *(player text)* |
 | **doctrine** | How a protocol treats hardware at decoy place. **STOCK** (working name, renameable) is hardware as sold. Written at `TryPlace`, not on repair. | stance, mode-as-flavour |
-| **Crew ability** | A Boarder-owned burst on `G`: brief window, moderate-to-long cooldown. Default sheet: **Barrage** (working name, renameable). | skill, perk, track, weapon ability |
-| **Personal ability** | A Boarder-owned burst on `H`: brief window, long cooldown, for the presser. Default sheet: **Rush** (working name, renameable). FORGE's personal is the **Outrider** (press) and **EMP** (hold). | skill, perk, ult, weapon ability |
+| **Crew ability** | A Boarder-owned burst on `G`: brief window, moderate-to-long cooldown. DEPOT sheet: **Dump** (code id Barrage). | skill, perk, track, weapon ability |
+| **Personal ability** | A Boarder-owned burst on `H`: brief window, long cooldown, for the presser. DEPOT sheet: **Feed** (toggle; code id Rush). FORGE's personal is the **Outrider** (press) and **EMP** (hold). | skill, perk, ult, weapon ability |
 | **Outrider** | FORGE's follower. Travels with the Boarder and fires on the Gatekeeper nearest to them. Not the Drone. | Drone *(the third weapon slot)*, companion, pet, drone |
 | **EMP** | The Outrider's special: light damage and a root, and near the turret it converts that turret's fire for the window. | stun, freeze, shock |
-| **Passive** | Always-on protocol rule. Reserved — Default has none. Specialist sheets pick one later. A rule, never a number. | stat, track, perk |
+| **Passive** | Always-on protocol rule. Reserved — DEPOT has none. Specialist sheets pick one later. A rule, never a number. | stat, track, perk |
 | **twist** | Reserved protocol modifier. Ships later. | mutator, relic, charm |
 | **loadout** | The Primary, Secondary and Drone a Boarder embarks with, plus their Equipment. | kit, gear, build |
 | **improvised cutter** | What a Boarder fights with having bought no weapon at all. Deliberately bad. | salvage cutter *(the code's old name)*, fists, melee, starter weapon |

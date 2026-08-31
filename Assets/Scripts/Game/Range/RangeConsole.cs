@@ -214,9 +214,9 @@ namespace GatekeepersProtocol.Game
 
             // A protocol from the first frame, so the ability bar has something to show before
             // anything is cycled. Set, not claimed — see GrantProtocol for why.
-            m.EquippedProtocol = BoarderProtocolId.Default;
-            m.EquippedPassive = BoarderProtocol.PassiveCount(BoarderProtocolId.Default) > 0
-                ? BoarderProtocol.PassiveAt(BoarderProtocolId.Default, 0)
+            m.EquippedProtocol = BoarderProtocolId.Depot;
+            m.EquippedPassive = BoarderProtocol.PassiveCount(BoarderProtocolId.Depot) > 0
+                ? BoarderProtocol.PassiveAt(BoarderProtocolId.Depot, 0)
                 : BoarderAbilityId.None;
 
             // Salvage for anything that still charges. Earned is raised with it: RealmState keeps

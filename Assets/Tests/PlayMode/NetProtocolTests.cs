@@ -108,7 +108,8 @@ namespace GatekeepersProtocol.PlayTests
 
             Assert.AreEqual(BoarderProtocol.BarrageFireMul,
                 BarrageField.FireMulAt(Vector3.zero), 0.01f, "SET max 2, never 2x2");
-            Assert.AreEqual(3f, BoarderProtocol.ComposeFireMul(true, true, 2f), 1e-5f);
+            Assert.AreEqual(2f, BoarderProtocol.ComposeFireMul(true, true, 2f), 1e-5f,
+                "Feed no longer multiplies — Dump zone alone is 2");
         }
 
         [UnityTest]
@@ -137,7 +138,7 @@ namespace GatekeepersProtocol.PlayTests
             yield return BootHostRun();
             GameSession.EnsureLoaded();
             Assert.IsNotNull(GameSession.Meta);
-            GameSession.Meta.EquippedProtocol = BoarderProtocolId.Default;
+            GameSession.Meta.EquippedProtocol = BoarderProtocolId.Depot;
             GameSession.Meta.EquippedPassive = BoarderAbilityId.None;
 
             var serverGo = SpawnObject(_avatarPrefab, m_ServerNetworkManager);
@@ -152,7 +153,7 @@ namespace GatekeepersProtocol.PlayTests
                 var avatar = serverGo.GetComponent<NetPlayerAvatar>();
                 return health != null && avatar != null
                     && Mathf.Abs(health.AcquisitionMul - 1f) < 0.01f
-                    && avatar.ProtocolId.Value == (int)BoarderProtocolId.Default
+                    && avatar.ProtocolId.Value == (int)BoarderProtocolId.Depot
                     && avatar.PassiveId.Value == (int)BoarderAbilityId.None;
             });
             AssertOnTimeout("server did not accept Default+None");

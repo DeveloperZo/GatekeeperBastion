@@ -32,4 +32,4 @@ Range, damage, rates, aura, pairing radius, root length and charge dials: [Field
 
 ## See also
 
-[Protocols](Protocols.md). [Default](Protocol-Default.md). [VEIL](Protocol-VEIL.md). [Upgrades](Upgrades.md).
+[Protocols](Protocols.md). [Default](Protocol-DEPOT.md). [VEIL](Protocol-VEIL.md). [Upgrades](Upgrades.md).
