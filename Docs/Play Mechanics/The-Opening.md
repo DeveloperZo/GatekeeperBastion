@@ -2,7 +2,7 @@
 Purpose: Current representation of the opening — the gate ladder every fresh realm runs under, what each Ship station will and will not answer while it holds, the metered purchase budget, and the single event that ends it — as it is in the build.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # The Opening
@@ -13,8 +13,8 @@ taking the free MK-1 that arms them for a first embark. While it holds, most of 
 is out of reach — FABRICATION opens no panel at all, the Primary rack stays sealed until a
 Boarding has gone deep enough, and upgrade-wheel purchases are rationed to two, then two
 more. The gates belong to the realm, so a well-equipped Boarder entering a fresh world
-runs the whole ladder again. It ends on one event: the realm's first Boarding to survive
-Master Control's Convert, which opens every console and the whole catalog at once.
+runs the whole ladder again. It ends on one event: the realm's first Boarding to throw
+Master Control's switch, which opens every console and the whole catalog at once.
 
 ## The interaction
 
@@ -131,8 +131,8 @@ The only code that sets the preference automatically is the intruder fight's las
 which a straight-through opening never reaches, so in practice the preference is whatever
 the options screen says.
 
-**The ending is one event.** The first **Escaped** — Master Control's Convert half
-survived ([Master Control](Master-Control.md)). The terminal-phase handler calls `EndDemo`
+**The ending is one event.** The first **Escaped** — Master Control's switch thrown
+after the elite is down ([Master Control](Master-Control.md)). The terminal-phase handler calls `EndDemo`
 on Escaped only; a lost or a Docked ending never does. `EndDemo` flips `DemoActive` off
 and writes `DemoFabPowered`. Every gate above no-ops once `DemoActive` is false, so that
 one write opens FABRICATION, opens the ARMORY's whole catalog, stops the two counters
@@ -209,7 +209,7 @@ statements the player gets to make; and Fellowship at rank 1 is gated on being a
 - [Realms](Realms.md) — the gate flags and both counters are realm-side, so every new world
   runs the opening again, the machine-level skip being the one thing that is not; that page
   owns the realm and Boarder split.
-- [Master Control](Master-Control.md) — surviving its Convert half is the single event that
+- [Master Control](Master-Control.md) — throwing its switch is the single event that
   ends the opening; that page owns the sequence.
 - [Protocols](Protocols.md) — the one door the gated CREW QUARTERS still opens is an
   unclaimed protocol; that page owns the claim and the sheets.

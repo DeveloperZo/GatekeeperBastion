@@ -1,143 +1,137 @@
 # 2 — Picking each other up
 
 <!--
-Purpose: Revive as a teammate verb. Bleed-out window, hold-interact by any living
-seat, partial HP. Host down no longer ends the Boarding (Zo, 2026-08-20 — M49 bends in
-co-op). Unbanked survives a down and is wiped only on bleed-out.
-Status: demo spec
-Authority: implementable
-Update trigger: when the revive cost stamp is overridden, when bleed-out length is
-tuned, when the priced-respawn rule moves
-Last updated: 2026-08-25 (the down state and the priced self-respawn shipped; the
-unbanked wipe on down is gone; Depends pointed at the real beat-1 filename)
-Depends: voice-coop.md, 1-two-doors-to-hold.md
+Purpose: A seat goes down mid-Boarding. Live path is the priced self-respawn
+from the realm bank. Teammate revive is still the stamped Build.
+Status: working
+Authority: implementable against 0.34.2
+Update trigger: when the revive stamp is overridden, when Respawns constants move
+Last updated: 2026-08-30 (bank purse, 10 s bleed, MaxRespawns 2, 150/300;
+revive still absent)
+Depends: voice-coop.md, 1-two-doors-to-hold.md, ../Play Mechanics/Going-Down.md
 -->
 
 ## Why this beat exists
 
-Revive does not exist anywhere in the codebase. A repo-wide grep for `revive` over
-`Assets/Scripts/` returns nothing — no type, method, field, RPC or binding.
+**Revive does not exist.** A repo-wide grep for `revive` over `Assets/Scripts/`
+returns nothing — no type, method, field, RPC or binding.
 
-A **down state** and a **priced self-respawn** do exist and shipped after this beat was
-written. A seat at 0 HP is marked down; `RunSim.SetSeatDown` freezes its Unbanked rather
-than wiping it, because that pile is the purse; and `RunSim.TryRespawn` debits
-`Respawns.CostFor` — **150** × (respawns taken this Boarding + 1) — from it, leaving the
-remainder with the seat. The host and solo seat get the same offer at the DOWN overlay
-(`GameController.Down.cs`); a waiting guest asks for it over
-`NetPlayerAvatar.RequestRespawn`. Nothing else can pay: not the realm's bank, not another
-seat.
+What ships is a **down state**, a **10 s bleed-out**, and a **priced self-respawn
+from the realm bank**. `RunSim.SetSeatDown` freezes that seat's Unbanked (so a
+Convert cannot drain a pile whose owner cannot act). `RunSim.TryRespawn` debits
+`Respawns.CostFor` — **150** × min(taken + 1, 3) — from `BankedSalvage` via
+`SpendBanked`. Cap this Boarding: **2** (`MaxRespawns`). Host and solo see the
+DOWN overlay; a guest is `WaitingOnShip` and asks over
+`NetPlayerAvatar.RequestRespawn`. Heal is to full, not partial.
 
-That is still a respawn rather than a rescue. It asks nothing of the other player, which
-is why the demo cannot sell co-op with it, and this beat's verb sits on top of it rather
-than replacing it.
+The fee is the crew's: the counter is the Boarding's, not the seat's. Nothing
+else pays, and the Hatch falling cannot be bought back.
 
-**Ruled by Zo, 2026-08-20: a downed host does not end the Boarding while another seat is
-alive.** This overrides `M49` (`endsTheRunOnDeath`) in co-op, and the shipped down state
-already behaves that way — `GameController.TryEnterLocalDown` holds the Boarding open
-while any remote seat is fighting, even when the local seat cannot afford its own return,
-and `NotifySeatWentDown` ends it only when nobody left can stand. Solo is unchanged in
-substance: one seat, no other seat, so the Boarding ends unless that seat's own carry
-covers the price.
+That still asks nothing of the other player as a verb. The stamped teammate
+hold sits on top of this path rather than replacing it.
 
-## The verb
+**Ruled 2026-08-20: a downed host does not end the Boarding while another seat
+is alive.** Landed. `TryEnterLocalDown` holds the Boarding open while
+`AnyRemoteSeatFighting()`; `NotifySeatWentDown` ends it only when nobody left
+can stand and nobody waiting can pay. Solo is unchanged in substance: one seat,
+no other seat.
 
-A seat at 0 HP enters a **downed** state: immobile, alive, look free, weapon holstered,
-still targetable. A bleed-out timer runs. Any other living seat holds Interact on them
-to bring them up at partial HP.
+## The live verb
 
-**Cost is exposure, not salvage** (stamped). Reviving means standing still, in the open,
-next to something the enemies are already routing toward. That is the price. The
-alternative, a salvage cost from the reviver's unbanked, would make rescue a bet and
-come out of the crew pot; it is in Gaps because nobody knows which reads better without play.
+A seat at 0 HP is down: overlay (host/solo) or Ship wait (guest). A Boarding-owned
+bleed clock starts at **10 s** and is not restarted for a second seat. Confirm
+(or NAV RESPAWN) buys the return if `RespawnRefuse` is null: "no run" /
+"out of respawns" / "not enough banked".
 
-**Unbanked survives the down.** This landed on its own:
-`NetPlayerAvatar.TryMarkWaiting` no longer zeroes a downed seat's pile, it freezes it,
-because the priced respawn buys from that pile. What this beat still owes is moving the
-wipe to bleed-out expiry, and deciding what a bleed-out means for a seat that could have
-paid.
+**Cost is Salvage from the realm pot**, climbing **150 / 300**, then the hard
+stop. Exposure-only teammate revive remains the stamp (Gaps).
+
+**Unbanked survives the down.** Freeze, not wipe. A paid return leaves the
+carry untouched. Wipe happens when the Boarding ends with nobody able to stand,
+or on Hatch breach.
 
 ## Functional storyboard
 
-Continues from beat 1. This beat is authored to happen during zone 1's second Wave or
-the bank window, whichever the tune lands on; it is not a scripted knockdown. The
-composition does the work, the same way solo's authored losses do.
+Continues from beat 1. Not a scripted knockdown.
 
 ### 0 — Go down
 
 | | |
 |---|---|
-| **Goal** | Understand instantly that this is not death. |
-| **Player** | HP reaches 0. Camera drops, movement locks, look stays free, weapon holsters. |
+| **Goal** | Understand instantly that this is a bill, not the end. |
+| **Player** | HP reaches 0. Host/solo: DOWN overlay names price, bank, countdown. Guest: waiting on the Ship. |
 | **Game** | Downed seat: `demo.coop.you_are_down` · Subtitle · Local · Game. **You are down. They can bring you up.** Other seats: `demo.coop.they_are_down` · Subtitle · Local · Game. **<name> is down.** |
-| **Standing** | Downed seat: Hold on. Others: Bring them up |
-| **Prompt** | Downed: bleed-out bar. Others, in range: `[Hold E] Revive <name>`. |
-| **Log** | `[Down] slot=<n> hatch=<id> bleedout=<s>s` (build) |
-| **Have** | HP at 0 on `NetPlayerAvatar` (REPLICATED-STATE), `PlayerRegistry` for all/nearest. The down state and its pile freeze (`RunSim.SetSeatDown`, `GameController.Down.cs`), and neither path wipes unbanked. |
-| **Build** | The bleed-out timer and the immobile-but-alive body on top of that state. HOST-ONLY authority on down/up transitions; the local seat drives only its own camera and input lock (R5). **Do not** wipe unbanked here. **Do not** call the host's death path. |
+| **Standing** | Downed: Buy back. Others: Keep fighting |
+| **Prompt** | DOWN: price + "of your N banked" + bleed clock (`HudController.Fight.DownText`). Guest: NAV RESPAWN row. |
+| **Log** | `[Run] bled out — nobody stood up inside 10s` on expiry; `respawn taken — slot=… cost=… bank …` on success |
+| **Have** | `GameController.Down`, `RunSim.SetSeatDown`, `BleedOutSeconds = 10`. M86: `Dead` animator bool from `Hp <= 0`; `Anim_Down.fbx` unsourced. |
+| **Build** | Immobile-but-alive body in the Bastion (guest already leaves for the Ship). The "they can bring you up" line is the revive stamp — live copy should name the bank until revive lands. HOST-ONLY authority on down/up. **Do not** wipe unbanked here. **Do not** call the host's death path while a remote seat fights. |
 
-### 1 — The rescue
+### 1 — The priced return
 
 | | |
 |---|---|
-| **Goal** | Pay for it in exposure. |
-| **Player** | Living seat walks to them and holds Interact. Hold completes; downed seat stands at partial HP. Interrupt by moving, firing, or taking a hit resets the hold. |
-| **Game** | On completion, revived seat: `demo.coop.up` · Subtitle · Local · Game. **Up. Get back to your hatch.** |
-| **Standing** | Back to normal for both |
-| **Prompt** | `[Hold E] Revive <name>` with fill. |
-| **Log** | `[Down] revived slot=<n> by=<n> hp=<n>` (build) |
-| **Have** | Hold-interact family exists (NAV repair 1.5 s, capsule 1.0 s in solo beat 0). |
-| **Build** | The hold, the interrupt rule, partial-HP restore. Command routes guest → host through `NetVerbs` (R1); the host applies it. |
+| **Goal** | Pay the realm pot, stand up. |
+| **Player** | Confirm (host/solo) or NAV RESPAWN (guest) inside the 10 s. Body resets to spawn, healed to full. Carry untouched. |
+| **Game** | On completion, returned seat: `demo.coop.up` · Subtitle · Local · Game. **Up. Get back to your hatch.** |
+| **Standing** | Back to the fight |
+| **Prompt** | — |
+| **Log** | `respawn taken — slot=<n> cost=<n> bank <a>-><b> taken=<n>` |
+| **Have** | `TryRespawn` → `SpendBanked`. Shared `RespawnsTaken`. FOLLOW is free and is not this verb (never-embarked seat). |
+| **Build** | Teammate hold-Interact revive: any living seat holds on them, interrupt by move/fire/hit, partial HP. Routes guest → host through `NetVerbs`. |
 
 ### 2 — Bleed-out
 
 | | |
 |---|---|
-| **Goal** | Losing a teammate costs something real without ending the Boarding. |
-| **Player** | Nobody reaches them in time. |
-| **Game** | `demo.coop.bled_out` · Subtitle · Party · Game. **<name> is out. Their unbanked is gone. They can come back at the next window.** |
+| **Goal** | Time runs out. |
+| **Player** | Nobody pays in 10 s. If a remote seat still fights, the host overlay stays and the Boarding continues. If nobody can stand and nobody waiting can pay, the Boarding ends Lost. |
+| **Game** | `demo.coop.bled_out` · Subtitle · Party · Game. **<name> is out. They come back when you next dock.** |
 | **Standing** | Unchanged for the living |
 | **Prompt** | — |
-| **Log** | `[Down] bled out slot=<n> unbanked wiped=<n>` (build) |
-| **Have** | `WaitingOnShip` and the priced self-respawn out of that seat's own frozen Unbanked, offered for as long as the Boarding is Tethered. |
-| **Build** | Bleed-out expiry wipes that seat's unbanked and routes them into the existing `WaitingOnShip` path as the **fallback**. A wipe there also removes the purse, so it prices the respawn at infinity — whether the co-op bleed-out is allowed to do that, or whether it should leave the priced return standing, is the ruling in Gaps. |
+| **Log** | `bled out — nobody stood up inside 10s` |
+| **Have** | Sim reports expiry; Game layer decides. Guest is already on the Ship at 0 HP. |
+| **Build** | Align `demo.coop.bled_out` with mid-Boarding bank-priced return. The stamped "next dock" copy contradicts `TryRespawn`. |
 
 ### 3 — The host goes down
 
 | | |
 |---|---|
-| **Goal** | Prove the ruling in play, not in a doc. |
-| **Player** | The host is downed. The Boarding continues. A guest revives them. |
+| **Goal** | Prove the ruling in play. |
+| **Player** | Host is down. Guest is still fighting. Boarding continues. Host Confirm pays the bank, or the guest keeps the floor until the sweep. |
 | **Game** | Same lines as steps 0 and 1. No special-casing in copy. |
 | **Standing** | Unchanged |
-| **Log** | `[Down] slot=0 hatch=<id> bleedout=<s>s` plus `[Run] host down, run continues seats alive=<n>` (build) |
-| **Have** | Landed. `GameController.TryEnterLocalDown` holds the Boarding open behind the DOWN overlay whenever a remote seat is still fighting, and `NotifySeatWentDown` ends it only when no seat left can pay its way back. The log line above is what is missing. |
-| **Build** | The log. The rule itself already reads seats rather than special-casing the host, which is the shape that keeps R4 (no singular player) honest. Solo is unchanged in substance: one seat, no other seat, so the Boarding ends unless that seat's own carry covers the price. |
+| **Log** | existing down / respawn lines |
+| **Have** | Landed. `TryEnterLocalDown` + `NotifySeatWentDown`. |
+| **Build** | Optional `[Run] host down, run continues seats alive=<n>` log. |
 
 ## Acceptance shape
 
-Player action: one player is downed mid-Wave and the other walks over and holds
-Interact to bring them up. Reads back: the down and revive log lines, the bleed-out
-bar, and a Run that survives the host being downed.
+Player action: one player is downed mid-Wave and buys back from the realm bank
+inside 10 s, or the Boarding continues on the other seat. Reads back: the
+respawn log naming cost and bank, and a Boarding that survives the host being
+downed.
+
+Teammate hold-Interact is the stamped extra; it does not ship.
 
 ## Verification
 
-The PlayMode net fixture (`NetcodeIntegrationTest`) can hold the sim half:
-down sets the state without wiping unbanked, revive restores partial HP, bleed-out
-wipes and marks `WaitingOnShip`, and a downed host with a living guest does not end
-the Boarding. The first and last of those already pass on the shipped down state. The
-hold interrupt, the camera and whether a rescue under pressure feels possible are
-eyes-on and cannot be gated there.
+The PlayMode net fixture can hold: down freezes unbanked, `TryRespawn` debits
+bank not carry, a downed host with a living guest does not end the Boarding,
+bleed-out expiry is reported. The hold-Interact revive, camera, and whether a
+rescue under pressure feels possible wait on that verb existing.
 
 ## Gaps
 
-- **Revive cost.** Exposure only is stamped. Salvage from the reviver's unbanked is
-  the alternative. Unknown which reads better; needs play data, not argument.
-- **Revive against the priced respawn.** Both now put the same seat back on its feet,
-  one free and asking a teammate, one costing **150** × (respawns taken + 1) of that
-  seat's own Unbanked. Whether the co-op demo keeps both, hides the priced one behind
-  bleed-out, or drops the price in a party is unruled and is Zo's.
-- **Bleed-out length.** Absent, not invented. It interacts with hatch spacing and wave
-  pressure, so it is a tune after the layout exists.
-- **Partial HP on revive.** Not specced. Same reason.
-- Whether a downed seat can be revived **during** a bank window, or only between
-  Waves, is open. Stamped permissive, because the beat 5 finale has no between.
+- **Revive cost.** Exposure only is stamped. Salvage from the pot is what
+  already ships for self-return. Unknown which teammate-rescue should use;
+  needs play data.
+- **Revive against the priced respawn.** Both would put the same seat back.
+  Keep both, hide the priced one behind bleed-out, or drop the price in a
+  party: unruled.
+- **Partial HP on revive.** Not specced. Live self-return is full HP.
+- Whether a downed seat can be revived during a Convert window: stamped
+  permissive, because Master Control has no between.
+- Ship wait labels that still price against `avatar.Unbanked`
+  (`ShipController.cs`, `MapStation.cs`) while the sim spends bank — UI drift,
+  not this beat's to invent.

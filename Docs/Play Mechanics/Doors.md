@@ -2,7 +2,7 @@
 Purpose: Current representation of the Bastion's doors — what opens one, what an open one changes, and that it stays open across Boardings — as it is in the build.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Doors
@@ -51,7 +51,7 @@ Every part of that is load-bearing: because the snapshot happens at the moment o
 
 So the second Boarding into a realm is not the first one again. The lane past the first gate is open from the moment the Boarder lands, the closets that gate was sealing are live from the same moment, and the walk to the Control Room has one fewer seal in it. The open set is also what names the zone the Boarding is working: the code counts open doors up from zone 1 to find the current zone, which is what the Convert's zone gate then reads.
 
-**What does not persist alongside it is the interesting half.** Terminal completion is snapshotted only at the end of a Convert window's Assault, and restored only when the Boarding starts deeper than Wave 1 — and a solo Boarding cannot reach a Convert window at all ([The Hatch](The-Hatch.md) owns the window and why), so solo it is never written.
+**What does not persist alongside it is the interesting half.** Terminal completion is snapshotted only at the end of a Convert window's Assault, and restored only when the Boarding starts deeper than Wave 1. A Convert window is reachable after a zone's terminals are done and before the control gate opens ([The Hatch](The-Hatch.md)).
 
 On an ordinary Wave-1 embark into a realm with a gate already open, the doors stand open while every terminal reads incomplete: the Hatch offers that zone's Wave again and the zone is re-fought, with its own door open behind it the whole time. Progress through the hull persists; progress through the terminals does not. A Boarding therefore starts where the last one *walked* to, not where it *finished*.
 

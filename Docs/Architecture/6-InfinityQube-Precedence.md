@@ -4,7 +4,7 @@
 Purpose: What was taken from InfinityQube's Assets/Docs/AI Agent, what was adapted, what was rejected and on what evidence, and the one fork that is Zo's to settle. Read once; the outcomes are folded into files 1–4.
 Status: record of one pass
 Update trigger: when InfinityQube's AI Agent docs change materially, or when a rejection here is overturned.
-Last updated: 2026-08-09; calibration figures re-counted 2026-08-25 (the pass itself is unchanged)
+Last updated: 2026-08-09; calibration figures re-counted 2026-08-30 (the pass itself is unchanged)
 -->
 
 Read 2026-08-09: `AI Agent/README.md`, `01-core-constraints`, `02-approval-gates`,
@@ -38,11 +38,10 @@ has to run is a rule that documents a violation rather than preventing one.** Th
 same shape as this project's Sim seam (`1-Boundaries.md` §1), enforced today by
 `Tools/verify/run.sh` and by nothing else, and it is why that file argues for the asmdef.
 
-For calibration, re-counted 2026-08-25: four files over, the worst being
+For calibration, re-counted 2026-08-30: **seven** files over, the worst still
 `BastionSketchEmitter.cs` at **976** against an 800 cap — **22%** over, against
-InfinityQube's 247%. The two files named when this pass was written have moved in opposite
-directions: `PlayerGun.cs` came back under at 362, `DevConsole.cs` went further out to 420.
-Not the same problem. Yet.
+InfinityQube's 247%. The largest Game file is now `GameController.Terminals.cs` at 611
+against 400. `PlayerGun.cs` remains under (371). Not the same problem. Yet.
 
 ## Adopted from InfinityQube
 

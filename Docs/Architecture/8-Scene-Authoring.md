@@ -4,43 +4,61 @@
 Purpose: How scenes are structured so an agent can work on one part without breaking the rest, and what a scene edit must assert.
 Status: working
 Update trigger: when a scene root is added or renamed, when UI moves out of a gameplay scene, or when a swap rule changes.
-Last updated: 2026-08-26 (rule 3's ownership statement corrected — the Ship hull comes from
-Tools/ship-hull/build_hull.py, not from SceneBuilder.Ship, which is a footgun; the hull
-measurements re-dated to the two-deck scene they were taken on, which the one-deck collapse
-supersedes)
+Last updated: 2026-08-30 (Build All no longer rebuilds the Ship; HatchRecallPad named on
+T2/T5 Portal; one-deck hull re-counted)
 -->
 
 The Ship hub is **`Ship - CoOp.unity`** — one hub, solo and party alike. Historical notes
 below that say `Ship.unity` or `Ship - Demo.unity` mean hubs that no longer exist (the
 scene pair consolidated onto the co-op hull); the authoring rules still apply.
 
-Seven scenes are on disk as of 2026-08-25, all under `Assets/Scenes/`. Six are registered in
+Seven scenes are on disk as of 2026-08-30, all under `Assets/Scenes/`. Six are registered in
 build settings, in this order: `Splash`, `MainMenu`, `RealmSelect`, `Ship - CoOp`,
 `Bastion_Coop`, `Range`. The play chain runs `Splash → MainMenu → RealmSelect → Ship - CoOp
 → Bastion_Coop → Ship - CoOp`. `Bastion.unity` and `Ship - Demo.unity` are gone with the
 rest of the solo pair.
 
-**`Explore - Kit.unity` is the seventh and nothing declares what it is for.** It is in
-neither `SceneFlow` nor build settings, its scripts live in `Assets/_Scratch/`, and no doc
-names it. Treat it as scratch until Zo says otherwise; do not wire it into anything on the
-assumption that it was meant to be wired.
+**`Explore - Kit.unity` is the seventh.** It is in neither `SceneFlow` nor build settings.
+Its scripts live in `Assets/_Scratch/`. `Docs/Release-Gate.md` calls it an authoring scene
+that is not in the build; `Docs/Working-Rules.md` allows emitting a sketch into it. Treat it
+as scratch; do not wire it into the play chain.
 
 ## What SceneBuilder owns
 
-**Build All owns three roots and one asset, and nothing else.** `OwnedRootNames` is
-`Environment`, `SpawnPoints` and `Directional Light`; the NavMesh asset is the fourth owned
-thing. Stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem` and every
-UI canvas are authored content it never touches. The one wipe exemption is an owned root that
-still holds `SpawnRoom` instances — Build All logs a warning and skips it, because spawn
-closets parented under `SpawnPoints` by mistake used to be deleted with it.
+**Build All owns three root names and one asset; it does not rebuild the Ship.**
+`OwnedRootNames` is `Environment`, `SpawnPoints` and `Directional Light`; the NavMesh asset
+is the fourth owned thing. `BuildAllCore` has not called `RebuildShipGeometry` since
+2026-08-26 — that method is retired and refuses if reached. On Bastion, kit `BastionSegment`s
+under `Environment` skip the geometry wipe, so a Build All rebakes NavMesh only.
+
+Stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem` and every UI
+canvas are authored content it never touches. `ShipDress` is not an owned root. Ship - CoOp
+has no `SpawnPoints` root; Bastion's `SpawnPoints` sits empty under `Environment`. The
+SpawnRoom wipe-skip still lives in `ClearOwnedRoots`, which only the retired ship rebuild
+would call.
+
+**Field recall pads are authored scene roots, not runtime meshes.** `T2 Portal` and
+`T5 Portal` on `Bastion_Coop.unity` carry `HatchRecallPad` and the Ship-teleporter graybox
+(`Pad` / `Emitter` / `Glass`). Hold Interact teleports to the Hatch.
+
+Dock `HatchPortal` stays on `Hatch Portal` only. Changelog 2026-08-30 removed the runtime
+cyan squares; do not spawn a stand-in. `RecallPadSceneTests` pins the two roots and the
+component.
 
 **It pins five scenes and keeps the rest.** `SceneBuilder.BootScenes` is Splash, MainMenu,
 RealmSelect, Ship - CoOp, Bastion_Coop, and `MergeBuildScenes` puts those at the head of the
 build list while keeping every other registered row after them with its enabled flag intact —
 which is why `Range` survives a Build All it is not named in. The only rows it removes are
 ones whose file is gone, so the list self-heals after a scene is deleted, and both the kept
-and dropped counts are logged. `SceneBuilder.cs`'s own class comment still describes the
-older behaviour and names two deleted scenes; read the code, not the comment.
+and dropped counts are logged. `SceneBuilder.cs`'s class comment still names two deleted
+scenes and a `ShipDress` skip that `BuildAllCore` no longer performs; read the code, not the
+comment.
+
+**Look-pass and Protocol Bar are separate from Build All.** `GatekeepersProtocol/Build/Ship Look
+Pass` (Bake/Ship Look Lighting beside it) reads `ShipDress` for wall shapes and writes a
+`Ship Look` root from `Assets/Settings/ShipLookProfile.asset`, replacing that root only.
+`GatekeepersProtocol/Build/Protocol Bar` authors the Bastion protocol HUD and a
+`Protocol Card Deck` into the CREW QUARTERS canvas. Neither wipes owned roots.
 
 ## Why this file exists
 
@@ -72,13 +90,15 @@ agent limitation to work around; it is a layout problem to fix.
 
 **The hull made it worse.** `Ship - CoOp.unity` measured **8.0 MB** and **2,784**
 GameObjects against 3,119 MonoBehaviours, 1,023 MeshRenderers and three `Canvas` roots on
-2026-08-25 — about three times the object count of the scene measured above.
-`Bastion_Coop.unity` is 12 MB and 4,103 GameObjects. Those Ship figures are of the two-deck
-hull; the interior collapsed to one deck on 2026-08-26 and nobody has re-counted, so treat
-them as an upper bound rather than a reading. The direction is what matters and it does not
-change: the hub is an order of magnitude past the size an agent can hold. The
-UI-versus-ship split is not measured here either; counting it needs a hierarchy walk, not a
-grep.
+2026-08-25 — the two-deck hull, about three times the object count of the scene measured
+above.
+
+Re-counted 2026-08-30 after the one-deck collapse: **7.0 MB**, **2,381** GameObjects,
+3,163 MonoBehaviours, 632 MeshRenderers (Unity YAML `--- !u!1 &` / `!u!114` / `!u!23`; file
+size from disk). `Bastion_Coop.unity` is 6.3 MB and 2,070 GameObjects (was 12 MB / 4,103 on
+2026-08-25). The hub is still an order of magnitude past the size an agent can hold. The
+UI-versus-ship split is not measured here; counting it needs a Transform-id hierarchy walk,
+not a GameObject-id grep.
 
 ## Rules
 
@@ -97,8 +117,8 @@ Rebuild skips `Authored/` so a re-stamp cannot replace hand edits.
 
 844 of `Ship.unity`'s 958 objects were the four station panels. Those belong in prefabs
 instantiated at bind, or in a UI scene loaded additively. **Target: the Ship hub under 100
-objects**, small enough for an agent to hold entirely. `Ship - CoOp.unity` was at 2,784 when
-it was last counted, so the target is further away than when it was written, not closer.
+objects**, small enough for an agent to hold entirely. `Ship - CoOp.unity` was at **2,381**
+on 2026-08-30, so the target is further away than when it was written.
 
 Until that lands, treat the `Canvas` subtrees as off-limits for any task whose subject is the
 ship itself, and say so in the task.
@@ -126,18 +146,21 @@ Canvas/            the station panels — off-limits under rule 2
 ```
 
 Station and dress names are unique and path-addressable, which is what makes a subtree
-instruction possible. Do not rename toward generic names.
+instruction possible. Do not rename toward generic names. Other authored roots sit beside
+that list (`ShipController`, `Demo Teleporter`, spawn markers, `Ship HUD Canvas`,
+`Level Music`) and are not hull. A look-pass would add a `Ship Look` root; that root is not
+in the scene until `GatekeepersProtocol/Build/Ship Look Pass` runs.
 
 **`Environment` and `ShipDress` belong to `Tools/ship-hull/build_hull.py`, not to
 SceneBuilder.** This is the correction that matters most on this page. The earlier wording
 here called those names SceneBuilder-generated and told the reader to address the subtree
-through the builder, which points an agent at the one tool that would destroy the ship:
-`SceneBuilder.Ship` still compiles and still has a menu row, it produced the twenty wall
-seams and the missing exterior skin that `M101` was cut to fix, and re-running it wipes the
-authored hull. `Docs/Milestones/3. completed/M101-a-ship-with-two-decks-and-a-stair.md` and
-`Docs/Working-Rules.md` both say do not run it. Do not run **Build/All Scenes** against the
-dressed Ship either — the `ShipDress` root makes Build All skip the geometry wipe, but the
-habit belongs to the old graybox.
+through the builder, which points an agent at the one tool that would destroy the ship.
+
+`SceneBuilder.Ship` still compiles as the pre-M101 graybox, it has no menu row, and Build All
+does not call it. Re-wiring it would wipe `Environment` and move the hatches. It produced
+the twenty wall seams and the missing exterior skin that `M101` was cut to fix.
+`Docs/Milestones/3. completed/M101-a-ship-with-two-decks-and-a-stair.md` and
+`Docs/Working-Rules.md` both say do not run it.
 
 `build_hull.py` is destructive by design too. It deletes every child of `Environment` and
 `ShipDress` and re-emits the hull from its layout table, and it rehomes `Hatch_1..3`, the

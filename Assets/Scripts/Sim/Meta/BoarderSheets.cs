@@ -22,20 +22,23 @@ namespace GatekeepersProtocol.Sim
         public const string CrewVeil =
             "G Ping — Every Gatekeeper renders through walls, for every Boarder, for 8s. Every Default and Hunter targets you while it runs. The crew gets the map; you get the room. Cooldown 30s.";
         public const string CrewForge =
-            "G Field Deploy — Stand a turret where you are looking. It acquires and fires on its own out to 18 m. While it stands, every Boarder within 8 m of it fires ×1.35. Deploying again replaces it. Cooldown 30s.";
-
+            "G Field Deploy — Stand a turret where you are looking, or move a live one and keep its charge. "
+            + "Spend charge to Overcharge; it ends Exhausted, then falls. Clear an Exhausted turret to cool down. "
+            + "Charge builds only while it fires. Near the Outrider, Overcharge also puts the Outrider at maximum fire rate. "
+            + "The pairing is proximity-gated. Cooldown 30s.";
         public const string PersonalDefault =
             "H Rush — You move. Fire ×1.5 for 6s. Cooldown 40s.";
         public const string PersonalVeil =
             "H Cloak — Off every targeting list for 6s. Gatekeepers already swinging finish the swing. Firing exits instantly. Cooldown 40s.";
         public const string PersonalForge =
-            "H Overcharge — Redline your standing turret for 6s: it fires ×2.5 and your own gun fires ×1.4. The machine pays 18 life per second and can burn itself out. Refuses with no turret standing. Cooldown 40s.";
+            "H Outrider — Deploy a follower that stays with you and fires on the Gatekeeper nearest to you. "
+            + "Spend charge to EMP: light damage and a root. Near the turret, EMP makes the turret's fire EMP rounds for the window. "
+            + "Charge builds only while it fires. EMP ends Exhausted. Clear an Exhausted Outrider to cool down. Cooldown 30s.";
 
         public const string PassiveDefault = "None.";
         public const string PassiveVeil =
             "Ghost — Gatekeepers notice you at 0.70× their normal range. Standing still was never the requirement.";
-        public const string PassiveForge =
-            "Magnet Hands — a Gatekeeper that would come for you comes for your turret instead, whenever both are in reach. The machine takes the swings, and the machine can be destroyed.";
+        public const string PassiveForge = "** CLASSIFIED **";
 
         public static string Name(BoarderProtocolId id)
         {

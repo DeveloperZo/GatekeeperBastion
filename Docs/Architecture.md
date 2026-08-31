@@ -4,7 +4,7 @@
 Purpose: Where code lives, the conventions that govern it, and the gotchas that cost real time. The rules subtree behind it is Architecture/, which is the master reference for how code is written.
 Status: working
 Update trigger: when an assembly, folder or convention changes, or when a gotcha is found that would otherwise be rediscovered.
-Last updated: 2026-08-25 (four files now over cap; Cloaker, Demo/ and Range/ in the map; gotcha 4 re-read against BastionCoopSceneTests and the Ship hull rebuild)
+Last updated: 2026-08-30 (306 .cs files; Outrider, recall pads, protocol types, Sim/Player and Fx assets in the map; seven files over cap; gotcha 4 against BastionCoopSceneTests and retired RebuildShipGeometry)
 -->
 
 ## The one structural rule
@@ -32,8 +32,8 @@ Folders group by subject. **Namespaces do not follow folders** — everything un
 `Scripts/Sim/**` is `GatekeepersProtocol.Sim`, everything under `Scripts/Game/**` is
 `GatekeepersProtocol.Game`. Adding a folder never means adding a namespace.
 
-**Read this map as a subject index.** 282 `.cs` files as of 2026-08-25 (70 Sim, 190 Game,
-21 Editor, 1 Util), against maybe half that many names below — a name missing here means
+**Read this map as a subject index.** 306 `.cs` files as of 2026-08-30 (78 Sim, 200 Game,
+27 Editor, 1 Util), against maybe half that many names below — a name missing here means
 the map has not caught up, never that the type is absent. `ls` the folder before concluding
 anything from an omission.
 
@@ -43,15 +43,19 @@ Assets/Scripts/
     Run/     RunSim(+7 partials)  RunContext  RunPhase  AssaultState  SalvageLedger
              EscapeSpool  IntensityJuice  HatchBank  DecoyState  MasterControl
              PlayerWallets  WaveMode  WeaponView  Respawns  FaucetLoop  TurretState
+             OutriderState  GatekeeperRoot
+    Player/  PlayerRegen
     Waves/   WaveDirector  WaveSpec  GatekeeperKind  GatekeeperStats  CloakerWatch
+             FieldTrickle
     Meta/    MetaState  MetaUpgrades  SaveFormat  JsonText  TetherSiphon
-             BoarderProtocol  BoarderSheets  BoarderState
+             BoarderProtocol  BoarderSheets  BoarderState  ProtocolOffer
              RealmState  RealmRecord  RealmShare  ProductVersion
              EquipmentId  EquipmentCatalog  PayloadCatalog  PayloadId  UpgradeTrack
              WeaponId  WeaponSlot  WeaponDef  WeaponCatalog
              WeaponTier  WeaponWheel  WeaponAbility  WeaponCrosshair
     Bastion/ BastionKit  BastionSketch*  BastionSeatSpawns  BastionUnlockGraph
              BastionMeshMap  DemoZones  FirstTerminal
+             FieldShutoff  HatchVerb  BastionVerbs
     Combat/  KillLog
     Ship/    ShipSystems  Subsystem  ShipCamera  ShipHatches
     Util/    Log (front end — rides inside the Sim assembly)
@@ -59,14 +63,17 @@ Assets/Scripts/
     Player/    FirstPersonController  PlayerGun(+.Firing, +.Slots, +.Reload)
                PlayerProtocolAbilities  PlayerHealth  PlayerRegistry  Interactor
                BoarderPresentation  WeaponViewModel
+               PlayerOutriderControl  PlayerTurretControl  ProtocolLayerView
     Enemies/   EnemyGatekeeper(+.Targeting, +.Death)  HunterGatekeeper  ThiefGatekeeper
                CloakerGatekeeper(+Presentation)  WaveSpawner(+.Groups, +.Range)  SpawnPoint
-    Combat/    Damageable  Effects
+    Combat/    Damageable  Effects  FxColors
     Bastion/  GameController(+17 partials)  HudController(+.EndScreens, +.Panels,
-               +.Fight, +.Pause, +.Weapon)
+               +.Fight, +.Pause, +.Weapon, +.Protocol)
                HatchStation  RepairInteractable  AnchorField  SpawnRoom
                BastionSegment(+.Geom, +.Aperture)  BastionDoor  BastionGeneratedGeom
                DecoyBay  DecoyObject  DecoyPlacement  BastionTerminal
+               HatchRecallPad  HatchPortal  OutriderObject  TurretObject  TurretLifeBar
+               BarrageField
     Demo/      DemoRun  DemoProgress  DemoVoice  DemoLines  DemoConversationIds
     Range/     RangeConsole  RangeRules  RangeReadout  RangeDoor  RespawnQueue
     Ui/        BastionHudView  station panels  Compendium*  UiBind
@@ -89,13 +96,15 @@ Assets/Scripts/
                (friends: DDOL NetSession from Resources/Net/NetSession; EnableSceneManagement on;
                M57 additive wait stays off NetworkSceneManager)
   Editor/
-    Scenes/  SceneBuilder(+.Ship, +.Enemies, +.Range, +.RangeDoors, +.ProtocolBar)
+    Scenes/  SceneBuilder(+.Ship, +.Enemies, +.Range, +.RangeDoors, +.ProtocolBar,
+             +.ProtocolCards)  ShipLookPass  ShipLookProfile  ControlPanels  WallStrips
              — Environment/spawns/light/NavMesh; hosts+UI authored
     Bastion/ BastionKitEmitter  BastionSketchEmitter  BastionSketchHatchDoors
              BastionSketchStairs  BastionGeomGroupTool
              BastionFieldConsole  BastionTerminalEditor
     Tools/   IntegrationCheck  BindingValidator  LogTools  GameplayRecorder
              ShipFlythrough  StationSceneGate  CompendiumCopy  ReleaseGateDump
+             SceneCapture
   Util/      LogFile (one file per session)
 
 Assets/Tests/
@@ -104,6 +113,8 @@ Assets/Tests/
   PlayMode/                                 scene contracts
 Assets/Prefabs/    prefab assets only; Net/NetSession is the authored copy
 Assets/Resources/Net/  runtime Load path for DDOL NetSession
+Assets/Resources/Fx/   ParticleUnlit.mat  SolidUnlit.mat — Effects loads these
+Assets/Shaders/        FxParticle  FxSolid (GKB/FxParticle, GKB/FxSolid)
 Assets/Packs/Gatekeepers/  dress wrappers; Prefabs/*Gatekeeper.prefab are SceneBuilder outputs
 Assets/Materials/  every Mat_*.mat; SceneBuilder writes here (MaterialDir)
 ```
@@ -155,16 +166,21 @@ directly above the live constants, which is exactly how a later session reverts 
   `UnityEngine.Random` for crits so trigger pulls never advance the replayable
   sim stream.
 
-Four files are over their cap, counted 2026-08-25 by `Tools/lint-arch/run.sh`:
+Seven files are over their cap, counted 2026-08-30 with the counted-line unit in
+`Tools/lint-arch/run.sh` (non-blank, non-comment, non-directive):
 `Editor/Bastion/BastionSketchEmitter.cs` at **976** against 800,
 `Sim/Bastion/BastionSketchParser.cs` at **639** against 600,
-`Game/Dev/DevConsole.cs` at **420**, and `Game/Bastion/GameController.cs` at **404** and
-climbing, both against 400. The fence below stays at `over_cap_baseline=0`, so the check
-fails on all four rather than forgiving them — baselining a file by name says the split is
-not going to happen, and that is Zo's call in the change that decides it. The precedent for
-the other answer is `Game/Bastion/HudController.cs`, 613 counted lines against 400 on
-2026-08-11, split by responsibility into `HudController.Weapon.cs` and
-`HudController.Fight.cs` alongside the existing Pause / Panels / EndScreens partials.
+`Game/Bastion/GameController.Terminals.cs` at **611** against 400,
+`Game/Net/NetVerbs.cs` at **549** against 400,
+`Game/Player/PlayerProtocolAbilities.cs` at **445** against 400,
+`Game/Dev/DevConsole.cs` at **421** against 400, and
+`Game/Bastion/GameController.cs` at **418** against 400.
+The fence below stays at `over_cap_baseline=0`, so the check fails on all seven rather
+than forgiving them — baselining a file by name says the split is not going to happen,
+and that is Zo's call in the change that decides it. The precedent for the other answer
+is `Game/Bastion/HudController.cs`, 613 counted lines against 400 on 2026-08-11, split
+by responsibility into `HudController.Weapon.cs` and `HudController.Fight.cs` alongside
+the existing Pause / Panels / EndScreens partials.
 `Tools/lint-arch/run.sh` reads the caps and the baseline from this fenced block;
 changing a value here changes the check with no script edit.
 
@@ -207,28 +223,32 @@ rects. Station panels in the Ship scene may use GUILayout. GUIStyles there are
 per-instance, never static (static styles survive domain-reload-disabled sessions
 holding destroyed font references).
 
-**4. Bastion geometry is kit-authored; the Ship hull regrows under its dressing.**
+**4. Bastion geometry is kit-authored; the Ship hull is `Tools/ship-hull/build_hull.py`.**
 Kit prefabs stamp rooms quickly; `BastionSketchEmitter` unpacks `Completely` and
 `SpawnPiece` unpacks on editor Rebuild. `Rebuild` and `OnValidate` refuse rooms under
 `Authored/`. Orphan kit cleanup only destroys `Gen_*` litter — room roots carry
 `BastionGeneratedGeom`, and a missing script during compile used to delete the whole
 room. A YAML test (`BastionCoopSceneTests`, EditMode) fails the run if
-`Bastion_Coop.unity` loses any of the rooms `R1 R6 R10 R15 U1 U6 U10`, falls outside a
-20–30 `BastionSegment` band, loses `Hatch_1..3` or any of the nine `Stair_*` /
-`GStairWalk_*` / `GStairLand_*` objects, leaves anything under `Generated`, or moves the
-rooms out of `Authored`. `EnsureAuthoredSpawnRooms` re-places closets without emitting
-rooms (`gkb_bastion_spawn_rooms_request.txt`). Build All does not wipe an owned root that
-still holds `SpawnRoom` instances. `Ship - CoOp.unity` is **not** the same shape any more:
-Build All wipes and regrows `Environment`, `SpawnPoints` and `Directional Light` there,
-because `ShipDress` is a skeleton of empty per-room containers that the owned-roots wipe
-never reaches, so the hull can rebuild underneath it. It does **not** touch stations, the
-player rig, `ShipController`, `GameSystems`, the `EventSystem`, or any UI canvas. Build
-settings lead with **Splash, MainMenu, RealmSelect, Ship - CoOp, Bastion_Coop**, then
-Range; `Explore - Kit` is not registered. After a
-spawn-point or kit-floor change, drop `gkb_bastion_navmesh_request.txt` (or Build All).
-Hand-editing **kit geometry** and **ShipDress** persists. A scene missing from build
-settings makes `SceneManager.LoadScene` throw, which strands the player on the end
-screen — `SceneFlow` guards this and logs an error telling you to rebuild.
+`Bastion_Coop.unity` loses any of `R1`–`R9`, is not exactly **9** `BastionSegment`s,
+loses `Hatch_1..3`, gains a `Stair_*` / `GStairWalk_*` / `GStairLand_*` object (the
+Bastion is single-storey), leaves anything under `Generated`, or moves the rooms out of
+`Authored`. `RecallPadSceneTests` fails if `T2 Portal` or `T5 Portal` is missing or
+loses `HatchRecallPad`; dock `HatchPortal` is Hatch-only (`HatchPortalSceneTests`).
+Those two portal roots keep Pad/Emitter/Glass (Changelog 2026-08-30).
+`EnsureAuthoredSpawnRooms` re-places closets without emitting rooms
+(`gkb_bastion_spawn_rooms_request.txt`). Live Build All skips kit `BastionSegment`s
+under `Environment` (`RebuildBastionGeometry`) and rebakes NavMesh; it does not wipe
+the Ship. The SpawnRoom wipe-skip lives in `ClearOwnedRoots`, which only the retired
+`RebuildShipGeometry` path would call. That method is retired 2026-08-26 and refuses;
+`BuildAllCore` does not call it — `SceneBuilder.Ship` still compiles as the pre-M101
+graybox. Build All does **not**
+touch stations, the player rig, `ShipController`, `GameSystems`, the `EventSystem`, or
+any UI canvas. Build settings lead with **Splash, MainMenu, RealmSelect, Ship - CoOp,
+Bastion_Coop**, then Range; `Explore - Kit` is not registered. After a spawn-point or
+kit-floor change, drop `gkb_bastion_navmesh_request.txt` (or Build All). Hand-editing
+**kit geometry** and **ShipDress** persists. A scene missing from build settings makes
+`SceneManager.LoadScene` throw, which strands the player on the end screen —
+`SceneFlow` guards this and logs an error telling you to rebuild.
 
 **5. Friends session bootstrap is `Resources/Net/NetSession`, not an in-scene NetworkManager.**
 Menu Host/Join loads that prefab DDOL (`destroyWithScene: false`) before Ship.

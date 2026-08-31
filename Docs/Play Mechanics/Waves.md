@@ -2,18 +2,18 @@
 Purpose: Current representation of Waves as they are in the build — the garrison's delivery: composition per Wave, groups with gaps, per-Wave health scaling, and the field trickle after the roster is spent.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Waves
 
-A Wave is what the garrison sends when the Boarder starts one: a fixed set of Gatekeepers, shuffled together and delivered as groups, one spawn point per group, with a gap between groups. Each Wave is bigger than the last in four ways at once — more bodies, tougher bodies, wider groups and a longer gap between groups — so a later Wave arrives over a longer window rather than a faster one. The Ante adds to the body count and to nothing else. Once a Wave's roster is spent the lane keeps dripping lone Gatekeepers until the terminal is shut off, and those bodies pay no Salvage and mend no health, so waiting a Wave out earns nothing.
+A Wave is what the garrison sends when the Boarder starts one: a fixed set of Gatekeepers, shuffled together and delivered as groups, one spawn point per group, with a gap between groups. Each Wave is bigger than the last in four ways at once — more bodies, tougher bodies, wider groups and a longer gap between groups — so a later Wave arrives over a longer window rather than a faster one. The Ante is parked; Waves run at dial 0. Once a Wave's roster is spent the lane keeps dripping lone Gatekeepers until the terminal is shut off, and those bodies pay no Salvage and mend no health, so waiting a Wave out earns nothing.
 
 ## Game
 
-Each Wave is bigger than the last, and it grows in four directions at once. More bodies. Tougher bodies. Wider groups. Shorter gaps. I have counted, and the count only ever moves one way.
+Each Wave is bigger than the last, and it grows in four directions at once. More bodies. Tougher bodies. Wider groups. Longer gaps. I have counted, and the count only ever moves one way.
 
-Ante adds to the first of those and to nothing else. Checked, rechecked, holds.
+The Ante is parked. Nothing I can press adds a body.
 
 The kinds arrive on a schedule I cannot buy, sell, or argue with. First Wave: Defaults only. Hunters after that. Thieves and Cloakers later still, thickest at the end. Inside a group the mix is shuffled, so there is no clean phase of one problem — sorting what is in front of me is the job, every group, every time.
 
@@ -25,7 +25,7 @@ Starting deep from the Ship does the same thing on purpose — the overlap moves
 
 The garrison invokes this one: a started Wave is delivered onto the field by the spawner, and the delivery — not any single body — is what the Boarder fights. Starting a Wave and shutting it off are [A Boarding](A-Boarding.md)'s pair: a Wave begins at the Hatch and ends at the zone's terminal, and one start runs the zone's whole authored span back to back with no Prep between. What this page owns is what arrives and how.
 
-Each Wave is a deterministic spec of (Wave index, Ante, seats): a body count, fixed per-kind counts with Defaults absorbing the remainder, a health multiplier, a group width and a gap between groups. The roster is **shuffled, not blocked** — drawn on the run's seeded stream, so the same seed replays the same roster — and delivered as groups of the Wave's width through **one spawn point per group**, one group per gap, the point rotating group to group. Which kinds exist and what each refuses is [Gatekeepers](Gatekeepers.md)'.
+Each Wave is a deterministic spec of (Wave index, seats): a body count, fixed per-kind counts with Defaults absorbing the remainder, a health multiplier, a group width and a gap between groups. The roster is **shuffled, not blocked** — drawn on the run's seeded stream, so the same seed replays the same roster — and delivered as groups of the Wave's width through **one spawn point per group**, one group per gap, the point rotating group to group. Which kinds exist and what each refuses is [Gatekeepers](Gatekeepers.md)'. The parked Ante would still scale body count only, surplus Defaults ([The Ante](Ante.md)).
 
 **The field trickle — this page owns it.** A field Wave's roster running dry is not the end of it: once the roster is spent, the field is empty and the zone still owes its shutoff, the Assault stays open and the lane drips lone Defaults on a fixed cadence, capped at a small live count, until the terminal is pressed. The one place that decides the field is empty is the one place that starts the drip.
 
@@ -39,7 +39,7 @@ Four things escalate together across a Boarding, and none of them is the Ante's:
 
 The axis carrying the pressure is health per second rather than bodies per second: the 2026-08-27 roster cut took roughly 40% of the body count out and put it back as HP on every kind, and the group gap was then re-solved to hold health-per-second at its pre-cut figures. The field accumulates at a rate that can be moved through rather than one that buries the player where they stand.
 
-Ante multiplies the body count only, and its surplus is entirely Defaults — health, group width, gap and the Hunter/Thief/Cloaker counts never see it ([The Ante](Ante.md)). Seat count multiplies bodies the same way ([The Crew](The-Crew.md)).
+Ante would multiply the body count only, and its surplus is entirely Defaults — health, group width, gap and the Hunter/Thief/Cloaker counts never see it ([The Ante](Ante.md)). Seat count multiplies bodies the same way ([The Crew](The-Crew.md)). The dial is parked; those terms sit at zero.
 
 The fixed schedule is what the player plans against: the first Wave is all Defaults and exists to teach the room; Hunters enter on the second and grow; Thieves on the third; Cloakers on the fourth — one Wave after the Thief, deliberately, so each new refusal gets read — and both stay deliberately scarce. Because groups are shuffled, there is never a clean phase of one problem.
 

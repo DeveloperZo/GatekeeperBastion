@@ -1,5 +1,6 @@
 using System.Text;
 using GatekeepersProtocol.Sim;
+using TMPro;
 using UnityEngine;
 
 namespace GatekeepersProtocol.Game
@@ -30,14 +31,19 @@ namespace GatekeepersProtocol.Game
         Interactor _interactor;
         FirstPersonController _fpc;
         Transform _camera;
+        Camera _eye;
         TextMesh[] _labels;
+        RectTransform _overlayCanvasRect;
+        RectTransform[] _overlayRects;
         bool _labelsScanned;
+        bool _overlayWarned;
         float _rebindTimer;
         bool _hudRelevant = true;
         long _cachedSalvage = long.MinValue;
         int _cachedLoadoutHash = int.MinValue;
         int _cachedRuns = int.MinValue;
         int _cachedDeepest = int.MinValue;
+        int _cachedProtocol = int.MinValue;
         string _cachedPrompt = "\0";
         bool _cachedCursorFree;
         bool _cachedCrosshairOn = true;
@@ -67,6 +73,7 @@ namespace GatekeepersProtocol.Game
                 _view.EnsureBuilt();
                 // Same Profile slots as Bastion until a real level/XP model exists.
                 _view.SetProfile(ShipHudView.ProfileRank, null);
+                _view.SetProtocolLine("NO PROTOCOL");
                 _view.SetScore("", "");
                 _view.SetWeapon("--", "--");
                 _view.SetCrosshairVisible(true);
@@ -83,7 +90,8 @@ namespace GatekeepersProtocol.Game
             }
             OptionsScreen.TickDisplayRevert();
             ApplyLabelVisibility(GameSession.Meta);
-            BillboardLabels();
+            if (_overlayRects == null) EnsureOverlay();
+            ProjectLabels();
             PushHud();
         }
 
@@ -116,15 +124,20 @@ namespace GatekeepersProtocol.Game
             int loadoutHash = LoadoutHash(m);
             int deepest = record.DeepestWave;
             int runs = m.TotalRuns;
+            int protocol = (int)m.EquippedProtocol;
             if (_cachedSalvage != banked || _cachedLoadoutHash != loadoutHash
-                || _cachedRuns != runs || _cachedDeepest != deepest)
+                || _cachedRuns != runs || _cachedDeepest != deepest
+                || _cachedProtocol != protocol)
             {
                 _cachedSalvage = banked;
                 _cachedLoadoutHash = loadoutHash;
                 _cachedRuns = runs;
                 _cachedDeepest = deepest;
+                _cachedProtocol = protocol;
 
                 _view.SetProfile(ShipHudView.ProfileRank, null);
+                string protoName = BoarderProtocol.ProtocolName(m.EquippedProtocol);
+                _view.SetProtocolLine(string.IsNullOrEmpty(protoName) ? "NO PROTOCOL" : protoName);
 
                 _lineBuf.Clear();
                 _lineBuf.Append("Salvage ").Append(banked);
@@ -195,12 +208,31 @@ namespace GatekeepersProtocol.Game
             }
 
             _camera = _fpc != null ? _fpc.cameraTransform : null;
+            _eye = ResolveEye();
 
-            if (_labelsScanned) return;
-            _labelsScanned = true;
-            _labels = _labelsRoot != null
-                ? _labelsRoot.GetComponentsInChildren<TextMesh>(true)
-                : null;
+            if (!_labelsScanned)
+            {
+                _labelsScanned = true;
+                _labels = _labelsRoot != null
+                    ? _labelsRoot.GetComponentsInChildren<TextMesh>(true)
+                    : null;
+            }
+            if (_overlayRects == null) EnsureOverlay();
+        }
+
+        Camera ResolveEye()
+        {
+            if (_camera != null)
+            {
+                var cam = _camera.GetComponent<Camera>();
+                if (cam != null) return cam;
+            }
+            if (_isoRig != null && _isoRig.isActiveAndEnabled)
+            {
+                var cam = _isoRig.GetComponentInChildren<Camera>(true);
+                if (cam != null) return cam;
+            }
+            return Camera.main;
         }
 
         /// <summary>Hidden stations show no name (2026-08-18 revision): the world label
@@ -232,22 +264,95 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        void BillboardLabels()
+        /// <summary>World TextMesh stays the authored source (text, colour, world point).
+        /// Glyphs are Overlay copies so they composite after <see cref="PixelRender"/>,
+        /// the same path as the HUD. Building those copies here is the view of that
+        /// source, not a scene rebuild.</summary>
+        void EnsureOverlay()
         {
-            // Iso scenes have no first-person camera wire; labels face the iso camera instead.
-            Transform eyeTransform = _camera;
-            if (eyeTransform == null && _isoRig != null && _isoRig.isActiveAndEnabled)
-                eyeTransform = _isoRig.transform;
-            if (_labels == null || eyeTransform == null) return;
-            Vector3 eye = eyeTransform.position;
+            if (_labels == null || _labels.Length == 0) return;
+            Canvas canvas = null;
+            if (_view != null) canvas = _view.GetComponentInParent<Canvas>();
+            if (canvas == null || canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            {
+                if (!_overlayWarned)
+                {
+                    _overlayWarned = true;
+                    Debug.LogError("[ShipHud] Station labels need a Screen Space Overlay canvas " +
+                        "so PixelRender cannot crush them. World TextMesh left as-is.", this);
+                }
+                return;
+            }
+
+            Transform parent = canvas.transform;
+            Transform existing = parent.Find("Station Labels");
+            RectTransform root;
+            if (existing != null) root = existing.GetComponent<RectTransform>();
+            else
+            {
+                var go = new GameObject("Station Labels", typeof(RectTransform));
+                go.layer = canvas.gameObject.layer;
+                root = go.GetComponent<RectTransform>();
+                root.SetParent(parent, false);
+                root.anchorMin = Vector2.zero;
+                root.anchorMax = Vector2.one;
+                root.offsetMin = Vector2.zero;
+                root.offsetMax = Vector2.zero;
+            }
+            _overlayCanvasRect = root;
+
+            TMP_FontAsset font = null;
+            var sample = canvas.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (sample != null) font = sample.font;
+
+            _overlayRects = new RectTransform[_labels.Length];
             for (int i = 0; i < _labels.Length; i++)
             {
-                var label = _labels[i];
-                if (label == null) continue;
-                Vector3 away = label.transform.position - eye;
-                away.y = 0f;
-                if (away.sqrMagnitude < 0.0001f) continue;
-                label.transform.rotation = Quaternion.LookRotation(away, Vector3.up);
+                var mesh = _labels[i];
+                if (mesh == null) continue;
+                var rend = mesh.GetComponent<MeshRenderer>();
+                if (rend != null) rend.enabled = false;
+
+                var child = new GameObject(mesh.text, typeof(RectTransform), typeof(TextMeshProUGUI));
+                child.layer = canvas.gameObject.layer;
+                var rt = child.GetComponent<RectTransform>();
+                rt.SetParent(root, false);
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = new Vector2(480f, 48f);
+                var tmp = child.GetComponent<TextMeshProUGUI>();
+                tmp.text = mesh.text;
+                tmp.color = mesh.color;
+                tmp.fontSize = 28f;
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.raycastTarget = false;
+                tmp.enableWordWrapping = false;
+                tmp.overflowMode = TextOverflowModes.Overflow;
+                if (font != null) tmp.font = font;
+                _overlayRects[i] = rt;
+            }
+        }
+
+        void ProjectLabels()
+        {
+            if (_labels == null || _overlayRects == null || _eye == null
+                || _overlayCanvasRect == null) return;
+            for (int i = 0; i < _labels.Length; i++)
+            {
+                var mesh = _labels[i];
+                var overlay = _overlayRects[i];
+                if (mesh == null || overlay == null) continue;
+                Vector3 sp = _eye.WorldToScreenPoint(mesh.transform.position);
+                bool show = mesh.gameObject.activeInHierarchy && sp.z > 0f;
+                if (overlay.gameObject.activeSelf != show)
+                    overlay.gameObject.SetActive(show);
+                if (!show) continue;
+                Vector2 local;
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        _overlayCanvasRect, sp, null, out local))
+                    continue;
+                overlay.anchoredPosition = local;
             }
         }
 

@@ -36,7 +36,9 @@ namespace GatekeepersProtocol.Game
         public bool slotLastDown;
         public bool weaponAbilityDown;
         public bool crewAbilityDown;
+        public bool crewAbilityHeld;
         public bool personalAbilityDown;
+        public bool personalAbilityHeld;
         public bool interactHeld;
         public bool interactDown;
         public bool pullDrawDown;

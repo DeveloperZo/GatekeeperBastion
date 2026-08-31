@@ -42,14 +42,15 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
-            ShortcutPanel.FillRows(ctx, _shortcutRows, dialLevel);
+            ShortcutPanel.FillRows(ctx, _shortcutRows, dialLevel, ShortcutPanel.DefaultDevSurface(),
+                sim.AnteEnabled);
             _view.SetShortcutRows(_shortcutRows, false);
         }
 
         void FillPauseShortcuts(RunSim sim, ControlContext ctx, int dialLevel)
         {
             if (_pauseShortcuts == null || sim == null) return;
-            ShortcutPanel.FillRows(ctx, _pauseShortcutRows, dialLevel, DevSurface.None);
+            ShortcutPanel.FillRows(ctx, _pauseShortcutRows, dialLevel, DevSurface.None, sim.AnteEnabled);
             var net = _game != null ? _game.Net : null;
             string code = net != null ? net.JoinCode : null;
             if (!string.IsNullOrEmpty(code))

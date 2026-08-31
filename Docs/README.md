@@ -7,23 +7,25 @@ Sci-fi wave-defense FPS. Unity 6, PC/Steam, first-person. The Boarder is the IQ 
 with FaxLab3D shooter-pack guns (the Cutter sword is still Synty, 2026-08-19); Ship desks
 and the Bastion kit are dressed (M61-2 closed 2026-08-14:
 scaler-2 station rooms, sliding doors, bulkhead Hatch). Solo playable;
-host-client co-op exists over UnityTransport (Main Menu Host / Join by Relay code or
-typed IPv4; F10/F11 stay the editor fallback). Shared Ship and party EMBARK closed
+host-client co-op exists over UnityTransport (REALMS OPEN TO FRIENDS / Main Menu JOIN
+by Relay code or typed IPv4; F10 host and End join stay the editor fallback). Shared Ship and party EMBARK closed
 with `M72` (2026-08-17, Relay `KPRMPR`). A five-Wave friends evening is still the
 Roadmap alpha sentence and is not that file.
 
 Your ship cuts into a **Bastion** — a garrisoned alien vessel — and siphons it for Salvage.
 You are the **Boarder**. You fight inside it, holding the **Hatch**, the umbilical back to
-your ship, while the **Gatekeepers** who hold the Bastion come to take it back. You **ante
-up** at a trigger to raise the **Ante**: more Salvage, more Gatekeepers. **You cannot leave a
-Boarding at will.**
+your ship, while the **Gatekeepers** who hold the Bastion come to take it back. A wave
+begins at the Hatch and ends at a terminal.
+
+**The party-night FPS where friends own the silence, choose the kit, start the wave
+themselves, and hold one Hatch — sci-fi as wallpaper, one more Boarding.**
 
 ## The pillars
 
 **The player sets both the pace and the stake, and the game supplies neither.** Nothing
-starts until you ante up, select with `E`, and press `T` at a field terminal, Master Control,
-or the Hatch. The clock never pays. The Ante is a bet you place at the trigger before you see
-what you bought.
+starts until you press `T` at the Hatch. The clock never pays. The Ante is parked
+(`Ante.Enabled`, 2026-08-30); when it returns it is still a bet you place. The live
+stakes are Withdraw, walking off the Hatch, and whether you take the Dock after a zone.
 
 **Every Gatekeeper kind is defined by what it refuses to do.** A Hunter can never hurt the Hatch.
 A Thief never turns when shot. On a Convert it never hunts you; on a field-terminal Wave it
@@ -32,7 +34,7 @@ does. These are rules in code, not tuning values, so no balance pass can soften 
 **The weapon is the build.** Progression is a weapon and its upgrade wheel, not a stat sheet.
 CREW QUARTERS equips a Boarder Protocol, not buyable attributes.
 
-**Death is what ends a Boarding early — unless the seat can buy itself back.** Every dead seat, host and solo included, is offered a respawn priced at `150 × (taken + 1)`, climbing with each one taken this Boarding, and it is paid out of the Unbanked that seat is carrying. Nothing else may pay: not the realm's bank, not another seat. Whatever is left of the carry survives the death with it. A Boarder who has just Converted is broke and dies for good, so when to Convert is also a choice about how mortal to be (`Respawns.cs`). Losing takes nothing back. A second
+**Death is what ends a Boarding early — unless the seat can buy itself back.** Every dead seat, host and solo included, is offered a respawn priced at `150 × min(taken+1, 3)` (150 then 300), paid from the **realm bank** (`SpendBanked`). Cap 2; a 10 s bleed-out. Nothing else may pay. Unbanked fills only on a deliberate Withdraw. Losing takes nothing back. A second
 Boarder going down waits on the Ship (`M57`) and does not end the host's Boarding (`M49`).
 
 The session is for **Fellowship, Expression, and Fantasy** (`Design/1-Experience.md` §1.2).
@@ -114,8 +116,8 @@ Everything else is how the game gets made, and is deliberately **not** on that l
 | `GatekeeperZo Notes/` | Zo's own files — `verification.md` is the Next-Run list the dashboard reads; `playthrough.md` is raw session notes. |
 | [`Architecture/asset-audit-2026-08-18.md`](Architecture/asset-audit-2026-08-18.md) | Dated snapshot of what art is on disk against what is referenced. Figures drift after its stamp, by its own declaration. |
 | `Brainstorms/` | Ideas before they graduate. |
-| `Demo - Single/`, `Demo - Coop/` | Solo and friends demo beat specs (voice pipes included). Cut milestones from these; do not duplicate them into a brainstorm. |
-| `Story/` | Fiction premise, beats, voices — draft, not on the Design ladder. Index: [`Story/README.md`](Story/README.md). |
+| `Demo - Single/`, `Demo - Coop/` | Solo demo beat specs; friends-session storyboard of the live alpha (`Demo - Coop/`, restamped 2026-08-30). Cut milestones from these; do not duplicate them into a brainstorm. Play Mechanics outrank Demo-Coop for the rules. |
+| `Story/` | Fiction as backdrop, not an arc. Unique lane: friends own the silence, choose the kit, start the wave, hold one Hatch. Draft, not on the Design ladder. Index: [`Story/README.md`](Story/README.md). |
 | `Marketing/` | Research, strategy, and claim-accurate copy. Pitch lives here, not in `Design/` or `Play/`. Honesty gaps: [`Marketing/gaps.md`](Marketing/gaps.md). |
 | `_meta/_definitions/` | `milestone.md`, `brainstorm.md`, `hygiene.md`, `animation-sidecar.md`, and `language.md` — the ubiquitous language every doc, log line and player-facing string uses. |
 | `Play/` | The **Compendium** — volumes of related entries. Each hand-written page holds `## Game` (what pause shows) and `## Reference` (fuller brief). Folder path is `Play/` (language lint); player-facing name is Compendium. In-game reader shipped (M62, Esc → Compendium). |

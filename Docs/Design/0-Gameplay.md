@@ -1,4 +1,4 @@
-<!-- Purpose: the moment-to-moment loop a Boarding is made of — where a wave begins, what ends it, and what each ending is worth. The one place the loop is stated; every other document defers to this. / Status: locked / Update trigger: when the start line, the end condition, or what a zone completion pays changes. / Last updated: 2026-08-26 (the loop enforced after the 07-04 playthrough) -->
+<!-- Purpose: the moment-to-moment loop a Boarding is made of — where a wave begins, what ends it, and what each ending is worth. The one place the loop is stated; every other document defers to this. / Status: locked / Update trigger: when the start line, the end condition, or what a zone completion pays changes. / Last updated: 2026-08-30 (T2/T5 recall to Hatch; finale start gated on ControlRoomReachable) -->
 
 # 0 — The Gameplay Loop
 
@@ -33,10 +33,11 @@ The finale used to break the loop in three places at once, and all three are gon
 - **It ended at the Hatch**, in a Convert window, so the game's final wave was the only one that
   did not end at a terminal.
 
-Now: start at the Hatch, fight the control room, and **the finale elite is the gate**. Killing it
-does not end the run — it ARMS the Master terminal, and throwing that switch is what ends the
-Boarding (`RunSim.ShutOffMasterControl`). A finale cannot end by attrition any more than a zone
-can. The HUD states which half of the gate you are in.
+Now: start at the Hatch once D3 is open (`ControlRoomReachable`), fight the control room, and
+**the finale elite is the gate**. Killing it does not end the run — it ARMS the Master terminal,
+and throwing that switch is what ends the Boarding (`RunSim.ShutOffMasterControl`). A finale
+cannot end by attrition any more than a zone can. The HUD states which half of the gate you are
+in.
 
 **And the switch pays.** `ShutOffFieldWave` has always banked the carry at a zone terminal —
 "reaching the switch IS the payout" — but removing the finale's Convert window quietly removed
@@ -112,19 +113,18 @@ does. The Hatch is a thing you can lose, never a thing you can win at.
 
 ### The way home, and the two bugs that hid it (2026-08-28)
 
-**The way home is a portal you can see, and it is where you already are.** `HatchPortal` is a
-pad that stands dark until a zone closes and lights when it does; a held Interact on it ends the
-Boarding Docked. There are three — beside the Hatch at `(4, 0, -59)`, and beside each field
-terminal, T2 at `(2.67, 0, 7.67)` and T5 at `(2.67, 0, 97.67)` (Zo, 2026-08-28: "portals should
-be added next to terminals as well").
+**The way home is a portal you can see, and it stands at the Hatch.** `HatchPortal` is a pad
+beside the Hatch that stands dark until a zone closes and lights when it does; a held Interact
+on it ends the Boarding Docked. It owns no rule — `RunSim.DockOffered` decides whether leaving
+is legal and `RunSim.DockRun` performs it, the same two the Hatch's own prompt reads, so the two
+surfaces cannot disagree. The Hatch prompt stays, for a player who walks to the door rather than
+the pad. The visual is the Ship's wake capsule (Pad, Emitter, Glass) copied into the Bastion.
 
-The terminal ones are the point. A zone ENDS at its terminal, and T5 is 156 m up the spine — so
-without a portal there, closing the last zone meant walking the whole lane back to the Hatch
-before the run could be ended on purpose. The Master terminal has none: its own switch ends the
-Run, and docking is refused for the whole finale, so a portal there could only ever be dark. It owns no rule — `RunSim.DockOffered` decides whether leaving is legal and
-`RunSim.DockRun` performs it, the same two the Hatch's own prompt reads, so the two surfaces
-cannot disagree. The Hatch prompt stays, for a player who walks to the door rather than the pad.
-The visual is the Ship's wake capsule (Pad, Emitter, Glass) copied into the Bastion.
+**T2 and T5 recall to the Hatch so the next zone can start there.** A zone ENDS at its terminal,
+and the next wave still BEGINS at the Hatch. Those pads keep Pad/Emitter/Glass and carry
+`HatchRecallPad` (2026-08-30): held Interact teleports to the Hatch (`TeleportLocalToHatch`)
+while Tethered, prompt "Recall — Hatch", lit for the whole Boarding. The Master terminal has
+none — its switch ends the Run, and docking is refused for the whole finale.
 
 **Closing a zone offers the Dock.** The Hatch's "[E] Dock — return to Ship" prompt used to open
 only after a surviving Hatch-bank window (`OfferDockIfBankSurvived`), and Convert was struck from
@@ -183,17 +183,17 @@ All of it lands on the shutoff, because the shutoff is the achievement:
 The Hatch is the start line and the bank, and it must never be ambiguous which one it is
 offering. In Prep, in priority order:
 
-1. **`[T] start the wave**` while any zone still has a terminal to run
-   (`GameController.HatchOffersWaveStart`). This is checked FIRST — ahead of Convert and
-   Withdraw — because a shutoff banks everything, so the player who walks back to start the
-   next wave arrives with nothing unbanked and the Convert branch would otherwise swallow the
+1. **`[T] start the wave**` while `GameController.HatchOffersWaveStart` is true: the current
+   zone still has a terminal (`HatchBankStartBlocked`), or Master Control is waiting and D3 is
+   open (`MasterControlAwaitsStart && ControlRoomReachable`). This is checked FIRST — ahead of
+   Convert and Withdraw — because a shutoff banks everything, so the player who returns to start
+   the next wave arrives with nothing unbanked and the Convert branch would otherwise swallow the
    prompt.
 2. **Convert / Withdraw**, only once there is no zone left to start.
 
-**A field terminal never starts a wave.** `CanSelectTerminal` refuses one while the Hatch is the
-start line, which covers the local look-at and `TryNetStartTerminal` (the co-op entry) together.
-Master Control is the exception: the control room is its own start line, and the one terminal
-the Hatch cannot answer for.
+**A field terminal never starts a wave.** `CanSelectTerminal` refuses one while
+`HatchOffersWaveStart`, which covers the local look-at and `TryNetStartTerminal` (the co-op
+entry) together. `T` at Master Control refuses and says the finale starts at the Hatch.
 
 ## The invariants, as a checklist
 
@@ -208,7 +208,9 @@ A build honours the loop when all of these are true:
 - [ ] Completing a zone opens its door, banks the carry, and says so.
 - [ ] The Hatch's start prompt outranks Convert and Withdraw.
 - [ ] Closing a zone offers the Dock, so the Hatch is a way home without a Convert window.
-- [ ] The Hatch portal is dark before a zone closes and lit after, and ends the run on a hold.
+- [ ] The Hatch dock portal is dark before a zone closes and lit after, and ends the run on a hold.
+- [ ] T2 and T5 recall to the Hatch while Tethered; Master has no pad.
+- [ ] The Hatch starts the finale only once the control room is reachable.
 - [ ] `T` at a zone terminal ends the wave in **Assault**, not only in Prep.
 - [ ] The drip never outlives the flag that makes its bodies free.
 - [ ] A field wave can target and damage the Hatch, and losing it ends the run.
@@ -223,7 +225,8 @@ terminal to *begin* a wave.
 
 | Rule | Code | Test |
 |---|---|---|
-| The Hatch starts; the terminal refuses | `GameController.HatchOffersWaveStart`, `CanSelectTerminal` | `HatchStartLinePlayModeTests.PlainEmbark_TheHatchStarts_AndTheZoneTerminalRefusesTo` |
+| The Hatch starts; the terminal refuses | `GameController.HatchOffersWaveStart`, `CanSelectTerminal`, `ControlRoomReachable` | `HatchStartLinePlayModeTests.PlainEmbark_TheHatchStarts_AndTheZoneTerminalRefusesTo` |
+| T2/T5 recall; dock at the Hatch | `HatchRecallPad`, `HatchPortal`, `RunSim.DockOffered` | `RecallPadSceneTests`, `HatchPortalSceneTests` |
 | Clearing the field does not complete the zone | `GameController.RecordCompositeClear` | `HatchStartLinePlayModeTests.KillingEveryBody_LeavesTheZoneOpen_UntilTheTerminal` |
 | The shutoff completes, banks and opens the door | `ShutOffTerminal`, `RunSim.ShutOffFieldWave`, `OpenDoorsFor` | `HatchStartLinePlayModeTests.TheWaveStartedAtTheHatch_IsShutOffAtTheTerminal_AndBanks` |
 | A Convert window has no off switch | `RunSim.ShutOffFieldWave` | `HatchBankTests.ShutOffFieldWave_RefusesAHatchBankWindow_AndKeepsTheStake` |

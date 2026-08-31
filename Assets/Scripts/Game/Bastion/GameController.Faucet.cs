@@ -115,17 +115,15 @@ namespace GatekeepersProtocol.Game
             PingMarker.Attach(_faucetTerminal.transform, 1.5f);
         }
 
-        /// <summary>Place the local Boarder at the Hatch on the draft confirm. XZ from the
-        /// approach side of the Hatch; Y from a NavMesh floor sample plus the authored rig
-        /// height (a sampled Y written raw is the 2026-08-18 fall-through class); yaw only,
-        /// facing the Hatch; CharacterController disabled around the write.</summary>
-        void TeleportLocalToHatch()
+        /// <summary>Place the local Boarder at the Hatch. Shared by the faucet draft confirm
+        /// and the recall pads beside field terminals.</summary>
+        public void TeleportLocalToHatch()
         {
             var player = PlayerRegistry.Local;
             var hatch = HatchStation.Instance;
             if (player == null || hatch == null)
             {
-                Log.Warn(Tag, "faucet teleport skipped — no player or hatch");
+                Log.Warn(Tag, "hatch teleport skipped — no player or hatch");
                 return;
             }
 
@@ -148,7 +146,7 @@ namespace GatekeepersProtocol.Game
             if (cc != null) cc.enabled = true;
             var fpc = player.GetComponent<FirstPersonController>();
             if (fpc != null) fpc.ClearFallVelocity();
-            Log.Event("Run", "faucet teleport — at the Hatch");
+            Log.Event("Run", "hatch teleport — at the Hatch");
         }
 
         /// <summary>Start the post-draft bank window. Mirrors StartHatchBankWave minus the

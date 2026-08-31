@@ -5,7 +5,7 @@ Purpose: The measured, Unity-6-current rules for code that runs in the engine. S
 Status: working
 Authority: CRITICAL — correctness against the engine, and measured cost.
 Update trigger: when Unity's guidance changes, when a rule here is measured against this project, or when a "stale" entry turns out to still bite.
-Last updated: 2026-08-25 (every §1/§2/§7 citation re-counted against the tree; §9 carries what the current lint run reports)
+Last updated: 2026-08-30 (every §1/§2/§7 citation re-counted against the tree; §9 carries what the current lint patterns report)
 -->
 
 Everything here is `[documented]` or `[measured]` and is **not** outrankable by convention.
@@ -53,8 +53,8 @@ copy), or when it holds reference-type fields.
 **Live in this codebase:** `new WaitForSeconds(...)` allocates on every call.
 `WaveSpawner.Groups.cs` used to construct one per group inside its spawn loop with a
 per-wave-constant interval; it was hoisted out of the loop on 2026-08-11 and the file no
-longer constructs one at all. That leaves exactly one site in the tree as of 2026-08-25:
-`Game/Combat/Damageable.cs:174`, one per hit flash, outside any loop. Cache a
+longer constructs one at all. That leaves exactly one site in the tree as of 2026-08-30:
+`Game/Combat/Damageable.cs:183`, one per hit flash, outside any loop. Cache a
 `static readonly WaitForSeconds` per distinct duration, or per wave. Also: `yield return
 null` is free; `yield return 0` boxes.
 
@@ -67,16 +67,16 @@ collection ([Incremental GC](https://docs.unity3d.com/6000.1/Documentation/Manua
 
 **Cache `GetComponent` results in `Awake`.** Unity's documented rule
 ([programming-best-practices](https://docs.unity3d.com/6000.5/Documentation/Manual/programming-best-practices.html)).
-This project already does it; the pattern to keep is `PlayerGun.cs:286-289`.
+This project already does it; the pattern to keep is `PlayerGun.cs:298-301`.
 
 **Use `TryGetComponent<T>` when the component may be absent.** `GetComponent` returning null
 allocates in the Editor for its diagnostic machinery; `TryGetComponent` does not
 ([TryGetComponent](https://docs.unity3d.com/ScriptReference/Component.TryGetComponent.html)).
-Editor-only, but the Editor is where you profile. **Counted 2026-08-25: 371 `GetComponent*<>`
-call sites under `Assets/Scripts` (285 of them in `Game/`), against 2 `TryGetComponent`
+Editor-only, but the Editor is where you profile. **Counted 2026-08-30: 412 `GetComponent*<>`
+call sites under `Assets/Scripts` (305 of them in `Game/`), against 2 `TryGetComponent`
 (`IsometricBodyPresentation.cs:56`, `NetShipWait.cs:145`).** The 2026-08-09 audit found 39
-and 0, so the ratio has not moved with the tree's growth. Most are `Awake`-cached and fine;
-the probing ones (`PlayerGun.Firing`'s `GetComponentInParent<EnemyGatekeeper>` on every
+and 0, so TryGetComponent has not moved with the tree's growth. Most are `Awake`-cached and fine;
+the probing ones (`PlayerGun.Firing.cs:256` `GetComponentInParent<EnemyGatekeeper>` on every
 damaged body) are the ones worth converting.
 
 **`GetComponentsInChildren(List<T> results)` over the array-returning overload** — the array
@@ -86,11 +86,13 @@ version allocates a fresh array per call.
 (fastest, no ordering guarantee — the common case), `FindFirstObjectByType<T>()`
 (deterministic, slower), `FindObjectsByType<T>(FindObjectsSortMode.None)` — "not sorting saves
 time" ([docs](https://docs.unity3d.com/6000.1/Documentation/ScriptReference/Object.FindObjectOfType.html)).
-**This project is already on the new API.** Counted 2026-08-25: **20** scene-lookup sites in
-`Game/`, every one a `Find*ByType` form, and all but `GameController.Wallets.cs:51` named on
-§9's allowlist. The two spawned-network lookups use the cheapest form
-(`NetPlayerAvatar.cs:165`, `NetRunMirror.cs:86` — `FindAnyObjectByType`); the rest use
-`FindFirstObjectByType` or `FindObjectsByType(FindObjectsSortMode.None)`.
+**This project is already on the new API.** Counted 2026-08-30: **26** scene-lookup sites in
+`Game/` (25 `Find*ByType`, plus `Camera.main` at `ShipHud.cs:235`). Seven of those sit
+outside §9's allowlist: `GameController.Wallets.cs:51`, `HatchPortal.cs:47,58`,
+`HatchRecallPad.cs:28,40,54`, and `ShipHud.cs:235`. OutriderObject and the Net types added
+none; `NetPlayerAvatar.cs:165` and `NetRunMirror.cs:86` remain the two `FindAnyObjectByType`
+sites, both already named. The rest on the allowlist use `FindFirstObjectByType` or
+`FindObjectsByType(FindObjectsSortMode.None)`.
 
 **`Camera.main` is no longer catastrophic.** Unity 2020.2 added an internal cache; a
 contrived 50,000-object test measured a 21,000×–51,000× improvement
@@ -99,9 +101,11 @@ Current docs put it at "comparable to calling `GameObject.GetComponent`"
 ([Camera.main](https://docs.unity3d.com/ScriptReference/Camera-main.html)). Cache it in a hot
 path; do not build a camera-service singleton to solve it. The remaining hazard is
 **correctness, not speed** — it returns the first *enabled* MainCamera-tagged camera, and
-null when that camera is disabled. This project sidesteps it entirely: `Camera.main` appears
-nowhere under `Assets/Scripts` as of 2026-08-25, and `FirstPersonController` takes its camera
-from a serialized child transform (`cameraTransform`, wired by `SceneBuilder`).
+null when that camera is disabled. `FirstPersonController` takes its camera from a serialized
+child transform (`cameraTransform`, wired by `SceneBuilder`). The one live site as of
+2026-08-30 is `ShipHud.cs:235`, a `ResolveEye` fallback after the serialized camera and the
+iso rig; that hit is also a §9 scene-lookup violation because `ShipHud.cs` is not on the
+allowlist.
 
 ## 3. Null checks on `UnityEngine.Object` — the rule with no exceptions
 
@@ -130,8 +134,10 @@ Any editor with "apply all suggestions" on will do this unprompted.
 
 **Audited 2026-08-09: no violations — then later UI work reintroduced the constructs, and
 on 2026-08-11 every flagged construct line across the 22 files were converted back to the Unity-null-safe
-forms.** The §9 row now enforces this at zero. The rule is written down because the next
-`?.` might not be safe, and history shows it arrives with routine UI work.
+forms.** Re-counted 2026-08-30: lint-arch's `fakenull_pattern` still matches 0 lines under
+`Game/` — no `?.` / `??` / `is null` / `ReferenceEquals` on a non-comment line, including on
+`UnityEngine.Object`. The §9 row still enforces this at zero. The rule is written down
+because the next `?.` might not be safe, and history shows it arrives with routine UI work.
 
 **Do not "optimize" `== null` into `ReferenceEquals`.** You buy nanoseconds and sell the
 destroyed-object check. The legitimate optimization is hoisting the check out of the loop.
@@ -221,11 +227,11 @@ and writes to the platform log — in a shipped build, whether or not anything r
 those sites are in the combat and spawn paths, which fire per kill, per group and per reload.
 A further **47 interpolations sat inside `OnGUI` files**, which run at least twice per frame.
 
-**Re-counted 2026-08-25: still not `[Conditional]`, and the call sites have tripled.** 428
-`Log.Event` / `Log.Metric` sites now, out of 742 `Log.*` sites in total, at least 47 of them
-interpolating — a floor, because the count reads one line at a time and misses calls broken
-across lines. The one figure that improved is the `OnGUI` files: 9 interpolations across
-`HudController`, `ShipHud` and `DevConsole` together, down from 47.
+**Re-counted 2026-08-30: still not `[Conditional]`.** 478 `Log.Event` / `Log.Metric` sites
+now, out of 802 `Log.*` sites in total, at least 47 of them interpolating — a floor, because
+the count reads one line at a time and misses calls broken across lines. The `OnGUI` files
+are unchanged at 9 interpolations across `HudController`, `ShipHud` and `DevConsole`
+together (including `DevConsole.Range.cs`).
 
 **Rule: `Log.Event` and `Log.Metric` become `[Conditional("GKB_LOG")]`, with `GKB_LOG` defined
 in Editor and development builds and absent in release. `Warn` and `Error` stay unconditional
@@ -254,7 +260,7 @@ reading a 2018 blog post does not re-propose it.
 | "Structs are always faster, they don't allocate" | Wrong for large structs, mutable structs behind properties, and dictionary keys without `IEquatable<T>` |
 | "Use `ReferenceEquals` instead of `== null` for speed" | Unity's docs say don't — it skips the destroyed-object check |
 | "Wrap logs in `if (Debug.isDebugBuild)`" | Does not stop the string building or the boxing. `[Conditional]` does |
-| "Build an update manager" | Unity: "not a one-size-fits-all"; the threshold is hundreds to thousands. This project has 33 (counted 2026-08-25) |
+| "Build an update manager" | Unity: "not a one-size-fits-all"; the threshold is hundreds to thousands. This project has 41 `void Update()` sites under `Assets/Scripts` (counted 2026-08-30) |
 
 ## 8. Claims with no modern measurement — treat with suspicion
 
@@ -275,35 +281,48 @@ with `rg` over `Assets/Scripts` using the patterns in the fence.
 |---|---|---|
 | `?.` / `??` / `is null` / `ReferenceEquals` on what may be a `UnityEngine.Object` (§3), scanned as the raw constructs in `Game/`, comment lines excluded | **enforced at 0** (stamped 2026-08-11) | 0 — every flagged construct line across the 22 baselined files were converted to Unity-null-safe forms (`== null` / `!= null` / plain truthiness) on 2026-08-11 |
 | `using System.Linq` in runtime code (§1) | **enforced at 0** | 0 — the one site M41's draft recorded has been fixed since |
-| `new WaitForSeconds` in a loop body (§1) | **enforced at 0** (stamped 2026-08-11) | 0 — the row greps every site in `Game/` and subtracts the files the fence names as known non-loop sites (`Damageable.cs:150`, not in a loop; `WaveSpawner.Groups.cs`, whose per-group wait was hoisted out of its `while` loop into a single allocation before it on 2026-08-11). Any new site outside the two named files fails the run; a new in-loop wait inside a named file is masked, so touching those files means re-checking the loop by eye |
+| `new WaitForSeconds` in a loop body (§1) | **enforced at 0** (stamped 2026-08-11) | 0 — the row greps every site in `Game/` and subtracts the files the fence names as known non-loop sites (`Damageable.cs:183`, not in a loop; `WaveSpawner.Groups.cs`, which no longer constructs one). Any new site outside the two named files fails the run; a new in-loop wait inside a named file is masked, so touching those files means re-checking the loop by eye |
 | `FindObjectOfType` / `FindObjectsOfType` (§2) | **enforced at 0** | 0 |
 | Empty `Update` / `Start` / `LateUpdate` / `FixedUpdate` / `OnGUI` body (§4) | **enforced at 0** | 0 |
 | A milestone ID (`M<digits>`) in an identifier — a file name, type, namespace, menu path or define | **enforced at 0** | 0 — true today (`M35Wp4OptionsPatch.cs`, the type, the file and its menu row, is already deleted). Zero exceptions |
 | A milestone ID in a comment or string literal | **enforced at 0** (stamped 2026-08-11) | 0 — the 66 baselined lines across 39 files were cleaned on 2026-08-11; comments now say what the code does, not which milestone touched it |
 | `[InitializeOnLoad]` outside the fence's allowlist | **enforced at 0** | 5 sites, all five in the allowlist. Trimmed 2026-08-19: it also named `RepairStationPanels.cs` and `StripSettingsToStations.cs`, both deleted long since, so the allowlist was pre-approving a construct for files that do not exist — a new file at either path would have inherited the exemption silently |
-| A scene lookup (`FindFirstObjectByType` / `FindObjectsByType` / `FindAnyObjectByType` / legacy `FindObject(s)OfType` / `GameObject.Find` / `Camera.main`) in `Game/` outside the fence's allowlist | **enforced at 0** (stamped 2026-08-12) | 0 outside the named files. Replaces the two-runs milestone gate's manual grep — the wiring rule is serialize/authored refs for scene-stable objects, pass-from-owner for runtime-spawned. The allowlist is the named-exemption list: cross-scene flow/audio dedupe (`SceneFlow`, `FrontEndMusic`), the settings-change volume broadcast (`AudioBuses`), the bind-time Shift-manager locator (`UiBind`), the two dev files, and the two spawned-network lookups (`NetRunMirror`, `NetPlayerAvatar`) — spawned prefabs cannot be scene-wired |
+| A scene lookup (`FindFirstObjectByType` / `FindObjectsByType` / `FindAnyObjectByType` / legacy `FindObject(s)OfType` / `GameObject.Find` / `Camera.main`) in `Game/` outside the fence's allowlist | **enforced at 0** (stamped 2026-08-12) | **7** outside as of 2026-08-30 (named in the paragraph below this table). Fence unchanged — adding a file to `scenelookup_allow` pre-approves every future lookup in it. The allowlist is still the named-exemption list: cross-scene flow/audio dedupe (`SceneFlow`, `FrontEndMusic`), the settings-change volume broadcast (`AudioBuses`), the bind-time Shift-manager locator (`UiBind`), the two dev files, and the two spawned-network lookups (`NetRunMirror`, `NetPlayerAvatar`) |
 | An `Input.` read in `Game/` outside `Controls.cs` (the sole producer) or the dev console | **enforced at 0** (stamped 2026-08-12) | 0 — `Controls.Sample()` produces one `PlayerInputFrame` per frame; gameplay reads the frame. Replaces the same milestone gate's input grep |
 | An ambient `UnityEngine.Random` draw in `Game/` outside the named sites | **enforced at 0** (stamped 2026-08-12) | 0 outside `PlayerGun.Firing.cs` (crit + pellet cone — deliberately off the replayable stream, see `4-Testing-and-Determinism.md`) and `UiPitchRandomizer.cs` (cosmetic). Spawn placement draws come from the seeded generator on `RunSim`. Replaces the same milestone gate's randomness grep |
 | `AssetDatabase.DeleteAsset` naming a `.cs` file (self-deleting script) | **enforced at 0** | 0 |
-| A non-source, non-`.meta` file under `Assets/Scripts/` (`.cs`, `.asmdef` and `.meta` are source here) | **enforced at 0** | 0 |
-| A `static Instance` on a type not named in `Architecture/README.md`'s fence | see that file's fence | 2 declarations, both named there (`DecoyBay`'s was retired 2026-08-11) |
-| A file over its folder's cap | see `Docs/Architecture.md`'s fence | 0 since 2026-08-11 |
+| A non-source, non-`.meta` file under `Assets/Scripts/` (`.cs`, `.asmdef` and `.meta` are source here) | **enforced at 0** | 0 — FX shaders live under `Assets/Shaders/`, outside this scan |
+| A `static Instance` on a type not named in `Architecture/README.md`'s fence | see that file's fence | 1 declaration (`HatchStation`); `DecoyBay`'s was retired 2026-08-11. `RealmShareBeacon._instance` is the same shape under another name and is invisible to this grep |
+| A file over its folder's cap | see `Docs/Architecture.md`'s fence | 7 files over as of 2026-08-30; fence baseline still 0 |
 
 The scan is textual — a construct inside a string or comment counts, which is
 deliberate for the milestone-ID text row and a cheap over-approximation for the rest.
 A row narrowed until its count reaches zero is a failed row, not a passing one.
 
-**The run is not clean today.** `Tools/lint-arch/run.sh` on 2026-08-25 reports 6 violations:
-the four over-cap files listed in `../Architecture.md`, the count exceeding that fence's
-baseline of 0, and one scene lookup outside this fence's allowlist —
-`Game/Bastion/GameController.Wallets.cs:51`, a `FindObjectsByType<SpawnRoom>` in the seat-mute
-pass. Adding it to `scenelookup_allow` would silence the row and pre-approve every future
-lookup in that file, so the fence is left alone until the lookup is either wired or
-deliberately exempted. One fence entry is also pre-approving nothing:
-`waitforseconds_nonloop_allow` still names `Game/Enemies/WaveSpawner.Groups.cs`, which no
-longer constructs a `WaitForSeconds` — the same shape as the `initializeonload_allow` entries
-trimmed on 2026-08-19, except that this file still exists, so removing the name is a
-tightening rather than a correction and is left for the change that wants it.
+**The run is not clean today.** Measured 2026-08-30 against the same unit and patterns
+`Tools/lint-arch/run.sh` uses (counted-lines awk, `rg --pcre2` on the fence). The script
+itself was not invoked.
+
+Seven files exceed their folder cap while `Architecture.md`'s fence still has
+`over_cap_baseline=0` and `over_cap_known` empty, so each file is a violation and the
+count exceeding 0 is another: `Editor/Bastion/BastionSketchEmitter.cs` 976/800,
+`Sim/Bastion/BastionSketchParser.cs` 639/600, `Game/Bastion/GameController.Terminals.cs`
+611/400, `Game/Net/NetVerbs.cs` 549/400, `Game/Player/PlayerProtocolAbilities.cs` 445/400,
+`Game/Dev/DevConsole.cs` 421/400, `Game/Bastion/GameController.cs` 418/400.
+
+Seven scene lookups sit outside this fence's allowlist: `GameController.Wallets.cs:51`
+(`FindObjectsByType<SpawnRoom>`), `HatchPortal.cs:47,58`, `HatchRecallPad.cs:28,40,54`
+(`FindFirstObjectByType<GameController>` / `FindObjectsByType<HatchRecallPad>`), and
+`ShipHud.cs:235` (`Camera.main`). Adding any of those files to `scenelookup_allow` would
+silence the row and pre-approve every future lookup in that file, so the fence is left
+alone until the lookup is either wired or deliberately exempted. `HatchRecallPad` is the
+new pad type; `OutriderObject` and the Net types added no lookups.
+
+One fence entry is also pre-approving nothing: `waitforseconds_nonloop_allow` still names
+`Game/Enemies/WaveSpawner.Groups.cs`, which no longer constructs a `WaitForSeconds` — the
+same shape as the `initializeonload_allow` entries trimmed on 2026-08-19, except that this
+file still exists, so removing the name is a tightening rather than a correction and is
+left for the change that wants it.
 
 ```arch-lint
 fakenull_pattern=^(?![ \t]*//).*?(\?\.|\?\?|\bis[ \t]+null\b|\bReferenceEquals\b)

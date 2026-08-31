@@ -6,82 +6,89 @@ would make it true. Not a store page. Does not invent mechanics.
 Status: working
 Update trigger: when a milestone changes a pitch Accuracy row, when a claim's
 source identifier is renamed or deleted, or when Play tense is restamped.
-Last updated: 2026-08-25 (regrilled against the tree after eight days of
-milestones landed under untouched copy; three claims cited identifiers that no
-longer exist)
+Last updated: 2026-08-30 (Copy restamped; 0.34.2 grill: payroll inverted, Ante parked, respawn
+purse, one-deck hull, DemoZones {2,3}, SalvagePerKill 42; play reports 08-25 and 08-29)
 -->
 
 Grill of `strategy.md`, `product.md`, `landscape.md`, `gtm.md`, `pitch.md`
-against code, Play, milestones, Demo, and brainstorms. Accuracy patches land in
-those files the same day.
+against code, Play Mechanics, milestones, Demo, and brainstorms. Accuracy patches
+land in those files the same day.
 
-**The 2026-08-17 pass grilled a build that has since moved a long way and the
-copy did not move with it.** Everything under *Landed under the copy* below
-shipped after that stamp and against files nobody restamped. That is the
-condition this register exists to catch, so it is listed first.
+**The 2026-08-17 copy was restamped 2026-08-25 against a build that then moved
+again.** 0.34.2 (`ProductVersion.Display`) ships three inverted rules this folder
+still described as current until this pass: kills bank on landing, the respawn
+purse is the realm's bank, the Ship is one deck. Ante is parked. That is the
+condition this register exists to catch.
 
 ## Blocking
 
 **Five-wave friends dry-run.** Shared Ship + party EMBARK closed with `M72`
 (2026-08-17, host log `13-24-37` / Relay `KPRMPR`). The Roadmap friends-alpha
 sentence still needs a full five-Wave both-participating Boarding, and nothing
-since has supplied one — the co-op work that landed is capability, not evidence.
+since has supplied one — including the 0.34.2 zip. The co-op work that landed is
+capability, not evidence.
 
 Recommendation: qualify "finish a Boarding together" until that dry-run lands.
 Play shared-Ship present tense is no longer blocked by lobby topology.
 
-**A shared realm has never run on two machines.** `M100` is built and carries 41
-tests, and its criteria 1, 2, 9 and 10 are explicitly owed on two boxes. Until
-they close, "play in your friend's world while they are offline" is a built
-feature with no proof, which is a different thing from a shipped one.
+**A shared realm has never run on two machines.** `M100` is built and its
+criteria 1, 2, 9 and 10 are explicitly owed on two boxes. Until they close,
+"play in your friend's world while they are offline" is a built feature with
+no proof.
 
-## Landed under the copy, 2026-08-18 to 2026-08-25
+## Landed under the copy, 2026-08-26 to 2026-08-30
 
-Each of these changes what may honestly be said, and none of it was in the copy
-files before this pass.
+Each of these changes what may honestly be said.
 
 | What shipped | What it changes for copy |
 |---|---|
-| `M93` — three Primaries that read as three guns | "The weapon is the build" has three distinct answers, not a catalog |
-| `M94` — VEIL and FORGE | Two specialist Protocols are claimable. "Specialist Protocols as if they ship" is no longer a blanket ban; AEGIS and LEDGER are the Coming Soon rows |
-| `M96` — the realm and the Boarder | A Boarder travels between worlds; a realm keeps the pot, the doors and the record. Save v13 refuses older documents |
-| `M97` — the ship remembers | The realm's record is on the hull: twelve clean-exit marks, a crew rack, a plate |
-| `M99` — a range you can fight in | A door off the Ship into a practice range with the catalogue unlocked. Presentation is graybox and it is a dev tool, so it is not a store beat |
-| `M101` — two decks and a stair | The Ship is a place with an upstairs. Any screenshot of the old wide single deck is of a hull that no longer exists |
-| `M63-3` — the Cloaker | A fourth Gatekeeper kind, and the first whose refusal is a state rather than a target: watched it holds, unwatched it advances |
-| `M98` recut — one priced respawn | Death is no longer flatly terminal. See the row below |
-| `M95` — the co-op bastion | 28 rooms over two storeys, three hatches. Built and unverified in play |
-| `M102` — the faucet loop graybox | Dev-gated and off by default. **Not printable in any form** — it is an experiment whose own playthrough is owed |
-| Convert rename (2026-08-24) | Player text says Boarding, Ante, ante up, Convert. Every store sentence follows |
+| Kills bank on landing (2026-08-25, Play `Salvage.md`) | Unbanked-until-Convert is false. Convert is an opt-in Withdraw bet. Struck from the demo |
+| Hatch-start / terminal-end (`Getting-Started.md`; faucet-loop **shape** on by default) | A Wave begins at the Hatch and ends at the zone terminal. Field terminals do not offer a start. Printable. The M102 graybox on top of it (auto-chain, Hatch-hunt, endure income, draft) stays **not printable** |
+| Roster cut ~40% (2026-08-27, `WaveDirector`) | Dial-0 solo is 11 / 18 / 25 / 32 / 39, not 18–66. Salvage per kill is **42**, not 25 |
+| Field Waves can nick the Hatch (`HatchBank.FieldWaveDamageScale = 0.15`) | "Field Wave, Hatch cannot be hurt" is false |
+| `M101` superseded (2026-08-26, Zo) | The Ship is one deck. Two-deck screenshots are of a hull that no longer exists |
+| Respawn purse recut | Realm bank, cap **2**, bleed-out **10 s**. File comment on `Respawns.cs` is stale |
+| Ante parked (2026-08-30, Zo) | `Ante.Enabled = false`. No ante up, no intensity select, no Ante readout. Waves at dial 0 |
+| Hatch recall pads (2026-08-30) | Hold 1.5 s at T2 / T5 Portal teleports to the Hatch. Operational, not a store pillar |
+| Hatch Master gate (`ControlRoomReachable`, 2026-08-30) | Hatch offers Master only when the control room is reachable; Convert / Withdraw can answer while the gate is shut |
+| Join-code reuse + Boarder name field (2026-08-30) | OPEN TO FRIENDS keeps the Relay allocation; REALMS has a Boarder name box. Send polish, not a pitch sentence |
+| SHIFT wordmark off; surfaces read GATEKEEPER'S PROTOCOL (2026-08-30) | **Not printable.** Chrome, not a product beat |
+| `M99` range | Graybox / dev tool. Not a store beat (`gaps.md` 2026-08-25 still holds) |
+| FORGE turret + Outrider (`Protocol-FORGE.md`, 2026-08-29) | May name the machines as **yours**. `M106` / `M107` still sit in `1. planned/` — Play is the citation, not those files |
+| Wheel unlock re-keyed | `MetaUpgrades.UpgradesUnlocked` is `LifetimeSalvageEarned > 0`, not first Convert and not first Lost |
+| `DemoZones.WavesPerTriggerByZone` | `{ 2, 3 }`. Zone 1 runs **2** Waves as one composite. `language.md` still says `{ 1, 3 }` |
 
-## Claims whose source no longer exists
+## Claims whose source no longer exists, or now disagrees
 
-The worst kind, because each reads as verified. Found 2026-08-25 by grepping the
-identifier rather than trusting the sentence.
-
-| Claim, and where | The problem | Honest line |
+| Claim, and where it lived | The problem | Honest line |
 |---|---|---|
-| Convert is "3 slots/Run", cited as `HatchBank.SlotsPerRun` — was in `pitch.md` and `product.md` | `SlotsPerRun` has zero hits in `Assets/Scripts/`. `language.md` still says Convert is capped per Boarding, so a cap exists; its source is unfound | Say "capped per Boarding" and print no number until someone names the constant |
-| T1's Wave count — `pitch.md` and `gaps.md` both asserted **3** | Four sources disagree as of 2026-08-25: the generated Field Manual says 5, `language.md` says 3, and `DemoZones.WavesPerTriggerByZone` is `{ 1, 3 }`, so zone 1 authors 1. The Field Manual's sentence is a hardcoded literal in `Tools/docgen/Program.cs:880`, not a generated value, which is how it drifted without failing `--check` | Cite no number. `DemoZones.WavesPerTrigger` is the source. Not a marketing fix — the generator needs it |
-| "code id stays `Ram` until M63" — `pitch.md`, `gaps.md`, `strategy.md` | `M63-3`'s rename landed 2026-08-20 and `Ram` has zero hits in `Assets/Scripts/`. `M63` itself is deferred, so the condition can never be met as written | Thief in code and in copy alike |
-| `MetaUpgrades.SalvagePerKill`, "25 + 5×Scavenging" | Takes no argument and returns a flat 25. `UpgradeTrack` has one member left, `HatchArmor` | Salvage per kill is flat and does not vary by kind |
-| Dead links: `../Play/A-Run.md`, `../Play/Intensity.md`, `../Demo/README.md` | Renamed with the Convert pass (`A-Boarding.md`, `Ante.md`) and split (`Demo - Single/`, `Demo - Coop/`) | Fixed in this pass |
+| Convert is "3 slots/Run", `HatchBank.SlotsPerRun` | Identifier has zero hits. `HatchBank.BankCap` exists and is co-op conversion math, not a Convert count. `language.md` Convert row: **there is no per-Boarding cap** | Print no number. Convert is not the payroll |
+| T1's Wave count as 3 or 5 | `DemoZones` is `{ 2, 3 }`. Field Manual: zone 1 = 2 waves. `language.md` still says `{ 1, 3 }` | Cite `DemoZones`. Not a marketing fix — language.md is stale |
+| Dial-0 bodies 18 / 30 / 42 / 54 / 66 | `WaveDirector` 2026-08-27: `11 + 7×i` → 11 / 18 / 25 / 32 / 39 | Cite the director. 4-Data's co-op formula line still reads `18 + 12×i` and is stale |
+| `MetaUpgrades.SalvagePerKill` = 25 | Returns **42** | 42 |
+| Respawn from carried Unbanked | `Respawns.Refuse` reads the realm bank; refusal string `not enough banked` | `Going-Down.md` |
+| Two-deck Ship (`M101`, product.md 2026-08-25) | Superseded 2026-08-26 | `The-Ship.md` one deck |
+| First Lost / first Convert unlocks the wheel | `LifetimeSalvageEarned > 0` | `MetaUpgrades.UpgradesUnlocked` |
+| `../Play/*.md` | Folder is `Play Mechanics/` | Fix the path |
+| Field Manual Ante table as live | Generator still prints it; `Ante.Enabled` is false | Do not print |
 
 ## Honest now / not yet
 
 | Pitch | Now | Gate |
 |---|---|---|
 | Alone | True | — |
-| With friends | Shared Ship + party EMBARK (`M72`), a realm both can hold (`M96`, `M100`), a late arrival who follows in at a break (`M98`) | Five-Wave dry-run still open; `M100` unproven on two machines |
-| Defeat Gatekeepers | True as the fight, four kinds | Escaped = Master Control (`M54`), not field Wave 5 |
-| Their Protocols | False | Same modifier pool, Gatekeeper form **diluted** (`boarder-protocols.md`). Probe: one body a player can name. Your own sheets — Default, VEIL, FORGE — are not this sentence |
-| Defend Salvage | True as Convert | False as fortress / "your Bastion". The per-Boarding cap has no citable number |
-| Death ends it | **Half true, and this is new.** `M98` prices one way back per dead seat: paid from the Unbanked that seat is carrying, `150 × (taken + 1)` with the counter the Boarding's, remainder surviving the death (`Sim/Run/Respawns.cs`). Nothing else can pay — not the realm's bank, not another seat | A seat carrying nothing cannot pay and the Boarding ends there. Neither "one death and it is over" nor "you can always come back" is printable |
+| With friends | Shared Ship + party EMBARK (`M72`), a realm both can hold (`M96`, `M100`), a late arrival who follows in at a break (`M98`). 0.34.2 is a zip of that | Five-Wave dry-run still open; `M100` unproven on two machines |
+| Defeat Gatekeepers | True as the fight, four kinds, Hatch-start / terminal-end | Escaped = Master Control (`M54`), not field Wave 5 |
+| Their Protocols | False | Same modifier pool, Gatekeeper form **diluted**. Probe: one body a player can name. Your sheets — Default, VEIL, FORGE (turret + Outrider) — are not this sentence |
+| Defend Salvage (old Copy) | **Restamped 2026-08-30.** Hold the Hatch. Salvage banks as they fall. Both **true** | Convert remains opt-in on Withdraw; no cap; struck from the demo. Do not print the retired sentence |
+| Death ends it | **Priced, capped, timed.** Realm bank, `150 / 300`, then `out of respawns`. 10 s bleed-out | Neither "one death and it is over" nor "you can always come back" is printable |
+| Ante / author the swarm | **Parked** | Flip `Ante.Enabled`; then Zo restamps Copy if he wants the wager in the block |
 
-Trailer that is true tonight: quiet Prep, an ante up, a **Terminal** hunt, a
-**Convert** at the Hatch, solo boarding, two people on a shared Ship, a crewmate
-who animates. Not AEGIS or LEDGER. Not thousands. Not the faucet loop. Not "they
-wear your Protocols" until the probe.
+Trailer that is true tonight: quiet Prep, `T` at the Hatch, the walk, a terminal
+shutoff, solo boarding, two people on a shared Ship, a crewmate who animates.
+Not AEGIS or LEDGER. Not thousands. Not the faucet graybox. Not the range.
+Not the wordmark swap. Not Ante. Not "they wear your Protocols" until the probe.
+Not Convert as payroll. Not the two-deck hull.
 
 ## Focus (existing work only)
 
@@ -91,10 +98,10 @@ Ranked to Fellowship / Expression / Fantasy (`../Design/1-Experience.md` §1.2).
 |---|---|---|---|
 | 1 | Product | Five-Wave both-participating dry-run | Friends-alpha sentence in full |
 | 2 | Product | `M100` on two real machines | A shared realm as a claim rather than a build |
-| 3 | Copy | Keep Play and Compendium tense aligned with the shipped realm and Convert names | Stops stale hedging and stops retired words leaking outward |
-| 4 | Product | One diluted Gatekeeper modifier (probe). Deeds later, as unlock spine | Protocols sentence |
-| 5 | Build | Name the Convert cap and the T1 count in one place each, and make the Field Manual generate them | Removes the two unciteable numbers above |
-| 6 | Product | Demo beats 0–7 — teach the Terminal hunt then the Convert | First-night as the two jobs that already ship |
+| 3 | Copy | Keep Play and Compendium tense on Hatch-start and bank-on-kill | Stops the retired "defend your Salvage" sentence leaking outward |
+| 4 | Copy | Recut `Demo - Single/` against Getting Started (Hatch-start, no Ante teach, kills already banked) | First-night spec matches the zip |
+| 5 | Product | One diluted Gatekeeper modifier (probe). Deeds later, as unlock spine | Protocols sentence |
+| 6 | Product | Flip `Ante.Enabled` if the stake half of pace-and-stake is wanted again | The wager. Not a copy fix — Zo parked it |
 | 7 | Product | Second destination that differs in layout / hazard / composition (`missions-and-destinations.md`) | Bastions, plural |
 
 Presence polish is `M66` for nameplates and remote-gun; the crewmate body itself
@@ -102,7 +109,8 @@ is done (`M83`, and `M86` for the downed pose, active). Voice is rejected in
 `M66`, parked in `../Brainstorms/co-op.md`. Neither unlocks a pitch sentence.
 
 Do not revive parked crew attributes / XP (`crew-skills-and-perks.md`). Do not
-sell FAB payloads as the Protocols sentence (`fabrication.md`).
+sell FAB payloads as the Protocols sentence (`fabrication.md`). Do not sell the
+faucet graybox. Do not sell Ante while the flag is false.
 
 ## Play that constrains copy
 
@@ -112,11 +120,8 @@ Only `../GatekeeperZo Notes/playthrough.md`.
 |---|---|
 | 2026-08-07 | Loop can read as a shooter people want — **upgraded** loadout (MR-35 T4). Log named in `product.md` |
 | 2026-08-09 | T9 felt easy; verdict **pending**. Do not trailer it |
-| 2026-08-13 | The Convert fight is sellable |
-| 2026-08-16 `[unconfirmed]` | Starting solo too hard; teach multiple Waves then overrun, lose **some** Salvage. Demo file 1 |
+| 2026-08-13 | The Convert fight is sellable as an opt-in Hatch bet |
+| 2026-08-16 `[unconfirmed]` | Starting solo too hard. "Lose some Salvage" was the old Unbanked model |
+| 2026-08-25 pending | MK-1 T2, no Primary, lost zone 1 composite at 25 live, 2 respawns, 227 banked. Log named in `product.md`. Soft-lock `[unconfirmed]`. Do not market an easy first night |
+| 2026-08-29 pending | FORGE T2, Hatch lost wave 8; machines 0 damage absorbed; EMP 6/8 caught 0. Do not trailer the Outrider as the hold |
 | Header | Field Waves still walk to the Boarder (camping). The Convert is the door job. Two modes are printable; a dungeon crawl is not |
-
-**Nothing since 2026-08-16 is a play report.** Everything in *Landed under the
-copy* closed on disk and harness evidence, and several carry owed playthroughs —
-`M95`, `M100`, `M102` and `M86` by name. No quality claim may be made from any
-of them.

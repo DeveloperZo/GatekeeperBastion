@@ -181,7 +181,7 @@ namespace GatekeepersProtocol.Game
             if (_shownAssault != AssaultState.Assault)
             {
                 _shownAssault = AssaultState.Assault;
-                ShowFightHud(prep: false);
+                if (!OverlayHidesFightHud) ShowFightHud(prep: false);
             }
         }
 
@@ -192,7 +192,7 @@ namespace GatekeepersProtocol.Game
             if (_shownAssault != AssaultState.Prep)
             {
                 _shownAssault = AssaultState.Prep;
-                ShowFightHud(prep: true);
+                if (!OverlayHidesFightHud) ShowFightHud(prep: true);
             }
         }
 
@@ -336,6 +336,9 @@ namespace GatekeepersProtocol.Game
             try
             {
                 if (TryPushClientEnd())
+                    return;
+
+                if (OverlayHidesFightHud)
                     return;
 
                 if (_shownPhase != sim.Phase

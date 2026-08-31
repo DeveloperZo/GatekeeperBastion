@@ -2,7 +2,7 @@
 Purpose: Current representation of the weapon system as it is in the build — Ship-only buy and equip, the two gun slots with their own clips, reload and swap, per-weapon fire behaviour and abilities, the upgrade-wheel purchase, and how a shot is aimed under the Ship's isometric rig.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Weapons
@@ -207,7 +207,7 @@ Figures: [Field Manual](Field-Manual.md).
 
 - Ammunition is infinite. The game shows a clip counter but never states that there is no reserve pool.
 - Tiers are per weapon and do not transfer. The ARMORY never warns you that buying a second Primary restarts the investment.
-- Weapon Tiers are locked until the first Hatch conversion. The panel says "locked" but what unlocks it is not explained.
+- Weapon Tiers are locked until this realm has earned any Salvage. The panel says "locked" but what unlocks it is not explained.
 - An upgrade purchase moves several spokes at once. Nothing explains the ring, and nothing tells you that range, spread, pellet count, pierce and falloff are frozen at purchase.
 - FABRICATION sells the Decoy into the Drone bay. Selecting an empty bay still looks identical to an input that failed to register.
 - The improvised cutter is never named; if you skip the free sidearm, you are just holding a weak gun.

@@ -6,11 +6,12 @@ Builder path stays Docs/Play/ (M28 language lint). Player-facing name is Compend
 Status: working
 Update trigger: when a volume or entry is added or removed, or when an entry's
 Coming Soon marker is placed or lifted.
-Last updated: 2026-08-24
+Last updated: 2026-08-30
 Builder notes (omitted in-game): Gaps sections are builder audit; the reader strips them
 and HTML comments. The Game block of every entry is a Boarder's working notes — voice
 rules, the hand-per-protocol roster and the derivability lint live in ../Story/Voices.md.
-Reference blocks are builder-only and are not read in the build. Countable facts live only
+Reference blocks are builder-only except First Time Out, whose numbered walkthrough ships
+in the pause reader with the Game notes. Countable facts live only
 in Field-Manual.md (Tools/docgen/run.sh --check), which the reader does not open.
 Coming Soon pages carry the marker in their title, carry coming_soon: true in this comment
 (the pause nav's optional filter and the form tests read it), stay in_build: true so the
@@ -28,16 +29,16 @@ its way; it is short on purpose.
 
 I am the Boarder. The Bastion is held. The Hatch is the way home.
 
-[The Game](The-Game.md) is the shape of the whole thing: what a Boarding is, why there are
-kinds, what losing costs. [First Time Out](Getting-Started.md) is the first hours in
-order, and the three mistakes that eat early Boardings.
+[First Time Out](Getting-Started.md) is the first Bastion in order, from a dark Ship to
+stripped — the pause reader opens there and shows the numbered steps. [The Game](The-Game.md)
+is the shape of the whole thing: what a Boarding is, why there are kinds, what losing costs.
 
 ## II. A Boarding
 
-One trip out and back. [A Boarding](A-Boarding.md) is embark, Prep, Ante, Assault, Convert,
+One trip out and back. [A Boarding](A-Boarding.md) is embark, Prep, Assault, Convert,
 and the four ways it finishes. [Waves](Waves.md) is how the room gets worse.
-[The Ante](Ante.md) is the only wager on offer and it is an honest one.
-[Salvage](Salvage.md) is the only currency, and it is not mine until it converts —
+[The Ante](Ante.md) is parked: the dial is off and Waves run at zero.
+[Salvage](Salvage.md) is the only currency, banked the moment a body falls —
 [The Other Currencies](Experience-And-Cores.md), Coming Soon, are the two that will join it.
 [Going Down](Going-Down.md) is what a death costs and who pays it.
 [Staying Alive](Staying-Alive.md) is what the room rewards, traced back to the rule that
@@ -99,7 +100,7 @@ bench.
 
 Between Boardings I walk my own Ship. [The Ship](The-Ship.md) is the hub and the four consoles,
 each owning one subject. [Upgrades](Upgrades.md) is what is permanent, what waits for the
-first Convert, and what is actually worth buying.
+first Salvage earned, and what is actually worth buying.
 [Life Aboard](The-Safehouse.md), Coming Soon, is what there will be to do here besides
 leaving.
 

@@ -1,5 +1,8 @@
 # The Ante
 
+**Parked.** The Ante dial is off in the current build — Waves run at the base stake. The
+rules below describe the mechanic when it returns.
+
 ## Game
 
 The Ante is a wager, placed per Wave, before I commit. It is the one dial on this machine that is mine.

@@ -2,7 +2,7 @@
 Purpose: MR-35 Rifle, an instance of Weapons — differences only.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # MR-35 Rifle
@@ -13,15 +13,15 @@ The Primary for things that will not come to the Boarder: a held trigger from a 
 
 ## Game
 
-A Primary for things that will not come to me. One heavy, accurate shot per pull, no spread, and full weight far enough down a corridor that most of a fight happens inside it. Past that the distance starts taking a cut, and the reach runs on well beyond where the BR-12 has given up. Only the PRI-C reaches further, and it buys that with cadence I would not pay.
+A Primary for things that will not come to me. A held trigger, a deep clip, no spread, and full weight far enough down a corridor that most of a fight happens inside it. Past that the distance starts taking a cut, and the reach runs on well beyond where the BR-12 has given up. Only the PRI-C reaches further, and it buys that with cadence I would not pay.
 
 It pierces. A shot continues through a body into the ones behind it, up to a limit. Walls still stop it; the dead do not soak it. The trick only pays when bodies queue, so I shoot down corridors, never across them. A group abreast is one hit. The same group in file is several, from one pull.
 
-The cadence is slow, and a miss is real time gone. It rewards a steady hand and punishes a spray. If I am holding the trigger, I am holding the wrong gun.
+The cadence is the assault rifle's: hold the trigger. A miss is still time gone, but spraying is what this gun is.
 
 Thieves are what it is for. Their walk is the entire budget I get, and this spends it from across the room without making me stand idle between shots the way the PRI-C does.
 
-The weak spot is a Hunter already inside my range. One is fine. Several, arriving between shots, is how Boardings end. That is the price of taking this over the BR-12, and the price is real.
+The weak spot is a Hunter already inside my range. One is fine. Several, arriving in the clip, is how Boardings end. That is the price of taking this over the BR-12, and the price is real.
 
 A Damage focus compounds here better than anywhere else. A Thief dropped one shot sooner is worth more than the step looks on the panel.
 

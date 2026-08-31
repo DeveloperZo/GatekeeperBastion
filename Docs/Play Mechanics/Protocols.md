@@ -2,7 +2,7 @@
 Purpose: Current representation of Boarder Protocols as they are in the build — the mechanic page; instances carry only their differences.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Protocols
@@ -67,8 +67,8 @@ Instances vary on the four rows: doctrine, Crew ability, Personal ability, Passi
 | Instance | Differs in | State | Page |
 |---|---|---|---|
 | Default | STOCK doctrine — hardware exactly as sold; rooted crew plant, mobile personal burst, no passive | in build | [Default Protocol](Protocol-Default.md) |
-| VEIL | PHANTOM doctrine — a placed decoy inherits the attention its placer was carrying; crew wallhack that pulls the room onto the caster, personal drop off every target list, shorter-notice passive | in build | [VEIL Protocol](Protocol-VEIL.md) |
-| FORGE | PARALLEL BAYS doctrine (written, not yet read — the bay still holds one); crew turret plant with a fire-rate aura, personal redline of that turret, turret-taunt passive | in build | [FORGE Protocol](Protocol-FORGE.md) |
+| VEIL | take the eyes (through-walls + pull onto the caster), hand them to a PHANTOM decoy, go dark; Ghost shortens notice | in build | [VEIL Protocol](Protocol-VEIL.md) |
+| FORGE | crew turret with charge-spent Overcharge, personal Outrider with EMP, proximity-gated pairing, passive ** CLASSIFIED ** | in build | [FORGE Protocol](Protocol-FORGE.md) |
 | AEGIS | the holding-ground identity — designed, not built | Coming Soon | [AEGIS — Coming Soon](Protocol-AEGIS.md) |
 | LEDGER | the salvage-as-position identity — designed, not built | Coming Soon | [LEDGER — Coming Soon](Protocol-LEDGER.md) |
 
@@ -89,8 +89,7 @@ Instances vary on the four rows: doctrine, Crew ability, Personal ability, Passi
 
 ## Gaps
 
-- Nothing in the Bastion names the protocol you are wearing. The HUD shows the ability bindings and their cooldowns and never the sheet they came from.
-- The doctrine layer is invisible. A decoy placed under PHANTOM and one placed under STOCK look identical, and nothing says the hardware behaved differently.
+- Fight HUD names the sheet top-left (`HudController.Protocol`). The doctrine layer is still invisible: a decoy placed under PHANTOM and one placed under STOCK look identical.
 - Embarking with no protocol is allowed and both bindings then refuse silently in play; the warning is only on the NAV MAP.
 - Nothing explains that the Crew ability's cost lands on the caster alone. Solo players read the crew half as missing rather than degraded.
 - The AEGIS and LEDGER sheets exist in the design and are not sold. Nothing on the panel indicates the roster is unfinished.

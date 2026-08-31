@@ -4,7 +4,7 @@
 Purpose: The FABRICATION console — the drone and its payloads, equipment, and the ship-systems shelf.
 Status: brainstorm
 Update trigger: when a payload row changes state, a drone control question in Open is answered, or the Hatch loss model changes.
-Last updated: 2026-08-25 (M94 shipped the turret as FORGE's ability without the ammo siphon; UTL-H and the Graduated table restated against that)
+Last updated: 2026-08-30 (FORGE turret is charge/Exhausted + Outrider, not Magnet Hands / ammo siphon)
 -->
 
 ## What this covers
@@ -25,7 +25,9 @@ the equipment slot + Repair Rig (`M23`, shipped), and the decoy payload (`M30`, 
 Repair is hold-to-interact at the Hatch (`RepairInteractable`); rate is flat 8 HP/s, paid
 from banked Salvage as applied. The rig's upgrade shape is still TBD (Open). Decoy
 **place** writes a doctrine mode onto the live decoy (`DecoyState.TryPlace`); STOCK is
-hardware as sold. Repair is not a place path and does not write doctrine.
+hardware as sold. Repair is not a place path and does not write doctrine. FORGE's turret
+and Outrider are **protocol machines**, not FABRICATION payloads (`TurretState`,
+`OutriderState`); they charge by firing and Exhausted-despawn. Magnet Hands is gone.
 
 The Hatch still dies to `arrivals x dwell` (`../Design/3-Mechanics.md`); one level of Hatch
 Armor is +15 HP = +4.4 gatekeeper-seconds against a measured ~120 gatekeeper-second deficit at
@@ -160,12 +162,11 @@ Link, never restate. If a detail below matters, it lives in the milestone.
 | The turret | `M94 — Two more protocols`, closed 2026-08-24 |
 
 **The turret left this file as a protocol ability, not as `UTL-H`.** `M94` built FORGE's turret
-rather than waiting on the payload, and recut its verbs while doing it — the sheet shipped as
-Field Deploy, Overcharge and Magnet Hands, and the Field Rearm / Redeploy pair that
-`boarder-protocols.md` had authored against decoys turned out to be the same shape twice. What
-that costs this file: the ammo-siphon cost model below was the reason `UTL-H` waited, and the
-shipped turret does not use it, so the row is a payload proposal again rather than a queued
-build. Turret health readout and number tuning are carried on `M94`.
+rather than waiting on the payload. The 2026-08-29 recut (`M106`/`M107`, in the 0.34.2 tree)
+replaced Overcharge-on-`H` and Magnet Hands with charge-by-fire, Exhausted, and the Outrider.
+The ammo-siphon cost model below was the reason `UTL-H` waited; neither the M94 turret nor
+the recut uses it, so a payload turret is still a second machine that needs a reason to
+exist beside FORGE's.
 
 ## The payload roster
 
@@ -179,7 +180,7 @@ refusal grammar carried over from `closed/armory-and-weapons.md` (migrated 2026-
 | UTL-E | small targets | Mine; arms only under a crowd, so it pays for letting one form. | candidate |
 | UTL-F | killing | Yanks one body off the Hatch. | candidate |
 | UTL-G | fighting at all | Preloaded ammo box, placed; gone when drained. | picked (Zo, 2026-08-08 — see *Decided*) |
-| UTL-H | downtime | Turret; fires while you reload, walk or repair, on a modest onboard magazine and then on your reserve. | overtaken — `M94` shipped a turret as FORGE's ability instead. A payload turret is now a second one, and needs a reason to exist beside it |
+| UTL-H | downtime | Turret; fires while you reload, walk or repair, on a modest onboard magazine and then on your reserve. | overtaken — FORGE owns a turret (`M94`, recut `M106`/`M107`). A payload turret is a second one, and needs a reason to exist beside the Outrider |
 
 **Ship order for the picked rows**, if the goal is play data rather than coverage: the
 control payload graduated first (`M30`), and `UTL-C` is the damage half that follows — the
@@ -217,6 +218,11 @@ its own slot, and the slot is unlocked through progression and bought with Salva
 | Piece | Enables | State |
 |---|---|---|
 | repair rig | Repairing the Hatch — impossible without it equipped. Hold-to-interact at the Hatch. Upgradeable, shape TBD. | shipped — `M23` |
+
+**One row is why doctrines are parked.** A doctrine — a rule making a placed machine behave
+differently for the protocol that put it down — was retired 2026-08-29 and reintroduces
+only after this roster stops being a single piece and its rules settle
+(`boarder-protocols.md`, *Doctrines*). Equipment is the gate on that, not protocols.
 
 ## Ideas
 

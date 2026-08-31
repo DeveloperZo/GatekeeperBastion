@@ -3,6 +3,15 @@
 Why the game is not the thing it used to be. Read before proposing a feature;
 re-litigating a cut costs more than the cut saved.
 
+## Parked — may return
+
+- **The Ante (intensity dial / juice).** Parked 2026-08-30 (Zo): player-facing ante-up,
+  E-select lock, and Ante readout are off; Waves run at dial 0. Spend path and curve stay
+  behind `Ante.Enabled` (`static readonly` in `Assets/Scripts/Sim/Run/IntensityJuice.cs`; each
+  `RunSim.AnteEnabled` copies it). Spend-path tests set the instance field. Not a permanent cut — flip the
+  flag when the stake half of "pace and stake" is wanted again. Play Mechanics page
+  `Ante.md` is status parked.
+
 ## Cut — do not rebuild
 
 - **Independent-roll rewards.** A drop, win, or proc that can starve N attempts or
@@ -202,10 +211,10 @@ live in `Bastion_Coop.unity` and `Range.unity` now.
 
 | Host | Corner | Size (canvas) | Contents |
 |---|---|---|---|
-| `Hud Profile` | TL `(64, −24)` | 320 × 64 | Shadow, **Profile Icon** (sprite), Profile Level, Protocol Line (`G`/`H` READY/countdown), Profile Exp |
-| `Hud Score` | TR `(−24, −24)` | 320 × 72 | Shadow, Score Salvage, Wave Counter (VLG) |
+| `Hud Profile` | TL `(40, −40)` | 360 × 96 | Shadow, **Profile Icon**, **BOARDER** (Profile Level), Protocol Line. EXP stays inactive |
+| `Hud Score` | TR `(−24, −40)` | 400 × 96 | Shadow, Score Salvage, Wave Counter (VLG) |
 | `Hud Hatch` | Top centre `(0, −24)`, anchors `(0.5, 1)` | 360 × 72 | Shadow, Shift **Hatch** row (Icon Border / Slider / Text) + value `hp/max` |
-| `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows, VLG. Protocol G/H readout is Hud Profile `Protocol Line` (always on) plus the Fight shortcut strip when the left drawer is open |
+| `Hud Vitals` | BL `(135, 24)` | 400 × 150 | Shift **Health** + **Stamina** rows, VLG. Ability G/H slots stay on the bottom-centre protocol bar |
 | `Hud Weapon` | BR `(−24, 24)` | 400 × 150 | Shadow, Weapon Name, Weapon Ammo, Shift **Reload** row (same bar recipe as vitals), VLG |
 
 `BastionHudView` wires those hosts. EXP-as-slider and further polish are manual on top
@@ -224,9 +233,9 @@ shortcut strip. The old text strip
 
 | Host | Corner | Size (canvas) | Ship contents |
 |---|---|---|---|
-| `Hud Profile` | TL `(64, −24)` | 320 × 64 | Shadow, Profile Icon, **LV** / **EXP** (same slots as Bastion) |
-| `Hud Score` | TR `(−24, −24)` | 320 × 72 | Shadow, Salvage, Wave + **runs** |
-| `Hud Weapon` | BR `(−24, 24)` | 320 × 72 | Shadow, primary + secondary names (no Reload; card matches Score) |
+| `Hud Profile` | TL `(40, −40)` | 360 × 96 | Shadow, Profile Icon, **BOARDER**, Protocol Line |
+| `Hud Score` | TR `(−24, −40)` | 360 × 96 | Shadow, Salvage, Wave + **runs** |
+| `Hud Weapon` | BR `(−24, 24)` | 320 × 72 | Shadow, primary + secondary names (no Reload) |
 | *(no)* `Hud Vitals` | — | — | Omitted on Ship |
 
 No slogans or embark/objective commands on the corners — those belong in station
@@ -533,6 +542,19 @@ rulemaking authority lives there.
   not outrun what the player can answer — relocates here intact; only its sign was wrong,
   and it was wrong because it rested on a kill-rate claim that later play data falsified
   (see `Docs/Design/2-Dynamics.md`, B1).
+
+## Locked — hatch doors are assigned by seat count (Zo, 2026-08-30)
+
+`ShipHatches.PackFor` is the rule: the i-th open door belongs to the i-th seat in
+ascending slot order. Prompts `HATCH n — yours` / `SEAT n` / `sealed`. Recomputed
+at embark, FOLLOW, and the break. No player claim or swap.
+
+Overturns Demo-Coop 2026-08-20 "nobody assigned". That ruling never reached the
+tree; `M92` shipped assignment into the packed wire, and tearing it out orphans
+the format. Combat is still one Hatch HP pool — assignment names a hull door, it
+does not split the fight.
+
+**Cut with this lock:** a player verb that claims or swaps a hatch.
 
 ## Locked — you host a realm, not a session (Zo, 2026-08-22)
 

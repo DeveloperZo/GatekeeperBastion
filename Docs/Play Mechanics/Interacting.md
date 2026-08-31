@@ -2,7 +2,7 @@
 Purpose: Current representation of interacting — the look-at-and-hold verb every operable surface in the game borrows — as it is in the build.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Interacting
@@ -30,7 +30,7 @@ Nothing central composes the prompt and nothing central knows what a verb costs:
 
 **Tap versus hold is a per-surface choice, not a property of the key.** The Interactor only ever delivers the held drive; a surface that wants a tap reads `Controls.Down(ControlId.Interact)` itself and leaves `Interact(dt)` empty.
 
-The Ship's four consoles are the tap case: `ShipController` resolves the console under the ray on Interact Down and opens its panel (`TryOpenStationFromInteract`), and `StationTerminal.Interact` forwards to the demo gate and no-ops everywhere else — so a station opens the instant the key goes down and holding it does nothing. The Bastion's terminals are the same shape for a different reason: `BastionTerminal.Interact` is empty, and the select is a tap read by the Boarding's prep commands off the interactor's current target (`E` selects and locks the Ante, `T` starts — [A Boarding](A-Boarding.md) owns the start).
+The Ship's four consoles are the tap case: `ShipController` resolves the console under the ray on Interact Down and opens its panel (`TryOpenStationFromInteract`), and `StationTerminal.Interact` forwards to the demo gate and no-ops everywhere else — so a station opens the instant the key goes down and holding it does nothing. The Bastion's terminals are the same shape for a different reason: `BastionTerminal.Interact` is empty, and the select is a tap read by the Boarding's prep commands off the interactor's current target (`T` starts or shuts off — [A Boarding](A-Boarding.md) owns the start). With the Ante parked, `E` at a trigger does not arm intensity.
 
 In the Bastion the verb is ticked by the fight's written order, sixth, after locomotion and the gun; on the Ship the component drives itself. Because the prep commands run earlier in that order than the raycast, a select reads the target the raycast found on the previous frame.
 
@@ -76,6 +76,7 @@ This table is the canonical roster of interactable surfaces, anywhere in Docs.
 |---|---|---|---|
 | The Hatch | Several verbs behind one prompt, ordered by a pure rule; repair and Withdraw apply per frame with no threshold to reach, the dock completes at 1.5 s | in build | [The Hatch](The-Hatch.md) |
 | Portal pad | The same 1.5 s dock as the Hatch's, deliberately identical; offers no prompt and shows no lit part until the way home is open | in build | [The Hatch](The-Hatch.md) |
+| Recall pad | Hold 1.5 s at the authored Ship-teleporter graybox beside T2/T5; teleports to the Hatch while Tethered | in build | [A Boarding](A-Boarding.md) |
 | Bastion terminal | Takes no hold at all — `Interact` is empty; `E` taps to select and `T` starts or shuts off, read off this verb's target by the Boarding's prep commands | in build | [A Boarding](A-Boarding.md) |
 | Ship stations (ARMORY, CREW QUARTERS, FABRICATION, NAV MAP) | Open on the tap, not the hold; the panel then takes the screen and frees the cursor, which disables this verb until a click recaptures it | in build | [The Ship](The-Ship.md) |
 | NAV MAP repair | The only station that takes a hold: 1.5 s powers the dark console, once per save, and the prompt is the only thing that says so | in build | [The Opening](The-Opening.md) |
@@ -96,7 +97,8 @@ This table is the canonical roster of interactable surfaces, anywhere in Docs.
 - Ship stations open on Interact Down against the console under the ray; the held path only forwards to the demo gate — `Assets/Scripts/Game/Ship/ShipController.cs` (`Update` Interact Down branch, `ResolveTargetedStation`, `TryOpenStationFromInteract`); `Assets/Scripts/Game/Ship/StationTerminal.cs` (`Interact`, `Prompt`)
 - Bastion terminals take no hold; the select is a tap read off the interactor's current target — `Assets/Scripts/Game/Bastion/BastionTerminal.cs` (`Interact`, `Prompt`); `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`TickPrepCommands`, `ToggleTerminalSelect`, `ToggleHatchSelect`)
 - Ticked sixth in the Bastion's written order, after the gun; self-driven on the Ship — `Assets/Scripts/Game/Bastion/GameController.cs` (`Tick` step 6, `ApplyMetaEffects` binding and `SetHosted`); `Assets/Scripts/Game/Player/Interactor.cs` (`SetHosted`, `Update`)
-- Hold lengths, per surface — `Assets/Scripts/Game/Bastion/HatchPortal.cs` (`HoldSeconds`), `Assets/Scripts/Game/Bastion/RepairInteractable.cs` (`DockHoldSeconds`), `Assets/Scripts/Game/Ship/ShipTeleporter.cs` (`UnlockHoldSeconds`), `Assets/Scripts/Game/Ship/DemoStationGate.cs` (`NavRepairHoldSeconds`), `Assets/Scripts/Game/Range/RangeDoor.cs` (`HoldSeconds`)
+- Hold lengths, per surface — `Assets/Scripts/Game/Bastion/HatchPortal.cs` (`HoldSeconds`), `Assets/Scripts/Game/Bastion/HatchRecallPad.cs` (`HoldSeconds`), `Assets/Scripts/Game/Bastion/RepairInteractable.cs` (`DockHoldSeconds`), `Assets/Scripts/Game/Ship/ShipTeleporter.cs` (`UnlockHoldSeconds`), `Assets/Scripts/Game/Ship/DemoStationGate.cs` (`NavRepairHoldSeconds`), `Assets/Scripts/Game/Range/RangeDoor.cs` (`HoldSeconds`)
+- Recall pad beside T2/T5 — authored Ship teleporter graybox (`T2 Portal` / `T5 Portal`) with `HatchRecallPad`; teleport `Assets/Scripts/Game/Bastion/GameController.Faucet.cs` (`TeleportLocalToHatch`)
 - The tap-only Ship terminal: arm on Down, start on `T`, one-shot per save — `Assets/Scripts/Game/Ship/ShipTerminal.cs` (`Update`, `Interact`, `StartTerminal`)
 - The look-only hull hatch door: empty `Interact`, prompt names the owning seat — `Assets/Scripts/Game/Ship/ShipHatchDoor.cs` (`Prompt`, `Interact`, `Refresh`)
 - The range door's own refusal lives in the loader rather than on the door — `Assets/Scripts/Game/Flow/SceneFlow.cs` (`LoadRange`, refusing on `Sim.Phase == RunPhase.Tethered`); whether a slab is authored into the shipped hub is scene wiring and is not readable here — the mirror carries no `.unity` files, and `SceneFlow`'s `Range` remark saying nothing in the hub reaches it is a comment, not a checked fact ([The Range](The-Range.md) holds that question)

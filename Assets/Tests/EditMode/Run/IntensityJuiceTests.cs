@@ -18,6 +18,7 @@ namespace GatekeepersProtocol.Tests
         {
             meta = MetaState.CreateNew();
             var sim = new RunSim(meta, seed);
+            sim.AnteEnabled = true;
             sim.StartRun();
             sim.EngageTether();
             return sim;
@@ -121,6 +122,20 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(earned, meta.BankedSalvage);
             Assert.AreEqual(0, sim.Siphon.Level);
             Assert.AreEqual(0L, sim.JuiceSpentThisPull);
+        }
+
+        [Test]
+        public void TryJuice_RefusedWhileAnteParked()
+        {
+            var meta = MetaState.CreateNew();
+            var sim = new RunSim(meta, 1);
+            sim.StartRun();
+            sim.EngageTether();
+            Assert.IsFalse(sim.AnteEnabled);
+            meta.EarnSalvage(1000L);
+            Assert.IsFalse(sim.TryJuice(1, true));
+            Assert.AreEqual(0, sim.Siphon.Level);
+            Assert.AreEqual(1000L, meta.BankedSalvage);
         }
 
         [Test]

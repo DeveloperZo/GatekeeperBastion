@@ -6,8 +6,8 @@ namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: the equipped protocol's actives on G/H. Ids pushed at Bind — never
     /// serialized (gotcha 1). This type owns the two windows, the input and the log lines;
-    /// the effects that hold state of their own live in their own types
-    /// (<see cref="TurretObject"/> for FORGE). Cooldowns run here; Barrage plants go
+        /// the effects that hold state of their own live in their own types
+        /// (<see cref="TurretObject"/> and <see cref="OutriderObject"/> for FORGE). Cooldowns run here; Barrage plants go
     /// server-side via NetVerbs when a session is listening.</summary>
     public sealed class PlayerProtocolAbilities : MonoBehaviour
     {
@@ -17,6 +17,7 @@ namespace GatekeepersProtocol.Game
         FirstPersonController _fpc;
         PlayerHealth _health;
         PlayerTurretControl _turretControl;
+        PlayerOutriderControl _outriderControl;
         BoarderProtocolId _protocol = BoarderProtocolId.None;
         BoarderAbilityId _passive = BoarderAbilityId.None;
         BoarderAbilityState _crew;
@@ -25,6 +26,11 @@ namespace GatekeepersProtocol.Game
         bool _hosted;
         bool _loggedCrewExpiry;
         bool _loggedPersonalExpiry;
+        string _firstMachineThisWave = "";
+        float _turretChargeAtSpecial = -1f;
+        float _outriderChargeAtSpecial = -1f;
+        bool _turretSpecialRan;
+        bool _outriderSpecialRan;
 
         public bool HasProtocol => _protocol != BoarderProtocolId.None;
         public string ProtocolName => BoarderProtocol.ProtocolName(_protocol);
@@ -48,7 +54,7 @@ namespace GatekeepersProtocol.Game
             PersonalAbility == BoarderAbilityId.Cloak && _personal.WindowOpen;
 
         public bool OverchargeOpen =>
-            PersonalAbility == BoarderAbilityId.Overcharge && _personal.WindowOpen;
+            _turretControl != null && _turretControl.IsOvercharged;
 
         /// <summary>This Boarder's own fire-rate multiplier. Exclusive by construction — one
         /// protocol means one personal ability — so the gun asks for a number, not a set of
@@ -63,8 +69,8 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        /// <summary>FORGE's standing machine, or null. Target selection reads it for MAGNET
-        /// HANDS; the gun never does — the aura is positional, not owner-scoped.</summary>
+        /// <summary>FORGE's standing machine, or null. The gun never reads this — the aura is
+        /// positional, not owner-scoped.</summary>
         public TurretObject Turret => _turretControl != null ? _turretControl.Live : null;
 
         /// <summary>Whichever ability currently has a window open, or None. Personal wins a
@@ -92,6 +98,139 @@ namespace GatekeepersProtocol.Game
         public float PersonalCooldown => _personal.CooldownRemaining;
         public bool CrewReady => _crew.IsReady;
         public bool PersonalReady => _personal.IsReady;
+        public bool HasTurret => _turretControl != null && _turretControl.HasTurret;
+        public bool HasOutrider => _outriderControl != null && _outriderControl.HasOutrider;
+
+        public bool MachinesPaired
+        {
+            get
+            {
+                var verbs = LocalVerbs();
+                if (verbs != null) return verbs.ServerMachinesPaired;
+                return TurretObject.PairingActive(transform);
+            }
+        }
+
+        /// <summary>Charge fraction for the crew square. Not routed through
+        /// <see cref="PlayerAbility"/> — that type divides by the active weapon's cooldown.</summary>
+        public float TurretChargeFraction
+        {
+            get
+            {
+                if (_turretControl == null) return 0f;
+                float max = _turretControl.ChargeMax;
+                return max > 0f ? _turretControl.Charge / max : 0f;
+            }
+        }
+
+        public string TurretChargeLabel
+        {
+            get
+            {
+                if (_turretControl == null) return "";
+                return ((int)_turretControl.Charge).ToString()
+                    + "/" + ((int)_turretControl.ChargeMax).ToString();
+            }
+        }
+
+        /// <summary>True when the crew square should show turret charge rather than cooldown.
+        /// </summary>
+        public bool TryCrewChargeSquare(out float fill, out string label)
+        {
+            fill = 0f;
+            label = "";
+            if (CrewAbility != BoarderAbilityId.FieldDeploy || !HasTurret) return false;
+            fill = TurretChargeFraction;
+            label = TurretChargeLabel;
+            return true;
+        }
+
+        public float OutriderChargeFraction
+        {
+            get
+            {
+                if (_outriderControl == null) return 0f;
+                float max = _outriderControl.ChargeMax;
+                return max > 0f ? _outriderControl.Charge / max : 0f;
+            }
+        }
+
+        public string OutriderChargeLabel
+        {
+            get
+            {
+                if (_outriderControl == null) return "";
+                return ((int)_outriderControl.Charge).ToString()
+                    + "/" + ((int)_outriderControl.ChargeMax).ToString();
+            }
+        }
+
+        public bool TryPersonalChargeSquare(out float fill, out string label)
+        {
+            fill = 0f;
+            label = "";
+            if (PersonalAbility != BoarderAbilityId.Emp || !HasOutrider) return false;
+            fill = OutriderChargeFraction;
+            label = OutriderChargeLabel;
+            return true;
+        }
+
+        public void BeginWaveMachines()
+        {
+            // A machine that stood through the last Assault is already this Wave's first.
+            // Clearing the latch here made wave 2 of 2026-08-29_22-53-02 log outrider-first
+            // after a turret that had been standing since wave 1.
+            if (HasTurret && HasOutrider)
+            {
+                if (_firstMachineThisWave.Length == 0) _firstMachineThisWave = "turret";
+            }
+            else if (HasTurret)
+                _firstMachineThisWave = "turret";
+            else if (HasOutrider)
+                _firstMachineThisWave = "outrider";
+            else
+                _firstMachineThisWave = "";
+            _turretChargeAtSpecial = -1f;
+            _outriderChargeAtSpecial = -1f;
+            _turretSpecialRan = false;
+            _outriderSpecialRan = false;
+        }
+
+        public void NoteMachineDeploy(string machine)
+        {
+            if (machine == null || machine.Length == 0) return;
+            if (_firstMachineThisWave.Length == 0) _firstMachineThisWave = machine;
+        }
+
+        public void NoteTurretSpecial(float charge)
+        {
+            _turretSpecialRan = true;
+            _turretChargeAtSpecial = charge;
+        }
+
+        public void NoteOutriderSpecial(float charge)
+        {
+            _outriderSpecialRan = true;
+            _outriderChargeAtSpecial = charge;
+        }
+
+        /// <summary>Criterion 10: which machine deployed first this Wave, and each machine's
+        /// charge when its special ran. Null when neither machine was deployed.</summary>
+        public string WaveMachineLine()
+        {
+            if (_firstMachineThisWave.Length == 0) return null;
+            string t = _turretSpecialRan
+                ? ((int)_turretChargeAtSpecial).ToString()
+                    + "/" + ((int)BoarderProtocol.TurretChargeMax).ToString()
+                : "-";
+            string o = _outriderSpecialRan
+                ? ((int)_outriderChargeAtSpecial).ToString()
+                    + "/" + ((int)BoarderProtocol.OutriderChargeMax).ToString()
+                : "-";
+            return "machines first=" + _firstMachineThisWave
+                + " turret-special-charge=" + t
+                + " outrider-special-charge=" + o;
+        }
 
         public void Bind(GameController game, BoarderProtocolId protocol, BoarderAbilityId passive)
         {
@@ -103,14 +242,17 @@ namespace GatekeepersProtocol.Game
             if (_turretControl == null) _turretControl = GetComponent<PlayerTurretControl>();
             if (_turretControl == null) _turretControl = gameObject.AddComponent<PlayerTurretControl>();
             _turretControl.Bind(game, _fpc);
+            if (_outriderControl == null) _outriderControl = GetComponent<PlayerOutriderControl>();
+            if (_outriderControl == null) _outriderControl = gameObject.AddComponent<PlayerOutriderControl>();
+            _outriderControl.Bind(game);
             if (GetComponent<ProtocolLayerView>() == null)
                 gameObject.AddComponent<ProtocolLayerView>();
             ApplyPassive();
         }
 
-        /// <summary>Standing rules. Ghost biases what notices you; Magnet Hands is read by
-        /// target selection, not applied here. Every path writes the acquisition bias so a
-        /// protocol swap cannot leave the previous protocol's rule on the rig.</summary>
+        /// <summary>Standing rules. Ghost biases what notices you. Every path writes the
+        /// acquisition bias so a protocol swap cannot leave the previous protocol's rule on
+        /// the rig.</summary>
         void ApplyPassive()
         {
             if (_health == null) return;
@@ -146,17 +288,15 @@ namespace GatekeepersProtocol.Game
             if (crewWasOpen && !_crew.WindowOpen) CloseCrewEffect(true);
             if (personalWasOpen && !_personal.WindowOpen) ClosePersonalEffect(true);
 
-            // Overcharge burns the machine for as long as its window runs, and can kill it
-            // mid-window — the window then has nothing left to redline.
-            if (OverchargeOpen && _turretControl != null && _turretControl.TickOvercharge(dt))
-            {
-                _loggedPersonalExpiry = false;
-                _personal.EndWindowEarly();
-            }
-
-            if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
-            if (Controls.Down(ControlId.CrewAbility)) OnCrew();
-            if (Controls.Down(ControlId.PersonalAbility)) OnPersonal();
+            bool paused = OptionsScreen.IsOpen || HudController.IsPauseOpen;
+            if (CrewAbility == BoarderAbilityId.FieldDeploy && _turretControl != null)
+                _turretControl.TickCrewBinding(dt, paused, ref _crew);
+            else if (!paused && Controls.Down(ControlId.CrewAbility))
+                OnCrew();
+            if (PersonalAbility == BoarderAbilityId.Emp && _outriderControl != null)
+                _outriderControl.TickPersonalBinding(dt, paused, ref _personal);
+            else if (!paused && Controls.Down(ControlId.PersonalAbility))
+                OnPersonal();
         }
 
         public void NotifyDeath()
@@ -177,6 +317,8 @@ namespace GatekeepersProtocol.Game
                 _personal.EndWindowEarly();
                 ClosePersonalEffect(true);
             }
+            if (_turretControl != null) _turretControl.CancelCrewHold();
+            if (_outriderControl != null) _outriderControl.CancelHold();
         }
 
         /// <summary>The gun fired. Cloak is the only window firing collapses — it is the whole
@@ -235,16 +377,6 @@ namespace GatekeepersProtocol.Game
             }
 
             float ready = _crew.SecondsSatReady;
-
-            // Field Deploy is instant: the turret's life is its uptime, so the slot goes
-            // straight to cooldown rather than holding a window that means nothing.
-            if (id == BoarderAbilityId.FieldDeploy)
-            {
-                if (_turretControl == null) return;
-                if (!_crew.TrySpendInstant(BoarderProtocol.Cooldown(id))) return;
-                _turretControl.Deploy(ready);
-                return;
-            }
 
             if (!_crew.TryActivate(BoarderProtocol.Window(id), BoarderProtocol.Cooldown(id)))
                 return;
@@ -343,17 +475,6 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
-            // Overcharge has a hard precondition: a machine must be standing to redline.
-            // Ask before the window is spent, or the cooldown eats a press that did nothing.
-            // HasTurret, not Turret: in a session the machine is the server's and this rig
-            // holds no reference to it, so asking for the object would refuse every guest.
-            if (id == BoarderAbilityId.Overcharge
-                && (_turretControl == null || !_turretControl.HasTurret))
-            {
-                Log.Event(Tag, "self Overcharge refused — no turret standing");
-                return;
-            }
-
             float ready = _personal.SecondsSatReady;
             if (!_personal.TryActivate(BoarderProtocol.Window(id), BoarderProtocol.Cooldown(id)))
                 return;
@@ -369,12 +490,6 @@ namespace GatekeepersProtocol.Game
                     Log.Event(Tag, "self Cloak sat-ready=" + ready.ToString("0.##")
                         + " — off every targeting list");
                     break;
-                case BoarderAbilityId.Overcharge:
-                    if (_turretControl != null) _turretControl.SetOvercharged(true);
-                    Log.Event(Tag, "self Overcharge sat-ready=" + ready.ToString("0.##")
-                        + " — turret x" + BoarderProtocol.OverchargeTurretRateMul.ToString("0.##")
-                        + ", gun x" + BoarderProtocol.OverchargeSelfFireMul.ToString("0.##"));
-                    break;
             }
         }
 
@@ -385,9 +500,6 @@ namespace GatekeepersProtocol.Game
             {
                 case BoarderAbilityId.Cloak:
                     SetCloaked(false);
-                    break;
-                case BoarderAbilityId.Overcharge:
-                    if (_turretControl != null) _turretControl.SetOvercharged(false);
                     break;
             }
             if (expired && _loggedPersonalExpiry)

@@ -7,13 +7,14 @@ not as Design jargon.
 Status: working
 Update trigger: when friends-alpha closes, when a pitch sentence's truth value
 changes, or when a comparable's public positioning would change our shelf.
-Last updated: 2026-08-25 (art-commission-brief added to the index; the copy-block / builder-note
-line stated with the trap-8 names; the identifier-rot rule added)
+Last updated: 2026-08-30 (0.34.2 grill: Ante parked, kills bank on landing, Hatch-start
+loop, respawn from the realm bank, one-deck hull; Play path is Play Mechanics/; GnG demo
+reception and the Extraction Shooter tag added to landscape)
 -->
 
-Not Design. Not Play. Not `Release-Send.md` (install instructions).
+Not Design. Not Play Mechanics. Not `Release-Send.md` (install instructions).
 
-**Grill.** A claim that is not true in `../Play/` or in a closed milestone is
+**Grill.** A claim that is not true in `../Play Mechanics/` or in a closed milestone is
 heading or refused. Play reports in `../GatekeeperZo Notes/playthrough.md` are
 the only quality evidence; do not invent reception.
 
@@ -28,16 +29,20 @@ the only quality evidence; do not invent reception.
 | [`art-commission-brief.md`](art-commission-brief.md) | Copy | What an outside artist would need to restyle the kit. Addressed to a contractor, not to a player. |
 
 **External copy** uses Play language (`../_meta/_definitions/language.md`). The line runs
-between the copy block and the note beside it: a store sentence says **Boarding**, **Ante**,
-**ante up** and **Convert** (rule 3, trap 8), while the rationale column beside it may name
-Run, intensity, juice and Hatch-bank because those are still the code's words. Hunicke names,
-milestone IDs and the Play ban list stay on the builder side of that line. The machine lint
-does not reach this folder — it scans `Docs/Play/` only — so the copy block is checked by
-reading it.
+between the copy block and the note beside it: a store sentence says **Boarding**, **Hatch**,
+**Convert** (rule 3, trap 8), while the rationale column beside it may name Run, intensity,
+juice and Hatch-bank because those are still the code's words. **Ante / ante up are parked
+in 0.34.2** (`Ante.Enabled = false`) — they stay legal words, they are not live verbs to
+print. Hunicke names, milestone IDs and the Play ban list stay on the builder side of that
+line. The machine lint does not reach this folder — it scans `Docs/Play/` when that
+directory exists. Player docs now live in `Docs/Play Mechanics/`, which the lint does not
+yet cover, so the copy block is checked by reading it.
 
-**A claim's source is an identifier, and identifiers get deleted.** Three claims in this
-folder outlived theirs. Grep the identifier before restating a number, and register anything
-you cannot verify in `gaps.md` rather than carrying it forward.
+**A claim's source is an identifier, and identifiers get deleted.** Grep the identifier
+before restating a number, and register anything you cannot verify in `gaps.md` rather
+than carrying it forward. The 2026-08-25 pass already caught three dead ones; the 0.34.2
+pass caught a worse class: whole rules that inverted (payroll, respawn purse, ship decks)
+while this folder still described the prior rule.
 
 **Design** remains authority for ranks and rules (`../Design/1-Experience.md`).
 This folder does not restamp them.

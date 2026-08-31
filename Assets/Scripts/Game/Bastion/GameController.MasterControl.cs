@@ -52,11 +52,13 @@ namespace GatekeepersProtocol.Game
                 return false;
             }
 
-            if (_armedTerminalId != terminal.TerminalId)
+            if (Ante.Enabled && _armedTerminalId != terminal.TerminalId)
             {
                 Log.Event("Terminal", "master-control refused — select intensity first");
                 return false;
             }
+            if (!Ante.Enabled)
+                _armedTerminalId = terminal.TerminalId;
 
             ClearPendingTerminal();
             _armedTerminalId = null;

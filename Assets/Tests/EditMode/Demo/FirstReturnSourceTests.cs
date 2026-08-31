@@ -194,7 +194,7 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("DemoStationGate.HealOnVisit", src);
             StringAssert.Contains("DemoConversationIds.CrewClaim", src);
             Assert.IsFalse(src.Contains("TryClaim"),
-                "the claim is the walk — BuyProtocol only ever fires from the sheet's BUY");
+                "the claim is the walk — BuyProtocol only ever fires from the sheet's EQUIP");
         }
 
         [Test]

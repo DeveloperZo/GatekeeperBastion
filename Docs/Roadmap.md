@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-25 (six milestones folder-moved to completed; M98 row carries the shipped respawn rule)
+Last updated: 2026-08-30 (0.34.2 cut; brainstorm restamp; M104/M106/M107 added to the Order table)
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -32,6 +32,9 @@ files written before that date still carry one and are a record.
 **Active (1/3):** `M86` (downed crewmates — controller bool and avatar drive landed
 2026-08-23, `Anim_Down.fbx` unsourced, nothing through the Editor yet).
 
+**0.34.2 cut 2026-08-30.** Ante parked; Hatch-start + recall pads; FORGE charged turret
++ Outrider in the tree (`M106`/`M107` still planned). Friends-alpha sentence unchanged.
+
 **Closed 2026-08-25, by folder move at Zo's direction:** `M63-3`, `M95`, `M97`, `M98`,
 `M100`, `M102`. Each was moved to `3. completed/` while its own criteria list still
 carried an Owed block, so the status is Zo's call rather than a closed gate, and each
@@ -39,9 +42,9 @@ file's frontmatter records which observation is still missing. In order: `M63-3`
 eyes-on; `M95` the co-op demo leg; `M97` eyes-on and the two-box run; `M98` the
 playthrough; `M100` has never run on two machines; `M102` owes the playthrough that is
 the experiment itself. `M98`'s recut is the shipped respawn rule — the dead seat pays
-`150 × (taken + 1)` out of the Unbanked it is carrying, the remainder survives with it,
-and nothing else may pay (`Respawns.cs`). The per-seat pool and the realm-pot version
-this file described until 2026-08-25 were superseded by `51e8f74` and never shipped.
+`150 × min(taken+1, 3)` out of the **realm bank** (`SpendBanked`), cap 2, 10 s bleed-out.
+The Unbanked-purse version this file described until 2026-08-25, and the class-comment
+on `Respawns.cs` that still describes it, are superseded by the method body.
 
 **Closed 2026-08-24:** `M94` (played and closed by Zo). Turret health readout,
 number tuning and PARALLEL BAYS carried.
@@ -63,13 +66,17 @@ with **M72**; remaining friends work is polish and dry-run length.
 
 **Recommended next**, in this order.
 
-1. **Take the `M84` / `M85` eyes-on through `M99`** — the range is closed and the
+1. **Play 0.34.2.** Friends-alpha dry-run is the starved lane. `M102` playthrough is the
+   experiment itself. FORGE's two-machine kill criterion cannot fire from the desk.
+2. **`M103` Unity leg** — the instrument that lets `M63-3` / `M102` kill criteria be
+   adjudicated; built offline, Unity + playthrough owed.
+3. **Take the `M84` / `M85` eyes-on through `M99`** — the range is closed and the
    short-loop path it existed to provide is open.
-2. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
+4. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
-3. Older play close-outs: `GatekeeperZo Notes/verification.md`.
 
-Active **1** of 3 (`M86`), and `1. planned/` holds `M103` alone.
+Active **1** of 3 (`M86`), and `1. planned/` holds `M103`, `M104`, `M106`, `M107`, `M108`
+(5 of 10). `M106`/`M107` implementation is in the 0.34.2 tree; folder status waits on play.
 
 ## Order
 
@@ -180,6 +187,10 @@ this table — see the change log.
 | M101 | A ship with two decks and a stair | completed, Aug 2026 | Hull rebuilt long and narrow over two decks joined by an open stair; exterior skin, one-owner wall lines, ~80 cells. Merged 2026-08-22 | [`3. completed/M101`](Milestones/3.%20completed/M101-a-ship-with-two-decks-and-a-stair.md) |
 | M102 | The faucet loop, graybox | completed, Aug 2026 (playthrough unobserved) | Dev-gated graybox of the faucet loop (`Brainstorms/coop-bastion-complexity.md`, graduated by Zo 2026-08-24): field Waves hunt the Hatch, the terminal gains an off verb, holding past the mark grows a modifier draft, confirm teleports to the Hatch and starts the bank with the axis applied. Off by default; shipped loop unchanged with the toggle off. The graybox runs the paradigm's pre-registered kill criteria. Re-verified 2026-08-25 on the tree after the Convert rename and slot-aware refactor landed on top: all 13 `FaucetLoopTests` pass, failures the recorded set only. Zo's playthrough (the experiment itself) owed | [`3. completed/M102`](Milestones/3.%20completed/M102-the-faucet-loop-graybox.md) |
 | M103 | Every Run files a report | planned (built 2026-08-24; offline-verified, Unity leg + playthrough owed) | The log becomes the play-data instrument the dashboard was promised: PlayMode-harness logs quarantined to `Logs/harness/` (2026-08-24 audit: 19 of 28 files were harness carrying ~550 synthetic Runs, evicting real sessions within a day), one `[Run] summary schema=1` Metric line per Run end (`Log.Metric` had zero call sites), beat-relative checkpoint-configuration taint (a config is valid once its beat could have earned it: Primary rows valid from beat 5, MK-1 T2 from beat 3, a max-upgraded kit never — read off the constructed beat state, pinned by `CheckpointConfigTaintTests`; checkpoint play on a valid row counts as play data), killer attribution by kind, and a dashboard panel for how Runs end and what dying costs. Built offline-verified 2026-08-24; Unity leg + playthrough owed. Unblocks adjudicating `M63-3`'s and `M102`'s dated kill criteria | [`1. planned/M103`](Milestones/1.%20planned/M103-every-run-files-a-report.md) |
+| M104 | The ship wears the look | planned | Near-black architecture, districts of coloured light, tinted mirror deck, slow motes — the look from `Assets/_Scratch/` landed on `Ship - CoOp` only | [`1. planned/M104`](Milestones/1.%20planned/M104-the-ship-wears-the-look.md) |
+| M106 | The turret is charged and spent | planned (implementation in 0.34.2 tree) | FORGE turret charges by firing; Overcharge is a hold spent from that charge and ends Exhausted; Magnet Hands retired | [`1. planned/M106`](Milestones/1.%20planned/M106-the-turret-is-charged-and-spent.md) |
+| M107 | The Outrider and the two orders | planned (implementation in 0.34.2 tree) | Follower charges by firing; EMP is light damage + root; pairing lifts the other machine's special; kill criterion is deploy-order as a record of the Wave | [`1. planned/M107`](Milestones/1.%20planned/M107-the-outrider-and-the-two-orders.md) |
+| M108 | HUD that fits the screen | planned | Restore locked insets; BOARDER + protocol beside Profile icon; MISSION header gap; CREW catalog Name/Level/SELECT. EditMode `HudSeparationTests` + M59 chrome. | [`1. planned/M108`](Milestones/1.%20planned/M108-hud-that-fits-the-screen.md) |
 
 ## Strategy
 
@@ -313,12 +324,19 @@ Moved out of this file. Mechanic areas that are wanted but not yet cuttable live
 | Area | File |
 |---|---|
 | Working surface (entries exit into a topic file) | [`Brainstorms/Master-Brainstorm`](Brainstorms/Master-Brainstorm.md) |
-| Fabrication, ship systems, deployables | [`Brainstorms/fabrication`](Brainstorms/fabrication.md) |
-| Crew attributes, skills, perks | [`Brainstorms/crew-skills-and-perks`](Brainstorms/crew-skills-and-perks.md) |
-| Missions, the console restructure, destinations | [`Brainstorms/missions-and-destinations`](Brainstorms/missions-and-destinations.md) |
-| Gatekeeper kinds and Wave composition | [`Brainstorms/gatekeepers-and-waves`](Brainstorms/gatekeepers-and-waves.md) |
+| Boarder Protocols beyond the shipped three | [`Brainstorms/boarder-protocols`](Brainstorms/boarder-protocols.md) |
+| Co-op bastion loop, faucet graybox, intensity | [`Brainstorms/coop-bastion-complexity`](Brainstorms/coop-bastion-complexity.md) |
 | Co-op beyond the filed slices | [`Brainstorms/co-op`](Brainstorms/co-op.md) |
-| Boarder Protocols beyond Default | [`Brainstorms/boarder-protocols`](Brainstorms/boarder-protocols.md) |
+| Crew attributes, skills, perks | [`Brainstorms/crew-skills-and-perks`](Brainstorms/crew-skills-and-perks.md) |
+| Currencies, roster-as-purchase | [`Brainstorms/economy`](Brainstorms/economy.md) |
+| Fabrication, ship systems, deployables | [`Brainstorms/fabrication`](Brainstorms/fabrication.md) |
+| Gatekeeper kinds and Wave composition | [`Brainstorms/gatekeepers-and-waves`](Brainstorms/gatekeepers-and-waves.md) |
+| HUD / ability presentation | [`Brainstorms/hud-and-ability-ui`](Brainstorms/hud-and-ability-ui.md) |
+| Missions, destinations, terminal roles | [`Brainstorms/missions-and-destinations`](Brainstorms/missions-and-destinations.md) |
+| Realms, ownership, drop-in | [`Brainstorms/realms`](Brainstorms/realms.md) |
+| Ship hull and interior | [`Brainstorms/ship-hull-and-interior`](Brainstorms/ship-hull-and-interior.md) |
+| Ship as hub / safehouse activities | [`Brainstorms/the-safehouse`](Brainstorms/the-safehouse.md) |
+| Bodies and art direction | [`Brainstorms/bodies-and-art-direction`](Brainstorms/bodies-and-art-direction.md) |
 
 The First Bastion demo graduated 2026-08-17: beats 0–7 + voice cut as **M74–M80**
 (`Demo/` stays as the implementable spec; the first-session brainstorm was retired

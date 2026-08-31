@@ -5,16 +5,6 @@ namespace GatekeepersProtocol.Tests
 {
     public class MasterControlTests
     {
-        /// <summary>The finale stopped reading <see cref="MasterControl.HatchWaves"/> on
-        /// 2026-08-28, but the static is still there and docgen still prints it, so exactly
-        /// one fixture below still writes it — to prove the finale IGNORES it. Restored here
-        /// so that proof cannot leak into the next test.</summary>
-        [TearDown]
-        public void RestoreHatchWaves()
-        {
-            MasterControl.HatchWaves = 1;
-        }
-
         static RunSim Tethered(out MetaState meta, int seed = 1)
         {
             meta = MetaState.CreateNew();
@@ -399,19 +389,13 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(restored.IsDoorOpen("D_control"));
         }
 
-        /// <summary>Renamed 2026-08-28 from <c>HatchWaves_DefaultsToOne</c>, which had become
-        /// a pin on a lever nothing pulls: the finale stopped reading
-        /// <see cref="MasterControl.HatchWaves"/> when it left Hatch-bank mode, so asserting
-        /// its default constrained no behaviour at all. The default is still worth a line —
-        /// docgen prints it as the "Hatch-bank Waves" row — but the CLAIM worth pinning is
-        /// that the finale IGNORES it: write five and the elite half is still exactly one
-        /// wave, and still ends at the gate rather than after five.</summary>
+        /// <summary>The elite half is one wave. <see cref="MasterControl.HatchWaves"/> is a
+        /// const the language table quotes; AdvanceMasterControl does not read it.</summary>
         [Test]
-        public void FinaleIgnoresHatchWaves_TheEliteIsAlwaysOneWave()
+        public void FinaleEliteHalf_IsAlwaysOneWave()
         {
-            Assert.AreEqual(1, MasterControl.HatchWaves, "the docgen row moved");
+            Assert.AreEqual(1, MasterControl.HatchWaves, "the language-table const moved");
 
-            MasterControl.HatchWaves = 5;
             MetaState meta;
             var sim = Tethered(out meta);
             Assert.IsTrue(sim.StartMasterControl());
@@ -431,7 +415,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(WaveMode.Terminal, sim.Mode);
             sim.NotifyAssaultCleared();
             Assert.IsTrue(sim.MasterAwaitsShutoff,
-                "one elite wave did not reach the gate — the finale is counting HatchWaves");
+                "one elite wave did not reach the gate");
             Assert.AreEqual(RunPhase.Tethered, sim.Phase);
         }
 

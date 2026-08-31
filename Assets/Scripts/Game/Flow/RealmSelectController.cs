@@ -258,7 +258,7 @@ namespace GatekeepersProtocol.Game
 
         void OnNewBoarder()
         {
-            string typed = _view != null ? _view.NameText : null;
+            string typed = _view != null ? _view.BoarderNameText : null;
             bool written;
             var boarder = RealmRegistry.CreateBoarder(typed, out written);
             if (_view != null) _view.ClearName();

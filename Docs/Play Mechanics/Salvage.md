@@ -1,4 +1,4 @@
-<!-- Purpose: the currency — where it comes from, why a kill is safe the moment it lands, what a Withdraw puts back at risk, and what competes for it. / Status: working / Update trigger: when the award path, the Withdraw, the repair charge, or the Boarding-end settlement changes. / Last updated: 2026-08-25 (kills bank as they land; the Convert leaves the demo) -->
+<!-- Purpose: the currency — where it comes from, why a kill is safe the moment it lands, what a Withdraw puts back at risk, and what competes for it. / Status: working / Update trigger: when the award path, the Withdraw, the repair charge, or the Boarding-end settlement changes. / Last updated: 2026-08-30 (Ante parked; respawn still bills the bank) -->
 
 # Salvage
 
@@ -12,7 +12,7 @@ So a Boarding cannot end with nothing to show for it. I can die on the Wave that
 
 Nothing is at risk unless I put it there. There is a hold at the Hatch that pulls money back out of the bank and into my pocket, and a pocket is a thing a death can empty. I never have to touch it. When I do it is because I meant to bet, not because the room charged me a toll for standing in it.
 
-Everything bills the same pot, and that is where the tension went. The Ante I raise before a Wave. The repair I hold at the door. The seat I buy back off the floor. The weapon, the Tiers, the Hatch Armor, the Rig, the Decoy. Raising the Ante now spends money I had already taken home, which is a heavier press than it was, and is meant to be.
+Everything bills the same pot, and that is where the tension went. The repair I hold at the door. The seat I buy back off the floor. The weapon, the Tiers, the Hatch Armor, the Rig, the Decoy. The Ante is parked; it does not spend anything today.
 
 A Boarding where the door takes a beating still costs me twice: once at the door, once at the console I walk back to and cannot afford. The bank is not a score. It is not banked so I can look at it.
 
@@ -26,7 +26,7 @@ Salvage is the only currency in the game. There is nothing else to collect, no s
 
 Only a live Assault pays, and a Gatekeeper killed inside a Convert window pays nothing at all: that window moves money you are already carrying rather than earning more.
 
-What one body is worth is a flat kill payout multiplied by wherever you left the Ante. The rate: [Field Manual](Field-Manual.md).
+What one body is worth is a flat kill payout. The Ante is parked, so the multiplier sits at 1. The rate: [Field Manual](Field-Manual.md).
 
 ### Why it is safe
 
@@ -42,15 +42,13 @@ Nothing else puts Salvage there. A Withdraw is the only way to be carrying anyth
 
 If you do carry, know what you are carrying against: the pile is gone on a death that ends the Boarding and gone if the Hatch falls. A Docked return keeps a small stated share of it. See [A Boarding](A-Boarding.md).
 
-### The three things that take it back
+**The two things that take it back**
 
 **Repairing the Hatch.** Repair is charged out of your banked Salvage as the healing lands — the same bank you were saving, spent from inside the Boarding, and it will run the bank to exactly zero if you hold long enough. See [The Hatch](The-Hatch.md).
 
 **Standing a dead seat up.** A respawn is bought from the realm's bank, at a price that climbs with every respawn taken this Boarding, whoever took it. See [Going Down](Going-Down.md).
 
-**Anting up.** Every step of the Ante spends banked Salvage before the Wave that is meant to earn it back. See [Ante](Ante.md).
-
-There is one pot and all three read from it, which is the part worth internalising: a raise, a repair and a respawn are direct competitors with the weapon you were saving for, not side-charges against some other purse. **A Boarding where the Hatch takes a beating is a Boarding that costs you twice:** once in the Salvage that went into the door, and again in the purchase you walked back to the Ship unable to make.
+The Ante is parked and spends nothing. There is one pot and both remaining bills read from it, which is the part worth internalising: a repair and a respawn are direct competitors with the weapon you were saving for, not side-charges against some other purse. **A Boarding where the Hatch takes a beating is a Boarding that costs you twice:** once in the Salvage that went into the door, and again in the purchase you walked back to the Ship unable to make.
 
 ### What competes for it
 
@@ -59,9 +57,9 @@ Everything wants the same pile:
 - **A weapon** at the ARMORY. The largest single decision, and the one that fixes what kind of fight you are good at.
 - **Weapon Tiers**, also at the ARMORY, per weapon. The deepest sink in the game and the least transferable — the money goes into one gun and stays there.
 - **The Hatch** at FABRICATION: a bigger pool (Hatch Armor), the Repair Rig that makes repairing possible at all, and the Decoy.
-- **Repairs, respawns and the Ante, mid-Boarding.** The bills you did not plan for, charged to the pile you were shopping with.
+- **Repairs and respawns, mid-Boarding.** The bills you did not plan for, charged to the pile you were shopping with.
 
-Nothing is exempt. There is no second purse that quietly funds the mid-Boarding costs, which is why the door you let get chewed and the Ante you raised on a Wave you could not finish both show up later as a Tier you cannot buy.
+Nothing is exempt. There is no second purse that quietly funds the mid-Boarding costs, which is why the door you let get chewed shows up later as a Tier you cannot buy.
 
 CREW QUARTERS spends nothing on Default (cost 0, same as the free sidearm). VEIL and
 FORGE are claimable there too.
@@ -80,6 +78,6 @@ There is no order that is correct for everyone, but there is a wrong instinct: t
 - Every station panel shows lifetime earned and lifetime spent. Neither is explained anywhere, and nothing says that lifetime earned is the figure the weapon Tiers and the equipment slot are waiting on.
 - If a save is old or damaged, those lifetime figures are silently rebuilt from what you own. Your bank is always the truth; the lifetime lines may be a reconstruction.
 - There is no way to sell anything back or refund a purchase, and nothing tells you that before you spend.
-- The Ante, a repair and a respawn all bill the same bank as the consoles do, and no prompt says so. Each one reads as its own small charge rather than as money off the next purchase.
+- The Ante is parked. A repair and a respawn still bill the same bank as the consoles do, and no prompt says so. Each one reads as its own small charge rather than as money off the next purchase.
 
 *Rates, costs and multipliers: [Field Manual](Field-Manual.md).*

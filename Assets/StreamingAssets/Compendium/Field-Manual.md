@@ -175,7 +175,7 @@ Between runs you walk your own ship. Four consoles, each owning one subject.
 | Console | Owns | Sells |
 |---|---|---|
 | **ARMORY** | the weapon in your hands | weapons, and wheel purchases for whichever you carry |
-| **CREW QUARTERS** | you | Default Protocol (STOCK; G Barrage; H Rush), VEIL Protocol (PHANTOM; G Ping; H Cloak; Ghost), FORGE Protocol (PARALLEL BAYS; G Field Deploy; H Overcharge; Magnet Hands) |
+| **CREW QUARTERS** | you | Default Protocol (STOCK; G Barrage; H Rush), VEIL Protocol (PHANTOM; G Ping; H Cloak; Ghost), FORGE Protocol (PARALLEL BAYS; G Field Deploy; H Outrider) |
 | **FABRICATION** | the ship | Hatch Armor, Equipment slot, Repair Rig, Decoy |
 | **NAV MAP** | where you go | the destination, and embarking |
 

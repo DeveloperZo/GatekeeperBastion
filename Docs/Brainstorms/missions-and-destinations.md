@@ -4,7 +4,7 @@
 Purpose: The NAV MAP console, run structure inside a bastion, and having more than one place to go.
 Status: brainstorm
 Update trigger: when a remaining entry graduates, or when a second destination exists.
-Last updated: 2026-08-25 (Demo folder paths corrected; the restated T1 wave count replaced by its source, which four documents disagreed about)
+Last updated: 2026-08-30 (Hatch-start + shutoff is the field grammar; Ante parked; recall pads)
 -->
 
 ## What this covers
@@ -15,20 +15,24 @@ has graduated (table below).
 
 ## Where it stands
 
-**M47 completed 2026-08-13** (kit bastion, unlock graph). Field loop shipped: **M52** terminal
-Waves, **M53** Hatch-bank, **M54** Master Control, **M55** intensity juice. One destination —
-`SceneFlow.BastionName` is still ALPHA-7 and `SceneFlow.CombatScene` is still the single
-`Bastion_Coop`, which the co-op hull (`M95`) replaced the old solo scene with rather than
-adding to. Cold-start recut of T1's door and the Hatch-bank checkpoint for the **first
-Bastion demo** lives in `../Demo - Single/` and `../Demo - Coop/` (the first-session brainstorm
-was retired 2026-08-19); do not restamp those here as campaign rules.
+**M47 completed 2026-08-13** (kit bastion, unlock graph). Field loop shipped, then recut:
+**M52** terminal Waves, **M53** Hatch-bank, **M54** Master Control, **M55** intensity juice
+(mechanic **parked** 2026-08-30 — `Ante.Enabled = false`). The live grammar is Hatch-start:
+`T` at the Hatch starts the Wave (`StartZoneWaveFromHatch`); the field terminal is where it
+**ends** (shutoff). Kills bank as they land. Hold Interact on a `HatchRecallPad` beside each
+Field/Master terminal teleports to the Hatch. Master start at the Hatch only when
+`ControlRoomReachable`. One destination — `SceneFlow.BastionName` is still ALPHA-7 and
+`SceneFlow.CombatScene` is still the single `Bastion_Coop`. Cold-start recut of T1's door
+and the Hatch-bank checkpoint for the **first Bastion demo** lives in `../Demo - Single/`
+and `../Demo - Coop/`; do not restamp those here as campaign rules.
 
 ### Terminal roles (Zo, 2026-08-13)
 
 | Role | Does | Status |
 |---|---|---|
-| **Field / progression terminal** | Interact starts one Boarder-hunt Wave; a terminal opens its **`D`** after its authored count, which is `DemoZones.WavesPerTrigger` and is not restated here (this row said "the 5th clear" until 2026-08-25 and the code has moved twice since); Open-door Interact if the slab is still up. Hatch-bank is legal in the untimed Prep after each clear | M52 |
-| **Hatch-bank** | Starts Hatch-bank Wave; converts unbanked → banked | M53 (Hatch look-at + `T`, or console — same loop) |
+| **Hatch (start line)** | `T` starts the zone Wave; Wave hunts the Boarder. Recall pads are the return verb, not this start | 2026-08-25 recut (`StartZoneWaveFromHatch`) |
+| **Field / progression terminal** | Shutoff — the Wave **ends** here. Opens its **`D`** after its authored count (`DemoZones.WavesPerTrigger`). Open-door Interact if the slab is still up. A cyan `HatchRecallPad` sits beside it | M52 shape, start verb moved to Hatch |
+| **Hatch-bank** | Convert window: Unbanked (opt-in Withdraw) → banked. Kills already banked on landing, so the window is a stake on a pile the Boarder chose to risk, not the only way money lands | M53 |
 | **Resource terminal** | Resources / boosts | Parked until the two Wave roles have play data |
 | **Master Control** | Win sequence | M54 |
 
@@ -46,10 +50,10 @@ Link, never restate.
 
 | What | Milestone |
 |---|---|
-| Field terminal starts one Boarder-hunt Wave; a door opens on its authored count; Hatch invulnerable during Terminal; Hatch-bank legal after each clear | [`M52`](../Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
+| Field terminal **started** the Boarder-hunt Wave (start verb moved to Hatch 2026-08-25); a door opens on its authored count; Hatch invulnerable during Terminal | [`M52`](../Milestones/3.%20completed/M52-waves-start-at-a-terminal.md) |
 | Unbanked pile; Hatch-bank drip / attrition / dump; 3 slots; convert multiplier | [`M53`](../Milestones/3.%20completed/M53-salvage-leaves-through-the-hatch.md) |
 | Master Control two-phase sequence is the win | [`M54`](../Milestones/3.%20completed/M54-master-control-is-the-win.md) |
-| Visible intensity; pay-to-juice; siphon dial retired | [`M55`](../Milestones/3.%20completed/M55-pay-for-intensity.md) |
+| Visible intensity; pay-to-juice; siphon dial retired. **Parked 2026-08-30** (`Ante.Enabled = false`) | [`M55`](../Milestones/3.%20completed/M55-pay-for-intensity.md) |
 
 The console restructure, opt-in loot delivery, “a reason the bastion is a place,” and
 *Deliver-loot-before-the-run-ends* (`../Decisions.md`) went with those four.

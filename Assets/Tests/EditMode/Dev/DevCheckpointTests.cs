@@ -41,7 +41,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(2));
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(4));
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(6),
-                "the zone-3 mouth (F) is a Bastion fight beat");
+                "control-room-ready (F) is a Bastion fight beat");
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(7));
             Assert.IsTrue(GameController.IsDemoFightCheckpoint(8));
             Assert.IsFalse(GameController.IsDemoFightCheckpoint(1));

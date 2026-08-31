@@ -6,15 +6,14 @@ namespace GatekeepersProtocol.Sim
     /// Live phase and remaining counts sit on <see cref="RunSim"/>.
     /// <para>2026-08-28: the sequence used to end in a Hatch-bank window back at the door.
     /// It ends at a terminal now, like every other wave in the game.
-    /// <see cref="HatchWaves"/> is no longer read by the finale and survives only for the
-    /// Hatch-bank fixtures that pin multi-window Convert machinery.</para></summary>
+    /// <see cref="HatchWaves"/> is the Convert-window count the language table quotes; the
+    /// finale does not read it (elite half is hardcoded to one wave).</para></summary>
     public static class MasterControl
     {
         public const int TerminalWaves = 5;
 
-        /// <summary>Hatch-bank windows in the second half. Production is 1 (one final window).
-        /// Tests that pin intermediate-window no-dump set this to 5 and restore it.</summary>
-        public static int HatchWaves = 1;
+        /// <summary>Hatch-bank windows in the second half. One Convert window.</summary>
+        public const int HatchWaves = 1;
 
         /// <summary>Bodies in the finale window. One lever: a single Thief, no escorts.
         /// The 45 s drip/dump window stays Hatch-bank; the Wave-5 horde does not ride along.

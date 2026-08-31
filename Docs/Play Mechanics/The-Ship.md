@@ -1,4 +1,4 @@
-<!-- Purpose: the hub between Boardings — what each console owns, how to use one, and what to buy first. / Status: working / Update trigger: when a station is added, removed, changes what it sells, or moves along the hull. / Last updated: 2026-08-26 (the ship is one deck) -->
+<!-- Purpose: the hub between Boardings — what each console owns, how to use one, and what to buy first. / Status: working / Update trigger: when a station is added, removed, changes what it sells, or moves along the hull. / Last updated: 2026-08-30 (lock is lifetime Salvage earned, not Convert) -->
 
 # The Ship
 
@@ -14,7 +14,7 @@ Four consoles, four subjects, and nothing is sold in two places. Weapons and the
 
 The order of a first visit: buy the free Secondary, because the first lesson is which console guns come from. Claim a protocol, which also costs nothing at its plainest. Look at the other two, so I know where the bills will arrive.
 
-Weapon Tiers and the equipment slot stay shut until Salvage first converts through the Hatch. Nothing else waits.
+Weapon Tiers and the equipment slot stay shut until this realm has earned any Salvage at all. Nothing else waits. FABRICATION itself stays shut until the Bastion is stripped.
 
 The NAV MAP will warn me if I own no weapon and no protocol, and then let me go anyway. It is willing to watch me make a bad bet. Everything on this Ship is.
 
@@ -43,7 +43,7 @@ is not here; that is the Repair Rig at FABRICATION.
 
 **FABRICATION — the Hatch.** How much the door can take before it falls, plus the equipment slot, the Repair Rig, and the Decoy that fills the Drone bay. What it buys applies from your next embark onward, not retroactively.
 
-**NAV MAP — where you go, and going there.** One destination. A selector for which Wave you start on, capped by the deepest Wave you have cleared. And the EMBARK button, which is the point of no return: once the Bastion loads, the only exits are clearing it and losing. On a friends session only the party lead's EMBARK commits the party. While the party fights without you — arrived late, or dead — the NAV MAP is also the wait surface: FOLLOW at the next break, or a priced RESPAWN ([Going Down](Going-Down.md)).
+**NAV MAP — where you go, and going there.** One destination. A selector for which Wave you start on, capped by the higher of deepest Wave entered and deepest Wave cleared. And the EMBARK button, which is the point of no return: once the Bastion loads, the only exits are clearing it and losing. On a friends session only the party lead's EMBARK commits the party. While the party fights without you — arrived late, or dead — the NAV MAP is also the wait surface: FOLLOW at the next break, or a priced RESPAWN ([Going Down](Going-Down.md)).
 
 ### The start-Wave selector
 
@@ -58,8 +58,8 @@ The NAV MAP will warn you loudly if you own no weapon or no protocol and then le
 **The free sidearm at the ARMORY, before anything.** It costs nothing, and the only reason it is sold rather than given is so that the first thing you learn is that weapons come from that console.
 
 **Then CREW QUARTERS.** Claim Default — it costs nothing, same reason the sidearm is
-sold rather than given. Weapon upgrades and the equipment slot are locked until Salvage
-first converts through the Hatch. Hatch Armor at FABRICATION is also open from the first minute.
+sold rather than given. Weapon upgrades and the equipment slot are locked until this
+realm has earned any Salvage. Hatch Armor at FABRICATION waits until the opening ends.
 
 **Then whatever killed you.** If the Hatch fell while you were still standing, that is FABRICATION and not you at all.
 
@@ -71,7 +71,7 @@ first converts through the Hatch. Hatch Armor at FABRICATION is also open from t
 
 ## Gaps
 
-- Nothing anywhere lays out which purchases are gated behind the first Convert and which are not. There is no one place that shows you the split, and the ARMORY's LOCKED row reads as though dying were what opens it.
+- Nothing anywhere lays out which purchases wait on the first Salvage earned and which wait on the opening ending. There is no one place that shows you the split, and the ARMORY's LOCKED row reads as though dying were what opens it.
 - FABRICATION sells the Decoy into the Drone bay. The slot still looks like a third gun until you own one.
 - The Hatch Armor track has a ceiling and you only learn where by seeing a row read MAX. Nothing shows you the whole ladder in advance.
 - Repairing needs the Repair Rig equipped, and nothing on the Hatch or in the fight says so until you try to repair and nothing happens.

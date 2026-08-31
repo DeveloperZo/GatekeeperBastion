@@ -152,7 +152,7 @@ namespace GatekeepersProtocol.Game
                 }
                 if (hatchStartable)
                 {
-                    if (!_armedHatch)
+                    if (Ante.Enabled && !_armedHatch)
                     {
                         Log.Event("Hatch", "hatch-bank refused — select intensity first");
                         return;
@@ -168,18 +168,25 @@ namespace GatekeepersProtocol.Game
                             + " refused — the wave starts at the Hatch");
                         return;
                     }
-                    if (!_armedRetrigger || _armedTerminalId != lookingTerminal.TerminalId)
+                    if (Ante.Enabled
+                        && (!_armedRetrigger || _armedTerminalId != lookingTerminal.TerminalId))
                     {
                         Log.Event("Terminal", lookingTerminal.TerminalId
                             + " refused — select the retrigger first");
                         return;
+                    }
+                    if (!Ante.Enabled && !_armedRetrigger)
+                    {
+                        _armedTerminalId = lookingTerminal.TerminalId;
+                        _armedRetrigger = true;
+                        _retriggerPartial = false;
                     }
                     StartZoneRetrigger(lookingTerminal);
                     return;
                 }
                 if (terminalStartable)
                 {
-                    if (_armedTerminalId != lookingTerminal.TerminalId)
+                    if (Ante.Enabled && _armedTerminalId != lookingTerminal.TerminalId)
                     {
                         Log.Event("Terminal", lookingTerminal.TerminalId
                             + " refused — select the Ante first");
@@ -194,6 +201,8 @@ namespace GatekeepersProtocol.Game
                             + " refused — Master Control starts at the Hatch");
                         return;
                     }
+                    if (!Ante.Enabled)
+                        _armedTerminalId = lookingTerminal.TerminalId;
                     StartTerminalWave(lookingTerminal);
                     return;
                 }
@@ -206,20 +215,33 @@ namespace GatekeepersProtocol.Game
 
             if (Controls.Down(ControlId.Interact))
             {
-                if (retriggerOffer.Available)
+                // Ante select is parked with the dial — E at a trigger does not arm.
+                if (!Ante.Enabled)
                 {
-                    ToggleRetriggerSelect(lookingTerminal, retriggerOffer);
-                    return;
+                    // Retrigger still uses E to open the composite/partial election.
+                    if (retriggerOffer.Available)
+                    {
+                        ToggleRetriggerSelect(lookingTerminal, retriggerOffer);
+                        return;
+                    }
                 }
-                if (terminalStartable)
+                else
                 {
-                    ToggleTerminalSelect(lookingTerminal);
-                    return;
-                }
-                if (hatchStartable)
-                {
-                    ToggleHatchSelect();
-                    return;
+                    if (retriggerOffer.Available)
+                    {
+                        ToggleRetriggerSelect(lookingTerminal, retriggerOffer);
+                        return;
+                    }
+                    if (terminalStartable)
+                    {
+                        ToggleTerminalSelect(lookingTerminal);
+                        return;
+                    }
+                    if (hatchStartable)
+                    {
+                        ToggleHatchSelect();
+                        return;
+                    }
                 }
             }
 
@@ -236,6 +258,8 @@ namespace GatekeepersProtocol.Game
                 ToggleRetriggerElection(lookingTerminal, retriggerOffer);
                 return;
             }
+
+            if (!Ante.Enabled) return;
 
             if (_armedHatch || !string.IsNullOrEmpty(_armedTerminalId))
             {
@@ -402,11 +426,13 @@ namespace GatekeepersProtocol.Game
                 return false;
             }
 
-            if (_armedTerminalId != terminal.TerminalId)
+            if (Ante.Enabled && _armedTerminalId != terminal.TerminalId)
             {
                 Log.Event("Terminal", terminal.TerminalId + " refused — select the Ante first");
                 return false;
             }
+            if (!Ante.Enabled)
+                _armedTerminalId = terminal.TerminalId;
 
             string block = FieldStartBlockReason(terminal.TerminalId);
             if (block != null)
@@ -500,7 +526,12 @@ namespace GatekeepersProtocol.Game
                 // zone and this returned false at the control room. With the Master terminal
                 // now refusing to start (correctly — one start line), the finale would have
                 // been unstartable and the demo uncompletable.
-                return MasterControlAwaitsStart;
+                //
+                // ControlRoomReachable is the other half: without it, a zone whose terminals
+                // are done but whose bank has not opened the control gate (F12-B/D, or a
+                // shutoff that has not yet been banked) offered Master at the Hatch while D3
+                // was still locked — "terminals say complete / wrong door locked".
+                return MasterControlAwaitsStart && _layout.ControlRoomReachable;
             }
         }
 
@@ -568,10 +599,13 @@ namespace GatekeepersProtocol.Game
             // only way into Master Control was pressing T at the Master terminal itself — a
             // SECOND START LINE, which is the exact shape 0-Gameplay.md forbids and which sent
             // the 2026-08-25 run to a terminal to begin a wave. The finale is a zone like the
-            // others: it begins here.
+            // others: it begins here — but only once the control gate is open. Offering it
+            // while D3 is still shut (zone terminals done, bank not survived) started a
+            // finale the player could not walk to.
             BastionTerminal master = _layout != null ? _layout.FindMaster() : null;
             if (master != null && Sim.Assault == AssaultState.Prep && !Sim.MasterSequenceLive
-                && (_layout == null || !_layout.IsTerminalDone(master.TerminalId)))
+                && _layout.ControlRoomReachable
+                && !_layout.IsTerminalDone(master.TerminalId))
             {
                 _armedTerminalId = master.TerminalId;
                 Log.Event("Hatch", "wave started from the Hatch — Master Control answers at "

@@ -2,53 +2,34 @@
 
 ## Game
 
-This sheet puts a second machine in the room for the garrison to account for, and it is the only sheet where something other than me deals the damage.
+This sheet puts two machines in the room, and they are the only things besides me that deal the damage.
 
-Its doctrine widens the bay: two of my decoys may stand live at once instead of one.
+The crew key is press versus hold. A tap stands a turret where I am looking, or moves a live one and keeps the charge it has already earned. A hold Overcharges a charged turret. Overcharge ends Exhausted: the machine stays on the field, silent, then falls. An Exhausted turret cannot be refreshed; a tap despawns it and starts the cooldown.
 
-The crew burst stands a turret where I am looking. It acquires and fires on its own out to a useful distance, and while it stands, every Boarder near it fires faster. A plant, an emplacement and a buff on one invoice — and standing a new one replaces the old, so the fleet is always exactly one machine deep.
+The personal key is the same grammar for a follower. A tap deploys the Outrider at my feet; it stays with me and fires on the Gatekeeper nearest to me. A hold EMP-blasts a charged Outrider — light damage and a root. Exhausted is the same end as the turret.
 
-The personal burst redlines it. The turret fires much harder, my own gun fires harder, and the machine pays for the window out of its own life at a steady burn. A full window on a healthy turret leaves it wounded. On a wounded one, it is a burnout I scheduled. It refuses outright with nothing standing.
+Charge rises only while a machine fires. A machine standing in an empty room earns nothing, so the special is always earned inside the fight it is spent in.
 
-The passive is the one nobody reads and the one that makes the sheet work: a Gatekeeper that would come for me takes the turret instead, whenever both are in reach. It is the only way the turret is ever attacked. Without it the machine would be furniture. With it, the machine is mortal, and it is mortal on my behalf.
+When the two are near each other, Overcharge also puts the Outrider at maximum fire rate, and EMP makes the turret's fire root what it hits. Outside that distance each special is its own. Both orders — turret first or Outrider first — reach the same peak: a max-rate EMP turret beside a max-rate Outrider.
 
-Attention and structure are the same subject here. I build the thing they look at.
+The passive row is a TODO, unfilled on purpose until the two-machine loop has been played.
 
-## Reference
+Attention and structure are the same subject here. I build the thing they look at, or I take it with me.
 
-Claimed at CREW QUARTERS, on the same panel as Default.
+## Differs
 
-### Doctrine: PARALLEL BAYS
+**Crew: Field Deploy.** Tap: stands a turret on the floor the caster is looking at, within reach; looking at a wall or open air puts it a step in front of the caster. The press is instant — no window, straight to cooldown. It acquires and fires on its own out to its range, and while it fires, every Boarder inside its aura fires faster. Deploying again replaces the standing turret and keeps its charge. Hold: Overcharge, refused when the standing turret has no charge. Overcharge redlines the turret (and the caster's own gun) until the earned charge is spent, then the machine enters Exhausted. Near the Outrider, Overcharge also puts the Outrider at maximum fire rate. The pairing is proximity-gated.
 
-Two of your decoys may stand live at once. STOCK and PHANTOM keep the payload's authored live count.
+**The turret is mortal three ways.** Gatekeeper damage kills it — hardware is a target in melee of a body already chasing the Boarder, with no protocol passive involved. Overcharge spends it into Exhausted: it stands silent, then despawns without further input. An Exhausted turret can also be tapped off the field. It does not expire on a life clock, and it does not run dry of a magazine.
 
-**Not yet active.** The bay still holds one decoy. The doctrine is written onto every decoy you place and nothing reads it, so a decoy placed under PARALLEL BAYS behaves exactly as one placed under STOCK. Raising the count needs the bay to track more than one live machine, which is a change to the decoy payload rather than to this protocol.
+**Personal: Outrider.** Tap: deploys a follower that stays with the Boarder and fires on the Gatekeeper nearest to them, not the one nearest to itself. Redeploying a live Outrider moves it to the Boarder and keeps its charge. Hold: EMP, refused without charge by that name. EMP is a blast of light damage and a root from the Outrider; near the turret, the turret's fire becomes EMP rounds (same damage, plus the root) for the EMP window. EMP ends Exhausted. An Exhausted Outrider is tapped off the field.
 
-### Crew: Field Deploy
+**Both specials end independently**, each on its own charge window.
 
-Stands a turret at the point you are looking at. It acquires and fires on its own out to its range. While it stands, every Boarder inside its aura radius fires faster. Deploying again replaces the standing turret rather than adding one.
+**Passive.** Authored TODO. Deliberately unfilled rather than blank — an empty row is the panel reading as broken.
 
-The aura belongs to the machine, not to a window on the caster: it lasts as long as the turret does.
-
-Range, damage per shot, shots per second, aura radius and multiplier: [Field Manual](Field-Manual.md).
-
-### Personal: Overcharge
-
-Redlines the standing turret for the window: it fires much faster and your own gun fires faster. The turret pays life per second for the whole window and can burn itself out. It refuses with no turret standing.
-
-### Passive: Magnet Hands
-
-A Gatekeeper that would target you targets your turret instead, whenever both are in reach. This is the only path by which a turret is ever attacked.
-
-### How it plays
-
-- **The turret is a target, and that is the point.** Placed well it is a second thing the room walks toward, on ground you chose, away from you and away from the Hatch.
-- **Place for the approach, not for the kill.** Its damage is real but modest. Its value is the aura and the attention. A turret behind you buffs you and absorbs nothing; a turret between you and the entry does both jobs.
-- **Overcharge is spending the machine.** Treat the turret as consumable and the ability as cashing it in. Firing it on a fresh turret at the start of a Wave wastes most of what the turret was for.
-- **Redeploying is free of everything except the cooldown.** A wounded turret is not worth defending. Replace it.
-- **Against Thieves the turret is a clock that runs while you do something else,** which is the closest thing this sheet has to an answer for them.
-- **Against a Hunter, the passive is the answer.** It goes for the machine, and the machine can take a few swings you could not.
+Range, damage, rates, aura, pairing radius, root length and charge dials: [Field Manual](Field-Manual.md). Charge per shot, charge max, hold threshold, Exhausted window, pairing radius, follow distance, EMP damage and root length are low-end placeholders.
 
 ## See also
 
-[Protocols](Protocols.md). [Default](Protocol-Default.md). [VEIL](Protocol-VEIL.md). [Upgrades](Upgrades.md). [Hunter](Gatekeeper-Hunter.md).
+[Protocols](Protocols.md). [Default](Protocol-Default.md). [VEIL](Protocol-VEIL.md). [Upgrades](Upgrades.md).

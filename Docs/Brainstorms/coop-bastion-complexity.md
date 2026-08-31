@@ -7,8 +7,8 @@ guns into the same trickle.
 Status: brainstorm — not a milestone
 Update trigger: when the faucet loop shape, player-count wave scaling, enemy
 health, extra terminals, cores, or run-loss rules change
-Last updated: 2026-08-25 (M102 build state recorded, M98's priced respawn
-replaces the buy-back gap, retired Bastion.unity fence removed)
+Last updated: 2026-08-30 (0.34.2: Hatch-start, Ante parked, recall pads,
+respawn spends the realm bank; faucet stays a gated graybox)
 Audience: another agent. Do not require the chat log.
 -->
 
@@ -35,17 +35,21 @@ rare. Do not wait on a three-player log.
 You **pay** for intensity. Intensity returns a **multiplier** on rewards,
 or an **unlock** for rewards.
 
-Juice at a trigger is one payment: Unbanked in, more Defaults and more
-Salvage per kill from one table (`IntensityJuice`, `TetherSiphon`). Cost
-100 Unbanked per `+` step. `-` is free, no refund. Intensity 0 is a legal
-start. Juice does **not** start the wave. `E` then `T` does. Assault
+**Parked 2026-08-30 (Zo).** `Ante.Enabled = false` — no juice, no intensity
+select, no Ante on prompts/HUD/shortcuts; Waves run at dial 0. The spend
+path and `TetherSiphon` curve stay behind the flag (`IntensityJuice.cs`,
+`../Decisions.md`). Cost when enabled is **banked** Salvage (`SpendBanked`),
+100 per `+` step, not Unbanked. This section is the parked design, not the
+0.34.2 friends-alpha surface.
+
+Juice does **not** start the wave. `T` at the Hatch does. Assault
 locks intensity. Juice does not raise HP, group size, spawn gap, Hunters,
 or Thieves.
 
 **Stake** is the category: pay to raise danger and payout from the same
 source (`3-Mechanics.md`). Juice is one stake. The hatch bank is another
-(Unbanked converts or wipes). Carry is a third. Do not call juice “the
-stake.”
+(Unbanked converts or wipes — Unbanked fills only on Withdraw). Carry is
+a third. Do not call juice “the stake.”
 
 **Cores** are intensity you can hold. Each core has a named risk/reward
 axis (density, toughness, tempo — names in `economy.md`, Zo 2026-08-20).
@@ -53,8 +57,9 @@ Spend one to harden that axis on the wave, or to buy a Protocol/Run
 multiplier on you. Same one-source rule. Currency split lives in
 `economy.md`. This file only needs cores as intensity-in-object-form.
 
-The faucet loop (`M102`) moves the intensity choice to the shutoff draft;
-whether the shipped juice dial survives beside it is Open.
+The faucet loop (`M102`) moves the intensity choice to the shutoff draft.
+The juice dial is parked; whether it returns beside the draft is Open
+(flip `Ante.Enabled` and play).
 
 ## Ancestor — Guns 'n Goblins, then the split
 
@@ -67,11 +72,12 @@ night. This game splits that object in two:
 
 | Object | Job |
 |---|---|
-| **Field terminal** | Starts the wave (`T`). Wave hunts the player. Kills fill Unbanked. Not safe yet. |
-| **Hatch** | GameObject. Door to the Ship. Destroyed → Run is **Lost**. Hatch wave is the **bank**: Unbanked starts converting; converted Salvage is safe. |
+| **Hatch** | `T` starts the zone Wave. Door to the Ship. Destroyed → Run is **Lost**. Convert / dock live here after shutoff. |
+| **Field terminal** | Where the Wave **ends** (shutoff). Wave hunts the player on the walk out. Kills bank as they land. Not safe yet. |
 
-Dying on a wave **costs Unbanked**. Respawn is not immediate. Delayed
-in-Run respawn is **open**.
+Dying on a wave **costs a respawn from the realm bank** (`SpendBanked`,
+cap 2, 10 s bleed-out) or the Boarding if the offer cannot be honored.
+Delayed in-Run respawn shipped with the `M98` recut.
 
 **Lost is the Hatch dying** (or failing the bank). A terminal wave is
 earn-and-risk, not the lose object.
@@ -80,14 +86,17 @@ This game also inverts the Bastion (theirs; you board) and refuses idle,
 XP sheet, build-your-fortress, thousands on screen, single-player as the
 only session.
 
-## The loop (shipped)
+## The loop (shipped, 0.34.2)
 
-1. Look at a field terminal. Optionally pay intensity. `E`, `T`. Wave
-   hunts **you**. Kills → Unbanked.
-2. Walk to the Hatch. Optionally pay intensity. `E`, `T`. Wave hits the
-   **Hatch** (and sometimes you). Survive → Unbanked converts (safe).
-   Die or Hatch destroyed → Lost; Unbanked gone; banked stays.
+1. `T` at the **Hatch**. Walk the corridor. Wave hunts **you**. Kills bank
+   as they land. Ante is off.
+2. `T` at the **field terminal** (shutoff). Hold Interact on the recall pad
+   to teleport to the Hatch, or walk. Dock on `E`, or `T` at the Hatch for
+   the next stretch.
 3. Spend **banked** Salvage on the Ship (guns, Protocol, Fabrication).
+
+The faucet loop below is a **dev-gated graybox** (`M102`), off by default.
+It is not the friends-alpha loop.
 
 Leaving the first room is this rotation. It is already in the game.
 
@@ -117,9 +126,10 @@ experiment itself, is owed** — so nothing below has play evidence yet:
   votes on a visible panel, the party lead confirms. Choose the modifier —
   spend it on the coming stand, or carry it to the next terminal — then the
   party teleports to the Hatch and defends.
-- **Traversal is asymmetric.** Back to the Hatch is cheap; out to terminals
-  is on foot through live streams and unforgiving. All trip risk sits on
-  the opt-in leg.
+- **Traversal is asymmetric.** Back to the Hatch is a recall pad (hold
+  Interact, `HatchRecallPad`) in the shipped loop and a teleport after
+  confirm in the faucet graybox; out to terminals is on foot through live
+  streams. All trip risk sits on the outbound leg.
 
 The greed dial is the hold: leave at N for one option or ride to N+2
 against more Hatch attrition and a harder trip. Legibility is three
@@ -166,14 +176,13 @@ combat scene is `Bastion_Coop` and the practice range is `Range.unity`.)
 ## Build vs this pattern (gap)
 
 Narrowed by the `M98` recut (2026-08-24). One priced respawn rule replaced
-the buy-back windows: a dead seat — host and solo included — pays out of the
-Unbanked it is carrying at `150 × uses+1` (`Sim/Run/Respawns.cs`, the
-counter the Run's, not the seat's), and host/solo death becomes a DOWN state
-whenever that offer can be honored. A seat carrying nothing cannot pay, and
-there the first loss still ends the Run. So the gap is now a narrow one: the
-pattern above says Lost is Hatch destroyed / bank failed, and the build still
-ends a Run on a field-wave death that cannot buy itself back. Do not “fix”
-host-death as a side effect of a layout pass.
+the buy-back windows: a dead seat — host and solo included — pays
+`150 × min(taken+1, 3)` out of the **realm's bank** (`SpendBanked`; cap 2,
+10 s bleed-out). A seat that cannot pay, or a third death, ends the
+Boarding. So the gap is now a narrow one: the pattern above says Lost is
+Hatch destroyed / bank failed, and the build still ends a Run on a
+field-wave death that cannot buy itself back. Do not “fix” host-death as
+a side effect of a layout pass.
 
 ## Refusals this thread
 
@@ -241,9 +250,11 @@ are parked, not open: revisit only if the paradigm dies.
 - What feeds the Hatch stand after shutoff — remaining bodies converging,
   a surge, or the next faucet — and what converts unbanked during it.
 - Do kills pay at all under Waves-endured income, or only the endure bonus.
-- Does the shipped juice dial survive beside the draft, or fold into it.
+- Does the parked juice dial return beside the draft, or stay folded.
+  Revisit = flip `Ante.Enabled` and play; not a live fork in 0.34.2.
 - The language table's **field terminal** row is recut when the faucet
-  loop ships for real (not for the graybox).
+  loop ships for real (not for the graybox). The **shipped** start verb
+  already moved to the Hatch (`Getting-Started.md`).
 - Lost rules — the respawn half landed with the `M98` recut (above); what a
   field-wave death should mean when nothing can pay is still Zo's, worked
   separately. Do not fix in passing.

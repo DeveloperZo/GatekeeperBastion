@@ -9,26 +9,30 @@ a perk layer at all.
 Status: brainstorm
 Update trigger: when a reference game changes what it does with abilities/perks/stakes UI,
 or when the Ante/Protocol systems this file references change shape.
-Last updated: 2026-08-26
+Last updated: 2026-08-30 (three protocol squares + charge HUD; Ante parked; M108 is chrome, not this file)
 -->
 
 ## What this covers
 
 HUD and menu presentation for player abilities, cooldowns, build/perk depth, and
 risk-stake systems — not the mechanics themselves (`boarder-protocols.md`,
-`Docs/Design/4-Data.md`), not the Ante number (`Docs/Play/Ante.md`,
-`Sim/Meta/IntensityJuice.cs`).
+`Docs/Design/4-Data.md`), not the Ante number (`Docs/Play Mechanics/Ante.md`,
+`Sim/Run/IntensityJuice.cs`; parked 2026-08-30). Corner chrome (insets, type size) is `M108`,
+not this file.
 
 ## Where it stands
 
-- `Assets/Scripts/Game/Ui/ProtocolAbilityBarView.cs`: one ability slot, radial
-  `Image.fillAmount` cooldown, distinct Active/Cooling fill colors. A player carries
-  exactly one Protocol ability at a time (`boarder-protocols.md`'s swap-at-Ship).
+- `ProtocolAbilityBarView` binds **Passive + Personal + Crew** (`_passive`, `_personal`,
+  `_crew`). `HudController.Protocol.PushProtocolChrome` drives all three plus the protocol
+  line. FORGE's crew square can show turret charge and the personal square Outrider charge;
+  the line appends `" (paired)"` when `BoarderProtocol.MachinesPaired`. Unequipped reads
+  `"NO PROTOCOL"` / `"--"`. One protocol equipped at a time (swap at Ship); three ability
+  squares, not one.
 - The "what can I do here" surface at every interactable (Hatch, Bastion terminal,
-  Ship station) is a single crosshair-line string (`IInteractable.Prompt`) — no panel,
-  no icon grid.
+  Ship station, recall pad) is a single crosshair-line string (`IInteractable.Prompt`) —
+  no panel, no icon grid.
 - No perk-tree UI exists anywhere in the game; a Protocol is one pick, not built out
-  or leveled.
+  or leveled. Ante is parked (`Ante.Enabled = false`); it is not a live dial on the HUD.
 
 ## Graduation test
 
@@ -71,9 +75,10 @@ name what changed.*
 Fireteam Elite 2 tags each of its 103 Challenge Cards by valence (Positive / Neutral /
 Negative), by what it affects (Bots / Enemies / Environment / Mechanics / Players /
 Tracker / Weapons), and by rarity, then gates the harder ones behind a store unlock.
-Ante is a single scalar dial today, not a card pool, and no milestone or brainstorm
-proposes changing that. Recorded as evidence for if Ante (or a future stakes system)
-ever grows named, discrete modifiers instead of a number — not a live proposal.
+Ante is parked (`Ante.Enabled = false`, 2026-08-30), not a live dial, and no milestone
+proposes turning it into a card pool. Recorded as evidence for if Ante (or a future
+stakes system) ever grows named, discrete modifiers instead of a number — not a live
+proposal.
 
 ## Rejected
 

@@ -18,6 +18,7 @@ namespace GatekeepersProtocol.Game
 
         long _cacheElapsed = long.MinValue;
         long _cacheWave = long.MinValue;
+        long _cacheScoreAlive = long.MinValue;
         long _cacheSiphon = long.MinValue;
         long _cacheKill = long.MinValue;
         long _cacheRunSalvage = long.MinValue;
@@ -26,19 +27,6 @@ namespace GatekeepersProtocol.Game
         long _cacheHatchHp = long.MinValue;
         long _cacheHatchMax = long.MinValue;
         long _cachePlayerHp = long.MinValue;
-        float _cacheCrewFill = -1f;
-        float _cachePersonalFill = -1f;
-        string _cacheCrewCdLabel;
-        string _cachePersonalCdLabel;
-        int _cacheHasProtocol = -1;
-        // Protocol IDENTITY, not just its cooldown state. Without these the cache key was
-        // (has, both fills, both countdown labels) — every one of which is identical between
-        // two protocols that are simply both ready, so granting a new protocol from the range
-        // console repainted nothing and the bar kept the old names until an ability was fired
-        // and moved a fill. Enums, so the comparison is free.
-        BoarderAbilityId _cacheCrewAbility = BoarderAbilityId.None;
-        BoarderAbilityId _cachePersonalAbility = BoarderAbilityId.None;
-        BoarderAbilityId _cachePassive = BoarderAbilityId.None;
         bool _cacheAlarm;
         bool _cachePlayerDead;
 
@@ -85,12 +73,14 @@ namespace GatekeepersProtocol.Game
             // the same readout and the gate has to move when the price escalates.
             long respawnCost = sim.NextRespawnCost;
             if (elapsed != _cacheElapsed || wave != _cacheWave
+                || alive != _cacheScoreAlive
                 || siphon != _cacheSiphon || kill != _cacheKill
                 || runSal != _cacheRunSalvage || banked != _cacheBanked
                 || unbanked != _cacheUnbanked || respawnCost != _cacheRespawnCost)
             {
                 _cacheElapsed = elapsed;
                 _cacheWave = wave;
+                _cacheScoreAlive = alive;
                 _cacheSiphon = siphon;
                 _cacheKill = kill;
                 _cacheRunSalvage = runSal;
@@ -112,15 +102,18 @@ namespace GatekeepersProtocol.Game
                 _lineBuf.Clear();
                 int shown = wave;
                 if (shown > WaveDirector.MaxWaves) shown = WaveDirector.MaxWaves;
-                _lineBuf.Append("Boarding ").Append(runSal)
-                    .Append("  ·  Ante ").Append(siphon)
-                    .Append("  -  Wave ").Append(shown).Append('/')
+                _lineBuf.Append("Boarding ").Append(runSal);
+                if (Ante.Enabled)
+                    _lineBuf.Append("  ·  Ante ").Append(siphon);
+                _lineBuf.Append("  -  Wave ").Append(shown).Append('/')
                     .Append(WaveDirector.MaxWaves)
                     .Append("  -  ");
                 _lineBuf.Append(elapsed / 60).Append(':');
                 int sec = elapsed % 60;
                 if (sec < 10) _lineBuf.Append('0');
                 _lineBuf.Append(sec);
+                // Last on a right-aligned, masked card so the remaining count stays visible.
+                _lineBuf.Append("  ·  ").Append(alive);
                 _view.SetScore(salvage, _lineBuf.ToString());
             }
 
@@ -263,108 +256,6 @@ namespace GatekeepersProtocol.Game
 
             _view.SetStaminaLabel(sprinting == 1 ? "<b>SPRINT</b>" : "STAMINA");
             _view.SetStaminaBar(_fpc.Stamina, _fpc.StaminaMax);
-        }
-
-        void PushProtocolReadout()
-        {
-            if (_protocol == null)
-            {
-                ResolveRefs();
-                if (_protocol == null)
-                {
-                    if (_cacheHasProtocol != 0)
-                    {
-                        _cacheHasProtocol = 0;
-                        PushProtocolChrome(false);
-                    }
-                    return;
-                }
-            }
-
-            int has = _protocol.HasProtocol ? 1 : 0;
-            BoarderAbilityId crewAbility = _protocol.CrewAbility;
-            BoarderAbilityId personalAbility = _protocol.PersonalAbility;
-            BoarderAbilityId passive = _protocol.Passive;
-            float crewFill = BoarderProtocol.OverlayFill(_protocol.CrewWindow, _protocol.CrewCooldown,
-                BoarderProtocol.Window(_protocol.CrewAbility),
-                BoarderProtocol.Cooldown(_protocol.CrewAbility));
-            float persFill = BoarderProtocol.OverlayFill(_protocol.PersonalWindow, _protocol.PersonalCooldown,
-                BoarderProtocol.Window(_protocol.PersonalAbility),
-                BoarderProtocol.Cooldown(_protocol.PersonalAbility));
-            string crewCd = CdLabel(_protocol.CrewWindow, _protocol.CrewCooldown);
-            string persCd = CdLabel(_protocol.PersonalWindow, _protocol.PersonalCooldown);
-            if (has == _cacheHasProtocol && crewFill == _cacheCrewFill && persFill == _cachePersonalFill
-                && crewCd == _cacheCrewCdLabel && persCd == _cachePersonalCdLabel
-                && crewAbility == _cacheCrewAbility && personalAbility == _cachePersonalAbility
-                && passive == _cachePassive)
-                return;
-            _cacheHasProtocol = has;
-            _cacheCrewAbility = crewAbility;
-            _cachePersonalAbility = personalAbility;
-            _cachePassive = passive;
-            _cacheCrewFill = crewFill;
-            _cachePersonalFill = persFill;
-            _cacheCrewCdLabel = crewCd;
-            _cachePersonalCdLabel = persCd;
-            PushProtocolChrome(has != 0);
-        }
-
-        void PushProtocolChrome(bool equipped)
-        {
-            if (!equipped)
-            {
-                _view.SetProtocolLine("NO PROTOCOL");
-                _view.SetProtocolAbilities(
-                    "--", 0f, "",
-                    Controls.DisplayOf(ControlId.PersonalAbility), "--", 0f, "", false,
-                    Controls.DisplayOf(ControlId.CrewAbility), "--", 0f, "", false);
-                return;
-            }
-
-            string proto = _protocol.ProtocolName;
-            _view.SetProtocolLine(string.IsNullOrEmpty(proto) ? "NO PROTOCOL" : proto);
-            string passive = _protocol.PassiveName;
-            _view.SetProtocolAbilities(
-                string.IsNullOrEmpty(passive) ? "--" : passive, 0f, "",
-                Controls.DisplayOf(ControlId.PersonalAbility),
-                _protocol.PersonalName,
-                BoarderProtocol.OverlayFill(_protocol.PersonalWindow, _protocol.PersonalCooldown,
-                    BoarderProtocol.Window(_protocol.PersonalAbility),
-                    BoarderProtocol.Cooldown(_protocol.PersonalAbility)),
-                CdLabel(_protocol.PersonalWindow, _protocol.PersonalCooldown),
-                _protocol.PersonalWindow > 0f,
-                Controls.DisplayOf(ControlId.CrewAbility),
-                _protocol.CrewName,
-                BoarderProtocol.OverlayFill(_protocol.CrewWindow, _protocol.CrewCooldown,
-                    BoarderProtocol.Window(_protocol.CrewAbility),
-                    BoarderProtocol.Cooldown(_protocol.CrewAbility)),
-                CdLabel(_protocol.CrewWindow, _protocol.CrewCooldown),
-                _protocol.CrewWindow > 0f);
-        }
-
-        static readonly string[] SecLabel = BuildSecLabel();
-
-        static string[] BuildSecLabel()
-        {
-            var a = new string[61];
-            for (int i = 0; i < a.Length; i++) a[i] = i.ToString();
-            return a;
-        }
-
-        static string CdLabel(float window, float cooldown)
-        {
-            const float eps = 0.05f;
-            if (window > eps) return SecAt(window);
-            if (cooldown > eps) return SecAt(cooldown);
-            return "";
-        }
-
-        static string SecAt(float seconds)
-        {
-            int n = (int)Mathf.Ceil(seconds);
-            if (n < 0) n = 0;
-            if (n < SecLabel.Length) return SecLabel[n];
-            return n.ToString();
         }
 
         void PushPrompt()

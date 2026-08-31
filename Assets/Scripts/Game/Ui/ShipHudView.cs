@@ -20,6 +20,7 @@ namespace GatekeepersProtocol.Game
         [SerializeField] GameObject _scoreRoot;
         [SerializeField] TMP_Text _scoreSalvage;
         [SerializeField] TMP_Text _scoreMeta;
+        [SerializeField, OptionalBinding] TMP_Text _protocolLine;
         [SerializeField] GameObject _weaponCardRoot;
         [SerializeField] TMP_Text _weaponName;
         [SerializeField] TMP_Text _weaponAmmo;
@@ -69,6 +70,12 @@ namespace GatekeepersProtocol.Game
         {
             UiBind.SetText(_scoreSalvage, salvageLine);
             UiBind.SetText(_scoreMeta, metaLine != null ? metaLine : "");
+        }
+
+        public void SetProtocolLine(string text)
+        {
+            UiBind.SetText(_protocolLine, text);
+            UiBind.Show(_protocolLine, true);
         }
 
         public void SetWeapon(string name, string ammoLine)

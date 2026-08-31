@@ -6,9 +6,7 @@ count, room metrics, lighting model and set dressing. Not what the ship's statio
 which is the station milestones; not the exterior of any other vessel.
 Status: brainstorm
 Update trigger: when the hull is rebuilt again, or when a remaining entry graduates.
-Last updated: 2026-08-26 (the interior collapses to one deck — Where it stands, Decided,
-the graduation test, the ceiling constraint, the dressing register and the window entry
-rewritten against it; the exterior is deliberately not reprofiled)
+Last updated: 2026-08-30 (`M104` took the lighting entry; one-deck collapse stands)
 -->
 
 ## What this covers
@@ -118,17 +116,6 @@ third and sweep outboard and *forward*, putting the glowing nacelles alongside t
 rather than trailing the stern. Almost nothing else does this, which is why it reads
 instantly. Pods behind the roots is a generic spaceship.
 
-### Light from what people are doing, not from the ceiling
-
-The stated art brief for the Normandy interior is *a modern submarine, with crew working at
-bright computer screens in an otherwise dark environment*. That is the inverse of a ceiling
-panel scheme: the light is at chest height and comes from work surfaces. The published
-starting ratio for key-to-fill is about 3 : 1, and the failure mode named by a Call of Duty
-lighting artist is exactly ours — a light on every fixture, nothing dark, so nothing reads
-as bright and the eye loses the contours of the room. Pairing each emissive panel with a
-real Rect light, dropping the ambient, and adding fog rather than fill is the shape of it.
-Note the light-count cap: plain Forward allows 8 additional lights per object.
-
 ### A dressing register per stretch of the hull
 
 The Nostromo ran four distinct dressing languages in one ship — sterile command, cluttered
@@ -163,6 +150,12 @@ Normandy, and the CIC carries a second hologram of the ship showing its installe
 We already have a Map station and a realm record; a hull hologram that reflects the
 realm's actual state is the same trick and it gives the Map station a reason to be a
 destination rather than a console.
+
+## Graduated
+
+| What | Milestone |
+|---|---|
+| Light from work surfaces, not the ceiling; one realtime light; glow band | `M104` (planned) |
 
 ## Rejected
 

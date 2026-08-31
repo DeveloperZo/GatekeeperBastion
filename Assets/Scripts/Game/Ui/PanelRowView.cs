@@ -32,6 +32,7 @@ namespace GatekeepersProtocol.Game
             if (_level != null)
             {
                 _level.text = level != null ? level : "";
+                SingleLine(_level);
                 _level.gameObject.SetActive(!string.IsNullOrEmpty(level));
             }
             if (_effect != null)

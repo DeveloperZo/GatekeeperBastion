@@ -8,8 +8,8 @@ namespace GatekeepersProtocol.Sim
     public sealed partial class RunSim
     {
         /// <summary>One pull: <see cref="MasterControl.TerminalWaves"/> Terminal Waves then
-        /// <see cref="MasterControl.HatchWaves"/> Hatch-bank windows. Refuses outside
-        /// Tethered+Prep, or when a sequence is already live. Disables deep-start chaining.</summary>
+        /// one elite wave. Refuses outside Tethered+Prep, or when a sequence is already live.
+        /// Disables deep-start chaining.</summary>
         public bool StartMasterControl()
         {
             if (Phase != RunPhase.Tethered || Assault != AssaultState.Prep)

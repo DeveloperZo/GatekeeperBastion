@@ -60,6 +60,8 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual("Coming Soon", CrewQuartersStation.ComingSoon);
             Assert.AreEqual("Coming Soon — no sheet yet", CrewQuartersStation.StubSheet);
             Assert.AreEqual("SELECT", CrewQuartersStation.SelectLabel);
+            Assert.AreEqual("EQUIP", CrewQuartersStation.EquipLabel);
+            Assert.AreEqual("EQUIPPED", CrewQuartersStation.EquippedLabel);
             Assert.AreEqual("BACK", ProtocolSheetView.BackLabel);
             Assert.AreEqual("Protocol Title", ProtocolSheetView.TitleHeading);
             Assert.AreEqual("Protocol Description", ProtocolSheetView.DescriptionHeading);

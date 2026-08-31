@@ -5,7 +5,7 @@ Purpose: Where the lines in this codebase are, what enforces them, and which pop
 Status: working
 Authority: CRITICAL — the Sim seam and the mutation surface are load-bearing.
 Update trigger: when an assembly is added or split, when the wiring approach changes, or when a rejected pattern is reconsidered.
-Last updated: 2026-08-25 (partial-class census and file-size figures re-counted; Update() count re-counted at 33; Cloaker added to the hierarchy)
+Last updated: 2026-08-30 (HatchWaves const; Ante.Enabled static readonly; partial-class census 15/72; seven files over cap; Update() 39 in Game/)
 -->
 
 ## 1. The Sim boundary: one-directional dependency, enforced by an assembly
@@ -53,9 +53,12 @@ direction a compile error. `Tools/verify/run.sh` compiles `Sim/` alone against t
 surface in `Tools/verify/Shims.cs` — CoreModule value types plus `Debug` — so a
 MonoBehaviour, scene call, `Time` or ambient `Random` in `Sim/` fails the offline harness at
 stage 1. And `TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState` fails the suite if
-a static mutable field appears anywhere in the Sim assembly — which it is doing today, on
-`Sim/Run/MasterControl.cs:13`'s `public static int HatchWaves = 1`. The exception the rule
-carries is `static readonly`, not a mutable field tests are trusted to restore.
+a static mutable field appears anywhere in the Sim assembly. The two fields that
+were failing that test closed 2026-08-30: `MasterControl.HatchWaves` is `const int = 1`
+(the finale does not read it; elite half is one wave in `AdvanceMasterControl`), and
+`Ante.Enabled` is `static readonly bool = false` with spend-path tests setting `RunSim.AnteEnabled`.
+The exception the rule carries is `static readonly` and `const`, not a mutable field
+tests are trusted to restore.
 
 **Do not add more assemblies than these.** Unity's own package guidance is that one assembly
 per code folder — Editor, Runtime, Tests — "typically suffices"
@@ -63,7 +66,8 @@ per code folder — Editor, Runtime, Tests — "typically suffices"
 Core/Gameplay/UI splits are community practice, not Unity guidance, and the usual outcome is
 a "Shared" assembly that everything references, which is the god-module you were avoiding.
 `GatekeepersProtocol.Sim`, `GatekeepersProtocol`, `GatekeepersProtocol.Editor` and the two test
-assemblies is the complete set.
+assemblies is the complete set. `Sim/Player/` is a folder inside `GatekeepersProtocol.Sim`,
+not a sixth assembly.
 
 ## 2. Wiring: a composition root, not a container
 
@@ -129,10 +133,12 @@ the dialog, because the dialog is invisible in code and does not diff.
 
 `Architecture.md` currently says: *"File size: Sim ≤ 600, Game ≤ 400, Editor ≤ 800 counted
 lines … Split with `partial` … only when the split passes section 4's test."* Counted
-2026-08-25, fifteen classes are split across **70** files. The five largest are `GameController`
-(×18), `RunSim` (×8), and `HudController`, `SceneBuilder` and `NetPlayerAvatar` at ×6 each;
-`PlayerGun` is ×4, `EnemyGatekeeper`, `WaveSpawner`, `DevConsole` and `BastionSegment` are
-×3, and five more are ×2.
+2026-08-30, fifteen classes are split across **72** files. The five largest are `GameController`
+(×18), `RunSim` (×8), `HudController` and `SceneBuilder` at ×7 each
+(`HudController.Protocol.cs`, `SceneBuilder.ProtocolCards.cs` the new parts), and
+`NetPlayerAvatar` at ×6; `PlayerGun` is ×4, `EnemyGatekeeper`, `WaveSpawner`, `DevConsole`
+and `BastionSegment` are ×3, and five more are ×2 (`BastionDoor`, `BastionSegmentVisuals`,
+`NetSession`, `RealmSelectController`, `ShipCommands`).
 
 Microsoft documents exactly three motivating cases for `partial`: multiple programmers
 editing one class, separating tool-generated code from hand-written code, and source
@@ -157,14 +163,16 @@ and is worth the question. **`[judgement]`.** InfinityQube's AI Agent docs take 
 across every multi-file partial and found each split paired with a stated, cohesive concern,
 including the ones the line cap forced — so the discipline is holding even at ×18.
 
-**File-size caps as measured 2026-08-25** by `Tools/lint-arch/run.sh`, which counts
-non-blank, non-comment, non-directive lines: four files are over. Sim's 600 cap is broken by
-`Sim/Bastion/BastionSketchParser.cs` at **639** (`RunSim.cs` is next at 534, and
-`MetaState.cs` has fallen to 286). Game's 400 cap is broken by `Game/Dev/DevConsole.cs` at
-**420** and `Game/Bastion/GameController.cs` at **404**. Editor's 800 cap is broken by
-`Editor/Bastion/BastionSketchEmitter.cs` at **976**. `PlayerGun.cs`, the standing example of
-a file over cap, is now 362 and under it. Either the caps move or those four split; a cap
-four files violate is not a cap.
+**File-size caps as measured 2026-08-30** with the counted-line unit
+`Tools/lint-arch/run.sh` implements (non-blank, non-comment, non-directive): **seven**
+files are over. Sim's 600 cap is broken by `Sim/Bastion/BastionSketchParser.cs` at **639**
+(`RunSim.cs` is next at 590, still under; `MetaState.cs` is 300). Game's 400 cap is
+broken by five files: `Game/Bastion/GameController.Terminals.cs` at **611**,
+`Game/Net/NetVerbs.cs` at **549**, `Game/Player/PlayerProtocolAbilities.cs` at **445**,
+`Game/Dev/DevConsole.cs` at **421**, and `Game/Bastion/GameController.cs` at **418**.
+Editor's 800 cap is broken by `Editor/Bastion/BastionSketchEmitter.cs` at **976**.
+`PlayerGun.cs` is 371 and under it. Caps unchanged. Either they move or those seven
+split; a cap seven files violate is not a cap.
 
 ## 5. Rejected, by name
 
@@ -173,7 +181,7 @@ architecture advice. Each is rejected for this project with a stated trigger to 
 
 | Pattern | Why not here | Revisit when |
 |---|---|---|
-| **Update manager / `IUpdatable` registry** | Unity's own measurement is 10,000 `Update` calls costing 9.98 ms with 42 ms of that being user code across the run ([10000 Update() calls](https://unity.com/blog/engine-platform/10000-update-calls)). This project has **33** `Update()` methods in `Game/` (counted 2026-08-25; 8 when this row was written). Unity's Manual says the pattern is for "hundreds or thousands" and to profile first ([events-per-frame-optimization](https://docs.unity3d.com/6000.5/Documentation/Manual/events-per-frame-optimization.html)). Building it now buys microseconds and costs registration bugs. | Live MonoBehaviour count with `Update` passes ~500, or a profile shows script-update overhead in the frame budget |
+| **Update manager / `IUpdatable` registry** | Unity's own measurement is 10,000 `Update` calls costing 9.98 ms with 42 ms of that being user code across the run ([10000 Update() calls](https://unity.com/blog/engine-platform/10000-update-calls)). This project has **39** `Update()` methods in `Game/` (counted 2026-08-30; 2 more in `Editor/`; 8 when this row was written). Unity's Manual says the pattern is for "hundreds or thousands" and to profile first ([events-per-frame-optimization](https://docs.unity3d.com/6000.5/Documentation/Manual/events-per-frame-optimization.html)). Building it now buys microseconds and costs registration bugs. | Live MonoBehaviour count with `Update` passes ~500, or a profile shows script-update overhead in the frame budget |
 | **DI container (VContainer / Zenject)** | §2. Reflection, opacity, and a wiring graph that currently fits in one `SceneBuilder`. | The wiring no longer fits in `SceneBuilder`, or a second developer joins |
 | **ScriptableObject event channels / SO variables** | Moves coupling out of code, where the compiler and Find-All-References can see it, into asset references, where only Unity's dependency browser can. Unity's own SO e-book warns that runtime SO edits **do not persist in a build** while they do persist in the Editor — an editor/build divergence. Genuinely contested: Unity and Unity Atoms document zero drawbacks, which is itself a signal; [cathei](https://github.com/cathei/AntiScriptableObjectArchitecture) documents several. | A non-programmer needs to rewire game logic without touching code |
 | **SO as mutable runtime state** | Same divergence, plus shared-mutation hazards and domain-reload retention. | Never for Run/Meta state — that is `Sim/`'s job and it is serialized deliberately |

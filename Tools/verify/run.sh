@@ -121,6 +121,7 @@ declare -A EXCLUDED=(
   ["Bastion/BastionDoorApertureTests.cs"]="needs BastionSegment MonoBehaviour, GameObject, and UnityEngine"
   ["Bastion/BastionSegmentDoorAlongTests.cs"]="needs GatekeepersProtocol.Game (BastionSegment.TryDoorPillars)"
   ["Bastion/BastionDoorOpensForTests.cs"]="needs EnemyGatekeeper, CharacterController, and UnityEngine"
+  ["Bastion/GatekeeperTargetingTests.cs"]="needs EnemyGatekeeper (MonoBehaviour) and UnityEngine; GatekeeperRoot's close/swing split is covered offline in GatekeeperRootTests"
   ["Bastion/SpawnRoomPrefabTests.cs"]="needs SpawnRoom prefab load and UnityEngine"
   ["Net/RunSeatsTests.cs"]="needs GatekeepersProtocol.Game (RunSeats) and Unity.Netcode"
   ["Run/RespawnQueueTests.cs"]="needs GatekeepersProtocol.Game (RespawnQueue lives in Game/Range)"

@@ -6,7 +6,7 @@ sources can sit in a Synty scene without reading as an accident.
 Status: brainstorm
 Update trigger: when a body or weapon source is bought, rejected, or swapped in, or when
 the in-scene coherence question is answered.
-Last updated: 2026-08-19
+Last updated: 2026-08-30 (stamp catch-up; FaxLab3D Gatekeepers and guns unchanged since 2026-08-25 verify)
 -->
 
 ## What this covers

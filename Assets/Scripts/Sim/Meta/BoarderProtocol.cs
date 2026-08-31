@@ -37,7 +37,8 @@ namespace GatekeepersProtocol.Sim
         // crew/personal ids are always derived — so the numbers are reused, not retired.
         FieldDeploy = 9,
         Overcharge = 10,
-        MagnetHands = 11,
+        // 11 retired — the turret-pull passive. Never reuse.
+        Emp = 12,
     }
 
     /// <summary>Catalog: protocol → doctrine / abilities, and every number as a function of
@@ -61,57 +62,68 @@ namespace GatekeepersProtocol.Sim
         public const float TurretDamagePerShot = 6f;
         public const float TurretShotsPerSecond = 2f;
 
-        /// <summary>Rounds the machine carries — ONE OF TWO LIMITS, with
-        /// <see cref="TurretLifeSeconds"/>, whichever runs out first (Zo, 2026-08-28). This
-        /// briefly read "not damage and not a clock", from the few hours when rounds were the
-        /// only limit; the clock was added the same day and is in practice the one that binds.
-        /// <para>Damage was never going to do it. Before 2026-08-27 nothing could target a
-        /// turret at all without one specific passive; making it mortal helped and did not fix
-        /// the feel, because a machine that only dies when the enemy chooses to shoot it is
-        /// still the player's to keep. FIELD DEPLOY's cooldown is 30 s, so anything that
-        /// outlives 30 s of use is a fixture rather than a deployable.</para>
-        /// <para>60 rounds is 30 s of firing at the base rate, so against a 20 s clock the
-        /// magazine is a CEILING on how much one machine can ever do rather than the thing that
-        /// ends it — a turret in a busy lane dies on the clock with about 20 rounds unspent, and
-        /// one in a quiet lane dies on the clock having spent almost none. OVERCHARGE DOES NOT
-        /// TOUCH THIS: it draws on <see cref="OverchargeShotBudget"/>, its own belt, so a spike
-        /// costs the spike and leaves the machine's ordinary life intact.</para>
-        /// <para>UNTESTED. This is arithmetic against a cooldown, not a measurement; it is the
-        /// first dial to turn after a run with FORGE.</para></summary>
-        public const int TurretShotBudget = 60;
+        /// <summary>Charge earned per round the turret actually fires. A quiet machine gains
+        /// nothing. Low end, expected to move when the second machine lands — unknown, needs
+        /// play data.</summary>
+        public const float TurretChargePerShot = 1f;
 
-        /// <summary>Seconds a turret stands, regardless of what it has left in the magazine.
-        /// TWO LIMITS, WHICHEVER COMES FIRST (Zo, 2026-08-28: "expire after 60 rounds and 20
-        /// seconds"). Rounds alone let a turret covering a quiet lane stand forever; a clock
-        /// alone let one in a firefight outlive its usefulness. 60 rounds at the base 2/s is
-        /// exactly 30 s of firing, so in a busy lane the CLOCK is what ends it at 20 s with
-        /// rounds to spare, and in a quiet one the clock ends it too. The magazine is the
-        /// ceiling on how much it can ever do; the clock is the floor under how often you
-        /// redeploy.</summary>
-        public const float TurretLifeSeconds = 20f;
+        /// <summary>Charge the meter holds. 10 rounds at 2/s is 5 s of defending to fill.
+        /// Low end, expected to move when the second machine lands — unknown, needs play
+        /// data.</summary>
+        public const float TurretChargeMax = 10f;
 
-        /// <summary>OVERCHARGE FIRES FROM ITS OWN BELT. Redlining used to empty the turret's
-        /// magazine 2.5x faster, which punished the ability with the machine's ordinary
-        /// lifespan — use it and the turret was gone. These rounds are separate, so a spike
-        /// costs the spike and nothing else and the turret is still standing afterwards with
-        /// what it had. 8 s at the overcharged rate (2 x 2.5 = 5/s) is exactly 40.</summary>
-        public const int OverchargeShotBudget = 40;
+        /// <summary>Hold past this on the crew binding to Overcharge. Below it is a tap
+        /// (deploy / redeploy / despawn Exhausted). Low end, expected to move when the
+        /// second machine lands.</summary>
+        public const float TurretHoldThresholdSeconds = 0.35f;
+
+        /// <summary>Seconds an Exhausted turret stands silent before despawning. Low end,
+        /// expected to move when the second machine lands — unknown, needs play data.</summary>
+        public const float TurretExhaustedSeconds = 3f;
 
         /// <summary>The aura belongs to the machine, not to a window on the caster: Boarders
         /// near the turret fire faster for as long as it stands.</summary>
         public const float TurretAuraRadius = 8f;
         public const float TurretAuraFireMul = 1.35f;
 
-        /// <summary>OVERCHARGE redlines the machine. The cost is the BELT it draws from
-        /// (<see cref="OverchargeShotBudget"/>) and nothing else — the old per-second life burn
-        /// was retired on 2026-08-28 because it charged the player twice for one spike and made
-        /// using the ability shorten the turret it was meant to make better.</summary>
+        /// <summary>OVERCHARGE redlines the machine. Paid from earned charge, not a cooldown
+        /// and not a life burn. The old per-second life burn was retired on 2026-08-28; the
+        /// overcharge belt retired because charge is what the machine earned.</summary>
         public const float OverchargeTurretRateMul = 2.5f;
         public const float OverchargeSelfFireMul = 1.4f;
-        /// <summary>DEAD as of 2026-08-28. <see cref="OverchargeBurnForSeconds"/> returns 0
-        /// and nothing else reads this. Kept for one release so a save or net message carrying
-        /// the old shape still resolves; delete it once nothing deserialises it.</summary>
-        public const float OverchargeHpPerSecond = 18f;
+
+        /// <summary>FORGE's follower. Same output grammar as the turret so the two machines
+        /// are comparable; numbers are low-end placeholders — unknown, needs play data.
+        /// </summary>
+        public const float OutriderMaxHp = 150f;
+        public const float OutriderRangeMetres = 18f;
+        public const float OutriderDamagePerShot = 6f;
+        public const float OutriderShotsPerSecond = 2f;
+        public const float OutriderChargePerShot = 1f;
+        public const float OutriderChargeMax = 10f;
+        public const float OutriderHoldThresholdSeconds = TurretHoldThresholdSeconds;
+        public const float OutriderExhaustedSeconds = 3f;
+        /// <summary>Orbit radius around a point slightly ahead of the Boarder. 4 m keeps
+        /// the body readable without walking out of the 8 m pairing radius of a turret at
+        /// the Boarder's feet.</summary>
+        public const float OutriderFollowDistance = 4f;
+
+        /// <summary>Planar metres between the two machines for each special to lift the
+        /// other. Same figure as the turret aura so "near" is a radius the Boarder already
+        /// has. Low end — unknown, needs play data.</summary>
+        public const float PairingRadiusMetres = 8f;
+
+        /// <summary>EMP blast catch radius, from the Outrider. Low end — unknown, needs
+        /// play data.</summary>
+        public const float EmpRadiusMetres = 8f;
+
+        /// <summary>Light damage the blast deals to each body it catches. Low end —
+        /// unknown, needs play data.</summary>
+        public const float EmpDamage = 8f;
+
+        /// <summary>Medium-length root. Low end on purpose: a long root does the whole
+        /// job and the rest of the sheet is noise. Unknown, needs play data.</summary>
+        public const float EmpRootSeconds = 2.5f;
 
         /// <summary>PARALLEL BAYS lets a second bay stand live. STOCK and PHANTOM keep the
         /// payload's authored maxLive.</summary>
@@ -176,7 +188,7 @@ namespace GatekeepersProtocol.Sim
             {
                 case BoarderProtocolId.Default: return BoarderAbilityId.Rush;
                 case BoarderProtocolId.Veil: return BoarderAbilityId.Cloak;
-                case BoarderProtocolId.Forge: return BoarderAbilityId.Overcharge;
+                case BoarderProtocolId.Forge: return BoarderAbilityId.Emp;
                 default: return BoarderAbilityId.None;
             }
         }
@@ -186,7 +198,6 @@ namespace GatekeepersProtocol.Sim
             switch (id)
             {
                 case BoarderProtocolId.Veil: return 1;
-                case BoarderProtocolId.Forge: return 1;
                 default: return 0;
             }
         }
@@ -197,7 +208,6 @@ namespace GatekeepersProtocol.Sim
             switch (id)
             {
                 case BoarderProtocolId.Veil: return BoarderAbilityId.Ghost;
-                case BoarderProtocolId.Forge: return BoarderAbilityId.MagnetHands;
                 default: return BoarderAbilityId.None;
             }
         }
@@ -254,12 +264,14 @@ namespace GatekeepersProtocol.Sim
                 // at the 6 s M70 authored. A fall-through group is a fine way to say "these
                 // agree"; it is a trap the moment one of them stops agreeing.
                 //
-                // The window and OverchargeShotBudget are one number expressed twice: 8 s at
-                // the overcharged rate (2 x 2.5 = 5 rounds/s) is the 40-round belt exactly.
-                // Move either and re-derive the other.
+                // FORGE no longer spends this window: Overcharge is a hold on the crew key
+                // paid from charge. The figure stays so the catalog arm does not silently
+                // regroup with Rush.
                 case BoarderAbilityId.Overcharge: return 8f;
-                // FIELD DEPLOY is instant: the turret's life is its uptime, not a window.
-                case BoarderAbilityId.FieldDeploy: return 0f;
+                // FIELD DEPLOY and EMP (the Outrider) are instant: each machine's own phase
+                // is its uptime, not a window.
+                case BoarderAbilityId.FieldDeploy:
+                case BoarderAbilityId.Emp: return 0f;
                 default: return 0f;
             }
         }
@@ -271,7 +283,8 @@ namespace GatekeepersProtocol.Sim
                 case BoarderAbilityId.Anchor:
                 case BoarderAbilityId.Barrage:
                 case BoarderAbilityId.Ping:
-                case BoarderAbilityId.FieldDeploy: return 30f;
+                case BoarderAbilityId.FieldDeploy:
+                case BoarderAbilityId.Emp: return 30f;
                 case BoarderAbilityId.Bulkhead:
                 case BoarderAbilityId.Rush:
                 case BoarderAbilityId.Cloak:
@@ -343,6 +356,7 @@ namespace GatekeepersProtocol.Sim
         {
             if (id == BoarderAbilityId.Anchor || id == BoarderAbilityId.Barrage) return 8f;
             if (id == BoarderAbilityId.FieldDeploy) return TurretAuraRadius;
+            if (id == BoarderAbilityId.Emp) return EmpRadiusMetres;
             return 0f;
         }
 
@@ -354,15 +368,49 @@ namespace GatekeepersProtocol.Sim
             return rate <= 0f ? 0f : 1f / rate;
         }
 
-        /// <summary>Turret life OVERCHARGE burns over a span. The machine pays for the spike.
-        /// <para>RETIRED 2026-08-28 and kept only so a save or a net message carrying the old
-        /// shape still resolves. Overcharge no longer bills a separate per-second toll: the
-        /// turret's life is its magazine, and the rate multiplier already empties it 2.5x
-        /// faster. Two costs for one spike double-charged it and made the burn read as an
-        /// arbitrary timer bolted onto a machine that had no other clock.</para></summary>
-        public static float OverchargeBurnForSeconds(float seconds)
+        /// <summary>Seconds between Outrider shots. Pairing passes
+        /// <see cref="OverchargeTurretRateMul"/> while the turret's special is lifting it.
+        /// </summary>
+        public static float OutriderShotInterval(float rateMul)
         {
-            return 0f;
+            float rate = OutriderShotsPerSecond * (rateMul > 0f ? rateMul : 1f);
+            return rate <= 0f ? 0f : 1f / rate;
+        }
+
+        /// <summary>Planar: height does not break pairing. True when the two machines are
+        /// inside <see cref="PairingRadiusMetres"/>.</summary>
+        public static bool MachinesPaired(float ax, float ay, float az, float bx, float by, float bz)
+        {
+            float dx = ax - bx;
+            float dz = az - bz;
+            float r = PairingRadiusMetres;
+            return dx * dx + dz * dz <= r * r;
+        }
+
+        /// <summary>Overcharge lifts the Outrider to max rate only while paired.
+        /// "Maximum" is <see cref="OverchargeTurretRateMul"/> — one number, both machines.
+        /// </summary>
+        public static float PairedOutriderRateMul(bool turretOvercharged, bool paired)
+        {
+            return turretOvercharged && paired ? OverchargeTurretRateMul : 1f;
+        }
+
+        /// <summary>EMP converts the turret's fire to EMP rounds only while paired.
+        /// Rounds keep turret damage and add the root; they do not add a second damage type.
+        /// </summary>
+        public static bool PairedTurretFiresEmp(bool outriderEmpActive, bool paired)
+        {
+            return outriderEmpActive && paired;
+        }
+
+        /// <summary>True when a body at the target sits inside the EMP blast.</summary>
+        public static bool EmpCatches(float ox, float oy, float oz, float tx, float ty, float tz)
+        {
+            float dx = ox - tx;
+            float dy = oy - ty;
+            float dz = oz - tz;
+            float r = EmpRadiusMetres;
+            return dx * dx + dy * dy + dz * dz <= r * r;
         }
 
         public static string DisplayName(BoarderAbilityId id)
@@ -379,7 +427,7 @@ namespace GatekeepersProtocol.Sim
                 case BoarderAbilityId.Cloak: return "Cloak";
                 case BoarderAbilityId.FieldDeploy: return "Field Deploy";
                 case BoarderAbilityId.Overcharge: return "Overcharge";
-                case BoarderAbilityId.MagnetHands: return "Magnet Hands";
+                case BoarderAbilityId.Emp: return "Outrider";
                 default: return "";
             }
         }

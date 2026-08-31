@@ -1,111 +1,105 @@
-# 5 — Deeper, until the boss
+# 5 — Deeper, until Master Control
 
 <!--
-Purpose: The demo's back half. The party repeats hold-the-doors and restock, getting
-incrementally further each time, until the kit is good enough to reach and take the
-boss. Escaped ends the demo.
-Status: demo spec
-Authority: implementable
-Update trigger: when the boss is specced, when the incremental-progress rule changes,
-when the number of return trips is tuned
-Last updated: 2026-08-25 (no boss kind ships; the solo finale's elite named; buy-back row
-rewritten against the shipped respawn rule)
-Depends: voice-coop.md, 4-restock-and-go-back.md
+Purpose: The evening's back half. Repeat Hatch-start → terminal-shutoff →
+restock until D3 is open, then Master Control: five control-room Waves, the
+elite, the switch. Escaped ends the Boarding, not a co-op-demo flag.
+Status: working
+Authority: implementable against 0.34.2
+Update trigger: when Master Control's sequence changes, when a boss kind is
+specced, when DemoZones moves
+Last updated: 2026-08-30 (T2→D1, T5→D3; Master starts at the Hatch;
+elite then switch, not a Convert-keyed boss stretch)
+Depends: voice-coop.md, 4-restock-and-go-back.md, ../Play Mechanics/Master-Control.md
 -->
 
 ## Why this beat exists
 
-**Progress through the bastion is incremental** (Zo, 2026-08-20). The party does not
-make one deep run. They hold the doors, come home, upgrade and restock, and go back in
-further. The boss is what the loop is climbing toward, and it is reachable only once
-the kit has been built by repeating beats 3 and 4.
+**Progress through the bastion is incremental** (Zo, 2026-08-20). The party
+does not make one deep run. They start at the Hatch, shut off a terminal, come
+home, restock, and go further.
 
-That is a deliberate simplification of the earlier shape, which had a sealed Control
-Room and a single dramatic finale window with the party split across doors. **There is
-no dramatic split.** Hatches are doors. The party holds them, together or apart as the
-moment requires, and the drama comes from the boss and from how thin the pot is, not
-from a staged separation.
+There is **no dramatic split** and **no co-op boss kind**. The live finale is
+Master Control: five Terminal Waves in the control room, then one oversized
+Thief, then `T` at the Master terminal. Convert and dock are refused for the
+whole sequence.
 
 ## Functional storyboard
 
-Continues from beat 4, and beats 3 and 4 have run at least twice by the time this
-starts.
+Continues from beat 4. D3 is open (`ControlRoomReachable`).
 
 ### 0 — Further each time
 
 | | |
 |---|---|
-| **Goal** | Feel the run extending: a terminal further, a door further, a wave longer. |
-| **Player** | Embark, retrigger the deepest terminal, clear more than last time, Convert, come home. Repeat. |
+| **Goal** | Feel the run extending. |
+| **Player** | Embark, `T` at the Hatch, shut off the live terminal, dock or Convert, restock. Repeat until D3 is open. |
 | **Game** | — |
 | **Standing** | Get past where you stopped |
-| **Prompt / HUD** | Existing terminal and bank prompts. |
-| **Log** | existing wave and Convert lines, plus `[Demo] deepest reached=<n> attempt=<n>` (build) |
-| **Have** | The deepest-terminal composite retrigger with partial start electable, from the solo demo (`GameController.Retrigger.cs`, `RunSim.TriggerCompositeDraw`). Doors unlock on Convert success. |
-| **Build** | The progress log, so a played session can be read back afterwards. Nothing about the loop itself is new; this step is beats 3 and 4 running again. |
+| **Prompt / HUD** | Existing Hatch start line and terminal shutoff. |
+| **Log** | existing wave / shutoff / door-open lines |
+| **Have** | Doors open on shutoff (`OpenEligibleDoors`) and persist on the realm. Deepest-entered rises on every draw. |
+| **Build** | `[Demo] deepest reached=<n> attempt=<n>` if a played evening needs a reader. |
 
-### 1 — The last stretch opens
+### 1 — The control room is open
 
 | | |
 |---|---|
-| **Goal** | Know the boss is the end and that this kit is what is fighting it. |
-| **Player** | The final door opens on the last bank's success. |
+| **Goal** | Know the finale is the end and that this kit is what is fighting it. |
+| **Player** | D3 open. Hatch start line offers Master (`HatchOffersWaveStart` && `ControlRoomReachable`). |
 | **Game** | `demo.coop.boss_ahead` · Lock (Prep) · Party · Game. **Whatever is through there is the last of it. This is the kit you are taking in.** |
-| **Standing** | Take the boss |
-| **Log** | `[Demo] boss stretch open` (build) |
-| **Have** | Door unlock on Convert-window survival. |
-| **Build** | The line and the log, and the door keyed to the last Convert rather than to a terminal AND. |
+| **Standing** | Take Master Control |
+| **Log** | existing Master-start line |
+| **Have** | `T` at the Hatch starts `StartMasterControl`. The Master terminal itself refuses to start — it is the switch at the end. Convert and dock refused while the sequence is live. |
+| **Build** | The line. |
 
-### 2 — The boss
+### 2 — The sequence
 
 | | |
 |---|---|
-| **Goal** | One fight the party takes together, with the doors still to hold behind them. |
-| **Player** | Fight it. The ordinary pressure on the open doors does not stop. |
+| **Goal** | Five control-room Waves, then the elite, then the switch. The Hatch is still live (scaled field-Wave damage). |
+| **Player** | Fight it. Killing the elite arms the Master terminal; it does not end the Boarding. `T` at Master throws the switch. |
 | **Game** | — |
-| **Standing** | Take the boss |
-| **Prompt / HUD** | `MsgPlayer` `HATCH UNDER ATTACK` still names a door if one is taking damage. |
-| **Log** | boss spawn and death lines (build, with the boss) |
-| **Have** | Nothing. |
-| **Build** | **Absent, not invented.** No boss kind ships: `GatekeeperKind` is Default, Hunter, Thief and Cloaker, and nothing in `Assets/Scripts/Sim/` spawns anything else. The solo demo's finale is not a boss either — `MasterControl.ApplyFinaleElite` swaps the last Convert window for one Thief at **240** HP pre-multiplier and **1.5×** body scale, no escorts — so a boss with its own behaviour is unbuilt in both demos. What this beat specs is only the frame: the boss is fought while the doors are still live, so the party cannot give it their whole attention, and it is reachable only after the restock loop has run. The creature is another file. |
+| **Standing** | Take Master Control |
+| **Prompt / HUD** | Master terminal prompt after the elite is down. `MsgPlayer` Hatch damage still names the door. |
+| **Log** | `master-control elite — kill it to arm the terminal`; `master shutoff banked N` |
+| **Have** | `MasterControl.TerminalWaves = 5`. Elite: one Thief, `FinaleEliteHp = 240`, `FinaleEliteScale = 1.5`, no escorts. Control-room door is **not** sealed. Field trickle off during the sequence. Kills bank on landing. |
+| **Build** | A boss kind with its own behaviour is unspecced. `GatekeeperKind` is Default, Hunter, Thief, Cloaker. |
 
 ### 3 — Escaped
 
 | | |
 |---|---|
 | **Goal** | End as a party. |
-| **Player** | Boss down, final Convert window held, remainder dumps. Escaped. |
+| **Player** | Switch thrown. Carry banks on the spot. Screen BASTION STRIPPED. RETURN TO SHIP. |
 | **Game** | `demo.coop.escaped` · Lock (Docked) · Party · Game. **Clear. You both got out with what you moved.** |
-| **Standing** | — (demo ends) |
-| **Log** | existing `CompleteRun` → Escaped, `CleanExits++`; plus `[Demo] co-op demo complete seats=<n> attempts=<n>` (build) |
-| **Have** | `CompleteRun`, Escaped, `CleanExits`. |
-| **Build** | Escaped is a **party** result: a seat waiting on the ship at that moment still escapes. The demo ends here and `DemoCoopActive` clears. A loss here does not end the demo; the party restocks and comes back, same as every other attempt. |
+| **Standing** | — (Boarding over; realm persists) |
+| **Log** | `CompleteRun` → Escaped, `CleanExits++` |
+| **Have** | Escaped is a party result: a seat waiting on the Ship still escapes. There is no `DemoCoopActive` to clear. A loss here does not wipe the realm; the party restocks and comes back. |
+| **Build** | The line, and `[Demo] co-op demo complete` only if a co-op-demo flag is ever added. |
 
 ## Acceptance shape
 
-Player action: two players reach the boss only after at least two restock trips, fight
-it while doors are still under attack, and reach Escaped together. Reads back: the
-deepest-reached log rising across attempts, the boss-stretch line, and the demo-complete
-log naming the attempt count.
+Player action: two players open D3, start Master at the Hatch, kill the elite,
+throw the switch, reach Escaped. Reads back: elite log, master shutoff, clean
+exit.
+
+Reaching the finale only after restock trips is the evening's shape, not a
+gate — a strong kit can push T2 and T5 in one Boarding.
 
 ## Verification
 
-The net fixture can hold: the final door keys on Convert success, Escaped fires with a
-seat on the ship, the Boarding does not end when one of several doors falls. Whether the
-incremental climb feels like progress rather than repetition is eyes-on, and it is the
-main thing this beat could get wrong.
+The net fixture can hold: D3 keys on T5 shutoff, Master start requires
+`ControlRoomReachable`, Escaped fires from `ShutOffMasterControl`, a waiting
+seat still escapes. Whether the climb feels like progress is eyes-on.
 
 ## Gaps
 
-- **The boss is unspecced, and this beat is speculative until it is.** No boss kind ships. The nearest shipped thing is the solo finale's elite, which is a scaled Thief with no behaviour of its own. This beat cannot close without a real spec.
-- **How many trips before the boss is reachable is not specced.** It is a tune against
-  the crew pot's fill rate. Too few and the loop does not read; too many and it is a
-  grind. Needs a played run, not an argument.
-- Buy-back priced from banked salvage and gated to a live Convert window is **cut from
-  this demo**: it depended on per-seat banked salvage, which the crew pot and deferred
-  persistence remove. A different buy-back shipped in the meantime and is not window-gated
-  — a dead seat pays **150** × (respawns taken this Boarding + 1) out of its own frozen
-  Unbanked. Under one crew pot there is no per-seat Unbanked for it to charge, so what that
-  rule does in this demo is unruled and is Zo's.
-- Three-seat behaviour is untested by construction: this demo authors for two and the
-  rules must not break at three.
+- **The boss is unspecced.** The live elite is a scaled Thief with no behaviour
+  of its own. This beat cannot close a "boss" promise without a real spec.
+- Trip count before Master Control is a tune against the pot's fill rate
+  (kills bank on landing, so losses still pay). Needs a played evening.
+- Three-seat behaviour is untested by construction: this evening authors for
+  two and the rules must not break at three.
+- Buy-back during Master Control is the ordinary bank-priced rule; Convert is
+  refused for the sequence, so there is no window-gated return.

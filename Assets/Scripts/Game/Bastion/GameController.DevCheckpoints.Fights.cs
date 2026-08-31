@@ -39,13 +39,13 @@ namespace GatekeepersProtocol.Game
                     PlacePlayerAtHatch();
                     break;
                 case 6:
-                    // Zone-3 mouth: T4+T5 done, the third bank is the next verb.
-                    Sim.SeedBankPile(HatchBank.BankCap(WaveDirector.MaxWaves) - HatchBank.BankCap(3),
-                        2, WaveDirector.MaxWaves);
+                    // Control room ready: both doors open, Master is the next Hatch start.
                     PlacePlayerAtHatch();
                     break;
                 case 7:
-                    PlacePlayerAtMaster();
+                    // Master Control begins at the Hatch (one start line) — stand there, not
+                    // at the Master terminal (that is the shutoff).
+                    PlacePlayerAtHatch();
                     break;
                 case 8:
                     ApplyFinaleHatchFight();

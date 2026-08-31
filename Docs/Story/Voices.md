@@ -6,22 +6,23 @@ the authorship implicit. This is where the fiction actually reaches the player a
 Status: draft. Ruled by Zo 2026-08-22 (one hand per protocol, never revealed).
 Update trigger: when a protocol ships or is retired, when an entry is added, or when the
 voice rules change. Mirror any rule change into ../_meta/_definitions/language.md.
-Last updated: 2026-08-24 (roster covers every current page; Coming Soon rule added;
-first-person rule mirrored into language.md, which had still banned "I").
+Last updated: 2026-08-30 (authoring path is ../Play Mechanics/; hands stay flavor, not
+evidence of a thesis).
 -->
 
 The player-facing dimension of every Compendium entry, the `## Game` block, is a Boarder's
 working notes. Not authorial voice. It reports what was observed and never quotes a rule.
 
 This is the whole story budget in practice. Almost everything a player will ever feel about
-the world, they will feel here, while looking up something mechanical.
+the world, they will feel here, while looking up something mechanical. The hands are flavor.
+They are not evidence the game is collecting toward a reveal. Authoring lives in
+`../Play Mechanics/`; the in-game reader copies it.
 
 ## One hand per protocol
 
-There is one writing hand per shipped Boarder Protocol. They are versions of the player, so
-the plurality is the story rather than a framing device. **It is never revealed explicitly.**
+There is one writing hand per shipped Boarder Protocol. **It is never revealed explicitly.**
 No names, no dates, no signatures, no protocol names in the text. A reader who never notices
-there is more than one author has lost nothing.
+there is more than one author has lost nothing. A reader who does has found wallpaper.
 
 The tell is the lens. What a hand notices is what its doctrine makes salient.
 

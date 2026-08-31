@@ -75,6 +75,16 @@ namespace GatekeepersProtocol.Game
             _compendium.Open();
         }
 
+        /// <summary>Wired from the pause Settings button — Shift still plays the panel
+        /// anims; this is what binds the real rows and makes Esc close Settings first.</summary>
+        public void OpenOptionsFromPauseMenu()
+        {
+            if (!IsPauseOpen) OpenPause();
+            if (_fpc == null && Player != null) _fpc = Player.GetComponent<FirstPersonController>();
+            if (_view != null) _view.HideChrome();
+            OptionsScreen.Open(_fpc);
+        }
+
         void BindCompendiumClosed()
         {
             if (_compendium == null || _compendiumClosedBound) return;
@@ -122,6 +132,7 @@ namespace GatekeepersProtocol.Game
             _pauseAnimator.Play("Window In");
             if (_pauseBlur != null) _pauseBlur.BlurInAnim();
             IsPauseOpen = true;
+            if (_view != null) _view.HideChrome();
             var sim = _game != null ? _game.Sim : null;
             if (sim != null)
             {
@@ -140,6 +151,7 @@ namespace GatekeepersProtocol.Game
             _closingPause = true;
             if (_compendium != null && _compendium.IsOpen)
                 _compendium.Close();
+            if (OptionsScreen.IsOpen) OptionsScreen.Close();
             _closingPause = false;
 
             if (_pauseAnimator != null) _pauseAnimator.Play("Window Out");
@@ -183,13 +195,14 @@ namespace GatekeepersProtocol.Game
 
         void RestoreFightHudUnderPause()
         {
-            if (_view == null || !IsPauseOpen) return;
+            if (!IsPauseOpen) return;
             var sim = _game != null ? _game.Sim : null;
             if (sim == null || sim.Phase != RunPhase.Tethered) return;
-            ShowFightHud(ViewAssault(sim) == AssaultState.Prep);
             var ctx = FightShortcutContext(sim);
             int dialLevel = ViewAssault(sim) == AssaultState.Prep ? sim.Siphon.Level : -1;
             FillPauseShortcuts(sim, ctx, dialLevel);
         }
+
+        static bool OverlayHidesFightHud => IsPauseOpen || OptionsScreen.IsOpen;
     }
 }

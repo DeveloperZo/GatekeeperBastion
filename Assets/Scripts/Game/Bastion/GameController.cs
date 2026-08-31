@@ -250,6 +250,7 @@ namespace GatekeepersProtocol.Game
                 Log.Event("Demo", "embark plain");
 
             ApplyPendingDemoFight();
+            HatchRecallPad.BindAll();
         }
 
         /// <summary>
@@ -577,6 +578,7 @@ namespace GatekeepersProtocol.Game
         {
             Log.Event("Run", $"wave {Sim.CurrentWaveIndex}/{WaveDirector.MaxWaves} — {wave.enemyCount} gatekeepers, " +
                 $"intensity={Sim.Siphon.Level} juiced={Sim.JuiceSpentThisPull} (each kill +{Sim.CurrentKillAward})");
+            if (_protocol != null) _protocol.BeginWaveMachines();
             if (!string.IsNullOrEmpty(_pendingTerminalId))
                 Log.Event("Terminal", _pendingTerminalId + " started wave " + Sim.CurrentWaveIndex
                     + " mode=terminal");
@@ -587,6 +589,13 @@ namespace GatekeepersProtocol.Game
             Log.Event("Run", $"wave {Sim.CurrentWaveIndex}/{WaveDirector.MaxWaves} cleared — " +
                 $"salvage {Sim.Salvage.RunSalvage:0}, " +
                 $"hatch {Sim.Ship.Hatch.Hp:0}/{Sim.Ship.Hatch.MaxHp:0}");
+            if (_protocol != null)
+            {
+                string machines = _protocol.WaveMachineLine();
+                if (machines != null)
+                    Log.Event("Run", "wave " + Sim.CurrentWaveIndex + "/" + WaveDirector.MaxWaves
+                        + " " + machines);
+            }
             if (Sim.Mode == WaveMode.HatchBank && _spawner != null)
                 _spawner.DespawnAllLive();
             RecordPendingTerminalClear();

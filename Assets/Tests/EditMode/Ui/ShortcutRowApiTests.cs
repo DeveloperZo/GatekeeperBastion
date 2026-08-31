@@ -57,11 +57,19 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void FillRows_JuiceRow_CarriesIntensity()
         {
-            ShortcutPanel.FillRows(ControlContext.Prep, _rows, dialLevel: 2);
+            ShortcutPanel.FillRows(ControlContext.Prep, _rows, 2, ShortcutPanel.DefaultDevSurface(), true);
 
             var juice = _rows.Where(r => r.Key == "+ -").ToList();
             Assert.AreEqual(1, juice.Count, "The two juice bindings must merge into '+ -'.");
             Assert.AreEqual("Ante 2", juice[0].Description);
+        }
+
+        [Test]
+        public void FillRows_JuiceRow_OmittedWhileAnteParked()
+        {
+            ShortcutPanel.FillRows(ControlContext.Prep, _rows, dialLevel: 2);
+            Assert.IsFalse(_rows.Exists(r => r.Key == "+ -"),
+                "parked Ante must not put juice on the shortcut strip");
         }
 
         [Test]

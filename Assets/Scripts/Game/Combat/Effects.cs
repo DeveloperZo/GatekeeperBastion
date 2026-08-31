@@ -4,8 +4,10 @@ using UnityEngine.SceneManagement;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>LOCAL-OWNER: code-built particle effects for the gray-box — no assets, URP-safe
-    /// materials. Everything is a one-shot burst ParticleSystem that destroys itself.</summary>
+    /// <summary>LOCAL-OWNER: code-built particle effects for the gray-box. Materials come from
+    /// Resources/Fx (project shaders GKB/FxParticle and GKB/FxSolid) so player builds cannot strip
+    /// them the way Shader.Find on Built-In/URP names can. Everything is a one-shot burst
+    /// ParticleSystem that destroys itself.</summary>
     /// <remarks>
     /// Cosmetic only: every entry point is a no-op when the app is quitting or a scene load is
     /// in flight. Creating GameObjects while a scene is unloading spawns them into the dying
@@ -17,6 +19,7 @@ namespace GatekeepersProtocol.Game
         const string Tag = "Effects";
 
         static Material _particleMat;
+        static Material _solidMat;
         static bool _suspended;
 
         /// <summary>Clears statics at play-mode start (domain-reload-disabled safety) and wires the
@@ -25,6 +28,7 @@ namespace GatekeepersProtocol.Game
         static void ResetStatics()
         {
             _particleMat = null;
+            _solidMat = null;
             _suspended = false;
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneLoaded += OnSceneLoaded;
@@ -68,20 +72,39 @@ namespace GatekeepersProtocol.Game
             {
                 if (_particleMat == null) // Unity-null: UnloadUnusedAssets can reap it across scene loads
                 {
-                    var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-                    if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
-                    if (shader == null) shader = Shader.Find("Particles/Standard Unlit");
-                    if (shader == null) shader = Shader.Find("Unlit/Color");
-                    if (shader == null)
-                    {
-                        // Guard trip: new Material(null) errors on every call; bail out instead.
-                        Log.Warn(Tag, "No usable shader found; particle FX disabled this session.");
-                        return null;
-                    }
-                    _particleMat = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+                    _particleMat = LoadPinnedMat("Fx/ParticleUnlit", "GKB/FxParticle");
+                    if (_particleMat == null)
+                        Log.Warn(Tag, "No usable particle shader; particle FX disabled this session.");
                 }
                 return _particleMat;
             }
+        }
+
+        static Material SolidMat
+        {
+            get
+            {
+                if (_solidMat == null)
+                {
+                    _solidMat = LoadPinnedMat("Fx/SolidUnlit", "GKB/FxSolid");
+                    if (_solidMat == null)
+                        Log.Warn(Tag, "No usable solid FX shader; pulse FX disabled this session.");
+                }
+                return _solidMat;
+            }
+        }
+
+        /// <summary>Resources material first (pulls the project shader into the player), then
+        /// Shader.Find on the project shader name. Built-In/URP names are not used — they strip.</summary>
+        static Material LoadPinnedMat(string resourcesPath, string projectShaderName)
+        {
+            var template = Resources.Load<Material>(resourcesPath);
+            if (template != null)
+                return new Material(template) { hideFlags = HideFlags.HideAndDontSave };
+
+            var shader = Shader.Find(projectShaderName);
+            if (shader == null) return null;
+            return new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
         }
 
         /// <summary>Small spark burst at a weapon impact point.</summary>
@@ -119,7 +142,77 @@ namespace GatekeepersProtocol.Game
             CombatSfx.HatchStruck(position);
         }
 
-        static void Burst(Vector3 position, Color color, int count, float speed, float size, float lifetime, float gravity)
+        /// <summary>Overcharge ignition — the turret going redline, readable from across the
+        /// room. Window length is the machine's charge; this is the one-shot that says it
+        /// started.</summary>
+        public static void OverchargeIgnite(Vector3 position)
+        {
+            Burst(position, FxColors.FxOvercharge, 48, speed: 7f, size: 0.16f, lifetime: 0.45f, gravity: 0.15f);
+            Burst(position, Color.white, 16, speed: 3f, size: 0.14f, lifetime: 0.22f, gravity: 0f);
+            Burst(position, FxColors.FxBurst, 22, speed: 4.5f, size: 0.11f, lifetime: 0.32f, gravity: 0.2f);
+        }
+
+        /// <summary>EMP blast at the Outrider. Particles travel the catch radius so a miss
+        /// and a hit read as the same disc, not a spark at the caster's feet.</summary>
+        public static void EmpBlast(Vector3 position, float radius)
+        {
+            float r = radius > 0.5f ? radius : 0.5f;
+            const float life = 0.55f;
+            float speed = r / life;
+            Burst(position, FxColors.FxEmp, 28, speed: 5f, size: 0.18f, lifetime: 0.3f, gravity: 0f, shapeRadius: 0.4f);
+            Burst(position, FxColors.FxEmp, 80, speed: speed, size: 0.14f, lifetime: life, gravity: 0f, shapeRadius: 0.25f);
+            Burst(position, Color.white, 20, speed: 3f, size: 0.16f, lifetime: 0.22f, gravity: 0f, shapeRadius: 0.2f);
+            PulseDisc.Spawn(position, r, life, FxColors.FxEmp);
+        }
+
+        /// <summary>Hotter muzzle while a machine's special is spending charge.</summary>
+        public static void SpecialMuzzle(Vector3 position, Color tint)
+        {
+            Burst(position, tint, 18, speed: 3.2f, size: 0.1f, lifetime: 0.16f, gravity: 0f);
+            Burst(position, Color.white, 8, speed: 1.8f, size: 0.08f, lifetime: 0.1f, gravity: 0f);
+        }
+
+        /// <summary>Looping ember parented to a machine for the length of Special. Caller
+        /// destroys the returned object when the window ends — leaving it would keep
+        /// emitting after Exhausted.</summary>
+        public static GameObject AttachSpecialAura(Transform parent, Color color)
+        {
+            if (Suspended || parent == null) return null;
+            var mat = ParticleMat;
+            if (mat == null) return null;
+
+            var go = new GameObject("FXAura");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = Vector3.up * 0.35f;
+            var ps = go.AddComponent<ParticleSystem>();
+
+            var main = ps.main;
+            main.loop = true;
+            main.playOnAwake = false;
+            main.startLifetime = 0.35f;
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 1.8f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.12f);
+            main.startColor = color;
+            main.gravityModifier = -0.15f;
+            main.maxParticles = 40;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+            var emission = ps.emission;
+            emission.rateOverTime = 22f;
+
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.35f;
+
+            var renderer = go.GetComponent<ParticleSystemRenderer>();
+            renderer.sharedMaterial = mat;
+
+            ps.Play();
+            return go;
+        }
+
+        static void Burst(Vector3 position, Color color, int count, float speed, float size,
+            float lifetime, float gravity, float shapeRadius = 0.08f)
         {
             if (Suspended) return; // guard: never create objects into a scene that is unloading / while quitting
             var mat = ParticleMat;
@@ -146,13 +239,69 @@ namespace GatekeepersProtocol.Game
 
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = 0.08f;
+            shape.radius = shapeRadius;
 
             var renderer = go.GetComponent<ParticleSystemRenderer>();
             renderer.sharedMaterial = mat;
 
             ps.Play();
             Object.Destroy(go, lifetime + 0.5f);
+        }
+
+        /// <summary>Floor disc that grows to the blast radius. One-shot; destroys itself.</summary>
+        sealed class PulseDisc : MonoBehaviour
+        {
+            float _life;
+            float _age;
+            float _endRadius;
+            Material _mat;
+
+            public static void Spawn(Vector3 position, float radius, float life, Color color)
+            {
+                if (Suspended) return;
+                var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                go.name = "FXPulse";
+                go.transform.position = position + Vector3.up * 0.06f;
+                go.transform.localScale = new Vector3(0.7f, 0.05f, 0.7f);
+                var col = go.GetComponent<Collider>();
+                if (col != null) Object.Destroy(col);
+
+                var rend = go.GetComponent<Renderer>();
+                Material mat = null;
+                if (rend != null)
+                {
+                    var template = SolidMat;
+                    if (template != null)
+                    {
+                        mat = new Material(template)
+                        {
+                            color = color,
+                            hideFlags = HideFlags.HideAndDontSave
+                        };
+                        rend.sharedMaterial = mat;
+                    }
+                }
+
+                var pulse = go.AddComponent<PulseDisc>();
+                pulse._life = life;
+                pulse._age = 0f;
+                pulse._endRadius = radius;
+                pulse._mat = mat;
+            }
+
+            void Update()
+            {
+                _age += Time.deltaTime;
+                float t = _life > 0f ? Mathf.Clamp01(_age / _life) : 1f;
+                float r = Mathf.Lerp(0.4f, _endRadius, t);
+                transform.localScale = new Vector3(r * 2f, 0.05f, r * 2f);
+                if (_age >= _life) Destroy(gameObject);
+            }
+
+            void OnDestroy()
+            {
+                if (_mat != null) Destroy(_mat);
+            }
         }
     }
 }

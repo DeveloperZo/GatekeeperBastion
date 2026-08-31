@@ -9,7 +9,8 @@ using UnityEngine.UI;
 namespace GatekeepersProtocol.Game
 {
     /// <summary>LOCAL-OWNER: pause Compendium reader. Left: one scroll of volume
-    /// headers with every entry under them (organized + exhaustive). Right: Game body.</summary>
+    /// headers with every entry under them (organized + exhaustive). Right: Game body;
+    /// First Time Out also carries its walkthrough.</summary>
     public sealed class CompendiumView : MonoBehaviour, IPointerClickHandler
     {
         const string Tag = "Compendium";
@@ -108,10 +109,15 @@ namespace GatekeepersProtocol.Game
             _opening = false;
             if (!string.IsNullOrEmpty(preferredStem) && TryOpenStem(preferredStem))
                 return;
-            if (string.IsNullOrEmpty(_openStem) && _navEntries.Count > 0)
-                TryOpenStem(_navEntries[0].Stem);
-            else
-                RefreshBody();
+            if (string.IsNullOrEmpty(_openStem))
+            {
+                if (TryOpenStem(CompendiumCatalog.DefaultOpenStem))
+                    return;
+                if (_navEntries.Count > 0)
+                    TryOpenStem(_navEntries[0].Stem);
+                return;
+            }
+            RefreshBody();
         }
 
         public void Close()

@@ -14,6 +14,8 @@ namespace GatekeepersProtocol.Game
         public const string ComingSoon = "Coming Soon";
         public const string StubSheet = "Coming Soon — no sheet yet";
         public const string SelectLabel = "SELECT";
+        public const string EquipLabel = "EQUIP";
+        public const string EquippedLabel = "EQUIPPED";
 
         /// <summary>Deck copy. It says free and it says reversible on purpose: a first-time
         /// player shown three unfamiliar sheets will stall on a choice they think is
@@ -128,7 +130,7 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Three cards, dealt by the Sim rule and committed through the same
-        /// <see cref="ShipCommands.BuyProtocol"/> the catalog's BUY uses — the claim is 0
+        /// <see cref="ShipCommands.BuyProtocol"/> the catalog's claim uses — the claim is 0
         /// salvage, so this is a pick and the card says CHOOSE rather than BUY. A card the
         /// command would refuse is painted with the reason instead of being lit and dead.
         /// </summary>
@@ -213,7 +215,7 @@ namespace GatekeepersProtocol.Game
                 bool owned = m.EquippedProtocol == id;
                 sheet = BoarderProtocol.SheetOf(id);
                 canBuy = !owned && !m.PayloadLoadoutLocked;
-                claim = owned ? "EQUIPPED" : "BUY";
+                claim = owned ? EquippedLabel : EquipLabel;
                 var claimed = id;
                 onClaim = canBuy ? () => ShipCommands.BuyProtocol(claimed) : null;
             }
@@ -229,8 +231,9 @@ namespace GatekeepersProtocol.Game
                 onClaim = null;
             }
 
+            // Chrome Close is the back control. Bind(onBack: null) hides the in-sheet Back.
             if (_body.Sheet != null)
-                _body.Sheet.Bind(sheet, claim, onClaim, canBuy, () => { _showingSheet = false; });
+                _body.Sheet.Bind(sheet, claim, onClaim, canBuy, onBack: null);
         }
 
         void BindCatalogRow(PanelRowView row, string name, int index, bool owned)
@@ -241,7 +244,7 @@ namespace GatekeepersProtocol.Game
             row.Bind(
                 name,
                 "",
-                owned ? "EQUIPPED" : "",
+                owned ? EquippedLabel : "\u00A0",
                 "",
                 SelectLabel,
                 () => { _selected = captured; _showingSheet = true; },

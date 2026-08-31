@@ -4,7 +4,7 @@
 
 They are not defending a wreck. They are home, and I am the thing that got in.
 
-Four frames, four machines, not four paints — I can sort a group by silhouette before it is close enough to matter. None swings faster than another. None has a weak point. None resists anything. What separates them is what each one refuses to do, and each refusal tells me exactly what ignoring it costs.
+Four frames, four machines, not four paints — I can sort a group by silhouette before it is close enough to matter. None swings faster than another. None has a weak point. None resists anything. A root can hold a body still, and that body still swings if it can already reach me. What separates them is what each one refuses to do, and each refusal tells me exactly what ignoring it costs.
 
 One question sorts the whole room: can this be moved off what it is doing? A Default can, at a price. A Hunter is already on me and cannot be moved anywhere. A Thief hunts me on a field-terminal Wave, hunts the Hatch on a Convert, and will not be shouted at in either direction. A Cloaker moves only where nobody's eyes are, so moving it is free and holding it still is what costs.
 

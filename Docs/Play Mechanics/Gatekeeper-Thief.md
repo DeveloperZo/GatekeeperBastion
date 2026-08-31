@@ -2,7 +2,7 @@
 Purpose: Thief, an instance of Gatekeepers — differences only.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Thief
@@ -15,9 +15,9 @@ The only kind that ignores the Boarder completely — it walks for the Hatch and
 
 Somebody built this thing to walk through gunfire, and then never told it about the gunfire.
 
-Heaviest frame on the hull, slowest thing aboard, and it has never once taken my blood. On a field-terminal Wave it walks at me and arrives with nothing. On a Convert it walks at the door and arrives with a bite that costs more than killing it would have.
+Heaviest frame on the hull, slowest thing aboard, and it has never once taken my blood. On every Wave it walks at the door. On a field Wave the bite is thinner. On a Convert it arrives with a bite that costs more than killing it would have.
 
-I put a full clip into one's back at arm's length. No stagger, no turn, no call to its escort. The rounds land, the walk continues. The ones beside it do not look up.
+I put a full clip into one's back at arm's length. It flinches. It does not turn, and it does not call its escort. The rounds land, the walk continues. The ones beside it do not look up.
 
 Its slowness is not mercy. It is the invoice. It is armor with an appointment, and the time it gives me is exactly the time it takes to kill — spent facing away from everything else in the room. Backing away buys seconds, and seconds are not an answer.
 

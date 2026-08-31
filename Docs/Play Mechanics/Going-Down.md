@@ -2,7 +2,7 @@
 Purpose: Current representation of going down and the priced respawn — the purse, the climbing capped price, the bleed-out clock, and the DOWN surfaces — as it is in the build.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Going Down
@@ -17,7 +17,7 @@ The purse is the bank — the same bank the guns come out of. Everything I kille
 
 The price climbs with every respawn bought this Boarding, whoever it was bought for. The counter is the Boarding's, not mine. One tab, everybody drinking.
 
-Which is the real trade, and it runs the other way from what I expected. I am never broke because I banked; I am broke because I spent. The Tier I bought on the way out, the repair I held too long at the door, the Ante I raised on a Wave I could not finish — every one of them is a death I can no longer afford, and none of them looked like that at the time.
+Which is the real trade, and it runs the other way from what I expected. I am never broke because I banked; I am broke because I spent. The Tier I bought on the way out, the repair I held too long at the door — every one of them is a death I can no longer afford, and none of them looked like that at the time.
 
 Down, I wait behind the vignette with the offer written on it, priced against the bank. A guest waits on the Ship with the same offer. If the bank is short and nobody is left standing, there is no offer. That is the whole difference between a setback and a loss.
 
@@ -48,7 +48,7 @@ Driven by Confirm on the DOWN overlay (host/solo) and the NAV MAP RESPAWN row (g
 
 ## Consequences
 
-Dying is priced against what the Boarding has actually earned: kills bank as they land, so every body put down raises the affordability of the way back — and every spend (a Tier, a repair hold, a raised Ante) is a death that may no longer be affordable, because there is one pot.
+Dying is priced against what the Boarding has actually earned: kills bank as they land, so every body put down raises the affordability of the way back — and every spend (a Tier, a repair hold) is a death that may no longer be affordable, because there is one pot.
 
 The shared counter and the hard cap make the crew's deaths one tab: the second respawn is dearer because of the first, whoever took it, and past the cap no bank buys another. The bleed-out clock turns buying back into a decision under pressure rather than a pause.
 

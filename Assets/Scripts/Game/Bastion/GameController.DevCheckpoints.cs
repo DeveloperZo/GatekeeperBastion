@@ -43,7 +43,6 @@ namespace GatekeepersProtocol.Game
         {
             long zoneOne = HatchBank.BankCap(2);
             long zoneTwo = HatchBank.BankCap(5) - HatchBank.BankCap(2);
-            long zoneThree = ZoneThreePile();
             long master = HatchBank.MasterTerminalUnbanked();
             return new[]
             {
@@ -51,19 +50,14 @@ namespace GatekeepersProtocol.Game
                 "B  post zone-1 terminals — Hatch, " + zoneOne + " unbanked",
                 "C  post first Convert — Ship, wheel opens",
                 "D  post zone-2 terminals — Hatch, " + zoneTwo + " unbanked",
-                "E  post second Convert — D2 open, Primary, zone 3 next",
-                "F  post zone-3 terminals — Hatch, " + zoneThree + " unbanked, D3 next",
-                "G  Master Control — Control Room, pull ready",
+                "E  post second Convert — D3 open, Primary, Master next",
+                "F  post zone-2 Convert — Hatch, both doors open, Master next",
+                "G  Master Control — Hatch, pull ready (start at Hatch)",
                 "H  finale Convert — elite window, " + master + " unbanked",
                 "I  stock realm record + Boarder kit (in place, no reload)",
                 "J  reset terminals + doors (live Bastion run)",
             };
         }
-
-        /// <summary>The zone-3 bank pile: two Waves' worth at the deep end of the field —
-        /// the same BankCap arithmetic the other fight beats use, not an authored aim.</summary>
-        static long ZoneThreePile() =>
-            HatchBank.BankCap(WaveDirector.MaxWaves) - HatchBank.BankCap(3);
 
         /// <summary>The beat that fills a realm's record and a Boarder's kit in place.</summary>
         public const int StockDigit = 9;

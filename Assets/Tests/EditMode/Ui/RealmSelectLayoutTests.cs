@@ -45,6 +45,26 @@ namespace GatekeepersProtocol.Tests
             AssertOnScreen(scene, "CLOSEButton", Panel);
         }
 
+        /// <summary>Bottom-anchored buttons at y≈600 once sat on top of the top-anchored join
+        /// code. On-screen is not enough — the widgets must not share pixels.</summary>
+        [Test]
+        public void TheOpenToFriendsPanel_CodeDoesNotCoverTheButtons()
+        {
+            var scene = SceneHudYaml.Load(Scene);
+            Aabb code = scene.CanvasAabb("Session Code", Panel, W, H);
+            Aabb copy = scene.CanvasAabb("COPYButton", Panel, W, H);
+            Aabb ship = scene.CanvasAabb("TOSHIPButton", Panel, W, H);
+            Assert.IsFalse(Overlaps(code, copy),
+                "Session Code overlaps COPY at " + code + " / " + copy);
+            Assert.IsFalse(Overlaps(code, ship),
+                "Session Code overlaps TO SHIP at " + code + " / " + ship);
+        }
+
+        static bool Overlaps(Aabb a, Aabb b)
+        {
+            return a.X0 < b.X1 && a.X1 > b.X0 && a.Y0 < b.Y1 && a.Y1 > b.Y0;
+        }
+
         [Test]
         public void TheChooserItself_IsOnTheScreen()
         {
@@ -52,6 +72,8 @@ namespace GatekeepersProtocol.Tests
             AssertOnScreen(scene, "REALMS", Canvas);
             AssertOnScreen(scene, "REALM", Canvas);
             AssertOnScreen(scene, "BOARDER", Canvas);
+            AssertOnScreen(scene, "NameField", Canvas);
+            AssertOnScreen(scene, "BoarderNameField", Canvas);
             AssertOnScreen(scene, "NEWREALMButton", Canvas);
             AssertOnScreen(scene, "NEWBOARDERButton", Canvas);
             AssertOnScreen(scene, "DELETEREALMButton", Canvas);

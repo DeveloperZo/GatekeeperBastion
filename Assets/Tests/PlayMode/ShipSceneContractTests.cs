@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using GatekeepersProtocol.Game;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -250,6 +251,38 @@ namespace GatekeepersProtocol.PlayTests
             var pause = GameObject.Find("Pause Menu");
             Assert.IsNotNull(pause, "Pause Menu missing after Esc");
             Assert.IsTrue(pause.activeInHierarchy, "Pause Menu must be visible after Esc");
+
+            Canvas.ForceUpdateCanvases();
+            var list = pause.transform.Find("Button List");
+            Assert.IsNotNull(list, "Pause Menu Button List missing");
+            var compendium = list.Find("Compendium") as RectTransform;
+            var settings = list.Find("Settings") as RectTransform;
+            Assert.IsNotNull(compendium, "Pause Menu has no Compendium option");
+            Assert.IsTrue(compendium.gameObject.activeInHierarchy,
+                "Pause Menu Compendium option is inactive");
+            Assert.IsNotNull(settings, "Pause Menu Settings missing");
+            Assert.IsFalse(RectsOverlap(compendium, settings),
+                "Compendium is stacked under Settings on Ship pause");
+            var label = compendium.GetComponentInChildren<TextMeshProUGUI>(true);
+            Assert.IsNotNull(label, "Compendium pause button has no TMP");
+            Assert.AreEqual("Compendium", label.text);
+        }
+
+        static bool RectsOverlap(RectTransform a, RectTransform b)
+        {
+            var ac = new Vector3[4];
+            var bc = new Vector3[4];
+            a.GetWorldCorners(ac);
+            b.GetWorldCorners(bc);
+            float aMinX = Mathf.Min(ac[0].x, ac[2].x);
+            float aMaxX = Mathf.Max(ac[0].x, ac[2].x);
+            float aMinY = Mathf.Min(ac[0].y, ac[2].y);
+            float aMaxY = Mathf.Max(ac[0].y, ac[2].y);
+            float bMinX = Mathf.Min(bc[0].x, bc[2].x);
+            float bMaxX = Mathf.Max(bc[0].x, bc[2].x);
+            float bMinY = Mathf.Min(bc[0].y, bc[2].y);
+            float bMaxY = Mathf.Max(bc[0].y, bc[2].y);
+            return aMinX < bMaxX && aMaxX > bMinX && aMinY < bMaxY && aMaxY > bMinY;
         }
 
         // =====================================================================
@@ -309,65 +342,61 @@ namespace GatekeepersProtocol.PlayTests
         // =====================================================================
 
         [UnityTest]
-        public IEnumerator StationLabels_AreReadableFromThePlayerSide_NotMirrored()
+        public IEnumerator StationLabels_CompositeOnOverlay_NotThroughPixelRender()
         {
             PlayTestUtil.RequireSceneInBuild(SceneFlow.ShipCoop);
             yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.ShipCoop);
-            // Give any runtime billboard component a few Update/LateUpdate passes to orient itself.
             yield return PlayTestUtil.Frames(5);
 
-            List<TextMesh> labels = PlayTestUtil.FindAll<TextMesh>();
-            if (labels.Count == 0)
+            Transform overlayRoot = null;
+            List<Transform> all = PlayTestUtil.FindAll<Transform>();
+            for (int i = 0; i < all.Count; i++)
             {
-                Assert.Inconclusive(
-                    "SKIPPED: the Ship scene contains no TextMesh labels (the scene builder falls back to " +
-                    "blank marker bars when the built-in LegacyRuntime font is unavailable), so text " +
-                    "orientation cannot be checked.");
+                if (all[i] != null && all[i].name == "Station Labels")
+                {
+                    overlayRoot = all[i];
+                    break;
+                }
             }
+            Assert.IsNotNull(overlayRoot,
+                "ShipHud did not project station names onto an Overlay 'Station Labels' root. " +
+                "Without that, PixelRender crushes the 3D TextMesh glyphs.");
 
-            Vector3 viewer = ViewerEyePosition();
+            Canvas canvas = overlayRoot.GetComponentInParent<Canvas>();
+            Assert.IsNotNull(canvas, "Station Labels has no parent Canvas.");
+            Assert.AreEqual(RenderMode.ScreenSpaceOverlay, canvas.renderMode,
+                "Station Labels must sit on a Screen Space Overlay canvas so they composite " +
+                "after PixelRender, same as the HUD.");
 
-            foreach (TextMesh label in labels)
+            int overlayNames = 0;
+            for (int i = 0; i < overlayRoot.childCount; i++)
             {
-                Transform t = label.transform;
-                string who = DescribePath(t);
-
-                Assert.IsFalse(string.IsNullOrEmpty(label.text), $"Label '{who}' renders empty text.");
-
-                // Mirror check #1: a negative scale axis flips the glyphs even when the object faces
-                // the right way.
-                Vector3 scale = t.lossyScale;
-                Assert.IsTrue(scale.x > 0f && scale.y > 0f && scale.z > 0f,
-                    $"Label '{who}' has a negative world scale {scale} — negative scale mirrors the glyphs.");
-
-                // Mirror check #2: TextMesh orientation.
-                //
-                // CONVENTION BEING ASSERTED (derived, not guessed): a TextMesh builds its glyph quads
-                // in the local XY plane with the reading direction along local +X, and the built-in
-                // font material renders with Cull Off — so the text is VISIBLE from both sides but
-                // reads correctly from only one. A viewer at V looking at the label at L sees the
-                // label's local +X on their right (i.e. not mirrored) exactly when
-                //     dot(label.forward, L - V) > 0
-                // i.e. the label's forward axis points AWAY from the reader. This is the same
-                // relationship the canonical Unity billboard snippet produces
-                // (transform.forward = camera.forward, which points from the camera into the scene).
-                // A console label simply parented to a console that FACES the room inherits the
-                // console's forward and therefore points AT the reader: mirrored text. The fix is
-                // either a 180-degree flip of the label relative to its console, or a billboard
-                // component that re-orients it at runtime; both satisfy this assertion.
-                Vector3 viewerToLabel = t.position - viewer;
-                if (viewerToLabel.sqrMagnitude < 1e-6f) continue; // degenerate: viewer inside the label
-                float facing = Vector3.Dot(t.forward.normalized, viewerToLabel.normalized);
-                float angle = Vector3.Angle(t.forward, viewerToLabel);
-
-                Assert.Greater(facing, 0f,
-                    $"Station label '{who}' (\"{label.text}\") renders MIRRORED from the player side. " +
-                    $"Angle between label.forward and the viewer->label direction is {angle:0.#}° " +
-                    "(must be < 90°, i.e. label.forward points AWAY from the reader — that is the " +
-                    "orientation Unity's TextMesh reads correctly in, and the one the standard billboard " +
-                    "snippet produces). Fix by flipping the label 180° relative to its console, or by " +
-                    $"adding a billboard component that faces it away from the camera each frame. Viewer used: {viewer}.");
+                var tmp = overlayRoot.GetChild(i).GetComponent<TMPro.TextMeshProUGUI>();
+                Assert.IsNotNull(tmp, "Station Labels child '" + overlayRoot.GetChild(i).name
+                    + "' is not TextMeshProUGUI.");
+                Assert.IsFalse(tmp.raycastTarget,
+                    "Station label '" + tmp.text + "' steals pointer hits from the world.");
+                overlayNames++;
             }
+            Assert.Greater(overlayNames, 0, "Station Labels has no overlay names.");
+
+            List<TextMesh> meshes = PlayTestUtil.FindAll<TextMesh>();
+            int stationMeshes = 0;
+            foreach (TextMesh mesh in meshes)
+            {
+                if (mesh == null) continue;
+                if (mesh.text != "ARMORY" && mesh.text != "MAP"
+                    && mesh.text != "FABRICATION" && mesh.text != "CREW QUARTERS")
+                    continue;
+                stationMeshes++;
+                var rend = mesh.GetComponent<MeshRenderer>();
+                Assert.IsNotNull(rend, "Station TextMesh '" + mesh.text + "' has no MeshRenderer.");
+                Assert.IsFalse(rend.enabled,
+                    "Station TextMesh '" + mesh.text + "' still renders in the world — " +
+                    "PixelRender will crush it. Overlay copy should own the glyphs.");
+            }
+            Assert.AreEqual(overlayNames, stationMeshes,
+                "Overlay name count must match the authored station TextMeshes.");
         }
 
         // =====================================================================
@@ -387,16 +416,6 @@ namespace GatekeepersProtocol.PlayTests
             if (station is EngineeringStation) return DemoProgress.FabricationVerdict(m) == DemoStationVerdict.Hidden;
             if (station is MapStation) return DemoProgress.NavVerdict(m) == DemoStationVerdict.Hidden;
             return false;
-        }
-
-        /// <summary>Eye position the labels/consoles should read from: the live main camera when
-        /// there is one, else the player's head, else the middle of the common room.</summary>
-        static Vector3 ViewerEyePosition()
-        {
-            if (Camera.main != null) return Camera.main.transform.position;
-            PlayerHealth player = PlayerRegistry.Local;
-            if (player != null) return player.transform.position + Vector3.up * 0.65f;
-            return new Vector3(0f, 1.7f, 0f);
         }
 
         /// <summary>
@@ -526,19 +545,6 @@ namespace GatekeepersProtocol.PlayTests
                 }
             }
             return null;
-        }
-
-        static string DescribePath(Transform t)
-        {
-            string path = t.name;
-            Transform parent = t.parent;
-            int guard = 0;
-            while (parent != null && guard++ < 8)
-            {
-                path = parent.name + "/" + path;
-                parent = parent.parent;
-            }
-            return path;
         }
     }
 }

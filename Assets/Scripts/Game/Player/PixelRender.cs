@@ -10,7 +10,8 @@
 // blocks and the edges go soft.
 //
 // Screen Space Overlay canvases are composited after this and are unaffected, so the HUD stays
-// crisp. World Space canvases are part of the 3D render and pixelate with the room.
+// crisp — ShipHud projects the station names onto that same canvas. World Space canvases are
+// part of the 3D render and pixelate with the room.
 using UnityEngine;
 
 namespace GatekeepersProtocol.Game

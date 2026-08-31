@@ -66,7 +66,7 @@ Made 2026-08-26, so no implementer has to choose:
 ## Implementation
 
 **Create** `Assets/Scripts/Editor/Scenes/ShipLookPass.cs` — a committed one-shot editor tool,
-menu `Tools/Scenes/Ship/Apply Look Pass`. It reads a `ShipLookProfile` asset and writes authored
+menu `GatekeepersProtocol/Build/Ship Look Pass`. It reads a `ShipLookProfile` asset and writes authored
 scene content: fixture rows, deck material, mote emitters, probe and probe-group placement. It
 does **not** run at runtime and nothing reconstructs it on `Awake`
 (`gkb-development`, *Never §1*).

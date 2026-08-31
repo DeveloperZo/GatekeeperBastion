@@ -11,7 +11,7 @@ namespace GatekeepersProtocol.Tests
     public class ProtocolHudSourceTests
     {
         const string ViewPath = "Assets/Scripts/Game/Ui/BastionHudView.cs";
-        const string FightPath = "Assets/Scripts/Game/Bastion/HudController.Fight.cs";
+        const string FightPath = "Assets/Scripts/Game/Bastion/HudController.Protocol.cs";
 
         [Test]
         public void TheView_TogglesTheBarOnlyWithTheFightChrome()

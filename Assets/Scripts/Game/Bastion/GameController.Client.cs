@@ -147,7 +147,7 @@ namespace GatekeepersProtocol.Game
             {
                 if (hatchStartable)
                 {
-                    if (!_armedHatch)
+                    if (Ante.Enabled && !_armedHatch)
                     {
                         Log.Event("Hatch", "hatch-bank refused — select intensity first");
                         return;
@@ -157,7 +157,7 @@ namespace GatekeepersProtocol.Game
                 }
                 if (terminalStartable)
                 {
-                    if (_armedTerminalId != lookingTerminal.TerminalId)
+                    if (Ante.Enabled && _armedTerminalId != lookingTerminal.TerminalId)
                     {
                         Log.Event("Terminal", lookingTerminal.TerminalId
                             + " refused — select the Ante first");
@@ -178,6 +178,7 @@ namespace GatekeepersProtocol.Game
 
             if (Controls.Down(ControlId.Interact))
             {
+                if (!Ante.Enabled) return;
                 if (terminalStartable)
                 {
                     ToggleTerminalSelect(lookingTerminal);
@@ -189,6 +190,8 @@ namespace GatekeepersProtocol.Game
                     return;
                 }
             }
+
+            if (!Ante.Enabled) return;
 
             int delta = 0;
             if (Controls.Down(ControlId.DialUp)) delta = 1;

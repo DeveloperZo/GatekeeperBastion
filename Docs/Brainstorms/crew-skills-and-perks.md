@@ -5,7 +5,7 @@ Purpose: The CREW QUARTERS console — the player beyond weapon and ship. The bu
 system graduated to M70; the RPG attribute tracks and the unbuilt 5-skill pairing are parked.
 Status: brainstorm
 Update trigger: when a parked entry is revived or a remaining entry graduates.
-Last updated: 2026-08-25 (M70 closed and M94 added VEIL and FORGE; save v13, not v8; the deleted Scavenging term named)
+Last updated: 2026-08-30 (`PlayerRegen` shipped; stamina-destination parked from Master; health-does-not-come-back is already true)
 -->
 
 ## What this covers
@@ -24,10 +24,15 @@ and Luck were refunded and deleted — `UpgradeTrack` has one member left, `Hatc
 `MetaUpgrades.SalvagePerKill()` is a flat 25 with no term to scale. Hatch Armor remains at
 FABRICATION on the `200 * 2^level` curve. Crit chance is frozen at 0.
 
+**Health comes back in a Run.** `PlayerRegen` (2026-08-25) climbs to full, slowly, faster
+with recent kills. Play Mechanics already says so (`Getting-Started.md`). The 2026-08-08
+burst (14×6 in 7.4 s) is a concurrency problem, not a pool problem — that lives on
+`Master-Brainstorm.md`.
+
 **`M70` closed, and CREW has since sold two more sheets.** `M94` shipped VEIL and FORGE beside
-the Default claim (closed 2026-08-24), so `BoarderProtocolId` is a catalog of three and AEGIS
-and LEDGER are the Coming Soon rows. `boarder-protocols.md` is the spec of record for all of
-them; nothing about the protocol system is decided in this file any more.
+the Default claim (closed 2026-08-24); the 0.34.2 tree recut FORGE to charge/Outrider
+(`M106`/`M107`). `boarder-protocols.md` is the spec of record; nothing about the protocol
+system is decided in this file any more.
 
 The 5-skill system in `../Design/3-Mechanics.md` §3.2 is unbuilt and parked (see below).
 
@@ -40,9 +45,9 @@ measured — the damage-taken one is computable from existing log transcripts.
 
 ## Graduation test
 
-For the remaining entries: the health entry needs the `player {hp}/{max}` Wave-clear log
-line and Runs read through it; the perks entry needs the NAV-MAP-fork question under it
-answered. Nothing else here is mineable.
+For the remaining entries: stamina-destination needs an `M102` playthrough (or a Hatch-start
+Boarding under fire); perks needs the NAV-MAP-fork question answered. Nothing else here is
+mineable.
 
 ## Decided
 
@@ -68,16 +73,22 @@ with the reasoning recorded in the brainstorm's "Recut 2026-08-15" note.
 
 ## Ideas
 
-### Stealth layer and the trade filter — graduated to M70 (2026-08-14)
+### Stamina has no destination (from Master, 2026-08-30)
 
-The stealth-layer entry (shared visibility layer, whoever-chose-the-shift-is-favoured, the
-Cloaker interplay, the Limbo/Mordekaiser comp conclusions, its graduation test and kill
-criteria) and the trade-filter entry (Overclock, Anchor, Recall, Ping) both moved whole
-into `M70` (2026-08-14), and the 2026-08-15 protocol recut moved them again:
-[`boarder-protocols.md`](boarder-protocols.md) is now the spec of record for the layer
-(VEIL's Cloak), Ping, and Recall; Anchor ships on the recut
-[`M70`](../Milestones/3.%20completed/M70-the-default-protocol.md); Overclock stays
-rejected by name on that file.
+Sprint is a cost with no errand if the Boarder has nowhere to be except the Hatch. The
+outbound walk now exists (Hatch-start, 28-room `M95`, `M102` graybox puts all trip risk
+on the outbound leg). 0.34.2 recall pads shorten the *return*; the Outrider follows, it
+is not a place to go; Rush is fire-mul, not sprint. *Unknown — needs a Run.* If a player
+travels under fire and sprint still has no use, delete the track rather than tune it.
+
+### Health does not come back — already true (2026-08-25)
+
+**Change shipped.** `PlayerRegen` climbs to full; kills speed the climb
+(`Assets/Scripts/Sim/Player/PlayerRegen.cs`). **Communicate shipped** in Play Mechanics
+("Health comes back between hits"). Do not revive a no-heal milestone. There is no
+*priced* heal — regen is free; old 2/HP and 6/HP Prep-heal candidates do not apply
+until someone proposes a paid heal on top. The burst that no buffer absorbs is the
+swing-concurrency entry on `Master-Brainstorm.md`.
 
 ### Experience as the CREW QUARTERS currency (Zo, 2026-08-12)
 
@@ -141,27 +152,6 @@ no AoE mechanic exists, and "double" is the pattern M20 rejected as "a second cr
 in all but name"; area damage sold at CREW QUARTERS also crosses the FABRICATION/Utility
 boundary. Bulwark: no mitigation stat exists; a Hatch-facing one multiplies Hatch Armor's
 budget and sells ship defence on the player console.
-
-### Health does not come back, and nothing says so
-There is no healing in a Run — `PlayerHealth` has no in-run heal path (run-start refill,
-scene reset, and Dev F5 only), and damage taken on the first Wave is still missing on the
-last. Defensible — it is why Vitality and Stamina are attributes at all — but currently a
-secret design. Two separable questions:
-
-- **Communicate?** Yes, and it costs nothing — seven wiki locations currently explain the
-  one absent sentence of UI. One naming collision to word around: the MK-1's HUD already
-  prints "Regen Surge", which regenerates Secondary ammo only.
-- **Change?** Open, and there are still zero data points: every valid logged loss is a
-  Hatch breach with the player alive, and the Wave-clear log line records Hatch HP but
-  omits player HP. Adding `player {hp}/{max}` to that line answers chip-vs-cliff from any
-  transcript. Prep-heal price candidates: 2/HP ≈ one attribute level (198 worst-case full
-  heal, 3.8% of a measured full clear); 6/HP ≈ a full Hatch repair (594, 11.3%). Shipped
-  references for the priced-against-power shape exist (FTL hull at 2 scrap/point is the
-  nearest match; Slay the Spire rest-vs-smith; Hades Well); the current shipped state —
-  persistent pool, zero recovery — has no exact match (Devil Daggers is no-healing via no
-  pool at all). Co-op wrinkle: a player heal sink scales with player count, Hatch repair
-  does not, and player HP is not sim state — the seam decision the ownership labels exist
-  to force. *Unknown which the game wants — needs the play data above.*
 
 ### Engineering is sold while scheduled for deletion
 **Closed — M23 shipped.** The track is gone from `UpgradeTrack`; legacy save fields migrate

@@ -4,10 +4,10 @@ using UnityEngine;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>LOCAL-OWNER: the Boarder's hold on FORGE's machine — where it stands, and what
-    /// redlining it costs. Separate from <see cref="PlayerProtocolAbilities"/> because that
-    /// owns windows, input and log lines while this owns a thing in the world with life of its
-    /// own; they would pass as separate classes in any language that forced the question.</summary>
+    /// <summary>LOCAL-OWNER: the Boarder's hold on FORGE's machine — where it stands, and
+    /// whether Overcharge is running. Separate from <see cref="PlayerProtocolAbilities"/>
+    /// because that owns windows, input and log lines while this owns a thing in the world;
+    /// they would pass as separate classes in any language that forced the question.</summary>
     public sealed class PlayerTurretControl : MonoBehaviour
     {
         const string Tag = "Protocol";
@@ -20,6 +20,7 @@ namespace GatekeepersProtocol.Game
 
         GameController _game;
         FirstPersonController _fpc;
+        PlayerProtocolAbilities _abilities;
         TurretObject _live;
 
         public TurretState State => _state;
@@ -36,8 +37,8 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        /// <summary>The standing machine, or null. Target selection reads this for MAGNET HANDS.
-        /// Null on a guest even while their turret stands, because the machine is the server's.</summary>
+        /// <summary>The standing machine, or null. Null on a guest even while their turret
+        /// stands, because the machine is the server's.</summary>
         public TurretObject Live => _live != null && _live.IsAlive ? _live : null;
 
         /// <summary>Whether a machine is standing for this Boarder anywhere — the server's in a
@@ -48,29 +49,129 @@ namespace GatekeepersProtocol.Game
             get
             {
                 var verbs = Verbs;
-                return verbs != null ? verbs.ServerTurretStanding : Live != null;
+                return verbs != null ? verbs.ServerTurretStanding : _state.IsLive;
             }
+        }
+
+        public bool IsExhausted
+        {
+            get
+            {
+                var verbs = Verbs;
+                return verbs != null
+                    ? verbs.ServerTurretPhase == TurretPhase.Exhausted
+                    : _state.Phase == TurretPhase.Exhausted;
+            }
+        }
+
+        public bool IsOvercharged
+        {
+            get
+            {
+                var verbs = Verbs;
+                return verbs != null
+                    ? verbs.ServerTurretPhase == TurretPhase.Special
+                    : _state.Overcharged;
+            }
+        }
+
+        public float Charge
+        {
+            get
+            {
+                var verbs = Verbs;
+                return verbs != null ? verbs.ServerTurretCharge : _state.Charge;
+            }
+        }
+
+        public float ChargeMax => BoarderProtocol.TurretChargeMax;
+
+        bool _crewHolding;
+        float _crewHold;
+        bool _crewHoldFired;
+
+        public void CancelCrewHold()
+        {
+            _crewHolding = false;
+            _crewHoldFired = false;
+            _crewHold = 0f;
+        }
+
+        /// <summary>Press versus hold on the crew binding. Tap deploys, redeploys, or despawns
+        /// Exhausted. Hold past the threshold Overcharges if the machine has charge.</summary>
+        public void TickCrewBinding(float dt, bool paused, ref BoarderAbilityState crew)
+        {
+            if (paused)
+            {
+                CancelCrewHold();
+                return;
+            }
+
+            bool held = Controls.Held(ControlId.CrewAbility);
+            if (held)
+            {
+                if (!_crewHolding)
+                {
+                    _crewHolding = true;
+                    _crewHold = 0f;
+                    _crewHoldFired = false;
+                }
+                _crewHold += dt;
+                if (!_crewHoldFired && _crewHold >= BoarderProtocol.TurretHoldThresholdSeconds)
+                {
+                    _crewHoldFired = true;
+                    if (!HasTurret)
+                        Log.Event(Tag, "crew Overcharge refused — no turret standing");
+                    else if (!IsExhausted)
+                        TryOvercharge();
+                }
+                return;
+            }
+
+            if (!_crewHolding) return;
+            _crewHolding = false;
+            if (!_crewHoldFired) TapCrew(ref crew);
+        }
+
+        void TapCrew(ref BoarderAbilityState crew)
+        {
+            float ready = crew.SecondsSatReady;
+            if (IsExhausted)
+            {
+                Clear();
+                if (crew.IsReady)
+                    crew.TrySpendInstant(BoarderProtocol.Cooldown(BoarderAbilityId.FieldDeploy));
+                Log.Event(Tag, "crew Field Deploy — exhausted turret despawned sat-ready="
+                    + ready.ToString("0.##"));
+                return;
+            }
+            if (!crew.IsReady)
+            {
+                Log.Event(Tag, "crew refused — " + crew.CooldownRemaining.ToString("0.#") + "s left");
+                return;
+            }
+            if (!crew.TrySpendInstant(BoarderProtocol.Cooldown(BoarderAbilityId.FieldDeploy))) return;
+            Deploy(ready);
         }
 
         public void Bind(GameController game, FirstPersonController fpc)
         {
             _game = game;
             _fpc = fpc;
+            _abilities = GetComponent<PlayerProtocolAbilities>();
             _state.ResetForRun();
         }
 
-        /// <summary>Stand a turret where the Boarder is looking. Replaces the one already
-        /// standing — Field Deploy is one machine, and the cooldown is what rations it.</summary>
+        /// <summary>Stand a turret where the Boarder is looking. Replaces a live one and keeps
+        /// its charge. Refuses Exhausted — that press despawns instead.</summary>
         public bool Deploy(float satReady)
         {
-            Clear();
-
             Vector3 at = PlacementPoint();
             var verbs = Verbs;
             if (verbs != null)
             {
-                // The server stands it, fires it and kills it; the scenery comes back by RPC.
                 verbs.RequestTurret(at, true);
+                NoteDeploy();
                 Log.Event(Tag, "crew Field Deploy — turret requested at "
                     + at.ToString("0.#") + " sat-ready=" + satReady.ToString("0.##"));
                 return true;
@@ -82,39 +183,56 @@ namespace GatekeepersProtocol.Game
                 Log.Event(Tag, "crew Field Deploy refused — " + reason);
                 return false;
             }
-            _live = TurretObject.Spawn(at, _state, _game, transform);
+            if (_live == null)
+                _live = TurretObject.Spawn(at, _state, _game, transform);
+            else
+                _live.transform.position = at;
+            NoteDeploy();
             Log.Event(Tag, "crew Field Deploy — turret standing at "
                 + _state.MaxHp.ToString("0") + " HP, aura "
                 + BoarderProtocol.TurretAuraRadius.ToString("0") + "m x"
                 + BoarderProtocol.TurretAuraFireMul.ToString("0.##")
+                + " charge=" + _state.Charge.ToString("0")
+                + "/" + _state.ChargeMax.ToString("0")
                 + " sat-ready=" + satReady.ToString("0.##"));
             return true;
         }
 
-        public void SetOvercharged(bool on)
+        /// <summary>Hold: spend charge on Overcharge. Refuses by naming charge, not cooldown.
+        /// </summary>
+        public bool TryOvercharge()
         {
             var verbs = Verbs;
             if (verbs != null)
             {
-                verbs.RequestOvercharge(on);
-                return;
+                verbs.RequestOvercharge(true);
+                NoteSpecial(Charge);
+                return true;
             }
-            _state.SetOvercharged(on);
+            string reason;
+            float chargeAt = _state.Charge;
+            if (!_state.TryBeginOvercharge(out reason))
+            {
+                Log.Event(Tag, "crew Overcharge refused — " + reason);
+                return false;
+            }
+            NoteSpecial(chargeAt);
+            Log.Event(Tag, "crew Overcharge — turret x"
+                + BoarderProtocol.OverchargeTurretRateMul.ToString("0.##")
+                + ", gun x" + BoarderProtocol.OverchargeSelfFireMul.ToString("0.##")
+                + " charge=" + _state.Charge.ToString("0")
+                + "/" + _state.ChargeMax.ToString("0"));
+            return true;
         }
 
-        /// <summary>Spend the machine's life for the spike. True when the burn is what killed
-        /// it — the caller's window then has nothing left to redline.</summary>
-        public bool TickOvercharge(float dt)
+        void NoteDeploy()
         {
-            // In a session the burn is spent on the server's machine by the server's clock.
-            // Burning here too would charge the same life twice.
-            if (Verbs != null) return false;
-            float burned;
-            if (!_state.BurnOvercharge(dt, out burned)) return false;
-            Log.Event(Tag, "self Overcharge burned the turret out — "
-                + _state.LifeBurned.ToString("0") + " life spent");
-            Clear();
-            return true;
+            if (_abilities != null) _abilities.NoteMachineDeploy("turret");
+        }
+
+        void NoteSpecial(float charge)
+        {
+            if (_abilities != null) _abilities.NoteTurretSpecial(charge);
         }
 
         /// <summary>How level a surface has to be to stand a turret on it. A raycast hits walls

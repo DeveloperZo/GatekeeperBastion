@@ -27,6 +27,31 @@ namespace GatekeepersProtocol.Game
         public readonly NetworkVariable<float> TurretHp = new NetworkVariable<float>(
             0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        /// <summary>Server-written: earned charge, so the owner's crew square can read it
+        /// without routing through <c>PlayerAbility</c>'s weapon cooldown.</summary>
+        public readonly NetworkVariable<float> TurretCharge = new NetworkVariable<float>(
+            0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        /// <summary>Server-written: <see cref="TurretPhase"/> as a byte. Exhausted must cross
+        /// the wire or a guest's tap refreshes a spent machine.</summary>
+        public readonly NetworkVariable<byte> TurretPhaseWire = new NetworkVariable<byte>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public readonly NetworkVariable<bool> OutriderStanding = new NetworkVariable<bool>(
+            false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public readonly NetworkVariable<float> OutriderHp = new NetworkVariable<float>(
+            0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public readonly NetworkVariable<float> OutriderCharge = new NetworkVariable<float>(
+            0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public readonly NetworkVariable<byte> OutriderPhaseWire = new NetworkVariable<byte>(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        public readonly NetworkVariable<bool> MachinesPairedWire = new NetworkVariable<bool>(
+            false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         GameController _game;
         bool _repairing;
         bool _loggedRange;
@@ -37,6 +62,11 @@ namespace GatekeepersProtocol.Game
         {
             base.OnNetworkSpawn();
             TurretHp.OnValueChanged += OnTurretHpChanged;
+            TurretCharge.OnValueChanged += OnTurretChargeChanged;
+            TurretPhaseWire.OnValueChanged += OnTurretPhaseChanged;
+            OutriderHp.OnValueChanged += OnOutriderHpChanged;
+            OutriderCharge.OnValueChanged += OnOutriderChargeChanged;
+            OutriderPhaseWire.OnValueChanged += OnOutriderPhaseChanged;
             if (!IsServer || _game != null) return;
             var session = NetworkManager.GetComponent<NetSession>();
             if (session != null)
@@ -46,8 +76,9 @@ namespace GatekeepersProtocol.Game
         void Update()
         {
             if (!IsSpawned || !IsServer) return;
-            TickServerOvercharge(Time.deltaTime);
             TickServerTurretMirror();
+            TickServerOutriderMirror();
+            WritePairingWire();
             if (!_repairing) return;
             TickRepair(Time.deltaTime);
         }
@@ -55,10 +86,21 @@ namespace GatekeepersProtocol.Game
         public override void OnNetworkDespawn()
         {
             TurretHp.OnValueChanged -= OnTurretHpChanged;
+            TurretCharge.OnValueChanged -= OnTurretChargeChanged;
+            TurretPhaseWire.OnValueChanged -= OnTurretPhaseChanged;
+            OutriderHp.OnValueChanged -= OnOutriderHpChanged;
+            OutriderCharge.OnValueChanged -= OnOutriderChargeChanged;
+            OutriderPhaseWire.OnValueChanged -= OnOutriderPhaseChanged;
             // A machine must not outlive the player who stood it up.
-            if (IsServer) ClearServerTurret();
+            if (IsServer)
+            {
+                ClearServerTurret();
+                ClearServerOutrider();
+            }
             if (_turretScenery != null) _turretScenery.Despawn();
             _turretScenery = null;
+            if (_outriderScenery != null) _outriderScenery.Despawn();
+            _outriderScenery = null;
             base.OnNetworkDespawn();
         }
         #endregion
@@ -122,17 +164,33 @@ namespace GatekeepersProtocol.Game
             RequestTurretServerRpc(position, deploying);
         }
 
-        /// <summary>FORGE Overcharge. The burn is life on the server's machine.</summary>
+        /// <summary>FORGE Overcharge. Paid from earned charge on the server's machine.</summary>
         public void RequestOvercharge(bool on)
         {
             RequestOverchargeServerRpc(on);
         }
 
+        public void RequestOutrider(Vector3 position, bool deploying)
+        {
+            RequestOutriderServerRpc(position, deploying);
+        }
+
+        public void RequestEmp(bool on)
+        {
+            RequestEmpServerRpc(on);
+        }
+
         /// <summary>True while the server has a machine standing for this player. Replicated,
         /// not read off the server's own state: a guest asking its local copy would be asking an
         /// object the server never writes, and would be told "no turret" with one standing in
-        /// front of it. The owner reads this to refuse Overcharge without a machine.</summary>
+        /// front of it.</summary>
         public bool ServerTurretStanding => TurretStanding.Value;
+        public float ServerTurretCharge => TurretCharge.Value;
+        public TurretPhase ServerTurretPhase => (TurretPhase)TurretPhaseWire.Value;
+        public bool ServerOutriderStanding => OutriderStanding.Value;
+        public float ServerOutriderCharge => OutriderCharge.Value;
+        public TurretPhase ServerOutriderPhase => (TurretPhase)OutriderPhaseWire.Value;
+        public bool ServerMachinesPaired => MachinesPairedWire.Value;
         #endregion
 
         #region Private
@@ -350,25 +408,39 @@ namespace GatekeepersProtocol.Game
         TurretObject _turretLive;
         TurretState _turretShadow;
         TurretObject _turretScenery;
+        readonly OutriderState _outriderState = new OutriderState();
+        OutriderObject _outriderLive;
+        OutriderState _outriderShadow;
+        OutriderObject _outriderScenery;
 
         [Rpc(SendTo.Server)]
         void RequestTurretServerRpc(Vector3 position, bool deploying)
         {
             if (!IsServer) return;
-            ClearServerTurret();
-            if (deploying)
+            if (!deploying)
             {
-                string reason;
-                if (!_turretState.TryPlace(position.x, position.y, position.z, out reason))
-                {
-                    Log.Event("Protocol", "crew Field Deploy refused — " + reason);
-                    return;
-                }
-                _turretLive = TurretObject.Spawn(position, _turretState, _game, transform);
+                ClearServerTurret();
+                ApplyTurretClientRpc(position, false);
+                return;
             }
-            TurretStanding.Value = _turretState.IsLive;
-            TurretHp.Value = _turretState.Hp;
-            ApplyTurretClientRpc(position, deploying);
+            if (_turretState.Phase == TurretPhase.Exhausted)
+            {
+                Log.Event("Protocol", "crew Field Deploy refused — exhausted turret cannot be refreshed");
+                return;
+            }
+            bool hadBody = _turretLive != null;
+            string reason;
+            if (!_turretState.TryPlace(position.x, position.y, position.z, out reason))
+            {
+                Log.Event("Protocol", "crew Field Deploy refused — " + reason);
+                return;
+            }
+            if (!hadBody)
+                _turretLive = TurretObject.Spawn(position, _turretState, _game, transform);
+            else
+                _turretLive.transform.position = position;
+            WriteTurretWire();
+            ApplyTurretClientRpc(position, true);
         }
 
         /// <summary>Scenery only. The server's machine is the one that shoots and the one that
@@ -382,27 +454,36 @@ namespace GatekeepersProtocol.Game
             if (_turretShadow == null) _turretShadow = new TurretState();
             _turretShadow.ResetForRun();
             _turretShadow.TryPlace(position.x, position.y, position.z, out _);
+            _turretShadow.MirrorCharge(TurretCharge.Value);
+            _turretShadow.MirrorPhase((TurretPhase)TurretPhaseWire.Value);
             _turretScenery = TurretObject.Spawn(position, _turretShadow, _game, null, true);
         }
 
         [Rpc(SendTo.Server)]
         void RequestOverchargeServerRpc(bool on)
         {
-            if (!IsServer) return;
-            _turretState.SetOvercharged(on);
-            ApplyOverchargeClientRpc(on);
+            if (!IsServer || !on) return;
+            string reason;
+            if (!_turretState.TryBeginOvercharge(out reason))
+            {
+                Log.Event("Protocol", "crew Overcharge refused — " + reason);
+                return;
+            }
+            WriteTurretWire();
+            ApplyOverchargeClientRpc(true);
         }
 
         [Rpc(SendTo.NotServer)]
         void ApplyOverchargeClientRpc(bool on)
         {
-            if (_turretShadow != null) _turretShadow.SetOvercharged(on);
+            if (_turretShadow == null || !on) return;
+            _turretShadow.MirrorPhase(TurretPhase.Special);
         }
 
         /// <summary>Keep the wire's view of the machine honest. A gatekeeper kills the turret
         /// inside <see cref="TurretObject"/>, which knows nothing of the session — without
         /// this watch the standing flag stays true and every client keeps a ghost machine.
-        /// While it lives, its life rides <see cref="TurretHp"/> for the scenery bars.</summary>
+        /// Charge and phase ride with Hp so the crew square and Exhausted tint stay true.</summary>
         void TickServerTurretMirror()
         {
             if (TurretStanding.Value && !_turretState.IsLive)
@@ -411,8 +492,16 @@ namespace GatekeepersProtocol.Game
                 ApplyTurretClientRpc(Vector3.zero, false);
                 return;
             }
-            if (_turretState.IsLive && TurretHp.Value != _turretState.Hp)
-                TurretHp.Value = _turretState.Hp;
+            if (_turretState.IsLive) WriteTurretWire();
+        }
+
+        void WriteTurretWire()
+        {
+            if (!IsServer || !IsSpawned) return;
+            TurretStanding.Value = _turretState.IsLive;
+            TurretHp.Value = _turretState.Hp;
+            TurretCharge.Value = _turretState.Charge;
+            TurretPhaseWire.Value = (byte)_turretState.Phase;
         }
 
         /// <summary>Client intake for the replicated life — onto the scenery copy's state,
@@ -423,17 +512,16 @@ namespace GatekeepersProtocol.Game
             if (_turretShadow != null) _turretShadow.MirrorHp(current);
         }
 
-        /// <summary>Server-side burn. The window lives on the owner, but the life it spends is
-        /// the server's machine, so the clock that spends it runs here.</summary>
-        void TickServerOvercharge(float dt)
+        void OnTurretChargeChanged(float previous, float current)
         {
-            if (!_turretState.IsLive || !_turretState.Overcharged) return;
-            float burned;
-            if (!_turretState.BurnOvercharge(dt, out burned)) return;
-            Log.Event("Protocol", "self Overcharge burned the turret out — "
-                + _turretState.LifeBurned.ToString("0") + " life spent clientId=" + OwnerClientId);
-            ClearServerTurret();
-            ApplyTurretClientRpc(Vector3.zero, false);
+            if (IsServer) return;
+            if (_turretShadow != null) _turretShadow.MirrorCharge(current);
+        }
+
+        void OnTurretPhaseChanged(byte previous, byte current)
+        {
+            if (IsServer) return;
+            if (_turretShadow != null) _turretShadow.MirrorPhase((TurretPhase)current);
         }
 
         void ClearServerTurret()
@@ -445,6 +533,135 @@ namespace GatekeepersProtocol.Game
             {
                 TurretStanding.Value = false;
                 TurretHp.Value = 0f;
+                TurretCharge.Value = 0f;
+                TurretPhaseWire.Value = (byte)TurretPhase.Available;
+            }
+        }
+
+        [Rpc(SendTo.Server)]
+        void RequestOutriderServerRpc(Vector3 position, bool deploying)
+        {
+            if (!IsServer) return;
+            if (!deploying)
+            {
+                ClearServerOutrider();
+                ApplyOutriderClientRpc(false);
+                return;
+            }
+            if (_outriderState.Phase == TurretPhase.Exhausted)
+            {
+                Log.Event("Protocol", "self Outrider refused — exhausted outrider cannot be refreshed");
+                return;
+            }
+            bool hadBody = _outriderLive != null;
+            string reason;
+            if (!_outriderState.TryPlace(position.x, position.y, position.z, out reason))
+            {
+                Log.Event("Protocol", "self Outrider refused — " + reason);
+                return;
+            }
+            if (!hadBody)
+                _outriderLive = OutriderObject.Spawn(position, _outriderState, _game, transform);
+            else
+                _outriderLive.transform.position = position;
+            WriteOutriderWire();
+            ApplyOutriderClientRpc(true);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        void ApplyOutriderClientRpc(bool deploying)
+        {
+            if (_outriderScenery != null) _outriderScenery.Despawn();
+            _outriderScenery = null;
+            if (!deploying) return;
+            if (_outriderShadow == null) _outriderShadow = new OutriderState();
+            _outriderShadow.ResetForRun();
+            _outriderShadow.TryPlace(transform.position.x, transform.position.y, transform.position.z, out _);
+            _outriderShadow.MirrorCharge(OutriderCharge.Value);
+            _outriderShadow.MirrorPhase((TurretPhase)OutriderPhaseWire.Value);
+            _outriderScenery = OutriderObject.Spawn(transform.position, _outriderShadow, _game, transform, true);
+        }
+
+        [Rpc(SendTo.Server)]
+        void RequestEmpServerRpc(bool on)
+        {
+            if (!IsServer || !on) return;
+            string reason;
+            if (!_outriderState.TryBeginEmp(out reason))
+            {
+                Log.Event("Protocol", "self EMP refused — " + reason);
+                return;
+            }
+            int caught = _outriderLive != null ? _outriderLive.ApplyEmpBlast() : 0;
+            Log.Event("Protocol", "self EMP — " + caught + " gatekeeper(s) caught clientId="
+                + OwnerClientId);
+            WriteOutriderWire();
+            ApplyEmpClientRpc(true);
+        }
+
+        [Rpc(SendTo.NotServer)]
+        void ApplyEmpClientRpc(bool on)
+        {
+            if (_outriderShadow == null || !on) return;
+            _outriderShadow.MirrorPhase(TurretPhase.Special);
+        }
+
+        void TickServerOutriderMirror()
+        {
+            if (OutriderStanding.Value && !_outriderState.IsLive)
+            {
+                ClearServerOutrider();
+                ApplyOutriderClientRpc(false);
+                return;
+            }
+            if (_outriderState.IsLive) WriteOutriderWire();
+        }
+
+        void WriteOutriderWire()
+        {
+            if (!IsServer || !IsSpawned) return;
+            OutriderStanding.Value = _outriderState.IsLive;
+            OutriderHp.Value = _outriderState.Hp;
+            OutriderCharge.Value = _outriderState.Charge;
+            OutriderPhaseWire.Value = (byte)_outriderState.Phase;
+        }
+
+        void WritePairingWire()
+        {
+            if (!IsServer || !IsSpawned) return;
+            MachinesPairedWire.Value = TurretObject.PairingActive(transform);
+        }
+
+        void OnOutriderHpChanged(float previous, float current)
+        {
+            if (IsServer) return;
+            if (_outriderShadow != null) _outriderShadow.MirrorHp(current);
+        }
+
+        void OnOutriderChargeChanged(float previous, float current)
+        {
+            if (IsServer) return;
+            if (_outriderShadow != null) _outriderShadow.MirrorCharge(current);
+        }
+
+        void OnOutriderPhaseChanged(byte previous, byte current)
+        {
+            if (IsServer) return;
+            if (_outriderShadow != null) _outriderShadow.MirrorPhase((TurretPhase)current);
+        }
+
+        void ClearServerOutrider()
+        {
+            if (_outriderLive != null) _outriderLive.Despawn();
+            _outriderLive = null;
+            _outriderState.Clear();
+            if (IsServer && IsSpawned)
+            {
+                OutriderStanding.Value = false;
+                OutriderHp.Value = 0f;
+                OutriderCharge.Value = 0f;
+                OutriderPhaseWire.Value = (byte)TurretPhase.Available;
+                MachinesPairedWire.Value = false;
             }
         }
 

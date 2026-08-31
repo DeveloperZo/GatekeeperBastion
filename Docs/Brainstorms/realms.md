@@ -8,9 +8,7 @@ both. Sourced from No Rest for the Wicked (Zo, 2026-08-20) and deliberately simp
 Status: brainstorm
 Update trigger: when an item moves across the character/realm line, when a remaining
 idea graduates, or when the farm-valve watch turns into a decision.
-Last updated: 2026-08-25 (graduated M100 entry deleted, its cost and trust records kept in
-Where it stands; M96/M97/M98 links replaced by bare ids; M98 recut and the retired Ship - Demo
-scene recorded)
+Last updated: 2026-08-30 (OPEN TO FRIENDS reuses the join code; respawn spends the realm bank, not Unbanked)
 -->
 
 ## What this covers
@@ -63,9 +61,11 @@ change, and `../Roadmap.md` is the addressable index.
   the Run (`DockRun` has no net route). ~~There is no mid-run join surface of any kind.~~
   **`M98` built one**: a late arrival lands on the Ship, waits, and follows the party in at a
   Prep boundary — `RunSeats`, `AwaitingFollow` / `RequestFollow`, and the FOLLOW labels. `M98`
-  was recut 2026-08-24 so the same seam owns death: one priced respawn rule replaced the
-  buy-back windows, and the seat pays out of the Unbanked it is carrying (`Sim/Run/Respawns.cs`
-  — `150 × uses+1`, the counter the Run's). Eyes-on criteria on the join half are still owed.
+  was recut 2026-08-24 so the same seam owns death: one priced respawn rule, then
+  2026-08-25 kills-bank-as-they-land moved the fee onto `SpendBanked` (realm bank,
+  `"not enough banked"`, cap 2, 10 s bleed-out). Eyes-on criteria on the join half are still owed.
+- **OPEN TO FRIENDS keeps its join code** (2026-08-30): closing the panel and reopening the
+  same realm reuses the Relay allocation. Boarders have their own name field on REALMS.
 - ~~**The Ship has no display objects.**~~ **`M97` built one**: the `Realm Record` root on
   `Ship - CoOp` carries twelve marks, a seven-mount weapon rack and a record plate. `M92`
   excluded trophies; the record is not one — it displays the realm, not the player. (This entry

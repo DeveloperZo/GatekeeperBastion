@@ -5,7 +5,7 @@ Purpose: Governs how code in this project is structured, named and written. Rule
 Status: working
 Authority: MASTER REFERENCE for how code is written. Docs/Architecture.md remains the reference for what this codebase is.
 Update trigger: when a rule is added, changed or retired, or when a new audit finds a rule nobody follows.
-Last updated: 2026-08-25 (08-25 audit indexed and folded into the standings; Build All no longer skips the Ship wipe; RealmShareBeacon named as unruled)
+Last updated: 2026-08-30 (ShipLookPass rows under GatekeepersProtocol/; HatchWaves const; Ante.Enabled static readonly; _Scratch tracked-empty)
 -->
 
 ## Never do
@@ -25,10 +25,11 @@ Last updated: 2026-08-25 (08-25 audit indexed and folded into the standings; Bui
   Only `== null`, `!= null`, `if (x)` respect Unity's lifetime check.
 - **Mutate Run state from anywhere but a `GameController` command method.** Meta / save
   mutation is `ShipCommands` only.
-- **Assume Build All leaves a dressed Ship alone.** It wipes and regrows `Environment`,
-  `SpawnPoints` and `Directional Light` in `Ship - CoOp.unity`; `ShipDress` survives only
-  because it is not an owned root (`../Architecture.md` gotcha 4). Bastion kit geometry
-  under `Environment` does persist. Stations, hosts and UI are authored and survive.
+- **Assume Build All rebuilds the Ship.** It does not. `RebuildShipGeometry` is retired
+  (2026-08-26) and `BuildAllCore` does not call it; the hull is
+  `Tools/ship-hull/build_hull.py` (`../Architecture.md` gotcha 4, `8-Scene-Authoring.md`).
+  On Bastion, kit segments under `Environment` skip the geometry wipe; Build All rebakes
+  NavMesh. Stations, hosts and UI are authored and survive.
 - **Allocate in a per-frame path** — no LINQ, no `params`, no capturing closure, no
   interpolated string, no `foreach` over an interface.
 - **Commit a partial method body or an incomplete control structure.** See *Complete unit*.
@@ -47,7 +48,7 @@ Last updated: 2026-08-25 (08-25 audit indexed and folded into the standings; Bui
 
 ## The singletons, named
 
-Measured 2026-08-12 and re-measured 2026-08-25 (`rg -n "static\s+\w+\s+Instance"
+Measured 2026-08-12 and re-measured 2026-08-30 (`rg -n "static\s+\w+\s+Instance"
 Assets/Scripts` for the declarations): exactly one `static Instance` declaration exists, and
 it is still `HatchStation`'s.
 
@@ -71,8 +72,9 @@ self-registered OnEnable/OnDisable — the sanctioned "the player" lookup) and
 nothing by contract). They hold lists of scene objects, not Run state; one Unity
 process can only ever host one Game-layer world (the NavMesh statics make two
 impossible), so scene-scoped and Run-scoped coincide at this layer. The Sim layer
-is where two Runs coexist, and it holds no statics at all — enforced by
-`TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState`.
+is where two Runs coexist, and it is required to hold no statics at all — enforced by
+`TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState`. HatchWaves is `const`; Ante is
+`static readonly` plus a per-run `RunSim.AnteEnabled` tests set.
 
 A fourth pattern existed when M40 was written (2026-08-09): `StationPanelView.EnsureInstance()`,
 a static factory — the same pattern under another name. It has since been removed
@@ -84,7 +86,8 @@ created, `DontDestroyOnLoad`'d, guarded by `Ensure()` / `Retire()`. The fence be
 for a member named `Instance`, so it does not see this and the check passes.
 `5-Audit-2026-08-25.md` raised it: milder than a service locator, since nothing reads
 state through it from outside, so grandfather-and-document may be the right answer rather
-than a refactor. Until Zo rules, it is neither allowed by name nor flagged by the check.
+than a refactor. Still present 2026-08-30 at the same field. Until Zo rules, it is
+neither allowed by name nor flagged by the check.
 
 `Tools/lint-arch/run.sh` reads the fenced block below; a `static Instance` declaration
 on any type not named in it fails the run. The owed list has been empty since
@@ -94,7 +97,7 @@ on any type not named in it fails the run. The owed list has been empty since
 singleton_allow=HatchStation
 singleton_owed=
 menu_root=GatekeepersProtocol
-menu_rows=Record/Gameplay/This scene (F9 to stop),Record/Gameplay/Ship,Record/Gameplay/Bastion,Record/Ship Flythrough,Logs/Open Logs Folder,Logs/Copy Latest Log Path,Build/All Scenes,Build/Place Bastion Obstacles,Build/Group Bastion Geom In Open Scene,Build/Unpack Bastion Geom In Open Scene,Build/Copy Compendium Pages,Build/Range Scene,Build/Protocol Bar,Bake/Bastion NavMesh,Validate/Integration Check,Validate/Scene Bindings
+menu_rows=Record/Gameplay/This scene (F9 to stop),Record/Gameplay/Ship,Record/Gameplay/Bastion,Record/Ship Flythrough,Logs/Open Logs Folder,Logs/Copy Latest Log Path,Build/All Scenes,Build/Place Bastion Obstacles,Build/Group Bastion Geom In Open Scene,Build/Unpack Bastion Geom In Open Scene,Build/Copy Compendium Pages,Build/Range Scene,Build/Protocol Bar,Build/Ship Look Pass,Bake/Bastion NavMesh,Bake/Ship Look Lighting,Validate/Integration Check,Validate/Scene Bindings
 ```
 
 **One menu root, five folders, and every row is named above.** Folders are Record, Logs,
@@ -104,6 +107,9 @@ missing from the code fails it too. Paths must be string literals (`MenuRoot + "
 invisible to the check). **Adding a row requires permission before it is written**, names
 the folder and the row it replaces, and updates this fence in the same change — a menu
 entry is a shared, permanent surface that outlives the reason it was added.
+
+`ShipLookPass` sat under `Tools/Scenes/Ship/` until 2026-08-30. Those two rows are now
+`Build/Ship Look Pass` and `Bake/Ship Look Lighting`. Do not put them back under `Tools/`.
 
 `Gatekeeper/HUD/` existed until 2026-08-11. It was created by two one-shot HUD migration tools
 (`PullBastionHudToShip.cs`, `RestoreShiftArmorHealth.cs`, ~220 lines each) that should never
@@ -120,7 +126,8 @@ deleted**, which is why this list is checked rather than trusted.
 | `4-Testing-and-Determinism.md` | MANDATORY | EditMode/PlayMode split, the offline harness, determinism, what not to test |
 | `5-Audit-2026-08-09.md` | record | What this codebase does against the rules above, with `file:line` |
 | `5-Audit-2026-08-10.md` | record | Supersedes the 08-09 pass: six lenses, re-derived, 28 surviving findings |
-| `5-Audit-2026-08-25.md` | record | The newest pass, and the one to read first: five lenses against AGENTS.md §4 and `gkb-development`, four findings plus one decision owed |
+| `5-Audit-2026-08-25.md` | record | Five lenses against AGENTS.md §4 and `gkb-development`; superseded as the newest pass by 08-30 |
+| `5-Audit-2026-08-30.md` | record | The newest pass, and the one to read first: five lenses post-0.34.2, four findings plus two decisions owed |
 | `6-InfinityQube-Precedence.md` | record | What was taken from InfinityQube, what was rejected, and on what evidence |
 | `7-File-Layout.md` | MANDATORY | The region order every file follows, and why the check matters more than the convention |
 | `8-Scene-Authoring.md` | MANDATORY | Scene roots, what an agent may edit, and what a scene edit must assert |
@@ -130,7 +137,7 @@ deleted**, which is why this list is checked rather than trusted.
 correctness against the engine. MANDATORY means it is required and a deviation needs a reason
 in writing. A record is history: corrections only.
 
-`Docs/Architecture.md` describes **this** codebase — its seam, its map, its four gotchas.
+`Docs/Architecture.md` describes **this** codebase — its seam, its map, its gotchas.
 This folder describes **how code should be written** in it. If the two contradict each other,
 `Architecture.md` wins on facts about the build and this folder wins on rules about the craft,
 and whichever is wrong gets fixed in the same commit.
@@ -175,16 +182,17 @@ This is how gray-box code stays honest instead of pretending to be finished.
 
 ## Where this stands today
 
-Last audited 2026-08-25 across `Assets/Scripts` (**282** `.cs` files: 70 in `Sim/`, 190 in
-`Game/`, 21 in `Editor/`, 1 in `Util/`). Detail in `5-Audit-2026-08-25.md`; the 08-09 and
-08-10 passes stay as the record of what the rules were written against.
+Last audited 2026-08-30 (`5-Audit-2026-08-30.md` is the newest record). File counts
+across `Assets/Scripts`: **306** `.cs` files (78 in `Sim/`, 200 in `Game/`, 27 in
+`Editor/`, 1 in `Util/`). The 08-09, 08-10 and 08-25 passes stay as the record of
+what the rules were written against.
 
 | | Finding |
 |---|---|
-| **Already right** | No LINQ in runtime code — `using System.Linq` does not appear once. No empty `Update`/`Start` bodies. No `FindObjectOfType` — already on the Unity 6 forms. No `Manager`/`Helper`/`Utils` class anywhere. No fake-null bypass on any `UnityEngine.Object`. `Log.Info` already `[Conditional]`. `partial` discipline holds project-wide, including the splits the line cap forced. |
-| **The structural gap** | Was: `Sim/` pure by convention, unenforced, sharing an assembly with `Game/`. **Closed 2026-08-12 (M45)** by `GatekeepersProtocol.Sim.asmdef` plus `TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState`. **Reopened by one field:** `Sim/Run/MasterControl.cs:13` declares `public static int HatchWaves = 1`, and that test is one of the 6 EditMode failures in the newest `gkb_verify_report.json`. `1-Boundaries.md` §1. |
-| **The measured cost** | `Log.Event` and `Log.Metric` are still not `[Conditional]` and ship in release. **428** call sites between them as of 2026-08-25, at least **47** of them interpolating, which under C# 9 allocates and boxes whether or not anything reads the log. `3-Unity-Runtime.md` §6. |
-| **The name that started this** | `RegisterPinHitIfNeeded` was the only `*IfNeeded` when the audit found it, and it is still the one place an audit found a shipped bug the name predicted. Three more have arrived since: `BindGunIfNeeded`, `BindAvatarIfNeeded`, `ApplyAudioIfNeeded`. `2-Naming.md` §2. |
-| **The rules with no fence** | Where enforcement is habit rather than a compile-time boundary, the rule slipped. `Assets/_Scratch/` is tracked with **25** scripts and a `Generated/` tree instead of a `.gitkeep`; three HUD `Prompt` getters allocate every frame the interactable is in view; `Reset()` for serialized tunables exists on 5 MonoBehaviours and not on `EnemyGatekeeper`, `PlayerGun`, `Damageable` or `FirstPersonController`. |
-| **Convention, no check** | InfinityQube's region order is adopted (`7-File-Layout.md`) and governs new files. **M34 cancelled** — no tree-wide sweep, no `Tools/lint-layout` in verify. |
+| **Already right** | Re-checked 2026-08-30. No LINQ in runtime code — `using System.Linq` does not appear once. No empty `Update`/`Start` bodies (fence pattern). No `FindObjectOfType`. No `Manager`/`Helper`/`Utils` class anywhere. No `?.` / `??` in `Game/`; `is null` only in comments. `Log.Info` already `[Conditional]`. `partial` discipline holds — 15 classes, 72 files, including `HudController.Protocol.cs` and `SceneBuilder.ProtocolCards.cs`. |
+| **The structural gap** | Was: `Sim/` pure by convention, unenforced, sharing an assembly with `Game/`. **Closed 2026-08-12 (M45)** by `GatekeepersProtocol.Sim.asmdef` plus `TwoRunIsolationTests.SimAssembly_HoldsNoStaticMutableState`. The two remaining static mutables closed 2026-08-30: `MasterControl.HatchWaves` is `const int = 1`; `Ante.Enabled` is `static readonly bool = false` and spend-path tests set `RunSim.AnteEnabled`. `1-Boundaries.md` §1. |
+| **The measured cost** | `Log.Event` and `Log.Metric` are still not `[Conditional]` and ship in release. **478** call sites between them as of 2026-08-30 (477 Event, 1 Metric), **90** of them containing an interpolated string (`$"`), which under C# 9 allocates and boxes whether or not anything reads the log. `3-Unity-Runtime.md` §6. |
+| **The name that started this** | `RegisterPinHitIfNeeded` was the only `*IfNeeded` when the audit found it, and it is still the one place an audit found a shipped bug the name predicted. Re-rg 2026-08-30: still four names — `RegisterPinHitIfNeeded`, `BindGunIfNeeded`, `BindAvatarIfNeeded`, `ApplyAudioIfNeeded`. `2-Naming.md` §2. |
+| **The rules with no fence** | Where enforcement is habit rather than a compile-time boundary. Tracked `Assets/_Scratch/` is `.gitkeep` only (08-25's 25 committed scripts are gone). This working tree still holds **13** gitignored Explore scripts there; `Tools/verify/run.sh` fails while they sit. HUD `Prompt` getters still allocate on some branches: `RepairInteractable` Dock/Docking concatenates; `StationTerminal` sealed-while-boarding concatenates; `BastionTerminal` HatchBank/Resource concatenate; `HatchRecallPad` concatenates when available; `HatchPortal` uses two literals. `Reset()` for serialized tunables now exists on the four 08-25 misses (`EnemyGatekeeper`, `PlayerGun`, `Damageable`, `FirstPersonController`) plus `PixelRender`; remaining tunable MonoBehaviours without `Reset()`: unknown — not a full pass. |
+| **Convention, no check** | InfinityQube's region order is adopted (`7-File-Layout.md`) and governs new files. **M34 still cancelled** (`Milestones/5. cancelled/M34-a-file-you-can-navigate.md`) — no tree-wide sweep, no `Tools/lint-layout` in verify. |
 | **Open for Zo** | Whether to adopt InfinityQube's `Manager`/`Utils`/`Helper` class naming (`6-InfinityQube-Precedence.md`), and how `RealmShareBeacon` is ruled (above). |

@@ -12,9 +12,9 @@ its way; it is short on purpose.
 
 I am the Boarder. The Bastion is held. The Hatch is the way home.
 
-[The Game](The-Game.md) is the shape of the whole thing: what a Boarding is, why there are
-kinds, what losing costs. [First Time Out](Getting-Started.md) is the first hours in
-order, and the three mistakes that eat early Boardings.
+[First Time Out](Getting-Started.md) is the first Bastion in order, from a dark Ship to
+stripped — the pause reader opens there and shows the numbered steps. [The Game](The-Game.md)
+is the shape of the whole thing: what a Boarding is, why there are kinds, what losing costs.
 
 ## II. A Boarding
 

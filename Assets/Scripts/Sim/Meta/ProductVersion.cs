@@ -8,7 +8,7 @@ namespace GatekeepersProtocol.Sim
         public const string Release = "0.34";
 
         /// <summary>Monotonic player-build counter. Not incremented on every code change.</summary>
-        public const int Build = 1;
+        public const int Build = 2;
 
         public static string Display => Release + "." + Build;
     }

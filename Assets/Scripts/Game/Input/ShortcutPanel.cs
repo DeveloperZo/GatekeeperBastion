@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using GatekeepersProtocol.Sim;
 using UnityEngine;
 
 namespace GatekeepersProtocol.Game
@@ -80,11 +81,17 @@ namespace GatekeepersProtocol.Game
         /// Does not call TickPanelToggle — the caller polls first.</summary>
         public static void FillRows(ControlContext active, IList<ShortcutRow> rows, int dialLevel = -1)
         {
-            FillRows(active, rows, dialLevel, DefaultDevSurface());
+            FillRows(active, rows, dialLevel, DefaultDevSurface(), Ante.Enabled);
         }
 
         public static void FillRows(ControlContext active, IList<ShortcutRow> rows, int dialLevel,
             DevSurface surface)
+        {
+            FillRows(active, rows, dialLevel, surface, Ante.Enabled);
+        }
+
+        public static void FillRows(ControlContext active, IList<ShortcutRow> rows, int dialLevel,
+            DevSurface surface, bool anteEnabled)
         {
             rows.Clear();
             Controls.CollectPanelRows(active, RowBuf);
@@ -104,6 +111,8 @@ namespace GatekeepersProtocol.Game
                     key = LineBuf.ToString();
                 }
 
+                if (b.Label == "juice" && !anteEnabled) continue;
+
                 string description = b.Label;
                 if (b.Label == "juice" && dialLevel >= 0)
                     description = "Ante " + dialLevel;
@@ -119,15 +128,21 @@ namespace GatekeepersProtocol.Game
         /// polls first.</summary>
         public static void FillLines(ControlContext active, IList<string> lines, int dialLevel = -1)
         {
-            FillLines(active, lines, dialLevel, DefaultDevSurface());
+            FillLines(active, lines, dialLevel, DefaultDevSurface(), Ante.Enabled);
         }
 
         public static void FillLines(ControlContext active, IList<string> lines, int dialLevel,
             DevSurface surface)
         {
+            FillLines(active, lines, dialLevel, surface, Ante.Enabled);
+        }
+
+        public static void FillLines(ControlContext active, IList<string> lines, int dialLevel,
+            DevSurface surface, bool anteEnabled)
+        {
             lines.Clear();
             Controls.CollectPanelRows(active, RowBuf);
-            BuildSections(RowBuf, dialLevel);
+            BuildSections(RowBuf, dialLevel, anteEnabled);
 
             if ((active & (Controls.FightAlways | ControlContext.Ship | ControlContext.EndScreen)) != 0)
                 AppendDevSection(surface);
@@ -204,7 +219,7 @@ namespace GatekeepersProtocol.Game
         static float ApproxWidth(string s) =>
             string.IsNullOrEmpty(s) ? 0f : s.Length * 7.2f;
 
-        static void BuildSections(List<ControlBinding> rows, int dialLevel)
+        static void BuildSections(List<ControlBinding> rows, int dialLevel, bool anteEnabled)
         {
             SectionBuf.Clear();
             OrderBuf.Clear();
@@ -228,6 +243,7 @@ namespace GatekeepersProtocol.Game
                     var b = rows[i];
                     if (b.Section != section) continue;
                     if (!SeenLabels.Add(b.Label)) continue;
+                    if (b.Label == "juice" && !anteEnabled) continue;
 
                     if (LineBuf.Length > 0) LineBuf.Append(" · ");
 

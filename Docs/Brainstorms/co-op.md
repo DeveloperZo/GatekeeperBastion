@@ -4,7 +4,7 @@
 Purpose: Everything co-op that is not yet a milestone — the open questions and the filed slices, with the decided ground left in Decisions.md rather than re-argued.
 Status: brainstorm
 Update trigger: when a co-op slice ships or is filed, or when a decided point is reopened.
-Last updated: 2026-08-25 (six co-op milestones since M72 recorded; the avatar is a rigged, animated body, not a capsule)
+Last updated: 2026-08-30 (interior is one deck; OPEN TO FRIENDS join-code reuse)
 -->
 
 ## What this covers
@@ -39,12 +39,13 @@ M60 shipped 2026-08-15 (Relay join; Zo eyes-on). M72 shipped 2026-08-17 (shared 
 lobby; host close log `13-24-37` / Relay `KPRMPR`).
 
 **Co-op stopped being polish-only after 2026-08-17, and none of it graduated from this
-file** — the surface below has not tracked it. `M92` and `M101` rebuilt the hull into a
-three-hatch, two-deck ship; `M95` built the 28-room co-op bastion; `M96` split the save so
-a Boarder travels and a realm stays; `M97` put the realm's record on the hull; `M98` split
-the seats playing from the seats connected and gave every dead seat one priced way back;
-`M100` made a realm reachable while its owner is offline. Those milestones are the record.
-What is still open here is presence and the questions below.
+file** — the surface below has not tracked it. `M92` built three hatches; `M101` built
+two decks, then the interior collapsed to **one deck** (2026-08-26, `ship-hull-and-interior.md`).
+`M95` built the 28-room co-op bastion; `M96` split the save; `M97` put the realm's record
+on the hull; `M98` split playing seats from connected seats; `M100` made a realm reachable
+while its owner is offline. 0.34.2: OPEN TO FRIENDS reuses the Relay code; Boarder has
+its own name field. Those milestones are the record. What is still open here is presence
+and the questions below.
 
 The epic's testability story is the `NetcodeIntegrationTest` fixture —
 every slice writes its gate against it and closes headless in the integration check —
@@ -72,17 +73,9 @@ Link, never restate.
 
 ### Guest progression
 
-**Graduated 2026-08-14 to** `M65`**; shipped 2026-08-15**
-([`3. completed/M65`](../Milestones/3.%20completed/M65-three-players-and-a-fight-that-counts-them.md)).
-Settled: salvage splits **equally** among connected players, every player banks to their own
-meta, and what a player may bank is capped by their own `DeepestWaveReached`, which rises from
-co-op clears as well as solo ones. A player brings their own loadout and inherits nothing. The
-principle it encodes: **co-op gets you further, not richer.** Equal split was chosen over kill-
-or damage-weighted because this game has jobs that are not shooting, and weighting by
-contribution makes doing them cost money.
-
-What is still open and belongs to play data rather than this file: whether a new guest joining
-a deep run needs a floor, and whether being carried should raise the banking cap at all.
+**Graduated 2026-08-14 to `M65`.** Principle: co-op gets you further, not richer. Play-data
+leftovers (guest floor on a deep join; whether being carried should raise the banking cap)
+stay Open, not an Idea.
 
 ### Second-player presence beyond a capsule
 

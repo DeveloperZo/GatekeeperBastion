@@ -860,7 +860,7 @@ public static class Docgen
         AppendManualGk(sb, GatekeeperKind.Hunter, "Hunter",
             "to touch the hatch; it only ever wants you");
         AppendManualGk(sb, GatekeeperKind.Thief, "Thief",
-            "to turn when shot; on a Convert it marches the Hatch, field-terminal it hunts you — it never hurts you");
+            "to turn when shot; it marches the Hatch on every Wave and never hurts you");
         AppendManualGk(sb, GatekeeperKind.Cloaker, "Cloaker",
             "to advance while watched — any Boarder's gaze stops it dead, and it fades and closes the moment every eye is elsewhere");
         sb.AppendLine();

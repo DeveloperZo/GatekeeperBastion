@@ -83,6 +83,22 @@ namespace GatekeepersProtocol.Tests
             AssertProfileExpInactive("Assets/Scenes/Ship - CoOp.unity", "Ship HUD");
         }
 
+        [Test]
+        public void FightScore_PushesAliveCountOnTheWaveLine()
+        {
+            string src = File.ReadAllText(Path.GetFullPath(
+                "Assets/Scripts/Game/Bastion/HudController.Fight.cs")).Replace("\r\n", "\n");
+            int set = src.IndexOf("_view.SetScore(salvage, _lineBuf.ToString())", StringComparison.Ordinal);
+            Assert.GreaterOrEqual(set, 0, "SetScore(salvage, ...) missing");
+            int start = src.LastIndexOf("_lineBuf.Clear();", set, StringComparison.Ordinal);
+            Assert.GreaterOrEqual(start, 0, "wave-line buffer clear missing");
+            string block = src.Substring(start, set - start);
+            StringAssert.Contains(".Append(alive)", block,
+                "Wave Counter must carry remaining enemies");
+            StringAssert.Contains("alive != _cacheScoreAlive", src,
+                "Score must repaint when remaining enemies change");
+        }
+
         static void AssertOverflow(string scenePath, string ancestor)
         {
             var scene = SceneHudYaml.Load(scenePath);
@@ -134,6 +150,126 @@ namespace GatekeepersProtocol.Tests
             }
         }
 
+        [Test]
+        public void FightHosts_LockedInsetsAndTypeFloors()
+        {
+            const string canvas = "Canvas - Dynamic";
+            var scene = SceneHudYaml.Load("Assets/Scenes/Bastion_Coop.unity");
+            AssertPosSize(scene, "Hud Vitals", canvas, 135f, 24f, 400f, 150f);
+            AssertPosSize(scene, "Hud Profile", canvas, 40f, -40f, 360f, 96f);
+            float px, py, sx, sy;
+            scene.RectOf("Hud Score", canvas, out px, out py, out sx, out sy);
+            Assert.AreEqual(-24f, px, 0.01, "Hud Score pos.x");
+            Assert.AreEqual(-40f, py, 0.01, "Hud Score pos.y");
+            Assert.AreEqual(400f, sx, 0.01, "Hud Score size.x");
+            Assert.AreEqual(96f, sy, 0.01, "Hud Score size.y");
+
+            Assert.IsTrue(scene.Has("Profile Level", "Hud Profile"),
+                "Profile Level must live under Hud Profile");
+            Assert.IsTrue(scene.Has("Protocol Line", "Hud Profile"),
+                "Protocol Line must live under Hud Profile");
+            var level = scene.TmpOf("Profile Level", canvas);
+            Assert.GreaterOrEqual(level.FontSizeBase, 28f, "Profile Level fontSizeBase");
+            Assert.AreNotEqual(3, level.OverflowMode, "Profile Level overflow is Truncate");
+            Assert.GreaterOrEqual(scene.TmpOf("Score Salvage", canvas).FontSizeMin, 20f,
+                "Score Salvage fontSizeMin");
+            Assert.GreaterOrEqual(scene.TmpOf("Wave Counter", canvas).FontSizeMin, 18f,
+                "Wave Counter fontSizeMin");
+        }
+
+        [Test]
+        public void FightMissionHeader_ClearsPrepBody()
+        {
+            AssertMissionHeader("Assets/Scenes/Bastion_Coop.unity");
+            AssertMissionHeader("Assets/Scenes/Range.unity");
+        }
+
+        [Test]
+        public void FightAndShipHosts_EdgeGapAtLeast24()
+        {
+            AssertEdgeInset("Assets/Scenes/Bastion_Coop.unity", "Canvas - Dynamic",
+                new[] { "Hud Profile", "Hud Score", "Hud Hatch", "Hud Vitals", "Hud Weapon" });
+            AssertEdgeInset("Assets/Scenes/Ship - CoOp.unity", "Ship HUD",
+                new[] { "Hud Profile", "Hud Score", "Hud Weapon" });
+        }
+
+        [Test]
+        public void ShipHosts_LockedInsetsAndTypeFloors()
+        {
+            const string hud = "Ship HUD";
+            var scene = SceneHudYaml.Load("Assets/Scenes/Ship - CoOp.unity");
+            AssertPosSize(scene, "Hud Profile", hud, 40f, -40f, 360f, 96f);
+            AssertPosSize(scene, "Hud Score", hud, -24f, -40f, 360f, 96f);
+            Assert.IsTrue(scene.Has("Profile Level", "Hud Profile"),
+                "Ship Profile Level must live under Hud Profile");
+            Assert.IsTrue(scene.Has("Protocol Line", "Hud Profile"),
+                "Ship Protocol Line must live under Hud Profile");
+            Assert.GreaterOrEqual(scene.TmpOf("Profile Level", hud).FontSizeBase, 28f,
+                "Ship Profile Level fontSizeBase");
+            Assert.GreaterOrEqual(scene.TmpOf("Score Salvage", hud).FontSizeMin, 18f,
+                "Ship Score Salvage fontSizeMin");
+            Assert.GreaterOrEqual(scene.TmpOf("Wave Counter", hud).FontSizeMin, 18f,
+                "Ship Wave Counter fontSizeMin");
+            Assert.GreaterOrEqual(scene.TmpOf("Weapon Name", hud).FontSizeMin, 16f,
+                "Ship Weapon Name fontSizeMin");
+        }
+
+        [Test]
+        public void RangeIdentity_SitsBesideIconOnProfile()
+        {
+            const string canvas = "Canvas - Dynamic";
+            var scene = SceneHudYaml.Load("Assets/Scenes/Range.unity");
+            AssertPosSize(scene, "Hud Profile", canvas, 40f, -40f, 360f, 96f);
+            Assert.IsTrue(scene.Has("Profile Level", "Hud Profile"),
+                "Range Profile Level must live under Hud Profile");
+            Assert.IsTrue(scene.Has("Protocol Line", "Hud Profile"),
+                "Range Protocol Line must live under Hud Profile");
+            Assert.GreaterOrEqual(scene.TmpOf("Profile Level", canvas).FontSizeBase, 28f,
+                "Range Profile Level fontSizeBase");
+            Assert.AreNotEqual(3, scene.TmpOf("Profile Level", canvas).OverflowMode,
+                "Range Profile Level overflow is Truncate");
+        }
+
+        [Test]
+        public void ShipPause_CompendiumHasItsOwnRow()
+        {
+            var scene = SceneHudYaml.Load("Assets/Scenes/Ship - CoOp.unity");
+            Assert.IsTrue(scene.Has("Compendium", "Button List"),
+                "Ship Pause Menu Button List has no Compendium row");
+            Assert.IsTrue(scene.IsActive("Compendium", "Button List"),
+                "Ship Pause Menu Compendium row is inactive");
+            float spacing = scene.VlgSpacing("Button List", "Pause Menu");
+            float cx, cy, cw, ch, sx, sy, sw, sh, qx, qy, qw, qh, rx, ry, rw, rh;
+            scene.RectOf("Resume", "Button List", out rx, out ry, out rw, out rh);
+            scene.RectOf("Compendium", "Button List", out cx, out cy, out cw, out ch);
+            scene.RectOf("Settings", "Button List", out sx, out sy, out sw, out sh);
+            scene.RectOf("QUIT TO MENU", "Button List", out qx, out qy, out qw, out qh);
+            float slot = rh + spacing;
+            Assert.GreaterOrEqual(Math.Abs(cy - ry), slot - 0.01f,
+                "Compendium overlaps Resume on Ship pause (cy=" + cy + " ry=" + ry + ")");
+            Assert.GreaterOrEqual(Math.Abs(sy - cy), slot - 0.01f,
+                "Compendium shares Settings' Ship pause row (cy=" + cy + " sy=" + sy + ")");
+            Assert.GreaterOrEqual(Math.Abs(qy - sy), slot - 0.01f,
+                "QUIT TO MENU overlaps Settings on Ship pause (qy=" + qy + " sy=" + sy + ")");
+        }
+
+        [Test]
+        public void CrewQuartersCatalog_NameAndLevelFit()
+        {
+            var scene = SceneHudYaml.Load("Assets/Scenes/Ship - CoOp.unity");
+            string[] rows = { "Vitality Row", "Stamina Row", "Scavenging Row", "Luck Row" };
+            for (int i = 0; i < rows.Length; i++)
+            {
+                string row = rows[i];
+                float px, py, sx, sy;
+                scene.RectOf("Name", row, out px, out py, out sx, out sy);
+                Assert.GreaterOrEqual(sx, 340f, row + " Name size.x");
+                scene.RectOf("Level", row, out px, out py, out sx, out sy);
+                Assert.GreaterOrEqual(sx, 160f, row + " Level size.x");
+                Assert.AreEqual(0, scene.TmpOf("Level", row).WrapMode, row + " Level wraps");
+            }
+        }
+
         static void AssertProfileExpInactive(string scenePath, string ancestor)
         {
             var scene = SceneHudYaml.Load(scenePath);
@@ -156,6 +292,52 @@ namespace GatekeepersProtocol.Tests
             Assert.GreaterOrEqual(gap, MinGap,
                 aName + " vs " + bName + " at " + w + "x" + h + " gap=" + gap
                 + " a=" + a + " b=" + b);
+        }
+
+        static void AssertPosSize(SceneHudYaml scene, string name, string ancestor,
+            float posX, float posY, float sizeX, float sizeY)
+        {
+            float x, y, w, h;
+            scene.RectOf(name, ancestor, out x, out y, out w, out h);
+            Assert.AreEqual(posX, x, 0.01, name + " pos.x");
+            Assert.AreEqual(posY, y, 0.01, name + " pos.y");
+            Assert.AreEqual(sizeX, w, 0.01, name + " size.x");
+            Assert.AreEqual(sizeY, h, 0.01, name + " size.y");
+        }
+
+        static void AssertMissionHeader(string scenePath)
+        {
+            var scene = SceneHudYaml.Load(scenePath);
+            float px, py, sx, sy;
+            scene.RectOf("Drawer Right Header", "Canvas - Dynamic", out px, out py, out sx, out sy);
+            Assert.GreaterOrEqual(sy, 52f, scenePath + " Drawer Right Header size.y");
+            Assert.GreaterOrEqual(scene.LayoutMinHeight("Drawer Right Header", "Canvas - Dynamic"),
+                52f, scenePath + " Drawer Right Header LayoutElement minHeight");
+            Assert.GreaterOrEqual(
+                scene.TmpOf("Drawer Right Header", "Canvas - Dynamic").FontSizeBase, 24f,
+                scenePath + " Drawer Right Header fontSizeBase");
+            scene.RectOf("Active Mission", "Hud Drawer Right", out px, out py, out sx, out sy);
+            Assert.LessOrEqual(py, -100f, scenePath + " Active Mission pos.y");
+            Assert.GreaterOrEqual(scene.VlgSpacing("Panel", "Hud Drawer Right"), 24f,
+                scenePath + " Hud Drawer Right Panel VLG spacing");
+        }
+
+        static void AssertEdgeInset(string scenePath, string ancestor, string[] hosts)
+        {
+            var scene = SceneHudYaml.Load(scenePath);
+            for (int r = 0; r < Widths.Length; r++)
+            {
+                int w = Widths[r], h = Heights[r];
+                for (int i = 0; i < hosts.Length; i++)
+                {
+                    var box = scene.CanvasAabb(hosts[i], ancestor, w, h);
+                    string at = hosts[i] + " at " + w + "x" + h + " " + box;
+                    Assert.GreaterOrEqual(box.X0, MinGap, at + " left inset");
+                    Assert.GreaterOrEqual(box.Y0, MinGap, at + " bottom inset");
+                    Assert.GreaterOrEqual(w - box.X1, MinGap, at + " right inset");
+                    Assert.GreaterOrEqual(h - box.Y1, MinGap, at + " top inset");
+                }
+            }
         }
     }
 
@@ -188,12 +370,16 @@ namespace GatekeepersProtocol.Tests
         public readonly int WrapMode;
         public readonly int OverflowMode;
         public readonly bool AutoSize;
+        public readonly float FontSizeBase;
+        public readonly float FontSizeMin;
 
-        public TmpFlags(int wrap, int overflow, bool autoSize)
+        public TmpFlags(int wrap, int overflow, bool autoSize, float fontSizeBase, float fontSizeMin)
         {
             WrapMode = wrap;
             OverflowMode = overflow;
             AutoSize = autoSize;
+            FontSizeBase = fontSizeBase;
+            FontSizeMin = fontSizeMin;
         }
     }
 
@@ -219,6 +405,8 @@ namespace GatekeepersProtocol.Tests
         readonly Dictionary<long, Rt> _rects = new Dictionary<long, Rt>();
         readonly Dictionary<long, TmpFlags> _tmpByGo = new Dictionary<long, TmpFlags>();
         readonly Dictionary<long, float> _leMinByGo = new Dictionary<long, float>();
+        readonly Dictionary<long, float> _leMinHByGo = new Dictionary<long, float>();
+        readonly Dictionary<long, float> _vlgSpacingByGo = new Dictionary<long, float>();
         readonly Dictionary<long, long> _mbGo = new Dictionary<long, long>();
         long _prepHeadingMb;
         long _shipPromptMb;
@@ -272,6 +460,38 @@ namespace GatekeepersProtocol.Tests
             float min;
             Assert.IsTrue(_leMinByGo.TryGetValue(goId, out min), "no LayoutElement on " + name);
             return min;
+        }
+
+        public float LayoutMinHeight(string name, string ancestor)
+        {
+            long goId = FindGo(name, ancestor);
+            Assert.AreNotEqual(0L, goId, "no '" + name + "' under " + ancestor);
+            float min;
+            Assert.IsTrue(_leMinHByGo.TryGetValue(goId, out min), "no LayoutElement height on " + name);
+            return min;
+        }
+
+        public void RectOf(string name, string ancestor,
+            out float posX, out float posY, out float sizeX, out float sizeY)
+        {
+            long goId = FindGo(name, ancestor);
+            Assert.AreNotEqual(0L, goId, "no '" + name + "' under " + ancestor);
+            Assert.IsTrue(_rects.TryGetValue(_gos[goId].RectId, out Rt rt),
+                "no RectTransform on " + name);
+            posX = rt.PosX;
+            posY = rt.PosY;
+            sizeX = rt.SizeX;
+            sizeY = rt.SizeY;
+        }
+
+        public float VlgSpacing(string name, string ancestor)
+        {
+            long goId = FindGo(name, ancestor);
+            Assert.AreNotEqual(0L, goId, "no '" + name + "' under " + ancestor);
+            float spacing;
+            Assert.IsTrue(_vlgSpacingByGo.TryGetValue(goId, out spacing),
+                "no VerticalLayoutGroup on " + name);
+            return spacing;
         }
 
         /// <summary>Whether a named object exists under an ancestor. Lets a test assert a
@@ -376,18 +596,23 @@ namespace GatekeepersProtocol.Tests
             long mbGo = 0;
             int wrap = 0, overflow = 0;
             bool autoSize = false;
+            float fontBase = 0f, fontMin = 0f;
             bool inHudController = false;
             bool inShipHud = false;
             bool inTmp = false;
             bool inLe = false;
+            bool inVlg = false;
             float leMin = -1f;
+            float leMinH = -1f;
+            float vlgSpacing = 0f;
 
             foreach (string raw in File.ReadLines(path))
             {
                 var m = Header.Match(raw);
                 if (m.Success)
                 {
-                    Flush(kind, id, go, rt, mbGo, wrap, overflow, autoSize, inTmp, inLe, leMin);
+                    Flush(kind, id, go, rt, mbGo, wrap, overflow, autoSize, fontBase, fontMin,
+                        inTmp, inLe, inVlg, leMin, leMinH, vlgSpacing);
                     kind = m.Groups[1].Value;
                     id = long.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
                     go = default;
@@ -395,11 +620,15 @@ namespace GatekeepersProtocol.Tests
                     mbGo = 0;
                     wrap = overflow = 0;
                     autoSize = false;
+                    fontBase = fontMin = 0f;
                     inHudController = false;
                     inShipHud = false;
                     inTmp = false;
                     inLe = false;
+                    inVlg = false;
                     leMin = -1f;
+                    leMinH = -1f;
+                    vlgSpacing = 0f;
                     continue;
                 }
 
@@ -445,6 +674,8 @@ namespace GatekeepersProtocol.Tests
                         inTmp = true;
                     else if (raw.Contains("UnityEngine.UI.LayoutElement"))
                         inLe = true;
+                    else if (raw.Contains("VerticalLayoutGroup"))
+                        inVlg = true;
                     else if (inHudController && raw.StartsWith("  _prepHeading:", StringComparison.Ordinal))
                         _prepHeadingMb = ParseFileId(raw);
                     else if (inShipHud && raw.StartsWith("  _prompt:", StringComparison.Ordinal))
@@ -455,15 +686,25 @@ namespace GatekeepersProtocol.Tests
                         overflow = ParseInt(raw);
                     else if (inTmp && raw.StartsWith("  m_enableAutoSizing:", StringComparison.Ordinal))
                         autoSize = raw.IndexOf('1') >= 0;
+                    else if (inTmp && raw.StartsWith("  m_fontSizeBase:", StringComparison.Ordinal))
+                        fontBase = ParseFloat(raw);
+                    else if (inTmp && raw.StartsWith("  m_fontSizeMin:", StringComparison.Ordinal))
+                        fontMin = ParseFloat(raw);
                     else if (inLe && raw.StartsWith("  m_MinWidth:", StringComparison.Ordinal))
                         leMin = ParseFloat(raw);
+                    else if (inLe && raw.StartsWith("  m_MinHeight:", StringComparison.Ordinal))
+                        leMinH = ParseFloat(raw);
+                    else if (inVlg && raw.StartsWith("  m_Spacing:", StringComparison.Ordinal))
+                        vlgSpacing = ParseFloat(raw);
                 }
             }
-            Flush(kind, id, go, rt, mbGo, wrap, overflow, autoSize, inTmp, inLe, leMin);
+            Flush(kind, id, go, rt, mbGo, wrap, overflow, autoSize, fontBase, fontMin,
+                inTmp, inLe, inVlg, leMin, leMinH, vlgSpacing);
         }
 
         void Flush(string kind, long id, Go go, Rt rt, long mbGo, int wrap, int overflow,
-            bool autoSize, bool inTmp, bool inLe, float leMin)
+            bool autoSize, float fontBase, float fontMin, bool inTmp, bool inLe, bool inVlg,
+            float leMin, float leMinH, float vlgSpacing)
         {
             if (kind == "1")
                 _gos[id] = go;
@@ -480,9 +721,14 @@ namespace GatekeepersProtocol.Tests
             {
                 if (mbGo != 0) _mbGo[id] = mbGo;
                 if (inTmp && mbGo != 0)
-                    _tmpByGo[mbGo] = new TmpFlags(wrap, overflow, autoSize);
+                    _tmpByGo[mbGo] = new TmpFlags(wrap, overflow, autoSize, fontBase, fontMin);
                 if (inLe && mbGo != 0)
+                {
                     _leMinByGo[mbGo] = leMin;
+                    _leMinHByGo[mbGo] = leMinH;
+                }
+                if (inVlg && mbGo != 0)
+                    _vlgSpacingByGo[mbGo] = vlgSpacing;
             }
         }
 

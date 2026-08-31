@@ -3,7 +3,7 @@ Purpose: Current representation of the faucet loop as it is in the build — the
 Status: in build. The loop's shape — start at the Hatch, end at the zone's terminal — shipped 2026-08-25, was enforced 2026-08-26, and is on by default with no toggle. The graybox extensions on top of it (auto-chaining Waves, Hatch-hunt targeting, endure income, the mark, the draft, the teleport home) are built and recorded harness-green by their milestone, but sit behind a dev-only toggle that does not compile into a player build, and their playthrough is unrun.
 in_build: true
 Update trigger: any milestone that touches this mechanic, in the same change; and the change that graduates the graybox extensions from dev-gated to shipped.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # The Faucet Loop
@@ -23,7 +23,7 @@ the Boarder holds.
 
 The Boarder invokes it against the Boarding's Wave state, at the two ends of a zone's lane. **The mechanic is in the build and on by default**: its spine is THE LOOP (Zo, 2026-08-25, enforced 2026-08-26) — *a wave begins at the Hatch and ends at a terminal* — and it is the loop every player meets today. What is not on is the set of extensions M102 grayboxed on top of it.
 
-**In build.** `T` at the Hatch runs the current zone's Wave span; the Hatch is the only start line, and a field terminal refuses to start a Wave while it is (`CanSelectTerminal`). `T` at that zone's terminal shuts the Wave off — in Assault **or** in Prep, because the field may already be empty when the Boarder gets there and the walk is still the objective (Zo, 2026-08-26). The Wave does not have to be killed to the last body.
+**In build.** `T` at the Hatch runs the current zone's Wave span; the Hatch is the only start line, and a field terminal refuses to start a Wave while it is (`CanSelectTerminal`). `T` at that zone's terminal shuts the Wave off — in Assault **or** in Prep, because the field may already be empty when the Boarder gets there and the walk is still the objective (Zo, 2026-08-26). The Wave does not have to be killed to the last body. Hold Interact on the authored pad beside T2 or T5 teleports back to the Hatch (`HatchRecallPad`) — that is the shipped return, not the gated draft-confirm teleport. The 0.34.2 player build never sees the graybox extensions below.
 
 The shutoff banks the whole carried pile, completes the terminal outright, opens the zone's door and offers the dock. Between the two ends the lane keeps dripping: the field trickle holds the walk open once the authored roster is spent, and pays nothing. [A Boarding](A-Boarding.md) owns the Boarding that contains this shape and describes it in full — the composite span, the door, the enders — and this page does not restate it.
 

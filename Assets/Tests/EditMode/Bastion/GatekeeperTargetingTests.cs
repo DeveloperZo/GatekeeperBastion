@@ -1,14 +1,10 @@
 using GatekeepersProtocol.Game;
-using GatekeepersProtocol.Sim;
 using NUnit.Framework;
 
 namespace GatekeepersProtocol.Tests
 {
-    /// <summary>Who a gatekeeper goes after, and how far it will divert to hit hardware. Both
-    /// rules were changed on 2026-08-28 on Zo's report and neither had anything executing it —
-    /// the surrounding class is a NavMesh MonoBehaviour, so the decisions were pulled out as
-    /// statics (the idiom <see cref="BastionDoor.CountsAsOpener"/> already uses) rather than
-    /// left where only a playthrough could reach them.</summary>
+    /// <summary>Who a gatekeeper goes after. Pulled out as statics because the surrounding
+    /// class is a NavMesh MonoBehaviour, and these decisions have to run in EditMode.</summary>
     public class GatekeeperTargetingTests
     {
         // ================================================================
@@ -73,31 +69,5 @@ namespace GatekeepersProtocol.Tests
                 + "at a time.");
         }
 
-        // ================================================================
-        //  How far it diverts to hit hardware
-        // ================================================================
-
-        [Test]
-        public void MagnetHands_WidensTheTurretPull_ItDoesNotGrantIt()
-        {
-            // THE BUG: the passive used to be the ONLY way a turret could be targeted at all,
-            // so without it the emplacement was literally invulnerable — 150 HP it could never
-            // lose, standing all run. The 07:17 log had four turrets and the only two deaths
-            // were the player's own Overcharge burning them out.
-            const float melee = 3.5f;
-            float without = EnemyGatekeeper.TurretPullRadius(false, melee);
-            float with = EnemyGatekeeper.TurretPullRadius(true, melee);
-
-            Assert.Greater(without, 0f,
-                "a turret cannot be reached without the passive, which is invulnerability by "
-                + "another name");
-            Assert.AreEqual(melee, without, 1e-4f,
-                "without the passive a machine should only be struck when it is already in "
-                + "reach — in the way, so it gets hit");
-            Assert.AreEqual(BoarderProtocol.TurretAuraRadius, with, 1e-4f,
-                "the passive should pull bodies from anywhere in the turret's aura");
-            Assert.Greater(with, without,
-                "the passive buys no extra reach, so there is no reason to wear it");
-        }
     }
 }

@@ -71,8 +71,10 @@ namespace GatekeepersProtocol.Game
                 return HatchBankRefuse("no boarding live");
             if (Sim.Phase != RunPhase.Tethered || Sim.Assault != AssaultState.Prep)
                 return HatchBankRefuse("not in Prep");
-            if (!_armedHatch)
+            if (Ante.Enabled && !_armedHatch)
                 return HatchBankRefuse("select the Ante first");
+            if (!Ante.Enabled)
+                _armedHatch = true;
             if (HatchBankStartBlocked)
             {
                 Log.Event("Demo", "bank refused — zone incomplete");

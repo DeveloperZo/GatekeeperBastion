@@ -2,7 +2,7 @@
 Purpose: Current representation of the permanent meta purchases as they are in the build — the Hatch Armor track, the equipment slot and Repair Rig one-offs, and the earned-Salvage lock.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Upgrades
@@ -23,7 +23,7 @@ CREW QUARTERS sells identity, not numbers. There are no attribute tracks; health
 
 FABRICATION changes the door. Hatch Armor raises what it absorbs, from the next embark — buying it changes nothing I can see standing here, which is either faith or engineering, and on this Ship those are the same purchase. The Repair Rig is not a track: it is a one-off, and without it equipped I cannot repair at all, at any bank balance. It does not make repair cheaper. It makes repair exist.
 
-Weapon Tiers and the equipment slot wait for the first Convert. A protocol claim and Hatch Armor never wait.
+Weapon Tiers and the equipment slot wait for the first Salvage this realm has earned. A protocol claim never waits. Hatch Armor waits on the opening ending, because FABRICATION is shut until then.
 
 Hatch Armor is the buy when I lose Boardings with my health bar still full. That signal is clean: the Boarding ended at the door, and no upgrade to me fixes a door.
 
@@ -130,7 +130,7 @@ shop money is what the Boardings killed for.
 ## Gaps
 
 - Nothing in the game lays out the gated/ungated split in one place. You infer it from a locked row at the ARMORY and a reassuring line on the other two panels.
-- The lock opens on the first Convert, not on a Lost Boarding — docking after a bank still unlocks the wheel. Nothing on the Ship says that.
+- The lock opens on the first Salvage earned, not on a Convert and not on a Lost Boarding. Nothing on the Ship says that.
 - Nothing reduces the Salvage cost of repairing. The Repair Rig is what lets you repair at all, at a fixed rate, and no panel says that owning it changes nothing about the price.
 - Tiers being per weapon and non-transferable is stated nowhere before you buy.
 - There is no respec and no refund. Nothing warns you.

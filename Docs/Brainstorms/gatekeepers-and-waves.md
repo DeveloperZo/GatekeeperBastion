@@ -4,7 +4,7 @@
 Purpose: The gatekeeper roster and the Wave composition curve — what kinds exist, what each one refuses, and how Waves escalate across the five.
 Status: brainstorm
 Update trigger: when a gatekeeper kind is added or its refusal changes, or when the Wave composition tables move.
-Last updated: 2026-08-25 (the Cloaker is shipped and counted, roster state and graduation-test instrument corrected; the 08-24 Cloaker row went in without a restamp)
+Last updated: 2026-08-30 (Cloaker debut is wave 4 in `WaveDirector.CloakerPerWave`, not wave 3)
 -->
 
 ## What this covers
@@ -17,12 +17,16 @@ refuses to do, and how Waves 1–5 escalate. Not the tuning of any single number
 ## Where it stands
 
 Four kinds in `Sim/Waves/GatekeeperKind.cs` — the Cloaker joined as `Cloaker = 3` with
-`M63-3` (2026-08-24), introduced in wave 3. Two Wave modes ship (`WaveMode`):
-**Terminal** hunts the Boarder (Hatch cannot be hurt); **HatchBank** hunts the Hatch
-and converts Unbanked (Hunters still hunt you). Default / Thief retarget with the
+`M63-3` (2026-08-24). Debut is **wave 4** (`WaveDirector.CloakerPerWave = {0,0,0,1,2}`),
+one wave after the Thief so two new kinds do not land together. The Kind comment that
+says wave 3 is stale. Two Wave modes ship (`WaveMode`):
+**Terminal** hunts the Boarder (Hatch cannot be hurt); **HatchBank** hunts the Hatch.
+Field Waves **start at the Hatch** and end at the terminal (0.34.2); the hunt rule is
+unchanged. Default / Thief retarget with the
 mode (`M52`/`M53`); Hunter refuses the Hatch on both. `WaveDirector`'s
 `HunterPerWave` / `ThiefPerWave` tables fix the counts; `defaultCount` absorbs the
-remainder; intensity surplus is entirely Default.
+remainder; intensity surplus is entirely Default. Ante is parked, so that surplus is
+off unless the flag flips.
 
 The Cloaker is the first kind whose refusal is a **state rather than a fixed target**:
 watched — cone, range and line of sight — it targets nothing and holds position;

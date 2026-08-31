@@ -82,6 +82,7 @@ namespace GatekeepersProtocol.Game
         Vector3? _standPoint;
         Vector3 _lastDestination = new Vector3(9999f, 9999f, 9999f);
         float _pinRemaining;
+        float _rootRemaining;
 
         static readonly int AnimSpeed = Animator.StringToHash("Speed");
         static readonly int AnimAttack = Animator.StringToHash("Attack");
@@ -100,9 +101,11 @@ namespace GatekeepersProtocol.Game
         HatchStation _hatchTarget;
         DecoyObject _decoyTarget;
         TurretObject _turretTarget;
+        OutriderObject _outriderTarget;
         bool _chasingPlayer;
         bool _chasingDecoy;
         bool _chasingTurret;
+        bool _chasingOutrider;
         float _attackTimer;
         float _retargetTimer;
 
@@ -132,12 +135,17 @@ namespace GatekeepersProtocol.Game
         /// <summary>True while a pin holds this gatekeeper in place. Commit latch is unchanged.</summary>
         public bool IsPinned => _pinRemaining > 0f;
 
+        /// <summary>True while EMP root holds this body. It may not close; it still swings
+        /// if already in reach. Commit latch is unchanged.</summary>
+        public bool IsRooted => _rootRemaining > 0f;
+
         /// <summary>True once the hatch-commit latch has closed. Shove and pin do not clear it.</summary>
         public bool IsCommittedToHatch => _committedToHatch;
 
         /// <summary>Dev F9 readout: who this gatekeeper is hunting right now.</summary>
         public string DevTargetLabel =>
             _chasingTurret ? "turret" :
+            _chasingOutrider ? "outrider" :
             _chasingDecoy ? "decoy" :
             _chasingPlayer ? "player" : (_committedToHatch ? "hatch" : (_hatchTarget != null ? "hatch?" : "idle"));
 
@@ -304,6 +312,12 @@ namespace GatekeepersProtocol.Game
                 _retargetTimer = 0f;
             }
 
+            if (_rootRemaining > 0f)
+            {
+                _rootRemaining -= dt;
+                if (_rootRemaining < 0f) _rootRemaining = 0f;
+            }
+
             RecomputeSpeed();
 
             // Kind seam, ahead of the retarget tick. A subclass MUST use this and never
@@ -315,6 +329,8 @@ namespace GatekeepersProtocol.Game
             if (_chasingDecoy && (_decoyTarget == null || !_decoyTarget.IsAlive))
                 _retargetTimer = 0f;
             if (_chasingTurret && (_turretTarget == null || !_turretTarget.IsAlive))
+                _retargetTimer = 0f;
+            if (_chasingOutrider && (_outriderTarget == null || !_outriderTarget.IsAlive))
                 _retargetTimer = 0f;
             if (_retargetTimer <= 0f)
             {
@@ -351,7 +367,7 @@ namespace GatekeepersProtocol.Game
             if (inRange && !_wasInRange) _attackTimer = 0f;
             _wasInRange = inRange;
 
-            if (inRange)
+            if (GatekeeperRoot.MaySwing(inRange))
             {
                 StopAgent();
                 if (_attackTimer <= 0f)
@@ -360,7 +376,8 @@ namespace GatekeepersProtocol.Game
                     _attackTimer = attackInterval;
                 }
             }
-            else if (_agent != null && _agent.isOnNavMesh)
+            else if (GatekeeperRoot.MayAdvance(IsRooted)
+                && _agent != null && _agent.isOnNavMesh)
             {
                 _agent.isStopped = false;
                 // Re-issuing an identical destination every frame restarts the path each time,
@@ -370,6 +387,10 @@ namespace GatekeepersProtocol.Game
                     _agent.SetDestination(goal);
                     _lastDestination = goal;
                 }
+            }
+            else
+            {
+                StopAgent();
             }
 
             DriveAnimator();
@@ -460,6 +481,15 @@ namespace GatekeepersProtocol.Game
             StopAgent();
         }
 
+        /// <summary>Hold position for <paramref name="seconds"/>. Refresh-only — never stacks.
+        /// Does not un-commit and does not cancel a swing already in reach.</summary>
+        public void Root(float seconds)
+        {
+            if (seconds <= 0f) return;
+            if (seconds > _rootRemaining) _rootRemaining = seconds;
+            StopAgent();
+        }
+
         /// <summary>Distance to whatever we are about to hit, ignoring height and using the hatch's
         /// surface rather than its centre.</summary>
         float PlanarDistanceToTarget(Vector3 goal)
@@ -522,6 +552,12 @@ namespace GatekeepersProtocol.Game
             if (_chasingTurret && _turretTarget != null && _turretTarget.IsAlive)
             {
                 _turretTarget.ApplyDamage(hatchDamage);
+                return;
+            }
+
+            if (_chasingOutrider && _outriderTarget != null && _outriderTarget.IsAlive)
+            {
+                _outriderTarget.ApplyDamage(hatchDamage);
                 return;
             }
 

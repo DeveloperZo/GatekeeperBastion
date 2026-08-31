@@ -57,6 +57,14 @@ namespace GatekeepersProtocol.PlayTests
             Assert.AreEqual(name, view.NameText, "the name field is wired both ways");
         }
 
+        static void TypeBoarderName(string name)
+        {
+            var view = View();
+            Assert.IsNotNull(view, "the chooser is loaded");
+            view.SetBoarderName(name);
+            Assert.AreEqual(name, view.BoarderNameText, "the boarder name field is wired both ways");
+        }
+
         [UnityTest]
         public IEnumerator TheChooserScene_LoadsAndBindsEverything()
         {
@@ -68,10 +76,13 @@ namespace GatekeepersProtocol.PlayTests
             Assert.IsNotNull(Object.FindAnyObjectByType<RealmSelectController>(),
                 "and a controller to drive it");
             TypeName("BINDING CHECK");
+            TypeBoarderName("BOARDER BIND");
             view.ClearName();
             Assert.AreEqual("", view.NameText,
                 "the hand-authored name field reads and writes — the part of that scene most "
                 + "likely to have come out wrong");
+            Assert.AreEqual("", view.BoarderNameText,
+                "and the boarder name field clears with it");
             Assert.IsNotNull(Object.FindAnyObjectByType<Canvas>(), "and a canvas to draw on");
 
             // A missing serialized reference logs one error naming the field, so a clean load

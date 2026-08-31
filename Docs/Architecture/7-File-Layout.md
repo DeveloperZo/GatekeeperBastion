@@ -5,7 +5,7 @@ Purpose: The region order every C# file in Assets/Scripts follows, and the rules
 Status: working
 Authority: MANDATORY — the order is fixed; which regions appear is not.
 Update trigger: when a region is added to or removed from either order, or when the checker's rules change.
-Last updated: 2026-08-25 (counted-line unit now names all three caps; over-cap example re-measured)
+Last updated: 2026-08-30 (over-cap example re-measured; counted-line unit unchanged)
 -->
 
 Adopted from InfinityQube's `03-file-standards.md` (`6-InfinityQube-Precedence.md`).
@@ -85,11 +85,12 @@ runtime data. Today both are "a private field near the top", and `1-Boundaries.m
 rules cannot be checked against that.
 
 **It gives the size cap somewhere to point.** `Docs/Architecture.md` says split at 800 lines
-in `Editor/` and `BastionSketchEmitter.cs` is 976 (counted 2026-08-25). "Split it" is an
-unanswerable instruction; "extract the region" is an answerable one. InfinityQube's caps
-failed precisely because the rule said what the number was and never said where the seam
-went — twelve files over, and the largest at 2,083 lines against 600
-(`6-InfinityQube-Precedence.md`).
+in `Editor/` and `BastionSketchEmitter.cs` is 976 (counted 2026-08-30, same unit as
+`Tools/lint-arch/run.sh`). Seven files currently exceed their folder cap; the largest Game
+file is `GameController.Terminals.cs` at 611 against 400. "Split it" is an unanswerable
+instruction; "extract the region" is an answerable one. InfinityQube's caps failed precisely
+because the rule said what the number was and never said where the seam went — twelve files
+over, and the largest at 2,083 lines against 600 (`6-InfinityQube-Precedence.md`).
 
 ## The check, not the convention
 

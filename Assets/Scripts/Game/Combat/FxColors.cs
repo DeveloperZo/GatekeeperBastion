@@ -44,6 +44,8 @@ namespace GatekeepersProtocol.Game
         public static readonly Color FxBurst = new Color(1f, 0.92f, 0.6f);
         public static readonly Color FxMuzzle = new Color(1f, 0.9f, 0.4f);
         public static readonly Color FxBlood = new Color(1f, 0.3f, 0.1f);
+        public static readonly Color FxOvercharge = new Color(1f, 0.38f, 0.08f);
+        public static readonly Color FxEmp = new Color(0.55f, 1f, 0.72f);
         public static readonly Color EnemyAlert = new Color(0.9f, 0.2f, 0.2f);
         public static readonly Color TracerDefault = new Color(1f, 0.9f, 0.35f);
         public static readonly Color SparkDefault = new Color(1f, 0.55f, 0.1f);

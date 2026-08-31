@@ -2,28 +2,28 @@
 Purpose: Default, an instance of Gatekeepers — differences only.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Default Gatekeeper
 
 Instance of [Gatekeepers](Gatekeepers.md).
 
-The kind with nothing switched off — it can be provoked into chasing the Boarder, and it will attack the Hatch when it can reach it. Its chase is slower than a walking Boarder, and every extra body a raised Ante buys is this one.
+The kind with nothing switched off — it can be provoked into chasing the Boarder, and it will attack the Hatch when it can reach it. Its chase is slower than a walking Boarder, and every extra body a raised Ante would buy is this one.
 
 ## Game
 
 The plain frame. Everything else on this hull, I measure against it.
 
-On a field-terminal Wave it walks at me. On a Convert it walks to the Hatch and will pass me by to get there. It closes and it swings. That is the whole manual.
+On a field Wave it walks to the Hatch and will pass me by to get there, unless I give it a reason not to. On a Convert it does the same thing at full swing. It closes and it swings. That is the whole manual.
 
-Three things put one on me, and I keep the list in order. Shooting it: permanent. Being seen down a clear line at distance: permanent. Standing in its space: wears off when I leave. The permanent two also put it in a hurry — faster than my walk, slower than my sprint — which makes backing away while firing a slow loss dressed as a plan.
+Three things put one on me, and I keep the list in order. Shooting it: permanent. Being seen down a clear line at distance: permanent. Standing in its space: wears off when I leave. The permanent two also put it in a hurry — still slower than my walk, slower than my sprint — which makes backing away while firing a real move, and a thin one.
 
 Hurt one and it shouts, and everything near it drops what it was doing and joins. The ones it pulls do not shout again. One shot buys one group. Whether that was a purchase or an accident depends on whether I meant it.
 
 At the Hatch it stops negotiating. It hits the door while I shoot it, while I stand beside it, while its friends chase me. A Default is a decision while it walks and a timer once it arrives.
 
-Weakest thing here, one at a time. It has never needed to be strong. It brings count, and every body a raised Ante adds is this one.
+Weakest thing here, one at a time. It has never needed to be strong. It brings count, and every extra body a raised Ante would add is this one.
 
 ## Differs
 
@@ -49,4 +49,4 @@ Weakest thing here, one at a time. It has never needed to be strong. It brings c
 - The game never says that being *seen* provokes one. Players reasonably assume only damage does.
 - Nothing tells you that shooting one alerts its neighbours, or how far that reaches.
 - A Default that has reached the Hatch is unrecoverable by any means except killing it, and the game presents that as the AI simply ignoring your fire.
-- Provoked movement being faster than your walk but slower than your sprint is never stated, and it is the difference between kiting working and not working.
+- Provoked movement sitting *under* the walk is never stated. Giving ground works; the corridor and the far closet still feeding are what make it a thin plan.

@@ -140,6 +140,13 @@ namespace GatekeepersProtocol.Game
                         string e = Controls.DisplayOf(ControlId.Interact);
                         bool armed = gc != null && gc.IsHatchBankArmed;
                         s_prompt.Clear();
+                        if (!Ante.Enabled)
+                        {
+                            s_prompt.Append('[').Append(Controls.DisplayOf(ControlId.PullDraw))
+                                .Append("] Convert");
+                            s_prompt.Append("  unbanked ").Append(unbanked);
+                            return s_prompt.ToString();
+                        }
                         if (armed)
                             s_prompt.Append('[').Append(Controls.DisplayOf(ControlId.PullDraw))
                                 .Append("] Convert");
@@ -368,6 +375,11 @@ namespace GatekeepersProtocol.Game
 
         static void AppendStake(StringBuilder sb, GameController gc, long unbanked)
         {
+            if (!Ante.Enabled)
+            {
+                sb.Append("  unbanked ").Append(unbanked);
+                return;
+            }
             int level = 0;
             int bodies = 0;
             if (gc != null && gc.Sim != null)

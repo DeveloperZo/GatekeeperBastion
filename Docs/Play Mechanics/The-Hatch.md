@@ -2,7 +2,7 @@
 Purpose: Current representation of the Hatch bank family — Withdraw, the Convert window, the Docked return and portal, breach loss, and repair — as it is in the build.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # The Hatch
@@ -12,23 +12,23 @@ defended: if its health reaches zero the Boarding ends on the spot, and no amoun
 buys it back. It is also the loop's cashier. Standing at the door, the Boarder can draw
 banked Salvage into a carried pile, run a Convert that multiplies that pile while
 Gatekeepers march on the door, repair the door at a price per point of health, or dock home
-when the way out is open. Today the door's one prompt always leads with the Wave start, so
-Convert and Withdraw are never offered as designed, and no seat in a solo Boarding can open
-a Convert at all.
+when the way out is open. Today the door's one prompt leads with the Wave start whenever a zone is unfinished or
+the control room is open for Master Control; Convert and Withdraw answer when the start
+line is off (zone terminals done, control gate still shut).
 
 ## Game
 
 One door with a pulse, and everything on this hull is arranged around it.
 
-The Hatch is the umbilical back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Boarding on the spot — the one loss nothing at all buys back. A dead Boarder can be priced back onto the floor out of what they were carrying. A dead door cannot, at any price, out of any purse.
+The Hatch is the umbilical back to my Ship. It has its own health and it is the only thing here being defended. It cannot be moved, closed, or traded away. Zero ends the Boarding on the spot — the one loss nothing at all buys back. A dead Boarder can be priced back onto the floor out of the bank. A dead door cannot, at any price, out of any purse.
 
 It starts every Boarding whole. Whatever I let happen to it last time did not carry.
 
-On a field-terminal Wave nothing can touch it. A Convert is the window where it can be hurt, and the same window where Unbanked converts — the payout and the damage come through the same slot. Defaults and Thieves bill the door. Hunters never do, at any range, standing on it.
+A field Wave can still bite the door — thinner than a Convert, but a body that reaches it is never inert. A Convert is the window where Unbanked converts, and the same window where the door takes the full swing. Defaults and Thieves bill the door. Hunters never do, at any range, standing on it.
 
 Repair is me at the door, holding — with the Rig equipped, or the hold does nothing at any bank balance. It bills banked Salvage per point healed and will take the bank to exactly zero if I let it.
 
-Survive a Convert and the door offers something better: hold, and dock home with what I banked. The offer lives until the next Wave starts, and never appears after a failed bank.
+Survive a Convert, or shut the zone's terminal off, and the door offers something better: hold, and dock home with what I banked. The offer lives until the next Wave starts, and never appears after a failed bank.
 
 The arithmetic worth keeping: a Thief that reaches this door costs more than killing it. Not in danger. In money. That is the whole reason to walk out and meet one.
 
@@ -36,20 +36,40 @@ The arithmetic worth keeping: a Thief that reaches this door costs more than kil
 
 The Boarder invokes it, at one door, against the realm's bank and the seat's carried pile. The Hatch bank is **one mechanic, several verbs**, and their precedence is a stated rule, not an accident of prompt order: a dock hold in progress, then destroyed, then repair, then the wave start line, then Convert, then Withdraw, then the dock (`HatchVerbs.Choose` — the start line always outranks the bank verbs; [A Boarding](A-Boarding.md) owns the start line itself). **This page owns the withdraw and repair spends.**
 
-**One consequence of that precedence dominates the family today.** `HatchOffersWaveStart` is true for the whole of a Boarding, not only while a zone is unfinished: its second clause is `MasterControlAwaitsStart`, and the Bastion's control room carries a Master terminal that is never entered into the unlock graph (`BastionLayout.RebuildGraph` loads Field terminals only), so it never reads as done — `BastionUnlockGraph.TryCompleteTerminal` refuses an id it was never given, with "unknown terminal".
+**One consequence of that precedence dominated the family until 2026-08-30.**
+`HatchOffersWaveStart`'s second clause is `MasterControlAwaitsStart`, and the Bastion's
+control room carries a Master terminal that is never entered into the unlock graph
+(`BastionLayout.RebuildGraph` loads Field terminals only), so it never reads as done —
+`BastionUnlockGraph.TryCompleteTerminal` refuses an id it was never given, with "unknown
+terminal". Without a further gate, that clause was true for the whole Prep of any Boarding
+that still had a Master terminal standing, so once the current zone's terminals were done
+`HatchBankStartBlocked` went false and the Hatch fell through to offering Master Control
+even while the control gate was still shut — F12-B/D and a post-shutoff Boarding both
+showed "terminals complete / wrong door locked", and `Choose` never returned Convert or
+Withdraw on a solo or host seat.
 
-The start line is therefore always on offer at an undamaged Hatch, and `Choose` consequently never returns Convert or Withdraw — neither prompt is reachable, **on any seat** — while `TickPrepCommands` routes `T` at the Hatch into the wave start before it ever reaches the Convert branch.
+The start line now offers Master only when `ControlRoomReachable` is also true (both
+progression gates open). While a zone's terminals are done and the control gate is still
+shut, `HatchOffersWaveStart` is false and the Convert / Withdraw branches can answer.
+With the control room open, the Hatch offers the finale and `Choose` leads with the start
+line again.
 
 **Withdraw — bank into carry.** In Prep, at a full, undamaged Hatch, with nothing carried, hold Interact: banked Salvage moves into the operating seat's Unbanked pile at a fixed rate (tied to the Rig's repair rate; no Rig needed to withdraw). Kills bank as they land ([A Boarding](A-Boarding.md)), so Withdraw is the **only** thing that fills the carry. Withdrawn units leave the Run's banked tally too, so a later Convert cannot count them twice. The withdraw lands in whichever counted seat holds the verb, and refuses an uncounted slot — a guest's hold is a real withdraw, opened as a repair channel (`NetVerbs.SetRepairing`) that the host ticks against its own range check and credits to the requesting seat's slot. **The hold works and the prompt does not name it**: `RepairInteractable.Interact` runs the dock, then repair, then the withdraw on its own conditions and never consults the start line, while `Prompt` goes through `Choose` and so leads with the start line instead.
 
-**Convert — the opt-in bet, and the one seat that can still take it.** The rule as the code holds it: in Prep, at a full Hatch, carrying Unbanked, `E` at the Hatch selects (locking the Ante dial) and `T` starts a Convert Wave. There is no per-Boarding cap. It is refused:
+**Convert — the opt-in bet.** The rule as the code holds it: in Prep, at a full Hatch, carrying Unbanked, `T` starts a Convert Wave. With the Ante parked there is no select to lock first. There is no per-Boarding cap. It is refused:
 
 - while the current zone still has a terminal to finish;
 - while the Master Control sequence is live;
 - once every Wave is cleared;
 - with nothing carried.
 
-**The Boarder's own `T` never reaches it; a guest's does.** `TickPrepCommands` tests the Hatch start line above the Convert branch, and that test is always true (above), so a solo or host seat starts a zone — or, once every field terminal is done, the finale — where it selected a Convert.
+**The Boarder's own `T` reaches Convert only while the start line is off.**
+`TickPrepCommands` still tests the Hatch start line above the Convert branch. While a
+zone is unfinished, or while both gates are open and Master awaits, that test is true and
+a solo or host seat starts a zone (or the finale) instead of a Convert. Once the
+current zone's terminals are done and the control gate is still shut, the start line is
+off and the Convert branch can fire — the guest path was already able to, because its Prep
+RPC never consulted the start line.
 
 The client path has no such branch at all: `TickClientPrepCommands` goes straight from `RepairInteractable.OffersHatchBank` to `NetPrep.RequestStartHatchBank` → `GameController.TryNetStartHatchBank`, which checks range to the Hatch, arms the Hatch host-side and calls `StartHatchBankWave` itself. **Nothing in that path refuses a client.** `StartHatchBankWave`'s `_net.IsClientOnly` guard tests the machine executing the call, and the call executes on the host, where it is false; it would only fire on a client-only machine calling the method locally, which no code path does. So "the Convert is refused on a client seat" is exactly backwards: the guest is the only seat that can open one, and the window it opens commits the whole party. The codebase says the same thing in its own words — "Convert was struck from the demo on 2026-08-25" (`RunSim.Dock.cs`), which is why the dock had to be re-hung on the zone shutoff.
 
@@ -57,7 +77,7 @@ What the guest is *told* is a third thing again: its Hatch prompt comes from the
 
 When a window does run it runs a fixed span (duration, drip rate: [Field Manual](Field-Manual.md)): the carry drips into the bank multiplied by a carry factor snapshotted from how many field Waves have been **drawn** since the last bank — `WavesSinceBank` is incremented in `LaunchWave`, not on a clear — and whatever is left dumps when the timer ends. Killing the Wave early or the carry hitting zero does **not** end the window — a Convert has no off switch, at the door or at any terminal.
 
-The Wave it sends matches the carry's Wave table, with an extra Thief at one authored carry ([Waves](Waves.md)); its Thieves target the door again, because `MayTargetPlayer` goes false for the kind on this mode ([Gatekeepers](Gatekeepers.md) owns targeting). Surviving the window opens any door the zone has earned and offers the dock; the Hatch breaching ends the Boarding before any of that fires.
+The Wave it sends matches the carry's Wave table, with an extra Thief at one authored carry ([Waves](Waves.md)); its Thieves walk the door on every mode ([Gatekeepers](Gatekeepers.md) owns targeting). Surviving the window opens any door the zone has earned and offers the dock; the Hatch breaching ends the Boarding before any of that fires.
 
 **The door is in the fight on both Wave modes** (Zo, 2026-08-27 — this falsified the old rule that field Waves leave it invulnerable). On a Convert it takes full damage; on a field Wave the damage is scaled well down (`HatchBank.FieldWaveDamageScale`) — the Hatch is shut and armoured while the Boarder is up the lane, but a body that reaches it is never inert. Every hit on the Hatch also bleeds the carried pile: `DamageHatch` scales the damage first and then both the door and the attrition read the same figure, so a field Wave cannot drain the stake at a rate the Hatch itself is armoured against. Which kinds bill the door and which refuse it: [Gatekeepers](Gatekeepers.md).
 
@@ -73,13 +93,17 @@ With the Rig, healing applies continuously while held and **charges banked Salva
 
 Repair is legal during a live Wave, not only in Prep — but while a dock offer is live, the dock takes the hold ahead of repair, and the two surfaces disagree about it: `Interact` tests the dock offer before the repair branch, while `Choose` puts Repair above Dock, so a damaged Hatch inside a dock window prompts for repair and docks the Boarding on the hold instead.
 
-Driven by held Interact for Withdraw / dock / repair, and Prep `E` then `T` for the Convert (bindings: [Field Manual](Field-Manual.md)). Which seat holds which verb: repair and withdraw are every seat's, the dock is the host seat's alone, and the Convert — today — is only a guest's — the roster and admission side of that is [The Crew](The-Crew.md)'s. Shown by the Hatch's one prompt line (verb-ordered — in practice the start line, the repair line, or, on a host seat, the dock line, never the Convert or Withdraw rows), the portal's lighting, and the HUD's Hatch bar. Reads back as the running withdraw/repair session totals in the prompt, the carry falling and the bank rising through a Convert, the door-open and dock-offer log lines, and the end screen's repair-spent line.
+Driven by held Interact for Withdraw / dock / repair, and Prep `T` for the Convert once the start line is off (bindings: [Field Manual](Field-Manual.md)). Repair and withdraw are every seat's; the dock is the host seat's alone; Convert answers for solo and host once the start line yields, and the guest path never consulted the start line. Roster and admission: [The Crew](The-Crew.md). Shown by the Hatch's one prompt line (verb-ordered), the portal's lighting, and the HUD's Hatch bar. Reads back as the running withdraw/repair session totals in the prompt, the carry falling and the bank rising through a Convert, the door-open and dock-offer log lines, and the end screen's repair-spent line.
 
 ## Consequences
 
 The Hatch is the loop's cashier and its one irreplaceable object. Withdraw turns safe progress into a stake that a Convert can multiply, that Hatch hits bleed, and that a death or breach wipes — the bank behind it survives everything, so risk is exactly what was chosen.
 
-Solo, the multiply half is out of reach entirely — no seat in a solo Boarding can open the window — so a withdrawn pile has exactly one bank point: the zone's terminal, at face value ([A Boarding](A-Boarding.md) owns the shutoff). That makes Withdraw solo a pure "carry it up the lane" bet with no multiplier attached to it, which is not the bet the carry factor was priced for. In a crew it is the reverse and stranger: the multiplier exists, but the only seat that can arm it is a guest, and the seat that owns the realm's pot cannot.
+Solo, the multiply half is reachable only after a zone's terminals are done and before the
+control gate opens — the start line yields then, and Convert can answer. A withdrawn pile
+still has the zone's terminal as a face-value bank point ([A Boarding](A-Boarding.md)
+owns the shutoff). In a crew the guest path never consulted the start line, so a guest
+could already arm Convert while the host seat could not.
 
 Repair prices the door's damage in the same units as the shops: a Boarding that lets bodies reach the door pays twice, once in HP and once at the ARMORY. The dock decides when a Boarding banks its ending — pressing on clears the offer. And the breach is the one loss no purse can answer, which is why the door, not the Boarder, is what the Bastion actually threatens.
 
@@ -104,8 +128,8 @@ Core, loop. Serves Expression and Fantasy (`../Design/1-Experience.md` §1.2, 20
 ## Where
 
 - Verb precedence, one pure rule: dock-hold, destroyed, repair, start line, Convert, Withdraw, dock — `Assets/Scripts/Sim/Bastion/HatchVerb.cs` (`HatchVerbs.Choose`, `ShowsDockAlongside`)
-- The start line is offered for the whole Boarding, so Convert and Withdraw never lead the prompt on any seat — `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`HatchOffersWaveStart`, `MasterControlAwaitsStart`); `Assets/Scripts/Game/Bastion/BastionLayout.cs` (`RebuildGraph` — `terminalSpecs` takes Field terminals only, `FindMaster`); `Assets/Scripts/Sim/Bastion/BastionUnlockGraph.cs` (`TryCompleteTerminal` — "unknown terminal", `IsTerminalDone`)
-- The Boarder's own `T` cannot reach the Convert; the guest's Prep RPC can, and is gated on range to the Hatch and nothing else — `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`TickPrepCommands` — the `HatchOffersWaveStart` branch above `StartHatchBankWave`); `Assets/Scripts/Game/Bastion/GameController.Client.cs` (`TickClientPrepCommands` — the `hatchStartable` branch, no start-line test); `Assets/Scripts/Game/Net/NetPrep.cs` (`RequestStartHatchBank`, `RequestStartHatchBankServerRpc`, `PrepRange`); `Assets/Scripts/Game/Bastion/GameController.NetPrep.cs` (`TryNetStartHatchBank`, `NetPrepInRangeOfHatch`)
+- The start line offers a zone while its terminals are unfinished, and Master only once the control gate is open — `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`HatchOffersWaveStart`, `MasterControlAwaitsStart`, `StartZoneWaveFromHatch`); `Assets/Scripts/Game/Bastion/BastionLayout.cs` (`RebuildGraph` — `terminalSpecs` takes Field terminals only, `FindMaster`); `Assets/Scripts/Sim/Bastion/BastionUnlockGraph.cs` (`TryCompleteTerminal` — "unknown terminal", `IsTerminalDone`, `ControlRoomReachable`)
+- The Boarder's own `T` reaches Convert when the start line is off; the guest's Prep RPC never consulted it — `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`TickPrepCommands` — the `HatchOffersWaveStart` branch above `StartHatchBankWave`); `Assets/Scripts/Game/Bastion/GameController.Client.cs` (`TickClientPrepCommands` — the `hatchStartable` branch, no start-line test); `Assets/Scripts/Game/Net/NetPrep.cs` (`RequestStartHatchBank`, `RequestStartHatchBankServerRpc`, `PrepRange`); `Assets/Scripts/Game/Bastion/GameController.NetPrep.cs` (`TryNetStartHatchBank`, `NetPrepInRangeOfHatch`)
 - The client refusal inside the Convert start tests the executing machine, so the guest's request never meets it — `Assets/Scripts/Game/Bastion/GameController.HatchBank.cs` (`StartHatchBankWave`, the `_net.IsClientOnly` guard); its two callers — `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` (`TickPrepCommands`); `Assets/Scripts/Game/Bastion/GameController.NetPrep.cs` (`TryNetStartHatchBank`)
 - The guest is offered the Convert by the Hatch and told it is the start line — `Assets/Scripts/Game/Bastion/RepairInteractable.cs` (`OffersHatchBank` — no client test, reads the mirror through `ReadRepairView`; `Prompt` — `HatchVerbs.Choose` with `gc.HatchOffersWaveStart`); `Assets/Scripts/Sim/Bastion/HatchVerb.cs` (`Choose` — `StartWave` above `Convert`)
 - A guest's Hatch hold is a repair/withdraw channel the host ticks and credits to that seat's slot — `Assets/Scripts/Game/Net/NetVerbs.cs` (`SetRepairing`, `TickRepair`, `InRepairRange`); `Assets/Scripts/Game/Bastion/GameController.Client.cs` (`RepairHatchFromNet(float,int)`, `TryWithdrawFromHpRequest`)
@@ -113,7 +137,7 @@ Core, loop. Serves Expression and Fantasy (`../Design/1-Experience.md` §1.2, 20
 - The withdraw hold does not consult the start line, so it works unprompted; and the hold's order (dock above repair) is not the prompt's (repair above dock) — `Assets/Scripts/Game/Bastion/RepairInteractable.cs` (`Interact` — `DockOffered`, then repair, then the `canStart` withdraw branch, against `Prompt`'s `HatchVerbs.Choose` call)
 - The one prompt and the holds at the door — `Assets/Scripts/Game/Bastion/RepairInteractable.cs` (`Prompt`, `Interact`, `OffersHatchBank`, `HoldWithdraw`, `TickDock`)
 - Withdraw: Prep, full Hatch, carry-0 start; bank → operating seat's pile; refuses uncounted slots; un-earns from the Run tally — `Assets/Scripts/Sim/Run/RunSim.cs` (`Withdraw(float,int)`); rate `Assets/Scripts/Sim/Run/HatchBank.cs` (`WithdrawPerSecond`, `WithdrawUnits`)
-- Convert start: Prep `E` then `T`, zone gate, no cap; refuses unbanked=0, all Waves cleared, Master sequence live — `Assets/Scripts/Game/Bastion/GameController.HatchBank.cs` (`StartHatchBankWave`, `HatchBankStartBlocked`); `Assets/Scripts/Sim/Run/RunSim.cs` (`TriggerDraw(WaveMode.HatchBank)`); zone rule `Assets/Scripts/Sim/Bastion/DemoZones.cs` (`HatchBankBlocked`)
+- Convert start: Prep `T` once the start line is off, zone gate, no cap; refuses unbanked=0, all Waves cleared, Master sequence live — `Assets/Scripts/Game/Bastion/GameController.HatchBank.cs` (`StartHatchBankWave`, `HatchBankStartBlocked`); `Assets/Scripts/Sim/Run/RunSim.cs` (`TriggerDraw(WaveMode.HatchBank)`); zone rule `Assets/Scripts/Sim/Bastion/DemoZones.cs` (`HatchBankBlocked`)
 - Convert window: timed drip then dump, multiplied by carry; wipe or carry-0 does not end it; no off switch — `Assets/Scripts/Sim/Run/RunSim.cs` (`Tick` HatchBank branch, `SnapshotHatchCarry`, `NotifyAssaultCleared`, `ShutOffFieldWave` refusal); `Assets/Scripts/Sim/Run/HatchBank.cs` (`DurationSeconds`, `DripUnits`, `CarryConvert`); credit path `Assets/Scripts/Sim/Run/RunSim.Wallets.cs` (`DripTick`, `DumpUnbanked`, `CreditSlot`, guest cap)
 - The carry counts Waves DRAWN since the last bank, not Waves cleared — `Assets/Scripts/Sim/Run/RunSim.cs` (`WavesSinceBank`, incremented in `LaunchWave`; read by `SnapshotHatchCarry`)
 - Convert composition rides the carry's Wave table plus an authored extra Thief — `Assets/Scripts/Sim/Run/HatchBank.cs` (`CarryWaveIndex`, `ApplyHatchComposition`)

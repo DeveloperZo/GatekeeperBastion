@@ -1,15 +1,33 @@
 namespace GatekeepersProtocol.Sim
 {
-    /// <summary>Pure run-time state for FORGE's turret: one live machine, its life, and the
-    /// overcharge burn. No UnityEngine — multiplayer seam, same shape as
-    /// <see cref="DecoyState"/>. Placement is governed by the ability's cooldown rather than
-    /// by charges, so there is no charge count here.</summary>
+    /// <summary>FORGE turret lifecycle. Charge is earned by firing and spent on Overcharge;
+    /// the machine ends by being spent (Exhausted), by enemy damage, or by the operator
+    /// despawning an Exhausted body. No UnityEngine — same seam as <see cref="DecoyState"/>.</summary>
+    public enum TurretPhase
+    {
+        Available = 0,
+        Deployed = 1,
+        Special = 2,
+        Exhausted = 3,
+        Despawned = 4,
+    }
+
     public sealed class TurretState
     {
-        public bool IsLive { get; private set; }
+        public TurretPhase Phase { get; private set; }
+        public bool IsLive =>
+            Phase == TurretPhase.Deployed
+            || Phase == TurretPhase.Special
+            || Phase == TurretPhase.Exhausted;
+        public bool MayFire =>
+            Phase == TurretPhase.Deployed || Phase == TurretPhase.Special;
+        public bool Overcharged => Phase == TurretPhase.Special;
+
         public float Hp { get; private set; }
         public float MaxHp { get; private set; }
-        public bool Overcharged { get; private set; }
+        public float Charge { get; private set; }
+        public float ChargeMax => BoarderProtocol.TurretChargeMax;
+        public float ExhaustedRemaining { get; private set; }
 
         public float PosX { get; private set; }
         public float PosY { get; private set; }
@@ -19,25 +37,6 @@ namespace GatekeepersProtocol.Sim
         /// the decoy's tally: what the turret bought by standing where it stood.</summary>
         public float DamageTaken { get; private set; }
 
-        /// <summary>Life spent by its own operator rather than by the enemy. Kept apart from
-        /// <see cref="DamageTaken"/> so "the gatekeepers killed it" and "you redlined it to
-        /// death" never read as the same event.</summary>
-        public float LifeBurned { get; private set; }
-
-        /// <summary>Rounds left in the ordinary magazine. One of the two things that end a
-        /// turret; <see cref="LifeRemaining"/> is the other, and whichever runs out first wins.
-        /// </summary>
-        public int ShotsRemaining { get; private set; }
-
-        /// <summary>Seconds this machine has left to stand. Runs whether or not it is
-        /// shooting, so a turret covering a quiet lane still expires.</summary>
-        public float LifeRemaining { get; private set; }
-
-        /// <summary>Rounds left on the OVERCHARGE belt. Separate from the magazine on purpose:
-        /// redlining used to burn the turret's ordinary life and so charged the player twice
-        /// for one spike.</summary>
-        public int OverchargeShotsRemaining { get; private set; }
-
         /// <summary>Rounds fired since it was placed — the counterpart to
         /// <see cref="DamageTaken"/>: what the machine spent rather than what it absorbed.</summary>
         public int ShotsFired { get; private set; }
@@ -45,6 +44,7 @@ namespace GatekeepersProtocol.Sim
         public TurretState()
         {
             MaxHp = BoarderProtocol.TurretMaxHp;
+            Phase = TurretPhase.Available;
         }
 
         public void ResetForRun()
@@ -53,8 +53,9 @@ namespace GatekeepersProtocol.Sim
             Clear();
         }
 
-        /// <summary>Stand a turret at a world position. Replaces a live one — FIELD DEPLOY is
-        /// one machine, and the cooldown is what rations it.</summary>
+        /// <summary>Stand a turret at a world position. Replaces a live Deployed or Special
+        /// machine and keeps its charge. Refuses Exhausted — that body is spent, and a press
+        /// despawns it rather than refreshing it.</summary>
         public bool TryPlace(float x, float y, float z, out string reason)
         {
             if (MaxHp <= 0f)
@@ -62,18 +63,25 @@ namespace GatekeepersProtocol.Sim
                 reason = "turret has no life to give";
                 return false;
             }
+            if (Phase == TurretPhase.Exhausted)
+            {
+                reason = "exhausted turret cannot be refreshed";
+                return false;
+            }
+
+            float savedCharge = (Phase == TurretPhase.Deployed || Phase == TurretPhase.Special)
+                ? Charge
+                : 0f;
+
             PosX = x;
             PosY = y;
             PosZ = z;
             Hp = MaxHp;
-            IsLive = true;
-            Overcharged = false;
             DamageTaken = 0f;
-            LifeBurned = 0f;
-            ShotsRemaining = BoarderProtocol.TurretShotBudget;
-            LifeRemaining = BoarderProtocol.TurretLifeSeconds;
-            OverchargeShotsRemaining = BoarderProtocol.OverchargeShotBudget;
             ShotsFired = 0;
+            Charge = savedCharge;
+            ExhaustedRemaining = 0f;
+            Phase = TurretPhase.Deployed;
             reason = null;
             return true;
         }
@@ -87,14 +95,9 @@ namespace GatekeepersProtocol.Sim
             DamageTaken += applied;
             if (Hp > 0f) return false;
             Hp = 0f;
-            IsLive = false;
-            Overcharged = false;
+            Phase = TurretPhase.Despawned;
+            ExhaustedRemaining = 0f;
             return true;
-        }
-
-        public void SetOvercharged(bool on)
-        {
-            Overcharged = IsLive && on;
         }
 
         /// <summary>Replication intake for a scenery copy: the server's Hp, so a client's life
@@ -109,69 +112,86 @@ namespace GatekeepersProtocol.Sim
             Hp = hp;
         }
 
-        /// <summary>Burn life for a span of overcharge. True when the burn is what killed it —
-        /// the gatekeepers did not, the operator did.</summary>
-        public bool BurnOvercharge(float dt, out float burned)
+        public void MirrorCharge(float charge)
         {
-            burned = 0f;
-            if (!IsLive || !Overcharged || dt <= 0f) return false;
-            float want = BoarderProtocol.OverchargeBurnForSeconds(dt);
-            burned = want > Hp ? Hp : want;
-            Hp -= burned;
-            LifeBurned += burned;
-            if (Hp > 0f) return false;
-            Hp = 0f;
-            IsLive = false;
-            Overcharged = false;
+            if (!IsLive) return;
+            if (charge < 0f) charge = 0f;
+            if (charge > ChargeMax) charge = ChargeMax;
+            Charge = charge;
+        }
+
+        public void MirrorPhase(TurretPhase phase)
+        {
+            if (!IsLive) return;
+            if (phase != TurretPhase.Deployed
+                && phase != TurretPhase.Special
+                && phase != TurretPhase.Exhausted)
+                return;
+            Phase = phase;
+            if (phase != TurretPhase.Exhausted) ExhaustedRemaining = 0f;
+        }
+
+        /// <summary>Spend the earned charge on Overcharge. Refuses at zero charge, by that
+        /// name. True when Special begins.</summary>
+        public bool TryBeginOvercharge(out string reason)
+        {
+            if (Phase == TurretPhase.Special)
+            {
+                reason = "already overcharged";
+                return false;
+            }
+            if (Phase == TurretPhase.Exhausted)
+            {
+                reason = "turret is exhausted";
+                return false;
+            }
+            if (Phase != TurretPhase.Deployed)
+            {
+                reason = "no turret standing";
+                return false;
+            }
+            if (Charge <= 0f)
+            {
+                reason = "no charge";
+                return false;
+            }
+            Phase = TurretPhase.Special;
+            reason = null;
             return true;
         }
 
-        /// <summary>Spend one round. True when THAT round was the last one and the machine is
-        /// now done — the caller reports it as spent, never as destroyed, because running dry
-        /// and being killed are different events and a player must be able to tell them apart.
-        /// <para>Refuses while not live, so a despawning turret cannot fire a farewell shot.</para>
-        /// </summary>
+        /// <summary>Spend one round. While Deployed, that round raises charge. While Special,
+        /// it spends charge, and the round that empties the meter ends into Exhausted.
+        /// True when THAT round is what spent the machine into Exhausted.
+        /// <para>Refuses while it may not fire, so an Exhausted or despawning turret cannot
+        /// fire a farewell shot.</para></summary>
         public bool SpendShot()
         {
-            if (!IsLive) return false;
+            if (!MayFire) return false;
             ShotsFired++;
 
-            // WHILE REDLINED THE ROUNDS COME OFF THE OVERCHARGE BELT, never the magazine. That
-            // is the whole point of the belt existing: a spike must not shorten the machine's
-            // ordinary life. An overcharge that runs dry drops the turret back to normal fire
-            // rather than killing it — it still has whatever the magazine held.
-            if (Overcharged && OverchargeShotsRemaining > 0)
+            if (Phase == TurretPhase.Special)
             {
-                OverchargeShotsRemaining--;
-                if (OverchargeShotsRemaining <= 0) Overcharged = false;
-                return false;
+                Charge -= BoarderProtocol.TurretChargePerShot;
+                if (Charge > 0f) return false;
+                Charge = 0f;
+                EnterExhausted();
+                return true;
             }
 
-            if (ShotsRemaining > 0) ShotsRemaining--;
-            if (ShotsRemaining > 0) return false;
-            return Expire();
+            Charge += BoarderProtocol.TurretChargePerShot;
+            if (Charge > ChargeMax) Charge = ChargeMax;
+            return false;
         }
 
-        /// <summary>Run the life clock. True on the tick it expires — the machine's time was
-        /// up, whatever it had left to shoot.</summary>
-        public bool TickLife(float dt)
+        /// <summary>Run the Exhausted window. True on the tick the body should despawn.</summary>
+        public bool TickExhausted(float dt)
         {
-            if (!IsLive || dt <= 0f) return false;
-            LifeRemaining -= dt;
-            if (LifeRemaining > 0f) return false;
-            LifeRemaining = 0f;
-            return Expire();
-        }
-
-        /// <summary>Shut the machine down for a reason that is NOT enemy damage. Kept apart
-        /// from TakeDamage so "it ran out" and "they killed it" stay different events.</summary>
-        bool Expire()
-        {
-            ShotsRemaining = 0;
-            LifeRemaining = 0f;
-            OverchargeShotsRemaining = 0;
-            IsLive = false;
-            Overcharged = false;
+            if (Phase != TurretPhase.Exhausted || dt <= 0f) return false;
+            ExhaustedRemaining -= dt;
+            if (ExhaustedRemaining > 0f) return false;
+            ExhaustedRemaining = 0f;
+            Phase = TurretPhase.Despawned;
             Hp = 0f;
             return true;
         }
@@ -185,16 +205,19 @@ namespace GatekeepersProtocol.Sim
 
         public void Clear()
         {
-            IsLive = false;
-            Overcharged = false;
+            Phase = TurretPhase.Available;
             Hp = 0f;
+            Charge = 0f;
+            ExhaustedRemaining = 0f;
             PosX = PosY = PosZ = 0f;
             DamageTaken = 0f;
-            ShotsRemaining = 0;
-            LifeRemaining = 0f;
-            OverchargeShotsRemaining = 0;
             ShotsFired = 0;
-            LifeBurned = 0f;
+        }
+
+        void EnterExhausted()
+        {
+            Phase = TurretPhase.Exhausted;
+            ExhaustedRemaining = BoarderProtocol.TurretExhaustedSeconds;
         }
     }
 }

@@ -113,7 +113,7 @@ the same 0.7 s clock — they differ in what they hit, never in how often.
 |---|---|---|---|---|---|
 | **Default** | 50 | 6 | 4 | 2.8 → 4.6 m/s when provoked | nothing — it will march, and it will turn on you if you hurt it |
 | **Hunter** | 33 | 6 | — | 5.6 m/s | to touch the hatch; it only ever wants you |
-| **Thief** | 200 | — | 20 | 2.2 m/s | to turn when shot; on a Convert it marches the Hatch, field-terminal it hunts you — it never hurts you |
+| **Thief** | 200 | — | 20 | 2.2 m/s | to turn when shot; it marches the Hatch on every Wave and never hurts you |
 | **Cloaker** | 75 | 6 | 4 | 2.8 → 4.6 m/s when provoked | to advance while watched — any Boarder's gaze stops it dead, and it fades and closes the moment every eye is elsewhere |
 
 HP above is the base line. Later waves multiply it (see the wave table).
@@ -180,7 +180,7 @@ Between runs you walk your own ship. Four consoles, each owning one subject.
 | Console | Owns | Sells |
 |---|---|---|
 | **ARMORY** | the weapon in your hands | weapons, and wheel purchases for whichever you carry |
-| **CREW QUARTERS** | you | Default Protocol (STOCK; G Barrage; H Rush), VEIL Protocol (PHANTOM; G Ping; H Cloak; Ghost), FORGE Protocol (PARALLEL BAYS; G Field Deploy; H Overcharge; Magnet Hands) |
+| **CREW QUARTERS** | you | Default Protocol (STOCK; G Barrage; H Rush), VEIL Protocol (PHANTOM; G Ping; H Cloak; Ghost), FORGE Protocol (PARALLEL BAYS; G Field Deploy; H Outrider) |
 | **FABRICATION** | the ship | Hatch Armor, Equipment slot, Repair Rig, Decoy |
 | **NAV MAP** | where you go | the destination, and embarking |
 

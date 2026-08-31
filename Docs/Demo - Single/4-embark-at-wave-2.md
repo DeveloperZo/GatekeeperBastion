@@ -86,10 +86,10 @@ prompt + Subtitle, never Lock, by construction).
 | | |
 |---|---|
 | **Goal** | Own a protocol: Barrage on `G`, Rush on `H`. |
-| **Player** | Interact Down on CREW. Panel opens (heal still applies on the visit): catalog rows — Default, VEIL and FORGE are all claimable (`BoarderProtocolId`), AEGIS and LEDGER are Coming Soon. SELECT → Protocol Sheet → BUY (0 salvage for the Default). |
+| **Player** | Interact Down on CREW. Panel opens (heal still applies on the visit): catalog rows — Default, VEIL and FORGE are all claimable (`BoarderProtocolId`), AEGIS and LEDGER are Coming Soon. SELECT → Protocol Sheet → EQUIP (0 salvage for the Default). |
 | **Game** | `demo.crew_claim` · Lock · Local · Game. **This is your protocol. Claim the Default — Barrage on G, Rush on H. It costs nothing.** |
 | **Standing** | Claim the Default Protocol → on claim success, flips to **EMBARK from the NAV MAP** (producing event: the claim itself, existing `claimed Default Protocol track=crew` log — no new line) |
-| **Prompt / panel** | Live: sheet headings Protocol Title / Description / Crew / Personal / Passive; Default doctrine `STOCK — hardware as sold`; button BUY → EQUIPPED. |
+| **Prompt / panel** | Live: sheet headings Protocol Title / Description / Crew / Personal / Passive; Default doctrine `STOCK — hardware as sold`; button EQUIP → EQUIPPED. |
 | **Log** | `[Demo] CREW menu unlocked` then existing `claimed Default Protocol track=crew` |
 | **Have** | Select-then-sheet, `BuyProtocol` → `TryClaim` (sets `EquippedProtocol`), `G`/`H` refuse `no protocol` until claimed. `M70` is planned but its claim path is in tree — needs code verification; do not rebuild CREW. |
 | **Build** | `DemoCrewMenuUnlocked` (v9), the two lines, heal folded into the open. Do not auto-equip Default. |

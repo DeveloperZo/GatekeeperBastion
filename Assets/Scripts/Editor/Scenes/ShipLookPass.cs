@@ -13,7 +13,7 @@ namespace GatekeepersProtocol.EditorTools
     /// Everything lands under one root the pass owns, so re-running replaces its own output and
     /// touches no hand-placed geometry. Walls are found by shape rather than by name.
     ///
-    /// Menu: Tools/Scenes/Ship/*
+    /// Menu: GatekeepersProtocol/Build/Ship Look Pass, Bake/Ship Look Lighting.
     /// </summary>
     public static class ShipLookPass
     {
@@ -22,7 +22,7 @@ namespace GatekeepersProtocol.EditorTools
         const string FixtureDir  = "Assets/Packs/ShipFixtures";
         const string ProfilePath = "Assets/Settings/ShipLookProfile.asset";
 
-        [MenuItem("Tools/Scenes/Ship/Apply Look Pass", false, 40)]
+        [MenuItem("GatekeepersProtocol/Build/Ship Look Pass", false, 65)]
         public static void Apply()
         {
             var profile = LoadOrCreateProfile();
@@ -402,7 +402,7 @@ namespace GatekeepersProtocol.EditorTools
 
         // ---- bake ---------------------------------------------------------------------------
 
-        [MenuItem("Tools/Scenes/Ship/Bake Look Lighting", false, 41)]
+        [MenuItem("GatekeepersProtocol/Bake/Ship Look Lighting", false, 81)]
         public static void Bake()
         {
             var settings = new LightingSettings

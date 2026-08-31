@@ -12,6 +12,10 @@ namespace GatekeepersProtocol.Game
     public static class CompendiumCatalog
     {
         public const string FieldManualStem = "Field-Manual";
+        public const string GettingStartedStem = "Getting-Started";
+        /// <summary>Pause reader lands here — First Time Out is the walkthrough a new
+        /// Boarder is handed, not The Game.</summary>
+        public const string DefaultOpenStem = GettingStartedStem;
         public const string StreamingRelative = "Compendium";
         public const string DocsRelative = "Docs/Play";
 
@@ -37,7 +41,7 @@ namespace GatekeepersProtocol.Game
             new Volume
             {
                 Title = "I. The Situation",
-                EntryStems = new[] { "The-Game", "Getting-Started" }
+                EntryStems = new[] { "Getting-Started", "The-Game" }
             },
             new Volume
             {
@@ -109,8 +113,12 @@ namespace GatekeepersProtocol.Game
             @"^##\s+Gaps\s*$", RegexOptions.Multiline | RegexOptions.Compiled);
         static readonly Regex GameHeading = new Regex(
             @"^##\s+Game\s*$", RegexOptions.Multiline | RegexOptions.Compiled);
+        static readonly Regex ReferenceHeading = new Regex(
+            @"^##\s+Reference\s*$", RegexOptions.Multiline | RegexOptions.Compiled);
         static readonly Regex SeeAlsoHeading = new Regex(
             @"^##\s+See also\s*$", RegexOptions.Multiline | RegexOptions.Compiled);
+        static readonly Regex CodeSpan = new Regex(
+            "`([^`]+)`", RegexOptions.Compiled);
         static readonly Regex H2Heading = new Regex(
             @"^##\s+", RegexOptions.Multiline | RegexOptions.Compiled);
 
@@ -138,12 +146,14 @@ namespace GatekeepersProtocol.Game
 
             string cleaned = StripBuilderAudit(raw);
             string title = ExtractTitle(cleaned, stem);
-            string gameView = ExtractGameView(cleaned, title);
+            string body = IsWalkthrough(stem)
+                ? ExtractWalkthroughView(cleaned, title)
+                : ExtractGameView(cleaned, title);
             entry = new Entry
             {
                 Stem = stem,
                 Title = title,
-                BodyMarkdown = gameView
+                BodyMarkdown = body
             };
             return true;
         }
@@ -254,6 +264,11 @@ namespace GatekeepersProtocol.Game
         public static string StripForPlayer(string markdown) =>
             ExtractGameView(StripBuilderAudit(markdown), ExtractTitle(markdown, "Entry"));
 
+        public static bool IsWalkthrough(string stem)
+        {
+            return string.Equals(stem, GettingStartedStem, StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>In-game dimension: title + ## Game body + ## See also.
         /// Pages without ## Game return the full stripped markdown.</summary>
         public static string ExtractGameView(string markdown, string title)
@@ -273,15 +288,7 @@ namespace GatekeepersProtocol.Game
             if (gameBodyEnd < 0) gameBodyEnd = markdown.Length;
             string gameBody = markdown.Substring(gameBodyStart, gameBodyEnd - gameBodyStart).Trim();
 
-            string seeAlso = "";
-            var see = SeeAlsoHeading.Match(markdown);
-            if (see.Success)
-            {
-                int seeStart = see.Index;
-                int seeEnd = IndexOfNextH2(markdown, see.Index + see.Length);
-                if (seeEnd < 0) seeEnd = markdown.Length;
-                seeAlso = markdown.Substring(seeStart, seeEnd - seeStart).Trim();
-            }
+            string seeAlso = ExtractSeeAlso(markdown);
 
             var sb = new StringBuilder(gameBody.Length + seeAlso.Length + 64);
             if (!string.IsNullOrEmpty(title))
@@ -297,6 +304,48 @@ namespace GatekeepersProtocol.Game
                 sb.Append(seeAlso);
             }
             return sb.ToString().Trim();
+        }
+
+        /// <summary>First Time Out: title, Game body, Reference body (the numbered
+        /// walkthrough — no ## Reference heading), then See also.</summary>
+        public static string ExtractWalkthroughView(string markdown, string title)
+        {
+            if (string.IsNullOrEmpty(markdown)) return "";
+            var reference = ReferenceHeading.Match(markdown);
+            if (!reference.Success)
+                return ExtractGameView(markdown, title);
+
+            int refBodyStart = reference.Index + reference.Length;
+            while (refBodyStart < markdown.Length
+                   && (markdown[refBodyStart] == '\r' || markdown[refBodyStart] == '\n'))
+                refBodyStart++;
+            int refBodyEnd = IndexOfNextH2(markdown, refBodyStart);
+            if (refBodyEnd < 0) refBodyEnd = markdown.Length;
+            string refBody = markdown.Substring(refBodyStart, refBodyEnd - refBodyStart).Trim();
+
+            string gameView = ExtractGameView(markdown, title);
+            if (string.IsNullOrEmpty(refBody))
+                return gameView;
+
+            var see = SeeAlsoHeading.Match(gameView);
+            if (!see.Success)
+                return (gameView + "\n\n" + refBody).Trim();
+
+            var sb = new StringBuilder(gameView.Length + refBody.Length + 8);
+            sb.Append(gameView, 0, see.Index);
+            sb.Append(refBody);
+            sb.Append("\n\n");
+            sb.Append(gameView, see.Index, gameView.Length - see.Index);
+            return sb.ToString().Trim();
+        }
+
+        static string ExtractSeeAlso(string markdown)
+        {
+            var see = SeeAlsoHeading.Match(markdown);
+            if (!see.Success) return "";
+            int seeEnd = IndexOfNextH2(markdown, see.Index + see.Length);
+            if (seeEnd < 0) seeEnd = markdown.Length;
+            return markdown.Substring(see.Index, seeEnd - see.Index).Trim();
         }
 
         static int IndexOfNextH2(string s, int from)
@@ -388,6 +437,7 @@ namespace GatekeepersProtocol.Game
         {
             if (string.IsNullOrEmpty(text)) return "";
             string s = Bold.Replace(text, "<b>$1</b>");
+            s = CodeSpan.Replace(s, "<b>$1</b>");
             s = MdLink.Replace(s, m =>
             {
                 string label = m.Groups[1].Value;

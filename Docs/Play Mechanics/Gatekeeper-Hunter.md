@@ -2,14 +2,14 @@
 Purpose: Hunter, an instance of Gatekeepers — differences only.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Hunter
 
 Instance of [Gatekeepers](Gatekeepers.md).
 
-The only kind faster than a walking Boarder, and the only one that never touches the Hatch — it comes for the Boarder from the moment it arrives and cannot be moved off. Holding the door does nothing about it, and shooting it still pulls its neighbours in.
+The only kind faster than a walking Boarder, and the only one that never touches the Hatch — it comes for the Boarder from the moment it arrives and cannot be moved onto the door. Holding the door does nothing about it, and shooting it still pulls its neighbours in.
 
 ## Game
 

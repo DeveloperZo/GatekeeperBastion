@@ -9,14 +9,13 @@ unlock model, the growth levers, the five protocol sheets (the Default plus four
 specialists), the candidate axes toward the 8–10 roster, and the doctrine matrix. It
 spans the crew-skills and fabrication brainstorm areas, which is why it has its own
 file.
-Status: Default shipped (`M70`); VEIL and FORGE shipped and claimable in CREW (`M94`,
-closed by Zo 2026-08-24). AEGIS and LEDGER remain brainstorm-only. Their sheets below
-are the spec of record; the three shipped sheets are not — `Sim/Meta/BoarderSheets.cs`
-and `M94` are.
+Status: Default shipped (`M70`); VEIL shipped (`M94`); FORGE recut (`M106`/`M107`) is in
+the 0.34.2 tree while those milestones stay planned. AEGIS and LEDGER remain brainstorm-only.
+Shipped sheets of record: `Sim/Meta/BoarderSheets.cs`. The M94 FORGE draft below is
+superseded.
 Update trigger: when Zo vetoes or accepts a row, doctrine or structure call; when a gate
 named on an expansion row ships; when a candidate axis earns or loses a sheet.
-Last updated: 2026-08-25 (M94 closed; VEIL and FORGE recorded in Graduation and their
-sheets marked against what shipped — FORGE's two verbs were recut on the way)
+Last updated: 2026-08-30 (0.34.2: charged turret + Outrider in tree; Magnet Hands gone; FORGE recut is the live sheet)
 -->
 
 ## What this is
@@ -39,6 +38,17 @@ own logic — upgrades change what a row does, not how much — as the core gram
 rather than a later slice. The displaced pool rows fold in as twists (Feint folded
 into Phantom Echo; Challenge, first an Anchor twist, since promoted to AEGIS's Crew
 signature) or sit in the parked and alternates records.
+
+## Where it stands
+
+Three protocols are claimable. `BoarderSheets.cs` is the CREW copy: Default Barrage/Rush,
+VEIL Ping/Cloak/Ghost, FORGE Field Deploy (charge → Overcharge on **G hold**, Exhausted)
+and Outrider (charge → EMP on **H hold**, pairing). Magnet Hands is gone (`PassiveForge`
+is `** CLASSIFIED **`; `PassiveCount(Forge) = 0`). Doctrine row PARALLEL BAYS still prints
+and is "Not yet active." `TurretState` / `OutriderState` / `GatekeeperRoot` / Game controls
+and `NetVerbs.RequestOutrider` / `RequestEmp` are in the tree. `M106` and `M107` remain
+under `1. planned/` — implementation landed ahead of the folder move; kill criteria and
+FORGE's passive wait on play. AEGIS and LEDGER are unbuilt.
 
 **The structure is the growth system.** Two levers, both incremental: **add a twist
 slot to an existing ability** — each ability below already carries a recorded parked
@@ -383,15 +393,128 @@ Passives, pick 1 of 2: **Salvage Sense** — world piles render through walls.
 pile has no one to reclaim it — Testament only means anything in co-op, where `M57`'s
 down-wait keeps the Run alive. Effectively co-op-only; the panel must say so.**]
 
+### Doctrines — retired 2026-08-29, reintroduce after equipment is solid
+
+A **doctrine** was the fourth row on a protocol sheet: what changes about a machine the
+Boarder places, because of which protocol they are wearing. Three existed — Default's
+STOCK (nothing changes), VEIL's PHANTOM (a placed decoy comes up holding the attention its
+placer was carrying), FORGE's PARALLEL BAYS (two decoys live at once). `M105` deletes the
+concept.
+
+**Why it failed the first time, stated so the reintroduction does not repeat it.** It was
+a slot before it was a behaviour. Of the three members, one was defined as doing nothing
+and the other two did nothing in fact: PHANTOM's handover ended by calling `Retarget`,
+which gave back every body outside the pull radius, and PARALLEL BAYS had no caller at
+all. Every sheet carried a row a player could not exercise from either ability key, and
+the CREW panel printed copy for rules that were not running. The lesson is not that
+per-owner hardware rules are wrong — it is that the row existed to be filled rather than
+because two protocols needed to change the same machine differently.
+
+**Reintroduce after equipment is implemented and solidified** (Zo, 2026-08-29). The
+reasoning is that a doctrine only has something to modify once there is a body of placed,
+owned hardware worth modifying. Today that body is one payload (the Decoy) and one piece
+of equipment (the Repair Rig) — `fabrication.md`, *Equipment*, where the roster is a
+single row. A rule about how *your* machines differ from someone else's is not worth a
+sheet row until there is more than one machine and more than one piece.
+
+**Graduation test for this entry**, tighter than the file's: equipment has stopped being
+one row and its rules are settled, AND two protocols independently want the same machine
+to behave differently. Both halves, because either alone reproduces the empty slot. When
+it returns, it returns as a named rule with behaviour on the day it ships, never as a
+column every protocol must fill.
+
+*Unknown, needs play data:* whether per-owner hardware differences read at all in play, or
+whether a Boarder simply sees "my turret" and never notices it behaves differently from a
+crewmate's.
+
+## FORGE — the recut (Zo, 2026-08-29)
+
+**This supersedes the FORGE draft below it.** Enshrined from Zo's recut the same day, with
+four rulings taken in the same pass. Cut into `M106` (the turret half) and `M107` (the
+Outrider half). **Both are in the 0.34.2 tree** (`TurretState`, `OutriderState`,
+`PlayerTurretControl`, `PlayerOutriderControl`, `GatekeeperRoot`); the milestones stay
+planned until the kill criterion is played. This section is the design those two were
+written from. The `### FORGE — serviceable hardware` sheet below is parked verbs, not
+the build.
+
+**Identity.** FORGE holds a position. The turret is the expression of that; the Outrider
+is what lets the Boarder leave it.
+
+**Input grammar — FORGE only, for now** (Zo's ruling). Two keys, four inputs. A press
+deploys, a press-and-hold fires that machine's special. The turret sits on the crew
+binding, the Outrider on the personal binding. Pressing with a machine already out
+redeploys it: both are freely redeployable, and placing a second retires the first.
+Default keeps its second-press stand-down and VEIL keeps its plain presses; two protocols
+answering the same key differently is a legibility cost taken knowingly, so the hold can
+be judged on FORGE before it spreads.
+
+**States.** Both machines run one chain: **Available** (off-field, cooldown elapsed,
+deployable) → **Deployed** (on field, active) → **Special** (its alternate mechanic
+running) → **Exhausted** (on field, no longer active, despawning) → **Despawned** (gone,
+by damage or by exhaustion).
+
+**Turret.** Deployed: acquires and fires on its own out to its range; Boarders inside its
+aura fire faster; firing builds its charge. Special — **Overcharge**: increased firing
+rate, and if the Outrider is deployed and near, the Outrider fires at maximum rate too.
+Ends into Exhausted.
+
+**Outrider.** Deployed: follows the Boarder and fires on the Gatekeeper nearest to them;
+firing builds its charge. Special — **EMP**: a blast from the Outrider, and if it is near
+the turret, the turret's fire becomes EMP rounds for the duration. Ends into Exhausted.
+**EMP's effect on a body is light damage and a medium-length root** (Zo, 2026-08-29).
+
+**The loop.** Both machines charge only by firing, so neither can be loaded in a quiet
+room — the special is always earned inside the fight it is spent in.
+
+- *Turret first.* Place it, let it fire and charge while it defends. Deploy the Outrider.
+  Trigger Overcharge: both go to max rate, which also charges the Outrider faster. Trigger
+  EMP: the Outrider blasts and the overcharged turret fires EMP rounds at max rate.
+  Overcharge ends, turret Exhausted; EMP ends, Outrider Exhausted.
+- *Outrider first.* Deploy it, fight, let it charge. Place the turret. Trigger EMP: the
+  turret fires EMP rounds immediately. Charge the turret, trigger Overcharge: the Outrider
+  picks up max rate. Same exit.
+
+Both orders reach the same peak — a max-rate EMP turret with a max-rate Outrider beside
+it — and both collapse into a double Exhausted.
+
+**Why the two orders matter.** A charged turret is evidence it was placed and defending. A
+charged Outrider with no turret out is evidence the Boarder went and found the fight. The
+orders are a record of how the Wave was played, and they map onto the Assault's real fork:
+hold where you are and grind the Wave down, or push across the zone and shut the terminal
+off early. Turret-first is the hold line. Outrider-first is the push line, because the
+Outrider charges by travelling. Overcharge also accelerates charging, since charge comes
+from firing — so turret-first escalates toward the peak on its own, while Outrider-first
+buys lockdown up front at normal rate. Greedy versus safe, same destination.
+
+**Rulings taken 2026-08-29 alongside the recut:**
+
+- **The follower is not called a Drone.** *Drone* is the third weapon slot and its
+  payloads (`../_meta/_definitions/language.md`, rule 3, Zo 2026-08-08). FORGE's follower
+  is named separately so a Boarder reading the sheet never confuses it with the bay.
+  **Outrider is a working name and needs Zo's word before it enters `language.md`.**
+- **Machines are naturally vulnerable.** Rather than a passive that steers Gatekeepers
+  onto hardware, a deployed machine is a target in its own right — either mortal and
+  targetable by the ordinary rule, or registered so targeting treats it as it treats a
+  Boarder. **Magnet Hands retires**: it exists to make Gatekeepers prefer the turret, and
+  natural vulnerability makes that redundant.
+- **FORGE's passive is open.** Zo, 2026-08-29: invent one or keep it TODO. Held open
+  deliberately rather than filled to make the sheet look complete; the trigger is the
+  `M107` close, when the two-machine loop has been played and it is clear what the sheet
+  is missing. Owner: Zo.
+- **Doctrine is gone.** PARALLEL BAYS retires with the doctrine concept (`M105`), so
+  nothing in this recut depends on a per-owner rule for placed hardware.
+
+**What this costs, said plainly.** This is a bet, not a defect fix. It adds a second
+machine, a charge resource, a status effect the garrison has never had, a five-state
+chain and an input grammar that no other protocol uses. The pre-mortem and the kill
+criterion are on `M107`, because the claim being tested — that the two orders read as a
+record of how the Wave was played — cannot be observed until both machines exist.
+
 ### FORGE — serviceable hardware
 
-**Shipped by `M94` with both verbs recut, so this sheet is the draft, not the build.**
-FORGE ships as PARALLEL BAYS (two live decoys, not yet active), **Field Deploy** on `G` — a
-turret that acquires and fires on its own to 18 m and hastens nearby Boarders — **Overcharge**
-on `H`, and **Magnet Hands** as the Passive. The two abilities below did not survive review:
-Field Rearm and Redeploy turned out to be the same shape twice, and `M94` built the turret
-here rather than waiting on `UTL-H`. Their `BoarderAbilityId` values were reused rather than
-retired, because neither ever reached a save.
+**Superseded 2026-08-29 / in-tree 2026-08-30.** The recut above plus `M106`/`M107` code
+are the build. This sheet is parked verbs (Field Rearm / Redeploy twists) so they are
+not rediscovered. Do not treat Field Deploy-on-`H` / Magnet Hands as live.
 
 The Engineer. Its doctrine keeps the turret a gun; its abilities make hardware
 something you tend rather than fire-and-forget. Two Forges diverge as: the
@@ -820,16 +943,14 @@ Graduated by direction (Zo, 2026-08-15): **`M70` is the Default Protocol**. Recu
 Foresight on that sheet, Coming Soon stubs stand in for specialists, Fight shortcut
 is the G/H readout.
 
-**VEIL and FORGE graduated to `M94`, closed 2026-08-24.** `BoarderProtocolId` became a
-catalog of three, all four new abilities replicate, and every open window telegraphs on
-screen. The recut inside that milestone is the part worth carrying back: FORGE's authored
-pair, Field Rearm and Redeploy, was one shape written twice, and the turret was built there
-instead of waiting on `UTL-H` (`fabrication.md`). VEIL's Passive shipped as Ghost, not the
-Sightline its sheet names. Turret health readout, number tuning and PARALLEL BAYS are
-carried on `M94`.
+**VEIL graduated to `M94`, closed 2026-08-24.** FORGE's first ship was also `M94`; the
+2026-08-29 recut (`M106` turret charge/Exhausted, `M107` Outrider/EMP/pairing) is what
+0.34.2 runs. Magnet Hands retired. VEIL's Passive shipped as Ghost, not the Sightline
+its sheet names. PARALLEL BAYS still prints "Not yet active." FORGE's passive is open
+until `M107` is played.
 
-AEGIS and LEDGER are what is left to graduate, and the ordering is unchanged: VEIL carried
-the unlock spine, AEGIS last.
+AEGIS and LEDGER are what is left to graduate from this file, and the ordering is
+unchanged: AEGIS last. Do not re-graduate FORGE.
 
 ## Open questions
 

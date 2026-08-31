@@ -35,9 +35,9 @@ the room marks Gatekeepers for the crew and pulls Defaults and Hunters onto you.
 **Cloak** (`H`): off targeting lists until you fire. Passive **Ghost**: they notice you
 closer in.
 
-**FORGE — PARALLEL BAYS.** Two decoys may stand live. **Field Deploy** (`G`): stand a
-turret where you look. **Overcharge** (`H`): redline that turret (and yourself) for a
-window. Passive **Magnet Hands**: hunters that would take you take the turret instead.
+**FORGE — PARALLEL BAYS.** Two decoys may stand live. **Field Deploy** (`G`): tap a
+turret, hold Overcharge. **Outrider** (`H`): tap a follower, hold EMP. Pairing is
+proximity-gated. Passive is unfilled.
 
 AEGIS and LEDGER are not on the panel.
 

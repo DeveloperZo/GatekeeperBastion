@@ -13,12 +13,18 @@ namespace GatekeepersProtocol.Game
     {
         RelayJoin.Payload _relay;
         string _joinCode;
+        /// <summary>Realm id the pending <see cref="_joinCode"/> was allocated for. Reopening
+        /// OPEN TO FRIENDS for the same realm must keep that code — minting again orphaned the
+        /// first invite and left player 1 holding a dead string while player 2 got a new one.
+        /// </summary>
+        string _hostRealmId;
 
         // ---- Open to friends ----
 
         /// <summary>Ask Relay for a code for the picked realm. Nothing is committed yet: the
         /// realm is entered on TO SHIP, at the same moment ENTER would have entered it, so
-        /// backing out of this panel leaves the session exactly as it was found.</summary>
+        /// backing out of this panel leaves the session exactly as it was found. A second open
+        /// for the same realm reuses the allocation already held.</summary>
         async void OnOpenToFriends()
         {
             if (_leaving || _busy) return;
@@ -43,7 +49,8 @@ namespace GatekeepersProtocol.Game
             // asked for anything. Every FRESH realm is DemoActive with two wheel buys left, so
             // this is the default path, not an edge case — and refusing after the fact meant the
             // player had already copied a code and sent it to a friend who could never use it.
-            var picked = SaveService.LoadRealm(_realms[_pickedRealm].Id);
+            string realmId = _realms[_pickedRealm].Id;
+            var picked = SaveService.LoadRealm(realmId);
             if (picked != null
                 && !DemoProgress.MultiplayerUnlocked(picked.DemoActive, picked.DemoWeaponGranted))
             {
@@ -54,9 +61,27 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
+            // Same realm, already holding a code: show it again. A fresh allocate here would
+            // replace the code a friend is already typing on the main menu.
+            if (RelayJoin.HasPayload(_relay)
+                && !string.IsNullOrEmpty(_joinCode)
+                && _hostRealmId == realmId)
+            {
+                if (_view != null)
+                {
+                    _view.SetCode(_joinCode);
+                    _view.SetLanVisible(false);
+                    _view.SetSessionStatus("Send this code to a friend, then go aboard.");
+                    _view.ShowSession();
+                }
+                Log.Event(Tag, "open reused joinCode=" + _joinCode);
+                return;
+            }
+
             _busy = true;
             _relay = default;
             _joinCode = null;
+            _hostRealmId = null;
             if (_view != null)
             {
                 _view.SetCode("");
@@ -78,6 +103,7 @@ namespace GatekeepersProtocol.Game
             }
             _relay = result.Payload;
             _joinCode = result.JoinCode;
+            _hostRealmId = realmId;
             _view.SetCode(_joinCode);
             _view.SetSessionStatus("Send this code to a friend, then go aboard.");
         }
@@ -105,13 +131,12 @@ namespace GatekeepersProtocol.Game
             StartHosting(relay: false);
         }
 
-        /// <summary>Back out without having hosted. The realm was never entered, so there is
-        /// nothing to undo.</summary>
+        /// <summary>Hide the panel without discarding the allocation. CLOSE is "put this away",
+        /// not "throw away the invite" — OPEN TO FRIENDS for the same realm shows the same code.
+        /// </summary>
         void OnSessionBack()
         {
             if (_busy) return;
-            _relay = default;
-            _joinCode = null;
             if (_view != null) _view.ShowChooser();
         }
 

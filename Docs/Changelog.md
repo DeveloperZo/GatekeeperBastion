@@ -5,8 +5,63 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-08-25
+Last updated: 2026-08-30
 -->
+
+- 2026-08-30: **0.34** build **2**. Ante parked; Hatch recall pads at Field/Master;
+  wordmark off on station/pause; OPEN TO FRIENDS keeps its join code; Boarders get
+  their own REALMS name field; Hatch start gated on `ControlRoomReachable`; combat FX
+  shaders pinned for the player. Menu `v0.34.2`; player `Logs/Builds/0.34.2/`.
+  Friends zip `Builds/ALPHA_BUILD_0.34.2/`.
+- 2026-08-30: **`Demo - Coop/` restamped against 0.34.2.** The folder was still a
+  proposed gated demo (Main Menu Host, crew-pot-to-build, Unbanked respawn,
+  Convert-as-earnings, T1–D3 spine, teammate revive as Have). It is now a
+  friends-session storyboard of the live path: REALMS OPEN TO FRIENDS, faucet
+  Hatch→T2/T5, realm pot, kills-bank-on-landing, bank-priced respawn
+  (`Respawns` 150/300, cap 2, 10 s). Have is the tree; Build is M-A targeting,
+  revive, presence leftovers, guest shop RPCs. Hatch `PackFor` assignment
+  restamped 2026-08-30 (Zo): host-owned, i-th open door to i-th seat; 2026-08-20
+  "nobody assigned" overturned.
+- 2026-08-30: **Brainstorms restamped against 0.34.2.** Hatch-start, parked Ante, recall
+  pads, kills-bank-as-they-land, realm-bank respawn, charged turret + Outrider in-tree.
+  Master stamina cycled to `crew-skills-and-perks.md`. `M104`/`M106`/`M107` added to the
+  Order table (they had files, no rows). Brainstorm index lists every live file.
+  Play is the recommended next; no new milestone files.
+
+- 2026-08-30: **`language.md` and `play-mechanic.md` catch Ante park and recall pads.**
+  Ante / ante up / Prep / Wave / field terminal mark `Ante.Enabled = false`; **recall pad**
+  is a table row. Play-mechanic Status admits `parked` (Ante is the exemplar).
+- 2026-08-30: **SHIFT UI wordmark is off.** Station Top Panel and Pause, and Bastion
+  and Range Pause, read GATEKEEPER'S PROTOCOL. The Placeholder Logo GO is inactive;
+  leftover Preview Image chrome that carried the wordmark is off on Ship, Bastion,
+  Range, and Main Menu.
+- 2026-08-30: **Recall pads use the Ship teleporter graybox; F12 G starts at the Hatch.**
+  T2/T5 Portal keep Pad/Emitter/Glass and carry `HatchRecallPad` (not dock `HatchPortal`).
+  Runtime cyan squares removed. Digit G places at the Hatch — Master starts there.
+- 2026-08-30: **Ante parked; Hatch recall pads at terminals.** `Ante.Enabled = false` —
+  no juice, no intensity select, no Ante on prompts/HUD/shortcuts; Waves at dial 0.
+  Hold Interact on a cyan pad beside each Field/Master terminal teleports to the Hatch
+  (`HatchRecallPad` + `TeleportLocalToHatch`).
+- 2026-08-30: **Hatch offers Master only when the control gate is open.** After a zone's
+  terminals were done, `HatchOffersWaveStart` fell through to Master Control while D3 was
+  still shut — F12-B/D and live shutoffs read "terminals complete / wrong door locked", and
+  the start line stole Convert/dock. Gate is `ControlRoomReachable`. Digit F no longer seeds
+  a zone-3 bank pile.
+- 2026-08-30: **`M108` — HUD that fits the screen.** Fight and Ship corners plus CREW
+  QUARTERS catalog: restore the locked Vitals inset, BOARDER + protocol beside the
+  Profile icon (TL), Score keeps salvage/wave, MISSION header gap and shorter tab.
+  CREW protocol sheet CTA is EQUIP (EQUIPPED when owned), a Shift MainButton, not BUY.
+  Filed under `1. planned/`.
+- 2026-08-30: **OPEN TO FRIENDS keeps its join code, and the panel no longer eats it.**
+  Closing the panel and opening the same realm again reuses the Relay allocation instead of
+  minting a second code that orphaned the first invite. COPY / TO SHIP had been bottom-
+  anchored near y=600 and drew on top of the code; they sit below it now.
+  `BoarderNameField` was also last in the Canvas Hierarchy, so it punched through the
+  overlay and hid TO SHIP — Session Panel is last again, and `ShowSession` reasserts that.
+- 2026-08-30: **Boarders get their own name field on REALMS.** NEW BOARDER used the
+  realm name box, so naming a Boarder looked like naming a world. `BoarderNameField` sits
+  above NEW BOARDER on the right; `RealmSelectView.BoarderNameText` feeds
+  `CreateBoarder` the same way the left field feeds `CreateRealm`.
 
 - 2026-08-25: **Six milestones moved to completed, and a documentation sweep that found
   the docs describing a respawn rule the code had already deleted.** `M63-3`, `M95`,

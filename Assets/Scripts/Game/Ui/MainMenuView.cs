@@ -141,9 +141,14 @@ namespace GatekeepersProtocol.Game
         public void SetCampaignStrip(int banked, int runs, int deepestWave, string version = null)
         {
             string deepest = deepestWave < 1 ? "1" : deepestWave.ToString();
-            string ver = string.IsNullOrEmpty(version) ? Application.version : version;
             UiBind.SetText(_campaignLine,
-                $"{banked} banked  —  {runs} boarding(s)  —  deepest Wave {deepest}  —  v{ver}");
+                $"{banked} banked  ·  {runs} boardings  ·  Wave {deepest}");
+            if (_campaignLine != null)
+            {
+                _campaignLine.enableWordWrapping = false;
+                _campaignLine.fontSize = 30f;
+                _campaignLine.overflowMode = TextOverflowModes.Overflow;
+            }
         }
 
         public void SetContinueVisible(bool visible) => UiBind.Show(_continueButton, visible);

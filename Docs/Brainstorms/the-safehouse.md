@@ -4,7 +4,7 @@
 Purpose: The Ship as a hub friends occupy between Runs — what there is to do there, and what those activities are allowed to pay.
 Status: brainstorm
 Update trigger: when an activity graduates, when the Ship gains or loses a station, or when session persistence for guests is answered.
-Last updated: 2026-08-25 (Ship - Demo retired and removed from every claim here; M99's range door shipped; M101 hull recount; M100 answers the offline-contribution half)
+Last updated: 2026-08-30 (interior is one deck since 2026-08-26; GO count not remeasured)
 -->
 
 ## What this covers
@@ -20,10 +20,11 @@ damage — is `missions-and-destinations.md`. What the four existing stations se
 
 ## Where it stands
 
-**The hub scene is authored, and it is the only hub.** `Ship - CoOp.unity` — **2,784**
-GameObjects measured 2026-08-25, after `M101` rebuilt the hull over two decks — generated on the
-grid convention (`Floor_x_y`, `GW_<dir>_x_y`, `GS_*`, `GB_*`) and then dressed, per the
-generate-then-author paradigm. Its shape is `ship-hull-and-interior.md`, not this file. It
+**The hub scene is authored, and it is the only hub.** `Ship - CoOp.unity` — interior is
+**one deck** (Zo, 2026-08-26; `ship-hull-and-interior.md`). The **2,784** GameObject count
+was measured 2026-08-25 on the two-deck hull and has not been recounted. Generated on the
+grid convention (`Floor_x_y`, `GW_<dir>_x_y`, `GS_*`, `GB_*`) and then dressed. Its shape
+is `ship-hull-and-interior.md`, not this file. It
 holds:
 
 - **Four stations**, each a full fixture rather than a menu hook: `Station_Armory`,

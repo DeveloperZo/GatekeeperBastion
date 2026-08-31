@@ -2,7 +2,7 @@
 Purpose: Current representation of retriggering — refighting a zone whose Waves are already partly behind the Boarder, and the election between the whole zone and a resume from its deepest cleared Wave — as it is in the build, including the fact that its launch is built and unreachable in normal play.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Retriggering
@@ -25,11 +25,11 @@ client-only seat, so a guest sees no offer and a realm past its first Escaped ha
 all ([The Opening](The-Opening.md)).
 
 **Built, and unreachable in normal play.** The offer rule, the arm, the election and the
-prompt row are all present and correct; both routes to the start key are closed by the
-loop's start line ([A Boarding](A-Boarding.md) owns it). `HatchOffersWaveStart` answers
-true for the whole of a Boarding — its second clause is `MasterControlAwaitsStart`, and
-the Master terminal is never entered into the unlock graph (`BastionLayout.RebuildGraph`
-loads Field terminals only), so it is never "done". From that one fact:
+prompt row are all present; both routes to the start key are closed by the loop's start
+line ([A Boarding](A-Boarding.md) owns it). The offer only stands while the zone is still
+incomplete this Boarding (`DemoRun.RetriggerOffer` returns `None` once the zone is done).
+That is exactly when `HatchBankStartBlocked` makes `HatchOffersWaveStart` true. From that
+one fact:
 
 - **At the terminal** the start key's retrigger branch checks `HatchOffersWaveStart`
   first and refuses by name — *"refused — the wave starts at the Hatch"* — and that

@@ -29,11 +29,186 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
+        public void SettingsListContent_TopPaddingIsNotNegative()
+        {
+            foreach (string scene in new[]
+            {
+                "Assets/Scenes/Bastion_Coop.unity",
+                "Assets/Scenes/Range.unity"
+            })
+            {
+                string yaml = File.ReadAllText(Path.GetFullPath(scene));
+                Assert.IsFalse(yaml.Contains("m_Top: -26"),
+                    scene + " Settings List Content top padding is -26 (first row clips)");
+            }
+        }
+
+        [Test]
+        public void PauseCanvas_SortsAboveFightHud()
+        {
+            foreach (string scene in new[]
+            {
+                "Assets/Scenes/Bastion_Coop.unity",
+                "Assets/Scenes/Range.unity"
+            })
+            {
+                string yaml = File.ReadAllText(Path.GetFullPath(scene));
+                int pause = CanvasSortingOrder(yaml, "Canvas - Pause Menu");
+                int hud = CanvasSortingOrder(yaml, "Canvas - Dynamic");
+                Assert.Greater(pause, hud,
+                    scene + " pause order " + pause + " must beat fight HUD " + hud);
+            }
+        }
+
+        [Test]
+        public void BastionPause_HasCompendiumRow()
+        {
+            foreach (string path in new[]
+            {
+                "Assets/Scenes/Bastion_Coop.unity",
+                "Assets/Scenes/Range.unity"
+            })
+            {
+                var scene = SceneHudYaml.Load(path);
+                Assert.IsTrue(scene.Has("Compendium", "Button List"),
+                    path + " Pause Menu Button List has no Compendium row");
+                Assert.IsTrue(scene.IsActive("Compendium", "Button List"),
+                    path + " Pause Menu Compendium row is inactive");
+            }
+        }
+
+        [Test]
+        public void BastionPause_SettingsOpensOptionsScreen()
+        {
+            foreach (string path in new[]
+            {
+                "Assets/Scenes/Bastion_Coop.unity",
+                "Assets/Scenes/Range.unity"
+            })
+            {
+                string yaml = File.ReadAllText(Path.GetFullPath(path));
+                Assert.IsTrue(yaml.Contains("OpenOptionsFromPauseMenu"),
+                    path + " Settings button does not call OpenOptionsFromPauseMenu");
+            }
+        }
+
+        static int CanvasSortingOrder(string yaml, string canvasName)
+        {
+            int nameAt = yaml.IndexOf("m_Name: " + canvasName + "\n", StringComparison.Ordinal);
+            if (nameAt < 0)
+                nameAt = yaml.IndexOf("m_Name: " + canvasName + "\r\n", StringComparison.Ordinal);
+            Assert.GreaterOrEqual(nameAt, 0, canvasName + " missing");
+            int go = yaml.LastIndexOf("--- !u!1 &", nameAt, StringComparison.Ordinal);
+            int canvasComp = -1;
+            foreach (Match cm in Regex.Matches(yaml.Substring(go, 400), @"component: \{fileID: (\d+)\}"))
+            {
+                string cid = cm.Groups[1].Value;
+                int s = yaml.IndexOf("--- !u!223 &" + cid + "\n", StringComparison.Ordinal);
+                if (s < 0)
+                    s = yaml.IndexOf("--- !u!223 &" + cid + "\r\n", StringComparison.Ordinal);
+                if (s < 0) continue;
+                canvasComp = s;
+                break;
+            }
+            Assert.GreaterOrEqual(canvasComp, 0, canvasName + " Canvas component missing");
+            int end = yaml.IndexOf("\n--- !u!", canvasComp + 5, StringComparison.Ordinal);
+            string block = yaml.Substring(canvasComp, end - canvasComp);
+            var om = Regex.Match(block, @"m_SortingOrder: (-?\d+)");
+            Assert.IsTrue(om.Success, canvasName + " sortingOrder missing");
+            return int.Parse(om.Groups[1].Value, CultureInfo.InvariantCulture);
+        }
+
+        [Test]
         public void StationCategoriesAndPreview_AreInactive()
         {
             string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - CoOp.unity"));
             AssertInactive(yaml, "Categories");
             AssertInactive(yaml, "Preview Image");
+        }
+
+        [Test]
+        public void ShiftUiWordmark_IsOff_AndGameTitleIsTheProtocol()
+        {
+            string ship = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - CoOp.unity"));
+            int titles = 0;
+            int idx = 0;
+            while (true)
+            {
+                int at = ship.IndexOf("m_text: GATEKEEPER'S PROTOCOL", idx, System.StringComparison.Ordinal);
+                if (at < 0) break;
+                titles++;
+                idx = at + 1;
+            }
+            Assert.GreaterOrEqual(titles, 2, "Top Panel and Pause Game Title");
+
+            int logos = 0;
+            int off = 0;
+            idx = 0;
+            while (true)
+            {
+                int nameAt = ship.IndexOf("m_Name: Logo\n", idx, System.StringComparison.Ordinal);
+                if (nameAt < 0)
+                    nameAt = ship.IndexOf("m_Name: Logo\r\n", idx, System.StringComparison.Ordinal);
+                if (nameAt < 0) break;
+                logos++;
+                int go = ship.LastIndexOf("--- !u!1 &", nameAt, System.StringComparison.Ordinal);
+                int end = ship.IndexOf("\n--- !u!", go + 5, System.StringComparison.Ordinal);
+                string goBlock = ship.Substring(go, end - go);
+                if (goBlock.Contains("m_IsActive: 0")) off++;
+                idx = nameAt + 1;
+            }
+            Assert.Greater(logos, 0, "Logo GOs missing");
+            Assert.AreEqual(logos, off, "every SHIFT UI Logo GO is inactive");
+
+            string menu = File.ReadAllText(Path.GetFullPath("Assets/Scenes/MainMenu.unity"));
+            Assert.IsTrue(menu.Contains("m_text: GATEKEEPER'S PROTOCOL"),
+                "Main Menu Title is GATEKEEPER'S PROTOCOL");
+            AssertInactive(menu, "Preview Image");
+
+            foreach (string scene in new[]
+            {
+                "Assets/Scenes/Bastion_Coop.unity",
+                "Assets/Scenes/Range.unity"
+            })
+            {
+                string yaml = File.ReadAllText(Path.GetFullPath(scene));
+                Assert.IsTrue(yaml.Contains("m_text: GATEKEEPER'S PROTOCOL"),
+                    scene + " Pause Game Title");
+                AssertInactive(yaml, "Logo");
+                AssertInactive(yaml, "Preview Image");
+            }
+        }
+
+        [Test]
+        public void Compendium_HidesGameTitleWhileOpen()
+        {
+            string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - CoOp.unity"));
+            int view = yaml.IndexOf(
+                "GatekeepersProtocol::GatekeepersProtocol.Game.CompendiumView",
+                StringComparison.Ordinal);
+            Assert.GreaterOrEqual(view, 0, "CompendiumView missing");
+            int end = yaml.IndexOf("\n--- !u!", view, StringComparison.Ordinal);
+            string block = yaml.Substring(view, end - view);
+            Assert.IsFalse(block.Contains("_hideWhileOpen: []"),
+                "CompendiumView._hideWhileOpen is empty");
+            int hide = block.IndexOf("_hideWhileOpen:", StringComparison.Ordinal);
+            int next = block.IndexOf("\n  _volumeListRoot", hide, StringComparison.Ordinal);
+            Assert.GreaterOrEqual(next, 0, "_hideWhileOpen block");
+            string arr = block.Substring(hide, next - hide);
+            var ids = Regex.Matches(arr, @"fileID: (\d+)");
+            Assert.GreaterOrEqual(ids.Count, 2, "hide Pause Game Title and Top Panel Game Title");
+            for (int i = 0; i < ids.Count; i++)
+            {
+                string id = ids[i].Groups[1].Value;
+                int go = yaml.IndexOf("--- !u!1 &" + id + "\n", StringComparison.Ordinal);
+                if (go < 0)
+                    go = yaml.IndexOf("--- !u!1 &" + id + "\r\n", StringComparison.Ordinal);
+                Assert.GreaterOrEqual(go, 0, "hideWhileOpen[" + i + "] GO " + id);
+                int goEnd = yaml.IndexOf("\n--- !u!", go + 5, StringComparison.Ordinal);
+                string goBlock = yaml.Substring(go, goEnd - go);
+                Assert.IsTrue(goBlock.Contains("m_Name: Game Title"),
+                    "hideWhileOpen[" + i + "] is not Game Title");
+            }
         }
 
         [Test]
@@ -299,6 +474,17 @@ namespace GatekeepersProtocol.Tests
                 Assert.AreNotEqual("0", m.Groups[1].Value,
                     "ProtocolSheetView." + sheetFields[i] + " is unbound");
             }
+            Assert.GreaterOrEqual(
+                yaml.IndexOf("m_Name: Claim Row\n", System.StringComparison.Ordinal), 0,
+                "Claim Row missing under Protocol Sheet");
+            int claimAt = yaml.IndexOf("m_Name: Claim\n", System.StringComparison.Ordinal);
+            if (claimAt < 0)
+                claimAt = yaml.IndexOf("m_Name: Claim\r\n", System.StringComparison.Ordinal);
+            Assert.GreaterOrEqual(claimAt, 0, "Claim button missing");
+            int mainButtonAt = yaml.IndexOf("guid: 7f6465851424ac84fa7e7c1d80acd1b7", claimAt,
+                System.StringComparison.Ordinal);
+            Assert.Greater(mainButtonAt, claimAt, "Claim is a Shift MainButton, not a plain Image strip");
+            Assert.Less(mainButtonAt - claimAt, 12000, "Claim MainButton is on the Claim GO");
         }
 
         [Test]

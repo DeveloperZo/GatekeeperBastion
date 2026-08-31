@@ -15,13 +15,13 @@ The sheet about who is looking at the Boarder: it shows the whole crew every Gat
 
 This sheet is about who is looking at me, which turns out to be the only question I ever really had.
 
-Its doctrine changes what a decoy is. Placed while I wear this, a decoy comes up already holding the attention I was carrying, instead of pulling neutrally from whoever is near. I hand the room's interest to a machine and walk out of the room.
+I can hand the crew every Gatekeeper through walls — the most useful thing anyone can give them — and for that same window every Default and Hunter in the place is coming for me. The crew gets the map. I get the room. That is not a drawback. It is the price on the tin, and I choose where to set the tin down.
 
-The crew burst is the loud one. For the window, every Gatekeeper renders through walls, for everyone — the most useful thing anyone can hand a crew — and for the same window, every Default and Hunter in the place is coming for me. The crew gets the map. I get the room. That is not a drawback. It is the price on the tin, and I choose where to set the tin down.
+When the room is on me, I place a decoy and it comes up already holding the attention I was carrying, instead of pulling neutrally from whoever is near. I hand the room's interest to a machine and walk out of the room. What it buys today is an early pull, not a wider one — the bodies that stay on it are the bodies the ordinary pull would have taken next anyway — but the hand-off is still the loop.
 
-The personal burst takes me off every targeting list outright. Anything mid-swing finishes the swing. Firing puts me back on instantly, so it is a way to leave, never a way to win. The room forgets me exactly as long as I give it nothing to remember.
+Then I go dark. Off every targeting list. Anything mid-swing finishes the swing. Firing puts me back on instantly, so it is a way to leave, never a way to win. The room forgets me exactly as long as I give it nothing to remember.
 
-The passive is standing: they notice me closer in than they otherwise would. Not silence, not stillness — just less reach on being seen. Standing still was never the requirement. It took me three Boardings to stop believing it was.
+Standing under all of that: they notice me closer in than they otherwise would. Not silence, not stillness — just less reach on being seen. Standing still was never the requirement. It took me three Boardings to stop believing it was.
 
 ## Differs
 
@@ -29,13 +29,13 @@ The passive is standing: they notice me closer in than they otherwise would. Not
 
 **What the transfer buys today is an early tick, not extra reach.** The transfer writes the decoy onto the Gatekeeper and then re-runs the standing retarget on it; that method clears the decoy target it was just given and re-derives one from the ordinary pull test — inside the payload's pull radius, not a Thief, not hatch-committed. So the bodies PHANTOM leaves on the decoy are the bodies the ordinary pull would have taken on the next retarget anyway. A chaser outside the pull radius is transferred and handed straight back, while the placement line still counts and logs it as inherited.
 
-**Crew: Ping.** For the window, every Gatekeeper renders through walls, for every Boarder. The same press provokes every Gatekeeper that can be provoked onto the caster — the pull is the standing provoke rule, so each kind refusal (a Thief walks on) is honoured without Ping knowing which kinds those are, and the provoked do not shout. Solo, the caster gets the render and the pull with nobody to hand the map to: a deliberate mass-provoke.
+**Crew: Ping.** For the window, every Gatekeeper renders through walls, for every Boarder. The same burst provokes every Gatekeeper that can be provoked onto the caster — the pull is the standing provoke rule, so each kind refusal (a Thief walks on) is honoured without Ping knowing which kinds those are, and the provoked do not shout. Solo, the caster gets the render and the pull with nobody to hand the map to: a deliberate mass-provoke.
 
 **Personal: Cloak.** Off every targeting list for the window — the registry the garrison picks targets from skips a cloaked Boarder outright. Gatekeepers already swinging finish the swing. Firing exits it instantly; it is the only window the gun collapses.
 
 **Passive: Ghost.** Gatekeepers notice and acquire the wearer at a reduced fraction of their normal ranges — both the sight range and the proximity radius are scaled. It applies always, moving or still, and is rewritten at bind so a protocol swap cannot leave it on the rig.
 
-Windows, cooldowns, and the Ghost fraction: [Field Manual](Field-Manual.md).
+Windows, cooldowns, the Ghost fraction, and the ability bindings: [Field Manual](Field-Manual.md).
 
 ## Where
 

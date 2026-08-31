@@ -262,6 +262,50 @@ namespace GatekeepersProtocol.PlayTests
                 + "find it shut again.");
         }
 
+        /// <summary>After zone 1's terminals are done and D1 is still shut, the Hatch must not
+        /// offer Master Control — that was how F12-B (and a live shutoff before the bank)
+        /// read "terminals complete / wrong door locked". The start line yields so Convert
+        /// and dock can answer.</summary>
+        [UnityTest]
+        public IEnumerator PostZoneOneTerminals_HatchDoesNotOfferMasterWhileControlGateShut()
+        {
+            PlayTestUtil.RequireSceneInBuild(SceneFlow.BastionCoop);
+
+            MetaState checkpoint = GameController.BuildDemoCheckpoint(2);
+            Assert.IsNotNull(checkpoint, "digit 2 no longer builds a checkpoint.");
+            GameSession.AdoptDevState(checkpoint);
+            GameSession.PendingStartWave = 1;
+            GameSession.PendingDemoFight = 2;
+            yield return PlayTestUtil.LoadSceneAndSettle(SceneFlow.BastionCoop);
+            yield return PlayTestUtil.WaitUntil(
+                () =>
+                {
+                    GameController g = Object.FindFirstObjectByType<GameController>();
+                    return g != null && g.Sim != null;
+                }, 10f);
+
+            GameController gc = Object.FindFirstObjectByType<GameController>();
+            Assert.IsNotNull(gc, "the Bastion scene has no GameController.");
+            BastionLayout layout = Object.FindFirstObjectByType<BastionLayout>();
+            Assert.IsNotNull(layout, "the Bastion scene has no BastionLayout.");
+
+            string terminalId = DemoZones.TerminalIdAt(1, 0);
+            Assert.IsTrue(layout.IsTerminalDone(terminalId),
+                "fight restore did not mark " + terminalId + " done.");
+            Assert.IsFalse(layout.IsDoorOpen(DemoZones.DoorId(1)),
+                "digit 2 opens no door — the bank has not been survived.");
+            Assert.IsFalse(layout.ControlRoomReachable,
+                "the control gate must still be shut at this beat.");
+            Assert.IsFalse(gc.HatchOffersWaveStart,
+                "with zone terminals done and the control gate shut, the Hatch still offered "
+                + "a start — that start was Master Control behind a locked door.");
+            Assert.IsFalse(gc.StartZoneWaveFromHatch(),
+                "StartZoneWaveFromHatch started something with no zone left and the control "
+                + "gate shut.");
+            Assert.IsFalse(gc.Sim.MasterSequenceLive,
+                "Master Control started anyway.");
+        }
+
         /// <summary>THE FINALE IS A ZONE LIKE THE OTHERS (Zo, 2026-08-28). Master Control used
         /// to begin at its own terminal — a SECOND start line, the exact thing this fixture
         /// exists to forbid — and interacting there sealed the control room behind the player.

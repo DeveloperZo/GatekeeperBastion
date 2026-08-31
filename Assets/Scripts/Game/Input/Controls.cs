@@ -263,8 +263,8 @@ namespace GatekeepersProtocol.Game
                     case ControlId.SlotDrone: f.slotDroneDown |= down; break;
                     case ControlId.SlotLast: f.slotLastDown |= down; break;
                     case ControlId.WeaponAbility: f.weaponAbilityDown |= down; break;
-                    case ControlId.CrewAbility: f.crewAbilityDown |= down; break;
-                    case ControlId.PersonalAbility: f.personalAbilityDown |= down; break;
+                    case ControlId.CrewAbility: f.crewAbilityDown |= down; f.crewAbilityHeld |= held; break;
+                    case ControlId.PersonalAbility: f.personalAbilityDown |= down; f.personalAbilityHeld |= held; break;
                     case ControlId.Interact: f.interactHeld |= held; f.interactDown |= down; break;
                     case ControlId.PullDraw: f.pullDrawDown |= down; break;
                     case ControlId.DialUp: f.dialUpDown |= down; break;
@@ -313,7 +313,8 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Held-this-frame for <paramref name="id"/> — reads the sampled frame's bit.
-        /// Only the ids gameplay holds (sprint, fire, interact, alt-fire / zoom) carry a held bit.</summary>
+        /// Only the ids gameplay holds (sprint, fire, interact, alt-fire / zoom, crew hold,
+        /// personal hold) carry a held bit.</summary>
         public static bool Held(ControlId id)
         {
             var f = Sample();
@@ -323,6 +324,8 @@ namespace GatekeepersProtocol.Game
                 case ControlId.Fire: return f.fireHeld;
                 case ControlId.Interact: return f.interactHeld;
                 case ControlId.AltFire: return f.altFireHeld;
+                case ControlId.CrewAbility: return f.crewAbilityHeld;
+                case ControlId.PersonalAbility: return f.personalAbilityHeld;
                 default: return false;
             }
         }

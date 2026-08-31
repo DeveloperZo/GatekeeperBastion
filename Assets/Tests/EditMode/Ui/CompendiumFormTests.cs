@@ -242,5 +242,50 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(game.Contains("## Reference"), game);
             Assert.IsFalse(game.Contains("Longer"), game);
         }
+
+        [Test]
+        public void ExtractWalkthroughView_IncludesReferenceBody_DropsReferenceHeading()
+        {
+            const string sample =
+                "# First Time Out\n\n## Game\n\nI start at the Hatch.\n\n## Reference\n\n### On the Ship\n\nBuy the MK-1.\n\n## See also\n\n[The Game](The-Game.md).\n\n## Gaps\n\n- secret\n";
+            string stripped = CompendiumCatalog.StripBuilderAudit(sample);
+            string walk = CompendiumCatalog.ExtractWalkthroughView(stripped, "First Time Out");
+            StringAssert.Contains("I start at the Hatch.", walk);
+            StringAssert.Contains("### On the Ship", walk);
+            StringAssert.Contains("Buy the MK-1.", walk);
+            StringAssert.Contains("## See also", walk);
+            Assert.IsFalse(walk.Contains("## Reference"), walk);
+            Assert.IsFalse(walk.Contains("secret"), walk);
+            Assert.Greater(walk.IndexOf("On the Ship", StringComparison.Ordinal),
+                walk.IndexOf("I start at the Hatch.", StringComparison.Ordinal));
+            Assert.Greater(walk.IndexOf("See also", StringComparison.Ordinal),
+                walk.IndexOf("On the Ship", StringComparison.Ordinal));
+        }
+
+        [Test]
+        public void GettingStarted_PlayerView_IsTheWalkthroughAndTheDefaultOpen()
+        {
+            Assert.AreEqual("Getting-Started", CompendiumCatalog.DefaultOpenStem);
+            Assert.AreEqual("Getting-Started", CompendiumCatalog.Volumes[0].EntryStems[0]);
+            Assert.IsTrue(CompendiumCatalog.IsWalkthrough("Getting-Started"));
+            Assert.IsFalse(CompendiumCatalog.IsWalkthrough("The-Game"));
+
+            Assert.IsTrue(CompendiumCatalog.TryLoadEntry("Getting-Started", out var entry),
+                "Getting-Started must load from StreamingAssets (or Docs/Play).");
+            StringAssert.Contains("On the Ship", entry.BodyMarkdown);
+            StringAssert.Contains("Master Control", entry.BodyMarkdown);
+            StringAssert.Contains("BASTION STRIPPED", entry.BodyMarkdown);
+            Assert.IsFalse(entry.BodyMarkdown.Contains("## Reference"), entry.BodyMarkdown);
+            Assert.IsFalse(entry.BodyMarkdown.Contains("## Gaps"), entry.BodyMarkdown);
+        }
+
+        [Test]
+        public void ToTmpRichText_RendersCodeSpansAsBold()
+        {
+            string tmp = CompendiumCatalog.ToTmpRichText("Hold `E`, then `T`.");
+            StringAssert.Contains("<b>E</b>", tmp);
+            StringAssert.Contains("<b>T</b>", tmp);
+            Assert.IsFalse(tmp.Contains("`"), tmp);
+        }
     }
 }

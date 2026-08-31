@@ -27,7 +27,7 @@ function Get-ProductVersionDisplay {
     $text = Get-Content -LiteralPath $cs -Raw
     $rel = [regex]::Match($text, 'Release\s*=\s*"([^"]+)"').Groups[1].Value
     $build = [regex]::Match($text, 'Build\s*=\s*(\d+)').Groups[1].Value
-    if (-not $rel -or -not $build) { return "0.34.1" }
+    if (-not $rel -or -not $build) { return "0.34.2" }
     return "$rel.$build"
 }
 $DefaultExe = Join-Path $Root ("Logs\Builds\{0}\GatekeepersProtocol.exe" -f (Get-ProductVersionDisplay))

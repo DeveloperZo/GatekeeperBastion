@@ -112,6 +112,10 @@ namespace GatekeepersProtocol.Sim
         /// <summary>The risk/reward siphon dial.</summary>
         public TetherSiphon Siphon { get; private set; }
 
+        /// <summary>Per-run Ante switch. Defaults to <see cref="Ante.Enabled"/> (parked).
+        /// Spend-path tests set this; production never writes it.</summary>
+        public bool AnteEnabled { get; set; }
+
         /// <summary>The defended objective (the Hatch back to your ship).</summary>
         public ShipSystems Ship { get; private set; }
 
@@ -273,6 +277,7 @@ namespace GatekeepersProtocol.Sim
             Seed = seed;
             Rng = new Random(seed);
             Siphon = new TetherSiphon();
+            AnteEnabled = Ante.Enabled;
             Ship = new ShipSystems(MetaUpgrades.HatchHp(meta.HatchArmorLevel));
             Salvage = new SalvageLedger();
             Phase = RunPhase.Docked;

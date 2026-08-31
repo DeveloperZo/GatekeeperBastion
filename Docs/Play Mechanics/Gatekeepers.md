@@ -2,7 +2,7 @@
 Purpose: Current representation of Gatekeepers — garrison-invoked targeting — as it is in the build: the mechanic page; the kinds are its instances.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 -->
 
 # Gatekeepers
@@ -19,9 +19,9 @@ one refuses, and four of the twelve planned kinds are in the build.
 
 They are not defending a wreck. They are home, and I am the thing that got in.
 
-Four frames, four machines, not four paints — I can sort a group by silhouette before it is close enough to matter. None swings faster than another. None has a weak point. None resists anything. What separates them is what each one refuses to do, and each refusal tells me exactly what ignoring it costs.
+Four frames, four machines, not four paints — I can sort a group by silhouette before it is close enough to matter. None swings faster than another. None has a weak point. None resists anything. A root can hold a body still, and that body still swings if it can already reach me. What separates them is what each one refuses to do, and each refusal tells me exactly what ignoring it costs.
 
-One question sorts the whole room: can this be moved off what it is doing? A Default can, at a price. A Hunter is already on me and cannot be moved anywhere. A Thief hunts me on a field-terminal Wave, hunts the Hatch on a Convert, and will not be shouted at in either direction. A Cloaker moves only where nobody's eyes are, so moving it is free and holding it still is what costs.
+One question sorts the whole room: can this be moved off what it is doing? A Default can, at a price. A Hunter is already on me and will never take the Hatch. A Thief walks the door on every Wave and will not be shouted at in either direction. A Cloaker moves only where nobody's eyes are, so moving it is free and holding it still is what costs.
 
 They arrive in groups, a whole group through one spawn point, the next group somewhere else. The point rotates. I cannot hold a direction here. I can only cover what I can turn to in time.
 
@@ -38,6 +38,7 @@ The garrison invokes this one, not a Boarder seat — it is the entry the defini
 - **The shout.** The body whose provocation just landed alerts every Gatekeeper within the alert radius; joiners are provoked without shouting again, so one shot pulls one group, never the Bastion by relay. Kinds that refuse provocation silently decline the shout.
 - **Gaze-noticing.** Clear line of sight to a player who is inside notice range and *outside* the aggro radius provokes, exactly as permanently as being shot; the sight branch is skipped for a player already close enough to divert the body by proximity. Proximity inside the aggro radius diverts a body only while the player stays close — the one transient trigger. (Sight-provoke is suppressed on faucet field Waves, a dev-gated graybox mode; damage and proximity still work there.)
 - **The Cloaker watch.** One kind's refusal is a state rather than a flag: watched — planar gaze cone, in range, clear line of sight, with a Schmitt release band so the edge cannot strobe — it refuses every target and holds position.
+- **Root.** A body can be rooted. It holds position and keeps its target; if it is already in reach it still finishes the swing. This is the garrison's first status. It is not a speed change.
 - **Group arrival.** A Wave is delivered as groups, and every Gatekeeper in a group enters at the same spawn point, picked once per group on a weighted rotation, ringed around it so nobody lands inside anybody. [Waves](Waves.md) owns the schedule; this page owns what a body does after it arrives.
 
 Driven by no input of the garrison's own — the Boarder's fire, position and gaze are what it answers. Shown by the body's path and pace, the group breaching at a spawn point, and the Assault count. Reads back as log lines: `gatekeeper provoked — N nearby joined the hunt`, `group N: … breached at <point> — N live`, `gatekeeper reached the hatch — attacking home`.
@@ -93,6 +94,7 @@ The eight Coming Soon rows come from the twelve-kind roster (`../Brainstorms/gat
 - Gaze-noticing provokes at range; proximity is transient — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`CanSeePlayer`; `Retarget`'s sight-provoke call, guarded by `!playerNear`; `Retarget` re-derives `playerNear` every tick and passes it to `ChasesPlayer` instead of latching it)
 - Sight-provoke suppressed on faucet field Waves — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`faucetField` guard in `Retarget`); `Assets/Scripts/Sim/Run/RunSim.Faucet.cs` (`FaucetHatchHunt`)
 - The Hatch is targetable on both Wave modes; commit latches inside the radius — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` (`Retarget`, 2026-08-27 note; `_committedToHatch`, `hatchCommitRadius`); shove/pin do not clear it — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Shove`, `Pin`, `IsCommittedToHatch`)
+- Root holds position without cancelling an in-reach swing — `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` (`Root`, `IsRooted`); the close/swing split — `Assets/Scripts/Sim/Run/GatekeeperRoot.cs` (`MayAdvance`, `MaySwing`)
 - The Cloaker watch, pure half (cone, range, Schmitt band) — `Assets/Scripts/Sim/Waves/CloakerWatch.cs` (`Watched`); state and line-of-sight half — `Assets/Scripts/Game/Enemies/CloakerGatekeeper.cs` (`AnyoneWatching`)
 - Groups enter whole at one spawn point, weighted rotation, ringed slots — `Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs` (`EmitGroup`, `GroupSlot`); `Assets/Scripts/Game/Enemies/WaveSpawner.cs` (`PickSpawnPoint`, once per group); `Assets/Scripts/Game/Enemies/SpawnPoint.cs` (`All`, `Weight`)
 - One swing clock, pushed onto every kind — `Assets/Scripts/Sim/Waves/WaveDirector.cs` (`GatekeeperAttackInterval`; `StatsFor` writes it first, before any kind branch); `Assets/Scripts/Sim/Waves/GatekeeperStats.cs` (`attackInterval`)
@@ -108,5 +110,5 @@ The eight Coming Soon rows come from the twelve-kind roster (`../Brainstorms/gat
 - Being seen at range provokes a Default permanently, and there is no cue for it at all. A Gatekeeper that noticed you across a room looks exactly like one that did not until it arrives — same frame, same walk; only the path changes.
 - That Gatekeepers near the Hatch can never be pulled off it is never stated. It reads as the AI ignoring you.
 - Entry points rotate per group, and the game never shows you where they are or which one is next.
-- Your health does not regenerate at any point in a Boarding, and nothing on the Bastion restores it. Damage taken in the first Wave is still missing in the last one.
+- Your health climbs between hits ([Regen](Regen.md)). Nothing on the Bastion names the rate, the kill boost, or the hold after a swing.
 - There are no weak points and no headshots. Where you hit a Gatekeeper does not matter.

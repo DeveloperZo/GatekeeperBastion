@@ -21,6 +21,7 @@ Countable facts are not restated here (`../README.md`, *Generated, or written*).
 
 **Stated by Zo, 2026-08-08.** These four are the Boarder's contract with the Bastion.
 They do not move when §1.2 ranks move. The mapping under the table is what gets restamped.
+Carriers restamped 2026-08-30.
 
 1. **Progress through failure.** A lost Run still moves you forward.
 2. **Reward success rather than punish failure.** Winning pays; losing does not take.
@@ -33,28 +34,29 @@ They do not move when §1.2 ranks move. The mapping under the table is what gets
 | Belief                                    | Carried today by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Gap                                                                                                                                           |
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Progress through failure                  | **The whole purchasable surface, and now the award path itself.** `RunSim.AwardKill` credits `MetaState.BankedSalvage` the moment a body falls, at face value and with no carry multiplier (`BankKill`), so shop money is simply what the Run killed. The rule is that it must be impossible to die with no progress to show for it (Zo, 2026-08-25, `../Decisions.md`): the 2026-08-25 playthrough cleared Wave 1, died twice on Wave 2 and reported `gross 0, repair 0, net 0`, because both events that used to bank sat past the point where a starting kit dies. Tiers and the equipment slot unlock on `MetaUpgrades.UpgradesUnlocked == LifetimeSalvageEarned > 0` — lifetime on purpose, so spending to zero does not re-lock; re-keyed from `HatchConversions >= 1` on 2026-08-25 when the Convert left the demo, and from `PodEjections >= 1` before that (`M78`). The Primary rack is `DemoProgress.PrimaryRowsOpen`, now `DeepestWaveReached >= DemoZones.EndWave(1)`: the Run that proves you need a Primary is the Run that sells you one.                                                                                                                      | The end screen still reads `converted this boarding: N` — the old label on the right number.                                                   |
-| Reward success rather than punish failure | No ending moves **banked** Salvage, and banked is now everything the Run earned. The only stake an ending settles is a pile the player deliberately pulled out of the bank with `RunSim.Withdraw` at the Hatch; that is wiped on a down or a breach and keeps `HatchBank.ReturnedKeepShare` on a Docked return. Nothing stakes money on the player's behalf, which is what makes a Withdraw a bet rather than a toll. Dying and clearing differ in which counter ticks, the deepest Wave shown, and what the screen says. The loss-stake "musical chairs" rotor was built and cut. Repair is an **exchange**, Salvage for Hatch HP, priced at `ShipSystems.RepairSalvagePerHp`; it is a purchase like any other and not a forfeit — as are the Ante and the respawn fee, which now charge the same bank.                                                                                                                | None identified.                                                                                                                              |
-| Skills and loadout amplify expression     | The weapon is the build, per-weapon rather than a global stat sheet, and each purchase is now a choice: `ShipCommands.BuyWheelUpgrade` centres one upgrade spoke and `WeaponWheel` awards 5 + 3 + 3 = 11 points across three of the five, nothing to the two at distance 2. BR-12, MR-35, PRI-C, MK-1 and SEC-D order their rings differently (`WeaponWheel.RingOf`), so the same focus buys a different gun. Intensity juice is a stake the player authors at a look-at trigger. CREW QUARTERS equips a named Boarder Protocol (`Sim/Meta/BoarderProtocol.cs`). | SEC-D's Ability spoke cannot be bought (`AbilityId.None`). Default, VEIL and FORGE ship (`M94`); AEGIS and LEDGER are still Coming Soon stubs (`../Brainstorms/boarder-protocols.md`). |
-| You start the action                      | No Wave timer until `T` starts it. **The wave begins at the Hatch** (Zo, 2026-08-25): `GameController.HatchOffersWaveStart` makes the Hatch the start line for as long as the current zone has a terminal left, and that zone's field terminals refuse the key and say so. `+/-` juices from the **bank**; `E` selects where a select is still required (Master Control, retriggers). The wave ENDS at the terminal — `RunSim.ShutOffFieldWave` banks the carry and completes the zone. Untimed Prep after each clear. Intensity locked in Assault. In a friends session the party lead is who calls it (`M72`). | None on the solo contract. Party lead is the co-op reading of "you". |
+| Reward success rather than punish failure | No ending moves **banked** Salvage, and banked is now everything the Run earned. The only stake an ending settles is a pile the player deliberately pulled out of the bank with `RunSim.Withdraw` at the Hatch; that is wiped on a down or a breach and keeps `HatchBank.ReturnedKeepShare` on a Docked return. Nothing stakes money on the player's behalf, which is what makes a Withdraw a bet rather than a toll. Dying and clearing differ in which counter ticks, the deepest Wave shown, and what the screen says. The loss-stake "musical chairs" rotor was built and cut. Repair is an **exchange**, Salvage for Hatch HP, priced at `ShipSystems.RepairSalvagePerHp`; it is a purchase like any other and not a forfeit — as is the respawn fee, which charges the same bank.                                                                                                                | None identified.                                                                                                                              |
+| Skills and loadout amplify expression     | The weapon is the build, per-weapon rather than a global stat sheet, and each purchase is now a choice: `ShipCommands.BuyWheelUpgrade` centres one upgrade spoke and `WeaponWheel` awards 5 + 3 + 3 = 11 points across three of the five, nothing to the two at distance 2. BR-12, MR-35, PRI-C, MK-1 and SEC-D order their rings differently (`WeaponWheel.RingOf`), so the same focus buys a different gun. Intensity juice is parked 2026-08-30 (`Ante.Enabled = false` in `IntensityJuice.cs`); Waves run at dial 0; `Enabled` is the return switch. CREW QUARTERS equips a named Boarder Protocol (`Sim/Meta/BoarderProtocol.cs`). | SEC-D's Ability spoke cannot be bought (`AbilityId.None`). Default, VEIL and FORGE ship (`M94`); AEGIS and LEDGER are still Coming Soon stubs (`../Brainstorms/boarder-protocols.md`). |
+| You start the action                      | No Wave timer until `T` starts it. **The wave begins at the Hatch** (Zo, 2026-08-25): `GameController.HatchOffersWaveStart` makes the Hatch the start line for as long as the current zone has a terminal left, and that zone's field terminals refuse the key and say so. Finale too: `T` at Master refuses (`refused — Master Control starts at the Hatch`); `StartZoneWaveFromHatch` starts it when `ControlRoomReachable`. `+/-` and E-select at triggers are gated off (`Ante.Enabled = false`, `GameController.Terminals.cs` / `ShortcutPanel.cs`); retrigger still uses `E` for composite/partial election. The wave ENDS at the terminal — `RunSim.ShutOffFieldWave` banks the carry and completes the zone. Untimed Prep after each clear. In a friends session the party lead is who calls it (`M72`). | None on the solo contract. Party lead is the co-op reading of "you". |
 
 
 Together: **the player sets both the pace and the stake, and the game supplies neither.**
-Pressure here is authored by the person under it. Juice, then `T` at the Hatch — or `E` then
-`T` at Master Control — is what starts a clock.
+`T` at the Hatch starts the clock — field waves and the finale. Juice / Ante is parked
+2026-08-30 (`Ante.Enabled = false` in `IntensityJuice.cs`); dial stays 0; `Enabled` is
+the return switch.
 
-**How the four serve §1.2** (stamp 2026-08-16; restamp when the rank table moves):
+**How the four serve §1.2** (ranks 2026-08-16; carriers 2026-08-30):
 
 | Belief | Serves |
 |---|---|
 | Progress through failure | Expression (shop money is everything the Run killed); Challenge (the vehicle) |
 | Reward success rather than punish failure | Expression (banked stays); Fellowship (guest down does not take the host's Run, `M49`) |
 | Skills and loadout amplify expression | Expression (rank 2) — the only belief that names an aesthetic |
-| You start the action | Challenge (the vehicle); Fellowship (party lead starts juice / `T` / EMBARK) |
+| You start the action | Challenge (the vehicle); Fellowship (party lead starts `T` / EMBARK) |
 
 **Not named by any belief:** Fellowship as the reason a friend embarks — session layer
-(Host/Join, `M65` wallets, `M72`). Fantasy as boarding a held vessel — kind refusals, the
-kit, destinations still heading. Those are §1.2 goals. A fifth belief is a Zo restatement,
-not a mapping edit.
+(Host/Join, `M65` wallets, `M72`). Fantasy as the unique lane (`../Story/README.md`) —
+kind refusals, the kit, the Hatch start. Those are §1.2 goals. A fifth belief is a Zo
+restatement, not a mapping edit.
 
 **Ancestor** (Zo, 2026-08-17): [Guns 'n Goblins](https://store.steampowered.com/app/881940/Guns_n_Goblins/)
 ([IGN](https://www.ign.com/games/guns-n-goblins)). You ring a bell to call the swarm;
@@ -64,7 +66,8 @@ a trip that fails always paid. Their bell is one object (start the swarm, lose i
 over). Here that splits: the **Hatch** is where the wave starts (Zo, 2026-08-25) and is
 also the GameObject that, destroyed, ends the Run; a **field terminal** is where the wave
 is switched off. Dying on a wave costs the fee, charged to the realm's bank
-(`M98` recut, re-pursed 2026-08-25). Intensity is not their bell. This game also inverts the Bastion (theirs;
+(`M98` recut, re-pursed 2026-08-25). Intensity juice is parked (`Ante.Enabled`, 2026-08-30)
+and was never their bell. This game also inverts the Bastion (theirs;
 you board) and refuses the rest of that Steam page: idler, incremental character
 sheet, build-your-fortress, thousands-strong spectacle, single-player as the
 session.
@@ -80,17 +83,20 @@ co-op client get-up is
 `../Milestones/3. completed/M57-the-downed-player-waits-on-the-ship.md`
 (Ship wait, then embark on the next hatch-defense Wave). Shipped 2026-08-15.
 Amended (Zo, 2026-08-17): **death is no longer the only Run ender.** A player who
-survives a hatch-bank window may return to the Ship — held interact at the Hatch,
-available until the next Wave is triggered — and the Run ends **Docked**, not Lost;
+survives a hatch-bank window, or who shuts off a zone (`OfferDockAfterZoneShutoff`),
+may return to the Ship — held interact at the Hatch, available until the next Wave is
+triggered — and the Run ends **Docked**, not Lost;
 banked Salvage and door state persist via the successful-bank snapshot (`../Decisions.md`,
 *Locked — return to Ship at a surviving bank*).
 Amended again (`M98` recut): **a dead seat now buys its own way back** — guest, host and
-solo alike, anywhere in `RunPhase.Tethered`, for `Respawns.BaseCost` × (respawns taken + 1),
+solo alike, in `RunPhase.Tethered`, for `Respawns.BaseCost` × (respawns taken + 1),
 charged to the **realm's bank** (`RunSim.TryRespawn` → `SpendBanked`; re-pursed 2026-08-25
 when kills began banking on landing and the carried pile stopped filling on its own). The
-refusal narrows rather than falls: still no bail-out lever, and outside a surviving bank
-window the only enders are breach and a death the bank cannot afford — which makes every
-purchase, repair and Ante step also a decision about how many deaths the crew can absorb.
+DOWN overlay is capped at `Respawns.MaxRespawns` (2) and timed at `Respawns.BleedOutSeconds`
+(10 s; numbers in `4-Data.md`). The refusal narrows rather than falls: still no bail-out
+lever, and outside a Dock-offered window the only enders are breach, a death the bank
+cannot afford, the cap, or bleed-out with nobody standing — which makes every purchase
+and repair also a decision about how many deaths the crew can absorb.
 - **It does not rush you.** The one thing it will never do is start without you.
 
 ---
@@ -116,12 +122,12 @@ Expression, and Fantasy have something to happen in.
 | Aesthetic | Rank | Status | Evidence |
 |---|---|---|---|
 | **Fellowship** | **1** | goal; in play | Friends alpha (`Roadmap.md`): install, join, share a Ship. In tree: Host/Join, wallets (`M65`), shared Ship + party EMBARK (`M72` closed 2026-08-17), guest wait (`M57`). Heading: `../Brainstorms/co-op.md` polish (nameplates, voice). Solo is still a complete Run; the goal is that a friend is the reason you embark. |
-| **Expression** | **2** | goal; served | The weapon is the build (`WeaponWheel` 5+3+3, per-weapon rings). Juice is a stake you author. CREW sells a named Protocol (`M70` closed, VEIL and FORGE added by `M94`; `../Brainstorms/boarder-protocols.md` — twists). FAB payloads (`../Brainstorms/fabrication.md`). ARMORY closed brainstorm is the gun shelf. Gap: SEC-D Ability spoke; AEGIS and LEDGER. |
-| **Fantasy** | **3** | goal; frame only | Boarder, Bastion, Gatekeepers, Hatch, Salvage — always on, no fantasy *progression*. Heading: twelve-kind garrison (`../Brainstorms/gatekeepers-and-waves.md`); a second destination that differs in layout, hazard, or composition (`../Brainstorms/missions-and-destinations.md`); named Protocols as identities; dead-Ship demo (`../Demo - Single/`). The goal is boarding a held vessel. |
-| **Challenge** | **4** | served | The Run’s fail state, juice, Hatch-bank fight, kind refusals. Demo first cycle and Wave roster live here. Play reports name this (`playthrough.md`). This is how Fellowship, Expression, and Fantasy are tested. |
+| **Expression** | **2** | goal; served | The weapon is the build (`WeaponWheel` 5+3+3, per-weapon rings). CREW sells a named Protocol (`M70` closed, VEIL and FORGE added by `M94`; `../Brainstorms/boarder-protocols.md` — twists). FAB payloads (`../Brainstorms/fabrication.md`). ARMORY closed brainstorm is the gun shelf. Gap: SEC-D Ability spoke; AEGIS and LEDGER. |
+| **Fantasy** | **3** | goal; frame only | Boarder, Bastion, Gatekeepers, Hatch, Salvage — always on, no fantasy *progression*. The goal is the unique lane in `../Story/README.md`: friends own the silence, choose the kit, start the wave, hold one Hatch. Heading: twelve-kind garrison (`../Brainstorms/gatekeepers-and-waves.md`); a second destination that differs in layout, hazard, or composition (`../Brainstorms/missions-and-destinations.md`); named Protocols as identities; dead-Ship demo (`../Demo - Single/`). |
+| **Challenge** | **4** | served | The Run’s fail state, Hatch-bank fight, kind refusals. Demo first cycle and Wave roster live here. Play reports name this (`playthrough.md`). This is how Fellowship, Expression, and Fantasy are tested. |
 | **Sensation** | **5** | in play | Dressed kit, guns, HUD (`M61`, `M61-2`); session voice (`M69` — Stardust slices on Splash/Menu/RealmSelect, Hydrodynamics beds on Ship/Bastion, fire/foot SFX). Heading: combat tells (`M66`). |
 | **Discovery** | **6** | declined for now; heading | One Bastion today. Heading: second destination (`missions-and-destinations.md` graduation test — layout, hazard, or composition, not difficulty alone); kit rooms and the twelve-kind roster as things to learn. |
-| **Narrative** | **7** | declined; heading light | No plot. Heading: demo PA / Dialogue System (`../Demo - Single/voice.md`) as furniture with a line (`M62` companion cut). |
+| **Narrative** | **7** | declined; backdrop | No plot. Fiction is wallpaper (`../Story/`). Demo PA / Dialogue System stays furniture (`../Demo - Single/voice.md`, `M62` companion cut). |
 | **Submission** | **8** | refused | Clock pays nothing. No brainstorm revives idle. |
 
 **What that implies for ordering work:** Fellowship's session lobby closed with `M72`.
@@ -197,7 +203,7 @@ twelve lives in `../Brainstorms/gatekeepers-and-waves.md`.
 
 | Actor | Wants | Rule |
 |---|---|---|
-| Host | the Run to continue | down raises the DOWN overlay and offers the priced respawn; `EndRun` fires only when no seat can pay (`GameController.PlayerDied`, `NotifySeatWentDown`) |
+| Host | the Run to continue | down raises the DOWN overlay and offers the priced respawn for `Respawns.MaxRespawns` (2) inside `Respawns.BleedOutSeconds` (10 s); `PlayerDied` / `NotifySeatWentDown` / bleed-out end the Run when no seat can pay or stand |
 | Guest | the same Wave on their own loadout | down waits (`M49` / `M57`), or pays the same `Respawns.CostFor` price out of the realm's bank (`GameController.TryNetRespawn`); every seat's kills credit that one bank |
 | Party lead | NAV pick and EMBARK | `NetPartyLobby` (`M72` closed 2026-08-17) |
 

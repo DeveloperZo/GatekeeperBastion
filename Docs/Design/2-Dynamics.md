@@ -23,17 +23,19 @@ Daniel Cook's skill atom: the player holds a **mental model**, takes an **action
 system responds with **feedback**, and the model updates. A mechanic the player cannot see
 the result of is not in their loop at all — it is a number in a file.
 
-Gatekeeper's Protocol's atom, one Wave at a time:
+Gatekeeper's Protocol's atom, one Wave at a time (2026-08-30):
 
 ```
 model    "I can hold the door if I thin the group before it lands"
   |
-action   juice, T at the Hatch to begin; pick targets; repair; T at the zone's terminal to end it
+action   T at the Hatch to begin; pick targets; repair; T at the zone's terminal to end it
   |
 feedback hatch HP falling, gatekeepers parked on the door, the bank climbing per body, the end screen, the log
   |
 model'   "eight parked is already lost" / "the bodies already paid; the only question is the door"
 ```
+
+The Hatch is also the finale start once `ControlRoomReachable` (`GameController.StartZoneWaveFromHatch`). Juice (`IntensityJuice`) is a parked lever — `Ante.Enabled = false`, `Try` refuses — so it is not in this atom.
 
 **Feedback is the return path, so #6 is a dynamics problem, not a presentation one.** A full
 pass tuning gatekeeper damage 4 → 18 never reached the running game because the prefab held the
@@ -96,7 +98,7 @@ that should be asked after Fellowship is a session a friend can use (`1-Experien
 
 ## 2.3 The four loops (#7 gain, #8 balance)
 
-Two drive, two damp, and the player holds the gain knob on one of them.
+Two drive, two damp. R2 is the gain knob; parked 2026-08-30, so Waves run at dial 0.
 
 ### R1 — kills → Salvage → upgrades → faster kills
 
@@ -156,16 +158,13 @@ slopes. `UpgradeTrack` is `HatchArmor` only. CREW QUARTERS equips `BoarderProtoc
 
 ### R2 — intensity: the player's hand on the gain
 
-`Sim/Meta/TetherSiphon.cs` is still the body-count table. The player authors the stake by
-juicing **banked** Salvage at a look-at trigger (`Sim/Run/IntensityJuice.cs`, re-pursed
-2026-08-25): raise costs real take-home progress, lower is free, `T` starts. That is a
-heavier press than it was, deliberately — R2's gain is now bought out of R1's output. Raising intensity multiplies reward and body count off the same
-hand-authored table, so payout and pressure cannot drift apart. They did once, and the
-result was +600% Gatekeeper HP for +50% money.
+`Sim/Meta/TetherSiphon.cs` is still the body-count table. Raising intensity multiplies reward and body count off the same hand-authored table, so payout and pressure cannot drift apart. They did once, and the result was +600% Gatekeeper HP for +50% money.
+
+**Parked 2026-08-30.** The player cannot author this today: `Ante.Enabled = false`, Waves run at dial 0, and `IntensityJuice.Try` refuses the raise path. The model is juice of **banked** Salvage at a look-at trigger (`Sim/Run/IntensityJuice.cs`, re-pursed 2026-08-25): raise costs take-home progress, lower is free, `T` starts — R2's gain bought out of R1's output.
 
 **Intensity adds only Default gatekeepers.** HP, group size and spawn gap ignore it. R2 raises
 R1's gain by adding load to B1 and nothing else — one lever, one mechanism. Changeable in
-Prep only, so the player raises the gain before seeing the Wave.
+Prep only, before the Wave is seen.
 
 ### B1 — kill rate against arrival rate
 
@@ -410,20 +409,22 @@ the player still alive. **Two sessions are not evidence at all**: `20-40-29` and
 log `[Player] took 4 damage`, the prefab-drift build where gatekeepers hit at 22% of design —
 the untouched-Hatch triple clear came from there.
 
-**Amended (Zo, 2026-08-17): breach and death are no longer the only enders.** A player who
-survives a hatch-bank window may return to the Ship — held interact at the Hatch, available
-until the next Wave is triggered — and the Run ends **Docked**, not Lost; banked Salvage and
+**Amended (Zo, 2026-08-17; dock 2026-08-30):** breach and death are no longer the only enders.
+`DockOffered` opens after a survived Hatch-bank (`OfferDockIfBankSurvived`) and after a zone
+shutoff (`OfferDockAfterZoneShutoff` from `ShutOffFieldWave`). Held interact at the Hatch
+until the next Wave is triggered ends the Run **Docked**, not Lost; banked Salvage and
 door state persist via the successful-bank snapshot (`../Decisions.md`,
 *Locked — return to Ship at a surviving bank*). Every loss on record above predates that rule.
 
-**Amended again (`M98` recut): a death is not an ender on its own.** A dead seat raises the
+**Amended again (`M98` recut):** a death is not an ender on its own. A dead seat raises the
 DOWN overlay and may buy itself back anywhere in `RunPhase.Tethered` for
 `Respawns.CostFor(taken)` = `150 × (taken + 1)`, debited from the **realm's bank**
-(`RunSim.TryRespawn` → `SpendBanked`; re-pursed 2026-08-25 with the award path, since the
-carried pile no longer fills on its own). `EndRun("player")` fires only when the bank cannot
-cover the price and no other seat is still fighting (`GameController.PlayerDied`,
-`NotifySeatWentDown`); that death wipes any carry the seat had withdrawn, and the run is over. Nothing above this line was logged under
-the respawn rule.
+(`RunSim.TryRespawn` → `SpendBanked`; re-pursed 2026-08-25), capped at `MaxRespawns = 2`
+with `BleedOutSeconds = 10` to pay (`Respawns.cs`, 2026-08-30). `EndRun("player")` fires
+when the seat cannot buy back (bank or cap) and no other seat is still fighting, or when
+bleed-out expires with nobody standing (`GameController.PlayerDied`, `NotifySeatWentDown`);
+that death wipes any carry the seat had withdrawn, and the run is over. Nothing above this
+line was logged under the respawn rule.
 
 ---
 

@@ -4,7 +4,7 @@
 Purpose: Definition of a play mechanic, and the authoring contract for entries under Docs/Play Mechanics/ — what an entry is, how one is added, and its format. The format is derived from the definition, not inherited from the previous Compendium entry shape. The code blocks near the bottom are what you copy.
 Status: working
 Update trigger: when the definition, the entry bar, the mechanic/instance split, or the entry format changes.
-Last updated: 2026-08-29
+Last updated: 2026-08-30 (parked status admitted — Ante is the exemplar)
 -->
 
 ## What a play mechanic is
@@ -126,7 +126,11 @@ spends writes it; the other links back.
 **`## Instances`** — mechanic page only. First the axes instances may vary on and
 the things no instance may vary (those are rules — link them). Then **the roster:
 the one canonical table of instances** — name, what it differs in, state
-(`in build` / `Coming Soon` / `cut` with the Decisions link), link to its page.
+(`in build` / `Coming Soon` / `parked` / `cut` with the Decisions link), link to its page.
+**Parked** means the mechanic stays in the tree behind a flag (or equivalent),
+deliberately off for players; the entry is kept so restore has a home. Cite
+`Decisions.md` and the flag in `## Where`. Ante (`Ante.md`, `Ante.Enabled`) is the
+exemplar.
 
 **`## Where`** — the code map: one row per load-bearing claim made above, naming
 the file (and member where it matters) that makes it true. A claim that cannot name
@@ -217,7 +221,7 @@ stating, because a later session will otherwise harden them into gates:
 
 <!--
 Purpose: Current representation of <mechanic> as it is in the build.
-Status: <working | Coming Soon>
+Status: <working | Coming Soon | parked>
 Update trigger: any milestone that touches this mechanic, in the same change.
 Last updated: YYYY-MM-DD
 -->
@@ -266,7 +270,7 @@ Instances vary on <axes>. No instance may vary <invariants — link the rules>.
 
 <!--
 Purpose: <Instance>, an instance of [<Mechanic>](<Mechanic>.md) — differences only.
-Status: <working | Coming Soon>
+Status: <working | Coming Soon | parked>
 Update trigger: any milestone that touches this instance, in the same change.
 Last updated: YYYY-MM-DD
 -->

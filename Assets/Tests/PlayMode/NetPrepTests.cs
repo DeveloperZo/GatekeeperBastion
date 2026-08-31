@@ -57,6 +57,7 @@ namespace GatekeepersProtocol.PlayTests
         public IEnumerator Juice_ClientRpc_RaisesHostSiphonOnce()
         {
             yield return BootHostRun();
+            _gc.Sim.AnteEnabled = true;
             long bankSnap = _gc.Meta.BankedSalvage;
             BankKills(10);
             // The Ante charges the BANK (Zo, 2026-08-25) — kills bank on landing, so the

@@ -4,7 +4,7 @@
 Purpose: What currencies exist, what each is for, and the Gatekeeper roster as something the player buys rather than something the game hands out.
 Status: brainstorm
 Update trigger: when a currency gains or loses a sink, when the roster scope moves, or when Experience income is first measured.
-Last updated: 2026-08-25 (M96 made MetaState a facade; the priced respawn is Unbanked's second sink; the Cloaker counted)
+Last updated: 2026-08-30 (Ante parked; kills bank as they land; respawn spends the realm bank; Cloaker debut is wave 4)
 -->
 
 ## What this covers
@@ -21,28 +21,32 @@ category that governs juicing — is settled and lives in `../Design/3-Mechanics
 are the whole of it; there is no Experience field anywhere in `Sim/`, and `BuyProtocol` charges
 0. `MetaState` is no longer where they live — `M96` split the save into a `BoarderState` that
 travels with the player and a `RealmState` that stays with the world, and `MetaState` is now a
-facade forwarding to both. The salvage ledger is the realm's half. Two stakes are shipped and
-multiply Salvage: the intensity dial (`IntensityJuice`, `TetherSiphon`) and carry depth
-(`HatchBank.CarryConvert`).
+facade forwarding to both. The salvage ledger is the realm's half. **Kills bank as they land** (`RunSim.AwardKill` →
+`BankKill` → `_meta.EarnSalvage`). Unbanked fills only on a deliberate Withdraw at the Hatch.
+Carry depth (`HatchBank.CarryConvert`) is still a stake on that opt-in pile. The intensity dial
+(`IntensityJuice`, `TetherSiphon`) is **parked** (`Ante.Enabled = false`, Zo 2026-08-30;
+`../Decisions.md`) — Waves run at dial 0; the spend path stays behind the flag.
 
 **Four facts the build already supplies, which the ideas below depend on:**
 
 - The Hatch-bank window pays nothing — `CurrentKillAward` returns 0 in `WaveMode.HatchBank`.
   The window's reward slot is empty by design, not by oversight.
 - Kind introduction is wave-indexed and resets every Run (`WaveDirector.HunterPerWave`,
-  `ThiefPerWave`; the `GatekeeperKind` doc comments read *"introduced in wave 2 / 3"*, and the
-  Cloaker joined at wave 3 with `M63-3`). Five Waves cannot introduce twelve kinds, so the
-  roster of twelve needs a second axis whatever else is decided.
+  `ThiefPerWave`, `CloakerPerWave`). Hunter debuts wave 2, Thief wave 3, Cloaker wave 4
+  (`CloakerPerWave = {0,0,0,1,2}` — one wave after the Thief so two new kinds do not land
+  together). Five Waves cannot introduce twelve kinds, so the roster of twelve needs a second
+  axis whatever else is decided.
 - Salvage value is flat per kill and does not vary by kind — `MetaUpgrades.SalvagePerKill()`
   now takes no argument and returns 25. The Scavenging term this line used to carry is gone
   with the attribute tracks; `UpgradeTrack` has one member left, `HatchArmor`. So per-kind
   value has nothing to replace or multiply, which sharpens the Open question below rather
   than answering it.
-- **Unbanked gained a second sink** with the `M98` recut (`Sim/Run/Respawns.cs`): a dead seat
-  buys its way back with the Unbanked it is carrying at `150 × (taken + 1)`, the counter the
-  Run's rather than the seat's, and the remainder of the carry survives the death. Nothing else
-  can pay — not the realm's bank, not another seat. So carry depth now prices mortality as well
-  as convert value, and any Core or stake idea below lands on a lever that already has two jobs.
+- **The respawn fee spends the realm's bank** (`RunSim.TryRespawn` → `SpendBanked`; refusal
+  `"not enough banked"`). Cap is 2 (`Respawns.MaxRespawns`), bleed-out 10 s, price
+  `150 × min(taken+1, 3)`. The class-comment on `Respawns.cs` still describes the superseded
+  Unbanked-purse rule; the method body and `RespawnsTests.TryRespawn_ChargesTheRealmsBank_NotAnySeatsCarry`
+  are the record. Unbanked is an opt-in stake, not the buy-back purse. Any Core or Ante idea
+  below spends the same bank kills already fill.
 
 ## Graduation test
 

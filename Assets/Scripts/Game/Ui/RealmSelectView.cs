@@ -30,6 +30,7 @@ namespace GatekeepersProtocol.Game
         [SerializeField] RectTransform _boarderRowsRoot;
         [SerializeField] GameObject _boarderRowTemplate;
         [SerializeField] TMP_InputField _nameField;
+        [SerializeField] TMP_InputField _boarderNameField;
         [SerializeField] Button _createBtn;
         [SerializeField] Button _enterBtn;
         [SerializeField] Button _backBtn;
@@ -78,11 +79,16 @@ namespace GatekeepersProtocol.Game
         static readonly Color Normal = new Color(0.62f, 0.66f, 0.72f, 1f);
         static readonly Color Refused = new Color(0.75f, 0.42f, 0.42f, 1f);
 
-        /// <summary>What the player has typed for a new realm's name. Read on demand; there is
-        /// no per-keystroke listener because nothing reacts until Create is pressed.</summary>
+        /// <summary>What the player typed for a new realm's name.</summary>
         public string NameText
         {
             get { return _nameField != null ? _nameField.text : ""; }
+        }
+
+        /// <summary>What the player typed for a new Boarder's name.</summary>
+        public string BoarderNameText
+        {
+            get { return _boarderNameField != null ? _boarderNameField.text : ""; }
         }
 
         void Awake()
@@ -129,6 +135,7 @@ namespace GatekeepersProtocol.Game
             Require(_boarderRowsRoot, "_boarderRowsRoot");
             Require(_boarderRowTemplate, "_boarderRowTemplate");
             Require(_nameField, "_nameField");
+            Require(_boarderNameField, "_boarderNameField");
             Require(_createBtn, "_createBtn");
             Require(_enterBtn, "_enterBtn");
             Require(_backBtn, "_backBtn");
@@ -155,9 +162,13 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>The code and the way aboard. Shown once a join code has been asked for, so
         /// the player can copy it before committing — the code is the only thing a friend needs
-        /// and it is easier to send from here than from inside the ship.</summary>
+        /// and it is easier to send from here than from inside the ship. Drawn last so a
+        /// chooser widget added after this panel in the Hierarchy cannot punch through it.
+        /// </summary>
         public void ShowSession()
         {
+            if (_sessionPanel != null)
+                _sessionPanel.transform.SetAsLastSibling();
             UiBind.Show(_sessionPanel, true);
         }
 
@@ -312,7 +323,7 @@ namespace GatekeepersProtocol.Game
             if (_enterBtn != null) _enterBtn.interactable = enabled;
         }
 
-        /// <summary>Put text in the name field. The chooser only ever clears it today, but a
+        /// <summary>Put text in the realm name field. The chooser only ever clears it today, but a
         /// field you can read and not write is half a binding — and a caller that sets a name
         /// and reads it back is the only way to prove the field is wired rather than merely
         /// present in the scene.</summary>
@@ -321,7 +332,16 @@ namespace GatekeepersProtocol.Game
             if (_nameField != null) _nameField.text = name == null ? "" : name;
         }
 
-        public void ClearName() { SetName(""); }
+        public void SetBoarderName(string name)
+        {
+            if (_boarderNameField != null) _boarderNameField.text = name == null ? "" : name;
+        }
+
+        public void ClearName()
+        {
+            SetName("");
+            SetBoarderName("");
+        }
 
         void OnDestroy()
         {

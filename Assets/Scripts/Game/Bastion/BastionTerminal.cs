@@ -102,6 +102,11 @@ namespace GatekeepersProtocol.Game
                 {
                     case BastionTerminalKind.Master:
                         s_prompt.Clear();
+                        if (!Ante.Enabled)
+                        {
+                            s_prompt.Append('[').Append(startKey).Append("] Master Control");
+                            return s_prompt.ToString();
+                        }
                         bool masterArmed = _game != null && _game.IsWaveStartArmed(terminalId);
                         if (masterArmed)
                             s_prompt.Append('[').Append(startKey).Append("] Master Control");
@@ -183,6 +188,13 @@ namespace GatekeepersProtocol.Game
                 int n = WavesToComplete;
                 if (_layout != null)
                     _layout.TryGetFieldProgress(terminalId, out k, out n);
+                if (!Ante.Enabled)
+                {
+                    s_prompt.Clear();
+                    s_prompt.Append('[').Append(startKey).Append("] Terminal ").Append(terminalId)
+                        .Append(" — start Wave (").Append(k).Append('/').Append(n).Append(')');
+                    return s_prompt.ToString();
+                }
                 bool armed = gc != null && gc.IsWaveStartArmed(terminalId);
                 s_prompt.Clear();
                 if (armed)
@@ -260,6 +272,7 @@ namespace GatekeepersProtocol.Game
 
         static void AppendStake(StringBuilder sb, GameController gc)
         {
+            if (!Ante.Enabled) return;
             if (gc == null || gc.Sim == null) return;
             var sim = gc.Sim;
             int idx = sim.CurrentWaveIndex;

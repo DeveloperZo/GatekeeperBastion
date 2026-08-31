@@ -5,7 +5,7 @@ Purpose: the ubiquitous language of Gatekeeper's Protocol. One name per thing, u
 in builder docs, in player docs and in the game's own text. This file is the authority.
 Status: working
 Update trigger: when a term is added, renamed, or retired, or when player-facing voice rules change.
-Last updated: 2026-08-25 (Master Control is one Convert window not five, the per-Boarding Convert cap struck as nonexistent, zone Waves-per-trigger un-inverted, RunPhase.Returned row added, arrivals x dwell recited to 2-Dynamics; Equipment unlock corrected to the first Convert, Thief row's Hatch-bank noun, rule 4's trap 8 carve-out, Compendium row named to the eight volumes on disk, dead Field-Manual link in voice rule 4, trap 4 restated for the folder/remote split; 2026-08-24: Boarding/Ante/ante up/Convert player-text renames — trap 8, realm row, voice rule 1 mirror, protocol roster refresh)
+Last updated: 2026-08-30 (Ante parked — Ante.Enabled = false; recall pad named; First Time Out's Reference ships in the pause reader; 2026-08-29: Outrider and EMP named for FORGE's follower; Master Control is one Convert window not five, the per-Boarding Convert cap struck as nonexistent, zone Waves-per-trigger un-inverted, RunPhase.Returned row added, arrivals x dwell recited to 2-Dynamics; Equipment unlock corrected to the first Convert, Thief row's Hatch-bank noun, rule 4's trap 8 carve-out, Compendium row named to the eight volumes on disk, dead Field-Manual link in voice rule 4, trap 4 restated for the folder/remote split; 2026-08-24: Boarding/Ante/ante up/Convert player-text renames — trap 8, realm row, voice rule 1 mirror, protocol roster refresh)
 -->
 
 **One thing, one name, everywhere.** The same word in the code, in `Docs/`, in
@@ -80,15 +80,16 @@ everything the game contains.
 | **Boarder** | The player. The one who cuts in. | operative, marine, survivor, defender |
 | **the tether** | The line from the Ship to the Bastion. What the siphon runs along, and what the Hatch anchors. | cable, line, connection |
 | **Hatch** | The umbilical junction back to the Ship. The Boarder's way out, and the thing they must hold. | door, gate, objective, junction |
+| **recall pad** | Hold Interact on the Ship-teleporter graybox beside a Field/Master terminal; teleports the Boarder to the Hatch while Tethered. Code: `HatchRecallPad`. | portal *(GO name only)*, cyan square *(retired runtime VFX)*, teleporter *(Ship wake pad)* |
 | **embark** | Leaving the Ship for the Bastion, from the NAV MAP. | deploy, launch, start mission |
-| **Prep** | The quiet state between Waves. Untimed, pays nothing, the only time anting up raises the Ante. | downtime, intermission, break |
+| **Prep** | The quiet state between Waves. Untimed, pays nothing. When Ante is enabled, the only time anting up raises the Ante. *(Ante parked 2026-08-30 — `Ante.Enabled = false`.)* | downtime, intermission, break |
 | **Assault** | The state while a Wave is live. | combat, the fight |
 | **the Siphon Draw** | Retired as the Wave-start verb (M52). Prep `T` starts the selected trigger (Field, Master, Convert). `T` without a select is a logged refusal. | spawn, trigger, call the wave, the draw *(alone)* |
-| **Wave** | One delivery of Gatekeepers. `+/-` ante up, `E` selects, `T` starts at a **field terminal**. How many a trigger runs is the **zone's**, not the terminal's — `DemoZones.WavesPerTriggerByZone` is `{ 1, 3 }`, so zone 1 (T1, T2) runs **1** per trigger and zone 2 (T3) runs **3** back to back. Prep `E` then `T` at the Hatch is a Convert. | round, horde |
-| **field terminal** | A bastion console marked **T**. `E` selects the Ante; `T` starts that zone's Boarder-hunt Waves. The **D** belongs to the zone, not the terminal: `DemoZones.HatchBankBlocked` holds the Convert shut until **every** terminal in the zone is complete, and the zone's survived Convert is what opens its door. | station *(alone)*, objective, console *(the Ship's four are stations)* |
+| **Wave** | One delivery of Gatekeepers. When Ante is enabled, `+/-` ante up and `E` selects intensity; `T` starts at a **field terminal**. How many a trigger runs is the **zone's**, not the terminal's — `DemoZones.WavesPerTriggerByZone` is `{ 1, 3 }`, so zone 1 (T1, T2) runs **1** per trigger and zone 2 (T3) runs **3** back to back. Prep `E` then `T` at the Hatch is a Convert. *(Ante parked — Waves run at dial 0.)* | round, horde |
+| **field terminal** | A bastion console marked **T**. `T` starts that zone's Boarder-hunt Waves. When Ante is enabled, `E` selects the Ante. The **D** belongs to the zone, not the terminal: `DemoZones.HatchBankBlocked` holds the Convert shut until **every** terminal in the zone is complete, and the zone's survived Convert is what opens its door. | station *(alone)*, objective, console *(the Ship's four are stations)* |
 | **cleared** / **stripped** | Survived Master Control's Convert half. Field Waves beaten is field stripped, not Escaped. | won, completed, extracted |
 | **Escaped** | Terminal, good: Master Control's Convert half survived. Wave 5 does not Escaped. | won, victory |
-| **Master Control** | Control Room console. `E` then `T` starts 5 terminal Waves (door sealed) then **one** Convert window (door open) — `MasterControl.TerminalWaves` is 5, `HatchWaves` is 1. `HatchWaves` is a static int only so tests can pin the multi-window machinery; production never writes it. | win terminal, extract console, D1 *(the door is not the win)* |
+| **Master Control** | Control Room console. `E` then `T` starts 5 terminal Waves (door sealed) then **one** Convert window (door open) — `MasterControl.TerminalWaves` is 5, `HatchWaves` is 1 (`const`). | win terminal, extract console, D1 *(the door is not the win)* |
 
 A Boarding that ends badly is **lost**: the Boarder went down, or the Hatch fell. It is listed
 under Boarding phases below only because `RunPhase.Lost` is a real enum value the code branches
@@ -135,7 +136,9 @@ are named here.
 | **Boarder Protocol** | The named sheet CREW QUARTERS sells: one doctrine, one Crew ability, one Personal ability, a Passive where the sheet has one. Default (0-salvage claim), VEIL and FORGE ship; unshipped specialists are marked Coming Soon (in the Compendium's Doctrine volume). | archetype, class, kit, loadout *(loadout is weapons)* |
 | **doctrine** | How a protocol treats hardware at decoy place. **STOCK** (working name, renameable) is hardware as sold. Written at `TryPlace`, not on repair. | stance, mode-as-flavour |
 | **Crew ability** | A Boarder-owned burst on `G`: brief window, moderate-to-long cooldown. Default sheet: **Barrage** (working name, renameable). | skill, perk, track, weapon ability |
-| **Personal ability** | A Boarder-owned burst on `H`: brief window, long cooldown, for the presser. Default sheet: **Rush** (working name, renameable). | skill, perk, ult, weapon ability |
+| **Personal ability** | A Boarder-owned burst on `H`: brief window, long cooldown, for the presser. Default sheet: **Rush** (working name, renameable). FORGE's personal is the **Outrider** (press) and **EMP** (hold). | skill, perk, ult, weapon ability |
+| **Outrider** | FORGE's follower. Travels with the Boarder and fires on the Gatekeeper nearest to them. Not the Drone. | Drone *(the third weapon slot)*, companion, pet, drone |
+| **EMP** | The Outrider's special: light damage and a root, and near the turret it converts that turret's fire for the window. | stun, freeze, shock |
 | **Passive** | Always-on protocol rule. Reserved — Default has none. Specialist sheets pick one later. A rule, never a number. | stat, track, perk |
 | **twist** | Reserved protocol modifier. Ships later. | mutator, relic, charm |
 | **loadout** | The Primary, Secondary and Drone a Boarder embarks with, plus their Equipment. | kit, gear, build |
@@ -158,8 +161,8 @@ mark in the commit that builds it.
 | **unbanked** | Salvage earned this Boarding that has not gone through the Hatch. Lost on down or Hatch breach. | floating, pending, at-risk |
 | **Convert** | Prep `E` then `T` while looking at the Hatch: a Wave that takes Unbanked through to the ship. **There is no per-Boarding cap.** `RunSim.TriggerDraw` refuses one on three grounds only — not Tethered, not Prep, or `TotalUnbanked` at 0 (`hatch-bank refused — unbanked=0`); a Convert also does not consume a field Wave. | Hatch-bank *(retired for player text 2026-08-24; code keeps HatchBank/WaveMode.HatchBank — trap 8)*, extract, cash-out, deposit |
 | **banked** | Salvage on the ship that the player can spend. | stored, saved |
-| **Ante** | The per-Wave wager 0–5: more Salvage per Gatekeeper, more Gatekeepers. Raised by anting up. | intensity *(retired for player text 2026-08-24; code keeps IntensityJuice/Siphon — trap 8)*, siphon dial, difficulty, risk slider, multiplier *(as a name for this)* |
-| **ante up** | Paying Unbanked at a trigger to raise the Ante. | juice *(retired for player text 2026-08-24)*, siphon, buy difficulty, map device |
+| **Ante** | The per-Wave wager 0–5: more Salvage per Gatekeeper, more Gatekeepers. Raised by anting up. *Parked 2026-08-30 — `Ante.Enabled = false`; Waves at dial 0. See `Decisions.md` / `Ante.md`.* | intensity *(retired for player text 2026-08-24; code keeps IntensityJuice/Siphon — trap 8)*, siphon dial, difficulty, risk slider, multiplier *(as a name for this)* |
+| **ante up** | Paying Unbanked at a trigger to raise the Ante. *Parked with Ante 2026-08-30.* | juice *(retired for player text 2026-08-24)*, siphon, buy difficulty, map device |
 | **track** | A permanent upgrade line at FABRICATION (Hatch Armor). | skill, perk, stat line |
 | **party** | Connected seats in a friends session. | group, team |
 | **party lead** | The host. Owns NAV EMBARK. | leader, captain |
@@ -205,7 +208,7 @@ same pause entry).
 | Heading | Who reads it | In the pause reader |
 |---|---|---|
 | `## Game` | Boarder, one pause | **Shown** (plus title and `## See also`) |
-| `## Reference` | Builder / fuller brief | Omitted |
+| `## Reference` | Builder / fuller brief. **Exception (2026-08-30):** First Time Out (`Getting-Started`) — the numbered walkthrough is player-facing. | Omitted, except First Time Out, whose Reference body ships with the Game notes (no `## Reference` heading) |
 | `## See also` | Both | Shown (navigation) |
 | `## Gaps` | Builder audit | Stripped at copy and at load |
 
@@ -225,7 +228,7 @@ Test a Play page's Game dimension (skip HTML comments, Reference, and Gaps). One
 | 10 | No analysis vocabulary (rule 3). | "A group arrives together." | `gatekeeper-seconds`, `hatchDist`. |
 | 11 | Visible body starts as player prose. HTML comments and `## Gaps` are not the opening. | First readable line is the title, then the world. | Purpose / Status as the thing a Boarder reads. |
 | 12 | Do not teach by citing another game or by riddle. | "They arrive from garrison to repel an intrusion." | "Like a Left 4 Dead tank…" |
-| 13 | `## Game` is the pause dimension; `## Reference` holds the fuller brief. | Game then Reference then See also. | One undifferentiated body the reader dumps whole. |
+| 13 | `## Game` is the pause dimension; `## Reference` holds the fuller brief, except First Time Out, where the reader shows the walkthrough. | Game then Reference then See also. | One undifferentiated body the reader dumps whole — First Time Out is the listed exception. |
 
 Always-on for friends alpha: every shipped entry is readable from the first pause. Unlock-
 on-encounter, a companion diary, a completion ledger, and a stat-block-as-entry are

@@ -34,7 +34,7 @@ Which is why the ones still standing matter to a Boarder who cannot afford the f
 
 ## The interaction
 
-**Opening and joining.** The realm's owner opens it from the chooser — OPEN TO FRIENDS (or HOST ON LAN as the fallback) — and reads out a join code; JOIN on the main menu takes it. The session refuses until the realm's Boarder is armed: friends unlock the moment the ARMORY's MK-1 is granted, or the moment the opening stretch ends. The party stands on one shared Ship; each seat shops its own loadout.
+**Opening and joining.** The realm's owner opens it from the chooser — OPEN TO FRIENDS (or HOST ON LAN as the fallback) — and reads out a join code; JOIN on the main menu takes it. Closing the panel and opening again for the same realm keeps that code, so a friend already holding it is not locked out by a second press. The session refuses until the realm's Boarder is armed: friends unlock the moment the ARMORY's MK-1 is granted, or the moment the opening stretch ends. The party stands on one shared Ship; each seat shops its own loadout.
 
 **Embarking.** Only the party lead's EMBARK commits the party. It refuses unless every guest has pressed Ready, then runs a countdown any seat can cancel and any un-Ready aborts; joins are refused at the door while the countdown runs, so the party embarks with exactly the seats it counted. As the Boarding goes live, everyone aboard is written into the Boarding's seat roster.
 
@@ -93,6 +93,7 @@ Core, loop. Serves Fellowship (`../Design/1-Experience.md` §1.2, 2026-08-16 ran
 - Ready gate, party-lead-only EMBARK, countdown, cancel and abort-on-un-Ready — `Assets/Scripts/Game/Net/NetPartyLobby.cs` (`RequestPartyEmbarkServerRpc`, `SetReadyServerRpc`, `CancelCountdownServerRpc`, `AbortCountdown`)
 - Joins refused while the countdown runs — `Assets/Scripts/Game/Net/NetSession.Internal.cs` (`OnConnectionApproval` refuses on `IsCountingDown`)
 - Friends unlock on being armed (MK-1) or the demo ending — `Assets/Scripts/Game/Demo/DemoProgress.cs` (`MultiplayerUnlocked`), gated at `Assets/Scripts/Game/Flow/RealmSelectController.Hosting.cs` and `Assets/Scripts/Game/Flow/MainMenuController.cs`
+- Same realm, same join code: CLOSE keeps the allocation; OPEN reuses it — `Assets/Scripts/Game/Flow/RealmSelectController.Hosting.cs` (`OnOpenToFriends`, `OnSessionBack`)
 - The Boarding's seat roster: everyone aboard at embark, admissions in Prep only, departures held to the boundary — `Assets/Scripts/Game/Net/RunSeats.cs` (`BeginRun`, `Admit`, `NoteLeft`, `ApplyBoundary`)
 - The boundary applied, doors recomputed and the count refreshed in one step — `Assets/Scripts/Game/Bastion/GameController.Seats.cs` (`TickSeatRoster`)
 - FOLLOW: Prep-only, free, named refusal during an Assault, door opens on arrival — `Assets/Scripts/Game/Net/NetPlayerAvatar.Follow.cs` (`TryAcceptFollow`, `AwaitingFollow`)

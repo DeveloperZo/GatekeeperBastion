@@ -22,9 +22,9 @@ has had; no tuning pass has come close.
 
 | Rule | Protects | Where |
 |---|---|---|
-| A Run ends early on a death nobody can pay for, on breach, or on a Docked return at a surviving bank window — nothing else. | Challenge (fail state); Fellowship (guest exception) | Hatch destroyed still ends it outright: `ShipSystems.HatchDestroyed` → `EndRun` → `Lost`, `PodEjections++`. A death no longer does on its own — see the respawn row below; `GameController.PlayerDied` calls `NotifyPlayerDown` only once the dead seat cannot pay and no other seat is fighting. A client Boarder at 0 HP never called that path (`endsTheRunOnDeath` false on the avatar, `M49`); the `M98` recut put host and solo on the same footing. Amended 2026-08-17 (Zo), superseding "death is the only thing that ends a Run early": a player who survives a hatch-bank window may return to the Ship — held interact at the Hatch, until the next Wave is triggered — ending the Run **Docked**, not Lost; banked Salvage and door state persist via the successful-bank snapshot (`../Decisions.md`, *Locked — return to Ship at a surviving bank*). |
-| A dead seat buys its way back out of the realm's bank. | Challenge (dying still costs); Fellowship (guest, host and solo on one rule) | `Respawns.Refuse` allows it anywhere in `RunPhase.Tethered`; `RunSim.TryRespawn` debits `Respawns.CostFor(taken)` via `SpendBanked`. Re-pursed 2026-08-25 with the award path: the carried pile it used to bill no longer fills on its own, and one pot means a death competes directly with a Tier. |
-| Clearing the last Wave is not the win. Master Control's Hatch-bank is. | Fantasy (boarding objective); Challenge | Wave 5 terminal clear does not `CompleteRun`. `Escaped` / `CleanExits++` only after the Master Control Hatch half (`AdvanceMasterControl`). Both endings exit by one door: RETURN TO SHIP. |
+| A Run ends early on a death nobody can pay for, on the respawn cap or bleed-out, on breach, or on a Docked return while `DockOffered` — nothing else. | Challenge (fail state); Fellowship (guest exception) | Hatch destroyed still ends it outright: `ShipSystems.HatchDestroyed` → `EndRun` → `Lost`, `PodEjections++`. A death no longer does on its own — see the respawn row below; `GameController.PlayerDied` calls `NotifyPlayerDown` only once the dead seat cannot pay and no other seat is fighting. A client Boarder at 0 HP never called that path (`endsTheRunOnDeath` false on the avatar, `M49`); the `M98` recut put host and solo on the same footing. Amended 2026-08-17 (Zo), restamped 2026-08-30: `DockOffered` after a zone shutoff (`OfferDockAfterZoneShutoff`) or a survived Hatch-bank (`OfferDockIfBankSurvived`); held interact at the Hatch / `HatchPortal` until the next Wave ends the Run **Docked**, not Lost. Banked Salvage and door state persist via the successful-bank snapshot (`../Decisions.md`, *Locked — return to Ship at a surviving bank*). |
+| A dead seat buys its way back out of the realm's bank. | Challenge (dying still costs); Fellowship (guest, host and solo on one rule) | `Respawns.Refuse` allows it anywhere in `RunPhase.Tethered`; `RunSim.TryRespawn` debits `Respawns.CostFor(taken)` via `SpendBanked`. Cap `Respawns.MaxRespawns` (2, all seats, one counter); bleed-out `Respawns.BleedOutSeconds` (10s) — numbers in `4-Data.md`. Re-pursed 2026-08-25: the carried pile it used to bill no longer fills on its own. Stamped 2026-08-30 for the cap and the clock. |
+| Clearing the last Wave is not the win. Throwing the Master switch after the elite is. | Fantasy (boarding objective); Challenge | Wave 5 terminal clear does not `CompleteRun`. The Hatch starts the finale when `ControlRoomReachable` (`HatchOffersWaveStart`); the Master terminal refuses start and is the end (`ShutOffMasterControl` → `Escaped` / `CleanExits++`). Both endings exit by one door: RETURN TO SHIP. Stamped 2026-08-30. |
 | Shooting a Default makes it come for you. | Challenge; Expression (you choose to pull) | `EnemyGatekeeper.OnDamaged`. |
 | A Hunter can never hurt the door, at any tuning. | Fantasy (kind identity); Challenge | `hatchDamage = 0`, `ignoresHatch`. |
 | A Thief hunts the Boarder on a field-terminal Wave; shooting it still will not shout. | Fantasy (kind identity); Challenge | `ThiefGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`; `CanBeProvoked` stays false. |
@@ -83,7 +83,7 @@ is which currency each stake is paid in and what it buys.
 
 | Stake | Paid in | Raises | Where |
 |---|---|---|---|
-| Intensity juice | Banked Salvage, at a look-at trigger | bodies and per-kill value | `IntensityJuice`, `TetherSiphon`, `WaveDirector.NextWave` |
+| Intensity juice | Banked Salvage, at a look-at trigger | bodies and per-kill value | `IntensityJuice`, `TetherSiphon`, `WaveDirector.NextWave`. Parked 2026-08-30: `Ante.Enabled = false`, `IntensityJuice.Try` refuses, Waves at dial 0; `Enabled` is the return switch. |
 | Withdraw depth | risk, by choosing to carry banked salvage | what a Convert can convert and what a wipe costs | `RunSim.Withdraw`, `HatchBank.CarryConvert` |
 | Run multipliers | *proposed* | wave attributes and yield on that axis | `../Brainstorms/economy.md` |
 | Roster authorship | *proposed* | which kinds exist, and what each is worth | `../Brainstorms/economy.md` |
@@ -117,22 +117,23 @@ Ready / EMBARK). Reach here before reaching for a number.
 
 | Lever | Window | Protects | Why that window |
 |---|---|---|---|
-| Intensity juice | Prep only, looking at a trigger. `IntensityJuice.Try` spends **banked** Salvage to raise (re-pursed 2026-08-25); lower is free, no refund. `SetSiphonLevel` remains for tests. `T` starts. Locked in Assault. | Expression; Challenge | The draw size is a pre-commitment, and it now costs take-home progress rather than money that was never safe. Choosing the stake after seeing the Wave is not a choice. |
+| Intensity juice | Parked 2026-08-30. `Ante.Enabled = false`; `IntensityJuice.Try` refuses and Waves run at dial 0. When the flag is on: Prep only, looking at a trigger; spends **banked** Salvage to raise (re-pursed 2026-08-25); lower is free, no refund. `SetSiphonLevel` remains for tests. `T` starts. Locked in Assault. | Expression; Challenge | The draw size is a pre-commitment, and it costs take-home progress rather than money that was never safe. Choosing the stake after seeing the Wave is not a choice. `Enabled` is the return switch. |
 | The weapon and where its wheel points | Ship only. `ShipCommands.BuyWheelUpgrade`; Bastion code never calls `EquipWeapon`. | Expression | The weapon is the build; a Run is played with the one you brought. |
 | Boarder Protocol / Passive | Ship only. `CrewQuartersStation` / `ShipCommands.PickPassive`. Default sheet owned from first session. | Expression; Fantasy (named identity) | A Run is played with the sheet you brought. G/H fire in Assault (`PlayerProtocolAbilities`). |
-| Hatch-bank | Prep, looking at the Hatch, with a carried pile above 0; locked until the zone's terminals are complete (Zo, 2026-08-17). `GameController.StartHatchBankWave`. | Expression; Fantasy (extract); Challenge | Convert is a fight, not a shop action, and since 2026-08-25 it is **out of the demo's critical path**: with kills banking on landing the pile is 0 unless the player deliberately withdrew, so the window cannot start unasked. It survives because Master Control's finale runs on it. No per-Run cap: the slot count was deleted (`RunSim.TriggerDraw`). |
-| Return to Ship | After surviving a Hatch-bank window, until the next Wave is triggered; held interact at the Hatch. Ends the Run **Docked**, not Lost (Zo, 2026-08-17). | Challenge (risk is mitigated at a window, not at will); Expression (banked stays) | Banked Salvage and door state persist via the successful-bank snapshot. One window, not a bail-out lever. Parked intent, not spec: when the juice/multiplier mechanic lands, leaving early loses or reduces the salvage multiplier. |
+| Hatch-bank | Prep, looking at the Hatch, with a carried pile above 0; locked until the zone's terminals are complete (`HatchBankStartBlocked`, Zo, 2026-08-17). `GameController.StartHatchBankWave`. | Expression; Fantasy (extract); Challenge | Convert is a fight, not a shop action, and since 2026-08-25 it is **out of the demo's critical path**: kills bank on landing, so the pile is 0 unless the player withdrew. Still a lever when Unbanked > 0 and `HatchBankStartBlocked` is false. No per-Run cap: the slot count was deleted (`RunSim.TriggerDraw`). Stamped 2026-08-30. |
+| Return to Ship | After a zone shutoff (`OfferDockAfterZoneShutoff`) or a survived Hatch-bank (`OfferDockIfBankSurvived`), until the next Wave; held interact at the Hatch / `HatchPortal`. Ends the Run **Docked**, not Lost (Zo, 2026-08-17; restamped 2026-08-30). T2/T5 `HatchRecallPad` teleports to the Hatch — convenience, not a fail-state. | Challenge (risk is mitigated at a window, not at will); Expression (banked stays) | Banked Salvage and door state persist via the successful-bank snapshot. One window class, not a bail-out lever. Parked intent, not spec: when the juice/multiplier mechanic lands, leaving early loses or reduces the salvage multiplier. |
 | Party Ready / EMBARK | Ship, friends session. Host is party lead (`NetPartyLobby`). | Fellowship | Closed (`M72`, 2026-08-17). Solo Continue never starts a session. |
 | The equipment slot | Ship only. `ShipCommands.BuyEquipmentSlot()` unlocks the slot for `EquipmentCatalog.SlotPrice = 300`, then `ShipCommands.BuyEquipment(EquipmentId)` fills it. | Expression | Repairing needs the rig owned *and* carried (`GameController.ApplyMetaEffects` configures `RepairInteractable` to 0 HP/s when it is not), so how much door the Boarder can buy back is settled before embarking. Purchasable in-Run it would turn a failing Hatch into a wallet check. |
-| Start Wave | NAV MAP, before embarking. Party lead's pick in a friends session. | Fellowship; Challenge | A start of N delivers Waves 1..N back to back. |
+| Start Wave | NAV MAP (`MapStation`), before embarking. Party lead's pick in a friends session, off-demo. Demo hides the picker and forces Wave 1 (`DemoActive`, 2026-08-30). | Fellowship; Challenge | A start of N delivers Waves 1..N back to back. The demo's refight lives at the terminal retrigger, not at NAV. |
 
 **What the player may never change:** when a Wave arrives, or what a Gatekeeper kind
 refuses to do. Those are section 3.1 (Challenge fail state, Fantasy kind identity) and they
 are not negotiable from inside a Run. Whether the Run can be left moved off this list on
 2026-08-17 (Zo) — at exactly the one window above; there is still no leave-anytime lever.
 
-**Intensity is the oldest instance.** The body-count table is still
-(`Sim/Meta/TetherSiphon.cs`), not a formula — do not simplify it into one. The player
+**Intensity is the oldest instance.** Parked 2026-08-30: `Ante.Enabled = false`, `IntensityJuice.Try`
+refuses, Waves at dial 0; flip `Enabled` to return it. The body-count table is still
+(`Sim/Meta/TetherSiphon.cs`), not a formula — do not simplify it into one. When the flag is on, the player
 authors the stake by juicing **banked** Salvage at a look-at trigger (`Sim/Run/IntensityJuice.cs`).
 `WaveDirector` sizes Waves off the same table the reward comes from, so payout and body count cannot drift
 apart.
@@ -270,7 +271,7 @@ Wave** than before either change.
 |---|---|---|
 | Hatch HP | `RunSim.RepairHatch`, paid from banked Salvage | gatekeeper dwell × landing rate |
 | Carried Salvage | `RunSim.Withdraw` only | Hatch-bank drip/dump, hatch-hit attrition, wipe on the death that ends the Run and on breach |
-| Banked Salvage | `AwardKill` → `BankKill`, as each body falls; Hatch-bank drip/dump | repair, juice spend, respawn fee (`Respawns.CostFor`), withdraw, Ship purchases |
+| Banked Salvage | `AwardKill` → `BankKill`, as each body falls; Hatch-bank drip/dump | repair, juice spend (drains only while `Ante.Enabled`; parked 2026-08-30 it does not), respawn fee (`Respawns.CostFor`), withdraw, Ship purchases |
 | Player HP | run start / bind; pool is frozen (`MetaUpgrades.PlayerMaxHp`) | gatekeeper swings |
 | Stamina | regen after a 1s delay; pool is frozen | sprint |
 | Clip | reload | firing |
@@ -291,9 +292,11 @@ or UI (`Architecture.md` gotcha 4). A `ShipDress` root skips the Ship Environmen
 without it, collider graybox is still generated. Kit geometry persists.
 
 - **Splash** — title card; any key or a 2.5s timeout advances.
-- **MainMenu** — CONTINUE / START NEW (with overwrite confirm) / HOST / JOIN / OPTIONS / QUIT.
-  Host/Join start a friends session (`NetSession` DDOL) before the hub. Solo Continue never does.
-- **RealmSelect** — the realm chooser. START NEW opens it; CONTINUE re-enters the realm played
+- **MainMenu** — CONTINUE / REALMS (`_startNewBtn`) / JOIN / OPTIONS / QUIT. There is no HOST
+  here. JOIN starts a friends session (`NetSession` DDOL) from this screen; hosting is
+  `OPEN TO FRIENDS` / `HOST ON LAN` on `RealmSelectView`. Solo Continue never starts a session.
+  Stamped 2026-08-30.
+- **RealmSelect** — the realm chooser. REALMS opens it; CONTINUE re-enters the realm played
   last. A session is a Boarder paired with a realm, and this is where that pair is chosen.
 - **Ship - CoOp** — walkable hub, four station consoles, one per alcove. No Run sim here.
   Named for the party it can hold, and solo play lives here too — the old `Ship - Demo` hub
@@ -313,7 +316,7 @@ without it, collider graybox is still generated. Kit geometry persists.
   there yet.
 
 While `Phase == Tethered` the sim alternates two sub-states (`Sim/Run/AssaultState.cs`):
-**Prep**, quiet, no Gatekeepers and no income, the only window intensity juice moves in; and **Assault**,
+**Prep**, quiet, no Gatekeepers and no income, the window intensity juice moves in when `Ante.Enabled` (parked 2026-08-30); and **Assault**,
 a live draw where kills pay and intensity is locked. `WaveSpawner` reports the Wave dead via
 `RunSim.NotifyAssaultCleared()` when spawning has finished and the alive count hits zero.
 

@@ -355,3 +355,53 @@ Three claims, each falsifiable from the next log:
 **Not yet acted on.** These are the level/economy dials, and the session's three shipped changes
 (the Hatch as the sole start line, enemy speeds down, terminals banking) were the ones Zo named.
 
+---
+
+## 2026-08-29 — FORGE on MR-35 T2, ALPHA-7, Hatch lost on wave 8
+
+Log: `Logs/GatekeepersProtocol_2026-08-29_22-53-02_p14936.log`. Clean (`dev=0`). FORGE, no Repair Rig, intensity 0. Primary **MR-35 T2**, Secondary MK-1 T0. 671 s. Hatch 600 → breached on wave 8. Zone 1 T2, then T2 shut, zone 2 T5, then Master Control.
+
+**Verdict:** _pending_ — concur, update, or replay.
+
+**Numbers.** 237 kills, **230 with Primary**, 7 unattributed. Machines absorbed **0** damage all Run. EMP blast: **8 holds, 6 at 0 caught, one 2, one 4**. Charge at special **10/10** on every full spend except a 7/10 turret on wave 7 and a 3/10 panic on wave 8. Logged deploy-first: outrider, outrider, outrider, turret — the first of those is a latch bug (turret stood through wave 1; `BeginWaveMachines` wiped it). Hatch 600/600 at wave 2 clear, **321/600** at waves 5–7, then 75% / 50% / 25% / breach on wave 8. Player: **54 hits of 6**. Repair refused (`equipment slot not purchased`).
+
+**Assessment `[unconfirmed]`:**
+
+1. **Do not move machine damage or charge.** *(#12 would be the wrong tier.)* T2 rifle took 97% of last hits and still died on the Hatch at Master Control. Falsified if a later T2 FORGE log shows machines taking a majority of kills.
+2. **EMP's blast is missing because the Outrider sat behind the Boarder, not because 8 m / 8 dmg is wrong.** *(#10 — where the body stands.)* 6 of 8 blasts caught nobody. Orbit is the lever; widening `EmpRadiusMetres` is not. Falsified if orbiting still logs 0-caught on a hold fired into a pack.
+3. **Ordinary melee divert is not making the machines mortal.** *(#5 leftover from Magnet Hands retiring.)* 0 damage absorbed on both bodies across 8 waves. Falsified by any log line `outrider destroyed` / `turret destroyed` from Gatekeeper swings.
+
+**Log file evicted** from `Logs/` (KeepSessions). Numbers above are the record.
+
+---
+
+## 2026-08-30 — 0.34.2 player, FORGE, zone-1 composite abandoned at trickle
+
+Played: WindowsPlayer on GENESIS, `Builds/ALPHA_BUILD_0.34.2`. Clean (`dev=0`). Realm "REALM" / "BOARDER". Two 20 s / 5 s abandons first (cursor not captured; no protocol). Third: claimed FORGE, embarked MK-1 T0, no Primary, no Repair Rig, 294 banked.
+
+Log: `C:/Users/awill/AppData/LocalLow/Gatekeeper/Gatekeeper's Protocol/Logs/GatekeepersProtocol_2026-08-30_16-40-43_p77728.log`. Seed 165737078. `result=abandoned cause=abandoned wave=2 duration=80 gross=1218 respawns=0 banked=1512`.
+
+Hatch-start (`wave started from the Hatch — zone 1 answers at T2`). Wave 1 = **11** bodies, wave 2 = **18**. Turret first (charge 0), then Outrider; Overcharge at **10/10** (58 rounds, **0 damage absorbed**); EMP **4 caught**, root 2.5 s, then Exhausted (40 rounds, **0 damage absorbed**). One hit of 6 (HP 94). Wave 2 emptied; field trickle on; quit. Kill lines still print `+42 unbanked` while the summary banks it.
+
+**Player-build defects in the same hour:** `No unlit shader found; tracers and sparks disabled` and `No usable shader found; particle FX disabled` on both 16:26 and 16:28; leftover `gatekeeper_meta.json` version 11 cannot load (needs 13).
+
+**Verdict:** _pending_ — concur, update, or replay.
+
+**Assessment `[unconfirmed]`:**
+
+1. **Machines still absorb 0.** *(#5.)* Same as 08-29 claim 3, on a 80 s zone-1 FORGE Boarding. Falsified by `turret destroyed` / `outrider destroyed` from swings, or a non-zero `damage absorbed`.
+2. **EMP can catch a pack when the Outrider is out.** *(#10.)* 4 caught vs 08-29's 6-of-8 empty. Does not close the orbit question; one hold is not a habit.
+3. **Zone 1 on MK-1 T0 + FORGE is clearable through the composite.** *(#12.)* Wave 2 emptied, Hatch never mentioned as damaged, 1 hit taken. Falsifies the 08-25 "unwinnable on MK-1 T2" claim's current-curve half — body counts are now 11/18, not 18/30. Does not say the Hatch stand after trickle is survivable; the Run ended there by quit.
+
+---
+
+## 2026-08-30 — editor, MK-1 T2 DEFAULT, Hatch lost on wave 5 `[Dev]`
+
+Not a quality entry. Checkpoint A config 1 (`MK-1 T2, DEFAULT`), `dev=1` `configTaint=1`. Cannot close a gate.
+
+Log: `Logs/GatekeepersProtocol_2026-08-30_15-36-50_p14936.log`.
+
+Recall T2 and T5 both fired. Docked zone 1 in 101 s, Hatch 600/600, Barrage + Rush used. Second Boarding: zone 2 T5, then `result=lost cause=hatch wave=5 duration=258 gross=2520 respawns=2 banked=2088`. Respawn 150 (bank 2412→2262) then 300 (2346→2046).
+
+**Swing burst, same file:** 15:44:18.368–15:44:18.636, **6 hits of 6 in 0.27 s** (HP 37→1), then death. Regen between clumps: 15:42:54 HP 21 → 15:43:18 HP 86 (~65 HP in 24 s). Regen recovers between clumps; it does not absorb a simultaneous swing cluster. The 2026-08-08 14×6 / 7.4 s figure is gone from disk; this is the live before-number, tagged `[Dev]`.
+

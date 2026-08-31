@@ -215,6 +215,8 @@ scavenging 0, and applies only when `n > 1`.
 | bank cap deepest 2 | 1218 |
 <!-- GKB:END player-count -->
 
+**Ante parked 2026-08-30.** `Ante.Enabled` is false; Waves run at dial 0. That flag is the return switch. CostPerStep stays in Sim, so this block stays generated from it.
+
 <!-- GKB:GEN intensity-juice — IntensityJuice.CostPerStep -->
 | | |
 |---|---|
@@ -291,7 +293,7 @@ rather than the seat's, so a party that keeps dying prices itself out together. 
 Hatch-bank Prep, flat 450 buy-back on Hatch-bank Assault — is retired (`Decisions.md`,
 *Locked — co-op down*). `BaseCost` = 150 is one Secondary MK-1 purchase, so the first death
 is affordable off one good push and the third is not casual. The rule is leverage **#5**; the
-numbers are **#12**.
+numbers are **#12**. Cap and bleed-out timer are the generated block below.
 
 <!-- GKB:GEN respawns — Respawns.BaseCost, CostFor, Refuse -->
 | | |
@@ -631,7 +633,7 @@ economy changed between those Runs.
 | Era: pre-weapon | filename date **≤ 2026-08-03** | `Docs/_meta/Logs/` 2026-08-02/03, pre-horde (`2-Dynamics.md`). |
 | Era: horde retune | **2026-08-04 … 2026-08-07** | After M10 / horde body counts; before wheel-era sessions dominate. |
 | Era: weapons and wheel | **2026-08-08 … 2026-08-12** | Primaries + upgrade wheel in session logs. |
-| Era: hatch-bank loop | **≥ 2026-08-13** | Field terminals, Unbanked, Hatch-bank, intensity juice, Master Control. |
+| Era: hatch-bank loop | **≥ 2026-08-13** | Field terminals, Unbanked, Hatch-bank, intensity juice (parked in the current alpha, 2026-08-30), Master Control. |
 
 `Tools/wave-report` remains the terminal/`--html` reader; the page is the bookmark.
 

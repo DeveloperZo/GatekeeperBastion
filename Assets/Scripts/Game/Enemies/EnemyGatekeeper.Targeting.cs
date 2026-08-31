@@ -91,7 +91,9 @@ namespace GatekeepersProtocol.Game
             _chasingDecoy = true;
             _chasingPlayer = false;
             _chasingTurret = false;
+            _chasingOutrider = false;
             _turretTarget = null;
+            _outriderTarget = null;
             _standPoint = null;
             _retargetTimer = 0f;
             Retarget();
@@ -204,32 +206,35 @@ namespace GatekeepersProtocol.Game
                 }
             }
 
-            // MAGNET HANDS WIDENS THE PULL; IT NO LONGER GRANTS IT (Zo, 2026-08-28: "it also
-            // appeared as if my turret was borderline invincible"). It was.
-            //
-            // This block used to require the passive before a turret could be targeted AT ALL,
-            // and the old comment said so plainly — the passive was "the only way a turret is
-            // ever attacked". Without it the emplacement was literally invulnerable: 150 HP it
-            // could never lose, 12 dps, and a 1.35x fire-rate aura, standing for the rest of the
-            // run. The 07:17 log is the proof — four deployments, and the only two deaths were
-            // OVERCHARGE burning it out from the inside. Nothing the Bastion sent ever touched
-            // it.
-            //
-            // Hardware is mortal by default now. What the passive buys is REACH: a gatekeeper
-            // wearing it is pulled off the Boarder from anywhere in the turret's aura, while
-            // one without it only swings at a machine already in its face — it is in the way,
-            // so it gets hit. That keeps the passive worth wearing (a 8 m pull against a 3.5 m
-            // one) without it being the difference between mortal and immortal.
+            // A standing machine is a target by the ordinary rule: already in melee of a body
+            // that was chasing the Boarder, so it is in the way and it gets hit. Reach is
+            // hatch melee. Nothing about who placed the machine is read. When both a turret
+            // and an Outrider sit in reach, the nearer one takes the swing.
             _turretTarget = null;
+            _outriderTarget = null;
             _chasingTurret = false;
+            _chasingOutrider = false;
             if (_chasingPlayer && _player != null)
             {
-                float reach = TurretPullRadius(PrefersHardware(_player), hatchAttackRange);
-                var machine = TurretObject.NearestAlive(transform.position, reach);
-                if (machine != null)
+                var turret = TurretObject.NearestAlive(transform.position, hatchAttackRange);
+                var rider = OutriderObject.NearestAlive(transform.position, hatchAttackRange);
+                float tDist = turret != null
+                    ? Vector3.Distance(transform.position, turret.transform.position)
+                    : float.MaxValue;
+                float oDist = rider != null
+                    ? Vector3.Distance(transform.position, rider.transform.position)
+                    : float.MaxValue;
+                if (turret != null && tDist <= oDist)
                 {
-                    _turretTarget = machine;
+                    _turretTarget = turret;
                     _chasingTurret = true;
+                    _chasingPlayer = false;
+                    _standPoint = null;
+                }
+                else if (rider != null)
+                {
+                    _outriderTarget = rider;
+                    _chasingOutrider = true;
                     _chasingPlayer = false;
                     _standPoint = null;
                 }
@@ -255,28 +260,6 @@ namespace GatekeepersProtocol.Game
         {
             return mayTargetPlayer && !committedToHatch
                    && (provoked || playerNear || !hatchAvailable);
-        }
-
-        /// <summary>How far a gatekeeper will divert to hit a turret. MAGNET HANDS widens the
-        /// pull; it does not grant it (Zo, 2026-08-28: "my turret was borderline invincible").
-        /// Without the passive a machine is only struck when it is already in reach — it is in
-        /// the way, so it gets hit — and the passive pulls bodies off the Boarder from anywhere
-        /// in the turret's aura. Static and pure for the same reason as
-        /// <see cref="ChasesPlayer"/>: the surrounding class cannot be executed outside Unity's
-        /// runtime, and this rule can.</summary>
-        public static float TurretPullRadius(bool prefersHardware, float meleeReach)
-        {
-            return prefersHardware
-                ? GatekeepersProtocol.Sim.BoarderProtocol.TurretAuraRadius
-                : meleeReach;
-        }
-
-        /// <summary>Does this Boarder wear MAGNET HANDS? Read per retarget, not per frame.</summary>
-        static bool PrefersHardware(PlayerHealth player)
-        {
-            var abilities = player.GetComponent<PlayerProtocolAbilities>();
-            return abilities != null
-                && abilities.Passive == GatekeepersProtocol.Sim.BoarderAbilityId.MagnetHands;
         }
 
         // Resolved ONCE per gatekeeper, from wherever it first wanted the hatch.
@@ -314,6 +297,11 @@ namespace GatekeepersProtocol.Game
             if (_chasingTurret && _turretTarget != null && _turretTarget.IsAlive)
             {
                 goal = _turretTarget.transform.position;
+                return true;
+            }
+            if (_chasingOutrider && _outriderTarget != null && _outriderTarget.IsAlive)
+            {
+                goal = _outriderTarget.transform.position;
                 return true;
             }
             if (_chasingDecoy && _decoyTarget != null && _decoyTarget.IsAlive)
