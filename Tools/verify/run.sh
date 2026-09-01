@@ -122,6 +122,7 @@ declare -A EXCLUDED=(
   ["Bastion/BastionSegmentDoorAlongTests.cs"]="needs GatekeepersProtocol.Game (BastionSegment.TryDoorPillars)"
   ["Bastion/BastionDoorOpensForTests.cs"]="needs EnemyGatekeeper, CharacterController, and UnityEngine"
   ["Bastion/GatekeeperTargetingTests.cs"]="needs EnemyGatekeeper (MonoBehaviour) and UnityEngine; GatekeeperRoot's close/swing split is covered offline in GatekeeperRootTests"
+  ["Bastion/PylonMeshTests.cs"]="needs UnityEngine.Mesh and GatekeepersProtocol.Game (PylonMesh); nothing offline covers the pylon's geometry, so the shared-instance and vertex/triangle counts are Unity Test Runner only"
   ["Bastion/SpawnRoomPrefabTests.cs"]="needs SpawnRoom prefab load and UnityEngine"
   ["Net/RunSeatsTests.cs"]="needs GatekeepersProtocol.Game (RunSeats) and Unity.Netcode"
   ["Run/RespawnQueueTests.cs"]="needs GatekeepersProtocol.Game (RespawnQueue lives in Game/Range)"

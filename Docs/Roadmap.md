@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-30 (0.34.2 cut; brainstorm restamp; M104/M106/M107 added to the Order table)
+Last updated: 2026-09-01 (M106 recut; the pylon readout is open build work on a milestone whose rule change had already landed)
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -76,7 +76,10 @@ with **M72**; remaining friends work is polish and dry-run length.
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
 
 Active **1** of 3 (`M86`), and `1. planned/` holds `M103`, `M104`, `M106`, `M107`, `M108`
-(5 of 10). `M106`/`M107` implementation is in the 0.34.2 tree; folder status waits on play.
+(5 of 10). `M107`'s implementation is in the 0.34.2 tree and its folder status waits on
+play. `M106`'s rule change is in that tree too, but its 2026-09-01 recut added criteria
+11-14 — the turret's body rebuilt as a pylon that carries charge and phase — so it has open
+build work again as well as a play path.
 
 ## Order
 
@@ -188,7 +191,7 @@ this table — see the change log.
 | M102 | The faucet loop, graybox | completed, Aug 2026 (playthrough unobserved) | Dev-gated graybox of the faucet loop (`Brainstorms/coop-bastion-complexity.md`, graduated by Zo 2026-08-24): field Waves hunt the Hatch, the terminal gains an off verb, holding past the mark grows a modifier draft, confirm teleports to the Hatch and starts the bank with the axis applied. Off by default; shipped loop unchanged with the toggle off. The graybox runs the paradigm's pre-registered kill criteria. Re-verified 2026-08-25 on the tree after the Convert rename and slot-aware refactor landed on top: all 13 `FaucetLoopTests` pass, failures the recorded set only. Zo's playthrough (the experiment itself) owed | [`3. completed/M102`](Milestones/3.%20completed/M102-the-faucet-loop-graybox.md) |
 | M103 | Every Run files a report | planned (built 2026-08-24; offline-verified, Unity leg + playthrough owed) | The log becomes the play-data instrument the dashboard was promised: PlayMode-harness logs quarantined to `Logs/harness/` (2026-08-24 audit: 19 of 28 files were harness carrying ~550 synthetic Runs, evicting real sessions within a day), one `[Run] summary schema=1` Metric line per Run end (`Log.Metric` had zero call sites), beat-relative checkpoint-configuration taint (a config is valid once its beat could have earned it: Primary rows valid from beat 5, MK-1 T2 from beat 3, a max-upgraded kit never — read off the constructed beat state, pinned by `CheckpointConfigTaintTests`; checkpoint play on a valid row counts as play data), killer attribution by kind, and a dashboard panel for how Runs end and what dying costs. Built offline-verified 2026-08-24; Unity leg + playthrough owed. Unblocks adjudicating `M63-3`'s and `M102`'s dated kill criteria | [`1. planned/M103`](Milestones/1.%20planned/M103-every-run-files-a-report.md) |
 | M104 | The ship wears the look | planned | Near-black architecture, districts of coloured light, tinted mirror deck, slow motes — the look from `Assets/_Scratch/` landed on `Ship - CoOp` only | [`1. planned/M104`](Milestones/1.%20planned/M104-the-ship-wears-the-look.md) |
-| M106 | The turret is charged and spent | planned (implementation in 0.34.2 tree) | FORGE turret charges by firing; Overcharge is a hold spent from that charge and ends Exhausted; Magnet Hands retired | [`1. planned/M106`](Milestones/1.%20planned/M106-the-turret-is-charged-and-spent.md) |
+| M106 | The turret is charged and spent | planned (rule change in the 0.34.2 tree; recut 2026-09-01, pylon build open) | FORGE turret charges by firing; Overcharge is a hold spent from that charge and ends Exhausted; Magnet Hands retired. The recut puts the readout on the machine: the turret becomes a plinth with a floating crystal whose glow is its charge and whose colour, spin and rest position are Deployed / Special / Exhausted, so a hold's refusal is predictable without looking at the HUD | [`1. planned/M106`](Milestones/1.%20planned/M106-the-turret-is-charged-and-spent.md) |
 | M107 | The Outrider and the two orders | planned (implementation in 0.34.2 tree) | Follower charges by firing; EMP is light damage + root; pairing lifts the other machine's special; kill criterion is deploy-order as a record of the Wave | [`1. planned/M107`](Milestones/1.%20planned/M107-the-outrider-and-the-two-orders.md) |
 | M108 | HUD that fits the screen | planned | Restore locked insets; BOARDER + protocol beside Profile icon; MISSION header gap; CREW catalog Name/Level/SELECT. EditMode `HudSeparationTests` + M59 chrome. | [`1. planned/M108`](Milestones/1.%20planned/M108-hud-that-fits-the-screen.md) |
 
