@@ -35,6 +35,15 @@ files written before that date still carry one and are a record.
 **0.34.2 cut 2026-08-30.** Ante parked; Hatch-start + recall pads; FORGE charged turret
 + Outrider in the tree (`M106`/`M107` still planned). Friends-alpha sentence unchanged.
 
+**Closed 2026-09-01:** `M103`. The three legs it owed a quiet editor were read off the
+2026-08-28 and 2026-08-30 sessions instead — the quarantine and both prune caps off disk,
+the named-kind death line out of the 15-36-50 session, and the checkpoint playthrough read
+back through the dashboard parser over six real sessions. Nothing ran inside Unity:
+`Tools/verify/run.sh` needs mono, which this machine lacks, and the six taint pins are
+excluded from it by design, so they have still never executed. Two findings sit in the
+file's Watch as Zo's call: the taint rule does not read protocol, and the
+order-of-operations that rule depends on is unpinned.
+
 **Closed 2026-08-25, by folder move at Zo's direction:** `M63-3`, `M95`, `M97`, `M98`,
 `M100`, `M102`. Each was moved to `3. completed/` while its own criteria list still
 carried an Owed block, so the status is Zo's call rather than a closed gate, and each
@@ -57,7 +66,7 @@ on `M99`), `M83` (PlayMode 2/0; two-window confirmation). PRI-C further tuning
 owed outside `M93`.
 
 
-**Folder-completed since 2026-08-20:** `M82`, `M83`, `M84`, `M85`, `M90`, `M91`, `M92`, `M93`, `M94`, `M96`, `M99` (2026-08-23), `M101` (2026-08-24), `M63-3`, `M95`, `M97`, `M98`, `M100`, `M102` (all 2026-08-25).
+**Folder-completed since 2026-08-20:** `M82`, `M83`, `M84`, `M85`, `M90`, `M91`, `M92`, `M93`, `M94`, `M96`, `M99` (2026-08-23), `M101` (2026-08-24), `M63-3`, `M95`, `M97`, `M98`, `M100`, `M102` (all 2026-08-25), `M103` (2026-09-01).
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
 developer touching a keyboard, play a full five-wave run with both participating, and the
@@ -68,15 +77,13 @@ with **M72**; remaining friends work is polish and dry-run length.
 
 1. **Play 0.34.2.** Friends-alpha dry-run is the starved lane. `M102` playthrough is the
    experiment itself. FORGE's two-machine kill criterion cannot fire from the desk.
-2. **`M103` Unity leg** — the instrument that lets `M63-3` / `M102` kill criteria be
-   adjudicated; built offline, Unity + playthrough owed.
-3. **Take the `M84` / `M85` eyes-on through `M99`** — the range is closed and the
+2. **Take the `M84` / `M85` eyes-on through `M99`** — the range is closed and the
    short-loop path it existed to provide is open.
-4. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
+3. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
 
-Active **1** of 3 (`M86`), and `1. planned/` holds `M103`, `M104`, `M106`, `M107`, `M108`
-(5 of 10). `M106`/`M107` implementation is in the 0.34.2 tree; folder status waits on play.
+Active **1** of 3 (`M86`), and `1. planned/` holds `M104`, `M106`, `M107`, `M108`
+(4 of 10). `M106`/`M107` implementation is in the 0.34.2 tree; folder status waits on play.
 
 ## Order
 
@@ -186,7 +193,7 @@ this table — see the change log.
 | M100 | A realm you can open while its owner is offline | completed, Aug 2026 (never run on two machines) | A shared realm lives as per-member copies in Cloud Save's public access class (a client writes only its own slot — the single-document premise was corrected against the real store); highest revision is the realm, the lock rides every copy, its heartbeat carries the live body, and stale claims are broken only after a 10 s observation. Playing together over Relay is the invitation: guests are admitted at connect and their chooser lists the realm as a "(shared)" row. Once shared, every open takes the lock, the owner's included. 41 tests (rules offline, flows against a faked store); criteria 1, 2, 9, 10 owed on two machines. Stays planned under the active cap | [`3. completed/M100`](Milestones/3.%20completed/M100-a-realm-you-can-open-while-its-owner-is-offline.md) |
 | M101 | A ship with two decks and a stair | completed, Aug 2026 | Hull rebuilt long and narrow over two decks joined by an open stair; exterior skin, one-owner wall lines, ~80 cells. Merged 2026-08-22 | [`3. completed/M101`](Milestones/3.%20completed/M101-a-ship-with-two-decks-and-a-stair.md) |
 | M102 | The faucet loop, graybox | completed, Aug 2026 (playthrough unobserved) | Dev-gated graybox of the faucet loop (`Brainstorms/coop-bastion-complexity.md`, graduated by Zo 2026-08-24): field Waves hunt the Hatch, the terminal gains an off verb, holding past the mark grows a modifier draft, confirm teleports to the Hatch and starts the bank with the axis applied. Off by default; shipped loop unchanged with the toggle off. The graybox runs the paradigm's pre-registered kill criteria. Re-verified 2026-08-25 on the tree after the Convert rename and slot-aware refactor landed on top: all 13 `FaucetLoopTests` pass, failures the recorded set only. Zo's playthrough (the experiment itself) owed | [`3. completed/M102`](Milestones/3.%20completed/M102-the-faucet-loop-graybox.md) |
-| M103 | Every Run files a report | planned (built 2026-08-24; offline-verified, Unity leg + playthrough owed) | The log becomes the play-data instrument the dashboard was promised: PlayMode-harness logs quarantined to `Logs/harness/` (2026-08-24 audit: 19 of 28 files were harness carrying ~550 synthetic Runs, evicting real sessions within a day), one `[Run] summary schema=1` Metric line per Run end (`Log.Metric` had zero call sites), beat-relative checkpoint-configuration taint (a config is valid once its beat could have earned it: Primary rows valid from beat 5, MK-1 T2 from beat 3, a max-upgraded kit never — read off the constructed beat state, pinned by `CheckpointConfigTaintTests`; checkpoint play on a valid row counts as play data), killer attribution by kind, and a dashboard panel for how Runs end and what dying costs. Built offline-verified 2026-08-24; Unity leg + playthrough owed. Unblocks adjudicating `M63-3`'s and `M102`'s dated kill criteria | [`1. planned/M103`](Milestones/1.%20planned/M103-every-run-files-a-report.md) |
+| M103 | Every Run files a report | completed, Sep 2026 (closed 2026-09-01 offline; nothing ran inside Unity) | The log becomes the play-data instrument the dashboard was promised: PlayMode-harness logs quarantined to `Logs/harness/` (2026-08-24 audit: 19 of 28 files were harness carrying ~550 synthetic Runs, evicting real sessions within a day), one `[Run] summary schema=1` Metric line per Run end (`Log.Metric` had zero call sites), beat-relative checkpoint-configuration taint (a config is valid once its beat could have earned it: Primary rows valid from beat 5, MK-1 T2 from beat 3, a max-upgraded kit never — read off the constructed beat state, pinned by `CheckpointConfigTaintTests`; checkpoint play on a valid row counts as play data), killer attribution by kind, and a dashboard panel for how Runs end and what dying costs. Closed 2026-09-01 from sessions already played rather than by driving a suite: `Logs/harness/` at its 6-file cap with every file carrying `InitTestScene`, `Logs/` at 30 human files with none harness-marked, the taint rule executed against the real beat builders reproducing the ruling verbatim, and `wave-report` byte-identical across three builds over the pre-M103 corpus. Closing found and fixed one defect in its own dashboard panel: the killer mix tallied per Run, not per death. Unblocks adjudicating `M63-3`'s and `M102`'s dated kill criteria | [`3. completed/M103`](Milestones/3.%20completed/M103-every-run-files-a-report.md) |
 | M104 | The ship wears the look | planned | Near-black architecture, districts of coloured light, tinted mirror deck, slow motes — the look from `Assets/_Scratch/` landed on `Ship - CoOp` only | [`1. planned/M104`](Milestones/1.%20planned/M104-the-ship-wears-the-look.md) |
 | M106 | The turret is charged and spent | planned (implementation in 0.34.2 tree) | FORGE turret charges by firing; Overcharge is a hold spent from that charge and ends Exhausted; Magnet Hands retired | [`1. planned/M106`](Milestones/1.%20planned/M106-the-turret-is-charged-and-spent.md) |
 | M107 | The Outrider and the two orders | planned (implementation in 0.34.2 tree) | Follower charges by firing; EMP is light damage + root; pairing lifts the other machine's special; kill criterion is deploy-order as a record of the Wave | [`1. planned/M107`](Milestones/1.%20planned/M107-the-outrider-and-the-two-orders.md) |

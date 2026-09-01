@@ -5,9 +5,21 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-08-30
+Last updated: 2026-09-01
 -->
 
+- 2026-09-01: **`M103` completed.** The Unity leg and playthrough it owed were closed
+  from sessions already played, not by driving a suite: `Logs/harness/` at its 6-file cap
+  with every file carrying `InitTestScene`, `Logs/` at 30 human files with none
+  harness-marked, `YOU DIED — killed by default at 2.4m` naming a real `GatekeeperKind`,
+  12 Metric lines across beats 1–5 whose taint verdicts match the ruling, the rule itself
+  executed against the real beat builders, and `wave-report` byte-identical across three
+  builds over the pre-M103 corpus. Closing found and fixed one defect in the milestone's
+  own panel: the killer mix tallied once per Run off a single `run.killer`, so repeat
+  deaths collapsed and a second kind was dropped. Nothing ran inside Unity — no mono for
+  `Tools/verify/run.sh`, and the six taint pins are excluded from it by design. Left open
+  in the file's Watch: the taint rule does not read protocol, and the order of operations
+  it depends on is unpinned.
 - 2026-08-31: **Default → DEPOT.** Player name `DEPOT Protocol`; enum
   `BoarderProtocolId.Depot` (value 1, saves unchanged); file `Protocol-DEPOT.md`.
   Gatekeeper kind Default is untouched.

@@ -1,9 +1,10 @@
 # M103 — Every Run files a report
 
 <!--
-Status: planned (built 2026-08-24; offline-verified, Unity leg + playthrough owed)
+Status: completed, Sep 2026 (built 2026-08-24; closed 2026-09-01 offline — no editor was
+running, so the owed legs were read off sessions already played rather than by driving a suite)
 Update trigger: when the Metric line schema changes, when the harness log location changes, or when a checkpoint configuration's taint flag flips
-Last updated: 2026-08-24
+Last updated: 2026-09-01
 -->
 
 The session log becomes a document that answers questions instead of one that must be
@@ -168,6 +169,12 @@ sample strip, status line, runs and rows tables.
 **Change** `Docs/Design/4-Data.md` — wave-report section records the quarantine, the
 schema and the taint rule.
 
+**Change** `Docs/dashboard.html` (2026-09-01, found while closing) — the killer mix
+tallied once per Run off a single `run.killer`, so two deaths to one kind rendered `×1`
+against a caption two lines above saying two deaths, and a Run that died to two kinds
+dropped the first entirely. `run.killers` now records one entry per death and the mix
+reads that; the per-Run table's Killer column still carries the last blow.
+
 **Not changed, deliberately**: `RunSim` (no counters — criterion 4);
 `GameController.ApplyMetaEffects` warnings and the per-frame audio-listener spam
 (both proved playmode-only across the day's human logs — quarantine removes them
@@ -214,17 +221,52 @@ bridge was left un-armed rather than colliding with a live editor):
    0/0/500/1400/4300 with `DemoRungTwoOpened` flipping at beat 5 — the ruling
    verbatim. The EditMode pins assert the same facts inside Unity.
 
-Owed (needs a quiet editor — one `gkb_verify_request.txt` when the tree settles):
+Closed 2026-09-01, offline. No editor was running, so the three owed legs were read off
+sessions Zo had already played (2026-08-28 and 2026-08-30) instead of by driving the suite.
 
-5. Criteria 1–2 — run the PlayMode suite once: the new log lands in `Logs/harness/`,
-   `Logs/` gains nothing, human files survive. **This is also the live test of the
-   quarantine itself** — the suite's own log is the fixture.
-6. Criterion 6 — one dev Run died to a named kind: the death line and Metric line
-   carry it.
-7. Playthrough path — F12 → beat 3 → config 1 (valid there) and beat 3 → config 2
-   (tainted there: Primary before the rung), die once, RETURN TO SHIP, open the
-   dashboard: the first Run charts, the second is labeled `cfg`, both fill the
-   "How do Runs end" panel.
+5. Criteria 1–2 — off disk. `Logs/harness/` holds 6 files, its exact cap, and every one
+   carries `InitTestScene` and `[LogFile] harness session - log moved to:` — the
+   quarantine fired on real PlayMode suite runs. `Logs/` holds 30 human session files,
+   its exact cap, and **0** of them carry `stage=playmode` or `InitTestScene`. Two days
+   of verification deleted no human file, which is the criterion.
+6. Criterion 6 — `[15:44:18.840] [Player] YOU DIED — killed by default at 2.4m, 44
+   gatekeepers still alive` (`GatekeepersProtocol_2026-08-30_15-36-50`), whose Run's
+   Metric line closes with `result=lost cause=hatch … respawns=2`. `default` is
+   `GatekeeperKind.Default`, the wave-1 hatch-seeker, not a fallback. The harness's
+   `killed by unknown` deaths each follow a sourceless `took 100 damage` — the PlayMode
+   tests call `TakeDamage` with no source, which is the unattributed case the criterion
+   allows.
+7. Criteria 4–5 — `dotnet build` on the three generated csprojs: **0 errors** (9/4/0
+   warnings, every one pre-existing and none in these files). The taint rule executed
+   against the real beat builders prints the ruling verbatim: earned 0/0/500/1400/4300
+   across beats 1–5 with `DemoRungTwoOpened` flipping at 5, row 1 valid from beat 3,
+   rows 2–4 from beat 5, validity monotonic, the max kit tainted at every beat. All 18
+   Metric tokens appear in the criterion's order, no spaces inside a value, in all three
+   real lines of the 15-36-50 session.
+   `lint-language` clean. `lint-arch` stands at 16 violations, none of them from this
+   close — it touched no C#. `Tools/docgen` needs mono and did not run.
+8. Criteria 7–9 — the playthrough, read back. `dashboard.html`'s parser driven in node
+   over the six 2026-08-30 human sessions plus one harness file: 26 Runs, 24 carrying
+   Metric lines. PlayMode default off keeps 13, and the exclusions count out on the page
+   as `kept 13 · playmode 13 · short 0 · dev 17 · cfg-taint 5`. The checkpoint panel
+   lists five cells — beats A and B tainted, C, D and E clean — matching the game's
+   verdicts, and the override loop flips them across every panel, keeps the rule verdict
+   underneath, marks the rows `[override]` and clears. 50/50 assertions.
+9. Criterion 10 — re-confirmed on this tree, not taken from the 2026-08-24 run.
+   `wave-report` built at the pre-M103 parent (`c7935a5`), at the commit that introduced
+   the schema read (`3d674ab`) and at HEAD, each run over the 12 files in
+   `Docs/_meta/Logs/`: `--summary` and table **byte-identical** across all three.
+
+Not closed by the above, and stated rather than buried:
+
+- **A hard-killed process files no report.** The abandon guard hangs off `OnDestroy`, so
+  a graceful quit, QUIT TO MENU and a mid-run checkpoint reload all reach it and a kill
+  reaches nothing. On 2026-08-30 that cost one line: 13 `run begins`, 12 Metric lines.
+  Moving the call to `OnApplicationQuit` would not help — both fire on a graceful quit,
+  neither on a kill.
+- **Nothing ran inside Unity.** `Tools/verify/run.sh` needs mono, which this machine does
+  not have, and `CheckpointConfigTaintTests` is EXCLUDED from it by design regardless. The
+  six pins have never executed; the rule they pin has, offline, against the real builders.
 
 ## Watch
 
@@ -235,6 +277,20 @@ Owed (needs a quiet editor — one `gkb_verify_request.txt` when the tree settle
   co-op parameter landed between two reads). Re-grep before any further edit there.
 - `MainMenuControllerSourceTests`-style source-pinning tests exist — none pin
   `LogFile` or the end lines today; check again before renaming either.
+- **The taint rule never reads protocol** (found 2026-09-01). `ConfigTaintedFor` judges
+  the Primary rung and the kit price only, so rows 2–4 — which differ from each other
+  only by Depot / Veil / Forge — are judged identically at every beat, and a beat that
+  only ever grants Depot stamps a VEIL row clean from beat 5 on. Faithful to the ruling
+  as written, which names the Primary rung and affordability and nothing else; a hole
+  against criterion 5's own phrase "PRI-C T2 + protocol". Deciding it re-classifies Runs
+  already logged, so it is Zo's call, not a repair.
+- **The rule's order of operations is unpinned** (found 2026-09-01). Criterion 5 turns on
+  the taint being judged before `ApplyCheckpointConfig`, because the overlay mints its own
+  kit into `LifetimeSalvageEarned` and would feed the affordability test its own answer.
+  Swapping those two lines in `LoadDemoCheckpoint` makes every row read clean and passes
+  all six pins.
+- **The per-Run table's Killer column carries the last blow only.** The mix panel counts
+  every death; that column shows one. Do not read it as complete attribution.
 
 ## Depends on / Unblocks
 
