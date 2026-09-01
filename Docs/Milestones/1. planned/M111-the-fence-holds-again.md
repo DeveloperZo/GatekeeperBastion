@@ -6,7 +6,7 @@ Update trigger: when lint-arch's rule set or baselines change, or when a standin
 Last updated: 2026-09-01
 -->
 
-`Tools/lint-arch/run.sh` reports 16 violations against baselines of zero, and four tests
+`Tools/lint-arch/run.sh` reports 11 violations against baselines of zero, and four tests
 have been red long enough to be called "standing". A gate that always fails gates nothing:
 this returns both fences to a state where a new red means something.
 
@@ -22,16 +22,35 @@ The August sessions proved the cost twice over: five loop regressions shipped wh
 suites were "green except the usual", and the offline harness's own false-green incident
 was survivable only because the real number was checked later. Today's fence state:
 
-- **7 over-cap files** — `BastionSketchEmitter.cs` 976/800, `BastionSketchParser.cs`
-  639/600, `GameController.Terminals.cs` 611/400, `NetVerbs.cs` 549/400,
-  `PlayerProtocolAbilities.cs` 459/400, `DevConsole.cs` 421/400, `GameController.cs`
-  418/400.
-- **8 milestone-id lines** in `SceneBuilder.Ship.cs`, `SceneBuilder.cs`,
-  `BoarderProtocol.cs` — the zero-exceptions rule (`../../Architecture/3-Unity-Runtime.md`).
-- **7 scene lookups outside the allowlist** — `HatchRecallPad.cs` ×3, `HatchPortal.cs` ×2,
-  `GameController.Wallets.cs`, `ShipHud.cs`; the dock-slice work landed without entries.
+- **5 over-cap files** — `BastionSketchEmitter.cs` 976/800, `BastionSketchParser.cs`
+  639/600, `GameController.Terminals.cs` 611/400, `DevConsole.cs` 421/400,
+  `GameController.cs` 418/400.
+- **0 milestone-id lines** — the 8 were reworded on `main` before this file was started.
+- **5 scene lookups outside the allowlist** — `HatchRecallPad.cs` ×3, `HatchPortal.cs` ×2;
+  the dock-slice work landed without entries.
 - **4 standing test reds**, two of which (`M59PolishChromeTests` pair) demo-readiness
   already diagnoses as "needs a `GatekeepersProtocol/Build` re-run".
+
+Two files came off the over-cap list on the way here, in `M107`'s close: `NetVerbs.cs`
+(549 to 277) and `PlayerProtocolAbilities.cs` (459 to 399). They are the worked example
+for criterion 2 and for the discussion the Implementation section asks be raised here
+rather than against the baseline.
+
+`PlayerProtocolAbilities` went the way criterion 2 wants: the per-Wave machine record
+became `WaveMachineRecord` in `Sim/Run/`, a real type that stands alone and gained the
+eleven tests the rule had never had.
+
+`NetVerbs` could not. Its FORGE half is `NetworkVariable` fields and `ServerRpc` methods,
+and both must be declared on the `NetworkBehaviour` itself — extracting them into a type
+that stands alone is not something the language or Netcode allows. It went out as a
+`partial`, `NetVerbs.Forge.cs`, with that reason stated in both headers. So criterion 2's
+"not `partial` splits" needs one carve-out, or it cannot be met on this file: **a `partial`
+is allowed where the framework requires one class, and the reason is stated in the file.**
+Left for Zo to accept or reject, because it is a rule change and not a tidy-up. The
+remaining five have no such constraint.
+
+`PlayerProtocolAbilities` sits at 399 against 400. It is under the cap and it is not
+finished; the charge-square cluster is the next seam.
 
 ## Acceptance criteria
 
@@ -42,6 +61,7 @@ was survivable only because the real number was checked later. Today's fence sta
    (`.claude/skills/gkb-development`), and `GameController.Terminals.cs`'s shutoff/start
    seam is the named first candidate.
 3. The 8 milestone-id lines read as what the code does, not which milestone touched it.
+   **Already met on `main`; the lint reports zero. Kept so the rule has a criterion.**
 4. Each of the 7 scene lookups either gains an allowlist entry with a one-line
    justification in the allowlist itself, or is refactored to a serialized binding —
    decided per site, and `HatchPortal`'s `FindFirstObjectByType<GameController>` is
@@ -64,11 +84,10 @@ was survivable only because the real number was checked later. Today's fence sta
 
 **Change** `Assets/Scripts/Game/Bastion/GameController.Terminals.cs` — extract the
 terminal shutoff/arming seam into a type named for that responsibility; the file's own
-611 lines are the argument. **Change** the other six over-cap files by the same method,
+611 lines are the argument. **Change** the other four over-cap files by the same method,
 smallest honest extraction first; if a file cannot lose enough without an incoherent
 split, say so on this file and raise *that* discussion, not the baseline.
-**Change** `SceneBuilder.Ship.cs`, `SceneBuilder.cs`, `BoarderProtocol.cs` — reword the 8
-lines. **Change** `Tools/lint-arch/` allowlist — entries per criterion 4.
+**Change** `Tools/lint-arch/` allowlist — entries per criterion 4.
 **Change** `Assets/Scripts/Sim/Run/MasterControl.cs` + `MasterControlTests` — criterion 6.
 **Change** `Tools/verify/run.sh` — criterion 7. **Change** the two milestone files —
 criterion 8.
