@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-08-30 (0.34.2 cut; brainstorm restamp; M104/M106/M107 added to the Order table)
+Last updated: 2026-09-01 (post-alpha slate: M109–M112 added to the Order table; Recommended-next reordered around the stamp → fence → docs → dials sequence)
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -75,15 +75,27 @@ with **M72**; remaining friends work is polish and dry-run length.
 
 **Recommended next**, in this order.
 
-1. **Play 0.34.2.** Friends-alpha dry-run is the starved lane. `M102` playthrough is the
-   experiment itself. FORGE's two-machine kill criterion cannot fire from the desk.
-2. **Take the `M84` / `M85` eyes-on through `M99`** — the range is closed and the
+1. **`M109` — the first bastion, stamped.** This *is* "Play 0.34.2" with a gate:
+   wake→Escaped assembled from as many sessions and replays as it takes (taint stated,
+   each seam crossed live once), the 0-Gameplay checklist checked, E7 answered. The
+   friends-alpha dry-run and the `M102` playthrough ride the same sessions. `M103` closed
+   2026-09-01, so the summary line is already there to stamp them with.
+2. **`M111` — the fence holds again.** Sixteen lint-arch violations and four standing
+   reds mean today's gates always fail; a new regression must be the only red on the
+   board before `M112` starts moving dials.
+3. **`M110` — the prose agrees with the tables** — before any tuning session argues from
+   `4-Data.md`, its prose has to stop citing the mid-August constants.
+4. **`M112` — tuned by playing** — five untainted runs adjudicate the door stake, wave 5,
+   and the turret (`M106`'s folder move rides criterion 4). Kill criterion pre-registered
+   2026-09-01: a stake that never bites gets cut, not retuned.
+5. **Take the `M84` / `M85` eyes-on through `M99`** — the range is closed and the
    short-loop path it existed to provide is open.
-3. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
+6. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
 
-Active **1** of 3 (`M86`), and `1. planned/` holds `M104`, `M106`, `M107`, `M108`
-(4 of 10). `M106`/`M107` implementation is in the 0.34.2 tree; folder status waits on play.
+Active **1** of 3 (`M86`), and `1. planned/` holds `M104`, `M106`, `M107`, `M108`,
+`M109`, `M110`, `M111`, `M112` (**8 of 10**). `M106`/`M107` implementation is in the
+0.34.2 tree; folder status waits on play, now via `M112` criterion 4.
 
 ## Order
 
@@ -198,6 +210,10 @@ this table — see the change log.
 | M106 | The turret is charged and spent | planned (implementation in 0.34.2 tree) | FORGE turret charges by firing; Overcharge is a hold spent from that charge and ends Exhausted; Magnet Hands retired | [`1. planned/M106`](Milestones/1.%20planned/M106-the-turret-is-charged-and-spent.md) |
 | M107 | The Outrider and the two orders | planned (implementation in 0.34.2 tree) | Follower charges by firing; EMP is light damage + root; pairing lifts the other machine's special; kill criterion is deploy-order as a record of the Wave | [`1. planned/M107`](Milestones/1.%20planned/M107-the-outrider-and-the-two-orders.md) |
 | M108 | HUD that fits the screen | planned | Restore locked insets; BOARDER + protocol beside Profile icon; MISSION header gap; CREW catalog Name/Level/SELECT. EditMode `HudSeparationTests` + M59 chrome. | [`1. planned/M108`](Milestones/1.%20planned/M108-hud-that-fits-the-screen.md) |
+| M109 | The first bastion, stamped | planned | Wake→Escaped adjudicated from the logs' own lines (skips/replays fine, taint stated, every seam crossed live once); the 0-Gameplay invariant checklist checked with evidence; E7 verdict recorded | [`1. planned/M109`](Milestones/1.%20planned/M109-the-first-bastion-stamped.md) |
+| M111 | The fence holds again | planned | lint-arch 16→0 without raising a baseline; the four standing test reds retired (chrome via one `GatekeepersProtocol/Build` re-run); owed exclusion-list row paid | [`1. planned/M111`](Milestones/1.%20planned/M111-the-fence-holds-again.md) |
+| M110 | The prose agrees with the tables | planned | The ~14 stale Design/Demo lines state live values; lint-constants gains a scalar watch over named Sim constants, proven twice, wired into verify | [`1. planned/M110`](Milestones/1.%20planned/M110-the-prose-agrees-with-the-tables.md) |
+| M112 | Tuned by playing, not by arithmetic | planned (bet; kill criterion pre-registered 2026-09-01) | Five untainted runs adjudicate the door stake, wave 5 vs the raised ceiling, and the turret; each dial moves at most once; stake cut if it never bites | [`1. planned/M112`](Milestones/1.%20planned/M112-tuned-by-playing.md) |
 
 ## Strategy
 
