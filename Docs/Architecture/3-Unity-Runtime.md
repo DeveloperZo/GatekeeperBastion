@@ -287,7 +287,7 @@ with `rg` over `Assets/Scripts` using the patterns in the fence.
 | A milestone ID (`M<digits>`) in an identifier — a file name, type, namespace, menu path or define | **enforced at 0** | 0 — true today (`M35Wp4OptionsPatch.cs`, the type, the file and its menu row, is already deleted). Zero exceptions |
 | A milestone ID in a comment or string literal | **enforced at 0** (stamped 2026-08-11) | 0 — the 66 baselined lines across 39 files were cleaned on 2026-08-11; comments now say what the code does, not which milestone touched it |
 | `[InitializeOnLoad]` outside the fence's allowlist | **enforced at 0** | 5 sites, all five in the allowlist. Trimmed 2026-08-19: it also named `RepairStationPanels.cs` and `StripSettingsToStations.cs`, both deleted long since, so the allowlist was pre-approving a construct for files that do not exist — a new file at either path would have inherited the exemption silently |
-| A scene lookup (`FindFirstObjectByType` / `FindObjectsByType` / `FindAnyObjectByType` / legacy `FindObject(s)OfType` / `GameObject.Find` / `Camera.main`) in `Game/` outside the fence's allowlist | **enforced at 0** (stamped 2026-08-12) | **7** outside as of 2026-08-30 (named in the paragraph below this table). Fence unchanged — adding a file to `scenelookup_allow` pre-approves every future lookup in it. The allowlist is still the named-exemption list: cross-scene flow/audio dedupe (`SceneFlow`, `FrontEndMusic`), the settings-change volume broadcast (`AudioBuses`), the bind-time Shift-manager locator (`UiBind`), the two dev files, and the two spawned-network lookups (`NetRunMirror`, `NetPlayerAvatar`) |
+| A scene lookup (`FindFirstObjectByType` / `FindObjectsByType` / `FindAnyObjectByType` / legacy `FindObject(s)OfType` / `GameObject.Find` / `Camera.main`) in `Game/` outside the fence's allowlist | **enforced at 0** (stamped 2026-08-12) | **5** outside as of 2026-09-01 (named in the paragraph below this table), down from 7. Adding a file to `scenelookup_allow` pre-approves every future lookup in it, so each new entry carries a `#` justification line directly above the key. The allowlist is the named-exemption list: cross-scene flow/audio dedupe (`SceneFlow`, `FrontEndMusic`), the settings-change volume broadcast (`AudioBuses`), the bind-time Shift-manager locator (`UiBind`), the two dev files, the two spawned-network lookups (`NetRunMirror`, `NetPlayerAvatar`), the ship HUD's last-resort eye (`ShipHud`) and the seat-closet enumeration (`GameController.Wallets`) |
 | An `Input.` read in `Game/` outside `Controls.cs` (the sole producer) or the dev console | **enforced at 0** (stamped 2026-08-12) | 0 — `Controls.Sample()` produces one `PlayerInputFrame` per frame; gameplay reads the frame. Replaces the same milestone gate's input grep |
 | An ambient `UnityEngine.Random` draw in `Game/` outside the named sites | **enforced at 0** (stamped 2026-08-12) | 0 outside `PlayerGun.Firing.cs` (crit + pellet cone — deliberately off the replayable stream, see `4-Testing-and-Determinism.md`) and `UiPitchRandomizer.cs` (cosmetic). Spawn placement draws come from the seeded generator on `RunSim`. Replaces the same milestone gate's randomness grep |
 | `AssetDatabase.DeleteAsset` naming a `.cs` file (self-deleting script) | **enforced at 0** | 0 |
@@ -310,13 +310,18 @@ count exceeding 0 is another: `Editor/Bastion/BastionSketchEmitter.cs` 976/800,
 611/400, `Game/Net/NetVerbs.cs` 549/400, `Game/Player/PlayerProtocolAbilities.cs` 445/400,
 `Game/Dev/DevConsole.cs` 421/400, `Game/Bastion/GameController.cs` 418/400.
 
-Seven scene lookups sit outside this fence's allowlist: `GameController.Wallets.cs:51`
-(`FindObjectsByType<SpawnRoom>`), `HatchPortal.cs:47,58`, `HatchRecallPad.cs:28,40,54`
-(`FindFirstObjectByType<GameController>` / `FindObjectsByType<HatchRecallPad>`), and
-`ShipHud.cs:235` (`Camera.main`). Adding any of those files to `scenelookup_allow` would
-silence the row and pre-approve every future lookup in that file, so the fence is left
-alone until the lookup is either wired or deliberately exempted. `HatchRecallPad` is the
-new pad type; `OutriderObject` and the Net types added no lookups.
+Five scene lookups sit outside this fence's allowlist, all in the same two files:
+`HatchPortal.cs:47,58` and `HatchRecallPad.cs:28,54` resolve `GameController` with
+`FindFirstObjectByType`, where the other nine components that need it — `HatchStation`,
+`HudController`, `RepairInteractable`, `BastionTerminal`, `WaveSpawner`, `NetSession`,
+`RangeConsole`, `RangeReadout`, `RangeRules` — carry a `[SerializeField] GameController`
+bound in the scene. Those four are owed a serialized binding, not an exemption.
+`HatchRecallPad.cs:40` (`BindAll`'s `FindObjectsByType<HatchRecallPad>`) is an honest set
+enumeration with no instance to bind through, but the allowlist's grain is the file, so
+exempting it would pre-approve the two lookups above it; it waits on the same refactor.
+
+`GameController.Wallets.cs:51` and `ShipHud.cs:235` were added to `scenelookup_allow` on
+2026-09-01 with the justifications written into the fence beside the key.
 
 One fence entry is also pre-approving nothing: `waitforseconds_nonloop_allow` still names
 `Game/Enemies/WaveSpawner.Groups.cs`, which no longer constructs a `WaitForSeconds` — the
@@ -345,7 +350,12 @@ midtext_file_baseline=0
 initializeonload_pattern=\[InitializeOnLoad\]
 initializeonload_allow=Editor/Scenes/SceneBuilder.cs,Editor/Tools/IntegrationCheck.cs,Editor/Tools/ReleaseGateDump.cs,Editor/Bastion/BastionKitEmitter.cs,Editor/Bastion/BastionSketchEmitter.cs
 scenelookup_pattern=\bFind(FirstObjectByType|AnyObjectByType|ObjectsByType|Objects?OfType)\b|\bGameObject\.Find\b|\bCamera\.main\b
-scenelookup_allow=Game/Dev/DevConsole.Range.cs,Game/Flow/SceneFlow.cs,Game/Flow/FrontEndMusic.cs,Game/Flow/LevelMusic.cs,Game/Ui/AudioBuses.cs,Game/Ui/UiBind.cs,Game/Dev/DevConsole.cs,Game/Bastion/GameController.DevCommands.cs,Game/Net/NetRunMirror.cs,Game/Net/NetPlayerAvatar.cs
+# Game/Ship/ShipHud.cs — Camera.main is ResolveEye()'s last resort, reached only when the
+# serialized _camera and _isoRig both fail to yield one; the result is cached in _eye.
+# Game/Bastion/GameController.Wallets.cs — MuteSeatSpawns enumerates every authored
+# SpawnRoom closet including inactive ones, on seat-count change only; the closets are
+# placed by BastionSketchEmitter, so a serialized list would go stale on each re-emit.
+scenelookup_allow=Game/Dev/DevConsole.Range.cs,Game/Flow/SceneFlow.cs,Game/Flow/FrontEndMusic.cs,Game/Flow/LevelMusic.cs,Game/Ui/AudioBuses.cs,Game/Ui/UiBind.cs,Game/Dev/DevConsole.cs,Game/Bastion/GameController.DevCommands.cs,Game/Net/NetRunMirror.cs,Game/Net/NetPlayerAvatar.cs,Game/Ship/ShipHud.cs,Game/Bastion/GameController.Wallets.cs
 ambientinput_pattern=(^|[^A-Za-z0-9_.])Input\.
 ambientinput_allow=Game/Input/Controls.cs,Game/Dev/DevConsole.cs,Game/Dev/DevConsole.Checkpoints.cs,Game/Dev/DevConsole.Range.cs
 ambientrandom_pattern=\bUnityEngine\.Random\b|(^|[^A-Za-z0-9_.])Random\.(Range|value|insideUnitSphere|onUnitSphere|rotation)\b

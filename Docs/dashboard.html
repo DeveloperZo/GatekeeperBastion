@@ -1422,6 +1422,7 @@ body.drag {
         respawns: 0,
         respawnSpend: 0,
         killer: '',
+        killers: [],
         metric: null,
         configTaint: false
       };
@@ -1598,7 +1599,12 @@ body.drag {
       if (tagL === 'player' && /^YOU DIED/i.test(msg)) {
         run.deaths++;
         var km = /killed by ([a-z]+)/i.exec(msg);
-        if (km) run.killer = km[1].toLowerCase();
+        if (km) {
+          run.killer = km[1].toLowerCase();
+          // One entry per death. The mix is per death, not per Run: a Run that dies
+          // twice to one kind counts twice, and two kinds in one Run both survive.
+          run.killers.push(run.killer);
+        }
         continue;
       }
 
@@ -2293,7 +2299,7 @@ body.drag {
     ordered.forEach(function (r) {
       var end = runEndLabel(r);
       endCounts[end] = (endCounts[end] || 0) + 1;
-      if (r.killer) killerCounts[r.killer] = (killerCounts[r.killer] || 0) + 1;
+      r.killers.forEach(function (k) { killerCounts[k] = (killerCounts[k] || 0) + 1; });
       deathsTotal += r.deaths;
       respawnsTotal += r.respawns;
       respawnSpendTotal += r.respawnSpend;

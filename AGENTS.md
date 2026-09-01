@@ -169,7 +169,7 @@ UI canvases and gameplay hosts are authored scene content and survive Build All.
   field carries the failure reason; `status:"precheck"` means a test assembly did not
   compile and nothing ran.
 - **`Tools/verify/run.sh`** compiles `Assets/Scripts/Sim/` plus `Assets/Tests/EditMode/`
-  outside Unity with mcs + mono and runs the tests, language lint, arch lint, vendor lint
+  outside Unity with mono or the .NET SDK and runs the tests, language lint, arch lint, vendor lint
   and docgen checks in seconds. Fastest signal for sim-only changes. It cannot see
   MonoBehaviours, scenes or the save file — those need the IntegrationCheck bridge above.
 - A log containing `[Dev]` is tainted and cannot close a gate. F10/F11 host/join log

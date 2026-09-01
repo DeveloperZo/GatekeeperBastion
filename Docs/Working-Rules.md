@@ -341,7 +341,7 @@ the editor tree, safe to delete. Do not commit them. The player escape hatch tem
 
 Three paths, in increasing cost:
 
-1. **`Tools/verify/run.sh`** — the `mcs`+`mono` EditMode harness, and more than the
+1. **`Tools/verify/run.sh`** — the offline EditMode harness, and more than the
    tests. In order: lint-language, lint-arch, lint-vendor, lint-constants, the
    `Assets/_Scratch/` empty check, then two compile stages, then
    `Tools/docgen/run.sh --check` and
@@ -352,7 +352,8 @@ Three paths, in increasing cost:
    the same dependency direction the asmdefs enforce. Seconds end to end (183 tests in
    ~80 ms on 2026-08-04). Fastest signal on any sim or tuning change; run it before
    claiming anything works. `--filter <substring>` narrows it, `--verbose` shows passing
-   names and game log lines. Needs `mono-devel`. It prints every EditMode file it could
+   names and game log lines. Needs either `mono-devel` or the .NET SDK — mono is tried
+   first, the SDK's Roslyn is the fallback. It prints every EditMode file it could
    not compile out here and why — a `skipped` line is coverage you did not get, so read
    them. `Assets/Scripts/Util/` holds only `LogFile.cs` and is not compiled here.
 2. **`Tools/wave-report/run.sh`** — mean live Gatekeepers per Wave from session logs
@@ -601,7 +602,7 @@ is the wrong tool, whatever the question.
 text. What needs Unity is *compiling* them, and that is not the same as driving it:
 
 - **`Sim/` and `Tests/EditMode/` never need Unity at all.** `Tools/verify/run.sh` compiles
-  them with `mcs` and runs them in about 80 ms. Write, compile, test, iterate — the editor is
+  them offline and runs them in about a second. Write, compile, test, iterate — the editor is
   not in the loop, and after M39's assembly split the boundary is enforced by the compiler.
 - **`Game/` and `Editor/` need Unity to compile, and Unity does that itself on focus.**
   Read the result from `Library/Bee/CachedNodeOutput`. **Do not drive the editor to ask
