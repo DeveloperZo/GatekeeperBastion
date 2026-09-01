@@ -22,6 +22,18 @@ Last updated: 2026-09-01
   `M107`'s machine landed alongside this one — and reads `do not retune it here`.
   `Protocol-FORGE.md` carries the machine's read; the `M106` row and the planned-folder
   sentence say the pylon is open build work.
+- 2026-09-01: **`M103` completed.** The Unity leg and playthrough it owed were closed
+  from sessions already played, not by driving a suite: `Logs/harness/` at its 6-file cap
+  with every file carrying `InitTestScene`, `Logs/` at 30 human files with none
+  harness-marked, `YOU DIED — killed by default at 2.4m` naming a real `GatekeeperKind`,
+  12 Metric lines across beats 1–5 whose taint verdicts match the ruling, the rule itself
+  executed against the real beat builders, and `wave-report` byte-identical across three
+  builds over the pre-M103 corpus. Closing found and fixed one defect in the milestone's
+  own panel: the killer mix tallied once per Run off a single `run.killer`, so repeat
+  deaths collapsed and a second kind was dropped. Nothing ran inside Unity — no mono for
+  `Tools/verify/run.sh`, and the six taint pins are excluded from it by design. Left open
+  in the file's Watch: the taint rule does not read protocol, and the order of operations
+  it depends on is unpinned.
 - 2026-08-31: **Default → DEPOT.** Player name `DEPOT Protocol`; enum
   `BoarderProtocolId.Depot` (value 1, saves unchanged); file `Protocol-DEPOT.md`.
   Gatekeeper kind Default is untouched.
