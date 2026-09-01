@@ -15,7 +15,7 @@ Shipped sheets of record: `Sim/Meta/BoarderSheets.cs`. The M94 FORGE draft below
 superseded.
 Update trigger: when Zo vetoes or accepts a row, doctrine or structure call; when a gate
 named on an expansion row ships; when a candidate axis earns or loses a sheet.
-Last updated: 2026-08-30 (0.34.2: charged turret + Outrider in tree; Magnet Hands gone; FORGE recut is the live sheet)
+Last updated: 2026-09-01 (parked the embark flash-pick ask with its found-state)
 -->
 
 ## What this is
@@ -978,3 +978,10 @@ unchanged: AEGIS last. Do not re-graduate FORGE.
   the kill-criteria Runs exist.
 - **Names** — DEFAULT, VEIL, AEGIS, LEDGER, FORGE are working names on the codename
   rule; STOCK is the Default's doctrine name on the same rule.
+- **The pick that finds you** (Zo, 2026-08-27: "if player hasnt selected we should flash
+  cards of the trio we have similar to lol aram mayhem augments") — an embark-time flash
+  of the three-card offer when no protocol is held, so the choice meets the player
+  instead of waiting in a room they may not visit. The deck already exists
+  (`ProtocolOffer`, `ProtocolCardDeckView`, per-card `RefuseReason`); what is missing is
+  only the run-start moment. Parked at the 2026-09-01 slate (planned folder at 9/10, cap
+  discipline); a candidate for the open slot once the M112 runs say the loop holds.
