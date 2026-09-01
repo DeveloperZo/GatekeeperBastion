@@ -1,10 +1,11 @@
 # M101 — A ship with two decks and a stair
 
 <!--
-Status: next (current)
+Status: completed, Aug 2026 (merged 2026-08-22; superseded 2026-08-26 by the collapse to one
+deck — see the banner below)
 Update trigger: when the hull layout table below changes, or when the deck program moves a
 station between decks.
-Last updated: 2026-08-22
+Last updated: 2026-09-01
 -->
 
 > **Superseded 2026-08-26 — the interior is one deck again (Zo).** Deck 2, the open stair

@@ -4,7 +4,13 @@
 Status: later
 Update trigger: when a kind is added, removed or renamed, when the property list or the
 per-bastion draw rule changes, or when a fourth in-build kind ships
-Last updated: 2026-08-20
+Return trigger: either of two, each alone. (a) A fifth Gatekeeper kind is proposed — the
+Cloaker was the fourth and the last that can be authored against an unsettled list, so the
+roster, the property split and the draw rule (criteria 1, 3, 4) have to land before a
+second unbuilt kind is written down. (b) A `HATCH BREACHED` loss has to be attributed
+between arrival rate and bodies standing too long — criterion 10's Gatekeeper-seconds at
+the Hatch is the only number that separates them, and nothing logs it today.
+Last updated: 2026-09-01
 -->
 
 Three kinds becomes a decided roster of **twelve**, recorded once so every later slice
