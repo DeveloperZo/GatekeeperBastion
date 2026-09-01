@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-09-01 (post-alpha slate: M109–M112 added to the Order table; Recommended-next reordered around the stamp → fence → docs → dials sequence)
+Last updated: 2026-09-01 (post-alpha slate: M109–M112 added to the Order table; Recommended-next reordered around the stamp → fence → docs → dials sequence; M109_ the size tell added ahead of M109, whose stamp run carries its one eyes-on check — planned queue now at the cap)
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -86,9 +86,10 @@ with **M72**; remaining friends work is polish and dry-run length.
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
 
 Active **1** of 3 (`M86`), and `1. planned/` holds `M103`, `M104`, `M106`, `M107`, `M108`,
-`M109`, `M110`, `M111`, `M112` (**9 of 10** — one slot left; at the cap, stop generating
-and build). `M106`/`M107` implementation is in the 0.34.2 tree; folder status waits on
-play, now via `M112` criterion 4.
+`M109`, `M109_`, `M110`, `M111`, `M112` (**10 of 10** — the cap is reached, no slot is
+left: stop generating milestone files and build, and anything that graduates from here has
+to name the file it replaces). `M106`/`M107` implementation is in the 0.34.2 tree; folder
+status waits on play, now via `M112` criterion 4.
 
 ## Order
 
@@ -203,6 +204,7 @@ this table — see the change log.
 | M106 | The turret is charged and spent | planned (implementation in 0.34.2 tree) | FORGE turret charges by firing; Overcharge is a hold spent from that charge and ends Exhausted; Magnet Hands retired | [`1. planned/M106`](Milestones/1.%20planned/M106-the-turret-is-charged-and-spent.md) |
 | M107 | The Outrider and the two orders | planned (implementation in 0.34.2 tree) | Follower charges by firing; EMP is light damage + root; pairing lifts the other machine's special; kill criterion is deploy-order as a record of the Wave | [`1. planned/M107`](Milestones/1.%20planned/M107-the-outrider-and-the-two-orders.md) |
 | M108 | HUD that fits the screen | planned | Restore locked insets; BOARDER + protocol beside Profile icon; MISSION header gap; CREW catalog Name/Level/SELECT. EditMode `HudSeparationTests` + M59 chrome. | [`1. planned/M108`](Milestones/1.%20planned/M108-hud-that-fits-the-screen.md) |
+| M109_ | The size tell, restored | planned | `SceneBuilder.Enemies.cs` carries `BodyScale = 1f` with the spread `1 / 0.85 / 1.2 / 1`, `MasterControl.FinaleEliteScale == 1.875f`, the four committed prefabs match those roots and their agent footprints, no kind is baked wider than the 0.5 carve (Cloaker included), and the elite is ≥ 1.8× a Default asserted from the two constants; the ~4.55 m elite against a 4.5 m opening is computed and named by the test but adjudicated by eye in `M109`'s stamp run | [`1. planned/M109_`](Milestones/1.%20planned/M109_the-size-tell-restored.md) |
 | M109 | The first bastion, stamped | planned | Wake→Escaped adjudicated from the logs' own lines (skips/replays fine, taint stated, every seam crossed live once); the 0-Gameplay invariant checklist checked with evidence; E7 verdict recorded | [`1. planned/M109`](Milestones/1.%20planned/M109-the-first-bastion-stamped.md) |
 | M111 | The fence holds again | planned | lint-arch 16→0 without raising a baseline; the four standing test reds retired (chrome via one `GatekeepersProtocol/Build` re-run); owed exclusion-list row paid | [`1. planned/M111`](Milestones/1.%20planned/M111-the-fence-holds-again.md) |
 | M110 | The prose agrees with the tables | planned | The ~14 stale Design/Demo lines state live values; lint-constants gains a scalar watch over named Sim constants, proven twice, wired into verify | [`1. planned/M110`](Milestones/1.%20planned/M110-the-prose-agrees-with-the-tables.md) |

@@ -30,10 +30,16 @@ namespace GatekeepersProtocol.Sim
         /// does not touch the NavMeshAgent, so the elite paths, avoids and shoves exactly like
         /// the Thief it is, and HP stays the one mechanical lever named above.
         /// Deliberately off the agent: the Bastion navmesh is baked at agentRadius 0.5 and a
-        /// Thief already carries 0.42, so scaling the footprint as well would put 0.63 m of
+        /// Thief already carries 0.48, so scaling the footprint as well would put 0.576 m of
         /// radius on a mesh carved for 0.5 and let the boss wedge in the doorway it exists to
-        /// reach.</summary>
-        public const float FinaleEliteScale = 1.5f;
+        /// reach.
+        /// <para>Derived: 1.2 (Thief root) × 1.875 = 2.25 of body, 2.25× a Default. Against the
+        /// 4.5 m opening a door and ceiling leave (BastionKit.StoreyHeight 5 −
+        /// FloorSlabThickness 0.5) that is ~4.55 m of elite, using the Thief skinned bind-pose
+        /// AABB extent y of 1.010 — at the limit, and inside the error bar of an AABB that
+        /// includes arms at their widest. Arithmetic cannot settle it; it is adjudicated by eye
+        /// during M109's stamp run.</para></summary>
+        public const float FinaleEliteScale = 1.875f;
 
         /// <summary>Replace a Hatch-bank spec with the finale elite: one Thief, counts sum to
         /// 1, <see cref="WaveSpec.finaleElite"/> set so the spawner applies

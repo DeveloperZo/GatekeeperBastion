@@ -8,6 +8,48 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-08-30
 -->
 
+- 2026-09-01: **`M109_` — the size tell, restored.** `SceneBuilder.Enemies.cs` `BodyScale`
+  0.75 → **1**, and `MasterControl.FinaleEliteScale` 1.5 → **1.875**. Root scales are now
+  Default **1.0** (was 0.75), Hunter **0.85** (was 0.6375), Thief **1.2** (was 1.05) and
+  Cloaker **1.0** (was 0.75), with the elite body at **2.25** (was 1.575); the agent
+  footprints follow the root at 0.4 / 0.34 / 0.48 / 0.4.
+  This **reverses the `BodyScale` shrink of 2026-08-20** ("Enemy bodies actually scale now,
+  and the finale elite towers"), and in doing so corrects that entry's account of itself.
+  **`BodyScale` cancels out of the elite's read.** Elite body is
+  `thiefSpread × BodyScale × FinaleEliteScale`, a Default is `1 × BodyScale`, so the ratio
+  reduces to `thiefSpread × FinaleEliteScale`: it was `1.4 × 1.5 = 2.1` before that change
+  and `1.4 × 1.5 = 2.1` after. The "2.1×, where it was 1.0×" that entry claims is real, but
+  all of it came from **removing `DressVisual`'s `1/scale` counter-scale** in the same
+  change — until then no kind's body scaled at all, so the elite rendered at 1.0 like
+  everything else. The 0.75 that shipped alongside moved that number by nothing and charged
+  four kinds for it. So the elite has one dial that has ever worked on it:
+  `MasterControl.FinaleEliteScale`, presentation only by construction. This turns that one
+  — **2.1× a Default → 2.25×** — and hands the 0.75 back, which now provably costs the
+  elite's read nothing. Found by seeding a violation into the new test, not by re-reading
+  the argument.
+  **The Thief's 1.4 did not come back with the rest, and that is the one concession.** At
+  the restored `BodyScale` a 1.4 Thief bakes `0.4 × 1.4 = 0.56` of `NavMeshAgent` radius
+  onto a navmesh carved at `agentRadius 0.5` (every scene's `NavMeshSettings`) — the
+  wedging failure `MasterControl.FinaleEliteScale`'s own comment already warns about, and
+  the one `EnemyPrefabs_StayInsideTheBakedAgentRadius` exists to catch. The authored spread
+  stops at **1.2**, which bakes 0.48 and clears the carve with 0.02 to spare. The Thief
+  still ends up bigger than it was (1.05 → 1.2); what it gives up is the 1.4 : 1 ratio
+  against a Default.
+  The other half of the 2026-08-20 entry — the removal of `DressVisual`'s `1/scale`
+  counter-scale — is **not** reverted. The body still wears the root's scale; only the two
+  constants moved.
+  The elite's derived height lands at **~4.55 m** against a 4.5 m door and ceiling opening
+  (`BastionKit.StoreyHeight` 5 − `FloorSlabThickness` 0.5). That is inside the error bar of
+  a bind-pose AABB, so the test computes the number and names it in its failure message
+  rather than settling it: it is adjudicated **by eye during `M109`'s stamp run**, at the
+  control room, and if the head clips then `FinaleEliteScale` comes down — never `BodyScale`.
+  Body scale remains presentation and is still absent from `Design/4-Data.md`. Neither
+  constant is one docgen emits — `Tools/docgen/Program.cs` `EmitMasterControl` writes
+  `TerminalWaves`, `FinaleEliteHp` and `WaveDirector.InterWaveGap`, and `FinaleEliteScale`
+  is not among them — so no generated block moves. Established by reading the generator;
+  `docgen --check` itself is owed to a run with `mono` on PATH, which this change was
+  authored without. Filed under `1. planned/`, and its Order row sits ahead of `M109`
+  because the look rides that run and must not delay it.
 - 2026-08-31: **Default → DEPOT.** Player name `DEPOT Protocol`; enum
   `BoarderProtocolId.Depot` (value 1, saves unchanged); file `Protocol-DEPOT.md`.
   Gatekeeper kind Default is untouched.
