@@ -7,8 +7,9 @@ namespace GatekeepersProtocol.Game
     /// <summary>LOCAL-OWNER: the equipped protocol's actives on G/H. Ids pushed at Bind — never
     /// serialized (gotcha 1). This type owns the two windows, the input and the log lines;
         /// the effects that hold state of their own live in their own types
-        /// (<see cref="TurretObject"/> and <see cref="OutriderObject"/> for FORGE). Cooldowns run here; Dump auras go
-        /// server-side via NetVerbs when a session is listening.</summary>
+        /// (<see cref="TurretObject"/> and <see cref="OutriderObject"/> for FORGE, and
+        /// <see cref="WaveMachineRecord"/> for what those two did across a Wave). Cooldowns run
+        /// here; Dump auras go server-side via NetVerbs when a session is listening.</summary>
     public sealed class PlayerProtocolAbilities : MonoBehaviour
     {
         const string Tag = "Protocol";
@@ -27,11 +28,7 @@ namespace GatekeepersProtocol.Game
         bool _hosted;
         bool _loggedCrewExpiry;
         bool _loggedPersonalExpiry;
-        string _firstMachineThisWave = "";
-        float _turretChargeAtSpecial = -1f;
-        float _outriderChargeAtSpecial = -1f;
-        bool _turretSpecialRan;
-        bool _outriderSpecialRan;
+        readonly WaveMachineRecord _machines = new WaveMachineRecord();
 
         public bool HasProtocol => _protocol != BoarderProtocolId.None;
         public string ProtocolName => BoarderProtocol.ProtocolName(_protocol);
@@ -125,15 +122,11 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        public string TurretChargeLabel
-        {
-            get
-            {
-                if (_turretControl == null) return "";
-                return ((int)_turretControl.Charge).ToString()
-                    + "/" + ((int)_turretControl.ChargeMax).ToString();
-            }
-        }
+        /// <summary>Charge readout for the crew square. The HUD asks for this from LateUpdate,
+        /// every frame the strip is up, so the string comes out of the shared meter table —
+        /// concatenating one here made a garbage string per frame per machine.</summary>
+        public string TurretChargeLabel =>
+            _turretControl == null ? "" : MachineChargeLabels.OfTurret(_turretControl.Charge);
 
         /// <summary>True when the crew square should show turret charge rather than cooldown.
         /// </summary>
@@ -157,15 +150,10 @@ namespace GatekeepersProtocol.Game
             }
         }
 
-        public string OutriderChargeLabel
-        {
-            get
-            {
-                if (_outriderControl == null) return "";
-                return ((int)_outriderControl.Charge).ToString()
-                    + "/" + ((int)_outriderControl.ChargeMax).ToString();
-            }
-        }
+        /// <summary>Charge readout for the personal square, on the same per-frame path and off
+        /// the same table as <see cref="TurretChargeLabel"/>.</summary>
+        public string OutriderChargeLabel =>
+            _outriderControl == null ? "" : MachineChargeLabels.OfOutrider(_outriderControl.Charge);
 
         public bool TryPersonalChargeSquare(out float fill, out string label)
         {
@@ -177,62 +165,20 @@ namespace GatekeepersProtocol.Game
             return true;
         }
 
-        public void BeginWaveMachines()
-        {
-            // A machine that stood through the last Assault is already this Wave's first.
-            // Clearing the latch here made wave 2 of 2026-08-29_22-53-02 log outrider-first
-            // after a turret that had been standing since wave 1.
-            if (HasTurret && HasOutrider)
-            {
-                if (_firstMachineThisWave.Length == 0) _firstMachineThisWave = "turret";
-            }
-            else if (HasTurret)
-                _firstMachineThisWave = "turret";
-            else if (HasOutrider)
-                _firstMachineThisWave = "outrider";
-            else
-                _firstMachineThisWave = "";
-            _turretChargeAtSpecial = -1f;
-            _outriderChargeAtSpecial = -1f;
-            _turretSpecialRan = false;
-            _outriderSpecialRan = false;
-        }
+        /// <summary>Wave boundary. The rig is the only thing that knows what is still standing,
+        /// so it hands that in; the record owns the rule that a survivor counts as this Wave's
+        /// first.</summary>
+        public void BeginWaveMachines() { _machines.BeginWave(HasTurret, HasOutrider); }
 
-        public void NoteMachineDeploy(string machine)
-        {
-            if (machine == null || machine.Length == 0) return;
-            if (_firstMachineThisWave.Length == 0) _firstMachineThisWave = machine;
-        }
+        public void NoteMachineDeploy(string machine) { _machines.NoteDeploy(machine); }
 
-        public void NoteTurretSpecial(float charge)
-        {
-            _turretSpecialRan = true;
-            _turretChargeAtSpecial = charge;
-        }
+        public void NoteTurretSpecial(float charge) { _machines.NoteTurretSpecial(charge); }
 
-        public void NoteOutriderSpecial(float charge)
-        {
-            _outriderSpecialRan = true;
-            _outriderChargeAtSpecial = charge;
-        }
+        public void NoteOutriderSpecial(float charge) { _machines.NoteOutriderSpecial(charge); }
 
         /// <summary>Criterion 10: which machine deployed first this Wave, and each machine's
         /// charge when its special ran. Null when neither machine was deployed.</summary>
-        public string WaveMachineLine()
-        {
-            if (_firstMachineThisWave.Length == 0) return null;
-            string t = _turretSpecialRan
-                ? ((int)_turretChargeAtSpecial).ToString()
-                    + "/" + ((int)BoarderProtocol.TurretChargeMax).ToString()
-                : "-";
-            string o = _outriderSpecialRan
-                ? ((int)_outriderChargeAtSpecial).ToString()
-                    + "/" + ((int)BoarderProtocol.OutriderChargeMax).ToString()
-                : "-";
-            return "machines first=" + _firstMachineThisWave
-                + " turret-special-charge=" + t
-                + " outrider-special-charge=" + o;
-        }
+        public string WaveMachineLine() { return _machines.Line(); }
 
         public void Bind(GameController game, BoarderProtocolId protocol, BoarderAbilityId passive)
         {

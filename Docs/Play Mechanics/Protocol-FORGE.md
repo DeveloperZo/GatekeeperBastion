@@ -2,7 +2,7 @@
 Purpose: the FORGE Protocol, an instance of Protocols — two machines, charge spent into Overcharge and EMP, proximity-gated pairing, passive CLASSIFIED.
 Status: working
 Update trigger: any milestone that touches this instance, in the same change.
-Last updated: 2026-08-31
+Last updated: 2026-09-01
 Where:
 - Field Deploy is press versus hold — Assets/Scripts/Game/Player/PlayerProtocolAbilities.cs (Tick); placement Assets/Scripts/Game/Player/PlayerTurretControl.cs; charge kept on live replace TurretState.TryPlace
 - Outrider is press versus hold on the personal binding — PlayerOutriderControl.cs; follow and Boarder-nearest fire OutriderObject.cs; charge and phase OutriderState.cs
@@ -86,7 +86,7 @@ Numbers — range, damage, rates, aura, pairing radius, root length, charge dial
 
 ### Gaps
 
-- The turret has no visible health, so there is no way to judge how many swings it will take. The Outrider has the same bar the turret does; the tell is still easy to miss in a scrum.
+- Both machines carry a life bar, so how many swings one has left is readable in principle. In a scrum it is easy to miss, and nothing else calls out a machine about to fall.
 - The aura radius is not drawn. The pairing radius is the protocol line reading "paired", not a disc on the floor.
 - Charge is on the two squares; a refusal at zero charge is a log line the player may miss if they have not watched the square.
 - PARALLEL BAYS is written onto every decoy placed and nothing reads it, so the doctrine row on the sheet promises a second bay the Drone bay does not give.
