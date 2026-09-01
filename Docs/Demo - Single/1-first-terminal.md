@@ -8,8 +8,10 @@ Status: demo spec
 Authority: implementable
 Update trigger: when the zone shape changes, when the Ante-teach timing changes,
 when the DemoZones table moves
-Last updated: 2026-08-25 (the zone re-spec and the DemoActive gate shipped; MaxWaves is
-an absolute ceiling; the teach line says Ante; Convert in the prompts)
+Last updated: 2026-09-01 (every body count, hit-point and award figure re-read from the tree
+after the 2026-08-27 roster cut; the shape is unchanged. 2026-08-25: the zone re-spec and the
+DemoActive gate shipped; MaxWaves is an absolute ceiling; the teach line says Ante; Convert in
+the prompts)
 Depends: voice.md, 0-wake-on-a-dead-ship.md
 Play: GatekeeperZo Notes/playthrough.md 2026-08-16 starting-weapon entry
 -->
@@ -89,19 +91,19 @@ are Subtitle only ([`voice.md`](voice.md)).
 
 | | |
 |---|---|
-| **Goal** | Clear 18 Defaults. MK-1 (damage **30**, in tree) one-shots a 30 HP Wave-1 Default. |
+| **Goal** | Clear 11 Defaults. MK-1 (damage **30**, in tree) needs two shots on a Wave-1 Default, whose `BaseEnemyHp` is 50 — it one-shot the pre-2026-08-27 body of 30. |
 | **Player** | Fight. Terminal-mode Wave hunts the Boarder; the Hatch cannot be hurt. |
 | **Game** | — (no locking line in Assault) |
 | **Standing** | Clear the Wave (1/2) — drawer Assault shows wave / remaining |
-| **Log** | `[Run] wave 1/5 — 18 gatekeepers, intensity=0 juiced=0 (each kill +25)` then `[Terminal] T1 wave 1/1 cleared` |
-| **Have** | Targeting: Hatch targetable only in `WaveMode.HatchBank`. Kill award `floor(25 × dial)`, split across `PlayerCount` wallets, 0 during a Convert. |
+| **Log** | `[Run] wave 1/5 — 11 gatekeepers, intensity=0 juiced=0 (each kill +42)` then `[Terminal] T1 wave 1/1 cleared` |
+| **Have** | Targeting: Hatch targetable only in `WaveMode.HatchBank`. Kill award `floor(42 × dial)`, split across `PlayerCount` wallets, 0 during a Convert. |
 | **Build** | Nothing beyond the re-spec. |
 
 ### 4 — Ante teach (Prep after T1)
 
 | | |
 |---|---|
-| **Goal** | Learn the bet. Unbanked is now > 0 (450 after a full T1 clear solo dial 0). |
+| **Goal** | Learn the bet. Unbanked is now > 0 (462 after a full T1 clear solo dial 0: 11 kills × 42). |
 | **Player** | Look at **T2** — the first Field look with Unbanked > 0: `demo.juice_teach` Lock, once. Then `+`/`-` while unarmed (each step −100 Unbanked), `E`, `T` for T2's Wave. Juicing 0 is legal. |
 | **Game** | `demo.juice_teach` · Lock · Local · Game. **Kills paid you Unbanked Salvage. + and - spend it on the Ante: the next Wave brings more Gatekeepers and pays more. Spending nothing is also a bet.** (shipped copy, `DemoLines`; the id keeps the code's word) |
 | **Standing** | Clear the Wave (2/2) |
@@ -114,7 +116,7 @@ are Subtitle only ([`voice.md`](voice.md)).
 
 | | |
 |---|---|
-| **Goal** | Finish zone 1's terminals. T2's Wave rides the in-tree Wave-2 spec: 30 bodies, 4 Hunters, ×1.40 — `[unconfirmed]` for the new shape; the zone Wave table is retune territory under the loss-1 aims (beat 2, Gaps below). |
+| **Goal** | Finish zone 1's terminals. T2's Wave rides the in-tree Wave-2 spec: 18 bodies, 2 Hunters, ×1.40 — `[unconfirmed]` for the new shape; the zone Wave table is retune territory under the loss-1 aims (beat 2, Gaps below). |
 | **Player** | `T` on T2; clear; untimed Prep before it; optional juice, no second lecture. |
 | **Game** | — |
 | **Standing** | Clear the Wave (2/2) |
@@ -127,7 +129,7 @@ are Subtitle only ([`voice.md`](voice.md)).
 
 | | |
 |---|---|
-| **Goal** | Take the pile to the Hatch. Full zone clear solo dial 0: **1200** Unbanked (48 kills × 25, in-tree Wave 1+2 specs). The ruled bank-start aim is **~2k** (tunable, Zo 2026-08-17) — the gap is zone-Wave/award tuning (Gaps below), not this file's to resolve. |
+| **Goal** | Take the pile to the Hatch. Full zone clear solo dial 0: **1218** Unbanked (29 kills × 42, in-tree Wave 1+2 specs). The ruled bank-start aim is **~2k** (tunable, Zo 2026-08-17) — the gap is zone-Wave/award tuning (Gaps below), not this file's to resolve. |
 | **Player** | After the 2/2 clear, look at the Hatch: `demo.after_terminal` Lock. Beat 2 owns the window. |
 | **Game** | `demo.after_terminal` · Lock · Local · Game. **The terminals are done. Your Salvage is still Unbanked. Go to the Hatch and hold it — the pile transfers home while you defend. E, then T.** |
 | **Standing** | Convert at the Hatch |
@@ -199,15 +201,15 @@ Nothing. Do not delete `AppendStake`. Do not hide `+/-`.
 | `MaxWaves` | **5**, an absolute end-Wave ceiling | `WaveDirector.MaxWaves`. Zone 1 is Waves 1–2 and zone 2 is 3–5, so both fit under it |
 | Juice cost | 100 / step | `IntensityJuice.CostPerStep` |
 | Dial curve | 1.00 … 1.50 | `TetherSiphon.Curve` |
-| Zone 1 kills solo dial 0 | 48 | 18+30 (in-tree Wave 1+2 specs — `[unconfirmed]` for the new shape, retune territory) |
-| Unbanked if no juice, full zone clear | **1200** | 48×25 — vs the ruled ~2k bank-start aim (tunable); see Gaps |
+| Zone 1 kills solo dial 0 | 29 | 11+18 (in-tree Wave 1+2 specs from `BaseEnemyCount` + `CountPerWave`·i — `[unconfirmed]` for the new shape, retune territory). Was 48 = 18+30 until the 2026-08-27 roster cut took `18+12i` to `11+7i` |
+| Unbanked if no juice, full zone clear | **1218** | 29×42 — vs the ruled ~2k bank-start aim (tunable); see Gaps. Was 1200 = 48×25 on the pre-2026-08-27 roster and award |
 | One juice step before T2 | −100 Unbanked, bodies ×1.10 | curve index 1 |
 | MK-1 damage | 30 | `WeaponCatalog` (lever 1 shipped) |
-| Default HP W1 | 30 | `BaseEnemyHp` × 1.0 |
+| Default HP W1 | 50 | `BaseEnemyHp` is 50 × 1.0; raised from 30 on 2026-08-27 with the roster cut |
 | Explore nag | 45 s | this spec |
-| Salvage / kill | `floor(25 × dial)`, 0 in `WaveMode.HatchBank` | `RunSim` award |
+| Salvage / kill | `floor(42 × dial)`, 0 in `WaveMode.HatchBank` | `RunSim` award off `MetaUpgrades.SalvagePerKill` 42 (25 before 2026-08-27; a kill is priced flat, so the roster cut re-priced it) |
 
-Gaps: in-tree zone-1 Wave specs give 1200 Unbanked at dial 0; the ruled loss-1
+Gaps: in-tree zone-1 Wave specs give 1218 Unbanked at dial 0; the ruled loss-1
 aim is **~2k** Unbanked at bank start (tunable, Zo 2026-08-17). Zone
 Wave/award tuning is open — record here, resolve with beat 2's overwhelm tune.
 
@@ -291,7 +293,8 @@ if they juiced everything and got no kills).
    the lane offered a start and the demo voice pointed at the wrong one.
 3. `+/-` one step spends 100 and the trigger starts `intensity=1`; spend Event
    line present.
-4. Duo: zone 1's first Wave `enemyCount=36` at dial 0.
+4. Duo: zone 1's first Wave `enemyCount=22` at dial 0 (`BaseEnemyCount` 11 × 2 players;
+   was 36 on the pre-2026-08-27 roster).
 5. With `DemoActive` false: live terminals, Hatch unblocked, no demo lines.
 6. No `[Dev]`.
 

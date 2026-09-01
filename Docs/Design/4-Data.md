@@ -6,7 +6,10 @@
      tier-cost, abilities, gatekeepers, waves, dial, player-count, intensity-juice, hatch, hatch-bank,
      respawns, master-control, tracks, bastion-mesh, ship-camera. Prose outside the
      markers is hand-written and preserved byte-for-byte on regenerate. Run
-     Tools/docgen/run.sh after any Sim/ change that owns a block; --check fails on drift. -->
+     Tools/docgen/run.sh after any Sim/ change that owns a block; --check fails on drift.
+     Last updated: 2026-09-01 (M110 constant-drift pass — hand-written prose re-derived
+     against HatchMaxHp 600, BaseEnemyHp 50, the four kind HPs, the 11+7i roster and the
+     7.3+0.40*w gap; superseded ladders kept and marked as history). -->
 
 **Mechanics, the data half** (MDA), and the bottom of the leverage ladder — #11 buffer
 sizes and #12 constants. Read last, on purpose.
@@ -49,12 +52,14 @@ base: (8 * 30) / (8/3 + 1.4) = 240 / 4.07 = 59.0 dps
 ```
 
 Reload is an upgrade spoke (`ReloadPerPoint = 0.98035f`) for every shop weapon, so the
-duty cycle is not fixed across a campaign. MK-1 T0 damage 30 one-shots a Wave-1 Default
-(`Mk1_T0_OneShotsWave1Default`). That puts T0 duty-cycle dps above the Secondary band;
+duty cycle is not fixed across a campaign. MK-1 T0 damage 30 no longer one-shots a Wave-1
+Default: against `WaveDirector.BaseEnemyHp` 50 it costs **two** shots, and three on Wave 2
+(`Mk1_T0_TwoShotsWave1Default_ThreeShotsWave2`, renamed on 2026-08-27 from the one-shot claim
+the raise deleted). T0 duty-cycle dps still sits above the Secondary band;
 first-session fodder TTK is the demand (2026-08-16). The SEC-D's fire-rate-centred build
 stays under focused Primaries (`SecDFireRateFocus_NeverRivalsFocusedPrimaries`). Secondaries
 price on their own curve — the tier-cost block below — and the first two MK-1 purchases
-(150 + 300) equal the 450 Wave 1 pays outright at kill-value 25 and intensity 0
+(150 + 300) fit inside the 462 Wave 1 pays outright at kill-value 42 and intensity 0
 (`FirstWheelPurchase_AffordableOffOneWaveOneClear`).
 
 **Crit** (`PlayerGun.RollCrit`, `CritDamageMultiplier = 2`): `MetaUpgrades.CritChance()` is
@@ -78,8 +83,12 @@ clip 8 → `96 / 6.73 = 14.3 dps`. A hard Run, not a dead end.
 
 `Sim/Waves/WaveDirector.StatsFor(kind)`, pushed onto each spawn by `Game/Enemies/WaveSpawner.cs`. All
 four share one **0.7s swing clock**: kinds differ by what they hit, never by cadence.
-HP 90 → 30 with 3x the bodies, so Wave 1 is still **540 HP of gatekeeper** (18 x 30 = the
-old 6 x 90) — a redistribution, not an inflation.
+Two roster passes have moved these numbers without moving the total. The 2026-08-04 horde pass
+took HP 90 → 30 with 3x the bodies (18 x 30 = the old 6 x 90 = **540 HP of gatekeeper** on Wave
+1); the 2026-08-27 fewer-and-tougher pass reversed the direction, `BaseEnemyHp` 30 → 50 against
+a roster cut `18+12i` → `11+7i`. Wave 1 is **550 HP of gatekeeper** today — `BaseEnemyHp` 50
+across the eleven bodies the roster formula authors — so both passes were a redistribution,
+not an inflation.
 
 <!-- GKB:GEN gatekeepers — WaveDirector.StatsFor, GatekeeperAttackInterval -->
 | kind | HP | player dmg | Hatch dmg | patrol | chase | refuses |
@@ -93,11 +102,12 @@ old 6 x 90) — a redistribution, not an inflation.
 GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game override
 (`ThiefGatekeeper.MayTargetPlayer` when `WaveMode.Terminal`). Player-facing name is Thief.
 
-- **Default** 30 HP = **1 shot** at MK-1 T0. 6 dmg/0.7s = 8.6 dps
+- **Default** `BaseEnemyHp` 50 HP = **2 shots** at MK-1 T0. 6 dmg/0.7s = 8.6 dps
   each: three on you kill a 100 HP player in **3.9s**, five in **2.3s** (at the old
   18 dmg, five were 128.6 dps and **0.8s** — why damage fell as bodies tripled).
-  Hatch 4/0.7s = 5.7 dps: one leaker needs 52s, so leaks are a crowd problem now.
-- **Hunter** 20 HP = **1 shot**. 5.6 m/s beats the 5 m/s walk and loses to the
+  Hatch 4/0.7s = 5.7 dps: one leaker needs 105s against `ShipSystems.HatchMaxHp`, so
+  leaks are a crowd problem now.
+- **Hunter** `HunterHp` 33 HP = **2 shots**. 5.6 m/s beats the 5 m/s walk and loses to the
   7.5 m/s sprint — the first Gatekeeper that makes **sprint** load-bearing. Zero Hatch
   damage: it cannot be answered by standing on the Hatch.
 - **Speeds fell on the spine (Zo, 2026-08-25).** Default chase went `5.6 → 4.6` and the
@@ -108,11 +118,11 @@ GEN `ignoresPlayer` is `WaveDirector.StatsFor`. Field-terminal hunt is a Game ov
   Hunter keeps the one relationship that was ever load-bearing — faster than walk, slower
   than sprint — and is now the ONLY kind that outruns a walking player, which is what it
   was for.
-- **Thief** 120 HP = **4 shots** = `120/59 = 2.03s` of focused fire while dealing
-  `20/0.7 = 28.6` dps → `28.6 x 2.03 = 58` HP of the 300 HP door, per Thief that
-  got home *while being shot*. Intercepting it turns "shoot the closest" into "shoot the
+- **Thief** `ThiefHp` 200 HP = **7 shots** = `200/59 = 3.39s` of focused fire while dealing
+  `20/0.7 = 28.6` dps → `28.6 x 3.39 = 97` HP of the door (`ShipSystems.HatchMaxHp` 600), per
+  Thief that got home *while being shot*. Intercepting it turns "shoot the closest" into "shoot the
   right thing"; it cannot hurt you, so it costs only the time the Hunters are using.
-- **Cloaker** 45 HP = **2 shots** at MK-1 T0, where a Default is one — the ONLY number it
+- **Cloaker** `CloakerHp` 75 HP = **3 shots** at MK-1 T0, where a Default is two — the ONLY number it
   owns; every other figure is Default's, read from the same constants, so the watch rule
   stays the whole difference. The rule is Game-layer state (`CloakerGatekeeper`): inside a
   **30° half-angle** cone of any live Boarder's planar forward, within **26 m**, with line
@@ -200,7 +210,7 @@ baseline** every table below rests on:
 | 5 | ×1.50 | 17 | 59 |
 <!-- GKB:END dial -->
 
-Body count scales linearly with connected players: `min(120 × n, round((18 + 12×i) × dial) × n)`.
+Body count scales linearly with connected players: `min(120 × n, round((11 + 7×i) × dial) × n)`.
 `n = 1` is the table above. Hunters and Thieves stay on the per-wave rows; surplus is Default.
 Bank cap at conversion is solo expected unbanked for waves 1..DeepestWaveReached at dial 0 /
 scavenging 0, and applies only when `n > 1`.
@@ -309,7 +319,9 @@ numbers are **#12**. Cap and bleed-out timer are the generated block below.
 
 Master Control is 5 terminal Waves then 1 Hatch-bank window. Gap is `WaveDirector.InterWaveGap`.
 The finale elite is one Thief, no escorts, at `MasterControl.FinaleEliteHp` (240 pre-multiplier;
-Wave-5 Thief spawned HP is 120 × 2.60 = 312, the elite is 240 × 2.60 = 624). The 45 s window
+Wave-5 Thief spawned HP is `ThiefHp` 200 × 2.60 = 520, the elite is 240 × 2.60 = 624).
+`FinaleEliteHp` did not move with the 2026-08-27 roster pass, so the elite now stands 1.2× a
+stock Wave-5 Thief where it stood 2× (624 against the old 120 × 2.60 = 312). The 45 s window
 stays Hatch-bank; the Wave-5 horde does not spawn with it.
 
 <!-- GKB:GEN master-control — MasterControl.TerminalWaves, HatchWaves, FinaleEliteHp, WaveDirector.InterWaveGap -->
@@ -321,13 +333,18 @@ stays Hatch-bank; the Wave-5 horde does not spawn with it.
 | gap | 3 s |
 <!-- GKB:END master-control -->
 
-Arithmetic for the 300/300 pair: a Run that dies on Wave 2 banks ~900 at dial 0 (pacing
-tables), so 600 fits inside one post-loss Run alongside a 400 wheel purchase — and prices the tool at
-exactly one full 300 HP repair (600 at 2/HP).
+Arithmetic for the 300/300 pair: Waves 1 and 2 clear for 1,218 at dial 0 (the bank-cap row
+above, 29 bodies at `SalvagePerKill` 42), so 600 fits inside one post-loss Run alongside a
+400 wheel purchase. **The equivalence the pair was priced on is gone**: 600 bought exactly one
+full repair of the 300 HP door it was set against, and at `ShipSystems.HatchMaxHp` 600 a full
+repair is 1,200 — slot plus rig now costs half a door, not a whole one.
 
-Scale of the per-HP cost: a full repair of the base 300 HP Hatch is **600 Salvage**. Measured
+Scale of the per-HP cost: a full repair of the Hatch at Armor 0 is **1,200 Salvage**
+(`ShipSystems.HatchMaxHp` 600 at 2/HP). Measured
 two-Wave Runs on 2026-08-04 grossed 1,072 / 1,182 / 1,075 (pre-M22 figures, so inflated by
-roughly 20), which puts a full repair at **about half a Run's take**.
+roughly 20), which put a full repair of the door as it then stood at about half a Run's take and
+puts a full repair of the raised one at **about a whole Run's take** — the door doubled and the
+per-HP rate did not.
 
 ## Decoy payload (M30)
 
@@ -343,7 +360,7 @@ Run; the decoy is the first row. All figures **initial, tunable, needs play data
 | place range | **20 m** |
 | max live | **1** |
 | effective dps (conversion) | **3.43** (`4 / 0.7 × ~60%` landing) |
-| gatekeeper-seconds / charge | `120 / 3.43 ≈ 35` (~40% of a 300 HP door's ~88 gs budget) |
+| gatekeeper-seconds / charge | `120 / 3.43 ≈ 35` (~20% of the door's ~175 gs budget: `ShipSystems.HatchMaxHp` 600 / 3.43) |
 
 Pulls Defaults and Hunters inside the radius; refuses Thieves entirely and Defaults already
 committed inside 8 m of the Hatch. Takes the attacker's Hatch-damage value. Player fire
@@ -453,7 +470,9 @@ array (`WeaponWheel.EffectiveDps`) and cannot be tabulated against derived Tier.
 **THE PRIMARY TIER WAS RAISED ~2x BECAUSE THE FREE SECONDARY OUT-KILLED IT** (2026-08-27,
 Zo's ruling: "It is the rifle. We should push the primary damage up"). BR-12 6 → 12/pellet,
 MR-35 8 → 16, PRI-C 90 → 180. `EnemyHealthPerWave` was restored 0.30 → 0.40 in the same pass
-("can scale health on later waves"), putting the Default ladder back to 30/42/54/66/78.
+("can scale health on later waves"), putting the Default ladder back to 30/42/54/66/78 —
+**read that ladder as history**: `EnemyHealthPerWave` is still 0.40, but the fewer-and-tougher
+pass below raised `BaseEnemyHp` 30 → 50 the same day, so the live ladder is 50/70/90/110/130.
 
 The MK-1 Sidearm sustains **59.0 dps at cost 0** against Primaries that cost 900-1500 Salvage
 and sat at 33.2 / 37.0 / 36.5. It is not offset by ammo starvation, which was the obvious
@@ -463,9 +482,10 @@ defence and is wrong: the Secondary's `0.4 rounds/s` regen
 still owns the clip and the full 59.0 is genuinely sustainable.
 
 **Judge this ladder on kills/s against the HP table, never on the dps column.** Duty-cycle dps
-ignores overkill, and at 30 damage a 42 HP body costs the sidearm two whole shots. Measured at
-EQUAL TIER (T0) against the restored ladder, the sidearm led the old rifle by 6% at Wave 2 and
-70% at Wave 4 — not the flat 60% the dps column implies. The granularity is the whole reason
+ignores overkill, and at 30 damage a 70 HP Wave-2 body costs the sidearm three whole shots.
+Measured at EQUAL TIER (T0) against the 30/42/54/66/78 ladder that stood that hour, the sidearm
+led the old rifle by 6% at Wave 2 and 70% at Wave 4 — not the flat 60% the dps column implies.
+The granularity is the whole reason
 the gap swings that far, and it is why an argument from dps alone reached the wrong answer
 twice while this was being tuned. After the raise the MR-35 leads on every wave of the ladder.
 

@@ -1,4 +1,4 @@
-<!-- Purpose: the moment-to-moment loop a Boarding is made of — where a wave begins, what ends it, and what each ending is worth. The one place the loop is stated; every other document defers to this. / Status: locked / Update trigger: when the start line, the end condition, or what a zone completion pays changes. / Last updated: 2026-08-30 (T2/T5 recall to Hatch; finale start gated on ControlRoomReachable) -->
+<!-- Purpose: the moment-to-moment loop a Boarding is made of — where a wave begins, what ends it, and what each ending is worth. The one place the loop is stated; every other document defers to this. / Status: locked / Update trigger: when the start line, the end condition, or what a zone completion pays changes. / Last updated: 2026-09-01 (M110 constant-drift pass: Hatch HP 600, Wave-5 roster 39, four Thieves) -->
 
 # 0 — The Gameplay Loop
 
@@ -96,8 +96,9 @@ Until 2026-08-27 a field wave removed the Hatch from targeting entirely and made
 invulnerable. Both halves were wrong, and the targeting half was much the larger bug: the
 "is there a hatch for me" term feeds the `_chasingPlayer` line in `EnemyGatekeeper.Retarget`,
 so deleting the Hatch did not give bodies one fewer option — it forced **every** body onto the
-player, unconditionally and for life, from anywhere on the spine. A Wave 5 field wave is 66 of
-them. A logged run died to that six times and paid 84% of its gross back in respawn fees.
+player, unconditionally and for life, from anywhere on the spine. A Wave 5 field wave is 39 of
+them (`11 + 7*waveIndex`; it was 66 on the roster of the day). A logged run died to that six
+times and paid 84% of its gross back in respawn fees.
 
 The invulnerable half made the Thief meaningless as a side effect: its only weapon is
 `hatchDamage`, so on a field wave it could affect nothing whatsoever. 12 of 13 walked a whole
@@ -148,10 +149,11 @@ there. The 07:17 run authored 39 bodies in wave 5, killed 93, and had to be aban
 
 **The Hatch is shut while you are up the lane, and armoured for it**
 (`HatchBank.FieldWaveDamageScale`). This is not a softening of the rule above; without it the
-rule is unplayable. Hatch HP is 300 and was sized for a mode where the player stands on it. A
-single Thief with three Defaults is 45.7 raw dps and would take the Hatch down in **6.6 s** —
-less time than it takes to turn around at the near terminal — and Wave 5 authors seven Thieves.
-Scaled, that same group gives about 45 s, which is the round trip to T2 plus a fight through.
+rule is unplayable. Hatch HP is 600 (`ShipSystems.HatchMaxHp`) and was sized for a mode where
+the player stands on it. A single Thief with three Defaults is 45.7 raw dps and would take the
+Hatch down in **13.1 s** — the 66 m walk back from the near terminal, near enough exactly — and
+Wave 5 authors four Thieves. Scaled, that same group gives about **88 s**: twice the margin the
+door bought when this was written, and comfortably the round trip to T2 plus a fight through.
 **This number is arithmetic, not a measurement**: no field wave has ever been played with the
 Hatch in the fight, so it is the first dial to turn after one is.
 

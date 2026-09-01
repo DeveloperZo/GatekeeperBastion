@@ -548,6 +548,18 @@ rulemaking authority lives there.
   not outrun what the player can answer — relocates here intact; only its sign was wrong,
   and it was wrong because it rested on a kill-rate claim that later play data falsified
   (see `Docs/Design/2-Dynamics.md`, B1).
+  **SUPERSEDED AGAIN 2026-08-27, hours later — the base and the slope both moved.** The live
+  formula is `max(0.4, 7.3 + 0.40*min(wave, MaxWaves-1))` — 7.30 / 7.70 / 8.10 / 8.50 / 8.90
+  (`WaveDirector.SpawnGapBase`, `WaveDirector.SpawnGapPerWave`). The sign flip above was
+  solved against the `18+12i` roster; the fewer-and-tougher pass cut that roster to `11+7i`
+  the same day and raised every kind's HP by 5/3, which shortened every delivery window by
+  ~40% while group width stayed 3/4/5/6/7. Body ARRIVALS barely moved, so nothing in a
+  bodies-per-second reading showed it, but each body now carries 5/3 the HP: HP pressure per
+  second rose by that factor, Wave 5 from 114 to 203 HP/s. The gap was re-solved to hold HP/s
+  at the pre-cut figures (25.1 / 40.9 / 69.4 / 82.8 / 113.9 against 25.7 / 40.9 / 61.6 /
+  92.8 / 114.4). **The roster and the gap are one lever** — moving either alone moves HP/s,
+  which is the trap that made this a same-day second supersession. Derivation in
+  `Docs/Design/4-Data.md`, *Waves and intensity*.
 
 ## Locked — hatch doors are assigned by seat count (Zo, 2026-08-30)
 

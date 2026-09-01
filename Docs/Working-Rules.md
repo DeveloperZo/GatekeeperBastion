@@ -391,55 +391,197 @@ array it describes all put a **1** in the third slot of `cloakerCount`, where
 generated table in that same file was right the whole time.
 
 The failure has a shape: **a number appears in two places and only one of them is the
-source.** `Tools/lint-constants/run.sh` covers one narrow, mechanical case of it — a numeric
-array literal, restated outside its declaration, that *nearly* matches a live `Sim/` array.
-Near is the signal. A restatement that agrees is silent, and a list of unrelated numbers is
-too far away to match, so the check has one thing to say and says it rarely.
+source.** `Tools/lint-constants/run.sh` covers two narrow, mechanical cases of it.
 
-**What it cannot catch, and this is most of the surface:**
+**Arrays.** A numeric array literal, restated outside its declaration, that *nearly* matches
+a live `Sim/` array. Near is the signal. A restatement that agrees is silent, and a list of
+unrelated numbers is too far away to match, so the check has one thing to say and says it
+rarely.
+
+**Watched scalars (M110).** A number written beside the name of a constant on the `watch`
+list, or beside one of that entry's declared plain-English aliases, that disagrees with the
+value the code compiles. The list is thirteen `Sim/` tuning constants and it is the whole
+subject: nothing is compared until someone writes it into the fence with the words the docs
+actually use for it.
+
+**The allow-list is the answer to a measured failure, and it is worth saying which one.** On
+2026-08-26 a scalar check that scanned *every* `const` was built and dropped at 6 hits, all
+false positives: a line may cite `FinaleEliteCount` while discussing HP, and `Build`, `Count`
+and `Curve` are English words before they are symbols. That version had no way to be told
+what it was looking at. This one is told — a watched constant is named, type-qualified, with
+its aliases, and an accidental symbol-shaped word can never become a subject. Two further
+rules from the same measurement: a mention with **no** number within `scalar_window`
+characters is not a restatement at all (most prose names a constant to argue about it), and a
+mention with the **true** value in reach is silent even when other numbers sit beside it,
+because `7.3 + 0.40*w` states two watched constants at once and each is correct next to the
+other's number.
+
+**Precision is the design constraint, and the first cut nearly lost it.** Measured on
+2026-09-01, mid-correction, the scalar watch reported **15 lines and 11 of them were noise** —
+worse precision than the all-`const` version rejected on 2026-08-26, and a check people learn
+to ignore is worse than no check. The noise was not one heuristic's worth. It was five
+distinct shapes plus three documents whose subject *is* stale numbers, and each got its own
+narrow rule rather than a wider window or a shorter watch list. Measured one rule at a time
+against the same tree:
+
+| Rule | The shape it silences | Lines |
+|---|---|---|
+| **Operand, not subject** | a watched name with `*` or `+` against it. `WaveDirector`'s formula block names four watched constants and states the value of none of them; the numbers beside them belong to the arithmetic, and one of them belongs to `MinSpawnInterval` | 2 |
+| **A full stop between** | the number ends the sentence before the one that names the constant. `4-Data.md` states a Primary's damage step, stops, then names a watched constant whose live value is on the same line just past the window | 1 |
+| **Read through the arrow** | dated history written as `X → Y` where the far half of the pair is the live value. `WeaponCatalog` records a same-day retune correctly and the window sees only the stale-looking half | 1 |
+| **The line names the owner** | the number is declared by a two-word `Sim/` type the line names. A finale line cites `MasterControl` and quotes its elite hit points; the alias `Thief HP` matched the sentence, not the number | 1 |
+| **A `path:NNN` citation** | a line reference inside a backticked path is not a value | 0 today; 1 before the citing line was reworded |
+| **Three exempt documents** | the register and the play log, below | 4 |
+
+The owner rule is matched by the type the line **names**, never by value alone. A
+value-anywhere-in-`Sim/` test was tried first and it silenced three of the four real drifts
+M110 exists to catch, because some unrelated constant happens to equal each of them. Narrow
+because it was measured, not because it reads better.
+
+Every one of these makes the check quieter, which is exactly how a check dies, so each carries
+a `--selftest` **pair**: the shape it must silence, and the near-identical shape it must still
+catch. Eighteen fixtures now, and the four real drifts were re-seeded in their pre-fix wording
+after the last rule landed to confirm all four still fire. Read a hit, do not obey it.
+
+**What it cannot catch, and this is still most of the surface:**
 
 - **Prose that paraphrases.** "The Cloaker debuts on the fourth wave" carries the same claim
   with no literal in it. Out of reach, and a clean run is not proof the docs are right.
 - **A restatement written any other way.** `0/0/1/2/3` and "0, 0, 1, 2, 3" in a sentence are
   both invisible. Slash-separated lists were measured and rejected: they collide with every
   `1/2` progress counter in `Docs/Demo - Single/` — 52 hits, all noise.
-- **Scalar constants.** A doc naming a `const` and a wrong value beside it was built and
-  measured too, and dropped at 6 hits, every one a false positive: a line may cite
-  `FinaleEliteCount` while discussing HP, and `Build`, `Count` and `Curve` are English words
-  before they are symbols. It would also not have caught the Cloaker drift, which names no
-  symbol. Restating a scalar in prose stays a review problem.
+- **An unwatched scalar.** Thirteen constants are watched out of some hundreds. Everything
+  else — every weapon dial, every price, `FinaleEliteHp`, `RepairSalvagePerHp` — restates
+  freely and silently. Adding one is a `watch=` line, not a script edit.
+- **A watched scalar named without a number, or numbered without its name.** "The door is
+  1.58× weaker relative to its budget" names no value; "300 → 88" names no constant. Both
+  are review problems, and the second is why `the door` on its own is not an alias: it is the
+  metaphor `2-Dynamics.md` and `3-Mechanics.md` use for the Hatch on nearly every page, and
+  as an alias it fired on every gatekeeper-second figure in either file. `HP door` and
+  `door HP` pin the unit and do not.
+- **A zero.** "Hatch 0 HP" is the destroyed state, never a stale copy of 600. Seven measured
+  hits said otherwise, so a zero beside a non-zero watched constant is ignored — which also
+  means a doc that wrongly writes a watched value as 0 gets away with it.
+- **A number an operator touches.** A watched name against a `*` or a `+` is skipped whole, so
+  a real restatement that happens to sit beside either is invisible. Only those two: `-` is an
+  em-dash and a bullet more often than it is subtraction, `/` is a unit separator, and `×` is
+  how a spec-table row writes a multiplier — a row of that shape is one of the four drifts
+  this check was built for, so widening the operator set would silence it.
+- **A number one sentence away.** A full stop between the numeral and the name ends the claim.
+  A stale figure in the sentence *before* the one naming the constant is out of reach, and so
+  is a paragraph that puts the wrong number in its opening line and the constant in its
+  closing one.
+- **The near half of a correct transition.** In `X → Y` where Y is live, X is not read at all.
+  A retune history whose starting figure is itself wrong — the door written as rising from a
+  value it never held — passes silently as long as it lands on the right one.
+- **Every value a named type declares.** A line that names a two-word `Sim/` type gets a free
+  pass for every number that type declares, including numbers that have nothing to do with it.
+  `EquipmentCatalog` and `RealmShare` each declare a value that collides with a watched
+  constant's stale figure, so a drifted line on a page that also names one of them is silent.
+  The watched constant's *own* type is excluded from this, so naming `WaveDirector` does not
+  excuse a page from quoting `WaveDirector`'s numbers wrongly.
+- **A number tight against a colon.** `path.md:542` is a citation, so a value written with no
+  space after the colon, and either half of a ratio written `1:2`, are both unread.
 - **A drift that changes the array's length**, or one that moves more values than
   `max_distance`. At that distance it is a different array, not a stale copy of this one.
 
 `min_length` is not tuning. Two-value arrays (`FirstWaveByZone`, `EndWaveByZone`) match
 `{1,2}`-shaped set notation in prose and were the only false positive measured on the tree;
-below three values an array is not distinctive enough to be worth comparing. `must_resolve`
-is the tripwire that stops the check being gutted by accident: rename `CloakerPerWave`, or
-write it in a shape the declaration pattern cannot read, and the check goes **exit 2** rather
-than quietly finding nothing to compare and passing. A negative check that can pass by
-seeing nothing is not a gate.
+below three values an array is not distinctive enough to be worth comparing. `scalar_window`
+is not tuning either: 10 characters was measured against 14, 16, 20, 24 and 30, and every
+wider setting bought back more clause-crossing noise than it removed dated history.
 
-`Tools/lint-constants/run.sh` reads every value below from this fenced block; changing a
-value here changes the check with no script edit. `--selftest` proves the rule still fires,
-`--no-exempt` shows what the exempt list hides.
+`must_resolve` is the tripwire that stops the array half being gutted by accident: rename
+`CloakerPerWave`, or write it in a shape the declaration pattern cannot read, and the check
+goes **exit 2** rather than quietly finding nothing to compare and passing. **The `watch`
+list is its own `must_resolve`** — every name on it must resolve type-qualified in `Sim/`, so
+deleting `HatchMaxHp` fails the run rather than quietly shortening the watch list. A negative check that can pass
+by seeing nothing is not a gate.
+
+Two things the watch list has to be careful about, both real. **Names collide**:
+`MetaUpgrades.BaseCost` is 200 and `Respawns.BaseCost` is 150, so a watch entry resolves
+type-qualified, and a bare `BaseCost` in a document matches *neither* — ambiguity resolves to
+nothing rather than to the wrong lever. **Values collide**: `0.40f` is both
+`EnemyHealthPerWave` and `SpawnGapPerWave`, which is harmless here only because entries are
+matched by name and never by value.
+
+`MetaUpgrades.SalvagePerKill` is a zero-argument method, not a `const` — `MetaUpgrades`
+writes its whole tuning table that way. It is watched anyway: a method whose entire body is
+`return <literal>;` is a constant wearing parentheses, it is cited in balance arguments as
+often as any `const`, and the alternative was to list it and have it silently never resolve.
+
+`Tools/lint-constants/run.sh` reads every value below from this fenced block — the watch list
+included; changing a value here changes the check with no script edit, and the tool carries no
+copy of its own. `--selftest` proves the rule still fires, `--no-exempt` shows what the exempt
+list hides, `--verbose` prints the resolved arrays and scalars with the file and line each
+came from.
 
 ```constant-lint
 min_length=3
 max_distance=2
+scalar_window=10
 sim_dir=Assets/Scripts/Sim
 doc_dirs=Docs
 code_dirs=Assets/Scripts,Assets/Tests
 must_resolve=CloakerPerWave,HunterPerWave,ThiefPerWave,Curve
-exempt=Docs/Changelog.md,Docs/Milestones/3. completed,Docs/_meta/Logs,Docs/_to_delete,Docs/Brainstorms
+exempt=Docs/Changelog.md,Docs/Milestones/3. completed,Docs/_meta/Logs,Docs/_to_delete,Docs/Brainstorms,Docs/GatekeeperZo Notes/playthrough.md,Docs/Marketing/gaps.md,Docs/Marketing/pitch.md
+scalar_exempt=Assets/Tests
+watch=ShipSystems.HatchMaxHp | Hatch HP | HP Hatch | HP door | door HP
+watch=WaveDirector.BaseEnemyHp | Default HP | HP Default
+watch=WaveDirector.HunterHp | Hunter HP | HP Hunter
+watch=WaveDirector.ThiefHp | Thief HP | HP Thief
+watch=WaveDirector.CloakerHp | Cloaker HP | HP Cloaker
+watch=WaveDirector.SpawnGapBase | spawn gap | spawn-gap | gap base
+watch=WaveDirector.SpawnGapPerWave | gap per Wave
+watch=WaveDirector.EnemyHealthPerWave | HP per Wave
+watch=Respawns.BaseCost | respawn cost | respawn fee
+watch=Respawns.MaxRespawns | respawn cap
+watch=Respawns.BleedOutSeconds | bleed-out | bleed out
+watch=HatchBank.FieldWaveDamageScale | field Wave damage scale
+watch=MetaUpgrades.SalvagePerKill | salvage per kill | per-kill salvage
 ```
 
 The `exempt` list is history, not convenience. `Changelog.md` and a completed milestone
 **record what the value used to be** — `M63-3` states the old `CloakerPerWave` twice as the
 change it was making, and correcting that would be falsifying the record. Brainstorms propose
-numbers that are deliberately not live yet.
+numbers that are deliberately not live yet. **`Milestones/3. completed/` is on that list, and
+every run prints the list**, so a clean pass cannot be read as having audited history: the
+line says what was not scanned, and `--no-exempt` scans it.
+
+Three files joined that list on 2026-09-01, each on its own header rather than on a shared
+rule of thumb, and each because **a document whose subject is stale numbers will always trip a
+stale-number check.**
+
+- `GatekeeperZo Notes/playthrough.md` — "One entry per play session. **The verdict is the
+  point** — the log file holds the numbers, this holds what it was like." Its dated entries
+  argue from the figures that were live on the day they were played. Rewriting one would
+  falsify a record and flagging it forever is noise, which is the same reason `_meta/Logs` has
+  been exempt since the array half shipped.
+- `Marketing/gaps.md` — "Purpose: Where locked copy cannot be honest yet, and which existing
+  work would make it true", and its central table's header row is *Claim, and where it lived |
+  The problem | Honest line*. Every row is "the doc said X, the code says Y" on one line by
+  construction.
+- `Marketing/pitch.md` — "Purpose: The store sentences Zo locked, and the truth value of
+  each", with a *Stale | Prefer* table doing the same job for copy.
+
+The cost is stated rather than assumed: gaps and pitch each carry the **live** value in their
+right-hand column, and those columns are now unaudited along with the stale left-hand ones. An
+exemption on a register is an exemption on the register's own answers.
+
+`scalar_exempt` is the scalar watch's own additional exemption and holds one entry,
+`Assets/Tests`. Test comments in this codebase narrate arithmetic and dated retunes —
+"`SalvagePerKill` 25 -> 42 on 2026-08-27 took the same ten kills to 420" — and they were
+measured at **27 hits, none of them real**. `Assets/Scripts` stays in scope and earns it:
+`HatchBank.cs:15` still sizes the door at 300 against a 600 constant, which is the same
+XML-comment drift the array half was written for. A declaration is the source; a comment restating one is
+not.
 
 One authoring constraint falls out of this: **a document may not spell a drifted array as a
 literal**, including this one, or the check reports itself. Say which slot is wrong instead.
+The scalar half extends the same constraint: do not write a stale number next to a watched
+name or alias on this page either — name the constant, or give the number, not both. That is
+why the paragraphs above say a comment "still sizes the door at 300" rather than quoting the
+sentence that does it.
 The alternative was exempting `Working-Rules.md` wholesale the way `lint-language` exempts
 its own rule document, and that would blind the check to every other number on this page.
 

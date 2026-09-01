@@ -9,7 +9,8 @@ Status: demo spec
 Authority: implementable
 Update trigger: when DripPerSecond changes, when the loss-1 overwhelm aims
 move, when the ship-return / respawn rules change
-Last updated: 2026-08-25 (Convert in player-facing strings; Carry3ExtraThief; slots are
+Last updated: 2026-09-01 (M110 constant-drift pass: the door's HP is re-read from the Sim
+constants. Prior: 2026-08-25 — Convert in player-facing strings; Carry3ExtraThief; slots are
 gone from the tree; wheel key is HatchConversions; respawn rule read from Respawns.cs)
 Depends: voice.md, 1-first-terminal.md
 Play: GatekeeperZo Notes/playthrough.md 2026-08-16 starting-weapon entry
@@ -65,7 +66,7 @@ Standing arrives as **Convert at the Hatch**.
 | **Standing** | Hold the Hatch |
 | **Prompt / HUD** | `MsgPlayer` `HATCH UNDER ATTACK` on any Hatch HP drop (live). Unbanked falls, banked rises on Score. |
 | **Log** | drip credits per wallet (live); `[Gatekeepers] gatekeeper reached the hatch — attacking home` |
-| **Have** | Window rules: timer end = clear; enemy wipe and Unbanked 0 do **not** end the window early. Hatch damage also **attrits Unbanked 1:1** (floored) on top of HP loss. Hatch 300 HP at Armor 0; Defaults 4 / Thieves 20 per 0.7 s swing; Hunters 0. Kill award is **0** in `WaveMode.HatchBank`. In-tree composition (carry-3 → 43 bodies, 6 Hunters, 3 Thieves, ×1.25) is the **old shape**. |
+| **Have** | Window rules: timer end = clear; enemy wipe and Unbanked 0 do **not** end the window early. Hatch damage also **attrits Unbanked 1:1** (floored) on top of HP loss. Hatch 600 HP at Armor 0 (`ShipSystems.HatchMaxHp`); Defaults 4 / Thieves 20 per 0.7 s swing; Hunters 0. Kill award is **0** in `WaveMode.HatchBank`. In-tree composition (carry-3 → 43 bodies, 6 Hunters, 3 Thieves, ×1.25) is the **old shape**. |
 | **Build** | The **authored overwhelm** (Zo, 2026-08-17): composition tuned so a 0-upgrade MK-1 seat cannot clear the window and the Hatch falls with ~500 banked from the ~2k pile (aims tunable). Numbers are restamped here when tuned — not invented now. |
 
 Survive path (the timer ends with Hatch > 0 — later Converts; a defect on this
@@ -153,7 +154,7 @@ Any-seat-down override (not in tree; stays out).
 | Banked when the Hatch falls (aim) | **~500**, tunable | Zo, 2026-08-17 |
 | Full ~2k pile at 8/s | ~250 s >> 45 s window | arithmetic on the aim |
 | **Ceiling on banked from this window** | **396** | 8/s x 45 s = 360 taken, x1.10 convert — and that is the survive-the-whole-window ceiling, which this authored loss never reaches. The ~500 aim is unreachable without moving drip, the window, or the convert table; beat 3 already degrades to one buy at 300 |
-| Hatch HP | 300 at Armor 0; dps vs Hatch is the overwhelm tune `[unconfirmed]` | this spec |
+| Hatch HP | 600 at Armor 0 (`ShipSystems.HatchMaxHp`); dps vs Hatch is the overwhelm tune `[unconfirmed]` | this spec |
 | Two Secondary buys | 150+300 = 450 — the ~500 aim funds both (tunable) | Zo, 2026-08-17; beat 3 |
 | Respawn cost | **150** × (respawns taken this Boarding + 1) | `Respawns.BaseCost` / `Respawns.CostFor`. The counter is the Boarding's, not the seat's |
 
@@ -211,7 +212,7 @@ name a death either, since a seat that could pay did not have one.
 - Tuning the overwhelm so the seat dies before any drip lands — the loss must
   read “some came home” (~500 aim).
 - `DurationSeconds` cut instead of composition/drip (wrong lever unless a log
-  shows they always last 45 s at Hatch 300).
+  shows they always last the whole 45 s against an undamaged Hatch).
 - Scripted `Die()`.
 - Forgetting attrition: Hatch damage burns Unbanked 1:1 on top of the drip, so
   a mauled Hatch shrinks the pile even before the wipe.

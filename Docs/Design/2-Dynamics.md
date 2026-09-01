@@ -200,10 +200,16 @@ bodies/s against a measured 0.93 kill rate:
 
 
 M10 shipped `max(0.4, 4.2 − 0.20×wave)`. Earlier softens were not enough after the horde and
-swing-landing fixes. **That sign was reversed on 2026-08-27** — the live formula is
-`max(0.4, 4.2 + 0.20×min(wave, MaxWaves−1))`, a gap that WIDENS as the Run escalates. The
-table above is kept because its arithmetic is still how a gap converts to a delivery time,
-but read it as history: the row this section argued toward is no longer the shipped one.
+swing-landing fixes. **That sign was reversed on 2026-08-27** to
+`max(0.4, 4.2 + 0.20×min(wave, MaxWaves−1))`, a gap that WIDENS as the Run escalates — and
+**superseded again hours later the same day**, when the ~40% roster cut re-derived it. The
+live formula is `max(MinSpawnInterval, SpawnGapBase + SpawnGapPerWave×min(wave, MaxWaves−1))`
+— 7.30 / 7.70 / 8.10 / 8.50 / 8.90 s, not the 4.20 / 4.40 / 4.60 / 4.80 / 5.00 this section
+argued toward. Cutting the roster while leaving group width alone had shortened every
+delivery window by about the same 40%, so the gap and the roster are one lever, not two
+(`WaveDirector.NextWave`; `../Decisions.md`, the M10 spawn-gap entry). The table above is
+kept because its arithmetic is still how a gap converts to a delivery time, but read both
+it and the 4.2 formulas as history.
 
 **~~Kill rate is not constant across a Run.~~ FALSIFIED by play data** (2026-08-27). This
 section previously read: *"Measured 1.23 / 1.50 / 1.67 per second on Waves 3 / 4 / 5 against

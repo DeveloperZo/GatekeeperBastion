@@ -17,10 +17,11 @@ namespace GatekeepersProtocol.Game
     {
         const string Tag = "Damageable";
 
-        // 30 mirrors WaveDirector.StatsFor(Default).maxHp (the gatekeeper baseline) so an actor built
-        // without a SceneBuilder pass still starts at a tuned value. WaveSpawner overrides it per
-        // spawn with the actor's OWN kind's hp — a Hunter is 20 and a Thief is 120, and neither of
-        // those numbers may ever be inferred from this one.
+        // Fallback for an actor built without a SceneBuilder pass. WaveSpawner overrides it per
+        // spawn from the actor's OWN kind's constant — WaveDirector.HunterHp, ThiefHp, CloakerHp,
+        // or the Default baseline — and none of those may ever be inferred from this number.
+        // This literal was written to mirror that Default baseline and no longer does:
+        // WaveDirector.BaseEnemyHp is 50 (raised 2026-08-27); the field below stayed behind.
         [SerializeField] float maxHp = 30f;
         [SerializeField] Color hitFlashColor = new Color(1f, 0.15f, 0.1f);
         [SerializeField] float hitFlashSeconds = 0.09f;

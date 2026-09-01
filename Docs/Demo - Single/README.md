@@ -7,7 +7,8 @@ the implementable specs — plus voice.md. Milestones cut 2026-08-17: M74–M80.
 Status: demo spec
 Authority: implementable — table “Treat as spec” is locked until Zo overrides a row
 Update trigger: when a stamp is overridden, when a beat ships, when M72 closes
-Last updated: 2026-08-25 (MaxWaves is an absolute ceiling, not a per-trigger cap; the
+Last updated: 2026-09-01 (M110 constant-drift pass: the in-tree facts below are re-read from
+WaveDirector, MetaUpgrades and ShipSystems. Prior: 2026-08-25 — MaxWaves is an absolute ceiling, not a per-trigger cap; the
 priced respawn replaced the co-op buy-back rule and closed the dead-host question; the
 finale elite is specced in code; Carry3ExtraThief)
 -->
@@ -111,8 +112,8 @@ pain is TTK and transfer rate.
 
 | Order | Lever | Tier | Why not a higher tier | Status |
 |---|---|---|---|---|
-| 1 | MK-1 damage 14 → **30** | #12 | Fodder TTK. Do not lower `BaseEnemyHp` (Thief 120 / Hunter 20 stay distinct) | **shipped** — `WeaponCatalog` |
-| 2 | `HatchBank.DripPerSecond` 20 → **8** | #12 | They named transfer rate. Do not cut `DurationSeconds` unless a log shows they always last 45 s at Hatch 300 | **shipped** — `HatchBank.cs` |
+| 1 | MK-1 damage 14 → **30** | #12 | Fodder TTK. Do not lower `BaseEnemyHp` (`ThiefHp` and `HunterHp` stay distinct from it) | **shipped** — `WeaponCatalog` |
+| 2 | `HatchBank.DripPerSecond` 20 → **8** | #12 | They named transfer rate. Do not cut `DurationSeconds` unless a log shows they always last the whole 45 s against an undamaged Hatch | **shipped** — `HatchBank.cs` |
 | 3 | Zone terminal shape + juice teach | #6 | Sequencer, not a constant | partial — `FirstTerminal.cs` in tree is the old 3-Wave T1 (re-spec to zone 1's 2×1-Wave, beat 1; needs `DemoActive` gate); juice teach is voice, unbuilt |
 
 Carry-3 extra Thief is in tree (`HatchBank.Carry3ExtraThief`) — keyed to the old
@@ -215,9 +216,9 @@ it. Next lever after that is +1 Thief on that carry (`2-first-hatch-bank.md`).
 
 ## In-tree facts the beats assume
 
-Wave 1: 18 Defaults, HP mul 1.0. MK-1 damage **30**.
-Salvage 25/kill. Secondary wheel 150 then 300 on the same spoke. Hatch-bank window 45 s, drip **8**/s.
-Slots 3. Player 100 HP. Swing 0.7 s. Hatch 300 HP.
+Wave 1: **11** Defaults, roster `11 + 7*waveIndex`, health multiplier 1.0. `BaseEnemyHp` 50. MK-1 damage **30**.
+Salvage **42**/kill (`MetaUpgrades.SalvagePerKill`). Secondary wheel 150 then 300 on the same spoke. Hatch-bank window 45 s, drip **8**/s.
+Slots 3. Player 100 HP. Swing 0.7 s. Hatch 600 HP (`ShipSystems.HatchMaxHp`).
 
 Kit graph: `Tools/bastion-sketch/bastion-defense-layout.txt`.
 

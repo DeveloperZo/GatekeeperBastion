@@ -166,3 +166,8 @@ Docs/_meta/*.env
 !/Assets/Packs/weapon_source/tex/
 /Assets/Packs/weapon_source/tex/*
 !/Assets/Packs/weapon_source/tex/*.meta
+
+# Python bytecode caches from Tools/ lint scripts. Three .pyc files were tracked before
+# this rule existed; a rule does not untrack them, so they still need a git rm --cached.
+__pycache__/
+*.pyc

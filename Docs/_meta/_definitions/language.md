@@ -220,7 +220,7 @@ Test a Play page's Game dimension (skip HTML comments, Reference, and Gaps). One
 | 1 | The `## Game` block is first-person Boarder — the hands of `../../Story/Voices.md` (one hand per protocol, never revealed; ruled 2026-08-22, mirrored here 2026-08-24). No named diarist, no "the player". Reference blocks may address *you*. | "I cut in. They are already home." | "Day 12 — J." / "The player should…" |
 | 2 | Sentence one is a situating fact in this world. | "The Thief is walking to the Hatch." | "A first-person Wave-defense game…" |
 | 3 | The first paragraph states a playable rule the HUD does not print. | "Shooting it does not provoke it." | Opening that only restates HP, clip, or a key already on pause. |
-| 4 | Numbers and bindings only by linking Field Manual. | `How many: [Field Manual](Field-Manual.md).` — the path is a Play page's, and the file is `../../Play/Field-Manual.md` from here. | "The Thief has 180 HP." / "Press F." |
+| 4 | Numbers and bindings only by linking Field Manual. | `How many: [Field Manual](Field-Manual.md).` — the path is a Play page's, and the file is `../../Play/Field-Manual.md` from here. | "The Thief has *n* HP." / "Press F." — any stat printed in the body, whatever *n* is |
 | 5 | No milestone IDs, "not built", or builder paths in the visible body. | The page describes what ships. | "M23 shipped the Repair Rig." |
 | 6 | No never-called terms from the table above. | Hatch, Gatekeeper, the Ante. | Codex, encyclopedia, wiki, enemy, aggro, mission. |
 | 7 | Humor is the situation's exactness. No pun, slang persona, or pop-culture aside. | "You are scenery." | "Think of it as the tank from every horde game." |

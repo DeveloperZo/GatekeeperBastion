@@ -50,6 +50,15 @@ namespace GatekeepersProtocol.Sim
         /// shrinking term must clear.</summary>
         public const float MinSpawnInterval = 0.4f;
 
+        /// <summary>Seconds between spawn GROUPS on the first authored wave, before the
+        /// per-wave term. Named so the doc side has a symbol to cite: this base and
+        /// <see cref="SpawnGapPerWave"/> are the pair every balance argument restates.</summary>
+        public const float SpawnGapBase = 7.3f;
+
+        /// <summary>Seconds added to the spawn-group gap per wave. NOT to be confused with
+        /// <see cref="EnemyHealthPerWave"/>, which is also 0.40 and is a different lever.</summary>
+        public const float SpawnGapPerWave = 0.40f;
+
         /// <summary>Gatekeepers per spawn group in wave 0; each later wave adds one, capped by
         /// <see cref="MaxGroupSize"/>.</summary>
         public const int BaseGroupSize = 3;
@@ -147,6 +156,21 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Seconds between repeated spool-assault waves while the escape spool runs.</summary>
         public const float SpoolWaveInterval = 8f;
 
+        // ---- The other three kinds' hit points. Default's is BaseEnemyHp; these three sat as
+        //      literals inside StatsFor until they were named, which is why the docs could cite
+        //      the pre-2026-08-27 figures with nothing going red. One copy of each number.
+
+        /// <summary>Hit points of one Hunter. 20 x 5/3 with the 2026-08-27 fewer-and-tougher pass.</summary>
+        public const float HunterHp = 33f;
+
+        /// <summary>Hit points of one Thief. 120 x 5/3; the heavy, and the reason its COUNT fell
+        /// hardest (7 -> 4 on wave 5).</summary>
+        public const float ThiefHp = 200f;
+
+        /// <summary>Hit points of one Cloaker. 45 x 5/3; still ~1.5 Defaults, which is the rule.
+        /// The ONLY number this kind owns.</summary>
+        public const float CloakerHp = 75f;
+
         // ---- Per-wave composition. Fixed counts; Default absorbs the remainder. ----
 
         private static readonly int[] HunterPerWave = { 0, 2, 4, 6, 7 };
@@ -166,7 +190,7 @@ namespace GatekeepersProtocol.Sim
             switch (kind)
             {
                 case GatekeeperKind.Hunter:
-                    stats.maxHp = 33f;   // 20 x 5/3 with the 2026-08-27 fewer-and-tougher pass
+                    stats.maxHp = HunterHp;
                     stats.playerDamage = 6f;
                     stats.hatchDamage = 0f;   // THE RULE: a Hunter can never hurt the hatch
                     stats.patrolSpeed = 5.6f; // no second gear: it is already hunting at spawn
@@ -182,7 +206,7 @@ namespace GatekeepersProtocol.Sim
                     // fell hardest (7 -> 4 on wave 5): a tankier body that walks at the Hatch is
                     // exactly what breached it at 09:24, and toughness had to be paid for in
                     // number rather than added on top of it.
-                    stats.maxHp = 200f;
+                    stats.maxHp = ThiefHp;
                     stats.playerDamage = 0f;  // THE RULE: a Thief can never hurt the player
                     stats.hatchDamage = 20f;
                     stats.patrolSpeed = 2.2f; // no second gear: nothing makes it change its mind
@@ -198,7 +222,7 @@ namespace GatekeepersProtocol.Sim
                     // Default's, read from the same constants, because the watch rule is the
                     // kind and its damage must not open a second question (see the milestone:
                     // "the one that stops when you look", door-time note).
-                    stats.maxHp = 75f;   // 45 x 5/3; still ~1.5 Defaults, which is the rule
+                    stats.maxHp = CloakerHp;
                     stats.playerDamage = GatekeeperPlayerDamage;
                     stats.hatchDamage = GatekeeperHatchDamage;
                     stats.patrolSpeed = GatekeeperPatrolSpeed;
@@ -231,8 +255,10 @@ namespace GatekeepersProtocol.Sim
         ///   defaultCount          = enemyCount - hunterCount - thiefCount - cloakerCount
         ///   enemyHealthMultiplier = 1 + EnemyHealthPerWave*waveIndex  (0.40 → 1.00/1.40/1.80/2.20/2.60)
         ///   groupSize             = min(3 + waveIndex, MaxGroupSize=7, enemyCount)  → 3/4/5/6/7
-        ///   spawnInterval         = max(0.4, 4.2 + 0.20*min(waveIndex, MaxWaves-1))
-        ///                           → 4.20/4.40/4.60/4.80/5.00 — PER GROUP, see WaveSpec
+        ///   spawnInterval         = max(0.4, SpawnGapBase + SpawnGapPerWave*min(waveIndex, MaxWaves-1))
+        ///                           → 7.30/7.70/8.10/8.50/8.90 — PER GROUP, see WaveSpec.
+        ///                           SUPERSEDED 2026-08-27: this line read 4.2 + 0.20i, giving
+        ///                           4.20/4.40/4.60/4.80/5.00, until the roster cut re-derived it.
         ///   timeUntilNextWave     = 0 — obsolete under the draw model; kept for WaveSpec shape.
         ///
         /// The dial scales BODY COUNT ONLY. Health, group size, spawn gap and composition do not
@@ -311,7 +337,7 @@ namespace GatekeepersProtocol.Sim
             // while a linear gap cannot follow. Any future roster change must re-derive this
             // line; the roster and this gap are one lever, not two.
             spec.spawnInterval = Math.Max(MinSpawnInterval,
-                                          7.3f + 0.40f * Math.Min(waveIndex, MaxWaves - 1));
+                                          SpawnGapBase + SpawnGapPerWave * Math.Min(waveIndex, MaxWaves - 1));
             spec.timeUntilNextWave = 0f; // obsolete: no wave timer exists under the draw model
             return spec;
         }

@@ -12,16 +12,21 @@ namespace GatekeepersProtocol.Sim
         /// <summary>What a field Wave's hit on the Hatch is worth, against a Hatch-bank Wave's
         /// full 1.0. THE HATCH IS SHUT WHILE YOU ARE UP THE LANE — you left through it — and it
         /// is armoured accordingly.
-        /// <para>Sized, not picked. Hatch HP is 300 and was set for a mode where the player
-        /// STANDS ON IT; the raw per-body rates (Default 4 and Thief 20, both per the 0.7 s
-        /// attack interval) are 5.71 and 28.57 dps. One Thief with three Defaults is therefore
-        /// 45.7 dps raw and would take the Hatch down in 6.6 s — before a player at the near
-        /// terminal could even finish turning around. Wave 5 authors SEVEN Thieves.</para>
+        /// <para>Sized, not picked. The raw per-body rates (Default 4 and Thief 20, both per
+        /// the 0.7 s attack interval) are 5.71 and 28.57 dps. One Thief with three Defaults is
+        /// therefore 45.7 dps raw and would take the live door down in 13 s — before a player
+        /// at the near terminal could even finish turning around. Wave 5 authors FOUR Thieves.</para>
         /// <para>The target is that the same small group gives the player about 45 s: enough
         /// that the round trip to the near terminal (66 m out and back at 5 m/s is ~26 s) plus
-        /// a fight through is a real choice, and not enough to ignore. 300 / 45 = 6.67 dps,
-        /// against 45.7 raw, is this number. Raising it makes the Hatch a coin flip; dropping
-        /// it makes the stake theatre.</para>
+        /// a fight through is a real choice, and not enough to ignore. Raising this number
+        /// makes the Hatch a coin flip; dropping it makes the stake theatre.</para>
+        /// <para>SUPERSEDED 2026-08-27, and kept because the arithmetic is still how this dial
+        /// is derived. 0.15 solves that 45 s target for the door as it then was, 300, set for a
+        /// mode where the player STANDS ON IT: 300 / 45 = 6.67 dps against 45.7 raw.
+        /// <see cref="ShipSystems.HatchMaxHp"/> doubled the same day and this scale did not
+        /// follow, so at 45.7 x 0.15 = 6.86 dps the same group now needs ~87 s rather than 45.
+        /// The same solve against the live door is 600 / 45 = 13.3 of 45.7, i.e. ~0.29 — the
+        /// stake as shipped is about half the one the paragraph above argues for.</para>
         /// <para>THIS IS THE FIRST DIAL TO TURN after playing a field Wave (Zo, 2026-08-27).
         /// It has never been playtested — it is arithmetic against a Wave nobody has run with
         /// the Hatch in the fight.</para></summary>
