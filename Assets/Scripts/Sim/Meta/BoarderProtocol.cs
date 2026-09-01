@@ -274,8 +274,8 @@ namespace GatekeepersProtocol.Sim
                 // separately. Its 6 -> 8 was first made by editing the shared arm above, which
                 // moved Bulkhead, Rush and Cloak to 8 s as well — three silent retunes riding
                 // on one intended change, caught only because BoarderProtocolTests pins Rush
-                // at the 6 s M70 authored. A fall-through group is a fine way to say "these
-                // agree"; it is a trap the moment one of them stops agreeing.
+                // at 6 s. A fall-through group is a fine way to say "these agree"; it is a
+                // trap the moment one of them stops agreeing.
                 //
                 // FORGE no longer spends this window: Overcharge is a hold on the crew key
                 // paid from charge. The figure stays so the catalog arm does not silently

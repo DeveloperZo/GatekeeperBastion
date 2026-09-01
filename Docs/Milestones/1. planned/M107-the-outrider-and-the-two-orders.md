@@ -3,7 +3,7 @@
 <!--
 Status: later
 Update trigger: when the kill criterion below resolves, or when EMP's root length, the pairing radius or either charge rate is retuned after play.
-Last updated: 2026-08-29
+Last updated: 2026-09-01
 -->
 
 FORGE gets a second machine: a follower that travels with the Boarder and shoots, charging
@@ -118,10 +118,11 @@ and the held-key EMP.
 **Change** `Assets/Scripts/Sim/Meta/BoarderProtocol.cs` — add the EMP ability, its window,
 its root length, its damage, and the pairing radius the two specials read.
 
-**Change** `Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs` and its movement —
-the root. A rooted body holds position, keeps its target, and swings if already in reach.
-This is the garrison's first status effect, so it lands as one named state on the body
-rather than as a speed multiplier, or the next one has nowhere to live.
+**Change** `Assets/Scripts/Game/Enemies/EnemyGatekeeper.cs` and its movement — the root. A
+rooted body holds position, keeps its target, and swings if already in reach. This is the
+garrison's first status effect, so it lands as one named state on the body rather than as a
+speed multiplier, or the next one has nowhere to live. (Cut against the plan: the root landed
+in `EnemyGatekeeper.cs` rather than `Targeting.cs`, which took the machine-divert block.)
 
 **Change** `Assets/Scripts/Sim/Meta/BoarderSheets.cs` — FORGE's personal row is the
 Outrider and EMP; the crew row names the pairing.
@@ -167,6 +168,28 @@ this close is its trigger.
    order and both charges for each Wave.
 6. The kill criterion is read from criterion 10's log across ten Boardings, not from this
    verification.
+
+**Offline leg run 2026-09-01, after merging `main`. Criteria 1-7 and 12 hold; 8, 9 and 10
+are built and unobserved.** `Tools/verify/run.sh` compiles and runs on the .NET SDK now,
+and `lint-glyphs` is clean, both off `main`. It still stops at `lint-arch`, which is
+deliberately red on five files and is `M111`'s lane, not this one — so the suite was run
+with the lint gates bypassed from a copy outside the tree.
+
+**EditMode 828 passed / 4 failed / 5 ignored** of 837. The four are the recorded
+scene-fixture set — `HudSeparationTests.ShipPause_CompendiumHasItsOwnRow`, both
+`M59PolishChromeTests` rows, and
+`RecallPadSceneTests.FieldTerminals_CarryRecallPads_NotDockPortals` — and none is new.
+`OutriderStateTests` 6/0, `GatekeeperRootTests` 2/0, `TurretStateTests` 6/0,
+`TurretLifeMirrorTests` 3/0, `WaveMachineRecordTests` 11/0, `MachineChargeLabelTests` 3/0.
+
+The one red this work owned is closed. The turret and Outrider commit pushed `NetVerbs.cs`
+(356 to 549) and `PlayerProtocolAbilities.cs` (343 to 459) past the 400-line cap, putting
+two files on the arch fence that were not on it before. Both are back under — 277 and 399
+— and the over-cap set is again the files that predate this work. The `partial` used on
+`NetVerbs` is raised for decision on `M111`, which owns that rule.
+
+Criteria 8, 9 and 10 need the playthrough in step 5, and the kill criterion needs ten
+Boardings. Neither has been observed, so the file stays here.
 
 ## Watch
 

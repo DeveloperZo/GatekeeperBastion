@@ -109,7 +109,7 @@ namespace GatekeepersProtocol.Tests
         /// <para>The tolerance is deliberate and is NOT slack. Today the arithmetic lands ~1%
         /// OVER the opening, and that 1% cannot be adjudicated here: a bind-pose AABB extent
         /// includes the arms at their widest and does not promise the head is the tallest point
-        /// at rest. M109 pre-registered the adjudication as one look at the elite in the control
+        /// at rest. The adjudication is pre-registered as one look at the elite in the control
         /// room, not as a number. So this test's job is not to settle the 1% — it is to catch a
         /// future change that sends the elite FAR through the ceiling, and to say the metres out
         /// loud every time it runs so the question stays visible instead of silently passing.</para></summary>

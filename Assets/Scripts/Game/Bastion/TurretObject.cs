@@ -12,8 +12,11 @@ namespace GatekeepersProtocol.Game
     /// this is presentation plus the firing clock.
     /// <para>In a session the server owns the one that shoots and every client carries a
     /// presentation-only copy — see <see cref="Configure(TurretState, GameController,
-    /// Transform, bool)"/>. Solo, the local one is both.</para></summary>
-    public sealed class TurretObject : MonoBehaviour
+    /// Transform, bool)"/>. Solo, the local one is both.</para>
+    /// <para>The pylon body and the crystal that wears the charge are in the Pylon part of this
+    /// class; this file holds the firing clock, targeting, damage intake and the aura.</para>
+    /// </summary>
+    public sealed partial class TurretObject : MonoBehaviour
     {
         const string Tag = "Turret";
 
@@ -23,7 +26,6 @@ namespace GatekeepersProtocol.Game
         GameController _game;
         Transform _owner;
         bool _presentationOnly;
-        Renderer _bodyRenderer;
         TurretLifeBar _lifeBar;
         float _shotClock;
         int _shotsFired;
@@ -164,11 +166,14 @@ namespace GatekeepersProtocol.Game
             var target = AcquireTarget();
             if (target == null) return;
 
-            // Face the target so the muzzle flash reads as coming from the barrel.
+            // Facing goes on the plinth, not on the root. The crystal hangs outside that
+            // rotation and keeps a spin of its own that reads as charge rather than as aim, and
+            // the life bar over the machine would swing with the gun if the root turned.
+            var facing = Facing;
             Vector3 to = target.transform.position - transform.position;
             to.y = 0f;
             if (to.sqrMagnitude > 0.01f)
-                transform.rotation = Quaternion.LookRotation(to.normalized, Vector3.up);
+                facing.rotation = Quaternion.LookRotation(to.normalized, Vector3.up);
 
             var body = target.GetComponent<Damageable>();
             if (body == null || body.IsDead) return;
@@ -183,7 +188,7 @@ namespace GatekeepersProtocol.Game
                 PairingActive(_owner));
             if (empRounds) target.Root(BoarderProtocol.EmpRootSeconds);
             _shotsFired++;
-            Vector3 muzzle = transform.position + transform.forward * 0.6f + Vector3.up * 0.7f;
+            Vector3 muzzle = transform.position + facing.forward * 0.6f + Vector3.up * 0.7f;
             if (_state.Phase == TurretPhase.Special)
                 Effects.SpecialMuzzle(muzzle, FxColors.FxOvercharge);
             else
@@ -264,21 +269,6 @@ namespace GatekeepersProtocol.Game
             _specialAura = null;
         }
 
-        /// <summary>Overcharged turrets run hot. Tint is the standing tell; ignition is
-        /// <see cref="TickSpecialFx"/>.</summary>
-        void PushTint()
-        {
-            if (_bodyRenderer == null) return;
-            var mat = _bodyRenderer.sharedMaterial;
-            if (mat == null) return;
-            Color want = new Color(0.35f, 0.75f, 1f, 1f);
-            if (_state.Phase == TurretPhase.Special)
-                want = new Color(1f, 0.35f, 0.1f, 1f);
-            else if (_state.Phase == TurretPhase.Exhausted)
-                want = new Color(0.35f, 0.35f, 0.38f, 1f);
-            if (mat.color != want) mat.color = want;
-        }
-
         public void Despawn()
         {
             ClearSpecialAura();
@@ -286,9 +276,9 @@ namespace GatekeepersProtocol.Game
             Destroy(gameObject);
         }
 
-        /// <summary>Build a turret at a world position. Graybox primitive — a base and a barrel
-        /// so facing reads. In a session the server calls this for the live machine and each
-        /// client calls it again with presentationOnly for scenery.</summary>
+        /// <summary>Build a turret at a world position: the pylon body plus the life bar. In a
+        /// session the server calls this for the live machine and each client calls it again
+        /// with presentationOnly for scenery.</summary>
         public static TurretObject Spawn(Vector3 position, TurretState state,
             GameController game, Transform owner)
         {
@@ -301,44 +291,13 @@ namespace GatekeepersProtocol.Game
             var go = new GameObject("Turret");
             go.transform.position = position + Vector3.up * 0.5f;
 
-            var body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            body.name = "TurretBody";
-            body.transform.SetParent(go.transform, false);
-            body.transform.localScale = new Vector3(0.7f, 0.5f, 0.7f);
-            StripCollider(body);
-
-            var barrel = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            barrel.name = "TurretBarrel";
-            barrel.transform.SetParent(go.transform, false);
-            barrel.transform.localPosition = new Vector3(0f, 0.25f, 0.55f);
-            barrel.transform.localScale = new Vector3(0.18f, 0.18f, 1.1f);
-            StripCollider(barrel);
-
             var turret = go.AddComponent<TurretObject>();
             turret.Configure(state, game, owner, presentationOnly);
-            turret._bodyRenderer = Tint(body, new Color(0.35f, 0.75f, 1f, 1f));
-            Tint(barrel, new Color(0.22f, 0.5f, 0.7f, 1f));
+            turret.BuildPylon();
+            // On the root, deliberately, and not on the plinth: the plinth turns to face what
+            // the gun is shooting and a bar parented inside that rotation would turn with it.
             turret._lifeBar = TurretLifeBar.Attach(go.transform);
             return turret;
-        }
-
-        static void StripCollider(GameObject go)
-        {
-            var col = go.GetComponent<Collider>();
-            if (col != null) Destroy(col);
-            int ignore = LayerMask.NameToLayer("Ignore Raycast");
-            if (ignore >= 0) go.layer = ignore;
-        }
-
-        static Renderer Tint(GameObject go, Color color)
-        {
-            var rend = go.GetComponent<Renderer>();
-            if (rend == null) return null;
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Unlit/Color");
-            if (shader == null) return rend;
-            rend.sharedMaterial = new Material(shader) { color = color };
-            return rend;
         }
     }
 }

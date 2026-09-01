@@ -37,8 +37,8 @@ namespace GatekeepersProtocol.Sim
         /// 4.5 m opening a door and ceiling leave (BastionKit.StoreyHeight 5 −
         /// FloorSlabThickness 0.5) that is ~4.55 m of elite, using the Thief skinned bind-pose
         /// AABB extent y of 1.010 — at the limit, and inside the error bar of an AABB that
-        /// includes arms at their widest. Arithmetic cannot settle it; it is adjudicated by eye
-        /// during M109's stamp run.</para></summary>
+        /// includes arms at their widest. Arithmetic cannot settle it; it is adjudicated by eye,
+        /// at the elite, in the control room.</para></summary>
         public const float FinaleEliteScale = 1.875f;
 
         /// <summary>Replace a Hatch-bank spec with the finale elite: one Thief, counts sum to

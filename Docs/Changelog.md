@@ -5,7 +5,7 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-08-30
+Last updated: 2026-09-01
 -->
 
 - 2026-09-01: **`M109_` — the size tell, restored.** `SceneBuilder.Enemies.cs` `BodyScale`
@@ -50,6 +50,32 @@ Last updated: 2026-08-30
   `docgen --check` itself is owed to a run with `mono` on PATH, which this change was
   authored without. Filed under `1. planned/`, and its Order row sits ahead of `M109`
   because the look rides that run and must not delay it.
+- 2026-09-01: **`M106` recut — the turret wears its charge.** Criteria 1-10 read true
+  against the 0.34.2 tree on the day of the recut and were kept as the gate rather than
+  deleted, because the folder move still waits on the play path. Criteria 11-14 are new and
+  are the milestone's remaining build: the turret's body is rebuilt as a pylon — a dark
+  tapered plinth with a faceted crystal floating above it — whose glow rises with
+  `Charge / ChargeMax` and whose colour, spin and rest position carry `Deployed`, `Special`
+  and `Exhausted`. The argument is information flow, and it sits a tier above the rule
+  change the milestone already claimed: charge is spent on a placement decision made while
+  looking at the machine across a room, and the HUD square only tells you once you have
+  looked away. A cosmetic milestone of its own, a floating charge bar and a vendor mesh are
+  rejected on the file by name. The stale `Do not build the Outrider` guard was struck —
+  `M107`'s machine landed alongside this one — and reads `do not retune it here`.
+  `Protocol-FORGE.md` carries the machine's read; the `M106` row and the planned-folder
+  sentence say the pylon is open build work.
+- 2026-09-01: **`M103` completed.** The Unity leg and playthrough it owed were closed
+  from sessions already played, not by driving a suite: `Logs/harness/` at its 6-file cap
+  with every file carrying `InitTestScene`, `Logs/` at 30 human files with none
+  harness-marked, `YOU DIED — killed by default at 2.4m` naming a real `GatekeeperKind`,
+  12 Metric lines across beats 1–5 whose taint verdicts match the ruling, the rule itself
+  executed against the real beat builders, and `wave-report` byte-identical across three
+  builds over the pre-M103 corpus. Closing found and fixed one defect in the milestone's
+  own panel: the killer mix tallied once per Run off a single `run.killer`, so repeat
+  deaths collapsed and a second kind was dropped. Nothing ran inside Unity — no mono for
+  `Tools/verify/run.sh`, and the six taint pins are excluded from it by design. Left open
+  in the file's Watch: the taint rule does not read protocol, and the order of operations
+  it depends on is unpinned.
 - 2026-08-31: **Default → DEPOT.** Player name `DEPOT Protocol`; enum
   `BoarderProtocolId.Depot` (value 1, saves unchanged); file `Protocol-DEPOT.md`.
   Gatekeeper kind Default is untouched.
