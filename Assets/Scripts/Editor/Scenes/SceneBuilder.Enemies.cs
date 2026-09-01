@@ -20,7 +20,8 @@ namespace GatekeepersProtocol.EditorTools
     /// channels that survive a dark corridor and a glance:
     ///   Default — the red they already know, at 1.0 of the base spread.
     ///   Hunter  — bright amber, 0.85. Small and loud: the fast fragile one coming for you.
-    ///   Thief   — saturated violet-steel, 1.4. Well over half again the silhouette of a Hunter.
+    ///   Thief   — saturated violet-steel, 1.2. The biggest of the four: a fifth wider than a
+    ///             Default and roughly 1.4× a Hunter.
     ///   Cloaker — cold teal, 1.0 (Default's footprint exactly — its tell is the cloak and the
     ///             freeze, not a new silhouette size; Docs/Milestones, "the one that stops when
     ///             you look").
@@ -62,14 +63,18 @@ namespace GatekeepersProtocol.EditorTools
         const string PackHunter = RobotDir + "Prefabs/Hunter_Base.prefab";
         const string PackThief = RobotDir + "Prefabs/Exterminator_Base.prefab";
         const string PackCloaker = RobotDir + "Prefabs/Tactical_Base.prefab";
-        // BODY SCALE PER KIND. The relative spread (1 : 0.85 : 1.4) is the authored read;
-        // BodyScale shrinks all three together so the finale elite towers over them
-        // (Zo, 2026-08-20 — the elite did not read as bigger, because until this change
-        // NO kind's body scaled at all: see EnsureVisualChild).
-        const float BodyScale = 0.75f;
+        // BODY SCALE PER KIND. The spread (1 : 0.85 : 1.2 : 1) IS the authored size; BodyScale is
+        // the identity and stays there, so the spread is what a kind ships at. It shrank all four
+        // to 0.75 between 2026-08-20 and this change to make the finale elite tower; the elite
+        // carries that tell itself now, on MasterControl.FinaleEliteScale, which is presentation
+        // only (Zo, 2026-09-01 — reversing the 2026-08-20 shrink, which paid for the elite's read
+        // with every other kind's).
+        // Thief stops at 1.2, not the 1.4 it was authored at: 0.4 * 1.4 = 0.56 of agent radius
+        // exceeds the 0.5 carve every scene is baked at, and the boss wedges. 1.2 bakes 0.48.
+        const float BodyScale = 1f;
         const float DefaultScale = 1f * BodyScale;
         const float HunterScale = 0.85f * BodyScale;
-        const float ThiefScale = 1.4f * BodyScale;
+        const float ThiefScale = 1.2f * BodyScale;
         // Identical to Default on purpose (milestone criterion 5): same footprint, same agent
         // radius/height/baseOffset, so no navmesh assumption changes with the fourth kind.
         const float CloakerScale = 1f * BodyScale;
@@ -151,7 +156,7 @@ namespace GatekeepersProtocol.EditorTools
             agent.speed = stats.patrolSpeed;
             agent.acceleration = 14f;
             agent.angularSpeed = 400f;
-            // Geometry follows the capsule: a 1.4-scale Thief is 1.4x as wide and as tall, and its
+            // Geometry follows the capsule: a 1.2-scale Thief is 1.2x as wide and as tall, and its
             // origin sits at the capsule's centre, so baseOffset must match the half-height or the
             // body sinks into (or floats over) the floor.
             agent.radius = 0.4f * scale;
