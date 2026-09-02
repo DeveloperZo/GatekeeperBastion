@@ -89,8 +89,14 @@ public static class HarnessRunner
                 }
                 catch (Exception e)
                 {
-                    failed++;
                     var inner = Unwrap(e);
+                    if (inner is IgnoreException)
+                    {
+                        ignored++;
+                        ignoredNames.Add(name + " — " + inner.Message);
+                        continue;
+                    }
+                    failed++;
                     string detail = inner is AssertionException
                         ? inner.Message
                         : inner.GetType().Name + ": " + inner.Message + FirstFrame(inner);

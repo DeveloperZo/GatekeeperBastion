@@ -4,7 +4,7 @@
 Purpose: Summary and strategy layer over Docs/Milestones/. Order, status, risks, and the rules that govern milestone files. Detail belongs in the milestone file, never here.
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when a Brainstorm item graduates.
-Last updated: 2026-09-01 (post-alpha slate: M109–M112 added to the Order table; Recommended-next reordered around the stamp → fence → docs → dials sequence; M106 recut — the pylon readout is open build work on a milestone whose rule change had already landed; M109_ the size tell added ahead of M109, whose stamp run carries its one eyes-on check)
+Last updated: 2026-09-01 (M113 — hands that hold the gun — added to the Order table and to Recommended next at 7, then recut the same day off the FPS arms pack onto a rigid arms prop riding M82's clips: no purchase, no clip authoring, M82's controller kept; the planned-cap line corrected against the folder after 9c105a1 moved six files to completed without updating their rows; post-alpha slate: M109–M112 added to the Order table; Recommended-next reordered around the stamp → fence → docs → dials sequence; M106 recut — the pylon readout is open build work on a milestone whose rule change had already landed; M109_ the size tell added ahead of M109, whose stamp run carries its one eyes-on check)
 -->
 
 There is exactly one roadmap and this is it. It is not branched, shadowed, or
@@ -31,6 +31,14 @@ files written before that date still carry one and are a record.
 
 **Active (1/3):** `M86` (downed crewmates — controller bool and avatar drive landed
 2026-08-23, `Anim_Down.fbx` unsourced, nothing through the Editor yet).
+
+**Closed 2026-09-02:** `M113`, by Zo — "we have the capability, we need to tune it for
+immersion." First-person arms cut from the Boarder's own `SK_Tactical` mesh in Unity, baked
+in each weapon's wrapper frame, riding the `M82` clips under the shown wrapper root; one
+class child per arms class (`Pistol`, `Rifle` baked; Shotgun and Melee show no arms until
+baked); the Boarder is left-handed and the pocket mirrored to match; a second pocket for
+long guns. Owed and listed in the file: ten criterion-3 rows, the two-client look, the
+thumb polish, `SecD`'s wrapper scale.
 
 **0.34.2 cut 2026-08-30.** Ante parked; Hatch-start + recall pads; FORGE charged turret
 + Outrider in the tree (`M106`/`M107` still planned). Friends-alpha sentence unchanged.
@@ -66,7 +74,7 @@ on `M99`), `M83` (PlayMode 2/0; two-window confirmation). PRI-C further tuning
 owed outside `M93`.
 
 
-**Folder-completed since 2026-08-20:** `M82`, `M83`, `M84`, `M85`, `M90`, `M91`, `M92`, `M93`, `M94`, `M96`, `M99` (2026-08-23), `M101` (2026-08-24), `M63-3`, `M95`, `M97`, `M98`, `M100`, `M102` (all 2026-08-25), `M103` (2026-09-01).
+**Folder-completed since 2026-08-20:** `M82`, `M83`, `M84`, `M85`, `M90`, `M91`, `M92`, `M93`, `M94`, `M96`, `M99` (2026-08-23), `M101` (2026-08-24), `M63-3`, `M95`, `M97`, `M98`, `M100`, `M102` (all 2026-08-25), `M103` (2026-09-01), `M113` (2026-09-02).
 
 **Friends alpha gate** (Zo, 2026-08-13): two friends install a build, join without the
 developer touching a keyboard, play a full five-wave run with both participating, and the
@@ -92,10 +100,16 @@ with **M72**; remaining friends work is polish and dry-run length.
    short-loop path it existed to provide is open.
 6. **HP-4 — The lost endings hold** — Zo, two Lost runs plus one demo-off run
    ([`HP-4`](Hygiene/1.%20open/HP-4-the-lost-endings-hold.md), TH-13).
+7. **`M113` tuning for immersion** — closed 2026-09-02 with the capability in; the
+   remaining criterion-3 rows, the Shotgun and Melee bakes, the thumb polish and the pocket
+   numbers are eyes-on work against the six constants in `WeaponView` and the cutter, not a
+   new milestone unless a row needs a mechanism that does not exist.
 
-Active **1** of 3 (`M86`), and `1. planned/` holds `M104`, `M106`, `M107`, `M108`,
-`M109`, `M109_`, `M110`, `M111`, `M112` (**9 of 10** — one slot left; at the cap, stop
-generating and build). `M107`'s implementation is in the 0.34.2 tree and its folder status
+Active **1** of 3 (`M86`), and `1. planned/` holds `M104`, `M111`, `M112`
+(**3 of 10**). Commit `9c105a1` moved `M106`, `M107`, `M108`, `M109`, `M109_` and `M110`
+to `3. completed/` without touching this table, so those six rows below still say planned
+and their `File` links 404 — a bug under `_meta/_definitions/milestone.md`, and Zo's to
+resolve since the moves were his. `M107`'s implementation is in the 0.34.2 tree and its folder status
 waits on play, now via `M112` criterion 4. `M106`'s rule change is in that tree too, but
 its 2026-09-01 recut added criteria 11-14 — the turret's body rebuilt as a pylon that
 carries charge and phase — so it has open build work again as well as a play path.
@@ -220,6 +234,7 @@ this table — see the change log.
 | M111 | The fence holds again | planned | lint-arch 16→0 without raising a baseline; the four standing test reds retired (chrome via one `GatekeepersProtocol/Build` re-run); owed exclusion-list row paid | [`1. planned/M111`](Milestones/1.%20planned/M111-the-fence-holds-again.md) |
 | M110 | The prose agrees with the tables | planned | The ~14 stale Design/Demo lines state live values; lint-constants gains a scalar watch over named Sim constants, proven twice, wired into verify | [`1. planned/M110`](Milestones/1.%20planned/M110-the-prose-agrees-with-the-tables.md) |
 | M112 | Tuned by playing, not by arithmetic | planned (bet; kill criterion pre-registered 2026-09-01) | Five untainted runs adjudicate the door stake, wave 5 vs the raised ceiling, and the turret; each dial moves at most once; stake cut if it never bites | [`1. planned/M112`](Milestones/1.%20planned/M112-tuned-by-playing.md) |
+| M113 | Hands that hold the gun | completed, Sep 2026 (closed by Zo 2026-09-02; immersion tuning owed) | A rigid forearms prop cut from `SK_Tactical` rides the wrapper root `M82`'s clips already animate, so kick, bob and reload dip carry the hands for free; one arms instance reparented in `Show`; `ViewModel.controller` and the four clips are kept, not deleted; remote avatars show no arms | [`3. completed/M113`](Milestones/3.%20completed/M113-hands-that-hold-the-gun.md) |
 
 ## Strategy
 

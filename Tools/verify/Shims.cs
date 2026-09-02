@@ -116,6 +116,13 @@ namespace NUnit.Framework
         public AssertionException(string message) : base(message) { }
     }
 
+    /// <summary>Thrown by Assert.Ignore. The runner counts it as ignored, not failed, which
+    /// is what lets a test skip cleanly when the asset it reads has not been authored yet.</summary>
+    public class IgnoreException : Exception
+    {
+        public IgnoreException(string message) : base(message) { }
+    }
+
     /// <summary>
     /// The assertions the EditMode suite uses, with NUnit's numeric semantics: AreEqual
     /// compares numbers by value across int/long/float/double rather than by boxed type,
@@ -159,6 +166,9 @@ namespace NUnit.Framework
             string.IsNullOrEmpty(message) ? "Assert.Fail" : message);
 
         public static void Pass(string message = "") { }
+
+        public static void Ignore(string message = "") => throw new IgnoreException(
+            string.IsNullOrEmpty(message) ? "Assert.Ignore" : message);
 
         public static void AreEqual(object expected, object actual, string message = null)
         {
