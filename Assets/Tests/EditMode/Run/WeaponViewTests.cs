@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
 using GatekeepersProtocol.Sim;
 
 namespace GatekeepersProtocol.Tests
@@ -86,7 +87,7 @@ namespace GatekeepersProtocol.Tests
         {
             Assert.Greater(WeaponView.LocalGunForward, 0.05f);
             Assert.Less(WeaponView.LocalGunForward, 1f);
-            Assert.Less(WeaponView.LocalGunRight, 0.5f);
+            Assert.Less(Mathf.Abs(WeaponView.LocalGunRight), 0.5f);
             Assert.Greater(WeaponView.LocalGunDown, -0.5f);
         }
 
@@ -98,29 +99,35 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(WeaponView.LocalGunDown, h.Down);
             Assert.AreEqual(WeaponView.LocalGunForward, h.Forward);
             Assert.AreEqual(0f, h.Pitch);
-            Assert.AreEqual(2f, h.Yaw);
-            Assert.AreEqual(10f, h.Roll);
+            // Mirrored 2026-09-02: the Boarder is left-handed (M113 posed the gun in hand.l),
+            // so the pocket sits lower-LEFT and yaw/roll flip sign with LocalGunRight.
+            Assert.AreEqual(-2f, h.Yaw);
+            Assert.AreEqual(-10f, h.Roll);
+            Assert.Less(WeaponView.LocalGunRight, 0f, "left-hand pocket");
         }
 
         [Test]
-        public void Hold_ShopGunsShareTheMk1Pocket()
+        public void Hold_PocketFollowsArmsClass()
         {
+            // Two pockets since 2026-09-02 (M113 MR-35 row): sidearms in the MK-1 pocket, long
+            // guns (rifle and shotgun classes) in one shared long-gun pocket. Within a class
+            // every weapon holds identically; zoom does not move either pocket.
             var mk1 = WeaponView.Hold(WeaponId.Mk1Sidearm);
-            WeaponId[] shop =
+            var rifle = WeaponView.Hold(WeaponId.Mr35Rifle);
+            WeaponId[] longGuns = { WeaponId.SecD, WeaponId.Br12Shotgun, WeaponId.Mr35Rifle, WeaponId.PriC };
+            for (int i = 0; i < longGuns.Length; i++)
             {
-                WeaponId.SecD, WeaponId.Br12Shotgun, WeaponId.Mr35Rifle, WeaponId.PriC
-            };
-            for (int i = 0; i < shop.Length; i++)
-            {
-                var h = WeaponView.Hold(shop[i]);
-                Assert.AreEqual(mk1.Right, h.Right, shop[i].ToString());
-                Assert.AreEqual(mk1.Down, h.Down, shop[i].ToString());
-                Assert.AreEqual(mk1.Forward, h.Forward, shop[i].ToString());
-                Assert.AreEqual(mk1.Pitch, h.Pitch, shop[i].ToString());
-                Assert.AreEqual(mk1.Yaw, h.Yaw, shop[i].ToString());
-                Assert.AreEqual(mk1.Roll, h.Roll, shop[i].ToString());
-                Assert.AreEqual(mk1.Right, WeaponView.Hold(shop[i], true).Right);
+                var h = WeaponView.Hold(longGuns[i]);
+                Assert.AreEqual(rifle.Right, h.Right, longGuns[i].ToString());
+                Assert.AreEqual(rifle.Down, h.Down, longGuns[i].ToString());
+                Assert.AreEqual(rifle.Forward, h.Forward, longGuns[i].ToString());
+                Assert.AreEqual(rifle.Pitch, h.Pitch, longGuns[i].ToString());
+                Assert.AreEqual(rifle.Yaw, h.Yaw, longGuns[i].ToString());
+                Assert.AreEqual(rifle.Roll, h.Roll, longGuns[i].ToString());
+                Assert.AreEqual(rifle.Right, WeaponView.Hold(longGuns[i], true).Right);
             }
+            Assert.AreEqual(mk1.Right, WeaponView.Hold(WeaponId.ThrowawayComposite).Right, "pistol class shares the MK-1 pocket");
+            Assert.AreNotEqual(mk1.Right, rifle.Right, "the two pockets are two pockets");
         }
 
         [Test]
@@ -128,15 +135,64 @@ namespace GatekeepersProtocol.Tests
         {
             var mk1 = WeaponView.Hold(WeaponId.Mk1Sidearm);
             var cutter = WeaponView.Hold(WeaponId.None);
-            Assert.Greater(cutter.Roll, mk1.Roll);
+            // The melee cant is stronger than the hip roll, whichever hand holds it.
+            Assert.Greater(Mathf.Abs(cutter.Roll), Mathf.Abs(mk1.Roll));
+            Assert.Greater(cutter.Right * mk1.Right, 0f, "same hand as the gun");
             AssertInFrame(cutter);
+        }
+
+        [Test]
+        public void ArmsClass_SortsTheCatalogLikeFireClip()
+        {
+            Assert.AreEqual(WeaponView.ArmsClass.Pistol, WeaponView.ArmsClassFor(WeaponId.Mk1Sidearm));
+            Assert.AreEqual(WeaponView.ArmsClass.Pistol, WeaponView.ArmsClassFor(WeaponId.ThrowawayComposite));
+            Assert.AreEqual(WeaponView.ArmsClass.Rifle, WeaponView.ArmsClassFor(WeaponId.Mr35Rifle));
+            Assert.AreEqual(WeaponView.ArmsClass.Rifle, WeaponView.ArmsClassFor(WeaponId.Vk7Rifle));
+            Assert.AreEqual(WeaponView.ArmsClass.Rifle, WeaponView.ArmsClassFor(WeaponId.PriC));
+            Assert.AreEqual(WeaponView.ArmsClass.Rifle, WeaponView.ArmsClassFor(WeaponId.SecD));
+            Assert.AreEqual(WeaponView.ArmsClass.Shotgun, WeaponView.ArmsClassFor(WeaponId.Br12Shotgun));
+            Assert.AreEqual(WeaponView.ArmsClass.Melee, WeaponView.ArmsClassFor(WeaponId.None));
+            // Child names are the const strings the viewmodel compares against.
+            Assert.AreEqual(WeaponView.ArmsPistol, WeaponView.ArmsClassName(WeaponView.ArmsClass.Pistol));
+            Assert.AreEqual(WeaponView.ArmsRifle, WeaponView.ArmsClassName(WeaponView.ArmsClass.Rifle));
+            Assert.AreEqual(WeaponView.ArmsShotgun, WeaponView.ArmsClassName(WeaponView.ArmsClass.Shotgun));
+            Assert.AreEqual(WeaponView.ArmsMelee, WeaponView.ArmsClassName(WeaponView.ArmsClass.Melee));
+        }
+
+        [Test]
+        public void Hold_LongGunKeepsThePocketConstants()
+        {
+            // The three LongGun* constants are the tuning surface; Hold returns them as-is.
+            // Change the constants, not this test.
+            var h = WeaponView.Hold(WeaponId.Mr35Rifle);
+            Assert.AreEqual(WeaponView.LongGunRight, h.Right);
+            Assert.AreEqual(WeaponView.LongGunDown, h.Down);
+            Assert.AreEqual(WeaponView.LongGunForward, h.Forward);
+            Assert.AreEqual(0f, h.Pitch);
+            Assert.AreEqual(0f, h.Yaw);
+            Assert.AreEqual(0f, h.Roll);
+            Assert.AreEqual(WeaponView.Hold(WeaponId.Br12Shotgun).Forward, h.Forward, "shotgun class shares the pocket");
+        }
+
+        [Test]
+        public void Hold_LongGunsSitNearerCentreAndCloser()
+        {
+            var mk1 = WeaponView.Hold(WeaponId.Mk1Sidearm);
+            foreach (var id in new[] { WeaponId.Mr35Rifle, WeaponId.PriC, WeaponId.SecD, WeaponId.Br12Shotgun })
+            {
+                var h = WeaponView.Hold(id);
+                Assert.Less(Mathf.Abs(h.Right), Mathf.Abs(mk1.Right), id + " nearer the centreline than the sidearm");
+                Assert.Less(h.Forward, mk1.Forward, id + " pulled back so the arms' elbow cuts leave the frame");
+                Assert.Greater(h.Right * mk1.Right, 0f, id + " same hand as the sidearm");
+                AssertInFrame(h);
+            }
         }
 
         static void AssertInFrame(WeaponView.GunHold h)
         {
             Assert.Greater(h.Forward, 0.05f);
             Assert.Less(h.Forward, 1f);
-            Assert.Less(h.Right, 0.5f);
+            Assert.Less(Mathf.Abs(h.Right), 0.5f);
             Assert.Greater(h.Down, -0.5f);
         }
 

@@ -65,7 +65,7 @@ the changelog cite item ids, so a reused id silently re-points an old reference 
 | TH-21 | Remote avatar's gun sits in the Tactical hand — `Grip` offsets were tuned for the mixamo hand | `HP-5`, open |
 | TH-22 | Boarder.controller clips watched in motion on the Tactical rig, not just bound | `HP-5`, open |
 | TH-23 | Boarder and Cloaker share `SK_Tactical` — the blue/cyan tell observed against a revealed Cloaker | `HP-5`, open |
-| TH-24 | Retire the mixamo remnant: `WeaponView.RightHandBone` and the unread `WeaponViewModel._rightHand` | `HP-5`, open |
+| TH-24 | Retire the mixamo remnant: `WeaponView.RightHandBone` and the unread `WeaponViewModel._rightHand` | `HP-5`, settled by `M113` 2026-09-01 |
 
 ### The double-issued block
 

@@ -11,7 +11,6 @@ namespace GatekeepersProtocol.Game
         static readonly int ReloadHash = Animator.StringToHash("Reload");
         static readonly int SpeedHash = Animator.StringToHash("Speed");
 
-        [SerializeField] Transform _rightHand;
         [SerializeField] Animator _animator;
         [SerializeField] GameObject _mk1;
         [SerializeField] GameObject _secD;
@@ -19,6 +18,7 @@ namespace GatekeepersProtocol.Game
         [SerializeField] GameObject _mr35;
         [SerializeField] GameObject _priC;
         [SerializeField] GameObject _cutter;
+        [SerializeField] GameObject _arms;
         [SerializeField] Transform _grip;
 
         [SerializeField, OptionalBinding, Tooltip("Isometric rig (Ship probe). While wired and " +
@@ -42,8 +42,6 @@ namespace GatekeepersProtocol.Game
         {
             _gun = GetComponentInChildren<PlayerGun>(true);
             _fpc = GetComponent<FirstPersonController>();
-            if (_rightHand == null)
-                _rightHand = FindNamed(transform, WeaponView.RightHandBone);
             if (_grip == null)
             {
                 Transform named = FindNamed(transform, "Grip");
@@ -55,6 +53,9 @@ namespace GatekeepersProtocol.Game
             if (_mr35 == null) _mr35 = FindGo("Mr35");
             if (_priC == null) _priC = FindGo("PriC");
             if (_cutter == null) _cutter = FindGo("Cutter");
+            // Resolved here, never activated here: EnableOnly owns the arms on/off state so
+            // it cannot be set from two places.
+            if (_arms == null) _arms = FindGo("Arms");
             // Grip only. GetComponentInChildren binds the Boarder body Animator and
             // Fire/Reload never reach the gun.
             if (_animator == null && _grip != null)
@@ -90,6 +91,7 @@ namespace GatekeepersProtocol.Game
 
             ApplyShown();
             PoseLocalGun();
+            PoseArms();
             RestoreReloadSpeedIfIdle();
         }
 
@@ -140,7 +142,24 @@ namespace GatekeepersProtocol.Game
             _grip.rotation = cam.rotation * Quaternion.Euler(hold.Pitch, hold.Yaw, hold.Roll);
         }
 
-        /// <summary>Enable the mapped mesh. Called from LateUpdate and from the assemble bind.</summary>
+        /// <summary>Write the arms prop's local TRS on the wrapper root it is parented to.
+        /// Per frame, not at switch time: EnableOnly re-runs only when the shown weapon
+        /// changes, so sampling IsZooming there would read the stance once and never again,
+        /// and the zoom pose could never differ from the hip pose.</summary>
+        void PoseArms()
+        {
+            // activeSelf, not _hidden: EnableOnly is what turns the arms off, and it also
+            // turns them off when MeshFor returns null on a scene missing a mesh field —
+            // a case _hidden does not cover. Parent is never null; Arms is authored under Grip.
+            if (_arms == null || !_arms.activeSelf) return;
+            Transform arms = _arms.transform;
+            var offset = WeaponView.ArmsOffset(_shown, _fpc != null && _fpc.IsZooming);
+            arms.localPosition = new Vector3(offset.Right, offset.Down, offset.Forward);
+            arms.localRotation = Quaternion.Euler(offset.Pitch, offset.Yaw, offset.Roll);
+        }
+
+        /// <summary>Enable the mapped mesh. Reached only from ApplyShown in this file, which
+        /// LateUpdate and Awake call; there is no caller outside.</summary>
         public void Show(WeaponId id)
         {
             _shown = id;
@@ -233,6 +252,10 @@ namespace GatekeepersProtocol.Game
             return _firePistol;
         }
 
+        /// <summary>The one choke point for what the viewmodel shows, arms included. Both
+        /// callers (Show and ShowHidden) come through here, so the arms cannot be turned on in
+        /// one place and off in another — Awake activating them once would leave them off for
+        /// the session after a Drone-slot or unowned episode.</summary>
         void EnableOnly(GameObject keep)
         {
             SetActive(_mk1, keep == _mk1);
@@ -241,6 +264,31 @@ namespace GatekeepersProtocol.Game
             SetActive(_mr35, keep == _mr35);
             SetActive(_priC, keep == _priC);
             SetActive(_cutter, keep == _cutter);
+
+            if (_arms == null) return;
+            // The prop stands in for the body's own arms only while the body is culled. Iso
+            // scenes show the body (BoarderPresentation skips the LocalHead cull when the
+            // iso rig is wired), so there the prop would be a third arm.
+            bool bodyVisible = _isoRig != null && _isoRig.isActiveAndEnabled;
+            if (keep == null || bodyVisible)
+            {
+                SetActive(_arms, false);
+                return;
+            }
+            SetActive(_arms, true);
+            // Parent to the shown wrapper root, not to the Grip: the clips key the roots, so
+            // a child of the Grip would sit still while the gun kicks out of its hands.
+            Transform arms = _arms.transform;
+            Transform root = keep.transform;
+            if (arms.parent != root) arms.SetParent(root, false);
+            // One child per arms class. Show the one this weapon's class baked and none if
+            // it has not been baked yet: no arms beats another class's hands on this gun.
+            string cls = WeaponView.ArmsClassName(WeaponView.ArmsClassFor(_shown));
+            for (int i = 0; i < arms.childCount; i++)
+            {
+                Transform child = arms.GetChild(i);
+                SetActive(child.gameObject, child.name == cls);
+            }
         }
 
         static void SetActive(GameObject go, bool on)

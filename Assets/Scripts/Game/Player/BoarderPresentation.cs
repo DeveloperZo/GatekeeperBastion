@@ -30,8 +30,8 @@ namespace GatekeepersProtocol.Game
             // mask is touched (presence of the rig reference is the gate — enabled state can
             // settle after this Awake, and the layer move is a one-shot either way).
             bool isoBody = _isoRig != null;
-            // Unity culls by the renderer's GameObject layer, not bone layers. This
-            // astronaut is one SkinnedMeshRenderer (Mesh1); putting mixamorig:Head on
+            // Unity culls by the renderer's GameObject layer, not bone layers. The body is
+            // SK_Tactical, one SkinnedMeshRenderer (Mesh1); putting mixamorig:Head on
             // LocalHead left the helmet in the local camera.
             if (_headLayer >= 0 && !isoBody)
             {

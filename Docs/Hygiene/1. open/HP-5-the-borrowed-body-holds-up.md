@@ -30,10 +30,9 @@ running, and `M63-3` put the Cloaker on the same robot the same day.
    `SK_Tactical` silhouette (`M63-3`, same day); the blue-paint / cyan-visor tell has
    never been observed against a revealed Cloaker. Settles when a fight with a Cloaker
    on screen shows the two read apart at a glance.
-4. **TH-24** — the mixamo remnant. `WeaponView.RightHandBone` still names
-   `mixamorig:RightHand`, which matches no bone since the redress; its one consumer fills
-   `WeaponViewModel._rightHand`, which nothing reads. Settles when the constant and the
-   dead field are retired or repointed in an edit that says so.
+4. **TH-24** — the mixamo remnant. **Settled 2026-09-01 by `M113`:** `WeaponView.RightHandBone`
+   and the unread `WeaponViewModel._rightHand` were deleted in the arms work, with
+   `ViewModelAnimTests.RightHandBone_IsGone` asserting neither name survives in either file.
 
 ## Not this pass
 
