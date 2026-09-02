@@ -206,6 +206,36 @@ namespace GatekeepersProtocol.EditorTools
             finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
+        // A scene whose Boarder is an unpacked copy (Ship - CoOp) never receives the Arms
+        // nested in Boarder.prefab. Give every scene Grip that is not part of a prefab
+        // instance its own inactive Arms instance; the scene is marked dirty, not saved.
+        [MenuItem("GatekeepersProtocol/Arms/Step 4b - Wire into unpacked scene Grips", false, 16)]
+        public static void MenuWireScene()
+        {
+            var armsAsset = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabAsset);
+            if (armsAsset == null) { Debug.LogError("[ArmsCutter] No " + PrefabAsset + " - bake first."); return; }
+            int wired = 0, already = 0;
+            foreach (GameObject go in Resources.FindObjectsOfTypeAll<GameObject>())
+            {
+                if (go == null || !go.scene.IsValid() || !go.scene.isLoaded || EditorUtility.IsPersistent(go)) continue;
+                if (go.name != "Grip" || PrefabUtility.IsPartOfPrefabInstance(go)) continue;
+                bool has = false;
+                for (int i = 0; i < go.transform.childCount; i++)
+                    if (go.transform.GetChild(i).name == "Arms") has = true;
+                if (has) { already++; continue; }
+                var inst = (GameObject)PrefabUtility.InstantiatePrefab(armsAsset, go.transform);
+                inst.name = "Arms";
+                inst.transform.localPosition = Vector3.zero;
+                inst.transform.localRotation = Quaternion.identity;
+                inst.transform.localScale = Vector3.one;
+                inst.SetActive(false);
+                Undo.RegisterCreatedObjectUndo(inst, "Wire Arms into scene Grip");
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(go.scene);
+                wired++;
+            }
+            Debug.Log("[ArmsCutter] Wired " + wired + " unpacked scene Grip(s); " + already + " already had Arms. Save the scene.");
+        }
+
         // Play-mode weapon switch a script can drive (the bridge cannot press F7). Same call
         // the dev loadout picker makes, then the slot is selected so the viewmodel shows it.
         [MenuItem("GatekeepersProtocol/Arms/Show weapon/Mk1", false, 30)] public static void ShowMk1() => ShowWeapon(WeaponId.Mk1Sidearm);

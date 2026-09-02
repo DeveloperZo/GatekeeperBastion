@@ -457,6 +457,13 @@ offline harness with its two pre-existing gates stubbed; four lints clean.
 - Criterion 4's Run half: `1`/`2`/`3` switching seen by eye. The class-child switch was
   verified in play by state, not by a person.
 - `SecD`'s 0.88 wrapper scale (Watch) has not been looked at.
+
+**Paid after close, 2026-09-02:** the Ship showed guns without hands. `Ship - CoOp.unity`'s
+Boarder is an **unpacked copy**, not a `Boarder.prefab` instance, so the arms nested into
+the prefab never reached it and `EnableOnly` found no `Arms`. The cutter's Step 4b wires an
+inactive `Arms.prefab` instance under any scene `Grip` that is not part of a prefab
+instance; run on the Ship and saved. Bastion and Range instance the prefab and needed
+nothing. Any future scene with an unpacked Boarder needs Step 4b once.
 - The bake tool lives at `Assets/Scripts/Editor/Tools/ArmsCutter.cs` (promoted out of
   `_Scratch` at close, because the source README depends on it and a clean clone must be
   able to re-cut).

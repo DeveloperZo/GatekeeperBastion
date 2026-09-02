@@ -14138,7 +14138,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1863fc853591ee4f9fe03709ff665ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GatekeepersProtocol::GatekeepersProtocol.Game.WeaponViewModel
-  _rightHand: {fileID: 0}
   _animator: {fileID: 0}
   _mk1: {fileID: 0}
   _secD: {fileID: 0}
@@ -14146,6 +14145,7 @@ MonoBehaviour:
   _mr35: {fileID: 0}
   _priC: {fileID: 0}
   _cutter: {fileID: 0}
+  _arms: {fileID: 0}
   _grip: {fileID: 0}
   _isoRig: {fileID: 0}
 --- !u!1 &784406946
@@ -20344,6 +20344,72 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1244375282}
   m_CullTransparentMesh: 0
+--- !u!1001 &1265863021
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3755538811529377086}
+    m_Modifications:
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2082400136656110382, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_Name
+      value: Arms
+      objectReference: {fileID: 0}
+    - target: {fileID: 2082400136656110382, guid: 71132d730f3845f4689afa140339a649, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 71132d730f3845f4689afa140339a649, type: 3}
+--- !u!4 &1265863022 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 853866005515815743, guid: 71132d730f3845f4689afa140339a649, type: 3}
+  m_PrefabInstance: {fileID: 1265863021}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1268740994
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22758,7 +22824,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "EXP --"
+  m_text: EXP --
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 194c956b3d864664890e731c63fd4a02, type: 2}
   m_sharedMaterial: {fileID: 21704438749789640, guid: 194c956b3d864664890e731c63fd4a02, type: 2}
@@ -33111,7 +33177,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "--"
+  m_text: --
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 194c956b3d864664890e731c63fd4a02, type: 2}
   m_sharedMaterial: {fileID: 21704438749789640, guid: 194c956b3d864664890e731c63fd4a02, type: 2}
@@ -34359,7 +34425,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "--"
+  m_text: --
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 194c956b3d864664890e731c63fd4a02, type: 2}
   m_sharedMaterial: {fileID: 21704438749789640, guid: 194c956b3d864664890e731c63fd4a02, type: 2}
@@ -101404,6 +101470,7 @@ Transform:
   - {fileID: 4115194865930208465}
   - {fileID: 8719847441514997166}
   - {fileID: 9220087528815625041}
+  - {fileID: 1265863022}
   m_Father: {fileID: 8511593083133011635}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3755775127565658342
