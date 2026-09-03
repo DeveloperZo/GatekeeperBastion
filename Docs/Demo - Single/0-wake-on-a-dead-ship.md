@@ -366,7 +366,7 @@ string, listed in the play-through. Those are not voice ids.
 | HP floor | yes | `PlayerHealth` + `ApplyReplicatedHp` | Clamp 1 on Ship while `DemoActive` |
 | MK-1 buy | yes | `BuyWeapon`, cost 0, owned→false | Have; grant treats owned as success |
 | Open-on-Down | yes | `ShipController` via `DemoStationGate` | Gated before `OpenStationPanel` |
-| Multiplayer gate | yes | F10/F11 + lobby | Refuse while `DemoWheelBuysLeft == 2` |
+| Multiplayer gate | yes | F10/F11 + lobby | Refuse while `!DemoWeaponGranted` (re-keyed 2026-08-25; the counter itself is gone since 2026-09-02) |
 | Demo flags | yes | v9 + `DemoCapsuleOpened` | Fresh campaign demo-on; pre-v9 played → demo-off |
 
 ## Create
@@ -415,7 +415,7 @@ Nothing. ARMORY catalog rows stay behind the gate (panel unlocks in beat 3).
 
 ## Multiplayer
 
-None this beat. Gate: `DemoActive && DemoWheelBuysLeft == 2`. F10/F11 log
+None this beat. Gate: `DemoActive && !DemoWeaponGranted` (re-keyed 2026-08-25; the counter is gone since 2026-09-02). F10/F11 log
 `[Demo] multiplayer locked — buy an upgrade first`.
 
 ## Driven / Shown / Reads-back

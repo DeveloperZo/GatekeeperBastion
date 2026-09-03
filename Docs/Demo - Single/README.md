@@ -44,9 +44,9 @@ This folder is what an implementer reads. The first-session brainstorm that poin
 | Buy-back | **Superseded by what shipped.** Any dead seat — host, guest, solo — is offered a respawn while the Boarding is Tethered, with no Convert-window gate. Price is `Respawns.CostFor`: **150** × (respawns taken this Boarding + 1). The purse is that seat's **own Unbanked**, frozen at the down and debited on the buy, with the remainder surviving; the realm's bank and other seats can never pay. A seat carrying less than the price does not get the offer | Beats 4+. Closes the dead-host question |
 | Doors | Unlock on a **survived zone Convert** (Zo, 2026-08-17): D1 = zone 1's, D2 = zone 2's, then the finale's single final Convert. `DemoZones.DoorId` is the table | Beats 2, 5–7 |
 | Default Protocol | CREW **menu** unlocks on the **first Docked after the first Convert** (`HatchConversions >= 1`, re-keyed with the wheel key — Zo, 2026-08-18; the Wave-2-seen key it replaced never shipped); CREW heals on interact from beat 0. Default, VEIL and FORGE are all claimable; AEGIS and LEDGER are Coming Soon | Beats 3–4. `M70` is the claim |
-| Multiplayer gate | **Locked until that save's first wheel purchase** (`DemoWheelBuysLeft < 2 \|\| !DemoActive`). F10/F11 and lobby entry refuse with a named log. Beats 0–3 are solo for every save | Every beat. Kills guest capsule-skip rules |
+| Multiplayer gate | **Locked until that save's first wheel purchase** (re-keyed 2026-08-25 to the MK-1: `DemoProgress.MultiplayerUnlocked`). F10/F11 and lobby entry refuse with a named log. Beats 0–3 are solo for every save | Every beat. Kills guest capsule-skip rules |
 | Voice audience | Host starts a **line id**; every seat plays it locally. No player replies. Assault: subtitles, no input lock | `voice.md` |
-| Wheel during demo | A **ladder** (Zo, 2026-08-17; Primary gate recut 2026-08-19): at most **2** Secondary purchases while `DemoActive` after the first bank; when zone 2's bank falls a **Primary + 2 upgrades are sold outside that count** (not granted; not keyed on a second ejection). The loss-1 aim (~500 banked, tunable) funds both secondary buys | Beat 3 + beat 5. Do not gift Salvage |
+| Wheel during demo | **Cut 2026-09-02 (Zo: anything affordable is buyable; `Decisions.md`).** Was: A **ladder** (Zo, 2026-08-17; Primary gate recut 2026-08-19): at most **2** Secondary purchases while `DemoActive` after the first bank; when zone 2's bank falls a **Primary + 2 upgrades are sold outside that count** (not granted; not keyed on a second ejection). The loss-1 aim (~500 banked, tunable) funds both secondary buys | Beat 3 + beat 5. Do not gift Salvage |
 | Beat 3 exit standing | Fires when **no buyable upgrades remain** (state-keyed; replaces the third-refuse trigger) (Zo, 2026-08-17) | Beat 3 |
 | Juice | **Taught** after first Wave 1. Live after that, including the finale | Beat 1. Withhold stamp overturned |
 | FABRICATION | Dark while `DemoActive` | Beats 0, 3, 5 |
@@ -139,7 +139,7 @@ or `DeepestWaveReached > 1` (they have already played; do not trap them in the c
 | `DemoCrewMenuUnlocked` | `false` | First Docked after the first bank (`HatchConversions >= 1`) — re-keyed again with the wheel key (Zo, 2026-08-18; was first-loss, was Wave-2-seen) | CREW panel vs heal-only. Heal-on-interact is live from beat 0 regardless |
 | `DemoFabPowered` | `false` | Stays false while `DemoActive`. Set true with `DemoActive` false | FAB open vs dark |
 | `DemoZoneDeepestWave` (per zone) | `0` | Deepest **cleared** field Wave in that zone, written on each field-Wave clear (ruling confirmed at cut, Zo 2026-08-17 — replaces `DemoNavUnlockWave` / `DemoBankCapWave`, which are never added) | Composite retrigger default / partial-start bounds (beat 4); guest `BankCap` while `DemoActive` and `PlayerCount > 1` |
-| `DemoWheelBuysLeft` | `2` | Decrement on `BuyWheelUpgrade` while `DemoActive` | ARMORY refuse at 0; **multiplayer gate** (`< 2` unlocks). Zone-2-bank Primary + 2 land outside this count |
+| `DemoWheelBuysLeft` | removed 2026-09-02 | — | the wheel ladder is cut; the key is no longer written or read |
 
 `DemoWave2Seen` is **deleted** (Zo, 2026-08-17) — the CREW unlock re-keyed to
 first Docked after first loss. `DeepestWaveReached` stays “highest field Wave
@@ -157,7 +157,7 @@ shared state is the lobby’s existing start-wave commit.
 
 - Multiplayer locked until first wheel purchase: F10/F11 and lobby entry refuse with
   `[Demo] multiplayer locked — buy an upgrade first` while
-  `DemoActive && DemoWheelBuysLeft == 2`.
+  `DemoActive && !DemoWeaponGranted` (re-keyed 2026-08-25).
 - Host-authoritative `RunSim`. Client-authoritative own movement. `[Net]` logs, never
   `[Dev]`, on a close path.
 - Party lead owns NAV commit (`M72` c4). Guests Ready + 5 s countdown (c5). Join during
@@ -210,7 +210,7 @@ was the only place it was written whole: the demo is the **first** Bastion throu
 Control — **no second destination**, and **no new resource**. The capsule is furniture and
 the retired ejection verb stays retired.
 
-**Kill observation for "overrun"** (same source): a 0-upgrade MK-1 (damage 30 after lever 1)
+**Kill observation for "overrun"** (same source): a 0-upgrade MK-1 (damage 50 after lever 1; 30 before 2026-09-02)
 solo log of the first Hatch-bank window reaching `NotifyAssaultCleared` with Hatch > 0 kills
 it. Next lever after that is +1 Thief on that carry (`2-first-hatch-bank.md`).
 

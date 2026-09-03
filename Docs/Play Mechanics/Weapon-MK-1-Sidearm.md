@@ -24,7 +24,7 @@ Early, it is the whole loadout if I picked reach. Later, it is the bridge: what 
 
 One accurate round per pull. No scatter, no pierce. A miss is a whole round of nothing, so it rewards a planted stance and a placed shot more than either Primary does. Its best work is finishing bodies that are nearly done, which saves the Primary's clip for something that needs all of it.
 
-Poor at volume. Small clip, modest damage, and everything on this hull gets tougher every Wave while this does not. Deep in a Boarding, the same body takes visibly more pulls.
+Poor at volume. Small clip, a slow pull, and everything on this hull gets tougher every Wave while this does not. Deep in a Boarding, the same body takes visibly more pulls.
 
 Wrong tool for a Thief. Emptying this into one, reload by reload, is usually slower than its walk to the Hatch. I have run that race. The Thief won.
 

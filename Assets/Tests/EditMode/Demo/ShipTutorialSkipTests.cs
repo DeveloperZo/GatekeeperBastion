@@ -47,21 +47,19 @@ namespace GatekeepersProtocol.Tests
                 "and it must be in hand, not merely owned");
         }
 
-        /// <summary>The lesson is beat 0. The zones, the wheel rungs and the rack that opens
+        /// <summary>The lesson is beat 0. The zones and the rack that opens
         /// on zone 2's loss are the GAME — a skip that swallowed those would hand the player
         /// a finished demo instead of a skipped tutorial.</summary>
         [Test]
         public void Skipping_LeavesTheRestOfTheDemoAlone()
         {
             var m = MetaState.CreateNew();
-            int wheelBefore = m.DemoWheelBuysLeft;
             DemoProgress.SkipShipTutorial(m);
 
             Assert.IsTrue(m.DemoActive, "the demo itself is not over — only its first beat");
-            Assert.AreEqual(wheelBefore, m.DemoWheelBuysLeft, "the wheel ladder is untouched");
             Assert.IsFalse(m.DemoZone2BankLost, "zone 2 has still not been played");
             Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m),
-                "the rack still opens on zone 2's loss, not on skipping the lesson");
+                "the rack still opens on Salvage earned, not on skipping the lesson");
             Assert.AreEqual(0, m.CompletedTerminalIds.Length, "no bastion progress was invented");
             Assert.AreEqual(0L, m.BankedSalvage, "and no salvage");
         }

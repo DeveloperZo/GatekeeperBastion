@@ -82,11 +82,11 @@ owned weapons. Each slot keeps its own clip, so switching is not a free reload.
 
 | Weapon | Slot | Cost | Damage | Shots/s | Clip | Reload | Range | Notes |
 |---|---|---|---|---|---|---|---|---|
-| **MK-1 Sidearm** | Secondary | 0 | 30 | 3 | 8 | 1.4 s | 45 m | falls off past 12 m; free — always affordable |
+| **MK-1 Sidearm** | Secondary | 0 | 50 | 1.4 | 8 | 1.4 s | 45 m | falls off past 12 m; free — always affordable |
 | **SEC-D** | Secondary | 0 | 18 | 6 | 4 | 2.2 s | 8 m | falls off past 3 m; free — always affordable |
-| **BR-12 Shotgun** | Primary | 900 | 19 ×7 | 1.2 | 6 | 2.6 s | 14 m | 7 pellets, 7° spread; falls off past 8 m |
-| **MR-35 Rifle** | Primary | 1,200 | 16 | 8 | 27 | 2.46 s | 60 m | pierces 2; falls off past 25 m |
-| **PRI-C** | Primary | 1,500 | 180 | 0.6 | 4 | 3.2 s | 90 m | pierces 3; falls off past 55 m |
+| **BR-12 Shotgun** | Primary | 1,500 | 19 ×7 | 1.2 | 6 | 2.6 s | 14 m | 7 pellets, 7° spread; falls off past 8 m |
+| **MR-35 Rifle** | Primary | 2,000 | 16 | 8 | 27 | 2.46 s | 60 m | pierces 2; falls off past 25 m |
+| **PRI-C** | Primary | 2,500 | 180 | 0.6 | 4 | 3.2 s | 90 m | pierces 3; falls off past 55 m |
 
 ### Upgrade wheel — what a purchase buys
 

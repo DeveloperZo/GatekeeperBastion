@@ -56,36 +56,41 @@ namespace GatekeepersProtocol.Game
             return weaponGranted;
         }
 
-        /// <summary>The Wave the player must have REACHED before Primary-slot rows go on the
-        /// rack. Zone 1's last Wave: getting there is the moment the MK-1 stops being
-        /// enough.</summary>
-        public static int PrimaryRowsWave { get { return DemoZones.EndWave(1); } }
+        /// <summary>Salvage the realm must have EARNED, lifetime, before Primary-slot rows go
+        /// on the rack: the cheapest available Primary's price, read off the catalog so the
+        /// price is the gate and a price move never leaves this behind (Zo, 2026-09-02).</summary>
+        public static long PrimaryRackSalvage
+        {
+            get
+            {
+                long cheapest = long.MaxValue;
+                foreach (WeaponId id in WeaponCatalog.ForSlot(WeaponSlot.Primary))
+                {
+                    if (!WeaponCatalog.IsAvailable(id)) continue;
+                    long cost = WeaponCatalog.Def(id).cost;
+                    if (cost < cheapest) cheapest = cost;
+                }
+                return cheapest == long.MaxValue ? 0L : cheapest;
+            }
+        }
 
-        /// <summary>Primary-slot rows are for sale once the player has REACHED the end of
-        /// zone 1's Wave span — whether they cleared it, died on it, or docked out.
+        /// <summary>Primary-slot rows are for sale once the realm has EARNED the cheapest
+        /// Primary's price, lifetime (<see cref="PrimaryRackSalvage"/>).
         ///
-        /// <para>Re-keyed 2026-08-25 (Zo). This was <c>DemoZone2BankLost</c>, resolved by
-        /// zone 2's Convert window, and the Convert is out of the demo — so that flag can
-        /// never be written and the rack could never open. Worse, it was already the wrong
-        /// shape: the 2026-08-25 playthrough died on Wave 2 with 227 banked and
-        /// "no buyable upgrades remain", because the only kit that could carry zone 1 sat
-        /// behind clearing zone 1. Gating on the Wave REACHED rather than a Wave survived is
-        /// what makes that impossible — the run that proves you need a Primary is the run
-        /// that sells you one.</para>
+        /// <para>Re-keyed 2026-09-02 (Zo: "rack opened when player earns enough"). It was the
+        /// deepest Wave ENTERED reaching zone 1's end (2026-08-25), and before that a zone-2
+        /// Convert window the demo no longer has. Lifetime earned, like the wheel's own lock:
+        /// spending the bank to zero cannot re-lock the rack, and a pile that never came
+        /// through the ledger opens nothing. The price is the gate, so the rack opens on the
+        /// Boarding that earned it and never refuses a Primary the bank could buy.</para>
         ///
-        /// <para>Reached, never a count of endings: a save that docked through zone 1 arrives
-        /// on its first ejection and must still be offered the rack
-        /// (Docs/Demo - Single/5-repeat-to-control-room.md). A null meta or a demo-off session
+        /// <para>Never a count of endings, never a depth. A null meta or a demo-off session
         /// never closes the rack — outside the demo the whole catalog is open.</para></summary>
         public static bool PrimaryRowsOpen(MetaState m)
         {
             if (m == null) return true;
             if (!m.DemoActive) return true;
-            // ENTERED, not Reached: DeepestWaveReached rises only on a CLEAR because deep
-            // start reads it as a permission, so it cannot tell "died on Wave 2" from "never
-            // drew Wave 2" — which is the whole case this gate exists for.
-            // The legacy flag still opens it, so a save written before the re-key keeps its rack.
-            return m.DemoZone2BankLost || m.DeepestWaveEntered >= PrimaryRowsWave;
+            return m.LifetimeSalvageEarned >= PrimaryRackSalvage;
         }
 
         /// <summary>Mark beat 0 — the ship tutorial — consumed, without playing it.
@@ -192,7 +197,7 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Beat 3's exit-standing state key: true when no wheel upgrade can be
-        /// bought right now — buys-left 0, or banked below the cheapest next wheel cost
+        /// bought right now — banked below the cheapest next wheel cost
         /// across owned weapons. An un-owned weapon row never counts, even at cost 0:
         /// SEC-D must not hold the exit standing open (beat 3, Traps). Evaluated on Docked
         /// and after every buy / refuse / spend; DemoShipStanding owns the flip.</summary>
@@ -200,11 +205,6 @@ namespace GatekeepersProtocol.Game
         {
             if (m == null) return true;
             if (!MetaUpgrades.UpgradesUnlocked(m)) return true;
-            // Both ladder rungs, summed: rung 2 hands out buys on its own counter, and reading
-            // rung 1 alone would flip the exit standing to EMBARK while those are still
-            // affordable (Docs/Demo - Single/5-repeat-to-control-room.md).
-            if (m.DemoActive && m.DemoWheelBuysLeft + m.DemoRungTwoBuysLeft <= 0) return true;
-
             long cheapest = long.MaxValue;
             for (int i = 0; i < WeaponCatalog.ArraySize; i++)
             {
@@ -223,8 +223,8 @@ namespace GatekeepersProtocol.Game
 
         /// <summary>Escaped only. Flips the demo off and powers FAB; every other demo gate
         /// already no-ops when <see cref="MetaState.DemoActive"/> is false, so those two
-        /// writes are the whole lift. Leaves <see cref="MetaState.DemoZone2BankLost"/>,
-        /// <see cref="MetaState.DemoRungTwoOpened"/> and <see cref="MetaState.DemoRungTwoBuysLeft"/>
+        /// writes are the whole lift. Leaves <see cref="MetaState.DemoZone2BankLost"/> and
+        /// <see cref="MetaState.DemoRungTwoOpened"/>
         /// alone — they are the record of what the player played, and every reader of them
         /// is already DemoActive-gated. A Lost or Docked end must not call this.</summary>
         public static void EndDemo(MetaState m)

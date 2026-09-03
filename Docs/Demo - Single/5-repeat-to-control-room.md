@@ -7,7 +7,9 @@ a heavier bank it cannot — that bank falling is the authored loss that sells
 the Primary, whether it is the save's first ejection or its second.
 Retrigger, clear, bank with Primary + 1 → D2 opens on window survival.
 Finale is beats 6–7.
-Status: demo spec
+Status: demo spec — SUPERSEDED IN PART 2026-09-02 (Zo): the wheel ladder (rung 1's two buys,
+rung 2's Primary + 2) is cut; anything affordable is buyable. Docs/Decisions.md, Cut. The
+rung-2 announce (demo.second_loss) and the Primary rack gate stand.
 Authority: implementable
 Update trigger: when the zone shape, the Convert-resolve Primary gate, the ladder
 rungs, or the respawn rule is overridden
@@ -194,7 +196,7 @@ Do not rebuild rooms. Do not emit a second kit.
 | Zone 2 shape | 1 terminal × 3 consecutive waves + heavier bank → D2 | counts tunable; **shape is spec** | Zo, 2026-08-17 |
 | Bank-loss ordering | secondary ceiling < zone 2 bank requirement < Primary + 1 upgrade | numbers tunable; **ordering is spec** | Zo, 2026-08-17; recut 2026-08-19: field waves survivable |
 | Ladder rung 2 | Primary + 2 upgrade buys outside the secondary 2-cap | rung contents tunable | Zo, 2026-08-17 |
-| Primary cost | BR-12 900 / MR-35 1,200 / PRI-C 1,500 | tunable | `WeaponCatalog.Def` — already priced; the "not set" stamp was stale (2026-08-20) |
+| Primary cost | BR-12 1,500 / MR-35 2,000 / PRI-C 2,500 (raised 2026-09-02; were 900 / 1,200 / 1,500) | tunable | `WeaponCatalog.Def`; the rack gate reads the cheapest (`DemoProgress.PrimaryRackSalvage`) |
 | Respawn cost | **150** × (respawns taken this Boarding + 1) | tunable | `Respawns.BaseCost` / `Respawns.CostFor`. The counter is the Boarding's, not the seat's, so a party that keeps dying prices itself out together |
 | `MaxWaves` | **5**, an absolute end-Wave ceiling | tunable | `WaveDirector.MaxWaves`. The per-trigger re-key was an intent, not the tree. Zone 2's Waves are 3–5 and fit under the ceiling, so no re-key is required — and this is the row every other file should be corrected against |
 | Window | 45 s base | tunable | `HatchBank.DurationSeconds` (in tree) |

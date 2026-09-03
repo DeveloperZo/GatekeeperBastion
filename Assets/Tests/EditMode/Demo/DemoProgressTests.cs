@@ -30,9 +30,6 @@ namespace GatekeepersProtocol.Tests
             // wait for the first wheel buy, which stranded friends behind a bank.
             var m = DemoMeta();
             Assert.IsFalse(DemoProgress.MultiplayerUnlocked(m), "unarmed is locked");
-            m.DemoWheelBuysLeft = 1;
-            Assert.IsFalse(DemoProgress.MultiplayerUnlocked(m),
-                "a wheel buy is no longer the key — only the MK-1 is");
             m.DemoWeaponGranted = true;
             Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "the MK-1 unlocks");
             m.DemoWeaponGranted = false;
@@ -144,50 +141,51 @@ namespace GatekeepersProtocol.Tests
                 "banked 450, buys-left 2, MK-1 at T0 (150) — spend first");
         }
 
-        /// <summary>Re-keyed from PrimaryRows_StayShutUntilZoneTwosBankFalls (Zo, 2026-08-25):
-        /// the key was DemoZone2BankLost, resolved by a Convert window the demo no longer has,
-        /// so the rack could never have opened again. The bank half of the old test is the half
-        /// worth keeping — salvage still buys nothing here; the DEPTH does.</summary>
+        /// <summary>Re-keyed 2026-09-02 (Zo: "rack opened when player earns enough") from the
+        /// deepest Wave entered, and before that from a zone-2 Convert window the demo no longer
+        /// has. Lifetime earned, so the gate is the price and nothing else.</summary>
         [Test]
-        public void PrimaryRows_StayShutUntilZoneOnesLastWaveIsReached()
+        public void PrimaryRows_StayShutUntilTheRealmHasEarnedTheCheapestPrimary()
         {
-            var m = FirstReturnMeta(10_000);
+            long gate = DemoProgress.PrimaryRackSalvage;
+            Assert.AreEqual(WeaponCatalog.Def(WeaponId.Br12Shotgun).cost, gate,
+                "the gate is the cheapest Primary on the rack, read off the catalog");
+            var m = DemoMeta();
+            m.SetOwned(WeaponId.Mk1Sidearm, true);
+            m.EarnSalvage(gate - 1);
+            m.DeepestWaveEntered = WaveDirector.MaxWaves;
             Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m),
-                "a fat bank does not buy a Primary — reaching zone 1's end does");
-            m.DeepestWaveEntered = DemoProgress.PrimaryRowsWave - 1;
-            Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m), "one Wave short is short");
-            m.DeepestWaveEntered = DemoProgress.PrimaryRowsWave;
+                "depth buys nothing — one salvage short of the price is shut");
+            m.EarnSalvage(1);
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m), "earning the price opens the rack");
+            m.SpendSalvage(m.BankedSalvage);
             Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),
-                "the Wave that proves you need a Primary is the Wave that sells you one");
-            Assert.AreEqual(DemoZones.EndWave(1), DemoProgress.PrimaryRowsWave,
-                "and the Wave is zone 1's end, not a number of its own");
-        }
-
-        /// <summary>The legacy flag is now a COMPATIBILITY read and nothing else: it is never
-        /// written by the demo any more, and it is kept solely so a save from before the
-        /// 2026-08-25 re-key still finds its rack where it left it.</summary>
-        [Test]
-        public void PrimaryRows_HonourTheLegacyFlag_ForSavesWrittenBeforeTheReKey()
-        {
-            var m = FirstReturnMeta(10_000);
-            m.DeepestWaveEntered = 1; // an old save that never recorded depth past the start
-            m.DemoZone2BankLost = true;
-            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),
-                "a player who already earned the rack must not be sent back for it");
+                "lifetime, not the pocket — spending to zero cannot re-lock it");
         }
 
         [Test]
-        public void PrimaryRows_AreNotKeyedOnEndings()
+        public void PrimaryRows_ReadTheLedger_NotAnAssignedPile()
         {
-            var m = FirstReturnMeta(10_000);
+            var m = DemoMeta();
+            m.BankedSalvage = 10_000; // a grant, a dev write — never came through the ledger
+            Assert.AreEqual(0L, m.LifetimeSalvageEarned);
+            Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m),
+                "a pile that was not earned opens nothing, exactly as the wheel's lock reads");
+        }
+
+        [Test]
+        public void PrimaryRows_AreNotKeyedOnEndings_OrOnZoneTwosBank()
+        {
+            var m = DemoMeta();
             m.PodEjections = 5;
+            m.DemoZone2BankLost = true;
             Assert.IsFalse(DemoProgress.PrimaryRowsOpen(m),
-                "counting ejections must never open the rack — a docked zone 1 arrives here at 0");
+                "ejections and the zone-2 record open nothing — only Salvage earned does");
             m.PodEjections = 0;
-            m.DeepestWaveEntered = DemoProgress.PrimaryRowsWave;
+            m.EarnSalvage(DemoProgress.PrimaryRackSalvage);
             Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),
-                "and the gate opens at zero ejections, which is the recut's whole point:\n"
-                + "the player who docked out of zone 1 alive is owed the same rack");
+                "and the gate opens at zero ejections: the player who docked out alive with\n"
+                + "the price earned is owed the same rack as the one who died earning it");
         }
 
         [Test]
@@ -200,53 +198,11 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void ExitStanding_HoldsOpenForRungTwoBuys_AfterRungOneIsSpent()
-        {
-            var m = FirstReturnMeta(10_000);
-            m.DemoWheelBuysLeft = 0;
-            m.DemoRungTwoBuysLeft = 2;
-            Assert.IsFalse(DemoProgress.NoBuyableUpgradeRemains(m),
-                "rung 1 spent but rung 2 open and affordable — the standing must not flip to EMBARK");
-            m.DemoRungTwoBuysLeft = 0;
-            Assert.IsTrue(DemoProgress.NoBuyableUpgradeRemains(m),
-                "both rungs spent is the flip");
-        }
-
-        [Test]
-        public void WheelLadder_DoesNotDisturbTheMultiplayerKey()
-        {
-            // Since 2026-08-25 the key is the MK-1, so NEITHER rung can move it in either
-            // direction — the strongest form of the rule this test has always been about.
-            var m = FirstReturnMeta(10_000);
-            m.DemoWeaponGranted = true;
-            m.DemoWheelBuysLeft = 0;
-            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "armed, friends unlocked");
-            m.DemoRungTwoBuysLeft = 2;
-            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m),
-                "opening rung 2 must not re-lock multiplayer");
-            m.DemoRungTwoBuysLeft = 0;
-            Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m), "and spending it does not either");
-            m.DemoWeaponGranted = false;
-            Assert.IsFalse(DemoProgress.MultiplayerUnlocked(m),
-                "and a spent ladder does not unlock an unarmed Boarder");
-        }
-
-        [Test]
-        public void ExitStanding_FlipsAtBuysLeftZero_NoThirdClickNeeded()
-        {
-            var m = FirstReturnMeta(10_000);
-            m.DemoWheelBuysLeft = 0;
-            Assert.IsTrue(DemoProgress.NoBuyableUpgradeRemains(m),
-                "the cap alone flips it — the third refuse produces nothing");
-        }
-
-        [Test]
         public void ExitStanding_FlipsWhenBankedFallsBelowTheCheapestSpoke()
         {
             // One Damage buy landed; Reload (and every other spoke) is still 150.
             // 149 cannot buy any remaining spoke. 150 still can.
             var m = FirstReturnMeta(149);
-            m.DemoWheelBuysLeft = 1;
             m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Damage);
             Assert.AreEqual(1, m.TierOf(WeaponId.Mk1Sidearm));
             Assert.AreEqual(1, m.WheelCentresOf(WeaponId.Mk1Sidearm, WheelAttr.Damage));
@@ -263,7 +219,6 @@ namespace GatekeepersProtocol.Tests
         public void ExitStanding_UnownedCostZeroSecondary_NeverHoldsItOpen()
         {
             var m = FirstReturnMeta(0);
-            m.DemoWheelBuysLeft = 1;
             Assert.IsTrue(DemoProgress.NoBuyableUpgradeRemains(m),
                 "SEC-D's free row is a weapon, not a buyable upgrade (beat 3, Traps)");
         }
@@ -272,7 +227,6 @@ namespace GatekeepersProtocol.Tests
         public void ExitStanding_AnOwnedSecondWeaponsWheel_CountsHonestly()
         {
             var m = FirstReturnMeta(150);
-            m.DemoWheelBuysLeft = 1;
             m.AwardWheel(WeaponId.Mk1Sidearm, WheelAttr.Damage); // MK-1 Damage next 300; other spokes 150
             m.SetOwned(WeaponId.SecD, true);                     // SEC-D wheel at T0: 150
             Assert.IsFalse(DemoProgress.NoBuyableUpgradeRemains(m),
@@ -300,8 +254,6 @@ namespace GatekeepersProtocol.Tests
             var m = DemoMeta();
             m.DemoZone2BankLost = true;
             m.DemoRungTwoOpened = true;
-            m.DemoRungTwoBuysLeft = 1;
-            m.DemoWheelBuysLeft = 0;
             DemoProgress.EndDemo(m);
             Assert.IsFalse(m.DemoActive);
             Assert.IsTrue(m.DemoFabPowered);
@@ -309,7 +261,6 @@ namespace GatekeepersProtocol.Tests
                 "the loss record stays — since 2026-08-25 it is the pre-re-key saves' only\n"
                 + "claim on the rack, so an Escape must not quietly erase it");
             Assert.IsTrue(m.DemoRungTwoOpened);
-            Assert.AreEqual(1, m.DemoRungTwoBuysLeft);
             Assert.AreEqual(DemoStationVerdict.Open, DemoProgress.FabricationVerdict(m));
             Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m));
             Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),

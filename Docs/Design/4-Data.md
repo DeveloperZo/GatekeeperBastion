@@ -39,8 +39,8 @@ the catalog ability is still `AbilityId.None`.
 <!-- GKB:GEN mk1-base — WeaponCatalog.Def(Mk1Sidearm) -->
 | | base | | base |
 |---|---|---|---|
-| damage/shot | 30 | reload | 1.4s |
-| shots/second | 3 | range | 45 m |
+| damage/shot | 50 | reload | 1.4s |
+| shots/second | 1.4 | range | 45 m |
 | clip | 8 | | |
 <!-- GKB:END mk1-base -->
 
@@ -48,15 +48,23 @@ the catalog ability is still `AbilityId.None`.
 
 ```
 dps = (clip * damage) / (clip/rate + reload)
-base: (8 * 30) / (8/3 + 1.4) = 240 / 4.07 = 59.0 dps
+base: (8 * 50) / (8/1.4 + 1.4) = 400 / 7.11 = 56.2 dps
 ```
 
 Reload is an upgrade spoke (`ReloadPerPoint = 0.98035f`) for every shop weapon, so the
-duty cycle is not fixed across a campaign. MK-1 T0 damage 30 no longer one-shots a Wave-1
-Default: against `WaveDirector.BaseEnemyHp` 50 it costs **two** shots, and three on Wave 2
-(`Mk1_T0_TwoShotsWave1Default_ThreeShotsWave2`, renamed on 2026-08-27 from the one-shot claim
-the raise deleted). T0 duty-cycle dps still sits above the Secondary band;
-first-session fodder TTK is the demand (2026-08-16). The SEC-D's fire-rate-centred build
+duty cycle is not fixed across a campaign.
+
+**MK-1 30 → 50 damage, 3.0 → 1.4 shots/s (Zo, 2026-09-02; #12).** Zo's 2026-08-16 verdict
+asked for one-shot first-session fodder; the 2026-08-27 `BaseEnemyHp` 30 → 50 raise undid it
+without a decision and the pin was renamed to match. At 50 the T0 sidearm one-shots a Wave-1
+Default and two-shots Wave 2's 70 (`Mk1_T0_OneShotsWave1Default_TwoShotsWave2`, renamed back).
+The rate is **solved, not picked**: a one-shot gun at the old 3.0 sustains 98 dps and 1.97 Wave-1
+kills/s, above every Primary, and at 1.8 it still out-kills the MR-35 on the shallow wave (1.37 against 1.16
+kills/s), which trips the 08-27 guard that no Primary loses to the free gun on its own axis
+(`PrimaryBand_T0_EachAvailablePrimaryLeadsOnOneAxis_SoNoneIsDominated`). 1.4 is the highest
+tenth at which the rifle still leads there (**1.12** kills/s against 1.16); from Wave 2 the
+rifle leads by more (0.93 against 0.56). Sustained dps fell 59.0 → 56.2. Whether 0.71 s
+between pulls reads as a sidearm is **unknown — needs play data**. The SEC-D's fire-rate-centred build
 stays under focused Primaries (`SecDFireRateFocus_NeverRivalsFocusedPrimaries`). Secondaries
 price on their own curve — the tier-cost block below — and the first two MK-1 purchases
 (150 + 300) fit inside the 462 Wave 1 pays outright at kill-value 42 and intensity 0
@@ -460,12 +468,19 @@ array (`WeaponWheel.EffectiveDps`) and cannot be tabulated against derived Tier.
 
 | weapon | dmg/shot | pellets | shots/s | clip | reload | range | pierce | base dps |
 |---|---|---|---|---|---|---|---|---|
-| MK-1 Sidearm | 30 | 1 | 3.0 | 8 | 1.4s | 45 m, falloff from 12 m | — | 59.0 |
+| MK-1 Sidearm | 50 | 1 | 1.4 | 8 | 1.4s | 45 m, falloff from 12 m | — | 56.2 |
 | SEC-D | 18 | 1 | 6.0 | 4 | 2.2s | 8 m, falloff from 3 m | — | 25.1 |
 | VK-7 Rifle *(disabled)* | 10 | 1 | 5.5 | 25 | 2.1s | 60 m | — | 37.6 |
 | BR-12 Shotgun | 19 | 7 | 1.2 | 6 | 2.6s | 14 m, falloff from 8 m | — | 105.0 |
 | MR-35 Rifle | 16 | 1 | 8.0 | 27 | 2.463s | 60 m, falloff from 25 m | 2 bodies ×0.26 after first | 74.0 |
 | PRI-C | 180 | 1 | 0.6 | 4 | 3.2s | 90 m, falloff from 55 m | 3 bodies ×0.75 after first | 73.0 |
+
+**Primaries cost 1,500 / 2,000 / 2,500** (Zo, 2026-09-02; #12; were 900 / 1,200 / 1,500). The
+ARMORY's Primary rack opens on Salvage EARNED — `DemoProgress.PrimaryRackSalvage`, the cheapest
+of these — so the price is the gate. Wave 1 alone pays 11 × 42 = 462 and a zone-1 clear
+29 × 42 = 1,218, so the BR-12 is a zone-1 clear plus seven kills: the second Boarding at the
+latest, never a Boarding the player did not fight. 3:4:5 kept; PRI-C is two zone-1 clears.
+Whether that is the right distance is **unknown — needs play data**.
 
 **THE PRIMARY TIER WAS RAISED ~2x BECAUSE THE FREE SECONDARY OUT-KILLED IT** (2026-08-27,
 Zo's ruling: "It is the rifle. We should push the primary damage up"). BR-12 6 → 12/pellet,
@@ -474,15 +489,17 @@ MR-35 8 → 16, PRI-C 90 → 180. `EnemyHealthPerWave` was restored 0.30 → 0.4
 **read that ladder as history**: `EnemyHealthPerWave` is still 0.40, but the fewer-and-tougher
 pass below raised `BaseEnemyHp` 30 → 50 the same day, so the live ladder is 50/70/90/110/130.
 
-The MK-1 Sidearm sustains **59.0 dps at cost 0** against Primaries that cost 900-1500 Salvage
+The MK-1 Sidearm sustained **59.0 dps at cost 0** (56.2 since the 2026-09-02 recut above)
+against Primaries that cost 1,500-2,500 Salvage (900-1,500 until 2026-09-02)
 and sat at 33.2 / 37.0 / 36.5. It is not offset by ammo starvation, which was the obvious
 defence and is wrong: the Secondary's `0.4 rounds/s` regen
 (`WeaponAbility.SecondaryRegenPerSecond`) is a never-dry FLOOR, not a throttle —
 `PlayerGun.TickSecondaryRegen` returns early while `reloadTimer > 0`, so a manual 1.4 s reload
-still owns the clip and the full 59.0 is genuinely sustainable.
+still owns the clip and the full figure is genuinely sustainable.
 
 **Judge this ladder on kills/s against the HP table, never on the dps column.** Duty-cycle dps
-ignores overkill, and at 30 damage a 70 HP Wave-2 body costs the sidearm three whole shots.
+ignores overkill, and at the 30 damage of that hour a 70 HP Wave-2 body cost the sidearm three
+whole shots (two at today's 50).
 Measured at EQUAL TIER (T0) against the 30/42/54/66/78 ladder that stood that hour, the sidearm
 led the old rifle by 6% at Wave 2 and 70% at Wave 4 — not the flat 60% the dps column implies.
 The granularity is the whole reason

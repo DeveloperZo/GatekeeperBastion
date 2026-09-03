@@ -166,7 +166,7 @@ Verified against code, 2026-08-30.
   `WipeUnbanked`. Banked Salvage survives every ending.
 - **Ante parked**: `Ante.Enabled = false`. Convert prompt is
   `[T] Convert  unbanked {n}` (`RepairInteractable.cs:143-148`).
-- **Primaries**: VK-7 disabled. BR-12 **900**, MR-35 **1200**, PRI-C **1500**.
+- **Primaries**: VK-7 disabled. BR-12 **1500**, MR-35 **2000**, PRI-C **2500** (raised 2026-09-02).
   MK-1 and SEC-D cost **0**.
 - **`RequestBulkheadServerRpc`** is an empty handler in `NetVerbs.cs` with a live
   call site. Do not build on it.

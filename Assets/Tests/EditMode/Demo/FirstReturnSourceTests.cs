@@ -17,20 +17,6 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void WheelCap_RefusesBeforeSpendSalvage_AndDecrementsOnSuccess()
-        {
-            string src = Read("Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs");
-            int buyStart = src.IndexOf("public static bool BuyWheelUpgrade", System.StringComparison.Ordinal);
-            Assert.Greater(buyStart, -1, "the wheel command lives in the Weapons partial");
-            int cap = src.IndexOf("wheel refused — demo cap", buyStart, System.StringComparison.Ordinal);
-            int spend = src.IndexOf("m.SpendSalvage(price)", buyStart, System.StringComparison.Ordinal);
-            Assert.Greater(cap, buyStart, "the cap refuse lives inside BuyWheelUpgrade");
-            Assert.Less(cap, spend, "named cap refuse BEFORE any SpendSalvage (criterion 1)");
-            StringAssert.Contains("m.DemoWheelBuysLeft--", src);
-            StringAssert.Contains("demoBuysLeft=", src);
-        }
-
-        [Test]
         public void TheMk1_UnlocksMultiplayer_OncePerSaveByConstruction()
         {
             // Re-keyed 2026-08-25 (Zo): the ARMORY's MK-1 is the key, and `armingBeat` is
@@ -39,28 +25,6 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("!m.DemoWeaponGranted", src);
             StringAssert.Contains("\"multiplayer unlocked\"", src);
             StringAssert.Contains("DemoConversationIds.MpUnlocked", src);
-            Assert.IsFalse(src.Contains("DemoWheelBuysLeft = 2"),
-                "the count never resets per visit (beat 3, Traps)");
-            Assert.IsFalse(Read("Assets/Scripts/Game/Ship/ShipCommands.cs")
-                    .Contains("DemoWheelBuysLeft = 2"),
-                "nor from the other command surface");
-        }
-
-        /// <summary>Rung 2 rides its own counter, refuses under its own name, and refuses
-        /// before any spend (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
-        [Test]
-        public void RungTwo_RefusesBeforeSpendSalvage_OnItsOwnCounter()
-        {
-            string src = Read("Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs");
-            int buyStart = src.IndexOf("public static bool BuyWheelUpgrade", System.StringComparison.Ordinal);
-            Assert.Greater(buyStart, -1, "the wheel command lives in the Weapons partial");
-            int rung = src.IndexOf("wheel refused — ladder rung spent", buyStart,
-                System.StringComparison.Ordinal);
-            int spend = src.IndexOf("m.SpendSalvage(price)", buyStart, System.StringComparison.Ordinal);
-            Assert.Greater(rung, buyStart, "the rung-2 refuse lives inside BuyWheelUpgrade");
-            Assert.Less(rung, spend, "named rung refuse BEFORE any SpendSalvage");
-            StringAssert.Contains("m.DemoRungTwoBuysLeft--", src, "rung 2 spends its own counter");
-            StringAssert.Contains("m.DemoRungTwoOpened", src, "which name the refuse takes");
         }
 
         /// <summary>The Primary rows are a gate this milestone ADDS: refused named, before the
@@ -86,15 +50,14 @@ namespace GatekeepersProtocol.Tests
         /// reads BOTH ladder counters — rung 1 alone would flip it to EMBARK while rung-2 buys
         /// are still affordable.</summary>
         [Test]
-        public void PrimaryGate_IsPure_AndTheStandingKeyReadsBothRungs()
+        public void PrimaryGate_IsPure_AndNeverReadsAnEndingCount()
         {
             string src = Read("Assets/Scripts/Game/Demo/DemoProgress.cs");
             StringAssert.Contains("public static bool PrimaryRowsOpen", src);
-            StringAssert.Contains("m.DemoZone2BankLost", src);
+            StringAssert.Contains("m.LifetimeSalvageEarned >= PrimaryRackSalvage", src);
             Assert.IsFalse(src.Contains("PodEjections"),
-                "the rack is keyed on the bank the player just lost, never on an ending count");
+                "the rack is keyed on Salvage earned, never on an ending count");
             Assert.IsFalse(src.Contains("UnityEngine"), "DemoProgress stays engine-free");
-            StringAssert.Contains("m.DemoWheelBuysLeft + m.DemoRungTwoBuysLeft <= 0", src);
         }
 
         /// <summary>The rung-2 Docked resolve: line, log, counter, latch — and it runs after
@@ -108,11 +71,10 @@ namespace GatekeepersProtocol.Tests
             Assert.Greater(first, -1);
             Assert.Greater(rung, first, "first-return resolves first on a same-load collision");
             StringAssert.Contains("DemoConversationIds.SecondLoss", src);
-            StringAssert.Contains("\"ladder rung=2 opened — primary + 2 buys\"", src);
-            StringAssert.Contains("m.DemoRungTwoBuysLeft = 2", src);
+            StringAssert.Contains("\"primary rack opened — \"", src);
             StringAssert.Contains("m.DemoRungTwoOpened = true", src);
-            // The ban is scoped to the RUNG-TWO resolve: that gate is DemoZone2BankLost and
-            // never an ejection count. The FIRST-LOSS resolve in the same file legitimately
+            // The ban is scoped to the RUNG-TWO resolve: that gate is the rack gate (Salvage
+            // earned) and never an ejection count. The FIRST-LOSS resolve in the same file legitimately
             // keys on PodEjections — its authored trigger IS the first Lost Boarding
             // (Docs/Demo - Single/2-first-hatch-bank.md), so a file-wide token ban would
             // outlaw the beat's own spec.
@@ -124,7 +86,9 @@ namespace GatekeepersProtocol.Tests
             int close = rungSrc.IndexOf("\n        }\n", System.StringComparison.Ordinal);
             if (close > 0) rungSrc = rungSrc.Substring(0, close);
             Assert.IsFalse(rungSrc.Contains("PodEjections"),
-                "the rung-two resolve is keyed on DemoZone2BankLost, never on an ejection count");
+                "the rung-two resolve is keyed on the rack gate, never on an ejection count");
+            StringAssert.Contains("DemoProgress.PrimaryRowsOpen(m)", rungSrc,
+                "one gate opens the rack and plays its line");
         }
 
         /// <summary>The restamped line must not assert a second ejection — this may be the
@@ -150,8 +114,6 @@ namespace GatekeepersProtocol.Tests
                 "an owned Primary still binds — only the BUY rows are held back");
             StringAssert.Contains("_viewSlot = WeaponSlot.Primary", src,
                 "the PRIMARY tab button stays bound");
-            StringAssert.Contains("m.DemoRungTwoBuysLeft", src,
-                "the panel rebinds when rung 2 hands out its buys");
         }
 
         [Test]
@@ -195,17 +157,6 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("DemoConversationIds.CrewClaim", src);
             Assert.IsFalse(src.Contains("TryClaim"),
                 "the claim is the walk — BuyProtocol only ever fires from the sheet's EQUIP");
-        }
-
-        [Test]
-        public void Nav_IsPlainEmbark_WhileTheDemoRuns()
-        {
-            string src = Read("Assets/Scripts/Game/Ship/MapStation.cs");
-            StringAssert.Contains("_startWave = 1", src);
-            StringAssert.Contains("DemoConversationIds.EmbarkWave2", src);
-            StringAssert.Contains("ShowStartWavePicker(false)", src);
-            StringAssert.Contains("lead && !counting && !m.DemoActive", src,
-                "the party lead's picker is suppressed too");
         }
 
         [Test]
@@ -268,15 +219,5 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(repair.Contains("finish the terminal"), "superseded refuse copy");
         }
 
-        [Test]
-        public void ArmoryWheel_SpeaksTheCapLine_OncePerVisit()
-        {
-            string src = Read("Assets/Scripts/Game/Ship/ArmoryStation.cs");
-            StringAssert.Contains("DemoConversationIds.WheelCap", src);
-            StringAssert.Contains("_capLinePlayed", src);
-            StringAssert.Contains("two purchases this demo — NAV is ready", src);
-            Assert.IsFalse(src.Contains("survive a death first"),
-                "the wheel lock copy follows the re-keyed gate");
-        }
     }
 }

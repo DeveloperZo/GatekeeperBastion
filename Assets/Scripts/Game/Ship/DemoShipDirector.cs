@@ -188,12 +188,12 @@ namespace GatekeepersProtocol.Game
             DemoShipStanding.Reevaluate();
         }
 
-        /// <summary>Docked after zone 2's bank fell: the ladder's second rung opens — the
-        /// PRIMARY rows go on sale and two more wheel buys land on their own counter, outside
-        /// the rung-1 cap. Keyed on the bank loss the player just played, never on a count of
-        /// endings, so a save that docked through zone 1 is offered the rack on its first
-        /// ejection (Docs/Demo - Single/5-repeat-to-control-room.md). DemoRungTwoOpened is the
-        /// once-per-save latch, and the flag write is what makes the line once-per-save too.
+        /// <summary>The first Ship load after the rack opened: the rack-opened line plays.
+        /// Keyed on the rack gate itself (DemoProgress.PrimaryRowsOpen — Salvage earned since
+        /// 2026-09-02), never on a count of endings and no longer on zone 2's bank, which the
+        /// shipped loop never opened. The two extra wheel buys this used to hand out went with
+        /// the wheel ladder the same day. DemoRungTwoOpened is the once-per-save latch, and the
+        /// flag write is what makes the line once-per-save too.
         ///
         /// Ordering — deliberately AFTER ResolveFirstReturn. Both can resolve on one Ship load:
         /// bank in zone 1 (D1 opens), push through without docking, lose zone 2's bank. That is
@@ -205,10 +205,10 @@ namespace GatekeepersProtocol.Game
         /// tell the player the rack changed. The displacement is logged by DemoVoice.</summary>
         void ResolveRungTwo(MetaState m)
         {
-            if (!m.DemoZone2BankLost || m.DemoRungTwoOpened) return;
+            if (!m.DemoActive || m.DemoRungTwoOpened) return;
+            if (!DemoProgress.PrimaryRowsOpen(m)) return;
             DemoVoice.Play(DemoConversationIds.SecondLoss, DemoVoiceMode.Lock);
-            Log.Event(Tag, "ladder rung=2 opened — primary + 2 buys");
-            m.DemoRungTwoBuysLeft = 2;
+            Log.Event(Tag, "primary rack opened — " + DemoProgress.PrimaryRackSalvage + " earned");
             m.DemoRungTwoOpened = true;
             GameSession.Save();
             DemoShipStanding.Reevaluate();

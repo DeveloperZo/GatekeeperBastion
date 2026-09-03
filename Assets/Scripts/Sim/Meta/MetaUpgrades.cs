@@ -116,7 +116,7 @@ namespace GatekeepersProtocol.Sim
         /// rose by, so a wave pays what it used to: wave 5 was 66 x 25 = 1650 and is now
         /// 39 x 42 = 1638.</para>
         /// <para>THE FLATNESS IS THE TRAP. Every price in the game — respawns at 150, Primaries
-        /// at 900-1500, tracks at 200 x 2^level — is denominated in kills, so any change to the
+        /// at 1500-2500, tracks at 200 x 2^level — is denominated in kills, so any change to the
         /// number of bodies in a wave silently re-prices all of them. Move this WITH the roster
         /// or the shop moves without anyone deciding it should.</para></summary>
         public static float SalvagePerKill()

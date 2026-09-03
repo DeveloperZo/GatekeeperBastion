@@ -20,7 +20,7 @@ Where:
 - Spoke prices per centred count, cheaper Secondary lane; ten-purchase cap — `Assets/Scripts/Sim/Meta/WeaponTier.cs` (`Cost(`WeaponSlot`, `int`)`, `MaxTier`)
 - Upgrade-wheel lock until the realm has earned Salvage (lifetime figure) — `Assets/Scripts/Sim/Meta/MetaUpgrades.cs` (`UpgradesUnlocked`)
 - SEC-D centred Ability purchase refused; neighbour awards still land — `Assets/Scripts/Sim/Meta/WeaponWheel.cs` (`SpokePurchasable`)
-- Demo: the ARMORY's Primary rows are locked on the BUY path, not the wheel path, and open on the last Wave of zone 1 entered or the zone-2 bank lost — `Assets/Scripts/Game/Demo/DemoProgress.cs` (`PrimaryRowsOpen`, `PrimaryRowsWave` = `DemoZones.EndWave(1)`); `Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs` (`BuyWeapon`'s Primary refusal); the two wheel rungs `Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs` (`BuyWheelUpgrade` demo counters)
+- Demo: the ARMORY's Primary rows are locked on the BUY path, not the wheel path, and open once the realm has earned the cheapest Primary's price, lifetime — `Assets/Scripts/Game/Demo/DemoProgress.cs` (`PrimaryRowsOpen`, `PrimaryRackSalvage`); `Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs` (`BuyWeapon`'s Primary refusal); the two wheel rungs `Assets/Scripts/Game/Ship/ShipCommands.Weapons.cs` (`BuyWheelUpgrade` demo counters)
 - Improvised cutter when no weapon is owned, and when the active slot holds none — `Assets/Scripts/Game/Player/PlayerGun.cs` (`UsingSalvageCutter`, `CutterDamageFactor`, `EffectiveDamage`); rate factor `Assets/Scripts/Game/Player/PlayerGun.Slots.cs` (`EffectiveFireRate`, `CutterRateFactor`)
 - Under the isometric rig the shot is aimed from the body along the cursor ray — first live body wins at its collider centre, else the surface point, else cast range — and the cursor lock stops being required to fire — `Assets/Scripts/Game/Player/PlayerGun.cs` (`_isoRig`, `IsoAimActive`, `CanFire`'s `&& !IsoAimActive`); `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`Fire`'s `IsoAimActive` branch, `ResolveIsoAimDirection`); the ray and its cast range `Assets/Scripts/Game/Ship/IsometricCameraRig.cs` (`ScreenRay`), `Assets/Scripts/Sim/Ship/ShipCamera.cs` (`FollowDistance`) — whether the rig is authored and enabled in the shipped hub is scene wiring and not readable here, the mirror carrying no `.unity` files
 - Crit is unreachable: the chance the roll reads is a hardcoded 0 on the gun, and `MetaUpgrades.CritChance()` is frozen at 0 with no caller — the roll still runs per pellet — `Assets/Scripts/Game/Player/PlayerGun.cs` (`CritChance` property); `Assets/Scripts/Game/Player/PlayerGun.Firing.cs` (`Fire` pellet loop, `RollCrit`)
@@ -60,13 +60,12 @@ Paying a weapon's price from the realm's banked pot owns it for good and equips 
 
 The player centres one spoke as the upgrade focus and pays. The purchase pays out by ring distance — most to the centred spoke, less to each neighbour, nothing to the two furthest — so a weapon's spoke adjacency is its identity. The price of a purchase rides how many have already centred that spoke, on a cheaper lane for Secondaries. Tier is derived from total points, and ten purchases cap a weapon. A purchase moves only what the five spokes name: range, spread, pellet count, pierce, falloff and slot stay frozen at the catalog row, and points never transfer between weapons.
 
-The wheel refuses a purchase in three cases:
+The wheel refuses a purchase in two cases:
 
 - Any purchase, until this realm has earned any Salvage at all — a lifetime figure, so spending the bank to zero cannot re-lock the wheel. Tiers wait on that earned total, not on a first Convert.
 - A centred purchase on SEC-D's Ability spoke; neighbour awards still land on it.
-- In the demo, a purchase past the two rungs of the ladder's metered budget.
 
-The demo's other rule is a buy lock rather than a wheel lock: the ARMORY's Primary rows stay shut until a Boarding has entered the last Wave of zone 1, or the zone-2 bank has been lost.
+The opening's other rule is a buy lock rather than a wheel lock: the ARMORY's Primary rows stay shut until the realm has earned the cheapest Primary's price, counted lifetime.
 
 Award, steps and prices: [Field Manual](Field-Manual.md).
 

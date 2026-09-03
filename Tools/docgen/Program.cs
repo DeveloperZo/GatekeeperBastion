@@ -1049,7 +1049,7 @@ public static class Docgen
             .Select(BoarderProtocol.ProtocolName).ToArray();
         sb.AppendLine("Crit chance is frozen at 0. There is no Luck shop. Protocols are CREW claims:");
         sb.AppendLine(string.Join(", ", shopNames) +
-                      " share one panel, Default at 0 salvage. AEGIS and LEDGER are not sold.");
+                      " share one panel, DEPOT at 0 salvage. AEGIS and LEDGER are not sold.");
         sb.AppendLine();
         sb.AppendLine("Weapon wheel purchases and the equipment slot unlock once this realm has earned any Salvage.");
         sb.AppendLine();

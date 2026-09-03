@@ -100,7 +100,6 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(MetaUpgrades.UpgradesUnlocked(m),
                 "the salvage this realm has earned is what opens the wheel");
             Assert.AreEqual(500L, m.BankedSalvage, "the authored loss-1 aim funds both buys");
-            Assert.AreEqual(2, m.DemoWheelBuysLeft);
             Assert.IsFalse(m.DemoCrewMenuUnlocked,
                 "unwritten on purpose — the first-return lines and the CREW write must play");
             Assert.AreEqual(FirstTerminal.ZoneOneEndWave,
@@ -124,7 +123,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(m.CompletedTerminalIds.Contains(DemoZones.TerminalIdAt(2, 0)));
             Assert.AreEqual(WaveDirector.MaxWaves, m.ZoneDeepest(2));
             Assert.IsTrue(DemoProgress.PrimaryRowsOpen(m),
-                "a save this deep has met the wall the Primary answers");
+                "zone 2's field pay is earned here, which is past the rack's price");
             Assert.IsTrue(m.SalvageLedgerBalances);
         }
 
@@ -132,7 +131,6 @@ namespace GatekeepersProtocol.Tests
         public void DoorOneOpen_HasTheShopPassSpent_AndTheClaimDone()
         {
             var m = GameController.BuildZoneTwoReadyCheckpoint();
-            Assert.AreEqual(0, m.DemoWheelBuysLeft);
             Assert.IsTrue(DemoProgress.MultiplayerUnlocked(m));
             Assert.AreEqual(2, m.TierOf(WeaponId.Mk1Sidearm), "both Secondary buys landed");
             Assert.AreEqual(BoarderProtocolId.Depot, m.EquippedProtocol);
@@ -157,7 +155,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(m.OpenDoorIds.Contains(DemoZones.DoorId(1)));
             Assert.IsTrue(m.OpenDoorIds.Contains(DemoZones.DoorId(2)));
             Assert.IsTrue(m.DemoZone2BankLost,
-                "the bank that fell is the gate — this is what sells the rack");
+                "zone 2 resolved is still recorded, though the rack no longer reads it");
             Assert.IsTrue(m.DemoRungTwoOpened,
                 "the rung already opened here, so the line does not replay on this load");
             Assert.AreEqual(2, m.PodEjections,

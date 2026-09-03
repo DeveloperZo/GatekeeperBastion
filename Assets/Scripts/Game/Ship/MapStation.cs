@@ -149,22 +149,17 @@ namespace GatekeepersProtocol.Game
             }
 
             _body.BindPartyLobby(false, null, false, null, null);
-            if (m.DemoActive)
-            {
-                // Plain EMBARK while the demo runs: no picker, no stepper, no wave number —
-                // refight-avoidance lives at the terminal's retrigger, not at NAV (beat 4).
-                _startWave = 1;
-                _body.ShowStartWavePicker(false);
-            }
-            else
-            {
-                _body.ShowStartWavePicker(true);
-                _body.SetStartWaveLine(StartWaveLine(_startWave, deepest));
-                _body.BindWaveControls(
-                    $"  {_startWave}  ",
-                    () => _startWave--, _startWave > 1,
-                    () => _startWave++, _startWave < deepest);
-            }
+            // The picker shows in the opening too (Zo, 2026-09-02: "when I return to the
+            // Bastion I can't elect to start where I last left off"). From 2026-08-30 until
+            // then the demo forced Wave 1 and hid the stepper (beat 4); the terminal
+            // retrigger stays as the in-zone refight. A pick past 1 restores the completed
+            // terminals (GameController.Start), so the Hatch offers the next zone.
+            _body.ShowStartWavePicker(true);
+            _body.SetStartWaveLine(StartWaveLine(_startWave, deepest));
+            _body.BindWaveControls(
+                $"  {_startWave}  ",
+                () => _startWave--, _startWave > 1,
+                () => _startWave++, _startWave < deepest);
 
             if (m.DemoActive && m.DemoShipFightDone)
             {
@@ -192,10 +187,7 @@ namespace GatekeepersProtocol.Game
             var avatar = NetPlayerAvatar.LocalOwner;
             bool ready = avatar != null && avatar.LobbyReady.Value;
 
-            if (m.DemoActive)
-                _startWave = 1; // plain EMBARK — the lead commits no wave choice (beat 4)
-
-            if (lead && !counting && !m.DemoActive)
+            if (lead && !counting)
             {
                 _body.ShowStartWavePicker(true);
                 _body.SetStartWaveLine(StartWaveLine(_startWave, deepest));
