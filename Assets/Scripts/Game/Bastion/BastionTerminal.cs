@@ -88,6 +88,15 @@ namespace GatekeepersProtocol.Game
         static readonly WaveDirector s_preview = new WaveDirector();
         static readonly StringBuilder s_prompt = new StringBuilder(160);
 
+        /// <summary>The finale named before it is started, the way a field terminal names its
+        /// last wave's shape: the same words the Hatch logs on the press. Per frame, so it
+        /// appends an int rather than building a string.</summary>
+        static void AppendFinaleShape(StringBuilder sb)
+        {
+            sb.Append(" — ").Append(MasterControl.TerminalWaves)
+                .Append(" waves, then the elite and its escort");
+        }
+
         public string Prompt
         {
             get
@@ -105,6 +114,7 @@ namespace GatekeepersProtocol.Game
                         if (!Ante.Enabled)
                         {
                             s_prompt.Append('[').Append(startKey).Append("] Master Control");
+                            AppendFinaleShape(s_prompt);
                             return s_prompt.ToString();
                         }
                         bool masterArmed = _game != null && _game.IsWaveStartArmed(terminalId);
@@ -113,6 +123,7 @@ namespace GatekeepersProtocol.Game
                         else
                             s_prompt.Append('[').Append(plus).Append('/').Append(minus)
                                 .Append("] Master Control");
+                        AppendFinaleShape(s_prompt);
                         AppendStake(s_prompt, _game);
                         s_prompt.Append("  [").Append(key).Append(masterArmed ? "] edit" : "] select");
                         return s_prompt.ToString();
@@ -137,6 +148,17 @@ namespace GatekeepersProtocol.Game
                     return s_prompt.ToString();
                 }
                 var gc = _game;
+                if (gc != null && gc.Sim != null && DemoZones.ZoneOf(terminalId) > 0
+                    && gc.CanCallFinalWave(terminalId))
+                {
+                    // M115: the terminal's first press draws the zone's last wave. M116: the
+                    // prompt names its shape, so the player reads the fight before calling it.
+                    s_prompt.Clear();
+                    s_prompt.Append('[').Append(startKey).Append("] call the last wave — ")
+                        .Append(WaveShapes.Name(WaveShapes.For(
+                            DemoZones.EndWave(DemoZones.ZoneOf(terminalId)))));
+                    return s_prompt.ToString();
+                }
                 // THE LOOP (Zo, 2026-08-25, enforced 2026-08-26): the wave began at the Hatch
                 // and this is its off switch — in Assault while bodies are still coming, and
                 // in Prep once the player has killed them all and walked up anyway. The zone
@@ -146,6 +168,15 @@ namespace GatekeepersProtocol.Game
                 {
                     s_prompt.Clear();
                     s_prompt.Append('[').Append(startKey).Append("] shut it down");
+                    return s_prompt.ToString();
+                }
+                if (gc != null && gc.Sim != null && gc.Sim.Assault == AssaultState.Assault
+                    && gc.Sim.ZoneFinalWaveDrawn && DemoZones.ZoneOf(terminalId) > 0)
+                {
+                    // M115: the last wave was called and is not down yet.
+                    s_prompt.Clear();
+                    s_prompt.Append("Terminal ").Append(terminalId)
+                        .Append(" — the last wave is still standing");
                     return s_prompt.ToString();
                 }
                 if (gc != null && gc.Sim != null && gc.Sim.Assault == AssaultState.Assault)

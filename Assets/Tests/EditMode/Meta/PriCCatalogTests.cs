@@ -85,7 +85,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void SustainedDps_WithinFivePercentOfMr35()
+        public void SustainedDps_IsItsOwnDutyCycle_AndSitsUnderTheMr35()
         {
             // Criterion 4, and the criterion is a RELATIONSHIP, not a pair of numbers. It read
             // "PRI-C 36.5 vs MR-35 37.0" until the 2026-08-27 Primary raise took both rows to
@@ -103,8 +103,10 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(SustainedDps(priCDef), priC, 0.1f, "PRI-C T0 is its own row's duty cycle");
             Assert.AreEqual(SustainedDps(mr35Def), mr35, 0.1f, "MR-35 T0 is its own row's duty cycle");
 
-            float ratio = Math.Abs(priC - mr35) / mr35;
-            Assert.LessOrEqual(ratio, 0.05f, $"sustained gap {ratio:0.###} exceeds 5%");
+            // THE SHADOW IS GONE (Zo, 2026-09-02: MR-35 damage 16 -> 18). PRI-C sits under the
+            // rifle on the dps column now and owns the pierce line instead; the criterion that
+            // survives is that it is not dominated, which PrimaryBand asserts on its own axis.
+            Assert.Less(priC, mr35, "PRI-C sits under the MR-35 on dps since 2026-09-02");
         }
 
         /// <summary>Renamed FROM CannotCarryWave5Alone_PureFireTime on 2026-08-27: the 100 s

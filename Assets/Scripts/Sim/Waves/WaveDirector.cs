@@ -171,15 +171,34 @@ namespace GatekeepersProtocol.Sim
         /// The ONLY number this kind owns.</summary>
         public const float CloakerHp = 75f;
 
-        // ---- Per-wave composition. Fixed counts; Default absorbs the remainder. ----
+        // ---- Per-wave KIND CAPS (M116). Composition is a SHAPE now (WaveShapes: Mass, Pack,
+        //      Convoy — shares of the roster, Default the remainder); these rows are the ceiling
+        //      a shape may not exceed, and a 0 is the debut gate: Hunter from wave 2, Thief from
+        //      wave 3, Cloaker from wave 4, one debut per wave so each rule is read alone. After
+        //      the gate the cap is the largest share any shape gives the kind, round(share ×
+        //      (11 + 7i)) — Hunter 35 %, Thief 15 %, Cloaker 15 % — so it never bites on the
+        //      authored table and a future shape cannot draw more of a kind than the design's
+        //      ceiling. WaveShapesTests pins both halves. Before M116 these rows were the
+        //      counts themselves (the 2026-08-27 halved rows; git has them). ----
 
-        private static readonly int[] HunterPerWave = { 0, 2, 4, 6, 7 };
-        private static readonly int[] ThiefPerWave = { 0, 0, 1, 2, 4 };
-        // Deliberately small: a Wave where somebody is always looking at every Cloaker freezes
-        // them all and turns the kind into free salvage (the milestone's pre-mortem, case b).
-        // Debut is wave 4, one wave AFTER the Thief: two new kinds landing in the same wave
-        // means neither rule gets read. It debuts as a pair so the watch-freeze is witnessed.
-        private static readonly int[] CloakerPerWave = { 0, 0, 0, 1, 2 };
+        private static readonly int[] HunterPerWave = { 0, 6, 9, 11, 14 };
+        private static readonly int[] ThiefPerWave = { 0, 0, 4, 5, 6 };
+        private static readonly int[] CloakerPerWave = { 0, 0, 0, 5, 6 };
+
+        /// <summary>The most of <paramref name="kind"/> any shape may put in wave
+        /// <paramref name="waveIndex"/> (0-based); 0 before the kind's debut. Default is
+        /// uncapped. Probe indices past the five authored waves hold the last row.</summary>
+        public static int KindCap(GatekeeperKind kind, int waveIndex)
+        {
+            if (waveIndex < 0) waveIndex = 0;
+            switch (kind)
+            {
+                case GatekeeperKind.Hunter: return Row(HunterPerWave, waveIndex);
+                case GatekeeperKind.Thief: return Row(ThiefPerWave, waveIndex);
+                case GatekeeperKind.Cloaker: return Row(CloakerPerWave, waveIndex);
+                default: return int.MaxValue;
+            }
+        }
 
         /// <summary>The stat line of one gatekeeper kind. Unknown kinds fall back to Default.</summary>
         public static GatekeeperStats StatsFor(GatekeeperKind kind)
@@ -201,8 +220,8 @@ namespace GatekeepersProtocol.Sim
                 case GatekeeperKind.Thief:
                     // 120 x 5/3. The Thief is the one kind where this is a real behaviour change
                     // and not just a longer TTK: at 200 base it is 520 HP on wave 5, and an
-                    // MR-35 magazine carries 432, so the deepest Thief no longer dies inside one
-                    // pull. That is intended — it is the heavy — but it is also why its COUNT
+                    // MR-35 magazine carries 486 (27 x 18 since 2026-09-02; 432 before), so the
+                    // deepest Thief still does not die inside one pull. That is intended — it is the heavy — but it is also why its COUNT
                     // fell hardest (7 -> 4 on wave 5): a tankier body that walks at the Hatch is
                     // exactly what breached it at 09:24, and toughness had to be paid for in
                     // number rather than added on top of it.
@@ -249,9 +268,10 @@ namespace GatekeepersProtocol.Sim
         ///   enemyCount            = min(120 * n, round((11 + 7*waveIndex) * dial) * n)
         ///                           n = playerCount (clamped >= 1). n = 1 is today's table.
         ///                           dial = TetherSiphon.RewardMultiplierFor(siphonLevel)
-        ///   hunterCount           = {0,2,4,6,7}[waveIndex]    (never scaled by the dial)
-        ///   thiefCount            = {0,0,1,2,4}[waveIndex]     (never scaled by the dial)
-        ///   cloakerCount          = {0,0,0,1,2}[waveIndex]     (never scaled by the dial)
+        ///   shape                 = WaveShapes.For(waveIndex + 1): 1 Mass, 2 Pack, 3 Mass,
+        ///                           4 Pack, 5 Convoy (M116)
+        ///   hunter/thief/cloaker  = round(shape share × (11 + 7*waveIndex)), capped by
+        ///                           KindCap (the debut gates); never scaled by the dial
         ///   defaultCount          = enemyCount - hunterCount - thiefCount - cloakerCount
         ///   enemyHealthMultiplier = 1 + EnemyHealthPerWave*waveIndex  (0.40 → 1.00/1.40/1.80/2.20/2.60)
         ///   groupSize             = min(3 + waveIndex, MaxGroupSize=7, enemyCount)  → 3/4/5/6/7
@@ -263,7 +283,8 @@ namespace GatekeepersProtocol.Sim
         ///
         /// The dial scales BODY COUNT ONLY. Health, group size, spawn gap and composition do not
         /// see it, and the dial's surplus is entirely Default so it cannot multiply Hunters or
-        /// Thieves. Both rules are load-bearing — see Docs/Design/2-Dynamics.md before relaxing either.
+        /// Thieves — the shape's shares are taken of the dial-0 solo roster, never the dialled
+        /// count. Both rules are load-bearing — see Docs/Design/2-Dynamics.md before relaxing either.
         /// </summary>
         public WaveSpec NextWave(int waveIndex, int siphonLevel, int playerCount = 1)
         {
@@ -285,15 +306,13 @@ namespace GatekeepersProtocol.Sim
             int bodies = (int)Math.Round(scaled, MidpointRounding.AwayFromZero);
             spec.enemyCount = Math.Min(MaxEnemyCount * playerCount, bodies * playerCount);
 
-            // The Min() calls only bite on probe indices past the five real waves, and exist so
-            // the four counts ALWAYS sum to enemyCount — the Game layer's spawn loop relies on
-            // that without checking.
-            spec.hunterCount = Math.Min(Row(HunterPerWave, waveIndex), spec.enemyCount);
-            spec.thiefCount = Math.Min(Row(ThiefPerWave, waveIndex), spec.enemyCount - spec.hunterCount);
-            spec.cloakerCount = Math.Min(Row(CloakerPerWave, waveIndex),
-                                         spec.enemyCount - spec.hunterCount - spec.thiefCount);
-            spec.defaultCount = spec.enemyCount - spec.hunterCount - spec.thiefCount
-                                - spec.cloakerCount;
+            // THE SHAPE IS APPLIED HERE, NOT IN RunSim.LaunchWave (M116): it is a pure function
+            // of the wave number, and every reader of this spec — the docgen table, the
+            // Foresight preview, the terminal prompt, the tests' NextWave(i, 0) — must see the
+            // same four counts the spawner will. Applying it at launch would leave NextWave
+            // describing a wave that never lands. WaveShapes keeps the four counts summing to
+            // enemyCount — the Game layer's spawn loop relies on that without checking.
+            spec = WaveShapes.Apply(spec, WaveShapes.For(waveIndex + 1), waveIndex);
 
             spec.enemyHealthMultiplier = 1f + EnemyHealthPerWave * waveIndex;
             spec.groupSize = Math.Max(1, Math.Min(Math.Min(BaseGroupSize + waveIndex, MaxGroupSize),

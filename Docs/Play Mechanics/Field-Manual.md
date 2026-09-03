@@ -85,7 +85,7 @@ owned weapons. Each slot keeps its own clip, so switching is not a free reload.
 | **MK-1 Sidearm** | Secondary | 0 | 50 | 1.4 | 8 | 1.4 s | 45 m | falls off past 12 m; free — always affordable |
 | **SEC-D** | Secondary | 0 | 18 | 6 | 4 | 2.2 s | 8 m | falls off past 3 m; free — always affordable |
 | **BR-12 Shotgun** | Primary | 1,500 | 19 ×7 | 1.2 | 6 | 2.6 s | 14 m | 7 pellets, 7° spread; falls off past 8 m |
-| **MR-35 Rifle** | Primary | 2,000 | 16 | 8 | 27 | 2.46 s | 60 m | pierces 2; falls off past 25 m |
+| **MR-35 Rifle** | Primary | 2,000 | 18 | 8 | 27 | 2.46 s | 60 m | pierces 2; falls off past 25 m |
 | **PRI-C** | Primary | 2,500 | 180 | 0.6 | 4 | 3.2 s | 90 m | pierces 3; falls off past 55 m |
 
 ### Upgrade wheel — what a purchase buys
@@ -131,10 +131,10 @@ At Ante 0:
 | Wave | Bodies | Default | Hunter | Thief | Cloaker | HP × | Arrive in groups of | Every |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 11 | 11 | 0 | 0 | 0 | 1 | 3 | 7.3 s |
-| 2 | 18 | 16 | 2 | 0 | 0 | 1.4 | 4 | 7.7 s |
-| 3 | 25 | 20 | 4 | 1 | 0 | 1.8 | 5 | 8.1 s |
-| 4 | 32 | 23 | 6 | 2 | 1 | 2.2 | 6 | 8.5 s |
-| 5 | 39 | 26 | 7 | 4 | 2 | 2.6 | 7 | 8.9 s |
+| 2 | 18 | 12 | 6 | 0 | 0 | 1.4 | 4 | 7.7 s |
+| 3 | 25 | 25 | 0 | 0 | 0 | 1.8 | 5 | 8.1 s |
+| 4 | 32 | 19 | 11 | 0 | 2 | 2.2 | 6 | 8.5 s |
+| 5 | 39 | 27 | 0 | 6 | 6 | 2.6 | 7 | 8.9 s |
 
 Hunters, Thieves and Cloakers are on a fixed schedule — the Ante never adds more of them.
 

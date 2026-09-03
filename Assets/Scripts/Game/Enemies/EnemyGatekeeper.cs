@@ -122,6 +122,16 @@ namespace GatekeepersProtocol.Game
         /// in onDeath — that would delete the corpse before the clip can play.</summary>
         public bool HasLifetimeOwner => _spawner != null;
 
+        /// <summary>The finale's elite. Written by WaveSpawner at spawn; the shield in
+        /// EnemyGatekeeper.Targeting.cs reads it on every hit.</summary>
+        public bool FinaleElite { get; set; }
+
+        /// <summary>One of the finale elite's escort. Written by WaveSpawner at spawn; its
+        /// death is what counts the escort ledger down.</summary>
+        public bool FinaleEscort { get; set; }
+
+        bool _loggedShield; // one shield line per elite, not one per shot
+
         /// <summary>Which kind this actor is. Identity only — behaviour comes from the flags, so
         /// this is what the kill line and the prefab palette read, never the AI.</summary>
         public virtual GatekeeperKind Kind => GatekeeperKind.Default;

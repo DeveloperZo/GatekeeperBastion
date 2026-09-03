@@ -92,6 +92,35 @@ namespace GatekeepersProtocol.Game
         /// <summary>Gatekeepers of the current assault spawned and still alive (HUD readout).</summary>
         public int AliveCount { get; private set; }
 
+        /// <summary>Escort bodies of the finale wave still standing. The elite reads this on
+        /// every hit and refuses damage while it is above zero (MasterControl.EliteShielded);
+        /// the ledger is the count, the rule is the sim's. Zero outside the finale, so a
+        /// finale elite with no escort — a spawn that failed — is exposed rather than
+        /// unkillable.</summary>
+        public int FinaleEscortAlive { get; private set; }
+
+        /// <summary>A finale body was spawned: the elite is marked, an escort is counted.</summary>
+        void RegisterFinaleBody(EnemyGatekeeper gatekeeper, bool isElite)
+        {
+            if (gatekeeper == null) return;
+            if (isElite)
+            {
+                gatekeeper.FinaleElite = true;
+                return;
+            }
+            gatekeeper.FinaleEscort = true;
+            FinaleEscortAlive++;
+        }
+
+        /// <summary>A finale escort fell. When the last one does the elite is exposed, and
+        /// the line says so — the kill order the finale is built on is readable in the log.</summary>
+        void ReleaseFinaleEscort(EnemyGatekeeper actor)
+        {
+            if (actor == null || !actor.FinaleEscort) return;
+            FinaleEscortAlive = Mathf.Max(0, FinaleEscortAlive - 1);
+            if (FinaleEscortAlive == 0) Log.Event("Gatekeepers", "finale elite exposed");
+        }
+
         readonly List<WaveEmit> _active = new List<WaveEmit>();
 
         /// <summary>Drip clock for the hold-until-shutoff trickle. See FieldTrickle.</summary>
@@ -233,6 +262,7 @@ namespace GatekeepersProtocol.Game
             _teardown = true;
             int despawned = DestroyTrackedGatekeepers();
             AliveCount = 0;
+            FinaleEscortAlive = 0;
             _active.Clear();
             // Info, not Event: this is teardown bookkeeping that happens AFTER the run summary has
             // been written (GameController subscribes to PhaseChanged first), and a stray line
@@ -249,6 +279,7 @@ namespace GatekeepersProtocol.Game
         void OnGatekeeperDied(GatekeeperKind kind, Damageable damageable, EnemyGatekeeper actor)
         {
             AliveCount = Mathf.Max(0, AliveCount - 1);
+            ReleaseFinaleEscort(actor);
 
             var gc = _game;
             long award = gc != null && gc.Sim != null ? gc.Sim.CurrentKillAward : 0L;
@@ -313,8 +344,14 @@ namespace GatekeepersProtocol.Game
             // only gathers the values and applies the verdict; putting any condition back
             // here recreates the 2026-08-28 two-homes deadlock.
             switch (FieldTrickle.Resolve(_sim.Phase, _sim.Assault, _sim.ChainPending,
-                _active.Count > 0, AliveCount, _game != null && _game.FieldWaveAwaitsShutoff))
+                _active.Count > 0, AliveCount, _game != null && _game.FieldWaveAwaitsShutoff,
+                _sim.ZoneFinalWaveDrawn))
             {
+                case FieldWaveResolution.ArmShutoff:
+                    // The zone's LAST wave is down (M115): no drip — the terminal arms and
+                    // the Assault stays open until the player throws it.
+                    _sim.ArmFieldShutoff();
+                    return;
                 case FieldWaveResolution.StartTrickle:
                     // Roster spent, field empty, shutoff owed: hand the rest of the wave to
                     // the drip and hold the Assault open.
@@ -377,6 +414,7 @@ namespace GatekeepersProtocol.Game
         {
             _active.Clear();
             AliveCount = 0;
+            FinaleEscortAlive = 0;
             return DestroyTrackedGatekeepers();
         }
 

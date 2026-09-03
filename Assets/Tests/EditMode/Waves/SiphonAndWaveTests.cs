@@ -16,8 +16,10 @@ namespace GatekeepersProtocol.Tests
     ///                           → 7.30/7.70/8.10/8.50/8.90 — SECONDS BETWEEN GROUPS since the
     ///                           horde retune, not between individuals
     ///   timeUntilNextWave     = 0 (obsolete under the draw model)
-    /// Per-kind composition (defaultCount/hunterCount/thiefCount) is pinned in
-    /// GatekeeperVariantsTests; this file owns the totals, the dial and the gaps.
+    /// Per-kind composition (defaultCount/hunterCount/thiefCount/cloakerCount) is a SHAPE since
+    /// M116 and is pinned in WaveShapesTests (the gates and the dial rule also in
+    /// GatekeeperVariantsTests); this file owns the totals, the dial and the gaps, none of which
+    /// a shape moves.
     ///
     /// FEWER AND TOUGHER — THE 2026-08-27 ROSTER CUT (Zo: "lower the volume of enemies and make
     /// them tougher... reducing volume by at least 40%"). BaseEnemyCount 18 -> 11 and CountPerWave

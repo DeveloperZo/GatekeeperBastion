@@ -97,7 +97,7 @@ on any type not named in it fails the run. The owed list has been empty since
 singleton_allow=HatchStation
 singleton_owed=
 menu_root=GatekeepersProtocol
-menu_rows=Record/Gameplay/This scene (F9 to stop),Record/Gameplay/Ship,Record/Gameplay/Bastion,Record/Ship Flythrough,Logs/Open Logs Folder,Logs/Copy Latest Log Path,Build/All Scenes,Build/Place Bastion Obstacles,Build/Group Bastion Geom In Open Scene,Build/Unpack Bastion Geom In Open Scene,Build/Copy Compendium Pages,Build/Range Scene,Build/Protocol Bar,Build/Ship Look Pass,Bake/Bastion NavMesh,Bake/Ship Look Lighting,Validate/Integration Check,Validate/Scene Bindings
+menu_rows=Record/Gameplay/This scene (Insert to stop),Record/Gameplay/Ship,Record/Gameplay/Bastion,Record/Ship Flythrough,Logs/Open Logs Folder,Logs/Copy Latest Log Path,Build/All Scenes,Build/Place Bastion Obstacles,Build/Group Bastion Geom In Open Scene,Build/Unpack Bastion Geom In Open Scene,Build/Copy Compendium Pages,Build/Range Scene,Build/Protocol Bar,Build/Ship Look Pass,Bake/Bastion NavMesh,Bake/Ship Look Lighting,Validate/Integration Check,Validate/Scene Bindings
 ```
 
 **One menu root, five folders, and every row is named above.** Folders are Record, Logs,

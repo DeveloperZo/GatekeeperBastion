@@ -7,9 +7,8 @@
      respawns, master-control, tracks, bastion-mesh, ship-camera. Prose outside the
      markers is hand-written and preserved byte-for-byte on regenerate. Run
      Tools/docgen/run.sh after any Sim/ change that owns a block; --check fails on drift.
-     Last updated: 2026-09-01 (M110 constant-drift pass — hand-written prose re-derived
-     against HatchMaxHp 600, BaseEnemyHp 50, the four kind HPs, the 11+7i roster and the
-     7.3+0.40*w gap; superseded ladders kept and marked as history). -->
+     Last updated: 2026-09-03 (M116 lever 3 — the finale: two shaped control-room Waves,
+     the 12 s beat, the escorted and shielded elite; the master-control block regenerated). -->
 
 **Mechanics, the data half** (MDA), and the bottom of the leverage ladder — #11 buffer
 sizes and #12 constants. Read last, on purpose.
@@ -150,14 +149,55 @@ hand-authored table, never a formula — `TetherSiphon.RewardMultiplierFor` =
 ```
 dial                  = TetherSiphon.RewardMultiplierFor(siphonLevel)
 enemyCount            = min(120, round((11 + 7*waveIndex) * dial))
-hunterCount           = {0,2,4,6,7}[waveIndex]   thiefCount = {0,0,1,2,4}[waveIndex]  (dial-proof)
-cloakerCount          = {0,0,0,1,2}[waveIndex]                                         (dial-proof)
+shape                 = WaveShapes.For(wave): 1 Mass, 2 Pack, 3 Mass, 4 Pack, 5 Convoy   (M116)
+hunter/thief/cloaker  = min(round(share * (11 + 7*waveIndex)), WaveDirector.KindCap)     (dial-proof)
 defaultCount          = enemyCount - hunterCount - thiefCount - cloakerCount  (takes the whole surplus)
 enemyHealthMultiplier = 1 + 0.40*waveIndex                       (x each kind's HP)
 groupSize             = min(3 + waveIndex, 7, enemyCount)        (3 / 4 / 5 / 6 / 7)
 spawnInterval         = max(0.4, 7.3 + 0.40*min(waveIndex, MaxWaves-1))  SECONDS BETWEEN GROUPS
 gatekeepers, wave 1..5   L0 11/18/25/32/39
 ```
+
+**A Wave is a SHAPE, not a rung on one ramp (M116, 2026-09-02).** `WaveShapes.For(wave)`
+names what a Wave is and `WaveShapes.Apply` writes its four counts. A shape is shares of the
+unchanged `11 + 7i` roster, Default absorbing the remainder:
+
+| Shape | Default | Hunter | Thief | Cloaker | legal from |
+|---|---|---|---|---|---|
+| Mass | 100 % | 0 | 0 | 0 | wave 1 |
+| Pack | 60 % | 35 % | 0 | 5 % | wave 2 (the Cloaker share from wave 4) |
+| Convoy | 70 % | 0 | 15 % | 15 % | wave 3 (the Cloaker share from wave 4) |
+
+Rounding and gates: each non-Default count is `round(share × (11 + 7i))`, midpoints up, taken
+of the **dial-0 solo roster** so the dial's and the party's surplus stay all Default; then
+capped by `WaveDirector.KindCap`. `HunterPerWave` / `ThiefPerWave` / `CloakerPerWave` are the
+per-Wave CEILINGS now, not the counts: **0** before the kind's debut (Hunter wave 2, Thief
+wave 3, Cloaker wave 4) and `round(largest share × roster)` after it, so a legal shape is never
+clipped and the debut gate is one fact in one place. Default is the remainder and the four
+counts always sum to `enemyCount`. Which Wave draws which: a zone's opening alternates Mass,
+Pack from its first Wave, and its terminal-called last Wave (M115) is a Convoy where the Thief
+is legal, else a Pack — **1 Mass, 2 Pack, 3 Mass, 4 Pack, 5 Convoy** (the table below). Waves
+off the zone table alternate Mass/Pack; the finale pins its own (lever 3). So the Hunter is
+first met on Wave 2, the Cloaker on Wave 4 (two, the Pack's 5 %) and the Thief on Wave 5 (the
+Convoy's six) — still one debut per Wave. Spawn groups are authored by kind
+(`WaveShapes.GroupByKind`): a Hunter group is four Hunters, not three Defaults and a Hunter;
+the full groups' order is shuffled on the seeded stream and a kind's short last group is
+topped up with Defaults. The prompt reads `[T] call the last wave — Convoy`; the log carries
+`zone start … shapes=Mass` and `T5 pressed — zone 2's last wave answers shape=Convoy`.
+**Falsifier, from the log (M116 criterion 2):** Convoy Thief kills sit at a median `hatchDist`
+closer to the Hatch than Pack Hunter kills, and the door's remaining pool on `wave N/5
+cleared` falls on the Convoy and not on the Pack. Three untainted Boardings that fail it revert
+the lever rather than retune it.
+
+**`spawnInterval` is a MEAN, not a metronome (M116, 2026-09-02).** `WaveCadence.Schedule`
+turns it into a seeded sequence at launch: groups come in pairs, the second `0.25–0.45 ×` the
+mean after the first, and each pair is followed by a lull that repays it, so every two gaps
+still sum to two means and the Wave's delivery window is exactly what the line above says.
+Whether a Wave opens on a burst or a lull is the seed's; an odd last gap is the mean. Nothing
+else moves — roster, group width and window are the 2026-08-27 lever and stay. At Wave 1 that
+is a pair `2.6 s` apart, then `12.0 s` of nothing, then the fourth group `7.3 s` on. Read from
+the log's `group k … breached at` timestamps: the falsifier is a coefficient of variation on
+the inter-group gaps under **0.4**, or a peak `N live` no higher than the metronome's.
 
 **`spawnInterval` is a GROUP gap now — the name did not change with it.** A Wave
 lands in `(ceil(count/groupSize) - 1) * gap` = **21.9 / 30.8 / 32.4 / 42.5 / 44.5s**; read as a
@@ -178,11 +218,13 @@ constant at ~30 s while the roster grew 18 to 66, so arrivals climbed 0.86 to 2.
 player who cannot acquire targets faster than about 0.95/s — the 103-body wall at Wave 5. Group
 width was already rising 3 to 7, so the old shrinking gap compounded with it instead of
 offsetting it. The clamp holds probe indices at the last authored gap, matching `Row()`. First
-field to check if a Wave feels empty. **The dial's surplus is all Default** (Hunter, Thief
-and Cloaker counts are fixed per Wave), so a dialled Wave 3 is all extra Defaults and **no
-Cloaker at all** — Wave 3 is the Thief's debut and the Cloaker's is Wave 4, one wave later, so that
-two new rules never land together. A bigger fight, not a different one: the dial cannot
-multiply the scariest Gatekeeper, nor multiply Cloakers into frozen free salvage.
+field to check if a Wave feels empty. **The dial's surplus is all Default** (a shape's shares
+are taken of the dial-0 roster, never of the dialled count), so a dialled Wave 4 is the same
+eleven Hunters and two Cloakers in a bigger crowd and a dialled Wave 3 is a bigger Mass with
+**no Cloaker at all** — the Hunter debuts on Wave 2, the Cloaker on Wave 4 and the Thief on
+Wave 5, one Wave apart, so that two new rules never land together. A bigger fight, not a
+different one: the dial cannot multiply the scariest Gatekeeper, nor multiply Cloakers into
+frozen free salvage.
 
 **`TerminalChainGap = 8s`** (`WaveDirector`). Unused by the field loop: `T` at the Hatch
 starts one Wave (Zo, 2026-08-25), `T` at the zone's terminal ends it, and Prep afterwards is
@@ -201,10 +243,10 @@ baseline** every table below rests on:
 | Wave | Bodies | Default | Hunter | Thief | Cloaker | HP × | groups of | Every |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 11 | 11 | 0 | 0 | 0 | 1 | 3 | 7.3 s |
-| 2 | 18 | 16 | 2 | 0 | 0 | 1.4 | 4 | 7.7 s |
-| 3 | 25 | 20 | 4 | 1 | 0 | 1.8 | 5 | 8.1 s |
-| 4 | 32 | 23 | 6 | 2 | 1 | 2.2 | 6 | 8.5 s |
-| 5 | 39 | 26 | 7 | 4 | 2 | 2.6 | 7 | 8.9 s |
+| 2 | 18 | 12 | 6 | 0 | 0 | 1.4 | 4 | 7.7 s |
+| 3 | 25 | 25 | 0 | 0 | 0 | 1.8 | 5 | 8.1 s |
+| 4 | 32 | 19 | 11 | 0 | 2 | 2.2 | 6 | 8.5 s |
+| 5 | 39 | 27 | 0 | 6 | 6 | 2.6 | 7 | 8.9 s |
 <!-- GKB:END waves -->
 
 <!-- GKB:GEN dial — TetherSiphon.RewardMultiplierFor, NextWave body counts -->
@@ -219,7 +261,7 @@ baseline** every table below rests on:
 <!-- GKB:END dial -->
 
 Body count scales linearly with connected players: `min(120 × n, round((11 + 7×i) × dial) × n)`.
-`n = 1` is the table above. Hunters and Thieves stay on the per-wave rows; surplus is Default.
+`n = 1` is the table above. Hunters, Thieves and Cloakers stay at the shape's solo counts; surplus is Default.
 Bank cap at conversion is solo expected unbanked for waves 1..DeepestWaveReached at dial 0 /
 scavenging 0, and applies only when `n > 1`.
 
@@ -325,20 +367,47 @@ numbers are **#12**. Cap and bleed-out timer are the generated block below.
 | refused when | the cap is spent, or the bank is short of the price |
 <!-- GKB:END respawns -->
 
-Master Control is 5 terminal Waves then 1 Hatch-bank window. Gap is `WaveDirector.InterWaveGap`.
-The finale elite is one Thief, no escorts, at `MasterControl.FinaleEliteHp` (240 pre-multiplier;
-Wave-5 Thief spawned HP is `ThiefHp` 200 × 2.60 = 520, the elite is 240 × 2.60 = 624).
-`FinaleEliteHp` did not move with the 2026-08-27 roster pass, so the elite now stands 1.2× a
-stock Wave-5 Thief where it stood 2× (624 against the old 120 × 2.60 = 312). The 45 s window
-stays Hatch-bank; the Wave-5 horde does not spawn with it.
+Master Control is `MasterControl.TerminalWaves` control-room Waves at the Wave-5 size, drawn
+with the finale's own shapes (`MasterControl.ShapeForTerminalWave`: Mass, then Pack — never
+`WaveShapes.For` of the clamped roster index, which would hand it Wave 5's Convoy), a gap of
+`WaveDirector.InterWaveGap` between them, then a quiet beat of `MasterControl.FinaleBeatSeconds`
+before the elite is drawn (`RunSim.AdvanceMasterControl`, logged `master-control beat — 12 s
+before the elite`). Five became two on 2026-09-03 (M116, lever 3): five identical Wave-5 rosters
+were 57% of the 2026-09-02 run (`playthrough.md`, claim 5) and read as a grind, not a finale;
+the beat is Valve's finale-script delay of 12 s before the tank, where the old 3 s was a gap the
+player could not tell from the one between Waves.
 
-<!-- GKB:GEN master-control — MasterControl.TerminalWaves, HatchWaves, FinaleEliteHp, WaveDirector.InterWaveGap -->
+The finale Wave is the elite and its escort: one Thief at `MasterControl.FinaleEliteHp` (240
+pre-multiplier; Wave-5 Thief spawned HP is `ThiefHp` 200 × 2.60 = 520, the elite is 240 × 2.60
+= 624) behind `EscortHunters` 4 and `EscortCloakers` 2 — seven bodies in two groups, the escort
+first and the elite alone one Wave-5 group gap later (`WaveShapes.GroupByKind` puts the Thief
+block last on a `finaleElite` spec; `ApplyFinaleElite` sets the group width to the whole escort).
+The shield rule is `MasterControl.EliteShielded(escortAlive)`: the elite refuses damage while
+any escort body stands, applied from the spawner's escort ledger (`WaveSpawner.FinaleEscortAlive`)
+on the elite's hit path (`EnemyGatekeeper.RefuseIfShielded`), with the flash and the flinch
+kept so a shielded hit reads as no damage rather than no hit. It logs `finale elite shielded —
+n escorts standing` once, and `finale elite exposed` when the last escort falls. Four Hunters
+and two Cloakers because those are the two kinds that make the player move rather than hold a
+line; the counts are a first cut — `unknown — needs play data`. `FinaleEliteHp` did not move with
+the 2026-08-27 roster pass or with the escort, so the elite still stands 1.2× a stock Wave-5
+Thief where it stood 2× (624 against the old 120 × 2.60 = 312). The trickle is off for the
+whole sequence (`GameController.FieldWaveAwaitsShutoff` refuses on `MasterSequenceLive`), and
+docking is refused throughout.
+
+Falsifiers, from an untainted log (M116 criterion 3): the finale's share of a winning Run —
+`master-control started` to `master shutoff banked` against the `[Run] summary` duration — at
+or under 30%; every escort kill line before the elite's; the elite's group breached no sooner
+than 12 s after the second control-room Wave's last kill.
+
+<!-- GKB:GEN master-control — MasterControl.TerminalWaves, ShapeForTerminalWave, FinaleBeatSeconds, EscortHunters, EscortCloakers, FinaleEliteHp, WaveDirector.InterWaveGap -->
 | | |
 |---|---|
-| terminal Waves | 5 |
+| terminal Waves | 2 — Mass, then Pack, at the Wave-5 size |
+| gap | 3 s |
+| beat before the elite | 12 s |
+| escort | 4 Hunters, 2 Cloakers — the elite is shielded until they are down |
 | elite waves | 1, and killing it arms the terminal |
 | finale elite HP | 240 |
-| gap | 3 s |
 <!-- GKB:END master-control -->
 
 Arithmetic for the 300/300 pair: Waves 1 and 2 clear for 1,218 at dial 0 (the bank-cap row
@@ -472,8 +541,21 @@ array (`WeaponWheel.EffectiveDps`) and cannot be tabulated against derived Tier.
 | SEC-D | 18 | 1 | 6.0 | 4 | 2.2s | 8 m, falloff from 3 m | — | 25.1 |
 | VK-7 Rifle *(disabled)* | 10 | 1 | 5.5 | 25 | 2.1s | 60 m | — | 37.6 |
 | BR-12 Shotgun | 19 | 7 | 1.2 | 6 | 2.6s | 14 m, falloff from 8 m | — | 105.0 |
-| MR-35 Rifle | 16 | 1 | 8.0 | 27 | 2.463s | 60 m, falloff from 25 m | 2 bodies ×0.26 after first | 74.0 |
+| MR-35 Rifle | 18 | 1 | 8.0 | 27 | 2.463s | 60 m, falloff from 25 m | 2 bodies ×0.26 after first | 83.2 |
 | PRI-C | 180 | 1 | 0.6 | 4 | 3.2s | 90 m, falloff from 55 m | 3 bodies ×0.75 after first | 73.0 |
+
+**MR-35 16 → 18 damage** (Zo, 2026-09-02, "increase MR-35 damage"; #12). Sustained 74.0 →
+83.2. One shot fewer on waves 1, 2, 3 and 5 of the Default ladder — 3/4/5/7/8 shots on
+50/70/90/110/130 where it was 4/5/6/7/9. 18 is the highest whole number that keeps two stated
+rules: the deepest Thief stays out of one magazine (27 × 18 = 486 against the wave-5 Thief's
+520, so the heavy still costs a reload; the boundary moves from wave 4 to wave 5), and the
+field still out-delivers a T0 rifle before the last wave (`SiphonAndWaveTests`' crossover stays
+on wave 4; at 19 the wave-4 body drops to six shots and the crossover moves to wave 5, which
+that pin refuses as "a spike, not a run"). What this gives up: PRI-C no longer shadows the
+rifle on dps (73.0 against 83.2) and BR-12 no longer
+matches it on kills/s across the ladder; each keeps its own axis (deepest body, pierce line)
+and the dominance pin. Against the 2026-09-02 play: the T0 rifle lost wave 5 twice and the
+T5 rifle walked it; whether 18 moves the T0 wall is **unknown — needs play data**.
 
 **Primaries cost 1,500 / 2,000 / 2,500** (Zo, 2026-09-02; #12; were 900 / 1,200 / 1,500). The
 ARMORY's Primary rack opens on Salvage EARNED — `DemoProgress.PrimaryRackSalvage`, the cheapest
@@ -534,7 +616,7 @@ Base dps is the duty-cycle formula with pellets folded into the pull:
 ```
 dps    = clip * damage * pellets / (clip/rate + reload)
 BR-12  = 6 * 19 * 7 / (6/1.2 + 2.6)    = 798 / 7.60 = 105.0
-MR-35  = 27 * 16    / (27/8.0 + 2.463) = 432 / 5.84 = 74.0
+MR-35  = 27 * 18    / (27/8.0 + 2.463) = 486 / 5.84 = 83.2
 PRI-C  = 4 * 180    / (4/0.6 + 3.2)    = 720 / 9.87 = 73.0
 ```
 
@@ -542,10 +624,10 @@ PRI-C  = 4 * 180    / (4/0.6 + 3.2)    = 720 / 9.87 = 73.0
 centres Damage, so Damage takes 50 points and its ring neighbours Clip and Ability take 30
 each, while Reload and FireRate take none: damage `12 x 9.30 = 111.6`, clip
 `round(6 x 2.31) = 14`, cycle `14/1.2 + 2.6 = 14.27s` → `14 x 111.6 x 7 / 14.27 =` **767 dps**.
-MR-35 centres Damage between Reload and Clip: damage `16 x 9.30 = 148.8`, clip
-`round(27 x 2.31) = 62`, reload `2.463 x 0.55 = 1.355s` → **1013 dps**. The first single
+MR-35 centres Damage between Reload and Clip: damage `18 x 9.30 = 167.4`, clip
+`round(27 x 2.31) = 62`, reload `2.463 x 0.55 = 1.355s` → **1,140 dps** (1,013 at the old 16). The first single
 purchase on that line is worth **+31%** (BR-12 `66.3 → 86.9`), which is the number the noise
-floor below is measured against. Whether Wave 5 still clears against a 767/1013 ceiling is
+floor below is measured against. Whether Wave 5 still clears against a 767/1,140 ceiling is
 **unknown — needs play data**.
 
 **A rate-for-damage swap is never ceiling-neutral, even when it is base-neutral**
@@ -554,7 +636,8 @@ fantasy, with the reload solved to hold base dps at exactly 37.0 — and that sa
 moved its focus ceiling 436 → 507. Reload is a FIXED cost amortised over `clip/rate` seconds,
 so the wheel's clip multiplier buys more from a long firing window than a short one. Any weapon
 re-expressed at a higher rate for feel gains ceiling for free unless its reload is re-solved at
-focus rather than at base. The subsequent damage raise compounds it: the ceiling is now 1013.
+focus rather than at base. The subsequent damage raise compounds it: the ceiling went to 1013,
+and the 2026-09-02 raise to 18 takes it to 1,140.
 Treat that as arithmetic, not a measurement — this file's own rule is that the ceiling question
 is answered by play data.
 

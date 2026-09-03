@@ -17,9 +17,9 @@ refuses to do, and how Waves 1–5 escalate. Not the tuning of any single number
 ## Where it stands
 
 Four kinds in `Sim/Waves/GatekeeperKind.cs` — the Cloaker joined as `Cloaker = 3` with
-`M63-3` (2026-08-24). Debut is **wave 4** (`WaveDirector.CloakerPerWave = {0,0,0,1,2}`),
-one wave after the Thief so two new kinds do not land together. The Kind comment that
-says wave 3 is stale. Two Wave modes ship (`WaveMode`):
+`M63-3` (2026-08-24). Debut is **wave 4** (`WaveDirector.CloakerPerWave`, a 0 before it
+since `M116` re-read the rows as gates and ceilings), one wave after the Thief's gate so
+two new kinds do not land together. The Kind comment that says wave 3 is stale. Two Wave modes ship (`WaveMode`):
 **Terminal** hunts the Boarder (Hatch cannot be hurt); **HatchBank** hunts the Hatch.
 Field Waves **start at the Hatch** and end at the terminal (0.34.2); the hunt rule is
 unchanged. Default / Thief retarget with the
@@ -96,12 +96,15 @@ movement (climber, vent-born, drops from above), shield, invulnerable until a st
 condition, visibility and camouflage, pack with a leader, splits on death, the elite
 flag.
 
-### Draw rule (recorded, not built)
+### Draw rule (graduated to `M116` lever 2, 2026-09-02)
 
 A bastion shows a subset of the roster, not the roster. One difficulty budget per
 bastion, Wave templates with slots that draw from that bastion's set, last Waves
-reserved for the heaviest draw. Whether a bastion's set is authored, drawn, or a
-fixed core plus a draw is **open**.
+reserved for the heaviest draw. **First cut shipped as `WaveShapes`** — Mass / Pack /
+Convoy as shares of the `11 + 7i` roster, the zone's terminal-called last Wave reserved
+for the heaviest legal shape, the draw a pure function of the Wave number rather than a
+random one. Whether a bastion's set is authored, drawn, or a fixed core plus a draw is
+still **open** (the row below).
 
 ## Graduation test
 

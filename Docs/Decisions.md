@@ -14,6 +14,13 @@ re-litigating a cut costs more than the cut saved.
 
 ## Cut — do not rebuild
 
+- **Spawn-direction variance (2026-09-02).** Proposed as M116's second lever from Left 4
+  Dead's flow-distance spawning and Vermintide's front/ambush roll. Zo: the players defend a
+  static point, so L4D is the wrong comparison; direction is a side effect of level design
+  (today the lane is a long hallway), and the overtune is a player attacked from behind while
+  pressing forward, or worse walking back because a body spawned behind them and hit the
+  Hatch. Do not add a seeded closet plan, an ahead/behind split or a pincer rule. Direction
+  changes when the level does.
 - **The demo wheel ladder — two metered buys, then two more (2026-09-02).** Rung 1
   (`DemoWheelBuysLeft = 2`, Zo 2026-08-17) and rung 2 (`DemoRungTwoBuysLeft`, opened by zone
   2's bank, `M79`) are gone: the counters, the `demo cap` / `ladder rung spent` refuses, the
@@ -518,6 +525,12 @@ rulemaking authority lives there.
 
 ## Retunes that already happened
 
+- **MR-35 damage 16 → 18 (Zo, 2026-09-02).** #12; higher tiers are wrong because the rifle's
+  rate, clip and reload are the 2026-08-27 assault-rifle recut and stay. 18 is the highest whole
+  number that keeps the deepest Thief out of one magazine (486 against 520) and the field
+  out-delivering a T0 rifle before the last wave (`SiphonAndWaveTests`); it takes one shot off
+  waves 1, 2, 3 and 5 of the Default ladder. The PRI-C dps shadow and the BR-12 kills/s parity are
+  given up; each row keeps its own axis. Derivation in `Design/4-Data.md`. Play-unconfirmed.
 - **MK-1 Sidearm 30 → 50 damage, 3.0 → 1.4 shots/s (Zo, 2026-09-02).** #12; a higher tier is
   wrong because the kind rules and the roster are Zo's own 2026-08-27 calls and only the number
   under the starting gun was unowned. Zo's 2026-08-16 verdict asked for one-shot first-session
@@ -692,3 +705,25 @@ unchanged: any Wave past 1 restores the terminals already completed, so the Hatc
 next zone (`GameController.Start`, `StartZoneWaveFromHatch`); Wave 1 replays from the top. A
 skip inside a zone is still the terminal retrigger's partial start. The beat-4 ruling that hid
 the picker (2026-08-17) is overridden for the picker only.
+
+## Locked — the terminal calls the last wave (Zo, 2026-09-02)
+
+"Terminal press spawns final wave." The Hatch draws a zone's opening span; the first `T` at
+the zone's terminal draws the zone's last wave into the live field; when that wave is down the
+terminal arms and the next `T` shuts the zone off. The finale's grammar (kill the elite arms
+the switch, the switch ends it) applied to every zone. What it replaces: a shutoff legal once
+the zone's first wave had drawn, which the 2026-09-02 logs show is a 10-second sprint past
+wave 1 in three Boardings of four, and the source of the stacked chains that followed. `M115`.
+The Hatch stays the only start line; the walk out is still the objective; a zone still cannot
+end by attrition.
+
+## Locked — waves differ by rhythm, shape and finale, not by direction (Zo, 2026-09-02)
+
+From the day's play: "the play felt static. No felt variance in waves." Three levers, one
+milestone (`M116`), one commit each: the group gap becomes a seeded beat inside an unchanged
+window (`WaveCadence`); waves are authored shapes (Mass, Pack, Convoy) instead of one ramp,
+the zone's opening from one and its terminal-called last wave from another; and Master
+Control is two waves, a quiet beat, then an escorted elite instead of five identical rosters.
+What every lever holds still: the `11 + 7i` roster and its HP ladder, the debut gates, the
+one-lane spine. Variance redistributes what a wave is, never how much of it there is — the
+"thousands on screen" and idle-dial refusals stand. Direction is cut (above).

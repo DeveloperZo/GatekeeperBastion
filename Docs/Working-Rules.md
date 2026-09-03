@@ -173,7 +173,7 @@ is why each row exists. If they disagree, the fence wins.
 
 | Folder | Priority | Rows | Earns it by |
 |---|---|---|---|
-| **Record/** | 10 | Gameplay/This scene (F9 to stop), Gameplay/Ship, Gameplay/Bastion, Ship Flythrough (22) | Playtest capture. F9 stops. |
+| **Record/** | 10 | Gameplay/This scene (Insert to stop), Gameplay/Ship, Gameplay/Bastion, Ship Flythrough (22) | Playtest capture. Insert stops; F9 is the dev readout. Clips land at the repo root as `GameplayCapture_*.mp4`, gitignored. |
 | **Logs/** | 40 | Open Logs Folder, Copy Latest Log Path | The log is the evidence behind every gate. |
 | **Build/** | 60 | All Scenes (60), Place Bastion Obstacles (61), Range Scene (62), Group Bastion Geom In Open Scene (62), Protocol Bar (63), Unpack Bastion Geom In Open Scene (63), Copy Compendium Pages (64) | Scene generation and kit authoring (`Architecture.md`, gotcha 4), plus the two scene-content emitters and the Compendium page copy the build needs. |
 | **Bake/** | 80 | Bastion NavMesh | Rebake walkable mesh without wiping kit. |

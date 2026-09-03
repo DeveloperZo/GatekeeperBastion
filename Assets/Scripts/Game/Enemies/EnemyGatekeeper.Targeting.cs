@@ -33,9 +33,28 @@ namespace GatekeepersProtocol.Game
         {
             // Presentation: flinch even when Provoke refuses (a Thief still staggers).
             if (_animator != null) _animator.SetTrigger(AnimHitReact);
+            RefuseIfShielded();
             // A Thief absorbs this and does not change: not its target, not its speed, and it does
             // not shout. Provoke() is the single gate, so there is no second path to miss.
             Provoke(source, shout: true);
+        }
+
+        /// <summary>The finale elite refuses damage while its escort stands. The rule is the
+        /// sim's (MasterControl.EliteShielded); the spawner's ledger is the count. Damageable
+        /// has already taken the hit off Hp by the time this listener runs and it fires
+        /// onDeath only after the listeners return, so refilling to max here IS the refusal —
+        /// and the flash and the flinch above have already played, so the player reads "no
+        /// damage" rather than "no hit". A state like the Cloaker's gaze, not a pushed flag:
+        /// it flips the moment the last escort falls.</summary>
+        void RefuseIfShielded()
+        {
+            if (!FinaleElite || _spawner == null || _damageable == null) return;
+            int escorts = _spawner.FinaleEscortAlive;
+            if (!MasterControl.EliteShielded(escorts)) return;
+            _damageable.SetMaxHp(_damageable.MaxHp);
+            if (_loggedShield) return;
+            _loggedShield = true;
+            Log.Event("Gatekeepers", "finale elite shielded — " + escorts + " escorts standing");
         }
 
         /// <summary>Commit to hunting the player for the rest of this gatekeeper's life. Idempotent,

@@ -1,15 +1,17 @@
+using System.Globalization;
 using GatekeepersProtocol.Util;
 
 namespace GatekeepersProtocol.Sim
 {
-    /// <summary>The Master Control sequence: five Terminal Waves then the Hatch-bank half,
-    /// driven off the sequential follow-up timer. Split from RunSim.cs at the line cap —
-    /// same class, one concern per file (the Composite/Dock split).</summary>
+    /// <summary>The Master Control sequence: <see cref="MasterControl.TerminalWaves"/> shaped
+    /// Terminal Waves, the beat, then the escorted elite, driven off the sequential follow-up
+    /// timer. Split from RunSim.cs at the line cap — same class, one concern per file (the
+    /// Composite/Dock split).</summary>
     public sealed partial class RunSim
     {
-        /// <summary>One pull: <see cref="MasterControl.TerminalWaves"/> Terminal Waves then
-        /// one elite wave. Refuses outside Tethered+Prep, or when a sequence is already live.
-        /// Disables deep-start chaining.</summary>
+        /// <summary>One pull: <see cref="MasterControl.TerminalWaves"/> Terminal Waves, the
+        /// beat, then one elite wave. Refuses outside Tethered+Prep, or when a sequence is
+        /// already live. Disables deep-start chaining.</summary>
         public bool StartMasterControl()
         {
             if (Phase != RunPhase.Tethered || Assault != AssaultState.Prep)
@@ -90,6 +92,19 @@ namespace GatekeepersProtocol.Sim
             ResetFaucetCycle("sequence cancel"); // every caller is a cycle-ending moment
         }
 
+        /// <summary>LaunchWave's arm: a control-room wave draws the wave-5 SIZE (the roster
+        /// index is already clamped) but the finale's OWN shape — Mass then Pack — never the
+        /// field's <see cref="WaveShapes.For"/>, which would read the clamped index as wave 5's
+        /// Convoy. Re-applying the shape rewrites only the four counts, from the same roster
+        /// index, so the size and the health multiplier are untouched. No-op outside the
+        /// Terminal phase; the elite's spec is replaced whole after this.</summary>
+        WaveSpec ShapeMasterTerminalWave(WaveSpec spec, int waveIndex)
+        {
+            if (_masterPhase != MasterControlPhase.Terminal) return spec;
+            int ordinal = MasterControl.TerminalWaves - _masterLeft + 1;
+            return WaveShapes.Apply(spec, MasterControl.ShapeForTerminalWave(ordinal), waveIndex);
+        }
+
         void AdvanceMasterControl(bool hatchBank)
         {
             _masterLeft--;
@@ -107,11 +122,16 @@ namespace GatekeepersProtocol.Sim
                 // 2026-08-28: "Terminal ends it but elite death is the gate to terminal end").
                 // Mode stays Terminal, so the finale is fought where it is fought and the run
                 // does not send the player back down the lane for its last beat.
+                // THE BEAT, not the gap: the elite waits FinaleBeatSeconds, long enough that
+                // the quiet is something the player reads before the escort lands.
                 _masterPhase = MasterControlPhase.Elite;
                 _masterLeft = 1;
-                _followUpTimer = WaveDirector.InterWaveGap;
+                _followUpTimer = MasterControl.FinaleBeatSeconds;
                 var eliteHalf = MasterHatchHalfStarted;
                 if (eliteHalf != null) eliteHalf();
+                Log.Event(Tag, "master-control beat — "
+                    + MasterControl.FinaleBeatSeconds.ToString("0.#", CultureInfo.InvariantCulture)
+                    + " s before the elite");
                 Log.Event(Tag, "master-control elite — kill it to arm the terminal");
                 return;
             }

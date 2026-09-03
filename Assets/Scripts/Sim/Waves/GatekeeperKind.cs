@@ -14,7 +14,7 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Player-seeker. Ignores the hatch entirely. Introduced in wave 2.</summary>
         Hunter = 1,
 
-        /// <summary>Hatch-only. Ignores the player entirely. Introduced in wave 3. Its salvage
+        /// <summary>Hatch-only. Ignores the player entirely. Gated from wave 3; first met on wave 5, the Convoy, since the shape table (2026-09-02). Its salvage
         /// rule — never damage while there is salvage to take — is recorded and NOT built
         /// (Docs/Brainstorms/gatekeepers-and-waves.md); today it still walks at the hatch.</summary>
         Thief = 2,
@@ -23,7 +23,7 @@ namespace GatekeepersProtocol.Sim
         /// (cone + range + line of sight), it targets nothing at all and holds position;
         /// unobserved, it targets exactly as a Default does. The refusal is a STATE that flips
         /// several times a second, so it is not a pushed flag: it lives in the Game layer's
-        /// CloakerGatekeeper. Introduced in wave 3.</summary>
+        /// CloakerGatekeeper. Gated from wave 4 (first met in wave 4's Pack since the shape table, 2026-09-02).</summary>
         Cloaker = 3,
     }
 }

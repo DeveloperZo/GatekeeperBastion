@@ -35,7 +35,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(FieldWaveResolution.Hold,
                 FieldTrickle.Resolve(RunPhase.Tethered, AssaultState.Assault,
                     chainPending: false, rosterDelivering: true, aliveCount: 0,
-                    awaitsShutoff: true),
+                    awaitsShutoff: true, finalWaveDrawn: false),
                 "the wave resolved while bodies were still owed to the field");
         }
 
@@ -48,7 +48,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(FieldWaveResolution.Hold,
                 FieldTrickle.Resolve(RunPhase.Tethered, AssaultState.Assault,
                     chainPending: false, rosterDelivering: false, aliveCount: 3,
-                    awaitsShutoff: true),
+                    awaitsShutoff: true, finalWaveDrawn: false),
                 "the trickle was offered over a field that still has live bodies");
         }
 
@@ -58,17 +58,17 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(FieldWaveResolution.Hold,
                 FieldTrickle.Resolve(RunPhase.Tethered, AssaultState.Assault,
                     chainPending: true, rosterDelivering: false, aliveCount: 0,
-                    awaitsShutoff: false),
+                    awaitsShutoff: false, finalWaveDrawn: false),
                 "a deep-start chain's gap read as a cleared wave");
             Assert.AreEqual(FieldWaveResolution.Hold,
                 FieldTrickle.Resolve(RunPhase.Tethered, AssaultState.Prep,
                     chainPending: false, rosterDelivering: false, aliveCount: 0,
-                    awaitsShutoff: true),
+                    awaitsShutoff: true, finalWaveDrawn: false),
                 "Prep resolved a wave that is not running");
             Assert.AreEqual(FieldWaveResolution.Hold,
                 FieldTrickle.Resolve(RunPhase.Lost, AssaultState.Assault,
                     chainPending: false, rosterDelivering: false, aliveCount: 0,
-                    awaitsShutoff: false),
+                    awaitsShutoff: false, finalWaveDrawn: false),
                 "a terminal phase resolved a wave");
         }
 
@@ -78,13 +78,13 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(FieldWaveResolution.StartTrickle,
                 FieldTrickle.Resolve(RunPhase.Tethered, AssaultState.Assault,
                     chainPending: false, rosterDelivering: false, aliveCount: 0,
-                    awaitsShutoff: true),
+                    awaitsShutoff: true, finalWaveDrawn: false),
                 "a wave owing its shutoff cleared instead of dripping — the corridor walk "
                 + "just stopped mattering");
             Assert.AreEqual(FieldWaveResolution.Cleared,
                 FieldTrickle.Resolve(RunPhase.Tethered, AssaultState.Assault,
                     chainPending: false, rosterDelivering: false, aliveCount: 0,
-                    awaitsShutoff: false),
+                    awaitsShutoff: false, finalWaveDrawn: false),
                 "a wave owing nothing was held open with no way to end it");
         }
 
@@ -110,7 +110,7 @@ namespace GatekeepersProtocol.Tests
             // Roster spent, field empty, shutoff owed → the verdict is StartTrickle, and
             // applying it is what makes drip bodies free.
             var verdict = FieldTrickle.Resolve(sim.Phase, sim.Assault, sim.ChainPending,
-                rosterDelivering: false, aliveCount: 0, awaitsShutoff: true);
+                rosterDelivering: false, aliveCount: 0, awaitsShutoff: true, finalWaveDrawn: false);
             Assert.AreEqual(FieldWaveResolution.StartTrickle, verdict);
             sim.SetFieldTrickle(true);
             Assert.AreEqual(0L, sim.CurrentKillAward,

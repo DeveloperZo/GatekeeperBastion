@@ -8,6 +8,19 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-01
 -->
 
+- 2026-09-02: **`M116` — waves that differ — created active; lever 1 landed.** Two research
+  agents (ancestors and comparables) refined four variance levers; Zo cut spawn direction
+  (static point, direction is level design) and kept rhythm, shape and finale. All three
+  landed the same day: the group gap is a seeded beat inside an unchanged window
+  (`WaveCadence`); waves are authored shapes — Mass, Pack, Convoy (`WaveShapes`); Master
+  Control is two waves, a 12 s beat, then an escorted, shielded elite. Play owed.
+- 2026-09-02: **`M115` — the terminal calls the last wave — created active.** Zo, from the
+  day's four Boardings: three shut zone 1 at T2 with wave 2 never drawn. The Hatch now draws
+  a zone's opening span, the terminal's first `T` draws the last wave into the live field,
+  and the shutoff waits for it to be down. Sim, game, tests and docs landed the same day;
+  the playthrough path is owed. Same day, outside any milestone: the wheel cap cut, the
+  picker shown in the opening, the rack keyed on Salvage earned, Primaries 1,500/2,000/2,500,
+  MK-1 50 at 1.4/s, MR-35 18 damage (`Decisions.md`).
 - 2026-09-01: **`M109_` — the size tell, restored.** `SceneBuilder.Enemies.cs` `BodyScale`
   0.75 → **1**, and `MasterControl.FinaleEliteScale` 1.5 → **1.875**. Root scales are now
   Default **1.0** (was 0.75), Hunter **0.85** (was 0.6375), Thief **1.2** (was 1.05) and

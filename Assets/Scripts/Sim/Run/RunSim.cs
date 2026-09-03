@@ -477,7 +477,7 @@ namespace GatekeepersProtocol.Sim
             // Every Assault exit clears the drip flag, this one included: an abort that left
             // it set would make the redrawn wave's kills pay zero until the next wave start
             // happened to reset it.
-            SetFieldTrickle(false);
+            ResetFieldHold();
         }
 
         /// <summary>
@@ -686,7 +686,7 @@ namespace GatekeepersProtocol.Sim
             // The sim owns its own flag at every Assault exit: leaving it for the Game layer
             // to clear is a cross-seam contract, and an exit path that misses it makes the
             // NEXT wave pay zero until something else resets it.
-            SetFieldTrickle(false);
+            ResetFieldHold();
             // Reaching the switch IS the payout: the whole carried pile banks here, so the
             // walk up the lane is what secures it and the trip home is not a second toll.
             long carried = TotalUnbanked;
@@ -756,7 +756,7 @@ namespace GatekeepersProtocol.Sim
             // Invariant: FieldTrickleLive never survives an Assault exit. This, AbortAssault,
             // ShutOffFieldWave and the run-end sweep are all four exits; each clears it
             // locally so no Game-layer caller is owed the reset.
-            SetFieldTrickle(false);
+            ResetFieldHold();
             var handler = AssaultEnded;
             if (handler != null) handler();
 
@@ -867,10 +867,15 @@ namespace GatekeepersProtocol.Sim
             if (Mode == WaveMode.HatchBank)
                 spec = HatchBank.ApplyHatchComposition(spec, _hatchCarry);
             spec = ConsumeFaucetAxisIfPending(spec);
+            spec = ShapeMasterTerminalWave(spec, idx);
             // The elite is the last CONTROL-ROOM wave, so this no longer keys on Hatch-bank
             // mode — the phase alone says which wave it is.
             if (_masterPhase == MasterControlPhase.Elite)
                 spec = MasterControl.ApplyFinaleElite(spec);
+            // The beat is the sim's (M116): seeded here so a replayed seed lands the same
+            // bursts and lulls, and so the Game layer paces without owning a random.
+            spec.groupGaps = WaveCadence.Schedule(
+                WaveCadence.GroupsFor(spec.enemyCount, spec.groupSize), spec.spawnInterval, Rng);
             if (Mode != WaveMode.HatchBank)
             {
                 CurrentWaveIndex++;
@@ -952,6 +957,7 @@ namespace GatekeepersProtocol.Sim
         {
             bool docked = cause == DockedCause;
             FieldTrickleLive = false;   // no drip outlives the Run it was holding open
+            FieldShutoffArmed = false;  // nor does an armed switch
             ClearChainState();
             CancelSequentialDraws();
             CancelMasterSequence();
