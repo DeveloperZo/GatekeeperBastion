@@ -116,8 +116,16 @@ namespace GatekeepersProtocol.Sim
                     // a 1200-salvage T2 rifle killed no faster than the starting gun. It did
                     // not, and the raw dps column had been saying so the whole time.
                     //
-                    // MR-35 is now 74.0 sustained (BR-12 66.3, PRI-C 73.0 — the band holds its
-                    // old shape, BR-12 10% low, exactly as when it was 33.2 against 37.0).
+                    // MR-35 was 74.0 sustained after that raise (BR-12 66.3, PRI-C 73.0 — the
+                    // band held its old shape, BR-12 10% low, exactly as when it was 33.2
+                    // against 37.0). DAMAGE 16 -> 18 (Zo, 2026-09-02: "increase MR-35 damage"),
+                    // sustained 83.2: one shot fewer on waves 1, 2, 3 and 5 of the Default
+                    // ladder (3/4/5/7/8 where it was 4/5/6/7/9). 18 is the highest whole number
+                    // that keeps two stated rules: the deepest Thief stays out of one magazine
+                    // (27 x 18 = 486 against 520 — the heavy stays heavy) and the field still
+                    // out-delivers a T0 rifle BEFORE the last wave (SiphonAndWaveTests' crossover
+                    // stays on wave 4; at 19 it moves to wave 5). The PRI-C dps shadow is gone
+                    // with it; PRI-C keeps the pierce column (WeaponCatalogTests, PrimaryBand).
                     // Single-target kills/s at T0 now leads the sidearm on every wave. Judge a
                     // change here on kills/s against WaveDirector's HP ladder, NOT on the dps
                     // column: dps ignores overkill, and at 30 damage a body with 42 HP costs
@@ -133,10 +141,12 @@ namespace GatekeepersProtocol.Sim
                     // number that was true when this was written.
                     //
                     // RE-DERIVED AGAIN 2026-08-27, after the roster cut raised Thief HP to 200
-                    // base: a magazine carries 27 x 16 = 432, and the deepest Thief is now 520.
-                    // THE SIZING RULE HAS INVERTED — the boundary is wave 4 (440), so waves 4
-                    // and 5 no longer die inside one pull. A wave-3 Thief still does, with four
-                    // rounds spare. Left at 27: clip and reload were solved together for the
+                    // base: a magazine carried 27 x 16 = 432, and the deepest Thief is now 520.
+                    // THE SIZING RULE HAS INVERTED — the boundary was wave 4 (440), so waves 4
+                    // and 5 no longer died inside one pull. A wave-3 Thief still did, with four
+                    // rounds spare. RE-DERIVED 2026-09-02 at 18 damage: a magazine carries 486,
+                    // so the boundary is wave 5 (520) — the deepest Thief, and only it, needs
+                    // the reload. Left at 27: clip and reload were solved together for the
                     // duty cycle, so the magazine cannot be resized without re-solving the dps,
                     // and the Thief is the heavy — needing a reload for it is defensible. What
                     // is NOT defensible is a comment claiming otherwise, which is why this is
@@ -146,7 +156,7 @@ namespace GatekeepersProtocol.Sim
                     // Pierce stays 2 x 0.26: at 8 shots/s it reads as a line being cut through
                     // a column rather than one heavy round punching two bodies.
                     return Make(WeaponSlot.Primary, "MR-35 Rifle", cost: 2000L,
-                        damage: 16f, shotsPerSecond: 8.0f, clipSize: 27f, reloadSeconds: 2.463f, range: 60f,
+                        damage: 18f, shotsPerSecond: 8.0f, clipSize: 27f, reloadSeconds: 2.463f, range: 60f,
                         pellets: 1, spreadDegrees: 0f, pierceCount: 2, pierceDamageMul: 0.26f, falloffStart: 25f,
                         BlueR, BlueG, BlueB, tracerWidth: 0.060f, WeaponCrosshair.Cross,
                         AbilityId.Mr35Pin);

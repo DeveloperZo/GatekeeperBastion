@@ -83,6 +83,56 @@ namespace GatekeepersProtocol.Tests
             StringAssert.Contains("finale elite hp=", src);
         }
 
+        /// <summary>The shield (2026-09-03) is applied in the Game layer but decided by the
+        /// sim: the elite's hit path asks MasterControl.EliteShielded with the spawner's escort
+        /// ledger, and the ledger's last decrement logs the exposure so the kill order is in
+        /// the log. Source pins because both halves are MonoBehaviours.</summary>
+        [Test]
+        public void EliteShield_ReadsTheSimRule_AndLogsTheExposure()
+        {
+            string targeting = Read("Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs");
+            int refuse = targeting.IndexOf("void RefuseIfShielded()", System.StringComparison.Ordinal);
+            Assert.Greater(refuse, 0, "the elite's refusal is gone");
+            int rule = targeting.IndexOf("MasterControl.EliteShielded(", refuse, System.StringComparison.Ordinal);
+            Assert.Greater(rule, refuse, "the refusal does not ask the sim's rule");
+            StringAssert.Contains("finale elite shielded — ", targeting);
+            int flinch = targeting.IndexOf("_animator.SetTrigger(AnimHitReact)", System.StringComparison.Ordinal);
+            int call = targeting.IndexOf("RefuseIfShielded();", System.StringComparison.Ordinal);
+            Assert.Greater(call, flinch, "the flinch must play before the refusal, so a shielded hit still reads as a hit");
+
+            string spawner = Read("Assets/Scripts/Game/Enemies/WaveSpawner.cs");
+            StringAssert.Contains("public int FinaleEscortAlive", spawner);
+            StringAssert.Contains("finale elite exposed", spawner);
+        }
+
+        /// <summary>The trickle is off through the finale: the spawner's drip reads
+        /// GameController.FieldWaveAwaitsShutoff, and that answers false for the whole Master
+        /// sequence before it looks at any zone. A MonoBehaviour property, so a source pin.</summary>
+        [Test]
+        public void Trickle_IsOffThroughTheFinale()
+        {
+            string src = Read("Assets/Scripts/Game/Bastion/GameController.Terminals.cs");
+            int prop = src.IndexOf("public bool FieldWaveAwaitsShutoff", System.StringComparison.Ordinal);
+            Assert.Greater(prop, 0, "FieldWaveAwaitsShutoff is gone");
+            int guard = src.IndexOf("if (Sim.MasterSequenceLive) return false;", prop, System.StringComparison.Ordinal);
+            int zone = src.IndexOf("CurrentDemoZone", prop, System.StringComparison.Ordinal);
+            Assert.Greater(guard, prop, "the trickle does not refuse a live Master sequence");
+            Assert.Greater(zone, guard, "the finale guard must sit before any zone is consulted");
+        }
+
+        /// <summary>The elite is named on the Hatch press, and the Master terminal's prompt
+        /// says the same words before the player walks back to press T.</summary>
+        [Test]
+        public void TheFinale_IsNamedOnTheHatchPress_AndOnTheMasterPrompt()
+        {
+            string hatch = Read("Assets/Scripts/Game/Bastion/GameController.Terminals.cs");
+            StringAssert.Contains("Master Control answers at \" + master.TerminalId", hatch);
+            StringAssert.Contains("\" waves, then the elite and its escort\"", hatch);
+            string prompt = Read("Assets/Scripts/Game/Bastion/BastionTerminal.cs");
+            StringAssert.Contains("\" waves, then the elite and its escort\"", prompt);
+            StringAssert.Contains("AppendFinaleShape(s_prompt);", prompt);
+        }
+
         /// <summary>Renamed 2026-08-28 from <c>DockOffer_IsRefusedOnTheFinale</c>. The guard
         /// used to read <c>_masterPhase == MasterControlPhase.Hatch</c> — the finale's last
         /// window and nothing else — because that was the only Master beat that could offer a

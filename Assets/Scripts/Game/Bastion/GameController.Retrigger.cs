@@ -139,7 +139,11 @@ namespace GatekeepersProtocol.Game
             ClearPendingTerminal();
             ActivateZoneSpawns(offer.Zone);
 
-            if (!Sim.TriggerCompositeDraw(start, offer.EndWave))
+            // The last wave belongs to the terminal (M115): a retrigger draws to EndWave-1
+            // and the press at the terminal draws the rest. An election of only the last
+            // wave has nothing to hold back — it draws it here and the armed shutoff follows.
+            int last = offer.EndWave > start ? offer.EndWave - 1 : offer.EndWave;
+            if (!Sim.TriggerCompositeDraw(start, last))
             {
                 if (_layout != null) _layout.RestoreFieldSpawns();
                 Log.Event("Terminal", terminal.TerminalId + " refused — draw did not start");

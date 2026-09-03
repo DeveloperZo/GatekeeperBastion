@@ -57,7 +57,7 @@ The default is the whole zone: its first authored field Wave through its last. T
 
 At a terminal holding an offer, the interact key arms it (and disarms it, and the first arm per zone speaks a line); while it is armed the dial keys swap the election rather than moving the Ante — anting up has no seat in that Prep, and the Wave runs at the level the dial already reads ([The Ante](Ante.md)). Looking away from the terminal drops the arm.
 
-What would launch: the elected span as one composite, consecutive Waves with no Prep between them, delivery-gapped, one Ante governing the chain. Every spawn point the zone's terminals own is switched live first. The draw is refused rather than clamped if the span is out of range or over the per-trigger cap.
+What would launch: the elected span up to the Wave before the zone's last, as one composite, consecutive Waves with no Prep between them, delivery-gapped, one Ante governing the chain; the last Wave stays with the terminal's own press ([A Boarding](A-Boarding.md)). An election of only the last Wave draws it here and the armed shutoff follows. Every spawn point the zone's terminals own is switched live first. The draw is refused rather than clamped if the span is out of range or over the per-trigger cap.
 
 When the chain's assault ends, the zone's saved deepest is raised to the elected end Wave and nothing else happens. Reaching the terminal and shutting it off is still the objective ([A Boarding](A-Boarding.md) owns the shutoff). Per-Wave clears also raise the saved depth as they land. The record is raise-only. A terminal phase drops a half-finished composite, and the next Boarding re-offers.
 

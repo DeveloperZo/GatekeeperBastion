@@ -30,9 +30,10 @@ namespace GatekeepersProtocol.Sim
         /// Fixed per wave; the dial never multiplies it.</summary>
         public int cloakerCount;
 
-        /// <summary>Master Control's final Hatch-bank window: one Thief at
-        /// <see cref="MasterControl.FinaleEliteHp"/>, no escorts. The counts still sum to
-        /// <see cref="enemyCount"/>; the flag tells the spawner which Thief wears the HP.</summary>
+        /// <summary>Master Control's finale wave: one Thief at
+        /// <see cref="MasterControl.FinaleEliteHp"/> behind its escort. The counts still sum to
+        /// <see cref="enemyCount"/>; the flag tells the spawner which Thief wears the HP, that
+        /// every other body of the wave is escort, and to land the escort first.</summary>
         public bool finaleElite;
 
         /// <summary>Multiplier applied to each gatekeeper's kind-specific
@@ -54,6 +55,14 @@ namespace GatekeepersProtocol.Sim
         /// times too slowly. This is the field to check first if a wave feels empty.
         /// </summary>
         public float spawnInterval;
+
+        /// <summary>The seeded beat inside that mean (M116): seconds after group k+1 (1-based)
+        /// before the next group, <c>groups − 1</c> entries summing to
+        /// <c>(groups − 1) × spawnInterval</c>. Null on a spec nothing paces (the trickle, a
+        /// probe), in which case the spawner waits <see cref="spawnInterval"/>. Attached by
+        /// <see cref="RunSim"/> at launch from its seeded generator; read through
+        /// <see cref="WaveCadence.GapAfter"/>, never indexed by hand.</summary>
+        public float[] groupGaps;
 
         /// <summary>OBSOLETE under the draw model: waves start only via RunSim.TriggerDraw, so
         /// there is no wave timer. Kept for struct compatibility; NextWave always writes 0.

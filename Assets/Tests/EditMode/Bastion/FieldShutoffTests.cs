@@ -16,14 +16,26 @@ namespace GatekeepersProtocol.Tests
         static string Zone1Terminal => DemoZones.TerminalIdAt(1, 0);
 
         static int Zone1Ready => DemoZones.FirstWave(1);
+        static int Zone1Last => DemoZones.EndWave(1);
 
+        /// <summary>M115 (Zo, 2026-09-02): the last wave belongs to the terminal, so on a
+        /// multi-wave zone the shutoff waits for that wave to be drawn AND down. The
+        /// first-wave rule this replaced let a sprint close zone 1 with wave 2 never drawn.</summary>
         [Test]
-        public void MayRun_OffersTheShutoff_OnceTheZoneHasRun()
+        public void MayRun_OffersTheShutoff_OnlyOnceTheLastWaveIsDrawnAndDown()
         {
+            Assert.IsFalse(FieldShutoff.MayRun(RunPhase.Tethered, runIsOver: false,
+                    WaveMode.Terminal, Zone1Terminal, terminalDone: false,
+                    currentWaveIndex: Zone1Ready, zoneShutoffReady: true),
+                "the opening span alone offered the shutoff — the sprint skip");
+            Assert.IsFalse(FieldShutoff.MayRun(RunPhase.Tethered, runIsOver: false,
+                    WaveMode.Terminal, Zone1Terminal, terminalDone: false,
+                    currentWaveIndex: Zone1Last, zoneShutoffReady: false),
+                "the last wave drawn but standing offered the shutoff");
             Assert.IsTrue(FieldShutoff.MayRun(RunPhase.Tethered, runIsOver: false,
                     WaveMode.Terminal, Zone1Terminal, terminalDone: false,
-                    currentWaveIndex: Zone1Ready),
-                "the shutoff is not offered on a zone whose wave is running");
+                    currentWaveIndex: Zone1Last, zoneShutoffReady: true),
+                "the last wave drawn and down is the shutoff");
         }
 
         [Test]
@@ -33,7 +45,7 @@ namespace GatekeepersProtocol.Tests
             // zone would let the player skip the lane entirely.
             Assert.IsFalse(FieldShutoff.MayRun(RunPhase.Tethered, runIsOver: false,
                     WaveMode.Terminal, Zone1Terminal, terminalDone: false,
-                    currentWaveIndex: Zone1Ready - 1),
+                    currentWaveIndex: Zone1Ready - 1, zoneShutoffReady: true),
                 "the shutoff was offered on a zone with no wave run at it");
         }
 
@@ -42,19 +54,19 @@ namespace GatekeepersProtocol.Tests
         {
             Assert.IsFalse(FieldShutoff.MayRun(RunPhase.Tethered, runIsOver: false,
                     WaveMode.Terminal, Zone1Terminal, terminalDone: true,
-                    currentWaveIndex: Zone1Ready),
+                    currentWaveIndex: Zone1Last, zoneShutoffReady: true),
                 "a completed terminal still offered its shutoff");
             Assert.IsFalse(FieldShutoff.MayRun(RunPhase.Tethered, runIsOver: false,
                     WaveMode.HatchBank, Zone1Terminal, terminalDone: false,
-                    currentWaveIndex: Zone1Ready),
+                    currentWaveIndex: Zone1Last, zoneShutoffReady: true),
                 "a Convert window offered an off switch it does not have");
             Assert.IsFalse(FieldShutoff.MayRun(RunPhase.Tethered, runIsOver: true,
                     WaveMode.Terminal, Zone1Terminal, terminalDone: false,
-                    currentWaveIndex: Zone1Ready),
+                    currentWaveIndex: Zone1Last, zoneShutoffReady: true),
                 "a dead run offered the shutoff");
             Assert.IsFalse(FieldShutoff.MayRun(RunPhase.Lost, runIsOver: false,
                     WaveMode.Terminal, Zone1Terminal, terminalDone: false,
-                    currentWaveIndex: Zone1Ready),
+                    currentWaveIndex: Zone1Last, zoneShutoffReady: true),
                 "a terminal phase offered the shutoff");
         }
 
@@ -62,11 +74,12 @@ namespace GatekeepersProtocol.Tests
         public void MayRun_RefusesIdsOffTheZoneTable()
         {
             Assert.IsFalse(FieldShutoff.MayRun(RunPhase.Tethered, runIsOver: false,
-                    WaveMode.Terminal, null, terminalDone: false, currentWaveIndex: 99),
+                    WaveMode.Terminal, null, terminalDone: false, currentWaveIndex: 99,
+                    zoneShutoffReady: true),
                 "a null id was offered a zone shutoff");
             Assert.IsFalse(FieldShutoff.MayRun(RunPhase.Tethered, runIsOver: false,
                     WaveMode.Terminal, "NOT-A-TERMINAL", terminalDone: false,
-                    currentWaveIndex: 99),
+                    currentWaveIndex: 99, zoneShutoffReady: true),
                 "an id outside the zone table was offered a zone shutoff");
         }
 

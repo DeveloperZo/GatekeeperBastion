@@ -4,7 +4,7 @@ Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
 Last updated: 2026-08-31
 Where:
-- The per-Wave spec: body curve, fixed kind rows (Defaults absorb the remainder), health multiplier per Wave, group width, widening group gap, Ante and seats scaling bodies only — Assets/Scripts/Sim/Waves/WaveDirector.cs (NextWave, HunterPerWave, ThiefPerWave, CloakerPerWave, EnemyHealthPerWave)
+- The per-Wave spec: body curve, kind shares by shape — Mass, Pack, Convoy; Defaults absorb the remainder; the per-Wave rows are debut gates and ceilings — health multiplier per Wave, group width, widening group gap, Ante and seats scaling bodies only — Assets/Scripts/Sim/Waves/WaveDirector.cs (NextWave, HunterPerWave, ThiefPerWave, CloakerPerWave, KindCap, EnemyHealthPerWave); Assets/Scripts/Sim/Waves/WaveShapes.cs (For, Apply)
 - Group gap widens with the Wave: spawnInterval = max(MinSpawnInterval 0.4, 7.3 + 0.40 * min(waveIndex, MaxWaves-1)) — WaveDirector.cs (NextWave, MinSpawnInterval); it does not shorten
 - One health multiplier applied to every kind's own base at spawn — Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs (SpawnOne, CreateActor — stats.maxHp * multiplier), stats per kind from WaveDirector.cs (StatsFor)
 - Shuffled-not-blocked roster on the run's seeded stream — Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs (BuildRoster)

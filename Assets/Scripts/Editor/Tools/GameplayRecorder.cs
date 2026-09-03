@@ -9,7 +9,7 @@ using UnityEngine;
 namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>
-    /// Records the game view while you play, and stops on F9. Editor-only: the capture component
+    /// Records the game view while you play, and stops on Insert. Editor-only: the capture component
     /// lives in this assembly, so nothing here can reach a player build.
     ///
     /// Capture is ScreenCapture.CaptureScreenshotIntoRenderTexture, which takes the composited
@@ -21,17 +21,41 @@ namespace GatekeepersProtocol.EditorTools
     /// clock at <see cref="Fps"/>, duplicating the last frame through a hitch and dropping
     /// surplus frames above it, so the video runs at real speed rather than in slow motion.
     /// Output lands at the repository root as GameplayCapture_yyyyMMdd_HHmmss.mp4.
+    ///
+    /// The frame is encoded at the Game view's own size, never rescaled. PixelRender draws the
+    /// game at 360 lines and point-samples it up, so any resample here turns authored pixels
+    /// into uneven smears — the first version squeezed every view to 1600x900 through a
+    /// bilinear blit and handed that to a Constrained Baseline encoder at ~5 Mbps, which is
+    /// what "horrible quality" was. Set the Game view to 1920x1080 for a clip worth sharing.
     /// </summary>
     public static class GameplayRecorder
     {
-        internal const KeyCode StopKey = KeyCode.F9;
-        internal const int Width = 1600;
-        internal const int Height = 900;
+        /// <summary>Insert: every F-key, Home and End belong to DevCommands (F9 is the gatekeeper
+        /// readout since M13), and Insert is bound nowhere in Controls or the dev console, so
+        /// stopping a capture cannot also fire a cheat.</summary>
+        internal const KeyCode StopKey = KeyCode.Insert;
         internal const int Fps = 30;
         internal const float MaxMinutes = 20f;
 
-        const string ShipScene = "Assets/Scenes/Ship - Demo.unity";
-        const string BastionScene = "Assets/Scenes/Bastion.unity";
+        /// <summary>Bits per pixel per frame the encoder is asked for. 0.3 puts 1080p30 near
+        /// 19 Mbps, which keeps flat dark rooms and hard pixel edges free of macroblocks;
+        /// the floor covers small Game views, where the per-pixel figure gets stingy.</summary>
+        internal const float BitsPerPixelPerFrame = 0.3f;
+        internal const uint MinBitRate = 8_000_000;
+
+        /// <summary>Bit rate for a frame of this size at <see cref="Fps"/>.</summary>
+        internal static uint TargetBitRate(int width, int height)
+        {
+            double bits = (double)width * height * Fps * BitsPerPixelPerFrame;
+            return (uint)Math.Max(MinBitRate, Math.Min(uint.MaxValue, bits));
+        }
+
+        /// <summary>H.264 wants even dimensions; an odd Game view loses its last row or column
+        /// rather than being resampled.</summary>
+        internal static int Even(int size) => Math.Max(2, size & ~1);
+
+        const string ShipScene = "Assets/Scenes/Ship - CoOp.unity";
+        const string BastionScene = "Assets/Scenes/Bastion_Coop.unity";
         const string PendingKey = "GKB.GameplayRecorder.Pending";
 
         /// <summary>ScreenCapture writes in native backbuffer order, which is upside down against
@@ -47,7 +71,7 @@ namespace GatekeepersProtocol.EditorTools
 
         /// <summary>Starts recording in the current Play session, or enters Play on a chosen
         /// scene when the editor is stopped.</summary>
-        [MenuItem("GatekeepersProtocol/Record/Gameplay/This scene (F9 to stop)", false, 10)]
+        [MenuItem("GatekeepersProtocol/Record/Gameplay/This scene (Insert to stop)", false, 10)]
         public static void RecordThisScene()
         {
             Record(scenePath: null);
@@ -65,7 +89,7 @@ namespace GatekeepersProtocol.EditorTools
             Record(BastionScene);
         }
 
-        [MenuItem("GatekeepersProtocol/Record/Gameplay/This scene (F9 to stop)", true)]
+        [MenuItem("GatekeepersProtocol/Record/Gameplay/This scene (Insert to stop)", true)]
         [MenuItem("GatekeepersProtocol/Record/Gameplay/Ship", true)]
         [MenuItem("GatekeepersProtocol/Record/Gameplay/Bastion", true)]
         static bool RecordValidate()
@@ -110,6 +134,14 @@ namespace GatekeepersProtocol.EditorTools
 
         static void OnPlayModeChanged(PlayModeStateChange change)
         {
+            // The driver is HideAndDontSave and the project enters Play without a domain
+            // reload, so nothing destroys it on the way out and its OnDisable never ran: a
+            // Stop-button exit left an mp4 with no moov atom (seen 2026-09-03). Close it here.
+            if (change == PlayModeStateChange.ExitingPlayMode)
+            {
+                if (GameplayRecorderDriver.Active != null) GameplayRecorderDriver.Active.StopRecording();
+                return;
+            }
             if (change != PlayModeStateChange.EnteredPlayMode) return;
             if (!SessionState.GetBool(PendingKey, false)) return;
             SessionState.SetBool(PendingKey, false);
@@ -132,8 +164,10 @@ namespace GatekeepersProtocol.EditorTools
         public static GameplayRecorderDriver Active { get; private set; }
 
         RenderTexture _screen;   // backbuffer copy, screen sized
-        RenderTexture _encode;   // fixed size, flipped, what the encoder reads
+        RenderTexture _encode;   // even-sized, flipped, what the encoder reads
         Texture2D _frame;
+        int _width;
+        int _height;
         MediaEncoder _encoder;
         string _path;
 
@@ -154,20 +188,32 @@ namespace GatekeepersProtocol.EditorTools
             _screenWidth = Mathf.Max(2, Screen.width);
             _screenHeight = Mathf.Max(2, Screen.height);
 
+            _width = GameplayRecorder.Even(_screenWidth);
+            _height = GameplayRecorder.Even(_screenHeight);
+
             _screen = new RenderTexture(_screenWidth, _screenHeight, 0, RenderTextureFormat.ARGB32);
-            _encode = new RenderTexture(GameplayRecorder.Width, GameplayRecorder.Height, 0,
-                RenderTextureFormat.ARGB32);
-            _frame = new Texture2D(GameplayRecorder.Width, GameplayRecorder.Height,
-                TextureFormat.RGBA32, false);
+            // Point: the blit is 1:1 (or one pixel short on an odd view), and if a driver ever
+            // does resample, point keeps the pixel-art edges hard instead of averaging them.
+            _screen.filterMode = FilterMode.Point;
+            _encode = new RenderTexture(_width, _height, 0, RenderTextureFormat.ARGB32);
+            _frame = new Texture2D(_width, _height, TextureFormat.RGBA32, false);
 
             _path = GameplayRecorder.NewOutputPath();
-            var attrs = new VideoTrackAttributes
+            uint bitRate = GameplayRecorder.TargetBitRate(_width, _height);
+            var h264 = new H264EncoderAttributes
+            {
+                gopSize = GameplayRecorder.Fps,   // a keyframe a second: seekable, cheap
+                numConsecutiveBFrames = 0,        // widest encoder support; the bit rate does the work
+                profile = VideoEncodingProfile.H264High,
+            };
+            var attrs = new VideoTrackEncoderAttributes(h264)
             {
                 frameRate = new MediaRational(GameplayRecorder.Fps),
-                width = GameplayRecorder.Width,
-                height = GameplayRecorder.Height,
+                width = (uint)_width,
+                height = (uint)_height,
                 includeAlpha = false,
                 bitRateMode = VideoBitrateMode.High,
+                targetBitRate = bitRate,
             };
 
             try
@@ -184,7 +230,8 @@ namespace GatekeepersProtocol.EditorTools
             _startTime = Time.realtimeSinceStartupAsDouble;
             _nextFrameTime = _startTime;
             _running = true;
-            Debug.Log($"[GameplayRecorder] Recording to {Path.GetFileName(_path)} — " +
+            Debug.Log($"[GameplayRecorder] Recording to {Path.GetFileName(_path)} at " +
+                      $"{_width}x{_height}, H.264 High, {bitRate / 1_000_000f:0.#} Mbps — " +
                       $"{GameplayRecorder.StopKey} to stop.");
             StartCoroutine(CaptureLoop());
         }
@@ -233,7 +280,7 @@ namespace GatekeepersProtocol.EditorTools
 
                 RenderTexture previous = RenderTexture.active;
                 RenderTexture.active = _encode;
-                _frame.ReadPixels(new Rect(0, 0, GameplayRecorder.Width, GameplayRecorder.Height), 0, 0, false);
+                _frame.ReadPixels(new Rect(0, 0, _width, _height), 0, 0, false);
                 _frame.Apply(false);
                 RenderTexture.active = previous;
 
@@ -267,6 +314,9 @@ namespace GatekeepersProtocol.EditorTools
             else
                 Graphics.Blit(_screen, _encode);
         }
+
+        /// <summary>Editor-side stop: the play-mode hook calls this on ExitingPlayMode.</summary>
+        public void StopRecording() => Stop();
 
         void Stop()
         {

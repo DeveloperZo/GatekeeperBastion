@@ -42,11 +42,11 @@ namespace GatekeepersProtocol.Tests
     ///           intercepted, which is what turns "shoot what is closest" into a decision.
     ///
     /// Composition teaches one kind per wave and THE DIAL'S SURPLUS IS ALL DEFAULT — see
-    /// Composition_DialSurplusLandsOnDefaultOnly for why. The Hunter/Thief/Cloaker rows are the
-    /// only tables restated here, because WaveDirector keeps them private and there is nothing to
-    /// read them off; every DEFAULT count is derived as enemyCount minus the other three, which is
-    /// what the sim itself does. Totals, gaps and the dial grid live in SiphonAndWaveTests; this
-    /// file owns the kinds.
+    /// Composition_DialSurplusLandsOnDefaultOnly for why. Since M116 composition is a SHAPE
+    /// (Mass / Pack / Convoy — WaveShapes) and the per-wave counts are derived in
+    /// WaveShapesTests; nothing here restates a kind row. Every DEFAULT count is enemyCount
+    /// minus the other three, which is what the sim itself does. Totals, gaps and the dial grid
+    /// live in SiphonAndWaveTests; this file owns the kinds.
     /// </summary>
     public class GatekeeperVariantsTests
     {
@@ -374,49 +374,32 @@ namespace GatekeepersProtocol.Tests
         // ================================================================
 
         [Test]
-        public void Composition_TeachesOneKindPerWave_ExactAtDialZero()
+        public void Composition_TeachesOneKindPerWave_AndTheGatesHoldAtEveryDial()
         {
-            // wave 1: the game as it was. wave 2: the first enemy that comes for YOU.
-            // wave 3: the first enemy you must CHOOSE how to answer — the Thief through the
-            // gun. wave 4: the Cloaker pair through the gaze — one debut per wave, so each
-            // rule gets read alone. wave 5 escalates composition.
+            // wave 1: the game as it was (a Mass). wave 2: the first enemy that comes for YOU
+            // (a Pack). wave 4: the Cloaker through the gaze (the Pack's small share). wave 5:
+            // the first enemy you must CHOOSE how to answer — the Thief through the gun (the
+            // Convoy). One debut per wave, so each rule gets read alone.
             //
-            // The three kind rows were cut with the roster on 2026-08-27 — Hunters peak 12 -> 7,
-            // Thieves 7 -> 4, Cloakers 3 -> 2 — and they are restated here, and ONLY here, because
-            // WaveDirector keeps them private and there is nothing to read them off.
-            // THE DEFAULT ROW IS NOT: it is enemyCount minus the other three, which is the
-            // sim's own definition of it, so the shape of the teaching curve is asserted without
-            // this fixture holding a fourth table that can drift on its own.
+            // THE PER-WAVE KIND ROWS ARE NOT RESTATED HERE ANY MORE (M116). Composition is a
+            // shape — shares of the roster, Default the remainder — and WaveShapesTests derives
+            // every count from the shares; the rows in WaveDirector are the debut gates and the
+            // ceiling, pinned there. What this fixture still owns is the teaching claim: one
+            // new kind per wave, and the gates at every dial setting.
             var director = new WaveDirector();
-            int[] hunters = { 0, 2, 4, 6, 7 };
-            int[] thieves = { 0, 0, 1, 2, 4 };
-            int[] cloakers = { 0, 0, 0, 1, 2 };
+            bool hunterSeen = false, thiefSeen = false, cloakerSeen = false;
             for (int w = 0; w < WaveDirector.MaxWaves; w++)
             {
                 var spec = director.NextWave(w, 0);
-                Assert.AreEqual(hunters[w], spec.hunterCount, "hunters, wave " + w);
-                Assert.AreEqual(thieves[w], spec.thiefCount, "thieves, wave " + w);
-                Assert.AreEqual(cloakers[w], spec.cloakerCount, "cloakers, wave " + w);
-                Assert.AreEqual(spec.enemyCount - hunters[w] - thieves[w] - cloakers[w],
-                    spec.defaultCount, "defaults, wave " + w);
-            }
-
-            // THE TEACHING SHAPE, which is the claim the three tables exist to make: exactly one
-            // NEW kind appears per wave from wave 2 on, and no kind ever thins out once it has
-            // been introduced. The roster cut halved the rows and left both properties intact.
-            for (int w = 1; w < WaveDirector.MaxWaves; w++)
-            {
-                var prev = director.NextWave(w - 1, 0);
-                var spec = director.NextWave(w, 0);
-                int debuts = (prev.hunterCount == 0 && spec.hunterCount > 0 ? 1 : 0)
-                           + (prev.thiefCount == 0 && spec.thiefCount > 0 ? 1 : 0)
-                           + (prev.cloakerCount == 0 && spec.cloakerCount > 0 ? 1 : 0);
+                int debuts = 0;
+                if (!hunterSeen && spec.hunterCount > 0) { hunterSeen = true; debuts++; }
+                if (!thiefSeen && spec.thiefCount > 0) { thiefSeen = true; debuts++; }
+                if (!cloakerSeen && spec.cloakerCount > 0) { cloakerSeen = true; debuts++; }
                 Assert.LessOrEqual(debuts, 1,
                     "two kinds debuting in wave " + w + " means neither rule gets read");
-                Assert.GreaterOrEqual(spec.hunterCount, prev.hunterCount, "hunters, wave " + w);
-                Assert.GreaterOrEqual(spec.thiefCount, prev.thiefCount, "thieves, wave " + w);
-                Assert.GreaterOrEqual(spec.cloakerCount, prev.cloakerCount, "cloakers, wave " + w);
             }
+            Assert.IsTrue(hunterSeen && thiefSeen && cloakerSeen,
+                "every kind is met inside the five waves");
             Assert.AreEqual(0, director.NextWave(0, 5).hunterCount,
                 "wave 1 is all Default at EVERY dial setting — there is nothing else to meet yet");
             Assert.AreEqual(0, director.NextWave(1, 5).thiefCount,

@@ -12,6 +12,10 @@ namespace GatekeepersProtocol.Sim
         StartTrickle,
         /// <summary>Roster spent, field empty, nothing owed: the wave is cleared.</summary>
         Cleared,
+        /// <summary>Roster spent, field empty, shutoff owed and the zone's LAST wave was the
+        /// one that just died (M115): arm the terminal and keep the Assault open — no drip,
+        /// the walk is done and the switch is what is left.</summary>
+        ArmShutoff,
     }
 
     /// <summary>The pressure that keeps a field Wave honest after its authored bodies are
@@ -65,15 +69,22 @@ namespace GatekeepersProtocol.Sim
         /// <paramref name="awaitsShutoff"/> because the flag zeroes
         /// <see cref="RunSim.CurrentKillAward"/> — raising it with authored bodies still on
         /// the field would quietly stop paying for the wave the player is fighting.</para></summary>
+        /// <para><paramref name="finalWaveDrawn"/> (M115, 2026-09-02): once the zone's last
+        /// wave — the one the terminal press draws — is the wave that just died, the verdict is
+        /// <see cref="FieldWaveResolution.ArmShutoff"/> rather than the drip. The drip holds
+        /// the lane between the opening span and the terminal; after the last wave there is
+        /// no lane left to hold, only a switch to throw.</para>
         public static FieldWaveResolution Resolve(RunPhase phase, AssaultState assault,
-            bool chainPending, bool rosterDelivering, int aliveCount, bool awaitsShutoff)
+            bool chainPending, bool rosterDelivering, int aliveCount, bool awaitsShutoff,
+            bool finalWaveDrawn)
         {
             if (phase != RunPhase.Tethered) return FieldWaveResolution.Hold;
             if (assault != AssaultState.Assault) return FieldWaveResolution.Hold;
             if (chainPending) return FieldWaveResolution.Hold;
             if (rosterDelivering) return FieldWaveResolution.Hold;
             if (aliveCount > 0) return FieldWaveResolution.Hold;
-            return awaitsShutoff ? FieldWaveResolution.StartTrickle : FieldWaveResolution.Cleared;
+            if (!awaitsShutoff) return FieldWaveResolution.Cleared;
+            return finalWaveDrawn ? FieldWaveResolution.ArmShutoff : FieldWaveResolution.StartTrickle;
         }
 
         /// <summary>Advance the drip clock by <paramref name="dt"/> and report whether a body is

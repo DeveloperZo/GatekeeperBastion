@@ -2,16 +2,22 @@
 Purpose: Current representation of Master Control — the finale sequence that ends a Boarding Escaped — as it is in the build.
 Status: working
 Update trigger: any milestone that touches this mechanic, in the same change.
-Last updated: 2026-08-31
+Last updated: 2026-09-03
 Where:
-- Sequence constants: five terminal Waves, one elite, HP the one lever, presentation-only scale — Assets/Scripts/Sim/Run/MasterControl.cs (TerminalWaves, FinaleEliteCount, FinaleEliteHp, FinaleEliteScale, ApplyFinaleElite)
+- Sequence constants: two terminal Waves at the deepest size with the finale's own shapes, the quiet beat, the escort, one elite, HP the one lever, presentation-only scale — Assets/Scripts/Sim/Run/MasterControl.cs (TerminalWaves, ShapeForTerminalWave, FinaleBeatSeconds, EscortHunters, EscortCloakers, FinaleEliteCount, FinaleEliteHp, FinaleEliteScale, ApplyFinaleElite)
+- The shield rule: the elite refuses damage while any escort body stands — Assets/Scripts/Sim/Run/MasterControl.cs (EliteShielded)
+- The escort ledger and the exposure line; the elite and its escort marked at spawn — Assets/Scripts/Game/Enemies/WaveSpawner.cs (FinaleEscortAlive, RegisterFinaleBody, ReleaseFinaleEscort); Assets/Scripts/Game/Enemies/WaveSpawner.Groups.cs (SpawnOne)
+- The refusal on the elite's hit path, flash and stagger kept — Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs (RefuseIfShielded)
+- Escort first, the elite alone in the last group — Assets/Scripts/Sim/Waves/WaveShapes.cs (GroupByKind, the finaleElite branch)
 - Phases: Terminal then Elite; the sequence does not end on its own from Elite — Assets/Scripts/Sim/Run/MasterControl.cs (MasterControlPhase)
 - Start: Prep-only, refuses a live or pending sequence, disables deep-start chaining — Assets/Scripts/Sim/Run/RunSim.Master.cs (StartMasterControl)
-- Advance: back-to-back Waves on the follow-up timer; elite is a Terminal-mode control-room Wave; killing it arms the switch — Assets/Scripts/Sim/Run/RunSim.Master.cs (AdvanceMasterControl, MasterAwaitsShutoff)
+- Advance: back-to-back Waves on the follow-up timer, then the beat before the elite; elite is a Terminal-mode control-room Wave; killing it arms the switch — Assets/Scripts/Sim/Run/RunSim.Master.cs (AdvanceMasterControl, MasterAwaitsShutoff)
+- The control-room Waves take the finale's shapes, not the field's — Assets/Scripts/Sim/Run/RunSim.Master.cs (ShapeMasterTerminalWave)
 - The switch ends the Boarding: banks the carry, then completes Escaped — Assets/Scripts/Sim/Run/RunSim.Master.cs (ShutOffMasterControl); Assets/Scripts/Sim/Run/RunSim.cs (CompleteRun, CleanExits)
 - The elite spec replaces the last control-room Wave; every sequence Wave draws the deepest table — Assets/Scripts/Sim/Run/RunSim.cs (LaunchWave — MasterControlPhase.Elite gate and CurrentWaveIndex >= MaxWaves clamp)
 - Terminal mode, so ordinary field-Wave targeting and scaled Hatch damage run through the finale — Assets/Scripts/Game/Enemies/EnemyGatekeeper.Targeting.cs (ChasesPlayer, hatchAvailable); Assets/Scripts/Sim/Run/RunSim.cs (DamageHatch)
 - Starts at the Hatch; the Master terminal refuses to start — Assets/Scripts/Game/Bastion/GameController.Terminals.cs (StartZoneWaveFromHatch finale branch, StartTerminalWave Master refusal, MasterControlAwaitsStart)
+- Named before it starts: the Hatch press logs the sequence and the Master prompt carries the same words — Assets/Scripts/Game/Bastion/GameController.Terminals.cs (StartZoneWaveFromHatch finale branch); Assets/Scripts/Game/Bastion/BastionTerminal.cs (AppendFinaleShape)
 - Game-side start gate; the room is not sealed — Assets/Scripts/Game/Bastion/GameController.MasterControl.cs (StartMasterControl)
 - The switch is thrown at the terminal, Prep or Assault — Assets/Scripts/Game/Bastion/GameController.Terminals.cs (ShutOffTerminal Master branch, CanShutOffTerminal, TickPrepCommands Master branch)
 - The elite arrives in the control room; the room is unsealed, the Hatch closets untouched — Assets/Scripts/Game/Bastion/GameController.HatchBank.cs (OnMasterHatchHalfStarted)
@@ -23,7 +29,7 @@ Where:
 
 # Master Control
 
-Master Control is the finale, and the only way a Boarding ends in a win. Once every field terminal in the Bastion is done, the Boarder starts it at the Hatch like any other Wave: a run of Waves fought in the control room, then one oversized Gatekeeper built from the Thief. Killing that body does not end anything — it arms the Master terminal, and the Boarder has to walk to the switch and throw it, which banks whatever they are carrying and ends the Boarding with the Bastion stripped. Docking home and Convert are both refused for the whole sequence, so once it starts the only ways out are winning it, dying, or losing the Hatch.
+Master Control is the finale, and the only way a Boarding ends in a win. Once every field terminal in the Bastion is done, the Boarder starts it at the Hatch like any other Wave: two Waves fought in the control room, a quiet, then one oversized Gatekeeper built from the Thief. The room goes still before it comes, and it comes behind an escort — nothing I put into it counts until the escort is down. Killing that body does not end anything — it arms the Master terminal, and the Boarder has to walk to the switch and throw it, which banks whatever they are carrying and ends the Boarding with the Bastion stripped. Docking home and Convert are both refused for the whole sequence, so once it starts the only ways out are winning it, dying, or losing the Hatch.
 
 ## Details
 
@@ -37,11 +43,11 @@ Whatever the Ante dial reads at the start governs every Wave of the sequence —
 
 ### Terminal waves
 
-Five ordinary Terminal-mode Waves fought in the control room, launched back to back off the follow-up timer, each drawn from the deepest Wave's table. Terminal mode is not a Boarder-only hunt: the Hatch is what they march on, at the scaled rate, and one turns on the Boarder only when shot, when the Boarder is inside its aggro radius, or when the door is gone. The control-room door is not sealed. The room's own spawn closets deliver.
+Two ordinary Terminal-mode Waves fought in the control room, launched back to back off the follow-up timer, each drawn at the deepest Wave's size — the first a Mass, the second a Pack — with a short gap between them. Terminal mode is not a Boarder-only hunt: the Hatch is what they march on, at the scaled rate, and one turns on the Boarder only when shot, when the Boarder is inside its aggro radius, or when the door is gone. The control-room door is not sealed. The room's own spawn closets deliver.
 
 ### Elite
 
-One more control-room Wave whose spec is replaced by a single Thief-built elite — one body, no escorts, HP the only mechanical lever, drawn half again as large in presentation only. It arrives where the fight already is; the Hatch's closets are not armed. Killing it does not end the Boarding — it arms the Master terminal. A finale can no more end by attrition than a zone can.
+After a twelve-second quiet, one more control-room Wave: the escort first — four Hunters and two Cloakers — then, alone, a single Thief-built elite, HP the only mechanical lever, drawn half again as large in presentation only. While any of its escort stands the elite takes no damage; a hit still lands and staggers it, it just does not bite. It arrives where the fight already is; the Hatch's closets are not armed. Killing it does not end the Boarding — it arms the Master terminal. A finale can no more end by attrition than a zone can.
 
 ### Switch
 
@@ -51,9 +57,9 @@ One more control-room Wave whose spec is replaced by a single Thief-built elite 
 
 Docking is refused throughout. Both dock-offer paths return while the sequence is live. A Convert is refused too. The field trickle never runs. Kills pay as on any field Wave, going down follows the ordinary rule ([Going Down](Going-Down.md)), and the Hatch breaching still ends the Boarding Lost ([The Hatch](The-Hatch.md)).
 
-Refusals are named: not in Prep, sequence already live or pending, draw did not start; the switch answers that the elite is still standing until the elite is down.
+Refusals are named: not in Prep, sequence already live or pending, draw did not start; the switch answers that the elite is still standing until the elite is down; the elite's own refusal is written once when the first shielded hit lands, and its exposure when the last escort falls.
 
-Driven by `T` at the Hatch to start and `T` at the Master terminal to end. Shown by the Master terminal's prompt, the control-room fight, and the elite's oversized body. Reads back as the sequence's log lines and the BASTION STRIPPED end screen.
+Driven by `T` at the Hatch to start and `T` at the Master terminal to end. Shown by the Master terminal's prompt, which names the two Waves, the elite and its escort before the start, the control-room fight, and the elite's oversized body. Reads back as the sequence's log lines and the BASTION STRIPPED end screen.
 
 Bindings: [Field Manual](Field-Manual.md).
 

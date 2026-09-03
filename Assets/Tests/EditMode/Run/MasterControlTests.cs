@@ -33,9 +33,9 @@ namespace GatekeepersProtocol.Tests
                 "the switch was thrown and the Run did not end Escaped");
         }
 
-        /// <summary>Drive the sequence to the gate and STOP THERE: five Terminal Waves, the
-        /// elite, and a Run that is still live because nobody has thrown the switch yet.
-        /// Callers that want the ending call <see cref="EscapeSequence"/>.</summary>
+        /// <summary>Drive the sequence to the gate and STOP THERE: two Terminal Waves, the
+        /// beat, the escorted elite, and a Run that is still live because nobody has thrown
+        /// the switch yet. Callers that want the ending call <see cref="EscapeSequence"/>.</summary>
         public static void SurviveSequence(RunSim sim, int killsPerTerminalWave)
         {
             Assert.IsTrue(sim.StartMasterControl());
@@ -53,9 +53,10 @@ namespace GatekeepersProtocol.Tests
             // THE SECOND HALF IS THE ELITE, IN TERMINAL MODE (Zo, 2026-08-28). It used to be
             // a Hatch-bank window back at the door; the finale now ends where every other wave
             // ends, and the elite is what stands between the player and the switch.
+            // THE BEAT (2026-09-03): the elite waits FinaleBeatSeconds, not the 3 s gap.
             Assert.AreEqual(MasterControlPhase.Elite, sim.MasterPhase);
             Assert.AreEqual(AssaultState.Prep, sim.Assault);
-            sim.Tick(WaveDirector.InterWaveGap);
+            sim.Tick(MasterControl.FinaleBeatSeconds);
 
             Assert.AreEqual(AssaultState.Assault, sim.Assault);
             Assert.AreEqual(WaveMode.Terminal, sim.Mode,
@@ -94,12 +95,13 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0, meta.CleanExits);
         }
 
-        /// <summary>The finale end to end. RENAMED 2026-08-28 (was
-        /// <c>Sequence_FiveTerminalThenHatchWindows_Escapes</c>): there are no Hatch windows
-        /// in it any more, and it does not escape on its own — the elite is the last Terminal
-        /// wave and the shutoff is the ending.</summary>
+        /// <summary>The finale end to end: two terminal waves, the beat, the escorted elite,
+        /// the switch. RENAMED 2026-09-03 (was <c>Sequence_FiveTerminalThenTheElite_…</c>,
+        /// and before that <c>…ThenHatchWindows_Escapes</c>): there are no Hatch windows in it,
+        /// five waves became two, and it does not escape on its own — the elite is the last
+        /// Terminal wave and the shutoff is the ending.</summary>
         [Test]
-        public void Sequence_FiveTerminalThenTheElite_EscapesOnTheShutoff()
+        public void Sequence_TwoTerminalTheBeatTheEscortedElite_EscapesOnTheShutoff()
         {
             MetaState meta;
             var sim = Tethered(out meta);
@@ -243,7 +245,7 @@ namespace GatekeepersProtocol.Tests
                     sim.Tick(WaveDirector.InterWaveGap);
             }
 
-            sim.Tick(WaveDirector.InterWaveGap);
+            sim.Tick(MasterControl.FinaleBeatSeconds);
             Assert.IsFalse(sim.DockOffered, "the elite's draw offered the dock");
             sim.AwardKill();
             sim.NotifyAssaultCleared();
@@ -410,7 +412,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1, sim.MasterWavesLeft,
                 "the elite half sized itself off HatchWaves again");
 
-            sim.Tick(WaveDirector.InterWaveGap);
+            sim.Tick(MasterControl.FinaleBeatSeconds);
             Assert.AreEqual(AssaultState.Assault, sim.Assault);
             Assert.AreEqual(WaveMode.Terminal, sim.Mode);
             sim.NotifyAssaultCleared();
@@ -419,8 +421,165 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(RunPhase.Tethered, sim.Phase);
         }
 
+        /// <summary>The finale's shape (2026-09-03): two control-room waves, not five. The
+        /// constant is read by the HUD readout, the Hatch's start line, HatchBank's master
+        /// pile and the checkpoint, so it is pinned here once rather than restated in each.</summary>
         [Test]
-        public void FinaleWindow_IsOneEliteThief()
+        public void TerminalWaves_IsTwo()
+        {
+            Assert.AreEqual(2, MasterControl.TerminalWaves);
+            Assert.AreEqual(12f, MasterControl.FinaleBeatSeconds, 1e-6f);
+            Assert.Greater(MasterControl.FinaleBeatSeconds, WaveDirector.InterWaveGap,
+                "a beat the player cannot tell from the gap is a gap");
+        }
+
+        /// <summary>The finale's shapes are ITS OWN: Mass then Pack, by ordinal — never
+        /// WaveShapes.For of a wave number, which would hand a clamped wave-5 draw its Convoy
+        /// or a wave-6/7 field alternation by accident.</summary>
+        [Test]
+        public void ShapeForTerminalWave_IsMassThenPack()
+        {
+            Assert.AreEqual(WaveShape.Mass, MasterControl.ShapeForTerminalWave(1));
+            Assert.AreEqual(WaveShape.Pack, MasterControl.ShapeForTerminalWave(2));
+            Assert.AreEqual(WaveShape.Mass, MasterControl.ShapeForTerminalWave(0), "below 1 clamps to the first");
+            for (int i = 1; i <= 8; i++)
+                Assert.AreNotEqual(WaveShape.Convoy, MasterControl.ShapeForTerminalWave(i),
+                    "the finale never draws a Convoy — the elite IS its Thief");
+        }
+
+        /// <summary>The two control-room waves as the spawner will see them: the wave-5 SIZE
+        /// (the roster index stays clamped at the deepest table once the field's five waves
+        /// have run — the path a real finale takes, so the field is walked first) with the
+        /// finale's shapes — the first all Default, the second a Pack with Hunters and no
+        /// Thief. Derived from the director, with the roster's current figure beside it so a
+        /// retune is named.</summary>
+        [Test]
+        public void TheTerminalWaves_DrawMassThenPack_AtWaveFiveSize()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            for (int w = 0; w < WaveDirector.MaxWaves; w++)
+            {
+                sim.TriggerDraw();
+                sim.NotifyAssaultCleared();
+            }
+            Assert.AreEqual(WaveDirector.MaxWaves, sim.CurrentWaveIndex, "the field was not stripped first");
+
+            var launched = new System.Collections.Generic.List<WaveSpec>();
+            sim.WaveStarted += s => launched.Add(s);
+
+            int waveFive = new WaveDirector().NextWave(WaveDirector.MaxWaves - 1, 0, 1).enemyCount;
+            Assert.AreEqual(39, waveFive, "the dial-0 solo wave-5 roster moved; re-read 4-Data.md");
+
+            Assert.IsTrue(sim.StartMasterControl());
+            sim.NotifyAssaultCleared();
+            sim.Tick(WaveDirector.InterWaveGap);
+            Assert.AreEqual(2, launched.Count, "two control-room waves were not drawn");
+
+            WaveSpec mass = launched[0];
+            Assert.AreEqual(waveFive, mass.enemyCount, "the first terminal wave is not wave-5 sized");
+            Assert.AreEqual(mass.enemyCount, mass.defaultCount, "the first terminal wave is a Mass: all Default");
+            Assert.IsFalse(mass.finaleElite);
+
+            WaveSpec pack = launched[1];
+            Assert.AreEqual(waveFive, pack.enemyCount, "the second terminal wave is not wave-5 sized");
+            Assert.Greater(pack.hunterCount, 0, "the second terminal wave is a Pack: it has Hunters");
+            Assert.AreEqual(0, pack.thiefCount, "a Pack has no Thief");
+            Assert.AreEqual(pack.enemyCount,
+                pack.defaultCount + pack.hunterCount + pack.thiefCount + pack.cloakerCount,
+                "the four counts must still sum to enemyCount");
+            Assert.IsFalse(pack.finaleElite);
+            Assert.AreEqual(mass.enemyHealthMultiplier, pack.enemyHealthMultiplier, 1e-6f,
+                "re-shaping a control-room wave must not touch its HP ladder");
+        }
+
+        /// <summary>The quiet beat: after the last terminal wave clears the elite waits
+        /// FinaleBeatSeconds, not the 3 s inter-wave gap. Driven through Tick, and pinned from
+        /// both sides — not launched a hair inside the beat, launched a hair past it.</summary>
+        [Test]
+        public void TheBeat_HoldsTheEliteForFinaleBeatSeconds()
+        {
+            MetaState meta;
+            var sim = Tethered(out meta);
+            Assert.IsTrue(sim.StartMasterControl());
+            for (int i = 0; i < MasterControl.TerminalWaves; i++)
+            {
+                sim.NotifyAssaultCleared();
+                if (i < MasterControl.TerminalWaves - 1)
+                    sim.Tick(WaveDirector.InterWaveGap);
+            }
+            Assert.AreEqual(MasterControlPhase.Elite, sim.MasterPhase);
+            Assert.AreEqual(AssaultState.Prep, sim.Assault, "the beat did not open on a Prep");
+            Assert.AreEqual(MasterControl.FinaleBeatSeconds, sim.SequentialFollowUpRemaining, 1e-4f,
+                "the elite's timer is not the beat");
+
+            // The gap is not enough any more: the old 3 s would have drawn the elite here.
+            sim.Tick(WaveDirector.InterWaveGap);
+            Assert.AreEqual(AssaultState.Prep, sim.Assault, "the elite launched on the 3 s gap");
+
+            sim.Tick(MasterControl.FinaleBeatSeconds - WaveDirector.InterWaveGap - 0.01f);
+            Assert.AreEqual(AssaultState.Prep, sim.Assault,
+                "the elite launched inside FinaleBeatSeconds - 0.01");
+
+            sim.Tick(0.02f);
+            Assert.AreEqual(AssaultState.Assault, sim.Assault,
+                "the elite had not launched by FinaleBeatSeconds + 0.01");
+            Assert.AreEqual(WaveMode.Terminal, sim.Mode);
+        }
+
+        /// <summary>The escort is the fight before the fight: while any escort body stands the
+        /// elite refuses damage; the moment the last one falls it takes damage normally. The
+        /// rule is pure so the Game layer can only supply a count, never a second rule.</summary>
+        [Test]
+        public void EliteShielded_WhileAnyEscortStands()
+        {
+            Assert.IsTrue(MasterControl.EliteShielded(MasterControl.EscortHunters + MasterControl.EscortCloakers));
+            Assert.IsTrue(MasterControl.EliteShielded(1), "one escort standing still shields");
+            Assert.IsFalse(MasterControl.EliteShielded(0), "no escort, no shield");
+            Assert.IsFalse(MasterControl.EliteShielded(-1), "a ledger that undercounted must not shield forever");
+        }
+
+        /// <summary>The finale wave's roster in emission order: the escort lands first, the
+        /// elite alone in the last group, on every seed — the shuffle only moves FULL groups
+        /// and the elite is the short tail, so it cannot be dealt in ahead of its escort.</summary>
+        [Test]
+        public void FinaleQueue_LandsTheEscortFirst_AndTheEliteAloneLast()
+        {
+            WaveSpec spec = MasterControl.ApplyFinaleElite(new WaveDirector().NextWave(WaveDirector.MaxWaves - 1, 0, 1));
+            int escort = MasterControl.EscortHunters + MasterControl.EscortCloakers;
+            Assert.AreEqual(escort, spec.groupSize, "the group width is the whole escort");
+            Assert.AreEqual(2, WaveCadence.GroupsFor(spec.enemyCount, spec.groupSize),
+                "two groups: the escort, then the elite");
+
+            var queue = new System.Collections.Generic.List<GatekeeperKind>();
+            for (int seed = 1; seed <= 25; seed++)
+            {
+                WaveShapes.GroupByKind(spec, new System.Random(seed), queue);
+                Assert.AreEqual(spec.enemyCount, queue.Count, "seed " + seed);
+                Assert.AreEqual(GatekeeperKind.Thief, queue[queue.Count - 1], "seed " + seed + ": the elite is not last");
+                int hunters = 0, cloakers = 0;
+                for (int i = 0; i < escort; i++)
+                {
+                    Assert.AreNotEqual(GatekeeperKind.Thief, queue[i], "seed " + seed + ": a Thief in the escort group");
+                    Assert.AreNotEqual(GatekeeperKind.Default, queue[i], "seed " + seed + ": a Default in the escort group");
+                    if (queue[i] == GatekeeperKind.Hunter) hunters++;
+                    if (queue[i] == GatekeeperKind.Cloaker) cloakers++;
+                }
+                Assert.AreEqual(MasterControl.EscortHunters, hunters, "seed " + seed);
+                Assert.AreEqual(MasterControl.EscortCloakers, cloakers, "seed " + seed);
+            }
+            // And a field spec keeps its build order (Hunter, Thief, Cloaker, Defaults): the
+            // Thief block sits ahead of the Cloakers there, not behind them.
+            WaveShapes.GroupByKind(new WaveDirector().NextWave(WaveDirector.MaxWaves - 1, 0, 1), null, queue);
+            Assert.Less(queue.IndexOf(GatekeeperKind.Thief), queue.IndexOf(GatekeeperKind.Cloaker),
+                "a field Convoy's build order moved — GroupByKind's finale branch leaked");
+        }
+
+        /// <summary>The finale wave: one Thief wearing the HP, four Hunters and two Cloakers in
+        /// front of it. RENAMED 2026-09-03 (was <c>FinaleWindow_IsOneEliteThief</c>, "no
+        /// escorts"): the escort is the point now.</summary>
+        [Test]
+        public void FinaleWave_IsTheEliteAndItsEscort()
         {
             MetaState meta;
             var sim = Tethered(out meta);
@@ -432,18 +591,26 @@ namespace GatekeepersProtocol.Tests
                     sim.Tick(WaveDirector.InterWaveGap);
             }
 
-            WaveSpec hatch = default;
-            sim.WaveStarted += s => hatch = s;
-            sim.Tick(WaveDirector.InterWaveGap);
+            WaveSpec finale = default;
+            sim.WaveStarted += s => finale = s;
+            sim.Tick(MasterControl.FinaleBeatSeconds);
 
-            Assert.IsTrue(hatch.finaleElite, "the final window carries the elite flag");
-            Assert.AreEqual(MasterControl.FinaleEliteCount, hatch.enemyCount);
-            Assert.AreEqual(MasterControl.FinaleEliteCount, hatch.thiefCount);
-            Assert.AreEqual(0, hatch.hunterCount, "no escorts");
-            Assert.AreEqual(0, hatch.defaultCount, "no escorts");
-            Assert.AreEqual(1, hatch.groupSize);
-            Assert.Greater(MasterControl.FinaleEliteHp * hatch.enemyHealthMultiplier,
-                WaveDirector.StatsFor(GatekeeperKind.Thief).maxHp * hatch.enemyHealthMultiplier,
+            Assert.IsTrue(finale.finaleElite, "the finale wave carries the elite flag");
+            Assert.AreEqual(1, MasterControl.FinaleEliteCount, "one elite; the escort is not elite");
+            Assert.AreEqual(MasterControl.FinaleEliteCount, finale.thiefCount, "the Thief is the elite");
+            Assert.AreEqual(4, MasterControl.EscortHunters);
+            Assert.AreEqual(2, MasterControl.EscortCloakers);
+            Assert.AreEqual(MasterControl.EscortHunters, finale.hunterCount);
+            Assert.AreEqual(MasterControl.EscortCloakers, finale.cloakerCount);
+            Assert.AreEqual(0, finale.defaultCount, "no Default in the finale");
+            Assert.AreEqual(7, finale.enemyCount, "1 Thief + 4 Hunters + 2 Cloakers");
+            Assert.AreEqual(finale.enemyCount,
+                finale.defaultCount + finale.hunterCount + finale.thiefCount + finale.cloakerCount);
+            Assert.AreEqual(MasterControl.EscortHunters + MasterControl.EscortCloakers, finale.groupSize,
+                "the escort is one group and the elite the next");
+            Assert.AreEqual(240f, MasterControl.FinaleEliteHp, 1e-6f, "the elite's HP did not move with the escort");
+            Assert.Greater(MasterControl.FinaleEliteHp * finale.enemyHealthMultiplier,
+                WaveDirector.StatsFor(GatekeeperKind.Thief).maxHp * finale.enemyHealthMultiplier,
                 "spawned elite HP must sit above a Wave-5 Thief");
         }
 
@@ -465,7 +632,8 @@ namespace GatekeepersProtocol.Tests
                 "the checkpoint dropped into a Convert window the finale no longer has");
             Assert.AreEqual(HatchBank.MasterTerminalUnbanked(), sim.Unbanked);
             Assert.IsTrue(hatch.finaleElite);
-            Assert.AreEqual(1, hatch.enemyCount);
+            Assert.AreEqual(MasterControl.EscortHunters + MasterControl.EscortCloakers + 1, hatch.enemyCount,
+                "the checkpoint's elite arrived without its escort");
             Assert.AreEqual(1, hatch.thiefCount);
 
             // The checkpoint must land on the same gate the real sequence reaches, or it stops

@@ -12,25 +12,31 @@ namespace GatekeepersProtocol.Game
     /// per tick.</summary>
     public sealed partial class WaveSpawner
     {
-        /// <summary>Fill a wave emit's roster from the spec's three counts and shuffle it.</summary>
-        /// <remarks>SHUFFLED, NOT BLOCKED: appending the kinds in order would send every Hunter
-        /// first and every Thief last, so the mix a player has to triage would only ever exist for
-        /// the few seconds the blocks overlap. Mixing is the whole reason there are three kinds.
+        /// <summary>Fill a wave emit's roster from the spec's four counts, GROUPED BY KIND.</summary>
+        /// <remarks>GROUPS ARE AUTHORED BY KIND (M116): the order is WaveShapes.GroupByKind's —
+        /// every group one kind where the counts allow, Defaults filling, the full groups'
+        /// ORDER shuffled — so a Hunter group is three Hunters and the mix still arrives across
+        /// the wave rather than kind by kind. This replaced a per-body shuffle whose groups
+        /// were two Defaults and a Hunter; a shape the player cannot read at the door is not a
+        /// shape.
         ///
         /// The shuffle draws from RunSim.Rng — the sim's seeded stream, and ONLY that stream — so
         /// the same seed replays the same roster; it is host-side wave construction, not player
         /// input, so it belongs on that stream (the reason PlayerGun's crits deliberately do not).
-        /// No sim means no seeded stream: the roster is left in build order (deterministic), with
+        /// No sim means no seeded stream: the groups are left in build order (deterministic), with
         /// one warning — the same no-sim case in which nothing spawns anyway.
         /// </remarks>
         void BuildRoster(WaveEmit emit, WaveSpec spec)
         {
-            emit.Queue.Clear();
             emit.FinaleElitePending = spec.finaleElite;
-            AddKind(emit, GatekeeperKind.Default, spec.defaultCount);
-            AddKind(emit, GatekeeperKind.Hunter, spec.hunterCount);
-            AddKind(emit, GatekeeperKind.Thief, spec.thiefCount);
-            AddKind(emit, GatekeeperKind.Cloaker, spec.cloakerCount);
+            if (spec.finaleElite) FinaleEscortAlive = 0; // a fresh finale owns the ledger
+            var rng = _sim != null ? _sim.Rng : null;
+            if (rng == null && !_warnedNoRng)
+            {
+                _warnedNoRng = true;
+                Log.Warn(Tag, "No sim RNG; groups left in build order (deterministic).");
+            }
+            WaveShapes.GroupByKind(spec, rng, emit.Queue);
 
             // The sim's contract is that the four counts sum to enemyCount. If a tuning pass ever
             // breaks that, spawn what the spec actually asked for rather than an empty wave, and
@@ -42,23 +48,9 @@ namespace GatekeepersProtocol.Game
                 if (emit.Queue.Count == 0) AddKind(emit, GatekeeperKind.Default, spec.enemyCount);
             }
 
-            var rng = _sim != null ? _sim.Rng : null;
-            if (rng == null)
-            {
-                if (!_warnedNoRng)
-                {
-                    _warnedNoRng = true;
-                    Log.Warn(Tag, "No sim RNG; roster left unshuffled (deterministic build order).");
-                }
-                return;
-            }
-            for (int i = emit.Queue.Count - 1; i > 0; i--)
-            {
-                int j = rng.Next(i + 1);
-                GatekeeperKind swap = emit.Queue[i];
-                emit.Queue[i] = emit.Queue[j];
-                emit.Queue[j] = swap;
-            }
+            // GroupByKind writes emission order (index 0 lands first); EmitGroup pops from the
+            // END of the queue, so the list is reversed once here rather than shifted per body.
+            emit.Queue.Reverse();
         }
 
         void AddKind(WaveEmit emit, GatekeeperKind kind, int count)
@@ -152,7 +144,9 @@ namespace GatekeepersProtocol.Game
 
                 if (spec.spawnInterval > 0f && emit.Queue.Count > 0)
                 {
-                    emit.Countdown = spec.spawnInterval;
+                    // The gap after THIS group is the seeded beat's, not the mean's (M116);
+                    // a spec with no schedule (the trickle) still waits the mean.
+                    emit.Countdown = WaveCadence.GapAfter(spec, emit.GroupNumber);
                     return false; // one group per tick when an interval paces the wave
                 }
                 // spawnInterval <= 0: no gap between groups — keep emitting this tick.
@@ -257,10 +251,14 @@ namespace GatekeepersProtocol.Game
 
             Vector3 at = GroupSlot(point.position, index, groupCount);
             float multiplier = spec.enemyHealthMultiplier > 0f ? spec.enemyHealthMultiplier : 1f;
-            if (CreateActor(kind, stats, prefab, at, point.rotation, multiplier, isElite,
-                    waveBody: true) == null)
+            EnemyGatekeeper actor = CreateActor(kind, stats, prefab, at, point.rotation, multiplier,
+                isElite, waveBody: true);
+            if (actor == null)
                 return false;
 
+            // Every body of a finale wave is either the elite or its escort; the ledger the
+            // shield reads is kept here, at the one place a wave body is born.
+            if (spec.finaleElite) RegisterFinaleBody(actor, isElite);
             emit.Spawned++;
             return true;
         }

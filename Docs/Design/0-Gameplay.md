@@ -16,10 +16,25 @@ That is the whole rule. Everything below is what it costs to mean it.
 
 | Beat | Where | Verb | What it does |
 |---|---|---|---|
-| 1. Start | The Hatch | `T` | Draws the current zone's whole trigger — every wave the zone authors, back to back, no Prep between them. |
-| 2. Push | The lane | movement + fire | Most of the wave breaches at the FAR closet, so the fight travels toward the terminal with you. Once the authored bodies are spent, a **trickle** keeps the lane honest. |
-| 3. End | The zone's terminal | `T` | Shuts the wave off, completes the zone, banks what you carry, opens the zone's door. |
-| 4. Repeat | The Hatch | `T` | The next zone's trigger. Master Control is the last one — and it is a zone like the others. |
+| 1. Start | The Hatch | `T` | Draws the current zone's **opening** waves — every wave the zone authors but the last, back to back, no Prep between them. |
+| 2. Push | The lane | movement + fire | Most of the wave breaches at the FAR closet, so the fight travels toward the terminal with you. Once the authored bodies are spent, a **trickle** keeps the lane honest until the terminal is pressed. |
+| 3. Call | The zone's terminal | `T` | Draws the zone's **last** wave into whatever is still standing (M115, 2026-09-02). |
+| 4. End | The same terminal | `T` | Once the last wave is down the terminal arms: shuts the wave off, completes the zone, banks what you carry, opens the zone's door. |
+| 5. Repeat | The Hatch | `T` | The next zone's trigger. Master Control is the last one — and it is a zone like the others: kill the elite arms its switch. |
+
+### The terminal calls the last wave (2026-09-02)
+
+Three of the four 2026-09-02 Boardings shut T2 within 9–32 s of the Hatch press with three to
+six of wave 1's eleven dead and wave 2 never drawn, because the shutoff was legal once the
+zone's *first* wave had drawn. The walk stopped being the pressure the moment a sprint could
+end it. So the zone's last wave now belongs to its terminal: `FieldShutoff.MayCallFinalWave`
+offers the call once the opening span has drawn, `RunSim.CallZoneFinalWave` draws it into the
+live field — the opening's survivors, or the drip — and `FieldShutoff.MayRun` refuses the
+shutoff until that wave has been drawn and is down (`RunSim.FieldShutoffArmed`, raised by the
+spawner's `ArmShutoff` verdict). The Hatch is still the only start line; the terminal only
+finishes what the Hatch began. `M115`. The opening and the last wave draw different shapes
+(`M116`, `WaveShapes`): a zone opens on a Mass and its terminal calls a Pack (zone 1) or a
+Convoy (zone 2), and the prompt names the shape before `T` — `4-Data.md`, "Waves and intensity".
 
 ### Master Control obeys the rule too (2026-08-28)
 
@@ -37,7 +52,9 @@ Now: start at the Hatch once D3 is open (`ControlRoomReachable`), fight the cont
 **the finale elite is the gate**. Killing it does not end the run — it ARMS the Master terminal,
 and throwing that switch is what ends the Boarding (`RunSim.ShutOffMasterControl`). A finale
 cannot end by attrition any more than a zone can. The HUD states which half of the gate you are
-in.
+in. Since 2026-09-03 the control room is two Waves at the Wave-5 size, Mass then Pack, a 12 s
+quiet beat, then the elite behind an escort of four Hunters and two Cloakers that has to fall
+before the elite takes damage — staged beats with a readable dip, not five of the same Wave.
 
 **And the switch pays.** `ShutOffFieldWave` has always banked the carry at a zone terminal —
 "reaching the switch IS the payout" — but removing the finale's Convert window quietly removed
@@ -71,8 +88,10 @@ So:
   the table does not author, a build with the trickle disabled, a Run that ended the wave some
   other way), and a player who arrives to a quiet lane must still be able to finish. Refusing
   outside Assault is what left the playthrough pressing a dead button.
-* **The shutoff is NOT legal before the zone's waves have been drawn.** Walking up a quiet lane
-  and pressing `T` must not skip the zone — see `GameController.ZoneWavesHaveRun`.
+* **The shutoff is NOT legal before the zone's waves have been drawn** — all of them, the last
+  one by the terminal's own press (2026-09-02). Walking up a quiet lane and pressing `T` must
+  not skip the zone, and neither may a sprint past the first wave — see
+  `FieldShutoff.MayRun` and `MayCallFinalWave`.
 * **A player may run a zone's waves more than once** before closing it. More salvage, more risk,
   same door at the end. That is a choice, not an exploit.
 

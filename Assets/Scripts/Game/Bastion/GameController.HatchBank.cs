@@ -141,7 +141,9 @@ namespace GatekeepersProtocol.Game
             }
             else
                 Log.Warn(Tag, "master-control elite — no BastionLayout");
-            Log.Event("Demo", "the elite is on the floor");
+            // Fires at the START of the beat: the elite is called, its escort lands first,
+            // and the room has FinaleBeatSeconds of quiet before either does.
+            Log.Event("Demo", "the elite is called — its escort lands first");
             DemoVoice.PlayLocalAndBroadcast(
                 DemoConversationIds.HatchFinale, DemoVoiceMode.Subtitle);
         }

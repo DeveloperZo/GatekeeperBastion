@@ -616,13 +616,20 @@ public static class Docgen
         var sb = new StringBuilder();
         sb.AppendLine("| | |");
         sb.AppendLine("|---|---|");
-        sb.AppendLine("| terminal Waves | " + MasterControl.TerminalWaves + " |");
+        var shapes = new List<string>();
+        for (int i = 1; i <= MasterControl.TerminalWaves; i++)
+            shapes.Add(WaveShapes.Name(MasterControl.ShapeForTerminalWave(i)));
+        sb.AppendLine("| terminal Waves | " + MasterControl.TerminalWaves + " — "
+                      + string.Join(", then ", shapes) + ", at the Wave-" + WaveDirector.MaxWaves + " size |");
+        sb.AppendLine("| gap | " + N(WaveDirector.InterWaveGap) + " s |");
+        sb.AppendLine("| beat before the elite | " + N(MasterControl.FinaleBeatSeconds) + " s |");
+        sb.AppendLine("| escort | " + MasterControl.EscortHunters + " Hunters, "
+                      + MasterControl.EscortCloakers + " Cloakers — the elite is shielded until they are down |");
         // The finale has no Hatch-bank half since 2026-08-28 — it ends at its own terminal
         // with the elite as the gate. Emitting MasterControl.HatchWaves here documented a
         // beat the game no longer has.
         sb.AppendLine("| elite waves | 1, and killing it arms the terminal |");
         sb.AppendLine("| finale elite HP | " + N(MasterControl.FinaleEliteHp) + " |");
-        sb.AppendLine("| gap | " + N(WaveDirector.InterWaveGap) + " s |");
         return sb.ToString().TrimEnd('\r', '\n');
     }
 

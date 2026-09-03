@@ -77,6 +77,11 @@ namespace GatekeepersProtocol.Game
             if (DemoZones.ZoneOf(id) <= 0) return;
             if (!ZoneWavesHaveRun(id)) return;
 
+            if (CanCallFinalWave(id))
+            {
+                CallFinalWave(lookingTerminal);
+                return;
+            }
             ShutOffTerminal(lookingTerminal);
         }
 
@@ -141,7 +146,10 @@ namespace GatekeepersProtocol.Game
                     && DemoZones.ZoneOf(lookingTerminal.TerminalId) > 0
                     && ZoneWavesHaveRun(lookingTerminal.TerminalId))
                 {
-                    ShutOffTerminal(lookingTerminal);
+                    if (CanCallFinalWave(lookingTerminal.TerminalId))
+                        CallFinalWave(lookingTerminal);
+                    else
+                        ShutOffTerminal(lookingTerminal);
                     return;
                 }
                 if (lookingHatch != null && Sim != null
@@ -487,10 +495,13 @@ namespace GatekeepersProtocol.Game
         {
             int first = DemoZones.FirstWave(zone);
             int end = DemoZones.EndWave(zone);
+            // THE LAST WAVE BELONGS TO THE TERMINAL (Zo, 2026-09-02; M115): the Hatch draws
+            // the opening span and the terminal press draws EndWave into the live field.
+            int last = end > first ? end - 1 : end;
             // The chain crosses every room the zone owns, so the zone's spawns go live, not
             // just this terminal's. Spawns register only while active; enable before the draw.
             ActivateZoneSpawns(zone);
-            if (!Sim.TriggerCompositeDraw(first, end))
+            if (!Sim.TriggerCompositeDraw(first, last))
             {
                 if (_layout != null) _layout.RestoreFieldSpawns();
                 Log.Event("Terminal", terminal.TerminalId + " refused — draw did not start");
@@ -499,8 +510,13 @@ namespace GatekeepersProtocol.Game
 
             _pendingCompositeZone = zone;
             _pendingCompositeEnd = end;
-            Log.Event("Demo", "zone start zone=" + zone + " waves=" + wavesPerTrigger
-                + " mode=composite");
+            // The opening span's shapes, in order (M116): once per zone start, so the string
+            // build is not a per-frame allocation.
+            string shapes = WaveShapes.Name(WaveShapes.For(first));
+            for (int w = first + 1; w <= last; w++)
+                shapes += ", " + WaveShapes.Name(WaveShapes.For(w));
+            Log.Event("Demo", "zone start zone=" + zone + " waves=" + (last - first + 1)
+                + " mode=composite shapes=" + shapes + " — the last wave answers at the terminal");
             return true;
         }
 
@@ -608,8 +624,8 @@ namespace GatekeepersProtocol.Game
                 && !_layout.IsTerminalDone(master.TerminalId))
             {
                 _armedTerminalId = master.TerminalId;
-                Log.Event("Hatch", "wave started from the Hatch — Master Control answers at "
-                    + master.TerminalId);
+                Log.Event("Hatch", "wave started from the Hatch — Master Control answers at " + master.TerminalId
+                    + ": " + MasterControl.TerminalWaves + " waves, then the elite and its escort");
                 if (StartMasterControl(master)) return true;
                 _armedTerminalId = null;
                 return false;
@@ -658,7 +674,10 @@ namespace GatekeepersProtocol.Game
                 for (int i = 0; i < count; i++)
                 {
                     string id = DemoZones.TerminalIdAt(zone, i);
-                    if (!string.IsNullOrEmpty(id) && CanShutOffTerminal(id)) return true;
+                    // "Owed", not "legal now": before the last wave is called the shutoff
+                    // is refused but the lane still drips (M115).
+                    if (!string.IsNullOrEmpty(id) && !_layout.IsTerminalDone(id)
+                        && ZoneWavesHaveRun(id)) return true;
                 }
                 return false;
             }
@@ -678,7 +697,48 @@ namespace GatekeepersProtocol.Game
             if (master != null && master.TerminalId == terminalId)
                 return Sim.MasterAwaitsShutoff;
             return FieldShutoff.MayRun(Sim.Phase, RunIsOver, Sim.Mode, terminalId,
-                _layout.IsTerminalDone(terminalId), Sim.CurrentWaveIndex);
+                _layout.IsTerminalDone(terminalId), Sim.CurrentWaveIndex, Sim.ZoneShutoffReady);
+        }
+
+        /// <summary>May this terminal call its zone's last wave right now (M115)? The pure
+        /// rule is <see cref="FieldShutoff.MayCallFinalWave"/>; the sim adds the states it
+        /// alone can see (a pending chain, the finale, a Convert window).</summary>
+        public bool CanCallFinalWave(string terminalId)
+        {
+            if (Sim == null || _layout == null || RunIsOver) return false;
+            if (!FieldShutoff.MayCallFinalWave(Sim.Phase, RunIsOver, Sim.Mode, terminalId,
+                    _layout.IsTerminalDone(terminalId), Sim.CurrentWaveIndex))
+                return false;
+            return Sim.CanCallZoneFinalWave;
+        }
+
+        /// <summary>The terminal press that draws the zone's last wave. The zone's spawns are
+        /// already live from the Hatch's draw; they are re-enabled anyway so a save that
+        /// arrived here by other means still has closets to breach from.</summary>
+        public bool CallFinalWave(BastionTerminal terminal)
+        {
+            if (terminal == null || Sim == null || _layout == null) return false;
+            if (_net != null && _net.IsClientOnly)
+            {
+                Log.Event("Terminal", terminal.TerminalId + " refused — client cannot call a Wave");
+                return false;
+            }
+            string id = terminal.TerminalId;
+            if (!CanCallFinalWave(id))
+            {
+                Log.Event("Terminal", id + " refused — the last wave cannot be called now");
+                return false;
+            }
+            int zone = DemoZones.ZoneOf(id);
+            ActivateZoneSpawns(zone);
+            if (!Sim.CallZoneFinalWave())
+            {
+                Log.Event("Terminal", id + " refused — the sim would not draw the last wave");
+                return false;
+            }
+            Log.Event("Terminal", id + " pressed — zone " + zone + "'s last wave answers shape="
+                + WaveShapes.Name(WaveShapes.For(DemoZones.EndWave(zone))));
+            return true;
         }
 
         public bool ShutOffTerminal(BastionTerminal terminal)
@@ -716,6 +776,16 @@ namespace GatekeepersProtocol.Game
                 }
                 Log.Event("Terminal", id + " shut down — Master Control ends here");
                 return Sim.ShutOffMasterControl();
+            }
+
+            // THE LAST WAVE BELONGS TO THE TERMINAL (M115): no shutoff until it was called
+            // and is down. The same predicate the prompt reads, so the two cannot disagree.
+            if (!_layout.IsTerminalDone(id) && !CanShutOffTerminal(id))
+            {
+                Log.Event("Terminal", id + " shutoff refused — " + (CanCallFinalWave(id)
+                    ? "the last wave has not been called"
+                    : "the last wave is still standing"));
+                return false;
             }
 
             BastionLayout layout = _layout;

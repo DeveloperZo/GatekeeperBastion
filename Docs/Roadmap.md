@@ -29,8 +29,11 @@ files written before that date still carry one and are a record.
 
 ## Current
 
-**Active (1/3):** `M86` (downed crewmates — controller bool and avatar drive landed
-2026-08-23, `Anim_Down.fbx` unsourced, nothing through the Editor yet).
+**Active (3/3):** `M86` (downed crewmates — controller bool and avatar drive landed
+2026-08-23, `Anim_Down.fbx` unsourced, nothing through the Editor yet); `M115` (the terminal
+calls the last wave — sim, game and tests landed 2026-09-02; the playthrough path is owed);
+`M116` (waves that differ — all three levers landed 2026-09-02: the seeded beat, the shape
+table, the two-wave finale with its beat and escorted elite; the adjudicating play is owed).
 
 **Closed 2026-09-02:** `M113`, by Zo — "we have the capability, we need to tune it for
 immersion." First-person arms cut from the Boarder's own `SK_Tactical` mesh in Unity, baked
@@ -235,6 +238,8 @@ this table — see the change log.
 | M110 | The prose agrees with the tables | planned | The ~14 stale Design/Demo lines state live values; lint-constants gains a scalar watch over named Sim constants, proven twice, wired into verify | [`1. planned/M110`](Milestones/1.%20planned/M110-the-prose-agrees-with-the-tables.md) |
 | M112 | Tuned by playing, not by arithmetic | planned (bet; kill criterion pre-registered 2026-09-01) | Five untainted runs adjudicate the door stake, wave 5 vs the raised ceiling, and the turret; each dial moves at most once; stake cut if it never bites | [`1. planned/M112`](Milestones/1.%20planned/M112-tuned-by-playing.md) |
 | M113 | Hands that hold the gun | completed, Sep 2026 (closed by Zo 2026-09-02; immersion tuning owed) | A rigid forearms prop cut from `SK_Tactical` rides the wrapper root `M82`'s clips already animate, so kick, bob and reload dip carry the hands for free; one arms instance reparented in `Show`; `ViewModel.controller` and the four clips are kept, not deleted; remote avatars show no arms | [`3. completed/M113`](Milestones/3.%20completed/M113-hands-that-hold-the-gun.md) |
+| M115 | The terminal calls the last wave | active | The Hatch draws a zone's opening waves, the terminal's first `T` draws its last wave into the live field, the terminal arms when it is down and the next `T` shuts the zone off; the first-wave shutoff that let a sprint close zone 1 is gone | [`2. active/M115`](Milestones/2.%20active/M115-the-terminal-calls-the-last-wave.md) |
+| M116 | Waves that differ | active | Three levers, one commit each: the group gap becomes a seeded burst-and-lull beat inside an unchanged window; waves are authored shapes (Mass, Pack, Convoy) with the zone's last wave drawn from a different shape than its opening; Master Control is two waves, a quiet beat and an escorted elite. Direction variance cut by Zo | [`2. active/M116`](Milestones/2.%20active/M116-waves-that-differ.md) |
 
 ## Strategy
 

@@ -207,7 +207,7 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void MasterTerminalUnbanked_IsFiveWaveFiveClears()
+        public void MasterTerminalUnbanked_IsTerminalWavesOfWaveFiveClears()
         {
             var director = new WaveDirector();
             long perKill = (long)System.Math.Floor((double)MetaUpgrades.SalvagePerKill());
@@ -218,8 +218,9 @@ namespace GatekeepersProtocol.Tests
             // it, and on 2026-08-27 the roster cut took 66 to 39 while SalvagePerKill took 25 to
             // 42 — so both factors in the comment were wrong and the product moved to 8190. The
             // line above already derives the whole figure; a second copy could only ever disagree
-            // with it. What is worth asserting beside it is the RELATION: the master pile is five
-            // deepest waves, so it must be a multiple of one and strictly more than one.
+            // with it. What is worth asserting beside it is the RELATION: the master pile is
+            // TerminalWaves deepest waves (five until 2026-09-03, two since), so it must be a
+            // multiple of one and strictly more than one.
             Assert.Greater(HatchBank.MasterTerminalUnbanked(), waveFive,
                 "the master pile is more than a single wave's take");
             Assert.AreEqual(0L, HatchBank.MasterTerminalUnbanked() % waveFive,

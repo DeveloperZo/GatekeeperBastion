@@ -122,13 +122,13 @@ namespace GatekeepersProtocol.Tests
                     + "starting sidearm at equal tier is not a purchase, it is a reskin");
             }
 
-            // THE BAND SHAPE. PRI-C and MR-35 still shadow each other on the dps column, because
-            // neither row moved on 2026-08-27 — that half of the shape is unchanged and is still
-            // asserted where it always was.
+            // THE BAND SHAPE, 2026-09-02: the MR-35 leads the dps column outright since its
+            // 16 -> 18 raise (Zo). PRI-C used to shadow it within 1.5%; what PRI-C owns now is
+            // the pierce column, asserted in PrimaryBand_T0_EachAvailablePrimaryLeadsOnOneAxis.
             float mr35 = Dps(WeaponId.Mr35Rifle, 0);
             float priC = Dps(WeaponId.PriC, 0);
-            Assert.LessOrEqual(Math.Abs(priC - mr35) / mr35, 0.02f,
-                "PRI-C shadows MR-35 within ~1.5%, as it did at 36.5 against 37.0");
+            Assert.Less(priC, mr35,
+                "PRI-C sits under the MR-35 on dps since 2026-09-02; it leads on the pierce line");
 
             // BR-12's HALF OF THE SHAPE MOVED TO A DIFFERENT COLUMN, and comparing it on dps is
             // now a category error rather than a balance claim: at 133 damage a volley into a
@@ -139,9 +139,13 @@ namespace GatekeepersProtocol.Tests
             var mr35Def = WeaponCatalog.Def(WeaponId.Mr35Rifle);
             float br12Kps = RunAverageKillsPerSecond(br12Def);
             float mr35Kps = RunAverageKillsPerSecond(mr35Def);
-            Assert.LessOrEqual(Math.Abs(mr35Kps - br12Kps) / mr35Kps, 0.05f,
+            // Parity within 5% held until 2026-09-02; the MR-35 raise (16 -> 18) makes the
+            // rifle the ladder's all-rounder. What BR-12 keeps is the DEEPEST body, pinned in
+            // the dominance test; what must never happen is the shotgun out-clearing the rifle
+            // across the whole ladder, which would make the rifle the dominated row.
+            Assert.GreaterOrEqual(mr35Kps, br12Kps,
                 $"BR-12 clears the ladder at {br12Kps:0.###} kills/s against MR-35's {mr35Kps:0.###}"
-                + " — the band's shape lives in this column now, not in the dps one");
+                + " — the rifle is the all-rounder since the 2026-09-02 raise");
 
             // ...and BR-12's one-shot is FLAT across the whole ladder, which is both why its dps
             // column is meaningless and why the 12 -> 19 raise bought no power. If a Default ever
@@ -283,14 +287,16 @@ namespace GatekeepersProtocol.Tests
         /// from _InThreeSeconds for the pair of moves that landed together (MR-35 damage 8 → 16
         /// with the Primary tier raise, and EnemyHealthPerWave restored 0.30 → 0.40), and now from
         /// _InOneAndThreeQuarterSeconds for the fewer-and-tougher pass: the Thief went 120 → 200
-        /// base, so a wave-3 Thief is 360 HP rather than 216 and the kill rose 1.75 s → 2.875 s.
+        /// base, so a wave-3 Thief is 360 HP rather than 216 and the kill rose 1.75 s → 2.875 s;
+        /// and from _InTwoAndSevenEighthsSeconds on 2026-09-02 when MR-35 damage went 16 → 18
+        /// (Zo: "increase MR-35 damage"), 20 shots on 360 HP at 8/s = 2.5 s.
         /// The claim is how long a wave-3 Thief survives focused fire, so the SECONDS are the pin,
         /// and the seconds move whenever either curve does — which is exactly why they are in the
         /// name and why the name is rewritten every time rather than left lying. Every HP figure
         /// below is DERIVED from WaveDirector rather than restated: this file must not carry a
         /// second copy of the enemy curve (Tools/lint-constants/run.sh enforces that).</summary>
         [Test]
-        public void Mr35_KillsWave3Thief_InTwoAndSevenEighthsSeconds_AndTheClipStillOutlastsIt()
+        public void Mr35_KillsWave3Thief_InTwoAndAHalfSeconds_AndTheClipStillOutlastsIt()
         {
             // 7 shots at 1.6/s was 4.375 s of held trigger. At 8 shots/s the same Thief dies off a
             // single held pull, which is the fantasy working. Nothing about a 27-round magazine is
@@ -309,7 +315,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(def.damage, dmg, 0.01f, "T0 is the authored row, no wheel multiplier");
 
             int shots = (int)Math.Ceiling(wave3ThiefHp / dmg);
-            Assert.AreEqual(2.875f, shots / def.shotsPerSecond, 0.01f,
+            Assert.AreEqual(2.5f, shots / def.shotsPerSecond, 0.01f,
                 $"{shots} shots on a wave-3 Thief ({wave3ThiefHp} HP) is the held-trigger time, "
                 + "and it must stay well under the old 4.375 s marksman cadence");
             Assert.AreEqual(2, def.pierceCount);
@@ -325,6 +331,11 @@ namespace GatekeepersProtocol.Tests
             // 520 HP on wave 5, and an MR-35 magazine carries 432, so the deepest Thief no longer
             // dies inside one pull. That is intended — it is the heavy."
             //
+            // AND IT WALKED AGAIN ON 2026-09-02: damage 16 -> 18 (Zo) puts 486 in a magazine, so
+            // the wave-4 Thief (440) fits and only the wave-5 Thief (520) does not. 18 is the
+            // highest whole number that keeps this boundary AND SiphonAndWaveTests' crossover
+            // before the last wave; at 20 (540) the heavy would die inside one pull everywhere.
+            //
             // Pinning the boundary WAVE rather than "0" or "never" is what makes this survive the
             // next move in either direction: it goes red when the boundary walks, whichever way.
             int firstWaveNeedingAReload = 0;
@@ -333,10 +344,10 @@ namespace GatekeepersProtocol.Tests
                 float hp = thiefBase * (1f + WaveDirector.EnemyHealthPerWave * w);
                 if (Math.Ceiling(hp / dmg) > def.clipSize) { firstWaveNeedingAReload = w + 1; break; }
             }
-            Assert.AreEqual(4, firstWaveNeedingAReload,
-                "the Thief is the one body a magazine is sized against, and wave 4 is where it "
+            Assert.AreEqual(5, firstWaveNeedingAReload,
+                "the Thief is the one body a magazine is sized against, and wave 5 is where it "
                 + "stops fitting; a boundary at wave 3 or earlier means the rifle lost the mid-run "
-                + "Thief, and one past wave 5 means the heavy stopped being heavy");
+                + "Thief, and none at all means the heavy stopped being heavy");
 
             float magazine = def.clipSize * dmg;
             float deepestThiefHp = thiefBase
@@ -352,7 +363,7 @@ namespace GatekeepersProtocol.Tests
             Assert.LessOrEqual(shots, (int)def.clipSize,
                 $"a wave-3 Thief costs {shots} of {def.clipSize} rounds; crossing a reload here is "
                 + "the regression that once cost 5.745 s of wall clock");
-            Assert.AreEqual(4, (int)def.clipSize - shots, "rounds to spare on a wave-3 Thief");
+            Assert.AreEqual(7, (int)def.clipSize - shots, "rounds to spare on a wave-3 Thief (4 at the old 16 damage)");
 
             // The slope at which even THAT would stop holding, so the guard is stated in the units
             // of the curve that would eat it: EnemyHealthPerWave has to reach 0.58 before a wave-3

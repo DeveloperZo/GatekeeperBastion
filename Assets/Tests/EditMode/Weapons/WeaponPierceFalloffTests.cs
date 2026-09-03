@@ -109,6 +109,10 @@ namespace GatekeepersProtocol.Tests
             //   front  ceil(50 / 16)          = 4 shots, 4/8 = 0.5 s
             //   rear   4 x (16 x 0.26 = 4.16) = 16.64 each, 33.3% of 50 — still standing
             //
+            // And on 2026-09-02 the raise to 18 (Zo) took the front to three shots:
+            //   front  ceil(50 / 18)          = 3 shots, 3/8 = 0.375 s
+            //   rear   3 x (18 x 0.26 = 4.68) = 14.04 each, 28.1% of 50 — still standing
+            //
             // THE PROPORTION IS THE INVARIANT AND IT IS WHY THIS PIN KEEPS READING THE SAME.
             // mul is a FRACTION of damage, so the front's kill threshold and the rear's share move
             // together, and pierce's share of a line is untouched by any pure DAMAGE retune. An
@@ -130,8 +134,8 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(def.damage, body1, Tol, "10 m is inside falloffStart: the front takes the row");
 
             int shotsToDropFront = (int)Math.Ceiling(wave1Hp / body1);
-            Assert.AreEqual(4, shotsToDropFront, $"front body takes {body1}/shot, need 4 to clear {wave1Hp}");
-            Assert.AreEqual(0.5f, shotsToDropFront / def.shotsPerSecond, Tol, "front body dies in 0.5 s");
+            Assert.AreEqual(3, shotsToDropFront, $"front body takes {body1}/shot, need 3 to clear {wave1Hp}");
+            Assert.AreEqual(0.375f, shotsToDropFront / def.shotsPerSecond, Tol, "front body dies in 0.375 s");
 
             Assert.Less(shotsToDropFront * body2, wave1Hp,
                 $"body 2 has taken {shotsToDropFront * body2} when the front drops, must live vs {wave1Hp}");

@@ -405,3 +405,52 @@ Recall T2 and T5 both fired. Docked zone 1 in 101 s, Hatch 600/600, Barrage + Ru
 
 **Swing burst, same file:** 15:44:18.368–15:44:18.636, **6 hits of 6 in 0.27 s** (HP 37→1), then death. Regen between clumps: 15:42:54 HP 21 → 15:43:18 HP 86 (~65 HP in 24 s). Regen recovers between clumps; it does not absorb a simultaneous swing cluster. The 2026-08-08 14×6 / 7.4 s figure is gone from disk; this is the live before-number, tagged `[Dev]`.
 
+
+---
+
+## 2026-09-02 — four Boardings: the wall at wave 5 on the starting kit, then a strip at T5
+
+Logs: `Logs/GatekeepersProtocol_2026-09-02_18-28-26_p62456.log` (three Boardings, `dev=0`) and
+`Logs/GatekeepersProtocol_2026-09-02_22-05-07_p62456.log` (one, `dev=0`). All four start at the
+Hatch. The 18:28 file ran the 50-damage / 1.4-per-second sidearm (no Default kill gap under
+0.67 s across 27 wave-2 kills; the old 3.0/s gun would show 0.33 s gaps) and still the wheel
+cap (`demoBuysLeft=1`); the 22:05 file ran the uncapped build (`primary rack opened — 1500 earned`).
+
+| Run | Kit | Result | Door min | Wave-1 kills/s from launch |
+|---|---|---|---|---|
+| A 18:30 | MK-1 T2, no Primary | lost `cause=hatch` wave 5, 259 s, gross 3,906 | **149/600** | 0.46 (0.61 from first kill) |
+| B 18:35 | MR-35 T0 + MK-1 T2 | lost `cause=player` wave 5, 180 s, 37 alive | 298/600 | zone 1 shut at +16 s |
+| C 18:39 | same | abandoned wave 5, 157 s, 35 alive | 600 | zone 1 shut at +32 s |
+| D 22:06 | MR-35 T5 + MK-1 T2 | **stripped**, 572 s, gross 12,600, 308 kills, 41 hits, HP min 34 | **566/600** | zone 1 shut at +9.3 s |
+
+**Verdict:** _pending_ — concur, update, or replay.
+
+**Assessment `[unconfirmed]`:**
+
+1. **A zone's shutoff is legal after its FIRST wave draws, so zone 1 is a 10-second sprint.**
+   *(#5 — `FieldShutoff.WavesHaveRun` is `currentWaveIndex >= FirstWave(zone)`; `0-Gameplay.md`
+   says "before the zone's waves have been drawn", plural.)* Runs B, C and D shut T2 at +16 s,
+   +32 s and +9.3 s with 6, 3 and 3 of wave 1's 11 dead and wave 2 never drawn (D banked 126).
+   Falsified by a reading of the rule under which one drawn wave of two is "the zone's waves".
+2. **The previous zone's delivery outlives the shutoff and advances the next zone's chain.**
+   *(Defect, `RunSim.NotifyDeliveryComplete` / `WaveSpawner.Groups.cs:163` — the spawner reports
+   any emit's completion and the sim cannot tell whose.)* D: zone 1 shut at 22:06:26 with
+   groups 3 and 4 still breaching at :31 and :38; wave 4 launched 5.9 s after wave 3 (at wave 1's
+   last group + 3 s), wave 5 at wave 3's delivery + 3 s while wave 4 was still landing; 38 live
+   at 22:07:11. C shows the same shape (wave 4 at +16 s). A, with no early shutoff, chained
+   cleanly (+35.4 s, +45.5 s). Falsified by a run that shuts off mid-delivery and chains cleanly.
+3. **The door stake bites on the starting kit and only there.** *(M112 criterion 2, first
+   table rows.)* A: 449 → 299 → 149 in 18 s at wave 5, then breach; B: 448 → 298. D on a T5
+   rifle: 600/600 through zone 2 and 566 after five finale waves. Below 480 in two of four —
+   the kill criterion does not fire. Whether a stake that bites only before the Primary is
+   worth its Thieves is Zo's read.
+4. **Wave 1 on the retuned sidearm empties.** *(#12, the 2026-09-02 MK-1 falsifier.)* A: 11
+   kills in 17.9 s from first kill (0.61/s) against 0.50 bodies/s delivered; zone 1 cleared at
+   600/600 for 1,218. The 0.66/s bar I named was the old 18-body wave's rate, the wrong
+   yardstick; against the spawn rate the field empties with margin.
+5. **Master Control is 57% of a stripped run.** *(#12, `MasterControl.TerminalWaves = 5`.)*
+   D: five 39-body waves at 75–88 s each, 325 s of the 572, door 600 → 566, peak 28 live,
+   kills at median 55–185 m. Not a claim about fun; a number for Zo's verdict.
+6. **T5 is a cliff.** *(#12, observation.)* Five MR-35 buys (2,800) took wave 5 from a 3-of-3
+   loss to a 0-damage walk; zone 2 in D took 128 s and the door was not touched. Progression
+   between "cannot hold wave 5" and "wave 5 is scenery" is those five purchases.

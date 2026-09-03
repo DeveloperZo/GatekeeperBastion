@@ -33,8 +33,8 @@ Until then this beat walks the live zone-1 loop, and the kill criterion cannot f
 ## What `WaveDirector` does today
 
 `NextWave` sets `enemyCount = min(MaxEnemyCount * playerCount, bodies * playerCount)`
-(`WaveDirector.cs:260`). `hunterCount`, `thiefCount` and `cloakerCount` are fixed
-table rows, then `Min` against that scaled total. Health, group size and spawn
+(`WaveDirector.cs:260`). `hunterCount`, `thiefCount` and `cloakerCount` are shape shares
+(`WaveShapes.Apply`, since 2026-09-02), capped by the per-wave rows, then `Min` against that scaled total. Health, group size and spawn
 interval never see `playerCount`. Solo (`playerCount == 1`) is byte-identical to
 the one-seat table, and that is a test.
 
