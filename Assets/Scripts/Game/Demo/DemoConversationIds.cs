@@ -27,7 +27,6 @@ namespace GatekeepersProtocol.Game
         public const string HatchFight = "demo.hatch_fight";
         public const string FirstHatchDown = "demo.first_hatch_down";
         public const string MpUnlocked = "demo.mp_unlocked";
-        public const string WheelCap = "demo.wheel_cap";
         public const string CrewReady = "demo.crew_ready";
         public const string CrewClaim = "demo.crew_claim";
         public const string EmbarkWave2 = "demo.embark_wave2";
@@ -49,7 +48,7 @@ namespace GatekeepersProtocol.Game
             EmbarkBlocked, EmbarkFirst,
             Explore, TerminalLook, JuiceTeach, AfterTerminal,
             HatchBankTeach, HatchFight, FirstHatchDown,
-            MpUnlocked, WheelCap,
+            MpUnlocked,
             CrewReady, CrewClaim, EmbarkWave2, ZoneRetrigger, DockOption,
             RepeatUnit, DoorD1, DoorD2, SecondLoss,
             ControlRoom, MasterControl,

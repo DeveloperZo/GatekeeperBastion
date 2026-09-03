@@ -5,7 +5,9 @@ Purpose: First ARMORY panel open (wheel unlocked by the first Convert), at most 
 Secondary wheel purchases — ladder rung 1 — multiplayer unlocks on the first
 purchase. Exit standing is state-keyed (no buyable upgrades remain). CREW menu
 unlock lands on this Docked (re-key); FAB stays dark.
-Status: demo spec
+Status: demo spec — SUPERSEDED IN PART 2026-09-02 (Zo): the wheel ladder (rung 1's two buys,
+rung 2's Primary + 2) is cut; anything affordable is buyable. Docs/Decisions.md, Cut. The
+rung-2 announce (demo.second_loss) and the Primary rack gate stand.
 Authority: implementable
 Update trigger: when the wheel ladder or the multiplayer gate moves, when SEC-D
 grant is overridden, when the exit-standing state key changes
@@ -82,7 +84,7 @@ authored aim is **~500** banked (tunable, beat 2), which funds both buys
 |---|---|
 | **Goal** | The cap is named, and the exit standing flips itself. |
 | **Player** | Buy again (300) if banked covers it. A third click refuses. |
-| **Game** | On a third-buy attempt: `demo.wheel_cap` · Lock · Local · Game. **Two purchases is the cap for now. The NAV MAP is ready when you are.** Once per Ship visit. The line no longer produces the standing. |
+| **Game** | On a third-buy attempt: the wheel-cap line (id retired 2026-09-02 with the ladder) · Lock · Local · Game. **Two purchases is the cap for now. The NAV MAP is ready when you are.** Once per Ship visit. The line no longer produces the standing. |
 | **Standing** | **State-keyed** (Zo, 2026-08-17 — replaces the third-refuse trigger): flips to **EMBARK from the NAV MAP** when **no buyable upgrades remain** — `DemoWheelBuysLeft == 0`, or banked below the next buy's cost — evaluated on Docked and after every buy / refuse / spend. Until then it stays **Spend Salvage at the ARMORY**. |
 | **Prompt / panel** | Cap refuse is named, not the salvage-short line. Panel copy `two purchases this demo — NAV is ready`. |
 | **Log** | `[Demo] wheel refused — ladder rung spent` (in tree, `ShipCommands.Weapons`); on the flip, `[Demo] exit standing set — no buyable upgrades remain` (in tree, `DemoShipStanding`) |
@@ -187,7 +189,7 @@ beats 0–3 first — their save carries the same gate.
 | Id | Mode | Scope | Trigger | Standing after |
 |---|---|---|---|---|
 | `demo.mp_unlocked` | Lock | Local | MOVED to beat 0: the ARMORY's MK-1 buy, once per save | per the state key |
-| `demo.wheel_cap` | Lock | Local | third-buy attempt at cap, once per visit | — (standing is state-keyed, not line-produced) |
+| the wheel-cap line (id retired 2026-09-02 with the ladder) | Lock | Local | third-buy attempt at cap, once per visit | — (standing is state-keyed, not line-produced) |
 
 No party PA "everyone shop."
 

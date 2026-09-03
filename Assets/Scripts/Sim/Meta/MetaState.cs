@@ -208,12 +208,6 @@ namespace GatekeepersProtocol.Sim
             set { Realm.DemoFabPowered = value; }
         }
 
-        public int DemoWheelBuysLeft
-        {
-            get { return Realm.DemoWheelBuysLeft; }
-            set { Realm.DemoWheelBuysLeft = value; }
-        }
-
         public bool DemoZone2BankLost
         {
             get { return Realm.DemoZone2BankLost; }
@@ -224,12 +218,6 @@ namespace GatekeepersProtocol.Sim
         {
             get { return Realm.DemoRungTwoOpened; }
             set { Realm.DemoRungTwoOpened = value; }
-        }
-
-        public int DemoRungTwoBuysLeft
-        {
-            get { return Realm.DemoRungTwoBuysLeft; }
-            set { Realm.DemoRungTwoBuysLeft = value; }
         }
 
         public int ZoneDeepest(int zone) { return Realm.ZoneDeepest(zone); }

@@ -77,7 +77,8 @@ namespace GatekeepersProtocol.Tests
         /// the cost of transcribing a column instead of deriving it.
         ///
         /// WHAT THE BAND IS FOR, restated as assertions rather than as a table. The free MK-1
-        /// Secondary sustains 59.0 dps. Every PURCHASABLE Primary sat at 33-37, so at equal tier
+        /// Secondary sustained 59.0 dps (56.2 since the 2026-09-02 retune to 50 at 1.4/s, rate
+        /// solved so the rifle still leads it on wave-1 kills/s). Every PURCHASABLE Primary sat at 33-37, so at equal tier
         /// the starting sidearm out-damaged a 1200-salvage rifle on every wave of the ladder —
         /// which is the whole reason the tier was raised ~2x (Zo: "It is the rifle. We should push
         /// the primary damage up"). That inversion is the thing that must never come back, so it

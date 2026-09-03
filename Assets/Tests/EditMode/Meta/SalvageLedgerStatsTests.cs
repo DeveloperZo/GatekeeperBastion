@@ -85,7 +85,7 @@ namespace GatekeepersProtocol.Tests
         {
             var m = MetaState.CreateNew();
             m.HatchArmorLevel = 1;                                  // 200, the realm's own
-            m.SetOwned(WeaponId.Br12Shotgun, true);                 // 900, the Boarder's
+            m.SetOwned(WeaponId.Br12Shotgun, true);                 // the row's price, the Boarder's
             m.ReplacePointsFromFlatTier(WeaponId.Br12Shotgun, 2);   // 400 + 600, also the Boarder's
 
             // The two floors are deliberately separate. A realm's floor has to be
@@ -94,7 +94,7 @@ namespace GatekeepersProtocol.Tests
             // starts claiming salvage the realm never earned.
             Assert.AreEqual(200L, m.ReconstructSpentFromLevels(),
                 "the realm owes for its own hatch armour and nothing else");
-            Assert.AreEqual(900L + 1000L, m.Boarder.ReconstructSpentOnKit(),
+            Assert.AreEqual(WeaponCatalog.Def(WeaponId.Br12Shotgun).cost + 1000L, m.Boarder.ReconstructSpentOnKit(),
                 "the weapon and its Tier are the Boarder's spend, wherever they were bought");
         }
 

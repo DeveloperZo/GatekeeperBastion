@@ -138,20 +138,9 @@ namespace GatekeepersProtocol.Game
                     $"tried to wheel-up {WeaponCatalog.Def(id).displayName} — locked until this realm has earned salvage");
                 return false;
             }
-            // Wheel ladder, two rungs on two counters: rung 1's two demo purchases are spent
-            // first, then rung 2's own counter, opened by zone 2's bank falling. Named refuse
-            // BEFORE any SpendSalvage, and which name depends on how far the ladder got —
-            // "demo cap" while rung 2 has not opened, "ladder rung spent" once it has and its
-            // buys are gone. Neither count resets per visit (beat 3, Traps;
-            // Docs/Demo - Single/5-repeat-to-control-room.md).
-            if (m.DemoActive && m.DemoWheelBuysLeft <= 0 && m.DemoRungTwoBuysLeft <= 0)
-            {
-                Log.Event("Demo", m.DemoRungTwoOpened
-                    ? "wheel refused — ladder rung spent"
-                    : "wheel refused — demo cap");
-                DemoShipStanding.Reevaluate();
-                return false;
-            }
+            // No demo cap. The wheel ladder that metered two buys, then two more, was cut on
+            // 2026-09-02 (Zo: anything affordable is buyable — Docs/Decisions.md). The only
+            // refuses left are the ones above and the price below.
 
             int tier = m.TierOf(id);
             if (tier >= WeaponTier.MaxTier)
@@ -177,20 +166,6 @@ namespace GatekeepersProtocol.Game
             }
 
             m.AwardWheel(id, centre);
-            if (m.DemoActive)
-            {
-                // Rung 1 first, rung 2 only once rung 1 is exhausted. The two counters stay
-                // separate: rung 1's absolute value is the multiplayer key, so a rung-2 buy
-                // must never write it (Docs/Demo - Single/5-repeat-to-control-room.md).
-                if (m.DemoWheelBuysLeft > 0)
-                {
-                    m.DemoWheelBuysLeft--;
-                }
-                else if (m.DemoRungTwoBuysLeft > 0)
-                {
-                    m.DemoRungTwoBuysLeft--;
-                }
-            }
             GameSession.Save();
 
             // Neighbours that came along — ring distance 1 from centre.
@@ -207,13 +182,10 @@ namespace GatekeepersProtocol.Game
                 got++;
             }
 
-            string demoSuffix = m.DemoActive
-                ? $" demoBuysLeft={m.DemoWheelBuysLeft} rungTwoBuysLeft={m.DemoRungTwoBuysLeft}"
-                : "";
             Log.Event("Ship",
                 $"bought {WeaponCatalog.Def(id).displayName} focus {WeaponWheel.AttrLabel(centre)} " +
                 $"(+{WeaponWheel.AttrLabel(n0)}, +{WeaponWheel.AttrLabel(n1)}) for {price} — " +
-                $"T{m.TierOf(id)}, banked {m.BankedSalvage} left track=weapon{demoSuffix}");
+                $"T{m.TierOf(id)}, banked {m.BankedSalvage} left track=weapon");
             DemoShipStanding.Reevaluate();
             return true;
         }

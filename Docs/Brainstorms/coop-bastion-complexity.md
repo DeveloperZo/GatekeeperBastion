@@ -141,7 +141,8 @@ collapses into guessing.
 
 Extra guns melt Wave 1 in one doorway. Count already scales with
 `playerCount`. Health does not (`WaveDirector.EnemyHealthPerWave` 0.40;
-Wave 1 multiplier 1.00). MK-1 T0 one-shots a Wave-1 Default (30 HP).
+Wave 1 multiplier 1.00). MK-1 T0 one-shots a Wave-1 Default (50 HP, at 50 damage since
+2026-09-02).
 
 `NextWave` multiplies **body count** by n. Group size and spawn interval
 do not. Wave 1 L0: 18 vs 54 bodies, groups of 3, gap 4.2 s → **0.71

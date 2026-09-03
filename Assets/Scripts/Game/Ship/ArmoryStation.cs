@@ -26,16 +26,12 @@ namespace GatekeepersProtocol.Game
         public const string PurposeLine = "the weapon in your hands";
         public override string Purpose => PurposeLine;
         public const string TransferLine = "Upgrades stay on this weapon.";
-        /// <summary>Deal-line suffix at the demo cap (beat 3, step 3 panel copy).</summary>
-        public const string DemoCapLine = "two purchases this demo — NAV is ready";
         /// <summary>Why the PRIMARY tab has nothing to buy before the rack opens. The tab stays
         /// reachable and says this rather than reading as dead
         /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
-        public const string PrimarySealedLine =
-            "Heavier hardware racks here — the Bastion has to take a Boarding off you first.";
-
-        // demo.wheel_cap plays once per Ship visit (instance lifetime is the visit).
-        bool _capLinePlayed;
+        public static string PrimarySealedLine =>
+            "Heavier hardware racks here once " + DemoProgress.PrimaryRackSalvage.ToString("N0")
+            + " Salvage has come through the Hatch.";
 
         protected override string PromptHint =>
             GameSession.Meta != null && !GameSession.Meta.OwnsAnyWeapon
@@ -88,9 +84,7 @@ namespace GatekeepersProtocol.Game
                 h = h * 397 ^ (int)eq;
                 if (eq != WeaponId.None) h = h * 397 ^ _centreIndexByWeapon[(int)eq];
                 h = h * 397 ^ (m.OwnsAnyWeapon ? 1 : 0);
-                h = h * 397 ^ m.DemoWheelBuysLeft;
-                h = h * 397 ^ m.DemoRungTwoBuysLeft;
-                h = h * 397 ^ (m.DemoZone2BankLost ? 1 : 0);
+                h = h * 397 ^ (DemoProgress.PrimaryRowsOpen(m) ? 1 : 0);
                 return h;
             }
         }
@@ -100,7 +94,7 @@ namespace GatekeepersProtocol.Game
             _wheelDirty = false;
             if (_body == null) return;
 
-            view.SetDeal(m.DemoActive ? TransferLine + "  ·  " + DemoDealSuffix(m) : TransferLine);
+            view.SetDeal(TransferLine);
 
             _body.BindSlotButtons(
                 _viewSlot == WeaponSlot.Primary ? "[ PRIMARY ]" : "  Primary  ",
@@ -222,20 +216,11 @@ namespace GatekeepersProtocol.Game
                 () => TryBuyFromWheel(display.Weapon, display.BuyAttr));
         }
 
-        /// <summary>Wheel BUY click. A click at the demo cap is the beat's third-buy
-        /// attempt: ShipCommands logs the named refuse; the line plays once per visit and
-        /// no longer produces the standing — that key is state (DemoShipStanding).</summary>
+        /// <summary>Wheel BUY click. ShipCommands refuses by name; the exit standing is
+        /// state-keyed (DemoShipStanding), so a refused click produces nothing here.</summary>
         void TryBuyFromWheel(WeaponId id, WheelAttr centre)
         {
-            var m = GameSession.Meta;
-            bool atCap = m != null && m.DemoActive
-                && m.DemoWheelBuysLeft + m.DemoRungTwoBuysLeft <= 0;
-            bool bought = ShipCommands.BuyWheelUpgrade(id, centre);
-            if (!bought && atCap && !_capLinePlayed)
-            {
-                _capLinePlayed = true;
-                DemoVoice.Play(DemoConversationIds.WheelCap, DemoVoiceMode.Subtitle);
-            }
+            ShipCommands.BuyWheelUpgrade(id, centre);
             _wheelDirty = true;
         }
 
@@ -368,16 +353,6 @@ namespace GatekeepersProtocol.Game
             }
 
             return d;
-        }
-
-        /// <summary>Remaining demo buys on the deal line (beat 3: wheel rows show them) — both
-        /// ladder rungs summed, so rung 2's buys are visible as purchases and not hidden behind
-        /// the rung-1 cap line (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
-        static string DemoDealSuffix(MetaState m)
-        {
-            int left = m.DemoWheelBuysLeft + m.DemoRungTwoBuysLeft;
-            if (left <= 0) return DemoCapLine;
-            return left == 1 ? "1 demo purchase left" : left + " demo purchases left";
         }
 
         static string ShortLabel(WheelAttr a)

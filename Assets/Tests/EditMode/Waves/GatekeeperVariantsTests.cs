@@ -21,8 +21,8 @@ namespace GatekeepersProtocol.Tests
     /// below are written against the ratios and against the live constants, and the only maxHp
     /// literals left are the four declaration pins in the stat-line tests.
     ///
-    /// The stat lines, and the arithmetic every one of them is derived from (MK-1 T0 = 30 damage
-    /// x 3 shots/s = 59.0 sustained dps once the 8-round clip and 1.4 s reload are counted; player
+    /// The stat lines, and the arithmetic every one of them is derived from (MK-1 T0 = 50 damage
+    /// x 1.4 shots/s = 56.2 sustained dps once the 8-round clip and 1.4 s reload are counted; player
     /// 100 hp, walk 5 m/s, sprint 7.5 m/s; hatch 300 hp):
     ///
     ///   | kind    | maxHp | player | hatch | interval | patrol | chase | refuses    |
@@ -31,14 +31,14 @@ namespace GatekeepersProtocol.Tests
     ///   | Thief   |   200 |      0 |    20 |     0.7s |    2.2 |   2.2 | the player |
     ///   | Cloaker |    75 |      6 |     4 |     0.7s |    2.8 |   4.6 | being seen (a state, not a flag) |
     ///
-    ///   Default 50 hp = 2 MK-1 shots; three of them are 25.7 dps and kill a 100 hp player in
+    ///   Default 50 hp = 1 MK-1 shot; three of them are 25.7 dps and kill a 100 hp player in
     ///           3.9s, five are 42.9 dps and 2.3s. (At the pre-horde 18 damage, five were 128.6
     ///           dps and 0.8s — not a fight, an execution.) The per-swing damage did NOT move on
     ///           2026-08-27, so the crowd budget is the one thing the retune left alone.
-    ///   Hunter  33 hp = 2 MK-1 shots, and 5.6 m/s beats the 5 m/s WALK while losing to the
+    ///   Hunter  33 hp = 1 MK-1 shot, and 5.6 m/s beats the 5 m/s WALK while losing to the
     ///           7.5 m/s SPRINT: the first enemy that makes the Stamina track worth buying.
-    ///   Thief   200 hp = 7 MK-1 shots = 3.4s of focused fire, 20 hatch damage / 0.7s = 28.6 dps,
-    ///           so it strips ~97 of the hatch's 300 hp while being killed. It must be
+    ///   Thief   200 hp = 4 MK-1 shots = 3.6s of focused fire, 20 hatch damage / 0.7s = 28.6 dps,
+    ///           so it strips ~102 of the hatch's 600 hp while being killed. It must be
     ///           intercepted, which is what turns "shoot what is closest" into a decision.
     ///
     /// Composition teaches one kind per wave and THE DIAL'S SURPLUS IS ALL DEFAULT — see
@@ -284,10 +284,10 @@ namespace GatekeepersProtocol.Tests
         [Test]
         public void Thief_StripsASixthOfTheHatch_AndTheDeepestWavesComplementTakesMost()
         {
-            // Why a Thief cannot be left for later: 200 hp is 3.4 s of an unupgraded player's FULL
-            // attention (200 / 59.0 dps), during which it deals 20 / 0.7 = 28.6 dps to a 300 hp
-            // hatch — about 97 hp, close to a third of the door, per Thief, and that is the GOOD
-            // case where someone is already shooting it.
+            // Why a Thief cannot be left for later: 200 hp is 3.6 s of an unupgraded player's FULL
+            // attention (200 / 56.2 dps since the 2026-09-02 sidearm retune; 3.4 s at the old
+            // 59.0), during which it deals 20 / 0.7 = 28.6 dps to the door — about 102 hp per
+            // Thief, and that is the GOOD case where someone is already shooting it.
             //
             // TWO NUMBERS MOVED UNDER THIS TEST AT ONCE AND THEY PULLED OPPOSITE WAYS. The Thief
             // went 120 -> 200 hp, which lengthens the kill; PlayerDps stopped being the stale 32
@@ -295,9 +295,9 @@ namespace GatekeepersProtocol.Tests
             // the claim and never were — the claim is the FRACTION OF THE DOOR one Thief takes with
             // it, so that is what is pinned, off ShipSystems.HatchMaxHp rather than a literal 300.
             //
-            // It is now just UNDER a third (32.3%) where it used to be just over (35.7%), because
-            // the hp raise did not quite keep pace with the sidearm figure the old constant was
-            // hiding. Asserted as a two-sided window: a Thief that stops being worth roughly a
+            // It sat just UNDER a third (32.3%) of the 300 door, then a sixth (16.1%) of the 600
+            // one, and the 2026-09-02 sidearm retune (59.0 -> 56.2 dps) nudged it to 17.0%.
+            // Asserted as a two-sided window: a Thief that stops being worth roughly a
             // third of the hatch stops being the enemy that has to be intercepted, and one worth
             // half the door is a different design problem in the other direction.
             var thief = WaveDirector.StatsFor(GatekeeperKind.Thief);
@@ -331,26 +331,25 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void ShotsToKill_IsTwoTwoAndSeven_AtTheUnupgradedSidearm()
+        public void ShotsToKill_IsOneOneFourAndTwo_AtTheUnupgradedSidearm()
         {
-            // Renamed from _IsThreeTwoAndTen_AtTheUnupgradedTwelveDamage. Both halves of that name
-            // were lies by 2026-08-27: the sidearm is 30 damage a shot, not 12, and the 5/3 hp
-            // pass moved every count in the sentence.
+            // Renamed from _IsTwoTwoAndSeven on 2026-09-02, when the sidearm went 30 -> 50 a shot
+            // (Zo: first-session fodder is one shot). Before that, from _IsThreeTwoAndTen at the
+            // 12-damage gun the 2026-08-27 hp pass retired.
             //
-            // The reason the kinds read differently through a gunsight: at 30 damage a shot, a
-            // 50 hp Default is 2, a 33 hp Hunter is 2, and a 200 hp Thief is 7 — a Thief costs
-            // three and a half Hunters. The Cloaker's 75 lands at 3: one shot more than the
-            // Default it impersonates, still nothing like a Thief.
+            // The reason the kinds read differently through a gunsight: at 50 damage a shot, a
+            // 50 hp Default is 1, a 33 hp Hunter is 1, and a 200 hp Thief is 4 — a Thief costs
+            // four Hunters. The Cloaker's 75 lands at 2: one shot more than the Default it
+            // impersonates, still nothing like a Thief.
             //
-            // AND THE HUNTER PIN IS NOW ON A BOUNDARY WORTH SAYING OUT LOUD. A Hunter used to be
-            // exactly two shots at 20 hp and 12 damage; at 33 against 30 it is two shots by three
-            // points. It reads as "the same as a Default" through the sight even though it is
-            // two-thirds of one, which is the granularity trap the catalog comments keep warning
-            // about — one point of damage either way on either row flips it.
-            Assert.AreEqual(2, ShotsToKill(GatekeeperKind.Default));
-            Assert.AreEqual(2, ShotsToKill(GatekeeperKind.Hunter));
-            Assert.AreEqual(7, ShotsToKill(GatekeeperKind.Thief));
-            Assert.AreEqual(3, ShotsToKill(GatekeeperKind.Cloaker));
+            // AND THE DEFAULT PIN IS NOW ON THE BOUNDARY. 50 into 50 hp is one shot by zero
+            // points; one point of Default HP either way flips it to two, which is the
+            // granularity trap the catalog comments keep warning about. That edge is the design:
+            // wave 1 is the calibration wave, and wave 2's 70 hp is meant to cost two.
+            Assert.AreEqual(1, ShotsToKill(GatekeeperKind.Default));
+            Assert.AreEqual(1, ShotsToKill(GatekeeperKind.Hunter));
+            Assert.AreEqual(4, ShotsToKill(GatekeeperKind.Thief));
+            Assert.AreEqual(2, ShotsToKill(GatekeeperKind.Cloaker));
 
             // The claim underneath the counts, which survives a retune of either side: the shot
             // ladder must stay strictly ordered Hunter <= Default < Cloaker < Thief, or the kinds

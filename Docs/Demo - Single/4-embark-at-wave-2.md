@@ -7,7 +7,9 @@ the zone composite by default; partial start electable. This time the bank
 window holds and D1 opens on window survival, not on terminal completions.
 New death direction: after a survived bank window the player may dock at the
 Hatch — Run ends Docked, not Lost. CREW menu + Default claim unchanged.
-Status: demo spec
+Status: demo spec — SUPERSEDED IN PART 2026-09-02 (Zo): the NAV start-Wave picker shows in the
+opening (solo and party lead); plain EMBARK is gone. Terminal retrigger unchanged.
+Docs/Decisions.md, Locked 2026-09-02.
 Authority: implementable
 Update trigger: when the composite-retrigger or door-on-Convert-survival ruling
 is overridden, when the dock-at-Hatch rule moves, when Protocol beat is moved

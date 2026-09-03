@@ -40,8 +40,15 @@ namespace GatekeepersProtocol.Sim
             switch (id)
             {
                 case WeaponId.Mk1Sidearm:
+                    // 50 damage at 1.4 shots/s (Zo, 2026-09-02; was 30 at 3.0). One shot kills a
+                    // wave-1 Default (50 hp), two a wave-2 body (70). The rate is SOLVED, not
+                    // picked: the highest tenth at which the MR-35 still out-kills this gun on the
+                    // shallow wave (1.16 against 1.12 kills/s), so no Primary loses to the free
+                    // sidearm on its own axis. Sustained 8 x 50 / (8/1.4 + 1.4) = 56.2 dps. Raising
+                    // the rate breaks PrimaryBand_T0_EachAvailablePrimaryLeadsOnOneAxis first;
+                    // derivation in Docs/Design/4-Data.md.
                     return Make(WeaponSlot.Secondary, "MK-1 Sidearm", cost: 0L,
-                        damage: 30f, shotsPerSecond: 3.0f, clipSize: 8f, reloadSeconds: 1.4f, range: 45f,
+                        damage: 50f, shotsPerSecond: 1.4f, clipSize: 8f, reloadSeconds: 1.4f, range: 45f,
                         pellets: 1, spreadDegrees: 0f, pierceCount: 0, pierceDamageMul: 1f, falloffStart: 12f,
                         AmberR, AmberG, AmberB, tracerWidth: 0.030f, WeaponCrosshair.Cross,
                         AbilityId.Mk1RegenSurge);
@@ -76,7 +83,12 @@ namespace GatekeepersProtocol.Sim
                     // a wave-3 body past the volley and HALVED this weapon to 0.395 — a cliff
                     // introduced by an enemy change, in a weapon nobody was retuning.
                     // Its dps column now reads ~105 and that number is a lie: it is overkill.
-                    return Make(WeaponSlot.Primary, "BR-12 Shotgun", cost: 900L,
+                    // PRICED 1,500 / 2,000 / 2,500 (Zo, 2026-09-02; were 900 / 1,200 / 1,500).
+                    // The rack opens on Salvage EARNED (DemoProgress.PrimaryRackSalvage reads the
+                    // cheapest of these), so the price is the gate: zone 1 pays 29 x 42 = 1,218 on
+                    // a clear, so the BR-12 is a zone-1 clear plus seven kills — the second
+                    // Boarding at the latest. 3:4:5 band kept. Derivation in 4-Data.md.
+                    return Make(WeaponSlot.Primary, "BR-12 Shotgun", cost: 1500L,
                         damage: 19f, shotsPerSecond: 1.2f, clipSize: 6f, reloadSeconds: 2.6f, range: 14f,
                         pellets: 7, spreadDegrees: 7f, pierceCount: 0, pierceDamageMul: 1f, falloffStart: 8f,
                         AmberR, AmberG, AmberB, tracerWidth: 0.050f, WeaponCrosshair.Brackets,
@@ -97,7 +109,8 @@ namespace GatekeepersProtocol.Sim
                     // THAT 37.0 IS GONE, DELIBERATELY (Zo, 2026-08-27: "It is the rifle. We
                     // should push the primary damage up"). The whole Primary tier was raised
                     // ~2x in one pass — BR-12 6 -> 12/pellet, MR-35 8 -> 16, PRI-C 90 -> 180 —
-                    // because the free MK-1 Sidearm sustains 59.0 dps and every Primary sat at
+                    // because the free MK-1 Sidearm sustained 59.0 dps (56.2 since the
+                    // 2026-09-02 recut to 50 at 1.4/s) and every Primary sat at
                     // 33-37. At EQUAL TIER the sidearm out-killed this rifle on every wave of
                     // the ladder, by 6% to 70%, which is the real content of the complaint that
                     // a 1200-salvage T2 rifle killed no faster than the starting gun. It did
@@ -132,7 +145,7 @@ namespace GatekeepersProtocol.Sim
                     //
                     // Pierce stays 2 x 0.26: at 8 shots/s it reads as a line being cut through
                     // a column rather than one heavy round punching two bodies.
-                    return Make(WeaponSlot.Primary, "MR-35 Rifle", cost: 1200L,
+                    return Make(WeaponSlot.Primary, "MR-35 Rifle", cost: 2000L,
                         damage: 16f, shotsPerSecond: 8.0f, clipSize: 27f, reloadSeconds: 2.463f, range: 60f,
                         pellets: 1, spreadDegrees: 0f, pierceCount: 2, pierceDamageMul: 0.26f, falloffStart: 25f,
                         BlueR, BlueG, BlueB, tracerWidth: 0.060f, WeaponCrosshair.Cross,
@@ -153,7 +166,7 @@ namespace GatekeepersProtocol.Sim
                     // kills/s, which beats the sidearm everywhere. Do not "fix" this row by
                     // reading the single-target column.
                     // pierce 3 ×0.75 is the bore payoff at 0.6 shots/s; Railshot overrides both.
-                    return Make(WeaponSlot.Primary, "PRI-C", cost: 1500L,
+                    return Make(WeaponSlot.Primary, "PRI-C", cost: 2500L,
                         damage: 180f, shotsPerSecond: 0.6f, clipSize: 4f, reloadSeconds: 3.2f, range: 90f,
                         pellets: 1, spreadDegrees: 0f, pierceCount: 3, pierceDamageMul: 0.75f, falloffStart: 55f,
                         VioletR, VioletG, VioletB, tracerWidth: 0.070f, WeaponCrosshair.Dot,

@@ -208,7 +208,6 @@ namespace GatekeepersProtocol.Game
         static void ApplyDoorOneOpen(MetaState m)
         {
             m.DemoCrewMenuUnlocked = true;
-            m.DemoWheelBuysLeft = 0;
             m.ReplacePointsFromFlatTier(WeaponId.Mk1Sidearm, 2);
             long wheelSpend = WeaponTier.SpentToReach(2);
             m.EarnSalvage(wheelSpend - 450);
@@ -225,6 +224,15 @@ namespace GatekeepersProtocol.Game
             int zoneTwo = FirstTerminal.ZoneOneNumber + 1;
             m.DeepestWaveReached = WaveDirector.MaxWaves;
             m.SetZoneDeepest(zoneTwo, WaveDirector.MaxWaves);
+            // Zone 2's field Waves were fought to reach T3, and kills bank as they land, so
+            // the beat has earned their pay. Read off the director and the kill value so a
+            // roster or price move keeps this beat honest; the rack (Salvage earned since
+            // 2026-09-02) and the config-taint rule both read LifetimeSalvageEarned.
+            long zoneTwoPay = 0L;
+            var director = new WaveDirector();
+            for (int w = DemoZones.FirstWave(zoneTwo); w <= DemoZones.EndWave(zoneTwo); w++)
+                zoneTwoPay += director.NextWave(w - 1, 0).enemyCount;
+            m.EarnSalvage((long)(zoneTwoPay * MetaUpgrades.SalvagePerKill()));
             m.SetCompletedTerminalIds(ZoneTerminalsThrough(zoneTwo));
         }
 
@@ -243,7 +251,6 @@ namespace GatekeepersProtocol.Game
             m.SetOwned(WeaponId.PriC, true);
             m.ReplacePointsFromFlatTier(WeaponId.PriC, 2);
             m.SetEquipped(WeaponId.PriC);
-            m.DemoRungTwoBuysLeft = 1;
             m.EarnSalvage(400);
             m.SetCompletedTerminalIds(ZoneTerminalsThrough(zoneTwo));
             m.SetOpenDoorIds(new[] { DemoZones.DoorId(FirstTerminal.ZoneOneNumber), DemoZones.DoorId(zoneTwo) });

@@ -136,8 +136,6 @@ namespace GatekeepersProtocol.Game
             new DemoLine(DemoConversationIds.MpUnlocked, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
                 "MK-1 in your hands — you are a Boarder now. " +
                 "And the Ship answers hails: friends can join you."),
-            new DemoLine(DemoConversationIds.WheelCap, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "Two purchases is the cap for now. The NAV MAP is ready when you are."),
 
             // Beat 4 — embark after the first loss. Draft copy (stamped drafts in the beat doc).
             new DemoLine(DemoConversationIds.CrewReady, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
@@ -162,13 +160,12 @@ namespace GatekeepersProtocol.Game
                 "That door is open. The next terminals are behind it."),
             new DemoLine(DemoConversationIds.DoorD2, Game, DemoVoiceMode.Lock, DemoVoiceScope.Party,
                 "That door is open. The next terminals are behind it."),
-            // Restamped 2026-08-20 (draft — Zo): the id is kept, the trigger is now zone 2's
-            // bank falling, and that may be this save's FIRST ejection. The shipped line opened
-            // by asserting a second one, which the recut forbids. Cause-agnostic from here: a
-            // loss that put heavier hardware on the rack, with no count of losses in it.
+            // Restamped 2026-09-02 (draft): the id is kept, the trigger is now the rack gate —
+            // enough Salvage earned, lifetime — so the copy names no loss, no zone and no
+            // count of endings. (2026-08-20 keyed it on zone 2's bank, which the shipped loop
+            // never opened.)
             new DemoLine(DemoConversationIds.SecondLoss, Game, DemoVoiceMode.Lock, DemoVoiceScope.Local,
-                "Zone 2 is settled — held or lost, the Bastion has your measure now. What " +
-                "transferred is aboard — and the rack answers with heavier hardware. " +
+                "Enough has come through the Hatch to rack heavier hardware. " +
                 "The PRIMARY slot is open at the ARMORY."),
 
             // Beats 6-7 — Control Room and finale.

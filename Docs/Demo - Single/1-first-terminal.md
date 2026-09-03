@@ -151,7 +151,7 @@ are Subtitle only ([`voice.md`](voice.md)).
 | Juice (100/step, curve, Prep-only) | yes | `IntensityJuice`, `TetherSiphon.Curve` | Have. Spend is silent — Build one Event log |
 | Prompt + stake strings | yes | `BastionTerminal` | Have; `(k/1)` / `(k/2)` counts follow the re-spec |
 | Untimed Prep on Field | yes | no `ArmSequentialDraws` on Field path | Have — stays for zone 1's single-Wave triggers |
-| MK-1 damage 30 (lever 1) | yes | `WeaponCatalog` | Have — shipped |
+| MK-1 damage 50 (lever 1; 30 until 2026-09-02) | yes | `WeaponCatalog` | Have — shipped |
 | Mission drawer (Tab) | yes | auto-opens first Prep; prep/assault content | Have; standing objective optional |
 | `MsgGeneral` arriving line | yes | `BastionHudView` | Build: do not stack with `demo.embark_first` |
 | Voice ids / `DemoVoice` | no | [`voice.md`](voice.md) | Build |

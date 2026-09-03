@@ -29,7 +29,7 @@ namespace GatekeepersProtocol.Tests
             var def = WeaponCatalog.Def(WeaponId.PriC);
             Assert.AreEqual(WeaponSlot.Primary, def.slot);
             Assert.AreEqual("PRI-C", def.displayName);
-            Assert.AreEqual(1500L, def.cost);
+            Assert.AreEqual(2500L, def.cost, "2,500 since 2026-09-02 (was 1,500); the rack gate reads the cheapest Primary, so a price move here moves the gate");
 
             bool inAll = false, inShop = false, inAvailable = false, inPrimary = false;
             foreach (WeaponId id in WeaponCatalog.All())

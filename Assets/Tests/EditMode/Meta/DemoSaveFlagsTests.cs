@@ -16,7 +16,6 @@ namespace GatekeepersProtocol.Tests
         {
             var m = MetaState.CreateNew();
             Assert.IsTrue(m.DemoActive);
-            Assert.AreEqual(2, m.DemoWheelBuysLeft);
             Assert.IsFalse(m.DemoCapsuleOpened);
             Assert.IsFalse(m.DemoNavPowered);
             Assert.IsFalse(m.DemoArmoryPowered);
@@ -26,7 +25,6 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(m.DemoFabPowered);
             Assert.IsFalse(m.DemoZone2BankLost);
             Assert.IsFalse(m.DemoRungTwoOpened);
-            Assert.AreEqual(0, m.DemoRungTwoBuysLeft, "rung 2 has no buys until it opens");
             Assert.AreEqual(0, m.ZoneDeepest(1));
         }
 
@@ -39,10 +37,8 @@ namespace GatekeepersProtocol.Tests
             m.DemoArmoryPowered = true;
             m.DemoWeaponGranted = true;
             m.DemoShipFightDone = true;
-            m.DemoWheelBuysLeft = 1;
             m.DemoZone2BankLost = true;
             m.DemoRungTwoOpened = true;
-            m.DemoRungTwoBuysLeft = 2;
             m.SetZoneDeepest(1, 2);
             m.SetZoneDeepest(2, 3);
 
@@ -60,11 +56,8 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(back.DemoShipFightDone);
             Assert.IsFalse(back.DemoCrewMenuUnlocked);
             Assert.IsFalse(back.DemoFabPowered);
-            Assert.AreEqual(1, back.DemoWheelBuysLeft);
             Assert.IsTrue(back.DemoZone2BankLost);
             Assert.IsTrue(back.DemoRungTwoOpened);
-            Assert.AreEqual(2, back.DemoRungTwoBuysLeft,
-                "rung 2's counter is its own — the rung-1 counter above stays at 1");
             Assert.AreEqual(2, back.ZoneDeepest(1));
             Assert.AreEqual(3, back.ZoneDeepest(2));
             Assert.AreEqual(0, back.ZoneDeepest(3));
@@ -80,14 +73,13 @@ namespace GatekeepersProtocol.Tests
             var m = RealmState.FromJson(
                 "{\"SaveVersion\":13,\"BankedSalvage\":400,\"CleanExits\":0,"
                 + "\"DemoActive\":true,\"DemoCapsuleOpened\":true,\"DemoNavPowered\":true,"
-                + "\"DemoWheelBuysLeft\":2}");
+                + "\"DemoWeaponGranted\":true}");
             Assert.IsNotNull(m, "a current-version realm document loads");
             Assert.IsFalse(m.DemoZone2BankLost);
             Assert.IsFalse(m.DemoRungTwoOpened);
-            Assert.AreEqual(0, m.DemoRungTwoBuysLeft, "a missing int key defaults to 0");
             Assert.IsTrue(m.DemoActive, "the rest of the v9 block still reads as written");
             Assert.IsTrue(m.DemoCapsuleOpened);
-            Assert.AreEqual(2, m.DemoWheelBuysLeft, "rung 1's counter is untouched");
+            Assert.IsTrue(m.DemoWeaponGranted, "and a key that IS present reads as written");
         }
 
         [Test]

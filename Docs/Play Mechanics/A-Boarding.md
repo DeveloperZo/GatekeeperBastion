@@ -19,7 +19,7 @@ Where:
 - After a zone shutoff, while the control gate is still shut, solo/host T at the Hatch can Convert — Assets/Scripts/Game/Bastion/GameController.Terminals.cs (TickPrepCommands — HatchOffersWaveStart false, then StartHatchBankWave); Assets/Scripts/Game/Bastion/GameController.HatchBank.cs (HatchBankStartBlocked)
 - Deep start chains Waves 1..N into the first Assault — Assets/Scripts/Sim/Run/RunSim.cs (TriggerDraw chain arm, Tick inter-wave timer, NotifyDeliveryComplete)
 - Deep-start ceiling is entered-or-cleared, whichever is higher — Assets/Scripts/Sim/Run/RunSim.cs (ClampStartWave); Assets/Scripts/Sim/Meta/RealmRecord.cs (From)
-- NAV MAP stepper; hidden while the demo runs — Assets/Scripts/Game/Ship/MapStation.cs (start-wave picker wiring, demo branch)
+- NAV MAP stepper, shown in the opening too since 2026-09-02 — Assets/Scripts/Game/Ship/MapStation.cs (start-wave picker wiring)
 - Deepest entered rises on the draw, deepest cleared on the clear — Assets/Scripts/Sim/Run/RunSim.cs (LaunchWave, NotifyAssaultCleared)
 - End screens: Lost / DOCKED / BASTION STRIPPED, converted / repair / net / deepest — Assets/Scripts/Game/Bastion/HudController.EndScreens.cs
 -->

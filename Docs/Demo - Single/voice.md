@@ -160,7 +160,7 @@ is this file being wrong. Every row below is in `DemoConversationIds.All`.
 | `demo.hatch_fight` | Subtitle | Local | 2 | Assault start of the first Convert |
 | `demo.first_hatch_down` | Lock | Local | 2 | First lost Boarding's Docked (any cause — copy is cause-agnostic): what dripped is aboard. Spend it at the ARMORY |
 | `demo.mp_unlocked` | Lock | Local | 3 | First wheel purchase made. Friends can join now |
-| `demo.wheel_cap` | Lock | Local | 3 | Cap refuse on a third-buy attempt (also a prompt string). Exit standing is state-keyed (no buyable upgrades remain), not this line |
+| the wheel-cap line (id retired 2026-09-02 with the ladder) | retired 2026-09-02 with the wheel ladder (`Decisions.md`, Cut) | — | — | — |
 | `demo.crew_ready` | Lock | Local | 4 | CREW menu is open now (unlocked on the first Docked after the first Convert — re-keyed 2026-08-18 with the wheel key). Protocol waits |
 | `demo.crew_claim` | Lock | Local | 4 | Claim Default. `G` Barrage, `H` Rush |
 | `demo.embark_wave2` | Lock | Party | 4 | Post-loss EMBARK: no wave skip — the zone's deepest terminal retriggers the composite (partial start electable). Lead still commits. Id is stale to its content; rename is Zo's (beat 4, Gaps) |

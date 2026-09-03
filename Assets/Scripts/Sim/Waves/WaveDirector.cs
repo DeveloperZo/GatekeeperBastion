@@ -215,8 +215,8 @@ namespace GatekeepersProtocol.Sim
                     break;
 
                 case GatekeeperKind.Cloaker:
-                    // THREE MK-1 T0 shots where a Default is two, since the 2026-08-27 roster
-                    // cut (75 and 50 against the sidearm's 30 damage). It reads as 1.5 Defaults,
+                    // TWO MK-1 T0 shots where a Default is one, since the 2026-09-02 sidearm recut
+                    // (75 and 50 against 50 damage; three and two at the old 30). It reads as 1.5 Defaults,
                     // which is the rule and is unchanged; the SHOT COUNTS moved because raising
                     // HP moves overkill boundaries in steps. The ONLY number this kind owns. Everything else is
                     // Default's, read from the same constants, because the watch rule is the

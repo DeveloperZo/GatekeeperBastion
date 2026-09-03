@@ -78,7 +78,7 @@ namespace GatekeepersProtocol.Tests
         public void MaxUpgradedKit_IsTaintedAtEveryBeat()
         {
             // The ruling's own example: a kit no beat could have earned. PRI-C T10 alone
-            // costs 1,500 + the full Primary wheel spend — beyond beat 8's whole economy.
+            // costs 2,500 + the full Primary wheel spend — beyond beat 8's whole economy.
             var maxed = new GameController.CheckpointConfig("maxed — PRI-C T10, DEFAULT",
                 BoarderProtocolId.Depot, WeaponId.PriC, 10, WeaponId.Mk1Sidearm, 10);
             for (int d = 1; d <= LastBeat; d++)

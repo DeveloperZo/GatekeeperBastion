@@ -46,7 +46,7 @@ namespace GatekeepersProtocol.Game
             }
 
             // Read the picked realm off disk and apply the multiplayer rule BEFORE Relay is
-            // asked for anything. Every FRESH realm is DemoActive with two wheel buys left, so
+            // asked for anything. Every FRESH realm is DemoActive and unarmed, so
             // this is the default path, not an edge case — and refusing after the fact meant the
             // player had already copied a code and sent it to a friend who could never use it.
             string realmId = _realms[_pickedRealm].Id;

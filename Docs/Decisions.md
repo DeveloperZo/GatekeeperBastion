@@ -14,6 +14,14 @@ re-litigating a cut costs more than the cut saved.
 
 ## Cut — do not rebuild
 
+- **The demo wheel ladder — two metered buys, then two more (2026-09-02).** Rung 1
+  (`DemoWheelBuysLeft = 2`, Zo 2026-08-17) and rung 2 (`DemoRungTwoBuysLeft`, opened by zone
+  2's bank, `M79`) are gone: the counters, the `demo cap` / `ladder rung spent` refuses, the
+  `demo.wheel_cap` line and the ARMORY deal-line suffix. Rung 2 had also been orphaned since
+  the Convert left the demo on 2026-08-25 — its only writer needed a zone-2 Hatch-bank window
+  — so a player was capped at two wheel buys for the whole opening. The rule that replaces it
+  is the Locked entry of the same date: anything affordable is buyable. `DemoRungTwoOpened`
+  stays as the rack-opened announce latch (a save v13 key). Do not re-meter the wheel.
 - **Default Barrage plant / root, and Rush as fire-rate personal (2026-08-31).** Recut as
   **Depot**: Dump is a following fire-rate aura with heavy slow (not rooted); Feed is a
   **toggle** clip regen at `0.22×` fire rate. Barrage×Rush compose (caster 3.0) is gone.
@@ -510,6 +518,14 @@ rulemaking authority lives there.
 
 ## Retunes that already happened
 
+- **MK-1 Sidearm 30 → 50 damage, 3.0 → 1.4 shots/s (Zo, 2026-09-02).** #12; a higher tier is
+  wrong because the kind rules and the roster are Zo's own 2026-08-27 calls and only the number
+  under the starting gun was unowned. Zo's 2026-08-16 verdict asked for one-shot first-session
+  fodder; the 08-27 `BaseEnemyHp` 30 → 50 raise undid it silently and the pin was renamed to
+  match. Damage one-shots a Wave-1 Default and two-shots Wave 2. The rate is solved so the
+  MR-35 still out-kills the sidearm on Wave-1 kills/s (1.16 against 1.12) — the 08-27 guard
+  that no Primary loses to the free gun on its own axis stands; at 1.8 it did not. Sustained
+  dps 59.0 → 56.2. Derivation in `Design/4-Data.md`, MK-1 section. Feel unplayed.
 - **Bastion kit re-scaled to station rooms (Zo, 2026-08-14, `M61-2`).** The M47
   footprint lock is waived: multiples are now metres on `BastionKit` scaler 2 —
   Half 16 m, Full 26 m, OpenArea 42 m, ControlRoom 94×47 m (multiple 47, aspect 0.5)
@@ -643,3 +659,36 @@ playthrough:
 **Not settled here.** Whether the Convert should come back as an opt-in bet on withdrawn
 salvage — the machinery is intact and the Hatch already prompts a Withdraw — or be cut from the
 code entirely. Left standing, unused by the demo, until a playthrough asks for it.
+
+## Locked — anything affordable is buyable, and the picker shows in the opening (Zo, 2026-09-02)
+
+Playthrough, 2026-09-02: "after first loss only able to buy 2 upgrades despite being able to
+afford more … I should always be able to purchase something I can afford. This rule violation
+keeps the player from improving from failure." Belief 1 (progress through failure) outranks the
+opening's rationed budget, so the budget goes (the Cut entry above). The wheel now refuses only
+for the earned-Salvage lock, SEC-D's Ability spoke, the ten-purchase cap and the price, and the
+exit standing (`DemoProgress.NoBuyableUpgradeRemains`) keys on affordability alone.
+
+**The Primary rack opens on Salvage earned** (Zo, same day: "re-key rack opened when player
+earns enough"): `DemoProgress.PrimaryRowsOpen` is `LifetimeSalvageEarned >=
+PrimaryRackSalvage`, the cheapest available Primary's price read off the catalog. Lifetime,
+like the wheel's own lock, so spending to zero cannot re-lock it and a granted pile opens
+nothing. This supersedes the 2026-08-25 re-key (deepest Wave entered) and the 2026-08-19 lock
+above (zone 2's bank), whose only writer the shipped loop never reaches. The rack-opened line
+(`demo.second_loss`, id kept) plays on the same gate. `DemoZone2BankLost` is still written as
+the record of zone 2 resolving; nothing reads it for the rack.
+
+**And the prices went up** (Zo, same day: "then push up price"; #12): BR-12 900 → **1,500**,
+MR-35 1,200 → **2,000**, PRI-C 1,500 → **2,500**, the 3:4:5 band kept. With the price as the
+gate, 900 opened the rack on the first Boarding (Wave 1 alone pays 11 × 42 = 462 and Wave 2
+adds 756). At 1,500 the cheapest Primary is one zone-1 clear (1,218) plus seven kills — the
+second Boarding at the latest, and one the player fought for. Unplayed; the number is Zo's to
+move, and moving it moves the gate with it.
+
+Same session: "when I return to the Bastion I can't elect to start where I last left off." The
+NAV MAP's start-Wave picker shows in the opening, solo and for the party lead, capped as before
+by the deeper of Wave entered and Wave cleared (`RealmRecord.From`). What a pick does is
+unchanged: any Wave past 1 restores the terminals already completed, so the Hatch offers the
+next zone (`GameController.Start`, `StartZoneWaveFromHatch`); Wave 1 replays from the top. A
+skip inside a zone is still the terminal retrigger's partial start. The beat-4 ruling that hid
+the picker (2026-08-17) is overridden for the picker only.

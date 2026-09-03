@@ -7,17 +7,17 @@ namespace GatekeepersProtocol.Tests
     /// <summary>What puts a Primary on the demo's rack. The class keeps its old name because
     /// the file does, but the beat it was written for is gone: THE CONVERT / HATCH-BANK WINDOW
     /// IS OUT OF THE DEMO (Zo, 2026-08-25), and with it both authored-loss beats that used to
-    /// resolve zone 2. The gate moved to the Wave the player REACHED —
-    /// <see cref="DemoProgress.PrimaryRowsWave"/>, zone 1's last — because the 2026-08-25
-    /// playthrough died on Wave 2 holding 227 banked and "no buyable upgrades remain": the only
-    /// kit that could carry zone 1 sat behind clearing zone 1. The run that proves you need a
-    /// Primary is now the run that sells you one.
+    /// resolve zone 2. The gate then moved to the Wave the player REACHED (2026-08-25) and on
+    /// 2026-09-02 to SALVAGE EARNED, lifetime — <see cref="DemoProgress.PrimaryRackSalvage"/>,
+    /// the cheapest Primary's price — because Zo's rule is that anything affordable is buyable,
+    /// so the price is the gate and the Boarding that earns it is the one that opens it.
     ///
-    /// <para><see cref="MetaState.DemoZone2BankLost"/> survives as a COMPATIBILITY read only —
-    /// a save written before the re-key keeps its rack — so the tests below assert the rack,
-    /// not the flag. The tests that pinned the flag's WRITE are [Ignore]d rather than deleted;
-    /// deletion is the owner's call. These are behaviour tests over RunSim; the source-shape
-    /// pins live in FirstReturnSourceTests.</para></summary>
+    /// <para><see cref="MetaState.DemoZone2BankLost"/> is still written as the record of zone 2
+    /// resolving and nothing reads it for the rack, so the tests below assert the rack, never
+    /// the flag. The tests that pinned the flag's WRITE are [Ignore]d rather than deleted;
+    /// deletion is the owner's call. These are behaviour tests over RunSim — kills bank as they
+    /// land, so the rack is earned by shooting; the source-shape pins live in
+    /// FirstReturnSourceTests.</para></summary>
     public class ZoneTwoBankLossTests
     {
         static RunSim Tethered(out MetaState meta, int seed = 1)
@@ -29,9 +29,22 @@ namespace GatekeepersProtocol.Tests
             return sim;
         }
 
+        /// <summary>Kill on a live field Wave until the realm has earned the rack, lifetime.
+        /// Kills bank as they land (Zo, 2026-08-25), so the lifetime figure the rack reads
+        /// rises one kill value at a time; this stops one kill SHORT so the caller can pin the
+        /// edge.</summary>
+        static void KillUntilOneShortOfTheRack(RunSim sim, MetaState meta)
+        {
+            long gate = DemoProgress.PrimaryRackSalvage;
+            long kill = (long)MetaUpgrades.SalvagePerKill();
+            Assert.Greater(gate, 0L, "the catalog sells a Primary");
+            while (meta.LifetimeSalvageEarned + kill < gate) sim.AwardKill();
+            Assert.IsFalse(DemoProgress.PrimaryRowsOpen(meta), "one kill short is shut");
+        }
+
         /// <summary>Clear field Waves up to and including <paramref name="throughWave"/>. One
-        /// draw per Wave rather than the zone's composite, so every Wave lands in
-        /// <see cref="MetaState.DeepestWaveEntered"/> — the figure the rack now reads. ENTERED, not Reached: Reached rises only on a CLEAR because deep start reads it as a permission, so it cannot tell "died on the Wave" from "never drew it".</summary>
+        /// draw per Wave rather than the zone's composite. Kept for the [Ignore]d window tests,
+        /// which walk to zone 2's end before staking.</summary>
         static void ClearFieldThrough(RunSim sim, int throughWave)
         {
             for (int w = 1; w <= throughWave; w++)
@@ -88,51 +101,52 @@ namespace GatekeepersProtocol.Tests
             Assert.IsTrue(meta.DemoZone2BankLost, "player-down inside the window is the same loss");
         }
 
-        /// <summary>Re-keyed from LossDuringZoneTwosFieldWaves_DoesNotWriteTheGate. INVERTED BY
-        /// DESIGN (Zo, 2026-08-25): a field loss used to be the case that must NOT sell a
-        /// Primary, and is now precisely the case that must — it is the death the ruling was
-        /// written for. What survives unchanged is the rest: the legacy flag stays unwritten,
-        /// and the loss still counts an ending.</summary>
+        /// <summary>A field loss after the rack is earned leaves it open: the kills that paid
+        /// for it landed in the bank as they fell, and dying takes nothing back. The zone-2
+        /// record stays unwritten, and the loss still counts an ending.</summary>
         [Test]
         public void LossDuringTheFieldWaves_LeavesTheRackOpen()
         {
             MetaState meta;
             var sim = Tethered(out meta);
-            ClearFieldThrough(sim, DemoProgress.PrimaryRowsWave);
-            sim.SeekWave(DemoZones.EndWave(2));
             sim.TriggerDraw();
             Assert.AreEqual(WaveMode.Terminal, sim.Mode, "a field Wave, not a bank window");
+            KillUntilOneShortOfTheRack(sim, meta);
+            sim.AwardKill();
+            Assert.IsTrue(DemoProgress.PrimaryRowsOpen(meta), "earned on the field");
 
             sim.NotifyPlayerDown();
 
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.IsTrue(DemoProgress.PrimaryRowsOpen(meta),
-                "the Wave was already reached — dying past it cannot take the rack back");
+                "the price was already earned — dying past it cannot take the rack back");
             Assert.IsFalse(meta.DemoZone2BankLost,
-                "and it opened on the Wave reached, not on the legacy flag");
+                "and it opened on Salvage earned, not on the zone-2 record");
             Assert.AreEqual(1, meta.PodEjections, "it still counts as an ending");
         }
 
-        /// <summary>Re-keyed from ZoneOnesBankFalling_DoesNotWriteTheGate. INVERTED BY DESIGN
-        /// (Zo, 2026-08-25): zone 1's end used to be the case that pointedly sold nothing, and
-        /// is now the whole key. The stepwise walk is the point — the rack must still be SHUT
-        /// one Wave short, or the gate has stopped gating.</summary>
+        /// <summary>Re-keyed 2026-09-02 from ReachingZoneOnesLastWave_OpensThePrimaryRack. The
+        /// stepwise walk is the point — the rack must still be SHUT one kill short of the price,
+        /// or the gate has stopped gating — and depth buys nothing on its own.</summary>
         [Test]
-        public void ReachingZoneOnesLastWave_OpensThePrimaryRack()
+        public void EarningTheCheapestPrimary_OpensThePrimaryRack()
         {
             MetaState meta;
             var sim = Tethered(out meta);
             Assert.IsFalse(DemoProgress.PrimaryRowsOpen(meta),
-                "a fresh realm has reached nothing");
+                "a fresh realm has earned nothing");
 
-            ClearFieldThrough(sim, DemoProgress.PrimaryRowsWave - 1);
+            sim.SeekWave(WaveDirector.MaxWaves);
+            sim.TriggerDraw();
+            Assert.AreEqual(WaveDirector.MaxWaves, meta.DeepestWaveEntered);
             Assert.IsFalse(DemoProgress.PrimaryRowsOpen(meta),
-                "one Wave short of zone 1's end is still short");
+                "the deepest Wave with nothing earned is still shut — depth is not the key");
 
-            ClearFieldThrough(sim, DemoProgress.PrimaryRowsWave);
-            Assert.AreEqual(DemoProgress.PrimaryRowsWave, meta.DeepestWaveEntered);
+            KillUntilOneShortOfTheRack(sim, meta);
+            sim.AwardKill();
+            Assert.GreaterOrEqual(meta.LifetimeSalvageEarned, DemoProgress.PrimaryRackSalvage);
             Assert.IsTrue(DemoProgress.PrimaryRowsOpen(meta),
-                "reaching zone 1's last Wave is what sells the Primary that carries zone 1");
+                "earning the cheapest Primary's price is what sells it");
 
             sim.Ship.Hatch.Damage(99999f);
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
@@ -145,23 +159,21 @@ namespace GatekeepersProtocol.Tests
         /// keeping is the separation itself — PodEjections counts endings and never opens the
         /// rack, so the gate cannot be reached by dying at it over and over.</summary>
         [Test]
-        public void ALossShortOfZoneOnesEnd_CountsAnEnding_AndOpensNothing()
+        public void ALossShortOfThePrice_CountsAnEnding_AndOpensNothing()
         {
-            // Falling short means never DRAWING zone 1's last Wave. An earlier draft cleared
-            // up to it and then drew it before dying, which under the entered-not-cleared rule
-            // is reaching it — and reaching it is exactly what sells the Primary.
             MetaState meta;
             var sim = Tethered(out meta);
             sim.TriggerDraw();
-            Assert.Less(meta.DeepestWaveEntered, DemoProgress.PrimaryRowsWave,
-                "this Run has to end short of zone 1's last Wave or it proves nothing");
+            sim.AwardKill();
+            Assert.Less(meta.LifetimeSalvageEarned, DemoProgress.PrimaryRackSalvage,
+                "this Run has to end short of the price or it proves nothing");
             sim.Ship.Hatch.Damage(99999f);
 
             Assert.AreEqual(RunPhase.Lost, sim.Phase);
             Assert.AreEqual(1, meta.PodEjections,
                 "PodEjections is untouched by this milestone — it counts endings either way");
             Assert.IsFalse(DemoProgress.PrimaryRowsOpen(meta),
-                "an ending is not progress; the Wave reached is");
+                "an ending is not progress; the Salvage earned is");
         }
 
         [Test]
@@ -182,16 +194,19 @@ namespace GatekeepersProtocol.Tests
                 "zone 2 RESOLVED opens the rack — survived or lost, either outcome");
         }
 
-        /// <summary>Re-keyed from DockingOutOfASurvivedWindow_ArrivesWithTheGateOpen. The window
-        /// is out of the demo's spine but is still the only door to a Docked end, and a player
-        /// who withdraws a stake to run one can still walk home through it. Re-keyed is the
-        /// payoff: the rack they dock with was bought by the Waves they reached.</summary>
+        /// <summary>Re-keyed from DockingOutOfASurvivedWindow_ArrivesWithTheGateOpen. A player
+        /// who withdraws a stake to run a window can still walk home through it. The payoff: the
+        /// rack they dock with was bought by the kills that landed on the field, and the stake
+        /// they pulled back out of the bank does not lower what was earned.</summary>
         [Test]
         public void DockingOutOfAStakedWindow_ArrivesWithTheRackOpen()
         {
             MetaState meta;
             var sim = Tethered(out meta);
-            ClearFieldThrough(sim, DemoProgress.PrimaryRowsWave);
+            sim.TriggerDraw();
+            KillUntilOneShortOfTheRack(sim, meta);
+            sim.AwardKill();
+            sim.NotifyAssaultCleared();
             StakeAndOpenBankWindow(sim, 50L);
             sim.Tick(HatchBank.DurationSeconds);
 

@@ -83,9 +83,10 @@ namespace GatekeepersProtocol.Tests
                     // hollowed out to stay green. The 2026-08-27 Primary raise (~2x on every
                     // Primary; Secondaries untouched) is precisely the fix for that inversion, so
                     // the exemptions are what should have been deleted by it. Measured after the
-                    // raise, across all eleven tiers, MK-1 runs 10-12% under the Primary floor
-                    // and SEC-D 34-62% under it — the claim in the name is true again at every
-                    // rung, so it is asserted again at every rung.
+                    // raise, across all eleven tiers, MK-1 ran 10-12% under the Primary floor
+                    // (about 24% under since the 2026-09-02 recut to 56.2 sustained) and SEC-D
+                    // 34-62% under it — the claim in the name is true again at every rung, so it
+                    // is asserted again at every rung.
                     float dps = WeaponWheel.EffectiveDps(WeaponCatalog.Def(id), pts);
                     Assert.Less(dps, primaryFloor,
                         $"{id} flat T{t} dps {dps:0.##} must stay below Primary floor {primaryFloor:0.##}");
@@ -93,29 +94,44 @@ namespace GatekeepersProtocol.Tests
             }
         }
 
-        /// <summary>Renamed FROM Mk1_T0_OneShotsWave1Default_TwoShotsWave2 on 2026-08-27, because
-        /// the claim in that name INVERTED. BaseEnemyHp went 30 -> 50 and the sidearm did not move,
-        /// so a wave-1 Default now costs two shots where it cost one, and a wave-2 body costs three
-        /// where it cost two. That is a deliberate consequence of the fewer-and-tougher pass, not a
-        /// regression: the free sidearm out-killed every purchasable Primary on the opening wave
-        /// precisely BECAUSE its one shot was the whole kill, and taking that away is most of what
-        /// the raise was for.</summary>
+        /// <summary>Renamed BACK to the one-shot claim on 2026-09-02 (Zo). The 2026-08-27 pass
+        /// raised BaseEnemyHp 30 -> 50 with the sidearm held at 30, which made a wave-1 Default two
+        /// shots and pinned it so, on the argument that a one-shot sidearm out-kills every Primary
+        /// on the opening wave. Zo's 2026-08-16 verdict asked for one-shot fodder on the first
+        /// session and the HP raise had silently undone it; the sidearm now deals 50 at 1.4/s.
+        /// What the 08-27 pin guarded is kept, twice: the dps guard below, and the kills/s guard
+        /// in WeaponCatalogTests.PrimaryBand_T0_EachAvailablePrimaryLeadsOnOneAxis, which is
+        /// what solved the rate. At 1.8/s the one-shot sidearm out-killed the rifle on wave 1
+        /// (1.37 against 1.16 kills/s) and that guard went red; 1.4 is the highest tenth at
+        /// which the rifle still leads (1.12).</summary>
         [Test]
-        public void Mk1_T0_TwoShotsWave1Default_ThreeShotsWave2()
+        public void Mk1_T0_OneShotsWave1Default_TwoShotsWave2()
         {
             var mk1 = WeaponCatalog.Def(WeaponId.Mk1Sidearm);
             float dmg = mk1.damage * System.Math.Max(1, mk1.pellets);
 
-            Assert.AreEqual(2, ShotsToKill(dmg, DefaultHp(0)), "wave-1 Default");
-            Assert.AreEqual(3, ShotsToKill(dmg, DefaultHp(1)), "wave-2 Default");
+            Assert.AreEqual(1, ShotsToKill(dmg, DefaultHp(0)), "wave-1 Default");
+            Assert.AreEqual(2, ShotsToKill(dmg, DefaultHp(1)), "wave-2 Default");
 
-            // THE CLAIM UNDERNEATH THE TWO COUNTS, and the reason it is worth a pin at all: the
-            // free sidearm must never one-shot the calibration wave again. One shot per kill is
-            // what let it beat a 1200-salvage rifle on wave 1 at equal tier, and it is the exact
-            // shape the 2026-08-27 pass was written to remove.
-            Assert.Greater(ShotsToKill(dmg, DefaultHp(0)), 1,
-                $"the free sidearm deals {dmg} into a {DefaultHp(0)} hp wave-1 body; if that ever "
-                + "becomes one shot again, every Primary loses the opening wave to it");
+            // THE CLAIM UNDERNEATH THE COUNTS: one shot is the calibration wave ONLY. If the
+            // sidearm ever one-shots wave 2 as well, the HP ladder has stopped costing it anything
+            // and every Primary loses the opening zone, not the opening wave.
+            Assert.Greater(ShotsToKill(dmg, DefaultHp(1)), 1,
+                $"the free sidearm deals {dmg} into a {DefaultHp(1)} hp wave-2 body; one shot "
+                + "there means the ladder no longer taxes the starting gun");
+
+            // And the rate was solved, not picked: sustained dps must sit under every Primary's
+            // or the 2026-08-27 inversion is back through the other door.
+            float cycle = mk1.clipSize / mk1.shotsPerSecond + mk1.reloadSeconds;
+            float sidearmDps = mk1.clipSize * dmg / cycle;
+            foreach (WeaponId id in WeaponCatalog.ForSlot(WeaponSlot.Primary))
+            {
+                var p = WeaponCatalog.Def(id);
+                float pDps = p.clipSize * p.damage * System.Math.Max(1, p.pellets)
+                    / (p.clipSize / p.shotsPerSecond + p.reloadSeconds);
+                Assert.Less(sidearmDps, pDps,
+                    $"MK-1 sustains {sidearmDps:0.#} dps against {p.displayName}'s {pDps:0.#}");
+            }
 
             // ...and the ladder has to keep costing it more, or the sidearm scales for free.
             for (int w = 1; w < WaveDirector.MaxWaves; w++)

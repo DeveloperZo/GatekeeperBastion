@@ -116,10 +116,6 @@ namespace GatekeepersProtocol.Sim
         /// simply replays the line once, which is the harmless direction.</summary>
         public bool DemoJuiceTaught;
         public bool DemoFabPowered;
-        /// <summary>Wheel ladder rung 1: Secondary buys remaining while DemoActive. The
-        /// multiplayer gate reads it — the first buy (2 → 1) unlocks friends.</summary>
-        public int DemoWheelBuysLeft = 2;
-
         /// <summary>A Run ended Lost inside zone 2's Hatch-bank window. This is the gate that
         /// sells the Primary — the event the player just played. It is NOT derived from
         /// PodEjections and must never be re-keyed to it: a save that docked through zone 1
@@ -131,19 +127,12 @@ namespace GatekeepersProtocol.Sim
         /// key; renaming it is a save-version bump for a word.</summary>
         public bool DemoZone2BankLost;
 
-        /// <summary>Once-per-save latch for the rung-2 Docked resolve: the demo.second_loss
-        /// line and the ladder log fire exactly once, however many times the player docks
-        /// afterwards (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
+        /// <summary>Once-per-save latch for the rack-opened Docked resolve: the demo.second_loss
+        /// line and its log fire exactly once, however many times the player docks afterwards
+        /// (Docs/Demo - Single/5-repeat-to-control-room.md). Named for the wheel ladder's second
+        /// rung, cut 2026-09-02 (Zo: anything affordable is buyable); the name is a save v13
+        /// JSON key and stays.</summary>
         public bool DemoRungTwoOpened;
-
-        /// <summary>Wheel ladder rung 2: buys remaining, set to 2 when rung 2 opens and
-        /// counted SEPARATELY from <see cref="DemoWheelBuysLeft"/>. It is a second counter
-        /// rather than a raise of the first because the two rungs are priced and refused
-        /// separately and their remaining counts are read independently. (Until 2026-08-25
-        /// the first counter was ALSO the multiplayer key; co-op now unlocks on the ARMORY's
-        /// MK-1 — DemoProgress.MultiplayerUnlocked reads DemoWeaponGranted.) Do not merge the two counters
-        /// (Docs/Demo - Single/5-repeat-to-control-room.md).</summary>
-        public int DemoRungTwoBuysLeft;
 
         int[] _demoZoneDeepest = new int[DemoZoneCount];
 
@@ -290,10 +279,8 @@ namespace GatekeepersProtocol.Sim
             JsonText.AppendBool(sb, "DemoCrewMenuUnlocked", DemoCrewMenuUnlocked, true);
             JsonText.AppendBool(sb, "DemoJuiceTaught", DemoJuiceTaught, true);
             JsonText.AppendBool(sb, "DemoFabPowered", DemoFabPowered, true);
-            JsonText.AppendLong(sb, "DemoWheelBuysLeft", DemoWheelBuysLeft, true);
             JsonText.AppendBool(sb, "DemoZone2BankLost", DemoZone2BankLost, true);
             JsonText.AppendBool(sb, "DemoRungTwoOpened", DemoRungTwoOpened, true);
-            JsonText.AppendLong(sb, "DemoRungTwoBuysLeft", DemoRungTwoBuysLeft, true);
             JsonText.AppendIntArray(sb, "DemoZoneDeepestWave", _demoZoneDeepest);
             sb.Append('}');
             return sb.ToString();
@@ -339,10 +326,8 @@ namespace GatekeepersProtocol.Sim
             r.DemoCrewMenuUnlocked = JsonText.ExtractBool(json, "DemoCrewMenuUnlocked", false);
             r.DemoJuiceTaught = JsonText.ExtractBool(json, "DemoJuiceTaught", false);
             r.DemoFabPowered = JsonText.ExtractBool(json, "DemoFabPowered", false);
-            r.DemoWheelBuysLeft = JsonText.ExtractInt(json, "DemoWheelBuysLeft", 0);
             r.DemoZone2BankLost = JsonText.ExtractBool(json, "DemoZone2BankLost", false);
             r.DemoRungTwoOpened = JsonText.ExtractBool(json, "DemoRungTwoOpened", false);
-            r.DemoRungTwoBuysLeft = JsonText.ExtractInt(json, "DemoRungTwoBuysLeft", 0);
             r.EnsureDemoZones();
             JsonText.ExtractIntArray(json, "DemoZoneDeepestWave", r._demoZoneDeepest);
 
