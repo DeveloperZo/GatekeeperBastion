@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace GatekeepersProtocol.EditorTools
 {
     /// <summary>Authors the protocol readout into a Bastion HUD: the bottom-centre ability bar
-    /// (Passive, Personal, Crew) and the protocol line above it — and, since 2026-08-26, the
+    /// (Passive, Crew, Personal) and the protocol line above it — and, since 2026-08-26, the
     /// three-card pick into the Ship's CREW QUARTERS panel (SceneBuilder.ProtocolCards.cs).
     /// One row for the protocol UI: the menu list in Docs/Architecture/README.md is fenced and
     /// permission-gated, and a second row for the same subject is exactly the sprawl that
@@ -153,7 +153,7 @@ namespace GatekeepersProtocol.EditorTools
         const float Gap = 16f;
 
         /// <summary>The bar: three ability squares across the bottom centre, Passive on the left,
-        /// Crew — the ult — on the right, in the order the player earns them.</summary>
+        /// then Crew (G) and Personal (H) — keycaps read left to right in keyboard order.</summary>
         static ProtocolAbilityBarView MakeBar(Transform canvas)
         {
             var go = new GameObject("Protocol Bar", typeof(ProtocolAbilityBarView));
@@ -165,8 +165,8 @@ namespace GatekeepersProtocol.EditorTools
             var so = new SerializedObject(bar);
             float step = Tile + Gap;
             BindSlot(so, "_passive", MakeSlot(go.transform, "Passive Slot", -step));
-            BindSlot(so, "_personal", MakeSlot(go.transform, "Personal Slot", 0f));
-            BindSlot(so, "_crew", MakeSlot(go.transform, "Crew Slot", step));
+            BindSlot(so, "_crew", MakeSlot(go.transform, "Crew Slot", 0f));
+            BindSlot(so, "_personal", MakeSlot(go.transform, "Personal Slot", step));
             so.ApplyModifiedPropertiesWithoutUndo();
             return bar;
         }

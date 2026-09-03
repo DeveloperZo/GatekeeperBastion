@@ -62,13 +62,18 @@ namespace GatekeepersProtocol.EditorTools
 
             var mats = FixtureMaterials(profile);
             int rows = DressWalls(root.transform, walls, deck, profile, mats);
-            Deck(root.transform, deck, profile);
+            // the tiles themselves carry the wet deck and the vents when the flow is on; the
+            // mirror sheet is the older answer for a deck left on the pack material
+            int tiles = ShipLookDeck.Apply(dress, profile);
+            if (!profile.deckFlow) Deck(root.transform, deck, profile);
             Motes(root.transform, deck, profile);
             Probes(root.transform, deck, profile);
+            ShipLookPost.Ensure(root.transform, scene, profile);
 
             EditorSceneManager.MarkSceneDirty(scene);
             Debug.Log($"[ShipLook] Dressed {walls.Count} wall faces with {rows} fixture rows in " +
                       $"{profile.districtHues.Length} districts, {mats.Count} shared materials, " +
+                      $"{tiles} deck tiles {(profile.deckFlow ? "on the flow deck" : "restored")}, " +
                       "0 realtime lights added. Bake Lighting next — until then the fixtures " +
                       "glow but light nothing.");
         }
@@ -81,6 +86,7 @@ namespace GatekeepersProtocol.EditorTools
             public Vector3 normal;   // pointing into the room
             public float length;
             public float floorY;
+            public Transform piece;  // the renderer, for the measured Wall_01 profile
         }
 
         /// <summary>A wall is thin in one horizontal axis, long in the other, and tall. Name
@@ -145,10 +151,11 @@ namespace GatekeepersProtocol.EditorTools
 
                 walls.Add(new Wall
                 {
-                    face = b.center + n * ((thinX ? b.size.x : b.size.z) * 0.5f + 0.03f),
+                    face = b.center + n * ((thinX ? b.size.x : b.size.z) * 0.5f + BandGap),
                     normal = n,
                     length = length,
                     floorY = b.min.y,
+                    piece = r.transform,
                 });
             }
             return walls;
@@ -183,6 +190,9 @@ namespace GatekeepersProtocol.EditorTools
             return mats;
         }
 
+        /// <summary>Air between a wall's furthest point and a band's back.</summary>
+        const float BandGap = 0.02f;
+
         static int DressWalls(Transform root, List<Wall> walls, Bounds deck, ShipLookProfile p,
                               Dictionary<string, Material> mats)
         {
@@ -190,7 +200,11 @@ namespace GatekeepersProtocol.EditorTools
             holder.transform.SetParent(root, false);
 
             int districts = Mathf.Max(1, p.districtHues.Length);
+            int rows = Mathf.Clamp(p.districtRows, 0, WallStrips.Rows.Length);
             float z0 = deck.min.z, span = Mathf.Max(deck.size.z, 0.01f);
+            var body = BodyMaterial();
+            // the band's body reaches half a thickness plus its backing either side of the pivot
+            float reach = WallStrips.DefaultThickness * 0.5f + 0.05f;
             int placed = 0;
 
             foreach (var w in walls)
@@ -199,19 +213,35 @@ namespace GatekeepersProtocol.EditorTools
                 // the cast
                 float t = Mathf.Clamp01((w.face.z - z0) / span);
                 int d = Mathf.Clamp(Mathf.FloorToInt(t * districts), 0, districts - 1);
+                // whole half-metres, the pack's panel pitch, so dashes line up with the wall
+                float len = Mathf.Max(WallStrips.Pitch * 2f,
+                                      Mathf.Floor(w.length / WallStrips.Pitch) * WallStrips.Pitch);
 
-                for (int row = 0; row < 2; row++)
+                for (int row = 0; row < rows; row++)
                 {
-                    float y = row == 0 ? p.rowHeights.x : p.rowHeights.y;
-                    var mesh = DashRow(w.length, row);
+                    var place = WallStrips.Rows[row];
+                    var yaw = Quaternion.LookRotation(w.normal, Vector3.up);
+                    var rotation = yaw * Quaternion.Euler(place.tilt, 0f, 0f);
+                    var pivot = new Vector3(w.face.x, w.floorY + place.height, w.face.z);
+
+                    // measured against the Synty wall where it is one; a hair proud of the
+                    // bounds face plus the tilt's lean everywhere else
+                    float stand = WallStrips.Standoff(w.piece, pivot, w.normal, place.tilt, reach, BandGap);
+                    if (float.IsNegativeInfinity(stand))
+                        stand = reach * Mathf.Tan(Mathf.Abs(place.tilt) * Mathf.Deg2Rad);
+                    var pos = pivot + w.normal * stand
+                              + rotation * Vector3.forward * place.outward
+                              - yaw * Vector3.right * (len * 0.5f);   // the mesh runs +X from its origin
+
+                    string key = $"Fixture_D{d}_{(row == 0 ? "Hot" : "Dim")}";
                     var go = new GameObject($"Row_D{d}_{(row == 0 ? "Hot" : "Dim")}_{placed}");
                     go.transform.SetParent(holder.transform, false);
-                    go.transform.position = new Vector3(w.face.x, w.floorY + y, w.face.z);
-                    go.transform.rotation = Quaternion.LookRotation(w.normal, Vector3.up);
+                    go.transform.position = pos;
+                    go.transform.rotation = rotation;
 
-                    go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                    go.AddComponent<MeshFilter>().sharedMesh = BandMesh(len, row, p);
                     var mr = go.AddComponent<MeshRenderer>();
-                    mr.sharedMaterial = mats[$"Fixture_D{d}_{(row == 0 ? "Hot" : "Dim")}"];
+                    mr.sharedMaterials = new[] { body, mats[key] };
                     mr.shadowCastingMode = ShadowCastingMode.Off;
 
                     GameObjectUtility.SetStaticEditorFlags(go,
@@ -223,58 +253,34 @@ namespace GatekeepersProtocol.EditorTools
             return placed;
         }
 
-        /// <summary>A run of glowing dashes at uneven pitch — the readout rhythm the look is
-        /// built on. Cached per rounded length so a ship of walls costs a handful of meshes.</summary>
-        static Mesh DashRow(float length, int row)
+        /// <summary>The dark recess the dashes sit in, the gallery's Skyline body.</summary>
+        static Material BodyMaterial()
         {
-            int metres = Mathf.Max(1, Mathf.RoundToInt(length));
-            string name = $"Fixture_Dash_{metres}m_{row}";
+            return Owned("Fixture_Body", m =>
+            {
+                m.color = new Color(0.012f, 0.016f, 0.028f);
+                m.SetFloat("_Glossiness", 0.40f);
+                m.SetFloat("_Metallic", 0.25f);
+                m.DisableKeyword("_EMISSION");
+                m.SetColor("_EmissionColor", Color.black);
+            });
+        }
+
+        /// <summary>The gallery's band mesh at this length, row, pattern and depth, kept as an
+        /// asset so a ship of walls shares a handful of meshes and the bake can see them.</summary>
+        static Mesh BandMesh(float length, int row, ShipLookProfile p)
+        {
+            int n = System.Enum.GetValues(typeof(WallStrips.Pattern)).Length;
+            var pattern = (WallStrips.Pattern)Mathf.Clamp(p.stripPattern, 0, n - 1);
+            float depth = Mathf.Clamp(p.stripDepth, 0.005f, 0.12f);
+            string name = WallStrips.NameFor(length, row, pattern, depth);
             string path = $"{FixtureDir}/{name}.asset";
             var had = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if (had != null) return had;
 
-            var verts = new List<Vector3>();
-            var tris = new List<int>();
-            var norms = new List<Vector3>();
-            var uvs = new List<Vector2>();
-
-            float half = metres * 0.5f;
-            float h = row == 0 ? 0.10f : 0.06f;
-            int seed = 7919 + row * 31;
-            float x = -half + 0.10f;
-
-            while (x < half - 0.10f)
-            {
-                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-                float w = 0.14f + (seed % 1000) / 1000f * 0.80f;
-                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-                float gap = 0.08f + (seed % 1000) / 1000f * 0.30f;
-                if (x + w > half - 0.10f) w = half - 0.10f - x;
-
-                if (w > 0.04f && (seed % 100) > 16)
-                {
-                    int o = verts.Count;
-                    verts.Add(new Vector3(x, -h, 0f));
-                    verts.Add(new Vector3(x + w, -h, 0f));
-                    verts.Add(new Vector3(x + w, h, 0f));
-                    verts.Add(new Vector3(x, h, 0f));
-                    for (int i = 0; i < 4; i++) norms.Add(Vector3.back);
-                    uvs.Add(new Vector2(0f, 0f)); uvs.Add(new Vector2(1f, 0f));
-                    uvs.Add(new Vector2(1f, 1f)); uvs.Add(new Vector2(0f, 1f));
-                    tris.Add(o); tris.Add(o + 2); tris.Add(o + 1);
-                    tris.Add(o); tris.Add(o + 3); tris.Add(o + 2);
-                }
-                x += w + gap;
-            }
-
-            var mesh = new Mesh { name = name };
-            mesh.SetVertices(verts);
-            mesh.SetNormals(norms);
-            mesh.SetUVs(0, uvs);
-            mesh.SetTriangles(tris, 0);
-            mesh.RecalculateBounds();
+            var mesh = WallStrips.Build(length, row, pattern, depth: depth);
+            mesh.name = name;
             Unwrapping.GenerateSecondaryUVSet(mesh);   // lightmap UVs, or the bake ignores it
-
             EnsureFolder(FixtureDir);
             AssetDatabase.CreateAsset(mesh, path);
             return mesh;

@@ -17,7 +17,7 @@ namespace GatekeepersProtocol.Game
         public TMP_Text countdown;
     }
 
-    /// <summary>Bottom-centre protocol bar: Passive, Personal, Crew (ult). Authored in
+    /// <summary>Bottom-centre protocol bar: Passive, Crew (G), Personal (H). Authored in
     /// Bastion.unity; HudController injects names, keys and fills.</summary>
     public sealed class ProtocolAbilityBarView : MonoBehaviour
     {

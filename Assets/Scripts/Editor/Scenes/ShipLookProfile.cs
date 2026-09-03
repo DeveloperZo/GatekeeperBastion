@@ -7,6 +7,28 @@ namespace GatekeepersProtocol.EditorTools
     /// them holds none of its own. The Bastion pass will read the same type.</summary>
     /// <remarks>Editor-only by design. Nothing loads this at runtime; the pass writes authored
     /// scene content and the scene owns the result from then on.</remarks>
+    /// <summary>One travelling pulse: on, signed metres per second along its axis, metres
+    /// between heads, pulse length as a fraction of that, and the trough brightness.</summary>
+    [System.Serializable]
+    public struct FlowSettings
+    {
+        public bool on;
+        public float speed;
+        public float length;
+        [Range(0.02f, 1f)] public float width;
+        [Range(0f, 1f)] public float floor;
+
+        public void Apply(Material m, string prefix, Vector3 dir)
+        {
+            m.SetFloat(prefix + "On", on ? 1f : 0f);
+            m.SetVector(prefix + "Dir", new Vector4(dir.x, dir.y, dir.z, 0f));
+            m.SetFloat(prefix + "Speed", speed);
+            m.SetFloat(prefix + "Length", Mathf.Max(length, 0.01f));
+            m.SetFloat(prefix + "Width", Mathf.Clamp(width, 0.02f, 1f));
+            m.SetFloat(prefix + "Floor", Mathf.Clamp01(floor));
+        }
+    }
+
     [CreateAssetMenu(fileName = "ShipLookProfile", menuName = "Gatekeeper/Ship Look Profile")]
     public sealed class ShipLookProfile : ScriptableObject
     {
@@ -36,6 +58,13 @@ namespace GatekeepersProtocol.EditorTools
         [Tooltip("Height of the hot row and the dim row above it, in metres off the floor.")]
         public Vector2 rowHeights = new Vector2(0.55f, 2.10f);
 
+        [Tooltip("Rows of dashes per wall, from the floor up: 1 keeps the city at the waterline, " +
+                 "0 dresses no walls at all and leaves the deck, motes and bloom.")]
+        [Range(0, 2)] public int districtRows = 2;
+        [Tooltip("Index into WallStrips.Pattern: the dash rhythm.")]
+        public int stripPattern;
+        [Range(0.005f, 0.12f)] public float stripDepth = 0.025f;
+
         [Header("Deck")]
         [Tooltip("The mirror's own tint, so the reflection joins the palette instead of being " +
                  "a neutral grey sheet.")]
@@ -47,6 +76,30 @@ namespace GatekeepersProtocol.EditorTools
                  "accent hue. 0 is a plain dielectric floor with white-ish reflections.")]
         [Range(0f, 1f)] public float deckAccentStrength = 0.15f;
         [Range(0f, 1f)] public float deckWet = 0.80f;
+        [Tooltip("How much of Deck Tint to blend over the tile's own atlas colour; 0 leaves it.")]
+        [Range(0f, 1f)] public float deckTintAmount;
+
+        [Header("Deck vents — the tile on the flow shader")]
+        [Tooltip("Keep the Synty floor tile and pulse its vents on GKB/EmissiveFlowAtlas, with wet " +
+                 "as the tile's smoothness. Off puts the tiles back on the pack material and lays " +
+                 "the mirror sheet instead.")]
+        public bool deckFlow;
+        public FlowSettings deckPulse;
+        [Tooltip("Linked: the along-Z vents take Deck Accent and its strength.")]
+        public bool ventZLinked = true;
+        public Color ventZColor = new Color(0.60f, 0.85f, 0.95f);
+        [Range(0f, 4f)] public float ventZStrength = 0.35f;
+        public FlowSettings ventZFlow;
+        public bool ventXLinked = true;
+        public Color ventXColor = new Color(0.60f, 0.85f, 0.95f);
+        [Range(0f, 4f)] public float ventXStrength = 0.35f;
+        public FlowSettings ventXFlow;
+
+        [Header("Post")]
+        [Tooltip("Bloom on the shared post profile, at the values the gallery was judged under.")]
+        public bool bloom = true;
+        [Range(0f, 4f)] public float bloomIntensity = 1.6f;
+        [Range(0f, 2f)] public float bloomThreshold = 0.70f;
 
         [Header("Motes — the splash grammar")]
         [Tooltip("Per district. The splash emitter runs 40.")]

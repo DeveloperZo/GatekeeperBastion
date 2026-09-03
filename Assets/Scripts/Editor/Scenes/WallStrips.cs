@@ -59,6 +59,60 @@ namespace GatekeepersProtocol.EditorTools
             new Row { height = 1.42f, tilt = -51.57f, outward = 0f },
         };
 
+        /// <summary>How far SM_Bld_Wall_01 reaches into the room at a given height above its
+        /// own origin, in metres, read off the model: a 0.75 m foot, a chamfer sloping back
+        /// to the 0.29 m face between 0.08 and 0.66 m, a recess, the face, the upper chamfer
+        /// out to the cornice. The wall's origin sits one metre above its base, so a bay height
+        /// is this height plus the piece's local y. Piecewise linear between the points.</summary>
+        static readonly Vector2[] Wall01Depth =
+        {
+            new Vector2(-1.00f, 0.750f), new Vector2(0.075f, 0.750f), new Vector2(0.655f, 0.236f),
+            new Vector2(0.745f, 0.232f), new Vector2(0.805f, 0.286f), new Vector2(2.335f, 0.286f),
+            new Vector2(2.465f, 0.232f), new Vector2(2.475f, 0.311f), new Vector2(3.125f, 0.750f),
+            new Vector2(3.135f, 0.803f), new Vector2(3.275f, 0.841f), new Vector2(3.315f, 0.892f),
+            new Vector2(4.00f, 0.892f),
+        };
+
+        /// <summary>The mesh the profile was measured on; other pieces fall back to colliders.</summary>
+        public const string Wall01Mesh = "SM_Bld_Wall_01";
+
+        /// <summary>How far, along `normal` from `pivot` (both world), a band has to stand so
+        /// that none of its back plane, tilted `tiltDeg` about its long axis and reaching
+        /// `reach` above and below the pivot, sits inside the Wall_01 `piece` behind it. The
+        /// piece's local +Z must be its inward face; otherwise, or for any other mesh, this
+        /// returns negative infinity and the caller measures some other way.</summary>
+        public static float Standoff(Transform piece, Vector3 pivot, Vector3 normal,
+                                     float tiltDeg, float reach, float gap)
+        {
+            if (piece == null) return float.NegativeInfinity;
+            var mf = piece.GetComponent<MeshFilter>();
+            if (mf == null || mf.sharedMesh == null || !mf.sharedMesh.name.StartsWith(Wall01Mesh))
+                return float.NegativeInfinity;
+            if (Vector3.Dot(piece.forward, normal) < 0.5f) return float.NegativeInfinity;
+
+            float originN = Vector3.Dot(piece.position - pivot, normal);
+            float lean = Mathf.Tan(Mathf.Abs(tiltDeg) * Mathf.Deg2Rad);
+            float need = float.NegativeInfinity;
+            const int Samples = 9;
+            for (int s = 0; s < Samples; s++)
+            {
+                float y = pivot.y + Mathf.Lerp(-reach, reach, s / (float)(Samples - 1));
+                float depth = originN + Wall01DepthAt(y - piece.position.y);
+                need = Mathf.Max(need, depth + gap + (y - pivot.y) * lean);
+            }
+            return need;
+        }
+
+        public static float Wall01DepthAt(float localY)
+        {
+            var d = Wall01Depth;
+            if (localY <= d[0].x) return d[0].y;
+            for (int i = 1; i < d.Length; i++)
+                if (localY <= d[i].x)
+                    return Mathf.Lerp(d[i - 1].y, d[i].y, Mathf.InverseLerp(d[i - 1].x, d[i].x, localY));
+            return d[d.Length - 1].y;
+        }
+
         public const float DefaultThickness = 0.18f;
         public const float DefaultDepth = 0.025f;
 

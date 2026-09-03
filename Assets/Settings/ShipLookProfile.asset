@@ -12,22 +12,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e845b5f712a83664a8635f19bcebfbc4, type: 3}
   m_Name: ShipLookProfile
   m_EditorClassIdentifier: GatekeepersProtocol.Editor::GatekeepersProtocol.EditorTools.ShipLookProfile
-  hullTint: {r: 0.039215688, g: 0.050980393, b: 0.078431375, a: 1}
+  hullTint: {r: 0.02745098, g: 0.039215688, b: 0.050980393, a: 1}
   districtHues:
-  - {r: 0.61960787, g: 0.9098039, b: 0.16078432, a: 1}
   - {r: 0.18431373, g: 0.8784314, b: 1, a: 1}
-  - {r: 1, g: 0.18431373, b: 0.65882355, a: 1}
-  districtPeak: 3
-  upperRowFraction: 0.7814211
+  - {r: 0.18431373, g: 0.8784314, b: 1, a: 1}
+  - {r: 0.18431373, g: 0.87843144, b: 1, a: 1}
+  districtPeak: 0.9
+  upperRowFraction: 0.43527526
   rowHeights: {x: 0.55, y: 2.1}
-  deckTint: {r: 0.061960787, g: 0.090980396, b: 0.016078433, a: 1}
-  deckAccent: {r: 0.18431373, g: 0.8784314, b: 1, a: 1}
-  deckAccentStrength: 0
-  deckWet: 0.578
-  moteCount: 0
-  moteColor: {r: 1, g: 1, b: 1, a: 1}
+  districtRows: 0
+  stripPattern: 0
+  stripDepth: 0.025
+  deckTint: {r: 0.01, g: 0.015, b: 0.02, a: 1}
+  deckAccent: {r: 0.6, g: 0.85, b: 0.95, a: 1}
+  deckAccentStrength: 0.35
+  deckWet: 0.9
+  deckTintAmount: 0
+  deckFlow: 1
+  deckPulse:
+    on: 1
+    speed: -3
+    length: 4
+    width: 0.35
+    floor: 0.25
+  ventZLinked: 0
+  ventZColor: {r: 0.18431373, g: 0.87843144, b: 1, a: 1}
+  ventZStrength: 0.35
+  ventZFlow:
+    on: 1
+    speed: -3
+    length: 4
+    width: 0.713
+    floor: 0.184
+  ventXLinked: 1
+  ventXColor: {r: 0.011764707, g: 0.015686275, b: 0.019607844, a: 1}
+  ventXStrength: 0.35
+  ventXFlow:
+    on: 0
+    speed: 3
+    length: 4
+    width: 0.35
+    floor: 0.25
+  bloom: 1
+  bloomIntensity: 1.6
+  bloomThreshold: 0.7
+  moteCount: 45
+  moteColor: {r: 0.011764707, g: 0.015686275, b: 0.019607844, a: 1}
   moteAlpha: 0.32
-  moteSize: {x: 0.05, y: 0.13}
+  moteSize: {x: 0.06, y: 0.16}
   moteRise: 0
   moteSimulationSpeed: 0.75
   dressRoots:
