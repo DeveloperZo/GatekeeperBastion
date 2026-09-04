@@ -157,6 +157,13 @@ the choice is genuinely press on or go home. Starting the next zone takes the of
 the door graph, where `RecordBankSurvived` was the only door-opening path. When a beat is cut,
 search for what was reading it, not just for what called it.
 
+**The field-wave door stake was turned on 2026-09-04**, from 0.15 to 0.29, the first time
+that dial has moved. It had been solved against a door of half the current size and never
+followed `ShipSystems.HatchMaxHp` when that doubled, so a leak of one Thief and three
+Defaults had 87 s against a 45 s target. The derivation
+and the table are in `4-Data.md`; `M112` adjudicates it across five untainted runs, of which
+one has been played.
+
 **The drip and the shutoff must agree, or wave 5 is inescapable.** Two rules disagreed and the
 disagreement was self-sustaining: the drip started when the ROSTER was spent, while the flag that
 makes dripped bodies free only rose when the FIELD WAS EMPTY. The drip kept a body alive, so the

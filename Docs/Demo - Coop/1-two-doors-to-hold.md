@@ -65,7 +65,7 @@ Continues from beat 0 step 5. Standing arrives as **Start at the Hatch**.
 | **Standing** | Shut off T2 |
 | **Prompt** | Terminal shutoff row. Recall pad is the Ship-teleporter graybox beside T2. |
 | **Log** | shutoff, door-open, bank-on-switch |
-| **Have** | `ShutOffFieldWave` banks the carry, completes T2, opens **D1**, offers dock. Field Waves can hurt the Hatch at `HatchBank.FieldWaveDamageScale` (**0.15**). One HP pool, **600**. |
+| **Have** | `ShutOffFieldWave` banks the carry, completes T2, opens **D1**, offers dock. Field Waves can hurt the Hatch at `HatchBank.FieldWaveDamageScale` (**0.29** since 2026-09-04). One HP pool, **600**. |
 | **Build** | Target selection: banking door else lowest-HP open door, re-eval on HP change. **Spawn rooms stay untouched.** Hunters already ignore the Hatch. |
 
 ### 2 — Clear

@@ -3,7 +3,7 @@
 <!--
 Status: later
 Update trigger: after each adjudicating play session, and whenever a watched dial moves
-Last updated: 2026-09-01
+Last updated: 2026-09-04
 -->
 
 Every dial the August rebalance moved was solved on paper and says so in its own comments.
@@ -37,6 +37,29 @@ bigger commit on this one.
    end) exists in `Logs/`, listed by filename in this file, with `Tools/wave-report`
    output attached for each. Checkpoint-tainted runs are excluded by the 2026-08-20
    taint ruling.
+
+   **Run 1 of 5 — `Logs/GatekeepersProtocol_2026-09-04_07-18-49_p51616.log`**, seed
+   259921031, the file's second Run. `dev=0 checkpoint=0 config=0 configTaint=0`, so it
+   counts. `result=lost cause=hatch wave=5 startWave=1 duration=419 gross=4704 banked=4554
+   respawns=1 seats=1 dial=0`. Kit: **no Primary at all**, MK-1 Sidearm T0, 0 banked at
+   embark, FORGE equipped (read from the `[Protocol]` lines, since the run predates the
+   protocol field this milestone's session added to both machine lines).
+
+   - **Zone 1 free.** Waves 1 and 2 closed with the door at 600/600 and 1302 banked. The
+     stake never engaged, and the Dock was offered and declined.
+   - **Zone 2 lost it on the last wave.** Wave 5 drew Convoy at the terminal at +332 s,
+     the door took its first hit at +398 s and was gone at +419 s. 32 of 39 bodies reached
+     it, about 20 of them inside six seconds. The player killed 24 in that wave, every one
+     a Default; the 6 Thieves and 6 Cloakers were never killed.
+   - **Minimum door HP: 0.** This is the criterion-2 reading and it refutes the kill
+     criterion below on its own terms, though on a kit no bought Primary would resemble.
+   - **The arithmetic underneath.** Wave 5 is 39 bodies at a 2.60 health multiplier, about
+     7800 HP, delivered over a 44.5 s window: 175 dps to hold the line. MK-1 T0 sustains
+     about 56 and MR-35 T0 about 83, so no shipped weapon holds wave 5 alone. The door's
+     600 HP is the buffer that absorbs the difference, which is what makes this the door
+     dial's question rather than the weapon table's.
+   - **`wave-report` output is not attached**: mono is absent on this machine, so the tool
+     refuses. The figures above are read from the log's own lines.
 2. **The door dial is adjudicated.** From those runs: minimum door HP reached per run,
    read from `hatch under attack` lines and the summary. The dial
    (`FieldWaveDamageScale` × `HatchMaxHp`) moves **at most once**, with the evidence and
@@ -87,6 +110,13 @@ about whether the mechanism ever engages.
   following is itself a defect to fix under M111's rules.
 
 ## Implementation
+
+**Moved 2026-09-04, dial 1 of 3:** `HatchBank.FieldWaveDamageScale` 0.15 → 0.29, its own
+commit, derivation and evidence in `4-Data.md` beside the constant. Direction is the
+constant's own written solve against the live 600 door, not the run: the run's door loss was
+a mass arrival that no scale value survives. The spawn-gap pair was the other candidate and
+was **not** moved, because `M116`'s live kill criterion measures the per-wave delivery windows
+that dial sets, and moving it mid-bet would rewrite the falsifier underneath it.
 
 **Change** `Assets/Scripts/Sim/Run/HatchBank.cs` / `Assets/Scripts/Sim/Ship/ShipSystems.cs`
 / `Assets/Scripts/Sim/Waves/WaveDirector.cs` / `Assets/Scripts/Sim/Meta/BoarderProtocol.cs`

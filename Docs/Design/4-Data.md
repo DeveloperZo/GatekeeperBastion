@@ -314,6 +314,38 @@ document below `SaveFormat.CurrentVersion` is refused by name rather than reshap
 | repair rig | **300** Salvage, flat 8 HP/s |
 <!-- GKB:END hatch -->
 
+## The field-wave door stake (`HatchBank.FieldWaveDamageScale`)
+
+What a field Wave's hit on the shut Hatch is worth, against a Hatch-bank Wave's full 1.0.
+**Turned 2026-09-04, the first time it has moved**, from 0.15 to **0.29**.
+
+The reference group and its target are unchanged and were re-checked against live constants
+on the day: Default deals 4 and Thief 20 per the 0.7 s interval, so 5.71 and 28.57 dps, and
+one Thief with three Defaults is 45.71 raw. The target is that this group gives the player
+about 45 s, enough that the round trip to the near terminal and a fight through is a real
+choice. `600 / 45 = 13.3` of 45.71 raw solves to 0.29.
+
+| | 0.15 (shipped to 2026-09-03) | 0.29 (from 2026-09-04) |
+|---|---|---|
+| one Thief, three Defaults (45.7 raw) | 87 s | 45 s |
+| wave 5 mass arrival (~320 raw) | 13 s | 7 s |
+
+0.15 was solved against a door of half the current size. `ShipSystems.HatchMaxHp` doubled on
+2026-08-27 and the scale did not follow, so the designed leak had 87 s against a 45 s target
+for two weeks. That is the theatre the constant's own comment warns about.
+
+**Evidence, and what it does not say.** The 2026-09-04 Boarding (`GatekeepersProtocol_
+2026-09-04_07-18-49_p51616.log`, seed 259921031, `dev=0 checkpoint=0 configTaint=0`) lost the
+door on wave 5 at 0.15, which reads as an argument for softening rather than raising. It is
+not. That wave put 32 of its 39 bodies on the Hatch inside about six seconds, roughly 320 dps
+raw, and no value of this scale survives that; the door fell 600 to 0 in 21 s. This dial
+governs LEAKAGE while the player is up the lane, which is the case the 45 s target describes.
+Mass arrival is a delivery question and belongs to the wave table.
+
+**Not adjudicated.** `M112` owns the verdict on five untainted runs; this is one, and it was
+played with no Primary at all. The move is provisional and the direction is the doc's own
+arithmetic, not the run.
+
 ## Hatch-bank (M53)
 
 **Out of the demo's critical path since 2026-08-25** (`Decisions.md`, *Locked — kills bank as

@@ -8,6 +8,11 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-04: **`M112` dial 1 of 3 turned — the field-wave door stake.**
+  `HatchBank.FieldWaveDamageScale` 0.15 → 0.29, the first time it has moved. It was the solve
+  for a 300 HP door and never followed the door to 600, leaving the designed leak 87 s against
+  a 45 s target. Run 1 of 5 is recorded on the milestone. The spawn-gap pair was not moved:
+  `M116`'s live kill criterion measures the windows it sets.
 - 2026-09-04: **DEPOT is an automatic grant, and the log names the protocol.** A fresh
   Boarder and every load now carry DEPOT rather than None, so no Boarding is fought with two
   dead keys; the run-begins line gains `protocol=` and `passive=`, and the summary line gains

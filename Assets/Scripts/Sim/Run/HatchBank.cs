@@ -20,17 +20,31 @@ namespace GatekeepersProtocol.Sim
         /// that the round trip to the near terminal (66 m out and back at 5 m/s is ~26 s) plus
         /// a fight through is a real choice, and not enough to ignore. Raising this number
         /// makes the Hatch a coin flip; dropping it makes the stake theatre.</para>
-        /// <para>SUPERSEDED 2026-08-27, and kept because the arithmetic is still how this dial
-        /// is derived. 0.15 solves that 45 s target for the door as it then was, 300, set for a
-        /// mode where the player STANDS ON IT: 300 / 45 = 6.67 dps against 45.7 raw.
-        /// <see cref="ShipSystems.HatchMaxHp"/> doubled the same day and this scale did not
-        /// follow, so at 45.7 x 0.15 = 6.86 dps the same group now needs ~87 s rather than 45.
-        /// The same solve against the live door is 600 / 45 = 13.3 of 45.7, i.e. ~0.29 — the
-        /// stake as shipped is about half the one the paragraph above argues for.</para>
-        /// <para>THIS IS THE FIRST DIAL TO TURN after playing a field Wave (Zo, 2026-08-27).
-        /// It has never been playtested — it is arithmetic against a Wave nobody has run with
-        /// the Hatch in the fight.</para></summary>
-        public const float FieldWaveDamageScale = 0.15f;
+        /// <para>0.15 solved that 45 s target for the door as it then was, 300, set for a mode
+        /// where the player STANDS ON IT: 300 / 45 = 6.67 dps against 45.7 raw.
+        /// <see cref="ShipSystems.HatchMaxHp"/> doubled to 600 on 2026-08-27 and this scale did
+        /// not follow, so the same group needed ~87 s rather than 45 for two weeks: the stake
+        /// shipped at about half the one the paragraph above argues for.</para>
+        /// <para>TURNED 2026-09-04, the first time this dial has moved, to 0.29 — the solve the
+        /// stale paragraph had already written down and never applied: 600 / 45 = 13.3 dps of
+        /// 45.7 raw. The reference group is unchanged and its arithmetic re-checked against
+        /// live constants on the day (Default hatchDamage 4 and Thief 20 over the 0.7 s
+        /// interval, so 5.71 and 28.57 dps, and one Thief with three Defaults is 45.71).</para>
+        /// <para>WHAT THE PLAY SAID, and why it did not point the other way. The 2026-09-04
+        /// Boarding (seed 259921031, untainted) lost the door on wave 5 at the old 0.15, which
+        /// looks like an argument for softening. It is not: 32 of that wave's 39 bodies reached
+        /// the Hatch at once, roughly 320 dps raw, and a door facing that is gone in 13 s at
+        /// 0.15 and 7 s at 0.29. No value of this scale saves a mass arrival. This dial governs
+        /// LEAKAGE while the player is up the lane, which is the case the 45 s target is written
+        /// for, and at 0.15 that case had 87 s — the theatre the paragraph above warns about.
+        /// The mass-arrival case is a delivery question and belongs to the wave table, not
+        /// here.</para>
+        /// <para>ADJUDICATED BY `M112`, not by this comment. One run is not five, and the move
+        /// is provisional until they are played: if the next runs lose the door to a small leak
+        /// while the player is up the lane, the dial is biting as designed; if they keep losing
+        /// it to whole waves arriving together, the finding is that the shape is wrong and this
+        /// number is not the answer.</para></summary>
+        public const float FieldWaveDamageScale = 0.29f;
 
         public const float DripPerSecond = 8f;
         /// <summary>Hatch-bank convert window. #12 — Wave 6 delivery is ~35 s; 45 s covers
