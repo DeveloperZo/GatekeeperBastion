@@ -8,6 +8,9 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-04: **VEIL gains tempo, not crit.** Breaking Cloak's window early refunds each
+  unspent second against the cooldown at double rate, so a strike-and-vanish cycle re-enters
+  well ahead of a full hide. Crit stays cut; the ruling is in `Decisions.md`.
 - 2026-09-04: **`M112` dial 1 of 3 turned — the field-wave door stake.**
   `HatchBank.FieldWaveDamageScale` 0.15 → 0.29, the first time it has moved. It was the solve
   for a 300 HP door and never followed the door to 600, leaving the designed leak 87 s against

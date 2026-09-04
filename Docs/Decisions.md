@@ -728,6 +728,25 @@ What every lever holds still: the `11 + 7i` roster and its HP ladder, the debut 
 one-lane spine. Variance redistributes what a wave is, never how much of it there is — the
 "thousands on screen" and idle-dial refusals stand. Direction is cut (above).
 
+## Locked — VEIL's power is tempo, not crit (Zo, 2026-09-04)
+
+VEIL buys survival and nothing else: Cloak leaves the acquisition lists, firing collapses it,
+and the sheet had no way to turn stealth into pressure. Zo raised crit bonuses as the fix and
+then chose the alternative in the same message: "give it power through a reset or lowering
+cooldowns to re-enter stealth or along those lines."
+
+- **Crit stays cut.** The 2026-08-16 stamp freezes crit chance at 0 and names Luck as its only
+  source, and the 2026-08-15 ban names crit sources outright. Nothing here expired those, so
+  VEIL is not the exception that reopens them.
+- **The refund is the mechanism.** Breaking Cloak's window early refunds each unspent second
+  against its cooldown at `BoarderProtocol.CloakBreakRefundPerSecond`. Hiding the full window
+  costs the full wait; breaking instantly cuts the wait by the whole window's worth. The
+  window becomes a decision rather than a duration, and the aggressive read re-enters more
+  often while buying less stealth each time.
+- **Cloak alone refunds.** Everywhere else "unspent window" is not a choice the player made,
+  so `BreakRefundPerSecond` returns 0 for every other ability and the no-argument
+  `EndWindowEarly` keeps the old behaviour exactly.
+
 ## Locked — every Boarder is granted DEPOT, and the log says which protocol ran (Zo, 2026-09-04)
 
 A Boarder used to embark on `BoarderProtocolId.None` until they claimed at CREW QUARTERS,

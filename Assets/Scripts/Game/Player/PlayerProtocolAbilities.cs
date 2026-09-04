@@ -276,13 +276,19 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>The gun fired. Cloak is the only window firing collapses — it is the whole
-        /// price of the layer.</summary>
+        /// price of the layer, and since 2026-09-04 it is also where VEIL is paid: the window
+        /// the shot did not spend comes off the cooldown, so breaking early is the way back
+        /// into stealth sooner rather than simply a shorter hide.</summary>
         public void NotifyFired()
         {
             if (!CloakOpen) return;
-            _personal.EndWindowEarly();
+            float unspent = _personal.WindowRemaining;
+            _personal.EndWindowEarly(
+                BoarderProtocol.BreakRefundPerSecond(BoarderAbilityId.Cloak));
             ClosePersonalEffect(false);
-            Log.Event(Tag, "self Cloak dropped — fired");
+            Log.Event(Tag, "self Cloak dropped — fired, "
+                + unspent.ToString("0.#") + "s unspent, "
+                + _personal.CooldownRemaining.ToString("0.#") + "s to re-enter");
         }
 
         public void NotifyBulkheadConsumed()

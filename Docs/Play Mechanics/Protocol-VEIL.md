@@ -10,6 +10,7 @@ Where:
 - Ping's provoke-per-body pulse and its render window — PlayerProtocolAbilities.cs (PulsePing, PingWindowOpen); markers PingMarker.ShowAll
 - The pull is the standing provoke rule, kind refusals included — EnemyGatekeeper.Targeting.cs (Provoke, CanBeProvoked)
 - Cloak sets the rig off the target registry; firing collapses it — PlayerProtocolAbilities.cs (SetCloaked, NotifyFired); PlayerHealth.Cloaked; PlayerRegistry.NearestAlive skips Cloaked
+- Breaking the window early refunds the unspent seconds against the cooldown — Assets/Scripts/Sim/Meta/BoarderProtocol.cs (CloakBreakRefundPerSecond, BreakRefundPerSecond, BoarderAbilityState.EndWindowEarly(float)), pinned by Assets/Tests/EditMode/Meta/CloakReentryTests.cs
 - Ghost's acquisition bias, applied at bind and read per retarget — BoarderProtocol.GhostAcquisitionMul; PlayerProtocolAbilities.ApplyPassive; PlayerHealth.ConfigureAcquisition; EnemyGatekeeper.Targeting.cs (NoticeRangeFor, AggroRadiusFor)
 -->
 
@@ -59,13 +60,15 @@ Cost: the same burst provokes every Gatekeeper that can be provoked onto the cas
 
 Output: off every targeting list for the window. The garrison's target picker skips a cloaked Boarder outright. Gatekeepers already swinging finish the swing.
 
-Cost: the presser's `H`. Firing exits it instantly. It is the only window the gun collapses. A way to leave, never a way to win.
+Cost: the presser's `H`. Firing exits it instantly. It is the only window the gun collapses. The window a shot does not spend is not wasted, though: since 2026-09-04 each unspent second comes off the cooldown at double rate, so breaking early is the way back into stealth sooner. Riding the window to its end pays the full wait. That makes the window a decision between a long hide and a short one you get back faster, and it is the only power VEIL gains from a break — no damage, no crit, nothing the gun reads.
 
 ### Passive
 
 **Ghost.** Gatekeepers notice and acquire the wearer at a reduced fraction of their normal ranges — both the sight range and the proximity radius. It applies always, moving or still, and is rewritten at bind so a protocol swap cannot leave it on the rig.
 
 ### Rules
+
+The loop on this sheet is take the eyes, hand them to a decoy, go dark, and choose how much of the dark to spend. The refund is the only thing on VEIL that answers the sheet's old complaint, that it bought survival and never tempo: it converts unused stealth into the next stealth, and never into damage.
 
 The loop on this sheet is take the eyes, hand them to a decoy, go dark. Ping puts the room on the caster. PHANTOM offers that room to the next decoy placed. Cloak drops the caster off the list. Ghost is the standing discount on being seen, not a stealth condition.
 
