@@ -748,7 +748,11 @@ to interactions in range. we should add spawn rooms and terminal to press and ad
   "beyond six it is a Wave, and Wave behaviour is what the Bastion is for" are reversed: a
   wave terminal on the range draws any authored wave and shape through the real director,
   cadence, shapes and spawner, paying nothing and banking nothing. The standing-target cap of
-  six stays for standing targets. Dev-console range digits are retired for keys on the range
+  six stays behind the dev console. Dev-console range digits are retired for keys on the range
   board — one per dimension, live anywhere on the lane, printed on the readout. The first cut
   (posts on the marks, a console at the firing line, a terminal 90 m away) lasted one play:
-  Zo, 2026-09-03, "I shouldnt have to walk to generate anything. Its a shooting range."
+  Zo, 2026-09-03, "I shouldnt have to walk to generate anything. Its a shooting range." The
+  second (six keys: kind, distance, stand, clear, wave, shape) lasted one message; the board
+  is Zo's dimensions of the same day — `Z` kind, `X` wave size (small 1, normal 11, large
+  25), `T` draw, the breach fixed 20 m from the firing line — and the M99 cooldown bypass is
+  cut: "no bypass. reset them on wave start."

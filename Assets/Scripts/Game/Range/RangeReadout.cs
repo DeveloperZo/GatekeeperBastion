@@ -184,11 +184,7 @@ namespace GatekeepersProtocol.Game
             }
             else if (rules != null)
             {
-                // The toggle states belong on screen, not only in the log — criterion 4 asks for
-                // the bypass to be readable, and a range that silently stopped bypassing would
-                // look like an ability that had gone wrong.
-                _sb.Append("\nCOOLDOWNS ").Append(rules.CooldownBypass ? "BYPASSED" : "REAL");
-                _sb.Append("   RESPAWN ").Append(rules.RespawnOn ? "ON" : "OFF");
+                _sb.Append("\nRESPAWN ").Append(rules.RespawnOn ? "ON" : "OFF");
                 if (rules.PendingRespawns > 0)
                     _sb.Append(" (").Append(rules.PendingRespawns).Append(" returning)");
             }

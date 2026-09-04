@@ -294,11 +294,11 @@ namespace GatekeepersProtocol.Game
 
         // ---- The lane ----
 
-        /// <summary>Kinds a post can stand. The shipped three — the range exercises the game's
+        /// <summary>Kinds the board cycles. The shipped four — the range exercises the game's
         /// Gatekeepers or it is not measuring the game.</summary>
         static readonly GatekeeperKind[] Kinds =
         {
-            GatekeeperKind.Default, GatekeeperKind.Hunter, GatekeeperKind.Thief
+            GatekeeperKind.Default, GatekeeperKind.Hunter, GatekeeperKind.Thief, GatekeeperKind.Cloaker
         };
 
         int _kindIndex;

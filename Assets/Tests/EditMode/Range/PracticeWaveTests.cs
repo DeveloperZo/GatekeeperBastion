@@ -4,10 +4,9 @@ using GatekeepersProtocol.Sim;
 
 namespace GatekeepersProtocol.Tests
 {
-    /// <summary>The practice rule: a range draw launches the named wave in the named
-    /// shape with a seeded beat, pays nothing, cannot lose the Run at the Hatch, is refused
-    /// off practice, and hands the sim back to Prep with nothing owed when the last body
-    /// falls.</summary>
+    /// <summary>The practice rule: a range draw launches one kind at one size on wave 1's
+    /// beat, pays nothing, cannot lose the Run at the Hatch, is refused off practice, and
+    /// hands the sim back to Prep with nothing owed when the last body falls.</summary>
     public class PracticeWaveTests
     {
         static RunSim PracticeSim(MetaState meta, int seed = 7)
@@ -22,67 +21,67 @@ namespace GatekeepersProtocol.Tests
             return sim;
         }
 
-        static void AssertCounts(WaveSpec expected, WaveSpec actual)
+        [Test]
+        public void Sizes_AreTheRosterLadder_AndTheBreachIsTwentyMetres()
         {
-            Assert.AreEqual(expected.enemyCount, actual.enemyCount, "enemyCount");
-            Assert.AreEqual(expected.defaultCount, actual.defaultCount, "defaultCount");
-            Assert.AreEqual(expected.hunterCount, actual.hunterCount, "hunterCount");
-            Assert.AreEqual(expected.thiefCount, actual.thiefCount, "thiefCount");
-            Assert.AreEqual(expected.cloakerCount, actual.cloakerCount, "cloakerCount");
+            Assert.AreEqual(1, PracticeWave.Count(PracticeSize.Small), "one body: the time-to-kill read");
+            Assert.AreEqual(WaveDirector.BaseEnemyCount, PracticeWave.Count(PracticeSize.Normal),
+                "normal is the Bastion's wave 1");
+            Assert.AreEqual(new WaveDirector().NextWave(2, 0, 1).enemyCount, PracticeWave.Count(PracticeSize.Large),
+                "large is wave 3's roster");
+            Assert.AreEqual(20, PracticeWave.SpawnMetres);
+            Assert.AreEqual(PracticeSize.Normal, PracticeWave.Next(PracticeSize.Small));
+            Assert.AreEqual(PracticeSize.Small, PracticeWave.Next(PracticeSize.Large), "the size wraps");
         }
 
         [Test]
-        public void Draw_LaunchesTheNamedWave_InTheNamedShape_WithACadenceSchedule()
+        public void Draw_LaunchesOneKind_AtTheSize_OnWaveOnesBeat()
         {
             var sim = PracticeSim(MetaState.CreateNew());
             var specs = new List<WaveSpec>();
             sim.WaveStarted += w => specs.Add(w);
 
-            Assert.IsTrue(sim.DrawPracticeWave(5, WaveShape.Convoy));
+            Assert.IsTrue(sim.DrawPracticeWave(GatekeeperKind.Hunter, PracticeSize.Large));
             Assert.AreEqual(AssaultState.Assault, sim.Assault);
-            Assert.AreEqual(5, sim.CurrentWaveIndex, "the draw seeks the wave it names");
+            Assert.AreEqual(1, sim.CurrentWaveIndex, "a practice wave is wave 1 with the roster rewritten");
             Assert.AreEqual(1, specs.Count);
 
-            // Wave 5's own roster, re-shaped as a Convoy: the same four counts WaveShapes
-            // writes from the same roster index, and the size is untouched.
-            WaveSpec own = new WaveDirector().NextWave(4, 0, 1);
-            WaveSpec expected = WaveShapes.Apply(own, WaveShape.Convoy, 4);
-            AssertCounts(expected, specs[0]);
-            Assert.Greater(specs[0].thiefCount, 0, "a Convoy carries Thieves");
-            Assert.AreEqual(0, specs[0].hunterCount, "and never a Hunter");
-            Assert.AreEqual(own.enemyHealthMultiplier, specs[0].enemyHealthMultiplier, 1e-6f);
+            WaveSpec own = new WaveDirector().NextWave(0, 0, 1);
+            WaveSpec s = specs[0];
+            Assert.AreEqual(PracticeWave.LargeCount, s.enemyCount);
+            Assert.AreEqual(PracticeWave.LargeCount, s.hunterCount, "all of the one kind");
+            Assert.AreEqual(0, s.defaultCount + s.thiefCount + s.cloakerCount);
+            Assert.IsFalse(s.finaleElite);
+            Assert.AreEqual(own.enemyHealthMultiplier, s.enemyHealthMultiplier, 1e-6f, "wave 1's health");
+            Assert.AreEqual(own.groupSize, s.groupSize, "wave 1's group width");
+            Assert.AreEqual(own.spawnInterval, s.spawnInterval, 1e-6f, "wave 1's mean gap");
 
-            int groups = WaveCadence.GroupsFor(specs[0].enemyCount, specs[0].groupSize);
+            int groups = WaveCadence.GroupsFor(s.enemyCount, s.groupSize);
             Assert.Greater(groups, 1);
-            Assert.IsNotNull(specs[0].groupGaps, "the beat is seeded at launch");
-            Assert.AreEqual(groups - 1, specs[0].groupGaps.Length);
+            Assert.IsNotNull(s.groupGaps, "the beat is seeded at launch");
+            Assert.AreEqual(groups - 1, s.groupGaps.Length);
             Assert.IsFalse(sim.ChainPending, "one wave, nothing chained");
             Assert.IsFalse(sim.FieldTrickleLive);
-            Assert.IsFalse(sim.ShapeOverride.HasValue, "the override is consumed by the launch");
+            Assert.AreEqual(0, sim.PracticeCount, "the roster override is consumed by the launch");
         }
 
         [Test]
-        public void Draw_WithNoShape_TakesTheWavesOwn()
+        public void Draw_Small_IsOneBody_OfAnyKind()
         {
-            var sim = PracticeSim(MetaState.CreateNew());
-            var specs = new List<WaveSpec>();
-            sim.WaveStarted += w => specs.Add(w);
-
-            Assert.IsTrue(sim.DrawPracticeWave(2, null));
-            Assert.AreEqual(2, sim.CurrentWaveIndex);
-            AssertCounts(new WaveDirector().NextWave(1, 0, 1), specs[0]);
-        }
-
-        [Test]
-        public void Draw_AsMass_IsAllDefault()
-        {
-            var sim = PracticeSim(MetaState.CreateNew());
-            var specs = new List<WaveSpec>();
-            sim.WaveStarted += w => specs.Add(w);
-
-            Assert.IsTrue(sim.DrawPracticeWave(4, WaveShape.Mass));
-            Assert.AreEqual(specs[0].enemyCount, specs[0].defaultCount);
-            Assert.AreEqual(0, specs[0].hunterCount + specs[0].thiefCount + specs[0].cloakerCount);
+            var kinds = new[] { GatekeeperKind.Default, GatekeeperKind.Thief, GatekeeperKind.Cloaker };
+            foreach (var kind in kinds)
+            {
+                var sim = PracticeSim(MetaState.CreateNew());
+                var specs = new List<WaveSpec>();
+                sim.WaveStarted += w => specs.Add(w);
+                Assert.IsTrue(sim.DrawPracticeWave(kind, PracticeSize.Small), kind.ToString());
+                WaveSpec s = specs[0];
+                Assert.AreEqual(1, s.enemyCount, kind.ToString());
+                int ofKind = kind == GatekeeperKind.Default ? s.defaultCount
+                    : kind == GatekeeperKind.Thief ? s.thiefCount : s.cloakerCount;
+                Assert.AreEqual(1, ofKind, kind + " is the one body — no debut gate on the range");
+                Assert.AreEqual(0, WaveCadence.GroupsFor(s.enemyCount, s.groupSize) - 1, "one group, no gap");
+            }
         }
 
         [Test]
@@ -90,7 +89,7 @@ namespace GatekeepersProtocol.Tests
         {
             var meta = MetaState.CreateNew();
             var sim = PracticeSim(meta);
-            Assert.IsTrue(sim.DrawPracticeWave(3, null));
+            Assert.IsTrue(sim.DrawPracticeWave(GatekeeperKind.Default, PracticeSize.Normal));
 
             Assert.AreEqual(0L, sim.CurrentKillAward);
             for (int i = 0; i < 20; i++) sim.AwardKill();
@@ -102,7 +101,7 @@ namespace GatekeepersProtocol.Tests
         public void HatchDamage_IsIgnored_AndCannotLoseTheRun()
         {
             var sim = PracticeSim(MetaState.CreateNew());
-            Assert.IsTrue(sim.DrawPracticeWave(1, null));
+            Assert.IsTrue(sim.DrawPracticeWave(GatekeeperKind.Default, PracticeSize.Normal));
             float before = sim.Ship.Hatch.Hp;
             Assert.Greater(before, 0f);
 
@@ -122,27 +121,22 @@ namespace GatekeepersProtocol.Tests
             sim.WaveStarted += w => started++;
 
             Assert.IsFalse(sim.PracticeMode);
-            Assert.IsFalse(sim.DrawPracticeWave(3, WaveShape.Pack));
+            Assert.IsFalse(sim.DrawPracticeWave(GatekeeperKind.Hunter, PracticeSize.Normal));
             Assert.AreEqual(0, started);
             Assert.AreEqual(AssaultState.Prep, sim.Assault);
             Assert.AreEqual(0, sim.CurrentWaveIndex);
         }
 
         [Test]
-        public void Draw_IsRefused_WhileAWaveIsLive_AndOutsideTheField()
+        public void Draw_IsRefused_WhileAWaveIsLive()
         {
             var sim = PracticeSim(MetaState.CreateNew());
             int started = 0;
             sim.WaveStarted += w => started++;
 
-            Assert.IsFalse(sim.DrawPracticeWave(0, null));
-            Assert.IsFalse(sim.DrawPracticeWave(WaveDirector.MaxWaves + 1, null));
-            Assert.AreEqual(0, started);
-
-            Assert.IsTrue(sim.DrawPracticeWave(2, null));
-            Assert.IsFalse(sim.DrawPracticeWave(3, null), "one wave at a time");
+            Assert.IsTrue(sim.DrawPracticeWave(GatekeeperKind.Default, PracticeSize.Normal));
+            Assert.IsFalse(sim.DrawPracticeWave(GatekeeperKind.Hunter, PracticeSize.Small), "one wave at a time");
             Assert.AreEqual(1, started);
-            Assert.AreEqual(2, sim.CurrentWaveIndex);
         }
 
         [Test]
@@ -152,7 +146,7 @@ namespace GatekeepersProtocol.Tests
             int ended = 0;
             sim.AssaultEnded += () => ended++;
 
-            Assert.IsTrue(sim.DrawPracticeWave(5, WaveShape.Convoy));
+            Assert.IsTrue(sim.DrawPracticeWave(GatekeeperKind.Thief, PracticeSize.Large));
             sim.NotifyDeliveryComplete();
             sim.NotifyAssaultCleared();
 
@@ -165,7 +159,7 @@ namespace GatekeepersProtocol.Tests
             Assert.IsFalse(sim.ChainPending);
             Assert.IsFalse(sim.MasterSequenceLive);
 
-            Assert.IsTrue(sim.DrawPracticeWave(1, WaveShape.Mass), "the lane is free again");
+            Assert.IsTrue(sim.DrawPracticeWave(GatekeeperKind.Default, PracticeSize.Small), "the lane is free again");
             Assert.AreEqual(1, sim.CurrentWaveIndex, "and the cursor is honest after a seek back");
         }
     }

@@ -36,6 +36,11 @@ range. I need ability to go from spawn to firing quickly." So criteria 3 and 4 w
 that day: the range's verbs are keys live anywhere on the lane, one per dimension, with the
 board's state printed on the readout; nothing on the lane is walked to.
 
+Zo, 2026-09-03, on the second cut's six keys: "Dimensions: Kind - Z / Distance - default to
+20 m / Wave Size - X, small, normal, large / Draw Wave - T / Cooldown - no bypass. reset them
+on wave start." So the board is two keys and the draw, the breach is 20 m from the firing
+line, the closets are gone, and the bypass with them.
+
 Leverage: **#6 information flows** (the panel and the readout tell the player what a kit
 does before a Boarding), **#5 rules** (what the range hands out, and that it draws waves).
 Higher tiers are wrong because the range serves the loop, it is not one; lower tiers are
@@ -56,21 +61,21 @@ wrong because no constant makes a dev digit a door.
    tainted and never saved, as today. Cancel closes the panel and loads nothing.
    `SceneFlow.LoadRange` keeps its live-Run refusal.
 3. **The board replaces the dev digits.** One `RangeBoard` on the range root, live
-   anywhere on the lane — no surface is looked at or walked to. One key per dimension, bound
-   in `Controls` under a `Range` context that shares no key with anything live in a fight:
-   `Z` target kind (Default, Hunter, Thief), `X` distance (5, 14, 30, 60, 90 m), `C` stands
-   one of that kind at that distance, `V` clears the lane and the readout; `+` flips cooldown
-   bypass and `-` flips respawn as before. The readout prints the board — every key, its
-   dimension and its current value — so nothing is memorised. The `DevConsole` range rows are
-   gone; the dev console keeps its general rows. Every action logs.
-4. **Spawn rooms and the wave keys.** The range keeps two of the Bastion copy's spawn
-   closets at the far end of the lane. On the board `B` cycles wave 1–5, `N` cycles shape
-   (the wave's own, Mass, Pack, Convoy) and `T` draws it through the real `WaveDirector`,
-   `WaveCadence`, `WaveShapes` and `WaveSpawner` — same groups, same beat, same kinds —
-   refused, and said so, while one is live. A range wave pays nothing, banks nothing, holds
-   no Assault open past its last body, and the standing-target cap of six does not apply to
-   it. The Hatch, if the copy has one, is not a target. The player stands on the firing
-   line on the first frame; spawn to firing is the walk from the door.
+   anywhere on the lane — no surface is looked at or walked to. The dimensions are Zo's
+   (2026-09-03): `Z` target kind (Default, Hunter, Thief, Cloaker), `X` wave size (small 1,
+   normal 11, large 25 — `PracticeWave`), `T` draws; the breach is fixed at
+   `PracticeWave.SpawnMetres` (20 m) from the firing line. Bound in `Controls` under a
+   `Range` context that shares no key with anything live in a fight. The readout prints the
+   board — every key beside its current value, or the standing count while a wave is live —
+   so nothing is memorised. No cooldown bypass: the timers are reset once, from outside, as a
+   wave is drawn. The `DevConsole` range rows are gone; the dev console keeps its general
+   rows. Every action logs.
+4. **The practice wave.** `T` draws `X` bodies of `Z` through the real `WaveDirector`,
+   `WaveCadence` and `WaveSpawner` — wave 1's group width, mean gap and health multiplier,
+   the roster rewritten to one kind at the size — breaching at the 20 m marker and nowhere
+   else, refused (and said so) while one is live. It pays nothing, banks nothing, holds no
+   Assault open past its last body. The Hatch is switched off. The player stands on the
+   firing line on the first frame.
 5. **The record.** `3-Mechanics.md`'s "never drawing a Wave" and `The-Range.md`'s "Coming
    Soon" are rewritten to what shipped; `Decisions.md` records the reversal and the door.
 
@@ -105,14 +110,18 @@ secondary, and per-weapon points (owned or base); `From(MetaState, choices)`.
 `SceneFlow.LoadRange` with the loadout pending on `GameSession`.
 **Change** `Assets/Scripts/Game/Range/RangeConsole.cs` — adopt the pending loadout;
 `SpawnAt` / `ClearAt` by mark; `Marks` read off the authored markers.
-**Create** `Assets/Scripts/Game/Range/RangeBoard.cs` — the keys, the state, the line the
+**Create** `Assets/Scripts/Game/Range/RangeBoard.cs` — the two keys, the draw, the line the
 readout prints. (2026-09-02's `RangeMarkPost`, `RangeControlConsole` and `RangeWaveTerminal`
-were built and deleted the next day on Zo's play.)
-**Change** `Assets/Scripts/Game/Input/Controls.cs`, `PlayerInputFrame.cs` — six `Range`
-ids on `Z X C V B N`, a `Range` context, off the shortcut panel (the readout teaches them).
+were built and deleted the next day on Zo's play; the six-key board lasted one message.)
+**Create** `Assets/Scripts/Sim/Range/PracticeWave.cs` — `PracticeSize`, the three counts,
+`SpawnMetres`. **Change** `RunSim.Practice.cs` — `DrawPracticeWave(kind, size)`.
+**Change** `Assets/Scripts/Game/Input/Controls.cs`, `PlayerInputFrame.cs` — `RangeKind` on
+`Z`, `RangeSize` on `X`, a `Range` context, off the shortcut panel (the readout teaches them).
+**Change** `Assets/Scripts/Game/Range/RangeRules.cs` — the bypass deleted; `ResetCooldowns`.
 **Change** `Assets/Scripts/Game/Range/RangeReadout.cs` — prints the board.
-**Change** `Assets/Scripts/Editor/Scenes/SceneBuilder.Range.cs` — keep two spawn closets;
-wire the board on the range root; the marks stay as posts to read distance by.
+**Change** `Assets/Scripts/Editor/Scenes/SceneBuilder.Range.cs` — one breach marker at 20 m
+on the spawner's list instead of two closets; the board on the range root; the marks stay as
+posts to read distance by.
 **Change** `Assets/Scripts/Game/Dev/DevConsole.Range.cs` — delete the range digit rows.
 **Change** `Docs/Play Mechanics/The-Range.md`, `Docs/Design/3-Mechanics.md`,
 `Docs/Decisions.md`, `Docs/Architecture/README.md` (`menu_rows` only if a row is added — none
@@ -123,17 +132,18 @@ is planned; the sentinel drives the builders).
 1. Criteria 1–2: `RangeLoadoutTests` (owned points carried, unowned at base, protocol any of
    three); source-shape pin that `SceneBuilder.RangeDoors` places the door on the ARMORY's
    wall; the builder's log line after Zo runs the sentinel.
-2. Criterion 3: `ControlsTests` — the six range keys exist, sit in the `Range` context
+2. Criterion 3: `ControlsTests` — the two range keys exist, sit in the `Range` context
    alone, and share no key with any row live in a fight (`FightAlways`), since the fight
-   keys stay live on the lane; the log lines `range target — <kind> at <m> m` and the toggle
-   lines from one range visit.
-3. Criterion 4: `PracticeWaveTests` — a range draw goes through `WaveDirector.NextWave` with
-   the chosen wave and shape, attaches a `WaveCadence` schedule, pays zero
-   (`CurrentKillAward` 0 on a range body), and the lane cap ignores it; the log's
-   `group k … breached at` lines from one range wave.
+   keys stay live on the lane; the log lines `range wave — 11 Hunter (normal) drawn at 20 m`
+   and `cooldowns reset — wave start` from one range visit.
+3. Criterion 4: `PracticeWaveTests` — the sizes are 1 / wave 1's roster / wave 3's roster;
+   a draw is wave 1's beat with the roster one kind at the size, no debut gate, attaches a
+   `WaveCadence` schedule, pays zero (`CurrentKillAward` 0), is refused off practice and
+   while one is live, and returns to Prep with nothing owed; the log's `group k … breached
+   at` lines from one range wave.
 4. Playthrough path — from the Ship: hold `E` at the door beside the ARMORY, pick FORGE +
-   MR-35 + MK-1, confirm; on the firing line press `Z` to Thief, `X` to 30 m, `C`; then `B`
-   to wave 5, `N` to Convoy, `T`; return through the door behind you.
+   MR-35 + MK-1, confirm; on the firing line press `Z` to Hunter, `X` to large, `T`; the wave
+   breaches 20 m out with every cooldown at zero; return through the door behind you.
 
 ## Do not build
 
@@ -142,6 +152,8 @@ is planned; the sentinel drives the builders).
 - Dev-only digits kept "just in case".
 - A verb you walk to. A post, a console or a terminal on the lane is the 2026-09-02 cut Zo
   rejected; the range is a shooting range, and its verbs are keys.
+- A cooldown bypass, a distance dial, a wave or shape picker, or a standing-target ledger on
+  the board. Two keys and the draw (Zo, 2026-09-03); anything more is the six-key cut back.
 
 ## Depends on / Unblocks
 

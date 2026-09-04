@@ -459,6 +459,21 @@ fractional dial overstated the take by about `0.25 × kills` at dial 3 (measured
 Salvage of drift on 2026-08-04 Runs). Instant kill-into-bank ended with M53 and came back on
 2026-08-25 — logs between those two dates are the only ones where a kill was not money.
 
+## Practice range (M117)
+
+`Sim/Range/PracticeWave.cs`, `Sim/Run/RunSim.Practice.cs`. A range wave is one kind at one
+size on wave 1's beat. Zo, 2026-09-03: "Distance - default to 20 m / Wave Size - X, small,
+normal, large / Cooldown - no bypass. reset them on wave start."
+
+| | | derivation |
+|---|---|---|
+| small | **1** | one body: the time-to-kill read the range was built for (M99) |
+| normal | **11** | wave 1's roster, `11 + 7i` at i = 0 — the normal a Boarding opens with |
+| large | **25** | wave 3's roster, `11 + 7i` at i = 2 — the first wave the shape table stands a Thief on |
+| breach | **20 m** | from the firing line; the first cut's closets sat 90 m out and put the fight a minute from the press |
+| beat | wave 1's | group width, mean gap and health multiplier are `WaveDirector.NextWave(0)`'s; the roster is rewritten to one kind, no debut gate |
+| cooldowns | reset on draw | every timer to zero once as the wave is drawn; no bypass |
+
 ## Upgrade tracks
 
 **Two cost curves, on purpose.** Weapon purchases are linear and reachable because weapons

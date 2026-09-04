@@ -4,17 +4,14 @@ using UnityEngine;
 
 namespace GatekeepersProtocol.Game
 {
-    /// <summary>The two rules that make a range a range rather than a fight: abilities need not
-    /// wait, and bodies come back.
+    /// <summary>What the range does to the abilities, and the respawn queue the standing
+    /// ledger used to feed.
     ///
-    /// The cooldown bypass clears the timer from out here every frame rather than branching
-    /// inside <see cref="PlayerAbility"/>. That is the milestone's stated trap: an ability that
-    /// knows it is in a range is not the ability that ships, and the range would then be
-    /// measuring a copy of the mechanism. Clearing the timer leaves the shipped path exactly as
-    /// it is — it simply never finds itself waiting.
-    ///
-    /// The bypass is a toggle and not a fixture, because how long an ability makes you wait is
-    /// itself one of the things being judged.
+    /// No cooldown bypass (Zo, 2026-09-03: "Cooldown - no bypass. reset them on wave start").
+    /// M99's bypass cleared every timer every frame; it judged an ability at a wait nobody
+    /// ships. Instead the timers are cleared once, from out here, when a wave is drawn — the
+    /// same reset-from-outside shape, so <see cref="PlayerAbility"/> never learns it is on a
+    /// range — and every wave is met with a full kit at the shipped wait.
     ///
     /// Bodies are not owned here. This holds the queue and answers "who is due"; whoever
     /// spawned an actor is the thing that can put it back
@@ -29,15 +26,7 @@ namespace GatekeepersProtocol.Game
 
         readonly RespawnQueue _respawn = new RespawnQueue();
 
-        bool _bypass = true;
         bool _missionDrawerClosed;
-
-        /// <summary>True while abilities fire as fast as they can be pressed. Default, because
-        /// that is what practice needs; one input restores the real wait.</summary>
-        public bool CooldownBypass
-        {
-            get { return _bypass; }
-        }
 
         public bool RespawnOn
         {
@@ -60,14 +49,18 @@ namespace GatekeepersProtocol.Game
             _game = game;
         }
 
-        /// <summary>Flip the bypass and say so — the toggle state has to be readable, and the
-        /// log is the half of that which survives into a bug report.</summary>
-        public bool ToggleCooldownBypass()
+        /// <summary>Every ability timer to zero, once — the board calls it as a wave is drawn.
+        /// From out here rather than inside the ability, for the reason the bypass was: the
+        /// ability that ships must not know it is on a range.</summary>
+        public void ResetCooldowns()
         {
-            _bypass = !_bypass;
-            Log.Event(Tag, "cooldown bypass " + (_bypass ? "on — abilities do not wait"
-                : "off — real cooldowns"));
-            return _bypass;
+            var game = _game;
+            if (game == null) return;
+            var ability = game.Ability;
+            if (ability != null) ability.ClearCooldown();
+            var protocol = game.Protocol;
+            if (protocol != null) protocol.ClearCooldowns();
+            Log.Event(Tag, "cooldowns reset — wave start");
         }
 
         public bool ToggleRespawn()
@@ -124,17 +117,6 @@ namespace GatekeepersProtocol.Game
         void Update()
         {
             CloseMissionDrawerOnce();
-            if (!_bypass) return;
-            var game = _game;
-            if (game == null) return;
-
-            // Every frame rather than on press: an ability can start a cooldown from a path
-            // this object never sees (a hit registering, a window closing), and the player
-            // must not find a bypassed ability refusing them anyway.
-            var ability = game.Ability;
-            if (ability != null) ability.ClearCooldown();
-            var protocol = game.Protocol;
-            if (protocol != null) protocol.ClearCooldowns();
         }
     }
 }

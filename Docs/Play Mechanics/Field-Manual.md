@@ -78,11 +78,7 @@ live right now, so this table is a reference, not something you have to memorise
 | Key | Does | Live when |
 |---|---|---|
 | `Z` | target kind | on the range |
-| `X` | distance | on the range |
-| `C` | stand one | on the range |
-| `V` | clear lane | on the range |
-| `B` | wave | on the range |
-| `N` | shape | on the range |
+| `X` | wave size | on the range |
 
 ## Weapons
 

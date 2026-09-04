@@ -52,11 +52,7 @@ namespace GatekeepersProtocol.Game
         public bool toggleMissionDrawerDown;
         // The range board (M117): one press per dimension, edge only.
         public bool rangeKindDown;
-        public bool rangeDistanceDown;
-        public bool rangeStandDown;
-        public bool rangeClearDown;
-        public bool rangeWaveDown;
-        public bool rangeShapeDown;
+        public bool rangeSizeDown;
 
         // Front-end bits, independent of the binding table: press-any-key screens,
         // click-to-relock, and each scene's Escape dispatcher.

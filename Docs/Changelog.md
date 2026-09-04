@@ -8,6 +8,10 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-03: **`M117` — the board is two keys and the draw.** Zo's dimensions replace the
+  six-key cut: Z kind (all four), X wave size (small 1, normal 11, large 25), T draw; the
+  wave breaches 20 m from the firing line instead of from two closets; the cooldown bypass is
+  cut and the timers reset as a wave starts.
 - 2026-09-03: **`M117` — criteria 3–4 rewritten on Zo's play.** The posts, the firing-line
   console and the far wave terminal are gone; the range's verbs are six keys on a board (Z X C
   V B N, plus T and the dial keys), live anywhere on the lane, printed on the readout. "I

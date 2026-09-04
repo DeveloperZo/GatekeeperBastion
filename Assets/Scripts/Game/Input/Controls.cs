@@ -37,11 +37,7 @@ namespace GatekeepersProtocol.Game
         /// <summary>The range board (M117, Zo 2026-09-03: "a key for each dimension"). Live
         /// anywhere on the lane, taught by the readout rather than the strip.</summary>
         RangeKind,
-        RangeDistance,
-        RangeStand,
-        RangeClear,
-        RangeWave,
-        RangeShape,
+        RangeSize,
     }
 
     /// <summary>When a binding is live. Flags so Prep∩Assault is empty and a collision
@@ -160,20 +156,13 @@ namespace GatekeepersProtocol.Game
             new(ControlId.ToggleMissionDrawer, KeyCode.Tab, KeyCode.None, "TAB", "mission", "BOARDING",
                 FightAlways, showOnPanel: false),
 
-            // The range board: one key per dimension, on the bottom letter row the fight
-            // leaves free (Q/E/R/F/G/H and the number row are taken). Off the panel — the
-            // range readout prints every key beside its current value, which is the teaching.
+            // The range board: one key per dimension (Zo, 2026-09-03: kind on Z, wave size
+            // on X, the fight's own T to draw), on the bottom letter row the fight leaves free.
+            // Off the panel — the range readout prints every key beside its current value,
+            // which is the teaching.
             new(ControlId.RangeKind, KeyCode.Z, KeyCode.None, "Z", "target kind", "RANGE",
                 ControlContext.Range, showOnPanel: false),
-            new(ControlId.RangeDistance, KeyCode.X, KeyCode.None, "X", "distance", "RANGE",
-                ControlContext.Range, showOnPanel: false),
-            new(ControlId.RangeStand, KeyCode.C, KeyCode.None, "C", "stand one", "RANGE",
-                ControlContext.Range, showOnPanel: false),
-            new(ControlId.RangeClear, KeyCode.V, KeyCode.None, "V", "clear lane", "RANGE",
-                ControlContext.Range, showOnPanel: false),
-            new(ControlId.RangeWave, KeyCode.B, KeyCode.None, "B", "wave", "RANGE",
-                ControlContext.Range, showOnPanel: false),
-            new(ControlId.RangeShape, KeyCode.N, KeyCode.None, "N", "shape", "RANGE",
+            new(ControlId.RangeSize, KeyCode.X, KeyCode.None, "X", "wave size", "RANGE",
                 ControlContext.Range, showOnPanel: false),
         };
 
@@ -303,11 +292,7 @@ namespace GatekeepersProtocol.Game
                     case ControlId.TogglePanel: f.togglePanelDown |= down; break;
                     case ControlId.ToggleMissionDrawer: f.toggleMissionDrawerDown |= down; break;
                     case ControlId.RangeKind: f.rangeKindDown |= down; break;
-                    case ControlId.RangeDistance: f.rangeDistanceDown |= down; break;
-                    case ControlId.RangeStand: f.rangeStandDown |= down; break;
-                    case ControlId.RangeClear: f.rangeClearDown |= down; break;
-                    case ControlId.RangeWave: f.rangeWaveDown |= down; break;
-                    case ControlId.RangeShape: f.rangeShapeDown |= down; break;
+                    case ControlId.RangeSize: f.rangeSizeDown |= down; break;
                 }
             }
 
@@ -342,11 +327,7 @@ namespace GatekeepersProtocol.Game
                 case ControlId.TogglePanel: return f.togglePanelDown;
                 case ControlId.ToggleMissionDrawer: return f.toggleMissionDrawerDown;
                 case ControlId.RangeKind: return f.rangeKindDown;
-                case ControlId.RangeDistance: return f.rangeDistanceDown;
-                case ControlId.RangeStand: return f.rangeStandDown;
-                case ControlId.RangeClear: return f.rangeClearDown;
-                case ControlId.RangeWave: return f.rangeWaveDown;
-                case ControlId.RangeShape: return f.rangeShapeDown;
+                case ControlId.RangeSize: return f.rangeSizeDown;
                 default: return false; // Move/Look/SlotCycle are DisplayOnly — never pressable
             }
         }

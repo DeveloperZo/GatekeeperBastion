@@ -53,7 +53,7 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1, n);
         }
 
-        /// <summary>M117: the range board's six keys live in the Range context alone, but the
+        /// <summary>M117: the range board's keys live in the Range context alone, but the
         /// fight keys stay live on the lane, so a board key must not share a key with any
         /// FightAlways row either — the context intersection test above cannot see that.</summary>
         [Test]
@@ -61,9 +61,7 @@ namespace GatekeepersProtocol.Tests
         {
             var expected = new[]
             {
-                (ControlId.RangeKind, KeyCode.Z), (ControlId.RangeDistance, KeyCode.X),
-                (ControlId.RangeStand, KeyCode.C), (ControlId.RangeClear, KeyCode.V),
-                (ControlId.RangeWave, KeyCode.B), (ControlId.RangeShape, KeyCode.N),
+                (ControlId.RangeKind, KeyCode.Z), (ControlId.RangeSize, KeyCode.X),
             };
             var rows = Controls.All;
             foreach (var (id, key) in expected)

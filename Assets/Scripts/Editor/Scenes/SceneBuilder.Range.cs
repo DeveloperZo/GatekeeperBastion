@@ -61,9 +61,9 @@ namespace GatekeepersProtocol.EditorTools
         /// wall.</summary>
         const float EndMargin = 1f;
 
-        /// <summary>How far short of the far corner the north closet hangs, so its shell
-        /// clears the east closet's and its door opens onto the lane's last stretch.</summary>
-        const float ClosetSetback = 6f;
+        /// <summary>The marker a practice wave breaches at, PracticeWave.SpawnMetres down
+        /// the lane from the firing line (Zo, 2026-09-03: "default to 20 m").</summary>
+        const string SpawnMarkerName = "Range_Spawn";
 
         static float _firingLineX;
         static float _laneZ;
@@ -113,13 +113,9 @@ namespace GatekeepersProtocol.EditorTools
                 StripBastionRooms(env);
                 GameObject hall = PlaceControlRoom(env.transform);
                 if (hall == null) return;
-                // Measured BEFORE the closets hang: their floors are named Floor too, and a
-                // closet's floor hangs outside the hall, so measuring after would put the far
-                // wall five metres past where it is.
                 if (!MeasureLane(hall)) return;
-                SpawnPoint[] closets = PlaceSpawnClosets(hall);
-                if (closets == null) return;
                 Transform marksRoot = PlaceMarks(env.transform);
+                SpawnPoint breach = PlaceSpawnMarker(marksRoot);
                 PlaceFiringLine();
                 // The way back, proud of the near wall behind the firing line. Authored here
                 // as well as by the door sentinel, so a rebuild of this scene keeps its door.
@@ -129,9 +125,8 @@ namespace GatekeepersProtocol.EditorTools
                 StripHatch();
                 StripBastionPortals();
                 GameObject root = EnsureRangeRoot(marksRoot);
-                if (root != null) WireRangeFixtures(root, marksRoot, closets);
+                if (root != null) WireRangeFixtures(root, breach);
 
-                // After the closets, so the lane's surface reaches into them.
                 BakeNavMesh(env, RangeNavMeshPath);
                 EditorSceneManager.MarkSceneDirty(scene);
                 if (!EditorSceneManager.SaveScene(scene, RangeScenePath))
@@ -143,7 +138,7 @@ namespace GatekeepersProtocol.EditorTools
                 AssetDatabase.SaveAssets();
                 Debug.Log("[SceneBuilder] Range.unity built — one ControlRoom hall, firing line at x="
                     + _firingLineX.ToString("0.#") + ", marks at " + string.Join("/", RangeMarks)
-                    + " m, " + closets.Length + " spawn closets, board wired, NavMesh baked.");
+                    + " m, breach at " + PracticeWave.SpawnMetres + " m, board wired, NavMesh baked.");
             }
             finally
             {
@@ -366,59 +361,20 @@ namespace GatekeepersProtocol.EditorTools
             return root;
         }
 
-        /// <summary>Two of the Bastion's hung closets at the far end of the lane, from the
-        /// same prefab and the same attach the sketch emitter uses, so a range wave breaches
-        /// from the door a Bastion wave breaches from. One edge takes one aperture, so the
-        /// second closet hangs on the north wall a few metres short of the far corner. Both
-        /// carry a SpawnPoint at weight 1: two doors, an even split.</summary>
-        static SpawnPoint[] PlaceSpawnClosets(GameObject hall)
+        /// <summary>Where a practice wave breaches: one SpawnPoint on the lane's centreline,
+        /// PracticeWave.SpawnMetres past the firing line, under Marks so the bake sees nothing
+        /// (an empty transform). The first cut hung two of the Bastion's closets 90 m down the
+        /// lane; Zo, 2026-09-03: "I need ability to go from spawn to firing quickly."</summary>
+        static SpawnPoint PlaceSpawnMarker(Transform marks)
         {
-            var segment = hall.GetComponent<BastionSegment>();
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(SpawnRoom.PrefabPath);
-            if (segment == null || prefab == null)
-            {
-                Debug.LogError("[SceneBuilder] Range: no closet prefab at " + SpawnRoom.PrefabPath
-                    + " or no segment to hang it on.");
-                return null;
-            }
-            // Along-the-edge positions are the segment's local axes. The hall sits at the
-            // origin unrotated, so local is world here; measured off the lane the kit made.
-            float farX = _firingLineX + RangeMarks[RangeMarks.Length - 1];
-            segment.EastDoorAlong = _laneZ;
-            segment.NorthDoorAlong = farX - ClosetSetback;
-
-            var points = new SpawnPoint[2];
-            points[0] = HangCloset(prefab, segment, BastionDoorEdge.East, "Range_E");
-            points[1] = HangCloset(prefab, segment, BastionDoorEdge.North, "Range_N");
-            if (points[0] == null || points[1] == null) return null;
-            return points;
-        }
-
-        static SpawnPoint HangCloset(GameObject prefab, BastionSegment segment,
-            BastionDoorEdge edge, string id)
-        {
-            var instance = PrefabUtility.InstantiatePrefab(prefab, segment.transform) as GameObject;
-            if (instance == null)
-            {
-                Debug.LogError("[SceneBuilder] Range: could not instantiate the closet prefab.");
-                return null;
-            }
-            instance.name = "Spawn_" + id;
-            var closet = instance.GetComponent<SpawnRoom>();
-            if (closet == null) closet = instance.AddComponent<SpawnRoom>();
-            // AttachTo punches the aperture and rebuilds the hall, then hangs the shell
-            // outside the wall with its interior off the floor, exactly as a Bastion closet.
-            closet.AttachTo(segment, edge);
-            closet.NameSpawn(id);
-            SpawnPoint sp = closet.Spawn;
-            if (sp == null)
-            {
-                Debug.LogError("[SceneBuilder] Range: closet " + instance.name + " has no SpawnPoint.");
-                return null;
-            }
+            var go = new GameObject(SpawnMarkerName);
+            go.transform.SetParent(marks, false);
+            go.transform.localPosition = new Vector3(_firingLineX + PracticeWave.SpawnMetres, 0f, _laneZ);
+            // Facing the firing line, so a body breaches looking at the Boarder.
+            go.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
+            var sp = go.AddComponent<SpawnPoint>();
             SetInt(sp, "weight", 1);
-            Debug.Log("[SceneBuilder] Range closet " + instance.name + " hung on the " + edge
-                + " edge at " + instance.transform.position.ToString("0.#"));
+            Debug.Log("[SceneBuilder] Range breach at " + go.transform.position.ToString("0.#"));
             return sp;
         }
 
@@ -443,9 +399,9 @@ namespace GatekeepersProtocol.EditorTools
         /// <summary>The board and the spawner, wired through SerializedObject so the
         /// references are the scene's rather than a Bind call's: the board on the range root
         /// beside the console, the rules and the readout it drives, the readout pointed back at
-        /// it, and the two closets on the spawner's explicit list so a range wave breaches from
-        /// them and nowhere else.</summary>
-        static void WireRangeFixtures(GameObject root, Transform marks, SpawnPoint[] closets)
+        /// it, and the breach marker alone on the spawner's explicit list so a range wave
+        /// breaches there and nowhere else.</summary>
+        static void WireRangeFixtures(GameObject root, SpawnPoint breach)
         {
             var console = root.GetComponent<RangeConsole>();
             var rules = root.GetComponent<RangeRules>();
@@ -461,19 +417,18 @@ namespace GatekeepersProtocol.EditorTools
 
             var spawner = Object.FindFirstObjectByType<WaveSpawner>();
             if (spawner == null)
-                Debug.LogWarning("[SceneBuilder] Range: no WaveSpawner to hand the closets to.");
+                Debug.LogWarning("[SceneBuilder] Range: no WaveSpawner to hand the breach to.");
             else
             {
                 var so = new SerializedObject(spawner);
                 SerializedProperty list = so.FindProperty("spawnPoints");
-                list.arraySize = closets.Length;
-                for (int i = 0; i < closets.Length; i++)
-                    list.GetArrayElementAtIndex(i).objectReferenceValue = closets[i];
+                list.arraySize = 1;
+                list.GetArrayElementAtIndex(0).objectReferenceValue = breach;
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            Debug.Log("[SceneBuilder] Range fixtures: board on the range root, spawner on "
-                + closets.Length + " closets.");
+            Debug.Log("[SceneBuilder] Range fixtures: board on the range root, spawner on the "
+                + PracticeWave.SpawnMetres + " m breach.");
         }
 
         static T Ensure<T>(GameObject go) where T : Component
