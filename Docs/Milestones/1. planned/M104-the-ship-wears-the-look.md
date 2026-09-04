@@ -4,7 +4,7 @@
 Status: next (current)
 Update trigger: when the Ship hull changes shape, when the glow band moves, or when the look
 is carried into the Bastion.
-Last updated: 2026-08-26
+Last updated: 2026-09-03
 -->
 
 The Ship hub stops being an untinted Synty kit and becomes the game's own interior: near-black
@@ -162,6 +162,18 @@ and reconstructing it on `Awake` is the habit that has cost this project most.
   sequencing note is no longer "wait for the rebuild" but "Apply Look Pass first, then Bake" —
   the probe group and the reflection probe are derived from `ShipDress` bounds, so a bake run
   before the Apply still describes the old volume.
+
+## What has landed (read 2026-09-03, outside this milestone)
+
+Zo carried the look onto `Ship - CoOp` and `Bastion_Coop` in commits `93d79aa`, `4794070`,
+`0f6bac6` and `cc6cd77` without moving this file: `Assets/Settings/ShipLookProfile.asset`,
+ten materials under `Assets/Packs/ShipFixtures/`, a `Ship Look` root in both scenes, one
+realtime light in each, a reflection probe and `LightingData.asset` baked for the Ship, and a
+`Glow Motes` emitter. Read against the criteria: 1 holds (one light); 2, 3 and 5 are
+plausibly met and unmeasured (material sharing, the fixture count, the mote numbers); 4 is
+Zo's eyes; **6 is not met** — `Assets/Packs/Gatekeepers/Hunter.mat` still holds
+`_EmissionColor` peak 1.0, so the band has not moved; 7 and 8 have not been run. Re-cut this
+file to what remains, or close it with 6–8 struck and the reason stated; Zo's call.
 
 ## Depends on / Unblocks
 

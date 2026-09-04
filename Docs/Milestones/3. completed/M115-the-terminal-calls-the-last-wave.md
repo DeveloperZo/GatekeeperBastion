@@ -1,9 +1,9 @@
 # M115 — The terminal calls the last wave
 
 <!--
-Status: active
+Status: completed, Sep 2026 (built 2026-09-02; closed 2026-09-03 on the offline suite — criteria 1–4 and 6–7 are `ZoneFinalWaveTests` / `FieldShutoffTests` / `FieldWaveResolutionTests`, criterion 5 the three prompt strings in `BastionTerminal.cs`; the playthrough path is unstamped, and Verification 3 says it does not gate)
 Update trigger: when the zone grammar (Hatch opening / terminal last wave / armed shutoff) changes, or when the play stamp lands
-Last updated: 2026-09-02
+Last updated: 2026-09-03
 -->
 
 A zone's last wave belongs to its terminal. `T` at the Hatch draws the zone's opening

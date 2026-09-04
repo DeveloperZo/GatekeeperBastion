@@ -8,6 +8,16 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-03: **`M115` completed.** Closed on the offline suite — the zone-final-wave,
+  shutoff and resolution tests are the gate, the three terminal prompts are pinned in source,
+  and the milestone's own Verification 3 says the playthrough path does not gate. Active
+  count 3/3. Same review: `M116` waits on its kill window (three untainted Boardings or
+  2026-09-21; none played since it landed), `M117` on one press of the distance terminal,
+  `M86` on a clip unsourced since 2026-08-23; `M104`'s look is half landed by Zo's own
+  commits (93d79aa … cc6cd77 — profile, fixtures, deck, motes, probe, bake) with the glow
+  band, the sightline gate and the frame-time baseline still open; `M111`'s count is 25,
+  not 11 (fourteen `Arms/…` menu rows outside the fence since `M113`); `M112` has zero of
+  its five untainted runs.
 - 2026-09-03: **`M117` — the distance dimension, at a terminal.** Zo, from the range: a
   terminal beside the firing line cycles the mark the next wave breaches from (5 to 90 m, 20
   until pressed); every mark carries a spawn point.

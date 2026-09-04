@@ -3,11 +3,14 @@
 <!--
 Status: later
 Update trigger: when lint-arch's rule set or baselines change, or when a standing-red test is retired by another milestone
-Last updated: 2026-09-01
+Last updated: 2026-09-03
 -->
 
-`Tools/lint-arch/run.sh` reports 11 violations against baselines of zero, and four tests
-have been red long enough to be called "standing". A gate that always fails gates nothing:
+`Tools/lint-arch/run.sh` reported 11 violations against baselines of zero when this was
+written and 25 on 2026-09-03 — fourteen `Arms/…` menu rows in `ArmsCutter.cs` arrived
+outside the menu fence with `M113` — and five tests have been red long enough to be called
+"standing" (`SessionMusicHostTests` joined the four when `cc6cd77` dropped Splash's Stardust
+binding). A gate that always fails gates nothing:
 this returns both fences to a state where a new red means something.
 
 ## Story
@@ -23,8 +26,10 @@ suites were "green except the usual", and the offline harness's own false-green 
 was survivable only because the real number was checked later. Today's fence state:
 
 - **5 over-cap files** — `BastionSketchEmitter.cs` 976/800, `BastionSketchParser.cs`
-  639/600, `GameController.Terminals.cs` 611/400, `DevConsole.cs` 421/400,
-  `GameController.cs` 418/400.
+  639/600, `GameController.Terminals.cs` 665/400 (611 when written; `M115` grew it),
+  `DevConsole.cs` 415/400, `GameController.cs` 419/400.
+- **14 menu rows outside the fence** — every `[MenuItem("Arms/…")]` in `ArmsCutter.cs`;
+  each needs a fence row in `Docs/Architecture/README.md` or to go.
 - **0 milestone-id lines** — the 8 were reworded on `main` before this file was started.
 - **5 scene lookups outside the allowlist** — `HatchRecallPad.cs` ×3, `HatchPortal.cs` ×2;
   the dock-slice work landed without entries.
