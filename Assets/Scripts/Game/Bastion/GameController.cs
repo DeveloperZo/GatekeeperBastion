@@ -392,6 +392,9 @@ namespace GatekeepersProtocol.Game
             if (Sim.FieldTrickleLive) return;
             var local = PlayerRegistry.Local;
             if (local != null) local.NotifyKill();
+            // VEIL's re-entry rides the same seam for the same reason (2026-09-04): a trickle
+            // body buys no stealth, exactly as it buys no Salvage and no health.
+            if (Protocol != null) Protocol.NotifyKill();
         }
 
         /// <summary>Command from HatchStation: damage the authoritative sim Hatch.

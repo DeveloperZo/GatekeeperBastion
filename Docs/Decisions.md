@@ -738,14 +738,21 @@ cooldowns to re-enter stealth or along those lines."
 - **Crit stays cut.** The 2026-08-16 stamp freezes crit chance at 0 and names Luck as its only
   source, and the 2026-08-15 ban names crit sources outright. Nothing here expired those, so
   VEIL is not the exception that reopens them.
-- **The refund is the mechanism.** Breaking Cloak's window early refunds each unspent second
-  against its cooldown at `BoarderProtocol.CloakBreakRefundPerSecond`. Hiding the full window
-  costs the full wait; breaking instantly cuts the wait by the whole window's worth. The
-  window becomes a decision rather than a duration, and the aggressive read re-enters more
-  often while buying less stealth each time.
-- **Cloak alone refunds.** Everywhere else "unspent window" is not a choice the player made,
-  so `BreakRefundPerSecond` returns 0 for every other ability and the no-argument
-  `EndWindowEarly` keeps the old behaviour exactly.
+- **Kills are the refund.** Every gatekeeper the wearer kills while Cloak is cooling takes
+  `BoarderProtocol.CloakKillRefundSeconds` off the wait. A wearer who kills nothing waits
+  exactly as long as before, so the sheet's aggression is what pays for its stealth. Sized
+  against the 40 s cooldown: a wave-1 roster of 11 bodies refunds 22 s, and at the 2026-09-04
+  Boarding's kill rate of 0.34/s the wait resolves to about 24 s, roughly double the uptime
+  of a wearer who hides.
+- **It only discounts a running cooldown.** Not while ready and not while the window is open,
+  because credit banked against a wait that has not started is a stored resource rather than
+  a discount. The wait floors at 0.
+- **Cloak alone refunds**, and the kill seam is `GameController`'s existing one, so a trickle
+  body buys no stealth exactly as it pays no Salvage and mends no health.
+- **Recut the same day.** The first cut refunded the UNSPENT WINDOW on an early break, which
+  paid the player for stealth they did not use rather than for the killing Zo asked to reward.
+  Zo: "we either give increased luck or get refund on cooldowns for kills". Headshot-only is
+  named as a later narrowing and is deliberately not built until the refund has been played.
 
 ## Locked — every Boarder is granted DEPOT, and the log says which protocol ran (Zo, 2026-09-04)
 

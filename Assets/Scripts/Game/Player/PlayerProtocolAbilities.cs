@@ -276,18 +276,30 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>The gun fired. Cloak is the only window firing collapses — it is the whole
-        /// price of the layer, and since 2026-09-04 it is also where VEIL is paid: the window
-        /// the shot did not spend comes off the cooldown, so breaking early is the way back
-        /// into stealth sooner rather than simply a shorter hide.</summary>
+        /// price of the layer.</summary>
         public void NotifyFired()
         {
             if (!CloakOpen) return;
-            float unspent = _personal.WindowRemaining;
-            _personal.EndWindowEarly(
-                BoarderProtocol.BreakRefundPerSecond(BoarderAbilityId.Cloak));
+            _personal.EndWindowEarly();
             ClosePersonalEffect(false);
-            Log.Event(Tag, "self Cloak dropped — fired, "
-                + unspent.ToString("0.#") + "s unspent, "
+            Log.Event(Tag, "self Cloak dropped — fired");
+        }
+
+        /// <summary>A gatekeeper died to this player. VEIL's re-entry (2026-09-04): each kill
+        /// takes <see cref="BoarderProtocol.CloakKillRefundSeconds"/> off Cloak's cooldown, so
+        /// the way back into stealth is killing rather than waiting. Every other personal
+        /// ability refunds nothing and this is a cheap early return for them.
+        ///
+        /// Routed from GameController's one kill seam, which already drops trickle bodies
+        /// before it calls anything: a body that pays no Salvage and mends no health must not
+        /// buy stealth either.</summary>
+        public void NotifyKill()
+        {
+            float refund = BoarderProtocol.KillRefundSeconds(PersonalAbility);
+            if (refund <= 0f) return;
+            if (!_personal.RefundCooldown(refund)) return;
+            Log.Event(Tag, "self " + BoarderProtocol.DisplayName(PersonalAbility)
+                + " refunded " + refund.ToString("0.#") + "s on a kill — "
                 + _personal.CooldownRemaining.ToString("0.#") + "s to re-enter");
         }
 

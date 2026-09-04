@@ -307,28 +307,31 @@ namespace GatekeepersProtocol.Sim
             }
         }
 
-        /// <summary>VEIL's re-entry (Zo, 2026-09-04: "give it power through a reset or
-        /// lowering cooldowns to re-enter stealth"). Seconds off Cloak's cooldown for each
-        /// UNSPENT second of its window when the window is broken early.
+        /// <summary>VEIL's re-entry (Zo, 2026-09-04: "get refund on cooldowns for kills to
+        /// allow for stealth entrance more"). Seconds off Cloak's cooldown for every body the
+        /// wearer kills while it is cooling.
         /// <para>VEIL was survival-only: Cloak leaves the acquisition lists and firing
-        /// collapses it, so the sheet had no way to convert stealth into anything but distance.
-        /// This does not give it damage — the 2026-08-15 ban on damage-granting rows and crit
-        /// sources stands, and nothing here touches a number the gun reads. It buys TEMPO:
-        /// break early and you are back in stealth sooner.</para>
-        /// <para>The number makes the window a decision rather than a duration. At 2 per second
-        /// against a 6 s window and a 40 s cooldown, hiding the full window costs the full 40,
-        /// and breaking instantly refunds 12 for a 28 s wait. So a full-hide cycle is 46 s and
-        /// a strike-and-vanish cycle is 28 s: the aggressive read re-enters about 1.6x as
-        /// often, and pays for it in stealth it did not use.</para>
-        /// <para>Cloak is the only ability with a refund, because it is the only window firing
-        /// collapses — everywhere else "unspent window" is not a choice the player made.</para></summary>
-        public const float CloakBreakRefundPerSecond = 2f;
+        /// collapses it, so the sheet could buy distance and never pressure. Killing is now
+        /// the way back into stealth, which makes the sheet's loop go dark, strike, go dark
+        /// again — and makes the wearer's own aggression the thing that pays for it.</para>
+        /// <para>No damage is granted. The alternative on the table was raising Luck, which is
+        /// the game's only crit source and is frozen at 0 by the 2026-08-16 stamp; this moves
+        /// one timer instead and leaves that verdict standing.</para>
+        /// <para>Sized against the 40 s cooldown. A wave-1 roster is 11 bodies, so clearing one
+        /// refunds 22 s, a little over half. At the kill rate of the 2026-09-04 Boarding —
+        /// 143 kills over 419 s, i.e. 0.34/s — the wait resolves to 40 / (1 + 0.34 x 2), about
+        /// 24 s: an actively killing VEIL re-enters roughly twice as often as one who hides,
+        /// and a wearer who kills nothing waits exactly as long as before.</para>
+        /// <para>Every kill counts today. Narrowing it to headshots is a one-line change at the
+        /// single call site (Zo, 2026-09-04: "later we can restrict to headshots if needed"),
+        /// and is deliberately not built until the refund itself has been played.</para></summary>
+        public const float CloakKillRefundSeconds = 2f;
 
-        /// <summary>Seconds refunded per unspent window second when <paramref name="id"/>'s
-        /// window is broken early. Zero for everything but Cloak.</summary>
-        public static float BreakRefundPerSecond(BoarderAbilityId id)
+        /// <summary>Seconds refunded against <paramref name="id"/>'s cooldown per kill. Zero
+        /// for everything but Cloak: nowhere else is re-entry the point of the ability.</summary>
+        public static float KillRefundSeconds(BoarderAbilityId id)
         {
-            return id == BoarderAbilityId.Cloak ? CloakBreakRefundPerSecond : 0f;
+            return id == BoarderAbilityId.Cloak ? CloakKillRefundSeconds : 0f;
         }
 
         public static float Cooldown(BoarderAbilityId id)
@@ -649,26 +652,27 @@ namespace GatekeepersProtocol.Sim
         /// <summary>Close the window early and start cooldown. No-op when the window is shut.</summary>
         public void EndWindowEarly()
         {
-            EndWindowEarly(0f);
+            if (WindowRemaining <= 0f) return;
+            WindowRemaining = 0f;
+            CooldownRemaining = _cooldownDuration;
         }
 
-        /// <summary>Close the window early, refunding each UNSPENT window second against the
-        /// cooldown at <paramref name="refundPerSecond"/> (2026-09-04, VEIL's re-entry — see
-        /// <see cref="BoarderProtocol.CloakBreakRefundPerSecond"/>). A refund of 0 is the old
-        /// behaviour exactly, which is why every other caller keeps the no-argument form.
-        /// The cooldown floors at 0 rather than going negative and reading as ready-with-debt.</summary>
-        public void EndWindowEarly(float refundPerSecond)
+        /// <summary>Take <paramref name="seconds"/> off a running cooldown (2026-09-04, VEIL's
+        /// re-entry — see <see cref="BoarderProtocol.CloakKillRefundSeconds"/>).
+        /// <para>Only while COOLING. A refund against a ready slot is meaningless, and one
+        /// against an open window would shorten a wait that has not started; both would let a
+        /// player bank credit toward a cooldown they are not paying, which is a stored resource
+        /// and a different mechanic from a discount. The cooldown floors at 0 rather than going
+        /// negative and reading as ready carrying a debt.</para>
+        /// <para>Returns true when it actually moved the clock, so the caller can log a
+        /// refund that did something and stay quiet about one that did not.</para></summary>
+        public bool RefundCooldown(float seconds)
         {
-            if (WindowRemaining <= 0f) return;
-            float unspent = WindowRemaining;
-            WindowRemaining = 0f;
-            if (refundPerSecond <= 0f)
-            {
-                CooldownRemaining = _cooldownDuration;
-                return;
-            }
-            float cd = _cooldownDuration - unspent * refundPerSecond;
-            CooldownRemaining = cd > 0f ? cd : 0f;
+            if (seconds <= 0f) return false;
+            if (WindowRemaining > 0f || CooldownRemaining <= 0f) return false;
+            CooldownRemaining -= seconds;
+            if (CooldownRemaining < 0f) CooldownRemaining = 0f;
+            return true;
         }
     }
 }

@@ -10,7 +10,7 @@ Where:
 - Ping's provoke-per-body pulse and its render window — PlayerProtocolAbilities.cs (PulsePing, PingWindowOpen); markers PingMarker.ShowAll
 - The pull is the standing provoke rule, kind refusals included — EnemyGatekeeper.Targeting.cs (Provoke, CanBeProvoked)
 - Cloak sets the rig off the target registry; firing collapses it — PlayerProtocolAbilities.cs (SetCloaked, NotifyFired); PlayerHealth.Cloaked; PlayerRegistry.NearestAlive skips Cloaked
-- Breaking the window early refunds the unspent seconds against the cooldown — Assets/Scripts/Sim/Meta/BoarderProtocol.cs (CloakBreakRefundPerSecond, BreakRefundPerSecond, BoarderAbilityState.EndWindowEarly(float)), pinned by Assets/Tests/EditMode/Meta/CloakReentryTests.cs
+- A kill refunds seconds against Cloak's cooldown — Assets/Scripts/Sim/Meta/BoarderProtocol.cs (CloakKillRefundSeconds, KillRefundSeconds, BoarderAbilityState.RefundCooldown) called from PlayerProtocolAbilities.NotifyKill on GameController's one kill seam, pinned by Assets/Tests/EditMode/Meta/CloakReentryTests.cs
 - Ghost's acquisition bias, applied at bind and read per retarget — BoarderProtocol.GhostAcquisitionMul; PlayerProtocolAbilities.ApplyPassive; PlayerHealth.ConfigureAcquisition; EnemyGatekeeper.Targeting.cs (NoticeRangeFor, AggroRadiusFor)
 -->
 
@@ -60,7 +60,7 @@ Cost: the same burst provokes every Gatekeeper that can be provoked onto the cas
 
 Output: off every targeting list for the window. The garrison's target picker skips a cloaked Boarder outright. Gatekeepers already swinging finish the swing.
 
-Cost: the presser's `H`. Firing exits it instantly. It is the only window the gun collapses. The window a shot does not spend is not wasted, though: since 2026-09-04 each unspent second comes off the cooldown at double rate, so breaking early is the way back into stealth sooner. Riding the window to its end pays the full wait. That makes the window a decision between a long hide and a short one you get back faster, and it is the only power VEIL gains from a break — no damage, no crit, nothing the gun reads.
+Cost: the presser's `H`. Firing exits it instantly. It is the only window the gun collapses. A way to leave, and since 2026-09-04 a way to come back: every gatekeeper the wearer kills while Cloak is cooling takes two seconds off the wait, so the way back into stealth is killing rather than waiting. A wearer who kills nothing waits exactly as long as before, and a trickle body buys nothing, the same rule that stops it paying Salvage or mending health. Nothing here grants damage.
 
 ### Passive
 
@@ -68,7 +68,7 @@ Cost: the presser's `H`. Firing exits it instantly. It is the only window the gu
 
 ### Rules
 
-The loop on this sheet is take the eyes, hand them to a decoy, go dark, and choose how much of the dark to spend. The refund is the only thing on VEIL that answers the sheet's old complaint, that it bought survival and never tempo: it converts unused stealth into the next stealth, and never into damage.
+The loop on this sheet is take the eyes, hand them to a decoy, go dark, kill, and go dark again. The kill refund is the only thing on VEIL that answers the sheet's old complaint, that it bought survival and never tempo: it converts the wearer's own aggression into the next stealth, and never into damage.
 
 The loop on this sheet is take the eyes, hand them to a decoy, go dark. Ping puts the room on the caster. PHANTOM offers that room to the next decoy placed. Cloak drops the caster off the list. Ghost is the standing discount on being seen, not a stealth condition.
 

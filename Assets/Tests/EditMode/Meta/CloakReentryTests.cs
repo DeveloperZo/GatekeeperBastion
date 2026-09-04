@@ -3,105 +3,117 @@ using NUnit.Framework;
 
 namespace GatekeepersProtocol.Tests
 {
-    /// <summary>VEIL's re-entry (Zo, 2026-09-04). Cloak is the only window firing collapses,
-    /// which left the sheet able to buy distance and nothing else. The window a shot does not
-    /// spend now comes off the cooldown, so breaking early is a way back into stealth rather
-    /// than only a shorter hide. No damage is granted anywhere: this moves one timer.</summary>
+    /// <summary>VEIL's re-entry (Zo, 2026-09-04). Cloak leaves the acquisition lists and firing
+    /// collapses it, which left the sheet able to buy distance and never pressure. Kills now
+    /// take seconds off Cloak's cooldown, so the way back into stealth is killing rather than
+    /// waiting. Nothing here grants damage: raising Luck was the alternative and Luck is the
+    /// game's only crit source, frozen at 0.</summary>
     public class CloakReentryTests
     {
-        static BoarderAbilityState OpenCloak()
+        static BoarderAbilityState CoolingCloak()
         {
             var s = new BoarderAbilityState();
-            Assert.IsTrue(s.TryActivate(
-                BoarderProtocol.Window(BoarderAbilityId.Cloak),
-                BoarderProtocol.Cooldown(BoarderAbilityId.Cloak)));
+            float window = BoarderProtocol.Window(BoarderAbilityId.Cloak);
+            Assert.IsTrue(s.TryActivate(window, BoarderProtocol.Cooldown(BoarderAbilityId.Cloak)));
+            s.Tick(window);   // ride the window out; the cooldown is now running
+            Assert.AreEqual(BoarderProtocol.Cooldown(BoarderAbilityId.Cloak),
+                s.CooldownRemaining, 1e-4f);
             return s;
         }
 
         [Test]
         public void OnlyCloak_Refunds()
         {
-            Assert.AreEqual(BoarderProtocol.CloakBreakRefundPerSecond,
-                BoarderProtocol.BreakRefundPerSecond(BoarderAbilityId.Cloak));
+            Assert.AreEqual(BoarderProtocol.CloakKillRefundSeconds,
+                BoarderProtocol.KillRefundSeconds(BoarderAbilityId.Cloak));
             foreach (BoarderAbilityId id in System.Enum.GetValues(typeof(BoarderAbilityId)))
             {
                 if (id == BoarderAbilityId.Cloak) continue;
-                Assert.AreEqual(0f, BoarderProtocol.BreakRefundPerSecond(id),
-                    id + " must not refund: unspent window is only a choice where firing "
-                    + "collapses the window");
+                Assert.AreEqual(0f, BoarderProtocol.KillRefundSeconds(id),
+                    id + " must not refund: nowhere else is re-entry the point of the ability");
             }
         }
 
         [Test]
-        public void BreakingInstantly_PaysTheMostBack_AndHidingFullPaysNothing()
+        public void EachKill_TakesItsSecondsOffTheWait()
         {
-            float window = BoarderProtocol.Window(BoarderAbilityId.Cloak);
+            float refund = BoarderProtocol.CloakKillRefundSeconds;
             float cooldown = BoarderProtocol.Cooldown(BoarderAbilityId.Cloak);
-            float refund = BoarderProtocol.CloakBreakRefundPerSecond;
 
-            var instant = OpenCloak();
-            instant.EndWindowEarly(refund);
-            Assert.AreEqual(cooldown - window * refund, instant.CooldownRemaining, 1e-4f,
-                "an instant break refunds the whole window");
-
-            var half = OpenCloak();
-            half.Tick(window * 0.5f);
-            half.EndWindowEarly(refund);
-            Assert.AreEqual(cooldown - window * 0.5f * refund, half.CooldownRemaining, 1e-4f);
-
-            // Riding the window to its end is not an early break at all, so nothing is owed.
-            var full = OpenCloak();
-            full.Tick(window);
-            Assert.AreEqual(cooldown, full.CooldownRemaining, 1e-4f,
-                "a window that expired on its own pays the full cooldown");
-            full.EndWindowEarly(refund);
-            Assert.AreEqual(cooldown, full.CooldownRemaining, 1e-4f,
-                "EndWindowEarly on a shut window is a no-op, refund or not");
+            var s = CoolingCloak();
+            Assert.IsTrue(s.RefundCooldown(refund));
+            Assert.AreEqual(cooldown - refund, s.CooldownRemaining, 1e-4f);
+            Assert.IsTrue(s.RefundCooldown(refund));
+            Assert.AreEqual(cooldown - refund * 2f, s.CooldownRemaining, 1e-4f);
         }
 
+        /// <summary>The sizing argument, kept as a test so the number cannot drift away from
+        /// the claim: clearing a wave-1 roster is worth about half the wait.</summary>
         [Test]
-        public void TheStrikeCycle_IsShorterThanTheHideCycle_ButBuysLessStealth()
+        public void AWaveOneRoster_BuysAboutHalfTheWait()
         {
-            float window = BoarderProtocol.Window(BoarderAbilityId.Cloak);
             float cooldown = BoarderProtocol.Cooldown(BoarderAbilityId.Cloak);
-            float refund = BoarderProtocol.CloakBreakRefundPerSecond;
-
-            float hideCycle = window + cooldown;
-            var strike = OpenCloak();
-            strike.EndWindowEarly(refund);
-            float strikeCycle = strike.CooldownRemaining;
-
-            Assert.Less(strikeCycle, hideCycle,
-                "breaking early must actually re-enter sooner or the refund is decoration");
-            Assert.Greater(strikeCycle, 0f,
-                "it must still be a cooldown: a free re-entry is a toggle, not a window");
-            Assert.Less(window * refund, cooldown,
-                "the refund must not be able to erase the whole cooldown");
+            float roster = WaveDirector.BaseEnemyCount * BoarderProtocol.CloakKillRefundSeconds;
+            Assert.Less(roster, cooldown,
+                "a single wave-1 roster must not hand back the whole cooldown");
+            Assert.Greater(roster, cooldown * 0.4f,
+                "and it must be worth enough to change how the wearer plays");
         }
 
         [Test]
-        public void ARefundOfZero_IsTheOldBehaviourExactly()
+        public void KillingEnough_ClearsTheWaitEntirely_ButNeverGoesNegative()
         {
-            var a = OpenCloak();
-            a.Tick(1f);
-            a.EndWindowEarly(0f);
-            var b = OpenCloak();
-            b.Tick(1f);
-            b.EndWindowEarly();
-            Assert.AreEqual(b.CooldownRemaining, a.CooldownRemaining, 1e-4f);
-            Assert.AreEqual(BoarderProtocol.Cooldown(BoarderAbilityId.Cloak),
-                a.CooldownRemaining, 1e-4f);
-        }
-
-        [Test]
-        public void TheCooldownFloorsAtZero_NeverNegative()
-        {
-            var s = new BoarderAbilityState();
-            Assert.IsTrue(s.TryActivate(10f, 5f));   // a refund larger than the cooldown
-            s.EndWindowEarly(2f);
+            var s = CoolingCloak();
+            for (int i = 0; i < 100; i++) s.RefundCooldown(BoarderProtocol.CloakKillRefundSeconds);
             Assert.AreEqual(0f, s.CooldownRemaining,
                 "a cooldown below zero would read as ready carrying a debt");
+            Assert.IsTrue(s.IsReady, "enough kills is a re-entry, which is the point");
+        }
+
+        [Test]
+        public void ARefundOffCooldown_DoesNothing()
+        {
+            float refund = BoarderProtocol.CloakKillRefundSeconds;
+
+            // Ready: there is no wait to discount.
+            var ready = new BoarderAbilityState();
+            Assert.IsTrue(ready.IsReady);
+            Assert.IsFalse(ready.RefundCooldown(refund));
+            Assert.AreEqual(0f, ready.CooldownRemaining);
+
+            // Window open: the wait has not started, and banking credit against it would be a
+            // stored resource rather than a discount.
+            var open = new BoarderAbilityState();
+            Assert.IsTrue(open.TryActivate(
+                BoarderProtocol.Window(BoarderAbilityId.Cloak),
+                BoarderProtocol.Cooldown(BoarderAbilityId.Cloak)));
+            Assert.IsFalse(open.RefundCooldown(refund));
+            open.Tick(BoarderProtocol.Window(BoarderAbilityId.Cloak));
+            Assert.AreEqual(BoarderProtocol.Cooldown(BoarderAbilityId.Cloak),
+                open.CooldownRemaining, 1e-4f,
+                "the window's kills did not shorten the wait that followed it");
+        }
+
+        [Test]
+        public void AWearerWhoKillsNothing_WaitsExactlyAsLongAsBefore()
+        {
+            var s = CoolingCloak();
+            float cooldown = BoarderProtocol.Cooldown(BoarderAbilityId.Cloak);
+            s.Tick(cooldown - 0.5f);
+            Assert.AreEqual(0.5f, s.CooldownRemaining, 1e-4f);
+            Assert.IsFalse(s.IsReady);
+            s.Tick(0.5f);
             Assert.IsTrue(s.IsReady);
+        }
+
+        [Test]
+        public void ANonPositiveRefund_IsRefused()
+        {
+            var s = CoolingCloak();
+            float before = s.CooldownRemaining;
+            Assert.IsFalse(s.RefundCooldown(0f));
+            Assert.IsFalse(s.RefundCooldown(-5f), "a negative refund must not extend the wait");
+            Assert.AreEqual(before, s.CooldownRemaining, 1e-4f);
         }
     }
 }
