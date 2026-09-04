@@ -158,6 +158,18 @@ namespace GatekeepersProtocol.Sim
 
         /// <summary>True when the id is a protocol this build sells. A save carrying a retired
         /// or unknown id answers false and is sanitised to None rather than throwing.</summary>
+        /// <summary>The protocol every Boarder carries without claiming it (Zo, 2026-09-04:
+        /// "add protocol as automatic grant"). Before this, a fresh Boarder embarked on
+        /// <see cref="BoarderProtocolId.None"/> and had no crew ability, no personal ability
+        /// and no doctrine, which split the player base into two populations the play data
+        /// could not tell apart: the 2026-09-04 run carried FORGE and the log never said so.
+        /// Depot is the grant because it is the 0-salvage claim already (2026-08-16) and it
+        /// owns no passive, so granting it moves nothing else.
+        /// <para>This is not a free protocol on top of the others. Claiming another still
+        /// replaces it, because <see cref="MetaState.EquippedProtocol"/> IS the ownership —
+        /// there is no owned-set beside it.</para></summary>
+        public const BoarderProtocolId GrantedProtocol = BoarderProtocolId.Depot;
+
         public static bool IsCatalogued(BoarderProtocolId id)
         {
             for (int i = 0; i < Shop.Length; i++)
@@ -251,8 +263,14 @@ namespace GatekeepersProtocol.Sim
             if (b == null) return;
             if (!IsCatalogued(b.EquippedProtocol))
             {
-                b.EquippedProtocol = BoarderProtocolId.None;
-                b.EquippedPassive = BoarderAbilityId.None;
+                // Falls to the GRANT rather than to None (2026-09-04). This arm is the one
+                // path every save passes through on load, so it is where an old save with no
+                // protocol picks the grant up; a retired or over-sold id lands here too and
+                // gets a working sheet instead of an empty one.
+                b.EquippedProtocol = GrantedProtocol;
+                b.EquippedPassive = PassiveCount(GrantedProtocol) > 0
+                    ? PassiveAt(GrantedProtocol, 0)
+                    : BoarderAbilityId.None;
                 return;
             }
             if (!IsLegalPair(b.EquippedProtocol, b.EquippedPassive))

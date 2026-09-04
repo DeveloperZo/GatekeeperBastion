@@ -140,22 +140,31 @@ namespace GatekeepersProtocol.Tests
         }
 
         [Test]
-        public void FreshSave_NoneUntilClaim()
+        /// <summary>Re-keyed 2026-09-04: a fresh Boarder carries the GRANT, not None. The
+        /// old rule was None-until-claim, which let a Boarder embark with no crew ability, no
+        /// personal ability and no doctrine.</summary>
+        public void FreshSave_CarriesTheGrant_AndAnotherClaimReplacesIt()
         {
             var m = MetaState.CreateNew();
-            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
-            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
+            Assert.AreEqual(BoarderProtocol.GrantedProtocol, m.EquippedProtocol,
+                "a fresh Boarder embarks carrying the granted protocol");
+            Assert.AreEqual(BoarderProtocolId.Depot, m.EquippedProtocol);
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive,
+                "the grant owns no passive, so nothing else moves with it");
             // v9 landed with the demo flags; the pin follows the schema, not a literal.
             Assert.AreEqual(SaveFormat.CurrentVersion, m.SaveVersion);
-            Assert.IsTrue(BoarderProtocol.TryClaim(m, BoarderProtocolId.Depot));
-            Assert.AreEqual(BoarderProtocolId.Depot, m.EquippedProtocol);
-            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
+            // Claiming the thing you were granted is refused as already owned, which is what
+            // the CREW row reads to print EQUIPPED instead of a claim button.
             Assert.IsFalse(BoarderProtocol.TryClaim(m, BoarderProtocolId.Depot));
             Assert.IsFalse(BoarderProtocol.TryClaim(m, BoarderProtocolId.None));
-            m.PayloadLoadoutLocked = true;
+            // The grant is a floor, not a ceiling: another protocol still replaces it, and
+            // arrives wearing its first passive.
+            Assert.IsTrue(BoarderProtocol.TryClaim(m, BoarderProtocolId.Veil));
+            Assert.AreEqual(BoarderProtocolId.Veil, m.EquippedProtocol);
+            Assert.AreEqual(BoarderAbilityId.Ghost, m.EquippedPassive);
             var locked = MetaState.CreateNew();
             locked.PayloadLoadoutLocked = true;
-            Assert.IsFalse(BoarderProtocol.TryClaim(locked, BoarderProtocolId.Depot));
+            Assert.IsFalse(BoarderProtocol.TryClaim(locked, BoarderProtocolId.Veil));
         }
 
         [Test]
@@ -188,8 +197,11 @@ namespace GatekeepersProtocol.Tests
                 "{\"SaveVersion\":13,\"EquippedProtocol\":99,\"EquippedPassive\":1}";
             var m = BoarderState.FromJson(json);
             Assert.IsNotNull(m, "a current-version Boarder document loads");
-            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
-            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
+            // Re-keyed 2026-09-04: an id no switch has an arm for falls to the GRANT rather
+            // than to None, so the load produces a Boarder who can fight.
+            Assert.AreEqual(BoarderProtocol.GrantedProtocol, m.EquippedProtocol);
+            Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive,
+                "the borrowed passive goes down with the id it belonged to");
         }
 
         [Test]

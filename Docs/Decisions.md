@@ -728,6 +728,32 @@ What every lever holds still: the `11 + 7i` roster and its HP ladder, the debut 
 one-lane spine. Variance redistributes what a wave is, never how much of it there is — the
 "thousands on screen" and idle-dial refusals stand. Direction is cut (above).
 
+## Locked — every Boarder is granted DEPOT, and the log says which protocol ran (Zo, 2026-09-04)
+
+A Boarder used to embark on `BoarderProtocolId.None` until they claimed at CREW QUARTERS,
+which meant a player could take the whole first Boarding with no crew ability, no personal
+ability and no doctrine. Zo, 2026-09-04, from the run: "protocols add real player power we
+should design for (and enforce when we know a player has a protocol and when they dont)."
+
+- **DEPOT is an automatic grant, not a claim.** `BoarderProtocol.GrantedProtocol` names it
+  once. A fresh Boarder carries it, and `ValidateEquip` resolves None or an uncatalogued id
+  to it on every load, so no save path produces a protocol-less Boarder. DEPOT is the grant
+  because it was already the 0-salvage claim and owns no passive, so granting it moves
+  nothing else. This supersedes the 2026-08-16 recut's "not auto-owned" for DEPOT only; the
+  other sheets are still claimed.
+- **The grant is a floor, not a ceiling.** Claiming another protocol still replaces it, since
+  `EquippedProtocol` IS the ownership and there is no owned-set beside it. The CREW row reads
+  the grant as owned and prints EQUIPPED rather than a claim button.
+- **The protocol-less guards stay and stay tested.** `CrewOpensForProtocolClaim` and the NAV
+  map's warnings are now unreachable through any save path. They are kept as guards and
+  `ProtocolOfferTests` constructs the state explicitly to keep them honest, rather than
+  deleting a branch whose absence would be silent.
+- **Both machine lines name the protocol.** The run-begins line gains `protocol=` and
+  `passive=`; the summary line gains `protocol=` and moves to `schema=2`. Before this, a
+  FORGE run and a protocol-less run were indistinguishable in the play data, so `M112`'s
+  five-run evidence base would have averaged two populations into one dial. The schema number
+  moves with the field set: a frozen version on a growing line is how a schema becomes a diary.
+
 ## Locked — the range is reached from a door beside the ARMORY, kitted from a panel, and draws waves (Zo, 2026-09-02)
 
 "Gate it by a UI selection for Protocol and weapon (weapons will have stats player has

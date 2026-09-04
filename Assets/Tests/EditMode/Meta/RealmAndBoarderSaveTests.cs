@@ -217,7 +217,9 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(EquipmentId.None, b.EquippedEquipment);
             Assert.AreEqual(PayloadId.None, b.EquippedDrone);
             Assert.AreEqual(0, b.OwnedPayloadMask);
-            Assert.AreEqual(BoarderProtocolId.None, b.EquippedProtocol);
+            // Re-keyed 2026-09-04: the protocol is the one thing a Boarder is never missing.
+            // Every other optional key still loads as nothing.
+            Assert.AreEqual(BoarderProtocol.GrantedProtocol, b.EquippedProtocol);
         }
 
         [Test]

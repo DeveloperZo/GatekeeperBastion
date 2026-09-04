@@ -79,6 +79,10 @@ namespace GatekeepersProtocol.Sim
             var b = new BoarderState();
             b.Id = id ?? string.Empty;
             b.Name = string.IsNullOrEmpty(name) ? DefaultName : name;
+            // The automatic grant (2026-09-04). The field's own default stays None so an old
+            // save that omits the key is still read as "unset" and picks the grant up through
+            // BoarderProtocol.ValidateEquip, which is the one path every load crosses.
+            b.EquippedProtocol = BoarderProtocol.GrantedProtocol;
             b.EnsureArrays();
             return b;
         }

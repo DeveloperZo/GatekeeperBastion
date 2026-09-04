@@ -107,7 +107,14 @@ namespace GatekeepersProtocol.Game
             long net = gross - repair;
             long banked = Meta != null ? Meta.BankedSalvage : 0;
             string scene = SceneFlow.CombatDisplayName.Replace(' ', '_');
-            Log.Metric("Run", "summary schema=1"
+            // schema 2 (2026-09-04): protocol= joins the field set. The version moves with the
+            // fields or it is decoration — a frozen number on a growing line is how a schema
+            // turns into a diary. wave-report matches the "summary schema=" prefix and not the
+            // number, so readers of schema-1 logs keep working.
+            string protocol = Meta != null && Meta.EquippedProtocol != BoarderProtocolId.None
+                ? BoarderProtocol.ProtocolName(Meta.EquippedProtocol)
+                : "none";
+            Log.Metric("Run", "summary schema=2"
                 + " result=" + result
                 + " cause=" + (string.IsNullOrEmpty(cause) ? "none" : cause)
                 + " wave=" + Sim.CurrentWaveIndex
@@ -124,6 +131,7 @@ namespace GatekeepersProtocol.Game
                 + " config=" + GameSession.CheckpointConfig
                 + " configTaint=" + (GameSession.CheckpointConfigTaint ? 1 : 0)
                 + " dev=" + (GameSession.DevTainted ? 1 : 0)
+                + " protocol=" + protocol
                 + " scene=" + scene
                 + " seed=" + Sim.Seed);
         }

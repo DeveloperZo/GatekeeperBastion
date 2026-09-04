@@ -5,6 +5,8 @@ Update trigger: any milestone that touches this mechanic, in the same change.
 Last updated: 2026-08-31 (DEPOT Protocol — enum Depot)
 Where:
 - Protocol ids, doctrine/crew/personal/passive mapping, windows, cooldowns, and the 0-cost claim — Assets/Scripts/Sim/Meta/BoarderProtocol.cs (BoarderProtocolId, DoctrineOf, CrewAbilityOf, PersonalAbilityOf, PassiveAt, Window, Cooldown, TryClaim)
+- The automatic grant, and the load path that hands it to every save — Assets/Scripts/Sim/Meta/BoarderProtocol.cs (GrantedProtocol, ValidateEquip) and Assets/Scripts/Sim/Meta/BoarderState.cs (CreateNew), pinned by Assets/Tests/EditMode/Meta/ProtocolGrantTests.cs
+- The protocol on both machine log lines — Assets/Scripts/Game/Bastion/GameController.Client.cs (RunBeginsFields) and Assets/Scripts/Game/Bastion/GameController.EndScreen.cs (LogRunMetric, schema 2)
 - The offer rule: it stands only while no protocol is worn, deals in catalog order and never deals the held one — Assets/Scripts/Sim/Meta/ProtocolOffer.cs (IsPickPending, Deal, RefuseReason, CardCount)
 - Deck mode versus catalog mode, and the two unbuilt sheets padding the catalog as Coming Soon rows — Assets/Scripts/Game/Ship/CrewQuartersStation.cs (DeckAvailable, BuildPickMode, BuildCatalogMode, BuildSheetMode, ComingSoonNames)
 - Authored sheet copy, one row set per protocol — Assets/Scripts/Sim/Meta/BoarderSheets.cs
@@ -20,7 +22,7 @@ Where:
 
 # Protocols
 
-A protocol is the identity a Boarder embarks wearing, claimed at CREW QUARTERS on the Ship and fixed for the whole Boarding. A claim costs nothing and is never lost to a bad Boarding, but only one is worn at a time and it cannot be swapped aboard the Bastion. In the fight it gives the Boarder two keys: a burst whose effect lands on the crew and whose cost lands on the caster, and a burst for the caster alone. The sheets differ in the four rows each one answers, and two of the named sheets are designed but not yet sold.
+A protocol is the identity a Boarder embarks wearing, fixed for the whole Boarding. Every Boarder is granted DEPOT without claiming it, so nobody ever fights with no crew ability, no personal ability and no doctrine; the other sheets are claimed at CREW QUARTERS on the Ship and replace whatever is worn. A claim costs nothing and is never lost to a bad Boarding, but only one is worn at a time and it cannot be swapped aboard the Bastion. In the fight it gives the Boarder two keys: a burst whose effect lands on the crew and whose cost lands on the caster, and a burst for the caster alone. The sheets differ in the four rows each one answers, and two of the named sheets are designed but not yet sold.
 
 ## Game
 
@@ -28,7 +30,7 @@ A protocol is the identity I embark wearing, and it is the only thing on the Shi
 
 Every sheet answers the same four rows, in the same order. A doctrine, always on, changing what my hardware does in my hands without changing what the hardware is. A crew burst, whose output belongs to whoever is near and whose cost belongs to me. A personal burst, mine alone. And a passive, where the sheet has one.
 
-The plainest sheet is **DEPOT**. It costs nothing, same as the free Secondary, and for the same reason: the claiming is the lesson. Two more are claimable beside it, and the roster is not finished — two further sheets are named and not yet sold.
+The plainest sheet is **DEPOT**. It is granted rather than claimed, the way the Secondary is free, and for a stronger reason than the lesson: a Boarder with no protocol has two dead keys and dies markedly faster, and the play data could not tell that Boarder from any other until the log started naming the protocol. Two more are claimable beside it, and the roster is not finished — two further sheets are named and not yet sold.
 
 One protocol at a time, fixed the moment I embark. The bursts refuse if I embarked wearing nothing, and the NAV MAP will let me do exactly that.
 
@@ -49,7 +51,7 @@ Wearing nothing, both keys refuse. The NAV MAP warns and embarks anyway.
 
 ### Rules
 
-Claim at CREW QUARTERS. While none is worn the station deals a pick deck; after that a swap is a catalog claim, still costing nothing. Two named sheets pad that list as Coming Soon and cannot be claimed. Claiming equips it — a sheet that owns a passive arrives wearing its first — and is refused mid-Boarding, so swapping is a Ship action.
+Claim at CREW QUARTERS. DEPOT is already worn on a fresh Boarder and reads as EQUIPPED there; a swap is a catalog claim, still costing nothing. Two named sheets pad that list as Coming Soon and cannot be claimed. Claiming equips it — a sheet that owns a passive arrives wearing its first — and is refused mid-Boarding, so swapping is a Ship action.
 
 One protocol at a time. Embark binds the equipped protocol and passive onto the rig for the whole Boarding.
 

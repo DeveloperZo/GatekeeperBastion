@@ -85,10 +85,18 @@ namespace GatekeepersProtocol.Game
         {
             string primary = "none", primaryTier = "0", secondary = "none", secondaryTier = "0";
             string rig = "none";
+            // Protocol is a run-deciding input and was the one the log never carried: a FORGE
+            // run and a protocol-less one read identically, so no play data could separate
+            // them (2026-09-04). Named, never numbered — the id is save-adjacent.
+            string protocol = "none", passive = "none";
             long banked = 0;
             if (meta != null)
             {
                 banked = meta.BankedSalvage;
+                if (meta.EquippedProtocol != BoarderProtocolId.None)
+                    protocol = BoarderProtocol.ProtocolName(meta.EquippedProtocol);
+                if (meta.EquippedPassive != BoarderAbilityId.None)
+                    passive = BoarderProtocol.DisplayName(meta.EquippedPassive);
                 if (meta.EquippedPrimary != WeaponId.None)
                 {
                     primary = WeaponCatalog.Def(meta.EquippedPrimary).displayName;
@@ -103,7 +111,8 @@ namespace GatekeepersProtocol.Game
             }
             return "startWave=" + startWave + " primary=" + primary + " primaryTier=" + primaryTier
                 + " secondary=" + secondary + " secondaryTier=" + secondaryTier
-                + " rig=" + rig + " banked=" + banked;
+                + " rig=" + rig + " protocol=" + protocol + " passive=" + passive
+                + " banked=" + banked;
         }
         #endregion
 

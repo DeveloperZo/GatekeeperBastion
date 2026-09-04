@@ -46,7 +46,9 @@ namespace GatekeepersProtocol.Tests
         public void Protocol_AnyOfTheThreeOnSale_ClaimedOrNot()
         {
             var m = MetaState.CreateNew();
-            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
+            // Re-keyed 2026-09-04: a fresh Boarder carries the grant. The point of the test is
+            // unchanged — the range door offers all three whatever is equipped.
+            Assert.AreEqual(BoarderProtocol.GrantedProtocol, m.EquippedProtocol);
             foreach (var p in BoarderProtocol.ShopProtocols())
             {
                 var kit = RangeLoadout.From(m, p, WeaponId.Br12Shotgun, WeaponId.SecD);

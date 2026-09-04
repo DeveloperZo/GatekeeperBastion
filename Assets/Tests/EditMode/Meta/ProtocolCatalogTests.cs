@@ -146,7 +146,11 @@ namespace GatekeepersProtocol.Tests
             foreach (var id in Sold)
             {
                 var m = MetaState.CreateNew();
-                Assert.IsTrue(BoarderProtocol.TryClaim(m, id), "claim " + id);
+                // The granted protocol is already equipped, so its claim refuses as owned
+                // (2026-09-04). Every other id is claimed the way it always was.
+                if (id != BoarderProtocol.GrantedProtocol)
+                    Assert.IsTrue(BoarderProtocol.TryClaim(m, id), "claim " + id);
+                Assert.AreEqual(id, m.EquippedProtocol, "equipped " + id);
                 var expectedPassive = BoarderProtocol.PassiveCount(id) > 0
                     ? BoarderProtocol.PassiveAt(id, 0)
                     : BoarderAbilityId.None;
@@ -159,17 +163,19 @@ namespace GatekeepersProtocol.Tests
             }
         }
 
-        /// <summary>Criterion 9: an id this build does not sell loads as None. It must not
-        /// throw, and it must not survive as an id no switch has an arm for.</summary>
+        /// <summary>Criterion 9, re-keyed 2026-09-04: an id this build does not sell loads as
+        /// the GRANT. It must not throw, and it must not survive as an id no switch has an arm
+        /// for. The resolution target moved from None to the grant so the load cannot produce
+        /// a Boarder with no abilities.</summary>
         [Test]
-        public void UnknownProtocolId_LoadsAsNone()
+        public void UnknownProtocolId_LoadsAsTheGrant()
         {
             // The equipped pair rides the Boarder, so this is a Boarder document.
             const string json =
                 "{\"SaveVersion\":13,\"EquippedProtocol\":42,\"EquippedPassive\":0}";
             var m = BoarderState.FromJson(json);
             Assert.IsNotNull(m, "a current-version Boarder document loads");
-            Assert.AreEqual(BoarderProtocolId.None, m.EquippedProtocol);
+            Assert.AreEqual(BoarderProtocol.GrantedProtocol, m.EquippedProtocol);
             Assert.AreEqual(BoarderAbilityId.None, m.EquippedPassive);
 
             // A sold protocol wearing a passive it does not own keeps the protocol and

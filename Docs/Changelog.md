@@ -8,6 +8,12 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-04: **DEPOT is an automatic grant, and the log names the protocol.** A fresh
+  Boarder and every load now carry DEPOT rather than None, so no Boarding is fought with two
+  dead keys; the run-begins line gains `protocol=` and `passive=`, and the summary line gains
+  `protocol=` at `schema=2`. From the 2026-09-04 run, which was carried by FORGE and never
+  said so, leaving `M112`'s evidence base unable to separate two populations. Ruling in
+  `Decisions.md`.
 - 2026-09-03: **`M115` completed.** Closed on the offline suite — the zone-final-wave,
   shutoff and resolution tests are the gate, the three terminal prompts are pinned in source,
   and the milestone's own Verification 3 says the playthrough path does not gate. Active

@@ -179,6 +179,11 @@ namespace GatekeepersProtocol.Tests
         public void CrewOpensEarly_ForAnUnclaimedProtocol_AndShutsAgainOnceOneIsHeld()
         {
             var m = MetaState.CreateNew();
+            // The protocol-less state is CONSTRUCTED here since 2026-09-04, because the grant
+            // means no save produces it any more. The early door is kept and kept tested: it
+            // is the guard that a Boarder who somehow reaches the ship with nothing equipped
+            // can still get into the room that hands protocols out.
+            m.EquippedProtocol = BoarderProtocolId.None;
             DemoProgress.SkipShipTutorial(m);   // the ship fight is behind us; CREW is not hidden
             Assert.IsFalse(m.DemoCrewMenuUnlocked,
                 "the fixture starts past the unlock, so it proves nothing about the early door");

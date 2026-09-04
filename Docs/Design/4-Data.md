@@ -734,11 +734,15 @@ real sessions hours from deletion. The Session tab's *Include PlayMode* toggle i
 **off by default** for pre-quarantine files still in `Logs/`; everything kept remains
 labeled, never silently dropped.
 
-**Run summary Metric line (M103, schema 1).** Every Run end also emits one
+**Run summary Metric line (M103, schema 2 since 2026-09-04).** Every Run end also emits one
 machine line beside the prose (`GameController.EndScreen.LogRunMetric`):
-`[Run] summary schema=1 result=<lost|stripped|docked|abandoned> cause=… wave= startWave=
+`[Run] summary schema=2 result=<lost|stripped|docked|abandoned> cause=… wave= startWave=
 duration= gross= repair= net= banked= respawns= seats= dial= checkpoint= config=
-configTaint= dev= scene= seed=`. Facts only — kills and deaths stay on their event
+configTaint= dev= protocol= scene= seed=`. **Schema 2 adds `protocol=`**, the named
+protocol the Run was played under, because schema 1 could not tell a FORGE run from a
+protocol-less one and every balance reading averaged the two. The run-begins line carries
+`protocol=` and `passive=` for the same reason. Readers match the `summary schema=` prefix
+rather than the number, so schema-1 logs still parse. Facts only — kills and deaths stay on their event
 lines and the readers do the arithmetic (the no-counters-in-Assets decision,
 `Decisions.md`). `checkpoint`/`config` name the F12/F11 beat and loadout row the
 session was built from. **`configTaint` is beat-relative** (owner ruling 2026-08-24):
