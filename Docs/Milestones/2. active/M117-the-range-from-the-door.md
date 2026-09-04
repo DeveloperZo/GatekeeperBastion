@@ -41,6 +41,11 @@ Zo, 2026-09-03, on the second cut's six keys: "Dimensions: Kind - Z / Distance -
 on wave start." So the board is two keys and the draw, the breach is 20 m from the firing
 line, the closets are gone, and the bypass with them.
 
+Zo, 2026-09-03, from the range: "We need a dimension for distance. This should be triggered
+at a terminal." So the breach distance is the one surface on the lane — a terminal beside the
+firing line whose press cycles the mark the next wave breaches from — and every mark carries
+a spawn point.
+
 Leverage: **#6 information flows** (the panel and the readout tell the player what a kit
 does before a Boarding), **#5 rules** (what the range hands out, and that it draws waves).
 Higher tiers are wrong because the range serves the loop, it is not one; lower tiers are
@@ -63,17 +68,19 @@ wrong because no constant makes a dev digit a door.
 3. **The board replaces the dev digits.** One `RangeBoard` on the range root, live
    anywhere on the lane — no surface is looked at or walked to. The dimensions are Zo's
    (2026-09-03): `Z` target kind (Default, Hunter, Thief, Cloaker), `X` wave size (small 1,
-   normal 11, large 25 — `PracticeWave`), `T` draws; the breach is fixed at
-   `PracticeWave.SpawnMetres` (20 m) from the firing line. Bound in `Controls` under a
-   `Range` context that shares no key with anything live in a fight. The readout prints the
-   board — every key beside its current value, or the standing count while a wave is live —
-   so nothing is memorised. No cooldown bypass: the timers are reset once, from outside, as a
+   normal 11, large 25 — `PracticeWave`), `T` draws. The breach distance is the fourth
+   dimension and the one surface on the lane: a `RangeDistanceTerminal` beside the firing
+   line whose `E` cycles the mark the next wave breaches from (`PracticeWave.Distances`, 5 /
+   14 / 20 / 30 / 60 / 90 m, 20 until pressed). Bound in `Controls` under a `Range` context
+   that shares no key with anything live in a fight. The readout prints the board — every
+   key beside its current value, the breach among them, or the standing count while a wave
+   is live — so nothing is memorised. No cooldown bypass: the timers are reset once, from outside, as a
    wave is drawn. The `DevConsole` range rows are gone; the dev console keeps its general
    rows. Every action logs.
 4. **The practice wave.** `T` draws `X` bodies of `Z` through the real `WaveDirector`,
    `WaveCadence` and `WaveSpawner` — wave 1's group width, mean gap and health multiplier,
-   the roster rewritten to one kind at the size — breaching at the 20 m marker and nowhere
-   else, refused (and said so) while one is live. It pays nothing, banks nothing, holds no
+   the roster rewritten to one kind at the size — breaching at the terminal's mark and
+   nowhere else, refused (and said so) while one is live. It pays nothing, banks nothing, holds no
    Assault open past its last body. The Hatch is switched off. The player stands on the
    firing line on the first frame.
 5. **The record.** `3-Mechanics.md`'s "never drawing a Wave" and `The-Range.md`'s "Coming
@@ -114,14 +121,16 @@ secondary, and per-weapon points (owned or base); `From(MetaState, choices)`.
 readout prints. (2026-09-02's `RangeMarkPost`, `RangeControlConsole` and `RangeWaveTerminal`
 were built and deleted the next day on Zo's play; the six-key board lasted one message.)
 **Create** `Assets/Scripts/Sim/Range/PracticeWave.cs` — `PracticeSize`, the three counts,
-`SpawnMetres`. **Change** `RunSim.Practice.cs` — `DrawPracticeWave(kind, size)`.
+`Distances`, `DefaultMetres`. **Change** `RunSim.Practice.cs` — `DrawPracticeWave(kind, size)`.
+**Create** `Assets/Scripts/Game/Range/RangeDistanceTerminal.cs` — the breach dimension: a
+spawn point per mark, `E` cycles, the board hands the chosen point to the spawner.
 **Change** `Assets/Scripts/Game/Input/Controls.cs`, `PlayerInputFrame.cs` — `RangeKind` on
 `Z`, `RangeSize` on `X`, a `Range` context, off the shortcut panel (the readout teaches them).
 **Change** `Assets/Scripts/Game/Range/RangeRules.cs` — the bypass deleted; `ResetCooldowns`.
 **Change** `Assets/Scripts/Game/Range/RangeReadout.cs` — prints the board.
-**Change** `Assets/Scripts/Editor/Scenes/SceneBuilder.Range.cs` — one breach marker at 20 m
-on the spawner's list instead of two closets; the board on the range root; the marks stay as
-posts to read distance by.
+**Change** `Assets/Scripts/Editor/Scenes/SceneBuilder.Range.cs` — a spawn point on every
+mark and the distance terminal beside the firing line instead of two closets; the board on
+the range root; the marks are the Sim's `Distances`, posts to read distance by.
 **Change** `Assets/Scripts/Game/Dev/DevConsole.Range.cs` — delete the range digit rows.
 **Change** `Docs/Play Mechanics/The-Range.md`, `Docs/Design/3-Mechanics.md`,
 `Docs/Decisions.md`, `Docs/Architecture/README.md` (`menu_rows` only if a row is added — none
@@ -142,8 +151,9 @@ is planned; the sentinel drives the builders).
    while one is live, and returns to Prep with nothing owed; the log's `group k … breached
    at` lines from one range wave.
 4. Playthrough path — from the Ship: hold `E` at the door beside the ARMORY, pick FORGE +
-   MR-35 + MK-1, confirm; on the firing line press `Z` to Hunter, `X` to large, `T`; the wave
-   breaches 20 m out with every cooldown at zero; return through the door behind you.
+   MR-35 + MK-1, confirm; on the firing line press `Z` to Hunter, `X` to large, `E` on the
+   terminal to 60 m, `T`; the wave breaches 60 m out with every cooldown at zero; return
+   through the door behind you.
 
 ## Do not build
 
@@ -152,8 +162,10 @@ is planned; the sentinel drives the builders).
 - Dev-only digits kept "just in case".
 - A verb you walk to. A post, a console or a terminal on the lane is the 2026-09-02 cut Zo
   rejected; the range is a shooting range, and its verbs are keys.
-- A cooldown bypass, a distance dial, a wave or shape picker, or a standing-target ledger on
-  the board. Two keys and the draw (Zo, 2026-09-03); anything more is the six-key cut back.
+- A cooldown bypass, a wave or shape picker, or a standing-target ledger on the board. Two
+  keys, the terminal and the draw (Zo, 2026-09-03); anything more is the six-key cut back.
+- A second surface on the lane. The distance terminal is the one thing pressed in place,
+  and it stands at the firing line.
 
 ## Depends on / Unblocks
 

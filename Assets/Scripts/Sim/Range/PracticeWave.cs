@@ -28,10 +28,18 @@ namespace GatekeepersProtocol.Sim
         /// wall.</summary>
         public const int LargeCount = 25;
 
-        /// <summary>Metres from the firing line to where a practice wave breaches. Zo,
-        /// 2026-09-03: "Distance - default to 20 m" — a shooting range, not a walk; the first
-        /// cut's closets 90 m down the lane put the fight a minute away from the press.</summary>
-        public const int SpawnMetres = 20;
+        /// <summary>Metres from the firing line a practice wave breaches at when nothing has
+        /// been chosen. Zo, 2026-09-03: "Distance - default to 20 m" — a shooting range, not a
+        /// walk; the first cut's closets 90 m down the lane put the fight a minute away from
+        /// the press.</summary>
+        public const int DefaultMetres = 20;
+
+        /// <summary>The marks a wave can breach at, nearest first: the range figures of the
+        /// three Primaries (30, 60, 90), two short marks (5, 14) and the default. Each mark
+        /// is a post pair on the lane and a spawn point the distance terminal cycles through
+        /// (Zo, 2026-09-03: "We need a dimension for distance. This should be triggered at a
+        /// terminal").</summary>
+        public static readonly int[] Distances = { 5, 14, 20, 30, 60, 90 };
 
         public static int Count(PracticeSize size)
         {

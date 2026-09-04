@@ -470,7 +470,7 @@ normal, large / Cooldown - no bypass. reset them on wave start."
 | small | **1** | one body: the time-to-kill read the range was built for (M99) |
 | normal | **11** | wave 1's roster, `11 + 7i` at i = 0 — the normal a Boarding opens with |
 | large | **25** | wave 3's roster, `11 + 7i` at i = 2 — the first wave the shape table stands a Thief on |
-| breach | **20 m** | from the firing line; the first cut's closets sat 90 m out and put the fight a minute from the press |
+| breach | **20 m** default; 5 / 14 / 20 / 30 / 60 / 90 at the terminal | from the firing line; the first cut's closets sat 90 m out and put the fight a minute from the press; the marks are the three Primaries' range figures, two short marks and the default (Zo: "a dimension for distance ... triggered at a terminal") |
 | beat | wave 1's | group width, mean gap and health multiplier are `WaveDirector.NextWave(0)`'s; the roster is rewritten to one kind, no debut gate |
 | cooldowns | reset on draw | every timer to zero once as the wave is drawn; no bypass |
 

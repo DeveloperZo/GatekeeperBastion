@@ -46,10 +46,9 @@ namespace GatekeepersProtocol.EditorTools
         /// breaking whichever scene was baked less recently.</summary>
         const string RangeNavMeshPath = "Assets/Scenes/Range-NavMesh.asset";
 
-        /// <summary>Metres down the lane at which a Gatekeeper can be stood. The range values of
-        /// BR-12, MR-35 and PRI-C plus the two short marks, so falloff is checked by walking
-        /// rather than by reading a table (criterion 7).</summary>
-        static readonly int[] RangeMarks = { 5, 14, 30, 60, 90 };
+        /// <summary>Metres down the lane a wave can breach at — the Sim's list, so the posts,
+        /// the spawn points and the terminal's cycle are one table.</summary>
+        static int[] RangeMarks => PracticeWave.Distances;
 
         /// <summary>How far inside the hall's near wall the firing line stands. Everything
         /// else is MEASURED off the geometry the kit actually generated: the hall is not centred
@@ -61,9 +60,9 @@ namespace GatekeepersProtocol.EditorTools
         /// wall.</summary>
         const float EndMargin = 1f;
 
-        /// <summary>The marker a practice wave breaches at, PracticeWave.SpawnMetres down
-        /// the lane from the firing line (Zo, 2026-09-03: "default to 20 m").</summary>
-        const string SpawnMarkerName = "Range_Spawn";
+        /// <summary>The distance terminal's box beside the firing line, found by name after
+        /// the marks exist so it can be wired.</summary>
+        const string DistanceTerminalName = "Distance Terminal";
 
         static float _firingLineX;
         static float _laneZ;
@@ -115,7 +114,7 @@ namespace GatekeepersProtocol.EditorTools
                 if (hall == null) return;
                 if (!MeasureLane(hall)) return;
                 Transform marksRoot = PlaceMarks(env.transform);
-                SpawnPoint breach = PlaceSpawnMarker(marksRoot);
+                SpawnPoint[] breaches = PlaceSpawnPoints(marksRoot);
                 PlaceFiringLine();
                 // The way back, proud of the near wall behind the firing line. Authored here
                 // as well as by the door sentinel, so a rebuild of this scene keeps its door.
@@ -125,7 +124,7 @@ namespace GatekeepersProtocol.EditorTools
                 StripHatch();
                 StripBastionPortals();
                 GameObject root = EnsureRangeRoot(marksRoot);
-                if (root != null) WireRangeFixtures(root, breach);
+                if (root != null) WireRangeFixtures(root, marksRoot, breaches);
 
                 BakeNavMesh(env, RangeNavMeshPath);
                 EditorSceneManager.MarkSceneDirty(scene);
@@ -138,7 +137,7 @@ namespace GatekeepersProtocol.EditorTools
                 AssetDatabase.SaveAssets();
                 Debug.Log("[SceneBuilder] Range.unity built — one ControlRoom hall, firing line at x="
                     + _firingLineX.ToString("0.#") + ", marks at " + string.Join("/", RangeMarks)
-                    + " m, breach at " + PracticeWave.SpawnMetres + " m, board wired, NavMesh baked.");
+                    + " m, a spawn point on each, distance terminal and board wired, NavMesh baked.");
             }
             finally
             {
@@ -312,8 +311,12 @@ namespace GatekeepersProtocol.EditorTools
 
             Box("Firing_Line", new Vector3(_firingLineX, 0.01f, _laneZ),
                 new Vector3(0.12f, 0.02f, 6f), palette.Breach, marks.transform);
-            // No fixture boxes: the range's verbs are keys on the board (Zo, 2026-09-03), and
-            // the posts are there to read distance by, not to press.
+
+            // The one surface on the lane: the distance terminal, a step off the firing line
+            // so a body at 5 m is not between the Boarder and it (Zo, 2026-09-03: "a dimension
+            // for distance ... triggered at a terminal"). Everything else is a key on the board.
+            Box(DistanceTerminalName, new Vector3(_firingLineX + 0.6f, 0.55f, _laneZ + 2.4f),
+                new Vector3(0.9f, 1.1f, 0.5f), palette.Hatch, marks.transform);
             return marks.transform;
         }
 
@@ -361,21 +364,31 @@ namespace GatekeepersProtocol.EditorTools
             return root;
         }
 
-        /// <summary>Where a practice wave breaches: one SpawnPoint on the lane's centreline,
-        /// PracticeWave.SpawnMetres past the firing line, under Marks so the bake sees nothing
-        /// (an empty transform). The first cut hung two of the Bastion's closets 90 m down the
-        /// lane; Zo, 2026-09-03: "I need ability to go from spawn to firing quickly."</summary>
-        static SpawnPoint PlaceSpawnMarker(Transform marks)
+        /// <summary>A spawn point on every mark, facing the firing line so a body breaches
+        /// looking at the Boarder. Empty transforms under the mark, so the bake sees nothing.
+        /// The first cut hung two of the Bastion's closets 90 m down the lane; Zo, 2026-09-03:
+        /// "I need ability to go from spawn to firing quickly."</summary>
+        static SpawnPoint[] PlaceSpawnPoints(Transform marks)
         {
-            var go = new GameObject(SpawnMarkerName);
-            go.transform.SetParent(marks, false);
-            go.transform.localPosition = new Vector3(_firingLineX + PracticeWave.SpawnMetres, 0f, _laneZ);
-            // Facing the firing line, so a body breaches looking at the Boarder.
-            go.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
-            var sp = go.AddComponent<SpawnPoint>();
-            SetInt(sp, "weight", 1);
-            Debug.Log("[SceneBuilder] Range breach at " + go.transform.position.ToString("0.#"));
-            return sp;
+            var points = new SpawnPoint[RangeMarks.Length];
+            for (int i = 0; i < RangeMarks.Length; i++)
+            {
+                Transform mark = marks.Find("RangeMark_" + RangeMarks[i]);
+                if (mark == null)
+                {
+                    Debug.LogError("[SceneBuilder] Range: no mark at " + RangeMarks[i] + " m to breach from.");
+                    return null;
+                }
+                var go = new GameObject("Spawn_" + RangeMarks[i] + "m");
+                go.transform.SetParent(mark, false);
+                go.transform.localPosition = Vector3.zero;
+                go.transform.localRotation = Quaternion.Euler(0f, -90f, 0f);
+                var sp = go.AddComponent<SpawnPoint>();
+                SetInt(sp, "weight", 1);
+                points[i] = sp;
+            }
+            Debug.Log("[SceneBuilder] Range spawn points on " + string.Join("/", RangeMarks) + " m.");
+            return points;
         }
 
         /// <summary>The Bastion copy's Hatch is a scene root, so StripBastionRooms never sees
@@ -399,9 +412,9 @@ namespace GatekeepersProtocol.EditorTools
         /// <summary>The board and the spawner, wired through SerializedObject so the
         /// references are the scene's rather than a Bind call's: the board on the range root
         /// beside the console, the rules and the readout it drives, the readout pointed back at
-        /// it, and the breach marker alone on the spawner's explicit list so a range wave
-        /// breaches there and nowhere else.</summary>
-        static void WireRangeFixtures(GameObject root, SpawnPoint breach)
+        /// it, the distance terminal with a spawn point per mark, and the default mark's point
+        /// alone on the spawner's explicit list until the board hands it another.</summary>
+        static void WireRangeFixtures(GameObject root, Transform marks, SpawnPoint[] breaches)
         {
             var console = root.GetComponent<RangeConsole>();
             var rules = root.GetComponent<RangeRules>();
@@ -415,6 +428,29 @@ namespace GatekeepersProtocol.EditorTools
             SetRef(board, "_game", game);
             SetRef(readout, "_board", board);
 
+            SpawnPoint breach = null;
+            Transform terminalBox = marks.Find(DistanceTerminalName);
+            if (terminalBox == null)
+                Debug.LogWarning("[SceneBuilder] Range: no " + DistanceTerminalName + " box.");
+            else
+            {
+                var terminal = Ensure<RangeDistanceTerminal>(terminalBox.gameObject);
+                var so = new SerializedObject(terminal);
+                SerializedProperty pts = so.FindProperty("_points");
+                SerializedProperty ms = so.FindProperty("_metres");
+                pts.arraySize = breaches.Length;
+                ms.arraySize = breaches.Length;
+                for (int i = 0; i < breaches.Length; i++)
+                {
+                    pts.GetArrayElementAtIndex(i).objectReferenceValue = breaches[i];
+                    ms.GetArrayElementAtIndex(i).intValue = RangeMarks[i];
+                    if (RangeMarks[i] == PracticeWave.DefaultMetres) breach = breaches[i];
+                }
+                so.ApplyModifiedPropertiesWithoutUndo();
+                SetRef(board, "_distance", terminal);
+            }
+            if (breach == null) breach = breaches[0];
+
             var spawner = Object.FindFirstObjectByType<WaveSpawner>();
             if (spawner == null)
                 Debug.LogWarning("[SceneBuilder] Range: no WaveSpawner to hand the breach to.");
@@ -427,8 +463,8 @@ namespace GatekeepersProtocol.EditorTools
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            Debug.Log("[SceneBuilder] Range fixtures: board on the range root, spawner on the "
-                + PracticeWave.SpawnMetres + " m breach.");
+            Debug.Log("[SceneBuilder] Range fixtures: board on the range root, distance terminal on "
+                + breaches.Length + " spawn points, spawner on the " + PracticeWave.DefaultMetres + " m one.");
         }
 
         static T Ensure<T>(GameObject go) where T : Component

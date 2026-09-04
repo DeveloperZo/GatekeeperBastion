@@ -8,6 +8,9 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-03: **`M117` — the distance dimension, at a terminal.** Zo, from the range: a
+  terminal beside the firing line cycles the mark the next wave breaches from (5 to 90 m, 20
+  until pressed); every mark carries a spawn point.
 - 2026-09-03: **`M117` — the board is two keys and the draw.** Zo's dimensions replace the
   six-key cut: Z kind (all four), X wave size (small 1, normal 11, large 25), T draw; the
   wave breaches 20 m from the firing line instead of from two closets; the cooldown bypass is

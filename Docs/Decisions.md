@@ -754,5 +754,6 @@ to interactions in range. we should add spawn rooms and terminal to press and ad
   Zo, 2026-09-03, "I shouldnt have to walk to generate anything. Its a shooting range." The
   second (six keys: kind, distance, stand, clear, wave, shape) lasted one message; the board
   is Zo's dimensions of the same day — `Z` kind, `X` wave size (small 1, normal 11, large
-  25), `T` draw, the breach fixed 20 m from the firing line — and the M99 cooldown bypass is
-  cut: "no bypass. reset them on wave start."
+  25), `T` draw, the breach 20 m from the firing line until the distance terminal beside the
+  firing line is pressed ("We need a dimension for distance. This should be triggered at a
+  terminal") — and the M99 cooldown bypass is cut: "no bypass. reset them on wave start."

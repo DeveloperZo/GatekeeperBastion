@@ -29,7 +29,11 @@ namespace GatekeepersProtocol.Tests
                 "normal is the Bastion's wave 1");
             Assert.AreEqual(new WaveDirector().NextWave(2, 0, 1).enemyCount, PracticeWave.Count(PracticeSize.Large),
                 "large is wave 3's roster");
-            Assert.AreEqual(20, PracticeWave.SpawnMetres);
+            Assert.AreEqual(20, PracticeWave.DefaultMetres);
+            CollectionAssert.AreEqual(new[] { 5, 14, 20, 30, 60, 90 }, PracticeWave.Distances,
+                "the marks, nearest first, with the default among them");
+            Assert.GreaterOrEqual(System.Array.IndexOf(PracticeWave.Distances, PracticeWave.DefaultMetres), 0,
+                "the default is one of the marks");
             Assert.AreEqual(PracticeSize.Normal, PracticeWave.Next(PracticeSize.Small));
             Assert.AreEqual(PracticeSize.Small, PracticeWave.Next(PracticeSize.Large), "the size wraps");
         }
