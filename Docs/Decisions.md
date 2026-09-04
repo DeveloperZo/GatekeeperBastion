@@ -728,6 +728,38 @@ What every lever holds still: the `11 + 7i` roster and its HP ladder, the debut 
 one-lane spine. Variance redistributes what a wave is, never how much of it there is — the
 "thousands on screen" and idle-dial refusals stand. Direction is cut (above).
 
+## Locked — the doorways widen to 10 m, and one rule resolves them (Zo, 2026-09-04)
+
+Zo: "we should also greatly widen the doorways and additionally adding another entrance so
+there's more funnel routes for enemies". The widening landed; the second entrance did not,
+and the reason is below.
+
+- **`DoorOpeningWidth` 6 to 10.** At 6 a passage carried about one spawn group abreast, so a
+  wave arriving in groups of up to seven queued at the mouth and the fight was decided by
+  whoever held the gap. This is the second widening; the first was 3 to 6 on 2026-08-28 for
+  firing angles.
+- **The share cap moves with it.** `DoorOpeningMaxShare` 0.4 to 0.65, named as a constant
+  instead of a literal repeated in three places. At 0.4 a Half room caps at 6.4 m, so raising
+  the width alone would have cut a 10 m mouth on the OpenArea side of a passage and 6.4 m on
+  the Half side. Rooms build their own walls with no knowledge of their neighbour, so nothing
+  would have noticed.
+- **The rule lives in the Sim, once.** `BastionKit.ApertureWidth` replaces three copies of the
+  same arithmetic in the Game layer, one of which still carried the old literal. The offline
+  gate is `BastionApertureAgreementTests`, which reads the shipped layout so it follows the
+  level, and which proves it can fail by pushing the width one centimetre past the tightest
+  cap and asserting the kinds then disagree.
+- **The second entrance is NOT built, and needs two calls from Zo.** Placement is one: the
+  Hatch room R1 has all four sides occupied, so a new closet must hang off R2 or R3, the
+  terminal rooms, which makes a terminal trip contested rather than safe. That is a flank and
+  not a rear approach, so it clears the 2026-09-02 direction cut, but the cut is Zo's and so
+  is its edge. Naming is the other: `GameController.Wallets.cs` reserves ids `S7`-`S12` for a
+  `minSeats=3` band that nothing currently authors, so a new closet either takes a name from
+  that band or the band is declared dead.
+- **Widening is not spacing.** `coop-bastion-complexity.md` pre-registered the one-doorway
+  kill as "funnel spacing, not numbers". A wider door is a number. If standing at the Hatch
+  and mowing converging streams still beats everything, this change is not the answer and the
+  second entrance is.
+
 ## Locked — VEIL's power is tempo, not crit (Zo, 2026-09-04)
 
 VEIL buys survival and nothing else: Cloak leaves the acquisition lists, firing collapses it,

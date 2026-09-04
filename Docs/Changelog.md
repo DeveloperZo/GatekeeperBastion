@@ -8,6 +8,12 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-04: **The doorways widen to 10 m.** `DoorOpeningWidth` 6 to 10 and the share cap
+  0.4 to 0.65, because at 0.4 a Half room capped at 6.4 and the two ends of a shared passage
+  would have disagreed. The resolving rule moves into the Sim as `BastionKit.ApertureWidth`,
+  replacing three copies in the Game layer, one of which still carried the old literal. The
+  second entrance Zo asked about is not built: it needs a placement call against the
+  2026-09-02 direction cut and a ruling on the reserved `S7`-`S12` id band.
 - 2026-09-04: **VEIL gains tempo, not crit — recut to kills the same day.** Every gatekeeper
   the wearer kills while Cloak is cooling takes 2 s off the wait, so killing is the way back
   into stealth and a wearer who kills nothing waits as long as before. The first cut refunded

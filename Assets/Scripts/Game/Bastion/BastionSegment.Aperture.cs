@@ -48,8 +48,9 @@ namespace GatekeepersProtocol.Game
             float wallHeight = BastionKit.StoreyHeight - BastionKit.FloorSlabThickness;
             float wallCenterY = wallHeight * 0.5f;
             float thickness = BastionKit.WallThickness;
-            float shortSide = Mathf.Min(width, depth);
-            float openingWidth = Mathf.Min(DoorOpeningWidth, shortSide * 0.4f);
+            // ONE copy of the rule, in the Sim: the two ends of a shared passage must agree.
+            float openingWidth = BastionKit.ApertureWidth(
+                blockKind, DoorOpeningWidth, DoorOpeningMaxShare);
 
             BuildSide(se, SideKind(se), SideAlong(se), width, depth, wallHeight, wallCenterY, thickness, openingWidth);
             BastionSegmentVisuals.RebuildFace(this, _geomRoot, se);

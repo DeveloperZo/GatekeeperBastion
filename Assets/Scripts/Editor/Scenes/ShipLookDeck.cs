@@ -75,13 +75,11 @@ namespace GatekeepersProtocol.EditorTools
                 Debug.LogWarning($"[ShipLook] Shader '{FlowShader}' not found; the deck stays on the graph.");
                 return null;
             }
-            if (mat.shader != shader)
-            {
-                mat.shader = shader;
-                // the pack material's keywords mean nothing to this shader and are reported
-                // against it every frame; that report crashed the editor once
-                mat.shaderKeywords = new string[0];
-            }
+            if (mat.shader != shader) mat.shader = shader;
+            // Unconditional: a keyword this shader does not declare is reported once per draw
+            // and the message building is what exhausts memory. Clearing only on the swap left
+            // an already-swapped material dirty for good.
+            mat.shaderKeywords = new string[0];
 
             var tint = Color.Lerp(Color.white, p.deckTint, p.deckTintAmount);
             tint.a = 1f;   // alpha is clip, not tint, on this deck

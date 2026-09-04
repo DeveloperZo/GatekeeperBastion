@@ -22,13 +22,16 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(0f, yawY, 1e-3f);
             // DERIVED, NOT RESTATED. This pinned a literal 3 and went stale the moment the
             // doorways were widened 3 -> 6 on 2026-08-28 (Zo: "widen the doorways... more
-            // consistent firing angles"). The clamp below it is the claim worth keeping: an
-            // OpenArea is 42 m across, so shortSide * 0.4 is 16.8 and the authored width is
-            // what survives — on a small block the clamp would win instead, and that is the
-            // rule, not the number.
+            // consistent firing angles"), and the clamp's 0.4 was restated here until it moved
+            // with the 6 -> 10 widening on 2026-09-04. Both halves now come off the constants:
+            // an OpenArea is 42 m across so the clamp allows far more than the authored width,
+            // and the authored width is what survives — on a small block the clamp wins
+            // instead, and that is the rule, not the number.
             float shortSide = Mathf.Min(BastionKit.FootprintWidth(BastionBlockKind.OpenArea),
                                         BastionKit.FootprintDepth(BastionBlockKind.OpenArea));
-            Assert.AreEqual(Mathf.Min(BastionSegment.DoorOpeningWidth, shortSide * 0.4f),
+            Assert.AreEqual(
+                Mathf.Min(BastionSegment.DoorOpeningWidth,
+                          shortSide * BastionSegment.DoorOpeningMaxShare),
                 size.x, 1e-3f, "the aperture is not the authored width on a block big enough "
                 + "to carry it");
             Assert.AreEqual(BastionSegment.DoorOpeningHeight, size.y, 1e-3f);

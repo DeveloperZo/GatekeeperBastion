@@ -50,5 +50,23 @@ namespace GatekeepersProtocol.Sim
             float depth = Multiple(kind) * ScalerZ;
             return kind == BastionBlockKind.ControlRoom ? depth * ControlRoomAspect : depth;
         }
+
+        /// <summary>The clear width a doorway or window resolves to on this block: the authored
+        /// width, or the share cap of the block's SHORT side when that is tighter.
+        ///
+        /// It lives here, in pure arithmetic on the footprint, because it is the rule that
+        /// decides whether the two ends of a shared passage agree. Each room builds its own
+        /// walls knowing nothing about its neighbour, so if two kinds resolve differently the
+        /// passage grows two different mouths and nothing in the geometry notices. The Game
+        /// layer's BastionSegment holds the two inputs and calls this; the offline suite
+        /// checks the agreement across every kind the sketch authors.</summary>
+        public static float ApertureWidth(BastionBlockKind kind, float authoredWidth, float maxShare)
+        {
+            float width = FootprintWidth(kind);
+            float depth = FootprintDepth(kind);
+            float shortSide = width < depth ? width : depth;
+            float cap = shortSide * maxShare;
+            return authoredWidth < cap ? authoredWidth : cap;
+        }
     }
 }

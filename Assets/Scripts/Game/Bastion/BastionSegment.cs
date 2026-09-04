@@ -25,11 +25,33 @@ namespace GatekeepersProtocol.Game
         /// that will give more consistent firing angles"). A 3 m gap in a one-lane corridor is
         /// narrower than the fight happening in it: the player could only ever engage what was
         /// squarely in the gap, so holding a line meant standing in the doorway rather than
-        /// choosing where to stand. The clamp below (shortSide * 0.4) never bound at 3 and does
-        /// not bind at 6 for the two block kinds the Bastion actually uses — Half is 16 m and
-        /// OpenArea 42 m, so their limits are 6.4 and 16.8. A Quarter block would still clamp to
-        /// 4, which is the clamp doing its job rather than this number being ignored.</summary>
-        public const float DoorOpeningWidth = 6f;
+        /// choosing where to stand.
+        /// <para>WIDENED AGAIN 2026-09-04, 6 -> 10 (Zo: "we should also greatly widen the
+        /// doorways ... so there's more funnel routes for enemies"). At 6 a passage carried
+        /// about one group abreast, so a wave arriving in groups of up to seven queued at the
+        /// opening and the fight was decided by whoever held the gap. At 10 the passage is
+        /// wider than a group, which spreads the arrival laterally instead of serialising it.
+        /// <para>This widens ONE route; it does not add one. The brainstorm's pre-registered
+        /// kill for the one-doorway problem says "funnel spacing, not numbers", and spacing is
+        /// a second entrance in the sketch rather than a bigger number here.</para>
+        /// <para>The clamp had to move with it. <see cref="DoorOpeningMaxShare"/> was 0.4,
+        /// which caps a Half room at 6.4 m — so raising this constant alone would have widened
+        /// the OpenArea side of a shared passage and left the Half side at 6.4, and the two
+        /// rooms build their own walls independently with no knowledge of each other. A
+        /// passage whose two ends disagree is the failure this pair exists to prevent, and
+        /// <c>BastionApertureAgreementTests</c> is the gate on it.</para></summary>
+        public const float DoorOpeningWidth = 10f;
+
+        /// <summary>Largest share of a wall's SHORT side an opening may take, so a doorway
+        /// cannot eat the wall it is cut into and leave nothing to build pillars from.
+        /// <para>0.65 since 2026-09-04, from 0.4. It is sized by the tightest block the Bastion
+        /// authors: a Half room is 16 m, so the clamp allows 10.4 m and
+        /// <see cref="DoorOpeningWidth"/> at 10 clears it with 0.4 m to spare and 3 m of wall
+        /// each side. That margin is thin ON PURPOSE — it is what makes the agreement test
+        /// fail loudly rather than a passage quietly growing two different mouths.</para>
+        /// <para>A Quarter block, 10 m, still clamps to 6.5. Nothing in the Bastion authors one;
+        /// that is the clamp doing its job rather than the width being ignored.</para></summary>
+        public const float DoorOpeningMaxShare = 0.65f;
 
         /// <summary>Clear height of a doorway: the FULL wall, floor slab to ceiling, so no
         /// lintel is emitted (BuildDoorWall skips it at lintelHeight 0). Was a hardcoded 3.5
@@ -367,8 +389,9 @@ namespace GatekeepersProtocol.Game
             float width = BastionKit.FootprintWidth(blockKind);
             float depth = BastionKit.FootprintDepth(blockKind);
             float thickness = BastionKit.WallThickness;
-            float shortSide = Mathf.Min(width, depth);
-            float openingWidth = Mathf.Min(DoorOpeningWidth, shortSide * 0.4f);
+            // ONE copy of the rule, in the Sim: the two ends of a shared passage must agree.
+            float openingWidth = BastionKit.ApertureWidth(
+                blockKind, DoorOpeningWidth, DoorOpeningMaxShare);
             float halfW = width * 0.5f;
             float halfD = depth * 0.5f;
 
@@ -425,8 +448,9 @@ namespace GatekeepersProtocol.Game
             float wallHeight = BastionKit.StoreyHeight - BastionKit.FloorSlabThickness;
             float wallCenterY = wallHeight * 0.5f;
             float thickness = BastionKit.WallThickness;
-            float shortSide = Mathf.Min(width, depth);
-            float openingWidth = Mathf.Min(DoorOpeningWidth, shortSide * 0.4f);
+            // ONE copy of the rule, in the Sim: the two ends of a shared passage must agree.
+            float openingWidth = BastionKit.ApertureWidth(
+                blockKind, DoorOpeningWidth, DoorOpeningMaxShare);
 
             BuildFloor(width, depth);
             BuildSide(SegmentEdge.North, north, northDoorAlong, width, depth, wallHeight, wallCenterY, thickness, openingWidth);

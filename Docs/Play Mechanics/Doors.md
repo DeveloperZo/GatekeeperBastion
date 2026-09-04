@@ -9,6 +9,7 @@ Where:
 - Completion only makes a door eligible; opening is a separate call, and an empty requirement list never opens — Assets/Scripts/Sim/Bastion/BastionUnlockGraph.cs (TryCompleteTerminal, OpenEligibleDoors, TryOpenDoors, AllRequiredTerminalsDone)
 - Two callers, one shared method: the zone shutoff and the survived Convert window — Assets/Scripts/Game/Bastion/GameController.Terminals.cs (OpenDoorsFor, called from ShutOffTerminal); Assets/Scripts/Game/Bastion/GameController.HatchBank.cs (OnBankWindowSurvived); the scene-side arm Assets/Scripts/Game/Bastion/BastionLayout.cs (OpenEligibleDoors, RefreshDoorStates, ApplyDoorState)
 - Opening kills the navmesh carve for good, frees the aperture, swaps the leaf material, and arms the spawn points the door sealed — Assets/Scripts/Game/Bastion/BastionDoor.cs (SetOpen, ApplyLeafMaterial, sealedSpawns)
+- One rule resolves how wide any opening is, in the Sim, so the two ends of a passage agree — Assets/Scripts/Sim/Bastion/BastionKit.cs (ApertureWidth) from Assets/Scripts/Game/Bastion/BastionSegment.cs (DoorOpeningWidth, DoorOpeningMaxShare), pinned by Assets/Tests/EditMode/Bastion/BastionApertureAgreementTests.cs
 - The demo's two gates, one per zone, the second the control gate — Assets/Scripts/Sim/Bastion/DemoZones.cs (DoorIdByZone, DoorId); the control-gate rule Assets/Scripts/Sim/Bastion/BastionUnlockGraph.cs (ControlRoomReachable, Validate)
 - Passage doors emitted unlocked with no requirements; spawn-closet doors unlocked and Gatekeeper-only — Assets/Scripts/Editor/Bastion/BastionSketchEmitter.cs (passage emit Configure(..., locked: false), WireSealedSpawns); Assets/Scripts/Game/Bastion/SpawnRoom.cs (ReassertClosetDoor); Assets/Scripts/Game/Bastion/BastionDoor.Proximity.cs (CountsAsOpener, AnyoneNear)
 - The slide: an unlocked leaf rises once within range and never shuts again; the collider blocks only while the leaf fills the aperture — Assets/Scripts/Game/Bastion/BastionDoor.cs (Update, ProximityRange, SlideSpeed, LeafTargetY)
@@ -23,6 +24,8 @@ Where:
 -->
 
 # Doors
+
+A passage is 10 m of clear opening, full height from floor slab to ceiling, since 2026-09-04; it was 6 m before that and 3 m before 2026-08-28. The width is one number for every room, because the two rooms either side of a passage cut their own halves of it independently and a passage whose ends disagree has two different mouths.
 
 Doors are the Bastion's gates, and the Boarder never operates one — there is no key that works on a door. A zone's gate opens when its terminal is shut off, or when a Convert window at the Hatch is survived; opening it frees the corridor for Boarder and Gatekeeper alike and wakes the spawn points the door was sealing. What makes this a mechanic is that an open door stays open. The open set is saved onto the realm the moment it opens, so even a Boarding that opens a gate and is then lost keeps it, and the next Boarding starts with that ground already taken. Terminal completion does not persist the same way, so a second Boarding walks further into the hull but refights the zone.
 
