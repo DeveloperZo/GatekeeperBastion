@@ -304,6 +304,22 @@ namespace GatekeepersProtocol.Sim
             FillCentresFromPoints(id);
         }
 
+        /// <summary>Replace the counters with an exact points shape — the range adopting a
+        /// realm's owned points into a fresh state. Centres derive from the points the way the
+        /// flat-Tier shape's do; nothing on the range buys a spoke, so the count only has to
+        /// read sanely. Tier stays derived.</summary>
+        public void ReplacePoints(WeaponId id, int[] points)
+        {
+            if (points == null || points.Length != WeaponWheel.AttrCount)
+                throw new ArgumentException("points must be length " + WeaponWheel.AttrCount, "points");
+            if (id == WeaponId.None) return;
+            EnsureArrays();
+            int i = (int)id;
+            if (i < 0 || i >= WeaponCatalog.ArraySize) return;
+            WritePoints(id, points);
+            FillCentresFromPoints(id);
+        }
+
         /// <summary>Derive centre counts from points: centre count = floor(points /
         /// FocusAward). Exact after nought or one centred buy; a neighbour sitting at 6 points
         /// after two stacked centres reads as 1. Used for the flat-Tier shape, and for a

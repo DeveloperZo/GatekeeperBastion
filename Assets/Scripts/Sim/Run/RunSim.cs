@@ -232,10 +232,11 @@ namespace GatekeepersProtocol.Sim
         }
 
         /// <summary>What one body pays right now. Zero inside a Convert window (the stake is
-        /// the pay there), and zero for a TRICKLE body — those are a clock, not an income, and
-        /// paying for them would turn walking the lane into farming it (Zo, 2026-08-26).</summary>
+        /// the pay there), zero for a TRICKLE body — those are a clock, not an income, and
+        /// paying for them would turn walking the lane into farming it (Zo, 2026-08-26) — and
+        /// zero under the practice rule, where nothing is at stake (<see cref="PracticeMode"/>).</summary>
         public long CurrentKillAward =>
-            Mode == WaveMode.HatchBank || FieldTrickleLive
+            PracticeMode || Mode == WaveMode.HatchBank || FieldTrickleLive
                 ? 0L
                 : (long)Math.Floor((double)CurrentKillValue);
 
@@ -429,6 +430,10 @@ namespace GatekeepersProtocol.Sim
         public void DamageHatch(float amount)
         {
             if (amount <= 0f)
+                return;
+            // The practice rule: the range has nothing at stake, so a body reaching the Hatch
+            // there wrecks nothing and can never end the Run with cause "hatch".
+            if (PracticeMode)
                 return;
             // Scaled BEFORE the hatch and the attrition both read it, so a field Wave cannot
             // bleed the carried stake at a rate the Hatch itself is armoured against.
@@ -770,8 +775,9 @@ namespace GatekeepersProtocol.Sim
 
             if (FaucetOwnsClear(hatchBank)) return;
 
+            // Not under the practice rule: a range has no field to strip and no finale to win.
             if (Phase == RunPhase.Tethered && CurrentWaveIndex >= WaveDirector.MaxWaves
-                && _followUpsLeft <= 0)
+                && _followUpsLeft <= 0 && !PracticeMode)
             {
                 string msg = hatchBank
                     ? "hatch-bank done — unbanked=" + TotalUnbanked + " door is open"
@@ -868,6 +874,7 @@ namespace GatekeepersProtocol.Sim
                 spec = HatchBank.ApplyHatchComposition(spec, _hatchCarry);
             spec = ConsumeFaucetAxisIfPending(spec);
             spec = ShapeMasterTerminalWave(spec, idx);
+            spec = ShapePracticeWave(spec, idx);
             // The elite is the last CONTROL-ROOM wave, so this no longer keys on Hatch-bank
             // mode — the phase alone says which wave it is.
             if (_masterPhase == MasterControlPhase.Elite)

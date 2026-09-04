@@ -334,6 +334,9 @@ namespace GatekeepersProtocol.Game
             // defensive Sample() call is then a free frame-guarded read.
             Controls.Sample();
             if (OptionsScreen.IsOpen || HudController.IsPauseOpen) return;
+            // The range's verbs live on its own interactables; the Bastion's would only
+            // refuse them here and say so in the log.
+            if (Sim.PracticeMode) return;
             TickFaucetHousekeeping();
             // WHICH VERBS ARE LIVE IS SIM'S CALL (BastionVerbs.LiveIn), not this method's.
             // It used to be the shape of these branches, and that is how the terminal shutoff

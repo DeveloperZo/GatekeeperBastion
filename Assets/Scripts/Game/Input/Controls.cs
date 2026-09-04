@@ -34,6 +34,14 @@ namespace GatekeepersProtocol.Game
         TogglePanel,
         /// <summary>Bastion right-edge mission drawer (Tab). Omitted from the strip.</summary>
         ToggleMissionDrawer,
+        /// <summary>The range board (M117, Zo 2026-09-03: "a key for each dimension"). Live
+        /// anywhere on the lane, taught by the readout rather than the strip.</summary>
+        RangeKind,
+        RangeDistance,
+        RangeStand,
+        RangeClear,
+        RangeWave,
+        RangeShape,
     }
 
     /// <summary>When a binding is live. Flags so Prep∩Assault is empty and a collision
@@ -48,6 +56,9 @@ namespace GatekeepersProtocol.Game
         NearInteract = 1 << 3,
         Ship = 1 << 4,
         EndScreen = 1 << 5,
+        /// <summary>The practice range. The fight keys stay live on the lane, so a Range row
+        /// must not share a key with a FightAlways row (ControlsTests pins it).</summary>
+        Range = 1 << 6,
     }
 
     /// <summary>One row in the binding list. <see cref="DisplayOnly"/> rows (WASD, wheel)
@@ -148,6 +159,22 @@ namespace GatekeepersProtocol.Game
             // Right-edge mission drawer — Bastion fight only.
             new(ControlId.ToggleMissionDrawer, KeyCode.Tab, KeyCode.None, "TAB", "mission", "BOARDING",
                 FightAlways, showOnPanel: false),
+
+            // The range board: one key per dimension, on the bottom letter row the fight
+            // leaves free (Q/E/R/F/G/H and the number row are taken). Off the panel — the
+            // range readout prints every key beside its current value, which is the teaching.
+            new(ControlId.RangeKind, KeyCode.Z, KeyCode.None, "Z", "target kind", "RANGE",
+                ControlContext.Range, showOnPanel: false),
+            new(ControlId.RangeDistance, KeyCode.X, KeyCode.None, "X", "distance", "RANGE",
+                ControlContext.Range, showOnPanel: false),
+            new(ControlId.RangeStand, KeyCode.C, KeyCode.None, "C", "stand one", "RANGE",
+                ControlContext.Range, showOnPanel: false),
+            new(ControlId.RangeClear, KeyCode.V, KeyCode.None, "V", "clear lane", "RANGE",
+                ControlContext.Range, showOnPanel: false),
+            new(ControlId.RangeWave, KeyCode.B, KeyCode.None, "B", "wave", "RANGE",
+                ControlContext.Range, showOnPanel: false),
+            new(ControlId.RangeShape, KeyCode.N, KeyCode.None, "N", "shape", "RANGE",
+                ControlContext.Range, showOnPanel: false),
         };
 
         static readonly List<ControlBinding> Extra = new List<ControlBinding>(4);
@@ -275,6 +302,12 @@ namespace GatekeepersProtocol.Game
                     case ControlId.Confirm: f.confirmDown |= down; break;
                     case ControlId.TogglePanel: f.togglePanelDown |= down; break;
                     case ControlId.ToggleMissionDrawer: f.toggleMissionDrawerDown |= down; break;
+                    case ControlId.RangeKind: f.rangeKindDown |= down; break;
+                    case ControlId.RangeDistance: f.rangeDistanceDown |= down; break;
+                    case ControlId.RangeStand: f.rangeStandDown |= down; break;
+                    case ControlId.RangeClear: f.rangeClearDown |= down; break;
+                    case ControlId.RangeWave: f.rangeWaveDown |= down; break;
+                    case ControlId.RangeShape: f.rangeShapeDown |= down; break;
                 }
             }
 
@@ -308,6 +341,12 @@ namespace GatekeepersProtocol.Game
                 case ControlId.Confirm: return f.confirmDown;
                 case ControlId.TogglePanel: return f.togglePanelDown;
                 case ControlId.ToggleMissionDrawer: return f.toggleMissionDrawerDown;
+                case ControlId.RangeKind: return f.rangeKindDown;
+                case ControlId.RangeDistance: return f.rangeDistanceDown;
+                case ControlId.RangeStand: return f.rangeStandDown;
+                case ControlId.RangeClear: return f.rangeClearDown;
+                case ControlId.RangeWave: return f.rangeWaveDown;
+                case ControlId.RangeShape: return f.rangeShapeDown;
                 default: return false; // Move/Look/SlotCycle are DisplayOnly — never pressable
             }
         }

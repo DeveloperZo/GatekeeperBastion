@@ -666,6 +666,9 @@ namespace GatekeepersProtocol.Game
             get
             {
                 if (Sim == null || _layout == null || RunIsOver) return false;
+                // The range never owes a shutoff (the practice rule): a practice wave ends with its last
+                // body, so FieldTrickle.Resolve answers Cleared rather than starting the drip.
+                if (Sim.PracticeMode) return false;
                 if (Sim.Phase != RunPhase.Tethered) return false;
                 if (Sim.Mode == WaveMode.HatchBank) return false;
                 if (Sim.MasterSequenceLive) return false;

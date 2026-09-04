@@ -149,6 +149,7 @@ namespace GatekeepersProtocol.Game
         bool _teardown;         // latched: the run is over or the scene is going away
         bool _warnedPrefab;     // one line per run about a missing per-kind prefab, not one per spawn
         bool _warnedNoRng;      // one line per run about a missing sim RNG, not one per wave
+        bool _warnedNoHatch;    // one line per run about a missing Hatch, not one per kill
 
         void Start()
         {
@@ -300,8 +301,10 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>Planar metres from the body to the Hatch surface and to SpawnedAt.
-        /// spawnDist is -1 when SpawnedAt was never written (hand-placed / unset).</summary>
-        static void KillDistances(Damageable damageable, out float hatchDist, out float spawnDist)
+        /// spawnDist is -1 when SpawnedAt was never written (hand-placed / unset). A scene with
+        /// no Hatch — the range keeps its copy switched off — is said once per run, not
+        /// once per kill.</summary>
+        void KillDistances(Damageable damageable, out float hatchDist, out float spawnDist)
         {
             hatchDist = 0f;
             spawnDist = -1f;
@@ -315,8 +318,11 @@ namespace GatekeepersProtocol.Game
                 hatchDist = KillLog.PlanarMetres(
                     pos.x, pos.y, pos.z, surface.x, surface.y, surface.z);
             }
-            else
+            else if (!_warnedNoHatch)
+            {
+                _warnedNoHatch = true;
                 Log.Warn(Tag, "Kill hatchDist measured with no HatchStation in the scene.");
+            }
 
             var gatekeeper = damageable.GetComponent<EnemyGatekeeper>();
             if (gatekeeper != null && gatekeeper.SpawnedAt != default)

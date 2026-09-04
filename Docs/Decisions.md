@@ -727,3 +727,28 @@ Control is two waves, a quiet beat, then an escorted elite instead of five ident
 What every lever holds still: the `11 + 7i` roster and its HP ladder, the debut gates, the
 one-lane spine. Variance redistributes what a wave is, never how much of it there is — the
 "thousands on screen" and idle-dial refusals stand. Direction is cut (above).
+
+## Locked — the range is reached from a door beside the ARMORY, kitted from a panel, and draws waves (Zo, 2026-09-02)
+
+"Gate it by a UI selection for Protocol and weapon (weapons will have stats player has
+unlocked, for unlocked weapons player can use base level). We will need to move dev commands
+to interactions in range. we should add spawn rooms and terminal to press and adjust waves."
+`M117`. Three rulings inside that:
+
+- **The way in is one door beside the ARMORY**, on the partition wall that closes its bay
+  (x 7.5, z 24.8, 2.5 m to the station's left — the station's own wall holds the airlock, a
+  window and the desk; a 2026-09-03 cut at z 17.5 sat in the airlock), not the FABRICATION
+  coordinate the 2026-08-29 builder carried and never authored. Hold `E` opens a
+  loadout panel; nothing loads until it is confirmed.
+- **The range kit is chosen, not granted.** Protocol any of DEPOT, VEIL, FORGE; a weapon the
+  realm owns comes with the wheel points it bought; a weapon it does not own comes at base and
+  says so. This supersedes `M99`'s "everything owned, every weapon at full focus" (Zo,
+  2026-08-22), which answered questions about a kit nobody owns. Tainted and unsaved as before.
+- **The range draws waves.** `3-Mechanics.md`'s "never drawing a Wave" and `The-Range.md`'s
+  "beyond six it is a Wave, and Wave behaviour is what the Bastion is for" are reversed: a
+  wave terminal on the range draws any authored wave and shape through the real director,
+  cadence, shapes and spawner, paying nothing and banking nothing. The standing-target cap of
+  six stays for standing targets. Dev-console range digits are retired for keys on the range
+  board — one per dimension, live anywhere on the lane, printed on the readout. The first cut
+  (posts on the marks, a console at the firing line, a terminal 90 m away) lasted one play:
+  Zo, 2026-09-03, "I shouldnt have to walk to generate anything. Its a shooting range."

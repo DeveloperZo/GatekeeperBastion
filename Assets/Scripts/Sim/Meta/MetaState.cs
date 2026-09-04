@@ -268,6 +268,8 @@ namespace GatekeepersProtocol.Sim
             Boarder.ReplacePointsFromFlatTier(id, tier);
         }
 
+        public void ReplacePoints(WeaponId id, int[] points) { Boarder.ReplacePoints(id, points); }
+
         public void EnsureArrays() { Boarder.EnsureArrays(); }
 
         // ---- Boarder: protocol, equipment, drone bay ----

@@ -53,6 +53,39 @@ namespace GatekeepersProtocol.Tests
             Assert.AreEqual(1, n);
         }
 
+        /// <summary>M117: the range board's six keys live in the Range context alone, but the
+        /// fight keys stay live on the lane, so a board key must not share a key with any
+        /// FightAlways row either — the context intersection test above cannot see that.</summary>
+        [Test]
+        public void RangeBoardKeys_LiveOnTheLane_ShareNoKeyWithTheFight()
+        {
+            var expected = new[]
+            {
+                (ControlId.RangeKind, KeyCode.Z), (ControlId.RangeDistance, KeyCode.X),
+                (ControlId.RangeStand, KeyCode.C), (ControlId.RangeClear, KeyCode.V),
+                (ControlId.RangeWave, KeyCode.B), (ControlId.RangeShape, KeyCode.N),
+            };
+            var rows = Controls.All;
+            foreach (var (id, key) in expected)
+            {
+                ControlBinding? found = null;
+                for (int i = 0; i < rows.Count; i++)
+                    if (rows[i].Id == id) { found = rows[i]; break; }
+                Assert.IsTrue(found.HasValue, id + " has no row");
+                var row = found.Value;
+                Assert.AreEqual(key, row.Key, id + " key");
+                Assert.AreEqual(ControlContext.Range, row.Context, id + " lives on the range alone");
+                Assert.IsFalse(row.ShowOnPanel, id + " is taught by the readout, not the strip");
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    var other = rows[i];
+                    if (other.DisplayOnly || other.Id == id) continue;
+                    if ((other.Context & Controls.FightAlways) == 0) continue;
+                    AssertNoSharedKey(row, other);
+                }
+            }
+        }
+
         [Test]
         public void NoOverlappingContext_SharesAKey()
         {

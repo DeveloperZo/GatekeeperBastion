@@ -75,7 +75,6 @@ namespace GatekeepersProtocol.Game
         GameController _gameCached;
         bool _awaitingWaveDigit;
         bool _awaitingCheckpointDigit;
-        bool _awaitingRangeDigit;
         bool _gatekeeperReadout;
         bool _loadoutPicker;
         bool _guiFaulted;
@@ -123,8 +122,6 @@ namespace GatekeepersProtocol.Game
                 _capture = CaptureKind.CheckpointDigit;
                 _suppressFightKeys = true;
             }
-            // The range digit borrows the jump digit's capture: same shape, same suppression.
-            else if (_awaitingRangeDigit) { _capture = CaptureKind.JumpDigit; _suppressFightKeys = true; }
             else if (_loadoutPicker)
             {
                 _capture = CaptureKind.LoadoutPicker;
@@ -165,7 +162,6 @@ namespace GatekeepersProtocol.Game
             if (_awaitingCheckpointDigit && TickCheckpointDigit())
                 return;
 
-            if (_awaitingRangeDigit && TickRangeDigit()) return;
             RefreshCapture();
 
             for (int i = 0; i < DevCommands.All.Length; i++)
@@ -190,7 +186,6 @@ namespace GatekeepersProtocol.Game
             if (action != DevCommands.Kind.ArmDemoCheckpoint
                 && action != DevCommands.Kind.ArmCoopCheckpoint)
                 _awaitingCheckpointDigit = false;
-            if (action != DevCommands.Kind.ArmJumpToWave) _awaitingRangeDigit = false;
 
             var gc = Game;
 
@@ -209,7 +204,6 @@ namespace GatekeepersProtocol.Game
 
                 case DevCommands.Kind.ArmJumpToWave:
                     _overlay = true; // discovery: show that a digit is expected
-                    if (TryArmRange()) break;
                     _awaitingWaveDigit = true;
                     Log.Event(Tag, $"jump armed — press 1..{WaveDirector.MaxWaves}");
                     break;
@@ -412,7 +406,6 @@ namespace GatekeepersProtocol.Game
             float y = OverlayTop;
 
             if (_awaitingCheckpointDigit) { DrawCheckpointRows(x, y, w); return; }
-            if (_awaitingRangeDigit) { DrawRangeRows(x, y, w); return; }
             if (_awaitingWaveDigit)
             {
                 // No printed row list: the digits are "any wave", not a named menu.

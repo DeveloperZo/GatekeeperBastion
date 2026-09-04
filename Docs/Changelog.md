@@ -5,9 +5,24 @@ Purpose: The audit trail for Docs/Roadmap.md. Milestone state transitions and st
 Status: working
 Update trigger: when a milestone changes status, when a gate is rewritten, or when the roadmap's structure changes.
 Rule: entries cite a milestone by bare id in a code span, never by link. The folder is the status, so a path written here dies at the next status change; Roadmap.md is the addressable index. Adopted 2026-08-19, when 12 entries had rotted this way.
-Last updated: 2026-09-01
+Last updated: 2026-09-03
 -->
 
+- 2026-09-03: **`M117` — criteria 3–4 rewritten on Zo's play.** The posts, the firing-line
+  console and the far wave terminal are gone; the range's verbs are six keys on a board (Z X C
+  V B N, plus T and the dial keys), live anywhere on the lane, printed on the readout. "I
+  shouldnt have to walk to generate anything. Its a shooting range."
+- 2026-09-03: **`M117` — scenes authored.** The PRACTICE RANGE door and panel landed in
+  `Ship - CoOp` on the ARMORY bay's partition wall (the sentinel's first run had hung a slab
+  outside the hull over no floor; a second cut sat in the airlock), and the Range Scene was
+  rebuilt from `Bastion_Coop.unity` — `Bastion.unity` retired in `3d674ab` and the build threw
+  on it — with two closets, ten posts, the console, the wave terminal and a return door proud
+  of the wall instead of inside it. Play stamp owed.
+- 2026-09-02: **`M117` — the range, from the door — created active.** Zo: a door beside the
+  ARMORY gated by a loadout panel (owned weapons at owned points, unowned at base), dev range
+  digits moved to range interactables, spawn rooms and a wave terminal. Reverses "the range
+  never draws a Wave" (`Decisions.md`). Active count is 4 against the cap of 3 — noted on the
+  Roadmap for Zo.
 - 2026-09-02: **`M116` — waves that differ — created active; lever 1 landed.** Two research
   agents (ancestors and comparables) refined four variance levers; Zo cut spawn direction
   (static point, direction is level design) and kept rhythm, shape and finale. All three

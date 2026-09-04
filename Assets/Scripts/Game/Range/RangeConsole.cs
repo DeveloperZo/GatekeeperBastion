@@ -13,12 +13,14 @@ namespace GatekeepersProtocol.Game
     /// that survived into a played save would make every later economy observation wrong, and
     /// nothing in the game would report it.
     ///
-    /// The range starts from a FULLY UNLOCKED kit rather than the player's own. Two separate
-    /// reasons, and both matter: judging a weapon while carrying whatever you last equipped
-    /// answers a question about your save rather than about the weapon (Docs/Milestones — a
-    /// range you can fight in), and until the game is tuned, everything has to be reachable
-    /// without earning it first (Zo, 2026-08-22). So the state is fresh — never the player's —
-    /// but it owns the whole catalogue.</summary>
+    /// The range state is fresh rather than the player's own: judging a weapon while carrying
+    /// whatever you last equipped answers a question about your save rather than about the
+    /// weapon (Docs/Milestones — a range you can fight in). Through the door it owns exactly
+    /// the kit chosen there — an owned weapon at the realm's points, an unowned one at base —
+    /// so the question is about the gun the Boarder would buy or already holds. Opened
+    /// directly, with no kit pending, it owns the whole catalogue at full focus as it did
+    /// before the door existed (Zo, 2026-08-22: until the game is tuned, everything has to be
+    /// reachable without earning it first).</summary>
     public sealed class RangeConsole : MonoBehaviour
     {
         const string Tag = "Range";
@@ -129,10 +131,7 @@ namespace GatekeepersProtocol.Game
             MetaState m = EnsureRangeState();
             if (m == null) return;
 
-            m.EquippedProtocol = id;
-            m.EquippedPassive = BoarderProtocol.PassiveCount(id) > 0
-                ? BoarderProtocol.PassiveAt(id, 0)
-                : BoarderAbilityId.None;
+            SetProtocol(m, id);
             Log.Event(Tag, "set protocol " + id);
             ReapplyKit();
         }
@@ -169,7 +168,9 @@ namespace GatekeepersProtocol.Game
         }
 
         /// <summary>The range's own state, adopted once: fresh rather than copied from the
-        /// player, and with the whole catalogue already unlocked.</summary>
+        /// player. Through the door it owns exactly the kit chosen there
+        /// (<see cref="GameSession.PendingRangeLoadout"/>, consumed here); opened directly it
+        /// owns the whole catalogue as it always has, so nothing regresses.</summary>
         MetaState EnsureRangeState()
         {
             if (_adopted) return GameSession.Meta;
@@ -178,11 +179,48 @@ namespace GatekeepersProtocol.Game
             // Not a tutorial. DemoActive would gate stations and lock multiplayer, neither of
             // which means anything on a lane.
             m.Realm.DemoActive = false;
-            UnlockEverything(m);
+            RangeLoadout? pending = GameSession.PendingRangeLoadout;
+            GameSession.PendingRangeLoadout = null;
+            if (pending.HasValue) AdoptLoadout(m, pending.Value);
+            else UnlockEverything(m);
             GameSession.AdoptDevState(m);
             _adopted = true;
-            Log.Event(Tag, "range kit adopted — everything unlocked, dev-tainted, will not save");
+            Log.Event(Tag, pending.HasValue
+                ? "range kit adopted — " + pending.Value.Summary()
+                : "range kit adopted — everything unlocked, dev-tainted, will not save");
+            EnterPractice();
             return GameSession.Meta;
+        }
+
+        /// <summary>The practice rule goes on with the kit, on both paths — through the door
+        /// and opened directly — so a range wave pays nothing and the Hatch is out of the
+        /// fight from the first frame. The sim exists from the controller's Awake, so this
+        /// is safe in either Start order.</summary>
+        void EnterPractice()
+        {
+            var game = _game;
+            if (game == null || game.Sim == null)
+            {
+                Log.Warn(Tag, "practice rule not set — no sim to set it on");
+                return;
+            }
+            game.Sim.EnterPracticeMode();
+        }
+
+        /// <summary>Own the two weapons at the points the door carried — the realm's own for
+        /// an owned weapon, base for one it did not own — and set the protocol. The payload,
+        /// the rig and the wallet are issued as they are for the unlocked kit: the door chose
+        /// the kit, and the lane still has to refuse nothing for price.</summary>
+        static void AdoptLoadout(MetaState m, RangeLoadout kit)
+        {
+            m.SetOwned(kit.Primary, true);
+            m.ReplacePoints(kit.Primary, kit.PrimaryPoints);
+            m.SetEquipped(kit.Primary);
+            m.SetOwned(kit.Secondary, true);
+            m.ReplacePoints(kit.Secondary, kit.SecondaryPoints);
+            m.SetEquipped(kit.Secondary);
+            SetProtocol(m, kit.Protocol);
+            IssueStandardKit(m);
         }
 
         /// <summary>Own the catalogue outright.
@@ -190,8 +228,8 @@ namespace GatekeepersProtocol.Game
         /// Nothing on a lane should refuse for want of a purchase — the point is to reach any
         /// weapon, protocol, payload or piece of equipment and feel it, so every grant below is
         /// ownership rather than a transaction. Weapons arrive at FULL focus because an ability
-        /// at zero points and the same ability maxed are different abilities; F3-then-7 and the
-        /// loadout picker dial that back down when the flat comparison is what you want.
+        /// at zero points and the same ability maxed are different abilities; the door's panel
+        /// and the F7 loadout picker dial that back down when the flat comparison is what you want.
         ///
         /// This runs on state that <see cref="GameSession.AdoptDevState"/> is about to taint, so
         /// none of it can reach a save.</summary>
@@ -208,16 +246,28 @@ namespace GatekeepersProtocol.Game
             // Something in hand on arrival, so the lane is shootable before touching a menu.
             m.SetEquipped(WeaponId.Mk1Sidearm);
 
+            // A protocol from the first frame, so the ability bar has something to show before
+            // anything is cycled. Set, not claimed — see GrantProtocol for why.
+            SetProtocol(m, BoarderProtocolId.Depot);
+            IssueStandardKit(m);
+        }
+
+        /// <summary>Set, not claimed, with the passive seeded the way TryClaim seeds it.</summary>
+        static void SetProtocol(MetaState m, BoarderProtocolId id)
+        {
+            m.EquippedProtocol = id;
+            m.EquippedPassive = BoarderProtocol.PassiveCount(id) > 0
+                ? BoarderProtocol.PassiveAt(id, 0)
+                : BoarderAbilityId.None;
+        }
+
+        /// <summary>The Decoy, the equipment slot with the Repair Rig, and the wallet — issued
+        /// to every range kit, chosen or unlocked.</summary>
+        static void IssueStandardKit(MetaState m)
+        {
             m.SetPayloadOwned(PayloadId.Decoy, true);
             m.Boarder.EquipmentSlotPurchased = true;
             m.SetEquipmentOwned(EquipmentId.RepairRig, true);
-
-            // A protocol from the first frame, so the ability bar has something to show before
-            // anything is cycled. Set, not claimed — see GrantProtocol for why.
-            m.EquippedProtocol = BoarderProtocolId.Depot;
-            m.EquippedPassive = BoarderProtocol.PassiveCount(BoarderProtocolId.Depot) > 0
-                ? BoarderProtocol.PassiveAt(BoarderProtocolId.Depot, 0)
-                : BoarderAbilityId.None;
 
             // Salvage for anything that still charges. Earned is raised with it: RealmState keeps
             // the ledger invariant earned == banked + spent, and a wallet conjured without it
@@ -243,6 +293,67 @@ namespace GatekeepersProtocol.Game
         }
 
         // ---- The lane ----
+
+        /// <summary>Kinds a post can stand. The shipped three — the range exercises the game's
+        /// Gatekeepers or it is not measuring the game.</summary>
+        static readonly GatekeeperKind[] Kinds =
+        {
+            GatekeeperKind.Default, GatekeeperKind.Hunter, GatekeeperKind.Thief
+        };
+
+        int _kindIndex;
+
+        /// <summary>The kind the next post press stands. One selection for every post, held
+        /// here so the posts and the control console read the same thing.</summary>
+        public GatekeeperKind SelectedKind
+        {
+            get { return Kinds[_kindIndex]; }
+        }
+
+        public GatekeeperKind CycleKind()
+        {
+            _kindIndex = (_kindIndex + 1) % Kinds.Length;
+            Log.Event(Tag, "range target — " + Kinds[_kindIndex]);
+            return Kinds[_kindIndex];
+        }
+
+        /// <summary>True while a standing body this console put at <paramref name="metres"/>
+        /// is still alive. Read by the posts every frame; the dictionary walk allocates
+        /// nothing.</summary>
+        public bool HasStanding(int metres)
+        {
+            foreach (var kv in _standing)
+            {
+                if (kv.Value.Metres == metres && kv.Value.Body != null) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Everything standing at one mark off the lane, and nothing queued to come
+        /// back to it. Wave bodies are the spawner's and are not touched.</summary>
+        public void ClearAt(int metres)
+        {
+            var game = _game;
+            _scratch.Clear();
+            foreach (var kv in _standing)
+            {
+                if (kv.Value.Metres == metres) _scratch.Add(kv.Key);
+            }
+            for (int i = 0; i < _scratch.Count; i++)
+            {
+                Standing s;
+                if (!_standing.TryGetValue(_scratch[i], out s)) continue;
+                _standing.Remove(_scratch[i]);
+                if (s.Body != null && game != null && game.Spawner != null)
+                    game.Spawner.Despawn(s.Body);
+            }
+            var rules = _rules;
+            if (rules != null)
+            {
+                for (int k = 0; k < Kinds.Length; k++) rules.ForgetBody(Pack(Kinds[k], metres));
+            }
+            Log.Event(Tag, "range target cleared — " + metres + " m");
+        }
 
         /// <summary>Stand one Gatekeeper of <paramref name="kind"/> at the
         /// <paramref name="metres"/> mark. Null when there is no such mark or the lane is
@@ -289,6 +400,34 @@ namespace GatekeepersProtocol.Game
             _standing.Clear();
             if (_rules != null) _rules.ClearLane();
             Log.Event(Tag, "lane cleared");
+        }
+
+        int[] _marksCache;
+
+        /// <summary>The authored marks in metres, nearest first, read once off the
+        /// <c>RangeMark_&lt;m&gt;</c> markers. Empty when the scene carries none.</summary>
+        public int[] Marks
+        {
+            get
+            {
+                if (_marksCache != null) return _marksCache;
+                var marks = _marks;
+                var list = new List<int>(8);
+                if (marks != null)
+                {
+                    for (int i = 0; i < marks.childCount; i++)
+                    {
+                        Transform c = marks.GetChild(i);
+                        int m;
+                        if (c != null && c.name.StartsWith("RangeMark_")
+                            && int.TryParse(c.name.Substring("RangeMark_".Length), out m))
+                            list.Add(m);
+                    }
+                }
+                list.Sort();
+                _marksCache = list.ToArray();
+                return _marksCache;
+            }
         }
 
         Transform MarkAt(int metres)

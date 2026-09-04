@@ -45,11 +45,12 @@ namespace GatekeepersProtocol.Game
         public const string BastionCoop = "Bastion_Coop";
 
         /// <summary>The practice range. Bastion-shaped so a Gatekeeper can think in it — the
-        /// brain reads run state off a live controller — but it never draws a Wave
-        /// (Docs/Milestones — a range you can fight in).
+        /// brain reads run state off a live controller. It draws waves on its own terminal under
+        /// the sim's practice rule (M117, 2026-09-02); it pays and stakes nothing.
         ///
-        /// The scene is built and in the build settings. What it still has no door: nothing in
-        /// Ship - CoOp reaches it, so today it is entered by opening Range.unity directly.</summary>
+        /// The scene is built and in the build settings. Ship - CoOp reaches it through the
+        /// PRACTICE RANGE door beside the ARMORY (M117); opening Range.unity directly still works
+        /// and adopts the old everything-unlocked kit.</summary>
         public const string Range = "Range";
 
         /// <summary>In-fiction name of the bastion, for the nav map and the run-start log

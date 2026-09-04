@@ -311,9 +311,12 @@ without it, collider graybox is still generated. Kit geometry persists.
   then `EngageTether()`, so you are fighting on arrival. `Docked` is a transient boot phase,
   not a screen. Groups instantiate inside a hung spawn closet and walk onto the fight floor;
   the origin is not on the playable floor.
-- **Range** — the practice range, Bastion-shaped but never drawing a Wave. In the build
-  settings and reachable only by opening `Range.unity` directly; nothing in the hub leads
-  there yet.
+- **Range** — the practice range, Bastion-shaped: one hall, standing targets on five marks,
+  two hung spawn closets at the far end and a wave terminal that draws waves 1–5 in a chosen
+  shape through the real `WaveDirector`, `WaveCadence`, `WaveShapes` and `WaveSpawner`, under
+  the sim's practice rule (`RunSim.Practice.cs`: kills pay nothing, the Hatch cannot be lost,
+  the Assault ends with the last body). In the build settings; reached through the PRACTICE
+  RANGE door beside the ARMORY on `Ship - CoOp`, or by opening `Range.unity` directly.
 
 While `Phase == Tethered` the sim alternates two sub-states (`Sim/Run/AssaultState.cs`):
 **Prep**, quiet, no Gatekeepers and no income, the window intensity juice moves in when `Ante.Enabled` (parked 2026-08-30); and **Assault**,

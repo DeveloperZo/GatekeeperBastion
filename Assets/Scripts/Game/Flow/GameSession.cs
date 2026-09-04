@@ -49,6 +49,12 @@ namespace GatekeepersProtocol.Game
         /// resets to 1 after the run begins so a direct-play fallback stays a normal start.</summary>
         public static int PendingStartWave { get; set; } = 1;
 
+        /// <summary>The kit chosen at the practice range door, carried across the scene load
+        /// the way <see cref="PendingStartWave"/> carries the MAP's pick. RangeConsole adopts
+        /// and clears it on the range's first frame; null means the range was opened directly
+        /// and hands out the whole catalogue as before. Transient: never saved.</summary>
+        public static RangeLoadout? PendingRangeLoadout { get; set; }
+
         /// <summary>Set on Escaped when EndDemo flips DemoActive off, consumed on the first
         /// Ship frame so demo.escaped can play after the director's DemoActive-false path
         /// would otherwise skip every line. Transient: never saved.</summary>
@@ -84,6 +90,7 @@ namespace GatekeepersProtocol.Game
             CurrentRealmIsRemote = false;
             DevTainted = false;
             PendingStartWave = 1;
+            PendingRangeLoadout = null;
             PendingEscapedLine = false;
             PendingDemoFight = 0;
             CheckpointBeat = 0;

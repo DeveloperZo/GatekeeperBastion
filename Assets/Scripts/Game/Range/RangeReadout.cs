@@ -33,6 +33,9 @@ namespace GatekeepersProtocol.Game
         [SerializeField, Tooltip("The range's rules, for the toggle states.")]
         RangeRules _rules;
 
+        [SerializeField, Tooltip("The board - its line is the readout's third row. Authored by the range builder.")]
+        RangeBoard _board;
+
         readonly StringBuilder _sb = new StringBuilder(256);
         readonly System.Collections.Generic.Dictionary<int, float> _lastHp =
             new System.Collections.Generic.Dictionary<int, float>(8);
@@ -170,7 +173,16 @@ namespace GatekeepersProtocol.Game
             }
 
             var rules = _rules;
-            if (rules != null)
+            var board = _board;
+            if (board != null)
+            {
+                // The board's keys beside their values: the range's verbs are read off this
+                // line, not remembered (M117, Zo 2026-09-03). The toggle states ride on it.
+                _sb.Append('\n').Append(board.Line);
+                if (rules != null && rules.PendingRespawns > 0)
+                    _sb.Append(" (").Append(rules.PendingRespawns).Append(" returning)");
+            }
+            else if (rules != null)
             {
                 // The toggle states belong on screen, not only in the log — criterion 4 asks for
                 // the bypass to be readable, and a range that silently stopped bypassing would

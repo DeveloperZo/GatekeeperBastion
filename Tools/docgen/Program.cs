@@ -772,6 +772,7 @@ public static class Docgen
         if ((c & ControlContext.NearInteract) != 0) parts.Add("near the hatch");
         if ((c & ControlContext.Ship) != 0) parts.Add("on the ship");
         if ((c & ControlContext.EndScreen) != 0) parts.Add("end screen");
+        if ((c & ControlContext.Range) != 0) parts.Add("on the range");
         return parts.Count == 0 ? "—" : string.Join(", ", parts);
     }
 

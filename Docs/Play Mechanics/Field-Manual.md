@@ -73,6 +73,17 @@ live right now, so this table is a reference, not something you have to memorise
 | `E` | interact | on the ship |
 | `ESC` | settings | on the ship |
 
+**RANGE**
+
+| Key | Does | Live when |
+|---|---|---|
+| `Z` | target kind | on the range |
+| `X` | distance | on the range |
+| `C` | stand one | on the range |
+| `V` | clear lane | on the range |
+| `B` | wave | on the range |
+| `N` | shape | on the range |
+
 ## Weapons
 
 You carry one **Primary** and one **Secondary** at once. The Drone bay holds a payload — today the **Decoy**, sold at FABRICATION.

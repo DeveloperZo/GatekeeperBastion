@@ -216,7 +216,8 @@ namespace GatekeepersProtocol.Tests
         {
             string yaml = File.ReadAllText(Path.GetFullPath("Assets/Scenes/Ship - CoOp.unity"));
             var alphas = CollectNamedImageAlphas(yaml, "Background Blur");
-            Assert.AreEqual(4, alphas.Count, "expected one Background Blur per station");
+            // Five since M117: the PRACTICE RANGE door is a station with a panel cloned from the ARMORY's.
+            Assert.AreEqual(5, alphas.Count, "expected one Background Blur per station");
             for (int i = 0; i < alphas.Count; i++)
                 Assert.GreaterOrEqual(alphas[i], 0.65f, "Background Blur[" + i + "] alpha=" + alphas[i]);
         }

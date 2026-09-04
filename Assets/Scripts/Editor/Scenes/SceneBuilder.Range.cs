@@ -61,8 +61,13 @@ namespace GatekeepersProtocol.EditorTools
         /// wall.</summary>
         const float EndMargin = 1f;
 
+        /// <summary>How far short of the far corner the north closet hangs, so its shell
+        /// clears the east closet's and its door opens onto the lane's last stretch.</summary>
+        const float ClosetSetback = 6f;
+
         static float _firingLineX;
         static float _laneZ;
+        static float _floorMinX;
 
         [MenuItem("GatekeepersProtocol/Build/Range Scene", false, 62)]
         public static void BuildRangeSceneMenu()
@@ -72,7 +77,9 @@ namespace GatekeepersProtocol.EditorTools
         }
 
         /// <summary>Copy the Bastion to Range.unity, replace its rooms with one hall, bake, and
-        /// register. Bastion.unity is not written to — SaveScene re-targets the open scene.</summary>
+        /// register. The copy is Bastion_Coop.unity since 2026-09-03 — Bastion.unity retired with
+        /// the solo scene pair (3d674ab) and this builder threw on its missing file. Bastion_Coop
+        /// is not written to — SaveScene re-targets the open scene.</summary>
         public static void BuildRangeSceneInPlace()
         {
             // Refuse rather than discard. This runs from a file sentinel, so there is nobody to
@@ -93,8 +100,8 @@ namespace GatekeepersProtocol.EditorTools
                 // Opened, not yet saved anywhere. Writing Range.unity up front meant a later
                 // refusal left a HALF-BUILT scene on disk — stripped of the Bastion and without
                 // the lane. The save happens once, at the end, when there is something worth
-                // saving. Bastion.unity is never written: SaveScene re-targets to the new path.
-                Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                // saving. Bastion_Coop.unity is never written: SaveScene re-targets to the new path.
+                Scene scene = EditorSceneManager.OpenScene(BastionCoopScenePath, OpenSceneMode.Single);
 
                 GameObject env = GameObject.Find("Environment");
                 if (env == null)
@@ -106,13 +113,25 @@ namespace GatekeepersProtocol.EditorTools
                 StripBastionRooms(env);
                 GameObject hall = PlaceControlRoom(env.transform);
                 if (hall == null) return;
+                // Measured BEFORE the closets hang: their floors are named Floor too, and a
+                // closet's floor hangs outside the hall, so measuring after would put the far
+                // wall five metres past where it is.
                 if (!MeasureLane(hall)) return;
+                SpawnPoint[] closets = PlaceSpawnClosets(hall);
+                if (closets == null) return;
                 Transform marksRoot = PlaceMarks(env.transform);
                 PlaceFiringLine();
+                // The way back, proud of the near wall behind the firing line. Authored here
+                // as well as by the door sentinel, so a rebuild of this scene keeps its door.
+                AuthorRangeReturnDoor(_floorMinX, _laneZ);
                 StripCombatHud();
                 EnsureLevelMusic();
-                EnsureRangeRoot(marksRoot);
+                StripHatch();
+                StripBastionPortals();
+                GameObject root = EnsureRangeRoot(marksRoot);
+                if (root != null) WireRangeFixtures(root, marksRoot, closets);
 
+                // After the closets, so the lane's surface reaches into them.
                 BakeNavMesh(env, RangeNavMeshPath);
                 EditorSceneManager.MarkSceneDirty(scene);
                 if (!EditorSceneManager.SaveScene(scene, RangeScenePath))
@@ -123,7 +142,8 @@ namespace GatekeepersProtocol.EditorTools
                 RegisterRangeScene();
                 AssetDatabase.SaveAssets();
                 Debug.Log("[SceneBuilder] Range.unity built — one ControlRoom hall, firing line at x="
-                    + _firingLineX.ToString("0.#") + ", marks at " + string.Join("/", RangeMarks) + " m, NavMesh baked.");
+                    + _firingLineX.ToString("0.#") + ", marks at " + string.Join("/", RangeMarks)
+                    + " m, " + closets.Length + " spawn closets, board wired, NavMesh baked.");
             }
             finally
             {
@@ -201,23 +221,14 @@ namespace GatekeepersProtocol.EditorTools
             // two-tenths of a metre past the last floor tile, on the invisible collider slab but
             // OFF the navmesh, which is baked from render meshes. The player stood there fine and
             // nothing walking could reach them.
-            var renderers = hall.GetComponentsInChildren<MeshRenderer>(true);
-            bool any = false;
-            Bounds bounds = new Bounds();
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                if (renderers[i] == null) continue;
-                if (renderers[i].name.IndexOf("Floor", System.StringComparison.OrdinalIgnoreCase) < 0)
-                    continue;
-                if (!any) { bounds = renderers[i].bounds; any = true; }
-                else bounds.Encapsulate(renderers[i].bounds);
-            }
-            if (!any)
+            Bounds bounds;
+            if (!HallFloorBounds(hall, out bounds))
             {
                 Debug.LogError("[SceneBuilder] Range: the hall generated no floor renderers — "
                     + "the navmesh bakes from render meshes, so there would be nothing to walk on.");
                 return false;
             }
+            _floorMinX = bounds.min.x;
 
             // Stand as far back as the floor allows, up to the preferred inset. The hall is
             // only a few centimetres longer than 90 m plus that inset, and refusing over one of
@@ -240,6 +251,44 @@ namespace GatekeepersProtocol.EditorTools
                 + bounds.max.x.ToString("0.#") + ", firing line " + _firingLineX.ToString("0.#")
                 + ", lane z " + _laneZ.ToString("0.#"));
             return true;
+        }
+
+        /// <summary>The floor the hall generated, as one bounds. FLOOR renderers only (see
+        /// <see cref="MeasureLane"/>). Shared with the door sentinel, which re-measures an
+        /// already-built Range.unity to place the way back.</summary>
+        static bool HallFloorBounds(GameObject hall, out Bounds bounds)
+        {
+            var renderers = hall.GetComponentsInChildren<MeshRenderer>(true);
+            bool any = false;
+            bounds = new Bounds();
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] == null) continue;
+                if (renderers[i].name.IndexOf("Floor", System.StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+                // A closet's floor hangs outside the hall; only the hall's own tiles count.
+                if (renderers[i].GetComponentInParent<SpawnRoom>() != null) continue;
+                if (!any) { bounds = renderers[i].bounds; any = true; }
+                else bounds.Encapsulate(renderers[i].bounds);
+            }
+            return any;
+        }
+
+        /// <summary>The Bastion copy's portals — the Hatch's and the two terminals' recall pads
+        /// — are scene roots at Bastion coordinates, which the hall's 94 m footprint covers.
+        /// Switched off like the Hatch: a pad on the lane is a free ride to the ship.</summary>
+        static void StripBastionPortals()
+        {
+            string[] names = { "Hatch Portal", "T2 Portal", "T5 Portal" };
+            int off = 0;
+            for (int i = 0; i < names.Length; i++)
+            {
+                GameObject go = GameObject.Find(names[i]);
+                if (go == null) continue;
+                go.SetActive(false);
+                off++;
+            }
+            Debug.Log("[SceneBuilder] Range: " + off + " Bastion portal(s) switched off.");
         }
 
         /// <summary>A marker where each body stands, and a post either side of it so the
@@ -268,6 +317,8 @@ namespace GatekeepersProtocol.EditorTools
 
             Box("Firing_Line", new Vector3(_firingLineX, 0.01f, _laneZ),
                 new Vector3(0.12f, 0.02f, 6f), palette.Breach, marks.transform);
+            // No fixture boxes: the range's verbs are keys on the board (Zo, 2026-09-03), and
+            // the posts are there to read distance by, not to press.
             return marks.transform;
         }
 
@@ -290,7 +341,7 @@ namespace GatekeepersProtocol.EditorTools
         /// <summary>The range's own root: the rules, the console that grants and spawns, and the
         /// readout. Everything is bound here rather than dragged in the inspector, so a rebuild
         /// cannot leave a half-wired scene behind.</summary>
-        static void EnsureRangeRoot(Transform marks)
+        static GameObject EnsureRangeRoot(Transform marks)
         {
             GameObject root = GameObject.Find("Range");
             if (root == null) root = new GameObject("Range");
@@ -307,11 +358,154 @@ namespace GatekeepersProtocol.EditorTools
             if (game == null)
             {
                 Debug.LogWarning("[SceneBuilder] Range: no GameController to bind to.");
-                return;
+                return root;
             }
             rules.Bind(game);
             console.Bind(game, rules, marks);
             readout.Bind(game, rules, BuildReadoutText(root.transform));
+            return root;
+        }
+
+        /// <summary>Two of the Bastion's hung closets at the far end of the lane, from the
+        /// same prefab and the same attach the sketch emitter uses, so a range wave breaches
+        /// from the door a Bastion wave breaches from. One edge takes one aperture, so the
+        /// second closet hangs on the north wall a few metres short of the far corner. Both
+        /// carry a SpawnPoint at weight 1: two doors, an even split.</summary>
+        static SpawnPoint[] PlaceSpawnClosets(GameObject hall)
+        {
+            var segment = hall.GetComponent<BastionSegment>();
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(SpawnRoom.PrefabPath);
+            if (segment == null || prefab == null)
+            {
+                Debug.LogError("[SceneBuilder] Range: no closet prefab at " + SpawnRoom.PrefabPath
+                    + " or no segment to hang it on.");
+                return null;
+            }
+            // Along-the-edge positions are the segment's local axes. The hall sits at the
+            // origin unrotated, so local is world here; measured off the lane the kit made.
+            float farX = _firingLineX + RangeMarks[RangeMarks.Length - 1];
+            segment.EastDoorAlong = _laneZ;
+            segment.NorthDoorAlong = farX - ClosetSetback;
+
+            var points = new SpawnPoint[2];
+            points[0] = HangCloset(prefab, segment, BastionDoorEdge.East, "Range_E");
+            points[1] = HangCloset(prefab, segment, BastionDoorEdge.North, "Range_N");
+            if (points[0] == null || points[1] == null) return null;
+            return points;
+        }
+
+        static SpawnPoint HangCloset(GameObject prefab, BastionSegment segment,
+            BastionDoorEdge edge, string id)
+        {
+            var instance = PrefabUtility.InstantiatePrefab(prefab, segment.transform) as GameObject;
+            if (instance == null)
+            {
+                Debug.LogError("[SceneBuilder] Range: could not instantiate the closet prefab.");
+                return null;
+            }
+            instance.name = "Spawn_" + id;
+            var closet = instance.GetComponent<SpawnRoom>();
+            if (closet == null) closet = instance.AddComponent<SpawnRoom>();
+            // AttachTo punches the aperture and rebuilds the hall, then hangs the shell
+            // outside the wall with its interior off the floor, exactly as a Bastion closet.
+            closet.AttachTo(segment, edge);
+            closet.NameSpawn(id);
+            SpawnPoint sp = closet.Spawn;
+            if (sp == null)
+            {
+                Debug.LogError("[SceneBuilder] Range: closet " + instance.name + " has no SpawnPoint.");
+                return null;
+            }
+            SetInt(sp, "weight", 1);
+            Debug.Log("[SceneBuilder] Range closet " + instance.name + " hung on the " + edge
+                + " edge at " + instance.transform.position.ToString("0.#"));
+            return sp;
+        }
+
+        /// <summary>The Bastion copy's Hatch is a scene root, so StripBastionRooms never sees
+        /// it, and it came through sitting 60 m off the hall. Switched off, not destroyed: the
+        /// controller and the HUD hold serialized references into it, and a missing reference
+        /// is a worse problem than an inactive object. With it off, HatchStation.Instance is
+        /// null on the range and every body targets the player (EnemyGatekeeper.Retarget) —
+        /// the Hatch is not a target on the lane.</summary>
+        static void StripHatch()
+        {
+            GameObject hatch = GameObject.Find("Hatch");
+            if (hatch == null)
+            {
+                Debug.Log("[SceneBuilder] Range: no active Hatch root to switch off.");
+                return;
+            }
+            hatch.SetActive(false);
+            Debug.Log("[SceneBuilder] Range: Hatch switched off — it is not a target on the lane.");
+        }
+
+        /// <summary>The board and the spawner, wired through SerializedObject so the
+        /// references are the scene's rather than a Bind call's: the board on the range root
+        /// beside the console, the rules and the readout it drives, the readout pointed back at
+        /// it, and the two closets on the spawner's explicit list so a range wave breaches from
+        /// them and nowhere else.</summary>
+        static void WireRangeFixtures(GameObject root, Transform marks, SpawnPoint[] closets)
+        {
+            var console = root.GetComponent<RangeConsole>();
+            var rules = root.GetComponent<RangeRules>();
+            var readout = root.GetComponent<RangeReadout>();
+            var game = Object.FindFirstObjectByType<GameController>();
+
+            var board = Ensure<RangeBoard>(root);
+            SetRef(board, "_console", console);
+            SetRef(board, "_rules", rules);
+            SetRef(board, "_readout", readout);
+            SetRef(board, "_game", game);
+            SetRef(readout, "_board", board);
+
+            var spawner = Object.FindFirstObjectByType<WaveSpawner>();
+            if (spawner == null)
+                Debug.LogWarning("[SceneBuilder] Range: no WaveSpawner to hand the closets to.");
+            else
+            {
+                var so = new SerializedObject(spawner);
+                SerializedProperty list = so.FindProperty("spawnPoints");
+                list.arraySize = closets.Length;
+                for (int i = 0; i < closets.Length; i++)
+                    list.GetArrayElementAtIndex(i).objectReferenceValue = closets[i];
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            Debug.Log("[SceneBuilder] Range fixtures: board on the range root, spawner on "
+                + closets.Length + " closets.");
+        }
+
+        static T Ensure<T>(GameObject go) where T : Component
+        {
+            var c = go.GetComponent<T>();
+            return c != null ? c : go.AddComponent<T>();
+        }
+
+        static void SetRef(Component target, string field, Object value)
+        {
+            var so = new SerializedObject(target);
+            SerializedProperty p = so.FindProperty(field);
+            if (p == null)
+            {
+                Debug.LogWarning("[SceneBuilder] Range: " + target.GetType().Name + " has no field " + field);
+                return;
+            }
+            p.objectReferenceValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static void SetInt(Component target, string field, int value)
+        {
+            var so = new SerializedObject(target);
+            SerializedProperty p = so.FindProperty(field);
+            if (p == null)
+            {
+                Debug.LogWarning("[SceneBuilder] Range: " + target.GetType().Name + " has no field " + field);
+                return;
+            }
+            p.intValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>Everything on the Bastion HUD that a lane has no answer for. The copy

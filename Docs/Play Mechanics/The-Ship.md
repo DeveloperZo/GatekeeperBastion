@@ -42,6 +42,7 @@ Four consoles, each owning one subject. Nothing is sold in two places.
 - **CREW QUARTERS** — the protocol worn at embark.
 - **FABRICATION** — Hatch Armor, the equipment slot, the Repair Rig, and the Decoy.
 - **NAV MAP** — where to go, and going there.
+- **PRACTICE RANGE** — a door beside the ARMORY that sells nothing: pick a protocol and two weapons and try them on the range ([The Range](The-Range.md)). An owned weapon goes at its own wheel points, an unowned one at base.
 
 One deck, long and narrow, stern to bow. Spawn forward and to port; the NAV MAP ahead on the bow bulkhead, same side. Three hatch doors spaced down the starboard hull. CREW QUARTERS to starboard, level with spawn. ARMORY and FABRICATION at the stern — ARMORY starboard, FABRICATION port — so a weapon or a Hatch buy is a walk the length of the ship and back. That traverse is geometry: no loading screen, no trigger to step into.
 

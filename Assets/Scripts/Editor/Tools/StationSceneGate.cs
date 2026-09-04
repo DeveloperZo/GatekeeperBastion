@@ -13,7 +13,7 @@ namespace GatekeepersProtocol.EditorTools
     public static class StationSceneGate
     {
         public static readonly string[] Stations =
-            { "ARMORY", "FABRICATION", "CREW QUARTERS", "NAV MAP" };
+            { "ARMORY", "FABRICATION", "CREW QUARTERS", "NAV MAP", "PRACTICE RANGE" };
 
         /// <summary>Returns false and appends FAIL lines when the Ship station open path
         /// cannot paint. Call after scene mutations, before SaveScene.</summary>
@@ -198,6 +198,8 @@ namespace GatekeepersProtocol.EditorTools
         static bool BodyViewReady(RectTransform panel, string name, StringBuilder log)
         {
             var viewType = BodyViewType(name);
+            // The range door carries its rows on the station rather than on a body view.
+            if (viewType == null && name == "PRACTICE RANGE") return true;
             if (viewType == null)
             {
                 log.AppendLine("FAIL: no body view type mapped for station '" + name + "'");
@@ -244,6 +246,10 @@ namespace GatekeepersProtocol.EditorTools
                 case "NAV MAP":
                     console = Object.FindFirstObjectByType<MapStation>(FindObjectsInactive.Include);
                     break;
+                case "PRACTICE RANGE":
+                    // The door binds its rows itself; there is no body view to require.
+                    return Object.FindFirstObjectByType<RangeDoorStation>(FindObjectsInactive.Include) != null
+                        || Fail(log, "console terminal missing for station '" + name + "'");
             }
             if (console == null)
             {
@@ -288,6 +294,12 @@ namespace GatekeepersProtocol.EditorTools
                 if (field != null)
                     return field.IsDefined(typeof(OptionalBindingAttribute), false);
             }
+            return false;
+        }
+
+        static bool Fail(StringBuilder log, string line)
+        {
+            log.AppendLine("FAIL: " + line);
             return false;
         }
 
