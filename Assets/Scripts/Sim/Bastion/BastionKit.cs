@@ -51,6 +51,36 @@ namespace GatekeepersProtocol.Sim
             return kind == BastionBlockKind.ControlRoom ? depth * ControlRoomAspect : depth;
         }
 
+        /// <summary>A hash of every SHARED number a segment's geometry is built from, so a
+        /// build that changes one can be told apart from the build that generated what is
+        /// already in the scene.
+        ///
+        /// It exists because omitting it cost two shipped changes. A segment stamped itself
+        /// with a hash of its own serialized fields only — kind, the four sides, the four
+        /// door offsets — and rebuilt only when that stamp changed. Constants are not fields,
+        /// so widening the doorways never invalidated anything: on 2026-09-04 Bastion_Coop was
+        /// still carrying 3 m openings with a lintel hung across each one, against code that
+        /// had said 6 m and full height since 2026-08-28. The scene had been right about what
+        /// it was built from and wrong about the game for a week.
+        ///
+        /// Pass the Game layer's aperture constants in; the kit's own are read here.</summary>
+        public static int GeometryStamp(float doorWidth, float doorMaxShare, float doorHeight)
+        {
+            unchecked
+            {
+                int h = 17;
+                h = h * 31 + doorWidth.GetHashCode();
+                h = h * 31 + doorMaxShare.GetHashCode();
+                h = h * 31 + doorHeight.GetHashCode();
+                h = h * 31 + ScalerX.GetHashCode();
+                h = h * 31 + ScalerZ.GetHashCode();
+                h = h * 31 + StoreyHeight.GetHashCode();
+                h = h * 31 + WallThickness.GetHashCode();
+                h = h * 31 + FloorSlabThickness.GetHashCode();
+                return h == 0 ? 1 : h;
+            }
+        }
+
         /// <summary>The clear width a doorway or window resolves to on this block: the authored
         /// width, or the share cap of the block's SHORT side when that is tighter.
         ///

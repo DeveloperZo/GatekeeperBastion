@@ -105,5 +105,25 @@ namespace GatekeepersProtocol.Tests
             Assert.Greater(seen.Count, 1,
                 "past the tightest cap the kinds must disagree, or this test proves nothing");
         }
+
+        /// <summary>The stamp that decides whether a segment rebuilds must move when a shared
+        /// number moves. It did not, and that is why the played Bastion carried 3 m doorways
+        /// with lintels for a week after the code said 6 m and full height.</summary>
+        [Test]
+        public void TheGeometryStamp_MovesWithEveryNumberItCovers()
+        {
+            int baseline = BastionKit.GeometryStamp(10f, 0.65f, 4.5f);
+            Assert.AreNotEqual(0, baseline, "a zero stamp reads as never-built");
+
+            Assert.AreNotEqual(baseline, BastionKit.GeometryStamp(6f, 0.65f, 4.5f),
+                "a doorway width change must invalidate the stamp");
+            Assert.AreNotEqual(baseline, BastionKit.GeometryStamp(10f, 0.4f, 4.5f),
+                "a share-cap change must invalidate the stamp");
+            Assert.AreNotEqual(baseline, BastionKit.GeometryStamp(10f, 0.65f, 3.5f),
+                "a doorway height change must invalidate the stamp");
+
+            Assert.AreEqual(baseline, BastionKit.GeometryStamp(10f, 0.65f, 4.5f),
+                "the same inputs must give the same stamp, or every load rebuilds");
+        }
     }
 }

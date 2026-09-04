@@ -755,6 +755,14 @@ and the reason is below.
   is its edge. Naming is the other: `GameController.Wallets.cs` reserves ids `S7`-`S12` for a
   `minSeats=3` band that nothing currently authors, so a new closet either takes a name from
   that band or the band is declared dead.
+- **The played Bastion had never been widened at all.** Measured from `Bastion_Coop.unity`
+  on 2026-09-04: every opening was **3 m** with a 3 m lintel hung across it, against code that
+  had said 6 m and full height since 2026-08-28. `BastionSegment.SettingsHash` stamped a
+  segment with its own serialized fields only, and constants are not fields, so no change to a
+  shared number ever invalidated a stamp and the scene kept geometry from an older build
+  forever. `BastionKit.GeometryStamp` now folds the shared numbers in, so a widening
+  invalidates every stamp and the segments rebuild themselves on load. Both this widening and
+  the 2026-08-28 one reach the scene on the same rebuild.
 - **Widening is not spacing.** `coop-bastion-complexity.md` pre-registered the one-doorway
   kill as "funnel spacing, not numbers". A wider door is a number. If standing at the Hatch
   and mowing converging streams still beats everything, this change is not the answer and the

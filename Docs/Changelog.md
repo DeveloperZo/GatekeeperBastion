@@ -8,6 +8,11 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-04: **The rebuild stamp covers the shared numbers, and the doorways widen to 10 m.**
+  Measured on the day: the played Bastion still had 3 m openings with lintels, because
+  `SettingsHash` hashed only a segment's own serialized fields and a constant is not a field,
+  so the 2026-08-28 widening had never reached the scene. `BastionKit.GeometryStamp` closes
+  that, and both widenings land on the next rebuild.
 - 2026-09-04: **The doorways widen to 10 m.** `DoorOpeningWidth` 6 to 10 and the share cap
   0.4 to 0.65, because at 0.4 a Half room capped at 6.4 and the two ends of a shared passage
   would have disagreed. The resolving rule moves into the Sim as `BastionKit.ApertureWidth`,

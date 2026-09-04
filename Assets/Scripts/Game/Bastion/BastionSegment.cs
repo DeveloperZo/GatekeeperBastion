@@ -479,6 +479,11 @@ namespace GatekeepersProtocol.Game
                 h = h * 31 + eastDoorAlong.GetHashCode();
                 h = h * 31 + southDoorAlong.GetHashCode();
                 h = h * 31 + westDoorAlong.GetHashCode();
+                // The SHARED numbers are geometry inputs too, and leaving them out meant a
+                // constant could change and no segment would ever notice. See
+                // BastionKit.GeometryStamp for what that cost.
+                h = h * 31 + BastionKit.GeometryStamp(
+                    DoorOpeningWidth, DoorOpeningMaxShare, DoorOpeningHeight);
                 return h == 0 ? 1 : h;
             }
         }
