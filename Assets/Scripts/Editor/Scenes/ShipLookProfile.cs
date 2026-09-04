@@ -95,6 +95,12 @@ namespace GatekeepersProtocol.EditorTools
         [Range(0f, 4f)] public float ventXStrength = 0.35f;
         public FlowSettings ventXFlow;
 
+        [Header("Walls")]
+        [Tooltip("Light the wall's strip in the deck accent instead of the pack's cyan. The " +
+                 "strip is the only thing that emits on SM_Bld_Wall_01, so this recolours it " +
+                 "and nothing else on the piece.")]
+        public bool wallStripAccent = true;
+
         [Header("Post")]
         [Tooltip("Bloom on the shared post profile, at the values the gallery was judged under.")]
         public bool bloom = true;

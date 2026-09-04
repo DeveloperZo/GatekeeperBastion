@@ -8,6 +8,12 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-04: **R2's northern entrance is an open span.** A new side kind whose meaning is the
+  wall's absence: the full 16 m open bar a 1.2 m divider at its centre, so R2 and R3 are one
+  space with a threshold. It counts as a passage everywhere a Door does, through one shared
+  predicate, because the old four-way duplication of that rule left a test behind and read a
+  walkable room as unreachable. The rebuild sentinel now takes a sketch, since a room settled
+  into `Authored` could otherwise never receive a side change.
 - 2026-09-04: **The rebuild stamp covers the shared numbers, and the doorways widen to 10 m.**
   Measured on the day: the played Bastion still had 3 m openings with lintels, because
   `SettingsHash` hashed only a segment's own serialized fields and a constant is not a field,

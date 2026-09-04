@@ -27,6 +27,9 @@ namespace GatekeepersProtocol.Sim
                 case BastionSideKind.Wall: return Wall;
                 case BastionSideKind.Door: return Doorframe;
                 case BastionSideKind.Window: return Window;
+                // The span is open; the one divider left standing is dressed in the wall
+                // piece, so the face's mesh is the wall's even though most of it is absent.
+                case BastionSideKind.OpenSpan: return Wall;
                 case BastionSideKind.None: return null;
                 default:
                     throw new System.ArgumentOutOfRangeException(

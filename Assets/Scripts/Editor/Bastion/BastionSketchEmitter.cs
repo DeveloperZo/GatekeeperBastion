@@ -192,17 +192,46 @@ namespace GatekeepersProtocol.EditorTools
         static void RebuildAllSegmentsFromSentinel(string text)
         {
             string scenePath = "Assets/Scenes/Bastion_Coop.unity";
+            string sketchPath = "";
             if (!string.IsNullOrEmpty(text))
             {
                 string[] lines = text.Split('\n');
+                int filled = 0;
                 for (int i = 0; i < lines.Length; i++)
                 {
                     string line = lines[i].Trim();
                     if (line.Length == 0)
                         continue;
-                    scenePath = NormalizeScenePath(line);
-                    break;
+                    if (filled == 0)
+                        scenePath = NormalizeScenePath(line);
+                    else if (filled == 1)
+                        sketchPath = Path.IsPathRooted(line) ? line : Path.Combine(Root, line);
+                    filled++;
                 }
+            }
+
+            // A room that has settled into Authored is never re-sided by the emitter: it
+            // keeps its geometry and the emit skips it, so a side kind changed in the
+            // sketch could not reach a built scene at all. Naming a sketch here re-applies
+            // the sides to rooms that already exist, which is the only way the OpenSpan
+            // authored on 2026-09-04 gets into Bastion_Coop.
+            Dictionary<string, SideSet> sides = null;
+            if (sketchPath.Length > 0)
+            {
+                if (!File.Exists(sketchPath))
+                {
+                    Debug.LogError("[BastionSketchEmitter] Geometry rebuild: no sketch at " + sketchPath);
+                    return;
+                }
+                BastionSketchParseResult parsed =
+                    BastionSketchParser.Parse(File.ReadAllText(sketchPath));
+                if (!parsed.Success)
+                {
+                    Debug.LogError("[BastionSketchEmitter] Geometry rebuild sketch failed: " + parsed.Error);
+                    return;
+                }
+                sides = BuildEffectiveSides(parsed.Sketch);
+                ApplyDoorSides(parsed.Sketch, sides);
             }
 
             try
@@ -215,6 +244,7 @@ namespace GatekeepersProtocol.EditorTools
                     FindObjectsInactive.Include, FindObjectsSortMode.None);
                 int rebuilt = 0;
                 int refused = 0;
+                int resided = 0;
                 BastionSegment.SuppressValidateRebuild = true;
                 try
                 {
@@ -235,6 +265,11 @@ namespace GatekeepersProtocol.EditorTools
                         Transform t = segment.transform;
                         Transform home = t.parent;
                         t.SetParent(generated.transform, true);
+                        if (sides != null && sides.TryGetValue(t.name, out SideSet set))
+                        {
+                            ApplySides(segment, set);
+                            resided++;
+                        }
                         segment.Rebuild();
                         UnpackGeom(t);
                         t.SetParent(home != null ? home : authored.transform, true);
@@ -249,7 +284,7 @@ namespace GatekeepersProtocol.EditorTools
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene);
                 Debug.Log("[BastionSketchEmitter] Geometry rebuild scene=" + scene.path
-                    + " rebuilt=" + rebuilt + " refused=" + refused
+                    + " rebuilt=" + rebuilt + " refused=" + refused + " resided=" + resided
                     + " (the NavMesh is stale until it is baked)");
             }
             catch (Exception e)

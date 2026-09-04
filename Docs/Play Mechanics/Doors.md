@@ -25,7 +25,7 @@ Where:
 
 # Doors
 
-A passage is 10 m of clear opening, full height from floor slab to ceiling, since 2026-09-04; it was 6 m before that and 3 m before 2026-08-28. The width is one number for every room, because the two rooms either side of a passage cut their own halves of it independently and a passage whose ends disagree has two different mouths.
+A passage is 10 m of clear opening, full height from floor slab to ceiling, since 2026-09-04; it was 6 m before that and 3 m before 2026-08-28. One passage is wider still: R2's northern entrance into R3 is an open span rather than a doorway, the whole 16 m wall gone bar a 1.2 m divider pillar at its centre, so the two rooms read as one space with a threshold rather than a corridor with a gate. The width is one number for every room, because the two rooms either side of a passage cut their own halves of it independently and a passage whose ends disagree has two different mouths.
 
 Doors are the Bastion's gates, and the Boarder never operates one — there is no key that works on a door. A zone's gate opens when its terminal is shut off, or when a Convert window at the Hatch is survived; opening it frees the corridor for Boarder and Gatekeeper alike and wakes the spawn points the door was sealing. What makes this a mechanic is that an open door stays open. The open set is saved onto the realm the moment it opens, so even a Boarding that opens a gate and is then lost keeps it, and the next Boarding starts with that ground already taken. Terminal completion does not persist the same way, so a second Boarding walks further into the hull but refights the zone.
 

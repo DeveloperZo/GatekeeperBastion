@@ -37,8 +37,11 @@ room R9 ControlRoom 0 142.5 M S:ControlW:W S:ControlE:E
 # --- Open passages: both faces carry a Door side ----------------------------
 side R1 N Door
 side R2 S Door
-side R2 N Door
-side R3 S Door
+# R2's northern entrance is the wall's absence, not a doorway: the full 16 m span with one
+# divider pillar at its centre (Zo, 2026-09-04). R2 and R3 are both Half, so both faces open
+# the same 16 m and the passage has one mouth.
+side R2 N OpenSpan
+side R3 S OpenSpan
 side R3 N Door
 side R4 S Door
 side R4 N Door

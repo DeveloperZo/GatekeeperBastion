@@ -724,6 +724,7 @@ mapping throws at emit time — a loud fail, never a primitive.
 | Door | `SM_Bld_Wall_Doorframe_01` |
 | Window | `SM_Bld_Wall_Exterior_Window_01` |
 | None | nothing emitted |
+| OpenSpan | `SM_Bld_Wall_01` |
 | Wall corner | `SM_Bld_Wall_Corner_Pillar_01` |
 | Ceiling fixture | `SM_Prop_Light_Panel_01` |
 <!-- GKB:END bastion-mesh -->

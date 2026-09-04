@@ -65,6 +65,7 @@ namespace GatekeepersProtocol.EditorTools
             // the tiles themselves carry the wet deck and the vents when the flow is on; the
             // mirror sheet is the older answer for a deck left on the pack material
             int tiles = ShipLookDeck.Apply(dress, profile);
+            int walls2 = ShipLookWalls.Apply(dress, profile);
             if (!profile.deckFlow) Deck(root.transform, deck, profile);
             Motes(root.transform, deck, profile);
             Probes(root.transform, deck, profile);
@@ -74,6 +75,7 @@ namespace GatekeepersProtocol.EditorTools
             Debug.Log($"[ShipLook] Dressed {walls.Count} wall faces with {rows} fixture rows in " +
                       $"{profile.districtHues.Length} districts, {mats.Count} shared materials, " +
                       $"{tiles} deck tiles {(profile.deckFlow ? "on the flow deck" : "restored")}, " +
+                      $"{walls2} walls {(profile.wallStripAccent ? "on the accent strip" : "restored")}, " +
                       "0 realtime lights added. Bake Lighting next — until then the fixtures " +
                       "glow but light nothing.");
         }

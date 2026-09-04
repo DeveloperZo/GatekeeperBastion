@@ -748,6 +748,21 @@ and the reason is below.
   gate is `BastionApertureAgreementTests`, which reads the shipped layout so it follows the
   level, and which proves it can fail by pushing the width one centimetre past the tightest
   cap and asserting the kinds then disagree.
+- **R2's northern entrance is an OpenSpan, not a doorway** (Zo, 2026-09-04: "just widen the
+  northern entrance to be full width of R2, maybe a small divider in middle"). A new
+  `BastionSideKind` whose meaning is the wall's ABSENCE: the whole 16 m span is open bar one
+  1.2 m divider pillar at its centre, so R2 and R3 read as one space with a threshold. Two
+  openings of 7.4 m each, either one wider than the doorway it replaced. Both faces must carry
+  it and the two rooms must have equal span on that edge, or the passage has two mouths.
+- **An OpenSpan is a passage, not a gate.** `BastionSketchPassages.IsPassageSide` is the one
+  predicate for "can a body walk through this", because the answer had been written out four
+  times and adding the kind left a test's copy behind, which read a walkable room as
+  unreachable. A `door D` line still needs a Door side, and `TryGetDoorAperture` answers only
+  for Door, so nothing hangs a leaf in an opening with no frame.
+- **A settled room could never take a sketch side change.** The emitter keeps a room already in
+  `Authored` and skips it, so the sketch was not the authority on anything already built. The
+  geometry rebuild sentinel takes an optional sketch path on its second line and re-applies the
+  sides before rebuilding, which is the only way this change reached `Bastion_Coop`.
 - **The second entrance is NOT built, and needs two calls from Zo.** Placement is one: the
   Hatch room R1 has all four sides occupied, so a new closet must hang off R2 or R3, the
   terminal rooms, which makes a terminal trip contested rather than safe. That is a flank and

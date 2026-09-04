@@ -46,7 +46,38 @@ namespace GatekeepersProtocol.Game
                 case BastionSideKind.Window:
                     BuildWindowWall(orientation, span, wallHeight, thickness, edgeOffset, openingWidth, doorAlong);
                     break;
+                case BastionSideKind.OpenSpan:
+                    BuildOpenSpanWall(orientation, span, wallHeight, thickness, edgeOffset);
+                    break;
             }
+        }
+
+        /// <summary>The wall's absence: one full-height divider at the centre of the span and
+        /// nothing else. No pillars at the ends, because the span IS the opening — that is what
+        /// separates this from a very wide Door.
+        ///
+        /// A divider wider than the span would be a solid wall wearing the wrong name, so that
+        /// case builds the wall it actually is rather than emitting a box that overhangs the
+        /// room. A divider of zero leaves a clear span, which is legal and emits nothing.</summary>
+        void BuildOpenSpanWall(
+            SegmentEdge orientation,
+            float span,
+            float wallHeight,
+            float thickness,
+            float edgeOffset)
+        {
+            float divider = OpenSpanDividerWidth;
+            if (divider <= 0f)
+                return;
+            if (divider >= span)
+            {
+                BuildSolidWall(orientation, span, wallHeight, wallHeight * 0.5f, thickness, edgeOffset);
+                return;
+            }
+            CreateBox(
+                GenPrefix + orientation + "_Span_Divider",
+                SideCenter(orientation, 0f, wallHeight * 0.5f, edgeOffset),
+                SideSize(orientation, divider, wallHeight, thickness));
         }
 
         void BuildSolidWall(

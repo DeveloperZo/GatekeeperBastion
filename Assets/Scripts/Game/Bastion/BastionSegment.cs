@@ -53,6 +53,14 @@ namespace GatekeepersProtocol.Game
         /// that is the clamp doing its job rather than the width being ignored.</para></summary>
         public const float DoorOpeningMaxShare = 0.65f;
 
+        /// <summary>The one pillar left standing in an <see cref="BastionSideKind.OpenSpan"/>
+        /// side, at the centre of the span. It is the threshold: without it the two rooms read
+        /// as one long box and nothing says where a fight moved from. 1.2 m is wider than the
+        /// 0.5 m wall so it reads as structure rather than a leftover, and narrow enough that
+        /// it is a sight-line break rather than cover a body can hold. On a Half room's 16 m
+        /// edge it leaves two openings of 7.4 m, each wider than a whole doorway.</summary>
+        public const float OpenSpanDividerWidth = 1.2f;
+
         /// <summary>Clear height of a doorway: the FULL wall, floor slab to ceiling, so no
         /// lintel is emitted (BuildDoorWall skips it at lintelHeight 0). Was a hardcoded 3.5
         /// against a 4.5 m wall, which hung a metre of geometry across every opening — invisible

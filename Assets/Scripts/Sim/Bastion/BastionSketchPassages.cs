@@ -19,6 +19,18 @@ namespace GatekeepersProtocol.Sim
         /// <summary>One passage per shared aperture, owned by the first room in sketch order.
         /// Apertures claimed by a sketch door (locked gate) are excluded. Ids run P1, P2, ...
         /// in sketch room order, so re-emits are stable.</summary>
+        /// <summary>Whether a side kind is something a body can walk through, which is the
+        /// question every passage and reachability reading is really asking.
+        ///
+        /// It exists as one predicate because the answer was written out four times — twice
+        /// here, once in EdgeIsPaired and once in a test's own partner lookup — and adding
+        /// OpenSpan on 2026-09-04 left the test's copy behind, which read a walkable room as
+        /// unreachable. A Window is not a passage: it has a walk-block at the sill.</summary>
+        public static bool IsPassageSide(BastionSideKind kind)
+        {
+            return kind == BastionSideKind.Door || kind == BastionSideKind.OpenSpan;
+        }
+
         public static List<BastionSketchPassage> Find(BastionSketch sketch)
         {
             var passages = new List<BastionSketchPassage>();
@@ -30,7 +42,7 @@ namespace GatekeepersProtocol.Sim
             for (int i = 0; i < sketch.Sides.Count; i++)
             {
                 BastionSketchSideOverride side = sketch.Sides[i];
-                if (side.Kind != BastionSideKind.Door)
+                if (!IsPassageSide(side.Kind))
                     continue;
                 if (roomById.TryGetValue(side.RoomId, out BastionSketchRoom room))
                     doorSides.Add(MakeSide(room, side.Direction, side.Along, sketch));
@@ -122,7 +134,7 @@ namespace GatekeepersProtocol.Sim
             for (int i = 0; i < sketch.Sides.Count; i++)
             {
                 BastionSketchSideOverride side = sketch.Sides[i];
-                if (side.Kind != BastionSideKind.Door)
+                if (!IsPassageSide(side.Kind))
                     continue;
                 if (roomById.TryGetValue(side.RoomId, out BastionSketchRoom r))
                     doorSides.Add(MakeSide(r, side.Direction, side.Along, sketch));

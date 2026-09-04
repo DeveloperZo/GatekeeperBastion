@@ -574,7 +574,10 @@ namespace GatekeepersProtocol.Tests
             for (int i = 0; i < sketch.Sides.Count; i++)
             {
                 BastionSketchSideOverride side = sketch.Sides[i];
-                if (side.Kind != BastionSideKind.Door || side.RoomId == passage.RoomId)
+                // Was "!= Door" and went stale the day OpenSpan arrived: the helper read a
+                // walkable room as unreachable because it did not know the new kind. The rule
+                // lives in one place now.
+                if (!BastionSketchPassages.IsPassageSide(side.Kind) || side.RoomId == passage.RoomId)
                     continue;
                 BastionSketchRoom other = FindRoom(sketch, side.RoomId);
                 if (other == null)

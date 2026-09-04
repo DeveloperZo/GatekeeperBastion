@@ -135,6 +135,24 @@ namespace GatekeepersProtocol.Game
                 return;
             }
 
+            // OpenSpan: the wall is gone and only the centre divider is dressed. Without this
+            // arm the kind fell through to the Door/Window split below, where anything that is
+            // not a Door is a Window — so the widest opening in the level came back wearing a
+            // pane of glass, and the divider itself had a collider and no mesh to see it by.
+            if (kind == BastionSideKind.OpenSpan)
+            {
+                float divider = BastionSegment.OpenSpanDividerWidth;
+                if (divider <= 0f)
+                    return;
+                if (divider >= span)
+                {
+                    BuildWallRun(geomRoot, segment.WallPiece, orientation, -span * 0.5f, span, edgeOffset, step, wallB, wallScaleY, ref index);
+                    return;
+                }
+                BuildWallRun(geomRoot, segment.WallPiece, orientation, -divider * 0.5f, divider, edgeOffset, step, wallB, wallScaleY, ref index);
+                return;
+            }
+
             // Door / Window: split around one full module (step), NOT the 3 m logical opening, so
             // the frame piece lands exactly one module wide with the logical opening centred in
             // it. The collision layer keeps the 3 m opening; sim and BastionDoor untouched.
