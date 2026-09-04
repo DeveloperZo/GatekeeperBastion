@@ -19,7 +19,14 @@ namespace GatekeepersProtocol.Tests
     /// to the layout is checked the moment it is authored.</summary>
     public class BastionApertureAgreementTests
     {
-        const string LayoutPath = "Tools/bastion-sketch/bastion-defense-layout.txt";
+        /// <summary>BOTH shipped layouts. The played co-op scene is built from the co-op one,
+        /// so a test that read only the defense layout would have been checking a level nobody
+        /// loads.</summary>
+        static readonly string[] LayoutPaths =
+        {
+            "Tools/bastion-sketch/bastion-coop-layout.txt",
+            "Tools/bastion-sketch/bastion-defense-layout.txt",
+        };
 
         /// <summary>Kept in step with BastionSegment's constants, which live in the Game layer
         /// and cannot be referenced from the offline harness. The pin that they still agree is
@@ -30,13 +37,17 @@ namespace GatekeepersProtocol.Tests
 
         static List<BastionBlockKind> KindsInTheLayout()
         {
-            string path = Path.GetFullPath(LayoutPath);
-            Assert.IsTrue(File.Exists(path), "no layout at " + LayoutPath);
-            BastionSketchParseResult parsed = BastionSketchParser.Parse(File.ReadAllText(path));
-            Assert.IsNotNull(parsed.Sketch, "the shipped layout does not parse");
             var kinds = new List<BastionBlockKind>();
-            foreach (BastionSketchRoom room in parsed.Sketch.Rooms)
-                if (!kinds.Contains(room.Kind)) kinds.Add(room.Kind);
+            for (int i = 0; i < LayoutPaths.Length; i++)
+            {
+                string path = Path.GetFullPath(LayoutPaths[i]);
+                Assert.IsTrue(File.Exists(path), "no layout at " + LayoutPaths[i]);
+                BastionSketchParseResult parsed =
+                    BastionSketchParser.Parse(File.ReadAllText(path));
+                Assert.IsNotNull(parsed.Sketch, LayoutPaths[i] + " does not parse");
+                foreach (BastionSketchRoom room in parsed.Sketch.Rooms)
+                    if (!kinds.Contains(room.Kind)) kinds.Add(room.Kind);
+            }
             Assert.Greater(kinds.Count, 1, "a layout of one room kind cannot disagree");
             return kinds;
         }

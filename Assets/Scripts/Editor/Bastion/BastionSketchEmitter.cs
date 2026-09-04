@@ -40,6 +40,7 @@ namespace GatekeepersProtocol.EditorTools
         static string SpawnRoomsSentinelPath => Path.Combine(Root, "gkb_bastion_spawn_rooms_request.txt");
         static string SpawnRoomsReportPath => Path.Combine(Root, "gkb_bastion_spawn_rooms_report.json");
         static string ControlRebuildSentinelPath => Path.Combine(Root, "gkb_bastion_control_rebuild_request.txt");
+        static string GeomRebuildSentinelPath => Path.Combine(Root, "gkb_bastion_geom_rebuild_request.txt");
         static string SettleSentinelPath => Path.Combine(Root, "gkb_bastion_settle_request.txt");
         static string DefaultSketchPath => Path.Combine(Root, DefaultSketchRelative);
 
@@ -65,6 +66,24 @@ namespace GatekeepersProtocol.EditorTools
                 }
 
                 PlaceAuthoredSpawnRoomsFromDisk();
+                return;
+            }
+
+            if (File.Exists(GeomRebuildSentinelPath))
+            {
+                string geomText = "";
+                try
+                {
+                    geomText = File.ReadAllText(GeomRebuildSentinelPath);
+                    File.Delete(GeomRebuildSentinelPath);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[BastionSketchEmitter] geom rebuild sentinel: " + e.Message);
+                    return;
+                }
+
+                RebuildAllSegmentsFromSentinel(geomText);
                 return;
             }
 
@@ -154,6 +173,91 @@ namespace GatekeepersProtocol.EditorTools
         /// <summary>One ControlRoom line per request: scene path, optional sketch path on the
         /// next line (positions). Unparents from Authored so Rebuild can run, stamps the new
         /// kit footprint, unpacks leftover pack links, then settles back under Authored.</summary>
+        /// <summary>Rebuild EVERY segment in a scene from the constants this build carries,
+        /// then settle the result back where it was. Trigger with
+        /// <c>gkb_bastion_geom_rebuild_request.txt</c>; the first non-empty line is the scene
+        /// path, defaulting to the co-op Bastion.
+        ///
+        /// This is the tool the rebuild stamp implies. A segment regenerates when its stamp
+        /// stops matching its settings, and until 2026-09-04 that stamp covered only the
+        /// segment's own serialized fields — so a change to a shared constant reached no scene
+        /// and none of them noticed. Bastion_Coop was measured that day still carrying 3 m
+        /// doorways with lintels against code that had said 6 m and full height since
+        /// 2026-08-28. <see cref="BastionKit.GeometryStamp"/> makes the mismatch visible; this
+        /// is what acts on it.
+        ///
+        /// It emits nothing and reads no sketch: rooms keep their kind, sides, offsets and
+        /// place. Only the generated geometry inside them is replaced, which is why it is safe
+        /// on a scene that has been hand-dressed around the kit.</summary>
+        static void RebuildAllSegmentsFromSentinel(string text)
+        {
+            string scenePath = "Assets/Scenes/Bastion_Coop.unity";
+            if (!string.IsNullOrEmpty(text))
+            {
+                string[] lines = text.Split('\n');
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i].Trim();
+                    if (line.Length == 0)
+                        continue;
+                    scenePath = NormalizeScenePath(line);
+                    break;
+                }
+            }
+
+            try
+            {
+                Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                GameObject layoutRoot = FindOrCreateRoot();
+                FindOrCreateSubtrees(layoutRoot, out GameObject generated, out GameObject authored);
+
+                BastionSegment[] segments = UnityEngine.Object.FindObjectsByType<BastionSegment>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None);
+                int rebuilt = 0;
+                int refused = 0;
+                BastionSegment.SuppressValidateRebuild = true;
+                try
+                {
+                    for (int i = 0; i < segments.Length; i++)
+                    {
+                        BastionSegment segment = segments[i];
+                        if (segment == null)
+                            continue;
+                        if (!segment.CanMutateHierarchy())
+                        {
+                            refused++;
+                            continue;
+                        }
+
+                        // Through Generated and back, the same round trip the control-room
+                        // rebuild makes: Rebuild writes into the segment's geom root, and
+                        // UnpackGeom is what turns that back into plain authored children.
+                        Transform t = segment.transform;
+                        Transform home = t.parent;
+                        t.SetParent(generated.transform, true);
+                        segment.Rebuild();
+                        UnpackGeom(t);
+                        t.SetParent(home != null ? home : authored.transform, true);
+                        rebuilt++;
+                    }
+                }
+                finally
+                {
+                    BastionSegment.SuppressValidateRebuild = false;
+                }
+
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+                Debug.Log("[BastionSketchEmitter] Geometry rebuild scene=" + scene.path
+                    + " rebuilt=" + rebuilt + " refused=" + refused
+                    + " (the NavMesh is stale until it is baked)");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("[BastionSketchEmitter] Geometry rebuild: " + e);
+            }
+        }
+
         static void RebuildControlRoomsFromSentinel(string text)
         {
             string scenePath = DefaultSceneRelative;
