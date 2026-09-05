@@ -8,6 +8,12 @@ Rule: entries cite a milestone by bare id in a code span, never by link. The fol
 Last updated: 2026-09-03
 -->
 
+- 2026-09-05: **Enclosure is pinned, and the widening did not break it.** A new test reads
+  the built scene's collider layer and holds every room face to its kind: a Wall is solid, a
+  Door opens exactly its width, a Window is sealed by sill and lintel, an OpenSpan opens the
+  span less its divider, and a side of `None` is a hole unless a neighbour of equal span
+  covers it. Against the committed scene every face passes. It found two faces open in an
+  uncommitted working copy that had drifted after the commit, which is what it is for.
 - 2026-09-04: **R2's northern entrance is an open span.** A new side kind whose meaning is the
   wall's absence: the full 16 m open bar a 1.2 m divider at its centre, so R2 and R3 are one
   space with a threshold. It counts as a passage everywhere a Door does, through one shared
