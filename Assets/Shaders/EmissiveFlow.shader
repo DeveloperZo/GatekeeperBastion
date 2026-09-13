@@ -30,6 +30,9 @@ Shader "GKB/EmissiveFlow"
         CGPROGRAM
         #pragma surface surf Standard fullforwardshadows
         #pragma target 3.0
+        // the material code enables _EMISSION the way it does for Standard; declaring it
+        // keeps that keyword inside this shader's space rather than reported against it
+        #pragma shader_feature_local _EMISSION
 
         sampler2D _MainTex;
         fixed4 _Color;
